@@ -7,13 +7,13 @@
   <!-- Header Stats Section -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Soporte</span>
-      <h1 class="cfg-titulo"><i class="fa fa-lightbulb"></i> Mis Ideas</h1>
-      <p class="cfg-sub">Gestiona tus ideas y sugerencias para la plataforma</p>
+      <span class="cfg-eyebrow">{{ 'soporte.misIdeas.soporte' | translate }}</span>
+      <h1 class="cfg-titulo"><i class="fa fa-lightbulb"></i> {{ 'soporte.misIdeas.misIdeas' | translate }}</h1>
+      <p class="cfg-sub">{{ 'soporte.misIdeas.gestionaTusIdeasYSugerencias' | translate }}</p>
     </div>
     <div class="cfg-acciones">
       <button class="cfg-btn" routerLink="/nueva-idea">
-        <i class="fa fa-plus"></i> Nueva Idea
+        <i class="fa fa-plus"></i> {{ 'soporte.misIdeas.nuevaIdea' | translate }}
       </button>
     </div>
   </header>
@@ -21,46 +21,46 @@
   <!-- Filters Section -->
   <div class="cfg-form filters-section">
     <div class="filters-header">
-      <h5><i class="fa fa-filter"></i> Filtros</h5>
+      <h5><i class="fa fa-filter"></i> {{ 'soporte.misIdeas.filtros' | translate }}</h5>
     </div>
     <div class="filters-body">
       <div class="filter-group">
-        <label for="statusFilter" [class.has-active-filter]="selectedStatus">Estado:</label>
+        <label for="statusFilter" [class.has-active-filter]="selectedStatus">{{ 'soporte.misIdeas.estado' | translate }}</label>
         <div class="select-wrapper">
           <select id="statusFilter" class="form-control" 
                   [class.active-filter]="selectedStatus"
                   [(ngModel)]="selectedStatus" 
                   (change)="filterIdeas()">
-            <option value="">Todos los estados</option>
-            <option value="evaluando">En Evaluación</option>
-            <option value="desarrollo">En Desarrollo</option>
-            <option value="implementado">Implementado</option>
-            <option value="rechazado">No viable</option>
+            <option value="">{{ 'soporte.misIdeas.todosLosEstados' | translate }}</option>
+            <option value="evaluando">{{ 'soporte.misIdeas.enEvaluacion' | translate }}</option>
+            <option value="desarrollo">{{ 'soporte.misIdeas.enDesarrollo' | translate }}</option>
+            <option value="implementado">{{ 'soporte.misIdeas.implementado' | translate }}</option>
+            <option value="rechazado">{{ 'soporte.misIdeas.noViable' | translate }}</option>
           </select>
         </div>
       </div>
       
       <div class="filter-group">
-        <label for="dateFilter" [class.has-active-filter]="dateFilter !== 'all'">Fecha:</label>
+        <label for="dateFilter" [class.has-active-filter]="dateFilter !== 'all'">{{ 'soporte.misIdeas.fecha' | translate }}</label>
         <div class="select-wrapper">
           <select id="dateFilter" class="form-control"
                   [class.active-filter]="dateFilter !== 'all'"
                   [(ngModel)]="dateFilter" 
                   (change)="filterIdeas()">
-            <option value="all">Todos los tiempos</option>
-            <option value="today">Hoy</option>
-            <option value="week">Esta semana</option>
-            <option value="month">Este mes</option>
+            <option value="all">{{ 'soporte.misIdeas.todosLosTiempos' | translate }}</option>
+            <option value="today">{{ 'soporte.misIdeas.hoy' | translate }}</option>
+            <option value="week">{{ 'soporte.misIdeas.estaSemana' | translate }}</option>
+            <option value="month">{{ 'soporte.misIdeas.esteMes' | translate }}</option>
           </select>
         </div>
       </div>
       
       <div class="filter-group search-group">
-        <label for="searchFilter" [class.has-active-filter]="searchText.trim()">Buscar:</label>
+        <label for="searchFilter" [class.has-active-filter]="searchText.trim()">{{ 'soporte.misIdeas.buscar' | translate }}</label>
         <div class="search-wrapper">
           <input type="text" id="searchFilter" class="form-control" 
                  [class.active-filter]="searchText.trim()"
-                 placeholder="Buscar por título o contenido..." 
+                 [placeholder]="'soporte.misIdeas.buscarPorTituloOContenido' | translate" 
                  [(ngModel)]="searchText" 
                  (input)="onSearchChange($event)" />
           <i class="fa fa-search search-icon"></i>
@@ -80,7 +80,7 @@
       </div>
       <div class="stat-info">
         <span class="stat-count">{{getIdeaCountByStatus('evaluando')}}</span>
-        <span class="stat-label">En Evaluación</span>
+        <span class="stat-label">{{ 'soporte.misIdeas.enEvaluacion' | translate }}</span>
       </div>
     </div>
     
@@ -90,7 +90,7 @@
       </div>
       <div class="stat-info">
         <span class="stat-count">{{getIdeaCountByStatus('desarrollo')}}</span>
-        <span class="stat-label">En Desarrollo</span>
+        <span class="stat-label">{{ 'soporte.misIdeas.enDesarrollo' | translate }}</span>
       </div>
     </div>
     
@@ -100,7 +100,7 @@
       </div>
       <div class="stat-info">
         <span class="stat-count">{{getIdeaCountByStatus('implementado')}}</span>
-        <span class="stat-label">Implementadas</span>
+        <span class="stat-label">{{ 'soporte.misIdeas.implementadas' | translate }}</span>
       </div>
     </div>
   </div>
@@ -110,9 +110,9 @@
     <div class="cfg-vacio__icono">
       <i class="fa fa-lightbulb"></i>
     </div>
-    <h3 class="cfg-vacio__titulo">No hay ideas que mostrar</h3>
-    <p class="cfg-vacio__texto">No se encontraron ideas con los filtros actuales</p>
-    <button class="cfg-btn" routerLink="/nueva-idea">Proponer una idea</button>
+    <h3 class="cfg-vacio__titulo">{{ 'soporte.misIdeas.noHayIdeasQueMostrar' | translate }}</h3>
+    <p class="cfg-vacio__texto">{{ 'soporte.misIdeas.noSeEncontraronIdeasCon' | translate }}</p>
+    <button class="cfg-btn" routerLink="/nueva-idea">{{ 'soporte.misIdeas.proponerUnaIdea' | translate }}</button>
   </div>
 
   <!-- Ideas List -->
@@ -126,7 +126,7 @@
            tabindex="0"
            [attr.aria-controls]="'idea-details-' + i">
         <div class="ticket-info">
-          <div class="ticket-id">#{{idea.cd || 'Sin ID'}}</div>
+          <div class="ticket-id">#{{idea.cd || ('soporte.misIdeas.sinId' | translate)}}</div>
           <h3 class="ticket-title">{{idea.asunto}}</h3>
           <div class="ticket-meta">
             <span class="ticket-date"><i class="fa fa-calendar"></i> {{idea.fechaRegistro | date:'dd/MM/yyyy'}}</span>
@@ -153,23 +153,23 @@
       <!-- Idea Details Section (Expanded) with animation -->
       <div id="idea-details-{{i}}" class="ticket-details" *ngIf="expandedTickets[i]" [class.expanded]="expandedTickets[i]">
         <div class="ticket-section description-section">
-          <h4><i class="fa fa-align-left"></i> Descripción</h4>
+          <h4><i class="fa fa-align-left"></i> {{ 'soporte.misIdeas.descripcion' | translate }}</h4>
           <p class="ticket-description">{{idea.asunto}}</p>
         </div>
 
         <!-- Attachments Section -->
         <div class="ticket-section attachments-section" *ngIf="idea.adjuntos?.length > 0">
-          <h4><i class="fa fa-paperclip"></i> Adjuntos ({{idea.adjuntos.length}})</h4>
+          <h4><i class="fa fa-paperclip"></i> {{ 'soporte.misIdeas.adjuntos' | translate:{length: idea.adjuntos.length} }}</h4>
           <div class="attachments-gallery">
             <div class="attachment-item" *ngFor="let adjunto of idea.adjuntos">
               <div class="attachment-preview" (click)="openInNewTab(adjunto)">
-                <img [src]="adjunto" alt="Adjunto" class="attachment-img" (error)="handleImageError($event)">
+                <img [src]="adjunto" [alt]="'soporte.misIdeas.adjunto' | translate" class="attachment-img" (error)="handleImageError($event)">
               </div>
               <div class="attachment-actions">
-                <button class="attachment-btn view" (click)="openInNewTab(adjunto)" title="Ver completo">
+                <button class="attachment-btn view" (click)="openInNewTab(adjunto)" [title]="'soporte.misIdeas.verCompleto' | translate">
                   <i class="fa fa-eye"></i>
                 </button>
-                <button class="attachment-btn download" (click)="openInNewTab(adjunto)" title="Descargar">
+                <button class="attachment-btn download" (click)="openInNewTab(adjunto)" [title]="'soporte.misIdeas.descargar' | translate">
                   <i class="fa fa-download"></i>
                 </button>
               </div>
@@ -179,7 +179,7 @@
 
         <!-- Comments Section -->
         <div class="ticket-section comments-section">
-          <h4><i class="fa fa-comments"></i> Comentarios ({{comentariosVisibles(idea).length}})</h4>
+          <h4><i class="fa fa-comments"></i> {{ 'soporte.misIdeas.comentarios' | translate:{length: (comentariosVisibles(idea).length)} }}</h4>
           
           <div class="comments-timeline" *ngIf="comentariosVisibles(idea).length">
             <div class="comment-item" *ngFor="let comment of comentariosVisibles(idea)">
@@ -198,7 +198,7 @@
                   <div class="comment-attachments" *ngIf="comment.adjuntos?.length">
                     <div class="attachment-thumbnails">
                       <div class="thumbnail-item" *ngFor="let adjunto of comment.adjuntos">
-                        <img [src]="adjunto" alt="Adjunto" (click)="openInNewTab(adjunto)">
+                        <img [src]="adjunto" [alt]="'soporte.misIdeas.adjunto' | translate" (click)="openInNewTab(adjunto)">
                       </div>
                     </div>
                   </div>
@@ -209,25 +209,25 @@
           
           <!-- No Comments Message -->
           <div class="no-comments-message" *ngIf="!comentariosVisibles(idea).length">
-            <p>No hay comentarios para esta idea. Sé el primero en comentar.</p>
+            <p>{{ 'soporte.misIdeas.noHayComentariosParaEsta' | translate }}</p>
           </div>
           
           <!-- Add Comment Form -->
           <div class="add-comment-form">
-            <h5><i class="fa fa-reply"></i> Añadir comentario</h5>
+            <h5><i class="fa fa-reply"></i> {{ 'soporte.misIdeas.anadirComentario' | translate }}</h5>
             <div class="form-group">
               <textarea 
                 [(ngModel)]="newComment" 
                 class="form-control" 
                 rows="3" 
-                placeholder="Escribe tu comentario aquí..."></textarea>
+                [placeholder]="'soporte.misIdeas.escribeTuComentarioAqui' | translate"></textarea>
             </div>
             
             <!-- File Upload -->
             <div class="file-upload-section">
               <div class="upload-button-wrap">
                 <button class="cfg-btn cfg-btn--sec upload-button" (click)="fileInput.click()">
-                  <i class="fa fa-paperclip"></i> Adjuntar archivos
+                  <i class="fa fa-paperclip"></i> {{ 'soporte.misIdeas.adjuntarArchivos' | translate }}
                 </button>
                 <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="hidden-file-input" />
               </div>
@@ -236,7 +236,7 @@
               <div class="upload-preview" *ngIf="imagePreviews.length > 0">
                 <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
                   <div class="preview-image">
-                    <img [src]="preview" alt="Vista previa">
+                    <img [src]="preview" [alt]="'soporte.misIdeas.vistaPrevia' | translate">
                     <button class="remove-preview" (click)="removeImage(i)">
                       <i class="fa fa-times"></i>
                     </button>
@@ -247,7 +247,7 @@
             
             <div class="form-actions">
               <button class="cfg-btn btn-submit" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(idea)">
-                <i class="fa fa-paper-plane"></i> Enviar comentario
+                <i class="fa fa-paper-plane"></i> {{ 'soporte.misIdeas.enviarComentario' | translate }}
               </button>
             </div>
           </div>
@@ -260,7 +260,7 @@
   <div class="comment-notification" [class.show]="showCommentSuccess">
     <div class="notification-content">
       <i class="fa fa-check-circle"></i>
-      <span>Comentario añadido correctamente</span>
+      <span>{{ 'soporte.misIdeas.comentarioAnadidoCorrectamente' | translate }}</span>
     </div>
   </div>
 </div>

@@ -2,10 +2,13 @@
 
 > Ticket TX-34 (nro 1249, cd `Es2985T0VnVBc95LqY2D`). Decisiones aprobadas: D-518 TX-34·2 a ·9,
 > TX-37·8, F2-42·8 y T·2. Preguntas P1-P20: `proposal.md`.
-> Código leído el 21-oct en `wt-back-tickets-web/functions` (rama `feature/tickets-web`, HEAD
-> `097ede2e`, con cambios de F2-41 sin commit en `controllers/sites.js`, `utils/siteTienda.js` y
-> `utils/siteHtml.js`) y en `wt-front-tickets-web/src`. Citas revalidadas el 21-oct, después de
-> la crítica; se vuelven a revalidar en la tarea 0.4 y al empezar el grupo 4.
+> Código leído primero el 21-oct en `wt-back-tickets-web/functions` (rama `feature/tickets-web`,
+> HEAD `097ede2e`, entonces con F2-41 sin commit; F2-41 entró después en `c9e74ff0`) y en
+> `wt-front-tickets-web/src`. Citas revalidadas el 21-oct, después de
+> la crítica; se vuelven a revalidar en la tarea 0.4 y al empezar el grupo 4. Las citas del pago
+> y del regreso a `/gracias` (bloque **Pago**, D12) se revalidaron el 21-oct sobre la punta de la
+> rama, con F2-41 en ella (`c9e74ff0`) y el arreglo de la revisión privada en commit local, sin
+> unir y pendiente de la aprobación de Daniel (tarea 0.4, parte de D12).
 > Los detalles de seguridad están en la revisión privada del backend
 > (`openspec/changes/tienda-celular-y-velocidad-seguridad/`).
 
@@ -59,32 +62,32 @@
   ciudad» (`624`). Las zonas se cargan al entrar a «Tus datos» (`cargarZonas`, `344`) desde
   `GET /public/:slug/zonas` (`zonasPublicas`, `controllers/sites.js:2221`; maestro `zonacobro`,
   sin tiempo de entrega). Al crear el pedido: `vaciar();pintarGracias(r);` y a los 1,2 s a la
-  pasarela (`1138`). Si el comprador vuelve atrás desde la pasarela, o la redirección falla,
+  pasarela (`1144`). Si el comprador vuelve atrás desde la pasarela, o la redirección falla,
   el carrito ya está vacío y no hay nada en la tienda para retomar el pago.
 - Baliza: `navigator.sendBeacon(api+'/vista')` (`siteHtml.js:4307`) → `registrarVista`
   (`controllers/sites.js:5360`): sin filtro de robots; suma `vistasCount`.
 
 **Pago** (`controllers/sites.js`):
-- `crearPedido` genera el enlace de Wompi con un regreso a `gracias?pedido=N` (3412). `/pagar`
-  (`retomarPago`, 5756; se entra por `renderPublico`, 6793) revisa el estado del pedido y
-  reenvía a Wompi con el enlace vigente o uno nuevo; su regreso es el mismo (5928). Cómo se
+- `crearPedido` genera el enlace de Wompi con un regreso a `gracias?pedido=N` (3686). `/pagar`
+  (`retomarPago`, 6053; se entra por `renderPublico`, 7090) revisa el estado del pedido y
+  reenvía a Wompi con el enlace vigente o uno nuevo; su regreso es el mismo (6229). Cómo se
   autoriza `/pagar` y qué viaja en cada dirección: ver revisión privada.
-- La reserva dura `RESERVA_TIENDA_MINUTOS` (60, 5552) y el barrido también vence los
+- La reserva dura `RESERVA_TIENDA_MINUTOS` (60, 5849) y el barrido también vence los
   rechazados (D-312). Un rechazo deja `estadoPago: "Rechazado"` y el pedido vivo hasta el
   barrido (`aplicarPagoDeTienda`).
-- `/gracias` lee el pedido de la empresa (`datosDeConfirmacion`, 5253) y el bloque `gracias`
-  (`siteHtml.js`, ~1934) dice «Tu pago no se completó… Escríbenos» y solo ofrece «Seguir
+- `/gracias` lee el pedido de la empresa (`datosDeConfirmacion`, 5550) y el bloque `gracias`
+  (`siteHtml.js`, ~1946) dice «Tu pago no se completó… Escríbenos» y solo ofrece «Seguir
   comprando».
-- **F2-41 (en la rama, sin commit)** ya pinta en `/gracias` el reintento de un pedido a cuotas
-  (`enlacesDeReintentoCuotas`, 4733) y solo promete el correo de rechazo si salió
-  (`avisoRechazoEnviado`, 5292). El correo de los pedidos de Wompi es el recordatorio único de los
+- **F2-41 (en la rama, `c9e74ff0`, bandera apagada)** ya pinta en `/gracias` el reintento de un pedido a cuotas
+  (`enlacesDeReintentoCuotas`, 5029) y solo promete el correo de rechazo si salió
+  (`avisoRechazoEnviado`, 5589). El correo de los pedidos de Wompi es el recordatorio único de los
   20 a 55 minutos (`sitePagoPendiente`, `ESTADOS_RECORDABLES`), que depende de un cron y el
   comercio puede apagar.
 - **F4-40 D11** (`pedido-whatsapp-con-link-de-pago`) habilita `/pagar` para los pedidos del bot,
   con un control propio dentro de `retomarPago`, y concilia el regreso a `/gracias`. **D-496**
-  extrae el núcleo de `crearPedido`: el regreso de 3412 cambia de lugar.
-- `crearPedido` cierra el carrito guardado del comprador (`cerrarCarritoAlComprar`, 6322,
-  llamado en 3264), así que el rearmado de D-313 (`?carrito=<id>&t=`) no sirve después de comprar.
+  extrae el núcleo de `crearPedido`: el regreso de 3686 cambia de lugar.
+- `crearPedido` cierra el carrito guardado del comprador (`cerrarCarritoAlComprar`, 6623,
+  llamado en 3538), así que el rearmado de D-313 (`?carrito=<id>&t=`) no sirve después de comprar.
 - Un segundo envío idéntico del checkout lo frena la guarda de gemelos
   (`orderService.buscarPedidoGemeloReciente`, huella por documento o celular, líneas y total, en
   una ventana corta; devuelve el pedido con `_duplicadoEvitado`, y `crearPedido` no vuelve a

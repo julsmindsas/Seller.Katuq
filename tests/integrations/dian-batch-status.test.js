@@ -169,8 +169,15 @@ test('la plantilla usa detalles normalizados y separa lote, software y ambiente'
   assert.doesNotMatch(html, /PENDIENTE O RECHAZADO|dianHabilitationStatus\?\.isValid/);
   assert.match(html, /batch\.details/);
   assert.match(html, /detail\.messages/);
-  assert.match(html, /Habilitación del software/);
-  assert.match(html, /Ambiente seleccionado en Katuq/);
-  assert.match(html, /Consultar lote/);
+  // IDI-B12a: los textos pasan al traductor; la plantilla pide la clave y es.json conserva el texto.
+  const es = JSON.parse(fs.readFileSync(path.join(__dirname, '../../src/assets/i18n/es.json'), 'utf8'));
+  for (const [clave, texto] of [
+    ['integrations.integrations.habilitacionDelSoftware', 'Habilitación del software'],
+    ['integrations.integrations.ambienteSeleccionadoEnKatuq', 'Ambiente seleccionado en Katuq'],
+    ['integrations.integrations.consultarLote', 'Consultar lote'],
+  ]) {
+    assert.match(html, new RegExp(`'${clave}' \\| translate`));
+    assert.equal(es[clave], texto);
+  }
   assert.match(html, /role="alert" \*ngIf="dianHabilitationError"/);
 });

@@ -2,14 +2,14 @@
     <section class="co" [class.co--sin-3d]="webglOk === false" aria-labelledby="co-titulo">
         <header class="co__head">
             <div>
-                <small class="co__eyebrow">Logística</small>
-                <h1 id="co-titulo" class="co__title">Centro de operaciones</h1>
-                <p class="co__sub">La bodega y los muelles de despacho en una sola vista, con los pedidos que no tienen unidades.</p>
+                <small class="co__eyebrow">{{ 'centroOperaciones.centroOperaciones.logistica' | translate }}</small>
+                <h1 id="co-titulo" class="co__title">{{ 'centroOperaciones.centroOperaciones.centroDeOperaciones' | translate }}</h1>
+                <p class="co__sub">{{ 'centroOperaciones.centroOperaciones.laBodegaYLosMuelles' | translate }}</p>
             </div>
             <div class="co__head-actions" *ngIf="foto">
-                <span class="co__live"><span class="co__live-dot"></span>Actualizado {{ actualizado }}</span>
-                <button type="button" class="co__btn co__btn--ghost" (click)="cargar()" title="Actualizar ahora">
-                    <i class="pi pi-refresh"></i><span>Actualizar</span>
+                <span class="co__live"><span class="co__live-dot"></span>{{ 'centroOperaciones.centroOperaciones.actualizado' | translate:{actualizado: actualizado} }}</span>
+                <button type="button" class="co__btn co__btn--ghost" (click)="cargar()" [title]="'centroOperaciones.centroOperaciones.actualizarAhora' | translate">
+                    <i class="pi pi-refresh"></i><span>{{ 'centroOperaciones.centroOperaciones.actualizar' | translate }}</span>
                 </button>
             </div>
         </header>
@@ -17,16 +17,16 @@
         <!-- Rol sin el centro de operaciones en sus menús -->
         <div class="co__vacio" *ngIf="noDisponible">
             <span class="co__vacio-icon"><i class="pi pi-lock"></i></span>
-            <h2 class="co__vacio-title">Tu rol no tiene activo el Centro de operaciones</h2>
-            <p class="co__vacio-text">Un administrador lo activa en Roles: agrega "Centro de operaciones" a los menús del rol y vuelve a iniciar sesión. Mientras tanto, los despachos siguen en Envíos y entregas.</p>
-            <a class="co__btn" routerLink="/despachos"><i class="pi pi-send"></i><span>Ir a Envíos y entregas</span></a>
+            <h2 class="co__vacio-title">{{ 'centroOperaciones.centroOperaciones.tuRolNoTieneActivo' | translate }}</h2>
+            <p class="co__vacio-text">{{ 'centroOperaciones.centroOperaciones.unAdministradorLoActivaEn' | translate }}</p>
+            <a class="co__btn" routerLink="/despachos"><i class="pi pi-send"></i><span>{{ 'centroOperaciones.centroOperaciones.irAEnviosYEntregas' | translate }}</span></a>
         </div>
 
         <div class="co__vacio" *ngIf="error && !noDisponible">
             <span class="co__vacio-icon co__vacio-icon--error"><i class="pi pi-exclamation-triangle"></i></span>
-            <h2 class="co__vacio-title">No pudimos cargar la operación</h2>
-            <p class="co__vacio-text">Revisa tu conexión e intenta de nuevo.</p>
-            <button type="button" class="co__btn" (click)="cargar()"><i class="pi pi-refresh"></i><span>Reintentar</span></button>
+            <h2 class="co__vacio-title">{{ 'centroOperaciones.centroOperaciones.noPudimosCargarLaOperacion' | translate }}</h2>
+            <p class="co__vacio-text">{{ 'centroOperaciones.centroOperaciones.revisaTuConexionEIntenta' | translate }}</p>
+            <button type="button" class="co__btn" (click)="cargar()"><i class="pi pi-refresh"></i><span>{{ 'centroOperaciones.centroOperaciones.reintentar' | translate }}</span></button>
         </div>
 
         <div class="co__body" [class.is-oculto]="noDisponible || error">
@@ -56,60 +56,60 @@
                 </div>
 
                 <div class="co__overlay" *ngIf="webglOk && foto">
-                    <div class="co__chips" role="group" aria-label="Acercar a una zona">
-                        <button type="button" [class.is-activo]="nivel === 'todo'" (click)="enfocar('todo')">Todo</button>
-                        <button type="button" [class.is-activo]="nivel === 'bodega'" (click)="enfocar('bodega')">Bodega</button>
-                        <button type="button" [class.is-activo]="nivel === 'muelles'" (click)="enfocar('muelles')">Muelles</button>
+                    <div class="co__chips" role="group" [attr.aria-label]="'centroOperaciones.centroOperaciones.acercarAUnaZona' | translate">
+                        <button type="button" [class.is-activo]="nivel === 'todo'" (click)="enfocar('todo')">{{ 'centroOperaciones.centroOperaciones.todo' | translate }}</button>
+                        <button type="button" [class.is-activo]="nivel === 'bodega'" (click)="enfocar('bodega')">{{ 'centroOperaciones.centroOperaciones.bodega' | translate }}</button>
+                        <button type="button" [class.is-activo]="nivel === 'muelles'" (click)="enfocar('muelles')">{{ 'centroOperaciones.centroOperaciones.muelles' | translate }}</button>
                     </div>
-                    <div class="co__chips co__chips--bodegas" role="group" aria-label="Bodega" *ngIf="(foto.bodegas?.length || 0) > 1">
+                    <div class="co__chips co__chips--bodegas" role="group" [attr.aria-label]="'centroOperaciones.centroOperaciones.bodega' | translate" *ngIf="(foto.bodegas?.length || 0) > 1">
                         <button type="button" *ngFor="let b of foto.bodegas" [class.is-activo]="b.id === bodega" (click)="elegirBodega(b.id)">
                             <span>{{ b.nombre }}</span><b>{{ b.pedidos }}</b>
                         </button>
                     </div>
                 </div>
 
-                <div class="co__controls" *ngIf="webglOk" role="group" aria-label="Mover la vista 3D">
-                    <button type="button" (click)="acercar()" title="Acercar" aria-label="Acercar"><i class="pi pi-plus"></i></button>
-                    <button type="button" (click)="alejar()" title="Alejar" aria-label="Alejar"><i class="pi pi-minus"></i></button>
+                <div class="co__controls" *ngIf="webglOk" role="group" [attr.aria-label]="'centroOperaciones.centroOperaciones.moverLaVista3d' | translate">
+                    <button type="button" (click)="acercar()" [title]="'centroOperaciones.centroOperaciones.acercar' | translate" [attr.aria-label]="'centroOperaciones.centroOperaciones.acercar' | translate"><i class="pi pi-plus"></i></button>
+                    <button type="button" (click)="alejar()" [title]="'centroOperaciones.centroOperaciones.alejar' | translate" [attr.aria-label]="'centroOperaciones.centroOperaciones.alejar' | translate"><i class="pi pi-minus"></i></button>
                     <span class="co__controls-sep"></span>
-                    <button type="button" (click)="girar(-30)" title="Girar a la izquierda" aria-label="Girar a la izquierda"><i class="pi pi-replay"></i></button>
-                    <button type="button" (click)="girar(30)" title="Girar a la derecha" aria-label="Girar a la derecha"><i class="pi pi-refresh"></i></button>
-                    <button type="button" (click)="centrar()" title="Volver a la vista inicial" aria-label="Volver a la vista inicial"><i class="pi pi-home"></i></button>
+                    <button type="button" (click)="girar(-30)" [title]="'centroOperaciones.centroOperaciones.girarALaIzquierda' | translate" [attr.aria-label]="'centroOperaciones.centroOperaciones.girarALaIzquierda' | translate"><i class="pi pi-replay"></i></button>
+                    <button type="button" (click)="girar(30)" [title]="'centroOperaciones.centroOperaciones.girarALaDerecha' | translate" [attr.aria-label]="'centroOperaciones.centroOperaciones.girarALaDerecha' | translate"><i class="pi pi-refresh"></i></button>
+                    <button type="button" (click)="centrar()" [title]="'centroOperaciones.centroOperaciones.volverALaVistaInicial' | translate" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverALaVistaInicial' | translate"><i class="pi pi-home"></i></button>
                 </div>
 
                 <div class="co__hint" *ngIf="webglOk && foto">
                     <i class="pi pi-arrows-h"></i>
-                    <span>Arrastra para girar · toca un pedido, una estantería o un muelle</span>
+                    <span>{{ 'centroOperaciones.centroOperaciones.arrastraParaGirarTocaUn' | translate }}</span>
                 </div>
 
                 <div class="co__aviso" *ngIf="webglOk && foto && !vivos.length">
                     <i class="pi pi-check-circle"></i>
-                    <span>No hay pedidos en cola por despachar</span>
+                    <span>{{ 'centroOperaciones.centroOperaciones.noHayPedidosEnCola' | translate }}</span>
                 </div>
 
                 <div class="co__cargando" *ngIf="cargando" aria-hidden="true">
-                    <span class="co__cargando-punto"></span><span>Armando la foto de tu operación…</span>
+                    <span class="co__cargando-punto"></span><span>{{ 'centroOperaciones.centroOperaciones.armandoLaFotoDeTu' | translate }}</span>
                 </div>
             </div>
 
             <!-- Panel en texto: la misma información de la escena, y lo único que queda sin 3D -->
-            <aside class="co__panel" aria-label="Detalle de la operación">
-                <div class="co__cargando-panel" *ngIf="cargando && !foto">Cargando…</div>
+            <aside class="co__panel" [attr.aria-label]="'centroOperaciones.centroOperaciones.detalleDeLaOperacion' | translate">
+                <div class="co__cargando-panel" *ngIf="cargando && !foto">{{ 'comun.cargando' | translate }}</div>
 
                 <ng-container *ngIf="foto && resumen as r">
                     <div class="co__stats">
                         <button type="button" class="co__stat" (click)="seleccionar(null)" [class.is-activo]="!sel">
-                            <small>En cola</small><strong>{{ fmt(r.vivos) }}</strong>
+                            <small>{{ 'centroOperaciones.centroOperaciones.enCola' | translate }}</small><strong>{{ fmt(r.vivos) }}</strong>
                         </button>
-                        <div class="co__stat co__stat--warning"><small>Urgentes</small><strong>{{ fmt(r.urgentes) }}</strong></div>
-                        <div class="co__stat" [class.co__stat--danger]="r.frenados"><small>Sin unidades</small><strong>{{ fmt(r.frenados) }}</strong></div>
+                        <div class="co__stat co__stat--warning"><small>{{ 'centroOperaciones.centroOperaciones.urgentes' | translate }}</small><strong>{{ fmt(r.urgentes) }}</strong></div>
+                        <div class="co__stat" [class.co__stat--danger]="r.frenados"><small>{{ 'centroOperaciones.centroOperaciones.sinUnidades' | translate }}</small><strong>{{ fmt(r.frenados) }}</strong></div>
                         <button type="button" class="co__stat co__stat--muted" (click)="seleccionar('rez')" [class.is-activo]="sel === 'rez'"
                                 [disabled]="!r.rezagados">
-                            <small>Rezagados</small><strong>{{ fmt(r.rezagados) }}</strong>
+                            <small>{{ 'centroOperaciones.centroOperaciones.rezagados' | translate }}</small><strong>{{ fmt(r.rezagados) }}</strong>
                         </button>
                     </div>
-                    <p class="co__nota" *ngIf="foto.soloPropias">Ves solo los pedidos donde eres el asesor.</p>
-                    <p class="co__nota" *ngIf="foto.truncado">Tu cola es muy grande: se muestran los primeros 3.000 pedidos.</p>
+                    <p class="co__nota" *ngIf="foto.soloPropias">{{ 'centroOperaciones.centroOperaciones.vesSoloLosPedidosDonde' | translate }}</p>
+                    <p class="co__nota" *ngIf="foto.truncado">{{ 'centroOperaciones.centroOperaciones.tuColaEsMuyGrande' | translate }}</p>
 
                     <!-- Sin 3D (y en el teléfono) la elección de bodega va en el panel -->
                     <div class="co__chips co__chips--panel" *ngIf="(foto.bodegas?.length || 0) > 1">
@@ -121,29 +121,29 @@
                     <!-- ===== Pedido elegido ===== -->
                     <section class="co__det" *ngIf="pedidoSel as p">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Pedido</small>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.pedido2' | translate }}</small>
                                 <h2 class="co__nro">{{ p.nroPedido }}</h2>
                             </div>
                             <span class="co__pill" [class.co__pill--danger]="p.frenado" [class.co__pill--warning]="!p.frenado && (p.urgencia === 'hoy' || p.urgencia === 'vencido')">
-                                {{ p.frenado ? 'Sin unidades' : nombreEtapa[p.etapa] }}
+                                {{ p.frenado ? ('centroOperaciones.centroOperaciones.sinUnidades' | translate) : (nombreEtapa[p.etapa] | translate) }}
                             </span>
                         </div>
                         <dl class="co__datos">
-                            <div><dt>Cliente</dt><dd>{{ p.cliente || '—' }}</dd></div>
-                            <div><dt>Ciudad</dt><dd>{{ p.ciudad || '—' }}</dd></div>
-                            <div><dt>Entrega</dt><dd>{{ entregaTexto(p) }}<span class="co__muted" *ngIf="p.horario"> · {{ p.horario }}</span></dd></div>
-                            <div><dt>Etapa</dt><dd>{{ nombreEtapa[p.etapa] }}<span class="co__muted" *ngIf="p.transportador"> · {{ p.transportador }}</span></dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.cliente' | translate }}</dt><dd>{{ p.cliente || '—' }}</dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.ciudad' | translate }}</dt><dd>{{ p.ciudad || '—' }}</dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.entrega' | translate }}</dt><dd>{{ entregaTexto(p) }}<span class="co__muted" *ngIf="p.horario"> · {{ p.horario }}</span></dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.etapa' | translate }}</dt><dd>{{ nombreEtapa[p.etapa] | translate }}<span class="co__muted" *ngIf="p.transportador"> · {{ p.transportador }}</span></dd></div>
                         </dl>
                         <div class="co__faltan" *ngIf="p.frenado">
                             <i class="pi pi-exclamation-triangle"></i>
                             <div>
-                                <strong>No hay unidades para despacharlo</strong>
-                                <span *ngFor="let f of p.faltantes">Faltan {{ fmt(f.faltan) }} de {{ f.nombre }} en la bodega.</span>
+                                <strong>{{ 'centroOperaciones.centroOperaciones.noHayUnidadesParaDespacharlo' | translate }}</strong>
+                                <span *ngFor="let f of p.faltantes">{{ 'centroOperaciones.centroOperaciones.faltanDeEnLaBodega' | translate:{faltan: (fmt(f.faltan)), nombre: f.nombre} }}</span>
                             </div>
                         </div>
-                        <small class="co__label-mini">Productos</small>
+                        <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.productos' | translate }}</small>
                         <ul class="co__lineas">
                             <li *ngFor="let l of p.lineas" (click)="tieneEstante(l.productoId) && seleccionar('s:' + l.productoId)" [class.is-click]="tieneEstante(l.productoId)">
                                 <span class="co__linea-cant">{{ fmt(l.cantidad) }}×</span>
@@ -151,118 +151,118 @@
                             </li>
                         </ul>
                         <div class="co__acciones">
-                            <button type="button" class="co__btn" (click)="despachar([p], p.transportador)"><i class="pi pi-send"></i><span>Abrir en Despachos</span></button>
+                            <button type="button" class="co__btn" (click)="despachar([p], p.transportador)"><i class="pi pi-send"></i><span>{{ 'centroOperaciones.centroOperaciones.abrirEnDespachos' | translate }}</span></button>
                             <button type="button" class="co__btn co__btn--ghost" (click)="generarGuia(p)" [disabled]="generandoGuia === p.id">
-                                <i class="pi" [class.pi-file-pdf]="generandoGuia !== p.id" [class.pi-spin]="generandoGuia === p.id" [class.pi-spinner]="generandoGuia === p.id"></i><span>Generar guía</span>
+                                <i class="pi" [class.pi-file-pdf]="generandoGuia !== p.id" [class.pi-spin]="generandoGuia === p.id" [class.pi-spinner]="generandoGuia === p.id"></i><span>{{ 'centroOperaciones.centroOperaciones.generarGuia' | translate }}</span>
                             </button>
-                            <button type="button" class="co__btn co__btn--ghost" (click)="verDetalle(p)"><i class="pi pi-external-link"></i><span>Ver detalle</span></button>
+                            <button type="button" class="co__btn co__btn--ghost" (click)="verDetalle(p)"><i class="pi pi-external-link"></i><span>{{ 'centroOperaciones.centroOperaciones.verDetalle' | translate }}</span></button>
                         </div>
                     </section>
 
                     <!-- ===== Producto (estantería) elegido ===== -->
                     <section class="co__det" *ngIf="productoSel as pr">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Producto{{ pr.referencia ? ' · ' + pr.referencia : '' }}</small>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.producto' | translate:{referencia: (pr.referencia ? ' · ' + pr.referencia : '')} }}</small>
                                 <h2 class="co__det-title">{{ pr.nombre }}</h2>
                             </div>
                         </div>
-                        <p class="co__texto" *ngIf="!pr.inventariable">No lleva control de inventario: se hace o se consigue por pedido, así que nunca frena un despacho.</p>
-                        <small class="co__label-mini" *ngIf="pr.inventariable">Existencias por bodega</small>
+                        <p class="co__texto" *ngIf="!pr.inventariable">{{ 'centroOperaciones.centroOperaciones.noLlevaControlDeInventario' | translate }}</p>
+                        <small class="co__label-mini" *ngIf="pr.inventariable">{{ 'centroOperaciones.centroOperaciones.existenciasPorBodega' | translate }}</small>
                         <ul class="co__bodegas" *ngIf="pr.inventariable">
                             <li *ngFor="let b of bodegasDelProducto(pr)" [class.is-neg]="b.saldo < 0">
-                                <span>{{ b.nombre }}</span><b>{{ b.saldo < 0 ? 'Faltan ' + fmt(-b.saldo) : fmt(b.saldo) }}</b>
+                                <span>{{ b.nombre }}</span><b>{{ b.saldo < 0 ? ('centroOperaciones.centroOperaciones.faltanN' | translate:{n: fmt(-b.saldo)}) : fmt(b.saldo) }}</b>
                             </li>
-                            <li *ngIf="!bodegasDelProducto(pr).length"><span>Sin existencias registradas</span><b>0</b></li>
+                            <li *ngIf="!bodegasDelProducto(pr).length"><span>{{ 'centroOperaciones.centroOperaciones.sinExistenciasRegistradas' | translate }}</span><b>0</b></li>
                         </ul>
-                        <small class="co__label-mini">{{ fmt(pr.enCola) }} unidades en {{ pedidosDelProducto.length }} {{ pedidosDelProducto.length === 1 ? 'pedido' : 'pedidos' }} de la cola</small>
+                        <small class="co__label-mini">{{ fmt(pr.enCola) }} {{ 'centroOperaciones.centroOperaciones.unidadesEnDeLaCola' | translate:{length: pedidosDelProducto.length, pedido: (pedidosDelProducto.length === 1 ? ('centroOperaciones.centroOperaciones.pedido' | translate) : ('centroOperaciones.centroOperaciones.pedidos' | translate))} }}</small>
                         <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelProducto }"></ng-container>
                     </section>
 
                     <!-- ===== Muelle elegido ===== -->
                     <section class="co__det" *ngIf="etapaSel as etapa">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Muelle</small>
-                                <h2 class="co__det-title">{{ nombreEtapa[etapa] }} · {{ porEtapa[etapa].length }}</h2>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.muelle' | translate }}</small>
+                                <h2 class="co__det-title">{{ nombreEtapa[etapa] | translate }} · {{ porEtapa[etapa].length }}</h2>
                             </div>
                         </div>
                         <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: porEtapa[etapa] }"></ng-container>
                         <div class="co__acciones" *ngIf="etapa === 'ParaDespachar' && porEtapa[etapa].length">
-                            <button type="button" class="co__btn" (click)="despachar(porEtapa[etapa])"><i class="pi pi-send"></i><span>Abrir estos {{ porEtapa[etapa].length }} en Despachos</span></button>
+                            <button type="button" class="co__btn" (click)="despachar(porEtapa[etapa])"><i class="pi pi-send"></i><span>{{ 'centroOperaciones.centroOperaciones.abrirEstosEnDespachos' | translate:{length: (porEtapa[etapa].length)} }}</span></button>
                         </div>
                     </section>
 
                     <!-- ===== Camión elegido ===== -->
                     <section class="co__det" *ngIf="transportadorSel as t">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Transportador</small>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.transportador' | translate }}</small>
                                 <h2 class="co__det-title">{{ t }}</h2>
                             </div>
                         </div>
                         <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelTransportador }"></ng-container>
                         <div class="co__acciones">
-                            <button type="button" class="co__btn" (click)="despachar(pedidosDelTransportador, t)"><i class="pi pi-send"></i><span>Abrir el camión en Despachos</span></button>
+                            <button type="button" class="co__btn" (click)="despachar(pedidosDelTransportador, t)"><i class="pi pi-send"></i><span>{{ 'centroOperaciones.centroOperaciones.abrirElCamionEnDespachos' | translate }}</span></button>
                         </div>
                     </section>
 
                     <!-- ===== Mensajero (moto) elegido ===== -->
                     <section class="co__det" *ngIf="mensajeroSel as m">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Mensajero</small>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.mensajero' | translate }}</small>
                                 <h2 class="co__det-title">{{ m.nombre }}</h2>
                             </div>
-                            <span class="co__pill" [class.co__pill--ok]="m.enLinea" [class.co__pill--muted]="!m.enLinea">{{ m.enLinea ? 'En línea' : 'Desconectado' }}</span>
+                            <span class="co__pill" [class.co__pill--ok]="m.enLinea" [class.co__pill--muted]="!m.enLinea">{{ m.enLinea ? ('centroOperaciones.centroOperaciones.enLinea' | translate) : ('centroOperaciones.centroOperaciones.desconectado' | translate) }}</span>
                         </div>
                         <dl class="co__datos">
-                            <div><dt>Moto</dt><dd>{{ m.moto || '—' }}<span class="co__muted" *ngIf="m.placa"> · {{ m.placa }}</span></dd></div>
-                            <div><dt>Guía</dt><dd>{{ guiaTexto(m) }}</dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.moto' | translate }}</dt><dd>{{ m.moto || '—' }}<span class="co__muted" *ngIf="m.placa"> · {{ m.placa }}</span></dd></div>
+                            <div><dt>{{ 'centroOperaciones.centroOperaciones.guia' | translate }}</dt><dd>{{ guiaTexto(m) }}</dd></div>
                         </dl>
-                        <small class="co__label-mini">{{ pedidosDelMensajero.length ? 'Pedidos asignados en la cola' : 'Sin pedidos asignados en la cola' }}</small>
+                        <small class="co__label-mini">{{ pedidosDelMensajero.length ? ('centroOperaciones.centroOperaciones.pedidosAsignadosEnLaCola' | translate) : ('centroOperaciones.centroOperaciones.sinPedidosAsignadosEnLa' | translate) }}</small>
                         <ng-container *ngIf="pedidosDelMensajero.length">
                             <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelMensajero }"></ng-container>
                         </ng-container>
                         <div class="co__acciones" *ngIf="pedidosDelMensajero.length">
-                            <button type="button" class="co__btn" (click)="despachar(pedidosDelMensajero, m.nombre)"><i class="pi pi-send"></i><span>Abrir en Despachos</span></button>
+                            <button type="button" class="co__btn" (click)="despachar(pedidosDelMensajero, m.nombre)"><i class="pi pi-send"></i><span>{{ 'centroOperaciones.centroOperaciones.abrirEnDespachos' | translate }}</span></button>
                         </div>
                     </section>
 
                     <!-- ===== Rezagados ===== -->
                     <section class="co__det" *ngIf="sel === 'rez'">
                         <div class="co__det-head">
-                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" [attr.aria-label]="'centroOperaciones.centroOperaciones.volverAlResumen' | translate"><i class="pi pi-arrow-left"></i></button>
                             <div>
-                                <small class="co__label-mini">Rezagados</small>
-                                <h2 class="co__det-title">{{ fmt(r.rezagados) }} pedidos con la entrega vencida hace más de {{ r.diasRezago }} días</h2>
+                                <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.rezagados' | translate }}</small>
+                                <h2 class="co__det-title">{{ fmt(r.rezagados) }} {{ 'centroOperaciones.centroOperaciones.pedidosConLaEntregaVencida' | translate:{diasRezago: r.diasRezago} }}</h2>
                             </div>
                         </div>
-                        <p class="co__texto">Siguen en la cola de despacho, pero su fecha de entrega ya pasó hace días. Muchos ya salieron y les falta el cambio de estado: revísalos para que la cola muestre solo lo que de verdad falta despachar.</p>
+                        <p class="co__texto">{{ 'centroOperaciones.centroOperaciones.siguenEnLaColaDe' | translate }}</p>
                         <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: rezagadosVisibles }"></ng-container>
-                        <p class="co__nota" *ngIf="rezagados.length > 50">Y {{ fmt(rezagados.length - 50) }} más.</p>
+                        <p class="co__nota" *ngIf="rezagados.length > 50">{{ 'centroOperaciones.centroOperaciones.yMas' | translate:{length: (fmt(rezagados.length - 50))} }}</p>
                     </section>
 
                     <!-- ===== Resumen (sin nada elegido) ===== -->
                     <ng-container *ngIf="!sel">
                         <section class="co__bloque" *ngIf="frenados.length">
-                            <small class="co__label-mini co__label-mini--danger">Pedidos sin unidades</small>
+                            <small class="co__label-mini co__label-mini--danger">{{ 'centroOperaciones.centroOperaciones.pedidosSinUnidades' | translate }}</small>
                             <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: frenados }"></ng-container>
                         </section>
                         <section class="co__bloque" *ngFor="let etapa of etapas">
                             <button type="button" class="co__etapa" (click)="seleccionar('m:' + etapa)">
-                                <span>{{ nombreEtapa[etapa] }}</span><b>{{ porEtapa[etapa].length }}</b><i class="pi pi-angle-right"></i>
+                                <span>{{ nombreEtapa[etapa] | translate }}</span><b>{{ porEtapa[etapa].length }}</b><i class="pi pi-angle-right"></i>
                             </button>
                             <ng-container *ngIf="webglOk === false">
                                 <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: porEtapa[etapa] }"></ng-container>
                             </ng-container>
                         </section>
                         <section class="co__bloque" *ngIf="flota.length">
-                            <small class="co__label-mini">Mensajeros · {{ enLinea }} en línea de {{ flota.length }}</small>
+                            <small class="co__label-mini">{{ 'centroOperaciones.centroOperaciones.mensajerosEnLineaDe' | translate:{enLinea: enLinea, length: flota.length} }}</small>
                             <ul class="co__pedidos">
                                 <li *ngFor="let m of flota; trackBy: trackId">
                                     <button type="button" class="co__pedido" (click)="seleccionar('v:' + m.id)">
@@ -271,12 +271,12 @@
                                             <span class="co__pedido-nombre">{{ m.nombre }}</span>
                                             <span class="co__pedido-sub">{{ guiaTexto(m) }}{{ m.placa ? ' · ' + m.placa : '' }}</span>
                                         </span>
-                                        <span class="co__pedido-side">{{ m.pedidos ? m.pedidos + (m.pedidos === 1 ? ' pedido' : ' pedidos') : (m.enLinea ? 'En línea' : 'Desconectado') }}</span>
+                                        <span class="co__pedido-side">{{ m.pedidos ? m.pedidos + (m.pedidos === 1 ? ('centroOperaciones.centroOperaciones.pedido' | translate) : ('centroOperaciones.centroOperaciones.pedidos' | translate)) : (m.enLinea ? ('centroOperaciones.centroOperaciones.enLinea' | translate) : ('centroOperaciones.centroOperaciones.desconectado' | translate)) }}</span>
                                     </button>
                                 </li>
                             </ul>
                         </section>
-                        <p class="co__nota" *ngIf="!vivos.length && !r.rezagados">No hay pedidos en cola por despachar.</p>
+                        <p class="co__nota" *ngIf="!vivos.length && !r.rezagados">{{ 'centroOperaciones.centroOperaciones.noHayPedidosEnCola2' | translate }}</p>
                     </ng-container>
                 </ng-container>
             </aside>
@@ -291,11 +291,11 @@
                 <span class="co__pedido-punto" [class.is-danger]="p.frenado" [class.is-warning]="!p.frenado && (p.urgencia === 'hoy' || p.urgencia === 'vencido')"></span>
                 <span class="co__pedido-main">
                     <span class="co__pedido-nro">{{ p.nroPedido }}</span>
-                    <span class="co__pedido-sub">{{ p.cliente || p.ciudad || 'Sin cliente' }}</span>
+                    <span class="co__pedido-sub">{{ p.cliente || p.ciudad || ('centroOperaciones.centroOperaciones.sinCliente' | translate) }}</span>
                 </span>
-                <span class="co__pedido-side" [class.is-danger]="p.frenado">{{ p.frenado ? 'Faltan ' + fmt(p.faltantes[0].faltan) : entregaTexto(p) }}</span>
+                <span class="co__pedido-side" [class.is-danger]="p.frenado">{{ p.frenado ? ('centroOperaciones.centroOperaciones.faltanN' | translate:{n: fmt(p.faltantes[0].faltan)}) : entregaTexto(p) }}</span>
             </button>
         </li>
-        <li class="co__pedidos-vacio" *ngIf="!lista.length">Sin pedidos</li>
+        <li class="co__pedidos-vacio" *ngIf="!lista.length">{{ 'centroOperaciones.centroOperaciones.sinPedidos' | translate }}</li>
     </ul>
 </ng-template>

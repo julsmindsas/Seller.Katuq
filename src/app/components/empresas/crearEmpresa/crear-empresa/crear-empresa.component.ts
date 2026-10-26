@@ -11,6 +11,7 @@ import { DataStoreService } from '../../../../shared/services/dataStoreService';
 import { DaneCodesService } from '../../../../shared/services/dane-codes.service';
 import { CompaniesService } from '../../../../services/companies.service';
 import { MunicipioDane } from '../../../../shared/data/colombia-dane-codes';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-crear-empresa',
   templateUrl: './crear-empresa.component.html',
@@ -217,7 +218,7 @@ export class CrearEmpresaComponent implements OnInit {
       next: documents => { this.brandDocuments = documents; this.brandDocumentsBusy = false; },
       error: () => {
         this.brandDocumentsBusy = false;
-        this.brandDocumentsError = 'No se pudo consultar. Debes tener permiso de marca y trabajar en la empresa de tu sesión.';
+        this.brandDocumentsError = this.translate.instant('empresas.crearEmpresa.noSePudoConsultarMarca');
       }
     });
   }
@@ -230,7 +231,7 @@ export class CrearEmpresaComponent implements OnInit {
       next: () => { this.brandDocumentsBusy = false; this.loadBrandDocuments(); },
       error: () => {
         this.brandDocumentsBusy = false;
-        this.brandDocumentsError = 'No se pudo preparar el archivo. Revisa tu permiso de administrador, formato, tamaño y cupo.';
+        this.brandDocumentsError = this.translate.instant('empresas.crearEmpresa.noSePudoPrepararArchivo');
       }
     });
   }
@@ -255,7 +256,8 @@ export class CrearEmpresaComponent implements OnInit {
     private route: ActivatedRoute,
     private companiesService: CompaniesService,
     private dataStoreService: DataStoreService,
-    private daneCodesService: DaneCodesService
+    private daneCodesService: DaneCodesService,
+    private translate: TranslateService
   ) {
 
     this.f = fb.group({
@@ -516,7 +518,7 @@ export class CrearEmpresaComponent implements OnInit {
       },
       error: () => {
         this.cargandoEmpresa = false;
-        this.errorCarga = 'No se pudieron cargar los datos de la empresa. No se muestra el formulario para no arriesgar sus sedes y contactos.';
+        this.errorCarga = this.translate.instant('empresas.crearEmpresa.noSePudieronCargarDatosEmpresa');
       },
     });
   }
@@ -663,10 +665,10 @@ export class CrearEmpresaComponent implements OnInit {
       next: () => {
         this.guardando = false;
         Swal.fire({
-          title: 'Guardado!',
-          text: 'Guardado con exito',
+          title: this.translate.instant('empresas.crearEmpresa.guardado'),
+          text: this.translate.instant('empresas.crearEmpresa.guardadoConExito'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('empresas.crearEmpresa.ok')
         }).then(() => {
           // Volver al listado
           this.volverAlListado();
@@ -675,10 +677,10 @@ export class CrearEmpresaComponent implements OnInit {
       error: (err) => {
         this.guardando = false;
         Swal.fire({
-          title: 'No se pudo guardar',
-          text: err?.error?.error || 'No se pudo crear la empresa. Intenta de nuevo.',
+          title: this.translate.instant('empresas.crearEmpresa.noSePudoGuardar'),
+          text: err?.error?.error || this.translate.instant('empresas.crearEmpresa.noSePudoCrearLa'),
           icon: 'error',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('empresas.crearEmpresa.ok')
         });
       },
     });
@@ -695,10 +697,10 @@ export class CrearEmpresaComponent implements OnInit {
     // editar la que estaba en pantalla.
     if (!this.empresaId) {
       Swal.fire({
-        title: 'No se pudo editar',
-        text: 'No se sabe qué empresa se está editando. Vuelve al listado y ábrela de nuevo.',
+        title: this.translate.instant('empresas.crearEmpresa.noSePudoEditar'),
+        text: this.translate.instant('empresas.crearEmpresa.noSeSabeQueEmpresa'),
         icon: 'error',
-        confirmButtonText: 'Ok'
+        confirmButtonText: this.translate.instant('empresas.crearEmpresa.ok')
       });
       return;
     }
@@ -711,10 +713,10 @@ export class CrearEmpresaComponent implements OnInit {
         this.guardando = false;
         this.sincronizarFormatoRotuloEnSesion();
         Swal.fire({
-          title: 'Editado!',
-          text: 'Editado con exito',
+          title: this.translate.instant('empresas.crearEmpresa.editado'),
+          text: this.translate.instant('empresas.crearEmpresa.editadoConExito'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('empresas.crearEmpresa.ok')
         }).then(() => {
           // Volver al listado
           this.volverAlListado();
@@ -723,10 +725,10 @@ export class CrearEmpresaComponent implements OnInit {
       error: (err) => {
         this.guardando = false;
         Swal.fire({
-          title: 'No se pudo editar',
-          text: err?.error?.error || 'No se pudieron guardar los cambios. Intenta de nuevo.',
+          title: this.translate.instant('empresas.crearEmpresa.noSePudoEditar'),
+          text: err?.error?.error || this.translate.instant('empresas.crearEmpresa.noSePudieronGuardarLos'),
           icon: 'error',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('empresas.crearEmpresa.ok')
         });
       },
     });
@@ -758,7 +760,7 @@ export class CrearEmpresaComponent implements OnInit {
     const hasProfile = Object.values(values).some(value => typeof value === 'string' && value.trim());
     if (hasProfile && !this.frmPersonificaTuMarca.valid) {
       this.frmPersonificaTuMarca.markAllAsTouched();
-      Swal.fire('Revisa la personalidad de marca', 'Completa los campos de Personifica tu marca antes de guardar.', 'warning');
+      Swal.fire(this.translate.instant('empresas.crearEmpresa.revisaLaPersonalidadDeMarca'), this.translate.instant('empresas.crearEmpresa.completaLosCamposDePersonifica'), 'warning');
       return false;
     }
     this.f.controls['personalidadMarca'].setValue({
@@ -830,12 +832,12 @@ export class CrearEmpresaComponent implements OnInit {
    */
   onFileSelected(event: Event, type: string): void {
     Swal.fire({
-      title: 'Subir imagen',
-      text: '¿Estás seguro de que deseas subir la imagen seleccionada?',
+      title: this.translate.instant('empresas.crearEmpresa.subirImagen'),
+      text: this.translate.instant('empresas.crearEmpresa.estasSeguroDeQueDeseas'),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, subir imagen',
-      cancelButtonText: 'No, cancelar',
+      confirmButtonText: this.translate.instant('empresas.crearEmpresa.siSubirImagen'),
+      cancelButtonText: this.translate.instant('empresas.crearEmpresa.noCancelar'),
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
     }).then((result) => {
@@ -868,7 +870,7 @@ export class CrearEmpresaComponent implements OnInit {
           const task = this.storage.upload(filePath, file);
           // Abrir modal con progress bar usando SweetAlert2
           Swal.fire({
-            title: 'Subiendo imagen...',
+            title: this.translate.instant('empresas.crearEmpresa.subiendoImagen'),
             html: `<div class="progress" style="height: 25px;">
                  <div id="upload-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
@@ -912,8 +914,8 @@ export class CrearEmpresaComponent implements OnInit {
                   Swal.close();
                   Swal.fire({
                     icon: 'success',
-                    title: 'Éxito',
-                    text: 'Imagen subida correctamente.'
+                    title: this.translate.instant('comun.exito'),
+                    text: this.translate.instant('empresas.crearEmpresa.imagenSubidaCorrectamente')
                   });
                 }
               });

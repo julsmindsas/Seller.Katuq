@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import { Subscription, forkJoin, interval } from "rxjs";
 import { ToastrService } from "ngx-toastr";
+import { TranslateService } from "@ngx-translate/core";
 
 import { MessagingThreadsService } from "../../../../../shared/services/messaging/messaging-threads.service";
 import {
@@ -108,6 +109,18 @@ export class WhatsappThreadDetailComponent
   // ─── Bot de pedidos ────────────────────────────────────────────────────
   /** Estado del bot para este hilo (null = sin bot o sin cargar). */
   botState: BotThreadState | null = null;
+
+  /**
+   * Texto del pedido que creó el bot: número, total y si está pagado (spec
+   * kai-metricas, D22). Sin total legible (0 o ausente) usa el texto sin él.
+   */
+  get claveDelPedidoDelBot(): string {
+    const p = this.botState?.pedidoCreado;
+    const pagado = p?.estadoPago === 'Aprobado';
+    const conTotal = Number(p?.total) > 0;
+    const base = pagado ? 'notificaciones.whatsapp.detail.botOrderApproved' : 'notificaciones.whatsapp.detail.botOrderPending';
+    return conTotal ? `${base}Total` : base;
+  }
   /** Lock del botón tomar/devolver mientras responde el backend. */
   botActionBusy = false;
 
@@ -132,37 +145,37 @@ export class WhatsappThreadDetailComponent
   readonly quickTemplates: QuickTemplate[] = [
     {
       id: "saludo",
-      label: "Saludo inicial",
+      label: "notificaciones.whatsapp.templates.greeting",
       sandboxBody:
         "Hola, gracias por escribirnos. ¿En qué te podemos ayudar hoy?",
     },
     {
       id: "pedido-recibido",
-      label: "Pedido recibido",
+      label: "notificaciones.whatsapp.templates.orderReceived",
       sandboxBody:
         "¡Confirmamos la recepción de tu pedido! Lo estamos preparando y te avisaremos cuando salga.",
     },
     {
       id: "despacho",
-      label: "Despacho en camino",
+      label: "notificaciones.whatsapp.templates.shipping",
       sandboxBody:
         "Tu pedido va en camino con el transportador. Llega en máximo 48 horas hábiles.",
     },
     {
       id: "pago-pendiente",
-      label: "Pago pendiente",
+      label: "notificaciones.whatsapp.templates.paymentPending",
       sandboxBody:
         "Notamos que el pago de tu pedido aún está pendiente. ¿Te ayudamos a completarlo?",
     },
     {
       id: "stock",
-      label: "Sin stock",
+      label: "notificaciones.whatsapp.templates.outOfStock",
       sandboxBody:
         "Lamentamos informarte que el producto está agotado por el momento. ¿Te interesa una alternativa?",
     },
     {
       id: "cierre",
-      label: "Cierre cordial",
+      label: "notificaciones.whatsapp.templates.closing",
       sandboxBody:
         "Gracias por tu mensaje. Si necesitas algo más, estamos aquí para ayudarte.",
     },
@@ -177,6 +190,7 @@ export class WhatsappThreadDetailComponent
     private readonly inbox: WhatsappInboxService,
     private readonly toastr: ToastrService,
     private readonly hilos: MessagingThreadsService,
+    private readonly translate: TranslateService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -229,7 +243,7 @@ export class WhatsappThreadDetailComponent
       this.profile.clienteNombre ||
       this.profile.profileName ||
       this.profile.phoneMasked ||
-      "Contacto"
+      this.translate.instant('notificaciones.whatsapp.detail.contact')
     );
   }
 
@@ -273,15 +287,15 @@ export class WhatsappThreadDetailComponent
   mediaLabel(msg: WhatsappMessage): string {
     switch (msg.type) {
       case "image":
-        return "📷 Imagen";
+        return this.translate.instant('notificaciones.whatsapp.media.image');
       case "audio":
-        return "🎤 Audio";
+        return this.translate.instant('notificaciones.whatsapp.media.audio');
       case "document":
-        return "📄 Documento";
+        return this.translate.instant('notificaciones.whatsapp.media.document');
       case "sticker":
-        return "Sticker";
+        return this.translate.instant('notificaciones.whatsapp.media.sticker');
       default:
-        return "Adjunto";
+        return this.translate.instant('notificaciones.whatsapp.media.attachment');
     }
   }
 
@@ -351,7 +365,7 @@ export class WhatsappThreadDetailComponent
           this.pendingForText = null;
           this.composerText = "";
           this.sending = false;
-          this.toastr.success("Mensaje enviado", "WhatsApp");
+          this.toastr.success(this.translate.instant('notificaciones.whatsapp.detail.sent'), "WhatsApp");
           // Recargar para ver el saliente en el feed.
           this.refreshMessages();
           // Responder a mano le quita el hilo al bot (lo marca el backend);
@@ -363,12 +377,12 @@ export class WhatsappThreadDetailComponent
           // [D-437] El chat lo atiende otra persona: se pinta su nombre y el redactor queda en lectura.
           if (esErrorChatConDueno(err)) {
             this.ponerDueno(err.error.owner || null);
-            this.toastr.warning(err.error.message || "Este chat lo atiende otra persona.", "Chat con dueño");
+            this.toastr.warning(err.error.message || this.translate.instant('notificaciones.whatsapp.detail.ownedByOther'), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
             return;
           }
           const message =
-            err?.error?.message || err?.error?.error || err?.message || "No se pudo enviar el mensaje";
-          this.toastr.error(message, "Error al enviar");
+            err?.error?.message || err?.error?.error || err?.message || this.translate.instant('notificaciones.whatsapp.detail.sendError');
+          this.toastr.error(message, this.translate.instant('notificaciones.whatsapp.detail.sendErrorTitle'));
         },
       });
   }
@@ -490,12 +504,12 @@ export class WhatsappThreadDetailComponent
     this.inbox.tomarConversacion(hash, this.lineId).subscribe({
       next: () => {
         this.botActionBusy = false;
-        this.toastr.success("La conversación quedó a tu cargo. El bot no vuelve a responder acá.");
+        this.toastr.success(this.translate.instant('notificaciones.whatsapp.detail.tookConversation'));
         this.cargarEstadoBot(hash);
       },
       error: () => {
         this.botActionBusy = false;
-        this.toastr.error("No se pudo tomar la conversación. Probá de nuevo.");
+        this.toastr.error(this.translate.instant('notificaciones.whatsapp.detail.takeError'));
       },
     });
   }
@@ -508,12 +522,12 @@ export class WhatsappThreadDetailComponent
     this.inbox.devolverAlBot(hash, this.lineId).subscribe({
       next: () => {
         this.botActionBusy = false;
-        this.toastr.success("El bot vuelve a atender esta conversación.");
+        this.toastr.success(this.translate.instant('notificaciones.whatsapp.detail.returnedToBot'));
         this.cargarEstadoBot(hash);
       },
       error: () => {
         this.botActionBusy = false;
-        this.toastr.error("No se pudo devolver la conversación al bot.");
+        this.toastr.error(this.translate.instant('notificaciones.whatsapp.detail.returnError'));
       },
     });
   }
@@ -566,28 +580,28 @@ export class WhatsappThreadDetailComponent
   }
 
   get motivoLectura(): string {
-    const nombre = this.dueno?.nombre || this.dueno?.email || "otra persona";
+    const nombre = this.dueno?.nombre || this.dueno?.email || this.translate.instant('notificaciones.whatsapp.detail.someoneElse');
     return this.esAdministrador
-      ? `Este chat lo atiende ${nombre}. Para escribir, pásatelo a ti.`
-      : `Este chat lo atiende ${nombre}. Solo esa persona puede escribir aquí.`;
+      ? this.translate.instant('notificaciones.whatsapp.detail.readOnlyAdmin', { nombre })
+      : this.translate.instant('notificaciones.whatsapp.detail.readOnly', { nombre });
   }
 
   tomarChat(): void {
     const threadId = this.chat?.threadId;
     if (!threadId) return;
-    this.accionDueno(this.hilos.tomar(threadId), "El chat quedó a tu cargo.");
+    this.accionDueno(this.hilos.tomar(threadId), "notificaciones.whatsapp.detail.ownerTaken");
   }
 
   soltarChat(): void {
     const threadId = this.chat?.threadId;
     if (!threadId) return;
-    this.accionDueno(this.hilos.soltar(threadId), "El chat quedó sin asignar.");
+    this.accionDueno(this.hilos.soltar(threadId), "notificaciones.whatsapp.detail.ownerReleased");
   }
 
   pasarChat(email: string): void {
     const threadId = this.chat?.threadId;
     if (!threadId || !email) return;
-    this.accionDueno(this.hilos.asignar(threadId, email), "Listo, le pasaste el chat.");
+    this.accionDueno(this.hilos.asignar(threadId, email), "notificaciones.whatsapp.detail.ownerPassed");
   }
 
   private accionDueno(peticion: ReturnType<MessagingThreadsService["tomar"]>, exito: string): void {
@@ -597,18 +611,18 @@ export class WhatsappThreadDetailComponent
       next: (owner) => {
         this.duenoOcupado = false;
         this.ponerDueno(owner);
-        this.toastr.success(exito);
+        this.toastr.success(this.translate.instant(exito));
       },
       error: (err: any) => {
         this.duenoOcupado = false;
         if (esErrorChatConDueno(err)) {
           this.ponerDueno(err.error.owner || null);
-          this.toastr.warning(err.error.message || "Este chat ya lo atiende otra persona.", "Chat con dueño");
+          this.toastr.warning(err.error.message || this.translate.instant('notificaciones.whatsapp.detail.alreadyOwned'), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
           return;
         }
         // Los 403 ya los avisa el interceptor con el mensaje del servidor.
         if (err?.status === 403) return;
-        this.toastr.error(err?.error?.message || "No se pudo cambiar quién atiende el chat. Intenta de nuevo.");
+        this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.whatsapp.detail.ownerChangeError'));
       },
     });
   }
@@ -659,8 +673,8 @@ export class WhatsappThreadDetailComponent
     const diffDays = Math.round(
       (today.getTime() - day.getTime()) / (1000 * 60 * 60 * 24),
     );
-    if (diffDays === 0) return "Hoy";
-    if (diffDays === 1) return "Ayer";
+    if (diffDays === 0) return this.translate.instant('notificaciones.whatsapp.detail.today');
+    if (diffDays === 1) return this.translate.instant('notificaciones.whatsapp.detail.yesterday');
     if (diffDays < 7) {
       return day
         .toLocaleDateString("es-CO", { weekday: "long" })

@@ -12,6 +12,7 @@ import {
   CentroOperacionesService, ETAPAS_COLA, EtapaCola, FotoOperacion, MensajeroFlota, NOMBRE_ETAPA, PedidoCola, ProductoCola,
 } from './centro-operaciones.service';
 
+import { TranslateService } from '@ngx-translate/core';
 type Tono = 'accent' | 'warning' | 'danger' | 'muted';
 
 interface Etiqueta {
@@ -81,6 +82,7 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
     private readonly toastr: ToastrService,
     private readonly servicio: CentroOperacionesService,
     private readonly logistica: LogisticaServiceV2,
+    private translate: TranslateService,
   ) {}
 
   // ---------------------------------------------------------------- datos
@@ -123,7 +125,7 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   }
 
   guiaTexto(m: MensajeroFlota): string {
-    return m.guia === 'katuq' ? 'Katuq Delivery' : m.guia === 'enviame' ? 'Guía de Enviame' : 'Sin proveedor de guía';
+    return m.guia === 'katuq' ? this.translate.instant('centroOperaciones.centroOperaciones.katuqDelivery') : m.guia === 'enviame' ? this.translate.instant('centroOperaciones.centroOperaciones.guiaDeEnviame') : this.translate.instant('centroOperaciones.centroOperaciones.sinProveedorDeGuia');
   }
   get pedidosDelProducto(): PedidoCola[] {
     const pr = this.productoSel;
@@ -134,7 +136,7 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
     return t ? this.ordenar(this.vivos.filter((p) => p.transportador === t)) : [];
   }
   get bodegaNombre(): string {
-    return this.foto?.bodegas?.find((b) => b.id === this.bodega)?.nombre || 'Sin bodega';
+    return this.foto?.bodegas?.find((b) => b.id === this.bodega)?.nombre || this.translate.instant('centroOperaciones.centroOperaciones.sinBodega');
   }
   get hoverTexto(): string {
     return this.hoverId && this.hoverId !== this.sel ? this.textoDe(this.hoverId) : '';
@@ -155,13 +157,13 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
       if (!pr) return '';
       return `${pr.nombre} · ${pr.inventariable ? this.saldoTexto(this.saldoEn(pr, this.bodega)) : 'se hace por pedido'}`;
     }
-    if (id.startsWith('m:')) return NOMBRE_ETAPA[id.slice(2) as EtapaCola] || '';
+    if (id.startsWith('m:')) return this.translate.instant(NOMBRE_ETAPA[id.slice(2) as EtapaCola] || '');
     if (id.startsWith('t:')) return id.slice(2);
     if (id.startsWith('v:')) {
       const m = this.flota.find((x) => x.id === id.slice(2));
-      return m ? `${m.nombre} · ${m.enLinea ? 'en línea' : 'desconectado'}` : '';
+      return m ? `${m.nombre} · ${m.enLinea ? this.translate.instant('centroOperaciones.centroOperaciones.enLineaMin') : this.translate.instant('centroOperaciones.centroOperaciones.desconectadoMin')}` : '';
     }
-    return id === 'rez' ? 'Pedidos rezagados' : '';
+    return id === 'rez' ? this.translate.instant('centroOperaciones.centroOperaciones.pedidosRezagados') : '';
   }
 
   saldoEn(pr: ProductoCola, bodega: string | null): number {
@@ -180,11 +182,11 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   }
 
   entregaTexto(p: PedidoCola): string {
-    if (p.urgencia === 'sin_fecha') return 'Sin fecha de entrega';
-    if (p.urgencia === 'hoy') return 'Entrega hoy';
+    if (p.urgencia === 'sin_fecha') return this.translate.instant('centroOperaciones.centroOperaciones.sinFechaDeEntrega');
+    if (p.urgencia === 'hoy') return this.translate.instant('centroOperaciones.centroOperaciones.entregaHoy');
     const f = p.entrega ? this.fecha.format(new Date(p.entrega)) : '';
-    if (p.urgencia === 'vencido') return `Vencido hace ${p.diasVencido} ${p.diasVencido === 1 ? 'día' : 'días'}${f ? ` · ${f}` : ''}`;
-    return f ? `Entrega ${f}` : 'Próxima entrega';
+    if (p.urgencia === 'vencido') return `${this.translate.instant('centroOperaciones.centroOperaciones.vencidoHace', { n: p.diasVencido, unidad: p.diasVencido === 1 ? this.translate.instant('centroOperaciones.centroOperaciones.dia') : this.translate.instant('centroOperaciones.centroOperaciones.dias') })}${f ? ` · ${f}` : ''}`;
+    return f ? this.translate.instant('centroOperaciones.centroOperaciones.entregaFecha', { fecha: f }) : this.translate.instant('centroOperaciones.centroOperaciones.proximaEntrega');
   }
 
   fmt(n: number | null | undefined): string { return this.numero.format(n || 0); }
@@ -266,7 +268,7 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   generarGuia(p: PedidoCola): void {
     if (this.generandoGuia) return;
     this.generandoGuia = p.id;
-    this.toastr.info('Generando guía…', 'Guía de envío');
+    this.toastr.info(this.translate.instant('centroOperaciones.centroOperaciones.generandoGuia'), this.translate.instant('centroOperaciones.centroOperaciones.guiaDeEnvio'));
     this.logistica.generarGuia(p.id).subscribe({
       next: (resp: any) => {
         this.generandoGuia = null;
@@ -275,16 +277,16 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
         if (resp?.success && raw) {
           const url = /^https?:\/\//i.test(raw) || raw.startsWith('data:') ? raw : `data:application/pdf;base64,${raw}`;
           if (!window.open(url, '_blank')) {
-            this.toastr.error('No se pudo abrir la guía. Revisa que las ventanas emergentes no estén bloqueadas.', 'Ventana bloqueada');
+            this.toastr.error(this.translate.instant('centroOperaciones.centroOperaciones.noSePudoAbrirLa'), this.translate.instant('centroOperaciones.centroOperaciones.ventanaBloqueada'));
           }
         } else {
-          this.toastr.warning(resp?.error || 'No se pudo generar la guía.', 'Guía no disponible');
+          this.toastr.warning(resp?.error || this.translate.instant('centroOperaciones.centroOperaciones.noSePudoGenerarLa'), this.translate.instant('centroOperaciones.centroOperaciones.guiaNoDisponible'));
         }
       },
       error: (err) => {
         this.generandoGuia = null;
         this.cdr.markForCheck();
-        this.toastr.error(err?.error?.error || 'No se pudo generar la guía. Intenta nuevamente.', 'Guía de envío');
+        this.toastr.error(err?.error?.error || this.translate.instant('centroOperaciones.centroOperaciones.noSePudoGenerarLa2'), this.translate.instant('centroOperaciones.centroOperaciones.guiaDeEnvio'));
       },
     });
   }
@@ -304,12 +306,12 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
       const mas = frenados.length > 6 ? `<p>Y ${frenados.length - 6} pedidos más.</p>` : '';
       const r = await Swal.fire({
         icon: 'warning',
-        title: frenados.length === 1 ? 'Un pedido no tiene unidades' : `${frenados.length} pedidos no tienen unidades`,
+        title: frenados.length === 1 ? this.translate.instant('centroOperaciones.centroOperaciones.unPedidoNoTieneUnidades') : this.translate.instant('centroOperaciones.centroOperaciones.pedidosNoTienenUnidades', { n: frenados.length }),
         html: `<ul style="text-align:left;margin:0;padding-left:18px">${items}</ul>${mas}`
-          + '<p style="margin-top:10px">Se vendieron sin existencias en la bodega. Revisa que estén completos antes de que salgan.</p>',
+          + `<p style="margin-top:10px">${this.translate.instant('centroOperaciones.centroOperaciones.seVendieronSinExistencias')}</p>`,
         showCancelButton: true,
-        confirmButtonText: 'Abrir Despachos igual',
-        cancelButtonText: 'Volver',
+        confirmButtonText: this.translate.instant('centroOperaciones.centroOperaciones.abrirDespachosIgual'),
+        cancelButtonText: this.translate.instant('comun.volver'),
         confirmButtonColor: '#5F3FE0',
       });
       if (!r.isConfirmed) return;
@@ -424,29 +426,29 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
       const urgentes = lista.filter((p) => p.urgencia === 'hoy' || p.urgencia === 'vencido').length;
       const extra = r?.ocultosPorMuelle[etapa] ? ` · +${r.ocultosPorMuelle[etapa]}` : '';
       out.push({
-        id: `z:${etapa}`, titulo: NOMBRE_ETAPA[etapa], valor: `${this.fmt(lista.length)}${extra}`,
+        id: `z:${etapa}`, titulo: this.translate.instant(NOMBRE_ETAPA[etapa]), valor: `${this.fmt(lista.length)}${extra}`,
         tono: frenados ? 'danger' : urgentes ? 'warning' : 'accent', icono: 'pi pi-inbox', elige: `m:${etapa}`,
       });
     }
     for (const t of r?.camiones || []) {
       const n = this.vivos.filter((p) => p.transportador === t).length;
-      out.push({ id: `t:${t}`, titulo: t, valor: `${n} ${n === 1 ? 'pedido' : 'pedidos'}`, tono: 'accent', icono: 'pi pi-truck', elige: `t:${t}` });
+      out.push({ id: `t:${t}`, titulo: t, valor: this.translate.instant(n === 1 ? 'centroOperaciones.centroOperaciones.unPedido' : 'centroOperaciones.centroOperaciones.nPedidos', { n }), tono: 'accent', icono: 'pi pi-truck', elige: `t:${t}` });
     }
-    if (r && !r.camiones.length) out.push({ id: 'z:salida', titulo: 'Transportadoras', valor: 'Sin pedidos asignados', tono: 'muted', icono: 'pi pi-truck', elige: null });
+    if (r && !r.camiones.length) out.push({ id: 'z:salida', titulo: this.translate.instant('centroOperaciones.centroOperaciones.transportadoras'), valor: this.translate.instant('centroOperaciones.centroOperaciones.sinPedidosAsignados'), tono: 'muted', icono: 'pi pi-truck', elige: null });
     if (r?.motos) {
       const mas = r.motosOcultas ? ` · +${r.motosOcultas}` : '';
-      out.push({ id: 'z:mensajeros', titulo: 'Mensajeros', valor: `${this.enLinea} en línea de ${this.flota.length}${mas}`, tono: this.enLinea ? 'accent' : 'muted', icono: 'pi pi-car', elige: null });
+      out.push({ id: 'z:mensajeros', titulo: this.translate.instant('centroOperaciones.centroOperaciones.mensajeros'), valor: `${this.translate.instant('centroOperaciones.centroOperaciones.enLineaDe', { n: this.enLinea, total: this.flota.length })}${mas}`, tono: this.enLinea ? 'accent' : 'muted', icono: 'pi pi-car', elige: null });
     }
     if (f.resumen?.rezagados) {
-      out.push({ id: 'z:rez', titulo: 'Rezagados', valor: this.fmt(f.resumen.rezagados), tono: 'muted', icono: 'pi pi-history', elige: 'rez' });
+      out.push({ id: 'z:rez', titulo: this.translate.instant('centroOperaciones.centroOperaciones.rezagados'), valor: this.fmt(f.resumen.rezagados), tono: 'muted', icono: 'pi pi-history', elige: 'rez' });
     }
     for (const p of this.frenados) {
       const x = p.faltantes[0];
-      out.push({ id: `f:${p.id}`, titulo: p.nroPedido, valor: `Faltan ${this.fmt(x.faltan)} · ${x.nombre}`, tono: 'danger', icono: 'pi pi-exclamation-triangle', elige: `p:${p.id}` });
+      out.push({ id: `f:${p.id}`, titulo: p.nroPedido, valor: this.translate.instant('centroOperaciones.centroOperaciones.faltanDe', { n: this.fmt(x.faltan), nombre: x.nombre }), tono: 'danger', icono: 'pi pi-exclamation-triangle', elige: `p:${p.id}` });
     }
     for (const pr of f.productos || []) {
       const s = this.saldoEn(pr, this.bodega);
-      if (pr.inventariable && s < 0) out.push({ id: `n:${pr.id}`, titulo: pr.nombre, valor: `Faltan ${this.fmt(-s)}`, tono: 'danger', icono: 'pi pi-minus-circle', elige: `s:${pr.id}` });
+      if (pr.inventariable && s < 0) out.push({ id: `n:${pr.id}`, titulo: pr.nombre, valor: this.translate.instant('centroOperaciones.centroOperaciones.faltanN', { n: this.fmt(-s) }), tono: 'danger', icono: 'pi pi-minus-circle', elige: `s:${pr.id}` });
     }
     out.push({ id: 'h', titulo: '', valor: '', tono: 'accent', icono: '', elige: null });
     out.push({ id: 'sel', titulo: '', valor: '', tono: 'accent', icono: '', elige: null });

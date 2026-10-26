@@ -1,4 +1,4 @@
-> Aprobada el 18-oct (D-501, fase 1). **Ampliación D-518 del 21-oct, pendiente de aprobación:** el requisito «Empresas con sincronización de productos» cambia (TX-37·5) y se agrega «Aviso de posible marca de agua o logo» (TX-37·2). Lo marcado con **[D-518, pendiente]** es nuevo; el resto es lo aprobado. El requisito «Interruptor general del servidor» no cambia: el diseño de D-518 lo cumple leyendo el interruptor antes de cada producto (`design-ampliacion.md` §A1). Entradas, categorías y series: `../product-photo-batch-scope/spec.md`. Fase 1b: `../product-photo-ownership/spec.md`. Fase 2: `../product-photo-background-ai/spec.md`.
+> Aprobada el 18-oct (D-501, fase 1). **Ampliación D-518 del 21-oct, aprobada en bloque el 21-oct:** el requisito «Empresas con sincronización de productos» cambia (TX-37·5) y se agrega «Aviso de posible marca de agua o logo» (TX-37·2). Lo marcado con **[D-518]** es lo nuevo de la ampliación; el resto es lo aprobado el 18-oct. El requisito «Interruptor general del servidor» no cambia: el diseño de D-518 lo cumple leyendo el interruptor antes de cada producto (`design-ampliacion.md` §A1). Entradas, categorías y series: `../product-photo-batch-scope/spec.md`. Fase 1b: `../product-photo-ownership/spec.md`. Fase 2: `../product-photo-background-ai/spec.md`.
 
 ## ADDED Requirements
 
@@ -32,7 +32,7 @@ WHILE el sistema esté en modo sombra, un lote SHALL procesar las fotos solo par
 - **THEN** el registro del lote muestra cuántas fotos se habrían uniformado, cuántas se omitieron y por qué, y los 20 productos, su historial y los archivos quedan idénticos
 
 ### Requirement: Vista previa sin escrituras y con límite
-**[→ D-518, pendiente: con «Quitar fondo» (fase 2) aplica la excepción de `../product-photo-background-ai/spec.md`, «La vista previa avisa su costo y no se paga dos veces». Sin «Quitar fondo», este requisito sigue igual.]**
+**[→ D-518: con «Quitar fondo» (fase 2) aplica la excepción de `../product-photo-background-ai/spec.md`, «La vista previa avisa su costo y no se paga dos veces». Sin «Quitar fondo», este requisito sigue igual.]**
 
 WHEN una persona pide la vista previa, el sistema SHALL mostrar el antes y el después de hasta 3 fotos y SHALL NOT escribir nada. IF la misma empresa ya tiene una vista previa en curso, o pidió demasiadas en poco tiempo, THEN el sistema SHALL pedirle que espere, sin procesar.
 
@@ -52,7 +52,7 @@ El sistema SHALL decidir la empresa solo por la sesión firmada y SHALL procesar
 - **THEN** esa foto se omite con su motivo y las demás siguen
 
 ### Requirement: Empresas con sincronización de productos
-**[D-518, pendiente; reemplaza el texto aprobado el 18-oct: «IF la empresa tiene activa una sincronización que escribe productos o reacciona a sus cambios, THEN el sistema SHALL rechazar el lote…»]**
+**[D-518; reemplaza el texto aprobado el 18-oct: «IF la empresa tiene activa una sincronización que escribe productos o reacciona a sus cambios, THEN el sistema SHALL rechazar el lote…»]**
 
 IF la empresa tiene activa una integración que escribe las fotos de sus productos (Cereza, Shopify, WooCommerce o un operador logístico), o un flujo que las escribe o que lleva productos a una de esas integraciones, THEN el sistema SHALL rechazar la vista previa y el lote con un aviso que nombre esa integración y SHALL NOT escribir nada. IF un producto está vinculado a una de esas integraciones, THEN el sistema SHALL omitirlo con su motivo. Una integración que no escribe fotos (por ejemplo, la de facturación) SHALL NOT excluir a la empresa ni al producto.
 
@@ -115,7 +115,7 @@ WHEN una foto tiene poca resolución o se ve borrosa, el sistema SHALL avisarlo 
 - **THEN** ve el aviso y puede guardar el producto igual
 
 ### Requirement: Aviso de posible marca de agua o logo
-**[D-518, pendiente]** WHEN una foto de fondo liso tiene, separada del producto, una marca pequeña en una esquina o en un borde, el sistema SHALL avisarlo como «posible marca de agua o logo» en la vista previa y en el resumen del lote, y SHALL NOT impedir que se uniforme ni que se use. WHILE la foto tenga un fondo de escena, el sistema SHALL NOT dar ese aviso.
+**[D-518]** WHEN una foto de fondo liso tiene, separada del producto, una marca pequeña en una esquina o en un borde, el sistema SHALL avisarlo como «posible marca de agua o logo» en la vista previa y en el resumen del lote, y SHALL NOT impedir que se uniforme ni que se use. WHILE la foto tenga un fondo de escena, el sistema SHALL NOT dar ese aviso.
 
 Fuente: D-518 TX-37·2 («En la fase 1 se detectan y se avisa. Quitarlos con IA va en la fase 2»); ticket 1252, «Qué pasa hoy: … algunas traen marca de agua o logo»; adjunto del ticket 1259 (cd 3UrH47Mko7eruBnF4tak).
 

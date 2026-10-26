@@ -195,40 +195,40 @@ export class AdaptiveNavigationComponent implements OnInit, OnDestroy {
     this.menuSections = [
       {
         id: 'comercial',
-        title: 'Gestión Comercial',
-        subtitle: 'Ventas y clientes',
+        title: 'shell.adaptiveNav.sales',
+        subtitle: 'shell.adaptiveNav.salesSubtitle',
         icon: 'fa fa-chart-line',
         color: '#459BD1',
         items: []
       },
       {
         id: 'operaciones',
-        title: 'Operaciones',
-        subtitle: 'Pedidos y producción',
+        title: 'shell.adaptiveNav.operations',
+        subtitle: 'shell.adaptiveNav.operationsSubtitle',
         icon: 'fa fa-cogs',
         color: '#28a745',
         items: []
       },
       {
         id: 'inventarios',
-        title: 'Inventarios',
-        subtitle: 'Productos y bodegas',
+        title: 'shell.adaptiveNav.inventory',
+        subtitle: 'shell.adaptiveNav.inventorySubtitle',
         icon: 'fa fa-boxes',
         color: '#fd7e14',
         items: []
       },
       {
         id: 'reportes',
-        title: 'Reportes',
-        subtitle: 'Analytics y KPIs',
+        title: 'shell.adaptiveNav.reports',
+        subtitle: 'shell.adaptiveNav.reportsSubtitle',
         icon: 'fa fa-chart-pie',
         color: '#6f42c1',
         items: []
       },
       {
         id: 'configuracion',
-        title: 'Configuración',
-        subtitle: 'Empresa y usuarios',
+        title: 'shell.adaptiveNav.settings',
+        subtitle: 'shell.adaptiveNav.settingsSubtitle',
         icon: 'fa fa-cog',
         color: '#6c757d',
         items: []

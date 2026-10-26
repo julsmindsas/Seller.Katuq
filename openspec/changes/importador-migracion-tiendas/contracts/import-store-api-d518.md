@@ -34,13 +34,15 @@
   "guards": [{ "code": "WOO_INTEGRATION_ACTIVE", "message": "…" }] }
 ```
 
-- **`format`:** `current`, `legacy` o `mixed`.
+- **`format`:** `current`, `legacy` o `mixed`; `null` cuando el archivo no trae las columnas mínimas (handle, nombre y precio) en ningún formato conocido, siempre con `UNKNOWN_FORMAT` en `issues`.
+- **`products.unpublishedOnline`** y **`products.notTracked`** ya los devuelve la simulación (revisión de A1 y E2). Un producto fuera de la tienda web no entra en el plan de redirecciones: la 301 llevaría a una ficha que la tienda no muestra.
 - **`offers.publicList`:** `found`, `missing` o `ambiguous`. Con `missing` o `ambiguous`, las ofertas no se cargan, y la pantalla ofrece crear el tipo de cliente (pregunta 1).
 - **`plan`:** solo con un plan que limita los productos visibles (E1); si no, `null`.
 - **`taxClasses`:** solo Woo, las clases distintas de vacía, `standard` y `zero-rate`.
 
 **`products` → 200, campos nuevos:**
 - `products[].offer`: `loaded`, `kept`, `none` o `skipped`.
+- `offers` (en la respuesta del lote): `{ publicList, loaded, kept, skipped }`; con `missing` o `ambiguous` no se escribe ninguna oferta y sale un aviso global.
 - `products[].taxExempt`: booleano.
 - `photosPending`: cuántas fotos de los creados quedan por copiar.
 
@@ -52,6 +54,7 @@
 | `INVENTORY_FORMAT_UNSUPPORTED` | dry-run | CSV de inventario con las ubicaciones como columnas: pide el export por estados |
 | `OFFER_NO_PUBLIC_LIST`, `OFFER_AMBIGUOUS_LIST` | dry-run, products | No hay un único tipo de cliente Público: la oferta no se carga |
 | `OFFER_SCHEDULED`, `OFFER_EXPIRED` | dry-run, products | Oferta de Woo con inicio futuro o ya vencida: no se carga |
+| `OFFER_INVALID` | dry-run, products | La oferta del producto no se puede calcular (IVA fuera de {0, tarifa elegida} o precios no válidos): no se carga |
 | `OFFER_KEPT` | products (`upsert`) | El producto ya tenía su fila Público: no se toca |
 | `TAX_CLASS_UNMAPPED` | dry-run, products | Woo trae una clase de impuesto sin tarifa asignada: esos productos no se importan |
 | `PRICES_TAX_UNKNOWN` | dry-run | Falta decir si los precios del archivo incluyen IVA |
@@ -65,7 +68,7 @@
 | `ATTRIBUTES_NOT_IMPORTED` | dry-run, products | Atributos que no definen variantes (pregunta 12) |
 | `SLUG_PROBABLE` | dry-run, redirects | La dirección vieja de Woo se armó con el nombre |
 
-`reason` de los omitidos suma `TYPE_NOT_SUPPORTED`.
+`reason` de los omitidos suma `TYPE_NOT_SUPPORTED` y `WRITE_FAILED` (el producto no se pudo guardar; reenviar el lote lo reintenta). `products` acepta `runId` opcional (formato de `migrationId`): otro recorrido del mismo lote tiene su propio resultado guardado.
 
 ## `POST photos` (nueva; requiere aprobación, pregunta 8)
 
@@ -88,6 +91,7 @@
 
 - `failed[].code` sale de la pieza `photoCopy`: `download_failed`, `not_image`, `too_large` o `unreadable`.
 - Nunca se devuelve ni se registra la URL de origen.
+- `429 RATE_LIMITED`: 120 lotes cada 15 minutos por empresa del token; `photos/pending` cuenta en el mismo tope. Un enlace que falló no se reintenta más de 3 veces por migración: el cuarto recorrido lo informa como `download_failed` sin descargar. Cualquier llave distinta de `migrationId`, `runId`, `lot` y `products[].cd` en el cuerpo da 400 `INVALID_PAYLOAD`. Guardas como `products`: `WOO_INTEGRATION_ACTIVE` y `FLOW_PUBLISHES_PRODUCTS` (409) e `IMPORT_IN_PROGRESS` (409).
 
 ## `GET photos/pending` (nueva; requiere aprobación, pregunta 8)
 
@@ -100,7 +104,7 @@ Sin cuerpo. Misma cadena; no toma el candado.
 - **Productos:** `products[]` acepta `probable: true`, para el slug de Woo armado con el nombre (W3).
 - **Dirección pegada:** acepta `urls[]: [{ "desde": "/product/mi-producto/", "cd": "…" }]`, la lista de direcciones reales que pega el comercio. Manda sobre la probable del mismo `cd`. `desde` pasa por `normalizarRutaRedireccion`.
 - **Fuente:** `source` acepta `woocommerce`.
-- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3).
+- **Base de Woo:** `productBase` y `categoryBase` (por ejemplo `/producto/` y `/categoria-producto/`), cada una una ruta interna que pasa por `normalizarRutaRedireccion`. Sin ellas, la del idioma del archivo y el aviso `BASE_ASSUMED` (W3). *Nota (F530-B09):* el servidor no ve el archivo en este paso, así que sin las bases usa las de WordPress en inglés (`/product/`, `/product-category/`) y avisa `BASE_ASSUMED`; la pantalla debe mandar las del idioma del archivo (la simulación las usa para su vista previa). `SLUG_PROBABLE` sale una sola vez (`desde: null`) cuando hubo direcciones armadas con el nombre; `probable` cuenta solo las que no tienen dirección pegada.
 - **Plan gratis:** no se genera la 301 hacia un producto fuera del cupo (`TARGET_HIDDEN_BY_PLAN`).
 
 ## `POST customers`: campo nuevo (si la pregunta 19 dice que sí)
@@ -112,3 +116,4 @@ Sin cuerpo. Misma cadena; no toma el candado.
 - `step` suma `photos`; el registro del lote de fotos lleva `runId`.
 - `counts` suma `copied`, `failed`, `offers`, `taxExempt` y `withSeo`.
 - Sigue con solo números: sin enlaces, nombres ni datos personales (`auditoria.js`, `soloNumeros`).
+- Excepción (F530-B05): el registro de un lote de `products` terminado guarda además el campo `respuesta` (el resultado que se devuelve con `replayed: true`: clave del producto, referencia, `cd`, códigos; sin enlaces ni datos personales). `counts` sigue siendo solo números, y suma `failedByCode` (conteo por código de causa de `WRITE_FAILED`). `user_add`/`user_edit` guardan el correo del token, igual que `importProducts` (`autorDe`); el rastro guarda el `sub`. `TYPE_NOT_SUPPORTED` llega con el lector de WooCommerce (W2).

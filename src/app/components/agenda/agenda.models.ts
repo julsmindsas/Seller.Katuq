@@ -105,23 +105,23 @@ export interface EntradaCita {
 }
 
 export const ESTADOS_CITA: Record<EstadoCita, { texto: string; clase: string }> = {
-  requested: { texto: 'Solicitada', clase: 'ag-estado--solicitada' },
-  confirmed: { texto: 'Confirmada', clase: 'ag-estado--confirmada' },
-  completed: { texto: 'Atendida', clase: 'ag-estado--atendida' },
-  cancelled: { texto: 'Cancelada', clase: 'ag-estado--cancelada' },
-  no_show: { texto: 'No asistió', clase: 'ag-estado--noasistio' },
+  requested: { texto: 'agenda.estados.solicitada', clase: 'ag-estado--solicitada' },
+  confirmed: { texto: 'agenda.estados.confirmada', clase: 'ag-estado--confirmada' },
+  completed: { texto: 'agenda.estados.atendida', clase: 'ag-estado--atendida' },
+  cancelled: { texto: 'agenda.estados.cancelada', clase: 'ag-estado--cancelada' },
+  no_show: { texto: 'agenda.estados.noAsistio', clase: 'ag-estado--noasistio' },
 };
 
 export const ORIGEN_CITA: Record<string, string> = {
-  agenda: 'Agenda',
-  sales: 'Venta asistida',
-  crm: 'CRM',
-  web: 'Página web',
-  opttia: 'Opttia',
+  agenda: 'agenda.origen.agenda',
+  sales: 'agenda.origen.ventaAsistida',
+  crm: 'agenda.origen.crm',
+  web: 'agenda.origen.paginaWeb',
+  opttia: 'agenda.origen.opttia',
 };
 
 export const MODALIDADES: { valor: ModalidadServicio; texto: string }[] = [
-  { valor: 'onsite', texto: 'En el local' },
-  { valor: 'home', texto: 'A domicilio' },
-  { valor: 'virtual', texto: 'Virtual' },
+  { valor: 'onsite', texto: 'agenda.modalidad.enElLocal' },
+  { valor: 'home', texto: 'agenda.modalidad.aDomicilio' },
+  { valor: 'virtual', texto: 'agenda.modalidad.virtual' },
 ];

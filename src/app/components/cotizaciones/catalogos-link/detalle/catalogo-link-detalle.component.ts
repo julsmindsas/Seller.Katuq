@@ -17,6 +17,8 @@ import {
 } from "../catalogo-link.reglas";
 import { mensajeDeError } from "../catalogo-link.errores";
 import { imagenDeProducto, urlImagenAbsoluta, IMAGEN_PRODUCTO_POR_DEFECTO } from "../../../../shared/utils/imagen-producto";
+import { CompanyFeaturesService } from "../../../../shared/services/company-features.service";
+import { idsParaUniformar } from "../../../productos/fotos-uniformes/fotos-uniformes-entradas";
 
 /**
  * Crear y administrar un catálogo por link (D-416). Misma pantalla para `nuevo` y para uno
@@ -49,6 +51,8 @@ export class CatalogoLinkDetalleComponent implements OnInit, OnDestroy {
   productos: ProductoVitrina[] = [];
   resolviendoProductos = false;
   eligiendo = false;
+  /** TX-37 · 7.12: diálogo «Uniformar fotos» abierto con los productos del catálogo guardado, o null. */
+  fotosUniformes: string[] | null = null;
 
   readonly maximo = MAX_PRODUCTOS_CATALOGO;
   readonly etiqueta = ETIQUETA_ESTADO;
@@ -63,6 +67,7 @@ export class CatalogoLinkDetalleComponent implements OnInit, OnDestroy {
     private service: CatalogosLinkService,
     private sitios: SitiosService,
     private toastr: ToastrService,
+    private features: CompanyFeaturesService,
   ) {}
 
   ngOnInit(): void {
@@ -274,6 +279,39 @@ export class CatalogoLinkDetalleComponent implements OnInit, OnDestroy {
 
   precio(valor: number | undefined): string {
     return (valor || 0).toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+  }
+
+  // ── Uniformar fotos (TX-37 · 7.12; solo con la bandera productPhotoUniform) ─
+
+  get fotosUniformesActiva(): boolean {
+    return !!this.catalogo && !this.esNuevo && this.features.isEnabled("productPhotoUniform");
+  }
+
+  /** El botón sale solo si el catálogo guardado tiene productos: sin ellos no hay qué uniformar. */
+  get hayProductosParaUniformar(): boolean {
+    return idsParaUniformar(this.catalogo?.productoIds).length > 0;
+  }
+
+  /**
+   * Solo con el catálogo guardado: con cambios sin guardar, recargar al cerrar los perdería, así
+   * que se avisa con un mensaje visible (también en el celular) y no se abre.
+   * Hasta 200 productos (MAX_PRODUCTOS_CATALOGO): más de 100 es una serie de 2 lotes.
+   */
+  abrirFotosUniformes(): void {
+    if (!this.fotosUniformesActiva) return;
+    const ids = idsParaUniformar(this.catalogo?.productoIds);
+    if (!ids.length) return;
+    if (this.hayCambios) {
+      this.toastr.warning("Guarda los cambios antes de uniformar las fotos.");
+      return;
+    }
+    this.fotosUniformes = ids;
+  }
+
+  /** Al cerrar con cambios, se vuelve a leer el catálogo para mostrar las fotos nuevas. */
+  cerrarFotosUniformes(evento: { cambio: boolean }): void {
+    this.fotosUniformes = null;
+    if (evento && evento.cambio && this.catalogo) this.cargar(this.catalogo.id);
   }
 
   // ── Guardar ────────────────────────────────────────────────────────────────

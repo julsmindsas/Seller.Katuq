@@ -89,3 +89,20 @@ El sistema DEBERÁ (SHALL) tomar los colores de cada tema de un único juego de 
 - **GIVEN** una pantalla que se crea o se moderniza
 - **WHEN** necesita colores de superficie, texto o acento
 - **THEN** los toma del juego compartido y se ve bien en los dos temas sin reglas propias de oscuro
+
+## ADDED Requirements (F2a, tarea 4.1)
+
+> Delta de F2a ([`design-f2a.md`](../../design-f2a.md)), aprobado en la aprobación en bloque de Daniel del 2026-10-21. Hay tres puntos sin decidir que hoy no lo cumplen: los literales claros sin token, el borde de `cfg-btn--sec` y el carril del interruptor (ver «Preguntas para Daniel» en el diseño).
+
+### Requirement: Pantallas de configuración legibles en oscuro
+MIENTRAS (WHILE) el tema oscuro esté activo, en las pantallas construidas sobre la base de configuración (encabezado, tarjeta, tabla, pills, métricas, formularios y pestañas), el sistema NO DEBERÁ (SHALL NOT) mostrar encabezados, tarjetas, filas ni botones secundarios con fondo blanco, y DEBERÁ (SHALL) cumplir un contraste de 4,5:1 en texto y de 3:1 en texto grande e indicadores sobre su superficie. El acento como texto, ícono o indicador DEBERÁ (SHALL) usar el tinte claro del morado, y el relleno DEBERÁ (SHALL) quedar en `#5F3FE0` con texto blanco. MIENTRAS (WHILE) el tema claro esté activo, esas pantallas DEBERÁN (SHALL) verse idénticas a como se veían antes de este cambio.
+
+#### Scenario: Ocasiones en oscuro
+- **GIVEN** un usuario con el tema oscuro elegido
+- **WHEN** abre Ocasiones, Géneros o Tipos de cliente
+- **THEN** el encabezado, la tarjeta y las filas de la tabla tienen la superficie oscura, el texto se lee con al menos 4,5:1 y la pestaña activa y la columna ordenada usan el tinte claro del morado
+
+#### Scenario: Las mismas pantallas en claro
+- **GIVEN** un usuario con el tema claro
+- **WHEN** abre cualquier pantalla de configuración
+- **THEN** se ve igual que antes del cambio

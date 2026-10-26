@@ -5,31 +5,31 @@
     <div class="tk-alertas-id">
       <span class="tk-alertas-chip" aria-hidden="true"><i class="pi pi-flag"></i></span>
       <div>
-        <div class="tk-alertas-title">Alertas anti-fraude</div>
+        <div class="tk-alertas-title">{{ 'tesoreria.alertasTesoreria.alertasAntiFraude' | translate }}</div>
         <div class="tk-alertas-sub">
-          {{ items.length | number }} {{ soloActivas ? 'alerta(s) activa(s)' : 'alerta(s) registrada(s)' }}
-          · posibles comprobantes reciclados
+          {{ items.length | number }} {{ soloActivas ? ('tesoreria.alertasTesoreria.alertaSActivaS' | translate) : ('tesoreria.alertasTesoreria.alertaSRegistradaS' | translate) }}
+          {{ 'tesoreria.alertasTesoreria.posiblesComprobantesReciclados' | translate }}
         </div>
       </div>
     </div>
     <div class="tk-alertas-actions">
       <button type="button" class="tk-toggle-btn" [class.is-on]="soloActivas" (click)="toggleFiltro()">
         <i class="pi" [ngClass]="soloActivas ? 'pi-filter' : 'pi-filter-slash'"></i>
-        {{ soloActivas ? 'Solo activas' : 'Ver todas' }}
+        {{ soloActivas ? ('tesoreria.alertasTesoreria.soloActivas' | translate) : ('tesoreria.alertasTesoreria.verTodas' | translate) }}
       </button>
-      <button type="button" class="tk-icon-btn" (click)="load()" [disabled]="loading" aria-label="Actualizar">
+      <button type="button" class="tk-icon-btn" (click)="load()" [disabled]="loading" [attr.aria-label]="'tesoreria.alertasTesoreria.actualizar' | translate">
         <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
       </button>
     </div>
   </div>
 
   <!-- Cargando -->
-  <div *ngIf="loading" class="tk-empty"><i class="pi pi-spin pi-spinner"></i> Cargando alertas…</div>
+  <div *ngIf="loading" class="tk-empty"><i class="pi pi-spin pi-spinner"></i> {{ 'tesoreria.alertasTesoreria.cargandoAlertas' | translate }}</div>
 
   <!-- Vacío -->
   <div *ngIf="!loading && items.length === 0" class="tk-empty">
     <i class="pi pi-check-circle"></i>
-    {{ soloActivas ? 'No hay alertas activas. Todo en orden.' : 'No hay alertas registradas.' }}
+    {{ soloActivas ? ('tesoreria.alertasTesoreria.noHayAlertasActivasTodo' | translate) : ('tesoreria.alertasTesoreria.noHayAlertasRegistradas' | translate) }}
   </div>
 
   <!-- Lista -->
@@ -43,9 +43,9 @@
           <span class="tk-alert-icon" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
           <span class="tk-alert-type">{{ tipoLabel(alert) }}</span>
           <span class="tk-sev-badge" [ngClass]="alert?.severity === 'high' ? 'sev-high' : 'sev-medium'">
-            {{ alert?.severity === 'high' ? 'ALTA' : 'MEDIA' }}
+            {{ alert?.severity === 'high' ? ('tesoreria.alertasTesoreria.alta' | translate) : ('tesoreria.alertasTesoreria.media' | translate) }}
           </span>
-          <span *ngIf="alert?.resolved" class="tk-resolved-badge"><i class="pi pi-check"></i> Resuelta</span>
+          <span *ngIf="alert?.resolved" class="tk-resolved-badge"><i class="pi pi-check"></i> {{ 'tesoreria.alertasTesoreria.resuelta' | translate }}</span>
           <span *ngIf="alert?.createdAt" class="tk-alert-time">
             <i class="pi pi-clock"></i> {{ alert?.createdAt | date:'dd/MM/yyyy HH:mm' }}
           </span>
@@ -55,12 +55,12 @@
 
         <div class="tk-alert-orders" *ngIf="alert?.orderIds?.length">
           <div class="tk-alert-orders-title">
-            <i class="pi pi-shopping-cart"></i> Pedidos afectados
+            <i class="pi pi-shopping-cart"></i> {{ 'tesoreria.alertasTesoreria.pedidosAfectados' | translate }}
           </div>
           <div class="tk-alert-chips">
             <span class="tk-order-chip" *ngFor="let pedido of pedidosVisibles(alert)">{{ pedido }}</span>
             <span class="tk-order-chip is-more" *ngIf="pedidosRestantes(alert) > 0">
-              +{{ pedidosRestantes(alert) }} más
+              {{ 'tesoreria.alertasTesoreria.mas' | translate:{alert: (pedidosRestantes(alert))} }}
             </span>
           </div>
         </div>
@@ -68,10 +68,10 @@
 
       <div class="tk-alert-buttons" *ngIf="!alert?.resolved">
         <button type="button" class="btn btn-primary tk-btn-sm" (click)="irARevisar()">
-          <i class="pi pi-search"></i> Ir a revisar
+          <i class="pi pi-search"></i> {{ 'tesoreria.alertasTesoreria.irARevisar' | translate }}
         </button>
         <button type="button" class="btn btn-outline-secondary tk-btn-sm" (click)="resolver(alert)">
-          <i class="pi pi-check"></i> Resolver
+          <i class="pi pi-check"></i> {{ 'tesoreria.alertasTesoreria.resolver' | translate }}
         </button>
       </div>
     </div>

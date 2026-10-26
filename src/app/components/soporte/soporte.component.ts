@@ -8,6 +8,7 @@ import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
 import { CATEGORIAS_TICKET, CATEGORIA_POR_DEFECTO, subcategoriasDe } from '../../shared/data/clasificacion-tickets';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-soporte',
   templateUrl: './soporte.component.html',
@@ -44,16 +45,16 @@ export class SoporteComponent implements OnInit {
   // Qué necesita el comercio; define a qué equipo llega el ticket
   readonly tiposSolicitud = [
     {
-      key: 'bug', motivo: 'soporte', label: 'Algo no funciona',
-      hint: 'Un error o algo que dejó de andar', iconBg: '#FCE9E8', iconColor: '#C0392F'
+      key: 'bug', motivo: 'soporte', label: 'soporte.soporte.algoNoFunciona',
+      hint: 'soporte.soporte.unErrorOAlgoQue', iconBg: '#FCE9E8', iconColor: '#C0392F'
     },
     {
-      key: 'ayuda', motivo: 'soporte', label: 'Necesito ayuda',
-      hint: 'Una duda de cómo usar Katuq', iconBg: '#EEE9FD', iconColor: '#6C4CE0'
+      key: 'ayuda', motivo: 'soporte', label: 'soporte.soporte.necesitoAyuda',
+      hint: 'soporte.soporte.unaDudaDeComoUsar', iconBg: '#EEE9FD', iconColor: '#6C4CE0'
     },
     {
-      key: 'idea', motivo: 'idea', label: 'Tengo una idea',
-      hint: 'Propón una mejora o función nueva', iconBg: '#E3F6EC', iconColor: '#15803D'
+      key: 'idea', motivo: 'idea', label: 'soporte.soporte.tengoUnaIdea',
+      hint: 'soporte.soporte.proponUnaMejoraOFuncion', iconBg: '#E3F6EC', iconColor: '#15803D'
     }
   ];
 
@@ -66,16 +67,16 @@ export class SoporteComponent implements OnInit {
   }
 
   readonly prioridades = [
-    { valor: 'baja', label: 'Baja' },
-    { valor: 'media', label: 'Media' },
-    { valor: 'alta', label: 'Alta' }
+    { valor: 'baja', label: 'soporte.soporte.baja' },
+    { valor: 'media', label: 'soporte.soporte.media' },
+    { valor: 'alta', label: 'soporte.soporte.alta' }
   ];
 
   // Pistas de redacción: marcan lo que ya cubre la descripción
   private readonly pistas = [
-    { label: 'Qué hiciste antes', re: /pas|clic|entr|abr|intent|cuando|al /i },
-    { label: 'Qué esperabas', re: /esper|deber|suponí|correcto/i },
-    { label: 'Qué ocurrió', re: /error|no |falló|salió|apareci|mostr/i }
+    { label: 'soporte.soporte.queHicisteAntes', re: /pas|clic|entr|abr|intent|cuando|al /i },
+    { label: 'soporte.soporte.queEsperabas', re: /esper|deber|suponí|correcto/i },
+    { label: 'soporte.soporte.queOcurrio', re: /error|no |falló|salió|apareci|mostr/i }
   ];
   isSubmitting: boolean = false;
   isDragging: boolean = false;
@@ -89,7 +90,8 @@ export class SoporteComponent implements OnInit {
     private router: Router,
     private securityService: SecurityService,
     private ticketsSoporte: TicketsSoporteService,
-    private storage: AngularFireStorage
+    private storage: AngularFireStorage,
+    private translate: TranslateService
   ) {
     // Get currently logged in user
     this.currentUser = this.getCurrentUser();
@@ -302,9 +304,9 @@ export class SoporteComponent implements OnInit {
     if (rechazados.length > 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Algunos archivos no se adjuntaron',
+        title: this.translate.instant('soporte.misTickets.algunosArchivosNoSeAdjuntaron'),
         html: rechazados.map(r => `<div>${r}</div>`).join(''),
-        confirmButtonText: 'Entendido'
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     }
   }
@@ -388,27 +390,27 @@ export class SoporteComponent implements OnInit {
   }
 
   get progresoTitulo(): string {
-    return this.listoParaEnviar ? 'Listo para enviar' : 'Falta poco';
+    return this.listoParaEnviar ? this.translate.instant('soporte.soporte.listoParaEnviar') : this.translate.instant('soporte.soporte.faltaPoco');
   }
 
   get progresoPista(): string {
     if (this.listoParaEnviar) {
-      return 'Puedes enviarlo cuando quieras';
+      return this.translate.instant('soporte.soporte.puedesEnviarloCuandoQuieras');
     }
     if (!this.motivoOk) {
-      return 'Elige qué necesitas';
+      return this.translate.instant('soporte.soporte.eligeQueNecesitas');
     }
-    return this.asuntoOk ? 'Amplía la descripción' : 'Escribe el asunto';
+    return this.asuntoOk ? this.translate.instant('soporte.soporte.ampliaLaDescripcion') : this.translate.instant('soporte.soporte.escribeElAsunto');
   }
 
   get placeholderDescripcion(): string {
     if (this.tipoElegido === 'bug') {
-      return 'Qué hiciste, qué esperabas y qué salió en cambio. Si hay un mensaje de error, cópialo aquí.';
+      return this.translate.instant('soporte.soporte.queHicisteQueEsperabasY');
     }
     if (this.tipoElegido === 'idea') {
-      return 'Qué te gustaría poder hacer y en qué te ayudaría en tu día a día.';
+      return this.translate.instant('soporte.soporte.queTeGustariaPoderHacer');
     }
-    return 'Describe con detalle lo que necesitas resolver.';
+    return this.translate.instant('soporte.soporte.describeConDetalleLoQue');
   }
 
   get pistasRedaccion(): { label: string; ok: boolean }[] {
@@ -418,17 +420,17 @@ export class SoporteComponent implements OnInit {
 
   get verificaciones(): { label: string; ok: boolean }[] {
     return [
-      { ok: this.motivoOk, label: this.motivoOk ? 'Tipo de solicitud elegido' : 'Elige qué necesitas' },
-      { ok: this.asuntoOk, label: this.asuntoOk ? 'Asunto claro' : `Escribe un asunto de al menos ${this.MIN_ASUNTO} caracteres` },
-      { ok: this.descOk, label: this.descOk ? 'Descripción con detalle' : `La descripción necesita ${this.MIN_DESC} caracteres o más` },
-      { ok: this.hayArchivos, label: this.hayArchivos ? 'Con evidencia adjunta' : 'Adjunta evidencia (opcional, pero ayuda)' }
+      { ok: this.motivoOk, label: this.motivoOk ? this.translate.instant('soporte.soporte.tipoDeSolicitudElegido') : this.translate.instant('soporte.soporte.eligeQueNecesitas') },
+      { ok: this.asuntoOk, label: this.asuntoOk ? this.translate.instant('soporte.soporte.asuntoClaro') : this.translate.instant('soporte.soporte.asuntoMinimo', { n: this.MIN_ASUNTO }) },
+      { ok: this.descOk, label: this.descOk ? this.translate.instant('soporte.soporte.descripcionConDetalle') : this.translate.instant('soporte.soporte.descripcionMinima', { n: this.MIN_DESC }) },
+      { ok: this.hayArchivos, label: this.hayArchivos ? this.translate.instant('soporte.soporte.conEvidenciaAdjunta') : this.translate.instant('soporte.soporte.adjuntaEvidenciaOpcionalPeroAyuda') }
     ];
   }
 
   get resumenClasificacion(): string {
-    const cat = this.categorias.find(c => c.valor === this.valor('categoria'))?.label || 'Sin categoría';
-    const sub = this.subcategorias.find(s => s.valor === this.valor('subcategoria'))?.label || 'General';
-    return `${cat} · ${sub} · ${this.eventoEsHoy ? 'hoy' : this.valor('fechaEvento')}`;
+    const cat = this.categorias.find(c => c.valor === this.valor('categoria'))?.label || this.translate.instant('soporte.soporte.sinCategoria');
+    const sub = this.subcategorias.find(s => s.valor === this.valor('subcategoria'))?.label || this.translate.instant('soporte.soporte.general');
+    return `${cat} · ${sub} · ${this.eventoEsHoy ? this.translate.instant('soporte.soporte.hoyMin') : this.valor('fechaEvento')}`;
   }
 
   get eventoEsHoy(): boolean {
@@ -455,14 +457,14 @@ export class SoporteComponent implements OnInit {
   // Reset form to initial state
   resetForm(): void {
     Swal.fire({
-      title: '¿Reiniciar el formulario?',
-      text: 'Se perderán todos los datos ingresados.',
+      title: this.translate.instant('soporte.soporte.reiniciarElFormulario'),
+      text: this.translate.instant('soporte.soporte.sePerderanTodosLosDatos'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, reiniciar',
-      cancelButtonText: 'No, continuar'
+      confirmButtonText: this.translate.instant('soporte.soporte.siReiniciar'),
+      cancelButtonText: this.translate.instant('soporte.soporte.noContinuar')
     }).then((result) => {
       if (result.isConfirmed) {
         // Reset form state
@@ -492,14 +494,14 @@ export class SoporteComponent implements OnInit {
   // Cancel button functionality
   cancelForm(): void {
     Swal.fire({
-      title: '¿Cancelar la creación del ticket?',
-      text: 'Perderá toda la información ingresada.',
+      title: this.translate.instant('soporte.soporte.cancelarLaCreacionDelTicket'),
+      text: this.translate.instant('soporte.soporte.perderaTodaLaInformacionIngresada'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, cancelar',
-      cancelButtonText: 'No, continuar'
+      confirmButtonText: this.translate.instant('soporte.soporte.siCancelar'),
+      cancelButtonText: this.translate.instant('soporte.soporte.noContinuar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.router.navigate(['/misTickets']);
@@ -560,8 +562,8 @@ export class SoporteComponent implements OnInit {
     const empresa = this.securityService.getCompanyInformationLogged();
     if (!empresa?.nombreComercio) {
       Swal.fire(
-        'Sesión incompleta',
-        'No pudimos identificar tu comercio. Cierra sesión y vuelve a ingresar para crear el ticket.',
+        this.translate.instant('soporte.soporte.sesionIncompleta'),
+        this.translate.instant('soporte.soporte.noPudimosIdentificarTuComercio'),
         'warning'
       );
       return;
@@ -578,13 +580,13 @@ export class SoporteComponent implements OnInit {
       }, empresa, this.currentUser);
 
       // Show processing indicator with progress steps
-      let loadingStep = 'Preparando información...';
+      let loadingStep = this.translate.instant('soporte.soporte.preparandoInformacion');
       let currentStep = 1;
       let totalSteps = this.selectedFiles.length > 0 ? 3 : 2;
       
       const loadingSwal = Swal.fire({
-        title: 'Procesando ticket...',
-        html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`,
+        title: this.translate.instant('soporte.soporte.procesandoTicket'),
+        html: this.translate.instant('soporte.soporte.pasoDe', { actual: currentStep, total: totalSteps, paso: loadingStep }),
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
@@ -594,9 +596,9 @@ export class SoporteComponent implements OnInit {
       // Process images if any
       if (this.selectedFiles && this.selectedFiles.length > 0) {
         currentStep = 2;
-        loadingStep = 'Subiendo archivos adjuntos...';
+        loadingStep = this.translate.instant('soporte.soporte.subiendoArchivosAdjuntos');
         Swal.update({
-          html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`
+          html: this.translate.instant('soporte.soporte.pasoDe', { actual: currentStep, total: totalSteps, paso: loadingStep })
         });
         
         const imageUrls = await this.subirImagenesAFirebase();
@@ -607,9 +609,9 @@ export class SoporteComponent implements OnInit {
       
       // Final step - sending data
       currentStep = this.selectedFiles.length > 0 ? 3 : 2;
-      loadingStep = 'Enviando información...';
+      loadingStep = this.translate.instant('soporte.soporte.enviandoInformacion');
       Swal.update({
-        html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`
+        html: this.translate.instant('soporte.soporte.pasoDe', { actual: currentStep, total: totalSteps, paso: loadingStep })
       });
 
       // Send ticket data (el servicio avisa al equipo y a la campana del comercio)
@@ -618,14 +620,14 @@ export class SoporteComponent implements OnInit {
           this.isSubmitting = false;
 
           Swal.fire({
-            title: '¡Ticket creado con éxito!',
+            title: this.translate.instant('soporte.soporte.ticketCreadoConExito'),
             html: `<div class="success-ticket">
                      <div class="ticket-number">#${numeroVisible}</div>
-                     <p>Estado inicial: <strong>Pendiente</strong></p>
-                     <p>Su ticket ha sido registrado correctamente</p>
+                     <p>${this.translate.instant('soporte.soporte.estadoInicial')} <strong>${this.translate.instant('soporte.soporte.pendiente')}</strong></p>
+                     <p>${this.translate.instant('soporte.soporte.suTicketHaSidoRegistrado')}</p>
                    </div>`,
             icon: 'success',
-            confirmButtonText: 'Ver mis tickets'
+            confirmButtonText: this.translate.instant('soporte.soporte.verMisTickets')
           }).then(() => {
             this.router.navigate(['/misTickets']);
           });
@@ -633,13 +635,13 @@ export class SoporteComponent implements OnInit {
         error: (error) => {
           // El formulario conserva los datos; el botón queda disponible para reintentar
           this.isSubmitting = false;
-          Swal.fire('Error', 'No se pudo crear el ticket. Verifica tu conexión e intenta de nuevo.', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('soporte.soporte.noSePudoCrearEl'), 'error');
           console.error('Error al crear el ticket:', error);
         }
       });
     } catch (error) {
       this.isSubmitting = false;
-      Swal.fire('Error', 'Ocurrió un error al procesar su solicitud', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('soporte.soporte.ocurrioUnErrorAlProcesar'), 'error');
       console.error('Error al procesar el ticket:', error);
     }
   }

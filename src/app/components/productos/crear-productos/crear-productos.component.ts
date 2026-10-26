@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Deshabilita validaciones TypeScript en este archivo debido a complejidad de migración de tipos.
 
+import { SEO_MAX_DESCRIPCION, SEO_MAX_TITULO, seoDeProducto, seoParaGuardar } from "./seo-producto";
 import {
   Component,
   ViewEncapsulation,
@@ -113,6 +114,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   croppedImage: any = "";
   carrouselImg: any[] = [];
   edit: any;
+  seoForm: FormGroup;
+  readonly seoMaxTitulo = SEO_MAX_TITULO;
+  readonly seoMaxDescripcion = SEO_MAX_DESCRIPCION;
   barCodeGen: boolean = false;
   ciudadesOrigen = [
     { value: "Medellin", label: "Medellin" },
@@ -364,6 +368,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       imagenesPrincipales: [""],
       imagenesSecundarias: [""],
       paraProduccion: [false, [Validators.required]],
+    });
+    this.seoForm = this.fb.group({
+      titulo: ["", Validators.maxLength(SEO_MAX_TITULO)],
+      descripcion: ["", Validators.maxLength(SEO_MAX_DESCRIPCION)],
     });
     this.precio = this.fb.group({
       precioUnitarioSinIva: ["0"],
@@ -1856,6 +1864,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /** Lo que se suma al payload: nada para un producto que siempre lo fue. */
+  /** SEO opcional (F5-30, 14.16): solo viaja si hay texto, o si había y se vació. No toca `crearProducto`. */
+  private seoParaGuardar(): { seo?: any } {
+    return seoParaGuardar(this.seoForm.value, !!(this.edit && this.edit.seo));
+  }
+
   private datosDeTipoParaGuardar(): { itemType?: 'product' | 'service'; service?: any } {
     if (this.esServicio) return { itemType: 'service', service: { ...this.servicioForm.value } };
     if (this.tipoItemInicial === 'service') return { itemType: 'product' };
@@ -2036,6 +2049,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       ...this.formGeneral.value,
       identificacion: this.identificacionParaGuardar(),
       ...this.datosDeTipoParaGuardar(),
+      ...this.seoParaGuardar(),
     };
 
     const context = this;
@@ -2172,7 +2186,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       stringify(this.categoriasForm.controls["categorias"].value),
     );
 
-    const formGeneralEditar = { ...this.formGeneral.value, ...this.datosDeTipoParaGuardar() };
+    const formGeneralEditar = { ...this.formGeneral.value, ...this.datosDeTipoParaGuardar(), ...this.seoParaGuardar() };
     formGeneralEditar["cd"] = this.cd;
 
     this.edit = formGeneralEditar;
@@ -3189,6 +3203,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   private loadBasicData() {
     this.crearProducto.patchValue(this.edit.crearProducto);
+    this.seoForm.patchValue(seoDeProducto(this.edit));
     this.Dimensiones.patchValue(this.edit.dimensiones);
     this.disponibilidad.patchValue(this.edit.disponibilidad);
     // D-491: servicio marcado (`itemType`) o creado por el onboarding (tipoReferencia "servicio").

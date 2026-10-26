@@ -5,12 +5,12 @@
     <div class="ct-head-text">
       <div class="ct-crumbs">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-        <a [routerLink]="['/misTickets']">Tickets</a>
+        <a [routerLink]="['/misTickets']">{{ 'soporte.soporte.tickets' | translate }}</a>
         <span class="ct-crumb-sep">/</span>
-        <span class="ct-crumb-actual">Crear ticket</span>
+        <span class="ct-crumb-actual">{{ 'soporte.misTickets.crearTicket' | translate }}</span>
       </div>
-      <h1 class="ct-title">Crear ticket de soporte</h1>
-      <p class="ct-subtitle">Cuéntanos qué pasó. Mientras más claro sea, más rápido lo resolvemos.</p>
+      <h1 class="ct-title">{{ 'soporte.soporte.crearTicketDeSoporte' | translate }}</h1>
+      <p class="ct-subtitle">{{ 'soporte.soporte.cuentanosQuePasoMientrasMas' | translate }}</p>
     </div>
 
     <div class="ct-progress">
@@ -36,8 +36,8 @@
             <ng-template #paso1>1</ng-template>
           </span>
           <div class="ct-card-title">
-            <div class="ct-card-name">¿Qué necesitas?</div>
-            <div class="ct-card-hint">Esto define a qué equipo llega tu ticket.</div>
+            <div class="ct-card-name">{{ 'soporte.soporte.queNecesitas' | translate }}</div>
+            <div class="ct-card-hint">{{ 'soporte.soporte.estoDefineAQueEquipo' | translate }}</div>
           </div>
         </div>
 
@@ -51,8 +51,8 @@
               <svg *ngIf="tipo.key === 'idea'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"></path></svg>
             </span>
             <span class="ct-tipo-text">
-              <span class="ct-tipo-label">{{ tipo.label }}</span>
-              <span class="ct-tipo-hint">{{ tipo.hint }}</span>
+              <span class="ct-tipo-label">{{ tipo.label | translate }}</span>
+              <span class="ct-tipo-hint">{{ tipo.hint | translate }}</span>
             </span>
           </button>
         </div>
@@ -66,21 +66,21 @@
             <ng-template #paso2>2</ng-template>
           </span>
           <div class="ct-card-title">
-            <div class="ct-card-name">Cuéntanos qué pasó <span class="ct-req">*</span></div>
-            <div class="ct-card-hint">Un título corto y el detalle de lo que ocurrió.</div>
+            <div class="ct-card-name">{{ 'soporte.soporte.cuentanosQuePaso' | translate }} <span class="ct-req">*</span></div>
+            <div class="ct-card-hint">{{ 'soporte.soporte.unTituloCortoYEl' | translate }}</div>
           </div>
         </div>
 
         <div class="ct-field">
-          <label class="ct-label" for="asunto">Asunto</label>
+          <label class="ct-label" for="asunto">{{ 'soporte.soporte.asunto' | translate }}</label>
           <input id="asunto" type="text" formControlName="asunto" class="ct-input" [class.is-ok]="asuntoOk"
-            placeholder="Ej.: El total del ticket no cuadra al aplicar un cupón" />
+            [placeholder]="'soporte.soporte.ejElTotalDelTicket' | translate" />
         </div>
 
         <div class="ct-field">
           <div class="ct-label-row">
-            <label class="ct-label" for="descripcion">Descripción</label>
-            <span class="ct-counter" [class.is-ok]="descOk">{{ largoDesc }} / {{ MIN_DESC }} mín.</span>
+            <label class="ct-label" for="descripcion">{{ 'soporte.misIdeas.descripcion' | translate }}</label>
+            <span class="ct-counter" [class.is-ok]="descOk">{{ largoDesc }} {{ 'soporte.soporte.min' | translate:{MIN_DESC: MIN_DESC} }}</span>
           </div>
           <textarea id="descripcion" formControlName="descripcion" rows="5" class="ct-textarea" [class.is-ok]="descOk"
             [placeholder]="placeholderDescripcion"></textarea>
@@ -91,7 +91,7 @@
               <ng-template #pendiente>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="9"></circle></svg>
               </ng-template>
-              {{ pista.label }}
+              {{ pista.label | translate }}
             </span>
           </div>
         </div>
@@ -104,8 +104,8 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
           </span>
           <div class="ct-card-title">
-            <div class="ct-card-name">Adjunta evidencia <span class="ct-badge">OPCIONAL</span></div>
-            <div class="ct-card-hint">Una captura o un video corto resuelve el ticket mucho más rápido.</div>
+            <div class="ct-card-name">{{ 'soporte.soporte.adjuntaEvidencia' | translate }} <span class="ct-badge">{{ 'soporte.soporte.opcional' | translate }}</span></div>
+            <div class="ct-card-hint">{{ 'soporte.soporte.unaCapturaOUnVideo' | translate }}</div>
           </div>
         </div>
 
@@ -114,8 +114,8 @@
           <span class="ct-drop-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           </span>
-          <span class="ct-drop-title">Arrastra archivos o haz clic para elegir</span>
-          <span class="ct-drop-hint">Imágenes, video, audios (incluso de WhatsApp) o documentos · hasta 50 MB cada uno</span>
+          <span class="ct-drop-title">{{ 'soporte.soporte.arrastraArchivosOHazClic' | translate }}</span>
+          <span class="ct-drop-hint">{{ 'soporte.soporte.imagenesVideoAudiosInclusoDe' | translate }}</span>
           <!-- Ticket 1068: se aceptan audios (.ogg/.opus de WhatsApp, mp3, m4a...) y más formatos de video -->
           <input type="file" multiple (change)="onFileChange($event)" hidden
             accept="image/*,video/*,audio/*,.ogg,.opus,.oga,.mp3,.m4a,.wav,.aac,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
@@ -138,7 +138,7 @@
               <audio *ngIf="archivo.tipo === 'audio'" controls preload="metadata" [src]="archivo.url"
                 style="display: block; width: 100%; max-width: 280px; height: 32px; margin-top: 4px;"></audio>
             </span>
-            <button type="button" class="ct-file-del" title="Quitar" aria-label="Quitar archivo" (click)="quitarArchivo(i)">
+            <button type="button" class="ct-file-del" [title]="'soporte.misTickets.quitar' | translate" [attr.aria-label]="'soporte.soporte.quitarArchivo' | translate" (click)="quitarArchivo(i)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
@@ -152,7 +152,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
           </span>
           <span class="ct-card-title">
-            <span class="ct-card-name">Clasificación</span>
+            <span class="ct-card-name">{{ 'soporte.soporte.clasificacion' | translate }}</span>
             <span class="ct-card-hint">{{ resumenClasificacion }}</span>
           </span>
           <svg class="ct-chevron" [class.is-open]="clasOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -160,33 +160,33 @@
 
         <div class="ct-collapse-body" *ngIf="clasOpen">
           <div class="ct-field">
-            <label class="ct-label" for="categoria">Categoría</label>
+            <label class="ct-label" for="categoria">{{ 'soporte.misTickets.categoria' | translate }}</label>
             <select id="categoria" formControlName="categoria" class="ct-input">
               <option *ngFor="let cat of categorias" [value]="cat.valor">{{ cat.label }}</option>
             </select>
           </div>
 
           <div class="ct-field">
-            <label class="ct-label" for="subcategoria">Subcategoría</label>
+            <label class="ct-label" for="subcategoria">{{ 'soporte.soporte.subcategoria' | translate }}</label>
             <select id="subcategoria" formControlName="subcategoria" class="ct-input">
               <option *ngFor="let sub of subcategorias" [value]="sub.valor">{{ sub.label }}</option>
             </select>
           </div>
 
           <div class="ct-field">
-            <label class="ct-label" for="fechaEvento">Cuándo ocurrió</label>
+            <label class="ct-label" for="fechaEvento">{{ 'soporte.soporte.cuandoOcurrio' | translate }}</label>
             <div class="ct-date">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#626878" stroke-width="2.3" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
               <input id="fechaEvento" type="date" formControlName="fechaEvento" />
-              <span class="ct-today" *ngIf="eventoEsHoy">HOY</span>
+              <span class="ct-today" *ngIf="eventoEsHoy">{{ 'soporte.soporte.hoy' | translate }}</span>
             </div>
           </div>
 
           <div class="ct-field">
-            <label class="ct-label">Prioridad</label>
+            <label class="ct-label">{{ 'soporte.soporte.prioridad' | translate }}</label>
             <div class="ct-prioridades">
               <button type="button" *ngFor="let p of prioridades" [class.is-on]="selectedPriority === p.valor"
-                (click)="setPriority(p.valor)">{{ p.label }}</button>
+                (click)="setPriority(p.valor)">{{ p.label | translate }}</button>
             </div>
           </div>
         </div>
@@ -197,17 +197,17 @@
     <aside class="ct-side">
 
       <div class="ct-card ct-side-card">
-        <div class="ct-side-title">Reporta</div>
+        <div class="ct-side-title">{{ 'soporte.soporte.reporta' | translate }}</div>
         <div class="ct-reporter">
           <span class="ct-avatar">{{ inicialReporta }}</span>
           <span class="ct-reporter-text">
-            <span class="ct-reporter-name">{{ ticketForm.get('nombreUsuarioReporta')?.value || 'Sin nombre' }}</span>
+            <span class="ct-reporter-name">{{ ticketForm.get('nombreUsuarioReporta')?.value || ('soporte.soporte.sinNombre' | translate) }}</span>
             <span class="ct-reporter-shop">{{ nombreComercio }}</span>
           </span>
         </div>
         <div class="ct-note">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
-          <span>Te avisamos en la campana y verás cada respuesta en Mis tickets.</span>
+          <span>{{ 'soporte.soporte.teAvisamosEnLaCampana' | translate }}</span>
         </div>
       </div>
 
@@ -219,7 +219,7 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             </ng-template>
           </span>
-          <span class="ct-check-title">{{ listoParaEnviar ? 'Todo listo' : 'Falta para enviar' }}</span>
+          <span class="ct-check-title">{{ listoParaEnviar ? ('soporte.soporte.todoListo' | translate) : ('soporte.soporte.faltaParaEnviar' | translate) }}</span>
         </div>
         <div class="ct-check-list">
           <div class="ct-check-row" *ngFor="let item of verificaciones" [class.is-ok]="item.ok">
@@ -235,14 +235,14 @@
       <button type="submit" class="ct-send" [disabled]="!listoParaEnviar || isSubmitting">
         <svg *ngIf="!isSubmitting" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
-        {{ isSubmitting ? 'Enviando…' : 'Enviar ticket' }}
+        {{ isSubmitting ? ('soporte.misTickets.enviando' | translate) : ('soporte.soporte.enviarTicket' | translate) }}
       </button>
 
-      <button type="button" class="ct-cancel" (click)="cancelForm()">Cancelar</button>
+      <button type="button" class="ct-cancel" (click)="cancelForm()">{{ 'comun.cancelar' | translate }}</button>
 
       <div class="ct-foot-note">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        <span>Podrás seguir el estado del ticket en Mis tickets. Los reportes de error se atienden primero.</span>
+        <span>{{ 'soporte.soporte.podrasSeguirElEstadoDel' | translate }}</span>
       </div>
     </aside>
   </form>

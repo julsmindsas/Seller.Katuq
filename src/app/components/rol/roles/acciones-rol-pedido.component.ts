@@ -80,8 +80,8 @@ export class AccionesRolPedidoComponent implements OnChanges {
         this.cdr.markForCheck();
         Swal.fire({
           icon: 'success',
-          title: 'Acciones guardadas',
-          text: 'Quienes tengan este rol las verán en su siguiente inicio de sesión.',
+          title: 'Acciones guardadas', // i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción)
+          text: 'Quienes tengan este rol las verán en su siguiente inicio de sesión.', // i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción)
           timer: 2500,
           showConfirmButton: false,
         });
@@ -91,9 +91,9 @@ export class AccionesRolPedidoComponent implements OnChanges {
         this.cdr.markForCheck();
         Swal.fire({
           icon: 'error',
-          title: 'No se guardaron las acciones',
-          text: err?.error?.message || 'No pudimos guardar las acciones del rol. Intenta de nuevo.',
-          confirmButtonText: 'Ok',
+          title: 'No se guardaron las acciones', // i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción)
+          text: err?.error?.message || 'No pudimos guardar las acciones del rol. Intenta de nuevo.', // i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción)
+          confirmButtonText: 'Ok', // i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción)
           confirmButtonColor: '#5F3FE0',
         });
       },

@@ -375,6 +375,41 @@ export interface VersionSitio {
   paginas: number;
 }
 
+/** D-518 (F5-29·6): borrador sin publicar que se guardó antes de restaurar. */
+export interface BorradorGuardado {
+  id: string;
+  guardadoEn: string;
+  por: string;
+  motivo: string;
+  secciones: number;
+  paginas: number;
+}
+
+/** D-518 (F5-29·1): por qué no salió la publicación programada. */
+export interface ProgramacionFallida {
+  fecha: string;
+  codigo?: string;
+  motivo: string;
+}
+
+/** D-518 (F5-29·1): lo que el servidor dice de este usuario sobre el sitio. */
+export interface PermisosSitio {
+  puedePublicar: boolean;
+  esAdministrador: boolean;
+}
+
+export interface RespuestaVersiones {
+  success: boolean;
+  message?: string;
+  data: VersionSitio[];
+  programada?: { fecha: string; por: string } | null;
+  ultimaProgramacionFallida?: ProgramacionFallida | null;
+  borradores?: BorradorGuardado[];
+  puedePublicar?: boolean;
+  esAdministrador?: boolean;
+  rolesPublicar?: string[];
+}
+
 export interface FilaOrigen {
   fuente?: string;
   utm_campaign?: string;
@@ -453,6 +488,21 @@ export interface KitDeMarca {
   eslogan: string;
   nombreComercial?: string;
   redesSociales?: any[];
+}
+
+export interface MetricasKai {
+  dias: number;
+  pedidos: number;
+  pedidosPagados: number;
+  ventas: number;
+  pagosRecuperados: number;
+  valorRecuperado: number;
+  citas: number;
+  cotizaciones: number;
+  ventasTiendaAsistidas: number;
+  truncado: boolean;
+  /** Cifras cuya marca aún nadie escribe: se muestran «pendiente», no como 0. */
+  pendientes?: string[];
 }
 
 interface Respuesta<T> {
@@ -586,6 +636,11 @@ export class SitiosService extends BaseService {
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
   metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
     return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
+  }
+
+  /** Bloque «KAI» de «Cómo va» (F4-40·B16): solo lectura, empresa de la sesión. */
+  metricasKai(dias = 30): Observable<Respuesta<MetricasKai>> {
+    return this.get<Respuesta<MetricasKai>>(`/v1/sites/kai/metricas?dias=${dias}`);
   }
 
   /** Quién le dejó sus datos a la tienda: formulario, Avísame y carritos. */
@@ -768,8 +823,13 @@ export class SitiosService extends BaseService {
   }
 
   /** Ticket 1253: historial de versiones publicadas, publicación programada y quién publica. */
-  versiones(id: string): Observable<Respuesta<VersionSitio[]> & { programada?: { fecha: string; por: string } | null; puedePublicar?: boolean; rolesPublicar?: string[] }> {
-    return this.get<any>(`/v1/sites/${encodeURIComponent(id)}/versiones`);
+  versiones(id: string): Observable<RespuestaVersiones> {
+    return this.get<RespuestaVersiones>(`/v1/sites/${encodeURIComponent(id)}/versiones`);
+  }
+
+  /** D-518 (F5-29·6): devuelve al borrador uno guardado antes de restaurar (no publica). */
+  recuperarBorrador(id: string, vid: string): Observable<Respuesta<null>> {
+    return this.post<Respuesta<null>>(`/v1/sites/${encodeURIComponent(id)}/versiones/${encodeURIComponent(vid)}/al-borrador`, {});
   }
 
   restaurarVersion(id: string, vid: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {

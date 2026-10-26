@@ -32,11 +32,11 @@
   overflow-wrap: anywhere; /* una palabra larguísima parte en vez de desbordar */
   line-height: 1.45;
   text-align: left;
-  color: #211F3A;
+  color: var(--ds-ink);
 }
 
 .texto-vacio {
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 /* Marca de "precio base": el precio de este tipo también es el precio base del

@@ -7,6 +7,7 @@ import { CrmLead, CrmTask, getPrioritySeverity } from '../../models/crm.models';
 import { CotizacionesService } from '../../../cotizaciones/cotizaciones.service';
 import { Cotizacion } from '../../../cotizaciones/modelo/cotizacion';
 
+import { TranslateService } from '@ngx-translate/core';
 type OverdueTask = CrmTask & { _daysOverdue: number };
 type UnreviewedTask = CrmTask & { _daysSinceReview: number };
 type SeguimientoCotizacion = Cotizacion & { _diasEsperando: number };
@@ -35,6 +36,7 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
     private crmService: CrmService,
     private router: Router,
     private cotizacionesService: CotizacionesService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -136,7 +138,7 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
   }
 
   leadName(task: CrmTask): string {
-    return this.leadsById[task.entityId]?.name || 'Lead';
+    return this.leadsById[task.entityId]?.name || this.translate.instant('crm.seguimiento.lead');
   }
 
   goToTask(task: CrmTask): void {
@@ -150,7 +152,7 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
 
   clienteNombre(c: Cotizacion): string {
     const cli: any = c.cliente || {};
-    return cli.nombres_completos || cli.razonSocial || cli.nombre || 'Sin nombre';
+    return cli.nombres_completos || cli.razonSocial || cli.nombre || this.translate.instant('crm.seguimiento.sinNombre');
   }
 
   goToCotizacion(c: Cotizacion): void {

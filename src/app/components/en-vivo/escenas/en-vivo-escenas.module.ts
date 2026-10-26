@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCompartidoModule } from '../compartido/en-vivo-compartido.module';
 import { EnVivoOrbeBotonComponent } from './en-vivo-orbe-boton.component';
@@ -26,7 +27,7 @@ const ESCENAS = [
 const INTERNOS = [EnVivoOrbeBotonComponent];
 
 @NgModule({
-  imports: [CommonModule, EnVivoCompartidoModule],
+  imports: [TranslateModule, CommonModule, EnVivoCompartidoModule],
   declarations: [...ESCENAS, ...INTERNOS],
   exports: ESCENAS,
 })

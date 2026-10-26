@@ -3,15 +3,17 @@
 // Reemplaza al carrusel de tarjetas: mismo dato (imagesRect), 1/4 de la altura.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host { @include kc-tokens; display: block; }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .cat-strip {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid var(--kc-line);
   font-family: var(--kc-font-body);
 }
@@ -65,7 +67,7 @@
   height: 22px;
   border-radius: 50%;
   object-fit: cover;
-  background: #fff;
+  background: var(--ds-surface);
   flex-shrink: 0;
 }
 

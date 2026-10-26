@@ -29,7 +29,7 @@ export class MyAccountComponent implements OnInit {
   accountMenuItem: MenuItem = {
     path: 'usuarios/editarUsuario',
     icon: 'user',
-    label: 'Cuenta'
+    label: 'shell.account.menu.account'
   };
 
   // Menu items that require authorization
@@ -37,22 +37,22 @@ export class MyAccountComponent implements OnInit {
     {
       path: 'empresas',
       icon: 'briefcase',
-      label: 'Configuración de empresa'
+      label: 'shell.account.menu.companySettings'
     },
     {
       path: 'usuarios',
       icon: 'users',
-      label: 'Usuarios'
+      label: 'shell.account.menu.users'
     },
     {
       path: 'rol',
       icon: 'shield',
-      label: 'Roles'
+      label: 'shell.account.menu.roles'
     },
     {
       path: 'rol/rol',
       icon: 'shield',
-      label: 'Roles'
+      label: 'shell.account.menu.roles'
     }
   ];
 

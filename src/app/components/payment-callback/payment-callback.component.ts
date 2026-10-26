@@ -45,7 +45,7 @@ export class PaymentCallbackComponent implements OnInit {
       } else {
         this.loading = false;
         this.error = true;
-        this.errorMessage = 'No se recibió un ID de transacción válido';
+        this.errorMessage = 'publica.payment.noTransactionId';
       }
     });
   }
@@ -82,14 +82,14 @@ export class PaymentCallbackComponent implements OnInit {
           this.sendTransactionNotification();
         } else {
           this.error = true;
-          this.errorMessage = 'No se pudo determinar el estado de la transacción';
+          this.errorMessage = 'publica.payment.unknownStatus';
         }
       },
       error: (error) => {
         this.loading = false;
         this.error = true;
         console.error('Error al consultar la transacción:', error);
-        this.errorMessage = 'Error al consultar el estado de la transacción';
+        this.errorMessage = 'publica.payment.queryFailed';
       }
     });
   }

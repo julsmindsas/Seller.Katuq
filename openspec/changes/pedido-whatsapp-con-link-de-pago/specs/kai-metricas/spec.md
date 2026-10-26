@@ -66,3 +66,30 @@ WHEN un comprador termina una compra en la tienda con al menos un producto que K
 ## [NEEDS CLARIFICATION]
 
 - Dónde ve el comercio estas cifras y si los pedidos del bot entran en «¿De dónde vienen tus ventas?» (F3-25, cd `uub6icHMX86eicw6Iont`). Preguntas 12 y 13 de `proposal.md`.
+
+### Requirement: Bloque «KAI» en «Cómo va»
+
+Fuente: pregunta 13 (recomendación aprobada el 2026-10-21); tarea 13.3. Dependen 12 (citas con origen `opttia`) y 13 («Vendido con Opttia»).
+
+THE system SHALL mostrar en «Cómo va» (`MetricasComponent`, ventana de métricas de la tienda) un bloque «KAI» con, para el rango elegido (7, 30 o 90 días): pedidos de KAI, ventas de KAI (suma de lo pagado), pagos recuperados por KAI, citas agendadas por KAI y cotizaciones de KAI.
+
+THE system SHALL leerlo de `GET /v1/sites/kai/metricas?dias=` (solo lectura, empresa de la sesión, sin colecciones ni rutas nuevas). Un conteo cuyo campo aún no se guarda (`recuperadoPorKai`, `asistidoPorKai`) SHALL ser 0, sin error.
+
+THE system SHALL NOT mostrar métricas de atención (conversaciones, resueltas sin humano, tiempo de respuesta, satisfacción): son de [CONV] H.
+
+#### UI (regla de diseño Katuq, D-398..D-400)
+
+- Bloque plano `kai-bloque`: título en UPPERCASE muted «KAI», tarjeta blanca, borde lila, radio 16 px, sombra violeta difusa; sin gradientes ni `border-left`. Cifras en tinta `#211F3A`, acento `#5F3FE0` en el valor principal (ventas).
+- Cuadrícula de 5 cifras: 5 columnas a 1440 px, 2 a 390 px, sin scroll horizontal. Etiqueta pequeña UPPERCASE muted sobre el número.
+- Estados: carga (texto «Cargando…», independiente del resto de la ventana), vacío (ícono, título «KAI aún no ha movido nada» y texto corto) cuando todo es 0, y error (aviso en par color fuerte / fondo suave; el resto de la ventana sigue funcionando).
+- Sin clases con «p-»; todo `span` con color y tamaño propios; `:focus-visible` con `outline: 3px solid #7C5CFF`.
+
+#### Scenario: Comercio con actividad de KAI
+
+- **WHEN** el comercio abre «Cómo va» y KAI creó pedidos, citas o cotizaciones en el rango
+- **THEN** ve el bloque «KAI» con sus cifras
+
+#### Scenario: Sin actividad o sin lectura
+
+- **WHEN** todo es 0, o la lectura falla
+- **THEN** ve el estado vacío o el aviso de error, y las demás métricas siguen visibles

@@ -13,7 +13,7 @@
         [accept]="acceptedFormats"
         [maxFileSize]="maxFileSize"
         [auto]="false"
-        chooseLabel="Seleccionar Archivo"
+        [chooseLabel]="'onboarding.mobileFileUpload.seleccionarArchivo' | translate"
         chooseIcon="pi pi-folder-open"
         (onSelect)="onFileSelect($event)"
         [disabled]="disabled"
@@ -48,18 +48,18 @@
         [showValue]="true"
         styleClass="mobile-progress-bar">
       </p-progressBar>
-      <p class="progress-text">Procesando archivo...</p>
+      <p class="progress-text">{{ 'onboarding.mobileFileUpload.procesandoArchivo' | translate }}</p>
     </div>
 
     <!-- State Messages -->
     <div *ngIf="state === 'uploaded'" class="state-message success-message">
       <i class="pi pi-check-circle"></i>
-      <span>Archivo cargado correctamente</span>
+      <span>{{ 'onboarding.mobileFileUpload.archivoCargadoCorrectamente' | translate }}</span>
     </div>
 
     <div *ngIf="state === 'error'" class="state-message error-message">
       <i class="pi pi-exclamation-circle"></i>
-      <span>Error al procesar el archivo</span>
+      <span>{{ 'onboarding.mobileFileUpload.errorAlProcesarElArchivo' | translate }}</span>
     </div>
 
     <!-- Action Buttons -->
@@ -67,7 +67,7 @@
       <button
         pButton
         type="button"
-        label="Cambiar Archivo"
+        [label]="'onboarding.mobileFileUpload.cambiarArchivo' | translate"
         icon="pi pi-sync"
         class="cfg-btn cfg-btn--sec change-button"
         (click)="changeFile()"
@@ -81,7 +81,7 @@
         class="cfg-btn cfg-btn--peligro clear-button"
         (click)="clearFile()"
         [disabled]="disabled"
-        pTooltip="Eliminar archivo"
+        [pTooltip]="'onboarding.mobileFileUpload.eliminarArchivo' | translate"
         tooltipPosition="top">
       </button>
     </div>

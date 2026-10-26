@@ -1,12 +1,12 @@
 <section class="card" aria-labelledby="ev-productos-titulo">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">{{ soloPropias ? 'Mis productos estrella · hoy' : 'Productos estrella · hoy' }}</div>
-      <h2 class="card__title" id="ev-productos-titulo">{{ soloPropias ? 'Lo que más vendo' : 'Lo que más se vende' }}</h2>
+      <div class="card__eyebrow">{{ soloPropias ? ('enVivo.enVivoProductosEstrella.misProductosEstrellaHoy' | translate) : ('enVivo.enVivoProductosEstrella.productosEstrellaHoy' | translate) }}</div>
+      <h2 class="card__title" id="ev-productos-titulo">{{ soloPropias ? ('enVivo.enVivoProductosEstrella.loQueMasVendo' | translate) : ('enVivo.enVivoProductosEstrella.loQueMasSeVende' | translate) }}</h2>
     </div>
   </header>
   <div class="card__body">
-    <p class="vacio" *ngIf="filas.length === 0">Todavía no hay ventas hoy.</p>
+    <p class="vacio" *ngIf="filas.length === 0">{{ 'enVivo.enVivoProductosEstrella.todaviaNoHayVentasHoy' | translate }}</p>
     <ol class="rows" *ngIf="filas.length > 0">
       <li class="row" *ngFor="let f of filas; trackBy: porClave">
         <span class="row__name">{{ f.posicion }}. {{ f.nombre }}</span>

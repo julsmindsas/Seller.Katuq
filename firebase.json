@@ -60,6 +60,14 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "//": "Ticket 1180 (D-502 F1): el tema oscuro de PrimeNG paso de md-dark-deeppurple.css a katuq-dark.css. Una sesion abierta con el main.js anterior sigue pidiendo el nombre viejo y, sin esto, el catch-all le respondia el index.html: el navegador lo rechaza como hoja de estilos y PrimeNG quedaba sin tema hasta recargar. 302 para que el navegador no lo guarde como permanente.",
+        "source": "/md-dark-deeppurple.css",
+        "destination": "/katuq-dark.css",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "//": "Ticket 1078 (D-356): el manifiesto del Service Worker viejo debe dar 404. Es la senal con la que el worker de Angular se desinstala solo; con el catch-all respondia el index.html con 200 y el worker viejo quedaba vivo para siempre. Apuntar a un archivo que no existe devuelve 404 (probado en el emulador).",

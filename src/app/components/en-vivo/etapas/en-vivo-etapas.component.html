@@ -1,4 +1,4 @@
-<ol class="pipe" aria-label="Pedidos por etapa">
+<ol class="pipe" [attr.aria-label]="'enVivo.enVivoEtapas.pedidosPorEtapa' | translate">
   <li *ngFor="let p of pasos; trackBy: porId; let ultimo = last" class="pipe__item">
     <button
       *ngIf="tocables; else fijo"

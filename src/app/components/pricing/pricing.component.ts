@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../shared/services/subscription.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 type PricingCurrency = 'USD' | 'COP';
 
@@ -51,27 +52,27 @@ export class PricingComponent implements OnInit, OnDestroy {
   ];
 
   readonly paidFeatures = [
-    { icon: 'pi-shopping-cart', title: 'Pedidos ilimitados', text: 'Gestiona todos tus canales sin límite mensual.' },
-    { icon: 'pi-users', title: 'Usuarios y roles', text: 'Tu equipo completo trabaja en una sola plataforma.' },
-    { icon: 'pi-bolt', title: 'KAI — IA integrada', text: 'Asistencia inteligente aplicada a tu operación.' },
-    { icon: 'pi-chart-bar', title: 'Reportes avanzados', text: 'Indicadores para decidir con datos reales.' },
-    { icon: 'pi-box', title: 'Inventario y bodegas', text: 'Control centralizado de existencias y movimientos.' },
-    { icon: 'pi-truck', title: 'Logística integrada', text: 'Despachos, entregas y trazabilidad en un solo flujo.' },
-    { icon: 'pi-link', title: 'Integraciones', text: 'Conecta tus canales y herramientas actuales.' },
-    { icon: 'pi-cog', title: 'Automatizaciones', text: 'Reduce tareas manuales y errores operativos.' }
+    { icon: 'pi-shopping-cart', title: 'pricing.paid.orders.title', text: 'pricing.paid.orders.text' },
+    { icon: 'pi-users', title: 'pricing.paid.users.title', text: 'pricing.paid.users.text' },
+    { icon: 'pi-bolt', title: 'pricing.paid.kai.title', text: 'pricing.paid.kai.text' },
+    { icon: 'pi-chart-bar', title: 'pricing.paid.reports.title', text: 'pricing.paid.reports.text' },
+    { icon: 'pi-box', title: 'pricing.paid.inventory.title', text: 'pricing.paid.inventory.text' },
+    { icon: 'pi-truck', title: 'pricing.paid.logistics.title', text: 'pricing.paid.logistics.text' },
+    { icon: 'pi-link', title: 'pricing.paid.integrations.title', text: 'pricing.paid.integrations.text' },
+    { icon: 'pi-cog', title: 'pricing.paid.automation.title', text: 'pricing.paid.automation.text' }
   ];
 
   readonly freeFeatures = [
-    { text: 'Hasta 15 pedidos al mes', enabled: true },
-    { text: '1 bodega y 5 usuarios', enabled: true },
-    { text: 'Catálogo de productos', enabled: true },
-    { text: '1 integración', enabled: true },
-    { text: 'Consultas KAI: 10 al día por usuario', enabled: true },
-    { text: 'Productos con IA: 10 al día por usuario', enabled: true },
-    { text: 'Producción, voz y video', enabled: false }
+    { text: 'pricing.free.orders', enabled: true },
+    { text: 'pricing.free.warehouseUsers', enabled: true },
+    { text: 'pricing.free.catalog', enabled: true },
+    { text: 'pricing.free.integration', enabled: true },
+    { text: 'pricing.free.kaiQueries', enabled: true },
+    { text: 'pricing.free.aiProducts', enabled: true },
+    { text: 'pricing.free.production', enabled: false }
   ];
 
-  constructor(private subscriptionService: SubscriptionService) {}
+  constructor(private subscriptionService: SubscriptionService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.subscriptionService.subscription$
@@ -106,9 +107,9 @@ export class PricingComponent implements OnInit, OnDestroy {
   }
 
   get currentPlanLabel(): string {
-    if (!this.subscriptionStateReady) return 'Cargando…';
-    if (this.currentPlan === 'freemium') return 'Plan Gratis';
-    return this.billingInfo?.currentTierName || 'Plan Pago';
+    if (!this.subscriptionStateReady) return this.translate.instant('comun.cargando');
+    if (this.currentPlan === 'freemium') return this.translate.instant('pricing.plan.free');
+    return this.billingInfo?.currentTierName || this.translate.instant('pricing.plan.paid');
   }
 
   get billingActionDisabled(): boolean {
@@ -129,11 +130,11 @@ export class PricingComponent implements OnInit, OnDestroy {
   }
 
   get currentBillingPeriodLabel(): string {
-    return this.currentSubscription?.billingPeriod === 'yearly' ? 'Anual' : 'Mensual';
+    return this.translate.instant(this.currentSubscription?.billingPeriod === 'yearly' ? 'pricing.period.yearly' : 'pricing.period.monthly');
   }
 
   get billingPeriodChoiceLabel(): string {
-    return this.billingPeriodChoice === 'yearly' ? 'Anual' : 'Mensual';
+    return this.translate.instant(this.billingPeriodChoice === 'yearly' ? 'pricing.period.yearly' : 'pricing.period.monthly');
   }
 
   get selectedPeriodAmountCOP(): number {
@@ -166,28 +167,26 @@ export class PricingComponent implements OnInit, OnDestroy {
 
   get savedPaymentMethodLabel(): string {
     const method = this.billingInfo?.paymentMethod;
-    if (!method) return 'Tarjeta autorizada en Wompi';
-    const brand = method.brand || 'Tarjeta';
-    return method.lastFour ? `${brand} terminada en ${method.lastFour}` : brand;
+    if (!method) return this.translate.instant('pricing.card.authorized');
+    const brand = method.brand || this.translate.instant('pricing.card.default');
+    return method.lastFour ? this.translate.instant('pricing.card.endingIn', { brand, lastFour: method.lastFour }) : brand;
   }
 
   get billingModeSummary(): string {
-    return this.billingInfo?.billingMode === 'manual'
-      ? 'Recibirás la cuenta de cobro y sus recordatorios por correo; guardar aquí no hace un débito automático.'
-      : 'El cobro se intentará automáticamente con tu medio de pago autorizado.';
+    return this.translate.instant(this.billingInfo?.billingMode === 'manual' ? 'pricing.period.modeManual' : 'pricing.period.modeAuto');
   }
 
   invoiceStatusLabel(status: string): string {
     const labels: Record<string, string> = {
-      paid: 'Pagado',
-      awaiting_confirmation: 'Confirmando con Wompi',
-      processing: 'Procesando',
-      failed: 'Pago fallido',
-      pending_manual: 'Pendiente de pago',
-      overdue: 'Vencida',
-      custom: 'Gestión personalizada'
+      paid: 'pricing.receipt.status.paid',
+      awaiting_confirmation: 'pricing.receipt.status.awaiting_confirmation',
+      processing: 'pricing.receipt.status.processing',
+      failed: 'pricing.receipt.status.failed',
+      pending_manual: 'pricing.receipt.status.pending_manual',
+      overdue: 'pricing.receipt.status.overdue',
+      custom: 'pricing.receipt.status.custom'
     };
-    return labels[String(status || '').toLowerCase()] || 'Pendiente';
+    return this.translate.instant(labels[String(status || '').toLowerCase()] || 'pricing.receipt.status.pending');
   }
 
   invoiceDate(invoice: any): Date | null {
@@ -246,8 +245,8 @@ export class PricingComponent implements OnInit, OnDestroy {
   }
 
   tierSalesLabel(tier: PricingTier): string {
-    if (tier.custom || !tier.maxSalesCOP) return 'Más de $500M COP al mes';
-    return `Hasta $${tier.maxSalesCOP / 1000000}M COP al mes`;
+    if (tier.custom || !tier.maxSalesCOP) return this.translate.instant('pricing.tiers.salesOver');
+    return this.translate.instant('pricing.tiers.salesUpTo', { limit: tier.maxSalesCOP / 1000000 });
   }
 
   tierShortLabel(tier: PricingTier): string {
@@ -256,14 +255,14 @@ export class PricingComponent implements OnInit, OnDestroy {
   }
 
   tierPrice(tier: PricingTier): string {
-    if (tier.custom) return 'A medida';
+    if (tier.custom) return this.translate.instant('pricing.tiers.custom');
     if (this.currency === 'USD') return `$${tier.priceUSD}`;
     return `$${Math.round(tier.priceUSD * this.trm).toLocaleString('es-CO')}`;
   }
 
   tierCurrencyLabel(tier: PricingTier): string {
-    if (tier.custom) return 'Contacta a nuestro equipo';
-    return this.currency === 'USD' ? 'USD / mes' : 'COP / mes aprox.';
+    if (tier.custom) return this.translate.instant('pricing.tiers.contactTeam');
+    return this.translate.instant(this.currency === 'USD' ? 'pricing.tiers.usdMonth' : 'pricing.tiers.copMonth');
   }
 
   isCurrentTier(tierId: string): boolean {
@@ -300,11 +299,11 @@ export class PricingComponent implements OnInit, OnDestroy {
     if (this.currentPlan !== 'premium' || this.cancellingSubscription) return;
     const confirmation = await Swal.fire({
       icon: 'warning',
-      title: '¿Volver al plan Gratis?',
-      html: 'La baja es <strong>inmediata</strong>: perderás las funciones Premium y no se harán nuevos cobros automáticos. Tus datos permanecerán en Katuq.',
+      title: this.translate.instant('pricing.cancel.title'),
+      html: this.translate.instant('pricing.cancel.text'),
       showCancelButton: true,
-      confirmButtonText: 'Sí, pasar a Gratis',
-      cancelButtonText: 'Conservar Premium',
+      confirmButtonText: this.translate.instant('pricing.cancel.confirm'),
+      cancelButtonText: this.translate.instant('pricing.cancel.keep'),
       confirmButtonColor: '#b91c1c',
       reverseButtons: true,
     });
@@ -318,18 +317,18 @@ export class PricingComponent implements OnInit, OnDestroy {
         this.refreshBillingState();
         Swal.fire({
           icon: 'success',
-          title: 'Plan Gratis activado',
-          text: response?.message || 'La renovación automática quedó cancelada.',
-          confirmButtonText: 'Entendido',
+          title: this.translate.instant('pricing.cancel.doneTitle'),
+          text: response?.message || this.translate.instant('pricing.cancel.doneText'),
+          confirmButtonText: this.translate.instant('comun.entendido'),
         });
       },
       error: (error: any) => {
         this.cancellingSubscription = false;
         Swal.fire({
           icon: 'error',
-          title: 'No pudimos cancelar todavía',
-          text: error?.error?.message || 'Hay un pago en proceso o una validación pendiente. Actualiza el estado e intenta nuevamente.',
-          confirmButtonText: 'Entendido',
+          title: this.translate.instant('pricing.cancel.failedTitle'),
+          text: error?.error?.message || this.translate.instant('pricing.cancel.failedText'),
+          confirmButtonText: this.translate.instant('comun.entendido'),
         });
       },
     });
@@ -350,21 +349,21 @@ export class PricingComponent implements OnInit, OnDestroy {
     this.subscriptionService.updateBillingPeriod(this.billingPeriodChoice).subscribe({
       next: (response: any) => {
         this.billingPeriodSaving = false;
-        this.billingPeriodMessage = response?.message || 'Periodicidad actualizada para el próximo cobro.';
+        this.billingPeriodMessage = response?.message || this.translate.instant('pricing.period.updated');
         this.loadBillingInfo();
       },
       error: (error: any) => {
         this.billingPeriodSaving = false;
-        this.billingPeriodError = error?.error?.message || 'No pudimos actualizar la periodicidad.';
+        this.billingPeriodError = error?.error?.message || this.translate.instant('pricing.period.updateFailed');
       }
     });
   }
 
   get primaryBillingActionLabel(): string {
-    if (!this.subscriptionStateReady) return 'Cargando tu plan…';
-    if (this.hasOutstandingManualInvoice) return 'Pagar cuenta pendiente';
-    if (this.currentPlan === 'premium' && !this.canManageBillingPeriod) return 'Plan Premium activo';
-    return this.currentPlan === 'premium' ? 'Administrar facturación' : 'Activar plan pago';
+    if (!this.subscriptionStateReady) return this.translate.instant('pricing.action.loading');
+    if (this.hasOutstandingManualInvoice) return this.translate.instant('pricing.action.payPending');
+    if (this.currentPlan === 'premium' && !this.canManageBillingPeriod) return this.translate.instant('pricing.action.premiumActive');
+    return this.translate.instant(this.currentPlan === 'premium' ? 'pricing.action.manageBilling' : 'pricing.action.activate');
   }
 
   contactarVentas(): void {

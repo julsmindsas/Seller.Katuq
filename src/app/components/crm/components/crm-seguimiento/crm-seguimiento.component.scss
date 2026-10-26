@@ -20,10 +20,10 @@
   h6 {
     font-size: 14px;
     font-weight: 800;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 
-  .text-muted { color: #8f8bab !important; }
+  .text-muted { color: var(--ds-muted) !important; }
 }
 
 .stat-card-overdue,
@@ -34,13 +34,13 @@
   min-width: 0;
 }
 
-.seg-icono--error { color: #D64545; }
-.seg-icono--warn { color: #D9820A; }
-.seg-icono--acento { color: #5F3FE0; }
-.seg-ok-icono { font-size: 2rem; color: #1E874B; }
+.seg-icono--error { color: var(--ds-err); }
+.seg-icono--warn { color: var(--ds-warn); }
+.seg-icono--acento { color: var(--ds-accent-ink); }
+.seg-ok-icono { font-size: 2rem; color: var(--ds-ok); }
 
 .seg-fila {
-  border-bottom: 1px solid #f1f0f7;
+  border-bottom: 1px solid var(--ds-line-soft);
 
   &:last-child { border-bottom: 0; }
 }
@@ -51,12 +51,12 @@
   small span.ms-2 { color: inherit; font-size: inherit; }
 }
 
-.seg-meta { color: #8f8bab !important; font-size: inherit; }
+.seg-meta { color: var(--ds-muted) !important; font-size: inherit; }
 
 .seg-total {
   font-size: 0.8rem;
   white-space: nowrap;
-  color: #211F3A !important;
+  color: var(--ds-ink) !important;
 }
 
 .seg-btn-mini {
@@ -80,7 +80,7 @@
   padding: 12px 14px;
   border-radius: 11px;
   border: 1px solid #eeecf7;
-  background: #fff;
+  background: var(--ds-surface);
   transition: transform .15s ease;
 
   &:hover { transform: translateY(-1px); }
@@ -89,20 +89,20 @@
     font-size: 18px !important;
     font-weight: 800;
     line-height: 1.2;
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
   }
   .metric-label {
     font-size: 10.5px !important;
     font-weight: 800;
-    color: #8f8bab !important;
+    color: var(--ds-muted) !important;
     text-transform: uppercase;
     letter-spacing: .5px;
   }
 
-  &.metric-chip-warning .metric-value { color: #D9820A !important; }
-  &.metric-chip-info .metric-value { color: #5F3FE0 !important; }
-  &.metric-chip-danger .metric-value { color: #D64545 !important; }
-  &.metric-chip-neutral .metric-value { color: #211F3A !important; }
+  &.metric-chip-warning .metric-value { color: var(--ds-warn) !important; }
+  &.metric-chip-info .metric-value { color: var(--ds-accent-ink) !important; }
+  &.metric-chip-danger .metric-value { color: var(--ds-err) !important; }
+  &.metric-chip-neutral .metric-value { color: var(--ds-ink) !important; }
 }
 
 // Pills: par color fuerte / fondo suave.
@@ -113,10 +113,10 @@
   font-size: 0.8rem;
   font-weight: 800;
 
-  &.stat-badge-danger { background: #FDECEC; color: #D64545; }
-  &.stat-badge-warning { background: #FFF1DF; color: #D9820A; }
-  &.stat-badge-info { background: #efe9ff; color: #5F3FE0; }
-  &.stat-badge-purple { background: #efe9ff; color: #5F3FE0; }
+  &.stat-badge-danger { background: var(--ds-err-soft); color: var(--ds-err); }
+  &.stat-badge-warning { background: var(--ds-warn-soft); color: var(--ds-warn); }
+  &.stat-badge-info { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
+  &.stat-badge-purple { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
 }
 
 .badge-overdue,
@@ -127,6 +127,6 @@
   font-size: 0.7rem;
   font-weight: 700;
 }
-.badge-overdue { background: #FFF1DF; color: #D9820A; }
-.badge-pending { background: #f5f4fa; color: #5b5878; }
-.badge-unreviewed { background: #efe9ff; color: #5F3FE0; }
+.badge-overdue { background: var(--ds-warn-soft); color: var(--ds-warn); }
+.badge-pending { background: var(--ds-chip-bg); color: var(--ds-body); }
+.badge-unreviewed { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }

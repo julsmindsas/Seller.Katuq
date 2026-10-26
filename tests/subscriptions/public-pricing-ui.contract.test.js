@@ -10,6 +10,10 @@ const pricingTs = read("src/app/components/pricing/pricing.component.ts");
 const pricingHtml = read("src/app/components/pricing/pricing.component.html");
 const pricingScss = read("src/app/components/pricing/pricing.component.scss");
 const modalHtml = read("src/app/shared/components/upgrade-modal/upgrade-modal.component.html");
+const esDic = JSON.parse(read('src/assets/i18n/es.json'));
+// D-540 (IDI-B02): Pricing pasa sus textos por el traductor; el español vive en es.json bajo la clave de la plantilla.
+const muestraTexto = (html, texto) => html.includes(texto)
+  || Object.entries(esDic).some(([clave, valor]) => typeof valor === 'string' && valor.includes(texto) && html.includes(`'${clave}'`));
 
 const publicTiers = [
   ["Base", 27, 15000000],
@@ -24,14 +28,14 @@ for (const [name, price, maxSales] of publicTiers) {
   assert.ok(pricingTs.includes(`name: '${name}', priceUSD: ${price}, maxSalesCOP: ${maxSales}`));
 }
 
-assert.ok(pricingHtml.includes("Crece") && pricingHtml.includes("Todo Katuq sin límites"));
-assert.ok(pricingHtml.includes("Calculadora"));
-assert.ok(pricingHtml.includes("Ver precios públicos"));
+assert.ok(muestraTexto(pricingHtml, "Crecemos si tú creces") && muestraTexto(pricingHtml, "Todo Katuq sin límites"));
+assert.ok(muestraTexto(pricingHtml, "Calculadora"));
+assert.ok(muestraTexto(pricingHtml, "Ver precios públicos"));
 assert.ok(pricingHtml.includes("20% de descuento") || pricingHtml.includes("annualDiscount"));
-assert.ok(pricingHtml.includes('¿Mensual o anual?'));
-assert.ok(pricingHtml.includes('invoice.paymentLink') && pricingHtml.includes('Pagar ahora'), 'una cuenta manual debe poder pagarse también desde Pricing');
+assert.ok(muestraTexto(pricingHtml, '¿Mensual o anual?'));
+assert.ok(pricingHtml.includes('invoice.paymentLink') && muestraTexto(pricingHtml, 'Pagar ahora'), 'una cuenta manual debe poder pagarse también desde Pricing');
 assert.ok(pricingHtml.includes('!invoice.manualReconciliationRequired'), 'Pricing no debe ofrecer de nuevo un link cuyo pago está en conciliación');
-assert.ok(pricingHtml.includes('No vuelvas a pagarlo'), 'la conciliación manual debe proteger al comercio de un segundo pago');
+assert.ok(muestraTexto(pricingHtml, 'No vuelvas a pagarlo'), 'la conciliación manual debe proteger al comercio de un segundo pago');
 assert.ok(pricingHtml.includes("invoice.status === 'paid'"), 'solo una factura pagada puede mostrar el próximo cobro');
 assert.ok(pricingTs.includes('invoiceGraceDeadline'), 'Pricing debe mostrar la fecha límite de la gabela manual');
 assert.ok(pricingTs.includes('Math.round(monthly * 12 * 0.8'), 'la vista anual debe aplicar el mismo 20% del backend');

@@ -6,6 +6,7 @@ import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { RolesComponent } from './roles.component';
 import { AccionesRolPedidoComponent } from './acciones-rol-pedido.component';
 import { PickListModule } from 'primeng/picklist';
+import { TranslateModule } from '@ngx-translate/core';
 
 @NgModule({
   declarations: [RolesComponent, AccionesRolPedidoComponent],
@@ -14,7 +15,8 @@ import { PickListModule } from 'primeng/picklist';
     ReactiveFormsModule,
     RouterModule,
     NgbModalModule,
-    PickListModule
+    PickListModule,
+    TranslateModule
   ],
   exports: [RolesComponent]
 })

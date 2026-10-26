@@ -1,8 +1,8 @@
 <section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-tiempos-titulo">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">Tiempos de la operación · hoy</div>
-      <h2 class="card__title" id="ev-kq-tiempos-titulo">Del pedido a la puerta</h2>
+      <div class="card__eyebrow">{{ 'enVivo.enVivoTiemposComercio.tiemposDeLaOperacionHoy' | translate }}</div>
+      <h2 class="card__title" id="ev-kq-tiempos-titulo">{{ 'enVivo.enVivoTiemposComercio.delPedidoALaPuerta' | translate }}</h2>
     </div>
   </header>
 
@@ -26,8 +26,8 @@
       </div>
 
       <div class="ciclo__extra">
-        <span *ngIf="vm.rapido as r">Más rápido hoy: <b>{{ r.nombre }}</b>, {{ r.texto }} de punta a punta</span>
-        <span>Con transportadora: <b>{{ vm.camion || '—' }}</b> desde que sale</span>
+        <span *ngIf="vm.rapido as r">{{ 'enVivo.enVivoTiemposOperacion.masRapidoHoy' | translate }} <b>{{ r.nombre }}</b>{{ 'enVivo.enVivoTiemposOperacion.dePuntaAPunta' | translate:{texto: r.texto} }}</span>
+        <span>{{ 'enVivo.enVivoTiemposOperacion.conTransportadora' | translate }} <b>{{ vm.camion || '—' }}</b> {{ 'enVivo.enVivoTiemposOperacion.desdeQueSale' | translate }}</span>
       </div>
     </div>
   </div>

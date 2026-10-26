@@ -23,7 +23,7 @@
     white-space: nowrap;
   }
   .ag-estado--solicitada { background: $cfg-warn-soft; color: $cfg-warn !important; border-color: #f6dcb7; }
-  .ag-estado--confirmada { background: $cfg-accent-soft; color: $cfg-accent !important; border-color: #ddd3fb; }
+  .ag-estado--confirmada { background: $cfg-accent-soft; color: $cfg-accent-ink !important; border-color: #ddd3fb; }
   .ag-estado--atendida { background: $cfg-ok-soft; color: $cfg-ok !important; border-color: #c4ead4; }
   .ag-estado--cancelada { background: $cfg-chip-bg; color: $cfg-muted !important; border-color: $cfg-chip-border; }
   .ag-estado--noasistio { background: $cfg-err-soft; color: $cfg-err !important; border-color: #f6caca; }
@@ -50,13 +50,13 @@
     padding: 8px 12px;
     border: 1px solid $cfg-line;
     border-radius: 11px;
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-ink;
     font-size: 14px;
     letter-spacing: normal;
     box-sizing: border-box;
 
-    &:focus { border-color: $cfg-accent; outline: none; box-shadow: 0 0 0 3px $cfg-accent-soft; }
+    &:focus { border-color: $cfg-accent-ink; outline: none; box-shadow: 0 0 0 3px $cfg-accent-soft; }
   }
 
   textarea.ag-input { min-height: 72px; resize: vertical; }
@@ -70,15 +70,15 @@
     padding: 0 12px;
     border: 1px solid $cfg-chip-border;
     border-radius: 20px;
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-ink !important;
     font-size: 13px;
     font-weight: 700;
     letter-spacing: normal;
     cursor: pointer;
 
-    &:hover:not(:disabled) { border-color: $cfg-accent; color: $cfg-accent !important; }
-    &.ag-opcion--activa { background: $cfg-accent; border-color: $cfg-accent; color: #fff !important; }
+    &:hover:not(:disabled) { border-color: $cfg-accent-ink; color: $cfg-accent-ink !important; }
+    &.ag-opcion--activa { background: $cfg-accent; border-color: $cfg-accent; color: var(--ds-on-accent) !important; }
     &:disabled { opacity: .45; cursor: not-allowed; text-decoration: line-through; }
   }
 

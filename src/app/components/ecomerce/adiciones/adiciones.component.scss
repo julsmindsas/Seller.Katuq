@@ -36,7 +36,7 @@
   width: 10rem;
   margin-bottom: 12px;
   overflow: hidden;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid $cfg-line;
   border-radius: 11px;
 }

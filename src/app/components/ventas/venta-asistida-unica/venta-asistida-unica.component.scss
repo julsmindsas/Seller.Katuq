@@ -449,7 +449,7 @@
   .category-inline-select {
     border: 1px solid var(--kc-line);
     border-radius: 10px;
-    background: #fff;
+    background: var(--ds-surface);
     padding: 8px 12px;
     font-size: 13px;
     font-weight: 700;
@@ -486,7 +486,7 @@
     align-items: center;
     gap: 9px;
     padding: 14px 18px;
-    background: #fff;
+    background: var(--ds-surface);
     border-bottom: 1px solid var(--kc-line2);
     font-family: var(--kc-font-head);
     font-weight: 700;
@@ -544,7 +544,7 @@
   .field-input,
   .country-code {
     @include kc-input;
-    background: #fff;
+    background: var(--ds-surface);
     width: 100%;
   }
 
@@ -567,7 +567,7 @@
     padding: 2px 8px;
     border: 1px solid var(--kc-red);
     border-radius: 999px;
-    background: #fff;
+    background: var(--ds-surface);
     font-size: 11px;
     font-weight: 700;
     color: var(--kc-red);
@@ -810,7 +810,7 @@
 
     &.has-value {
       border-color: #cbc0f2;
-      background: #fff;
+      background: var(--ds-surface);
     }
   }
 
@@ -1085,7 +1085,7 @@
       width: 100%;
       text-align: left;
       border: 2px solid var(--kc-line);
-      background: #fff;
+      background: var(--ds-surface);
       border-radius: 14px;
       padding: 14px 16px;
       cursor: pointer;
@@ -1132,7 +1132,7 @@
         border-radius: 50%;
         flex-shrink: 0;
         border: 2px solid #cfd3df;
-        background: #fff;
+        background: var(--ds-surface);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1225,7 +1225,7 @@
       &:hover:not(.active) { color: var(--kc-accent); }
 
       &.active {
-        background: #fff;
+        background: var(--ds-surface);
         color: var(--kc-accent);
         border-bottom-color: transparent;
         box-shadow: 0 1px 3px rgba(30, 35, 60, 0.12);
@@ -1332,7 +1332,7 @@
   .form-control,
   .form-select {
     @include kc-input;
-    background: #fff;
+    background: var(--ds-surface);
   }
 }
 
@@ -1367,7 +1367,7 @@
       outline: none;
       border-color: var(--kc-accent);
       box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
-      background: #fff;
+      background: var(--ds-surface);
     }
   }
 
@@ -1542,7 +1542,7 @@
 
       // "Configurar" — blanco plano con borde
       &.btn-action-config {
-        background: #fff;
+        background: var(--ds-surface);
         color: var(--kc-ink2);
         border: 1px solid #e4e5ee;
 
@@ -1832,7 +1832,7 @@
     border: 1px solid #ecedf3;
     border-radius: 16px;
     overflow: hidden;
-    background: #fff;
+    background: var(--ds-surface);
     box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
   }
 
@@ -1852,7 +1852,7 @@
     border-top: 1px solid #f0f1f6 !important;   // separador entre filas
     box-shadow: none !important;
     height: auto !important;
-    background: #fff;
+    background: var(--ds-surface);
     transition: background 0.12s ease;
 
     &:hover {
@@ -2081,7 +2081,7 @@
       height: 38px !important;
       border-radius: 10px !important;
       padding: 0 !important;
-      background: #fff !important;
+      background: var(--ds-surface) !important;
       color: #6c4ce0 !important;
       border: 1px solid #e4e5ee !important;
 
@@ -2414,7 +2414,7 @@
 
   // Tab activa = fondo blanco + acento + sombra suave (sin subrayado)
   .payment-tabs .nav-link.active {
-    background: #ffffff !important;
+    background: var(--ds-surface) !important;
     color: #6c4ce0 !important;
     border-bottom: none !important;
     border-bottom-color: transparent !important;
@@ -2448,7 +2448,7 @@
     height: auto !important;
     border: 2px solid #ecedf3 !important;
     border-radius: 12px !important;
-    background: #ffffff !important;
+    background: var(--ds-surface) !important;
     transition: border-color 0.14s ease, background 0.14s ease;
   }
 
@@ -2504,7 +2504,7 @@
     margin: 0 !important;
     border-radius: 50% !important;
     border: 2px solid #cfd3df !important;
-    background: #ffffff !important;
+    background: var(--ds-surface) !important;
     box-sizing: border-box !important;
     display: flex !important;
     align-items: center;
@@ -2519,7 +2519,7 @@
     box-shadow: none !important;
   }
   .payment-radio:checked + .payment-method-card i {
-    background: #ffffff !important;
+    background: var(--ds-surface) !important;
     color: #6c4ce0 !important;
   }
   .payment-radio:checked + .payment-method-card span {
@@ -2921,7 +2921,7 @@
         margin: 0;
         border: 1px solid #e4e5ee;
         border-radius: 9px;
-        background: #fff;
+        background: var(--ds-surface);
         color: var(--kc-ink2);
         font-family: var(--kc-font-body);
         font-weight: 700;
@@ -2948,7 +2948,7 @@
       }
 
       &.disabled .page-link {
-        background: #fff;
+        background: var(--ds-surface);
         border-color: #e4e5ee;
         color: #c4c8d4;
       }
@@ -3078,7 +3078,7 @@
 
   // Botones secundarios (Importar / Cargar / Plantilla): blancos con borde
   .entrega-header__actions .btn.btn-outline-secondary {
-    background: #fff !important;
+    background: var(--ds-surface) !important;
     border: 1px solid #e4e5ee !important;
     color: var(--kc-ink2) !important;
     border-radius: 10px !important;
@@ -3741,7 +3741,7 @@
   // El encabezado de la app es fijo: sin este margen el scroll automático deja
   // la banda verde de confirmación tapada por la barra superior.
   scroll-margin-top: 84px;
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #dff0e5;
   border-radius: 18px;
   overflow: hidden;
@@ -3766,7 +3766,7 @@
 
     .order-badge {
       margin-left: auto;
-      background: #ffffff;
+      background: var(--ds-surface);
       border: 1px solid #cfeadb;
       border-radius: 999px;
       padding: 5px 12px;
@@ -3808,7 +3808,7 @@
   }
 
   .btn-outline-secondary {
-    background: #fff;
+    background: var(--ds-surface);
     border-color: var(--kc-line);
     color: var(--kc-ink);
 

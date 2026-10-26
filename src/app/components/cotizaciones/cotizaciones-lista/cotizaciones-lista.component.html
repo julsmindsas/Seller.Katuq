@@ -506,6 +506,14 @@
                 >
                   Catálogo
                 </span>
+                <!-- D-518 (F2-43·6): la solicitud que llega desde la página web -->
+                <span
+                  *ngIf="c.origen === 'sitio-web'"
+                  class="origen-chip"
+                  title="Solicitud desde la página web"
+                >
+                  Web
+                </span>
               </div>
             </td>
             <td>

@@ -6,7 +6,7 @@
 .lfm-cabeza {
   align-items: center;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid $cfg-line;
 }
 .lfm-titulo {
@@ -34,7 +34,7 @@
 .lfm-pie {
   gap: 8px;
   padding: 14px 20px;
-  background: #fff;
+  background: var(--ds-surface);
   border-top: 1px solid $cfg-line-soft;
 }
 .lfm-pie .lfm-btn {
@@ -52,9 +52,9 @@
   &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
 }
 .lfm-pie .lfm-btn.lfm-btn--sec {
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-body;
-  border-color: #e4e2ef;
+  border-color: var(--ds-line-strong);
   box-shadow: none;
 
   &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }

@@ -7,6 +7,7 @@ import { AgendaService } from '../agenda.service';
 import { ConfigAgenda, ModoAgenda, PersonaAgenda, ServicioAgenda } from '../agenda.models';
 import { NOMBRES_DIAS, minutos } from '../agenda-fechas';
 
+import { TranslateService } from '@ngx-translate/core';
 interface DiaEditable {
   clave: string;
   nombre: string;
@@ -48,6 +49,7 @@ export class AgendaConfigComponent implements OnInit {
     private readonly agenda: AgendaService,
     private readonly router: Router,
     private readonly toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -59,7 +61,7 @@ export class AgendaConfigComponent implements OnInit {
       },
       error: (e) => {
         this.cargando = false;
-        this.error = e?.error?.message || 'No pudimos abrir la configuración de la Agenda.';
+        this.error = e?.error?.message || this.translate.instant('agenda.agendaConfig.noPudimosAbrirLaConfiguracion');
       },
     });
   }
@@ -69,7 +71,7 @@ export class AgendaConfigComponent implements OnInit {
     this.paso = c.slotMinutes;
     this.dias = NOMBRES_DIAS.map((d) => {
       const bloques = (c.hours?.[d.clave] || []).map(([desde, hasta]) => ({ desde, hasta }));
-      return { clave: d.clave, nombre: d.largo, abierto: bloques.length > 0, bloques: bloques.length ? bloques : [{ desde: '08:00', hasta: '18:00' }] };
+      return { clave: d.clave, nombre: this.translate.instant(d.largo), abierto: bloques.length > 0, bloques: bloques.length ? bloques : [{ desde: '08:00', hasta: '18:00' }] };
     });
     this.franjasTexto = (c.windows || []).join('\n');
     this.capacidad = c.capacity || 1;
@@ -98,7 +100,7 @@ export class AgendaConfigComponent implements OnInit {
       otro.abierto = d.abierto;
       otro.bloques = d.bloques.map((b) => ({ ...b }));
     }
-    this.toastr.info(`Horario de ${d.nombre.toLowerCase()} copiado de lunes a sábado.`);
+    this.toastr.info(this.translate.instant('agenda.agendaConfig.horarioCopiado', { dia: d.nombre.toLowerCase() }));
   }
 
   // ── Personas ───────────────────────────────────────────────────────────────
@@ -110,11 +112,11 @@ export class AgendaConfigComponent implements OnInit {
   async quitarPersona(i: number): Promise<void> {
     const p = this.personas[i];
     const r = await Swal.fire({
-      title: `¿Quitar a ${p.name || 'esta persona'}?`,
-      text: 'Sus citas se conservan. Si solo dejó de atender por un tiempo, mejor desactívala.',
+      title: this.translate.instant('agenda.agendaConfig.quitarA', { nombre: p.name || this.translate.instant('agenda.agendaConfig.estaPersona') }),
+      text: this.translate.instant('agenda.agendaConfig.susCitasSeConservanSi'),
       showCancelButton: true,
-      confirmButtonText: 'Quitar',
-      cancelButtonText: 'No',
+      confirmButtonText: this.translate.instant('agenda.agendaConfig.quitar'),
+      cancelButtonText: this.translate.instant('comun.no'),
       confirmButtonColor: '#D64545',
     });
     if (r.isConfirmed) this.personas.splice(i, 1);
@@ -132,10 +134,10 @@ export class AgendaConfigComponent implements OnInit {
         }
       }
     }
-    if (!this.dias.some((d) => d.abierto)) return { problema: 'Abre al menos un día de atención.' };
+    if (!this.dias.some((d) => d.abierto)) return { problema: this.translate.instant('agenda.agendaConfig.abreAlMenosUnDia') };
     const windows = this.franjasTexto.split('\n').map((s) => s.trim()).filter(Boolean);
-    if (this.modo === 'window' && !windows.length) return { problema: 'Escribe al menos una franja, por ejemplo 8:00 - 10:00.' };
-    if (this.personas.some((p) => !p.name.trim())) return { problema: 'Cada persona que atiende necesita un nombre.' };
+    if (this.modo === 'window' && !windows.length) return { problema: this.translate.instant('agenda.agendaConfig.escribeAlMenosUnaFranja') };
+    if (this.personas.some((p) => !p.name.trim())) return { problema: this.translate.instant('agenda.agendaConfig.cadaPersonaQueAtiendeNecesita') };
     return {
       config: {
         mode: this.modo,
@@ -162,12 +164,12 @@ export class AgendaConfigComponent implements OnInit {
     this.agenda.guardarConfig(config).subscribe({
       next: () => {
         this.guardando = false;
-        this.toastr.success('Agenda guardada.');
+        this.toastr.success(this.translate.instant('agenda.agendaConfig.agendaGuardada'));
         this.router.navigate(['/agenda']);
       },
       error: (e) => {
         this.guardando = false;
-        this.error = e?.error?.message || 'No pudimos guardar la configuración.';
+        this.error = e?.error?.message || this.translate.instant('agenda.agendaConfig.noPudimosGuardarLaConfiguracion');
       },
     });
   }

@@ -7,6 +7,7 @@ import { DianInvoiceService } from './dian-invoice.service';
 import { ManualInvoiceFormComponent } from './manual-invoice-form.component';
 import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH, invoiceTotals } from './invoice-composer.models';
 
+import { TranslateService } from '@ngx-translate/core';
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 @Component({
@@ -44,7 +45,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   private notified = '';
   private request?: Subscription;
 
-  constructor(private invoices: DianInvoiceService, private integrations: IntegrationsService) {
+  constructor(private invoices: DianInvoiceService, private integrations: IntegrationsService, private translate: TranslateService) {
     this.companyId = this.activeCompanyId();
   }
   ngOnInit(): void {
@@ -54,7 +55,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
         this.requestId = saved.requestId; this.phase = saved.phase === 'submit' ? 'submit' : 'review';
         this.unknown = true; this.restored = true; this.checkingStoredRequest = true; this.refreshStatus();
       }
-    } catch (_) { this.storageError = 'No pudimos recuperar el último envío del navegador. No emitas hasta revisar el historial.'; }
+    } catch (_) { this.storageError = this.translate.instant('facturacionElectronica.composer.noPudimosRecuperarElUltimo'); }
   }
   private activeCompanyId(): string {
     try { return this.integrations.getActiveCompanyId(); } catch (_) { return ''; }
@@ -70,20 +71,20 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   get nextNumber(): string {
     const numbering = this.integration?.config?.numbering;
-    return numbering?.prefix && numbering?.current ? numbering.prefix + numbering.current : 'Se asigna al emitir';
+    return numbering?.prefix && numbering?.current ? numbering.prefix + numbering.current : this.translate.instant('facturacionElectronica.composer.seAsignaAlEmitir');
   }
   get statusTitle(): string {
-    const labels = { draft: 'Borrador guardado · Por completar', ready: 'Revisión guardada · Aún no emitida', processing: 'Envío en proceso',
-      accepted: 'Factura aceptada por la DIAN', rejected: 'La DIAN rechazó la factura',
-      failed: 'No se envió la factura', uncertain: 'Falta confirmar el resultado' };
-    return this.unknown ? 'Consultemos el resultado antes de continuar' : labels[this.record?.status || 'ready'];
+    const labels = { draft: this.translate.instant('facturacionElectronica.composer.borradorGuardadoPorCompletar'), ready: this.translate.instant('facturacionElectronica.composer.revisionGuardadaAunNoEmitida'), processing: this.translate.instant('facturacionElectronica.composer.envioEnProceso'),
+      accepted: this.translate.instant('facturacionElectronica.composer.facturaAceptadaPorLaDian'), rejected: this.translate.instant('facturacionElectronica.composer.laDianRechazoLaFactura'),
+      failed: this.translate.instant('facturacionElectronica.composer.noSeEnvioLaFactura'), uncertain: this.translate.instant('facturacionElectronica.composer.faltaConfirmarElResultado') };
+    return this.unknown ? this.translate.instant('facturacionElectronica.composer.consultemosElResultadoAntesDe') : labels[this.record?.status || 'ready'];
   }
   private remember(): boolean {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify({ requestId: this.requestId, phase: this.phase }));
       this.storageError = ''; return true;
     } catch (_) {
-      this.storageError = 'El navegador no permite guardar la referencia del envío. Habilita el almacenamiento antes de emitir.';
+      this.storageError = this.translate.instant('facturacionElectronica.composer.elNavegadorNoPermiteGuardar');
       return false;
     }
   }
@@ -92,9 +93,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.mode = mode; this.invalidate();
   }
   get observationsError(): string {
-    if (this.observations.length > this.maxObservationsLength) return 'Las observaciones admiten hasta 1000 caracteres.';
+    if (this.observations.length > this.maxObservationsLength) return this.translate.instant('facturacionElectronica.composer.lasObservacionesAdmitenHasta1000');
     if (/[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(this.observations)) {
-      return 'Las observaciones contienen caracteres no admitidos. Escríbelas como texto normal.';
+      return this.translate.instant('facturacionElectronica.composer.lasObservacionesContienenCaracteresNo');
     }
     return '';
   }
@@ -106,7 +107,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   invalidate(): void {
     if (this.loading || this.pending || this.record?.status === 'accepted') return;
-    if (this.draftId) this.draftMessage = 'Hay cambios sin guardar en este borrador.';
+    if (this.draftId) this.draftMessage = this.translate.instant('facturacionElectronica.composer.hayCambiosSinGuardarEn');
     this.preview = null; this.selection = null; this.record = null; this.requestId = '';
     this.confirmed = false; this.error = '';
     try { localStorage.removeItem(this.storageKey); } catch (_) {}
@@ -120,7 +121,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.loading || this.pending) {
-      this.error ||= 'Primero debemos confirmar la operación anterior. Usa Consultar estado; no se ha abierto ni enviado otra factura.';
+      this.error ||= this.translate.instant('facturacionElectronica.composer.primeroDebemosConfirmarLaOperacion');
       return;
     }
     this.startNew();
@@ -128,14 +129,14 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   startNew(): void {
     if (this.loading || this.pending || this.companyChanged) return;
     if (!this.record && (this.manualForm?.form.dirty || this.observationsDirty)) {
-      this.confirm('¿Empezar una factura nueva?', 'Tienes datos sin guardar. Los borradores ya guardados se conservan en Borradores.', 'Sí, empezar otra')
+      this.confirm(this.translate.instant('facturacionElectronica.composer.empezarUnaFacturaNueva'), this.translate.instant('facturacionElectronica.composer.tienesDatosSinGuardarLos'), this.translate.instant('facturacionElectronica.composer.siEmpezarOtra'))
         .then(ok => { if (ok) this.resetComposer(); });
       return;
     }
     this.resetComposer();
   }
   private confirm(title: string, text: string, confirmButtonText: string): Promise<boolean> {
-    return Swal.fire({ icon: 'question', title, text, showCancelButton: true, confirmButtonText, cancelButtonText: 'Cancelar', confirmButtonColor: '#6c4ce0' })
+    return Swal.fire({ icon: 'question', title, text, showCancelButton: true, confirmButtonText, cancelButtonText: this.translate.instant('comun.cancelar'), confirmButtonColor: '#6c4ce0' })
       .then(result => result.isConfirmed);
   }
   private resetComposer(): void {
@@ -152,9 +153,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   correctInvoice(): void {
     if (!this.canCorrect) return;
     if (/Regla:\s*90\b|procesado anteriormente/i.test(this.record?.message || '')) {
-      this.confirm('Documento procesado anteriormente',
-        'La DIAN reportó un documento procesado anteriormente. Continúa solo si verificaste el historial y corregiste la numeración o la causa del duplicado. Esto recupera los datos, NO emite.',
-        'Continuar').then(ok => { if (ok && this.canCorrect) this.restoreForCorrection(); });
+      this.confirm(this.translate.instant('facturacionElectronica.composer.documentoProcesadoAnteriormente'),
+        this.translate.instant('facturacionElectronica.composer.laDianReportoUnDocumento'),
+        this.translate.instant('facturacionElectronica.composer.continuar')).then(ok => { if (ok && this.canCorrect) this.restoreForCorrection(); });
       return;
     }
     this.restoreForCorrection();
@@ -167,14 +168,14 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.observations = original.observations || ''; this.observationsDirty = false;
     if (original.source === 'manual') {
       this.manualForm?.restoreDraft(original.invoice);
-      this.draftMessage = 'Datos recuperados del intento anterior. Revisa y guarda nuevamente antes de emitir. El rechazo original permanece en el historial.';
+      this.draftMessage = this.translate.instant('facturacionElectronica.composer.datosRecuperadosDelIntentoAnterior');
     } else this.reviewOrder(original.orderId);
   }
   saveDraft(invoice: ManualInvoice): void {
     if (this.editorDisabled) return;
     if (this.observationsError) { this.error = this.observationsError; return; }
     this.invalidate(); this.showDrafts = false; this.draftMessage = '';
-    try { this.draftId ||= crypto.randomUUID(); } catch (_) { this.error = 'No pudimos identificar el borrador.'; return; }
+    try { this.draftId ||= crypto.randomUUID(); } catch (_) { this.error = this.translate.instant('facturacionElectronica.composer.noPudimosIdentificarElBorrador'); return; }
     this.loading = true;
     this.request = defer(() => this.invoices.saveDraft(this.draftId, invoice, this.draftVersion, this.observations.trim()))
       .pipe(finalize(() => this.loading = false)).subscribe({
@@ -182,20 +183,20 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
           if (this.companyChanged) return;
           this.draftVersion = record.version || 0;
           if (this.observations.trim() !== (record.selection?.observations || '')) {
-            this.error = 'El servidor no confirmó las observaciones guardadas. Conservamos tu texto; actualiza el backend antes de continuar.';
+            this.error = this.translate.instant('facturacionElectronica.composer.elServidorNoConfirmoLas');
             return;
           }
-          this.draftMessage = 'Borrador guardado en este comercio. Puedes cerrar la página y continuarlo desde Borradores. No se ha emitido.';
+          this.draftMessage = this.translate.instant('facturacionElectronica.composer.borradorGuardadoEnEsteComercio');
           this.manualForm?.form.markAsPristine();
           this.observationsDirty = false;
         },
-        error: error => { if (!this.companyChanged) this.error = error?.error?.message || 'No se confirmó el guardado. Consulta Borradores antes de guardar otra copia.'; },
+        error: error => { if (!this.companyChanged) this.error = error?.error?.message || this.translate.instant('facturacionElectronica.composer.noSeConfirmoElGuardado'); },
       });
   }
   openDraft(id: string): void {
     if (this.loading || this.pending || this.companyChanged) return;
     if (this.manualForm?.form.dirty || this.observationsDirty) {
-      this.confirm('¿Abrir este borrador?', 'Abrir otro borrador reemplaza los datos sin guardar de este formulario.', 'Sí, abrir')
+      this.confirm(this.translate.instant('facturacionElectronica.composer.abrirEsteBorrador'), this.translate.instant('facturacionElectronica.composer.abrirOtroBorradorReemplazaLos'), this.translate.instant('facturacionElectronica.composer.siAbrir'))
         .then(ok => { if (ok) this.loadDraft(id); });
       return;
     }
@@ -214,7 +215,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
           this.manualForm?.restoreDraft(record.selection.invoice);
           this.observations = record.selection.observations || ''; this.observationsDirty = false;
           this.draftId = id; this.draftVersion = record.version || 0;
-          this.draftMessage = 'Borrador recuperado. Comprobamos nuevamente los datos del cliente antes de revisar.';
+          this.draftMessage = this.translate.instant('facturacionElectronica.composer.borradorRecuperadoComprobamosNuevamenteLos');
         } else {
           this.draftId = ''; this.draftVersion = 0; this.draftMessage = '';
           this.requestId = id; this.phase = record.status === 'ready' ? 'review' : 'submit';
@@ -235,7 +236,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.preview = null; this.record = null; this.confirmed = false; this.error = '';
     this.selection = selection;
     try { this.requestId = this.mode === 'manual' && this.draftId ? this.draftId : crypto.randomUUID(); }
-    catch (_) { this.error = 'Abre Katuq en un navegador actualizado con conexión HTTPS para preparar el envío.'; return; }
+    catch (_) { this.error = this.translate.instant('facturacionElectronica.composer.abreKatuqEnUnNavegador'); return; }
     this.phase = 'review';
     if (!this.remember()) return;
     this.loading = true;
@@ -294,14 +295,14 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.loading = true; this.error = '';
     this.request = defer(() => this.invoices.recoverDocuments(this.requestId)).pipe(finalize(() => this.loading = false)).subscribe({
       next: record => this.adopt(record),
-      error: error => { if (!this.companyChanged) this.error = error?.error?.message || 'No se completó la recuperación. La factura sigue aceptada; no la emitas otra vez.'; },
+      error: error => { if (!this.companyChanged) this.error = error?.error?.message || this.translate.instant('facturacionElectronica.composer.noSeCompletoLaRecuperacion'); },
     });
   }
   private adopt(record: InvoiceRequest): void {
     if (this.companyChanged || record.requestId !== this.requestId) return;
     if (record.status === 'ready' && this.selection &&
       (record.preview?.observations || '') !== (this.selection.observations || '')) {
-      this.error = 'Las observaciones del resumen no coinciden con las escritas. No emitas: actualiza el backend y vuelve a revisar.';
+      this.error = this.translate.instant('facturacionElectronica.composer.lasObservacionesDelResumenNo');
       this.record = null; this.preview = null; this.confirmed = false;
       return;
     }
@@ -316,9 +317,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   private message(error: any): string {
     return error?.error?.message || (error?.name === 'TimeoutError' || error?.status === 0
-      ? 'La conexión no confirmó el resultado. Usa Consultar estado; no crees otra factura para esta venta.'
-      : error?.status === 404 ? 'No encontramos esta operación. Verifica que el backend esté actualizado.'
-      : 'No pudimos completar la operación. Consulta el estado antes de intentar otro envío.');
+      ? this.translate.instant('facturacionElectronica.composer.laConexionNoConfirmoEl')
+      : error?.status === 404 ? this.translate.instant('facturacionElectronica.composer.noEncontramosEstaOperacionVerifica')
+      : this.translate.instant('facturacionElectronica.composer.noPudimosCompletarLaOperacion'));
   }
   // ===== Resumen en vivo y lista de pendientes (panel lateral) =====
   get liveTotals() {
@@ -338,9 +339,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   get checks(): { ok: boolean; label: string }[] {
     return [
-      { ok: this.customerDone, label: this.customerDone ? 'Cliente con datos fiscales completos' : 'Elige un cliente registrado' },
-      { ok: this.itemsDone, label: this.itemsDone ? 'Conceptos con nombre y valor' : 'Agrega al menos un concepto con valor' },
-      { ok: this.paymentDone, label: this.paymentDone ? 'Forma y medio de pago definidos' : 'Elige el medio de pago' },
+      { ok: this.customerDone, label: this.customerDone ? this.translate.instant('facturacionElectronica.composer.clienteConDatosFiscalesCompletos') : this.translate.instant('facturacionElectronica.composer.eligeUnClienteRegistrado') },
+      { ok: this.itemsDone, label: this.itemsDone ? this.translate.instant('facturacionElectronica.composer.conceptosConNombreYValor') : this.translate.instant('facturacionElectronica.composer.agregaAlMenosUnConcepto') },
+      { ok: this.paymentDone, label: this.paymentDone ? this.translate.instant('facturacionElectronica.composer.formaYMedioDePago') : this.translate.instant('facturacionElectronica.composer.eligeElMedioDePago') },
     ];
   }
   reviewFromSummary(): void { if (!this.editorDisabled) this.manualForm?.reviewInvoice(); }
@@ -348,9 +349,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   get observationTemplates(): { label: string; text: string }[] {
     const now = new Date();
     return [
-      { label: 'Periodo del servicio', text: `Servicio correspondiente a ${MONTHS[now.getMonth()]} de ${now.getFullYear()}.` },
-      { label: 'Instrucciones de pago', text: 'Indicar el número de factura al realizar el pago.' },
-      { label: 'Gracias por tu compra', text: 'Gracias por tu compra. Cualquier inquietud sobre esta factura escríbenos.' },
+      { label: this.translate.instant('facturacionElectronica.composer.periodoDelServicio'), text: `Servicio correspondiente a ${MONTHS[now.getMonth()]} de ${now.getFullYear()}.` },
+      { label: this.translate.instant('facturacionElectronica.composer.instruccionesDePago'), text: 'Indicar el número de factura al realizar el pago.' },
+      { label: this.translate.instant('facturacionElectronica.composer.graciasPorTuCompra'), text: 'Gracias por tu compra. Cualquier inquietud sobre esta factura escríbenos.' },
     ];
   }
   applyTemplate(text: string): void {

@@ -209,34 +209,54 @@ $aviso-estados: (
 }
 
 // ---------------------------------------------------------------- Modo oscuro
+// D-502 F1 (ticket 1180, tarea 3.6): el oscuro de los avisos sale de los tokens --ds-* de
+// shared/styles/_theme-tokens.scss (una sola fuente de colores por tema), no de un juego propio.
+// Superficie surface-2, borde line-strong, título ink, texto body, enlaces accent-ink, cerrar muted
+// (ink al pasar el mouse) y foco --ds-focus. Cada ícono lleva su semántico oscuro sobre su -soft
+// (>= 5,9:1, tests/theme/theme-tokens.test.js). La sombra queda literal: no hay token con esa forma.
+// Las reglas claras de arriba no cambian. Prueba: tests/theme/marco-tokens.test.js.
 body.dark-only {
   #toast-container > .ngx-toastr,
   .p-toast .p-toast-message {
-    background: #262633 !important;
-    background-color: #262633 !important;
-    border-color: #34344a !important;
+    background: var(--ds-surface-2) !important;
+    background-color: var(--ds-surface-2) !important;
+    border-color: var(--ds-line-strong) !important;
     box-shadow: 0 12px 28px -12px rgba(0, 0, 0, .6) !important;
-    color: #ECEBF5 !important;
+    color: var(--ds-ink) !important;
   }
 
   #toast-container > .ngx-toastr {
-    .toast-title { color: #ECEBF5; }
-    .toast-message { color: #b9b6cf; }
+    .toast-title { color: var(--ds-ink); }
+    .toast-message { color: var(--ds-body); }
+
+    .toast-message a,
+    .toast-message label { color: var(--ds-accent-ink); }
+
+    .toast-close-button {
+      color: var(--ds-muted);
+
+      &:hover,
+      &:focus { color: var(--ds-ink); }
+
+      &:focus-visible { outline-color: var(--ds-focus) !important; }
+    }
   }
 
-  // Íconos con el fondo del estado translúcido: el suave claro brilla demasiado sobre oscuro.
+  // Íconos: el semántico oscuro sobre su fondo suave oscuro.
   #toast-container > .ngx-toastr::before,
-  .p-toast .p-toast-message .p-toast-message-icon { background: rgba(30, 111, 217, .18) !important; color: #7FB0F0 !important; }
+  .p-toast .p-toast-message .p-toast-message-icon { background: var(--ds-info-soft) !important; color: var(--ds-info) !important; }
   #toast-container > .ngx-toastr.toast-success::before,
-  .p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon { background: rgba(30, 135, 75, .2) !important; color: #6FD39B !important; }
+  .p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon { background: var(--ds-ok-soft) !important; color: var(--ds-ok) !important; }
   #toast-container > .ngx-toastr.toast-warning::before,
-  .p-toast .p-toast-message.p-toast-message-warn .p-toast-message-icon { background: rgba(217, 130, 10, .2) !important; color: #F2B661 !important; }
+  .p-toast .p-toast-message.p-toast-message-warn .p-toast-message-icon { background: var(--ds-warn-soft) !important; color: var(--ds-warn) !important; }
   #toast-container > .ngx-toastr.toast-error::before,
-  .p-toast .p-toast-message.p-toast-message-error .p-toast-message-icon { background: rgba(214, 69, 69, .2) !important; color: #F08A8A !important; }
+  .p-toast .p-toast-message.p-toast-message-error .p-toast-message-icon { background: var(--ds-err-soft) !important; color: var(--ds-err) !important; }
 
   .p-toast .p-toast-message {
-    .p-toast-summary { color: #ECEBF5 !important; }
-    .p-toast-detail { color: #b9b6cf !important; }
-    .p-toast-icon-close:hover { background: #34344a !important; color: #ECEBF5 !important; }
+    .p-toast-summary { color: var(--ds-ink) !important; }
+    .p-toast-detail { color: var(--ds-body) !important; }
+    .p-toast-icon-close { color: var(--ds-muted) !important; }
+    .p-toast-icon-close:hover { background: var(--ds-line-strong) !important; color: var(--ds-ink) !important; }
+    .p-toast-icon-close:focus-visible { outline-color: var(--ds-focus) !important; }
   }
 }

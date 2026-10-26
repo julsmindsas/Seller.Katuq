@@ -12,6 +12,7 @@ import {
   PaymentStateMeta,
 } from '../../tesoreria.constants';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Spec 013 — Tesorería MVP. Modal "Cambiar Estado" (T-18, CA-09/10).
  * Muestra los estados destino permitidos por la matriz (validada en el server)
@@ -39,6 +40,7 @@ export class CambiarEstadoPagoComponent implements OnInit {
     public activeModal: NgbActiveModal,
     private treasury: TreasuryService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -95,8 +97,8 @@ export class CambiarEstadoPagoComponent implements OnInit {
         this.submitting = false;
         const devolvio = mercanciaVolvio && res?.devolucionInventario === true;
         this.toastr.success(
-          `Estado cambiado a ${this.meta(this.estadoSeleccionado).label}.` +
-            (devolvio ? ' El inventario se devolvió a la bodega.' : ''),
+          this.translate.instant('tesoreria.cambiarEstadoPago.estadoCambiadoA', { estado: this.meta(this.estadoSeleccionado).label }) +
+            (devolvio ? ' ' + this.translate.instant('tesoreria.cambiarEstadoPago.elInventarioSeDevolvioA') : ''),
         );
         this.activeModal.close({ changed: true });
       },
@@ -105,10 +107,10 @@ export class CambiarEstadoPagoComponent implements OnInit {
         const conflict = err?.status === 409;
         Swal.fire({
           icon: 'warning',
-          title: conflict ? 'Transición no permitida' : 'No se pudo cambiar el estado',
+          title: conflict ? this.translate.instant('tesoreria.cambiarEstadoPago.transicionNoPermitida') : this.translate.instant('tesoreria.cambiarEstadoPago.noSePudoCambiarEl'),
           text: conflict
-            ? 'La transición ya no es válida (el estado del pedido cambió). Actualiza la lista.'
-            : 'Ocurrió un error al cambiar el estado. Inténtalo de nuevo.',
+            ? this.translate.instant('tesoreria.cambiarEstadoPago.laTransicionYaNoEs')
+            : this.translate.instant('tesoreria.cambiarEstadoPago.ocurrioUnErrorAlCambiar'),
         });
       },
     });

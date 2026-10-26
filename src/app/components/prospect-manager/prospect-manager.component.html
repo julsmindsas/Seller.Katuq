@@ -4,9 +4,9 @@
   <div *ngIf="loading" class="loading-overlay">
     <div class="spinner-container">
       <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Cargando...</span>
+        <span class="visually-hidden">{{ 'prospectManager.cargando' | translate }}</span>
       </div>
-      <p class="loading-text mt-2">Cargando prospectos...</p>
+      <p class="loading-text mt-2">{{ 'prospectManager.cargandoProspectos' | translate }}</p>
     </div>
   </div>
 
@@ -14,9 +14,9 @@
     <header class="cfg-cabeza prospect-cabeza">
         <!-- Información del módulo -->
         <div class="cfg-cabeza__textos">
-          <span class="cfg-eyebrow">Gestión General</span>
-          <h1 class="cfg-titulo">Gestión de Prospectos</h1>
-          <p class="cfg-sub">Gestiona y da seguimiento a tus prospectos web</p>
+          <span class="cfg-eyebrow">{{ 'prospectManager.gestionGeneral' | translate }}</span>
+          <h1 class="cfg-titulo">{{ 'prospectManager.gestionDeProspectos' | translate }}</h1>
+          <p class="cfg-sub">{{ 'prospectManager.gestionaYDaSeguimientoA' | translate }}</p>
         </div>
         
         <!-- Controles y acciones -->
@@ -27,16 +27,16 @@
               <form [formGroup]="searchForm" (ngSubmit)="searchProspects()">
                 <div class="input-group">
                   <select class="form-select filter-select" formControlName="filterStatus">
-                    <option value="all">Todos</option>
-                    <option value="new">Nuevos</option>
-                    <option value="contacted">Contactados</option>
-                    <option value="meeting-scheduled">Con Cita</option>
-                    <option value="demo-completed">Demo Completa</option>
-                    <option value="started">Iniciados</option>
-                    <option value="closed">Cerrados</option>
+                    <option value="all">{{ 'prospectManager.todos' | translate }}</option>
+                    <option value="new">{{ 'prospectManager.nuevos' | translate }}</option>
+                    <option value="contacted">{{ 'prospectManager.contactados' | translate }}</option>
+                    <option value="meeting-scheduled">{{ 'prospectManager.conCita' | translate }}</option>
+                    <option value="demo-completed">{{ 'prospectManager.demoCompleta' | translate }}</option>
+                    <option value="started">{{ 'prospectManager.iniciados' | translate }}</option>
+                    <option value="closed">{{ 'prospectManager.cerrados' | translate }}</option>
                   </select>
                   <input #searchInput class="form-control search-input" type="text" 
-                         placeholder="Buscar prospecto..." formControlName="searchTerm">
+                         placeholder="{{ 'prospectManager.buscarProspecto' | translate }}" formControlName="searchTerm">
                   <button type="submit" class="cfg-btn search-btn">
                     <i class="fa fa-search"></i>
                   </button>
@@ -51,37 +51,37 @@
               <button class="cfg-btn cfg-btn--sec dropdown-toggle" type="button" 
                       data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa fa-sort"></i>
-                <span>Ordenar</span>
+                <span>{{ 'prospectManager.ordenar' | translate }}</span>
               </button>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" (click)="changeSort('date-desc')">
-                  <i class="fa fa-calendar-alt me-2"></i>Más recientes primero
+                  <i class="fa fa-calendar-alt me-2"></i>{{ 'prospectManager.masRecientesPrimero' | translate }}
                 </a></li>
                 <li><a class="dropdown-item" (click)="changeSort('date-asc')">
-                  <i class="fa fa-calendar me-2"></i>Más antiguos primero
+                  <i class="fa fa-calendar me-2"></i>{{ 'prospectManager.masAntiguosPrimero' | translate }}
                 </a></li>
                 <li><a class="dropdown-item" (click)="changeSort('company-asc')">
-                  <i class="fa fa-sort-alpha-down me-2"></i>Empresa (A-Z)
+                  <i class="fa fa-sort-alpha-down me-2"></i>{{ 'prospectManager.empresaAZ' | translate }}
                 </a></li>
                 <li><a class="dropdown-item" (click)="changeSort('company-desc')">
-                  <i class="fa fa-sort-alpha-up me-2"></i>Empresa (Z-A)
+                  <i class="fa fa-sort-alpha-up me-2"></i>{{ 'prospectManager.empresaZA' | translate }}
                 </a></li>
                 <li><a class="dropdown-item" (click)="changeSort('priority-high')">
-                  <i class="fa fa-flag me-2"></i>Prioridad (Alta → Baja)
+                  <i class="fa fa-flag me-2"></i>{{ 'prospectManager.prioridadAltaBaja' | translate }}
                 </a></li>
               </ul>
             </div>
-            <button class="cfg-btn cfg-btn--sec" (click)="exportToCSV()" ngbTooltip="Exportar datos">
+            <button class="cfg-btn cfg-btn--sec" (click)="exportToCSV()" ngbTooltip="{{ 'prospectManager.exportarDatos' | translate }}">
               <i class="fa fa-file-export"></i>
-              <span>Exportar</span>
+              <span>{{ 'prospectManager.exportar' | translate }}</span>
             </button>
-            <button class="cfg-btn cfg-btn--sec" (click)="loadProspects()" ngbTooltip="Refrescar Lista">
+            <button class="cfg-btn cfg-btn--sec" (click)="loadProspects()" ngbTooltip="{{ 'prospectManager.refrescarLista' | translate }}">
               <i class="fa fa-sync-alt"></i>
-              <span>Refrescar</span>
+              <span>{{ 'prospectManager.refrescar' | translate }}</span>
             </button>
             <button class="cfg-btn" (click)="createNewProspect()">
               <i class="fa fa-plus"></i>
-              <span>Nuevo Prospecto</span>
+              <span>{{ 'prospectManager.nuevoProspecto' | translate }}</span>
             </button>
           </div>
         </div>
@@ -94,7 +94,7 @@
         <div class="col-md-3">
           <div class="stat-card">
             <div class="stat-card-header">
-              <h6 class="m-0">Progreso de conversión</h6>
+              <h6 class="m-0">{{ 'prospectManager.progresoDeConversion' | translate }}</h6>
             </div>
             <div class="stat-card-body">
               <div class="progress-container">
@@ -105,8 +105,8 @@
                        aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
                 <div class="d-flex justify-content-between mt-2">
-                  <small>{{ getOverallProgress() }}% completado</small>
-                  <small class="text-muted">{{ stats.total }} prospectos</small>
+                  <small>{{ getOverallProgress() }}{{ 'prospectManager.completado' | translate }}</small>
+                  <small class="text-muted">{{ stats.total }} {{ 'prospectManager.prospectos' | translate }}</small>
                 </div>
               </div>
             </div>
@@ -117,7 +117,7 @@
         <div class="col-md-9">
           <div class="stat-card">
             <div class="stat-card-header">
-              <h6 class="m-0">Distribución de prospectos</h6>
+              <h6 class="m-0">{{ 'prospectManager.distribucionDeProspectos' | translate }}</h6>
             </div>
             <div class="stat-card-body">
               <div class="status-pills">
@@ -125,43 +125,43 @@
                         [ngClass]="{'active': selectedFilter === 'all'}" 
                         (click)="filterByStatus('all')">
                   <div class="pill-count">{{ stats.total }}</div>
-                  <div class="pill-label">Todos</div>
+                  <div class="pill-label">{{ 'prospectManager.todos' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'new', 'bg-primary': selectedFilter === 'new'}" 
                         (click)="filterByStatus('new')">
                   <div class="pill-count">{{ stats.new }}</div>
-                  <div class="pill-label">Nuevos</div>
+                  <div class="pill-label">{{ 'prospectManager.nuevos' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'contacted', 'bg-info': selectedFilter === 'contacted'}" 
                         (click)="filterByStatus('contacted')">
                   <div class="pill-count">{{ stats.contacted }}</div>
-                  <div class="pill-label">Contactados</div>
+                  <div class="pill-label">{{ 'prospectManager.contactados' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'meeting-scheduled', 'bg-warning': selectedFilter === 'meeting-scheduled'}" 
                         (click)="filterByStatus('meeting-scheduled')">
                   <div class="pill-count">{{ stats.meetingScheduled }}</div>
-                  <div class="pill-label">Con Cita</div>
+                  <div class="pill-label">{{ 'prospectManager.conCita' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'demo-completed', 'bg-success': selectedFilter === 'demo-completed'}" 
                         (click)="filterByStatus('demo-completed')">
                   <div class="pill-count">{{ stats.demoCompleted }}</div>
-                  <div class="pill-label">Demo</div>
+                  <div class="pill-label">{{ 'prospectManager.demo' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'started', 'bg-success': selectedFilter === 'started'}" 
                         (click)="filterByStatus('started')">
                   <div class="pill-count">{{ stats.started }}</div>
-                  <div class="pill-label">Iniciados</div>
+                  <div class="pill-label">{{ 'prospectManager.iniciados' | translate }}</div>
                 </button>
                 <button class="status-pill" 
                         [ngClass]="{'active': selectedFilter === 'closed', 'bg-secondary': selectedFilter === 'closed'}" 
                         (click)="filterByStatus('closed')">
                   <div class="pill-count">{{ stats.closed }}</div>
-                  <div class="pill-label">Cerrados</div>
+                  <div class="pill-label">{{ 'prospectManager.cerrados' | translate }}</div>
                 </button>
               </div>
             </div>
@@ -176,9 +176,9 @@
       <div *ngIf="!loading && filteredProspects.length === 0" class="empty-state p-5">
         <div class="text-center">
           <i class="fa fa-search fa-3x text-muted mb-3"></i>
-          <h4>No se encontraron prospectos</h4>
-          <p class="text-muted">No hay prospectos que coincidan con tu búsqueda.</p>
-          <button class="btn btn-primary" (click)="filterByStatus('all')">Ver todos los prospectos</button>
+          <h4>{{ 'prospectManager.noSeEncontraronProspectos' | translate }}</h4>
+          <p class="text-muted">{{ 'prospectManager.noHayProspectosQueCoincidan' | translate }}</p>
+          <button class="btn btn-primary" (click)="filterByStatus('all')">{{ 'prospectManager.verTodosLosProspectos' | translate }}</button>
         </div>
       </div>
 
@@ -192,7 +192,7 @@
                 <div class="d-flex align-items-center">
                   <div class="status-indicator" [ngClass]="'bg-' + getStatusColor(prospect.status)"></div>
                   <div class="prospect-logo me-2">
-                    <img [src]="logoPath" alt="Logo" class="img-fluid">
+                    <img [src]="logoPath" alt="{{ 'prospectManager.logo' | translate }}" class="img-fluid">
                   </div>
                   <h4>{{ prospect.companyName }}</h4>
                 </div>
@@ -201,7 +201,7 @@
                   'priority-medium': prospect.priority === 'Media' || !prospect.priority,
                   'priority-low': prospect.priority === 'Baja'
                 }">
-                  {{ prospect.priority || 'Media' }}
+                  {{ prioridadEtiqueta(prospect.priority) }}
                 </span>
               </div>
               <p class="contact-info">
@@ -218,9 +218,9 @@
               <div class="d-flex gap-2 mt-2">
                 <button class="btn btn-primary btn-sm manage-btn flex-grow-1"
                         (click)="selectProspect(prospect)">
-                  Gestionar
+                  {{ 'prospectManager.gestionar' | translate }}
                 </button>
-                <button class="btn btn-sm pm-convertir" ngbTooltip="Convertir a cliente" 
+                <button class="btn btn-sm pm-convertir" ngbTooltip="{{ 'prospectManager.convertirACliente' | translate }}" 
                         (click)="convertToClient(prospect); $event.stopPropagation()">
                   <i class="fa fa-user-check"></i>
                 </button>
@@ -240,7 +240,7 @@
                     <h3 class="m-0 d-flex align-items-center">
                       <div *ngIf="!isNewProspect" class="status-indicator me-2" 
                            [ngClass]="'bg-' + getStatusColor(selectedProspect?.status)"></div>
-                      {{ isNewProspect ? 'Nuevo Prospecto' : 'Información del Prospecto' }}
+                      {{ isNewProspect ? ('prospectManager.nuevoProspecto' | translate) : ('prospectManager.informacionDelProspecto' | translate) }}
                       
                       <span class="badge ms-2" *ngIf="!isNewProspect && selectedProspect?.priority"
                             [ngClass]="{
@@ -248,28 +248,25 @@
                               'bg-warning': selectedProspect.priority === 'Media',
                               'bg-info': selectedProspect.priority === 'Baja'
                             }">
-                        {{ selectedProspect?.priority }}
+                        {{ prioridadEtiqueta(selectedProspect?.priority) }}
                       </span>
                     </h3>
                     <p class="text-muted mb-0" *ngIf="!isNewProspect">
-                      {{ getStatusLabel(selectedProspect?.status) }} · Última actualización: 
-                      {{ selectedProspect?.timeline?.length ? 
-                         (selectedProspect?.timeline[selectedProspect?.timeline.length-1].date | date:'dd/MM/yyyy HH:mm') : 
-                         (selectedProspect?.contactDate | date:'dd/MM/yyyy') }}
+                      {{ getStatusLabel(selectedProspect?.status) }} {{ 'prospectManager.ultimaActualizacion' | translate: { p0: (selectedProspect?.timeline?.length ? (selectedProspect?.timeline[selectedProspect?.timeline.length-1].date | date:'dd/MM/yyyy HH:mm') : (selectedProspect?.contactDate | date:'dd/MM/yyyy')) } }}
                     </p>
                   </div>
                   <div class="d-flex gap-2">
                     <!-- Acciones rápidas para contactar -->
                     <div class="btn-group me-2" *ngIf="!isNewProspect">
-                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="Enviar email" 
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="{{ 'prospectManager.enviarEmail' | translate }}" 
                               (click)="contactProspect('email')">
                         <i class="fa fa-envelope"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="Llamar" 
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="{{ 'prospectManager.llamar' | translate }}" 
                               (click)="contactProspect('phone')">
                         <i class="fa fa-phone"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="WhatsApp" 
+                      <button class="btn btn-sm btn-outline-primary" ngbTooltip="{{ 'prospectManager.whatsapp' | translate }}" 
                               (click)="contactProspect('whatsapp')">
                         <i class="fa fa-whatsapp"></i>
                       </button>
@@ -277,8 +274,8 @@
                     
                     <!-- Programar tarea -->
                     <button class="btn btn-sm btn-outline-warning me-2" *ngIf="!isNewProspect"
-                            (click)="scheduleTask(scheduleTaskModal)" ngbTooltip="Programar tarea">
-                      <i class="fa fa-calendar-plus"></i> Programar
+                            (click)="scheduleTask(scheduleTaskModal)" ngbTooltip="{{ 'prospectManager.programarTarea' | translate }}">
+                      <i class="fa fa-calendar-plus"></i> {{ 'prospectManager.programar' | translate }}
                     </button>
                     
                     <!-- Botón de editar/cancelar -->
@@ -286,10 +283,10 @@
                             [ngClass]="isEdit ? 'btn-outline-danger' : 'btn-outline-primary'" 
                             (click)="toggleEditMode()" *ngIf="!isNewProspect">
                       <i class="fa" [ngClass]="isEdit ? 'fa-times' : 'fa-edit'"></i>
-                      {{ isEdit ? 'Cancelar' : 'Editar' }}
+                      {{ isEdit ? ('comun.cancelar' | translate) : ('comun.editar' | translate) }}
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" (click)="isNewProspect = false" *ngIf="isNewProspect">
-                      <i class="fa fa-times"></i> Cancelar
+                      <i class="fa fa-times"></i> {{ 'comun.cancelar' | translate }}
                     </button>
                   </div>
                 </div>
@@ -300,23 +297,23 @@
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
                       <h5 class="m-0">
                         <i class="fa fa-building me-2 text-primary"></i>
-                        Información de la Empresa
+                        {{ 'prospectManager.informacionDeLaEmpresa' | translate }}
                       </h5>
                     </div>
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-6 mb-3">
-                          <label class="form-label">Nombre de la Empresa</label>
+                          <label class="form-label">{{ 'prospectManager.nombreDeLaEmpresa' | translate }}</label>
                           <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                             {{ selectedProspect?.companyName }}
                           </div>
                           <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="companyName">
                           <div class="text-danger small" *ngIf="prospectForm.get('companyName')?.invalid && prospectForm.get('companyName')?.touched">
-                            Este campo es obligatorio
+                            {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                           </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                          <label class="form-label">Prioridad</label>
+                          <label class="form-label">{{ 'prospectManager.prioridad' | translate }}</label>
                           <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                             <span class="badge" 
                                   [ngClass]="{
@@ -324,31 +321,31 @@
                                     'bg-warning': selectedProspect?.priority === 'Media' || !selectedProspect?.priority,
                                     'bg-info': selectedProspect?.priority === 'Baja'
                                   }">
-                              {{ selectedProspect?.priority || 'Media' }}
+                              {{ prioridadEtiqueta(selectedProspect?.priority) }}
                             </span>
                           </div>
                           <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="priority">
-                            <option *ngFor="let priority of priorityLevels" [value]="priority">{{ priority }}</option>
+                            <option *ngFor="let priority of priorityLevels" [value]="priority">{{ prioridadEtiqueta(priority) }}</option>
                           </select>
                         </div>
                       </div>
                       
                       <div class="row mb-3">
                         <div class="col-md-6 mb-3">
-                          <label class="form-label">Fecha de Contacto</label>
+                          <label class="form-label">{{ 'prospectManager.fechaDeContacto' | translate }}</label>
                           <div class="form-control-static">
                             {{ (isNewProspect ? today : selectedProspect?.contactDate) | date:'dd/MM/yyyy' }}
                           </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                          <label class="form-label">Estado</label>
+                          <label class="form-label">{{ 'prospectManager.estado' | translate }}</label>
                           <div class="form-control-static" *ngIf="!isNewProspect">
                             <span class="badge" [ngClass]="'bg-' + getStatusColor(selectedProspect?.status)">
                               {{ getStatusLabel(selectedProspect?.status) }}
                             </span>
                           </div>
                           <div class="form-control-static" *ngIf="isNewProspect">
-                            <span class="badge bg-primary">Nuevo</span>
+                            <span class="badge bg-primary">{{ 'prospectManager.nuevo' | translate }}</span>
                           </div>
                         </div>
                       </div>
@@ -356,71 +353,71 @@
                       <div formGroupName="basicInfo">
                         <div class="row">
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Tipo de Empresa</label>
+                            <label class="form-label">{{ 'prospectManager.tipoDeEmpresa' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.basicInfo?.companyType }}
                             </div>
                             <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="companyType">
-                              <option value="">Seleccione...</option>
-                              <option value="Retail">Retail</option>
-                              <option value="Restaurante">Restaurante</option>
-                              <option value="Servicios">Servicios</option>
-                              <option value="Manufactura">Manufactura</option>
-                              <option value="Otro">Otro</option>
+                              <option value="">{{ 'prospectManager.seleccione' | translate }}</option>
+                              <option value="Retail">{{ 'prospectManager.retail' | translate }}</option>
+                              <option value="Restaurante">{{ 'prospectManager.restaurante' | translate }}</option>
+                              <option value="Servicios">{{ 'prospectManager.servicios' | translate }}</option>
+                              <option value="Manufactura">{{ 'prospectManager.manufactura' | translate }}</option>
+                              <option value="Otro">{{ 'prospectManager.otro' | translate }}</option>
                             </select>
                             <div class="text-danger small" 
                                  *ngIf="basicInfoForm.get('companyType')?.invalid && basicInfoForm.get('companyType')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Sector</label>
+                            <label class="form-label">{{ 'prospectManager.sector' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.basicInfo?.sector }}
                             </div>
                             <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="sector">
-                              <option value="">Seleccione...</option>
-                              <option value="Tecnología">Tecnología</option>
-                              <option value="Alimentos">Alimentos</option>
-                              <option value="Comercio">Comercio</option>
-                              <option value="Servicios">Servicios</option>
-                              <option value="Otro">Otro</option>
+                              <option value="">{{ 'prospectManager.seleccione' | translate }}</option>
+                              <option value="Tecnología">{{ 'prospectManager.tecnologia' | translate }}</option>
+                              <option value="Alimentos">{{ 'prospectManager.alimentos' | translate }}</option>
+                              <option value="Comercio">{{ 'prospectManager.comercio' | translate }}</option>
+                              <option value="Servicios">{{ 'prospectManager.servicios' | translate }}</option>
+                              <option value="Otro">{{ 'prospectManager.otro' | translate }}</option>
                             </select>
                             <div class="text-danger small" 
                                  *ngIf="basicInfoForm.get('sector')?.invalid && basicInfoForm.get('sector')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                         </div>
                         
                         <div class="row">
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Ciudad</label>
+                            <label class="form-label">{{ 'prospectManager.ciudad' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.basicInfo?.city }}
                             </div>
                             <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="city">
                             <div class="text-danger small" 
                                  *ngIf="basicInfoForm.get('city')?.invalid && basicInfoForm.get('city')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Número de Empleados</label>
+                            <label class="form-label">{{ 'prospectManager.numeroDeEmpleados' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.basicInfo?.employeeCount }}
                             </div>
                             <input *ngIf="isEdit || isNewProspect" type="number" class="form-control" formControlName="employeeCount">
                             <div class="text-danger small" 
                                  *ngIf="basicInfoForm.get('employeeCount')?.invalid && basicInfoForm.get('employeeCount')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                         </div>
                         
                         <div class="row">
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Website</label>
+                            <label class="form-label">{{ 'prospectManager.website' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               <a [href]="'https://' + selectedProspect?.basicInfo?.website" 
                                  target="_blank" rel="noopener noreferrer">
@@ -430,18 +427,18 @@
                             <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="website">
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Interesado en</label>
+                            <label class="form-label">{{ 'prospectManager.interesadoEn' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.basicInfo?.interestedIn || 'No especificado' }}
+                              {{ selectedProspect?.basicInfo?.interestedIn || ('prospectManager.noEspecificado' | translate) }}
                             </div>
                             <select *ngIf="isEdit || isNewProspect" class="form-select" formControlName="interestedIn">
-                              <option value="">Seleccione...</option>
-                              <option value="Punto de Venta">Punto de Venta</option>
-                              <option value="Inventario">Inventario</option>
-                              <option value="E-commerce">E-commerce</option>
-                              <option value="Marketing">Marketing</option>
-                              <option value="Solución Completa">Solución Completa</option>
-                              <option value="Otro">Otro</option>
+                              <option value="">{{ 'prospectManager.seleccione' | translate }}</option>
+                              <option value="Punto de Venta">{{ 'prospectManager.puntoDeVenta' | translate }}</option>
+                              <option value="Inventario">{{ 'prospectManager.inventario' | translate }}</option>
+                              <option value="E-commerce">{{ 'prospectManager.eCommerce' | translate }}</option>
+                              <option value="Marketing">{{ 'prospectManager.marketing' | translate }}</option>
+                              <option value="Solución Completa">{{ 'prospectManager.solucionCompleta' | translate }}</option>
+                              <option value="Otro">{{ 'prospectManager.otro' | translate }}</option>
                             </select>
                           </div>
                         </div>
@@ -454,25 +451,25 @@
                     <div class="card-header bg-light">
                       <h5 class="m-0">
                         <i class="fa fa-user me-2 text-primary"></i>
-                        Información de Contacto
+                        {{ 'prospectManager.informacionDeContacto' | translate }}
                       </h5>
                     </div>
                     <div class="card-body">
                       <div formGroupName="contactInfo">
                         <div class="row">
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Nombre del Contacto</label>
+                            <label class="form-label">{{ 'prospectManager.nombreDelContacto' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               {{ selectedProspect?.contactInfo?.name }}
                             </div>
                             <input *ngIf="isEdit || isNewProspect" type="text" class="form-control" formControlName="name">
                             <div class="text-danger small" 
                                  *ngIf="contactInfoForm.get('name')?.invalid && contactInfoForm.get('name')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Correo Electrónico</label>
+                            <label class="form-label">{{ 'prospectManager.correoElectronico' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               <a [href]="'mailto:' + selectedProspect?.contactInfo?.email">
                                 {{ selectedProspect?.contactInfo?.email }}
@@ -481,13 +478,13 @@
                             <input *ngIf="isEdit || isNewProspect" type="email" class="form-control" formControlName="email">
                             <div class="text-danger small" 
                                  *ngIf="contactInfoForm.get('email')?.invalid && contactInfoForm.get('email')?.touched">
-                              Ingrese un correo electrónico válido
+                              {{ 'prospectManager.ingreseUnCorreoElectronicoValido' | translate }}
                             </div>
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">Teléfono</label>
+                            <label class="form-label">{{ 'prospectManager.telefono' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
                               <a [href]="'tel:' + selectedProspect?.contactInfo?.phone">
                                 {{ selectedProspect?.contactInfo?.phone }}
@@ -496,13 +493,13 @@
                             <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="phone">
                             <div class="text-danger small" 
                                  *ngIf="contactInfoForm.get('phone')?.invalid && contactInfoForm.get('phone')?.touched">
-                              Este campo es obligatorio
+                              {{ 'prospectManager.esteCampoEsObligatorio' | translate }}
                             </div>
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label class="form-label">WhatsApp</label>
+                            <label class="form-label">{{ 'prospectManager.whatsapp' | translate }}</label>
                             <div *ngIf="!isEdit && !isNewProspect" class="form-control-static">
-                              {{ selectedProspect?.contactInfo?.whatsapp || 'No especificado' }}
+                              {{ selectedProspect?.contactInfo?.whatsapp || ('prospectManager.noEspecificado' | translate) }}
                             </div>
                             <input *ngIf="isEdit || isNewProspect" type="tel" class="form-control" formControlName="whatsapp">
                           </div>
@@ -515,12 +512,12 @@
                   <div class="d-flex justify-content-end gap-2" *ngIf="isEdit || isNewProspect">
                     <button type="button" class="btn btn-secondary" 
                             (click)="isNewProspect ? (isNewProspect = false) : toggleEditMode()">
-                      Cancelar
+                      {{ 'comun.cancelar' | translate }}
                     </button>
                     <button type="button" class="btn btn-primary" 
                             [disabled]="!prospectForm.valid" 
                             (click)="saveProspect()">
-                      {{ isNewProspect ? 'Crear Prospecto' : 'Guardar Cambios' }}
+                      {{ isNewProspect ? ('prospectManager.crearProspecto' | translate) : ('prospectManager.guardarCambios' | translate) }}
                     </button>
                   </div>
                 </form>
@@ -532,11 +529,11 @@
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="m-0 d-flex align-items-center">
                       <i class="fa fa-history me-2"></i>
-                      Historial de Actividades
+                      {{ 'prospectManager.historialDeActividades' | translate }}
                     </h5>
                     <div class="timeline-actions" *ngIf="selectedProspect && !isNewProspect">
                       <button class="btn btn-sm btn-outline-primary" (click)="updateStatusSection = !updateStatusSection">
-                        <i class="fa fa-exchange-alt me-1"></i> Cambiar estado
+                        <i class="fa fa-exchange-alt me-1"></i> {{ 'prospectManager.cambiarEstado' | translate }}
                       </button>
                     </div>
                   </div>
@@ -544,7 +541,7 @@
                   <!-- Sección para actualizar estado -->
                   <div class="card-body border-bottom bg-light" *ngIf="updateStatusSection && selectedProspect">
                     <div class="status-update-section">
-                      <h6 class="mb-2">Actualizar estado del prospecto</h6>
+                      <h6 class="mb-2">{{ 'prospectManager.actualizarEstadoDelProspecto' | translate }}</h6>
                       <div class="d-flex flex-wrap gap-2 mb-3">
                         <button 
                           *ngFor="let status of ['new', 'contacted', 'meeting-scheduled', 'demo-completed', 'started', 'closed']"
@@ -561,30 +558,30 @@
                   <!-- Sección para agregar nota -->
                   <div class="card-body border-bottom" *ngIf="selectedProspect && !isNewProspect">
                     <form [formGroup]="noteForm" (ngSubmit)="addNote()">
-                      <h6 class="mb-2">Agregar nota</h6>
+                      <h6 class="mb-2">{{ 'prospectManager.agregarNota' | translate }}</h6>
                       <div class="mb-3">
-                        <label class="form-label form-label-sm">Descripción</label>
+                        <label class="form-label form-label-sm">{{ 'prospectManager.descripcion' | translate }}</label>
                         <input type="text" class="form-control form-control-sm" 
-                               placeholder="Descripción del evento o nota" 
+                               placeholder="{{ 'prospectManager.descripcionDelEventoONota' | translate }}" 
                                formControlName="description">
                          <div class="text-danger small" 
                               *ngIf="noteForm.get('description')?.invalid && noteForm.get('description')?.touched">
-                          La descripción es obligatoria
+                          {{ 'prospectManager.laDescripcionEsObligatoria' | translate }}
                         </div>
                       </div>
                       <div class="mb-3">
-                        <label class="form-label form-label-sm">Nota del Agente (Interna)</label>
+                        <label class="form-label form-label-sm">{{ 'prospectManager.notaDelAgenteInterna' | translate }}</label>
                         <textarea class="form-control form-control-sm" rows="2" 
-                                  placeholder="Nota interna (visible solo para ti)"
+                                  placeholder="{{ 'prospectManager.notaInternaVisibleSoloPara' | translate }}"
                                   formControlName="agentNote"></textarea>
                          <div class="text-danger small" 
                               *ngIf="noteForm.get('agentNote')?.invalid && noteForm.get('agentNote')?.touched">
-                          La nota interna es obligatoria
+                          {{ 'prospectManager.laNotaInternaEsObligatoria' | translate }}
                         </div>
                       </div>
                       <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-sm btn-primary" [disabled]="!noteForm.valid">
-                          <i class="fa fa-plus-circle me-1"></i> Agregar nota
+                          <i class="fa fa-plus-circle me-1"></i> {{ 'prospectManager.agregarNota' | translate }}
                         </button>
                       </div>
                     </form>
@@ -614,19 +611,19 @@
                           <div class="task-details ps-4 mb-2" *ngIf="event.isTask">
                             <div class="d-flex align-items-center text-muted small">
                               <i class="fa fa-calendar-alt me-1"></i>
-                              <span>Fecha: {{ event.dueDate }}</span>
+                              <span>{{ 'prospectManager.fecha' | translate: { dueDate: event.dueDate } }}</span>
                               <i class="fa fa-clock ms-2 me-1"></i>
-                              <span>Hora: {{ event.dueTime }}</span>
+                              <span>{{ 'prospectManager.hora' | translate: { dueTime: event.dueTime } }}</span>
                               <i class="fa" 
                                  [ngClass]="event.reminder ? 'fa-bell ms-2 me-1' : 'fa-bell-slash ms-2 me-1'"></i>
-                              <span>{{ event.reminder ? 'Con recordatorio' : 'Sin recordatorio' }}</span>
+                              <span>{{ event.reminder ? ('prospectManager.conRecordatorio' | translate) : ('prospectManager.sinRecordatorio' | translate) }}</span>
                             </div>
                           </div>
                           
                           <p class="agent-note ps-4 mb-0" *ngIf="event.agentNote">
                             <small>
                               <i class="fa fa-user-shield me-1 text-muted"></i>
-                              <strong>Nota del agente:</strong> {{ event.agentNote }}
+                              <strong>{{ 'prospectManager.notaDelAgente' | translate }}</strong> {{ event.agentNote }}
                             </small>
                           </p>
                         </div>
@@ -636,8 +633,8 @@
                     <div class="timeline-empty" *ngIf="selectedProspect && (!selectedProspect.timeline || selectedProspect.timeline.length === 0)">
                       <div class="text-center mt-4 mb-4">
                         <i class="fa fa-clipboard text-muted fa-2x mb-3"></i>
-                        <p class="text-muted">No hay actividades registradas</p>
-                        <p class="text-muted small">Agrega una nota o actualiza el estado para comenzar el seguimiento.</p>
+                        <p class="text-muted">{{ 'prospectManager.noHayActividadesRegistradas' | translate }}</p>
+                        <p class="text-muted small">{{ 'prospectManager.agregaUnaNotaOActualiza' | translate }}</p>
                       </div>
                     </div>
                   </div>
@@ -653,8 +650,8 @@
              *ngIf="!selectedProspect && !isNewProspect && filteredProspects.length > 0">
           <div class="text-center p-5">
             <i class="fa fa-hand-pointer fa-3x text-muted mb-3"></i>
-            <h4>Selecciona un prospecto</h4>
-            <p class="text-muted">Selecciona un prospecto de la lista para ver sus detalles.</p>
+            <h4>{{ 'prospectManager.seleccionaUnProspecto' | translate }}</h4>
+            <p class="text-muted">{{ 'prospectManager.seleccionaUnProspectoDeLa' | translate }}</p>
           </div>
         </div>
       </div>
@@ -664,40 +661,40 @@
 <!-- Modal de Programar Tarea -->
 <ng-template #scheduleTaskModal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title">Programar Tarea</h4>
+    <h4 class="modal-title">{{ 'prospectManager.programarTarea2' | translate }}</h4>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body cfg-form">
     <form [formGroup]="taskForm">
       <div class="mb-3">
-        <label class="form-label">Tipo de tarea</label>
+        <label class="form-label">{{ 'prospectManager.tipoDeTarea' | translate }}</label>
         <div class="d-flex gap-2">
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" 
                    id="taskTypeCall" value="call" formControlName="taskType">
             <label class="form-check-label" for="taskTypeCall">
-              <i class="fa fa-phone me-1"></i> Llamada
+              <i class="fa fa-phone me-1"></i> {{ 'prospectManager.llamada' | translate }}
             </label>
           </div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" 
                    id="taskTypeMeeting" value="meeting" formControlName="taskType">
             <label class="form-check-label" for="taskTypeMeeting">
-              <i class="fa fa-handshake me-1"></i> Reunión
+              <i class="fa fa-handshake me-1"></i> {{ 'prospectManager.reunion' | translate }}
             </label>
           </div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" 
                    id="taskTypeDemo" value="demo" formControlName="taskType">
             <label class="form-check-label" for="taskTypeDemo">
-              <i class="fa fa-laptop me-1"></i> Demo
+              <i class="fa fa-laptop me-1"></i> {{ 'prospectManager.demo' | translate }}
             </label>
           </div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" 
                    id="taskTypeOther" value="other" formControlName="taskType">
             <label class="form-check-label" for="taskTypeOther">
-              <i class="fa fa-tasks me-1"></i> Otro
+              <i class="fa fa-tasks me-1"></i> {{ 'prospectManager.otro' | translate }}
             </label>
           </div>
         </div>
@@ -705,36 +702,36 @@
       
       <div class="row mb-3">
         <div class="col-md-6">
-          <label class="form-label">Fecha</label>
+          <label class="form-label">{{ 'prospectManager.fecha2' | translate }}</label>
           <input type="date" class="form-control" formControlName="dueDate">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Hora</label>
+          <label class="form-label">{{ 'prospectManager.hora2' | translate }}</label>
           <input type="time" class="form-control" formControlName="dueTime">
         </div>
       </div>
       
       <div class="mb-3">
-        <label class="form-label">Descripción</label>
+        <label class="form-label">{{ 'prospectManager.descripcion' | translate }}</label>
         <textarea class="form-control" rows="3" formControlName="description"
-                  placeholder="Describe la tarea a realizar..."></textarea>
+                  placeholder="{{ 'prospectManager.describeLaTareaARealizar' | translate }}"></textarea>
       </div>
       
       <div class="form-check mb-3">
         <input class="form-check-input" type="checkbox" id="taskReminder" formControlName="reminder">
         <label class="form-check-label" for="taskReminder">
-          Recordatorio (recibirás una notificación)
+          {{ 'prospectManager.recordatorioRecibirasUnaNotificacion' | translate }}
         </label>
       </div>
     </form>
   </div>
   <div class="modal-footer">
-    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss()">Cancelar</button>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
     <button type="button" class="cfg-btn" 
             [disabled]="!taskForm.valid" 
             (click)="saveTask(); modal.close()">
       <i class="fa fa-calendar-check me-1"></i>
-      Programar Tarea
+      {{ 'prospectManager.programarTarea2' | translate }}
     </button>
   </div>
 </ng-template>

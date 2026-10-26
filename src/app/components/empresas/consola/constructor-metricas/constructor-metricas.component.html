@@ -1,78 +1,78 @@
 <section class="cw">
   <header class="cw__head">
     <div>
-      <h5 class="cw__titulo">Constructor web</h5>
-      <p class="cw__sub">Cómo usan los comercios el constructor: sitios, tiempo hasta publicar, ventas de las webs y a quién acompañar.</p>
+      <h5 class="cw__titulo">{{ 'empresas.consolaPlataforma.constructorWeb' | translate }}</h5>
+      <p class="cw__sub">{{ 'empresas.constructorMetricas.comoUsanLosComerciosEl' | translate }}</p>
     </div>
     <button type="button" class="cw__btn" (click)="cargar()" [disabled]="cargando">
       <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
-      {{ cargando ? 'Cargando…' : 'Actualizar' }}
+      {{ cargando ? ('comun.cargando' | translate) : ('empresas.consolaPlataforma.actualizar' | translate) }}
     </button>
   </header>
 
   <p class="cw__error" *ngIf="error" role="alert">{{ error }}</p>
-  <p class="cw__vacio" *ngIf="cargando && !datos">Cargando…</p>
+  <p class="cw__vacio" *ngIf="cargando && !datos">{{ 'comun.cargando' | translate }}</p>
 
   <ng-container *ngIf="datos">
     <!-- Cifras clave -->
     <div class="cw__kpis">
       <div class="cw__kpi">
-        <div class="cw__kpi-label">Sitios creados</div>
+        <div class="cw__kpi-label">{{ 'empresas.constructorMetricas.sitiosCreados' | translate }}</div>
         <div class="cw__kpi-valor">{{ datos.resumen.creados }}</div>
-        <div class="cw__kpi-nota">+{{ datos.resumen.creados7 }} esta semana</div>
+        <div class="cw__kpi-nota">{{ 'empresas.constructorMetricas.estaSemana' | translate:{creados7: datos.resumen.creados7} }}</div>
       </div>
       <div class="cw__kpi">
-        <div class="cw__kpi-label">Publicados</div>
+        <div class="cw__kpi-label">{{ 'empresas.constructorMetricas.publicados' | translate }}</div>
         <div class="cw__kpi-valor">{{ datos.resumen.publicados }}</div>
-        <div class="cw__kpi-nota">+{{ datos.resumen.publicados7 }} esta semana</div>
+        <div class="cw__kpi-nota">{{ 'empresas.constructorMetricas.estaSemana2' | translate:{publicados7: datos.resumen.publicados7} }}</div>
       </div>
       <div class="cw__kpi">
-        <div class="cw__kpi-label">Activos</div>
+        <div class="cw__kpi-label">{{ 'empresas.constructorMetricas.activos' | translate }}</div>
         <div class="cw__kpi-valor">{{ datos.resumen.activos }}</div>
-        <div class="cw__kpi-nota">publicados con pedidos en 30 días</div>
+        <div class="cw__kpi-nota">{{ 'empresas.constructorMetricas.publicadosConPedidosEn30' | translate }}</div>
       </div>
       <div class="cw__kpi">
-        <div class="cw__kpi-label">Tiempo hasta publicar</div>
+        <div class="cw__kpi-label">{{ 'empresas.constructorMetricas.tiempoHastaPublicar' | translate }}</div>
         <div class="cw__kpi-valor cw__kpi-valor--texto">{{ dias(datos.tiempoHastaPublicar.medianaDias) }}</div>
-        <div class="cw__kpi-nota">mediana de {{ datos.tiempoHastaPublicar.empresasMedidas }} empresas, desde su registro</div>
+        <div class="cw__kpi-nota">{{ 'empresas.constructorMetricas.medianaDeEmpresasDesdeSu' | translate:{empresasMedidas: datos.tiempoHastaPublicar.empresasMedidas} }}</div>
       </div>
       <div class="cw__kpi">
-        <div class="cw__kpi-label">Ventas por las webs</div>
+        <div class="cw__kpi-label">{{ 'empresas.constructorMetricas.ventasPorLasWebs' | translate }}</div>
         <div class="cw__kpi-valor">{{ moneda(datos.ventasWeb.ventas) }}</div>
-        <div class="cw__kpi-nota">{{ datos.ventasWeb.pedidos }} pedidos · {{ datos.ventasWeb.pedidos7 }} esta semana</div>
+        <div class="cw__kpi-nota">{{ datos.ventasWeb.pedidos }} {{ 'empresas.constructorMetricas.pedidosEstaSemana' | translate:{pedidos7: datos.ventasWeb.pedidos7} }}</div>
       </div>
     </div>
 
     <div class="cw__grid">
       <!-- Embudo por empresa -->
       <div class="cw__card">
-        <div class="cw__card-titulo">Embudo por empresa</div>
+        <div class="cw__card-titulo">{{ 'empresas.constructorMetricas.embudoPorEmpresa' | translate }}</div>
         <div class="cw__embudo">
           <div class="cw__fila">
-            <div class="cw__fila-texto"><span class="cw__txt">Con algún sitio</span><strong>{{ datos.embudo.conSitio }}</strong></div>
+            <div class="cw__fila-texto"><span class="cw__txt">{{ 'empresas.constructorMetricas.conAlgunSitio' | translate }}</span><strong>{{ datos.embudo.conSitio }}</strong></div>
             <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conSitio)"></div></div>
           </div>
           <div class="cw__fila">
-            <div class="cw__fila-texto"><span class="cw__txt">Con sitio publicado</span><strong>{{ datos.embudo.conPublicado }}</strong></div>
+            <div class="cw__fila-texto"><span class="cw__txt">{{ 'empresas.constructorMetricas.conSitioPublicado' | translate }}</span><strong>{{ datos.embudo.conPublicado }}</strong></div>
             <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conPublicado)"></div></div>
           </div>
           <div class="cw__fila">
-            <div class="cw__fila-texto"><span class="cw__txt">Con pedidos de la web</span><strong>{{ datos.embudo.conPedidos }}</strong></div>
+            <div class="cw__fila-texto"><span class="cw__txt">{{ 'empresas.constructorMetricas.conPedidosDeLaWeb' | translate }}</span><strong>{{ datos.embudo.conPedidos }}</strong></div>
             <div class="cw__barra"><div class="cw__barra-relleno" [style.width.%]="pctEmbudo(datos.embudo.conPedidos)"></div></div>
           </div>
         </div>
         <p class="cw__nota" *ngIf="estadosTiendaEnUnPaso.length">
-          Tienda en un paso:
+          {{ 'empresas.constructorMetricas.tiendaEnUnPaso' | translate }}
           <span class="cw__txt" *ngFor="let e of estadosTiendaEnUnPaso; let ultimo = last">{{ e.total }} {{ e.estado }}{{ ultimo ? '' : ' · ' }}</span>
         </p>
-        <p class="cw__nota">Los pasos del asistente no se registran uno a uno; el embudo va por empresa.</p>
+        <p class="cw__nota">{{ 'empresas.constructorMetricas.losPasosDelAsistenteNo' | translate }}</p>
       </div>
 
       <!-- Por tipo -->
       <div class="cw__card">
-        <div class="cw__card-titulo">Por tipo de sitio</div>
+        <div class="cw__card-titulo">{{ 'empresas.constructorMetricas.porTipoDeSitio' | translate }}</div>
         <table class="cw__tabla cw__tabla--chica">
-          <thead><tr><th>Tipo</th><th class="num">Creados</th><th class="num">Publicados</th><th class="num">Activos</th></tr></thead>
+          <thead><tr><th>{{ 'empresas.constructorMetricas.tipo' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.creados' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.publicados' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.activos' | translate }}</th></tr></thead>
           <tbody>
             <tr *ngFor="let t of tipos">
               <td class="cw__capital">{{ t.tipo }}</td>
@@ -86,30 +86,30 @@
 
       <!-- Uso de funciones -->
       <div class="cw__card">
-        <div class="cw__card-titulo">Uso de funciones</div>
+        <div class="cw__card-titulo">{{ 'empresas.constructorMetricas.usoDeFunciones' | translate }}</div>
         <ul class="cw__uso">
-          <li><span class="cw__txt">Diseños con Opttia (KAI)</span><strong>{{ datos.uso.opttia }}</strong></li>
-          <li><span class="cw__txt">Sitios con cupones activos</span><strong>{{ datos.uso.cupones }}</strong></li>
-          <li><span class="cw__txt">Sitios con pauta conectada</span><strong>{{ datos.uso.pauta }}</strong></li>
-          <li><span class="cw__txt">Sitios con dominio propio</span><strong>{{ datos.uso.dominioPropio }}</strong></li>
-          <li><span class="cw__txt">Publicados con pago en línea</span><strong>{{ datos.uso.pagoEnLinea }}</strong></li>
-          <li><span class="cw__txt">Publicados con contra entrega</span><strong>{{ datos.uso.contraEntrega }}</strong></li>
-          <li><span class="cw__txt">Publicados con otras formas de pago</span><strong>{{ datos.uso.otrasFormasPago }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.disenosConOpttiaKai' | translate }}</span><strong>{{ datos.uso.opttia }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.sitiosConCuponesActivos' | translate }}</span><strong>{{ datos.uso.cupones }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.sitiosConPautaConectada' | translate }}</span><strong>{{ datos.uso.pauta }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.sitiosConDominioPropio' | translate }}</span><strong>{{ datos.uso.dominioPropio }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.publicadosConPagoEnLinea' | translate }}</span><strong>{{ datos.uso.pagoEnLinea }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.publicadosConContraEntrega' | translate }}</span><strong>{{ datos.uso.contraEntrega }}</strong></li>
+          <li><span class="cw__txt">{{ 'empresas.constructorMetricas.publicadosConOtrasFormasDe' | translate }}</span><strong>{{ datos.uso.otrasFormasPago }}</strong></li>
         </ul>
       </div>
     </div>
 
     <!-- Alertas -->
     <div class="cw__card">
-      <div class="cw__card-titulo">Comercios para acompañar</div>
+      <div class="cw__card-titulo">{{ 'empresas.constructorMetricas.comerciosParaAcompanar' | translate }}</div>
       <div class="cw__vacio-card" *ngIf="!datos.alertas.length">
         <i class="fa fa-check-circle" aria-hidden="true"></i>
-        <strong>Sin alertas</strong>
-        <span class="cw__txt">Ningún sitio publicado lleva más de 30 días sin pedidos ni hay tiendas sin forma de cobro.</span>
+        <strong>{{ 'empresas.constructorMetricas.sinAlertas' | translate }}</strong>
+        <span class="cw__txt">{{ 'empresas.constructorMetricas.ningunSitioPublicadoLlevaMas' | translate }}</span>
       </div>
       <ul class="cw__alertas" *ngIf="datos.alertas.length">
         <li *ngFor="let a of datos.alertas" class="cw__alerta" [class.cw__alerta--grave]="a.tipo === 'sin-cobro'">
-          <span class="cw__chip" [class.cw__chip--grave]="a.tipo === 'sin-cobro'">{{ a.tipo === 'sin-cobro' ? 'Sin forma de cobro' : 'Sin pedidos' }}</span>
+          <span class="cw__chip" [class.cw__chip--grave]="a.tipo === 'sin-cobro'">{{ a.tipo === 'sin-cobro' ? ('empresas.constructorMetricas.sinFormaDeCobro' | translate) : ('empresas.constructorMetricas.sinPedidos' | translate) }}</span>
           <span class="cw__txt"><strong>{{ a.empresa }}</strong> · {{ a.sitio }}</span>
           <span class="cw__txt cw__muted">{{ a.detalle }}</span>
         </li>
@@ -119,16 +119,16 @@
     <!-- Tablas -->
     <div class="cw__card">
       <div class="cw__tabs" role="tablist">
-        <button type="button" role="tab" [class.activa]="tabla === 'empresas'" (click)="tabla = 'empresas'">Por empresa</button>
-        <button type="button" role="tab" [class.activa]="tabla === 'sitios'" (click)="tabla = 'sitios'">Sitios</button>
+        <button type="button" role="tab" [class.activa]="tabla === 'empresas'" (click)="tabla = 'empresas'">{{ 'empresas.constructorMetricas.porEmpresa' | translate }}</button>
+        <button type="button" role="tab" [class.activa]="tabla === 'sitios'" (click)="tabla = 'sitios'">{{ 'empresas.constructorMetricas.sitios' | translate }}</button>
       </div>
 
       <div class="cw__tabla-wrap" *ngIf="tabla === 'empresas'">
         <table class="cw__tabla">
           <thead>
             <tr>
-              <th>Empresa</th><th class="num">Sitios</th><th class="num">Publicados</th>
-              <th class="num">Hasta publicar</th><th class="num">Pedidos web</th><th class="num">Ventas web</th><th class="num">Opttia</th>
+              <th>{{ 'empresas.consolaPlataforma.empresa2' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.sitios' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.publicados' | translate }}</th>
+              <th class="num">{{ 'empresas.constructorMetricas.hastaPublicar' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.pedidosWeb' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.ventasWeb' | translate }}</th><th class="num">Opttia</th>
             </tr>
           </thead>
           <tbody>
@@ -149,8 +149,8 @@
         <table class="cw__tabla">
           <thead>
             <tr>
-              <th>Sitio</th><th>Empresa</th><th>Tipo</th><th>Estado</th><th>Creado</th>
-              <th class="num">Vistas</th><th class="num">Leads</th><th class="num">Pedidos</th><th class="num">Ventas</th>
+              <th>{{ 'empresas.constructorMetricas.sitio' | translate }}</th><th>{{ 'empresas.consolaPlataforma.empresa2' | translate }}</th><th>{{ 'empresas.constructorMetricas.tipo' | translate }}</th><th>{{ 'empresas.consolaPlataforma.estado2' | translate }}</th><th>{{ 'empresas.constructorMetricas.creado' | translate }}</th>
+              <th class="num">{{ 'empresas.constructorMetricas.vistas' | translate }}</th><th class="num">{{ 'empresas.constructorMetricas.leads' | translate }}</th><th class="num">{{ 'empresas.consolaPlataforma.pedidos2' | translate }}</th><th class="num">{{ 'empresas.consolaPlataforma.ventas' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -158,7 +158,7 @@
               <td>{{ s.nombre }}<span class="cw__txt cw__muted cw__slug">{{ s.slug }}</span></td>
               <td>{{ s.empresa }}</td>
               <td class="cw__capital">{{ s.tipo }}</td>
-              <td><span class="cw__estado" [class.cw__estado--ok]="s.estado === 'publicado'">{{ s.estado === 'publicado' ? 'Publicado' : 'Borrador' }}</span></td>
+              <td><span class="cw__estado" [class.cw__estado--ok]="s.estado === 'publicado'">{{ s.estado === 'publicado' ? ('empresas.constructorMetricas.publicado' | translate) : ('empresas.constructorMetricas.borrador' | translate) }}</span></td>
               <td>{{ s.creado ? (s.creado | date:'dd/MM/yyyy') : '—' }}</td>
               <td class="num">{{ s.vistas }}</td>
               <td class="num">{{ s.leads }}</td>

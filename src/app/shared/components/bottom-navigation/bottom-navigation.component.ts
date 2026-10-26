@@ -36,7 +36,7 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
   private readonly allNavigationItems: NavigationItem[] = [
     {
       id: 'inicio',
-      label: 'Inicio',
+      label: 'shell.bottomNav.home',
       icon: 'fa fa-home',
       route: '/welcome',
       color: '#5F3FE0',
@@ -44,7 +44,7 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
     },
     {
       id: 'ventas',
-      label: 'Ventas',
+      label: 'shell.bottomNav.sales',
       icon: 'fa fa-shopping-cart',
       // Revisión 2026-10-18 (ticket 1168): la entrada única del menú; el guard abre la
       // vista preferida y el menú la deja ver también con el permiso viejo (permisoPrevio).
@@ -54,21 +54,21 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
     },
     {
       id: 'pedidos',
-      label: 'Pedidos',
+      label: 'shell.bottomNav.orders',
       icon: 'fa fa-list-alt',
       route: '/ventas/pedidos',
       color: '#459BD1'
     },
     {
       id: 'productos',
-      label: 'Productos',
+      label: 'shell.bottomNav.products',
       icon: 'fa fa-cube',
       route: '/productos',
       color: '#fd7e14'
     },
     {
       id: 'mas',
-      label: 'Menú',
+      label: 'shell.bottomNav.menu',
       icon: 'fa fa-bars',
       route: '/mas',
       color: '#6c757d',
@@ -188,15 +188,6 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
     if (width < 576) return 'mobile';
     if (width < 768) return 'tablet';
     return 'desktop';
-  }
-
-  // Accessibility method for screen readers
-  getAriaLabel(item: NavigationItem): string {
-    let label = `Navegar a ${item.label}`;
-    if (item.isActive) {
-      label += ', página actual';
-    }
-    return label;
   }
 
   // Method for keyboard navigation

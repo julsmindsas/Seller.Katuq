@@ -9,6 +9,7 @@ import { IntegrationsService } from '../../integrations/integrations.service';
 import { FlowTemplate, FlowSpec, NodeSpec } from '../interfaces/flow.interface';
 import { SistemaVisible, cuandoArranca, inicialDe, integracionesNecesarias, recorrido } from '../flows-lenguaje';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Node credential key → integration provider key (no siempre coinciden). */
 const PROVIDER_ALIASES: { [k: string]: string } = {
   worldoffice: 'world_office',
@@ -173,7 +174,8 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
     private integrationsService: IntegrationsService,
     private modal: NgbModal,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -427,7 +429,7 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
           }
           this.closeWizard();
           if (activate) {
-            this.toastr.success(`«${flow.name}» quedó encendida.`, '', { timeOut: 2800 });
+            this.toastr.success(this.translate.instant('flows.flowTemplates.quedoEncendida', { nombre: flow.name }), '', { timeOut: 2800 });
             this.router.navigate(['/flows']);
           } else {
             this.router.navigate(['/flows/editor', flow.id]);
@@ -437,8 +439,8 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
           this.wizardBusy = false;
           if (activate) {
             this.toastr.error(
-              'No pudimos encender la automatización. Ábrela en modo avanzado y revisa sus pasos.',
-              'Error',
+              this.translate.instant('flows.flowTemplates.noPudimosEncenderLaAutomatizacion'),
+              this.translate.instant('comun.error'),
               { timeOut: 5000 }
             );
           } else {

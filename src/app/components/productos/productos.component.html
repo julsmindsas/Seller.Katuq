@@ -57,6 +57,11 @@
                                     <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
                                 </button>
                             </ng-template>
+                            <!-- «Traer mi tienda» (F5-30): solo con la bandera storeMigrationImport -->
+                            <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="traerTiendaActiva"
+                                    (click)="traerMiTienda()">
+                                <i class="pi pi-cloud-download pk-ico-accent"></i>Traer mi tienda
+                            </button>
                             <!-- Split: Importar Excel + dropdown integraciones -->
                             <div class="btn-group pk-split" ngbDropdown>
                                 <button type="button" class="cfg-btn cfg-btn--sec pk-split-main"
@@ -178,12 +183,13 @@
                                 <option *ngFor="let c of categoriasList" [value]="c.label">{{ c.label }}</option>
                             </select>
 
-                            <!-- D-501: uniformar las fotos de la categoría filtrada (bandera productPhotoUniform) -->
-                            <button *ngIf="fotosUniformesActiva && categoriaParaFotos" type="button"
+                            <!-- D-501: uniformar las fotos de la categoría filtrada (bandera productPhotoUniform).
+                                 TX-37 · 7.12: manda la ruta (con la subcategoría si está filtrada, y entonces lo dice) y no tiene
+                                 tope de 100. Espera a que lleguen las categorías para mandar los nombres del servidor. -->
+                            <button *ngIf="fotosUniformesActiva && categoriaParaFotos && categoriasCargadas" type="button"
                                 class="pk-btn-sm pk-btn-sm-ghost fu-entrada ms-1"
-                                title="Uniformar fotos de esta categoría (hasta 100 productos por lote)"
                                 (click)="abrirFotosUniformesCategoria()">
-                                <i class="pi pi-images"></i>Uniformar fotos de esta categoría · hasta 100
+                                <i class="pi pi-images"></i>{{ filtros.subcategoria ? 'Uniformar fotos de esta subcategoría' : 'Uniformar fotos de esta categoría' }}
                             </button>
 
                             <!-- Subcategoría (solo si la categoría tiene hijos) -->
@@ -981,7 +987,7 @@
 <!-- D-501: diálogo «Uniformar fotos» (solo se abre con la bandera productPhotoUniform) -->
 <app-fotos-uniformes *ngIf="fotosUniformes"
     [productIds]="fotosUniformes.productIds"
-    [categoryLabel]="fotosUniformes.categoryLabel"
+    [categoryPath]="fotosUniformes.categoryPath"
     (cerrado)="cerrarFotosUniformes($event)"></app-fotos-uniformes>
 
 

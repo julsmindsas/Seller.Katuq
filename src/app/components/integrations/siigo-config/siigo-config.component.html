@@ -6,9 +6,9 @@
     <div class="header-content">
       <img src="assets/images/logos/siigo.svg" alt="Siigo" class="siigo-logo">
       <div class="header-text cfg-cabeza__textos">
-        <span class="cfg-eyebrow">Integraciones</span>
-        <h1 class="cfg-titulo">Configuracion de Siigo</h1>
-        <p class="cfg-sub">Conecta tu cuenta de Siigo para facturacion electronica y sincronizacion de inventario</p>
+        <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'integrations.siigoConfig.configuracionDeSiigo' | translate }}</h1>
+        <p class="cfg-sub">{{ 'integrations.siigoConfig.conectaTuCuentaDeSiigo' | translate }}</p>
       </div>
     </div>
 
@@ -22,29 +22,29 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" *ngIf="isLoading">
     <i class="pi pi-spin pi-spinner"></i>
-    <span>Cargando configuracion...</span>
+    <span>{{ 'integrations.siigoConfig.cargandoConfiguracion' | translate }}</span>
   </div>
 
   <form [formGroup]="siigoForm" (ngSubmit)="saveConfig()">
 
     <!-- Section 1: Credentials -->
-    <p-card header="Credenciales de Siigo" styleClass="config-card">
+    <p-card [header]="'integrations.siigoConfig.credencialesDeSiigo' | translate" styleClass="config-card">
       <div class="form-grid">
         <div class="form-field">
-          <label for="username">Usuario / Email *</label>
+          <label for="username">{{ 'integrations.siigoConfig.usuarioEmail' | translate }}</label>
           <input
             pInputText
             id="username"
             formControlName="username"
-            placeholder="tu-email@empresa.com"
+            [placeholder]="'integrations.integrations.tuEmailEmpresaCom' | translate"
             [ngClass]="{'ng-invalid ng-dirty': siigoForm.get('username')?.invalid && siigoForm.get('username')?.touched}">
           <small class="p-error" *ngIf="siigoForm.get('username')?.invalid && siigoForm.get('username')?.touched">
-            Usuario requerido (minimo 5 caracteres)
+            {{ 'integrations.siigoConfig.usuarioRequeridoMinimo5Caracteres' | translate }}
           </small>
         </div>
 
         <div class="form-field">
-          <label for="accessKey">Access Key *</label>
+          <label for="accessKey">{{ 'integrations.siigoConfig.accessKey' | translate }}</label>
           <span class="p-input-icon-right w-full">
             <i class="pi" [ngClass]="showAccessKey ? 'pi-eye-slash' : 'pi-eye'"
                style="cursor: pointer;" (click)="showAccessKey = !showAccessKey"></i>
@@ -53,22 +53,22 @@
               id="accessKey"
               [type]="showAccessKey ? 'text' : 'password'"
               formControlName="accessKey"
-              placeholder="Tu Access Key de Siigo API"
+              [placeholder]="'integrations.siigoConfig.tuAccessKeyDeSiigo' | translate"
               class="w-full">
           </span>
           <small class="p-error" *ngIf="siigoForm.get('accessKey')?.invalid && siigoForm.get('accessKey')?.touched">
-            Access Key requerido (minimo 10 caracteres)
+            {{ 'integrations.siigoConfig.accessKeyRequeridoMinimo10' | translate }}
           </small>
         </div>
 
         <div class="form-field">
-          <label for="partnerId">Partner ID</label>
+          <label for="partnerId">{{ 'integrations.siigoConfig.partnerId' | translate }}</label>
           <input
             pInputText
             id="partnerId"
             formControlName="partnerId"
             readonly>
-          <small class="field-hint">Identificador de partner asignado por Siigo</small>
+          <small class="field-hint">{{ 'integrations.siigoConfig.identificadorDePartnerAsignadoPor' | translate }}</small>
         </div>
 
         <div class="form-field checkbox-field">
@@ -77,7 +77,7 @@
             [binary]="true"
             inputId="testMode">
           </p-checkbox>
-          <label for="testMode">Modo de prueba (Sandbox)</label>
+          <label for="testMode">{{ 'integrations.siigoConfig.modoDePruebaSandbox' | translate }}</label>
         </div>
       </div>
 
@@ -85,7 +85,7 @@
         <button
           pButton
           type="button"
-          label="Probar Conexion"
+          [label]="'integrations.siigoConfig.probarConexion' | translate"
           icon="pi pi-bolt"
           class="p-button-outlined"
           [loading]="connectionStatus === 'testing'"
@@ -95,154 +95,154 @@
     </p-card>
 
     <!-- Section 2: Accounting Configuration (only visible after successful connection) -->
-    <p-card header="Configuracion Contable" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+    <p-card [header]="'integrations.siigoConfig.configuracionContable' | translate" styleClass="config-card" *ngIf="connectionStatus === 'success'">
       <div class="loading-section" *ngIf="isLoadingMasterData">
         <i class="pi pi-spin pi-spinner"></i>
-        <span>Cargando datos maestros de Siigo...</span>
+        <span>{{ 'integrations.siigoConfig.cargandoDatosMaestrosDeSiigo' | translate }}</span>
       </div>
 
       <div class="form-grid" *ngIf="!isLoadingMasterData">
         <div class="form-field">
-          <label for="defaultWarehouse">Bodega Predeterminada</label>
+          <label for="defaultWarehouse">{{ 'integrations.siigoConfig.bodegaPredeterminada' | translate }}</label>
           <p-dropdown
             id="defaultWarehouse"
             formControlName="defaultWarehouse"
             [options]="masterData.warehouses"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona bodega"
+            [placeholder]="'integrations.siigoConfig.seleccionaBodega' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
         </div>
 
         <div class="form-field">
-          <label for="defaultCostCenter">Centro de Costo</label>
+          <label for="defaultCostCenter">{{ 'integrations.siigoConfig.centroDeCosto' | translate }}</label>
           <p-dropdown
             id="defaultCostCenter"
             formControlName="defaultCostCenter"
             [options]="masterData.costCenters"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona centro de costo"
+            [placeholder]="'integrations.siigoConfig.seleccionaCentroDeCosto' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
         </div>
 
         <div class="form-field">
-          <label for="documentTypeId">Tipo de Documento para Facturas *</label>
+          <label for="documentTypeId">{{ 'integrations.siigoConfig.tipoDeDocumentoParaFacturas' | translate }}</label>
           <p-dropdown
             id="documentTypeId"
             formControlName="documentTypeId"
             [options]="masterData.documentTypes"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona tipo de documento"
+            [placeholder]="'integrations.siigoConfig.seleccionaTipoDeDocumento' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
-          <small class="field-hint">Requerido para facturacion electronica</small>
+          <small class="field-hint">{{ 'integrations.siigoConfig.requeridoParaFacturacionElectronica' | translate }}</small>
         </div>
 
         <div class="form-field">
-          <label for="defaultPaymentTypeId">Tipo de Pago por Defecto</label>
+          <label for="defaultPaymentTypeId">{{ 'integrations.siigoConfig.tipoDePagoPorDefecto' | translate }}</label>
           <p-dropdown
             id="defaultPaymentTypeId"
             formControlName="defaultPaymentTypeId"
             [options]="masterData.paymentTypes"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona tipo de pago"
+            [placeholder]="'integrations.siigoConfig.seleccionaTipoDePago' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
-          <small class="field-hint">Forma de pago predeterminada en facturas</small>
+          <small class="field-hint">{{ 'integrations.siigoConfig.formaDePagoPredeterminadaEn' | translate }}</small>
         </div>
 
         <div class="form-field">
-          <label for="defaultPriceList">Lista de Precios</label>
+          <label for="defaultPriceList">{{ 'integrations.siigoConfig.listaDePrecios' | translate }}</label>
           <p-dropdown
             id="defaultPriceList"
             formControlName="defaultPriceList"
             [options]="masterData.priceLists"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona lista de precios"
+            [placeholder]="'integrations.siigoConfig.seleccionaListaDePrecios' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
         </div>
 
         <div class="form-field">
-          <label for="defaultTaxRate">Tasa de IVA (%)</label>
+          <label for="defaultTaxRate">{{ 'integrations.siigoConfig.tasaDeIva' | translate }}</label>
           <input
             pInputText
             type="number"
             id="defaultTaxRate"
             formControlName="defaultTaxRate"
             placeholder="19">
-          <small class="field-hint">Tasa de IVA predeterminada para productos</small>
+          <small class="field-hint">{{ 'integrations.siigoConfig.tasaDeIvaPredeterminadaPara' | translate }}</small>
         </div>
       </div>
 
       <!-- Tax IDs Section -->
       <div class="tax-ids-section" *ngIf="!isLoadingMasterData && masterData.taxes.length > 0">
-        <h4><i class="pi pi-percentage"></i> IDs de Impuestos de Siigo</h4>
+        <h4><i class="pi pi-percentage"></i> {{ 'integrations.siigoConfig.idsDeImpuestosDeSiigo' | translate }}</h4>
         <p class="section-description">
-          Selecciona los impuestos correspondientes a cada tasa de IVA. Estos IDs son requeridos para crear facturas correctamente.
+          {{ 'integrations.siigoConfig.seleccionaLosImpuestosCorrespondientesA' | translate }}
         </p>
 
         <div class="form-grid">
           <div class="form-field">
-            <label for="tax0Id">Impuesto 0% (Excluido/Exento)</label>
+            <label for="tax0Id">{{ 'integrations.siigoConfig.impuesto0ExcluidoExento' | translate }}</label>
             <p-dropdown
               id="tax0Id"
               formControlName="tax0Id"
               [options]="masterData.taxes"
               optionLabel="name"
               optionValue="id"
-              placeholder="Selecciona impuesto 0%"
+              [placeholder]="'integrations.siigoConfig.seleccionaImpuesto0' | translate"
               [showClear]="true"
               [filter]="true"
               filterBy="name"
               styleClass="w-full">
             </p-dropdown>
-            <small class="field-hint">Para productos exentos o excluidos de IVA</small>
+            <small class="field-hint">{{ 'integrations.siigoConfig.paraProductosExentosOExcluidos' | translate }}</small>
           </div>
 
           <div class="form-field">
-            <label for="tax5Id">Impuesto 5%</label>
+            <label for="tax5Id">{{ 'integrations.siigoConfig.impuesto5' | translate }}</label>
             <p-dropdown
               id="tax5Id"
               formControlName="tax5Id"
               [options]="masterData.taxes"
               optionLabel="name"
               optionValue="id"
-              placeholder="Selecciona impuesto 5%"
+              [placeholder]="'integrations.siigoConfig.seleccionaImpuesto5' | translate"
               [showClear]="true"
               [filter]="true"
               filterBy="name"
               styleClass="w-full">
             </p-dropdown>
-            <small class="field-hint">Para productos con IVA reducido del 5%</small>
+            <small class="field-hint">{{ 'integrations.siigoConfig.paraProductosConIvaReducido' | translate }}</small>
           </div>
 
           <div class="form-field">
-            <label for="tax19Id">Impuesto 19% (IVA General)</label>
+            <label for="tax19Id">{{ 'integrations.siigoConfig.impuesto19IvaGeneral' | translate }}</label>
             <p-dropdown
               id="tax19Id"
               formControlName="tax19Id"
               [options]="masterData.taxes"
               optionLabel="name"
               optionValue="id"
-              placeholder="Selecciona impuesto 19%"
+              [placeholder]="'integrations.siigoConfig.seleccionaImpuesto19' | translate"
               [showClear]="true"
               [filter]="true"
               filterBy="name"
               styleClass="w-full">
             </p-dropdown>
-            <small class="field-hint">Para productos con IVA general del 19%</small>
+            <small class="field-hint">{{ 'integrations.siigoConfig.paraProductosConIvaGeneral' | translate }}</small>
           </div>
         </div>
       </div>
@@ -250,21 +250,21 @@
     </p-card>
 
     <!-- Section 3: Account Mapping (only visible after successful connection) -->
-    <p-card header="Mapeo de Cuentas Contables" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+    <p-card [header]="'integrations.integrations.mapeoDeCuentasContables' | translate" styleClass="config-card" *ngIf="connectionStatus === 'success'">
       <p class="section-description">
-        Configura las cuentas contables PUC para la integracion con Siigo
+        {{ 'integrations.siigoConfig.configuraLasCuentasContablesPuc' | translate }}
       </p>
 
       <div formGroupName="accountsMapping" class="form-grid">
         <div class="form-field">
-          <label for="accountGroup">Grupo de Cuentas</label>
+          <label for="accountGroup">{{ 'integrations.siigoConfig.grupoDeCuentas' | translate }}</label>
           <p-dropdown
             id="accountGroup"
             formControlName="accountGroup"
             [options]="masterData.accountGroups"
             optionLabel="name"
             optionValue="id"
-            placeholder="Selecciona grupo"
+            [placeholder]="'integrations.siigoConfig.seleccionaGrupo' | translate"
             [showClear]="true"
             styleClass="w-full">
           </p-dropdown>
@@ -272,69 +272,67 @@
 
         <div class="form-field">
           <label for="incomeAccount">
-            <i class="pi pi-dollar"></i> Cuenta de Ingresos
+            <i class="pi pi-dollar"></i> {{ 'integrations.siigoConfig.cuentaDeIngresos' | translate }}
           </label>
           <input
             pInputText
             id="incomeAccount"
             formControlName="incomeAccount"
-            placeholder="Ej: 4135">
-          <small class="field-hint">Cuentas 4xxx para ventas</small>
+            [placeholder]="'integrations.siigoConfig.ej4135' | translate">
+          <small class="field-hint">{{ 'integrations.siigoConfig.cuentas4xxxParaVentas' | translate }}</small>
         </div>
 
         <div class="form-field">
           <label for="costAccount">
-            <i class="pi pi-money-bill"></i> Cuenta de Costos
+            <i class="pi pi-money-bill"></i> {{ 'integrations.siigoConfig.cuentaDeCostos' | translate }}
           </label>
           <input
             pInputText
             id="costAccount"
             formControlName="costAccount"
-            placeholder="Ej: 6135">
-          <small class="field-hint">Cuentas 6xxx para costos de venta</small>
+            [placeholder]="'integrations.siigoConfig.ej6135' | translate">
+          <small class="field-hint">{{ 'integrations.siigoConfig.cuentas6xxxParaCostosDe' | translate }}</small>
         </div>
 
         <div class="form-field">
           <label for="inventoryAccount">
-            <i class="pi pi-box"></i> Cuenta de Inventario
+            <i class="pi pi-box"></i> {{ 'integrations.siigoConfig.cuentaDeInventario' | translate }}
           </label>
           <input
             pInputText
             id="inventoryAccount"
             formControlName="inventoryAccount"
-            placeholder="Ej: 1435">
-          <small class="field-hint">Cuentas 1xxx para inventarios</small>
+            [placeholder]="'integrations.siigoConfig.ej1435' | translate">
+          <small class="field-hint">{{ 'integrations.siigoConfig.cuentas1xxxParaInventarios' | translate }}</small>
         </div>
 
         <div class="form-field">
           <label for="discountAccount">
-            <i class="pi pi-percentage"></i> Cuenta de Descuentos
+            <i class="pi pi-percentage"></i> {{ 'integrations.siigoConfig.cuentaDeDescuentos' | translate }}
           </label>
           <input
             pInputText
             id="discountAccount"
             formControlName="discountAccount"
-            placeholder="Ej: 4175">
-          <small class="field-hint">Cuentas 4xxx para descuentos</small>
+            [placeholder]="'integrations.siigoConfig.ej4175' | translate">
+          <small class="field-hint">{{ 'integrations.siigoConfig.cuentas4xxxParaDescuentos' | translate }}</small>
         </div>
       </div>
 
       <!-- D-504 (ticket 1229): categoría de SIIGO por categoría de Katuq -->
       <div class="cat-contable">
-        <h4 class="cat-contable__titulo">Categoría contable por categoría de Katuq</h4>
+        <h4 class="cat-contable__titulo">{{ 'integrations.siigoConfig.categoriaContablePorCategoriaDe' | translate }}</h4>
         <p class="cat-contable__texto">
-          En SIIGO, la categoría del producto define sus cuentas de inventario, costo, ingreso y devolución.
-          Cuando Katuq tenga que crear un producto en SIIGO, usará la categoría que elijas aquí para su
-          categoría. Si una categoría no tiene ninguna, usará el "Grupo de Cuentas" de arriba.
+          {{ 'integrations.siigoConfig.enSiigoLaCategoriaDel' | translate }}
         </p>
         <div class="cat-contable__vacio" *ngIf="!filasCategorias.length">
           <i class="pi pi-sitemap"></i>
-          <strong>Sin categorías</strong>
-          <small>Crea las categorías de tus productos para conectarlas con SIIGO.</small>
+          <strong>{{ 'integrations.siigoConfig.sinCategorias' | translate }}</strong>
+          <small>{{ 'integrations.siigoConfig.creaLasCategoriasDeTus' | translate }}</small>
         </div>
         <table class="cat-contable__tabla" *ngIf="filasCategorias.length">
           <thead>
-            <tr><th>Categoría en Katuq</th><th>Categoría en SIIGO</th></tr>
+            <tr><th>{{ 'integrations.siigoConfig.categoriaEnKatuq' | translate }}</th><th>{{ 'integrations.siigoConfig.categoriaEnSiigo' | translate }}</th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let fila of filasCategorias">
@@ -346,7 +344,7 @@
                   optionValue="id"
                   [(ngModel)]="grupoPorCategoria[fila.clave]"
                   [ngModelOptions]="{ standalone: true }"
-                  [placeholder]="fila.nivel > 0 ? 'Igual que ' + fila.padre : 'Grupo de Cuentas de arriba'"
+                  [placeholder]="fila.nivel > 0 ? ('integrations.siigoConfig.igualQue' | translate) + fila.padre : ('integrations.siigoConfig.grupoDeCuentasDeArriba' | translate)"
                   [showClear]="true"
                   [filter]="true"
                   filterBy="name"
@@ -361,40 +359,38 @@
 
       <!-- PUC Guide -->
       <div class="puc-guide">
-        <h4><i class="pi pi-info-circle"></i> Guia de Cuentas PUC Colombia</h4>
+        <h4><i class="pi pi-info-circle"></i> {{ 'integrations.siigoConfig.guiaDeCuentasPucColombia' | translate }}</h4>
         <div class="puc-items">
           <div class="puc-item">
-            <span class="puc-code">1xxx</span>
-            <span class="puc-name">Activos (Inventarios, Cuentas por Cobrar)</span>
+            <span class="puc-code">{{ 'integrations.siigoConfig.1xxx' | translate }}</span>
+            <span class="puc-name">{{ 'integrations.siigoConfig.activosInventariosCuentasPorCobrar' | translate }}</span>
           </div>
           <div class="puc-item">
-            <span class="puc-code">4xxx</span>
-            <span class="puc-name">Ingresos (Ventas, Descuentos)</span>
+            <span class="puc-code">{{ 'integrations.siigoConfig.4xxx' | translate }}</span>
+            <span class="puc-name">{{ 'integrations.siigoConfig.ingresosVentasDescuentos' | translate }}</span>
           </div>
           <div class="puc-item">
-            <span class="puc-code">6xxx</span>
-            <span class="puc-name">Costos de Ventas</span>
+            <span class="puc-code">{{ 'integrations.siigoConfig.6xxx' | translate }}</span>
+            <span class="puc-name">{{ 'integrations.siigoConfig.costosDeVentas' | translate }}</span>
           </div>
         </div>
       </div>
     </p-card>
 
     <!-- Section: Payment Methods Mapping -->
-    <p-card header="Mapeo de Formas de Pago" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+    <p-card [header]="'integrations.siigoConfig.mapeoDeFormasDePago' | translate" styleClass="config-card" *ngIf="connectionStatus === 'success'">
       <p class="section-description">
         <i class="pi pi-info-circle"></i>
-        Configura que tipo de pago de Siigo se usara para cada forma de pago en Katuq.
-        <strong>Importante:</strong> Cada tipo de pago en Siigo tiene asociada una cuenta contable (ej: 13050501 - Clientes nacionales).
-        Asegurate de seleccionar el tipo de pago correcto para que los asientos contables se generen en la cuenta deseada.
+        {{ 'integrations.siigoConfig.configuraQueTipoDePago' | translate }}
+        <strong>{{ 'integrations.integrations.importante' | translate }}</strong> {{ 'integrations.siigoConfig.cadaTipoDePagoEn' | translate }}
       </p>
 
       <div class="payment-mapping-info">
         <div class="info-box">
           <i class="pi pi-lightbulb"></i>
           <div>
-            <strong>¿Como funciona?</strong>
-            <p>En Siigo, cada forma de pago tiene configurada una cuenta por cobrar (ej: 13050501 - Clientes nacionales).
-            Al mapear las formas de pago de Katuq a Siigo, las facturas generadas usaran la cuenta contable correcta.</p>
+            <strong>{{ 'integrations.siigoConfig.comoFunciona' | translate }}</strong>
+            <p>{{ 'integrations.siigoConfig.enSiigoCadaFormaDe' | translate }}</p>
           </div>
         </div>
       </div>
@@ -402,14 +398,14 @@
       <!-- Loading payment methods -->
       <div class="loading-section" *ngIf="isLoadingPaymentMethods">
         <i class="pi pi-spin pi-spinner"></i>
-        <span>Cargando formas de pago configuradas...</span>
+        <span>{{ 'integrations.siigoConfig.cargandoFormasDePagoConfiguradas' | translate }}</span>
       </div>
 
       <!-- No payment methods configured -->
       <div class="empty-state" *ngIf="!isLoadingPaymentMethods && katuqPaymentMethods.length === 0">
         <i class="pi pi-exclamation-circle"></i>
-        <p>No tienes formas de pago configuradas en Katuq.</p>
-        <small>Ve a <strong>Extras → Formas de Pago</strong> para configurar tus formas de pago primero.</small>
+        <p>{{ 'integrations.siigoConfig.noTienesFormasDePago' | translate }}</p>
+        <small>{{ 'integrations.siigoConfig.veA' | translate }} <strong>{{ 'integrations.siigoConfig.extrasFormasDePago' | translate }}</strong> {{ 'integrations.siigoConfig.paraConfigurarTusFormasDe' | translate }}</small>
       </div>
 
       <!-- Payment methods mapping -->
@@ -431,7 +427,7 @@
               [options]="masterData.paymentTypes"
               optionLabel="name"
               optionValue="id"
-              [placeholder]="'Selecciona tipo de pago en Siigo'"
+              [placeholder]="('integrations.siigoConfig.seleccionaTipoDePagoEn' | translate)"
               [showClear]="true"
               [filter]="masterData.paymentTypes.length > 5"
               filterBy="name"
@@ -439,7 +435,7 @@
               <ng-template let-item pTemplate="item">
                 <div class="payment-option">
                   <span>{{ item.name }}</span>
-                  <small class="payment-type-badge">ID: {{ item.id }}</small>
+                  <small class="payment-type-badge">{{ 'integrations.siigoConfig.id' | translate:{id: item.id} }}</small>
                 </div>
               </ng-template>
             </p-dropdown>
@@ -450,14 +446,13 @@
       <div class="mapping-tip" *ngIf="katuqPaymentMethods.length > 0">
         <i class="pi pi-exclamation-triangle"></i>
         <span>
-          <strong>Tip:</strong> Si no mapeas una forma de pago, se usara el "Tipo de Pago por Defecto" configurado arriba.
-          Verifica en Siigo (Configuracion → Formas de Pago) que cuenta contable tiene asociada cada forma de pago.
+          <strong>{{ 'integrations.integrations.tip' | translate }}</strong> {{ 'integrations.siigoConfig.siNoMapeasUnaForma' | translate }}
         </span>
       </div>
     </p-card>
 
     <!-- Section 4: Automation & Sync (only visible after successful connection) -->
-    <p-card header="Automatizacion y Sincronizacion" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+    <p-card [header]="'integrations.siigoConfig.automatizacionYSincronizacion' | translate" styleClass="config-card" *ngIf="connectionStatus === 'success'">
       <div class="form-grid">
         <div class="form-field checkbox-field">
           <p-checkbox
@@ -466,8 +461,8 @@
             inputId="enableAutoInvoicing">
           </p-checkbox>
           <label for="enableAutoInvoicing">
-            <strong>Facturacion Automatica</strong>
-            <small>Crear factura en Siigo automaticamente cuando se apruebe el pago</small>
+            <strong>{{ 'integrations.siigoConfig.facturacionAutomatica' | translate }}</strong>
+            <small>{{ 'integrations.siigoConfig.crearFacturaEnSiigoAutomaticamente' | translate }}</small>
           </label>
         </div>
 
@@ -478,13 +473,13 @@
             inputId="autoSyncInventory">
           </p-checkbox>
           <label for="autoSyncInventory">
-            <strong>Sincronizar Inventario</strong>
-            <small>Mantener el inventario sincronizado entre Katuq y Siigo</small>
+            <strong>{{ 'integrations.siigoConfig.sincronizarInventario' | translate }}</strong>
+            <small>{{ 'integrations.siigoConfig.mantenerElInventarioSincronizadoEntre' | translate }}</small>
           </label>
         </div>
 
         <div class="form-field" *ngIf="siigoForm.get('autoSyncInventory')?.value">
-          <label for="syncFrequency">Frecuencia de Sincronizacion</label>
+          <label for="syncFrequency">{{ 'integrations.siigoConfig.frecuenciaDeSincronizacion' | translate }}</label>
           <p-dropdown
             id="syncFrequency"
             formControlName="syncFrequency"
@@ -498,13 +493,13 @@
 
       <!-- Manual Sync -->
       <div class="sync-section">
-        <h4>Sincronizacion Manual de Productos</h4>
-        <p>Sincroniza todos los productos de Katuq con Siigo</p>
+        <h4>{{ 'integrations.siigoConfig.sincronizacionManualDeProductos' | translate }}</h4>
+        <p>{{ 'integrations.siigoConfig.sincronizaTodosLosProductosDe' | translate }}</p>
 
         <button
           pButton
           type="button"
-          label="Sincronizar Ahora"
+          [label]="'integrations.siigoConfig.sincronizarAhora' | translate"
           icon="pi pi-sync"
           class="p-button-outlined"
           [loading]="isSyncing"
@@ -522,19 +517,19 @@
           <div class="result-grid">
             <div class="result-item success">
               <span class="result-value">{{ syncResult.total || 0 }}</span>
-              <span class="result-label">Total</span>
+              <span class="result-label">{{ 'integrations.siigoConfig.total' | translate }}</span>
             </div>
             <div class="result-item created">
               <span class="result-value">{{ syncResult.created || 0 }}</span>
-              <span class="result-label">Creados</span>
+              <span class="result-label">{{ 'integrations.siigoConfig.creados' | translate }}</span>
             </div>
             <div class="result-item updated">
               <span class="result-value">{{ syncResult.updated || 0 }}</span>
-              <span class="result-label">Actualizados</span>
+              <span class="result-label">{{ 'integrations.siigoConfig.actualizados' | translate }}</span>
             </div>
             <div class="result-item error" *ngIf="syncResult.failed">
               <span class="result-value">{{ syncResult.failed }}</span>
-              <span class="result-label">Errores</span>
+              <span class="result-label">{{ 'integrations.siigoConfig.errores' | translate }}</span>
             </div>
           </div>
         </div>
@@ -546,7 +541,7 @@
       <button
         pButton
         type="submit"
-        label="Guardar Configuracion"
+        [label]="'integrations.siigoConfig.guardarConfiguracion' | translate"
         icon="pi pi-save"
         class="boton-guardar"
         [loading]="isSaving"

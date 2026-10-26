@@ -1,8 +1,8 @@
-<div class="ticker" *ngIf="vm$ | async as vm" role="region" aria-label="Comercios de Katuq hoy">
-  <div class="ticker__label"><span class="live__dot" aria-hidden="true"></span>Hoy en Katuq</div>
+<div class="ticker" *ngIf="vm$ | async as vm" role="region" [attr.aria-label]="'enVivo.enVivoCinta.comerciosDeKatuqHoy' | translate">
+  <div class="ticker__label"><span class="live__dot" aria-hidden="true"></span>{{ 'enVivo.enVivoCinta.hoyEnKatuq' | translate }}</div>
 
   <div class="ticker__win">
-    <p class="vacio" *ngIf="vm.items.length === 0">Todavía no hay comercios con movimiento hoy.</p>
+    <p class="vacio" *ngIf="vm.items.length === 0">{{ 'enVivo.enVivoCinta.todaviaNoHayComerciosCon' | translate }}</p>
 
     <ul class="ticker__track" *ngIf="vm.items.length > 0" [style.--dur]="vm.duracion + 's'">
       <ng-container *ngFor="let copia of copias">

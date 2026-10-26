@@ -75,11 +75,11 @@
   }
 }
 .btn-dark-gradien{
-  @include btn-gradien(60,lighten($dark-color,8%),0%,darken($dark-color,8%),100%,$white);
+  @include btn-gradien(60,#3d4557,0%,#1b1f27,100%,$white);
  &:hover,&:focus,&:active,&.active,&.hover{
     transition: 1.5s;
     background-position: right center;
-   background-image: linear-gradient(to right, lighten($dark-color,8%),0%,darken($dark-color,8%),100%,$white) !important;
+   background-image: linear-gradient(to right, #3d4557,0%,#1b1f27,100%,$white) !important;
   }
 }
 

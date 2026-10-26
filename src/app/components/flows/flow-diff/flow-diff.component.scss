@@ -17,7 +17,7 @@
   font-weight: 700;
   color: $cfg-muted;
 
-  &:hover { color: $cfg-accent; }
+  &:hover { color: $cfg-accent-ink; }
 }
 
 .fd-versiones {
@@ -45,7 +45,7 @@
     color: $cfg-ink;
     font-size: 13.5px;
 
-    &:focus { outline: none; background: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+    &:focus { outline: none; background: var(--ds-surface); border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
   }
 }
 

@@ -450,6 +450,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
           this.validezDias = c.validezDias ?? this.VALIDEZ_DEFAULT;
           this.recalcularVencimiento();
         }
+        this.actualizarValidezDeBorradorVencido();
         this.clienteTerm = this.clienteNombre(c.cliente);
         // Si no trae términos, precargar el default de empresa. Ticket 1081: la
         // config se lee siempre, para mostrar el anexo y sus acciones.
@@ -1683,6 +1684,26 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.fechaVencimiento = value;
     this.validezDias = this.diasEntre(this.fechaEmision, this.fechaVencimiento);
     this.reactivarSiVencidaExtendida();
+  }
+
+  /**
+   * D-518 (F2-43·6, pregunta C11): un BORRADOR que se abre cuando su fecha de
+   * validez ya pasó (p. ej. una solicitud de la página web que se completa
+   * días después) propone hoy + los días de validez, y lo avisa. Al guardar o
+   * enviar viaja esa fecha. No aplica a cotizaciones ya enviadas.
+   */
+  private actualizarValidezDeBorradorVencido(): void {
+    if (String(this.cotizacion.estadoCotizacion || "borrador").toLowerCase() !== "borrador") return;
+    const venc = this.fromInputDate(this.fechaVencimiento);
+    if (!venc) return;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (venc.getTime() >= hoy.getTime()) return;
+    const dias = Number(this.validezDias) > 0 ? Number(this.validezDias) : this.VALIDEZ_DEFAULT;
+    this.validezDias = dias;
+    this.fechaEmision = this.toInputDate(new Date());
+    this.recalcularVencimiento();
+    this.toastr.info(`La fecha de validez se actualizó a hoy + ${dias} días.`, "Validez actualizada", { timeOut: 5000 });
   }
 
   private recalcularVencimiento(): void {

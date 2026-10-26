@@ -191,3 +191,18 @@ test('el cajón cerrado del celular depende de `.collapsed` en el aside: se liga
   // El encabezado y el contenido del riel sí son solo de escritorio.
   assert.match(html, /<header class="sidebar-header unified-header"\s+\[class\.collapsed\]="compacto"/);
 });
+
+test('D-540: el menú rediseñado traduce lo que se ve y deja intacto el título que es identidad', () => {
+  const dir = path.resolve(__dirname, '../../src/app/shared/components/sidebar');
+  const html = fs.readFileSync(path.join(dir, 'sidebar.component.html'), 'utf8');
+  const ts = fs.readFileSync(path.join(dir, 'sidebar.component.ts'), 'utf8');
+  // La fila y el panel muestran el título traducido; el dato (fuente.title) sigue siendo la clave en español.
+  assert.match(html, /\{\{fila\.titulo \| translate\}\}/);
+  assert.match(html, /\[attr\.aria-label\]="'shell\.sidebar\.goTo' \| translate/);
+  assert.match(html, /\[title\]="'shell\.sidebar\.newOptions' \| translate"/);
+  assert(!/aria-label="Navegación principal"/.test(html), 'la etiqueta de navegación va por clave');
+  // La estrella usa claves, no texto fijo.
+  assert.match(ts, /translate\.instant\(this\.esFavorita\(estrella\) \? 'shell\.sidebar\.removeFavorite' : 'shell\.sidebar\.addFavorite'\)/);
+  // Ninguna comparación con el título visible: las excepciones de identidad no se traducen.
+  assert(!/translate\.instant\([^)]*\)\s*===\s*['"]Mensajes/.test(ts));
+});

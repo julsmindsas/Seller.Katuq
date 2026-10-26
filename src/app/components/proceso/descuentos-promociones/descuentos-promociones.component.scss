@@ -13,13 +13,13 @@
   height: 40px;
   min-width: 220px;
   padding: 0 14px;
-  background: #f5f4fa;
-  border: 1px solid #e9e7f3;
+  background: var(--ds-chip-bg);
+  border: 1px solid var(--ds-control-border);
   border-radius: 10px;
-  color: #211F3A;
+  color: var(--ds-ink);
   font-size: 13.5px;
   outline: none;
 
-  &::placeholder { color: #8f8bab; }
-  &:focus { border-color: #7C5CFF; background: #fff; box-shadow: 0 0 0 3px #efe9ff; }
+  &::placeholder { color: var(--ds-muted); }
+  &:focus { border-color: var(--ds-focus); background: var(--ds-surface); box-shadow: 0 0 0 3px var(--ds-accent-soft); }
 }

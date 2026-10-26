@@ -6,6 +6,7 @@ import { EscalaNpsComponent } from '../escala-nps/escala-nps.component';
 import { NpsPreguntaService } from '../../services/feedback/nps-pregunta.service';
 import { rutaSinQuery } from '../../data/rutas-publicas';
 
+import { TranslateModule } from '@ngx-translate/core';
 /**
  * El contenido de la pregunta NPS de Katuq (D-483, D-506): la escala, el segundo paso según
  * la nota y el agradecimiento. Lo usan la ventana, el botón flotante y la tarjeta de Inicio;
@@ -14,7 +15,7 @@ import { rutaSinQuery } from '../../data/rutas-publicas';
 @Component({
   selector: 'app-nps-pregunta',
   standalone: true,
-  imports: [CommonModule, FormsModule, EscalaNpsComponent],
+  imports: [TranslateModule, CommonModule, FormsModule, EscalaNpsComponent],
   templateUrl: './nps-pregunta.component.html',
   styleUrls: ['./nps-pregunta.component.scss'],
 })

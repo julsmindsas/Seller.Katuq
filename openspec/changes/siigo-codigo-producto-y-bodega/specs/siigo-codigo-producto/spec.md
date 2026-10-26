@@ -67,3 +67,34 @@ enviarlo con `stock_control: false`.
 #### Scenario: Servicio
 - **WHEN** se factura el servicio "Diagnóstico", que no existe en SIIGO
 - **THEN** se crea con `type: Service` y sin control de inventario
+
+### Requirement: La vista previa dice qué pasará con cada producto en SIIGO
+
+WHILE la empresa tiene la bandera `siigoProductEquivalence` encendida, WHEN se
+pide la vista previa de una factura SIIGO, THE SYSTEM SHALL revisar en SIIGO,
+solo leyendo, cada código del carrito con la misma regla que la factura, y
+SHALL anotar cada línea con `enSiigo` (`existente`, `equivalente`, `ambiguo`,
+`nuevo` o `error`) y con `codigoSiigo` cuando va con un equivalente. Con la
+bandera apagada, la vista previa SHALL quedar igual que hoy, sin consultar
+productos en SIIGO. La revisión SHALL NOT crear clientes ni productos, ni
+escribir en Firestore.
+
+#### Scenario: Código guardado que existe (criterio de 3.2)
+- **WHEN** el producto `GLD-00-01-4SSFR` tiene guardado `GLD-01-4SSFR` y ese código existe en SIIGO
+- **THEN** la línea sale con `enSiigo: 'existente'` y no hay aviso de creación
+
+#### Scenario: Avisos
+- **WHEN** hay productos que se crearán, que van con un equivalente o que tienen más de un posible
+- **THEN** la vista previa lo avisa con textos cortos en singular o plural («No existe en SIIGO y se creará al facturar: A.», «Se facturará con el producto que ya existe en SIIGO: A → B.», «Tiene más de un posible en SIIGO y se creará con el código de Katuq: X.»), y no avisa nada si todo existe
+
+#### Scenario: Revisión acotada
+- **WHEN** el carrito tiene más de 20 códigos distintos, o la revisión pasa de 15 s
+- **THEN** se revisan los primeros en orden, cada código una vez, y se avisa «Se revisaron en SIIGO k de N productos.»
+
+#### Scenario: SIIGO falla
+- **WHEN** una consulta a SIIGO falla
+- **THEN** esa línea queda en `error`, no se consulta más (una sola falla, sin reintentos y con timeout de 5 s, para no abrir el circuit breaker compartido de SIIGO), se avisa cuántos se revisaron y la vista previa sale igual. A diferencia de la factura, que en ese caso sigue y crea, la vista previa no afirma ni que existe ni que se creará
+
+#### Scenario: La revisión entera falla
+- **WHEN** la revisión o la lectura de la bandera fallan
+- **THEN** la vista previa sale exactamente como hoy

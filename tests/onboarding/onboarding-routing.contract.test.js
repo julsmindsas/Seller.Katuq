@@ -36,7 +36,12 @@ assert.match(inventory, /requestedReturn === '\/onboarding'/);
 assert.match(inventory, /!this\.onboardingReturnUrl && !completedTours\.includes\("inventario"\)/);
 assert.match(productsHtml, /Volver a la configuración/);
 assert.match(inventoryHtml, /Volver a la configuración/);
-assert.match(wizardHtml, /Faltan las existencias iniciales/);
+// IDI-B12b: la plantilla pide la clave y es.json conserva el texto en español.
+assert.match(wizardHtml, /onboarding\.onboardingWizard\.faltanLasExistenciasIniciales/);
+assert.equal(
+  JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/assets/i18n/es.json'), 'utf8'))['onboarding.onboardingWizard.faltanLasExistenciasIniciales'],
+  'Faltan las existencias iniciales',
+);
 
 // La copia más reciente gana por fecha y el dato viaja dentro del contexto V2.
 assert.match(wizard, /lastUpdated: this\.progressUpdatedAt/);

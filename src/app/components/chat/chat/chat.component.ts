@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { NgForm } from '@angular/forms';
 import { trigger, style, animate, transition, state } from '@angular/animations';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
@@ -68,17 +69,18 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   // Adjuntos y prompts
   public attachedImage: string | null = null;
   public quickPrompts: string[] = [
-    'Resumen de mis pedidos pendientes',
-    '¿Qué productos tienen bajo stock?',
-    'Ayúdame a crear una oferta',
-    '¿Cómo configuro un nuevo producto?'
+    'chat.chat.resumenDeMisPedidosPendientes',
+    'chat.chat.queProductosTienenBajoStock',
+    'chat.chat.ayudameACrearUnaOferta',
+    'chat.chat.comoConfiguroUnNuevoProducto'
   ];
   public isDragOver: boolean = false;
 
   constructor(
     private chatService: ChatService,
     private cdRef: ChangeDetectorRef,
-    private themeMode: ThemeModeService
+    private themeMode: ThemeModeService,
+    private translate: TranslateService
   ) {
     this.chatService.getUsers().subscribe(users => { 
       this.searchUsers = users
@@ -291,7 +293,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   }
 
   applyPrompt(prompt: string): void {
-    this.chatText = prompt;
+    this.chatText = this.translate.instant(prompt);
     // Enfocar y permitir edición inmediatamente
     setTimeout(() => {
       const textarea = document.querySelector('.message-input') as HTMLTextAreaElement;

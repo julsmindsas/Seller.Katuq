@@ -2,16 +2,16 @@
   <section class="cfg-card">
     <div class="nps-barra">
       <div>
-        <h2 class="nps-barra__titulo">Encuestas</h2>
-        <p class="nps-barra__sub">Qué se le pregunta a tus clientes, cuándo y quién atiende a los inconformes.</p>
+        <h2 class="nps-barra__titulo">{{ 'nps.encuestaEditor.encuestas' | translate }}</h2>
+        <p class="nps-barra__sub">{{ 'nps.encuestasLista.queSeLePreguntaA' | translate }}</p>
       </div>
       <div class="cfg-acciones">
-        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando" aria-label="Actualizar">
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando" [attr.aria-label]="'nps.encuestasLista.actualizar' | translate">
           <i class="pi pi-refresh" [class.pi-spin]="cargando" aria-hidden="true"></i>
         </button>
         <a class="cfg-btn" *ngIf="puedeEditar" routerLink="nueva">
           <i class="pi pi-plus" aria-hidden="true"></i>
-          <span>Nueva encuesta</span>
+          <span>{{ 'nps.encuestaEditor.nuevaEncuesta' | translate }}</span>
         </a>
       </div>
     </div>
@@ -25,18 +25,18 @@
   <section class="cfg-card" *ngIf="cargando && !encuestas.length">
     <div class="cfg-vacio">
       <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
-      <p class="cfg-vacio__titulo">Cargando las encuestas…</p>
+      <p class="cfg-vacio__titulo">{{ 'nps.encuestasLista.cargandoLasEncuestas' | translate }}</p>
     </div>
   </section>
 
   <section class="cfg-card" *ngIf="!cargando && !error && !encuestas.length">
     <div class="cfg-vacio">
       <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-list"></i></span>
-      <p class="cfg-vacio__titulo">Todavía no tienes encuestas</p>
-      <p class="cfg-vacio__texto">Crea una para preguntarle a tus clientes después de la entrega, o con un enlace y un QR.</p>
+      <p class="cfg-vacio__titulo">{{ 'nps.encuestasLista.todaviaNoTienesEncuestas' | translate }}</p>
+      <p class="cfg-vacio__texto">{{ 'nps.encuestasLista.creaUnaParaPreguntarleA' | translate }}</p>
       <a class="cfg-btn" *ngIf="puedeEditar" routerLink="nueva">
         <i class="pi pi-plus" aria-hidden="true"></i>
-        <span>Crear la primera encuesta</span>
+        <span>{{ 'nps.encuestasLista.crearLaPrimeraEncuesta' | translate }}</span>
       </a>
     </div>
   </section>
@@ -49,48 +49,48 @@
         </span>
         <div class="enc-tarjeta__textos">
           <h3 class="enc-tarjeta__nombre">{{ e.nombre }}</h3>
-          <span class="enc-tarjeta__detalle">{{ NOMBRE_CANAL[e.canal] }} · {{ detalle(e) }}</span>
+          <span class="enc-tarjeta__detalle">{{ NOMBRE_CANAL[e.canal] | translate }} · {{ detalle(e) }}</span>
         </div>
-        <span class="nps-pastilla" [ngClass]="'is-' + e.estado" *ngIf="!e.soloLectura">{{ NOMBRE_ESTADO[e.estado] }}</span>
-        <span class="nps-pastilla is-canal" *ngIf="e.soloLectura">Solo lectura</span>
+        <span class="nps-pastilla" [ngClass]="'is-' + e.estado" *ngIf="!e.soloLectura">{{ NOMBRE_ESTADO[e.estado] | translate }}</span>
+        <span class="nps-pastilla is-canal" *ngIf="e.soloLectura">{{ 'nps.encuestasLista.soloLectura' | translate }}</span>
       </div>
 
       <dl class="enc-datos">
         <div class="enc-dato">
-          <dt class="cfg-label">Respuestas (90 días)</dt>
+          <dt class="cfg-label">{{ 'nps.encuestasLista.respuestas90Dias' | translate }}</dt>
           <dd class="enc-dato__valor">{{ (e.respuestas90d || 0) | number }}</dd>
         </div>
         <div class="enc-dato">
-          <dt class="cfg-label">Responsable</dt>
+          <dt class="cfg-label">{{ 'nps.encuestasLista.responsable' | translate }}</dt>
           <dd class="enc-dato__valor enc-dato__valor--texto" [class.is-falta]="!e.responsable && !e.soloLectura">
-            {{ e.responsable?.nombre || e.responsable?.email || (e.soloLectura ? 'Soporte de Katuq' : 'Sin responsable') }}
+            {{ e.responsable?.nombre || e.responsable?.email || (e.soloLectura ? ('nps.encuestasLista.soporteDeKatuq' | translate) : ('nps.encuestasLista.sinResponsable' | translate)) }}
           </dd>
         </div>
       </dl>
 
       <div class="enc-enlace" *ngIf="enlace(e) as url">
         <span class="enc-enlace__url" [title]="url">{{ url }}</span>
-        <button type="button" class="enc-mini" (click)="copiar(e)"><i class="pi pi-copy" aria-hidden="true"></i><span class="nps-heredar">Copiar</span></button>
-        <button type="button" class="enc-mini" (click)="qr(e)"><i class="pi pi-download" aria-hidden="true"></i><span class="nps-heredar">QR</span></button>
+        <button type="button" class="enc-mini" (click)="copiar(e)"><i class="pi pi-copy" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.encuestaEditor.copiar' | translate }}</span></button>
+        <button type="button" class="enc-mini" (click)="qr(e)"><i class="pi pi-download" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.encuestasLista.qr' | translate }}</span></button>
       </div>
 
       <div class="enc-acciones">
         <a class="cfg-btn cfg-btn--sec" [routerLink]="e.id">
           <i class="pi" [ngClass]="puedeEditar && !e.soloLectura ? 'pi-pencil' : 'pi-eye'" aria-hidden="true"></i>
-          <span>{{ puedeEditar && !e.soloLectura ? 'Editar' : 'Ver' }}</span>
+          <span>{{ puedeEditar && !e.soloLectura ? ('comun.editar' | translate) : ('nps.encuestasLista.ver' | translate) }}</span>
         </a>
         <ng-container *ngIf="puedeEditar && !e.soloLectura">
           <button type="button" class="cfg-btn" [class.cfg-btn--sec]="e.estado === 'activa'" (click)="alternarEstado(e)" [disabled]="ocupada === e.id">
             <i class="pi" [ngClass]="e.estado === 'activa' ? 'pi-pause' : 'pi-play'" aria-hidden="true"></i>
-            <span>{{ e.estado === 'activa' ? 'Pausar' : 'Activar' }}</span>
+            <span>{{ e.estado === 'activa' ? ('nps.encuestaEditor.pausar' | translate) : ('nps.encuestaEditor.activar' | translate) }}</span>
           </button>
-          <button type="button" class="cfg-btn cfg-btn--peligro enc-borrar" *ngIf="e.estado !== 'activa'" (click)="eliminar(e)" [disabled]="ocupada === e.id" aria-label="Eliminar encuesta">
+          <button type="button" class="cfg-btn cfg-btn--peligro enc-borrar" *ngIf="e.estado !== 'activa'" (click)="eliminar(e)" [disabled]="ocupada === e.id" [attr.aria-label]="'nps.encuestasLista.eliminarEncuesta' | translate">
             <i class="pi pi-trash" aria-hidden="true"></i>
           </button>
         </ng-container>
       </div>
 
-      <span class="enc-pie" *ngIf="e.updatedAt">Actualizada el {{ fecha(e.updatedAt) }}</span>
+      <span class="enc-pie" *ngIf="e.updatedAt">{{ 'nps.encuestasLista.actualizadaEl' | translate:{updatedAt: (fecha(e.updatedAt))} }}</span>
     </article>
   </div>
 </div>

@@ -5,6 +5,7 @@ import { SecurityService } from '../../../shared/services/security/security.serv
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
+import { TranslateService } from '@ngx-translate/core';
 type EstadoKey = 'pendiente' | 'haciendo' | 'resuelto';
 type TipoKey = 'bug' | 'ayuda' | 'idea';
 
@@ -78,30 +79,31 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   // Los conteos y el color de cada estado viven en un solo mapa para que la
   // lista, las píldoras y las pestañas no se desincronicen entre sí.
   readonly estados: { [key: string]: Descriptor } = {
-    pendiente: { label: 'Pendiente',   fg: '#b5700f', bg: '#fdf1dd', dot: '#e0891b', icon: 'pi-clock' },
-    haciendo:  { label: 'En progreso', fg: '#1f5fbf', bg: '#e7f0fd', dot: '#2f6fe0', icon: 'pi-sync' },
-    resuelto:  { label: 'Resuelto',    fg: '#15803d', bg: '#e3f6ec', dot: '#22c55e', icon: 'pi-check-circle' },
-    archivado: { label: 'Archivado',   fg: '#5a6070', bg: '#f1f2f5', dot: '#b0b6c5', icon: 'pi-inbox' }
+    pendiente: { label: 'soporte.misTickets.estado.pendiente',   fg: '#b5700f', bg: '#fdf1dd', dot: '#e0891b', icon: 'pi-clock' },
+    haciendo:  { label: 'soporte.misTickets.estado.haciendo', fg: '#1f5fbf', bg: '#e7f0fd', dot: '#2f6fe0', icon: 'pi-sync' },
+    resuelto:  { label: 'soporte.misTickets.estado.resuelto',    fg: '#15803d', bg: '#e3f6ec', dot: '#22c55e', icon: 'pi-check-circle' },
+    archivado: { label: 'soporte.misTickets.estado.archivado',   fg: '#5a6070', bg: '#f1f2f5', dot: '#b0b6c5', icon: 'pi-inbox' }
   };
 
   // Mismo lenguaje que la pantalla de creación (tiposSolicitud en soporte.component)
   readonly tipos: { [key: string]: Descriptor } = {
-    bug:   { label: 'Error',      fg: '#c0392f', bg: '#fce9e8', dot: '#c0392f', icon: 'bug' },
-    ayuda: { label: 'Consulta',   fg: '#6c4ce0', bg: '#eee9fd', dot: '#6c4ce0', icon: 'ayuda' },
-    idea:  { label: 'Sugerencia', fg: '#15803d', bg: '#e3f6ec', dot: '#15803d', icon: 'idea' }
+    bug:   { label: 'soporte.misTickets.tipo.bug',      fg: '#c0392f', bg: '#fce9e8', dot: '#c0392f', icon: 'bug' },
+    ayuda: { label: 'soporte.misTickets.tipo.ayuda',   fg: '#6c4ce0', bg: '#eee9fd', dot: '#6c4ce0', icon: 'ayuda' },
+    idea:  { label: 'soporte.misTickets.tipo.idea', fg: '#15803d', bg: '#e3f6ec', dot: '#15803d', icon: 'idea' }
   };
 
   readonly tabs: { key: '' | EstadoKey; label: string; dot: string }[] = [
-    { key: '',          label: 'Todos',       dot: '#b0b6c5' },
-    { key: 'pendiente', label: 'Pendientes',  dot: '#e0891b' },
-    { key: 'haciendo',  label: 'En progreso', dot: '#2f6fe0' },
-    { key: 'resuelto',  label: 'Resueltos',   dot: '#22c55e' }
+    { key: '',          label: 'soporte.misTickets.tab.todos',       dot: '#b0b6c5' },
+    { key: 'pendiente', label: 'soporte.misTickets.tab.pendientes',  dot: '#e0891b' },
+    { key: 'haciendo',  label: 'soporte.misTickets.estado.haciendo', dot: '#2f6fe0' },
+    { key: 'resuelto',  label: 'soporte.misTickets.tab.resueltos',   dot: '#22c55e' }
   ];
 
   constructor(
     private ticketService: ServiciosService,
     private securityService: SecurityService,
-    private storage: AngularFireStorage
+    private storage: AngularFireStorage,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -144,9 +146,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         Swal.fire({
           icon: 'error',
-          title: 'No pudimos cargar tus tickets',
-          text: 'Vuelve a intentarlo en un momento.',
-          confirmButtonText: 'Entendido'
+          title: this.translate.instant('soporte.misTickets.noPudimosCargarTusTickets'),
+          text: this.translate.instant('soporte.misTickets.vuelveAIntentarloEnUn'),
+          confirmButtonText: this.translate.instant('comun.entendido')
         });
         console.error('Error al obtener tickets:', error);
       }
@@ -279,9 +281,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   }
 
   get listTitle(): string {
-    if (!this.selectedStatus) { return 'Todos los tickets'; }
+    if (!this.selectedStatus) { return this.translate.instant('soporte.misTickets.todosLosTickets'); }
     const estado = this.estados[this.selectedStatus];
-    return estado ? estado.label + 's' : 'Tickets';
+    return estado ? this.translate.instant('soporte.misTickets.plural.' + this.selectedStatus) : this.translate.instant('soporte.misTickets.tickets');
   }
 
   get hayFiltros(): boolean {
@@ -368,10 +370,10 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   /** 'Hoy' · 'Ayer' · 'Hace N días' */
   edad(valor: any): string {
     const dias = this.diasDesde(valor);
-    if (dias === null) { return 'Sin fecha'; }
-    if (dias <= 0) { return 'Hoy'; }
-    if (dias === 1) { return 'Ayer'; }
-    return 'Hace ' + dias + ' días';
+    if (dias === null) { return this.translate.instant('soporte.misTickets.sinFecha'); }
+    if (dias <= 0) { return this.translate.instant('soporte.misTickets.hoy'); }
+    if (dias === 1) { return this.translate.instant('soporte.misTickets.ayer'); }
+    return this.translate.instant('soporte.misTickets.haceNDias', { n: dias });
   }
 
   /** Un ticket abierto hace una semana o más se marca en ámbar */
@@ -382,7 +384,7 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
 
   ultimaRespuesta(ticket: any): string {
     const comentarios = ticket?.comentariosVista || [];
-    if (!comentarios.length) { return 'Sin respuestas aún'; }
+    if (!comentarios.length) { return this.translate.instant('soporte.misTickets.sinRespuestasAun'); }
     return this.edad(comentarios[comentarios.length - 1].fechaCreacion);
   }
 
@@ -508,9 +510,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
     if (rechazados.length) {
       Swal.fire({
         icon: 'warning',
-        title: 'Algunos archivos no se adjuntaron',
+        title: this.translate.instant('soporte.misTickets.algunosArchivosNoSeAdjuntaron'),
         html: rechazados.map(r => `<div>${r}</div>`).join(''),
-        confirmButtonText: 'Entendido'
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     }
   }
@@ -605,9 +607,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
       console.error('Error guardando el comentario:', error);
       Swal.fire({
         icon: 'error',
-        title: 'No pudimos enviar tu respuesta',
-        text: 'Revisa tu conexión e inténtalo de nuevo. Tu texto sigue escrito.',
-        confirmButtonText: 'Entendido'
+        title: this.translate.instant('soporte.misTickets.noPudimosEnviarTuRespuesta'),
+        text: this.translate.instant('soporte.misTickets.revisaTuConexionEIntentalo'),
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     } finally {
       this.enviandoComentario = false;
@@ -703,9 +705,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
       console.error('Error guardando la tarea:', error);
       Swal.fire({
         icon: 'error',
-        title: 'No pudimos guardar la tarea',
-        text: 'Revisa tu conexión e inténtalo de nuevo.',
-        confirmButtonText: 'Entendido'
+        title: this.translate.instant('soporte.misTickets.noPudimosGuardarLaTarea'),
+        text: this.translate.instant('soporte.misTickets.revisaTuConexionEIntentalo2'),
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     } finally {
       this.guardandoTarea = false;
@@ -785,8 +787,8 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
         }
         Swal.fire({
           icon: 'success',
-          title: '¡Gracias por contarnos!',
-          text: 'Tu respuesta le llega al equipo de soporte.',
+          title: this.translate.instant('soporte.misTickets.graciasPorContarnos'),
+          text: this.translate.instant('soporte.misTickets.tuRespuestaLeLlegaAl'),
           timer: 2500,
           showConfirmButton: false
         });
@@ -795,9 +797,9 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
         // para no mostrar ni reenviar una copia vieja
         Swal.fire({
           icon: 'info',
-          title: 'Reabrimos tu ticket',
-          text: 'El equipo de soporte ya recibió lo que nos contaste y lo retoma.',
-          confirmButtonText: 'Entendido'
+          title: this.translate.instant('soporte.misTickets.reabrimosTuTicket'),
+          text: this.translate.instant('soporte.misTickets.elEquipoDeSoporteYa'),
+          confirmButtonText: this.translate.instant('comun.entendido')
         });
         this.cargarTickets();
       }
@@ -806,22 +808,22 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
       if (error?.status === 409) {
         Swal.fire({
           icon: 'info',
-          title: 'Este ticket ya cambió',
-          text: error?.error?.message || 'Lo actualizamos para que veas cómo quedó.',
-          confirmButtonText: 'Entendido'
+          title: this.translate.instant('soporte.misTickets.esteTicketYaCambio'),
+          text: error?.error?.message || this.translate.instant('soporte.misTickets.loActualizamosParaQueVeas'),
+          confirmButtonText: this.translate.instant('comun.entendido')
         });
         this.limpiarConfirmacion();
         this.cargarTickets();
       } else {
         Swal.fire({
           icon: 'error',
-          title: 'No pudimos guardar tu respuesta',
+          title: this.translate.instant('soporte.misTickets.noPudimosGuardarTuRespuesta'),
           text: error?.status === 400 && error?.error?.message
             ? error.error.message
             : error?.status === 404
-              ? 'Esta opción todavía no está disponible. Inténtalo más tarde o respóndenos en la conversación.'
-              : 'Revisa tu conexión e inténtalo de nuevo. Lo que escribiste sigue ahí.',
-          confirmButtonText: 'Entendido'
+              ? this.translate.instant('soporte.misTickets.estaOpcionTodaviaNoEsta')
+              : this.translate.instant('soporte.misTickets.revisaTuConexionEIntentalo3'),
+          confirmButtonText: this.translate.instant('comun.entendido')
         });
       }
     } finally {

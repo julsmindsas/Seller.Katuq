@@ -23,7 +23,7 @@
   flex-direction: column;
   max-height: 240px;
   overflow-y: auto;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid $cfg-line;
   border-radius: 11px;
   box-shadow: 0 12px 28px -12px rgba(30, 20, 80, .25);
@@ -38,7 +38,7 @@
   padding: 8px 12px;
   border: 0;
   border-bottom: 1px solid $cfg-line-soft;
-  background: #fff;
+  background: var(--ds-surface);
   text-align: left;
   cursor: pointer;
 
@@ -63,7 +63,7 @@
   margin-left: auto;
   border: 0;
   background: transparent;
-  color: $cfg-accent !important;
+  color: $cfg-accent-ink !important;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;

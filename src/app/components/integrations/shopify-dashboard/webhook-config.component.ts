@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { IntegrationsService } from '../integrations.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface ShopifyWebhook {
   id: string;
   topic: string;
@@ -32,7 +33,8 @@ export class WebhookConfigComponent implements OnInit, OnDestroy {
   constructor(
     private integrationsService: IntegrationsService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -68,8 +70,8 @@ export class WebhookConfigComponent implements OnInit, OnDestroy {
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los webhooks'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.webhookConfig.noSePudieronCargarLos')
           });
         }
       });
@@ -91,16 +93,16 @@ export class WebhookConfigComponent implements OnInit, OnDestroy {
             next: (response) => {
               this.messageService.add({
                 severity: 'success',
-                summary: 'Webhooks registrados',
-                detail: response?.message || 'Se registraron todos los webhooks correctamente'
+                summary: this.translate.instant('integrations.webhookConfig.webhooksRegistrados'),
+                detail: response?.message || this.translate.instant('integrations.webhookConfig.seRegistraronTodosLosWebhooks')
               });
               this.loadWebhooks();
             },
             error: (err) => {
               this.messageService.add({
                 severity: 'error',
-                summary: 'Error',
-                detail: err?.error?.message || 'No se pudieron registrar los webhooks'
+                summary: this.translate.instant('comun.error'),
+                detail: err?.error?.message || this.translate.instant('integrations.webhookConfig.noSePudieronRegistrarLos')
               });
             }
           });
@@ -126,15 +128,15 @@ export class WebhookConfigComponent implements OnInit, OnDestroy {
               this.webhooks = this.webhooks.filter(w => w.id !== webhook.id);
               this.messageService.add({
                 severity: 'success',
-                summary: 'Webhook eliminado',
-                detail: `Se desregistro el webhook "${webhook.topic}"`
+                summary: this.translate.instant('integrations.webhookConfig.webhookEliminado'),
+                detail: this.translate.instant('integrations.webhookConfig.seDesregistroWebhook', { topic: webhook.topic })
               });
             },
             error: () => {
               this.messageService.add({
                 severity: 'error',
-                summary: 'Error',
-                detail: 'No se pudo desregistrar el webhook'
+                summary: this.translate.instant('comun.error'),
+                detail: this.translate.instant('integrations.webhookConfig.noSePudoDesregistrarEl')
               });
             }
           });
@@ -155,15 +157,15 @@ export class WebhookConfigComponent implements OnInit, OnDestroy {
         next: () => {
           this.messageService.add({
             severity: 'info',
-            summary: 'Prueba enviada',
-            detail: `Se envio un evento de prueba para "${webhook.topic}"`
+            summary: this.translate.instant('integrations.webhookConfig.pruebaEnviada'),
+            detail: this.translate.instant('integrations.webhookConfig.seEnvioEventoPrueba', { topic: webhook.topic })
           });
         },
         error: () => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo enviar el evento de prueba'
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('integrations.webhookConfig.noSePudoEnviarEl')
           });
         }
       });

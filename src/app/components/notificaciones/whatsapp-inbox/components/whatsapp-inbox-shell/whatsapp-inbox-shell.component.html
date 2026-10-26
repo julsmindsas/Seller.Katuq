@@ -4,13 +4,13 @@
 >
   <header class="wa-shell__header">
     <div class="wa-shell__heading">
-      <h2 class="wa-shell__title">Conversaciones de WhatsApp</h2>
+      <h2 class="wa-shell__title">{{ 'notificaciones.whatsapp.shell.title' | translate }}</h2>
       <p class="wa-shell__subtitle">
-        Lo que tus clientes te escriben y lo que el asistente responde por ti
+        {{ 'notificaciones.whatsapp.shell.subtitle' | translate }}
       </p>
     </div>
 
-    <nav class="wa-shell__tabs" role="tablist" aria-label="Vista del buzón">
+    <nav class="wa-shell__tabs" role="tablist" [attr.aria-label]="'notificaciones.whatsapp.shell.tabsAria' | translate">
       <button
         type="button"
         role="tab"
@@ -19,7 +19,7 @@
         [attr.aria-selected]="vista === 'conversaciones'"
         (click)="setVista('conversaciones')"
       >
-        <i class="fa fa-comments-o" aria-hidden="true"></i> Conversaciones
+        <i class="fa fa-comments-o" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.shell.tabConversations' | translate }}
       </button>
       <button
         type="button"
@@ -29,16 +29,16 @@
         [attr.aria-selected]="vista === 'pedidos'"
         (click)="setVista('pedidos')"
       >
-        <i class="fa fa-shopping-basket" aria-hidden="true"></i> Pedidos
+        <i class="fa fa-shopping-basket" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.shell.tabOrders' | translate }}
       </button>
     </nav>
 
     <a
       class="wa-shell__campaign"
       routerLink="/marketing/campanas/whatsapp"
-      title="Enviar una campaña de WhatsApp a un grupo de clientes"
+      [title]="'notificaciones.whatsapp.shell.campaignTitle' | translate"
     >
-      <i class="fa fa-bullhorn" aria-hidden="true"></i> Nueva campaña
+      <i class="fa fa-bullhorn" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.shell.newCampaign' | translate }}
     </a>
   </header>
 

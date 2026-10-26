@@ -1,25 +1,26 @@
 import { SegmentoNps } from '../../shared/services/feedback/feedback.models';
 import { CanalEncuesta, EstadoCaso, EstadoEncuesta } from '../../shared/services/nps/nps.models';
+import { TranslateService } from '@ngx-translate/core';
 import { esFamiliaAdministrador } from '../../shared/utils/roles';
 
 /** Textos y utilidades compartidas del módulo NPS (D-490). */
 
-export const NOMBRE_SEGMENTO: Record<SegmentoNps, string> = { promotor: 'Promotor', pasivo: 'Pasivo', detractor: 'Detractor' };
+export const NOMBRE_SEGMENTO: Record<SegmentoNps, string> = { promotor: 'nps.segmento.promotor', pasivo: 'nps.segmento.pasivo', detractor: 'nps.segmento.detractor' };
 
 export const NOMBRE_CANAL: Record<CanalEncuesta, string> = {
-  entrega: 'Después de la entrega',
-  enlace: 'Enlace y QR',
-  seller: 'Dentro del Seller',
-  katuq: 'Correo de Katuq',
+  entrega: 'nps.canal.entrega',
+  enlace: 'nps.canal.enlace',
+  seller: 'nps.canal.seller',
+  katuq: 'nps.canal.katuq',
 };
 
-export const NOMBRE_ESTADO_ENCUESTA: Record<EstadoEncuesta, string> = { borrador: 'Borrador', activa: 'Activa', pausada: 'Pausada' };
+export const NOMBRE_ESTADO_ENCUESTA: Record<EstadoEncuesta, string> = { borrador: 'nps.estadoEncuesta.borrador', activa: 'nps.estadoEncuesta.activa', pausada: 'nps.estadoEncuesta.pausada' };
 
 export const NOMBRE_ESTADO_CASO: Record<EstadoCaso, string> = {
-  nuevo: 'Nuevo',
-  contactado: 'Contactado',
-  resuelto: 'Resuelto',
-  sin_solucion: 'Sin solución',
+  nuevo: 'nps.estadoCaso.nuevo',
+  contactado: 'nps.estadoCaso.contactado',
+  resuelto: 'nps.estadoCaso.resuelto',
+  sin_solucion: 'nps.estadoCaso.sinSolucion',
 };
 
 export const ESTADOS_CASO: EstadoCaso[] = ['nuevo', 'contactado', 'resuelto', 'sin_solucion'];
@@ -27,9 +28,9 @@ export const ESTADOS_CIERRE: EstadoCaso[] = ['resuelto', 'sin_solucion'];
 
 /** Etapas de la encuesta de Julsmind a sus comercios (`NPS_COMERCIOS`). */
 export const NOMBRE_ETAPA: Record<string, string> = {
-  apagada: 'Apagada',
-  internos: 'Solo internos (Julsmind y FLORECER)',
-  todos: 'Todos los comercios',
+  apagada: 'nps.etapa.apagada',
+  internos: 'nps.etapa.internos',
+  todos: 'nps.etapa.todos',
 };
 
 export function casoAbierto(estado: EstadoCaso | null | undefined): boolean {
@@ -98,12 +99,12 @@ export function fechaHora(iso: string | null | undefined): string {
 }
 
 /** "3 h", "2 días" o "—". */
-export function duracionHoras(horas: number | null | undefined): string {
+export function duracionHoras(horas: number | null | undefined, tr: TranslateService): string {
   if (horas === null || horas === undefined || !isFinite(horas)) return '—';
-  if (horas < 1) return 'menos de 1 h';
-  if (horas < 48) return `${Math.round(horas)} h`;
+  if (horas < 1) return tr.instant('nps.comun.menosDe1H');
+  if (horas < 48) return tr.instant('nps.comun.nHoras', { n: Math.round(horas) });
   const dias = Math.round(horas / 24);
-  return `${dias} días`;
+  return tr.instant('nps.comun.nDias', { n: dias });
 }
 
 /** Código de error del contrato (`{ success: false, code, error }`). */
@@ -112,9 +113,9 @@ export function codigoError(e: any): string | undefined {
 }
 
 /** Mensaje para el comercio: el del servidor (ya en lenguaje de comercio) o uno por omisión. */
-export function mensajeError(e: any, porOmision: string): string {
-  if (e?.status === 0) return 'No hay conexión. Revisa tu internet e inténtalo de nuevo.';
-  if (e?.status === 403 && !e?.error?.error) return 'Esto lo ven los administradores de tu empresa.';
+export function mensajeError(e: any, porOmision: string, tr: TranslateService): string {
+  if (e?.status === 0) return tr.instant('nps.comun.sinConexion');
+  if (e?.status === 403 && !e?.error?.error) return tr.instant('nps.comun.soloAdministradores');
   return e?.error?.error || porOmision;
 }
 

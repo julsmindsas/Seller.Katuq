@@ -45,12 +45,19 @@ export const COMPANY_FEATURE_FLAGS = [
   'categoryAttributes',
   // Fotos uniformes del producto (D-501, ticket 1252). Dueño: Daniel. Se retira el 2027-04-30.
   'productPhotoUniform',
+  // Quitar el fondo con IA al uniformar fotos (D-518 TX-37·6, ticket 1252, fase 2). Exige
+  // productPhotoUniform (COMPANY_FEATURE_REQUIRES): sola no prende. Dueño: Daniel. Se retira el
+  // 2027-06-30: encendida para todos o eliminada.
+  'productPhotoBackground',
   // SIIGO: facturar con el producto equivalente en vez de crear otro (D-504, ticket 1229).
   // Solo donde se comprobó la regla (ALMACEN BOMBAS). Dueño: Daniel. Se revisa el 2027-04-30.
   'siigoProductEquivalence',
   // Traer mi tienda desde Shopify o WooCommerce (D-498, ticket 1245). Solo a mano, primero en
   // FLORECER y nunca en OH MY STORE. Dueño: Daniel. Se retira el 2027-03-31.
   'storeMigrationImport',
+  // Clientes traídos con su autorización de correo (F5-30, D-531). Apagada hasta el concepto legal
+  // (tarea 0.7): sin ella los clientes entran sin suscripción. Dueño: Daniel. Se retira el 2027-03-31.
+  'storeMigrationCustomerConsent',
   // Facturación electrónica en Integraciones (D-500, ticket 1260, FE-01): tarjeta única, elección
   // del proveedor y resolvedor del servidor. Dueño: Daniel. Se retira el 2027-03-31.
   'invoicingHub',
@@ -82,9 +89,33 @@ export const COMPANY_FEATURE_FLAGS = [
   // muestra la pestaña de hoy y Listas de precios no ofrece «Historial». Dueño: Daniel. Se retira el
   // 2027-04-30: encendida para todos o eliminada (Artículo XII).
   'productHistoryLog',
+  // La tienda en el celular (TX-34, D10): una bandera por pieza; el modo lo pone el interruptor
+  // general `config/feature_flags.storeMobile`. No nacen encendidas para empresas nuevas.
+  // Dueño: Daniel. Cada una se retira 30 días después de quedar su pieza para todas las tiendas.
+  'storeLightIndex',
+  'storeSmartSearch',
+  'storeSalesRanking',
+  'storePaymentRetry',
+  'storeDrawer',
+  'storeShippingEstimate',
+  // Bot de WhatsApp con pedido directo, atención y seguimiento (ticket F4-40, D-531): mismos nombres
+  // que el backend; la llave general vive en `config/feature_flags`. Nacen apagadas.
+  // Dueño: Daniel. Se revisan el 2027-04-30.
+  'whatsappBotDirectOrder',
+  'whatsappBotAttention',
+  'whatsappBotFollowUp',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
+
+/**
+ * Banderas que exigen otras (mismo `FEATURE_FLAG_REQUIRES` del backend): solo cuentan como
+ * prendidas si cada una de sus requeridas también vale exactamente `true`. Las demás no tienen
+ * requisitos.
+ */
+export const COMPANY_FEATURE_REQUIRES: Readonly<Partial<Record<CompanyFeatureFlag, readonly CompanyFeatureFlag[]>>> = Object.freeze({
+  productPhotoBackground: Object.freeze(['productPhotoUniform'] as const),
+});
 
 /**
  * ¿Tiene la empresa activa prendida una función nueva?
@@ -124,9 +155,15 @@ export class CompanyFeaturesService {
 
   constructor(private readonly securityService: SecurityService) {}
 
-  /** `true` solo si la bandera está en el documento de la empresa y vale exactamente `true`. */
+  /**
+   * `true` solo si la bandera está en el documento de la empresa y vale exactamente `true` y, si
+   * está en `COMPANY_FEATURE_REQUIRES`, también cada una de las que exige.
+   */
   isEnabled(flag: CompanyFeatureFlag): boolean {
-    return this.leerBanderas()[flag] === true;
+    const banderas = this.leerBanderas();
+    if (banderas[flag] !== true) return false;
+    const requeridas = COMPANY_FEATURE_REQUIRES[flag] || [];
+    return requeridas.every((r) => banderas[r] === true);
   }
 
   /** Igual que `isEnabled`, pero se vuelve a evaluar cuando cambia la empresa de la sesión. */

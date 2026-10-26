@@ -312,7 +312,10 @@ export class ListComponent implements OnInit, OnChanges {
       },
       (error) => {
         this.cargando = false;
-        this.showError('Error al guardar las categorías');
+        // D-495 H3: el servidor dice por qué no guardó (por ejemplo, fotos de categoría
+        // demasiado pesadas). El árbol sigue en pantalla para volver a guardar.
+        const mensaje = error?.error?.success === false && typeof error?.error?.message === 'string' ? error.error.message : '';
+        this.showError(mensaje || 'Error al guardar las categorías');
         console.error("Error guardando categorías:", error);
       }
     );

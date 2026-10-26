@@ -10,16 +10,16 @@
      (click)="sidebarToggle()"
      role="button"
      tabindex="0"
-     [attr.aria-label]="'Deslizar para abrir menú'"
-     title="Toca para abrir el menú">
+     [attr.aria-label]="'shell.sidebar.swipeToOpen' | translate"
+     [title]="'shell.sidebar.tapToOpen' | translate">
   <div class="swipe-hint"></div>
 </div>
 
 <!-- Indicador visual cuando el sidebar está oculto en auto-hide -->
 <div class="sidebar-edge-indicator"
      *ngIf="isAutoHideEnabled && !isSidebarVisible && !isMobile()"
-     [attr.aria-label]="'Pase el cursor para mostrar el menú'"
-     title="Pase el cursor para mostrar el menú">
+     [attr.aria-label]="'shell.sidebar.hoverToShow' | translate"
+     [title]="'shell.sidebar.hoverToShow' | translate">
   <div class="edge-line"></div>
   <div class="edge-hint">
     <i class="fa fa-chevron-right"></i>
@@ -33,7 +33,7 @@
        [class.sidebar-hidden]="isAutoHideEnabled && !isSidebarVisible"
        [class.sidebar-hovering]="isAutoHideEnabled && isHovering"
        role="navigation"
-       aria-label="Menú principal">
+       [attr.aria-label]="'shell.sidebar.ariaMainMenu' | translate">
 
   <!-- Header Unificado: Logo + Perfil de Usuario. En el riel compacto: el logo y, debajo, el botón alternar. -->
   <header class="sidebar-header unified-header"
@@ -44,7 +44,7 @@
       <!-- Logo + Avatar combinados -->
       <div class="brand-profile">
         <!-- Logo/Avatar clickeable -->
-        <a routerLink='/welcome' class="brand-avatar-link" [attr.aria-label]="'Ir a inicio'">
+        <a routerLink='/welcome' class="brand-avatar-link" [attr.aria-label]="'shell.sidebar.goHome' | translate">
           <!-- Logo compacto cuando está colapsado -->
           <div class="logo-avatar" *ngIf="compacto">
             <img src="assets/images/logo/Katuq/katuq_logo_solo.svg"
@@ -68,7 +68,7 @@
         <!-- Info expandida: Saludo + Logo -->
         <div class="expanded-info" *ngIf="!compacto">
           <div class="greeting-section">
-            <span class="greeting-text">{{greeting}} <span class="emoji">👋</span></span>
+            <span class="greeting-text">{{greeting | translate}} <span class="emoji">👋</span></span>
             <span class="user-name">{{firstName}}</span>
           </div>
         </div>
@@ -77,9 +77,9 @@
       <!-- Botón alternar: abierto ⇄ compacto (en el celular, cierra el cajón) -->
       <button class="collapse-toggle-btn"
               (click)="sidebarToggle()"
-              [attr.aria-label]="collapseMenu ? 'Expandir menú' : 'Contraer menú'"
+              [attr.aria-label]="(collapseMenu ? 'shell.sidebar.expandMenu' : 'shell.sidebar.collapseMenu') | translate"
               [attr.aria-pressed]="compacto"
-              [title]="collapseMenu ? 'Expandir menú' : 'Contraer menú'">
+              [title]="(collapseMenu ? 'shell.sidebar.expandMenu' : 'shell.sidebar.collapseMenu') | translate">
         <app-icono-tabler [nombre]="collapseMenu ? 'layout-sidebar-left-expand' : 'layout-sidebar-left-collapse'" [tamano]="18"></app-icono-tabler>
       </button>
     </div>
@@ -98,13 +98,13 @@
              (input)="searchMenu()" 
              (focus)="isSearchFocused = true" 
              (blur)="isSearchFocused = false"
-             placeholder="Buscar menú..." 
+             [placeholder]="'shell.sidebar.searchPlaceholder' | translate"
              class="search-input"
-             aria-label="Buscar en el menú">
+             [attr.aria-label]="'shell.sidebar.searchAria' | translate">
       <button class="clear-btn" 
               *ngIf="searchTerm" 
               (click)="clearSearch()"
-              aria-label="Limpiar búsqueda">
+              [attr.aria-label]="'shell.search.clear' | translate">
         <app-icono-tabler nombre="x" [tamano]="15"></app-icono-tabler>
       </button>
     </div>
@@ -130,7 +130,7 @@
     <div class="search-no-results" 
          *ngIf="isSearchActive && searchResults.length === 0 && searchTerm">
       <app-icono-tabler nombre="search" [tamano]="14"></app-icono-tabler>
-      <span>Sin resultados para "{{searchTerm}}"</span>
+      <span>{{ 'shell.sidebar.noResultsFor' | translate: { term: searchTerm } }}</span>
     </div>
   </div>
 
@@ -141,7 +141,7 @@
        aria-labelledby="favorites-title">
     <h3 id="favorites-title" class="favorites-title">
       <app-icono-tabler nombre="star" [tamano]="12" [relleno]="true"></app-icono-tabler>
-      <span>Favoritos</span>
+      <span>{{ 'shell.sidebar.favorites' | translate }}</span>
     </h3>
     
     <ul class="favorites-list" role="list">
@@ -152,7 +152,7 @@
            [routerLink]="rutaMenu(favorite.ruta)"
            (click)="onMobileLinkClick()"
            class="favorite-link"
-           [attr.aria-label]="'Ir a ' + (favorite.titulo | translate)">
+           [attr.aria-label]="'shell.sidebar.goTo' | translate: { title: (favorite.titulo | translate) }">
           <app-icono-tabler class="fav-icono" [nombre]="favorite.icono" [tamano]="18"></app-icono-tabler>
           <span class="fav-textos">
             <span class="favorite-text" [attr.title]="favorite.titulo | translate">{{favorite.titulo | translate}}</span>
@@ -165,7 +165,7 @@
           <a href="#"
              (click)="abrirSeccionFavorita(favorite, $event)"
              class="favorite-link"
-             [attr.aria-label]="'Abrir ' + (favorite.titulo | translate) + ' en el menú'">
+             [attr.aria-label]="'shell.sidebar.openInMenu' | translate: { title: (favorite.titulo | translate) }">
             <app-icono-tabler class="fav-icono" [nombre]="favorite.icono" [tamano]="18"></app-icono-tabler>
             <span class="fav-textos">
               <span class="favorite-text" [attr.title]="favorite.titulo | translate">{{favorite.titulo | translate}}</span>
@@ -180,7 +180,7 @@
                  (click)="onMobileLinkClick()"
                  routerLinkActive="active"
                  class="favorite-link favorite-link--hijo"
-                 [attr.aria-label]="'Ir a ' + (enlace.titulo | translate)">
+                 [attr.aria-label]="'shell.sidebar.goTo' | translate: { title: (enlace.titulo | translate) }">
                 <span class="favorite-text" [attr.title]="enlace.titulo | translate">{{enlace.titulo | translate}}</span>
               </a>
             </li>
@@ -212,7 +212,7 @@
   <ng-template #filaTpl let-fila>
     <span class="fila-ico" *ngIf="fila.nivel === 2" aria-hidden="true">
       <app-icono-tabler [nombre]="fila.icono" [tamano]="20"></app-icono-tabler>
-      <span class="fila-punto" *ngIf="puntoVisible(fila)" title="Hay opciones nuevas"></span>
+      <span class="fila-punto" *ngIf="puntoVisible(fila)" [title]="'shell.sidebar.newOptions' | translate"></span>
     </span>
     <span class="fila-nombre menu-text"
           [class.submenu-text]="fila.nivel === 3"
@@ -222,7 +222,7 @@
       <span class="fila-slot-insignia">
         <span class="fila-insignia"
               *ngIf="fila.insignia"
-              [class.fila-insignia--pronto]="fila.insignia.tono === 'pronto'">{{fila.insignia.texto}}</span>
+              [class.fila-insignia--pronto]="fila.insignia.tono === 'pronto'">{{fila.insignia.texto | translate}}</span>
       </span>
       <span class="fila-slot-estrella">
         <ng-container *ngIf="favoritoDeFila(fila) as estrella">
@@ -274,7 +274,7 @@
   </ng-template>
 
   <!-- Menú Principal -->
-  <nav class="main-navigation" role="navigation" aria-label="Navegación principal">
+  <nav class="main-navigation" role="navigation" [attr.aria-label]="'shell.sidebar.ariaMainNav' | translate">
     <div class="menu-container">
       
       <!-- Iterar secciones -->
@@ -345,8 +345,8 @@
                (click)="onMenuItemClick(fila.fuente)"
                class="menu-link external fila fila--n2"
                [class.collapsed-link]="compacto"
-               [attr.aria-label]="(fila.titulo | translate) + ' (enlace externo)'"
-               [attr.title]="compacto ? null : (fila.titulo | translate) + ' (enlace externo)'"
+               [attr.aria-label]="'shell.sidebar.externalLink' | translate: { title: (fila.titulo | translate) }"
+               [attr.title]="compacto ? null : ('shell.sidebar.externalLink' | translate: { title: (fila.titulo | translate) })"
                role="menuitem">
               <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
             </a>
@@ -358,7 +358,7 @@
                  role="menuitem"
                  tabindex="-1"
                  aria-disabled="true"
-                 [attr.aria-label]="(fila.titulo | translate) + ' (próximamente)'">
+                 [attr.aria-label]="'shell.sidebar.soonNamed' | translate: { title: (fila.titulo | translate) }">
               <ng-container *ngTemplateOutlet="filaTpl; context: { $implicit: fila }"></ng-container>
             </div>
 
@@ -442,7 +442,7 @@
        role="contentinfo">
     <img class="logo-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq">
     <img class="logo-dark" src="assets/images/logo/Katuq/katuq-dark.png" alt="Katuq">
-    <span class="version-badge">v{{version}}</span>
+    <span class="version-badge">v{{version}}</span><!-- i18n-ignorar: «v» de versión, no es texto -->
   </div>
 
   <!-- Plan Card -->
@@ -453,11 +453,11 @@
     <div class="plan-card-header">
       <div class="plan-title">
         <i class="fa fa-star"></i>
-        <small>Mi Plan</small>
+        <small>{{ 'shell.sidebar.plan.title' | translate }}</small>
         <div class="plan-badge"
              [class.premium]="currentPlan.type === 'Premium'"
              [class.freemium]="currentPlan.type === 'Freemium'">
-          {{currentPlan.type === 'Freemium' ? 'Gratis' : currentPlan.type}}
+          {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : currentPlan.type }}
         </div>
       </div>
       
@@ -489,7 +489,7 @@
                [class.premium]="currentPlan.type === 'Premium'"
                [class.freemium]="currentPlan.type === 'Freemium'">
             <i class="fa" [ngClass]="currentPlan.type === 'Premium' ? 'fa-crown' : 'fa-star'"></i>
-            {{currentPlan.type === 'Freemium' ? 'Gratis' : currentPlan.type}}
+            {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : currentPlan.type }}
           </div>
         </div>
 
@@ -497,12 +497,12 @@
         <div class="card-balance-section">
           <div class="balance-label">
             <i class="fa fa-wallet"></i>
-            Saldo Disponible
+            {{ 'shell.sidebar.plan.balance' | translate }}
           </div>
           <div class="balance-amount">
             <span class="currency">$</span>
             <span class="amount">{{(currentPlan.walletBalance || 0).toFixed(2)}}</span>
-            <span class="currency-code">COP</span>
+            <span class="currency-code">COP</span><!-- i18n-ignorar: código de moneda (formato, Ola 0) -->
           </div>
         </div>
 
@@ -510,20 +510,20 @@
         <div class="premium-unlimited-section" *ngIf="currentPlan.type === 'Premium'">
           <div class="unlimited-badge">
             <i class="fa fa-infinity"></i>
-            <span>Todo Ilimitado</span>
+            <span>{{ 'shell.sidebar.plan.allUnlimited' | translate }}</span>
           </div>
           <div class="premium-features">
             <div class="premium-feature-item">
               <i class="fa fa-check-circle"></i>
-              <span>Pedidos ilimitados</span>
+              <span>{{ 'shell.sidebar.plan.unlimitedOrders' | translate }}</span>
             </div>
             <div class="premium-feature-item">
               <i class="fa fa-check-circle"></i>
-              <span>IA sin restricciones</span>
+              <span>{{ 'shell.sidebar.plan.unrestrictedAi' | translate }}</span>
             </div>
             <div class="premium-feature-item">
               <i class="fa fa-check-circle"></i>
-              <span>Todas las funciones</span>
+              <span>{{ 'shell.sidebar.plan.allFeatures' | translate }}</span>
             </div>
           </div>
 
@@ -531,8 +531,8 @@
           <div class="billing-info">
             <i class="fa fa-calendar-alt"></i>
             <div class="billing-text">
-              <span class="billing-label">Próximo cobro</span>
-              <span class="billing-date">{{currentPlan.renewalDate}}</span>
+              <span class="billing-label">{{ 'shell.sidebar.plan.nextCharge' | translate }}</span>
+              <span class="billing-date">{{ currentPlan.renewalDate ?? ('shell.sidebar.plan.notDefined' | translate) }}</span>
             </div>
           </div>
         </div>
@@ -546,7 +546,7 @@
                 <i class="fa fa-shopping-cart"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Pedidos este mes</div>
+                <div class="stat-label">{{ 'shell.sidebar.plan.ordersThisMonth' | translate }}</div>
                 <div class="stat-value">
                   {{currentPlan.usage.orders.current}}<span class="stat-limit">/{{currentPlan.usage.orders.limit}}</span>
                 </div>
@@ -558,7 +558,7 @@
                 <i class="fa fa-comments"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Consultas KAI hoy</div>
+                <div class="stat-label">{{ 'shell.sidebar.plan.kaiQueriesToday' | translate }}</div>
                 <div class="stat-value">
                   {{currentPlan.usage.chatAI.current}}<span class="stat-limit">/{{currentPlan.usage.chatAI.limit}}</span>
                 </div>
@@ -570,7 +570,7 @@
                 <i class="fa fa-box"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Productos IA hoy</div>
+                <div class="stat-label">{{ 'shell.sidebar.plan.aiProductsToday' | translate }}</div>
                 <div class="stat-value">
                   {{currentPlan.usage.productsAI.current}}<span class="stat-limit">/{{currentPlan.usage.productsAI.limit}}</span>
                 </div>
@@ -583,7 +583,7 @@
             <div class="progress-header">
               <span class="progress-label">
                 <i class="fa fa-chart-line"></i>
-                Pedidos del mes
+                {{ 'shell.sidebar.plan.ordersOfMonth' | translate }}
               </span>
               <span class="progress-percentage">{{currentPlan.progress}}%</span>
             </div>
@@ -604,10 +604,10 @@
           <div class="billing-info freemium-reset">
             <i class="fa fa-sync-alt"></i>
             <div class="billing-text">
-              <span class="billing-label">Pedidos se renuevan</span>
-              <span class="billing-date">{{currentPlan.renewalDate}} ({{currentPlan.daysLeft}} días)</span>
-              <span class="billing-label mt-1">KAI y Productos IA</span>
-              <span class="billing-date">Se renuevan diariamente</span>
+              <span class="billing-label">{{ 'shell.sidebar.plan.ordersRenew' | translate }}</span>
+              <span class="billing-date">{{ (currentPlan.daysLeft === 1 ? 'shell.sidebar.plan.renewalDays.one' : 'shell.sidebar.plan.renewalDays.other') | translate: { date: (currentPlan.renewalDate ?? ('shell.sidebar.plan.notDefined' | translate)), days: currentPlan.daysLeft } }}</span>
+              <span class="billing-label mt-1">{{ 'shell.sidebar.plan.kaiAndAiProducts' | translate }}</span>
+              <span class="billing-date">{{ 'shell.sidebar.plan.renewDaily' | translate }}</span>
             </div>
           </div>
         </ng-container>
@@ -618,20 +618,20 @@
                   *ngIf="currentPlan.type === 'Freemium'"
                   (click)="openPlanModal(); $event.stopPropagation();">
             <i class="fa fa-rocket"></i>
-            <span>Desbloquear Premium</span>
+            <span>{{ 'shell.sidebar.plan.unlockPremium' | translate }}</span>
           </button>
 
           <button class="modern-btn secondary"
                   *ngIf="currentPlan.type === 'Premium'"
                   (click)="openPlanModal(); $event.stopPropagation();">
             <i class="fa fa-sliders-h"></i>
-            <span>Gestionar</span>
+            <span>{{ 'shell.sidebar.plan.manage' | translate }}</span>
           </button>
 
           <button class="modern-btn outline"
                   (click)="viewSubscriptionDetails(); $event.stopPropagation();">
             <i class="fa fa-chart-pie"></i>
-            <span>Detalles</span>
+            <span>{{ 'shell.sidebar.plan.details' | translate }}</span>
           </button>
         </div>
       </div>

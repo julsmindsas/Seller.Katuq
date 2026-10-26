@@ -240,6 +240,23 @@
 										</div>
 									</div>
 								</div>
+								<div class="row" [formGroup]="seoForm">
+									<div class="col-md-12 mb-3">
+										<label class="form-label" for="prodSeoTitulo">Título para buscadores (opcional)</label>
+										<small class="mp-hint" style="margin-top:0;margin-bottom:7px">
+											Se guarda desde ya y se usará en la ficha de tu tienda en una próxima versión; hoy la ficha todavía usa el nombre y la descripción del producto.
+										</small>
+										<input formControlName="titulo" class="form-control" id="prodSeoTitulo" type="text"
+											[maxlength]="seoMaxTitulo" placeholder="Ej: Camiseta de algodón para hombre" />
+										<small class="mp-hint">{{ seoForm.value.titulo?.length || 0 }} / {{ seoMaxTitulo }}</small>
+									</div>
+									<div class="col-md-12 mb-3">
+										<label class="form-label" for="prodSeoDescripcion">Descripción para buscadores (opcional)</label>
+										<textarea formControlName="descripcion" class="form-control" id="prodSeoDescripcion" rows="3"
+											[maxlength]="seoMaxDescripcion" placeholder="Una o dos frases sobre el producto"></textarea>
+										<small class="mp-hint">{{ seoForm.value.descripcion?.length || 0 }} / {{ seoMaxDescripcion }}</small>
+									</div>
+								</div>
 								<div class="row">
 
 

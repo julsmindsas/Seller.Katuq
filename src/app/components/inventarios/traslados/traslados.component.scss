@@ -2,8 +2,10 @@
 @include config-pagina;
 
 // Variables Katuq (tokens del canon, D-516)
-$primary-color: $cfg-accent;
-$secondary-color: $cfg-accent-2;
+// D-502 F2a: alias en hex (el valor claro de su token) porque este archivo les aplica rgba()/darken(),
+// que no aceptan var(). Su oscuro llega con la pantalla en F3 (inventario).
+$primary-color: #5F3FE0; // = $cfg-accent en claro
+$secondary-color: #7C5CFF; // = $cfg-accent-2 en claro
 $success-color: $cfg-ok;
 $warning-color: $cfg-warn;
 $danger-color: $cfg-err;
@@ -17,7 +19,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Mixins
 @mixin card {
-  background: white;
+  background: var(--ds-surface);
   border-radius: $border-radius;
   box-shadow: $box-shadow;
   padding: 24px;
@@ -235,7 +237,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
       
       .input-group {
         .input-group-text {
-          background-color: white;
+          background-color: var(--ds-surface);
           border: 2px solid $medium-gray;
           padding: 0 16px;
           display: flex;
@@ -347,7 +349,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
       &.btn-outline-secondary {
         border: 1px solid $medium-gray;
         color: $text-color;
-        background-color: white;
+        background-color: var(--ds-surface);
         
         &:hover {
           background-color: $light-gray;
@@ -680,8 +682,8 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 :host ::ng-deep {
   .boton-trasladar.p-button {
-    background: $cfg-accent;
-    border-color: $cfg-accent;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     border-radius: 11px;
     font-weight: 700;
     box-shadow: $cfg-shadow-btn;
@@ -689,9 +691,9 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
     &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
   }
   .boton-cancelar.p-button {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-body;
-    border-color: #e4e2ef;
+    border-color: var(--ds-line-strong);
     border-radius: 11px;
     font-weight: 700;
 

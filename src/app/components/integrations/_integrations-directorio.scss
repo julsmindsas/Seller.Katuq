@@ -12,7 +12,7 @@
   padding: 32px 28px 48px;
   background: $cb-canvas;
   font-family: $cb-text;
-  color: $cb-ink;
+  color: var(--ds-ink);
 
   .ig-wrap { width: 100%; min-width: 0; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
 
@@ -20,18 +20,18 @@
   .ig-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
   .ig-head-txt { display: flex; flex-direction: column; gap: 10px; max-width: 660px; }
   .ig-eyebrow { @include cb-chip-accent; align-self: flex-start; }
-  .ig-title { margin: 0; font-family: $cb-display; font-size: 24px !important; line-height: 1.15; color: $cb-ink; span { color: $cb-accent; font-size: inherit; } }
-  .ig-sub { margin: 0; font-size: 15px; line-height: 1.55; color: $cb-body; }
+  .ig-title { margin: 0; font-family: $cb-display; font-size: 24px !important; line-height: 1.15; color: var(--ds-ink); span { color: var(--ds-accent-ink); font-size: inherit; } }
+  .ig-sub { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ds-body); }
   .ig-head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
   .ig-search {
     display: flex; align-items: center; gap: 8px; height: 44px; min-width: 280px; margin: 0; padding: 0 14px;
-    box-sizing: border-box; border-radius: 11px; border: 1px solid $cb-chip-border; background: #fff; color: $cb-muted;
+    box-sizing: border-box; border-radius: 11px; border: 1px solid var(--ds-control-border); background: var(--ds-surface); color: $cb-muted;
     transition: border-color .15s ease, box-shadow .15s ease;
     &:focus-within { border-color: $cb-accent-line; box-shadow: 0 0 0 3px $cb-accent-soft; }
     input {
       flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: transparent;
-      font-family: $cb-text; font-size: 14px; color: $cb-ink;
+      font-family: $cb-text; font-size: 14px; color: var(--ds-ink);
       &::placeholder { color: $cb-muted; }
     }
   }
@@ -44,12 +44,12 @@
   .ig-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .ig-stat {
     display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 16px;
-    background: #fff; border: 1px solid $cb-line; box-shadow: $cb-shadow-panel;
+    background: var(--ds-surface); border: 1px solid var(--ds-line); box-shadow: $cb-shadow-panel;
   }
   .ig-stat-label { @include cb-label; }
-  .ig-stat-value { font-family: $cb-display; font-size: 28px; color: $cb-accent; line-height: 1.1; }
+  .ig-stat-value { font-family: $cb-display; font-size: 28px; color: var(--ds-accent-ink); line-height: 1.1; }
   .ig-stat-value-slate { color: $cb-slate; }
-  .ig-stat-value-ink { color: $cb-ink; }
+  .ig-stat-value-ink { color: var(--ds-ink); }
   .ig-stat-hint { font-size: 12.5px; color: $cb-muted; line-height: 1.4; }
 
   // ---- Error ----
@@ -57,17 +57,17 @@
     display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px;
     border-radius: 16px; background: $cb-err-soft; border: 1px solid #f6d3d3;
     strong { font-family: $cb-display; font-weight: normal; font-size: 15px; color: $cb-err; }
-    p { margin: 2px 0 0; font-size: 13.5px; color: $cb-body; }
+    p { margin: 2px 0 0; font-size: 13.5px; color: var(--ds-body); }
   }
 
   // ---- Barra ----
   .ig-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .ig-seg {
-    display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: #fff; border: 1px solid $cb-line;
+    display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--ds-surface); border: 1px solid var(--ds-line);
     button {
       height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent;
-      font-family: $cb-text; font-size: 13px; font-weight: 700; color: $cb-body; cursor: pointer;
-      &.on { background: $cb-accent-soft; color: $cb-accent; }
+      font-family: $cb-text; font-size: 13px; font-weight: 700; color: var(--ds-body); cursor: pointer;
+      &.on { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
     }
   }
   .ig-loading { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: $cb-muted; }
@@ -76,39 +76,39 @@
   .ig-grupo { display: flex; flex-direction: column; gap: 14px; }
   .ig-grupo-head {
     display: flex; align-items: center; gap: 12px;
-    h2 { margin: 0; font-family: $cb-display; font-size: 19px; color: $cb-ink; }
-    p { margin: 2px 0 0; font-size: 13.5px; color: $cb-body; }
+    h2 { margin: 0; font-family: $cb-display; font-size: 19px; color: var(--ds-ink); }
+    p { margin: 2px 0 0; font-size: 13.5px; color: var(--ds-body); }
   }
   .ig-grupo-ic {
     flex: 0 0 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
-    background: $cb-accent-soft; border: 1px solid $cb-accent-line; color: $cb-accent;
+    background: var(--ds-accent-soft); border: 1px solid $cb-accent-line; color: var(--ds-accent-ink);
   }
 
   .ig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
 
   .ig-card {
     position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px 16px 14px;
-    border-radius: 16px; background: #fff; border: 1px solid $cb-line; box-shadow: $cb-shadow-panel;
+    border-radius: 16px; background: var(--ds-surface); border: 1px solid var(--ds-line); box-shadow: $cb-shadow-panel;
     cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     &:hover, &:focus-visible { border-color: $cb-accent-line; box-shadow: $cb-shadow-float; }
     &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
-    h3 { margin: 6px 0 0; font-family: $cb-display; font-size: 16px; color: $cb-ink; }
+    h3 { margin: 6px 0 0; font-family: $cb-display; font-size: 16px; color: var(--ds-ink); }
     &.is-atencion { border-color: #F6DDB0; }
     &.is-pronto {
-      cursor: default; background: $cb-tint; box-shadow: none;
-      &:hover { border-color: $cb-line; box-shadow: none; }
+      cursor: default; background: var(--ds-surface-2); box-shadow: none;
+      &:hover { border-color: var(--ds-line); box-shadow: none; }
       .ig-logo img { filter: grayscale(1); opacity: .55; }
-      h3 { color: $cb-body; }
+      h3 { color: var(--ds-body); }
     }
   }
   .ig-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .ig-logo {
     width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; overflow: hidden;
-    background: $cb-tile; border: 1px solid $cb-line-soft;
+    background: var(--ds-tile); border: 1px solid var(--ds-line-soft);
     img { max-width: 30px; max-height: 30px; object-fit: contain; }
   }
-  .ig-inicial { font-family: $cb-display; font-size: 18px; color: $cb-accent; }
-  .ig-que { margin: 0; flex: 1 1 auto; font-size: 13.5px; line-height: 1.45; color: $cb-body; }
+  .ig-inicial { font-family: $cb-display; font-size: 18px; color: var(--ds-accent-ink); }
+  .ig-que { margin: 0; flex: 1 1 auto; font-size: 13.5px; line-height: 1.45; color: var(--ds-body); }
   .ig-detalle { margin: 0; font-size: 12.5px; line-height: 1.4; color: $cb-muted; }
 
   .ig-estado {
@@ -117,11 +117,11 @@
     .ig-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
   }
   .ig-estado-ok { background: $cb-ok-soft; color: $cb-ok; border-color: #c9ecd8; }
-  .ig-estado-prueba { background: $cb-accent-soft; color: $cb-accent; border-color: $cb-accent-line; }
+  .ig-estado-prueba { background: var(--ds-accent-soft); color: var(--ds-accent-ink); border-color: $cb-accent-line; }
   .ig-estado-atencion { background: #FFF6E5; color: #8A5200; border-color: #F6DDB0; }
-  .ig-estado-sin { background: $cb-chip-bg; color: $cb-muted; border-color: $cb-chip-border; .ig-dot { background: transparent; border: 1.5px solid currentColor; } }
-  .ig-estado-pronto { background: $cb-accent-soft; color: $cb-accent; border-color: $cb-accent-line; .ig-dot { display: none; } }
-  .ig-estado-guia { background: $cfg-accent-soft; color: $cfg-accent; border-color: $cfg-chip-border; .ig-dot { display: none; } }
+  .ig-estado-sin { background: $cb-chip-bg; color: $cb-muted; border-color: var(--ds-control-border); .ig-dot { background: transparent; border: 1.5px solid currentColor; } }
+  .ig-estado-pronto { background: var(--ds-accent-soft); color: var(--ds-accent-ink); border-color: $cb-accent-line; .ig-dot { display: none; } }
+  .ig-estado-guia { background: $cfg-accent-soft; color: $cfg-accent-ink; border-color: $cfg-chip-border; .ig-dot { display: none; } }
 
   .ig-card-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 36px; }
   .ig-pronto-txt { font-size: 12.5px; color: $cb-muted; }
@@ -129,10 +129,10 @@
   // ---- Vacío ----
   .ig-empty {
     display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 20px; text-align: center;
-    border-radius: 16px; background: #fff; border: 1px dashed $cb-accent-line;
-    p { margin: 0; color: $cb-body; font-size: 14px; }
+    border-radius: 16px; background: var(--ds-surface); border: 1px dashed $cb-accent-line;
+    p { margin: 0; color: var(--ds-body); font-size: 14px; }
   }
-  .ig-empty-title { font-family: $cb-display; font-size: 18px; color: $cb-ink; }
+  .ig-empty-title { font-family: $cb-display; font-size: 18px; color: var(--ds-ink); }
 }
 
 // Tutorial «¿Cómo funciona?»: botón principal Katuq a lo ancho y sombra violeta difusa.

@@ -14,6 +14,10 @@ const USUARIO = {
   name: 'Ana María Pérez', image: 'foto.png', lang: { language: 'Español', code: 'es', type: 'CO', icon: 'co' }, tema: false,
 };
 
+// D-540 (IDI-B01b): edit-profile recibe TranslateService para sus avisos; en estas pruebas el
+// traductor devuelve la clave, así que lo que se comprueba (qué se guarda en `user`) no cambia.
+const TRADUCTOR = { instant: clave => clave };
+
 function cambiarTemaPorFuera(nav, tema) {
   // lo que hace el botón del header (ThemeModeService.setPreference) con el componente ya montado
   nav.localStorage.setItem('user', JSON.stringify({ ...nav.usuario(), tema }));
@@ -55,7 +59,7 @@ test('edit-profile: guardar el prompt de KAI no pisa un tema cambiado después d
   const componente = new EditProfileComponent(
     {}, {},
     { updateUser: item => { enviados.push(JSON.parse(JSON.stringify(item))); return rxjs.of({ ok: true }); } },
-    {}, {}, {}, {}, {},
+    {}, {}, {}, {}, {}, TRADUCTOR,
   );
   componente.ngOnInit();
   cambiarTemaPorFuera(nav, true);
@@ -95,7 +99,7 @@ test('edit-profile: si la sesión terminó mientras se guardaba el prompt, no re
     globales: { document: nav.document, localStorage: nav.localStorage, window: nav.window },
   });
   const respuesta = new rxjs.Subject();
-  const componente = new EditProfileComponent({}, {}, { updateUser: () => respuesta }, {}, {}, {}, {}, {});
+  const componente = new EditProfileComponent({}, {}, { updateUser: () => respuesta }, {}, {}, {}, {}, {}, TRADUCTOR);
   componente.ngOnInit();
   componente.kaiPrompt = 'Responde corto';
   componente.saveKaiPrompt();
@@ -111,7 +115,7 @@ test('edit-profile: si el backend responde con error no escribe el user', () => 
     modulos: { sweetalert2: { __esModule: true, default: { fire: () => Promise.resolve({}) } } },
     globales: { document: nav.document, localStorage: nav.localStorage, window: nav.window },
   });
-  const componente = new EditProfileComponent({}, {}, { updateUser: () => rxjs.of({ error: true }) }, {}, {}, {}, {}, {});
+  const componente = new EditProfileComponent({}, {}, { updateUser: () => rxjs.of({ error: true }) }, {}, {}, {}, {}, {}, TRADUCTOR);
   componente.ngOnInit();
   cambiarTemaPorFuera(nav, true);
   componente.kaiPrompt = 'Otro';

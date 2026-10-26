@@ -8,20 +8,20 @@
       <ng-template #chipEnvio>
         <span class="dz-envio t-info">
           <app-en-vivo-icono nombre="caja"></app-en-vivo-icono>
-          <span class="dz-envio__texto">Una orden por pedido</span>
+          <span class="dz-envio__texto">{{ 'enVivo.grupoDespacho.unaOrdenPorPedido' | translate }}</span>
         </span>
       </ng-template>
       <h3 class="dz-grupo__zona" [id]="'dz-grupo-' + numero">{{ grupo.zona }}</h3>
       <p class="dz-grupo__cifras">
-        <span class="dz-dato">{{ grupo.pedidos.length }} {{ grupo.pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
-        <span class="dz-dato" *ngIf="porCobrar > 0">· {{ dinero(porCobrar) }} por cobrar</span>
+        <span class="dz-dato">{{ grupo.pedidos.length }} {{ grupo.pedidos.length === 1 ? ('enVivo.grupoDespacho.pedido' | translate) : ('enVivo.grupoDespacho.pedidos' | translate) }}</span>
+        <span class="dz-dato" *ngIf="porCobrar > 0">{{ 'enVivo.grupoDespacho.porCobrar' | translate:{porCobrar: (dinero(porCobrar))} }}</span>
       </p>
     </div>
     <span class="dz-grupo__numero" aria-hidden="true">{{ numero }}</span>
   </header>
 
   <div class="dz-mensajero" *ngIf="!esTransportadora; else bloqueTransportadora">
-    <label class="dz-etiqueta" [for]="'dz-sel-' + numero">Mensajero</label>
+    <label class="dz-etiqueta" [for]="'dz-sel-' + numero">{{ 'enVivo.grupoDespacho.mensajero' | translate }}</label>
     <select
       class="dz-select"
       [id]="'dz-sel-' + numero"
@@ -29,7 +29,7 @@
       [ngModel]="grupo.mensajeroId || ''"
       (ngModelChange)="elegir($event)"
     >
-      <option value="" disabled>Escoge un mensajero</option>
+      <option value="" disabled>{{ 'enVivo.grupoDespacho.escogeUnMensajero' | translate }}</option>
       <option *ngFor="let o of opciones; let i = index; trackBy: trackOpcion" [value]="o.id">{{ etiquetaOpcion(o, i) }}</option>
     </select>
     <p class="dz-razon" *ngIf="mensajero?.razon as razon">
@@ -37,16 +37,16 @@
       <span class="dz-razon__texto">{{ razon }}</span>
     </p>
     <p class="dz-aviso-chico t-warn" *ngIf="!grupo.mensajeroId">
-      <span class="dz-aviso-chico__texto">Opttia no tiene a quién sugerir: escoge tú.</span>
+      <span class="dz-aviso-chico__texto">{{ 'enVivo.grupoDespacho.opttiaNoTieneAQuien' | translate }}</span>
     </p>
     <p class="dz-aviso-chico t-warn" *ngIf="mensajero && mensajero.app === 'sin-conectar'">
-      <span class="dz-aviso-chico__texto">Su app no está conectada: verá los pedidos cuando la abra.</span>
+      <span class="dz-aviso-chico__texto">{{ 'enVivo.grupoDespacho.suAppNoEstaConectada' | translate }}</span>
     </p>
   </div>
 
   <ng-template #bloqueTransportadora>
     <div class="dz-transportadora">
-      <p class="dz-etiqueta" [id]="'dz-tr-' + numero">Transportadora</p>
+      <p class="dz-etiqueta" [id]="'dz-tr-' + numero">{{ 'enVivo.grupoDespacho.transportadora' | translate }}</p>
       <select
         class="dz-select dz-select--transportadora"
         *ngIf="grupo.transportadoras.length > 1; else fichaTransportadora"
@@ -60,7 +60,7 @@
       <ng-template #fichaTransportadora>
         <p class="dz-transportadora__ficha">
           <app-en-vivo-icono nombre="camion"></app-en-vivo-icono>
-          <span class="dz-transportadora__nombre">{{ transportadora?.nombre || 'Sin transportadora' }}</span>
+          <span class="dz-transportadora__nombre">{{ transportadora?.nombre || ('enVivo.grupoDespacho.sinTransportadora' | translate) }}</span>
         </p>
       </ng-template>
       <p class="dz-tarifa" *ngIf="transportadora as t">
@@ -80,7 +80,7 @@
 
   <ul class="dz-pedidos">
     <li class="dz-pedido" *ngFor="let p of grupo.pedidos; trackBy: trackPedido">
-      <button type="button" class="dz-pedido__abrir" (click)="abrirPedido.emit(p.id)" [attr.aria-label]="'Abrir el pedido ' + p.nroPedido">
+      <button type="button" class="dz-pedido__abrir" (click)="abrirPedido.emit(p.id)" [attr.aria-label]="('enVivo.grupoDespacho.abrirElPedido' | translate) + ' ' + p.nroPedido">
         <span class="dz-pedido__nro">#{{ p.nroPedido }}</span>
         <span class="dz-pedido__zona">{{ p.zona }}</span>
         <span class="dz-pedido__cobro" *ngIf="p.porCobrar > 0">{{ dinero(p.porCobrar) }}</span>
@@ -89,13 +89,13 @@
         <select
           class="dz-select dz-select--chico"
           *ngIf="!esTransportadora && otrosGrupos.length"
-          [attr.aria-label]="'Pasar el pedido ' + p.nroPedido + ' a otro grupo'"
+          [attr.aria-label]="('enVivo.grupoDespacho.pasarElPedido' | translate) + ' ' + p.nroPedido + ' ' + ('enVivo.grupoDespacho.aOtroGrupo' | translate)"
           (change)="moverA(p, $any($event.target).value); $any($event.target).value = ''"
         >
-          <option value="">Pasar a…</option>
+          <option value="">{{ 'enVivo.grupoDespacho.pasarA' | translate }}</option>
           <option *ngFor="let g of otrosGrupos" [value]="g.id">{{ g.etiqueta }}</option>
         </select>
-        <button type="button" class="dz-btn-icono" (click)="sacar.emit(p)" [attr.aria-label]="'Sacar el pedido ' + p.nroPedido + ' del grupo'">
+        <button type="button" class="dz-btn-icono" (click)="sacar.emit(p)" [attr.aria-label]="('enVivo.grupoDespacho.sacarElPedido' | translate) + ' ' + p.nroPedido + ' ' + ('enVivo.grupoDespacho.delGrupo' | translate)">
           <app-en-vivo-icono nombre="equis"></app-en-vivo-icono>
         </button>
       </div>
@@ -115,10 +115,10 @@
       class="dz-btn"
       *ngIf="puedeAprobar && !aprobado"
       [disabled]="!puedeTocar || ocupado || !conQuien || !grupo.pedidos.length"
-      [attr.aria-label]="(aplicando ? 'Aprobando el grupo ' : 'Aprobar el grupo ') + numero + ', ' + grupo.zona"
+      [attr.aria-label]="(aplicando ? ('enVivo.grupoDespacho.aprobandoElGrupo' | translate) : ('enVivo.grupoDespacho.aprobarElGrupo' | translate)) + ' ' + numero + ', ' + grupo.zona"
       (click)="aprobar.emit()"
     >
-      <span>{{ aplicando ? 'Aprobando…' : esTransportadora ? 'Aprobar y enviar' : 'Aprobar y despachar' }}</span>
+      <span>{{ aplicando ? ('enVivo.grupoDespacho.aprobando' | translate) : esTransportadora ? ('enVivo.grupoDespacho.aprobarYEnviar' | translate) : ('enVivo.grupoDespacho.aprobarYDespachar' | translate) }}</span>
     </button>
   </footer>
 </article>

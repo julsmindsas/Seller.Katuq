@@ -25,7 +25,7 @@ h3 { color: $cfg-ink; font-size: 14px; font-weight: 800; margin: 24px 0 16px; }
   input { accent-color: $cfg-accent; width: 18px; height: 18px; }
 }
 .kuvo-help { color: $cfg-body; font-size: 12.5px; margin: 12px 0 18px;
-  a { color: $cfg-accent; text-decoration: underline; }
+  a { color: $cfg-accent-ink; text-decoration: underline; }
 }
 .kuvo-form-actions { margin-top: 22px; }
 .kuvo-withdraw { margin-top: 18px; }
@@ -34,7 +34,7 @@ h3 { color: $cfg-ink; font-size: 14px; font-weight: 800; margin: 24px 0 16px; }
 .kuvo-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
   div { background: $cfg-tile; padding: 16px; border: 1px solid $cfg-line; border-radius: 11px; }
   label { display: block; text-transform: uppercase; font-size: 10px; font-weight: 800; color: $cfg-muted; margin-bottom: 9px; }
-  strong { display: block; color: $cfg-accent; font-size: 21px; font-weight: 800; overflow-wrap: anywhere; }
+  strong { display: block; color: $cfg-accent-ink; font-size: 21px; font-weight: 800; overflow-wrap: anywhere; }
 }
 .kuvo-bank-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 15px; background: $cfg-tile; border-radius: 11px; color: $cfg-ink; font-size: 13px; }
 @media (max-width: 900px) { .kuvo-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

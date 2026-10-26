@@ -1,4 +1,4 @@
-<!-- «Uniformar fotos» (D-501, ticket 1252). Clases fu-*: ninguna lleva "p-" (trampa de CSS global). -->
+<!-- «Uniformar fotos» (D-501, ticket 1252; series y categoría por ruta: TX-37 · 7.11; origen de copias y «Quitar fondo»: TX-37 · 8.6 y 9.10). Clases fu-*: ninguna lleva "p-" (trampa de CSS global). -->
 <div class="fu-fondo" (click)="cerrarDesdeFondo($event)">
   <section #dialogo class="fu-dialogo" role="dialog" aria-modal="true" aria-labelledby="fu-titulo" tabindex="-1">
 
@@ -13,11 +13,12 @@
       </button>
     </header>
 
-    <ol class="fu-pasos" *ngIf="paso === 'ajustes' || paso === 'vista' || paso === 'aplicando' || paso === 'resumen'" aria-label="Pasos">
-      <li class="fu-marca" [class.is-active]="paso === 'ajustes'" [class.is-done]="paso !== 'ajustes'"><span class="fu-marca-num">1</span><span class="fu-marca-texto">Ajustes</span></li>
-      <li class="fu-marca" [class.is-active]="paso === 'vista'" [class.is-done]="paso === 'aplicando' || paso === 'resumen'"><span class="fu-marca-num">2</span><span class="fu-marca-texto">Vista previa</span></li>
-      <li class="fu-marca" [class.is-active]="paso === 'aplicando'" [class.is-done]="paso === 'resumen'"><span class="fu-marca-num">3</span><span class="fu-marca-texto">Aplicar</span></li>
-      <li class="fu-marca" [class.is-active]="paso === 'resumen'"><span class="fu-marca-num">4</span><span class="fu-marca-texto">Resumen</span></li>
+    <ol class="fu-pasos" *ngIf="paso === 'categoria' || paso === 'ajustes' || paso === 'vista' || paso === 'aplicando' || paso === 'resumen'" aria-label="Pasos">
+      <li class="fu-marca" *ngIf="conPasoCategoria" [class.is-active]="paso === 'categoria'" [class.is-done]="paso !== 'categoria'"><span class="fu-marca-num">1</span><span class="fu-marca-texto">Categoría</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'ajustes'" [class.is-done]="paso !== 'ajustes' && paso !== 'categoria'"><span class="fu-marca-num">{{ numeroPaso(1) }}</span><span class="fu-marca-texto">Ajustes</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'vista'" [class.is-done]="paso === 'aplicando' || paso === 'resumen'"><span class="fu-marca-num">{{ numeroPaso(2) }}</span><span class="fu-marca-texto">Vista previa</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'aplicando'" [class.is-done]="paso === 'resumen'"><span class="fu-marca-num">{{ numeroPaso(3) }}</span><span class="fu-marca-texto">Aplicar</span></li>
+      <li class="fu-marca" [class.is-active]="paso === 'resumen'"><span class="fu-marca-num">{{ numeroPaso(4) }}</span><span class="fu-marca-texto">Resumen</span></li>
     </ol>
 
     <div class="fu-cuerpo">
@@ -37,7 +38,7 @@
       <!-- Error que no deja seguir -->
       <div *ngIf="paso === 'error'" class="fu-vacio">
         <div class="fu-vacio-icono fu-vacio-icono--error"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></div>
-        <div class="fu-vacio-titulo">No pudimos abrir Uniformar fotos</div>
+        <div class="fu-vacio-titulo">{{ tituloError }}</div>
         <div class="fu-vacio-texto">{{ error }}</div>
       </div>
 
@@ -49,10 +50,51 @@
         <div class="fu-vacio-texto" *ngIf="config && !config.canApply">Solo un administrador puede revertir fotos.</div>
       </div>
 
+      <!-- Paso de categoría (TX-37 · 7.11, pregunta 4): árbol de la empresa, con sus subcategorías -->
+      <div *ngIf="paso === 'categoria'" class="fu-categorias">
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="soloSubrutasDe">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span class="fu-aviso-texto">«{{ textoSoloSubrutas }}» tiene demasiados productos para una sola vez. Elige una de sus subcategorías.</span>
+        </div>
+        <label class="fu-label" for="fu-buscar-categoria">Categoría</label>
+        <input id="fu-buscar-categoria" type="search" class="fu-buscar" placeholder="Buscar categoría" autocomplete="off"
+          [(ngModel)]="buscarCategoria" aria-describedby="fu-ayuda-categoria">
+        <div id="fu-ayuda-categoria" class="fu-ayuda">Se incluyen la categoría y todas sus subcategorías.</div>
+
+        <div *ngIf="cargandoRutas" class="fu-vacio">
+          <div class="fu-vacio-icono"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i></div>
+          <div class="fu-vacio-titulo">Cargando tus categorías…</div>
+        </div>
+        <div *ngIf="!cargandoRutas && errorRutas" class="fu-vacio">
+          <div class="fu-vacio-icono fu-vacio-icono--error"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i></div>
+          <div class="fu-vacio-titulo">No pudimos cargar tus categorías</div>
+          <div class="fu-vacio-texto">{{ errorRutas }}</div>
+        </div>
+        <div *ngIf="!cargandoRutas && !errorRutas && rutasCargadas && !rutasVisibles.length" class="fu-vacio">
+          <div class="fu-vacio-icono"><i class="pi pi-sitemap" aria-hidden="true"></i></div>
+          <div class="fu-vacio-titulo">{{ soloSubrutasDe ? 'Esta categoría no tiene subcategorías' : 'No hay categorías para mostrar' }}</div>
+          <div class="fu-vacio-texto">{{ soloSubrutasDe ? 'Elige los productos desde la lista de productos, en grupos más pequeños.' : (buscarCategoria ? 'Prueba con otra palabra.' : 'Crea tus categorías en Inventarios y productos › Categorías de productos.') }}</div>
+        </div>
+        <ul class="fu-rutas" *ngIf="!cargandoRutas && !errorRutas && rutasVisibles.length">
+          <li *ngFor="let r of rutasVisibles; let i = index; trackBy: trackRuta" class="fu-ruta-item">
+            <button type="button" class="fu-ruta" [ngClass]="'fu-ruta--nivel' + r.nivel" (click)="elegirRuta(r)" [disabled]="r.repetida"
+              [attr.aria-describedby]="r.repetida ? 'fu-repetida-' + i : null">
+              <i class="pi pi-folder" aria-hidden="true"></i><span class="fu-ruta-texto">{{ r.texto }}</span>
+              <span *ngIf="r.repetida" class="fu-ruta-nota" [attr.id]="'fu-repetida-' + i">Hay dos categorías con este nombre. Cámbiale el nombre a una en Categorías de productos para elegirla.</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <!-- Paso 1: ajustes -->
       <div *ngIf="paso === 'ajustes'" class="fu-ajustes">
+        <div class="fu-elegida" *ngIf="conPasoCategoria && rutaElegida">
+          <span class="fu-elegida-texto">{{ textoSeleccion }}</span>
+          <button type="button" class="fu-btn fu-btn--sec fu-btn--chico" (click)="cambiarCategoria()">Cambiar categoría</button>
+        </div>
         <fieldset class="fu-grupo">
           <legend class="fu-label">Proporción</legend>
+          <div class="fu-ayuda" *ngIf="proporcionDelSitio">Empieza en la proporción de las fotos de tu sitio. Puedes cambiarla.</div>
           <div class="fu-opciones">
             <button type="button" *ngFor="let a of proporciones" class="fu-opcion" [class.is-active]="ajustes.aspect === a"
               [attr.aria-pressed]="ajustes.aspect === a" (click)="elegirProporcion(a)">
@@ -83,6 +125,37 @@
           </div>
         </fieldset>
 
+        <!-- TX-37 · 9.10: solo si el servidor la ofrece (bandera, proveedor, administrador y modo) -->
+        <fieldset class="fu-grupo fu-fondo-ia" *ngIf="fondoDisponible">
+          <legend class="fu-label">Quitar fondo</legend>
+          <div class="fu-ayuda">Separa el producto de lo que tiene detrás y lo pone sobre el fondo que elegiste arriba. Cada foto usa hasta 1 uso de tu plan; las que ya pagaste no se vuelven a cobrar.</div>
+          <div class="fu-opciones">
+            <button type="button" class="fu-opcion" [class.is-active]="!quitarFondo" [attr.aria-pressed]="!quitarFondo" (click)="elegirQuitarFondo(false)">
+              <i class="pi pi-image" aria-hidden="true"></i><span class="fu-opcion-texto">Conservar el fondo</span>
+            </button>
+            <button type="button" class="fu-opcion" [class.is-active]="quitarFondo" [attr.aria-pressed]="quitarFondo" (click)="elegirQuitarFondo(true)">
+              <i class="pi pi-sparkles" aria-hidden="true"></i><span class="fu-opcion-texto">Quitar fondo</span>
+            </button>
+          </div>
+          <div class="fu-subgrupo" *ngIf="quitarFondo">
+            <div class="fu-label">Qué fotos</div>
+            <div class="fu-opciones">
+              <button type="button" *ngFor="let a of alcances" class="fu-opcion" [class.is-active]="alcanceFondo === a" [attr.aria-pressed]="alcanceFondo === a" (click)="elegirAlcance(a)">
+                <span class="fu-opcion-texto">{{ etiquetasAlcance[a] }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="fu-usos" *ngIf="textoUsosQuedan">
+            <i class="pi pi-ticket" aria-hidden="true"></i><span class="fu-usos-texto">{{ textoUsosQuedan }}</span>
+          </div>
+          <div class="fu-aviso fu-aviso--alerta" *ngIf="avisoVistaVisible">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ avisoCostoVista }}.<ng-container *ngIf="vistaPreviaConIA"> Las fotos que procese se guardan: al aplicar no se vuelven a pagar.</ng-container></span>
+          </div>
+          <div class="fu-aviso fu-aviso--info" *ngIf="fondoEnSombra">
+            <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">Por ahora es una simulación: la vista previa se ve sin quitar el fondo y, al simular, solo contamos cuántos usos necesitaría. No se gasta ninguno.</span>
+          </div>
+        </fieldset>
+
         <div class="fu-aviso fu-aviso--info">
           <i class="pi pi-info-circle" aria-hidden="true"></i>
           <span class="fu-aviso-texto">Centramos el producto, quitamos los bordes de un solo color y dejamos el fondo liso. Una foto con una mesa o una pared detrás no queda con fondo blanco. Las fotos originales se guardan y puedes revertir.</span>
@@ -92,6 +165,26 @@
       <!-- Paso 2: vista previa -->
       <div *ngIf="paso === 'vista'" class="fu-vista">
         <div class="fu-ajustes-elegidos">{{ textoAjustes }}</div>
+        <!-- TX-37 · 7.11: el conteo es el del servidor (la lista filtra por nombre; aquí cuenta la ruta) -->
+        <div class="fu-conteo" *ngIf="textoConteo">
+          <i class="pi pi-box" aria-hidden="true"></i><span class="fu-conteo-texto">{{ textoConteo }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="textoSinUbicar">
+          <i class="pi pi-question-circle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ textoSinUbicar }}. No entran en este cambio; revisa su categoría en la lista de productos.</span>
+        </div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="conteo.excede || excedeEnServidor">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ mensajeExcede }}</span>
+        </div>
+        <!-- TX-37 · 9.10: «Quitar fondo» — usos que necesita y que quedan; en sombra, solo la estimación -->
+        <div class="fu-conteo" *ngIf="textoUsosVista">
+          <i class="pi pi-ticket" aria-hidden="true"></i><span class="fu-conteo-texto">{{ textoUsosVista }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--alerta" *ngIf="paradaDeVista">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i><span class="fu-aviso-texto">{{ paradaDeVista }}</span>
+        </div>
+        <div class="fu-aviso fu-aviso--info" *ngIf="fondoEnSombra">
+          <i class="pi pi-info-circle" aria-hidden="true"></i><span class="fu-aviso-texto">Elegiste «Quitar fondo»: al simular contamos las fotos y los usos que necesitaría, sin gastar ninguno. La vista previa de abajo no lo muestra.</span>
+        </div>
         <div *ngIf="!muestras.length" class="fu-vacio">
           <div class="fu-vacio-icono"><i class="pi pi-images" aria-hidden="true"></i></div>
           <div class="fu-vacio-titulo">No hay fotos para mostrar</div>
@@ -109,7 +202,8 @@
                 <figcaption class="fu-pie-foto">Después</figcaption>
               </figure>
             </div>
-            <div class="fu-etiquetas" *ngIf="m.after.warnings?.length">
+            <div class="fu-etiquetas" *ngIf="m.after.warnings?.length || m.copiedFrom">
+              <span *ngIf="m.copiedFrom" class="fu-etiqueta fu-etiqueta--info">{{ textoOrigen(m) }}</span>
               <span *ngFor="let w of m.after.warnings" class="fu-etiqueta fu-etiqueta--alerta">{{ textoAviso(w) }}</span>
             </div>
             <button type="button" class="fu-btn fu-btn--sec fu-btn--bloque" (click)="alternar(m)" [attr.aria-pressed]="excluida(m)">
@@ -135,12 +229,29 @@
       </div>
 
       <!-- Paso 3: aplicando -->
-      <div *ngIf="paso === 'aplicando'" class="fu-aplicando">
+      <div *ngIf="paso === 'aplicando' && !serieId" class="fu-aplicando">
         <div class="fu-vacio-titulo">{{ lote?.type === 'revert' ? 'Devolviendo las fotos originales…' : 'Uniformando fotos…' }}</div>
         <div class="fu-barra" role="progressbar" [attr.aria-valuenow]="progreso.porcentaje" aria-valuemin="0" aria-valuemax="100">
           <div class="fu-barra-relleno" [style.width.%]="progreso.porcentaje"></div>
         </div>
+        <div class="fu-vacio-texto" *ngIf="textoUsosSombra">{{ textoUsosSombra }}.</div>
         <div class="fu-vacio-texto">{{ progreso.hechos }} de {{ progreso.total }} productos. Puedes cerrar esta ventana: el lote sigue y, si vuelves a abrir Uniformar fotos en este navegador, verás cómo va. Si estás editando el producto, espera a que termine antes de guardar.</div>
+      </div>
+
+      <!-- Paso 3 con serie (TX-37 · 7.11): lotes seguidos de hasta 100, uno a la vez -->
+      <div *ngIf="paso === 'aplicando' && serieId" class="fu-aplicando">
+        <div class="fu-vacio-titulo">Uniformando fotos en lotes seguidos…</div>
+        <div class="fu-serie-texto" *ngIf="serie">{{ textoProgresoSerie }}</div>
+        <div class="fu-barra" role="progressbar" [attr.aria-valuenow]="progresoSerie.porcentaje" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="serie ? textoProgresoSerie : null">
+          <div class="fu-barra-relleno" [style.width.%]="progresoSerie.porcentaje"></div>
+        </div>
+        <div class="fu-vacio-texto" *ngIf="textoUsosSombra">{{ textoUsosSombra }}.</div>
+        <ol class="fu-partes" *ngIf="serie?.parts?.length" aria-label="Lotes de la serie">
+          <li *ngFor="let p of serie!.parts; trackBy: trackParte" class="fu-parte" [ngClass]="'fu-parte--' + p.status">
+            <span class="fu-parte-num">Lote {{ p.part }}</span><span class="fu-parte-estado">{{ textoParte(p) }}</span>
+          </li>
+        </ol>
+        <div class="fu-vacio-texto">Puedes cerrar esta ventana: los lotes siguen uno tras otro y, si vuelves a abrir Uniformar fotos en este navegador, verás cómo van. Si estás editando un producto, espera a que terminen antes de guardar.</div>
       </div>
 
       <!-- Paso 4: resumen -->
@@ -166,15 +277,68 @@
             <div class="fu-cifra-valor">{{ resumen.conAviso }}</div>
           </div>
         </div>
+        <!-- D-518 TX-37·2: qué aviso es (p. ej., posible marca de agua o logo), no solo la cifra -->
+        <div class="fu-avisos-resumen" *ngIf="resumen.avisos.length">
+          <div class="fu-label">Fotos con aviso de calidad</div>
+          <ul class="fu-lista">
+            <li *ngFor="let av of resumen.avisos" class="fu-lista-item">
+              <span class="fu-etiqueta fu-etiqueta--alerta">{{ av.texto }}</span><span class="fu-lista-cantidad">{{ av.cantidad }}</span>
+            </li>
+          </ul>
+          <div class="fu-ayuda">Revisa esas fotos en cada producto. Se uniformaron igual.</div>
+        </div>
+        <!-- TX-37 · 8.6: de dónde salieron las fotos copiadas o adoptadas (fase 1b) -->
+        <div class="fu-origen-resumen" *ngIf="resumen.origenes.length || resumen.copiadas || resumen.habriaCopiado">
+          <div class="fu-label">{{ resumen.enSombra ? 'Fotos que se copiarían' : 'Fotos copiadas a tus archivos' }}</div>
+          <ul class="fu-lista">
+            <li class="fu-lista-item" *ngIf="resumen.copiadas || resumen.habriaCopiado">
+              <span class="fu-lista-texto">{{ resumen.enSombra ? 'Se copiarían en total' : 'Copiadas en total' }}</span><span class="fu-lista-cantidad">{{ resumen.enSombra ? resumen.habriaCopiado : resumen.copiadas }}</span>
+            </li>
+            <li *ngFor="let o of resumen.origenes" class="fu-lista-item">
+              <span class="fu-lista-texto">{{ o.texto }}</span><span class="fu-lista-cantidad">{{ o.cantidad }}</span>
+            </li>
+          </ul>
+        </div>
+        <!-- TX-37 · 8.6 y 9.10: lo que se haría en una simulación y los usos de «Quitar fondo» -->
+        <div class="fu-origen-resumen" *ngIf="resumen.simulados.length || resumen.usosGastados || resumen.usosDevueltos || resumen.usosSimulados">
+          <div class="fu-label">{{ resumen.enSombra ? 'Lo que se haría' : 'Quitar fondo' }}</div>
+          <ul class="fu-lista">
+            <li *ngFor="let si of resumen.simulados" class="fu-lista-item">
+              <span class="fu-lista-texto">{{ si.texto }}</span><span class="fu-lista-cantidad">{{ si.cantidad }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosSimulados">
+              <span class="fu-lista-texto">Usos que necesitaría (no se gastó ninguno)</span><span class="fu-lista-cantidad">{{ resumen.usosSimulados }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosGastados">
+              <span class="fu-lista-texto">Usos gastados</span><span class="fu-lista-cantidad">{{ resumen.usosGastados }}</span>
+            </li>
+            <li class="fu-lista-item" *ngIf="resumen.usosDevueltos">
+              <span class="fu-lista-texto">Usos devueltos porque no pudimos quitar el fondo</span><span class="fu-lista-cantidad">{{ resumen.usosDevueltos }}</span>
+            </li>
+          </ul>
+        </div>
         <ul class="fu-lista" *ngIf="resumen.motivos.length">
           <li *ngFor="let mo of resumen.motivos" class="fu-lista-item">
             <span class="fu-lista-texto">{{ mo.texto }}</span><span class="fu-lista-cantidad">{{ mo.cantidad }}</span>
           </li>
         </ul>
+        <div class="fu-ayuda" *ngIf="resumen.motivosIncompletos">Estas listas no están completas; las cifras de arriba son del total.</div>
+        <ol class="fu-partes" *ngIf="serieId && serie?.parts?.length" aria-label="Lotes de la serie">
+          <li *ngFor="let p of serie!.parts; trackBy: trackParte" class="fu-parte" [ngClass]="'fu-parte--' + p.status">
+            <span class="fu-parte-num">Lote {{ p.part }}</span><span class="fu-parte-estado">{{ textoParte(p) }}</span>
+          </li>
+        </ol>
       </div>
     </div>
 
     <footer class="fu-pie">
+      <ng-container *ngIf="paso === 'categoria'">
+        <button type="button" class="fu-btn fu-btn--sec" (click)="salirDeCategoria()">{{ rutaElegida || soloSubrutasDe ? 'Volver' : 'Cancelar' }}</button>
+        <button type="button" class="fu-btn" *ngIf="errorRutas" (click)="cargarRutas()" [disabled]="cargandoRutas">
+          <i class="pi pi-refresh" aria-hidden="true"></i><span class="fu-btn-texto">Reintentar</span>
+        </button>
+      </ng-container>
+
       <ng-container *ngIf="paso === 'ajustes'">
         <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cancelar</button>
         <button type="button" class="fu-btn" (click)="pedirVistaPrevia()" [disabled]="ocupado">
@@ -185,7 +349,10 @@
 
       <ng-container *ngIf="paso === 'vista'">
         <button type="button" class="fu-btn fu-btn--sec" (click)="volverAAjustes()" [disabled]="ocupado">Cambiar ajustes</button>
-        <button type="button" class="fu-btn" (click)="aplicar()" [disabled]="ocupado || !puedeAplicar">
+        <button type="button" class="fu-btn fu-btn--sec" *ngIf="ofreceSubcategoria" (click)="elegirSubcategoria()" [disabled]="ocupado">
+          <i class="pi pi-sitemap" aria-hidden="true"></i><span class="fu-btn-texto">Elegir una subcategoría</span>
+        </button>
+        <button type="button" class="fu-btn" (click)="aplicar()" [disabled]="ocupado || !puedeAplicar || bloqueaAplicar">
           <i class="pi" [class.pi-spin]="ocupado" [class.pi-spinner]="ocupado" [class.pi-check]="!ocupado" aria-hidden="true"></i>
           <span class="fu-btn-texto">{{ config?.mode === 'shadow' ? 'Simular en los productos' : 'Aplicar a los productos' }}</span>
         </button>
@@ -193,12 +360,12 @@
 
       <ng-container *ngIf="paso === 'aplicando'">
         <button type="button" class="fu-btn fu-btn--sec" (click)="cerrar()">Cerrar</button>
-        <button type="button" class="fu-btn fu-btn--peligro" (click)="cancelarLote()" [disabled]="ocupado || !lote || !config?.canApply">Cancelar lote</button>
+        <button type="button" class="fu-btn fu-btn--peligro" (click)="cancelarLote()" [disabled]="ocupado || (!lote && !serieId) || !config?.canApply">{{ serieId ? 'Cancelar los lotes' : 'Cancelar lote' }}</button>
       </ng-container>
 
       <ng-container *ngIf="paso === 'resumen'">
-        <button type="button" class="fu-btn fu-btn--sec" *ngIf="resumen?.puedeRevertir && config?.canApply" (click)="revertirLote()" [disabled]="ocupado">
-          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir lote</span>
+        <button type="button" class="fu-btn fu-btn--sec" *ngIf="resumen?.puedeRevertir && config?.canApply" (click)="revertirResumen()" [disabled]="ocupado">
+          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">{{ serieId ? 'Revertir todos los lotes' : 'Revertir lote' }}</span>
         </button>
         <button type="button" class="fu-btn" (click)="cerrar()">Listo</button>
       </ng-container>
@@ -210,6 +377,9 @@
         </button>
         <button type="button" class="fu-btn" *ngIf="ultimoLoteId && config?.canApply" (click)="revertirLote(ultimoLoteId)" [disabled]="ocupado">
           <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir el último lote</span>
+        </button>
+        <button type="button" class="fu-btn" *ngIf="ultimaSerieId && config?.canApply" (click)="revertirSerie(ultimaSerieId)" [disabled]="ocupado">
+          <i class="pi pi-undo" aria-hidden="true"></i><span class="fu-btn-texto">Revertir los últimos lotes</span>
         </button>
       </ng-container>
 

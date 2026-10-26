@@ -4,6 +4,7 @@ import { PaymentCallbackComponent } from './payment-callback.component';
 import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { PublicaModule } from '../../shared/components/publica/publica.module';
+import { TranslateModule } from '@ngx-translate/core';
 
 const routes: Routes = [
   {
@@ -17,6 +18,7 @@ const routes: Routes = [
   imports: [
     CommonModule,
     PublicaModule,
+    TranslateModule,
     RouterModule.forChild(routes),
     HttpClientModule
   ]

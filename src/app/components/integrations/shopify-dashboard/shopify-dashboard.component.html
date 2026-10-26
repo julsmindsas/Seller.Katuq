@@ -4,16 +4,16 @@
   <!-- Header -->
   <header class="dashboard-header cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Integraciones</span>
-      <h1 class="cfg-titulo">Dashboard Shopify</h1>
-      <p class="cfg-sub">Monitoreo y gestion de la integracion con Shopify</p>
+      <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'integrations.shopifyDashboard.dashboardShopify' | translate }}</h1>
+      <p class="cfg-sub">{{ 'integrations.shopifyDashboard.monitoreoYGestionDeLa' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button pButton type="button" label="Verificar Conexion" icon="pi pi-refresh"
+      <button pButton type="button" [label]="'integrations.shopifyDashboard.verificarConexion' | translate" icon="pi pi-refresh"
         class="p-button-outlined p-button-sm"
         [loading]="connectionStatus === 'checking'"
         (click)="verifyConnection()"></button>
-      <button pButton type="button" label="Recargar" icon="pi pi-sync"
+      <button pButton type="button" [label]="'integrations.shopifyDashboard.recargar' | translate" icon="pi pi-sync"
         class="p-button-outlined p-button-secondary p-button-sm"
         [loading]="loading"
         (click)="loadDashboardData()"></button>
@@ -39,7 +39,7 @@
           </div>
           <p-tag [value]="getStatusLabel()" [severity]="getStatusSeverity()"></p-tag>
           <p class="text-muted mt-2 mb-0 small" *ngIf="lastChecked">
-            Ultima verificacion: {{ lastChecked | date:'short' }}
+            {{ 'integrations.shopifyDashboard.ultimaVerificacion' | translate:{lastChecked: (lastChecked | date:'short')} }}
           </p>
         </div>
       </p-card>
@@ -51,7 +51,7 @@
         <div class="card-content text-center">
           <i class="pi pi-box metric-icon metric-icon--acento mb-2"></i>
           <h3 class="metric-value mb-1">{{ syncMetrics.products }}</h3>
-          <p class="metric-label mb-0">Productos Sincronizados</p>
+          <p class="metric-label mb-0">{{ 'integrations.shopifyDashboard.productosSincronizados' | translate }}</p>
         </div>
       </p-card>
     </div>
@@ -62,7 +62,7 @@
         <div class="card-content text-center">
           <i class="pi pi-shopping-cart metric-icon metric-icon--ok mb-2"></i>
           <h3 class="metric-value mb-1">{{ syncMetrics.orders }}</h3>
-          <p class="metric-label mb-0">Ordenes Recibidas</p>
+          <p class="metric-label mb-0">{{ 'integrations.shopifyDashboard.ordenesRecibidas' | translate }}</p>
         </div>
       </p-card>
     </div>
@@ -76,7 +76,7 @@
             {{ syncMetrics.lastSync | date:'short' }}
           </h3>
           <h3 class="metric-value mb-1" *ngIf="!syncMetrics.lastSync">--</h3>
-          <p class="metric-label mb-0">Ultima Sincronizacion</p>
+          <p class="metric-label mb-0">{{ 'integrations.shopifyDashboard.ultimaSincronizacion' | translate }}</p>
         </div>
       </p-card>
     </div>
@@ -86,30 +86,30 @@
   <div class="row">
     <!-- Quick Actions -->
     <div class="col-12 col-lg-5 mb-4">
-      <p-card header="Acciones Rapidas" styleClass="dashboard-card">
+      <p-card [header]="'integrations.shopifyDashboard.accionesRapidas' | translate" styleClass="dashboard-card">
         <div class="actions-grid">
-          <button pButton type="button" label="Sync Productos" icon="pi pi-box"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.syncProductos' | translate" icon="pi pi-box"
             class="p-button-outlined action-btn mb-2 w-100"
             [loading]="isSyncing('products')"
             (click)="triggerSync('products')"></button>
-          <button pButton type="button" label="Sync Inventario" icon="pi pi-database"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.syncInventario' | translate" icon="pi pi-database"
             class="p-button-outlined action-btn mb-2 w-100"
             [loading]="isSyncing('inventory')"
             (click)="triggerSync('inventory')"></button>
-          <button pButton type="button" label="Sync Ordenes" icon="pi pi-shopping-cart"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.syncOrdenes' | translate" icon="pi pi-shopping-cart"
             class="p-button-outlined action-btn mb-2 w-100"
             [loading]="isSyncing('orders')"
             (click)="triggerSync('orders')"></button>
         </div>
         <hr>
         <div class="nav-links">
-          <button pButton type="button" label="Ver Logs de Sync" icon="pi pi-list"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.verLogsDeSync' | translate" icon="pi pi-list"
             class="p-button-text p-button-sm w-100 text-start mb-1"
             (click)="navigateTo('logs')"></button>
-          <button pButton type="button" label="Mapeo de Campos" icon="pi pi-map"
+          <button pButton type="button" [label]="'integrations.fieldMapping.mapeoDeCampos' | translate" icon="pi pi-map"
             class="p-button-text p-button-sm w-100 text-start mb-1"
             (click)="navigateTo('mapping')"></button>
-          <button pButton type="button" label="Configuracion Webhooks" icon="pi pi-bell"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.configuracionWebhooks' | translate" icon="pi pi-bell"
             class="p-button-text p-button-sm w-100 text-start"
             (click)="navigateTo('webhooks')"></button>
         </div>
@@ -118,15 +118,15 @@
 
     <!-- Recent Events -->
     <div class="col-12 col-lg-7 mb-4">
-      <p-card header="Eventos Recientes" styleClass="dashboard-card">
+      <p-card [header]="'integrations.shopifyDashboard.eventosRecientes' | translate" styleClass="dashboard-card">
         <div *ngIf="loading" class="text-center py-4">
           <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
-          <p class="text-muted mt-2">Cargando eventos...</p>
+          <p class="text-muted mt-2">{{ 'integrations.shopifyDashboard.cargandoEventos' | translate }}</p>
         </div>
 
         <div *ngIf="!loading && recentEvents.length === 0" class="cfg-vacio">
           <i class="pi pi-inbox cfg-vacio__icono"></i>
-          <p class="cfg-vacio__titulo">No hay eventos recientes</p>
+          <p class="cfg-vacio__titulo">{{ 'integrations.shopifyDashboard.noHayEventosRecientes' | translate }}</p>
         </div>
 
         <p-timeline [value]="recentEvents" *ngIf="!loading && recentEvents.length > 0">
@@ -158,7 +158,7 @@
         </p-timeline>
 
         <div class="text-end mt-3" *ngIf="recentEvents.length > 0">
-          <button pButton type="button" label="Ver todos los logs" icon="pi pi-arrow-right"
+          <button pButton type="button" [label]="'integrations.shopifyDashboard.verTodosLosLogs' | translate" icon="pi pi-arrow-right"
             class="p-button-text p-button-sm"
             (click)="navigateTo('logs')"></button>
         </div>

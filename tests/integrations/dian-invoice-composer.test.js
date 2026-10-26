@@ -33,7 +33,12 @@ function loadClass(file, extras = {}) {
     crypto: require('node:crypto').webcrypto, localStorage: storageFixture(),
     defer, finalize, Date, ...extras };
   vm.runInNewContext(js, globals);
-  return Object.values(globals.exports)[0];
+  const Cls = Object.values(globals.exports)[0];
+  // D-540 (IDI-B10): el compositor recibe el traductor como tercer argumento; las pruebas usan los textos en español.
+  if (file !== 'invoice-composer.component.ts') return Cls;
+  const es = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/assets/i18n/es.json'), 'utf8'));
+  const translate = { currentLang: 'es', instant: (key, params = {}) => String(es[key] ?? key).replace(/\{\{\s*(\w+)\s*\}\}/g, (_, p) => params[p]) };
+  return class extends Cls { constructor(a, b, c = translate) { super(a, b, c); } };
 }
 function formFixture() {
   const Form = loadClass('manual-invoice-form.component.ts');
@@ -152,7 +157,10 @@ test('abrir explícitamente una revisión desde Borradores sigue mostrando su re
 test('la recuperación explica el pendiente y ofrece crear nueva cuando el estado ya está confirmado', () => {
   const html=fs.readFileSync(path.resolve(__dirname,'../../src/app/components/facturacion-electronica/composer/invoice-composer.component.html'),'utf8');
   assert.doesNotMatch(html,/<h3>Revisión recuperada<\/h3>/);
-  assert.match(html,/Hay una operación por confirmar/);assert.match(html,/Crear una factura nueva/);
+  const es=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../src/assets/i18n/es.json'),'utf8'));
+  for (const [key,text] of [['hayUnaOperacionPorConfirmar','Hay una operación por confirmar'],['crearUnaFacturaNueva','Crear una factura nueva']]) {
+    assert.match(html,new RegExp("facturacionElectronica\\.invoiceComposer\\."+key));assert.equal(es['facturacionElectronica.invoiceComposer.'+key],text);
+  }
   assert.match(html,/\(click\)="requestNewInvoice\(\)"/);
 });
 
@@ -636,7 +644,7 @@ test('referencia tiene etiqueta asociada por fila y guardar concepto no envía e
   const html = fs.readFileSync(path.resolve(__dirname, '../../src/app/components/facturacion-electronica/composer/invoice-concept-picker.component.html'), 'utf8');
   assert.match(html, /\[attr\.for\]="'invoice-concept-reference-' \+ index"/);
   assert.match(html, /\[id\]="'invoice-concept-reference-' \+ index" formControlName="reference"/);
-  assert.match(html, /Referencia <span>Opcional<\/span>/);
+  assert.match(html, /invoiceConceptPicker\.referencia' \| translate \}\} <span>\{\{ 'facturacionElectronica\.invoiceComposer\.opcional' \| translate \}\}<\/span>/);
   assert.match(html, /<button type="button" class="btn concept-save"/);
 });
 

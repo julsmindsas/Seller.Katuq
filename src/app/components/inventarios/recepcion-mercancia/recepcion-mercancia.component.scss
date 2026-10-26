@@ -2,11 +2,13 @@
 @include config-pagina;
 
 // Variables Katuq (tokens del canon, D-516)
-$primary-color: $cfg-accent;
+// D-502 F2a: alias en hex (el valor claro de su token) porque este archivo les aplica rgba()/darken(),
+// que no aceptan var(). Su oscuro llega con la pantalla en F3 (inventario).
+$primary-color: #5F3FE0; // = $cfg-accent en claro
 $secondary-color: $cfg-accent-2;
-$success-color: $cfg-ok;
-$warning-color: $cfg-warn;
-$danger-color: $cfg-err;
+$success-color: #1E874B; // = $cfg-ok en claro
+$warning-color: #D9820A; // = $cfg-warn en claro
+$danger-color: #D64545; // = $cfg-err en claro
 $info-color: $cfg-info;
 $text-color: $cfg-ink;
 $light-gray: $cfg-tint;
@@ -17,7 +19,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
 
 // Mixins
 @mixin card {
-  background: white;
+  background: var(--ds-surface);
   border-radius: $border-radius;
   box-shadow: $box-shadow;
   padding: 24px;
@@ -592,7 +594,7 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   right: 14px;
   transform: translateY(-50%);
   font-size: 1.3rem;
-  color: $cfg-accent;
+  color: var(--ds-accent-ink);
   opacity: .35;
 }
 .stat-texto { font-size: 14px !important; max-width: 100%; }
@@ -608,8 +610,8 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   border-radius: 16px;
 }
 .addon-buscar {
-  background-color: $cfg-accent !important;
-  border-color: $cfg-accent !important;
+  background-color: var(--ds-accent) !important;
+  border-color: var(--ds-accent-ink) !important;
   color: #fff !important;
 }
 
@@ -623,8 +625,8 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
   .boton-recargar.p-button { color: $cfg-accent; }
 
   .boton-principal.p-button {
-    background: $cfg-accent;
-    border-color: $cfg-accent;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     border-radius: 11px;
     font-weight: 700;
     box-shadow: $cfg-shadow-btn;
@@ -632,9 +634,9 @@ $box-shadow: 0 8px 24px -12px rgba(95, 63, 224, .25);
     &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
   }
   .boton-secundario.p-button {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-body;
-    border-color: #e4e2ef;
+    border-color: var(--ds-line-strong);
     border-radius: 11px;
     font-weight: 700;
 

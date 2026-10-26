@@ -129,7 +129,8 @@ export class AuthService implements OnInit {
       // Usuarios legacy pueden traer `lang: "es"`; los nuevos pueden traer el
       // objeto completo. Si no hay preferencia, cada login empieza en español
       // y nunca hereda el idioma de la sesión anterior.
-      result.lang = this.setLanguage(result.lang);
+      // D-540: con los idiomas visibles que trae el login; uno oculto se muestra en español.
+      result.lang = this.setLanguage(result.lang, result.visibleLanguages);
 
       localStorage.setItem("user", JSON.stringify(result));
       localStorage.setItem("loginTime", new Date().toISOString());
@@ -255,11 +256,11 @@ export class AuthService implements OnInit {
     });
   }
 
-  private setLanguage(lang: unknown): AppLanguage {
-    const activeLanguage = normalizeAppLanguage(lang);
+  private setLanguage(lang: unknown, visibles?: unknown): AppLanguage {
+    const activeLanguage = normalizeAppLanguage(lang, Array.isArray(visibles) ? visibles : undefined);
     this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
     this.translate.use(activeLanguage.code);
-    document.documentElement.lang = activeLanguage.code;
+    document.documentElement.lang = activeLanguage.htmlLang;
     return activeLanguage;
   }
 

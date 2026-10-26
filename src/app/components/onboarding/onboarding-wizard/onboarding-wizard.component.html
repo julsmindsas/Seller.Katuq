@@ -1,44 +1,44 @@
 <div class="onboarding-loading" *ngIf="isInitializing" role="status" aria-live="polite">
   <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-  <p>Estamos preparando tu siguiente paso…</p>
+  <p>{{ 'onboarding.onboardingWizard.estamosPreparandoTuSiguientePaso' | translate }}</p>
 </div>
 
 <div class="kq-onboarding" *ngIf="!isInitializing">
   <header class="mobile-header">
     <button type="button" class="icon-button" (click)="mobileNavOpen = !mobileNavOpen"
             [attr.aria-expanded]="mobileNavOpen" aria-controls="onboarding-navigation"
-            aria-label="Abrir pasos de configuración">
+            [attr.aria-label]="'onboarding.onboardingWizard.abrirPasosDeConfiguracion' | translate">
       <i class="pi pi-bars" aria-hidden="true"></i>
     </button>
     <div>
-      <strong>{{ active.shortName }}</strong>
-      <span>Paso {{ stepPosition }} de {{ all.length }}</span>
+      <strong>{{ active.shortName | translate }}</strong>
+      <span>{{ 'onboarding.onboardingWizard.pasoDe' | translate:{stepPosition: stepPosition, length: all.length} }}</span>
     </div>
     <span class="mobile-progress">{{ progressPercentage }}%</span>
   </header>
 
   <button *ngIf="mobileNavOpen" type="button" class="nav-backdrop"
-          (click)="mobileNavOpen = false" aria-label="Cerrar pasos"></button>
+          (click)="mobileNavOpen = false" [attr.aria-label]="'onboarding.onboardingWizard.cerrarPasos' | translate"></button>
 
   <aside id="onboarding-navigation" class="onboarding-sidebar" [class.is-open]="mobileNavOpen">
     <div class="brand-block">
       <span class="brand-icon" aria-hidden="true"><i class="pi pi-sparkles"></i></span>
       <div>
-        <h1>Vamos paso a paso</h1>
+        <h1>{{ 'onboarding.onboardingWizard.vamosPasoAPaso' | translate }}</h1>
         <p>{{ companyLabel }}</p>
       </div>
     </div>
 
     <div class="progress-copy">
-      <strong>{{ doneCount }} de {{ all.length }} listos</strong>
-      <span>≈ {{ minsLeft }} min</span>
+      <strong>{{ doneCount }} {{ 'onboarding.onboardingWizard.deListos' | translate:{length: all.length} }}</strong>
+      <span>{{ 'onboarding.onboardingWizard.min' | translate:{minsLeft: minsLeft} }}</span>
     </div>
-    <div class="progress-track" role="progressbar" aria-label="Avance de configuración"
+    <div class="progress-track" role="progressbar" [attr.aria-label]="'onboarding.onboardingWizard.avanceDeConfiguracion' | translate"
          aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressPercentage">
       <span [style.width.%]="progressPercentage"></span>
     </div>
 
-    <nav class="steps-nav" aria-label="Pasos de configuración">
+    <nav class="steps-nav" [attr.aria-label]="'onboarding.onboardingWizard.pasosDeConfiguracion' | translate">
       <button *ngFor="let step of all" type="button" class="step-link"
               [class.is-active]="step.id === activeId"
               [class.is-done]="status[step.id] === 'done'"
@@ -50,23 +50,23 @@
           <span *ngIf="status[step.id] !== 'done'">{{ all.indexOf(step) + 1 }}</span>
         </span>
         <span class="step-label">
-          <strong>{{ step.shortName }}</strong>
-          <small>{{ status[step.id] === 'done' ? 'Listo' : 'Pendiente' }}</small>
+          <strong>{{ step.shortName | translate }}</strong>
+          <small>{{ status[step.id] === 'done' ? ('onboarding.onboardingWizard.listo' | translate) : ('onboarding.onboardingWizard.pendiente' | translate) }}</small>
         </span>
       </button>
     </nav>
 
     <div class="sidebar-footer">
-      <p><i class="pi pi-cloud" aria-hidden="true"></i> Tu avance se guarda de forma segura.</p>
-      <button type="button" class="text-button" (click)="continueLater()">Continuar después</button>
+      <p><i class="pi pi-cloud" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.tuAvanceSeGuardaDe' | translate }}</p>
+      <button type="button" class="text-button" (click)="continueLater()">{{ 'onboarding.onboardingWizard.continuarDespues' | translate }}</button>
     </div>
   </aside>
 
   <main class="onboarding-main">
     <div class="content-scroll">
       <div class="content-shell">
-        <div class="step-kicker">Paso {{ stepPosition }} de {{ all.length }} · cerca de {{ active.mins }} min</div>
-        <h2 id="active-step-title">{{ active.name }}</h2>
+        <div class="step-kicker">{{ 'onboarding.onboardingWizard.pasoDeCercaDeMin' | translate:{stepPosition: stepPosition, length: all.length, mins: active.mins} }}</div>
+        <h2 id="active-step-title">{{ active.name | translate }}</h2>
 
         <div class="notice notice--warning" *ngIf="progressWarning" role="status">
           <i class="pi pi-cloud-upload" aria-hidden="true"></i>
@@ -80,86 +80,86 @@
 
         <section class="step-card" aria-labelledby="active-step-title" [ngSwitch]="activeId">
           <ng-container *ngSwitchCase="'goal'">
-            <p class="step-intro">¿Qué te gustaría conseguir primero? Puedes cambiar de ruta cuando quieras.</p>
+            <p class="step-intro">{{ 'onboarding.onboardingWizard.queTeGustariaConseguirPrimero' | translate }}</p>
             <p class="aviso-spam">
               <i class="pi pi-envelope" aria-hidden="true"></i>
-              Te escribimos desde <strong>notificaciones&#64;katuq.com</strong> con tus siguientes pasos. Si no ves nuestros correos, búscalos en <strong>Spam</strong> o <strong>Promociones</strong> y márcalos como “No es spam”.
+              {{ 'onboarding.onboardingWizard.teEscribimosDesde' | translate }} <strong>{{ 'onboarding.onboardingWizard.notificacionesKatuqCom' | translate }}</strong> {{ 'onboarding.onboardingWizard.conTusSiguientesPasosSi' | translate }} <strong>{{ 'onboarding.onboardingWizard.spam' | translate }}</strong> {{ 'onboarding.onboardingWizard.o' | translate }} <strong>{{ 'onboarding.onboardingWizard.promociones' | translate }}</strong> {{ 'onboarding.onboardingWizard.yMarcalosComoNoEs' | translate }}
             </p>
             <div class="choice-list choice-list--goals">
               <button type="button" class="choice-card" [class.is-selected]="goal === 'sell_today'"
                       [attr.aria-pressed]="goal === 'sell_today'" (click)="selectGoal('sell_today')">
                 <span class="choice-icon choice-icon--purple" aria-hidden="true"><i class="pi pi-shopping-cart"></i></span>
-                <span><strong>Quiero vender hoy</strong><small>Crea algo que vendes, confirma cómo cobras y abre tu primera venta.</small></span>
+                <span><strong>{{ 'onboarding.onboardingWizard.quieroVenderHoy' | translate }}</strong><small>{{ 'onboarding.onboardingWizard.creaAlgoQueVendesConfirma' | translate }}</small></span>
               </button>
               <button type="button" class="choice-card" [class.is-selected]="goal === 'import_excel'"
                       [attr.aria-pressed]="goal === 'import_excel'" (click)="selectGoal('import_excel')">
                 <span class="choice-icon choice-icon--green" aria-hidden="true"><i class="pi pi-file-excel"></i></span>
-                <span><strong>Tengo mis productos en Excel</strong><small>Ve al importador, revisa tus datos y vuelve para dejar listo el cobro.</small></span>
+                <span><strong>{{ 'onboarding.onboardingWizard.tengoMisProductosEnExcel' | translate }}</strong><small>{{ 'onboarding.onboardingWizard.veAlImportadorRevisaTus' | translate }}</small></span>
               </button>
               <button type="button" class="choice-card" [class.is-selected]="goal === 'explore'"
                       [attr.aria-pressed]="goal === 'explore'" (click)="selectGoal('explore')">
                 <span class="choice-icon choice-icon--blue" aria-hidden="true"><i class="pi pi-compass"></i></span>
-                <span><strong>Prefiero explorar primero</strong><small>Conoce Katuq sin configurar nada ahora. Te mostraremos cómo continuar después.</small></span>
+                <span><strong>{{ 'onboarding.onboardingWizard.prefieroExplorarPrimero' | translate }}</strong><small>{{ 'onboarding.onboardingWizard.conoceKatuqSinConfigurarNada' | translate }}</small></span>
               </button>
             </div>
           </ng-container>
 
           <ng-container *ngSwitchCase="'context'">
-            <p class="step-intro">No hay respuestas técnicas. Esto nos ayuda a mostrarte solamente lo que necesitas.</p>
+            <p class="step-intro">{{ 'onboarding.onboardingWizard.noHayRespuestasTecnicasEsto' | translate }}</p>
 
             <fieldset class="question-block">
-              <legend>¿Qué vendes?</legend>
-              <p>Así sabremos si necesitas controlar existencias.</p>
+              <legend>{{ 'onboarding.onboardingWizard.queVendes' | translate }}</legend>
+              <p>{{ 'onboarding.onboardingWizard.asiSabremosSiNecesitasControlar' | translate }}</p>
               <div class="segmented-grid">
-                <button type="button" [class.is-selected]="offering === 'products'" [attr.aria-pressed]="offering === 'products'" (click)="selectOffering('products')">Productos</button>
-                <button type="button" [class.is-selected]="offering === 'services'" [attr.aria-pressed]="offering === 'services'" (click)="selectOffering('services')">Servicios</button>
-                <button type="button" [class.is-selected]="offering === 'both'" [attr.aria-pressed]="offering === 'both'" (click)="selectOffering('both')">Ambos</button>
-                <button type="button" [class.is-selected]="offering === 'unknown'" [attr.aria-pressed]="offering === 'unknown'" (click)="selectOffering('unknown')">Aún no estoy seguro</button>
+                <button type="button" [class.is-selected]="offering === 'products'" [attr.aria-pressed]="offering === 'products'" (click)="selectOffering('products')">{{ 'onboarding.onboardingWizard.productos' | translate }}</button>
+                <button type="button" [class.is-selected]="offering === 'services'" [attr.aria-pressed]="offering === 'services'" (click)="selectOffering('services')">{{ 'onboarding.onboardingWizard.servicios' | translate }}</button>
+                <button type="button" [class.is-selected]="offering === 'both'" [attr.aria-pressed]="offering === 'both'" (click)="selectOffering('both')">{{ 'onboarding.onboardingWizard.ambos' | translate }}</button>
+                <button type="button" [class.is-selected]="offering === 'unknown'" [attr.aria-pressed]="offering === 'unknown'" (click)="selectOffering('unknown')">{{ 'onboarding.onboardingWizard.aunNoEstoySeguro' | translate }}</button>
               </div>
             </fieldset>
 
             <fieldset class="question-block">
-              <legend>¿Dónde recibes pedidos normalmente?</legend>
-              <p>Luego podrás activar otros canales.</p>
+              <legend>{{ 'onboarding.onboardingWizard.dondeRecibesPedidosNormalmente' | translate }}</legend>
+              <p>{{ 'onboarding.onboardingWizard.luegoPodrasActivarOtrosCanales' | translate }}</p>
               <div class="segmented-grid">
-                <button type="button" [class.is-selected]="channel === 'local'" [attr.aria-pressed]="channel === 'local'" (click)="selectChannel('local')">En mi local</button>
-                <button type="button" [class.is-selected]="channel === 'social'" [attr.aria-pressed]="channel === 'social'" (click)="selectChannel('social')">WhatsApp o redes</button>
-                <button type="button" [class.is-selected]="channel === 'delivery'" [attr.aria-pressed]="channel === 'delivery'" (click)="selectChannel('delivery')">Pedidos o domicilios</button>
-                <button type="button" [class.is-selected]="channel === 'unknown'" [attr.aria-pressed]="channel === 'unknown'" (click)="selectChannel('unknown')">Todavía no vendo</button>
+                <button type="button" [class.is-selected]="channel === 'local'" [attr.aria-pressed]="channel === 'local'" (click)="selectChannel('local')">{{ 'onboarding.onboardingWizard.enMiLocal' | translate }}</button>
+                <button type="button" [class.is-selected]="channel === 'social'" [attr.aria-pressed]="channel === 'social'" (click)="selectChannel('social')">{{ 'onboarding.onboardingWizard.whatsappORedes' | translate }}</button>
+                <button type="button" [class.is-selected]="channel === 'delivery'" [attr.aria-pressed]="channel === 'delivery'" (click)="selectChannel('delivery')">{{ 'onboarding.onboardingWizard.pedidosODomicilios' | translate }}</button>
+                <button type="button" [class.is-selected]="channel === 'unknown'" [attr.aria-pressed]="channel === 'unknown'" (click)="selectChannel('unknown')">{{ 'onboarding.onboardingWizard.todaviaNoVendo' | translate }}</button>
               </div>
             </fieldset>
 
             <fieldset class="question-block" *ngIf="offering && offering !== 'services' && offering !== 'unknown'">
-              <legend>¿Quieres llevar la cuenta de cuántas unidades te quedan?</legend>
-              <p>Puedes responder “Ahora no” y activarlo más adelante.</p>
+              <legend>{{ 'onboarding.onboardingWizard.quieresLlevarLaCuentaDe' | translate }}</legend>
+              <p>{{ 'onboarding.onboardingWizard.puedesResponderAhoraNoY' | translate }}</p>
               <div class="segmented-grid segmented-grid--two">
-                <button type="button" [class.is-selected]="inventoryEnabled === true" [attr.aria-pressed]="inventoryEnabled === true" (click)="selectInventory(true)">Sí, quiero controlarlas</button>
-                <button type="button" [class.is-selected]="inventoryEnabled === false" [attr.aria-pressed]="inventoryEnabled === false" (click)="selectInventory(false)">Ahora no</button>
+                <button type="button" [class.is-selected]="inventoryEnabled === true" [attr.aria-pressed]="inventoryEnabled === true" (click)="selectInventory(true)">{{ 'onboarding.onboardingWizard.siQuieroControlarlas' | translate }}</button>
+                <button type="button" [class.is-selected]="inventoryEnabled === false" [attr.aria-pressed]="inventoryEnabled === false" (click)="selectInventory(false)">{{ 'onboarding.onboardingWizard.ahoraNo' | translate }}</button>
               </div>
             </fieldset>
 
             <div class="follow-up" *ngIf="inventoryEnabled === true">
-              <h3>¿Dónde guardas tus productos?</h3>
-              <p>Katuq llama “bodega” a este lugar. Puede ser tu local, casa o almacén.</p>
+              <h3>{{ 'onboarding.onboardingWizard.dondeGuardasTusProductos' | translate }}</h3>
+              <p>{{ 'onboarding.onboardingWizard.katuqLlamaBodegaAEste' | translate }}</p>
               <div class="form-grid">
                 <div class="field field--full">
-                  <label for="warehouse-name">Nombre del lugar</label>
+                  <label for="warehouse-name">{{ 'onboarding.onboardingWizard.nombreDelLugar' | translate }}</label>
                   <input id="warehouse-name" type="text" autocomplete="organization"
                          [(ngModel)]="warehouseName" (ngModelChange)="onDraftChange()"
-                         [ngModelOptions]="{ standalone: true }" placeholder="Ej. Local principal">
+                         [ngModelOptions]="{ standalone: true }" [placeholder]="'onboarding.onboardingWizard.ejLocalPrincipal' | translate">
                 </div>
                 <div class="field">
-                  <label for="warehouse-city">Ciudad <span>opcional</span></label>
+                  <label for="warehouse-city">{{ 'onboarding.onboardingWizard.ciudad' | translate }} <span>{{ 'onboarding.onboardingWizard.opcional' | translate }}</span></label>
                   <input id="warehouse-city" type="text" autocomplete="address-level2"
                          [(ngModel)]="warehouseCity" (ngModelChange)="onDraftChange()"
-                         [ngModelOptions]="{ standalone: true }" placeholder="Ej. Bogotá">
+                         [ngModelOptions]="{ standalone: true }" [placeholder]="'onboarding.onboardingWizard.ejBogota' | translate">
                 </div>
                 <div class="field">
-                  <label for="low-stock">Avísame cuando queden menos de</label>
+                  <label for="low-stock">{{ 'onboarding.onboardingWizard.avisameCuandoQuedenMenosDe' | translate }}</label>
                   <input id="low-stock" type="number" min="0" step="1" inputmode="numeric"
                          [(ngModel)]="lowStockThreshold" (ngModelChange)="onDraftChange()"
                          [ngModelOptions]="{ standalone: true }" aria-describedby="low-stock-help">
-                  <small id="low-stock-help">Déjalo vacío si prefieres configurar el aviso después.</small>
+                  <small id="low-stock-help">{{ 'onboarding.onboardingWizard.dejaloVacioSiPrefieresConfigurar' | translate }}</small>
                 </div>
               </div>
             </div>
@@ -169,53 +169,53 @@
             <div class="success-panel" *ngIf="readiness?.product_ready">
               <i class="pi pi-check-circle" aria-hidden="true"></i>
               <div>
-                <strong>Ya encontramos algo listo para vender</strong>
-                <p *ngIf="!needsImportedInventory">No necesitas crearlo otra vez. Puedes continuar con el cobro.</p>
-                <p *ngIf="needsImportedInventory">Ahora carga cuántas unidades tienes para que la primera venta no deje existencias incorrectas.</p>
+                <strong>{{ 'onboarding.onboardingWizard.yaEncontramosAlgoListoPara' | translate }}</strong>
+                <p *ngIf="!needsImportedInventory">{{ 'onboarding.onboardingWizard.noNecesitasCrearloOtraVez' | translate }}</p>
+                <p *ngIf="needsImportedInventory">{{ 'onboarding.onboardingWizard.ahoraCargaCuantasUnidadesTienes' | translate }}</p>
               </div>
             </div>
 
             <div class="import-panel" *ngIf="needsImportedInventory">
               <span class="large-icon" aria-hidden="true"><i class="pi pi-box"></i></span>
-              <div><strong>Faltan las existencias iniciales</strong><p>Usa la plantilla de inventario; solo se actualizarán cantidades de productos existentes.</p></div>
+              <div><strong>{{ 'onboarding.onboardingWizard.faltanLasExistenciasIniciales' | translate }}</strong><p>{{ 'onboarding.onboardingWizard.usaLaPlantillaDeInventario' | translate }}</p></div>
               <button type="button" class="ow-btn" (click)="openInventoryImporter()">
-                <i class="pi pi-external-link" aria-hidden="true"></i> Cargar existencias
+                <i class="pi pi-external-link" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.cargarExistencias' | translate }}
               </button>
             </div>
 
             <ng-container *ngIf="!readiness?.product_ready && isImportRoute">
-              <p class="step-intro">Abre el catálogo, usa “Importar productos” y vuelve aquí. Katuq comprobará el resultado real antes de continuar.</p>
+              <p class="step-intro">{{ 'onboarding.onboardingWizard.abreElCatalogoUsaImportar' | translate }}</p>
               <div class="import-panel">
                 <span class="large-icon" aria-hidden="true"><i class="pi pi-file-excel"></i></span>
-                <div><strong>Excel o CSV</strong><p>Podrás revisar las columnas y los errores antes de confirmar.</p></div>
+                <div><strong>{{ 'onboarding.onboardingWizard.excelOCsv' | translate }}</strong><p>{{ 'onboarding.onboardingWizard.podrasRevisarLasColumnasY' | translate }}</p></div>
                 <button type="button" class="ow-btn" (click)="openImporter()">
-                  <i class="pi pi-external-link" aria-hidden="true"></i> Importar productos
+                  <i class="pi pi-external-link" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.importarProductos' | translate }}
                 </button>
               </div>
-              <p class="helper-copy" *ngIf="importOpened">Cuando termines, regresa y pulsa “Ya importé, verificar”.</p>
+              <p class="helper-copy" *ngIf="importOpened">{{ 'onboarding.onboardingWizard.cuandoTerminesRegresaYPulsa' | translate }}</p>
             </ng-container>
 
             <ng-container *ngIf="!readiness?.product_ready && !isImportRoute">
-              <p class="step-intro">Empieza con una sola cosa. Los detalles avanzados se pueden completar después.</p>
+              <p class="step-intro">{{ 'onboarding.onboardingWizard.empiezaConUnaSolaCosa' | translate }}</p>
 
               <fieldset class="question-block" *ngIf="productTypeNeedsChoice">
-                <legend>¿Qué quieres crear primero?</legend>
+                <legend>{{ 'onboarding.onboardingWizard.queQuieresCrearPrimero' | translate }}</legend>
                 <div class="segmented-grid segmented-grid--two">
-                  <button type="button" [class.is-selected]="product.tipo === 'producto'" [attr.aria-pressed]="product.tipo === 'producto'" (click)="selectProductType('producto')">Un producto</button>
-                  <button type="button" [class.is-selected]="product.tipo === 'servicio'" [attr.aria-pressed]="product.tipo === 'servicio'" (click)="selectProductType('servicio')">Un servicio</button>
+                  <button type="button" [class.is-selected]="product.tipo === 'producto'" [attr.aria-pressed]="product.tipo === 'producto'" (click)="selectProductType('producto')">{{ 'onboarding.onboardingWizard.unProducto' | translate }}</button>
+                  <button type="button" [class.is-selected]="product.tipo === 'servicio'" [attr.aria-pressed]="product.tipo === 'servicio'" (click)="selectProductType('servicio')">{{ 'onboarding.onboardingWizard.unServicio' | translate }}</button>
                 </div>
               </fieldset>
 
               <div class="form-grid product-form">
                 <div class="field field--full">
-                  <label for="product-name">Nombre del {{ productNoun }}</label>
+                  <label for="product-name">{{ 'onboarding.onboardingWizard.nombreDel' | translate:{productNoun: productNoun} }}</label>
                   <input id="product-name" type="text" autocomplete="off" maxlength="120"
                          [(ngModel)]="product.nombre" (ngModelChange)="onDraftChange()"
                          [ngModelOptions]="{ standalone: true }"
-                         [placeholder]="selectedProductType === 'servicio' ? 'Ej. Corte de cabello' : 'Ej. Camiseta blanca'">
+                         [placeholder]="selectedProductType === 'servicio' ? ('onboarding.onboardingWizard.ejCorteDeCabello' | translate) : ('onboarding.onboardingWizard.ejCamisetaBlanca' | translate)">
                 </div>
                 <div class="field">
-                  <label for="product-price">Precio de venta</label>
+                  <label for="product-price">{{ 'onboarding.onboardingWizard.precioDeVenta' | translate }}</label>
                   <div class="money-input"><span aria-hidden="true">$</span>
                     <input id="product-price" type="text" inputmode="decimal" maxlength="20" autocomplete="off"
                            [(ngModel)]="product.precio" (ngModelChange)="onDraftChange()"
@@ -223,33 +223,33 @@
                   </div>
                 </div>
                 <div class="field" *ngIf="tracksInitialInventory">
-                  <label for="initial-quantity">¿Cuántos tienes hoy?</label>
+                  <label for="initial-quantity">{{ 'onboarding.onboardingWizard.cuantosTienesHoy' | translate }}</label>
                   <input id="initial-quantity" type="number" min="1" step="1" inputmode="numeric"
                          [(ngModel)]="initialQuantity" (ngModelChange)="onDraftChange()"
                          [ngModelOptions]="{ standalone: true }"
                          [attr.aria-invalid]="validInitialQuantity ? null : true"
                          aria-describedby="initial-quantity-help">
-                  <small id="initial-quantity-help">Usaremos esta cantidad para que tu primera venta no deje existencias negativas.</small>
+                  <small id="initial-quantity-help">{{ 'onboarding.onboardingWizard.usaremosEstaCantidadParaQue' | translate }}</small>
                 </div>
                 <div class="field field-help">
                   <i class="pi pi-image" aria-hidden="true"></i>
-                  <span><strong>La foto es opcional</strong> Puedes agregarla después desde tu catálogo.</span>
+                  <span><strong>{{ 'onboarding.onboardingWizard.laFotoEsOpcional' | translate }}</strong> {{ 'onboarding.onboardingWizard.puedesAgregarlaDespuesDesdeTu' | translate }}</span>
                 </div>
               </div>
             </ng-container>
           </ng-container>
 
           <ng-container *ngSwitchCase="'payment'">
-            <p class="step-intro">Confirma una forma que ya usas o agrega otra. Esto solo registra cómo te pagaron; no conecta ni mueve dinero.</p>
+            <p class="step-intro">{{ 'onboarding.onboardingWizard.confirmaUnaFormaQueYa' | translate }}</p>
             <div class="notice notice--warning" *ngIf="paymentNeedsManualActivation" role="alert">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
-              <span>Encontramos una forma de cobro desactivada con ese nombre.
-                <button type="button" class="inline-link" (click)="managePaymentMethods()">Revisar métodos de pago</button>
+              <span>{{ 'onboarding.onboardingWizard.encontramosUnaFormaDeCobro' | translate }}
+                <button type="button" class="inline-link" (click)="managePaymentMethods()">{{ 'onboarding.onboardingWizard.revisarMetodosDePago' | translate }}</button>
               </span>
             </div>
             <div class="success-panel" *ngIf="readiness?.payment_ready">
               <i class="pi pi-check-circle" aria-hidden="true"></i>
-              <div><strong>Ya tienes una forma de cobro configurada</strong><p>Puedes continuar o agregar otra de la lista.</p></div>
+              <div><strong>{{ 'onboarding.onboardingWizard.yaTienesUnaFormaDe' | translate }}</strong><p>{{ 'onboarding.onboardingWizard.puedesContinuarOAgregarOtra' | translate }}</p></div>
             </div>
             <div class="payment-grid">
               <button *ngFor="let option of paymentOptions" type="button" class="payment-choice"
@@ -261,12 +261,12 @@
               </button>
             </div>
             <div class="custom-payment">
-              <label for="custom-payment">¿Usas otra forma?</label>
+              <label for="custom-payment">{{ 'onboarding.onboardingWizard.usasOtraForma' | translate }}</label>
               <div>
                 <input id="custom-payment" type="text" maxlength="60" [(ngModel)]="customPayment"
-                       [ngModelOptions]="{ standalone: true }" placeholder="Ej. Bono o convenio"
+                       [ngModelOptions]="{ standalone: true }" [placeholder]="'onboarding.onboardingWizard.ejBonoOConvenio' | translate"
                        (keyup.enter)="addCustomPayment()">
-                <button type="button" class="ow-btn ow-btn--sec" [disabled]="!customPayment.trim()" (click)="addCustomPayment()">Agregar</button>
+                <button type="button" class="ow-btn ow-btn--sec" [disabled]="!customPayment.trim()" (click)="addCustomPayment()">{{ 'onboarding.onboardingWizard.agregar' | translate }}</button>
               </div>
             </div>
             <div class="selected-chips" *ngIf="paymentMethods.length">
@@ -278,58 +278,58 @@
             <ng-container *ngIf="isExploreRoute">
               <div class="result-hero">
                 <span class="large-icon large-icon--purple" aria-hidden="true"><i class="pi pi-compass"></i></span>
-                <h3>Explora con tranquilidad</h3>
-                <p>Tu avance queda guardado. En el inicio verás un acceso claro para continuar cuando estés listo.</p>
+                <h3>{{ 'onboarding.onboardingWizard.exploraConTranquilidad' | translate }}</h3>
+                <p>{{ 'onboarding.onboardingWizard.tuAvanceQuedaGuardadoEn' | translate }}</p>
               </div>
             </ng-container>
 
             <ng-container *ngIf="!isExploreRoute">
               <div class="checking" *ngIf="isCheckingReadiness" role="status">
-                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Comprobando tu configuración…
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.comprobandoTuConfiguracion' | translate }}
               </div>
               <div class="result-hero" *ngIf="!isCheckingReadiness">
                 <span class="large-icon" [class.large-icon--success]="readiness?.ready_to_sell" aria-hidden="true">
                   <i [class]="readiness?.ready_to_sell ? 'pi pi-check' : 'pi pi-list-check'"></i>
                 </span>
-                <h3>{{ readiness?.ready_to_sell ? '¡Ya puedes registrar una venta!' : 'Estamos a un paso de terminar' }}</h3>
-                <p>{{ readiness?.ready_to_sell ? 'El sistema confirmó producto, cobro y numeración.' : 'Revisa lo pendiente. No diremos que está listo hasta confirmarlo.' }}</p>
+                <h3>{{ readiness?.ready_to_sell ? ('onboarding.onboardingWizard.yaPuedesRegistrarUnaVenta' | translate) : ('onboarding.onboardingWizard.estamosAUnPasoDe' | translate) }}</h3>
+                <p>{{ readiness?.ready_to_sell ? ('onboarding.onboardingWizard.elSistemaConfirmoProductoCobro' | translate) : ('onboarding.onboardingWizard.revisaLoPendienteNoDiremos' | translate) }}</p>
               </div>
 
               <ul class="readiness-list" *ngIf="!isCheckingReadiness">
                 <li *ngFor="let row of readinessRows" [class.is-ready]="row.ready">
                   <i [class]="row.ready ? 'pi pi-check-circle' : 'pi pi-clock'" aria-hidden="true"></i>
                   <span>{{ row.label }}</span>
-                  <strong>{{ row.ready ? 'Listo' : 'Pendiente' }}</strong>
+                  <strong>{{ row.ready ? ('onboarding.onboardingWizard.listo' | translate) : ('onboarding.onboardingWizard.pendiente' | translate) }}</strong>
                 </li>
               </ul>
 
               <!-- D-324: la tienda en línea en 1 clic -->
               <section class="tienda-1clic" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && tiendaHabilitada" aria-labelledby="tienda-1clic-titulo">
                 <ng-container *ngIf="!tiendaInicial">
-                  <span class="tienda-1clic__etiqueta">Tu tienda en línea</span>
-                  <h4 id="tienda-1clic-titulo">Publícala ahora con lo que ya cargaste</h4>
-                  <p>Queda en tu propia dirección de Katuq, lista para recibir pedidos. Cobras como elegiste y la puedes cambiar cuando quieras.</p>
-                  <div class="tienda-1clic__tipos" role="radiogroup" aria-label="¿Cómo vendes?">
+                  <span class="tienda-1clic__etiqueta">{{ 'onboarding.onboardingWizard.tuTiendaEnLinea' | translate }}</span>
+                  <h4 id="tienda-1clic-titulo">{{ 'onboarding.onboardingWizard.publicalaAhoraConLoQue' | translate }}</h4>
+                  <p>{{ 'onboarding.onboardingWizard.quedaEnTuPropiaDireccion' | translate }}</p>
+                  <div class="tienda-1clic__tipos" role="radiogroup" [attr.aria-label]="'onboarding.onboardingWizard.comoVendes' | translate">
                     <button type="button" *ngFor="let t of tiposNegocio" role="radio"
                       [class.is-selected]="tipoNegocio === t.id" [attr.aria-checked]="tipoNegocio === t.id"
-                      (click)="tipoNegocio = t.id">{{ t.label }}</button>
+                      (click)="tipoNegocio = t.id">{{ t.label | translate }}</button>
                   </div>
                   <button type="button" class="tienda-1clic__publicar" (click)="publicarTienda()" [disabled]="publicandoTienda">
                     <i [class]="publicandoTienda ? 'pi pi-spin pi-spinner' : 'pi pi-globe'" aria-hidden="true"></i>
-                    {{ publicandoTienda ? 'Publicando tu tienda…' : 'Publicar mi tienda' }}
+                    {{ publicandoTienda ? ('onboarding.onboardingWizard.publicandoTuTienda' | translate) : ('onboarding.onboardingWizard.publicarMiTienda' | translate) }}
                   </button>
                 </ng-container>
 
                 <ng-container *ngIf="tiendaInicial">
-                  <span class="tienda-1clic__etiqueta tienda-1clic__etiqueta--ok"><i class="pi pi-check" aria-hidden="true"></i> Tu tienda está publicada</span>
-                  <h4 id="tienda-1clic-titulo">Compártela y recibe tu primer pedido</h4>
+                  <span class="tienda-1clic__etiqueta tienda-1clic__etiqueta--ok"><i class="pi pi-check" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.tuTiendaEstaPublicada' | translate }}</span>
+                  <h4 id="tienda-1clic-titulo">{{ 'onboarding.onboardingWizard.compartelaYRecibeTuPrimer' | translate }}</h4>
                   <a class="tienda-1clic__url" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener">{{ tiendaInicial.urlPublica }}</a>
                   <div class="tienda-1clic__acciones">
-                    <a class="tienda-1clic__publicar" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener"><i class="pi pi-external-link" aria-hidden="true"></i> Verla</a>
-                    <button type="button" class="ow-btn ow-btn--sec" (click)="compartirTiendaPorWhatsApp()"><i class="pi pi-whatsapp" aria-hidden="true"></i> Compartir por WhatsApp</button>
-                    <button type="button" class="ow-btn ow-btn--sec" (click)="copiarTextoInstagram()"><i class="pi pi-copy" aria-hidden="true"></i> {{ textoCopiado ? 'Copiado' : 'Copiar para Instagram' }}</button>
+                    <a class="tienda-1clic__publicar" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener"><i class="pi pi-external-link" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.verla' | translate }}</a>
+                    <button type="button" class="ow-btn ow-btn--sec" (click)="compartirTiendaPorWhatsApp()"><i class="pi pi-whatsapp" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.compartirPorWhatsapp' | translate }}</button>
+                    <button type="button" class="ow-btn ow-btn--sec" (click)="copiarTextoInstagram()"><i class="pi pi-copy" aria-hidden="true"></i> {{ textoCopiado ? ('onboarding.onboardingWizard.copiado' | translate) : ('onboarding.onboardingWizard.copiarParaInstagram' | translate) }}</button>
                   </div>
-                  <a class="tienda-1clic__mas" routerLink="/productos/crear">Agregar más productos</a>
+                  <a class="tienda-1clic__mas" routerLink="/productos/crear">{{ 'onboarding.onboardingWizard.agregarMasProductos' | translate }}</a>
                 </ng-container>
 
                 <p class="tienda-1clic__error" *ngIf="errorTienda" role="alert">{{ errorTienda }}</p>
@@ -337,20 +337,20 @@
 
               <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && !planPremium">
                 <div>
-                  <span>Empiezas en el plan Gratis</span>
-                  <strong>15 pedidos al mes, sin tarjeta y con tus datos siempre disponibles.</strong>
+                  <span>{{ 'onboarding.onboardingWizard.empiezasEnElPlanGratis' | translate }}</span>
+                  <strong>{{ 'onboarding.onboardingWizard.15PedidosAlMesSin' | translate }}</strong>
                 </div>
-                <a routerLink="/pricing">Conocer Premium</a>
+                <a routerLink="/pricing">{{ 'onboarding.onboardingWizard.conocerPremium' | translate }}</a>
               </div>
               <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && planPremium">
                 <div>
-                  <span>Tienes Premium activo</span>
-                  <strong>Todas las funciones de Katuq, sin tope de pedidos.</strong>
+                  <span>{{ 'onboarding.onboardingWizard.tienesPremiumActivo' | translate }}</span>
+                  <strong>{{ 'onboarding.onboardingWizard.todasLasFuncionesDeKatuq' | translate }}</strong>
                 </div>
               </div>
 
               <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="ow-btn ow-btn--sec verify-button" (click)="retryReadiness()">
-                <i class="pi pi-refresh" aria-hidden="true"></i> Verificar de nuevo
+                <i class="pi pi-refresh" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.verificarDeNuevo' | translate }}
               </button>
 
               <div class="result-actions" *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell && missingActionLabel">
@@ -361,10 +361,10 @@
 
               <div class="result-actions" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell">
                 <button type="button" class="ow-btn ow-btn--sec" (click)="viewProducts()">
-                  <i class="pi pi-box" aria-hidden="true"></i> Ver mis productos
+                  <i class="pi pi-box" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.verMisProductos' | translate }}
                 </button>
                 <button type="button" class="ow-btn ow-btn--sec" (click)="continueLater()">
-                  <i class="pi pi-clock" aria-hidden="true"></i> Seguir después
+                  <i class="pi pi-clock" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.seguirDespues' | translate }}
                 </button>
               </div>
             </ng-container>
@@ -376,12 +376,12 @@
     <footer class="wizard-footer">
       <div class="footer-shell">
         <button type="button" class="ow-btn ow-btn--sec" (click)="goBack()" [disabled]="stepPosition === 1 || isSaving">
-          <i class="pi pi-arrow-left" aria-hidden="true"></i> Atrás
+          <i class="pi pi-arrow-left" aria-hidden="true"></i> {{ 'onboarding.onboardingWizard.atras' | translate }}
         </button>
         <span class="footer-hint" *ngIf="!canSubmitCurrentStep">{{ nextHint }}</span>
         <button type="button" class="ow-btn" (click)="goNext()" [disabled]="!canSubmitCurrentStep">
           <i *ngIf="isSaving" class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-          <span>{{ isSaving ? 'Guardando…' : nextLabel }}</span>
+          <span>{{ isSaving ? ('onboarding.onboardingWizard.guardando' | translate) : nextLabel }}</span>
           <i *ngIf="!isSaving" class="pi pi-arrow-right" aria-hidden="true"></i>
         </button>
       </div>

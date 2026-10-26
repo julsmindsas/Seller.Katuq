@@ -531,7 +531,7 @@
       display: block;
       @include pixelstrap-size(100%, 100%);
       border-radius: 15px;
-      background: rgba($dark-color, 0.2);
+      background: rgba(44, 50, 63, 0.2);
       z-index: 2;
       transition: 0.5s;
       opacity: 0;

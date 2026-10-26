@@ -7,6 +7,11 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 const modalTs = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.ts');
 const modalHtml = read('src/app/shared/components/upgrade-modal/upgrade-modal.component.html');
+// D-540 (IDI-B01b): el modal de pago pasa sus textos por el traductor; el texto en español vive en
+// es.json bajo la clave que pide la plantilla (puede llevar variables alrededor).
+const esDic = JSON.parse(read('src/assets/i18n/es.json'));
+const muestraTexto = (html, texto) => html.includes(texto)
+  || Object.entries(esDic).some(([clave, valor]) => typeof valor === 'string' && valor.includes(texto) && html.includes(`'${clave}'`));
 const guard = read('src/app/shared/guards/subscription.guard.ts');
 const appRoutes = read('src/app/app-routing.module.ts');
 const childRoutes = read('src/app/shared/routes/routes.ts');
@@ -23,9 +28,9 @@ assert.ok(!modalHtml.includes('Omitir tarjeta'), 'la UI no debe ofrecer Premium 
 assert.ok(modalTs.includes('getPaymentStatus'), 'el modal debe esperar confirmación del webhook');
 assert.ok(modalHtml.includes("step === 'pending'"), 'la UI debe explicar el estado pendiente');
 assert.ok(modalTs.includes('initialAmountCOP'), 'el modal debe exponer el monto exacto calculado por backend');
-assert.ok(modalHtml.includes('Pago real con Wompi'), 'la UI debe advertir claramente cuando el cobro mueve dinero real');
-assert.ok(modalHtml.includes('No mueve dinero real'), 'la UI debe diferenciar Sandbox del ambiente productivo');
-assert.ok(modalHtml.includes('Correo para el comprobante') && modalHtml.includes('Aquí llegará el comprobante PDF'), 'el usuario debe elegir dónde recibir el comprobante');
+assert.ok(muestraTexto(modalHtml, 'Pago real con Wompi'), 'la UI debe advertir claramente cuando el cobro mueve dinero real');
+assert.ok(muestraTexto(modalHtml, 'No mueve dinero real'), 'la UI debe diferenciar Sandbox del ambiente productivo');
+assert.ok(muestraTexto(modalHtml, 'Correo para el comprobante') && muestraTexto(modalHtml, 'Aquí llegará el comprobante PDF'), 'el usuario debe elegir dónde recibir el comprobante');
 assert.ok(subscriptionService.includes('getPaymentConfig('), 'el frontend debe obtener del backend el ambiente público de Wompi');
 assert.ok(modalTs.includes("'https://sandbox.wompi.co/v1'"), 'sandbox debe estar permitido explícitamente');
 assert.ok(modalTs.includes("'https://production.wompi.co/v1'"), 'producción debe estar permitida explícitamente');
@@ -48,16 +53,19 @@ const dropshippingBlock = childRoutes.slice(dropshippingStart, dropshippingStart
 assert.ok(dropshippingBlock.includes('SubscriptionGuard'), 'dropshipping debe usar SubscriptionGuard');
 assert.ok(dropshippingBlock.includes('requiresPremium: true'), 'dropshipping debe ser Premium');
 
-assert.ok(onboarding.includes('Empiezas en el plan Gratis'), 'el cierre debe confirmar el plan Gratis');
+// IDI-B12b: la plantilla del asistente pide la clave y es.json conserva el texto.
+assert.ok(muestraTexto(onboarding, 'Empiezas en el plan Gratis'), 'el cierre debe confirmar el plan Gratis');
 assert.ok(welcome.includes('Haz tu primera venta en Katuq'), 'el inicio debe guiar a la primera venta');
 assert.ok(welcome.includes('0 de {{ freeOrdersLimit }} pedidos usados') || welcome.includes('{{ freeOrdersUsed }} de {{ freeOrdersLimit }} pedidos usados'), 'el inicio debe mostrar uso Gratis');
 
 assert.ok(registrationTs.includes("= 'welcome'"), 'el registro no debe comenzar obligatoriamente en el video');
 assert.ok(registrationTs.includes('startFreeRegistration()'), 'debe existir un camino de registro directo');
 assert.ok(registrationTs.includes("['video', 'welcome', 'quickstart-success']"), 'un registro anterior no debe dejar una pantalla de éxito vacía');
-assert.ok(registrationHtml.includes('Crear mi cuenta Gratis'), 'el CTA principal debe ser crear la cuenta Gratis');
-assert.ok(registrationHtml.includes('El diagnóstico es opcional'), 'la UI debe decir que el diagnóstico es opcional');
-assert.ok(registrationHtml.includes('Solo necesitamos estos 4 datos'), 'el registro directo debe explicar su alcance');
+// IDI-B12c: el registro pide la clave y es.json conserva el texto. El texto de «diagnóstico opcional» y
+// «4 datos» ya no existía desde el rediseño del registro (5 datos, diagnóstico como enlace secundario).
+assert.ok(muestraTexto(registrationHtml, 'Crear mi cuenta Gratis'), 'el CTA principal debe ser crear la cuenta Gratis');
+assert.ok(muestraTexto(registrationHtml, 'Haz el diagnóstico de 5 minutos'), 'el diagnóstico debe ser un camino secundario opcional');
+assert.ok(muestraTexto(registrationHtml, 'Son 5 datos. Toma menos de 1 minuto.'), 'el registro directo debe explicar su alcance');
 assert.ok(!quickStart.includes('Se requieren respuestas del diagnóstico'), 'el servicio no debe bloquear el registro sin diagnóstico');
 
 console.log('subscription-onboarding.contract.test.js: OK');

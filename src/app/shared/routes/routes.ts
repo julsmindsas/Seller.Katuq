@@ -196,6 +196,16 @@ export const content: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    // «Traer mi tienda» (F5-30): módulo lazy; la bandera storeMigrationImport y el rol los exige
+    // MigracionTiendaGuard dentro de la ruta.
+    path: "migrar-tienda",
+    loadChildren: () =>
+      import("../../components/migracion-tienda/migracion-tienda.routing").then(
+        (m) => m.MIGRACION_TIENDA_ROUTES,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "produccion",
     loadChildren: () =>
       import("../../components/produccion/produccion.module").then(

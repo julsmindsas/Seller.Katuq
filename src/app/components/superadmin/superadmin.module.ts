@@ -6,11 +6,13 @@ import { RouterModule } from '@angular/router';
 import { SuperadminCampanasComponent } from './superadmin-campanas/superadmin-campanas.component';
 import { SuperadminRoutingModule } from './superadmin-routing.module';
 
+import { TranslateModule } from '@ngx-translate/core';
 @NgModule({
   declarations: [
     SuperadminCampanasComponent
   ],
   imports: [
+    TranslateModule,
     CommonModule,
     FormsModule,
     RouterModule,

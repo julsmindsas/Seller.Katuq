@@ -24,7 +24,7 @@ Lo fija la prueba `importStore.routes.contract.test.js` (tarea 1.1) antes de imp
 | `IMPORT_IN_PROGRESS` | 409 | El candado de la empresa está tomado (`products`, `customers`) |
 | `TOO_MANY` | 413 | Se pasa el límite de la ruta (tabla de abajo) |
 
-Mientras no entren las escrituras (tareas 6.1 y 7.1), `products` y `redirects` validan, revisan la guarda y el sitio, y responden 501 `NOT_AVAILABLE_YET`.
+`products` y `redirects` escriben (tareas 6.1 y 7.1).
 
 Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote ya había terminado, recibe su resultado con `replayed: true`.
 
@@ -68,13 +68,14 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 { "success": true, "migrationId": "…", "lot": 3, "replayed": false,
   "products": [{ "key": "camiseta-basica", "row": 2, "action": "created", "cd": "…", "referencia": "CAM-01" },
                { "key": "gorra", "row": 9, "action": "skipped", "reason": "ALREADY_MIGRATED", "cd": "…" }],
-  "inventory": { "warehouse": "BOD-001", "loaded": 22, "notLoaded": 3, "failed": [{ "key": "…", "code": "INVENTORY_FAILED" }] },
+  "inventory": { "warehouse": "BOD-001", "loaded": 22, "notLoaded": 3, "failed": [{ "key": "…", "referencia": "CAM-01", "code": "INVENTORY_FAILED" }] },
   "photos": { "valid": 61, "rejected": 2, "overLimit": 4 }, "categories": { "created": ["Camisetas"] },
   "issues": [{ "row": 14, "key": "…", "code": "PHOTO_REJECTED", "message": "…" }], "durationMs": 9100 }
 ```
 
 - **`action`:** `created`, `updated` o `skipped`.
 - **`reason`:** `EXISTS`, `ALREADY_MIGRATED` (devuelve `cd`), `AMBIGUOUS_REFERENCE`, `TOO_MANY_AXES`, `ARCHIVED`, `GIFT_CARD`, `DUPLICATED_IN_FILE` o `INVALID`.
+- **`inventory`:** solo cuenta los productos creados (o, en `upsert`, los existentes con `replaceExistingStock`). `notLoaded` = sin control de existencias (`NOT_TRACKED`) o sin unidades. Un conteo fallido no tumba el lote: el producto queda creado y sale `INVENTORY_FAILED` (también en `issues`); sus existencias se cargan con el importador de existencias.
 - **Producto separado por precio:** lleva `splitFrom` con la clave original.
 - **`replayed: true`:** el lote ya había terminado y se devuelve el resultado guardado.
 
@@ -99,26 +100,44 @@ Ante `IMPORT_IN_PROGRESS`, el front espera y reenvía el mismo lote. Si ese lote
 - `TARGET_MISSING`: apunta a un producto que ya no existe.
 - `OVER_CAPACITY`: no cupo en el tope.
 - `NOT_MIGRATED`: el `cd` no corresponde a un producto migrado de la empresa con ese `handle`.
+- `CATEGORY_MISSING`: la categoría de la colección no existe en el árbol de la empresa; no se crea redirección.
+
+`issues` trae hasta 500 avisos y `issuesTotal` el total. Un producto separado por precio (`splitFrom`) o fuera de la tienda web no genera redirección. Errores propios de la ruta: `404 SITE_NOT_FOUND` (sitio ajeno o inexistente), `409 WOO_INTEGRATION_ACTIVE` y `413 SITE_TOO_LARGE` (el borrador no cabe en 1 MiB; no se escribe nada). Solo cambia `draft.redirecciones`; repetir el paso no duplica.
 
 ### `POST customers` (fase 1b)
 
 ```json
-{ "migrationId": "uuid", "source": "shopify", "siteId": "…", "lot": 1, "declaration": true,
+{ "migrationId": "uuid", "source": "shopify", "siteId": "…", "lot": 1, "declaration": true, "exportedAt": "2026-10-01",
   "rows": [{ "row": 2, "data": { "…": "columnas conocidas" } }] }
 ```
 
 **→ 200:**
 
 ```json
-{ "success": true, "importBatchId": "<migrationId>_c1", "created": 410, "completed": 70, "skipped": 20,
-  "subscriptions": { "created": 300, "noConsent": 150, "existing": 25, "suppressed": 5 },
-  "issues": [{ "row": 31, "code": "NO_CONTACT" }] }
+{ "success": true, "importBatchId": "<migrationId>_c1", "created": 410, "completed": 70, "resumed": 0, "skipped": 20,
+  "subscriptions": { "created": 300, "noConsent": 150, "existing": 25, "suppressed": 5, "failed": 0 },
+  "issues": [{ "row": 31, "code": "NO_CONTACT" }], "issuesTotal": 1, "durationMs": 840 }
 ```
 
-Sin `declaration: true`, el lote entra sin crear ninguna suscripción.
+Sin `declaration: true`, el lote entra sin crear ninguna suscripción. Lo mismo con la bandera `storeMigrationCustomerConsent` apagada (D-505, hasta el concepto legal 0.7) y con `source: "woocommerce"`, cuyo archivo no trae consentimiento: ahí `subscriptions.created` es siempre 0.
+
+Notas (F530-B16, tarea 9.3):
+
+- `source` acepta `shopify` y `woocommerce` (lector de clientes por plataforma). `exportedAt` es opcional (fecha del export, solo para la evidencia). La empresa sale del token; `companyId` o `company` en el cuerpo se ignoran.
+- Orden: validación (400/413) → lote repetido (`replayed: true`) → guarda `409 WOO_INTEGRATION_ACTIVE` → `404 SITE_NOT_FOUND` (el sitio debe ser de la empresa del token) → candado compartido (`409 IMPORT_IN_PROGRESS`).
+- Un archivo con columnas que no se reconocen responde `400 INVALID_PAYLOAD` con el mensaje de la plataforma. Más de 500 filas: `413 TOO_MANY`.
+- `completed` cuenta los clientes que ya existían en la empresa (se completan sin pisar y sin `importBatchId`); `resumed`, los que este mismo lote ya había creado en un envío anterior que no alcanzó a cerrar. `skipped` son las filas por fuera del lector (`NO_CONTACT`, `DUPLICATE_IN_FILE`); `issues` trae hasta 500 avisos con solo fila y código.
+- Un lote con un fallo de escritura responde 500 y no deja escritura parcial de clientes (un solo batch de máximo 500). Reenviarlo es seguro.
+- Rastro: `migration_audit` paso `customers` con solo números (`created`, `completed`, `resumed`, `skipped`, `subscriptions*`).
 
 ### `DELETE customers/:batchId` (fase 1b)
 
-**→ 200:** `{ "success": true, "clientsDeleted": 410, "subscribersDeleted": 290, "subscribersKept": 10 }`.
+**→ 200:** `{ "success": true, "clientsDeleted": 410, "clientsKept": 2, "subscribersDeleted": 290, "subscribersKept": 10 }`.
 
-Si el lote no es de la empresa, responde 404 `BATCH_NOT_FOUND`.
+Si el lote no es de la empresa (o ya no tiene nada), responde 404 `BATCH_NOT_FOUND`. Un `batchId` que no es `<migrationId>_c<lote>` responde 400. Comparte el candado (`409 IMPORT_IN_PROGRESS`). Conserva:
+
+- los clientes que alguien editó después de la importación o que ya tienen un pedido (`clientsKept`);
+- las suscripciones en baja, suprimidas o cuyo origen ya no es `importacion` (`subscribersKept`);
+- los clientes que ya existían (nunca llevaron el `importBatchId`).
+
+Borra en tandas de 500 escrituras. No hace falta que el front lo divida. La reversa no aplica la guarda de WooCommerce (solo quita lo que la propia importación creó). Rastro: paso `customers-undo`, solo números.

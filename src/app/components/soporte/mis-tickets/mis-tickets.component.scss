@@ -13,6 +13,9 @@
   // Tokens del canon (openspec/specs/design-system/spec.md) sobre la paleta kc.
   --kc-accent: #{$cfg-accent};
   --kc-accent-ink: #{$cfg-accent-hover};
+  // Acento como texto, ícono o borde: sube en oscuro (D-502 F2a, TEMA-B09). El relleno sigue en --kc-accent.
+  --kc-accent-texto: #{$cfg-accent-ink};
+  --kc-surface: var(--ds-surface);
   --kc-accent-wash: #{$cfg-accent-soft};
   --kc-ink: #{$cfg-ink};
   --kc-ink2: #{$cfg-body};
@@ -66,11 +69,11 @@
     color: var(--kc-muted);
     text-decoration: none;
 
-    &:hover { color: var(--kc-accent); }
+    &:hover { color: var(--kc-accent-texto); }
   }
 
   &__sep { color: #b0b6c5; }
-  &__here { color: var(--kc-accent); }
+  &__here { color: var(--kc-accent-texto); }
 }
 
 .mt-head__actions {
@@ -95,7 +98,7 @@
   width: 38px;
   height: 38px;
   border-radius: 11px;
-  color: var(--kc-accent);
+  color: var(--kc-accent-texto);
 
   &:hover:not(:disabled) { background: var(--kc-accent-wash); }
   &:disabled { opacity: 0.6; cursor: default; }
@@ -146,8 +149,8 @@
   }
 
   &__count {
-    background: #f1f2f5;
-    color: #5a6070;
+    background: var(--ds-chip-bg);
+    color: var(--ds-body);
     font-size: 10.5px;
     font-weight: 800;
     padding: 2px 8px;
@@ -157,11 +160,11 @@
   &.is-on {
     background: var(--kc-accent);
     border-color: var(--kc-accent);
-    color: #fff;
+    color: var(--ds-on-accent);
 
     .mt-tab__count {
       background: rgba(255, 255, 255, 0.24);
-      color: #fff;
+      color: var(--ds-on-accent);
     }
   }
 }
@@ -200,7 +203,7 @@
     border-radius: 7px;
     background: var(--kc-line);
     border: none;
-    color: #5a6070;
+    color: var(--ds-body);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -212,8 +215,8 @@
   }
 
   &.is-on {
-    border-color: var(--kc-accent);
-    > i { color: var(--kc-accent); }
+    border-color: var(--kc-accent-texto);
+    > i { color: var(--kc-accent-texto); }
   }
 }
 
@@ -237,7 +240,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--kc-accent);
+      border-color: var(--kc-accent-texto);
       box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
     }
   }
@@ -252,7 +255,7 @@
     font-size: 11px;
   }
 
-  &.is-on select { border-color: var(--kc-accent); color: var(--kc-accent); }
+  &.is-on select { border-color: var(--kc-accent-texto); color: var(--kc-accent-texto); }
 }
 
 // ── Maestro + detalle ───────────────────────────────────────────────────────
@@ -291,7 +294,7 @@
 
   &__count {
     background: var(--kc-accent-wash);
-    color: var(--kc-accent);
+    color: var(--kc-accent-texto);
     font-size: 11px;
     font-weight: 800;
     padding: 3px 10px;
@@ -313,14 +316,14 @@
   gap: 11px;
   background: var(--kc-surface);
   border: none;
-  border-bottom: 1px solid #f5f6fa;
+  border-bottom: 1px solid var(--ds-line-soft);
   padding: 13px 15px;
   cursor: pointer;
   font-family: var(--kc-font-body);
   text-align: left;
   transition: background 0.12s ease;
 
-  &:hover { background: #fbfaff; }
+  &:hover { background: var(--ds-surface-2); }
 
   // Seleccionado: fondo suave del acento, sin borde lateral de acento (D-131).
   &.is-on {
@@ -400,7 +403,7 @@
   }
 
   &__edad.is-viejo { color: #b5700f; }
-  &__com { color: var(--kc-accent); font-weight: 800; }
+  &__com { color: var(--kc-accent-texto); font-weight: 800; }
 }
 
 // Esqueleto de carga: la lista no salta de tamaño cuando llegan los datos
@@ -409,13 +412,13 @@
   align-items: flex-start;
   gap: 11px;
   padding: 13px 15px;
-  border-bottom: 1px solid #f5f6fa;
+  border-bottom: 1px solid var(--ds-line-soft);
 
   &__icon {
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: #f1f2f5;
+    background: var(--ds-chip-bg);
     flex-shrink: 0;
   }
 
@@ -424,7 +427,7 @@
   &__bar {
     height: 10px;
     border-radius: 6px;
-    background: #f1f2f5;
+    background: var(--ds-chip-bg);
     animation: mt-pulse 1.3s ease-in-out infinite;
 
     &--sm { width: 45%; }
@@ -532,8 +535,8 @@
   svg { display: block; flex-shrink: 0; }
 
   &--soft {
-    background: #f1f2f5;
-    color: #5a6070;
+    background: var(--ds-chip-bg);
+    color: var(--ds-body);
   }
 }
 
@@ -544,7 +547,7 @@
   gap: 22px;
   margin-top: 13px;
   padding-top: 13px;
-  border-top: 1px solid #f5f6fa;
+  border-top: 1px solid var(--ds-line-soft);
   flex-wrap: wrap;
 
   &__item { min-width: 0; }
@@ -657,7 +660,7 @@
 
   &:hover {
     border-color: #e2d9fb;
-    background: #f9f7ff;
+    background: var(--ds-surface-2);
   }
 
   &--nuevo { cursor: default; }
@@ -703,8 +706,8 @@
 }
 
 .mt-conv__count {
-  background: #f1f2f5;
-  color: #5a6070;
+  background: var(--ds-chip-bg);
+  color: var(--ds-body);
   font-size: 10.5px;
   font-weight: 800;
   padding: 3px 9px;
@@ -745,7 +748,7 @@
     height: 32px;
     border-radius: 50%;
     background: var(--kc-accent);
-    color: #fff;
+    color: var(--ds-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -774,7 +777,7 @@
 
   &__tag {
     background: var(--kc-accent-wash);
-    color: var(--kc-accent);
+    color: var(--kc-accent-texto);
     font-size: 9.5px;
     font-weight: 800;
     padding: 3px 8px;
@@ -803,7 +806,7 @@
   p { margin: 0; white-space: pre-wrap; }
 
   &.is-agente {
-    background: #f7f5fe;
+    background: var(--ds-surface-2);
     border-color: #e4dcfc;
   }
 
@@ -815,7 +818,7 @@
 .mt-composer {
   padding: 15px 20px 17px;
   border-top: 1px solid var(--kc-line2);
-  background: #fbfcfe;
+  background: var(--ds-surface-2);
   display: flex;
   gap: 11px;
   align-items: flex-start;
@@ -836,8 +839,8 @@
     resize: vertical;
     min-height: 78px;
 
-    &:focus { outline: none; border-color: var(--kc-accent); }
-    &.is-on { border-color: var(--kc-accent); }
+    &:focus { outline: none; border-color: var(--kc-accent-texto); }
+    &.is-on { border-color: var(--kc-accent-texto); }
     &::placeholder { color: var(--kc-muted); font-weight: 500; }
     &:disabled { background: var(--kc-canvas); color: var(--kc-muted); }
   }
@@ -878,7 +881,7 @@
   align-items: center;
   gap: 9px;
   background: var(--kc-ink);
-  color: #fff;
+  color: var(--ds-on-accent);
   border-radius: 999px;
   padding: 11px 20px;
   font-size: 13px;
@@ -945,7 +948,7 @@
   gap: 10px;
   width: 100%;
   text-align: left;
-  background: #fff8ec;
+  background: var(--ds-warn-soft);
   border: 1px solid #f6dfb8;
   border-radius: 12px;
   padding: 10px 12px;
@@ -962,12 +965,12 @@
     margin-top: 1px;
     border: 2px solid #e0a34a;
     border-radius: 5px;
-    background: #fff;
+    background: var(--ds-surface);
     display: flex;
     align-items: center;
     justify-content: center;
 
-    i { font-size: 10px; font-weight: 800; color: #fff; }
+    i { font-size: 10px; font-weight: 800; color: var(--ds-on-accent); }
   }
 
   &__texto {
@@ -989,7 +992,7 @@
 
 .mt-confirma {
   border: 1px solid var(--kc-line);
-  background: #fbfcfe;
+  background: var(--ds-surface-2);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -1029,8 +1032,8 @@
       color: var(--kc-ink);
       resize: vertical;
 
-      &:focus { outline: none; border-color: var(--kc-accent); }
-      &.is-on { border-color: var(--kc-accent); }
+      &:focus { outline: none; border-color: var(--kc-accent-texto); }
+      &.is-on { border-color: var(--kc-accent-texto); }
       &::placeholder { color: var(--kc-muted); font-weight: 500; }
       &:disabled { background: var(--kc-canvas); color: var(--kc-muted); }
     }

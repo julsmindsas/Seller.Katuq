@@ -1,16 +1,16 @@
 <div class="cfg-pagina ag-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Servicios</span>
-      <h1 class="cfg-titulo">Agenda</h1>
-      <p class="cfg-sub">Tus citas por día y por semana. Las que llegan de tu página web entran como solicitadas para que las confirmes.</p>
+      <span class="cfg-eyebrow">{{ 'agenda.agendaPage.servicios' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'agenda.agendaConfig.agenda' | translate }}</h1>
+      <p class="cfg-sub">{{ 'agenda.agendaPage.tusCitasPorDiaY' | translate }}</p>
     </div>
     <div class="cfg-acciones">
       <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="esAdmin" (click)="irAConfigurar()">
-        <i class="fa fa-cog" aria-hidden="true"></i><span class="ag-txt">Configurar</span>
+        <i class="fa fa-cog" aria-hidden="true"></i><span class="ag-txt">{{ 'agenda.agendaPage.configurar' | translate }}</span>
       </button>
       <button type="button" class="cfg-btn" (click)="nuevaCita()" [disabled]="!configurada">
-        <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">Agendar</span>
+        <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">{{ 'agenda.citaForm.agendar' | translate }}</span>
       </button>
     </div>
   </header>
@@ -22,10 +22,10 @@
   <section class="cfg-card ag-arranque" *ngIf="!cargando && !error && !configurada">
     <div class="cfg-vacio">
       <div class="cfg-vacio__icono"><i class="fa fa-calendar" aria-hidden="true"></i></div>
-      <h2 class="cfg-vacio__titulo">Configura tu Agenda</h2>
-      <p class="cfg-vacio__texto">Di qué días y a qué horas atiendes y quién presta cada servicio. Toma dos minutos.</p>
-      <button type="button" class="cfg-btn" *ngIf="esAdmin" (click)="irAConfigurar()"><span class="ag-txt">Configurar ahora</span></button>
-      <p class="cfg-vacio__texto" *ngIf="!esAdmin">Pídele a un administrador de tu empresa que la configure.</p>
+      <h2 class="cfg-vacio__titulo">{{ 'agenda.agendaPage.configuraTuAgenda' | translate }}</h2>
+      <p class="cfg-vacio__texto">{{ 'agenda.agendaPage.diQueDiasYA' | translate }}</p>
+      <button type="button" class="cfg-btn" *ngIf="esAdmin" (click)="irAConfigurar()"><span class="ag-txt">{{ 'agenda.agendaPage.configurarAhora' | translate }}</span></button>
+      <p class="cfg-vacio__texto" *ngIf="!esAdmin">{{ 'agenda.agendaPage.pideleAUnAdministradorDe' | translate }}</p>
     </div>
   </section>
 
@@ -33,23 +33,23 @@
     <!-- Barra: fecha, vista y resumen -->
     <section class="cfg-card ag-barra">
       <div class="ag-nav">
-        <button type="button" class="ag-icono" (click)="mover(-1)" aria-label="Anterior"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
-        <button type="button" class="ag-opcion" (click)="irAHoy()">Hoy</button>
-        <button type="button" class="ag-icono" (click)="mover(1)" aria-label="Siguiente"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+        <button type="button" class="ag-icono" (click)="mover(-1)" [attr.aria-label]="'agenda.agendaPage.anterior' | translate"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="ag-opcion" (click)="irAHoy()">{{ 'agenda.agendaPage.hoy' | translate }}</button>
+        <button type="button" class="ag-icono" (click)="mover(1)" [attr.aria-label]="'agenda.agendaPage.siguiente' | translate"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
         <h2 class="ag-fecha">{{ tituloFecha }}</h2>
       </div>
       <div class="ag-derecha">
-        <span class="ag-resumen" *ngIf="vista === 'dia'">{{ totalDelDia }} {{ totalDelDia === 1 ? 'cita' : 'citas' }}</span>
-        <span class="ag-estado ag-estado--solicitada" *ngIf="porConfirmar > 0">{{ porConfirmar }} por confirmar</span>
-        <div class="ag-vistas" role="group" aria-label="Vista">
-          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'dia'" (click)="cambiarVista('dia')">Día</button>
-          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'semana'" (click)="cambiarVista('semana')">Semana</button>
+        <span class="ag-resumen" *ngIf="vista === 'dia'">{{ totalDelDia }} {{ totalDelDia === 1 ? ('agenda.agendaPage.cita' | translate) : ('agenda.agendaPage.citas' | translate) }}</span>
+        <span class="ag-estado ag-estado--solicitada" *ngIf="porConfirmar > 0">{{ porConfirmar }} {{ 'agenda.agendaPage.porConfirmar' | translate }}</span>
+        <div class="ag-vistas" role="group" [attr.aria-label]="'agenda.agendaPage.vista' | translate">
+          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'dia'" (click)="cambiarVista('dia')">{{ 'agenda.agendaPage.dia' | translate }}</button>
+          <button type="button" class="ag-opcion" [class.ag-opcion--activa]="vista === 'semana'" (click)="cambiarVista('semana')">{{ 'agenda.agendaPage.semana' | translate }}</button>
         </div>
       </div>
     </section>
 
     <section class="cfg-card ag-cargando" *ngIf="cargando">
-      <span class="ag-muted">Cargando citas…</span>
+      <span class="ag-muted">{{ 'agenda.agendaPage.cargandoCitas' | translate }}</span>
     </section>
 
     <!-- ═════ DÍA ═════ -->
@@ -61,7 +61,7 @@
             <div class="ag-horas-cab"></div>
             <div class="ag-col-cab" *ngFor="let col of columnas">
               <span class="ag-col-nombre">{{ col.nombre }}</span>
-              <span class="ag-muted" *ngIf="col.inactiva">(ya no atiende)</span>
+              <span class="ag-muted" *ngIf="col.inactiva">{{ 'agenda.agendaPage.yaNoAtiende' | translate }}</span>
             </div>
           </div>
           <div class="ag-cuerpo" [style.height.px]="altoGrilla">
@@ -73,7 +73,7 @@
             <div class="ag-col" *ngFor="let col of columnas">
               <button type="button" class="ag-hueco" *ngFor="let f of filas"
                 [class.ag-hueco--punto]="f.enPunto" [style.height.px]="altoMediaHora"
-                (click)="agendarEn(col, f.min)" [attr.aria-label]="'Agendar con ' + col.nombre"></button>
+                (click)="agendarEn(col, f.min)" [attr.aria-label]="('agenda.agendaPage.agendarConNombre' | translate:{nombre: col.nombre})"></button>
               <button type="button" class="ag-cita" *ngFor="let c of citasDeColumna(col); trackBy: trackCita"
                 [ngClass]="ESTADOS[c.status].clase" [class.ag-cita--fuera]="!c.startTime"
                 [style.top.px]="c.startTime ? posicion(c).top : 0" [style.height.px]="c.startTime ? posicion(c).height : 40"
@@ -103,7 +103,7 @@
                 <span class="ag-cita-serv">{{ textoServicios(c) }}</span>
               </button>
               <button type="button" class="ag-agregar" (click)="agendarEnFranja(col, franja)">
-                <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">Agendar</span>
+                <i class="fa fa-plus" aria-hidden="true"></i><span class="ag-txt">{{ 'agenda.citaForm.agendar' | translate }}</span>
               </button>
             </div>
           </div>
@@ -112,20 +112,20 @@
 
       <!-- Lista del día (celular, y siempre como respaldo) -->
       <section class="cfg-card ag-lista-dia">
-        <h3 class="ag-lista-titulo">Citas del día</h3>
+        <h3 class="ag-lista-titulo">{{ 'agenda.agendaPage.citasDelDia' | translate }}</h3>
         <div class="cfg-vacio" *ngIf="!citasDelDia(fecha).length">
           <div class="cfg-vacio__icono"><i class="fa fa-calendar-o" aria-hidden="true"></i></div>
-          <h4 class="cfg-vacio__titulo">Sin citas este día</h4>
-          <p class="cfg-vacio__texto">Agenda la primera o mira otro día.</p>
-          <button type="button" class="cfg-btn" (click)="nuevaCita()"><span class="ag-txt">Agendar</span></button>
+          <h4 class="cfg-vacio__titulo">{{ 'agenda.agendaPage.sinCitasEsteDia' | translate }}</h4>
+          <p class="cfg-vacio__texto">{{ 'agenda.agendaPage.agendaLaPrimeraOMira' | translate }}</p>
+          <button type="button" class="cfg-btn" (click)="nuevaCita()"><span class="ag-txt">{{ 'agenda.citaForm.agendar' | translate }}</span></button>
         </div>
         <button type="button" class="ag-fila" *ngFor="let c of citasDelDia(fecha); trackBy: trackCita" (click)="abrirCita(c)">
           <span class="ag-fila-hora">{{ cuando(c) }}</span>
           <span class="ag-fila-centro">
             <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
-            <span class="ag-muted">{{ textoServicios(c) }} · {{ c.staffName || 'Sin asignar' }}</span>
+            <span class="ag-muted">{{ textoServicios(c) }} · {{ c.staffName || ('agenda.citaPanel.sinAsignar' | translate) }}</span>
           </span>
-          <span class="ag-estado" [ngClass]="ESTADOS[c.status].clase">{{ ESTADOS[c.status].texto }}</span>
+          <span class="ag-estado" [ngClass]="ESTADOS[c.status].clase">{{ ESTADOS[c.status].texto | translate }}</span>
         </button>
       </section>
     </ng-container>
@@ -143,7 +143,7 @@
           <span class="ag-cita-cliente">{{ c.customer?.name }}</span>
           <span class="ag-cita-serv">{{ textoServicios(c) }}<ng-container *ngIf="c.staffName"> · {{ c.staffName }}</ng-container></span>
         </button>
-        <span class="ag-muted ag-dia-sem-vacio" *ngIf="!citasDelDia(d).length">Sin citas</span>
+        <span class="ag-muted ag-dia-sem-vacio" *ngIf="!citasDelDia(d).length">{{ 'agenda.agendaPage.sinCitas' | translate }}</span>
       </div>
     </section>
   </ng-container>

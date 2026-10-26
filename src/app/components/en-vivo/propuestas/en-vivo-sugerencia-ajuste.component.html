@@ -3,10 +3,10 @@
 <aside class="ev-sug-hoja" role="dialog" aria-modal="false" [attr.aria-labelledby]="idTitulo" (keydown)="alTeclado($event)">
   <header class="ev-sug-hoja__cabeza">
     <div class="ev-sug-hoja__tit">
-      <span class="ev-sug-hoja__eyebrow">Ajustar la propuesta</span>
+      <span class="ev-sug-hoja__eyebrow">{{ 'enVivo.enVivoSugerenciaAjuste.ajustarLaPropuesta' | translate }}</span>
       <h2 class="ev-sug-hoja__titulo" [id]="idTitulo" tabindex="-1" #titulo>{{ hoja.grupo.zona }}</h2>
     </div>
-    <button type="button" class="ev-sug-hoja__cerrar" (click)="cerrar()" aria-label="Cerrar Ajustar">
+    <button type="button" class="ev-sug-hoja__cerrar" (click)="cerrar()" [attr.aria-label]="'enVivo.enVivoSugerenciaAjuste.cerrarAjustar' | translate">
       <app-en-vivo-icono nombre="equis"></app-en-vivo-icono>
     </button>
   </header>
@@ -44,25 +44,25 @@
         <span class="ev-sug-hoja__btn-texto">{{ hoja.confirmar }}</span>
       </button>
       <button type="button" class="ev-sug-hoja__btn ev-sug-hoja__btn--sec" (click)="soltar()">
-        <span class="ev-sug-hoja__btn-texto">Cancelar</span>
+        <span class="ev-sug-hoja__btn-texto">{{ 'comun.cancelar' | translate }}</span>
       </button>
     </div>
 
     <section class="ev-sug-hoja__sacados" *ngIf="hoja.sacados.length" [attr.aria-labelledby]="idTitulo + '-sacados'">
-      <h3 class="ev-sug-hoja__subtitulo" [id]="idTitulo + '-sacados'">Sacados del plan</h3>
+      <h3 class="ev-sug-hoja__subtitulo" [id]="idTitulo + '-sacados'">{{ 'enVivo.enVivoSugerenciaAjuste.sacadosDelPlan' | translate }}</h3>
       <ul class="ev-sug-hoja__lista">
         <li class="ev-sug-hoja__fila" *ngFor="let s of hoja.sacados; trackBy: trackSacado">
-          <button type="button" class="ev-sug-hoja__pedido" (click)="abrirPedido(s.pedido.id)" [attr.aria-label]="'Abrir el pedido ' + s.pedido.nroPedido">
+          <button type="button" class="ev-sug-hoja__pedido" (click)="abrirPedido(s.pedido.id)" [attr.aria-label]="('enVivo.grupoDespacho.abrirElPedido' | translate) + ' ' + s.pedido.nroPedido">
             <span class="ev-sug-hoja__nro">#{{ s.pedido.nroPedido }}</span>
             <span class="ev-sug-hoja__zona">{{ s.pedido.zona }}</span>
           </button>
           <select
             class="ev-sug-hoja__select"
             *ngIf="s.destinos.length"
-            [attr.aria-label]="'Pasar el pedido ' + s.pedido.nroPedido + ' a un grupo'"
+            [attr.aria-label]="('enVivo.grupoDespacho.pasarElPedido' | translate) + ' ' + s.pedido.nroPedido + ' ' + ('enVivo.enVivoSugerenciaAjuste.aUnGrupo' | translate)"
             (change)="devolver(s.pedido, $any($event.target).value); $any($event.target).value = ''"
           >
-            <option value="">Pasar a…</option>
+            <option value="">{{ 'enVivo.grupoDespacho.pasarA' | translate }}</option>
             <option *ngFor="let d of s.destinos" [value]="d.id">{{ d.etiqueta }}</option>
           </select>
         </li>
@@ -74,7 +74,7 @@
 
   <footer class="ev-sug-hoja__pie">
     <button type="button" class="ev-sug-hoja__btn ev-sug-hoja__btn--sec" (click)="cerrar()">
-      <span class="ev-sug-hoja__btn-texto">Listo</span>
+      <span class="ev-sug-hoja__btn-texto">{{ 'enVivo.enVivoSugerenciaAjuste.listo' | translate }}</span>
     </button>
   </footer>
 </aside>

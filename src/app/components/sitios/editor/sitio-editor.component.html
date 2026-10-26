@@ -745,6 +745,10 @@
               <button class="btn-fantasma btn-fantasma--sm" (click)="abrirSelector()">
                 {{ (b.datos.productoIds?.length || 0) ? 'Cambiar productos' : 'Elegir productos' }}
               </button>
+              <!-- TX-37 · 7.12: «Uniformar fotos» con los elegidos (bandera productPhotoUniform) -->
+              <button *ngIf="fotosUniformesActiva && (b.datos.productoIds?.length || 0)" type="button"
+                      class="btn-fantasma btn-fantasma--sm fu-entrada-sitio"
+                      (click)="abrirFotosUniformesDelBloque()">Uniformar fotos de estos productos</button>
 
               <!-- Los elegidos, arrastrables: el orden de esta lista es el orden
                    en que salen en la página. -->
@@ -982,7 +986,18 @@
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
-            <p class="nota nota--simple">Cada envío queda como prospecto en tu CRM.</p>
+            <!-- D-518 (F2-43·6): el formulario puede crear una cotización en vez de un prospecto -->
+            <div class="campo">
+              <label>Cada envío crea</label>
+              <select [ngModel]="b.datos.destino === 'cotizacion' ? 'cotizacion' : 'prospecto'"
+                      (ngModelChange)="b.datos.destino = $event; marcarSucio()">
+                <option value="prospecto">Prospecto en el CRM</option>
+                <option value="cotizacion">Cotización en borrador</option>
+              </select>
+            </div>
+            <p class="nota nota--simple" *ngIf="b.datos.destino !== 'cotizacion'">Cada envío queda como prospecto en tu CRM.</p>
+            <p class="nota nota--simple" *ngIf="b.datos.destino === 'cotizacion'">Cada envío crea una cotización en borrador en
+              Cotizaciones, con su asesor, y al cliente le llega un correo si deja el suyo.</p>
           </ng-container>
 
           <!-- Preguntas frecuentes -->
@@ -1012,6 +1027,10 @@
               Muestra <strong>todo tu catálogo</strong>, no una selección: los productos salen solos de
               Katuq, con su precio y disponibilidad. Los agotados no aparecen.
             </p>
+            <!-- TX-37 · 7.12: «Uniformar fotos» por categoría (bandera productPhotoUniform) -->
+            <button *ngIf="fotosUniformesActiva" type="button"
+                    class="btn-fantasma btn-fantasma--sm fu-entrada-sitio fu-entrada-sitio--catalogo"
+                    (click)="abrirFotosUniformesPorCategoria()">Uniformar fotos por categoría</button>
             <div class="campo">
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
@@ -3103,7 +3122,8 @@
               <div class="campo" *ngIf="cotizables.length">
                 <label>Asesores (correos, uno por línea)</label>
                 <textarea rows="3" [value]="asesoresCotizacionTexto" (change)="cambiarAsesoresCotizacion($any($event.target).value)"></textarea>
-                <small>Las solicitudes se reparten por turnos y a cada uno le llega un correo. Sin asesores, quedan sin asignar.</small>
+                <small>Las solicitudes se reparten por turnos y a cada uno le llega un correo. Sin asesores, las recibe el
+                  administrador de la empresa. Usa correos de usuarios de tu empresa para que salga su nombre.</small>
               </div>
             </div>
             <!-- Ticket 1244 -->
@@ -3655,6 +3675,11 @@
           <small *ngIf="programada">Se publicará sola el {{ programada.fecha | date: 'dd/MM/yyyy HH:mm' }}.
             <button type="button" class="enlace-sutil" (click)="cancelarProgramada()">Cancelar</button></small>
           <small *ngIf="!programada">Tu borrador sale solo en esa fecha y hora (revisamos cada 5 minutos).</small>
+          <!-- D-518 (F5-29·1): la programada que no salió dice por qué -->
+          <p class="aviso" *ngIf="programacionFallida" role="status">
+            <strong>No se publicó la programada del {{ programacionFallida.fecha | date: 'dd/MM/yyyy HH:mm' }}.</strong>
+            {{ programacionFallida.motivo }}. Revisa y vuelve a programarla o publícala.
+          </p>
         </div>
 
         <div class="grupo">
@@ -3669,6 +3694,17 @@
             <button type="button" class="enlace-sutil" *ngIf="i > 0 && puedePublicarVersiones" (click)="restaurarVersion(v)">Restaurar</button>
             <small class="version__actual" *ngIf="i === 0">Publicada ahora</small>
           </div>
+          <!-- D-518 (F5-29·6): lo que había sin publicar antes de restaurar -->
+          <ng-container *ngIf="borradoresGuardados.length">
+            <h4 class="version__titulo">Borradores guardados antes de restaurar</h4>
+            <div class="version" *ngFor="let b of borradoresGuardados">
+              <div class="version__datos">
+                <strong>{{ b.guardadoEn | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                <small>{{ b.motivo }} · {{ b.por || 'sin autor' }} · {{ b.secciones }} secciones</small>
+              </div>
+              <button type="button" class="enlace-sutil" (click)="recuperarBorrador(b)">Recuperar</button>
+            </div>
+          </ng-container>
         </div>
 
         <div class="grupo" *ngIf="esAdministrador">
@@ -3677,7 +3713,8 @@
             <input type="text" [value]="rolesPublicarTexto" (change)="cambiarRolesPublicar($any($event.target).value)"
                    placeholder="Vacío = todos. Ej.: Administrador, Marketing" />
             <small>Escribe los roles separados por coma. Los demás pueden editar el borrador, pero no publicar
-              ni revertir. Los administradores siempre pueden.</small>
+              ni revertir. Los administradores siempre pueden. Restaurar devuelve el diseño de la versión: tu tienda
+              y tu medición quedan como están.</small>
           </div>
         </div>
       </div>
@@ -3843,6 +3880,14 @@
   (confirmar)="aplicarProductosPromo($event)"
   (cerrar)="promoEditandoProductos = null">
 </app-selector-productos>
+
+<!-- TX-37 · 7.12: «Uniformar fotos» (D-501). appAlBody: por encima del menú y la barra. -->
+<app-fotos-uniformes *ngIf="fotosUniformes" appAlBody
+  [productIds]="fotosUniformes.productIds"
+  [elegirCategoria]="fotosUniformes.elegirCategoria"
+  [proporcionSugerida]="proporcionDelEstilo"
+  (cerrado)="cerrarFotosUniformes($event)">
+</app-fotos-uniformes>
 
 <app-selector-productos
   *ngIf="mostrandoSelector && bloqueActual"

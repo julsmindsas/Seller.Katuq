@@ -6,6 +6,7 @@ import { VoiceAgentSalesService } from '../../../services/voice-agent/voice-agen
 import { VoiceSalesIntegrationService } from '../../../services/voice-agent/voice-sales-integration.service';
 import { OrderToolsRegistrarService } from '../../../services/tools/order-tools-registrar.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-voice-sales-demo',
@@ -79,7 +80,8 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
     private voiceIntegrationService: VoiceSalesIntegrationService,
     private orderToolsService: OrderToolsRegistrarService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -119,7 +121,7 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
     this.currentDemoStep = 'start';
     this.demoProgress = 0;
     
-    this.toastr.info('Iniciando demostración completa de ventas por voz', 'Demo Iniciado');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesDemo.iniciandoDemostracionCompleta'), this.translate.instant('asistentes.voiceSalesDemo.demoIniciado'));
     
     // Iniciar el servicio de ventas por voz
     this.voiceSalesService.startVoiceSales();
@@ -138,7 +140,7 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
     if (!step) return;
 
     this.currentDemoStep = stepId;
-    this.toastr.info(`Ejecutando: ${step.name}`, 'Demo en Progreso');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesDemo.ejecutando', { paso: this.translate.instant(`asistentes.voiceSalesDemo.paso.${step.id}.name`) }), this.translate.instant('asistentes.voiceSalesDemo.demoEnProgreso'));
 
     try {
       // Ejecutar el comando correspondiente al paso
@@ -148,15 +150,15 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
       );
 
       if (result.success) {
-        this.toastr.success(`${step.name} completado exitosamente`, 'Demo Exitoso');
+        this.toastr.success(this.translate.instant('asistentes.voiceSalesDemo.pasoCompletado', { paso: this.translate.instant(`asistentes.voiceSalesDemo.paso.${step.id}.name`) }), this.translate.instant('asistentes.voiceSalesDemo.demoExitoso'));
         
         // Avanzar al siguiente paso automáticamente
         this.advanceToNextDemoStep(stepId);
       } else {
-        this.toastr.error(`Error en ${step.name}: ${result.message}`, 'Demo Fallido');
+        this.toastr.error(this.translate.instant('asistentes.voiceSalesDemo.errorEnPaso', { paso: this.translate.instant(`asistentes.voiceSalesDemo.paso.${step.id}.name`), mensaje: result.message }), this.translate.instant('asistentes.voiceSalesDemo.demoFallido'));
       }
     } catch (error: any) {
-      this.toastr.error(`Error ejecutando demo: ${error.message}`, 'Error en Demo');
+      this.toastr.error(this.translate.instant('asistentes.voiceSalesDemo.errorEjecutandoDemo', { mensaje: error.message }), this.translate.instant('asistentes.voiceSalesDemo.errorEnDemo'));
     }
   }
 
@@ -186,7 +188,7 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
     this.currentDemoStep = 'completed';
     this.demoProgress = 100;
     
-    this.toastr.success('¡Demostración completada exitosamente!', 'Demo Finalizado');
+    this.toastr.success(this.translate.instant('asistentes.voiceSalesDemo.demostracionCompletada'), this.translate.instant('asistentes.voiceSalesDemo.demoFinalizado'));
     
     // Mostrar resumen del demo
     this.showDemoSummary();
@@ -303,7 +305,7 @@ export class VoiceSalesDemoComponent implements OnInit, OnDestroy {
     // Reiniciar el servicio de ventas por voz
     this.voiceSalesService.resetVoiceSales();
     
-    this.toastr.info('Demostración reiniciada', 'Demo Reiniciado');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesDemo.demostracionReiniciada'), this.translate.instant('asistentes.voiceSalesDemo.demoReiniciado'));
   }
 
   /**

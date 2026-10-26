@@ -2,8 +2,7 @@
   <!-- Header Info -->
   <div class="step-intro">
     <p class="intro-text">
-      Comencemos con la información básica de tu negocio. Esta información se utilizará
-      para configurar tu tienda y generar documentos oficiales.
+      {{ 'onboarding.companyInfoStep.comencemosConLaInformacionBasica' | translate }}
     </p>
   </div>
 
@@ -15,20 +14,20 @@
       <ng-template pTemplate="header">
         <div class="onb-cabeza">
           <i class="pi pi-building"></i>
-          <span>Información Legal</span>
+          <span>{{ 'onboarding.companyInfoStep.informacionLegal' | translate }}</span>
         </div>
       </ng-template>
 
       <div class="form-grid">
         <!-- Nombre Legal -->
         <div class="form-field col-12">
-          <label for="nombre" class="required">Razón Social o Nombre Legal *</label>
+          <label for="nombre" class="required">{{ 'onboarding.companyInfoStep.razonSocialONombreLegal' | translate }}</label>
           <input
             id="nombre"
             type="text"
             pInputText
             formControlName="nombre"
-            placeholder="Ej: Comercializadora ABC S.A.S"
+            [placeholder]="'onboarding.companyInfoStep.ejComercializadoraAbcSA' | translate"
             [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
             {{ getErrorMessage('nombre') }}
@@ -42,7 +41,7 @@
 
         <!-- NIT -->
         <div class="form-field col-md-6 col-12">
-          <label for="nit" class="required">NIT o Documento de Identificación *</label>
+          <label for="nit" class="required">{{ 'onboarding.companyInfoStep.nitODocumentoDeIdentificacion' | translate }}</label>
           <input
             id="nit"
             type="text"
@@ -57,12 +56,12 @@
 
         <!-- Tipo de Empresa -->
         <div class="form-field col-md-6 col-12">
-          <label for="tipoEmpresa" class="required">Tipo de Empresa *</label>
+          <label for="tipoEmpresa" class="required">{{ 'onboarding.companyInfoStep.tipoDeEmpresa' | translate }}</label>
           <p-dropdown
             id="tipoEmpresa"
             formControlName="tipoEmpresa"
             [options]="tipoEmpresaOptions"
-            placeholder="Selecciona el tipo"
+            [placeholder]="'onboarding.companyInfoStep.seleccionaElTipo' | translate"
             optionLabel="label"
             optionValue="value"
             [showClear]="false"
@@ -72,19 +71,19 @@
 
         <!-- Sector -->
         <div class="form-field col-12">
-          <label for="sector" class="required">Sector o Industria *</label>
+          <label for="sector" class="required">{{ 'onboarding.companyInfoStep.sectorOIndustria' | translate }}</label>
           <p-dropdown
             id="sector"
             formControlName="sector"
             [options]="sectorOptions"
-            placeholder="Selecciona tu sector"
+            [placeholder]="'onboarding.companyInfoStep.seleccionaTuSector' | translate"
             optionLabel="label"
             optionValue="value"
             [filter]="true"
             filterBy="label"
             styleClass="w-100">
           </p-dropdown>
-          <small class="field-help">Esto nos ayuda a personalizar tu experiencia</small>
+          <small class="field-help">{{ 'onboarding.companyInfoStep.estoNosAyudaAPersonalizar' | translate }}</small>
         </div>
       </div>
     </p-card>
@@ -94,20 +93,20 @@
       <ng-template pTemplate="header">
         <div class="onb-cabeza">
           <i class="pi pi-phone"></i>
-          <span>Información de Contacto</span>
+          <span>{{ 'onboarding.companyInfoStep.informacionDeContacto' | translate }}</span>
         </div>
       </ng-template>
 
       <div class="form-grid">
         <!-- Email -->
         <div class="form-field col-md-6 col-12">
-          <label for="email" class="required">Email de Contacto *</label>
+          <label for="email" class="required">{{ 'onboarding.companyInfoStep.emailDeContacto' | translate }}</label>
           <input
             id="email"
             type="email"
             pInputText
             formControlName="email"
-            placeholder="contacto@tuempresa.com"
+            [placeholder]="'onboarding.companyInfoStep.contactoTuempresaCom' | translate"
             [class.p-invalid]="hasError('email', 'required') || hasError('email', 'email')" />
           <small class="p-error" *ngIf="hasError('email', 'required') || hasError('email', 'email')">
             {{ getErrorMessage('email') }}
@@ -116,7 +115,7 @@
 
         <!-- Teléfono -->
         <div class="form-field col-md-6 col-12">
-          <label for="telefono" class="required">Teléfono *</label>
+          <label for="telefono" class="required">{{ 'onboarding.companyInfoStep.telefono' | translate }}</label>
           <input
             id="telefono"
             type="tel"
@@ -131,13 +130,13 @@
 
         <!-- Sitio Web -->
         <div class="form-field col-12">
-          <label for="sitioWeb">Sitio Web (Opcional)</label>
+          <label for="sitioWeb">{{ 'onboarding.companyInfoStep.sitioWebOpcional' | translate }}</label>
           <input
             id="sitioWeb"
             type="url"
             pInputText
             formControlName="sitioWeb"
-            placeholder="https://www.tuempresa.com"
+            [placeholder]="'onboarding.companyInfoStep.httpsWwwTuempresaCom' | translate"
             [class.p-invalid]="hasError('sitioWeb', 'pattern')" />
           <small class="p-error" *ngIf="hasError('sitioWeb', 'pattern')">
             {{ getErrorMessage('sitioWeb') }}
@@ -151,19 +150,19 @@
       <ng-template pTemplate="header">
         <div class="onb-cabeza">
           <i class="pi pi-map-marker"></i>
-          <span>Ubicación</span>
+          <span>{{ 'onboarding.companyInfoStep.ubicacion' | translate }}</span>
         </div>
       </ng-template>
 
       <div class="form-grid">
         <!-- País -->
         <div class="form-field col-md-4 col-12">
-          <label for="pais" class="required">País *</label>
+          <label for="pais" class="required">{{ 'onboarding.companyInfoStep.pais' | translate }}</label>
           <p-dropdown
             id="pais"
             formControlName="pais"
             [options]="paisOptions"
-            placeholder="Selecciona"
+            [placeholder]="'onboarding.companyInfoStep.selecciona' | translate"
             optionLabel="label"
             optionValue="value"
             [showClear]="false"
@@ -173,12 +172,12 @@
 
         <!-- Ciudad -->
         <div class="form-field col-md-4 col-12">
-          <label for="ciudad" class="required">Ciudad *</label>
+          <label for="ciudad" class="required">{{ 'onboarding.billingZonesStep.ciudad' | translate }}</label>
           <p-dropdown
             id="ciudad"
             formControlName="ciudad"
             [options]="ciudadesColombiaOptions"
-            placeholder="Selecciona tu ciudad"
+            [placeholder]="'onboarding.companyInfoStep.seleccionaTuCiudad' | translate"
             optionLabel="label"
             optionValue="value"
             [filter]="true"
@@ -189,13 +188,13 @@
 
         <!-- Dirección -->
         <div class="form-field col-md-8 col-12">
-          <label for="direccion" class="required">Dirección *</label>
+          <label for="direccion" class="required">{{ 'onboarding.companyInfoStep.direccion' | translate }}</label>
           <input
             id="direccion"
             type="text"
             pInputText
             formControlName="direccion"
-            placeholder="Calle 123 #45-67"
+            [placeholder]="'onboarding.companyInfoStep.calle1234567' | translate"
             [class.p-invalid]="hasError('direccion', 'required')" />
           <small class="p-error" *ngIf="hasError('direccion', 'required')">
             {{ getErrorMessage('direccion') }}
@@ -204,16 +203,16 @@
 
         <!-- Descripción -->
         <div class="form-field col-12">
-          <label for="descripcion">Descripción de tu Negocio (Opcional)</label>
+          <label for="descripcion">{{ 'onboarding.companyInfoStep.descripcionDeTuNegocioOpcional' | translate }}</label>
           <textarea
             id="descripcion"
             pInputTextarea
             formControlName="descripcion"
             rows="3"
-            placeholder="Cuéntanos brevemente sobre tu negocio..."
+            [placeholder]="'onboarding.companyInfoStep.cuentanosBrevementeSobreTuNegocio' | translate"
             [autoResize]="true">
           </textarea>
-          <small class="field-help">Esta descripción se puede usar en tu tienda online</small>
+          <small class="field-help">{{ 'onboarding.companyInfoStep.estaDescripcionSePuedeUsar' | translate }}</small>
         </div>
       </div>
     </p-card>
@@ -223,7 +222,7 @@
       <button
         pButton
         type="button"
-        label="Guardar y Continuar"
+        [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
         icon="pi pi-check"
         class="cfg-btn"
         [disabled]="!isFormValid()"
@@ -232,11 +231,11 @@
 
       <p class="form-status" *ngIf="!isFormValid()">
         <i class="pi pi-info-circle"></i>
-        Completa todos los campos requeridos para continuar
+        {{ 'onboarding.companyInfoStep.completaTodosLosCamposRequeridos' | translate }}
       </p>
       <p class="form-status success" *ngIf="isFormValid()">
         <i class="pi pi-check-circle"></i>
-        ¡Listo! Puedes continuar al siguiente paso
+        {{ 'onboarding.companyInfoStep.listoPuedesContinuarAlSiguiente' | translate }}
       </p>
     </div>
   </form>

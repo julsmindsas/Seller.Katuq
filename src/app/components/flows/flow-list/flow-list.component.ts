@@ -14,6 +14,7 @@ import {
   textoEstadoAutomatizacion,
 } from '../flows-lenguaje';
 
+import { TranslateService } from '@ngx-translate/core';
 type Filtro = 'todas' | 'active' | 'inactive' | 'draft';
 
 /** Lo que muestra cada tarjeta, calculado una vez por cambio de datos. */
@@ -53,7 +54,8 @@ export class FlowsListComponent implements OnInit, OnDestroy {
   constructor(
     private flowsService: FlowsService,
     private state: FlowsStateService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -164,14 +166,14 @@ export class FlowsListComponent implements OnInit, OnDestroy {
       this.cambiarEstado(flow, true);
       return;
     }
-    const destino = t.a.length ? ` hacia ${t.a.map((s) => s.nombre).join(' y ')}` : '';
+    const destino = t.a.length ? this.translate.instant('flows.flowList.haciaDestino', { nombres: t.a.map((s) => s.nombre).join(this.translate.instant('flows.flowList.yUnion')) }) : '';
     Swal.fire({
-      title: `¿Apagar «${flow.name}»?`,
-      html: `Mientras esté apagada, Katuq deja de mover estos datos${destino}. Puedes volver a encenderla cuando quieras.`,
+      title: this.translate.instant('flows.flowEditor.apagarFlow', { nombre: flow.name }),
+      html: this.translate.instant(destino ? 'flows.flowList.mientrasApagadaDestino' : 'flows.flowList.mientrasApagada', { destino }),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, apagar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('flows.flowEditor.siApagar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#B83232',
     }).then((r) => {
       if (r.isConfirmed) this.cambiarEstado(flow, false);

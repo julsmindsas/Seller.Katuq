@@ -1,53 +1,53 @@
 <div class="cfg-pagina home-container">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Indicadores</span>
-      <h1 class="cfg-titulo">Dashboard gerencial</h1>
-      <p class="cfg-sub">Crea, guarda y comparte reportes dinámicos sobre tus datos.</p>
+      <span class="cfg-eyebrow">{{ 'dashboard.home.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'dashboard.home.title' | translate }}</h1>
+      <p class="cfg-sub">{{ 'dashboard.home.subtitle' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button type="button" class="cfg-btn cfg-btn--sec" (click)="openClassic()"
-        title="Resumen de ventas, despachos, inventario, producción y finanzas en una sola pantalla">
-        <i class="fa fa-tachometer"></i> Panel de control
+      <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="openClassic()" title="Resumen de ventas, despachos, inventario, producción y finanzas en una sola pantalla">
+        <i class="fa fa-tachometer"></i> Panel de control <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       </button>
       <button type="button" class="cfg-btn" (click)="newReport()">
-        <i class="fa fa-plus"></i> Nuevo reporte
+        <i class="fa fa-plus"></i> {{ 'dashboard.home.newReport' | translate }}
       </button>
     </div>
   </header>
 
   <div *ngIf="loading" class="state-empty">
-    <i class="fa fa-spinner fa-spin"></i> Cargando reportes…
+    <i class="fa fa-spinner fa-spin"></i> {{ 'dashboard.home.loading' | translate }}
   </div>
 
   <div *ngIf="loadError && !loading" class="state-error">
-    <i class="fa fa-exclamation-triangle"></i> {{ loadError }}
+    <i class="fa fa-exclamation-triangle"></i> {{ loadError | translate }}
   </div>
 
   <div *ngIf="!loading && !loadError && reports.length === 0" class="state-empty">
-    <h2>Aún no tienes reportes</h2>
-    <p>Elige qué quieres revisar (pedidos, productos, clientes…), arrastra los datos que te interesan y escoge cómo verlos: tabla, barras o torta. También puedes arrancar con una plantilla lista.</p>
+    <h2>Aún no tienes reportes</h2> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <p>Elige qué quieres revisar (pedidos, productos, clientes…), arrastra los datos que te interesan y escoge cómo verlos: tabla, barras o torta. También puedes arrancar con una plantilla lista.</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     <button type="button" class="cfg-btn" (click)="newReport()">
-      <i class="fa fa-plus"></i> Crear el primer reporte
+      <i class="fa fa-plus"></i> {{ 'dashboard.home.createFirst' | translate }}
     </button>
   </div>
 
   <!-- Plantillas pre-armadas (request Harmony Lens punto 6) -->
   <section *ngIf="!loading && presets.length > 0" class="presets-section">
     <header class="presets-header">
-      <h2><i class="fa fa-magic me-1"></i> Plantillas listas</h2>
-      <small>Arranca con un reporte pre-armado. Lo puedes editar libremente antes de guardar.</small>
+      <h2><i class="fa fa-magic me-1"></i> {{ 'dashboard.home.presetsTitle' | translate }}</h2>
+      <small>{{ 'dashboard.home.presetsHelp' | translate }}</small>
     </header>
     <div class="presets-grid">
       <article
         *ngFor="let p of presets"
         class="preset-card"
         (click)="openPreset(p)"
-        [title]="p.description">
+        [title]="cat(p.description)">
         <div class="preset-icon"><i class="fa" [ngClass]="p.icon"></i></div>
         <div class="preset-body">
-          <div class="preset-name">{{ p.name }}</div>
-          <div class="preset-desc">{{ p.description }}</div>
+          <div class="preset-name">{{ cat(p.name) }}</div>
+          <div class="preset-desc">{{ cat(p.description) }}</div>
           <div class="preset-meta">
             <span class="preset-category">{{ p.category }}</span>
             <span class="preset-viz">{{ vizLabel(p.viz.type) }}</span>
@@ -73,9 +73,9 @@
       </div>
       <div class="report-card-body">
         <h3 class="report-card-title">{{ r.name }}</h3>
-        <p class="report-card-desc">{{ r.description || (sourceLabel(r.source) + ' · ' + vizLabel(r.viz?.type)) }}</p>
+        <p class="report-card-desc">{{ r.description || (cat(sourceLabel(r.source)) + ' · ' + vizLabel(r.viz?.type)) }}</p>
         <div class="report-card-meta">
-          <span><i class="fa fa-database me-1"></i>{{ sourceLabel(r.source) }}</span>
+          <span><i class="fa fa-database me-1"></i>{{ cat(sourceLabel(r.source)) }}</span>
           <span *ngIf="r.updatedAt"><i class="fa fa-clock-o me-1"></i>{{ r.updatedAt | date: 'dd/MM/yyyy' }}</span>
         </div>
       </div>
@@ -86,28 +86,28 @@
   <section class="preview-panel" #previewPanel *ngIf="selected">
     <div class="preview-header">
       <div class="preview-title-block">
-        <span class="cfg-label preview-label">Vista previa</span>
+        <span class="cfg-label preview-label">{{ 'dashboard.home.preview' | translate }}</span>
         <h2 class="preview-title">{{ selected.name }}</h2>
         <div class="preview-meta" *ngIf="selectedSource">
-          <span><i class="fa fa-database me-1"></i>{{ selectedSource.label }}</span>
+          <span><i class="fa fa-database me-1"></i>{{ cat(selectedSource.label) }}</span>
           <ng-container *ngIf="selected.dateFrom || selected.dateTo">
             <span class="meta-sep">·</span>
-            <span><i class="fa fa-calendar me-1"></i>{{ selected.dateFrom || '-' }} al {{ selected.dateTo || '-' }}</span>
+            <span><i class="fa fa-calendar me-1"></i>{{ 'dashboard.common.dateRange' | translate: { from: selected.dateFrom || '-', to: selected.dateTo || '-' } }}</span>
           </ng-container>
           <ng-container *ngIf="result?.meta">
             <span class="meta-sep">·</span>
-            <span>{{ result!.meta.totalRows }} filas</span>
-            <span *ngIf="result!.meta.truncated" class="meta-info" title="Se muestran las primeras 1000 filas. Edita el reporte para aumentar el límite o agregar filtros.">
-              <i class="fa fa-info-circle me-1"></i>primeras 1000
+            <span>{{ 'dashboard.common.rows' | translate: { count: result!.meta.totalRows } }}</span>
+            <span *ngIf="result!.meta.truncated" class="meta-info" [title]="'dashboard.common.truncatedTitle' | translate">
+              <i class="fa fa-info-circle me-1"></i>{{ 'dashboard.common.first1000' | translate }}
             </span>
           </ng-container>
         </div>
       </div>
       <div class="preview-actions">
         <button type="button" class="cfg-btn cfg-btn--sec btn-outline-sm" (click)="editSelected()">
-          <i class="fa fa-pencil me-1"></i> Editar
+          <i class="fa fa-pencil me-1"></i> {{ 'comun.editar' | translate }}
         </button>
-        <button type="button" class="btn-icon-sm" (click)="closePreview()" title="Cerrar">
+        <button type="button" class="btn-icon-sm" (click)="closePreview()" [title]="'comun.cerrar' | translate">
           <i class="fa fa-times"></i>
         </button>
       </div>
@@ -115,10 +115,10 @@
 
     <div class="preview-body">
       <div *ngIf="previewRunning" class="preview-state">
-        <i class="fa fa-spinner fa-spin"></i> Calculando…
+        <i class="fa fa-spinner fa-spin"></i> Calculando… <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       </div>
       <div *ngIf="previewError && !previewRunning" class="preview-error">
-        <i class="fa fa-exclamation-triangle me-1"></i>{{ previewError }}
+        <i class="fa fa-exclamation-triangle me-1"></i>{{ previewError | translate }}
       </div>
       <div class="preview-viz" *ngIf="result && !previewRunning">
         <app-viz-kpi   *ngIf="activeVizTypes.has('kpi')"   [result]="result"></app-viz-kpi>

@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoComercioModule } from './comercio/en-vivo-comercio.module';
 import { EnVivoCompartidoModule } from './compartido/en-vivo-compartido.module';
@@ -25,6 +26,7 @@ import { EnVivoPropuestasModule } from './propuestas/en-vivo-propuestas.module';
  */
 @NgModule({
   imports: [
+    TranslateModule,
     CommonModule,
     EnVivoCompartidoModule,
     EnVivoFichaModule,

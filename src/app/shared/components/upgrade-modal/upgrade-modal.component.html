@@ -20,10 +20,10 @@
       <i [class]="isReplacementMode ? 'pi pi-credit-card' : 'pi pi-bolt'" style="color: #5F3FE0; font-size: 1.2rem;"></i>
       <div>
         <h5 class="mb-0 fw-bold" style="color: #211F3A;">
-          {{ step === 'info' ? (isReplacementMode ? 'Actualizar medio de pago' : 'Activar Plan Pago') : step === 'card' ? 'Medio de Pago' : step === 'pending' ? 'Verificando Pago' : (isReplacementMode ? 'Tarjeta actualizada' : 'Plan Activado') }}
+          {{ (step === 'info' ? (isReplacementMode ? 'shell.upgrade.title.replace' : 'shell.upgrade.title.activate') : step === 'card' ? 'shell.upgrade.title.card' : step === 'pending' ? 'shell.upgrade.title.pending' : (isReplacementMode ? 'shell.upgrade.title.replaced' : 'shell.upgrade.title.activated')) | translate }}
         </h5>
         <small class="text-muted">
-          {{ step === 'info' ? (isReplacementMode ? 'La nueva tarjeta se usará en el próximo cobro' : 'Desbloquea todo, paga según tus ventas') : step === 'card' ? (isReplacementMode ? 'Registro seguro sin cobro inmediato' : 'Primer cobro y facturación ' + billingPeriodLabel) : step === 'pending' ? 'Premium se activa solo con pago aprobado' : '' }}
+          {{ (step === 'info' ? (isReplacementMode ? 'shell.upgrade.subtitle.replace' : 'shell.upgrade.subtitle.activate') : step === 'card' ? (isReplacementMode ? 'shell.upgrade.subtitle.cardReplace' : (billingPeriod === 'yearly' ? 'shell.upgrade.subtitle.cardYearly' : 'shell.upgrade.subtitle.cardMonthly')) : step === 'pending' ? 'shell.upgrade.subtitle.pending' : null) | translate }}
         </small>
       </div>
     </div>
@@ -33,96 +33,96 @@
   <div *ngIf="step === 'info'" class="p-3">
     <div *ngIf="configLoading" class="payment-notice payment-notice-loading mb-3">
       <i class="pi pi-spin pi-spinner"></i>
-      Consultando el valor exacto antes de pagar…
+      {{ 'shell.upgrade.loadingQuote' | translate }}
     </div>
-    <div *ngIf="!isReplacementMode" class="billing-period-picker mb-3" role="group" aria-label="Periodicidad de facturación">
+    <div *ngIf="!isReplacementMode" class="billing-period-picker mb-3" role="group" [attr.aria-label]="'shell.upgrade.period.aria' | translate">
       <button type="button" [class.active]="billingPeriod === 'monthly'"
               (click)="selectBillingPeriod('monthly')" [disabled]="configLoading || loading">
-        <span>Mensual</span>
-        <small>Un cobro cada mes</small>
+        <span>{{ 'shell.upgrade.period.monthly' | translate }}</span>
+        <small>{{ 'shell.upgrade.period.monthlyHelp' | translate }}</small>
       </button>
       <button type="button" [class.active]="billingPeriod === 'yearly'"
               (click)="selectBillingPeriod('yearly')" [disabled]="configLoading || loading">
-        <span>Anual <em>Ahorra 20%</em></span>
-        <small>Un cobro cada 12 meses</small>
+        <span>{{ 'shell.upgrade.period.yearly' | translate }} <em>{{ 'shell.upgrade.period.save' | translate }}</em></span>
+        <small>{{ 'shell.upgrade.period.yearlyHelp' | translate }}</small>
       </button>
     </div>
     <div *ngIf="!isReplacementMode && paymentEnvironment === 'sandbox'" class="payment-notice payment-notice-sandbox mb-3">
       <i class="pi pi-wrench"></i>
       <div>
-        <strong>Prueba Wompi Sandbox</strong>
-        <span>Simularemos un cobro de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. No mueve dinero real.</span>
+        <strong>{{ 'shell.upgrade.sandbox.title' | translate }}</strong>
+        <span>{{ 'shell.upgrade.sandbox.text' | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
       </div>
     </div>
     <div *ngIf="!isReplacementMode && paymentEnvironment === 'production'" class="payment-notice payment-notice-production mb-3">
       <i class="pi pi-credit-card"></i>
       <div>
-        <strong>{{ productionTestCharge ? 'Prueba real con Wompi' : 'Pago real con Wompi' }}</strong>
-        <span *ngIf="productionTestCharge">Se cobrarán realmente {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} para validar el flujo. La próxima renovación {{ billingPeriodLabel }} usará el precio de tu tramo.</span>
-        <span *ngIf="!productionTestCharge">El primer cobro será de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. Después se cobrará de forma {{ billingPeriodLabel }} según tu tramo.</span>
+        <strong>{{ (productionTestCharge ? 'shell.upgrade.production.testTitle' : 'shell.upgrade.production.title') | translate }}</strong>
+        <span *ngIf="productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.testTextYearly' : 'shell.upgrade.production.testTextMonthly') | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+        <span *ngIf="!productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.textYearly' : 'shell.upgrade.production.textMonthly') | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
       </div>
     </div>
     <div *ngIf="isReplacementMode" class="payment-notice payment-notice-production mb-3">
       <i class="pi pi-shield"></i>
       <div>
-        <strong>Sin cobro inmediato</strong>
-        <span>Wompi guardará una nueva autorización tokenizada. Katuq la usará desde el próximo cobro o reintento programado.</span>
+        <strong>{{ 'shell.upgrade.replace.title' | translate }}</strong>
+        <span>{{ 'shell.upgrade.replace.text' | translate }}</span>
       </div>
     </div>
     <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
-      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
+      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError | translate }}
     </div>
     <div *ngIf="!isReplacementMode" class="mb-3 p-3 rounded" style="background: #faf9fe; border: 1px solid #ececf4;">
       <h6 class="fw-bold mb-3" style="color: #211F3A; font-size: 0.85rem;">
-        <i class="pi pi-info-circle me-1" style="color: #5F3FE0;"></i>Cómo funciona
+        <i class="pi pi-info-circle me-1" style="color: #5F3FE0;"></i>{{ 'shell.upgrade.how.title' | translate }}
       </h6>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">1</span>
-        <small style="color: #5b5878;">Usas Katuq sin restricciones — todo ilimitado.</small>
+        <small style="color: #5b5878;">{{ 'shell.upgrade.how.step1' | translate }}</small>
       </div>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">2</span>
-        <small style="color: #5b5878;">Al cierre del mes, sumamos tus ventas y determinamos tu tramo.</small>
+        <small style="color: #5b5878;">{{ 'shell.upgrade.how.step2' | translate }}</small>
       </div>
       <div class="d-flex align-items-start gap-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #5F3FE0; font-size: 0.65rem;">3</span>
-        <small style="color: #5b5878;">Te cobramos según lo que vendiste. El plan anual aplica 20% de descuento sobre 12 mensualidades.</small>
+        <small style="color: #5b5878;">{{ 'shell.upgrade.how.step3' | translate }}</small>
       </div>
     </div>
 
     <table *ngIf="!isReplacementMode" class="table table-sm mb-3" style="font-size: 0.8rem;">
       <thead style="background: #faf9fe;">
         <tr>
-          <th style="color: #8f8bab; font-weight: 600;">Plan</th>
-          <th class="text-center" style="color: #8f8bab; font-weight: 600;">Ventas hasta</th>
-          <th class="text-center" style="color: #8f8bab; font-weight: 600;">Precio</th>
+          <th style="color: #8f8bab; font-weight: 600;">{{ 'shell.upgrade.table.plan' | translate }}</th>
+          <th class="text-center" style="color: #8f8bab; font-weight: 600;">{{ 'shell.upgrade.table.salesUpTo' | translate }}</th>
+          <th class="text-center" style="color: #8f8bab; font-weight: 600;">{{ 'shell.upgrade.table.price' | translate }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Base</td><td class="text-center">$15M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$27 USD</td></tr>
-        <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$47 USD</td></tr>
-        <tr><td>Esencia</td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$77 USD</td></tr>
-        <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$147 USD</td></tr>
-        <tr><td>Expansión</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$247 USD</td></tr>
-        <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$427 USD</td></tr>
+        <tr><td>Base</td><td class="text-center">$15M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$27 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
+        <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$47 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
+        <tr><td>Esencia</td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$77 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
+        <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$147 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
+        <tr><td>Expansión</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$247 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
+        <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #5F3FE0;">$427 USD</td></tr><!-- i18n-ignorar: nombre del tramo y cifras -->
       </tbody>
     </table>
 
     <small *ngIf="!isReplacementMode" class="text-muted d-block mb-3" style="font-size: 0.7rem;">
-      <i class="pi pi-info-circle me-1"></i>Precios en USD convertidos a COP con la TRM del día de cobro
+      <i class="pi pi-info-circle me-1"></i>{{ 'shell.upgrade.table.note' | translate }}
     </small>
   </div>
 
   <!-- STEP 2: Card -->
   <div *ngIf="step === 'card'" class="p-3">
     <div class="payment-summary mb-3" [class.payment-summary-real]="paymentEnvironment === 'production'">
-      <span>{{ isReplacementMode ? 'Actualización segura' : (paymentEnvironment === 'production' ? (productionTestCharge ? 'Prueba real ahora' : 'Cobro real ahora') : 'Cobro de prueba') }}</span>
-      <strong *ngIf="!isReplacementMode">{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong>
-      <strong *ngIf="isReplacementMode">$0 ahora</strong>
-      <small>{{ isReplacementMode ? 'Se usará en tu próximo cobro automático' : 'Plan ' + tierName + ' · ' + renewalLabel }}</small>
+      <span>{{ (isReplacementMode ? 'shell.upgrade.summary.replace' : (paymentEnvironment === 'production' ? (productionTestCharge ? 'shell.upgrade.summary.realTest' : 'shell.upgrade.summary.realCharge') : 'shell.upgrade.summary.testCharge')) | translate }}</span>
+      <strong *ngIf="!isReplacementMode">{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong><!-- i18n-ignorar: código de moneda -->
+      <strong *ngIf="isReplacementMode">{{ 'shell.upgrade.summary.zeroNow' | translate }}</strong>
+      <small>{{ (isReplacementMode ? 'shell.upgrade.summary.nextCharge' : (billingPeriod === 'yearly' ? 'shell.upgrade.summary.planYearly' : 'shell.upgrade.summary.planMonthly')) | translate: { tier: tierName } }}</small>
     </div>
 
     <div class="security-status mb-3"
@@ -132,63 +132,63 @@
         <i [class]="securityReady && termsReady ? 'pi pi-shield' : 'pi pi-spin pi-spinner'"></i>
       </span>
       <div>
-        <strong>{{ securityReady && termsReady ? 'Cifrado seguro activo' : 'Preparando conexión segura…' }}</strong>
-        <small *ngIf="securityReady && termsReady">Tus datos se cifran en este navegador y viajan directamente a Wompi. Katuq solo recibe un token.</small>
-        <small *ngIf="!securityReady || !termsReady">Espera a que Wompi confirme el cifrado y las autorizaciones antes de escribir la tarjeta.</small>
+        <strong>{{ (securityReady && termsReady ? 'shell.upgrade.security.ready' : 'shell.upgrade.security.preparing') | translate }}</strong>
+        <small *ngIf="securityReady && termsReady">{{ 'shell.upgrade.security.readyText' | translate }}</small>
+        <small *ngIf="!securityReady || !termsReady">{{ 'shell.upgrade.security.preparingText' | translate }}</small>
       </div>
     </div>
 
     <div class="secure-card-form">
       <div class="payment-field">
-        <label for="receiptEmail">Correo para el comprobante</label>
+        <label for="receiptEmail">{{ 'shell.upgrade.card.receiptEmail' | translate }}</label>
         <div class="input-shell" [class.input-shell-error]="receiptEmailError">
           <i class="pi pi-envelope field-icon"></i>
           <input id="receiptEmail" type="email" class="form-control"
                  [ngModel]="receiptEmail" (ngModelChange)="onReceiptEmailInput($event)"
-                 (blur)="validateReceiptEmail()" placeholder="tu@correo.com"
+                 (blur)="validateReceiptEmail()" [placeholder]="'shell.upgrade.card.receiptEmailPlaceholder' | translate"
                  autocomplete="email" maxlength="254" [disabled]="loading"
                  [attr.aria-invalid]="!!receiptEmailError">
         </div>
-        <small *ngIf="!receiptEmailError" class="field-help">{{ isReplacementMode ? 'Aquí llegarán los próximos comprobantes.' : 'Aquí llegará el comprobante PDF cuando Wompi apruebe.' }}</small>
-        <small *ngIf="receiptEmailError" class="field-error">{{ receiptEmailError }}</small>
+        <small *ngIf="!receiptEmailError" class="field-help">{{ (isReplacementMode ? 'shell.upgrade.card.receiptHelpReplace' : 'shell.upgrade.card.receiptHelp') | translate }}</small>
+        <small *ngIf="receiptEmailError" class="field-error">{{ receiptEmailError | translate }}</small>
       </div>
 
       <div class="payment-field">
         <div class="field-label-row">
-          <label for="cardNumber">Número de tarjeta</label>
-          <span class="brand-badge" [class.brand-badge-known]="cardBrand !== 'unknown'">{{ cardBrandLabel }}</span>
+          <label for="cardNumber">{{ 'shell.upgrade.card.number' | translate }}</label>
+          <span class="brand-badge" [class.brand-badge-known]="cardBrand !== 'unknown'">{{ cardBrandLabel | translate }}</span>
         </div>
         <div class="input-shell" [class.input-shell-error]="cardNumberError">
           <i class="pi pi-credit-card field-icon"></i>
           <input id="cardNumber" type="text" class="form-control card-number-input"
                  [ngModel]="cardNumber" (ngModelChange)="onCardNumberInput($event)"
-                 (blur)="validateCardNumber()" placeholder="Número de la tarjeta"
+                 (blur)="validateCardNumber()" [placeholder]="'shell.upgrade.card.numberPlaceholder' | translate"
                  inputmode="numeric" autocomplete="cc-number" maxlength="23"
                  [disabled]="loading || !securityReady || !termsReady"
                  [attr.aria-invalid]="!!cardNumberError">
           <i *ngIf="cardNumber && !cardNumberError && isCardNumberValid" class="pi pi-check-circle field-valid"></i>
         </div>
-        <small *ngIf="cardNumberError" class="field-error">{{ cardNumberError }}</small>
+        <small *ngIf="cardNumberError" class="field-error">{{ cardNumberError | translate }}</small>
       </div>
 
       <div class="card-detail-grid">
         <div class="payment-field">
-          <label for="cardExpMonth">Mes</label>
+          <label for="cardExpMonth">{{ 'shell.upgrade.card.month' | translate }}</label>
           <div class="input-shell compact" [class.input-shell-error]="expiryError">
             <input id="cardExpMonth" type="text" class="form-control"
                    [ngModel]="cardExpMonth" (ngModelChange)="onExpiryMonthInput($event)"
-                   (blur)="validateExpiry()" placeholder="MM" inputmode="numeric"
+                   (blur)="validateExpiry()" [placeholder]="'shell.upgrade.card.monthPlaceholder' | translate" inputmode="numeric"
                    autocomplete="cc-exp-month" maxlength="2"
                    [disabled]="loading || !securityReady || !termsReady"
                    [attr.aria-invalid]="!!expiryError">
           </div>
         </div>
         <div class="payment-field">
-          <label for="cardExpYear">Año</label>
+          <label for="cardExpYear">{{ 'shell.upgrade.card.year' | translate }}</label>
           <div class="input-shell compact" [class.input-shell-error]="expiryError">
             <input id="cardExpYear" type="text" class="form-control"
                    [ngModel]="cardExpYear" (ngModelChange)="onExpiryYearInput($event)"
-                   (blur)="validateExpiry()" placeholder="AA" inputmode="numeric"
+                   (blur)="validateExpiry()" [placeholder]="'shell.upgrade.card.yearPlaceholder' | translate" inputmode="numeric"
                    autocomplete="cc-exp-year" maxlength="2"
                    [disabled]="loading || !securityReady || !termsReady"
                    [attr.aria-invalid]="!!expiryError">
@@ -196,8 +196,8 @@
         </div>
         <div class="payment-field">
           <div class="field-label-row">
-            <label for="cardCvc">CVC</label>
-            <span class="cvc-hint" title="Código de seguridad de 3 o 4 dígitos">?</span>
+            <label for="cardCvc">{{ 'shell.upgrade.card.cvc' | translate }}</label>
+            <span class="cvc-hint" [title]="'shell.upgrade.card.cvcHint' | translate">?</span>
           </div>
           <div class="input-shell compact" [class.input-shell-error]="cardCvcError">
             <input id="cardCvc" type="password" class="form-control"
@@ -209,21 +209,21 @@
           </div>
         </div>
       </div>
-      <small *ngIf="expiryError" class="field-error detail-error">{{ expiryError }}</small>
-      <small *ngIf="cardCvcError" class="field-error detail-error">{{ cardCvcError }}</small>
+      <small *ngIf="expiryError" class="field-error detail-error">{{ expiryError | translate }}</small>
+      <small *ngIf="cardCvcError" class="field-error detail-error">{{ cardCvcError | translate }}</small>
 
       <div class="payment-field">
-        <label for="cardHolder">Titular de la tarjeta</label>
+        <label for="cardHolder">{{ 'shell.upgrade.card.holder' | translate }}</label>
         <div class="input-shell" [class.input-shell-error]="cardHolderError">
           <i class="pi pi-user field-icon"></i>
           <input id="cardHolder" type="text" class="form-control holder-input"
                  [ngModel]="cardHolder" (ngModelChange)="onCardHolderInput($event)"
-                 (blur)="validateHolder()" placeholder="NOMBRE COMO APARECE EN LA TARJETA"
+                 (blur)="validateHolder()" [placeholder]="'shell.upgrade.card.holderPlaceholder' | translate"
                  autocomplete="cc-name" maxlength="80"
                  [disabled]="loading || !securityReady || !termsReady"
                  [attr.aria-invalid]="!!cardHolderError">
         </div>
-        <small *ngIf="cardHolderError" class="field-error">{{ cardHolderError }}</small>
+        <small *ngIf="cardHolderError" class="field-error">{{ cardHolderError | translate }}</small>
       </div>
     </div>
 
@@ -233,26 +233,26 @@
         <input type="checkbox" class="form-check-input" id="acceptPolicy"
                [(ngModel)]="acceptedPolicy" [disabled]="loading || !termsReady">
         <label class="form-check-label" for="acceptPolicy">
-          Leí y acepto los <a [href]="policyLink" target="_blank" rel="noopener noreferrer">términos y condiciones</a> de Wompi.
+          {{ 'shell.upgrade.consent.policyBefore' | translate }} <a [href]="policyLink" target="_blank" rel="noopener noreferrer">{{ 'shell.upgrade.consent.policyLink' | translate }}</a>{{ 'shell.upgrade.consent.policyAfter' | translate }}
         </label>
       </div>
       <div class="form-check">
         <input type="checkbox" class="form-check-input" id="acceptPersonal"
                [(ngModel)]="acceptedPersonalData" [disabled]="loading || !termsReady">
         <label class="form-check-label" for="acceptPersonal">
-          Autorizo el <a [href]="personalDataLink" target="_blank" rel="noopener noreferrer">tratamiento de mis datos personales</a>.
+          {{ 'shell.upgrade.consent.dataBefore' | translate }} <a [href]="personalDataLink" target="_blank" rel="noopener noreferrer">{{ 'shell.upgrade.consent.dataLink' | translate }}</a>{{ 'shell.upgrade.consent.dataAfter' | translate }}
         </label>
       </div>
     </div>
 
     <!-- Error -->
     <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
-      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
+      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError | translate }}
     </div>
 
     <div class="secure-footer-note">
       <i class="pi pi-lock"></i>
-      <span><strong>No almacenamos tu tarjeta.</strong> El número, vencimiento y CVC se eliminan de la pantalla apenas Wompi genera el token.</span>
+      <span><strong>{{ 'shell.upgrade.secureNote.title' | translate }}</strong> {{ 'shell.upgrade.secureNote.text' | translate }}</span>
     </div>
   </div>
 
@@ -261,9 +261,9 @@
     <div class="mb-3">
       <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #5F3FE0;"></i>
     </div>
-    <h5 class="fw-bold" style="color: #211F3A;">Verificando tu pago</h5>
-    <p class="text-muted mb-2">{{ pendingMessage }}</p>
-    <small class="text-muted">Mientras tanto, tu cuenta continúa funcionando con el plan Gratis.</small>
+    <h5 class="fw-bold" style="color: #211F3A;">{{ 'shell.upgrade.pending.title' | translate }}</h5>
+    <p class="text-muted mb-2">{{ pendingMessage | translate }}</p>
+    <small class="text-muted">{{ 'shell.upgrade.pending.meanwhile' | translate }}</small>
   </div>
 
   <!-- STEP 4: Success -->
@@ -271,18 +271,18 @@
     <div class="mb-3">
       <i class="pi pi-check-circle" style="font-size: 3rem; color: #1E874B;"></i>
     </div>
-    <h5 class="fw-bold" style="color: #211F3A;">{{ isReplacementMode ? 'Medio de pago actualizado' : 'Plan activado exitosamente' }}</h5>
-    <p *ngIf="!isReplacementMode" class="text-muted">Wompi confirmó el pago. Ya tienes acceso a Premium y enviamos el comprobante PDF a <strong>{{ receiptEmail }}</strong>.</p>
-    <p *ngIf="isReplacementMode" class="text-muted">La nueva tarjeta quedó tokenizada para tus próximos cobros. No realizamos ningún cargo ahora.</p>
+    <h5 class="fw-bold" style="color: #211F3A;">{{ (isReplacementMode ? 'shell.upgrade.success.replaced' : 'shell.upgrade.success.activated') | translate }}</h5>
+    <p *ngIf="!isReplacementMode" class="text-muted">{{ 'shell.upgrade.success.textBefore' | translate }} <strong>{{ receiptEmail }}</strong>.</p>
+    <p *ngIf="isReplacementMode" class="text-muted">{{ 'shell.upgrade.success.replacedText' | translate }}</p>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="d-flex justify-content-between w-100">
       <!-- Step 1 -->
       <ng-container *ngIf="step === 'info'">
-        <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        <button pButton type="button" [label]="'comun.cancelar' | translate" icon="pi pi-times"
                 class="p-button-text p-button-secondary" (click)="closeModal()"></button>
-        <button pButton type="button" label="Continuar" icon="pi pi-arrow-right" iconPos="right"
+        <button pButton type="button" [label]="'shell.upgrade.footer.continue' | translate" icon="pi pi-arrow-right" iconPos="right"
                 style="background: #5F3FE0; border-color: #5F3FE0;"
                 [disabled]="configLoading || !initialAmountCOP || !!cardError"
                 (click)="goToCardStep()"></button>
@@ -290,7 +290,7 @@
 
       <!-- Step 2 -->
       <ng-container *ngIf="step === 'card'">
-        <button pButton type="button" label="Atrás" icon="pi pi-arrow-left"
+        <button pButton type="button" [label]="'shell.upgrade.footer.back' | translate" icon="pi pi-arrow-left"
                 class="p-button-text p-button-secondary" (click)="step = 'info'"
                 [disabled]="loading"></button>
         <button pButton type="button"
@@ -305,17 +305,17 @@
       <!-- Step 3 -->
       <ng-container *ngIf="step === 'pending'">
         <span></span>
-        <button pButton type="button" label="Seguir usando Gratis" icon="pi pi-arrow-right"
+        <button pButton type="button" [label]="'shell.upgrade.footer.keepFree' | translate" icon="pi pi-arrow-right"
                 class="p-button-text" (click)="closeModal()"></button>
       </ng-container>
 
       <!-- Step 4 -->
       <ng-container *ngIf="step === 'success'">
         <span></span>
-        <button *ngIf="!isReplacementMode" pButton type="button" label="Ir al Dashboard" icon="pi pi-home"
+        <button *ngIf="!isReplacementMode" pButton type="button" [label]="'shell.upgrade.footer.goDashboard' | translate" icon="pi pi-home"
                 style="background: #5F3FE0; border-color: #5F3FE0;"
                 (click)="closeModal()" routerLink="/welcome"></button>
-        <button *ngIf="isReplacementMode" pButton type="button" label="Listo" icon="pi pi-check"
+        <button *ngIf="isReplacementMode" pButton type="button" [label]="'shell.upgrade.footer.done' | translate" icon="pi pi-check"
                 style="background: #5F3FE0; border-color: #5F3FE0;"
                 (click)="closeModal()"></button>
       </ng-container>

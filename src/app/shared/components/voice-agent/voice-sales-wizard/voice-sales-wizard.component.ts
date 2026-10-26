@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { VoiceAgentSalesService, VoiceSalesStep, VoiceSalesProgress } from '../../../services/voice-agent/voice-agent-sales.service';
 import { VoiceSalesIntegrationService, VoiceSalesExecutionResult } from '../../../services/voice-agent/voice-sales-integration.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-voice-sales-wizard',
@@ -35,7 +36,8 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   constructor(
     private voiceSalesService: VoiceAgentSalesService,
     private voiceIntegrationService: VoiceSalesIntegrationService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -106,7 +108,7 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   startVoiceSales(): void {
     this.voiceSalesService.startVoiceSales();
     this.showVoiceInput = true;
-    this.toastr.success('Sesión de ventas por voz iniciada', 'Agente de Voz');
+    this.toastr.success(this.translate.instant('asistentes.voiceSalesWizard.sesionIniciada'), this.translate.instant('asistentes.voiceSalesWizard.agenteDeVoz'));
   }
 
   /**
@@ -115,7 +117,7 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   endVoiceSales(): void {
     this.voiceSalesService.endVoiceSales();
     this.showVoiceInput = false;
-    this.toastr.info('Sesión de ventas por voz finalizada', 'Agente de Voz');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesWizard.sesionFinalizada'), this.translate.instant('asistentes.voiceSalesWizard.agenteDeVoz'));
   }
 
   /**
@@ -125,7 +127,7 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
     this.voiceSalesService.resetVoiceSales();
     this.voiceCommand = '';
     this.lastResult = null;
-    this.toastr.info('Sesión de ventas por voz reiniciada', 'Agente de Voz');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesWizard.sesionReiniciada'), this.translate.instant('asistentes.voiceSalesWizard.agenteDeVoz'));
   }
 
   /**
@@ -133,7 +135,7 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
    */
   async executeVoiceCommand(): Promise<void> {
     if (!this.voiceCommand.trim()) {
-      this.toastr.warning('Ingresa un comando de voz', 'Comando Requerido');
+      this.toastr.warning(this.translate.instant('asistentes.voiceSalesWizard.ingresaUnComando'), this.translate.instant('asistentes.voiceSalesWizard.comandoRequerido'));
       return;
     }
 
@@ -144,13 +146,13 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
       );
 
       if (result.success) {
-        this.toastr.success(result.message, 'Comando Ejecutado');
+        this.toastr.success(result.message, this.translate.instant('asistentes.voiceSalesWizard.comandoEjecutado'));
         this.voiceCommand = '';
       } else {
-        this.toastr.error(result.message, 'Error en Comando');
+        this.toastr.error(result.message, this.translate.instant('asistentes.voiceSalesWizard.errorEnComando'));
       }
     } catch (error: any) {
-      this.toastr.error(`Error al ejecutar comando: ${error.message}`, 'Error');
+      this.toastr.error(this.translate.instant('asistentes.voiceSalesWizard.errorAlEjecutarComando', { mensaje: error.message }), this.translate.instant('comun.error'));
     }
   }
 
@@ -160,9 +162,9 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   nextStep(): void {
     const result = this.voiceSalesService.nextStep();
     if (result.success) {
-      this.toastr.success(result.message, 'Siguiente Paso');
+      this.toastr.success(result.message, this.translate.instant('asistentes.voiceSalesWizard.siguientePaso'));
     } else {
-      this.toastr.warning(result.message, 'No se puede avanzar');
+      this.toastr.warning(result.message, this.translate.instant('asistentes.voiceSalesWizard.noSePuedeAvanzar'));
     }
   }
 
@@ -172,9 +174,9 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   previousStep(): void {
     const result = this.voiceSalesService.previousStep();
     if (result.success) {
-      this.toastr.info(result.message, 'Paso Anterior');
+      this.toastr.info(result.message, this.translate.instant('asistentes.voiceSalesWizard.pasoAnterior'));
     } else {
-      this.toastr.warning(result.message, 'No se puede retroceder');
+      this.toastr.warning(result.message, this.translate.instant('asistentes.voiceSalesWizard.noSePuedeRetroceder'));
     }
   }
 
@@ -184,9 +186,9 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
   goToStep(stepNumber: number): void {
     const result = this.voiceSalesService.goToStep(stepNumber);
     if (result.success) {
-      this.toastr.info(result.message, 'Navegación');
+      this.toastr.info(result.message, this.translate.instant('asistentes.voiceSalesWizard.navegacion'));
     } else {
-      this.toastr.warning(result.message, 'Navegación Fallida');
+      this.toastr.warning(result.message, this.translate.instant('asistentes.voiceSalesWizard.navegacionFallida'));
     }
   }
 
@@ -422,7 +424,7 @@ export class VoiceSalesWizardComponent implements OnInit, OnDestroy {
    */
   clearCommandHistory(): void {
     this.voiceIntegrationService.clearCommandHistory();
-    this.toastr.info('Historial de comandos limpiado', 'Historial');
+    this.toastr.info(this.translate.instant('asistentes.voiceSalesWizard.historialLimpiado'), this.translate.instant('asistentes.voiceSalesWizard.historial'));
   }
 
   /**

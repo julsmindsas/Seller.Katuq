@@ -1,23 +1,26 @@
 // "Opinar" (D-483). Contenido de un NgbModal (se abre con modalDialogClass 'katuq-modal',
 // que redondea el .modal-content). Tema canónico: plano, acento #5F3FE0, radios 16/11/20.
 // Ningún nombre de clase contiene "p-"; spans con color y tamaño propios; h2 con !important.
-$accent: #5F3FE0;
-$accent-hover: #4a2fc0;
-$accent-2: #7C5CFF;
-$accent-soft: #efe9ff;
-$ink: #211F3A;
-$body: #5b5878;
-$muted: #8f8bab;
-$line: #ececf4;
-$line-soft: #f1f0f7;
-$err: #D64545;
-$err-soft: #FDECEC;
+// D-502 F2c (ticket 1180, tarea 4.3): los colores salen de los tokens --ds-* (_theme-tokens.scss), que en claro
+// valen lo mismo que antes. $accent es relleno o borde; $accent-ink es el acento como texto o ícono.
+$accent: var(--ds-accent);
+$accent-ink: var(--ds-accent-ink);
+$accent-hover: var(--ds-accent-hover);
+$accent-2: var(--ds-focus);
+$accent-soft: var(--ds-accent-soft);
+$ink: var(--ds-ink);
+$body: var(--ds-body);
+$muted: var(--ds-muted);
+$line: var(--ds-line);
+$line-soft: var(--ds-line-soft);
+$err: var(--ds-err);
+$err-soft: var(--ds-err-soft);
 
 :host { display: block; }
 
 .opinar {
   color: $ink;
-  background: #fff;
+  background: var(--ds-surface);
 
   p, label, span, button, textarea, legend { letter-spacing: normal; }
   :focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
@@ -45,7 +48,7 @@ $err-soft: #FDECEC;
   border: 1px solid #ddd3fb;
   border-radius: 20px;
   background: $accent-soft;
-  color: $accent;
+  color: $accent-ink;
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: .6px !important;
@@ -74,13 +77,13 @@ $err-soft: #FDECEC;
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid #e4e2ef;
+  border: 1px solid var(--ds-line-strong);
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   color: $body;
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: #faf9fe; color: $accent; }
+  &:hover:not(:disabled) { background: var(--ds-surface-2); color: $accent-ink; }
   &:disabled { opacity: .5; cursor: not-allowed; }
 }
 
@@ -126,13 +129,13 @@ $err-soft: #FDECEC;
   gap: 10px;
   margin: 0;
   padding: 12px;
-  border: 1px solid #e9e7f3;
+  border: 1px solid var(--ds-control-border);
   border-radius: 16px;
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
 
-  &:hover { background: #faf9ff; border-color: #d9cffb; }
+  &:hover { background: var(--ds-row-hover); border-color: #d9cffb; }
   &:focus-within { outline: 3px solid $accent-2; outline-offset: 2px; }
 
   &.is-activo {
@@ -159,7 +162,7 @@ $err-soft: #FDECEC;
   height: 34px;
   border-radius: 11px;
   background: $accent-soft;
-  color: $accent;
+  color: $accent-ink;
   font-size: 14px;
 }
 
@@ -187,9 +190,9 @@ $err-soft: #FDECEC;
   width: 100%;
   min-height: 120px;
   padding: 10px 12px;
-  border: 1px solid #e9e7f3;
+  border: 1px solid var(--ds-control-border);
   border-radius: 11px;
-  background: #f5f4fa;
+  background: var(--ds-chip-bg);
   color: $ink;
   font-family: inherit;
   font-size: 14px;
@@ -198,7 +201,7 @@ $err-soft: #FDECEC;
   transition: border-color .15s ease, background .15s ease;
 
   &::placeholder { color: $muted; }
-  &:focus { border-color: $accent; background: #fff; outline: none; }
+  &:focus { border-color: $accent; background: var(--ds-surface); outline: none; }
   &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 1px; }
   &[aria-invalid='true'] { border-color: $err; }
 }
@@ -253,7 +256,7 @@ $err-soft: #FDECEC;
   border: 1px solid $accent;
   border-radius: 11px;
   background: $accent;
-  color: #fff;
+  color: var(--ds-on-accent);
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 700;
@@ -269,13 +272,13 @@ $err-soft: #FDECEC;
 .opinar__btn-texto { color: inherit; font-size: inherit; }
 
 .opinar__btn--sec {
-  border-color: #e4e2ef;
-  background: #fff;
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
   color: $body;
   box-shadow: none;
 
-  &:hover:not(:disabled) { background: #faf9fe; border-color: #d9cffb; color: $accent; }
-  &:disabled { background: #fff; border-color: #e4e2ef; opacity: .55; }
+  &:hover:not(:disabled) { background: var(--ds-surface-2); border-color: #d9cffb; color: $accent-ink; }
+  &:disabled { background: var(--ds-surface); border-color: var(--ds-line-strong); opacity: .55; }
 }
 
 @media (max-width: 480px) {

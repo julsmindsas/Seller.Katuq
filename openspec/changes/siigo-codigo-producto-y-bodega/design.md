@@ -79,7 +79,11 @@ revisa que el objeto del update tenga solo esas tres claves.
 
 Script `scripts/siigo/cargarCodigosSiigo.js --company "ALMACEN BOMBAS"`:
 
-- Por defecto es una prueba sin escribir. Con `--apply` escribe.
+- Por defecto es una prueba sin escribir. Con `--apply` escribe; `--dry-run`
+  siempre gana. `--apply` exige `--aprobado "<xlsx>"`: solo se escriben los
+  productos cuyo par (Referencia, Código en SIIGO) de la hoja «Asignados» que
+  revisó el comercio coincide con el emparejamiento recalculado; lo demás se
+  informa y no se escribe. El Excel de salida nunca reemplaza el aprobado.
 - Lee todo el catálogo de SIIGO por páginas y los productos de Katuq de la
   empresa.
 - Por cada producto busca primero el código exacto y después la regla
@@ -89,7 +93,15 @@ Script `scripts/siigo/cargarCodigosSiigo.js --company "ALMACEN BOMBAS"`:
 - No pisa un `productCode` que ya esté guardado.
 - Genera el Excel de revisión con cuatro hojas: asignados, ambiguos, sin
   equivalente y repetidos en SIIGO.
-- Escribe con D4, en lotes, y deja un resumen en la salida.
+- Escribe con D4, en lotes, y deja un resumen en la salida. Relee cada lote con
+  `getAll`, salta los productos que ya tienen código (pudo guardarlo la
+  equivalencia al facturar) o que no son de la empresa, y escribe con la
+  precondición `lastUpdateTime` del documento leído.
+- `--verificar N` toma una foto de una muestra antes y la relee después: fuera
+  de `integrations.siigo` no puede cambiar nada y el código debe ser el
+  esperado. Sin `--apply` relee una carga ya hecha.
+- La lógica vive en `scripts/siigo/planCargaSiigo.js`, sin efectos al cargarse,
+  con pruebas en `tests/accounting/emparejarCodigosSiigo.test.js`.
 
 ## D6. Categoría contable de SIIGO por categoría de Katuq
 
@@ -123,12 +135,69 @@ inventario, costo de venta, ingreso y devolución. Hoy `createProduct` usa
   existe, va una tabla con las categorías de Katuq de la empresa y un
   selector de categoría de SIIGO para cada una. Se guarda en el mismo
   `accountsMapping`.
-- **Bombas:** un script precarga la conexión por mayoría a partir de los
-  productos ya emparejados, con prueba sin escribir y por
-  `integrationConfigService`, para no tocar el cifrado a mano. Se carga
-  solo después de que el comercio confirme si van las categorías viejas
-  (BOMBAS, MOTOR…) o las nuevas (1647–1679).
+- **Bombas:** un script propone la conexión por mayoría a partir de los
+  productos ya emparejados, solo como prueba. Para guardar, `--apply` exige
+  `--conexiones` con la lista que eligió el comercio (19-oct: las nuevas,
+  1647–1679). Guarda por `integrationConfigService`, para no tocar el cifrado
+  a mano, solo si la integración ya está activa; funde con lo guardado (la
+  misma categoría escrita distinto cuenta una vez y gana lo que eligió el
+  comercio) y `--verificar` relee lo guardado contra el archivo.
 - **No cambia** la categoría de los productos que ya existen en SIIGO.
+
+## D7. Vista previa: qué pasará con cada producto (tarea 1.9)
+
+- `codigoSiigo.js` replica la decisión de `findOrCreateProduct` en funciones
+  puras con `buscar` inyectado (`strategy.findProductByCode`): búsqueda exacta;
+  candidatos solo sin código guardado y con la bandera; uno solo y con código
+  exacto. El código buscado sale en el orden del proveedor (con `code` antes de
+  `_id`); la línea se anota por el código del mapper (`codigosLinea`), no por
+  índice. Un contract test compara la decisión con la del proveedor real.
+- **Detrás de `siigoProductEquivalence`.** Apagada, la vista previa es la de
+  hoy (nada nuevo nace encendido). Desvío de la recomendación 5 del informe,
+  que pedía la búsqueda exacta para todos: así no cambia la latencia ni los
+  avisos de OH MY STORE ni de ALMARA. 3.2 se verifica después de 2.5.
+- **Acotada.** Tope de 20 códigos, plazo de 15 s, `retryAttempts: 0` y timeout
+  de 5 s solo para estas lecturas, y corte en el primer error. El circuit
+  breaker de `ResilientHttpClient` es uno por proveedor para todas las empresas
+  y se abre con 5 fallas seguidas: la vista previa aporta como mucho una.
+- **Divergencia declarada.** Si una consulta falla, la factura sigue y crea; la
+  vista previa marca `error` y avisa que no revisó todo, sin afirmar nada.
+- No cambia lo que se factura: no toca el proveedor, el mapper ni
+  `createInvoiceFromOrder`.
+
+## Desvíos al implementar (registro del 2026-10-21, bloque 1229-B05)
+
+Los tres primeros van con D-504 (aprobada por Daniel el 21-oct, en bloque) y
+están anotados en el contrato. El candado (S.1) no estaba en lo aprobado: es
+la propuesta D-561, apagada y pendiente de ratificar.
+
+- **D3 detrás de una bandera por comercio.** La búsqueda del equivalente solo
+  corre con `siigoProductEquivalence` (`companies.featureFlags`, D-505), apagada
+  por defecto. La regla depende de cómo codifica cada comercio (ALMARA y OH MY
+  STORE codifican distinto). El código guardado de D1/D2 sí se lee siempre.
+  Dueño Daniel; se revisa el 2027-04-30 (tarea 3.5). El requisito «Equivalencia
+  única antes de crear» de la spec todavía no dice «WHILE la bandera…»: se
+  ajusta con la aprobación de Daniel (tarea 3.6).
+- **D6, `stock_control` solo para servicios.** `createProduct` crea los
+  servicios sin control de inventario; los productos siguen con control, aunque
+  el mapper mande otro valor.
+- **D7 detrás de la misma bandera** (ya escrito en D7): apagada, la vista
+  previa es la de siempre. Se aparta de la recomendación 5 del informe, que
+  pedía la búsqueda exacta para todos y decía que el front no cambiaba: lo
+  nuevo nace apagado y el circuit breaker de SIIGO es compartido. El front sí
+  cambió (1b.2, chip por línea), porque los avisos solos no dicen a qué línea
+  se refieren.
+- **Candado de emisión (S.1), fuera del diseño original.** Hallazgo de
+  planificación del 21-oct: `from-order` y `from-order-async` le creían al
+  header `company`. Va en su propia decisión, D-561, con el interruptor global
+  `config/feature_flags.invoiceTenantLock` (off | shadow | on), que nace en
+  `off`. Que el `orderId` sea de la empresa queda en S.2. Daniel la ratifica
+  antes de desplegar (3.1).
+- **Requisitos EARS sin pasar a la spec.** El de la vista previa sí entró
+  (1229-B02) porque era la recomendación 5, aprobada. Los del candado (D-561,
+  propuesta) y los de la carga con `--aprobado` y `--verificar` (D5 y D6) no
+  estaban en el plan aprobado; quedan para que Daniel los apruebe, junto con
+  la condición de la bandera en «Equivalencia única antes de crear».
 
 ## Pruebas
 

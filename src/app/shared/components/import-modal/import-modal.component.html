@@ -1,6 +1,6 @@
 <p-dialog
   [(visible)]="visible"
-  [header]="config?.title || 'Importar'"
+  [header]="config?.title || ('importador.importModal.importar' | translate)"
   [modal]="true"
   appendTo="body"
   [closable]="!isUploading && !isAnalyzingColumns && !isDeleting"
@@ -16,17 +16,17 @@
     <div class="ix-cabeza">
       <h4>
         <i class="pi pi-upload mr-2"></i>
-        Selecciona el archivo a importar
+        {{ 'importador.importModal.seleccionaElArchivoAImportar' | translate }}
       </h4>
       <p class="text-muted">
-        Formatos aceptados: Excel (.xlsx, .xls) o JSON (.json)
+        {{ 'importador.importModal.formatosAceptadosExcelXlsxXls' | translate }}
       </p>
     </div>
 
     <app-mobile-file-upload
       [acceptedFormats]="acceptedFormats"
       [maxFileSize]="config?.maxFileSize || 5000000"
-      [placeholder]="'Selecciona un archivo para importar'"
+      [placeholder]="('importador.importModal.seleccionaUnArchivoParaImportar' | translate)"
       (fileSelected)="onMobileFileSelected($event)"
       (fileCleared)="clearFile()">
     </app-mobile-file-upload>
@@ -35,14 +35,13 @@
          Activo y Página Web vacíos dejan el producto sin poder venderse. -->
     <div class="aviso-categorias mt-4" *ngIf="type === 'product'">
       <h6>
-        <i class="pi pi-exclamation-triangle me-2"></i>Escriba SI o NO en las casillas
+        <i class="pi pi-exclamation-triangle me-2"></i>{{ 'importador.importModal.escribaSiONoEn' | translate }}
       </h6>
       <p class="mb-2">
-        En las columnas que dicen <strong>(SI/NO)</strong> escriba SI o NO en cada fila. Una casilla vacía cuenta como NO.
+        {{ 'importador.importModal.enLasColumnasQueDicen' | translate }} <strong>{{ 'importador.importModal.siNo' | translate }}</strong> {{ 'importador.importModal.escribaSiONoEn2' | translate }}
       </p>
       <p class="aviso-detalle mb-0">
-        Revise sobre todo <strong>Activo</strong> y <strong>Página Web</strong>: en NO o vacías, el producto queda
-        apagado, no sale en la tienda en línea y su stock no se le envía a la tienda.
+        {{ 'importador.importModal.reviseSobreTodo' | translate }} <strong>{{ 'importador.importModal.activo' | translate }}</strong> {{ 'importador.importModal.y' | translate }} <strong>{{ 'importador.importModal.paginaWeb' | translate }}</strong>{{ 'importador.importModal.enNoOVaciasEl' | translate }}
       </p>
     </div>
 
@@ -50,12 +49,12 @@
       <p-divider></p-divider>
       <div class="template-info">
         <i class="pi pi-info-circle mr-2"></i>
-        <span>Necesitas una plantilla? Descargala aqui:</span>
+        <span>{{ 'importador.importModal.necesitasUnaPlantillaDescargalaAqui' | translate }}</span>
       </div>
       <button
         pButton
         type="button"
-        label="Descargar Plantilla"
+        [label]="'importador.importModal.descargarPlantilla' | translate"
         icon="pi pi-download"
         class="cfg-btn cfg-btn--sec mt-2"
         (click)="downloadTemplate()">
@@ -67,9 +66,9 @@
   <div class="analyzing-step" *ngIf="isAnalyzingColumns">
     <div class="analyzing-content">
       <i class="pi pi-spin pi-spinner analyzing-icon"></i>
-      <h4>KAI esta analizando tu archivo...</h4>
+      <h4>{{ 'importador.importModal.kaiEstaAnalizandoTuArchivo' | translate }}</h4>
       <p class="text-muted">
-        El agente inteligente esta identificando las columnas y sugiriendo el mejor mapeo
+        {{ 'importador.importModal.elAgenteInteligenteEstaIdentificando' | translate }}
       </p>
       <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
     </div>
@@ -84,23 +83,22 @@
   <div class="analyzing-step" *ngIf="isUploading">
     <div class="analyzing-content">
       <i class="pi pi-spin pi-spinner analyzing-icon"></i>
-      <h4>Importando {{ importTotalRecords | number }} {{ type === 'customer' ? 'clientes' : type === 'inventory' ? 'registros de inventario' : type === 'category' ? 'categorías' : 'productos' }}...</h4>
+      <h4>{{ 'importador.importModal.importando' | translate:{importTotalRecords: (importTotalRecords | number), tipo: (type === 'customer' ? ('importador.importModal.clientes' | translate) : type === 'inventory' ? ('importador.importModal.registrosDeInventario' | translate) : type === 'category' ? ('importador.importModal.categorias' | translate) : ('importador.importModal.productos' | translate))} }}</h4>
 
       <ng-container *ngIf="totalLotes > 1; else barraSimple">
         <p-progressBar [value]="porcentajeImport" styleClass="mt-3"></p-progressBar>
         <p class="progreso-detalle">
-          Lote <strong>{{ loteActual }}</strong> de <strong>{{ totalLotes }}</strong>
-          · {{ registrosProcesados | number }} de {{ importTotalRecords | number }} procesados
+          {{ 'importador.importModal.lote' | translate }} <strong>{{ loteActual }}</strong> {{ 'importador.importModal.de' | translate }} <strong>{{ totalLotes }}</strong>
+          {{ 'importador.importModal.deProcesados' | translate:{registrosProcesados: (registrosProcesados | number), importTotalRecords: (importTotalRecords | number)} }}
         </p>
         <p class="text-muted">
-          Se envía por lotes para no saturar el servidor. No cierres esta ventana ni
-          recargues la página: se cortaría a la mitad y lo ya subido quedaría cargado.
+          {{ 'importador.importModal.seEnviaPorLotesPara' | translate }}
         </p>
       </ng-container>
 
       <ng-template #barraSimple>
         <p class="text-muted">
-          Esto puede tardar varios segundos dependiendo del volumen. No cierres esta ventana.
+          {{ 'importador.importModal.estoPuedeTardarVariosSegundos' | translate }}
         </p>
         <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
       </ng-template>
@@ -116,27 +114,20 @@
     <div class="ix-cabeza">
       <h4>
         <i class="mr-2" [ngClass]="origenMapeo === 'kai' ? 'pi pi-sparkles' : 'pi pi-check-square'"></i>
-        Mapeo de Columnas
+        {{ 'importador.importModal.mapeoDeColumnas' | translate }}
       </h4>
       <p class="text-muted" *ngIf="origenMapeo === 'kai'">
-        KAI analizó {{ sourceColumns.length }} columnas de tu archivo y sugirió estos mapeos.
-        Revisá que cada columna apunte al campo correcto; podés cambiar cualquiera.
+        {{ 'importador.importModal.kaiAnalizoColumnasDeTu' | translate:{length: sourceColumns.length} }}
       </p>
       <p class="text-muted" *ngIf="origenMapeo === 'plantilla'">
-        Se reconocieron {{ getMappedCount() }} de {{ sourceColumns.length }} columnas por su nombre,
-        porque el archivo usa la plantilla de Katuq. Revisá que cada columna apunte al campo
-        correcto; podés cambiar cualquiera.
+        {{ 'importador.importModal.seReconocieronDeColumnasPor' | translate:{getMappedCount: (getMappedCount()), length: sourceColumns.length} }}
       </p>
       <!-- Fotos por enlace (bandera productImportPhotos). Solo aparece con la
            función activa; apagada, esta pantalla es la de siempre. -->
       <p class="text-muted" *ngIf="fotosPorUrlActivas">
         <i class="pi pi-image mr-1"></i>
-        Fotos: si tu archivo trae los enlaces de las fotos, asigna su columna a
-        <strong>Foto principal (URL)</strong> y a <strong>Fotos adicionales (URLs)</strong>.
-        Los enlaces tienen que empezar por <strong>https://</strong>. Los de Google Drive y
-        Dropbox se convierten solos, pero la foto debe estar compartida con
-        «Cualquier persona con el enlace». Si no asignas ninguna columna de fotos y el archivo
-        actualiza productos que ya existen, esos productos quedan sin las fotos que tenían.
+        {{ 'importador.importModal.fotosSiTuArchivoTrae' | translate }}
+        <strong>{{ 'importador.importModal.fotoPrincipalUrl' | translate }}</strong> {{ 'importador.importModal.yA' | translate }} <strong>{{ 'importador.importModal.fotosAdicionalesUrls' | translate }}</strong>{{ 'importador.importModal.losEnlacesTienenQueEmpezar' | translate }} <strong>{{ 'importador.importModal.https' | translate }}</strong>{{ 'importador.importModal.losDeGoogleDriveY' | translate }}
       </p>
     </div>
 
@@ -169,13 +160,13 @@
     <div class="mapping-summary mt-4">
       <div class="summary-chips">
         <p-chip
-          [label]="getMappedCount() + ' campos mapeados'"
+          [label]="getMappedCount() + ' ' + ('importador.columnMappingPreview.camposMapeados' | translate)"
           icon="pi pi-check-circle"
           styleClass="mr-2">
         </p-chip>
         <p-chip
           *ngIf="getAdjustedCount() > 0"
-          [label]="getAdjustedCount() + ' ajustados manualmente'"
+          [label]="getAdjustedCount() + ' ' + ('importador.importModal.ajustadosManualmente' | translate)"
           icon="pi pi-pencil"
           styleClass="chip-adjusted">
         </p-chip>
@@ -186,38 +177,38 @@
     <div class="import-mode-selector mt-3 ix-panel" *ngIf="type === 'product'">
       <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
         <i class="pi pi-sliders-h ix-acento"></i>
-        Modo de importación
+        {{ 'importador.importModal.modoDeImportacion' | translate }}
       </div>
       <div class="d-flex gap-4 flex-wrap">
         <div class="form-check">
           <input type="radio" [(ngModel)]="importMode" value="upsert" id="modeUpsert" name="importMode" class="form-check-input" />
           <label for="modeUpsert" class="form-check-label">
-            <span class="fw-semibold">Crear y actualizar</span>
-            <small class="d-block text-muted">Crea nuevos y actualiza existentes por referencia</small>
+            <span class="fw-semibold">{{ 'importador.importModal.crearYActualizar' | translate }}</span>
+            <small class="d-block text-muted">{{ 'importador.importModal.creaNuevosYActualizaExistentes' | translate }}</small>
           </label>
         </div>
         <div class="form-check">
           <input type="radio" [(ngModel)]="importMode" value="create" id="modeCreate" name="importMode" class="form-check-input" />
           <label for="modeCreate" class="form-check-label">
-            <span class="fw-semibold">Solo crear nuevos</span>
-            <small class="d-block text-muted">Ignora registros con referencia duplicada</small>
+            <span class="fw-semibold">{{ 'importador.importModal.soloCrearNuevos' | translate }}</span>
+            <small class="d-block text-muted">{{ 'importador.importModal.ignoraRegistrosConReferenciaDuplicada' | translate }}</small>
           </label>
         </div>
         <div class="form-check">
           <input type="radio" [(ngModel)]="importMode" value="update" id="modeUpdate" name="importMode" class="form-check-input" />
           <label for="modeUpdate" class="form-check-label">
-            <span class="fw-semibold">Solo actualizar existentes</span>
-            <small class="d-block text-muted">Omite productos sin coincidencia por referencia</small>
+            <span class="fw-semibold">{{ 'importador.importModal.soloActualizarExistentes' | translate }}</span>
+            <small class="d-block text-muted">{{ 'importador.importModal.omiteProductosSinCoincidenciaPor' | translate }}</small>
           </label>
         </div>
       </div>
       <div class="mt-2 small" *ngIf="importMode === 'upsert'">
         <i class="pi pi-info-circle ix-acento me-1"></i>
-        <span class="text-muted">Recomendado: los duplicados se detectan por el campo <strong>Referencia</strong>.</span>
+        <span class="text-muted">{{ 'importador.importModal.recomendadoLosDuplicadosSeDetectan' | translate }} <strong>{{ 'importador.importModal.referencia' | translate }}</strong>.</span>
       </div>
       <div class="mt-2 small" *ngIf="importMode === 'update'">
         <i class="pi pi-exclamation-triangle ix-alerta me-1"></i>
-        <span class="text-muted">Solo se actualizarán productos cuya <strong>Referencia</strong> ya exista en el catálogo.</span>
+        <span class="text-muted">{{ 'importador.importModal.soloSeActualizaranProductosCuya' | translate }} <strong>{{ 'importador.importModal.referencia' | translate }}</strong> {{ 'importador.importModal.yaExistaEnElCatalogo' | translate }}</span>
       </div>
     </div>
   </div>
@@ -226,38 +217,38 @@
   <div class="result-step" *ngIf="importResult && !isUploading">
     <div class="result-content" [ngClass]="{'success': importResult.success > 0, 'partial': importResult.failed > 0}">
       <i class="pi result-icon" [ngClass]="importResult.success > 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-      <h4>Importacion {{ importResult.success > 0 ? 'Completada' : 'con Errores' }}</h4>
+      <h4>{{ 'importador.importModal.importacion' | translate:{completada: (importResult.success > 0 ? ('importador.importModal.completada' | translate) : ('importador.importModal.conErrores' | translate))} }}</h4>
       <div class="result-stats">
         <ng-container *ngIf="importResult.created != null || importResult.updated != null; else simpleStats">
           <div class="stat success" *ngIf="importResult.created != null && importResult.created! > 0">
             <span class="stat-number">{{ importResult.created }}</span>
-            <span class="stat-label">Creados</span>
+            <span class="stat-label">{{ 'importador.importModal.creados' | translate }}</span>
           </div>
           <div class="stat info" *ngIf="importResult.updated != null && importResult.updated! > 0">
             <span class="stat-number">{{ importResult.updated }}</span>
-            <span class="stat-label">Actualizados</span>
+            <span class="stat-label">{{ 'importador.importModal.actualizados' | translate }}</span>
           </div>
           <div class="stat success" *ngIf="(importResult.created == null || importResult.created === 0) && (importResult.updated == null || importResult.updated === 0)">
             <span class="stat-number">{{ importResult.success }}</span>
-            <span class="stat-label">Procesados</span>
+            <span class="stat-label">{{ 'importador.importModal.procesados' | translate }}</span>
           </div>
         </ng-container>
         <ng-template #simpleStats>
           <div class="stat success">
             <span class="stat-number">{{ importResult.success }}</span>
-            <span class="stat-label">Importados</span>
+            <span class="stat-label">{{ 'importador.importModal.importados' | translate }}</span>
           </div>
         </ng-template>
         <div class="stat error" *ngIf="importResult.failed > 0">
           <span class="stat-number">{{ importResult.failed }}</span>
-          <span class="stat-label">Fallidos</span>
+          <span class="stat-label">{{ 'importador.importModal.fallidos' | translate }}</span>
         </div>
       </div>
 
       <div class="errors-list" *ngIf="importResult.errors && importResult.errors.length > 0">
         <p-accordion>
           <p-accordionTab
-            header="Ver errores ({{ importResult.errors.length }}{{ erroresDetallados.length > importResult.errors.length ? ' de ' + erroresDetallados.length : '' }})">
+            [header]="'importador.importModal.verErrores' | translate:{length: importResult.errors.length, de: (erroresDetallados.length > importResult.errors.length ? ' ' + ('importador.importModal.de' | translate) + ' ' + erroresDetallados.length : '')}">
             <ul>
               <li *ngFor="let error of importResult.errors">{{ error }}</li>
             </ul>
@@ -270,12 +261,12 @@
           <button
             pButton
             type="button"
-            [label]="'Descargar las ' + erroresDetallados.length + ' filas rechazadas'"
+            [label]="('importador.importModal.descargarLas' | translate) + ' ' + erroresDetallados.length + ' ' + ('importador.importModal.filasRechazadas' | translate)"
             icon="pi pi-download"
             class="cfg-btn cfg-btn--sec"
             (click)="descargarErrores()">
           </button>
-          <small>Trae fila del Excel, documento, nombre y motivo.</small>
+          <small>{{ 'importador.importModal.traeFilaDelExcelDocumento' | translate }}</small>
         </div>
       </div>
 
@@ -287,18 +278,16 @@
           <i class="pi pi-copy"></i>
           <span>
             <strong>{{ duplicadosEnArchivo.length }}</strong>
-            {{ duplicadosEnArchivo.length === 1 ? 'fila venía repetida' : 'filas venían repetidas' }}
-            en el archivo y <strong>no se subieron</strong>.
-            Se conservó la primera aparición de cada una. Revisá esas filas en tu Excel:
-            si son clientes distintos, tienen el mismo documento y hay que corregirlo.
+            {{ duplicadosEnArchivo.length === 1 ? ('importador.importModal.filaVeniaRepetida' | translate) : ('importador.importModal.filasVenianRepetidas' | translate) }}
+            {{ 'importador.importModal.enElArchivoY' | translate }} <strong>{{ 'importador.importModal.noSeSubieron' | translate }}</strong>{{ 'importador.importModal.seConservoLaPrimeraAparicion' | translate }}
           </span>
         </div>
         <p-accordion>
-          <p-accordionTab header="Ver filas repetidas ({{ duplicadosEnArchivo.length }})">
+          <p-accordionTab [header]="'importador.importModal.verFilasRepetidas' | translate:{length: duplicadosEnArchivo.length}">
             <ul class="duplicados-lista">
               <li *ngFor="let d of duplicadosEnArchivo">
-                Fila <strong>{{ d.fila }}</strong> — documento {{ d.valor }}
-                <small>(ya venía en la fila {{ d.primeraFila }})</small>
+                {{ 'importador.importModal.fila' | translate }} <strong>{{ d.fila }}</strong> {{ 'importador.importModal.documento' | translate:{valor: d.valor} }}
+                <small>{{ 'importador.importModal.yaVeniaEnLaFila' | translate:{primeraFila: d.primeraFila} }}</small>
               </li>
             </ul>
           </p-accordionTab>
@@ -313,20 +302,17 @@
           <i class="pi pi-folder-open"></i>
           <span>
             <strong>{{ categoriasCreadasEnImport.length }}</strong>
-            {{ categoriasCreadasEnImport.length === 1 ? 'categoría nueva creada' : 'categorías nuevas creadas' }}
-            desde este archivo: <em>{{ categoriasCreadasEnImport.join(', ') }}</em>.
-            Quedaron solo con el nombre — completales orden, imagen e Id Categoría en
-            <strong>Categorías de productos</strong>.
+            {{ categoriasCreadasEnImport.length === 1 ? ('importador.importModal.categoriaNuevaCreada' | translate) : ('importador.importModal.categoriasNuevasCreadas' | translate) }}
+            {{ 'importador.importModal.desdeEsteArchivo' | translate }} <em>{{ categoriasCreadasEnImport.join(', ') }}</em>{{ 'importador.importModal.quedaronSoloConElNombre' | translate }}
+            <strong>{{ 'importador.importModal.categoriasDeProductos' | translate }}</strong>.
           </span>
         </div>
         <div *ngIf="productosSinCategoria > 0" class="pendiente-item aviso">
           <i class="pi pi-exclamation-triangle"></i>
           <span>
             <strong>{{ productosSinCategoria }}</strong>
-            {{ productosSinCategoria === 1 ? 'producto quedó' : 'productos quedaron' }} sin categoría.
-            Se venden igual, pero no salen al filtrar por categoría ni califican para promociones
-            segmentadas. Encontralos en el listado con el filtro
-            <strong>Categoría: Sin categoría</strong>.
+            {{ productosSinCategoria === 1 ? ('importador.importModal.productoQuedo' | translate) : ('importador.importModal.productosQuedaron' | translate) }} {{ 'importador.importModal.sinCategoriaSeVendenIgual' | translate }}
+            <strong>{{ 'importador.importModal.categoriaSinCategoria' | translate }}</strong>.
           </span>
         </div>
       </div>
@@ -339,53 +325,49 @@
         <div *ngIf="resumenFotos.guardadas > 0" class="pendiente-item">
           <i class="pi pi-image"></i>
           <span>
-            Se {{ resumenFotos.guardadas === 1 ? 'guardó' : 'guardaron' }}
+            {{ 'importador.importModal.se' | translate:{guardo: (resumenFotos.guardadas === 1 ? ('importador.importModal.guardo' | translate) : ('importador.importModal.guardaron' | translate))} }}
             <strong>{{ resumenFotos.guardadas }}</strong>
-            {{ resumenFotos.guardadas === 1 ? 'foto' : 'fotos' }} en
+            {{ resumenFotos.guardadas === 1 ? ('importador.importModal.foto' | translate) : ('importador.importModal.fotos' | translate) }} {{ 'importador.importModal.en' | translate }}
             <strong>{{ resumenFotos.productos }}</strong>
-            {{ resumenFotos.productos === 1 ? 'producto' : 'productos' }}.
+            {{ resumenFotos.productos === 1 ? ('importador.importModal.producto' | translate) : ('importador.importModal.productos' | translate) }}.
             <ng-container *ngIf="resumenFotos.convertidas > 0">
               {{ resumenFotos.convertidas }}
-              {{ resumenFotos.convertidas === 1 ? 'enlace de Google Drive o Dropbox se convirtió' : 'enlaces de Google Drive o Dropbox se convirtieron' }}
-              en enlace directo. Si alguna foto no se ve, revisa que esté compartida con
-              «Cualquier persona con el enlace».
+              {{ resumenFotos.convertidas === 1 ? ('importador.importModal.enlaceDeGoogleDriveO' | translate) : ('importador.importModal.enlacesDeGoogleDriveO' | translate) }}
+              {{ 'importador.importModal.enEnlaceDirectoSiAlguna' | translate }}
             </ng-container>
-            Revisa en Productos que las fotos se vean bien.
+            {{ 'importador.importModal.revisaEnProductosQueLas' | translate }}
           </span>
         </div>
         <div *ngIf="resumenFotos.avisos > 0" class="pendiente-item aviso">
           <i class="pi pi-exclamation-triangle"></i>
           <span>
             <strong>{{ resumenFotos.avisos }}</strong>
-            {{ resumenFotos.avisos === 1 ? 'enlace de foto no se pudo guardar' : 'enlaces de fotos no se pudieron guardar' }}.
-            Los productos sí quedaron guardados, sin esa foto (o con la que ya tenían).
-            Corrige esos enlaces en tu Excel y vuelve a importar el archivo.
+            {{ resumenFotos.avisos === 1 ? ('importador.importModal.enlaceDeFotoNoSe' | translate) : ('importador.importModal.enlacesDeFotosNoSe' | translate) }}{{ 'importador.importModal.losProductosSiQuedaronGuardados' | translate }}
           </span>
         </div>
         <div *ngIf="resumenFotos.ignoradas > 0" class="pendiente-item aviso">
           <i class="pi pi-exclamation-triangle"></i>
           <span>
-            Las fotos por enlace todavía no están activas para tu empresa, así que
+            {{ 'importador.importModal.lasFotosPorEnlaceTodavia' | translate }}
             <strong>{{ resumenFotos.ignoradas }}</strong>
-            {{ resumenFotos.ignoradas === 1 ? 'producto se guardó' : 'productos se guardaron' }} sin foto.
-            Escríbenos por soporte y te las activamos.
+            {{ resumenFotos.ignoradas === 1 ? ('importador.importModal.productoSeGuardo' | translate) : ('importador.importModal.productosSeGuardaron' | translate) }} {{ 'importador.importModal.sinFotoEscribenosPorSoporte' | translate }}
           </span>
         </div>
       </div>
 
       <div class="duplicados-archivo" *ngIf="type === 'product' && avisosFotos.length > 0">
         <p-accordion>
-          <p-accordionTab header="Ver los enlaces de fotos con problema ({{ resumenFotos?.avisos }})">
+          <p-accordionTab [header]="'importador.importModal.verLosEnlacesDeFotos' | translate:{avisos: resumenFotos?.avisos}">
             <ul class="duplicados-lista">
               <li *ngFor="let a of avisosFotos">
-                <strong>Fila {{ a.fila || '?' }}</strong>
+                <strong>{{ 'importador.importModal.fila2' | translate:{fila: (a.fila || '?')} }}</strong>
                 <span *ngIf="a.referencia"> ({{ a.referencia }})</span>
                 · {{ a.campo }}<span *ngIf="a.valor">: <em>{{ a.valor }}</em></span>
                 <br><small>{{ a.mensaje }}</small>
               </li>
             </ul>
             <small *ngIf="avisosFotos.length < (resumenFotos?.avisos || 0)">
-              Se muestran los primeros {{ avisosFotos.length }}.
+              {{ 'importador.importModal.seMuestranLosPrimeros' | translate:{length: avisosFotos.length} }}
             </small>
           </p-accordionTab>
         </p-accordion>
@@ -393,7 +375,7 @@
 
       <div class="batch-info mt-3" *ngIf="importResult.batchId">
         <small class="text-muted">
-          <i class="pi pi-tag mr-1"></i>Batch: {{ importResult.batchId }}
+          <i class="pi pi-tag mr-1"></i>{{ 'importador.importModal.batch' | translate:{batchId: importResult.batchId} }}
         </small>
       </div>
     </div>
@@ -403,11 +385,11 @@
   <div class="result-step" *ngIf="deleteResult && !isDeleting">
     <div class="result-content">
       <i class="pi pi-trash result-icon result-icon--alerta"></i>
-      <h4>Importacion eliminada</h4>
+      <h4>{{ 'importador.importModal.importacionEliminada' | translate }}</h4>
       <div class="result-stats">
         <div class="stat">
           <span class="stat-number">{{ deleteResult.deleted }}</span>
-          <span class="stat-label">Clientes eliminados</span>
+          <span class="stat-label">{{ 'importador.importModal.clientesEliminados' | translate }}</span>
         </div>
       </div>
     </div>
@@ -417,7 +399,7 @@
   <div class="analyzing-step" *ngIf="isDeleting">
     <div class="analyzing-content">
       <i class="pi pi-spin pi-spinner analyzing-icon"></i>
-      <h4>Eliminando importacion...</h4>
+      <h4>{{ 'importador.importModal.eliminandoImportacion' | translate }}</h4>
       <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
     </div>
   </div>
@@ -438,17 +420,15 @@
       <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && debeAvisarCategoria"
            class="aviso-categorias">
         <h6>
-          <i class="pi pi-exclamation-triangle me-2"></i>Productos sin categoría
+          <i class="pi pi-exclamation-triangle me-2"></i>{{ 'importador.importModal.productosSinCategoria' | translate }}
         </h6>
         <p class="mb-2">{{ textoAvisoCategoria }}</p>
         <p class="aviso-detalle mb-2">
-          Se van a importar igual y se venden sin problema, pero no vas a poder filtrarlos por
-          categoría ni aplicarles promociones segmentadas por categoría.
-          Lo recomendable es importar primero las categorías, o completar la columna en el archivo.
+          {{ 'importador.importModal.seVanAImportarIgual' | translate }}
         </p>
         <label>
           <input type="checkbox" [(ngModel)]="avisoCategoriaAceptado">
-          <span>Entiendo, importar igual</span>
+          <span>{{ 'importador.importModal.entiendoImportarIgual' | translate }}</span>
         </label>
       </div>
 
@@ -458,24 +438,23 @@
       <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && entregaSinHomologar.length > 0"
            class="volumen-panel con-error">
         <h6>
-          <i class="pi pi-truck me-2"></i>Tipo y tiempo de entrega sin coincidencia
+          <i class="pi pi-truck me-2"></i>{{ 'importador.importModal.tipoYTiempoDeEntrega' | translate }}
         </h6>
         <p class="mb-1">
-          Estos valores del archivo no existen en los maestros de tu empresa, así que esos
-          productos van a quedar con el campo <strong>vacío</strong>:
+          {{ 'importador.importModal.estosValoresDelArchivoNo' | translate }} <strong>{{ 'importador.importModal.vacio' | translate }}</strong>:
         </p>
         <ul class="volumen-errores">
           <li *ngFor="let e of entregaSinHomologar">{{ e }}</li>
         </ul>
         <p class="mb-1 volumen-detalle" *ngIf="opcionesTipoEntrega.length">
-          <strong>Tipos de entrega válidos:</strong> {{ opcionesTipoEntrega.join(' · ') }}
+          <strong>{{ 'importador.importModal.tiposDeEntregaValidos' | translate }}</strong> {{ opcionesTipoEntrega.join(' · ') }}
         </p>
         <p class="mb-1 volumen-detalle" *ngIf="opcionesTiempoEntrega.length">
-          <strong>Tiempos de entrega válidos:</strong> {{ opcionesTiempoEntrega.join(' · ') }}
+          <strong>{{ 'importador.importModal.tiemposDeEntregaValidos' | translate }}</strong> {{ opcionesTiempoEntrega.join(' · ') }}
         </p>
         <p class="mb-0 volumen-detalle">
-          Corregí el Excel con uno de esos valores, o creá la opción que falta en
-          <strong>Maestros</strong> y volvé a subir el archivo.
+          {{ 'importador.importModal.corregiElExcelConUno' | translate }}
+          <strong>{{ 'importador.importModal.maestros' | translate }}</strong> {{ 'importador.importModal.yVolveASubirEl' | translate }}
         </p>
       </div>
 
@@ -485,25 +464,23 @@
       <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && (productosConVolumen > 0 || erroresVolumen.length > 0)"
            class="volumen-panel" [class.con-error]="erroresVolumen.length > 0">
         <h6>
-          <i class="pi pi-dollar me-2"></i>Precios por volumen
+          <i class="pi pi-dollar me-2"></i>{{ 'importador.importModal.preciosPorVolumen' | translate }}
         </h6>
         <p class="mb-1" *ngIf="productosConVolumen > 0">
-          Se leyeron rangos para <strong>{{ productosConVolumen }}</strong>
-          {{ productosConVolumen === 1 ? 'producto' : 'productos' }} desde la hoja
-          «Precios por volumen».
+          {{ 'importador.importModal.seLeyeronRangosPara' | translate }} <strong>{{ productosConVolumen }}</strong>
+          {{ productosConVolumen === 1 ? ('importador.importModal.producto' | translate) : ('importador.importModal.productos' | translate) }} {{ 'importador.importModal.desdeLaHojaPreciosPor' | translate }}
         </p>
         <div *ngIf="erroresVolumen.length > 0">
           <p class="mb-1">
             <strong>{{ erroresVolumen.length }}</strong>
-            {{ erroresVolumen.length === 1 ? 'fila se va a ignorar' : 'filas se van a ignorar' }}:
+            {{ erroresVolumen.length === 1 ? ('importador.importModal.filaSeVaAIgnorar' | translate) : ('importador.importModal.filasSeVanAIgnorar' | translate) }}:
           </p>
           <ul class="volumen-errores">
             <li *ngFor="let e of erroresVolumen.slice(0, 8)">{{ e }}</li>
-            <li *ngIf="erroresVolumen.length > 8">…y {{ erroresVolumen.length - 8 }} más.</li>
+            <li *ngIf="erroresVolumen.length > 8">{{ 'importador.importModal.yMas' | translate:{length: (erroresVolumen.length - 8)} }}</li>
           </ul>
           <p class="mb-0 volumen-detalle">
-            El resto se importa normalmente. Corregí esas filas y volvé a subir el archivo
-            si querés que esos rangos también entren.
+            {{ 'importador.importModal.elRestoSeImportaNormalmente' | translate }}
           </p>
         </div>
       </div>
@@ -512,16 +489,16 @@
       <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading"
            class="produccion-panel">
         <h6>
-          <i class="fa fa-cogs me-2"></i>Opciones de producción
+          <i class="fa fa-cogs me-2"></i>{{ 'importador.importModal.opcionesDeProduccion' | translate }}
         </h6>
         <div class="d-flex flex-column gap-2">
           <label>
             <input type="checkbox" [(ngModel)]="todosParaProduccion">
-            <span>Todos los productos se producen internamente</span>
+            <span>{{ 'importador.importModal.todosLosProductosSeProducen' | translate }}</span>
           </label>
           <label>
             <input type="checkbox" [(ngModel)]="todosIntegranProduccion">
-            <span>Aptos para integración con software de producción</span>
+            <span>{{ 'importador.importModal.aptosParaIntegracionConSoftware' | translate }}</span>
           </label>
         </div>
       </div>
@@ -531,7 +508,7 @@
       <button
         pButton
         type="button"
-        label="Cancelar"
+        [label]="'comun.cancelar' | translate"
         icon="pi pi-times"
         class="cfg-btn cfg-btn--sec"
         (click)="visible = false; visibleChange.emit(false)"
@@ -543,7 +520,7 @@
         *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns && !isUploading"
         pButton
         type="button"
-        label="Confirmar Mapeo"
+        [label]="'importador.columnMappingPreview.confirmarMapeo' | translate"
         icon="pi pi-check"
         class="cfg-btn cfg-btn--sec d-md-none"
         (click)="confirmAllMappings()"
@@ -555,7 +532,7 @@
         *ngIf="showMappingPreview && !importResult && !isUploading"
         pButton
         type="button"
-        [label]="'Importar ' + (type === 'customer' ? 'Clientes' : type === 'inventory' ? 'Inventario' : type === 'category' ? 'Categorias' : 'Productos') + ' (' + parsedData.length + ')'"
+        [label]="('importador.importModal.importar' | translate) + ' ' + (type === 'customer' ? ('importador.importModal.clientes2' | translate) : type === 'inventory' ? ('importador.importModal.inventario' | translate) : type === 'category' ? ('importador.importModal.categorias2' | translate) : ('importador.importModal.productos2' | translate)) + ' (' + parsedData.length + ')'"
         icon="pi pi-upload"
         class="cfg-btn"
         (click)="importData()"
@@ -567,7 +544,7 @@
         *ngIf="importResult && importResult.batchId && type === 'customer' && !isDeleting"
         pButton
         type="button"
-        label="Eliminar Importacion"
+        [label]="'importador.importModal.eliminarImportacion' | translate"
         icon="pi pi-trash"
         class="cfg-btn cfg-btn--peligro"
         (click)="deleteImport()">
@@ -578,7 +555,7 @@
         *ngIf="importResult && type === 'customer' && !isDeleting"
         pButton
         type="button"
-        label="Eliminar TODOS los Clientes"
+        [label]="'importador.importModal.eliminarTodosLosClientes' | translate"
         icon="pi pi-exclamation-triangle"
         class="cfg-btn ix-btn--peligro-fuerte"
         (click)="deleteAllClients()">
@@ -589,7 +566,7 @@
         *ngIf="(importResult || deleteResult) && !isDeleting"
         pButton
         type="button"
-        label="Cerrar"
+        [label]="'comun.cerrar' | translate"
         icon="pi pi-check"
         class="cfg-btn"
         (click)="visible = false; visibleChange.emit(false)">

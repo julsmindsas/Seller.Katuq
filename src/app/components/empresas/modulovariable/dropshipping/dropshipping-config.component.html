@@ -9,15 +9,15 @@
 
     <header class="cfg-cabeza">
       <div class="cfg-cabeza__textos">
-        <span class="cfg-eyebrow">Configuración</span>
-        <h1 class="cfg-titulo">Configuración de Dropshipping</h1>
+        <span class="cfg-eyebrow">{{ 'empresas.camposPersonalizados.configuracion' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'empresas.dropshippingConfig.configuracionDeDropshipping' | translate }}</h1>
         <p class="cfg-sub" *ngIf="currentCompany">
-          <strong>Empresa:</strong> {{ currentCompany.nomComercial }}
+          <strong>{{ 'empresas.dropshippingConfig.empresa' | translate }}</strong> {{ currentCompany.nomComercial }}
         </p>
       </div>
       <div class="cfg-acciones" *ngIf="puedeGuardar && !errorCarga">
         <button type="button" class="cfg-btn cfg-btn--sec" (click)="resetToDefaults()">
-          <i class="fa fa-refresh"></i> Restablecer
+          <i class="fa fa-refresh"></i> {{ 'empresas.dropshippingConfig.restablecer' | translate }}
         </button>
       </div>
     </header>
@@ -29,7 +29,7 @@
         <strong>{{ errorCarga }}</strong>
         <div class="dsh-aviso__acciones">
           <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadDropshippingConfig()">
-            <i class="fa fa-repeat"></i> Reintentar
+            <i class="fa fa-repeat"></i> {{ 'empresas.consolaPlataforma.reintentar' | translate }}
           </button>
         </div>
       </div>
@@ -41,10 +41,9 @@
       <div class="cfg-aviso">
         <i class="fa fa-info-circle dsh-aviso__icono" aria-hidden="true"></i>
         <div>
-          <strong>¿Qué es el Dropshipping?</strong>
+          <strong>{{ 'empresas.dropshippingConfig.queEsElDropshipping' | translate }}</strong>
           <p class="dsh-aviso__texto">
-            El dropshipping permite que tu empresa venda productos sin mantener inventario.
-            Cuando un cliente hace un pedido, el producto se envía directamente desde el proveedor.
+            {{ 'empresas.dropshippingConfig.elDropshippingPermiteQueTu' | translate }}
           </p>
         </div>
       </div>
@@ -53,8 +52,8 @@
       <div class="cfg-aviso cfg-aviso--warn" *ngIf="!puedeGuardar">
         <i class="fa fa-lock dsh-aviso__icono" aria-hidden="true"></i>
         <div>
-          <strong>Solo un administrador puede cambiar esta configuración.</strong>
-          <p class="dsh-aviso__texto">Aquí ves la que tiene tu empresa.</p>
+          <strong>{{ 'empresas.dropshippingConfig.soloUnAdministradorPuedeCambiar' | translate }}</strong>
+          <p class="dsh-aviso__texto">{{ 'empresas.dropshippingConfig.aquiVesLaQueTiene' | translate }}</p>
         </div>
       </div>
 
@@ -68,9 +67,9 @@
             formControlName="habilitado"
             (change)="onHabilitadoChange()">
           <div>
-            <label class="dsh-interruptor__titulo" for="enableDropshipping">Habilitar módulo de Dropshipping para esta empresa</label>
+            <label class="dsh-interruptor__titulo" for="enableDropshipping">{{ 'empresas.dropshippingConfig.habilitarModuloDeDropshippingPara' | translate }}</label>
             <small class="dsh-ayuda">
-              Al habilitar este módulo, los usuarios podrán configurar productos como dropshipping y gestionar órdenes con proveedores externos. Aplica para toda la empresa.
+              {{ 'empresas.dropshippingConfig.alHabilitarEsteModuloLos' | translate }}
             </small>
           </div>
         </div>
@@ -81,13 +80,13 @@
 
         <!-- Configuraciones de Negocio -->
         <section class="cfg-card">
-          <h2 class="cfg-card__titulo"><i class="fa fa-cogs dsh-icono" aria-hidden="true"></i> Configuraciones de Negocio</h2>
+          <h2 class="cfg-card__titulo"><i class="fa fa-cogs dsh-icono" aria-hidden="true"></i> {{ 'empresas.dropshippingConfig.configuracionesDeNegocio' | translate }}</h2>
 
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label class="cfg-label" for="margenMinimoPermitido">
-                  Margen Mínimo Permitido (%) <span class="dsh-req">*</span>
+                  {{ 'empresas.dropshippingConfig.margenMinimoPermitido' | translate }} <span class="dsh-req">*</span>
                 </label>
                 <div class="input-group">
                   <input
@@ -105,7 +104,7 @@
                   </div>
                 </div>
                 <small class="form-text dsh-ayuda">
-                  Margen mínimo que deben tener los productos de dropshipping
+                  {{ 'empresas.dropshippingConfig.margenMinimoQueDebenTener' | translate }}
                 </small>
                 <div class="invalid-feedback" *ngIf="isFieldInvalid('margenMinimoPermitido')">
                   {{ getFieldError('margenMinimoPermitido') }}
@@ -116,7 +115,7 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label class="cfg-label" for="tiempoLimiteOrden">
-                  Tiempo Límite para Órdenes (días) <span class="dsh-req">*</span>
+                  {{ 'empresas.dropshippingConfig.tiempoLimiteParaOrdenesDias' | translate }} <span class="dsh-req">*</span>
                 </label>
                 <input
                   type="number"
@@ -129,7 +128,7 @@
                   step="1"
                   placeholder="7">
                 <small class="form-text dsh-ayuda">
-                  Tiempo máximo para procesar órdenes de dropshipping
+                  {{ 'empresas.dropshippingConfig.tiempoMaximoParaProcesarOrdenes' | translate }}
                 </small>
                 <div class="invalid-feedback" *ngIf="isFieldInvalid('tiempoLimiteOrden')">
                   {{ getFieldError('tiempoLimiteOrden') }}
@@ -141,7 +140,7 @@
 
         <!-- Configuraciones de Sistema -->
         <section class="cfg-card">
-          <h2 class="cfg-card__titulo"><i class="fa fa-sliders dsh-icono" aria-hidden="true"></i> Configuraciones de Sistema</h2>
+          <h2 class="cfg-card__titulo"><i class="fa fa-sliders dsh-icono" aria-hidden="true"></i> {{ 'empresas.dropshippingConfig.configuracionesDeSistema' | translate }}</h2>
 
           <div class="row">
             <div class="col-md-6">
@@ -153,11 +152,11 @@
                     id="automatizacionActivada"
                     formControlName="automatizacionActivada">
                   <label class="form-check-label" for="automatizacionActivada">
-                    <strong>Automatización Activada</strong>
+                    <strong>{{ 'empresas.dropshippingConfig.automatizacionActivada' | translate }}</strong>
                   </label>
                 </div>
                 <small class="dsh-ayuda d-block">
-                  Enviar órdenes automáticamente a proveedores cuando se confirme el pago
+                  {{ 'empresas.dropshippingConfig.enviarOrdenesAutomaticamenteAProveedores' | translate }}
                 </small>
               </div>
             </div>
@@ -171,11 +170,11 @@
                     id="notificacionesActivadas"
                     formControlName="notificacionesActivadas">
                   <label class="form-check-label" for="notificacionesActivadas">
-                    <strong>Notificaciones Activadas</strong>
+                    <strong>{{ 'empresas.dropshippingConfig.notificacionesActivadas' | translate }}</strong>
                   </label>
                 </div>
                 <small class="dsh-ayuda d-block">
-                  Recibir notificaciones sobre estados de órdenes dropshipping
+                  {{ 'empresas.dropshippingConfig.recibirNotificacionesSobreEstadosDe' | translate }}
                 </small>
               </div>
             </div>
@@ -186,9 +185,9 @@
         <div class="cfg-aviso">
           <i class="fa fa-plug dsh-aviso__icono" aria-hidden="true"></i>
           <div>
-            <strong>La conexión por API se configura en cada proveedor.</strong>
+            <strong>{{ 'empresas.dropshippingConfig.laConexionPorApiSe' | translate }}</strong>
             <p class="dsh-aviso__texto">
-              Entra a <a class="dsh-enlace" routerLink="/dropshipping/proveedores">Proveedores</a> y edita el proveedor para indicar cómo se integra.
+              {{ 'empresas.dropshippingConfig.entraA' | translate }} <a class="dsh-enlace" routerLink="/dropshipping/proveedores">{{ 'empresas.dropshippingConfig.proveedores' | translate }}</a> {{ 'empresas.dropshippingConfig.yEditaElProveedorPara' | translate }}
             </p>
           </div>
         </div>
@@ -196,28 +195,28 @@
         <!-- Resumen de Configuración -->
         <section class="cfg-card dsh-resumen">
           <h2 class="cfg-card__titulo">
-            <i class="fa fa-check-circle dsh-icono dsh-icono--ok" aria-hidden="true"></i> Resumen de Configuración
+            <i class="fa fa-check-circle dsh-icono dsh-icono--ok" aria-hidden="true"></i> {{ 'empresas.dropshippingConfig.resumenDeConfiguracion' | translate }}
           </h2>
           <ul class="dsh-resumen__lista">
             <li>
-              <strong>Estado:</strong>
-              <span class="dsh-tag dsh-tag--ok">Dropshipping Habilitado</span>
+              <strong>{{ 'empresas.consolaPlataforma.estado' | translate }}</strong>
+              <span class="dsh-tag dsh-tag--ok">{{ 'empresas.dropshippingConfig.dropshippingHabilitado' | translate }}</span>
             </li>
             <li>
-              <strong>Margen mínimo:</strong>
+              <strong>{{ 'empresas.dropshippingConfig.margenMinimo' | translate }}</strong>
               {{ dropshippingConfigForm.get('margenMinimoPermitido')?.value || 0 }}%
             </li>
             <li>
-              <strong>Tiempo límite de orden:</strong>
-              {{ dropshippingConfigForm.get('tiempoLimiteOrden')?.value || 7 }} días
+              <strong>{{ 'empresas.dropshippingConfig.tiempoLimiteDeOrden' | translate }}</strong>
+              {{ dropshippingConfigForm.get('tiempoLimiteOrden')?.value || 7 }} {{ 'empresas.consolaPlataforma.dias' | translate }}
             </li>
             <li>
-              <strong>Automatización:</strong>
-              {{ dropshippingConfigForm.get('automatizacionActivada')?.value ? 'Activada' : 'Desactivada' }}
+              <strong>{{ 'empresas.dropshippingConfig.automatizacion' | translate }}</strong>
+              {{ dropshippingConfigForm.get('automatizacionActivada')?.value ? ('empresas.dropshippingConfig.activada' | translate) : ('empresas.dropshippingConfig.desactivada' | translate) }}
             </li>
             <li>
-              <strong>Notificaciones:</strong>
-              {{ dropshippingConfigForm.get('notificacionesActivadas')?.value ? 'Activadas' : 'Desactivadas' }}
+              <strong>{{ 'empresas.dropshippingConfig.notificaciones' | translate }}</strong>
+              {{ dropshippingConfigForm.get('notificacionesActivadas')?.value ? ('empresas.dropshippingConfig.activadas' | translate) : ('empresas.dropshippingConfig.desactivadas' | translate) }}
             </li>
           </ul>
         </section>
@@ -228,9 +227,9 @@
       <div *ngIf="!dropshippingConfigForm.get('habilitado')?.value" class="cfg-aviso cfg-aviso--warn">
         <i class="fa fa-exclamation-triangle dsh-aviso__icono" aria-hidden="true"></i>
         <div>
-          <strong>Módulo Dropshipping Deshabilitado</strong>
+          <strong>{{ 'empresas.dropshippingConfig.moduloDropshippingDeshabilitado' | translate }}</strong>
           <p class="dsh-aviso__texto">
-            Para utilizar las funcionalidades de dropshipping, debe habilitar el módulo usando el interruptor superior.
+            {{ 'empresas.dropshippingConfig.paraUtilizarLasFuncionalidadesDe' | translate }}
           </p>
         </div>
       </div>
@@ -240,7 +239,7 @@
         <a
           routerLink="/empresas/modulovariable"
           class="cfg-btn cfg-btn--sec">
-          <i class="fa fa-arrow-left"></i> Volver
+          <i class="fa fa-arrow-left"></i> {{ 'comun.volver' | translate }}
         </a>
         <button
           *ngIf="puedeGuardar"
@@ -249,7 +248,7 @@
           [disabled]="!dropshippingConfigForm.valid || saving">
           <i class="fa fa-save" *ngIf="!saving"></i>
           <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-          {{ saving ? 'Guardando...' : 'Guardar Configuración' }}
+          {{ saving ? ('empresas.empresas.guardando' | translate) : ('empresas.dropshippingConfig.guardarConfiguracion' | translate) }}
         </button>
       </div>
 

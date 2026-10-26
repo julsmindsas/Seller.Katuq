@@ -1,7 +1,7 @@
 <p-card *ngIf="!loading && usage && !isPremium" styleClass="usage-widget">
   <ng-template pTemplate="header">
     <div class="card-header-content">
-      <h4>Uso del Plan Gratis</h4>
+      <h4>{{ 'shell.usage.freeTitle' | translate }}</h4>
       <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="refresh()" [loading]="loading"></button>
     </div>
   </ng-template>
@@ -10,7 +10,7 @@
   <div class="usage-item mb-4">
     <div class="d-flex justify-content-between mb-2 align-items-center">
       <span class="usage-label">
-        <i class="pi pi-shopping-cart"></i> Pedidos este mes
+        <i class="pi pi-shopping-cart"></i> {{ 'shell.usage.ordersMonth' | translate }}
       </span>
       <span class="usage-value">{{ usage.orders.current }} / {{ usage.orders.limit }}</span>
     </div>
@@ -20,7 +20,7 @@
       [styleClass]="getProgressBarClass(getOrdersPercentage())">
     </p-progressBar>
     <small class="text-muted d-block mt-1">
-      <i class="pi pi-calendar"></i> Resetea: {{ usage.orders.resetDate | date:'dd/MM/yyyy' }}
+      <i class="pi pi-calendar"></i> {{ 'shell.usage.resets' | translate: { date: (usage.orders.resetDate | date:'dd/MM/yyyy') } }}
     </small>
   </div>
 
@@ -33,7 +33,7 @@
   <div class="usage-item mb-4">
     <div class="d-flex justify-content-between mb-2 align-items-center">
       <span class="usage-label">
-        <i class="pi pi-comments"></i> Consultas KAI hoy (tu usuario)
+        <i class="pi pi-comments"></i> {{ 'shell.usage.kaiToday' | translate }}
       </span>
       <span class="usage-value">{{ usage.ai.chat.used }} / {{ usage.ai.chat.limit }}</span>
     </div>
@@ -43,7 +43,7 @@
       [styleClass]="getProgressBarClass(getChatPercentage())">
     </p-progressBar>
     <small class="text-muted d-block mt-1">
-      <i class="pi pi-clock"></i> Se renueva diariamente
+      <i class="pi pi-clock"></i> {{ 'shell.usage.renewsDaily' | translate }}
     </small>
   </div>
 
@@ -51,7 +51,7 @@
   <div class="usage-item mb-4">
     <div class="d-flex justify-content-between mb-2 align-items-center">
       <span class="usage-label">
-        <i class="pi pi-box"></i> Productos IA hoy (tu usuario)
+        <i class="pi pi-box"></i> {{ 'shell.usage.aiProductsToday' | translate }}
       </span>
       <span class="usage-value">{{ usage.ai.products.used }} / {{ usage.ai.products.limit }}</span>
     </div>
@@ -61,21 +61,21 @@
       [styleClass]="getProgressBarClass(getProductsPercentage())">
     </p-progressBar>
     <small class="text-muted d-block mt-1">
-      <i class="pi pi-clock"></i> Se renueva diariamente
+      <i class="pi pi-clock"></i> {{ 'shell.usage.renewsDaily' | translate }}
     </small>
   </div>
 
   <!-- Features bloqueadas -->
   <div class="blocked-features mb-3">
-    <p class="mb-2"><strong>Funciones Premium:</strong></p>
+    <p class="mb-2"><strong>{{ 'shell.usage.premiumFeatures' | translate }}</strong></p>
     <div class="feature-badge">
-      <i class="pi pi-lock"></i> IA de Voz
+      <i class="pi pi-lock"></i> {{ 'shell.usage.voiceAi' | translate }}
     </div>
     <div class="feature-badge">
-      <i class="pi pi-lock"></i> IA de Video
+      <i class="pi pi-lock"></i> {{ 'shell.usage.videoAi' | translate }}
     </div>
     <div class="feature-badge">
-      <i class="pi pi-lock"></i> Producción
+      <i class="pi pi-lock"></i> {{ 'shell.usage.production' | translate }}
     </div>
   </div>
 
@@ -83,7 +83,7 @@
     <div class="text-center">
       <button
         pButton
-        label="Desbloquear Premium"
+        [label]="'shell.usage.unlockPremium' | translate"
         icon="pi pi-star"
         routerLink="/pricing"
         class="p-button-success w-100">
@@ -96,28 +96,28 @@
 <p-card *ngIf="!loading && isPremium" styleClass="usage-widget premium-widget">
   <ng-template pTemplate="header">
     <div class="card-header-content premium">
-      <h4>Plan Premium</h4>
+      <h4>{{ 'shell.usage.premiumTitle' | translate }}</h4>
       <i class="pi pi-star"></i>
     </div>
   </ng-template>
 
   <div class="text-center premium-content">
     <i class="pi pi-star premium-icon"></i>
-    <h4 class="mt-3 mb-2">Uso Ilimitado</h4>
-    <p class="text-muted">Disfruta de todas las funciones Premium</p>
+    <h4 class="mt-3 mb-2">{{ 'shell.usage.unlimited' | translate }}</h4>
+    <p class="text-muted">{{ 'shell.usage.enjoyPremium' | translate }}</p>
 
     <div class="premium-features mt-4">
       <div class="feature-item">
         <i class="pi pi-check-circle"></i>
-        <span>Pedidos ilimitados</span>
+        <span>{{ 'shell.usage.unlimitedOrders' | translate }}</span>
       </div>
       <div class="feature-item">
         <i class="pi pi-check-circle"></i>
-        <span>Chat e IA sin restricciones</span>
+        <span>{{ 'shell.usage.unrestrictedAi' | translate }}</span>
       </div>
       <div class="feature-item">
         <i class="pi pi-check-circle"></i>
-        <span>Todas las integraciones</span>
+        <span>{{ 'shell.usage.allIntegrations' | translate }}</span>
       </div>
     </div>
   </div>
@@ -126,7 +126,7 @@
     <div class="text-center">
       <button
         pButton
-        label="Ver Detalles del Plan"
+        [label]="'shell.usage.planDetails' | translate"
         icon="pi pi-info-circle"
         routerLink="/pricing"
         class="p-button-outlined w-100">
@@ -139,6 +139,6 @@
 <p-card *ngIf="loading" styleClass="usage-widget">
   <div class="text-center p-4">
     <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
-    <p class="mt-3 text-muted">Cargando estadísticas...</p>
+    <p class="mt-3 text-muted">{{ 'shell.usage.loading' | translate }}</p>
   </div>
 </p-card>

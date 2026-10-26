@@ -1,6 +1,6 @@
 <div class="nov-overlay" *ngIf="visible && novedad" (click)="cerrar()">
   <div class="nov-modal" (click)="$event.stopPropagation()">
-    <button type="button" class="nov-close" (click)="cerrar()" aria-label="Cerrar">
+    <button type="button" class="nov-close" (click)="cerrar()" [attr.aria-label]="'comun.cerrar' | translate">
       <i class="pi pi-times"></i>
     </button>
 
@@ -21,7 +21,7 @@
 
     <!-- Cuerpo -->
     <div class="nov-body">
-      <span class="nov-badge">✨ {{ 'Novedad' | translate }}</span>
+      <span class="nov-badge">✨ {{ 'shell.novedad.badge' | translate }}</span>
       <h3 class="nov-title">{{ novedad.titulo }}</h3>
       <p class="nov-desc" *ngIf="novedad.descripcion">{{ novedad.descripcion }}</p>
 
@@ -36,7 +36,7 @@
           >{{ novedad.cta.label }}</a
         >
         <button type="button" class="nov-btn nov-btn--primary" (click)="cerrar()">
-          {{ 'Entendido' | translate }}
+          {{ 'shell.novedad.gotIt' | translate }}
         </button>
       </div>
     </div>

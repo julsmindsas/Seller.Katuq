@@ -1,8 +1,8 @@
 <section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-logros-titulo">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">Récords y proyección</div>
-      <h2 class="card__title" id="ev-kq-logros-titulo">Para contar hoy</h2>
+      <div class="card__eyebrow">{{ 'enVivo.enVivoLogrosComercio.recordsYProyeccion' | translate }}</div>
+      <h2 class="card__title" id="ev-kq-logros-titulo">{{ 'enVivo.enVivoLogrosComercio.paraContarHoy' | translate }}</h2>
     </div>
   </header>
 
@@ -12,7 +12,7 @@
     <div class="logros__sub" *ngIf="vm.hayProyeccion">
       {{ vm.prefijo }}<span class="up" *ngIf="vm.pintaRecord">{{ vm.subtexto }}</span><ng-container *ngIf="!vm.pintaRecord">{{ vm.subtexto }}</ng-container>
     </div>
-    <div class="logros__sub" *ngIf="!vm.hayProyeccion">Calculando cómo va el día…</div>
+    <div class="logros__sub" *ngIf="!vm.hayProyeccion">{{ 'enVivo.enVivoLogros.calculandoComoVaElDia' | translate }}</div>
 
     <ul class="logros__list">
       <li class="logro" *ngFor="let l of vm.items; trackBy: porClave" [ngClass]="l.clase">

@@ -1,0 +1,11 @@
+{
+  "comun.guardar": "Save",
+  "ventas.saludo": "Hello {{name}}",
+  "ventas.titulo": "Orders",
+  "ventas.usoPos": "POS",
+  "Correo": "Email",
+  "primeng": {
+    "today": "Today",
+    "dayNamesMin": ["Su", "Mo"]
+  }
+}

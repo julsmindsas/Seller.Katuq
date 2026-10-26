@@ -6,10 +6,10 @@
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="e.paso === 'gracias' ? null : 'ntv-pregunta'"
-      [attr.aria-label]="e.paso === 'gracias' ? 'Gracias por tu opinión' : null"
+      [attr.aria-label]="e.paso === 'gracias' ? ('npsTarjeta.npsTarjeta.graciasPorTuOpinion' | translate) : null"
       (keydown.escape)="cerrar()"
     >
-      <button type="button" class="nt-cerrar" (click)="cerrar()" aria-label="Cerrar">
+      <button type="button" class="nt-cerrar" (click)="cerrar()" [attr.aria-label]="'comun.cerrar' | translate">
         <i class="pi pi-times" aria-hidden="true"></i>
       </button>
       <app-nps-pregunta idBase="ntv"></app-nps-pregunta>
@@ -26,7 +26,7 @@
       (click)="expandida = true"
     >
       <i class="pi pi-star" aria-hidden="true"></i>
-      <span class="nt-boton__texto">Califica a Katuq</span>
+      <span class="nt-boton__texto">{{ 'npsTarjeta.npsTarjeta.calificaAKatuq' | translate }}</span>
     </button>
     <ng-template #tarjeta>
       <aside
@@ -34,10 +34,10 @@
         role="dialog"
         aria-modal="false"
         [attr.aria-labelledby]="e.paso === 'gracias' ? null : 'ntf-pregunta'"
-        [attr.aria-label]="e.paso === 'gracias' ? 'Gracias por tu opinión' : null"
+        [attr.aria-label]="e.paso === 'gracias' ? ('npsTarjeta.npsTarjeta.graciasPorTuOpinion' | translate) : null"
         (keydown.escape)="cerrar()"
       >
-        <button type="button" class="nt-cerrar" (click)="cerrar()" aria-label="Cerrar">
+        <button type="button" class="nt-cerrar" (click)="cerrar()" [attr.aria-label]="'comun.cerrar' | translate">
           <i class="pi pi-times" aria-hidden="true"></i>
         </button>
         <app-nps-pregunta idBase="ntf"></app-nps-pregunta>

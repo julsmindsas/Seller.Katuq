@@ -6,13 +6,13 @@
     </svg>
   </div>
 
-  <h2 id="codigo-correo-titulo" class="codigo-correo__titulo">Confirma tu correo</h2>
+  <h2 id="codigo-correo-titulo" class="codigo-correo__titulo">{{ 'authentication.emailCode.title' | translate }}</h2>
   <p class="codigo-correo__texto">
-    Te enviamos un código de 6 dígitos a <strong>{{ email }}</strong>. Escríbelo aquí para entrar.
+    {{ 'authentication.emailCode.introBefore' | translate }} <strong>{{ email }}</strong>{{ 'authentication.emailCode.introAfter' | translate }}
   </p>
 
   <form class="codigo-correo__form" (ngSubmit)="confirmar()" novalidate>
-    <label for="codigo-correo-input" class="codigo-correo__label">Código</label>
+    <label for="codigo-correo-input" class="codigo-correo__label">{{ 'authentication.emailCode.codeLabel' | translate }}</label>
     <input
       id="codigo-correo-input"
       class="codigo-correo__input"
@@ -31,14 +31,14 @@
     <p *ngIf="aviso && !error" class="codigo-correo__aviso" role="status">{{ aviso }}</p>
 
     <button type="submit" class="codigo-correo__boton" [disabled]="!completo || confirmando">
-      {{ confirmando ? 'Confirmando…' : 'Confirmar y entrar' }}
+      {{ (confirmando ? 'authentication.emailCode.confirming' : 'authentication.emailCode.confirm') | translate }}
     </button>
   </form>
 
   <p id="codigo-correo-ayuda" class="codigo-correo__ayuda">
-    ¿No te llegó? Búscalo en Spam o Promociones. Vence en 15 minutos.
+    {{ 'authentication.emailCode.help' | translate }}
   </p>
   <button type="button" class="codigo-correo__reenviar" (click)="reenviar()" [disabled]="segundos > 0 || reenviando">
-    {{ segundos > 0 ? 'Reenviar código en ' + segundos + ' s' : (reenviando ? 'Enviando…' : 'Reenviar código') }}
+    {{ segundos > 0 ? ('authentication.emailCode.resendIn' | translate: { seconds: segundos }) : ((reenviando ? 'authentication.emailCode.sending' : 'authentication.emailCode.resend') | translate) }}
   </button>
 </section>

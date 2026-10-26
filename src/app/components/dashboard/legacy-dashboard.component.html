@@ -4,18 +4,18 @@
     <div class="dashboard-header-modern">
         <div class="header-top">
             <div class="header-title-section">
-                <h1 class="dashboard-title">{{ 'Panel de Control' | translate }}</h1>
-                <p class="header-subtitle">{{ 'Métricas clave y análisis de rendimiento' | translate }}</p>
+                <h1 class="dashboard-title">{{ 'dashboard.legacy.title' | translate }}</h1>
+                <p class="header-subtitle">{{ 'dashboard.legacy.subtitle' | translate }}</p>
                 <!-- D-349: el backend filtró por el asesor; se dice para que no se lea como el total. -->
                 <p class="header-subtitle" *ngIf="$any(coreData)?.soloMisMetricas">
-                    <i class="fa fa-user me-1"></i>Estás viendo solo tus ventas.
+                    <i class="fa fa-user me-1"></i>{{ 'dashboard.legacy.onlyMine' | translate }}
                 </p>
             </div>
             <div class="header-controls">
                 <!-- Date Range Controls - PrimeNG Style -->
                 <div class="date-range-group">
                     <div class="date-input-wrapper">
-                        <label for="fechaInicial" class="date-label">{{ 'Desde' | translate }}</label>
+                        <label for="fechaInicial" class="date-label">{{ 'dashboard.legacy.from' | translate }}</label>
                         <input
                             type="date"
                             id="fechaInicial"
@@ -24,7 +24,7 @@
                             (change)="firstEvent($event.target.value)" />
                     </div>
                     <div class="date-input-wrapper">
-                        <label for="fechaFinal" class="date-label">{{ 'Hasta' | translate }}</label>
+                        <label for="fechaFinal" class="date-label">{{ 'dashboard.legacy.to' | translate }}</label>
                         <input
                             type="date"
                             id="fechaFinal"
@@ -36,21 +36,21 @@
 
                 <!-- Action Buttons - Styled HTML -->
                 <div class="button-group-modern">
-                    <button type="button" class="btn-filter" (click)="cargarDatos()" title="{{ 'Filtrar' | translate }}">
+                    <button type="button" class="btn-filter" (click)="cargarDatos()" title="{{ 'dashboard.legacy.filter' | translate }}">
                         <i class="fa fa-filter me-1"></i>
-                        {{ 'Filtrar' | translate }}
+                        {{ 'dashboard.legacy.filter' | translate }}
                     </button>
                     <button type="button" class="btn-secondary" (click)="cargarDatosMesActual()">
-                        {{ 'Este Mes' | translate }}
+                        {{ 'dashboard.legacy.thisMonth' | translate }}
                     </button>
                     <button type="button" class="btn-secondary" (click)="cargarDatosMesAnterior()">
-                        {{ 'Mes Anterior' | translate }}
+                        {{ 'dashboard.legacy.lastMonth' | translate }}
                     </button>
                     <div class="module-controls-divider"></div>
-                    <button type="button" class="btn-icon" (click)="expandAll()" title="{{ 'Expandir Todo' | translate }}">
+                    <button type="button" class="btn-icon" (click)="expandAll()" title="{{ 'dashboard.legacy.expandAll' | translate }}">
                         <i class="fa fa-window-maximize"></i>
                     </button>
-                    <button type="button" class="btn-icon" (click)="collapseAll()" title="{{ 'Colapsar Todo' | translate }}">
+                    <button type="button" class="btn-icon" (click)="collapseAll()" title="{{ 'dashboard.legacy.collapseAll' | translate }}">
                         <i class="fa fa-window-minimize"></i>
                     </button>
                 </div>
@@ -60,7 +60,7 @@
         <!-- Error Alert -->
         <div *ngIf="estadoCarga.error" class="error-banner">
             <i class="fa fa-exclamation-circle me-2"></i>
-            {{ estadoCarga.error }}
+            {{ estadoCarga.error | translate }}
         </div>
     </div>
 
@@ -74,12 +74,12 @@
                     <div class="kpi-card-modern">
                         <div class="kpi-loading" *ngIf="estadoCarga.core">
                             <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                             </div>
                         </div>
                         <div class="kpi-content" *ngIf="!estadoCarga.core">
                             <div class="kpi-header">
-                                <span class="kpi-label">{{ 'Ventas Totales' | translate }}</span>
+                                <span class="kpi-label">{{ 'dashboard.legacy.kpiTotalSales' | translate }}</span>
                                 <span class="kpi-change" [class.positive]="crecimientoVentas > 0" [class.negative]="crecimientoVentas < 0">
                                     <i class="fa" [ngClass]="crecimientoVentas > 0 ? 'fa-arrow-up' : 'fa-arrow-down'" *ngIf="crecimientoVentas !== 0"></i>
                                     {{ crecimientoVentas }}%
@@ -88,7 +88,7 @@
                             <div class="kpi-value">
                                 {{ totalVentas | currency:'COP':'symbol':'1.0-0' }}
                             </div>
-                            <div class="kpi-footer">vs período anterior</div>
+                            <div class="kpi-footer">{{ 'dashboard.legacy.vsPrevious' | translate }}</div>
                         </div>
                     </div>
                 </div>
@@ -98,17 +98,17 @@
                     <div class="kpi-card-modern">
                         <div class="kpi-loading" *ngIf="estadoCarga.core">
                             <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                             </div>
                         </div>
                         <div class="kpi-content" *ngIf="!estadoCarga.core">
                             <div class="kpi-header">
-                                <span class="kpi-label">{{ 'Ticket Promedio' | translate }}</span>
+                                <span class="kpi-label">{{ 'dashboard.legacy.kpiAvgTicket' | translate }}</span>
                             </div>
                             <div class="kpi-value">
                                 {{ promedioTicket | currency:'COP':'symbol':'1.0-0' }}
                             </div>
-                            <div class="kpi-footer">por pedido aprobado</div>
+                            <div class="kpi-footer">{{ 'dashboard.legacy.perApprovedOrder' | translate }}</div>
                         </div>
                     </div>
                 </div>
@@ -118,17 +118,17 @@
                     <div class="kpi-card-modern">
                         <div class="kpi-loading" *ngIf="estadoCarga.core">
                             <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                             </div>
                         </div>
                         <div class="kpi-content" *ngIf="!estadoCarga.core">
                             <div class="kpi-header">
-                                <span class="kpi-label">{{ 'Tasa Conversión' | translate }}</span>
+                                <span class="kpi-label">{{ 'dashboard.legacy.kpiConversion' | translate }}</span>
                             </div>
                             <div class="kpi-value">
                                 {{ tasaConversion }}<span class="percent-sign">%</span>
                             </div>
-                            <div class="kpi-footer">{{ pedidosAprobados }} de {{ totalPedidos }} pedidos</div>
+                            <div class="kpi-footer">{{ 'dashboard.legacy.approvedOfTotal' | translate: { approved: pedidosAprobados, total: totalPedidos } }}</div>
                         </div>
                     </div>
                 </div>
@@ -138,17 +138,17 @@
                     <div class="kpi-card-modern">
                         <div class="kpi-loading" *ngIf="estadoCarga.core">
                             <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                             </div>
                         </div>
                         <div class="kpi-content" *ngIf="!estadoCarga.core">
                             <div class="kpi-header">
-                                <span class="kpi-label">{{ 'Total Pedidos' | translate }}</span>
+                                <span class="kpi-label">{{ 'dashboard.legacy.kpiTotalOrders' | translate }}</span>
                             </div>
                             <div class="kpi-value">
                                 {{ totalPedidos }}
                             </div>
-                            <div class="kpi-footer">{{ pedidosAprobados }} aprobados</div>
+                            <div class="kpi-footer">{{ 'dashboard.legacy.approvedCount' | translate: { count: pedidosAprobados } }}</div>
                         </div>
                     </div>
                 </div>
@@ -163,9 +163,9 @@
                     <div class="module-title-wrapper">
                         <h3 class="module-title-modern">
                             <i class="fa fa-chart-bar me-2"></i>
-                            {{ 'Módulo de Ventas' | translate }}
+                            {{ 'dashboard.legacy.salesModule' | translate }}
                         </h3>
-                        <p class="module-description-modern">{{ 'Análisis detallado de ventas y productos' | translate }}</p>
+                        <p class="module-description-modern">{{ 'dashboard.legacy.salesModuleDesc' | translate }}</p>
                     </div>
                     <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.ventas"></i>
                 </div>
@@ -201,7 +201,7 @@
                                 <!-- Loading State -->
                                 <div *ngIf="estadoCarga.core || estadoCarga.details" class="widget-loading-modern">
                                     <div class="spinner-border spinner-border-sm" role="status">
-                                        <span class="visually-hidden">Loading...</span>
+                                        <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                                     </div>
                                 </div>
 
@@ -255,7 +255,7 @@
                             <div class="kai-header">
                                 <h5 class="kai-title">
                                     <i class="fa fa-brain me-2"></i>
-                                    {{ 'K.A.I. Insights - Análisis Inteligente' | translate }}
+                                    {{ 'dashboard.legacy.kaiTitle' | translate }}
                                 </h5>
                             </div>
                             <div class="kai-body">
@@ -263,17 +263,17 @@
                                     <button class="btn btn-sm btn-apply" (click)="analizar('VentasMes')" [disabled]="isAnalyzing">
                                         <i class="fa fa-magic me-1" *ngIf="!isAnalyzing"></i>
                                         <div class="spinner-border spinner-border-sm me-1" role="status" *ngIf="isAnalyzing">
-                                            <span class="visually-hidden">Loading...</span>
+                                            <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                                         </div>
-                                        {{ isAnalyzing ? ('Analizando...' | translate) : ('Analizar Período' | translate) }}
+                                        {{ isAnalyzing ? ('dashboard.legacy.analyzing' | translate) : ('dashboard.legacy.analyze' | translate) }}
                                     </button>
                                 </div>
 
                                 <div *ngIf="isAnalyzing" class="text-center">
                                     <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Loading...</span>
+                                        <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                                     </div>
-                                    <p class="mt-2 text-muted">{{ 'Analizando datos...' | translate }}</p>
+                                    <p class="mt-2 text-muted">{{ 'dashboard.legacy.analyzingData' | translate }}</p>
                                 </div>
 
                                 <div *ngIf="ventasMesCheck && !isAnalyzing" class="analysis-result">
@@ -282,7 +282,7 @@
 
                                 <div *ngIf="!ventasMesCheck && !isAnalyzing" class="text-center text-muted">
                                     <i class="fa fa-lightbulb fa-2x mb-2 opacity-50"></i>
-                                    <p class="mb-0">{{ 'Obtén insights inteligentes sobre tus ventas' | translate }}</p>
+                                    <p class="mb-0">{{ 'dashboard.legacy.kaiEmpty' | translate }}</p>
                                 </div>
                             </div>
                         </div>
@@ -296,9 +296,9 @@
                     <div class="module-title-wrapper">
                         <h3 class="module-title-modern">
                             <i class="fa fa-truck me-2"></i>
-                            {{ 'Módulo de Logística' | translate }}
+                            {{ 'dashboard.legacy.logisticsModule' | translate }}
                         </h3>
-                        <p class="module-description-modern">{{ 'Gestión de entregas y distribución' | translate }}</p>
+                        <p class="module-description-modern">{{ 'dashboard.legacy.logisticsModuleDesc' | translate }}</p>
                     </div>
                     <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.logistica"></i>
                 </div>
@@ -306,9 +306,9 @@
                     <!-- Loading state -->
                     <div class="text-center py-4" *ngIf="estadoCarga.logistica">
                         <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                            <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                         </div>
-                        <p class="mt-2 text-muted">{{ 'Cargando análisis de logística...' | translate }}</p>
+                        <p class="mt-2 text-muted">{{ 'dashboard.legacy.logisticsLoading' | translate }}</p>
                     </div>
 
                     <!-- Data loaded state -->
@@ -317,10 +317,10 @@
                             <div class="col-12">
                                 <div class="alert alert-info">
                                     <i class="fa fa-truck me-2"></i>
-                                    {{ 'Datos de logística cargados correctamente' | translate }}
+                                    {{ 'dashboard.legacy.logisticsLoaded' | translate }}
                                 </div>
                                 <p class="text-muted">
-                                    {{ 'Entregas registradas:' | translate }}
+                                    {{ 'dashboard.legacy.deliveries' | translate }}
                                     <strong>{{ logisticaData.performanceEntregas?.totalEntregas || 0 }}</strong>
                                 </p>
                             </div>
@@ -330,7 +330,7 @@
                     <!-- No data state -->
                     <div *ngIf="!estadoCarga.logistica && !logisticaData.performanceEntregas" class="text-center text-muted py-4">
                         <i class="fa fa-truck fa-2x mb-3 text-muted"></i>
-                        <p>{{ 'No hay datos de logística disponibles para el período seleccionado' | translate }}</p>
+                        <p>{{ 'dashboard.legacy.logisticsEmpty' | translate }}</p>
                     </div>
                 </div>
             </div>
@@ -341,9 +341,9 @@
                     <div class="module-title-wrapper">
                         <h3 class="module-title-modern">
                             <i class="fa fa-boxes me-2"></i>
-                            {{ 'Módulo de Inventario' | translate }}
+                            {{ 'dashboard.legacy.inventoryModule' | translate }}
                         </h3>
-                        <p class="module-description-modern">{{ 'Stock, rotación, alertas y movimientos' | translate }}</p>
+                        <p class="module-description-modern">{{ 'dashboard.legacy.inventoryModuleDesc' | translate }}</p>
                     </div>
                     <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.inventario"></i>
                 </div>
@@ -352,7 +352,7 @@
                     <!-- Loading -->
                     <div class="text-center py-4" *ngIf="estadoCarga.inventario">
                         <div class="spinner-border" role="status"></div>
-                        <p class="mt-2 text-muted">{{ 'Cargando inventario...' | translate }}</p>
+                        <p class="mt-2 text-muted">{{ 'dashboard.legacy.inventoryLoading' | translate }}</p>
                     </div>
 
                     <!-- Datos cargados -->
@@ -362,30 +362,30 @@
                         <div class="row g-3 mb-4">
                             <div class="col-6 col-md-3">
                                 <div class="kpi-card-modern text-center p-3">
-                                    <div class="kpi-label">{{ 'Productos con Stock' | translate }}</div>
+                                    <div class="kpi-label">{{ 'dashboard.legacy.inStock' | translate }}</div>
                                     <div class="kpi-value text-success">{{ inventarioData.snapshot.resumen.conStock | number }}</div>
-                                    <small class="text-muted">de {{ inventarioData.snapshot.resumen.totalProductosUnicos | number }}</small>
+                                    <small class="text-muted">{{ 'dashboard.legacy.ofTotal' | translate: { total: (inventarioData.snapshot.resumen.totalProductosUnicos | number) } }}</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="kpi-card-modern text-center p-3">
-                                    <div class="kpi-label">{{ 'En Ruptura' | translate }}</div>
+                                    <div class="kpi-label">{{ 'dashboard.legacy.outOfStock' | translate }}</div>
                                     <div class="kpi-value text-danger">{{ inventarioData.snapshot.resumen.enRuptura | number }}</div>
-                                    <small class="text-muted">{{ 'Sin stock' | translate }}</small>
+                                    <small class="text-muted">{{ 'dashboard.legacy.noStock' | translate }}</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="kpi-card-modern text-center p-3">
-                                    <div class="kpi-label">{{ 'Stock Bajo' | translate }}</div>
+                                    <div class="kpi-label">{{ 'dashboard.legacy.lowStock' | translate }}</div>
                                     <div class="kpi-value text-warning">{{ inventarioData.snapshot.resumen.stockBajo | number }}</div>
-                                    <small class="text-muted">≤ 5 unidades</small>
+                                    <small class="text-muted">{{ 'dashboard.legacy.lowStockHelp' | translate }}</small>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="kpi-card-modern text-center p-3">
-                                    <div class="kpi-label">{{ 'Dormidos' | translate }}</div>
+                                    <div class="kpi-label">{{ 'dashboard.legacy.dormant' | translate }}</div>
                                     <div class="kpi-value text-secondary">{{ inventarioData.snapshot.resumen.productosDormidos | number }}</div>
-                                    <small class="text-muted">sin salidas {{ inventarioData.snapshot.resumen.diasDormidoUmbral }}d</small>
+                                    <small class="text-muted">{{ 'dashboard.legacy.dormantShort' | translate: { days: inventarioData.snapshot.resumen.diasDormidoUmbral } }}</small>
                                 </div>
                             </div>
                         </div>
@@ -394,18 +394,18 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-5" *ngIf="inventarioBodegasChartOption && inventarioData.snapshot.distribucionBodegas.length">
                                 <div class="kpi-card-modern p-3">
-                                    <h6 class="mb-3"><i class="fa fa-warehouse me-2"></i>{{ 'Distribución por Bodega' | translate }}</h6>
+                                    <h6 class="mb-3"><i class="fa fa-warehouse me-2"></i>{{ 'dashboard.legacy.byWarehouse' | translate }}</h6>
                                     <div echarts [options]="inventarioBodegasChartOption" style="height: 220px;"></div>
                                 </div>
                             </div>
                             <div class="col-md-7" *ngIf="inventarioMovimientosChartOption && inventarioData.movimientos">
                                 <div class="kpi-card-modern p-3">
-                                    <h6 class="mb-2"><i class="fa fa-exchange-alt me-2"></i>{{ 'Movimientos del Período' | translate }}</h6>
+                                    <h6 class="mb-2"><i class="fa fa-exchange-alt me-2"></i>{{ 'dashboard.legacy.periodMovements' | translate }}</h6>
                                     <div class="d-flex gap-3 mb-2">
-                                        <span class="badge bg-success">+{{ inventarioData.movimientos.resumen.totalIngresosUnidades | number }} ingresos</span>
-                                        <span class="badge bg-danger">-{{ inventarioData.movimientos.resumen.totalSalidasUnidades | number }} salidas</span>
+                                        <span class="badge bg-success">{{ 'dashboard.legacy.inboundBadge' | translate: { count: (inventarioData.movimientos.resumen.totalIngresosUnidades | number) } }}</span>
+                                        <span class="badge bg-danger">{{ 'dashboard.legacy.outboundBadge' | translate: { count: (inventarioData.movimientos.resumen.totalSalidasUnidades | number) } }}</span>
                                         <span class="badge" [class.bg-primary]="inventarioData.movimientos.resumen.balanceNeto >= 0" [class.bg-warning]="inventarioData.movimientos.resumen.balanceNeto < 0">
-                                            Balance: {{ inventarioData.movimientos.resumen.balanceNeto | number }}
+                                            {{ 'dashboard.legacy.balance' | translate: { value: (inventarioData.movimientos.resumen.balanceNeto | number) } }}
                                         </span>
                                     </div>
                                     <div echarts [options]="inventarioMovimientosChartOption" style="height: 180px;"></div>
@@ -418,7 +418,7 @@
                             <!-- Sin stock -->
                             <div class="col-md-6" *ngIf="inventarioData.snapshot.alertas.sinStock.length">
                                 <div class="kpi-card-modern p-3">
-                                    <h6 class="text-danger mb-2"><i class="fa fa-exclamation-circle me-2"></i>{{ 'En Ruptura' | translate }} ({{ inventarioData.snapshot.alertas.sinStock.length }})</h6>
+                                    <h6 class="text-danger mb-2"><i class="fa fa-exclamation-circle me-2"></i>{{ 'dashboard.legacy.outOfStock' | translate }} ({{ inventarioData.snapshot.alertas.sinStock.length }})</h6>
                                     <div style="max-height:180px; overflow-y:auto;">
                                         <table class="table table-sm table-hover mb-0">
                                             <tbody>
@@ -435,7 +435,7 @@
                             <!-- Stock bajo -->
                             <div class="col-md-6" *ngIf="inventarioData.snapshot.alertas.stockBajo.length">
                                 <div class="kpi-card-modern p-3">
-                                    <h6 class="text-warning mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ 'Stock Bajo' | translate }} ({{ inventarioData.snapshot.alertas.stockBajo.length }})</h6>
+                                    <h6 class="text-warning mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ 'dashboard.legacy.lowStock' | translate }} ({{ inventarioData.snapshot.alertas.stockBajo.length }})</h6>
                                     <div style="max-height:180px; overflow-y:auto;">
                                         <table class="table table-sm table-hover mb-0">
                                             <tbody>
@@ -453,15 +453,15 @@
 
                         <!-- Top productos con movimiento -->
                         <div class="kpi-card-modern p-3 mb-3" *ngIf="inventarioData.movimientos?.topProductosMovidos?.length">
-                            <h6 class="mb-3"><i class="fa fa-sort-amount-down me-2"></i>{{ 'Top Productos por Movimiento' | translate }}</h6>
+                            <h6 class="mb-3"><i class="fa fa-sort-amount-down me-2"></i>{{ 'dashboard.legacy.topMoved' | translate }}</h6>
                             <div style="overflow-x:auto;">
                                 <table class="table table-sm table-hover mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>{{ 'Producto' | translate }}</th>
-                                            <th>{{ 'Ref.' | translate }}</th>
-                                            <th class="text-end text-success">{{ 'Entradas' | translate }}</th>
-                                            <th class="text-end text-danger">{{ 'Salidas' | translate }}</th>
+                                            <th>{{ 'dashboard.legacy.product' | translate }}</th>
+                                            <th>{{ 'dashboard.legacy.ref' | translate }}</th>
+                                            <th class="text-end text-success">{{ 'dashboard.legacy.inbound' | translate }}</th>
+                                            <th class="text-end text-danger">{{ 'dashboard.legacy.outbound' | translate }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -478,8 +478,8 @@
 
                         <!-- Productos dormidos -->
                         <div class="kpi-card-modern p-3" *ngIf="inventarioData.snapshot.alertas.dormidos.length">
-                            <h6 class="text-secondary mb-2"><i class="fa fa-moon me-2"></i>{{ 'Productos Dormidos' | translate }} ({{ inventarioData.snapshot.alertas.dormidos.length }})</h6>
-                            <p class="text-muted small mb-2">{{ 'Sin salidas en los últimos' | translate }} {{ inventarioData.snapshot.resumen.diasDormidoUmbral }} {{ 'días' | translate }}</p>
+                            <h6 class="text-secondary mb-2"><i class="fa fa-moon me-2"></i>{{ 'dashboard.legacy.dormantProducts' | translate }} ({{ inventarioData.snapshot.alertas.dormidos.length }})</h6>
+                            <p class="text-muted small mb-2">{{ 'dashboard.legacy.dormantHelp' | translate: { days: inventarioData.snapshot.resumen.diasDormidoUmbral } }}</p>
                             <div style="max-height:200px; overflow-y:auto;">
                                 <table class="table table-sm table-hover mb-0">
                                     <tbody>
@@ -497,7 +497,7 @@
                     <!-- Sin datos -->
                     <div *ngIf="!estadoCarga.inventario && !inventarioData.snapshot" class="text-center text-muted py-4">
                         <i class="fa fa-boxes fa-2x mb-3"></i>
-                        <p>{{ 'Expande el módulo para cargar datos de inventario' | translate }}</p>
+                        <p>{{ 'dashboard.legacy.inventoryExpand' | translate }}</p>
                     </div>
                 </div>
             </div>
@@ -508,15 +508,15 @@
                     <div class="module-title-wrapper">
                         <h3 class="module-title-modern">
                             <i class="fa fa-cogs me-2"></i>
-                            {{ 'Módulo de Producción' | translate }}
+                            {{ 'dashboard.legacy.productionModule' | translate }}
                         </h3>
-                        <p class="module-description-modern">{{ 'Seguimiento de producción' | translate }}</p>
+                        <p class="module-description-modern">{{ 'dashboard.legacy.productionModuleDesc' | translate }}</p>
                     </div>
                     <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.produccion"></i>
                 </div>
                 <div class="module-content-modern" [class.collapsed]="!modulosExpandidos.produccion">
                     <div class="text-center text-muted py-4">
-                        <p>{{ 'Módulo de producción' | translate }}</p>
+                        <p>{{ 'dashboard.legacy.productionPlaceholder' | translate }}</p>
                     </div>
                 </div>
             </div>
@@ -527,15 +527,15 @@
                     <div class="module-title-wrapper">
                         <h3 class="module-title-modern">
                             <i class="fa fa-money-bill me-2"></i>
-                            {{ 'Módulo Financiero' | translate }}
+                            {{ 'dashboard.legacy.financeModule' | translate }}
                         </h3>
-                        <p class="module-description-modern">{{ 'Análisis financiero y reportes' | translate }}</p>
+                        <p class="module-description-modern">{{ 'dashboard.legacy.financeModuleDesc' | translate }}</p>
                     </div>
                     <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.financiero"></i>
                 </div>
                 <div class="module-content-modern" [class.collapsed]="!modulosExpandidos.financiero">
                     <div class="text-center text-muted py-4">
-                        <p>{{ 'Módulo financiero' | translate }}</p>
+                        <p>{{ 'dashboard.legacy.financePlaceholder' | translate }}</p>
                     </div>
                 </div>
             </div>

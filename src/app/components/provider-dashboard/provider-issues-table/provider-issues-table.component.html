@@ -1,19 +1,19 @@
 <div class="issues-wrapper">
   <div class="summary-row">
     <div class="kpi" [class.highlight]="selectedCategory === 'missing_osmosis_id'">
-      <div class="kpi-label">Sin enviar al proveedor</div>
+      <div class="kpi-label">{{ 'providerDashboard.providerIssuesTable.sinEnviarAlProveedor' | translate }}</div>
       <div class="kpi-value warning">{{ summary.missing_osmosis_id }}</div>
     </div>
     <div class="kpi" [class.highlight]="selectedCategory === 'push_error'">
-      <div class="kpi-label">Error al enviar</div>
+      <div class="kpi-label">{{ 'providerDashboard.providerIssuesTable.errorAlEnviar' | translate }}</div>
       <div class="kpi-value danger">{{ summary.push_error }}</div>
     </div>
     <div class="kpi" [class.highlight]="selectedCategory === 'cancelled_in_cereza'">
-      <div class="kpi-label">Cancelado en proveedor</div>
+      <div class="kpi-label">{{ 'providerDashboard.providerIssuesTable.canceladoEnProveedor' | translate }}</div>
       <div class="kpi-value info">{{ summary.cancelled_in_cereza }}</div>
     </div>
     <div class="kpi total">
-      <div class="kpi-label">Total con problemas</div>
+      <div class="kpi-label">{{ 'providerDashboard.providerIssuesTable.totalConProblemas' | translate }}</div>
       <div class="kpi-value">{{ total }}</div>
     </div>
   </div>
@@ -25,7 +25,7 @@
       (onChange)="onCategoryChange()"
       optionLabel="label"
       optionValue="value"
-      placeholder="Categoría"
+      [placeholder]="'providerDashboard.providerIssuesTable.categoria' | translate"
       styleClass="filter-dropdown"
     ></p-dropdown>
     <span class="search-input">
@@ -35,11 +35,11 @@
         pInputText
         [(ngModel)]="searchText"
         (input)="onSearchChange()"
-        placeholder="Buscar por # pedido, cliente, error..."
+        [placeholder]="'providerDashboard.providerIssuesTable.buscarPorPedidoClienteError' | translate"
       />
     </span>
     <button
-      pButton type="button" icon="pi pi-refresh" label="Refrescar"
+      pButton type="button" icon="pi pi-refresh" [label]="'providerDashboard.providerIssuesTable.refrescar' | translate"
       class="p-button-text" (click)="load()" [disabled]="loading"
     ></button>
   </div>
@@ -54,8 +54,8 @@
 
   <div *ngIf="!loading && !error && filteredIssues.length === 0" class="state-msg empty">
     <i class="pi pi-check-circle"></i>
-    <p *ngIf="total === 0">No hay pedidos con problemas. Todo en sincronía.</p>
-    <p *ngIf="total > 0">Ningún pedido coincide con los filtros aplicados.</p>
+    <p *ngIf="total === 0">{{ 'providerDashboard.providerIssuesTable.noHayPedidosConProblemas' | translate }}</p>
+    <p *ngIf="total > 0">{{ 'providerDashboard.providerIssuesTable.ningunPedidoCoincideConLos' | translate }}</p>
   </div>
 
   <p-table
@@ -68,14 +68,14 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 11rem;">Categoría</th>
-        <th>Pedido</th>
-        <th>Cliente</th>
-        <th style="width: 9rem;">Total</th>
-        <th style="width: 10rem;">Estado proceso</th>
-        <th>Detalle</th>
-        <th style="width: 11rem;">Fecha</th>
-        <th style="width: 8rem;">Acciones</th>
+        <th style="width: 11rem;">{{ 'providerDashboard.providerIssuesTable.categoria' | translate }}</th>
+        <th>{{ 'providerDashboard.providerIssuesTable.pedido' | translate }}</th>
+        <th>{{ 'providerDashboard.providerIssuesTable.cliente' | translate }}</th>
+        <th style="width: 9rem;">{{ 'providerDashboard.providerIssuesTable.total' | translate }}</th>
+        <th style="width: 10rem;">{{ 'providerDashboard.providerIssuesTable.estadoProceso' | translate }}</th>
+        <th>{{ 'providerDashboard.providerIssuesTable.detalle' | translate }}</th>
+        <th style="width: 11rem;">{{ 'providerDashboard.providerIssuesTable.fecha' | translate }}</th>
+        <th style="width: 8rem;">{{ 'providerDashboard.providerIssuesTable.acciones' | translate }}</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
@@ -83,8 +83,8 @@
         <td><p-tag [value]="categoryLabel(row.category)" [severity]="categorySeverity(row.category)"></p-tag></td>
         <td class="cell-nopedido">
           <div>{{ row.nroPedido }}</div>
-          <small *ngIf="row.shopifyOrderName" class="muted">SH-{{ row.shopifyOrderName }}</small>
-          <small *ngIf="row.osmosisOrderId" class="muted">OSM-{{ row.osmosisOrderId }}</small>
+          <small *ngIf="row.shopifyOrderName" class="muted">{{ 'providerDashboard.providerIssuesTable.sh' | translate:{shopifyOrderName: row.shopifyOrderName} }}</small>
+          <small *ngIf="row.osmosisOrderId" class="muted">{{ 'providerDashboard.providerIssuesTable.osm' | translate:{osmosisOrderId: row.osmosisOrderId} }}</small>
         </td>
         <td>{{ row.cliente || '—' }}</td>
         <td>{{ formatTotal(row.total) }}</td>
@@ -99,15 +99,15 @@
           <span *ngIf="row.category === 'cancelled_in_cereza' && row.osmosisLastNote">
             <i class="pi pi-info-circle"></i> {{ row.osmosisLastNote }}
           </span>
-          <span *ngIf="row.category === 'missing_osmosis_id'" class="muted">Pendiente de envío</span>
+          <span *ngIf="row.category === 'missing_osmosis_id'" class="muted">{{ 'providerDashboard.providerIssuesTable.pendienteDeEnvio' | translate }}</span>
         </td>
         <td>{{ formatFecha(row.fechaCreacion) }}</td>
         <td class="cell-actions">
           <button *ngIf="row.category !== 'cancelled_in_cereza'"
-                  pButton type="button" icon="pi pi-send" label="Reenviar"
+                  pButton type="button" icon="pi pi-send" [label]="'providerDashboard.providerIssuesTable.reenviar' | translate"
                   class="p-button-sm p-button-outlined"
                   [disabled]="pushingIds.has(row.cd)" (click)="reenviar(row)"
-                  pTooltip="Forzar push al proveedor (idempotente)" tooltipPosition="left"></button>
+                  [pTooltip]="'providerDashboard.providerIssuesTable.forzarPushAlProveedorIdempotente' | translate" tooltipPosition="left"></button>
         </td>
       </tr>
     </ng-template>

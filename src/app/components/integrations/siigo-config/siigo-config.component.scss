@@ -14,16 +14,16 @@
     font-weight: 700;
     background: $cfg-accent;
     border-color: $cfg-accent;
-    color: #fff;
+    color: var(--ds-on-accent);
     &:enabled:hover { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
     &:focus { box-shadow: 0 0 0 3px rgba(124, 92, 255, .25); }
     &:disabled { background: #d8d4ea; border-color: #d8d4ea; opacity: 1; }
   }
   .p-button.p-button-outlined {
-    background: #fff;
-    border: 1px solid #e4e2ef;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line-strong);
     color: $cfg-body;
-    &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent; }
+    &:enabled:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
   }
 
   .p-card {
@@ -128,7 +128,7 @@
 
   i {
     font-size: 2rem;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
   }
 
   span {
@@ -178,7 +178,7 @@
 
     i {
       margin-right: 6px;
-      color: $cfg-accent;
+      color: $cfg-accent-ink;
     }
   }
 
@@ -243,7 +243,7 @@
 
   i {
     font-size: 1.5rem;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
   }
 }
 
@@ -261,7 +261,7 @@
 
     i {
       margin-right: 8px;
-      color: $cfg-accent;
+      color: $cfg-accent-ink;
     }
   }
 
@@ -278,14 +278,14 @@
 .cat-contable {
   margin-top: 24px;
   padding: 16px;
-  background: #ffffff;
+  background: var(--ds-surface);
   border: 1px solid #E6E0FA;
   border-radius: 16px;
 
   &__titulo {
     margin: 0 0 6px 0;
     font-size: 0.95rem !important;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 
   &__texto {
@@ -314,7 +314,7 @@
     td {
       padding: 6px 8px;
       font-size: 0.875rem;
-      color: #211F3A;
+      color: var(--ds-ink);
       border-bottom: 1px solid #F3F0FD;
       vertical-align: middle;
     }
@@ -331,8 +331,8 @@
     padding: 20px;
     color: #6B6787;
 
-    i { font-size: 1.4rem; color: #5F3FE0; }
-    strong { color: #211F3A; }
+    i { font-size: 1.4rem; color: var(--ds-accent-ink); }
+    strong { color: var(--ds-ink); }
     small { color: #6B6787; }
   }
 }
@@ -357,7 +357,7 @@
 
     i {
       margin-right: 8px;
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
     }
   }
 
@@ -374,7 +374,7 @@
 
     .puc-code {
       background-color: $cfg-accent-soft;
-      color: $cfg-accent;
+      color: $cfg-accent-ink;
       padding: 4px 8px;
       border-radius: 4px;
       font-family: monospace;
@@ -456,7 +456,7 @@
 
     &.created {
       background-color: $cfg-accent-soft;
-      color: $cfg-accent;
+      color: $cfg-accent-ink;
     }
 
     &.updated {
@@ -641,7 +641,7 @@
     border-radius: 16px;
     background: $cfg-tile;
     font-size: 26px;
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
     margin-bottom: 16px;
   }
 

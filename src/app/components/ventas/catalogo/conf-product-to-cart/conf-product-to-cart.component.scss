@@ -223,7 +223,7 @@
       white-space: nowrap;
 
       &.primary {
-        background-color: #5F3FE0;
+        background-color: var(--ds-accent);
         color: white;
         
         &:hover {
@@ -343,7 +343,7 @@
     width: 100%;
     height: 100%;
     border: none;
-    background-color: #5F3FE0;
+    background-color: var(--ds-accent);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -497,7 +497,7 @@
 
 // Asegúrate de que los estilos de bootstrap para acordeones sean respetados
 ::ng-deep .accordion-item {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border: 1px solid rgba(0, 0, 0, .125);
 }
 
@@ -514,7 +514,7 @@
   font-size: 1rem;
   color: #212529;
   text-align: left;
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border: 0;
   border-radius: 0;
   overflow-anchor: none;
@@ -799,7 +799,7 @@
       }
 
       &.active {
-        background-color: #fff;
+        background-color: var(--ds-surface);
         border-color: rgba(0, 0, 0, .125);
         border-bottom-color: transparent;
         color: var(--bs-primary);
@@ -821,7 +821,7 @@
 .fixed-summary-container {
   position: fixed;
   bottom: 0;
-  background-color: white;
+  background-color: var(--ds-surface);
   padding: 1rem;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   border-top: 1px solid #eee;
@@ -943,10 +943,10 @@
 
 /* Estilos para alertas de error de datos maestros */
 .alert.alert-danger {
-  background-color: #FDECEC;
+  background-color: var(--ds-err-soft);
   border: 0;
   border-radius: 11px;
-  color: #D64545;
+  color: var(--ds-err);
   
   .btn-sm {
     padding: 0.25rem 0.75rem;
@@ -955,23 +955,23 @@
     border-radius: 0.2rem;
     
     &.btn-primary {
-      background-color: #5F3FE0;
-      border-color: #5F3FE0;
+      background-color: var(--ds-accent);
+      border-color: var(--ds-accent-ink);
       
       &:hover {
-        background-color: #4a2fc0;
-        border-color: #4a2fc0;
+        background-color: var(--ds-accent-hover);
+        border-color: var(--ds-accent-hover);
       }
     }
     
     &.btn-outline-secondary {
-      background-color: #fff;
-      color: #5b5878;
-      border-color: #e4e2ef;
+      background-color: var(--ds-surface);
+      color: var(--ds-body);
+      border-color: var(--ds-line-strong);
 
       &:hover {
-        color: #5F3FE0;
-        background-color: #faf9fe;
+        color: var(--ds-accent-ink);
+        background-color: var(--ds-surface-2);
         border-color: #d9cffb;
       }
     }
@@ -980,10 +980,10 @@
 
 /* Estilos para indicador de carga */
 .alert.alert-info {
-  background-color: #E7F1FF;
+  background-color: var(--ds-info-soft);
   border: 0;
   border-radius: 11px;
-  color: #1E6FD9;
+  color: var(--ds-info);
   
   .spinner-border-sm {
     width: 1rem;
@@ -1048,7 +1048,7 @@
         margin-left: 0.5rem;
         
         &[title*="Reintentar"] {
-          color: #5F3FE0;
+          color: var(--ds-accent-ink);
           
           &:hover {
             color: #4a2fc0;
@@ -1137,7 +1137,7 @@
   align-items: center;
   gap: 14px;
   padding: 16px 22px !important;
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid var(--kc-line) !important;
 
   .cfg-head-ic {
@@ -1181,7 +1181,7 @@
   }
 
   > .card-header {
-    background: #fff;
+    background: var(--ds-surface);
     border-bottom: 1px solid var(--kc-line2);
     border-radius: 18px 18px 0 0;
     padding: 14px 18px;
@@ -1197,13 +1197,13 @@
   display: flex;
   align-items: center;
   padding: 10px 14px;
-  background: #fff;
-  border-bottom: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
 
   h5 {
     font-size: 15px;
     font-weight: 800;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 }
 
@@ -1289,7 +1289,7 @@
     &:focus {
       border-color: var(--kc-accent);
       box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.12);
-      background: #fff;
+      background: var(--ds-surface);
     }
   }
 
@@ -1419,7 +1419,7 @@
   border-radius: 0 !important;
   border: none !important;
   border-top: 1px solid var(--kc-line) !important;
-  background: #fff !important;
+  background: var(--ds-surface) !important;
   backdrop-filter: none !important;
   box-shadow: 0 -6px 24px rgba(30, 35, 60, 0.08) !important;
   z-index: 1100 !important;
@@ -1541,7 +1541,7 @@
   flex-wrap: wrap;
   gap: 6px;
   padding: 12px 14px;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--kc-line);
   border-radius: 16px;
   margin-bottom: 14px;
@@ -1556,7 +1556,7 @@
   gap: 8px;
   padding: 9px 15px;
   border: 1px solid #e4e5ee;
-  background: #fff;
+  background: var(--ds-surface);
   color: var(--kc-ink2);
   border-radius: 999px;
   cursor: pointer;
@@ -1612,7 +1612,7 @@
 
   .accordion-header,
   .card-header {
-    background: #fff !important;
+    background: var(--ds-surface) !important;
     border-bottom: 1px solid var(--kc-line2) !important;
     padding: 4px 8px !important;
   }
@@ -1645,7 +1645,7 @@
   }
 
   .accordion-body {
-    background: #fff;
+    background: var(--ds-surface);
     padding: 16px 18px !important;
   }
 }
@@ -1705,7 +1705,7 @@
     padding: 0 !important;
     border: none !important;
     border-radius: 10px !important;
-    background: #fff !important;
+    background: var(--ds-surface) !important;
     color: var(--kc-accent) !important;
     font-weight: 800;
     box-shadow: 0 1px 2px rgba(30, 35, 60, 0.06);
@@ -1764,7 +1764,7 @@
     padding: 0 !important;
     border: none !important;
     border-radius: 11px !important;
-    background: #fff !important;
+    background: var(--ds-surface) !important;
     color: var(--kc-accent) !important;
     display: flex !important;
     align-items: center;

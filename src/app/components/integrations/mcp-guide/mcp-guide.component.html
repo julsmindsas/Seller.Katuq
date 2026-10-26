@@ -1,50 +1,48 @@
 <section class="cfg-pagina mguide-page" *ngIf="guide">
   <header class="cfg-cabeza mguide-header">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Desde tu IA · Instructivo MCP</span>
-      <h2 id="mguide-title" class="mguide-title">Conecta Katuq desde {{ guide.name }}</h2>
-      <p class="cfg-sub">La conexión se hace en {{ guide.name }} con tu cuenta de Katuq.</p>
+      <span class="cfg-eyebrow">{{ 'integrations.mcpGuide.desdeTuIaInstructivoMcp' | translate }}</span>
+      <h2 id="mguide-title" class="mguide-title">{{ 'integrations.mcpGuide.conectaKatuqDesde' | translate:{name: guide.name} }}</h2>
+      <p class="cfg-sub">{{ 'integrations.mcpGuide.laConexionSeHaceEn' | translate:{name: guide.name} }}</p>
     </div>
-    <button type="button" class="cfg-btn cfg-btn--sec mguide-close" aria-label="Cerrar instructivo"
-            (click)="activeModal.close()">Cerrar</button>
+    <button type="button" class="cfg-btn cfg-btn--sec mguide-close" [attr.aria-label]="'integrations.mcpGuide.cerrarInstructivo' | translate"
+            (click)="activeModal.close()">{{ 'comun.cerrar' | translate }}</button>
   </header>
 
   <p class="cfg-aviso mguide-requirements">{{ guide.requirements }}</p>
 
-  <section class="cfg-card mguide-address" aria-label="Dirección del servidor de Katuq">
-    <label class="mguide-label" for="mguide-address">Dirección del servidor</label>
+  <section class="cfg-card mguide-address" [attr.aria-label]="'integrations.mcpGuide.direccionDelServidorDeKatuq' | translate">
+    <label class="mguide-label" for="mguide-address">{{ 'integrations.mcpGuide.direccionDelServidor' | translate }}</label>
     <div class="mguide-copyrow">
       <input id="mguide-address" class="mguide-url" type="text" readonly [value]="serverUrl"
              aria-describedby="mguide-copy-result" spellcheck="false">
-      <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="copying" (click)="copyAddress()">Copiar</button>
+      <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="copying" (click)="copyAddress()">{{ 'integrations.integrations.copiar' | translate }}</button>
     </div>
     <p id="mguide-copy-result" class="mguide-status" role="status" aria-live="polite">{{ copyMessage }}</p>
   </section>
 
-  <ol class="mguide-steps" aria-label="Pasos de conexión">
+  <ol class="mguide-steps" [attr.aria-label]="'integrations.mcpGuide.pasosDeConexion' | translate">
     <li *ngFor="let step of guide.steps" class="cfg-card mguide-step">
       <h3>{{ step.title }}</h3>
       <p>{{ step.text }}</p>
     </li>
   </ol>
 
-  <section class="cfg-card mguide-terminal" *ngIf="guide.terminalCommands?.length" aria-label="Alternativa por terminal">
-    <h3>Si usas Codex en la terminal</h3>
-    <p>Ejecuta estos comandos, uno a la vez. El segundo abre el inicio de sesión de Katuq.</p>
+  <section class="cfg-card mguide-terminal" *ngIf="guide.terminalCommands?.length" [attr.aria-label]="'integrations.mcpGuide.alternativaPorTerminal' | translate">
+    <h3>{{ 'integrations.mcpGuide.siUsasCodexEnLa' | translate }}</h3>
+    <p>{{ 'integrations.mcpGuide.ejecutaEstosComandosUnoA' | translate }}</p>
     <code *ngFor="let command of guide.terminalCommands">{{ command }}</code>
   </section>
 
   <section class="cfg-card mguide-help">
-    <h3>¿Qué puedes hacer después?</h3>
-    <p>Consultar ventas, productos, existencias, clientes, pedidos o tickets según los permisos de tu usuario.
-      Las acciones que cambian datos dependen de tus permisos y de las opciones de tu IA: revisa lo que vas a confirmar.</p>
-    <p>Si no ves la opción para añadir Katuq, revisa el acceso de tu cuenta y las políticas de tu organización.
-      Si Katuq rechaza una consulta, pide al administrador que revise los permisos de tu rol.</p>
-    <p>Los nombres de los menús pueden variar según la versión de {{ guide.name }}.</p>
+    <h3>{{ 'integrations.mcpGuide.quePuedesHacerDespues' | translate }}</h3>
+    <p>{{ 'integrations.mcpGuide.consultarVentasProductosExistenciasClientes' | translate }}</p>
+    <p>{{ 'integrations.mcpGuide.siNoVesLaOpcion' | translate }}</p>
+    <p>{{ 'integrations.mcpGuide.losNombresDeLosMenus' | translate:{name: guide.name} }}</p>
   </section>
 
   <footer class="mguide-footer">
-    <p>Revisado el {{ guide.reviewedOn }}.</p>
-    <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">Ver documentación oficial de {{ guide.name }}</a>
+    <p>{{ 'integrations.mcpGuide.revisadoEl' | translate:{reviewedOn: guide.reviewedOn} }}</p>
+    <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'integrations.mcpGuide.verDocumentacionOficialDe' | translate:{name: guide.name} }}</a>
   </footer>
 </section>

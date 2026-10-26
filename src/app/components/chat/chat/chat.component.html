@@ -8,14 +8,14 @@
       <div>
         <h5 class="mb-1 fw-bold kai-nombre">
           <i class="pi pi-comments me-2"></i>KAI
-          <span class="p-badge p-badge-sm ms-2 kai-insignia">LLM</span>
+          <span class="p-badge p-badge-sm ms-2 kai-insignia">{{ 'chat.chat.llm' | translate }}</span>
         </h5>
         <p class="text-muted small mb-0">
           <span *ngIf="chatUser?.typing" class="kai-estado kai-estado--escribiendo">
-            <i class="pi pi-spin pi-spinner me-1"></i>Escribiendo...
+            <i class="pi pi-spin pi-spinner me-1"></i>{{ 'chat.chat.escribiendo' | translate }}
           </span>
           <span *ngIf="!chatUser?.typing" class="kai-estado">
-            <i class="pi pi-circle-fill me-1 kai-punto"></i>Disponible 24/7 para ayudarte
+            <i class="pi pi-circle-fill me-1 kai-punto"></i>{{ 'chat.chat.disponible247ParaAyudarte' | translate }}
           </span>
         </p>
       </div>
@@ -27,16 +27,16 @@
               [icon]="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'"
               class="p-button-secondary p-button-text p-button-sm"
               (click)="toggleDarkMode()"
-              pTooltip="Cambiar tema"
+              [pTooltip]="'chat.chat.cambiarTema' | translate"
               tooltipPosition="bottom"></button>
       <button pButton
               *ngIf="isGenerating"
               type="button"
               icon="pi pi-stop-circle"
-              label="Detener"
+              [label]="'chat.chat.detener' | translate"
               class="p-button-danger p-button-sm"
               (click)="onStopGeneration()"
-              pTooltip="Detener generación de KAI"
+              [pTooltip]="'chat.chat.detenerGeneracionDeKai' | translate"
               tooltipPosition="bottom"></button>
       <button pButton
               *ngIf="isFloating"
@@ -44,7 +44,7 @@
               icon="pi pi-times"
               class="p-button-text p-button-sm"
               (click)="onClose()"
-              pTooltip="Cerrar chat"
+              [pTooltip]="'chat.chat.cerrarChat' | translate"
               tooltipPosition="bottom"></button>
     </div>
   </div>
@@ -53,8 +53,8 @@
   <section class="messages-area" #chatHistoryContainer (scroll)="onChatScroll()">
     <!-- Mensaje de bienvenida -->
     <div class="welcome-message" *ngIf="!chats?.message?.length">
-      <h3>¡Hola! Soy KAI, tu asistente personal.</h3>
-      <p>¿En qué puedo ayudarte hoy? Puedes preguntarme sobre cualquier tema relacionado con tu trabajo.</p>
+      <h3>{{ 'chat.chat.holaSoyKaiTuAsistente' | translate }}</h3>
+      <p>{{ 'chat.chat.enQuePuedoAyudarteHoy' | translate }}</p>
     </div>
 
     <!-- Mensajes del chat -->
@@ -77,7 +77,7 @@
           <div class="message-text" [style.white-space]="'pre-wrap'">{{ chat.text }}</div>
 
           <!-- Imagen si existe -->
-          <img *ngIf="chat.image" [src]="chat.image" class="message-image" alt="Imagen de respuesta" onerror="this.src='assets/images/default-avatar.png'">
+          <img *ngIf="chat.image" [src]="chat.image" class="message-image" [alt]="'chat.chat.imagenDeRespuesta' | translate" onerror="this.src='assets/images/default-avatar.png'">
 
           <div class="message-meta">
             <span class="message-time">{{ chat.time }}</span>
@@ -87,14 +87,14 @@
                       icon="pi pi-copy"
                       class="p-button-text p-button-sm msg-action"
                       (click)="copyMessage(chat.text)"
-                      pTooltip="Copiar mensaje"
+                      [pTooltip]="'chat.chat.copiarMensaje' | translate"
                       tooltipPosition="top"></button>
               <button pButton
                       type="button"
                       icon="pi pi-refresh"
                       class="p-button-text p-button-sm msg-action"
                       (click)="regenerate(chat)"
-                      pTooltip="Regenerar respuesta"
+                      [pTooltip]="'chat.chat.regenerarRespuesta' | translate"
                       tooltipPosition="top"></button>
             </div>
           </div>
@@ -112,7 +112,7 @@
         <p-skeleton width="85%" height="1rem" styleClass="mb-2"></p-skeleton>
         <p-skeleton width="70%" height="1rem"></p-skeleton>
         <span class="typing-text text-muted small mt-2 d-block">
-          <i class="pi pi-spin pi-spinner me-1"></i>Pensando...
+          <i class="pi pi-spin pi-spinner me-1"></i>{{ 'chat.chat.pensando' | translate }}
         </span>
       </div>
     </div>
@@ -124,12 +124,12 @@
   <section class="quick-prompts" *ngIf="(chats?.message?.length || 0) === 0 && quickPrompts?.length">
     <button class="prompt-chip" *ngFor="let prompt of quickPrompts" (click)="applyPrompt(prompt)" type="button">
       <i class="fa fa-bolt"></i>
-      <span>{{ prompt }}</span>
+      <span>{{ prompt | translate }}</span>
     </button>
   </section>
 
   <!-- Botón para ir al final del chat -->
-  <button class="scroll-to-bottom-btn" *ngIf="userHasScrolled" (click)="onScrollToBottom()" aria-label="Ir al final del chat">
+  <button class="scroll-to-bottom-btn" *ngIf="userHasScrolled" (click)="onScrollToBottom()" [attr.aria-label]="'chat.chat.irAlFinalDelChat' | translate">
     <i class="fa fa-chevron-down"></i>
   </button>
 
@@ -141,12 +141,12 @@
     [ngClass]="{'drag-over': isDragOver}">
     <div class="drop-hint" *ngIf="isDragOver">
       <i class="fa fa-upload"></i>
-      <span>Suelta tu imagen para adjuntarla</span>
+      <span>{{ 'chat.chat.sueltaTuImagenParaAdjuntarla' | translate }}</span>
     </div>
     <!-- Previsualización de adjuntos -->
     <div class="attachment-preview" *ngIf="attachedImage">
-      <img [src]="attachedImage" alt="Adjunto" />
-      <button type="button" class="remove-attachment" (click)="removeAttachment()" aria-label="Quitar adjunto">
+      <img [src]="attachedImage" [alt]="'chat.chat.adjunto' | translate" />
+      <button type="button" class="remove-attachment" (click)="removeAttachment()" [attr.aria-label]="'chat.chat.quitarAdjunto' | translate">
         <i class="fa fa-times"></i>
       </button>
     </div>
@@ -159,22 +159,22 @@
                 icon="pi pi-paperclip"
                 class="p-button-text p-button-sm attach-button"
                 (click)="triggerFilePicker()"
-                pTooltip="Adjuntar imagen"
+                [pTooltip]="'chat.chat.adjuntarImagen' | translate"
                 tooltipPosition="top"
-                aria-label="Adjuntar imagen"></button>
+                [attr.aria-label]="'chat.chat.adjuntarImagen' | translate"></button>
         <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
 
         <textarea
           class="message-input"
           [class.error]="error"
-          placeholder="Escribe un mensaje..."
+          [placeholder]="'chat.chat.escribeUnMensaje' | translate"
           [(ngModel)]="chatText"
           name="message"
           rows="1"
           (input)="autoResize($event)"
           (keydown.enter)="handleEnter($event, chatForm)"
           (paste)="onPaste($event)"
-          aria-label="Mensaje">
+          [attr.aria-label]="'chat.chat.mensaje' | translate">
         </textarea>
 
         <button pButton
@@ -182,9 +182,9 @@
                 icon="pi pi-face-smile"
                 class="p-button-text p-button-sm emoji-button"
                 (click)="toggleEmojiPicker()"
-                pTooltip="Insertar emoji"
+                [pTooltip]="'chat.chat.insertarEmoji' | translate"
                 tooltipPosition="top"
-                aria-label="Selector de emoji"></button>
+                [attr.aria-label]="'chat.chat.selectorDeEmoji' | translate"></button>
       </div>
 
       <button pButton
@@ -192,9 +192,9 @@
               icon="pi pi-send"
               class="p-button-primary send-button"
               [disabled]="!canSend()"
-              pTooltip="Enviar mensaje (Enter)"
+              [pTooltip]="'chat.chat.enviarMensajeEnter' | translate"
               tooltipPosition="top"
-              aria-label="Enviar mensaje"></button>
+              [attr.aria-label]="'chat.chat.enviarMensaje' | translate"></button>
     </form>
 
     <!-- Emoji picker -->
@@ -203,8 +203,8 @@
     </div>
 
     <div class="input-hint">
-      <span>Enter para enviar</span>
-      <span>Shift + Enter para salto de línea</span>
+      <span>{{ 'chat.chat.enterParaEnviar' | translate }}</span>
+      <span>{{ 'chat.chat.shiftEnterParaSaltoDe' | translate }}</span>
     </div>
   </footer>
 </div>

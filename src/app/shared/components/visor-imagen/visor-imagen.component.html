@@ -20,14 +20,14 @@
               (click)="girar()" [disabled]="!fotoActual || error"
               aria-keyshortcuts="R"
               [attr.aria-label]="'Girar' | translate"
-              [title]="('Girar' | translate) + ' (R)'">
+              [title]="('Girar' | translate) + ' ' + ('visorImagen.visorImagen.r' | translate)">
         <i class="pi pi-refresh" aria-hidden="true"></i>
       </button>
       <button type="button" class="visor-imagen__boton"
               (click)="cerrarVisor()"
               aria-keyshortcuts="Escape"
               [attr.aria-label]="'Cerrar' | translate"
-              [title]="('Cerrar' | translate) + ' (Esc)'">
+              [title]="('Cerrar' | translate) + ' ' + ('visorImagen.visorImagen.esc' | translate)">
         <i class="pi pi-times" aria-hidden="true"></i>
       </button>
     </div>

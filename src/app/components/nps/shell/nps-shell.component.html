@@ -1,14 +1,14 @@
 <div class="cfg-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Clientes</span>
-      <h1 class="cfg-titulo">NPS</h1>
-      <p class="cfg-sub">Qué tan probable es que tus clientes te recomienden, las encuestas que lo miden y el seguimiento de cada cliente que quedó inconforme.</p>
+      <span class="cfg-eyebrow">{{ 'nps.npsShell.clientes' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'nps.npsShell.nps' | translate }}</h1>
+      <p class="cfg-sub">{{ 'nps.npsShell.queTanProbableEsQue' | translate }}</p>
     </div>
   </header>
 
   <ng-container *ngIf="disponible; else noDisponible">
-    <nav class="nps-pestanas" aria-label="Secciones de NPS">
+    <nav class="nps-pestanas" [attr.aria-label]="'nps.npsShell.seccionesDeNps' | translate">
       <a
         *ngFor="let p of pestanas"
         class="nps-pestanas__opcion"
@@ -29,11 +29,11 @@
     <section class="cfg-card">
       <div class="cfg-vacio">
         <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-heart"></i></span>
-        <p class="cfg-vacio__titulo">El NPS todavía no está disponible para tu empresa</p>
-        <p class="cfg-vacio__texto">Cuando lo activemos, aquí vas a poder medir qué tan probable es que tus clientes te recomienden y atender a los que quedaron inconformes.</p>
+        <p class="cfg-vacio__titulo">{{ 'nps.npsShell.elNpsTodaviaNoEsta' | translate }}</p>
+        <p class="cfg-vacio__texto">{{ 'nps.npsShell.cuandoLoActivemosAquiVas' | translate }}</p>
         <a class="cfg-btn cfg-btn--sec" routerLink="/welcome">
           <i class="pi pi-home" aria-hidden="true"></i>
-          <span>Volver al inicio</span>
+          <span>{{ 'nps.npsShell.volverAlInicio' | translate }}</span>
         </a>
       </div>
     </section>

@@ -39,6 +39,7 @@ import { PARAM_CONEXION_PENDIENTE, getConnectorConfig } from "./connectors/conne
 import { MCP_GUIDES } from "./mcp-guides";
 import { McpGuideComponent } from "./mcp-guide/mcp-guide.component";
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Estado que ve el comercio en cada tarjeta.
  * - ok / prueba / atencion: está conectada (prueba = bot en modo sombra;
@@ -109,6 +110,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private metaInbox: MetaInboxService,
     private features: CompanyFeaturesService,
     private facturacionIntegracion: FacturacionIntegracionService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -438,12 +440,12 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   deleteIntegration(integration: Integration): void {
     Swal.fire({
-      title: `¿Quitar ${integration.name}?`,
-      text: "Katuq deja de hablar con este servicio. Puedes volver a conectarlo cuando quieras.",
+      title: this.translate.instant('integrations.integrationsList.quitarIntegracion', { nombre: integration.name }),
+      text: this.translate.instant('integrations.integrationsList.katuqDejaDeHablarCon'),
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, quitar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: this.translate.instant('integrations.integrationsList.siQuitar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: "#B83232",
     }).then((r) => {
       if (!r.isConfirmed) return;

@@ -1,13 +1,13 @@
-<section class="invoice-panel" aria-label="Borradores guardados">
-  <div class="invoice-panel__heading"><div><h3>Borradores</h3><p>Guardados para este comercio, sin número fiscal ni envío. Hasta 50 borradores y 50 revisiones.</p></div>
-    <button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading || disabled">Actualizar</button></div>
+<section class="invoice-panel" [attr.aria-label]="'facturacionElectronica.invoiceDrafts.borradoresGuardados' | translate">
+  <div class="invoice-panel__heading"><div><h3>{{ 'facturacionElectronica.invoiceComposer.borradores' | translate }}</h3><p>{{ 'facturacionElectronica.invoiceDrafts.guardadosParaEsteComercioSin' | translate }}</p></div>
+    <button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading || disabled">{{ 'facturacionElectronica.invoiceDrafts.actualizar' | translate }}</button></div>
   <p *ngIf="error" role="alert">{{ error }}</p>
-  <p *ngIf="loading" role="status">Consultando borradores…</p>
-  <p *ngIf="!loading && !error && !items.length">No tienes borradores guardados. Usa Guardar borrador mientras preparas una factura.</p>
+  <p *ngIf="loading" role="status">{{ 'facturacionElectronica.invoiceDrafts.consultandoBorradores' | translate }}</p>
+  <p *ngIf="!loading && !error && !items.length">{{ 'facturacionElectronica.invoiceDrafts.noTienesBorradoresGuardadosUsa' | translate }}</p>
   <div class="composer-message" *ngFor="let item of items">
     <strong>{{ item.title }}</strong>
-    <p>{{ item.status === 'draft' ? 'Por completar' : 'Revisado · Aún no emitido' }} · {{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }}
+    <p>{{ item.status === 'draft' ? ('facturacionElectronica.invoiceDrafts.porCompletar' | translate) : ('facturacionElectronica.invoiceDrafts.revisadoAunNoEmitido' | translate) }} · {{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }}
       <span *ngIf="item.total !== null"> · {{ item.total | currency:'COP':'symbol-narrow':'1.2-2' }}</span></p>
-    <button class="btn btn-outline-primary" type="button" (click)="open(item.requestId)" [disabled]="loading || disabled">{{ item.status === 'draft' ? 'Continuar borrador' : 'Abrir revisión' }}</button>
+    <button class="btn btn-outline-primary" type="button" (click)="open(item.requestId)" [disabled]="loading || disabled">{{ item.status === 'draft' ? ('facturacionElectronica.invoiceDrafts.continuarBorrador' | translate) : ('facturacionElectronica.invoiceDrafts.abrirRevision' | translate) }}</button>
   </div>
 </section>

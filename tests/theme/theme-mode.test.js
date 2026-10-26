@@ -43,7 +43,7 @@ function claseOscura(nav) {
 test('1. al arrancar en el marco con tema oscuro queda oscuro antes de cualquier evento del router', () => {
   const { nav, layout, oscuro } = montar({ pathname: '/ventas/todos-los-pedidos' });
   assert.equal(claseOscura(nav), true);
-  assert.equal(nav.link.href, 'md-dark-deeppurple.css');
+  assert.equal(nav.link.href, 'katuq-dark.css');
   assert.equal(layout.config.settings.layout_version, 'dark-only');
   assert.equal(oscuro(), true);
 });

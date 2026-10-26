@@ -1,0 +1,42 @@
+// D-502 F1 (ticket 1180, tarea 3.7): tamaños y ajustes de PrimeNG comunes a los dos temas.
+// Es el bloque que estaba en theme-lara-light-blue.scss:19-55, movido tal cual. Lo importan
+// theme-lara-light-blue.scss y theme-katuq-dark.scss en la MISMA posición (después de
+// primeng-overrides.scss), así el claro compila idéntico y los tamaños no cambian al alternar.
+// Prueba: tests/theme/primeng-dark.test.js.
+
+.p-datatable .p-sortable-column.p-highlight {
+    background: var(--secondary-light-color);
+    color: var(--secondary-color);
+}
+
+/* Overrides adicionales específicos para Katuq */
+.p-component {
+    font-size: 0.7rem !important;
+}
+
+.p-inputtext,
+.p-dropdown,
+.p-multiselect,
+.p-calendar,
+.p-button {
+    font-size: 0.7rem !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th,
+.p-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.7rem !important;
+    padding: 0.5rem !important;
+}
+
+.p-paginator {
+    font-size: 0.7rem !important;
+}
+
+.p-dialog .p-dialog-title {
+    font-size: 0.8rem !important;
+}
+
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+    font-size: 0.7rem !important;
+}

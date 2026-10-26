@@ -9,14 +9,14 @@
         <span class="cx-label">{{ k.label }}</span>
       </div>
       <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="cx-sub">{{ k.pct | number:'1.0-0' }}% del total</div>
+      <div class="cx-sub">{{ k.pct | number:'1.0-0' }}{{ 'cartera.carteraAging.delTotal' | translate }}</div>
     </div>
   </div>
 
   <!-- Empty -->
   <div *ngIf="rows.length === 0" class="cx-empty">
     <i class="pi pi-check-circle"></i>
-    <div class="cx-empty-title">No hay cartera pendiente 🎉</div>
+    <div class="cx-empty-title">{{ 'cartera.carteraAging.noHayCarteraPendiente' | translate }}</div>
   </div>
 
   <ng-container *ngIf="rows.length > 0">
@@ -44,13 +44,13 @@
 
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="nombre" style="min-width: 200px">Cliente <p-sortIcon field="nombre"></p-sortIcon></th>
-            <th pSortableColumn="documento" style="min-width: 130px">Documento <p-sortIcon field="documento"></p-sortIcon></th>
-            <th pSortableColumn="aging.corriente" class="text-end cx-c-corriente" style="min-width: 130px">Corriente <p-sortIcon field="aging.corriente"></p-sortIcon></th>
-            <th pSortableColumn="aging.d16_30" class="text-end cx-c-d16" style="min-width: 120px">16-30 d <p-sortIcon field="aging.d16_30"></p-sortIcon></th>
-            <th pSortableColumn="aging.d31_60" class="text-end cx-c-d31" style="min-width: 120px">31-60 d <p-sortIcon field="aging.d31_60"></p-sortIcon></th>
-            <th pSortableColumn="aging.d60" class="text-end cx-c-d60" style="min-width: 120px">60+ d <p-sortIcon field="aging.d60"></p-sortIcon></th>
-            <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 140px">Total <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
+            <th pSortableColumn="nombre" style="min-width: 200px">{{ 'cartera.carteraAging.cliente' | translate }} <p-sortIcon field="nombre"></p-sortIcon></th>
+            <th pSortableColumn="documento" style="min-width: 130px">{{ 'cartera.carteraAging.documento' | translate }} <p-sortIcon field="documento"></p-sortIcon></th>
+            <th pSortableColumn="aging.corriente" class="text-end cx-c-corriente" style="min-width: 130px">{{ 'cartera.carteraAging.corriente' | translate }} <p-sortIcon field="aging.corriente"></p-sortIcon></th>
+            <th pSortableColumn="aging.d16_30" class="text-end cx-c-d16" style="min-width: 120px">{{ 'cartera.carteraAging.1630D' | translate }} <p-sortIcon field="aging.d16_30"></p-sortIcon></th>
+            <th pSortableColumn="aging.d31_60" class="text-end cx-c-d31" style="min-width: 120px">{{ 'cartera.carteraAging.3160D' | translate }} <p-sortIcon field="aging.d31_60"></p-sortIcon></th>
+            <th pSortableColumn="aging.d60" class="text-end cx-c-d60" style="min-width: 120px">{{ 'cartera.carteraAging.60D' | translate }} <p-sortIcon field="aging.d60"></p-sortIcon></th>
+            <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 140px">{{ 'cartera.carteraAging.total' | translate }} <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
           </tr>
         </ng-template>
 
@@ -68,8 +68,8 @@
 
         <ng-template pTemplate="footer">
           <tr class="cx-foot">
-            <td class="cx-cell-strong">Totales</td>
-            <td>{{ rows.length | number }} cliente(s)</td>
+            <td class="cx-cell-strong">{{ 'cartera.carteraAging.totales' | translate }}</td>
+            <td>{{ rows.length | number }} {{ 'cartera.carteraAging.clienteS' | translate }}</td>
             <td class="text-end cx-c-corriente cx-num">{{ totals.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-c-d16 cx-num">{{ totals.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-c-d31 cx-num">{{ totals.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>

@@ -2,71 +2,71 @@
   <div class="mapping-grid">
     <div class="mapping-field">
       <label for="accountGroup">
-        <i class="pi pi-folder"></i> Grupo de Cuenta
+        <i class="pi pi-folder"></i> {{ 'integrations.siigoMapping.grupoDeCuenta' | translate }}
       </label>
       <input
         pInputText
         id="accountGroup"
         formControlName="accountGroup"
-        placeholder="Codigo de grupo contable">
+        [placeholder]="'integrations.siigoMapping.codigoDeGrupoContable' | translate">
     </div>
 
     <div class="mapping-field">
       <label for="incomeAccount">
-        <i class="pi pi-dollar"></i> Cuenta de Ingresos
+        <i class="pi pi-dollar"></i> {{ 'integrations.siigoConfig.cuentaDeIngresos' | translate }}
       </label>
       <input
         pInputText
         id="incomeAccount"
         formControlName="incomeAccount"
-        placeholder="Ej: 4135">
-      <small>Cuentas 4xxx para ventas</small>
+        [placeholder]="'integrations.siigoConfig.ej4135' | translate">
+      <small>{{ 'integrations.siigoConfig.cuentas4xxxParaVentas' | translate }}</small>
     </div>
 
     <div class="mapping-field">
       <label for="costAccount">
-        <i class="pi pi-money-bill"></i> Cuenta de Costos
+        <i class="pi pi-money-bill"></i> {{ 'integrations.siigoConfig.cuentaDeCostos' | translate }}
       </label>
       <input
         pInputText
         id="costAccount"
         formControlName="costAccount"
-        placeholder="Ej: 6135">
-      <small>Cuentas 6xxx para costos</small>
+        [placeholder]="'integrations.siigoConfig.ej6135' | translate">
+      <small>{{ 'integrations.siigoMapping.cuentas6xxxParaCostos' | translate }}</small>
     </div>
 
     <div class="mapping-field">
       <label for="inventoryAccount">
-        <i class="pi pi-box"></i> Cuenta de Inventario
+        <i class="pi pi-box"></i> {{ 'integrations.siigoConfig.cuentaDeInventario' | translate }}
       </label>
       <input
         pInputText
         id="inventoryAccount"
         formControlName="inventoryAccount"
-        placeholder="Ej: 1435">
-      <small>Cuentas 1xxx para inventarios</small>
+        [placeholder]="'integrations.siigoConfig.ej1435' | translate">
+      <small>{{ 'integrations.siigoConfig.cuentas1xxxParaInventarios' | translate }}</small>
     </div>
 
     <div class="mapping-field">
       <label for="discountAccount">
-        <i class="pi pi-percentage"></i> Cuenta de Descuentos
+        <i class="pi pi-percentage"></i> {{ 'integrations.siigoConfig.cuentaDeDescuentos' | translate }}
       </label>
       <input
         pInputText
         id="discountAccount"
         formControlName="discountAccount"
-        placeholder="Ej: 4175">
-      <small>Cuentas 4xxx para descuentos</small>
+        [placeholder]="'integrations.siigoConfig.ej4175' | translate">
+      <small>{{ 'integrations.siigoConfig.cuentas4xxxParaDescuentos' | translate }}</small>
     </div>
   </div>
 
   <!-- PUC Guide -->
   <div class="puc-guide">
-    <h4><i class="pi pi-info-circle"></i> Codigos PUC Colombia</h4>
+    <h4><i class="pi pi-info-circle"></i> {{ 'integrations.siigoMapping.codigosPucColombia' | translate }}</h4>
     <div class="puc-items">
-      <span class="puc-item"><strong>1xxx</strong> Activos</span>
-      <span class="puc-item"><strong>4xxx</strong> Ingresos</span>
-      <span class="puc-item"><strong>6xxx</strong> Costos</span>
+      <span class="puc-item"><strong>{{ 'integrations.siigoConfig.1xxx' | translate }}</strong> {{ 'integrations.siigoMapping.activos' | translate }}</span>
+      <span class="puc-item"><strong>{{ 'integrations.siigoConfig.4xxx' | translate }}</strong> {{ 'integrations.siigoMapping.ingresos' | translate }}</span>
+      <span class="puc-item"><strong>{{ 'integrations.siigoConfig.6xxx' | translate }}</strong> {{ 'integrations.siigoMapping.costos' | translate }}</span>
     </div>
   </div>
 </div>

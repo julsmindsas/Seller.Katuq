@@ -3,6 +3,7 @@ import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-rol',
   templateUrl: './rol.component.html',
@@ -28,7 +29,9 @@ export class RolComponent implements OnInit {
   closeResult: string;
 
   isMobile = false;
-  constructor(private service: MaestroService, private router: Router) {
+  constructor(private service: MaestroService, private router: Router,
+    private translate: TranslateService
+  ) {
     this.cargarDatos()
   }
   cargarDatos() {
@@ -59,23 +62,23 @@ export class RolComponent implements OnInit {
 
   eliminarRol(role: any) {
     Swal.fire({
-      title: '¿Eliminar rol?',
-      html: `Se eliminará el rol <strong>${role.rol}</strong>. Esta acción no se puede deshacer.`,
+      title: this.translate.instant('rol.rol.eliminarRol'),
+      html: this.translate.instant('rol.rol.seEliminaraElRol', {rol: role.rol}),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d12b38',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('comun.eliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deleteRol(role.id).subscribe({
           next: () => {
             this.cargarDatos();
-            Swal.fire({ title: 'Eliminado', text: 'Rol eliminado correctamente', icon: 'success', timer: 1500, showConfirmButton: false });
+            Swal.fire({ title: this.translate.instant('rol.rol.eliminado'), text: this.translate.instant('rol.rol.rolEliminadoCorrectamente'), icon: 'success', timer: 1500, showConfirmButton: false });
           },
           error: () => {
-            Swal.fire({ title: 'Error', text: 'No se pudo eliminar el rol', icon: 'error' });
+            Swal.fire({ title: this.translate.instant('comun.error'), text: this.translate.instant('rol.rol.noSePudoEliminarEl'), icon: 'error' });
           }
         });
       }

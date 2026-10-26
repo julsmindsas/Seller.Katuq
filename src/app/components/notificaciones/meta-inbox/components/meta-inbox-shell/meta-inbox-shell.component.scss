@@ -75,7 +75,7 @@ $error-bg: #fdecec;
     background: $acento;
     color: #fff;
     box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
-    &:hover:not(:disabled) { background: #4a2fc0; }
+    &:hover:not(:disabled) { background: var(--ds-accent-hover); }
     &:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
   }
 }
@@ -90,7 +90,7 @@ $error-bg: #fdecec;
 .mb-lista,
 .mb-chat,
 .mb-panel {
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid $linea;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
@@ -113,7 +113,7 @@ $error-bg: #fdecec;
     color: $muted;
   }
   &__conteo {
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     color: $acento;
     border-radius: 20px;
     padding: 2px 10px;
@@ -130,13 +130,13 @@ $error-bg: #fdecec;
   padding: 12px 16px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid #f1f0f7;
+  border-bottom: 1px solid var(--ds-line-soft);
   cursor: pointer;
   text-align: left;
   border-radius: 11px;
   transition: background 0.12s ease;
 
-  &:hover { background: #faf9ff; }
+  &:hover { background: var(--ds-row-hover); }
   &.is-activa {
     background: rgba(124, 92, 255, 0.09);
     border-color: #d9cffb;
@@ -222,7 +222,7 @@ $error-bg: #fdecec;
     line-height: 1.45;
   }
   &--mio &__burbuja {
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     border-color: #d9cffb;
   }
   &__adjunto { color: $muted; }
@@ -301,7 +301,7 @@ $error-bg: #fdecec;
     width: 64px;
     height: 64px;
     border-radius: 16px;
-    background: #f3f1fb;
+    background: var(--ds-tile);
     color: $acento;
     display: grid;
     place-items: center;

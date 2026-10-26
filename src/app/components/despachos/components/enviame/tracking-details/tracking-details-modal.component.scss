@@ -45,6 +45,25 @@
   --radius-full: 9999px;
 }
 
+// Modo oscuro (D-502 F3): las variables propias del modal toman los tokens del tema. Solo con body.dark-only; el claro no cambia.
+:host-context(body.dark-only) {
+  --primary-color: var(--ds-accent);
+  --primary-solid: var(--ds-accent);
+  --primary-gradient: var(--ds-accent);
+  --secondary-color: var(--ds-accent);
+  --success-color: var(--ds-ok);
+  --warning-color: var(--ds-warn);
+  --danger-color: var(--ds-err);
+  --info-color: var(--ds-focus);
+  --text-primary: var(--ds-ink);
+  --text-secondary: var(--ds-body);
+  --text-muted: var(--ds-muted);
+  --border-color: var(--ds-line);
+  --bg-primary: var(--ds-surface);
+  --bg-secondary: var(--ds-surface-2);
+  --bg-tertiary: var(--ds-tile);
+}
+
 .tracking-modal-container-optimized {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-primary);
@@ -62,7 +81,7 @@
     top: 0;
     z-index: 100;
     margin: -1.5rem -1.5rem 0;
-    background: white;
+    background: var(--ds-surface);
     border-bottom: 1px solid var(--border-color);
     animation: slideDown var(--transition-fast) ease-out;
 
@@ -91,7 +110,7 @@
           flex-shrink: 0;
 
           &.has-logo {
-            background: white;
+            background: var(--ds-surface);
           }
 
           .provider-logo-compact {
@@ -102,7 +121,7 @@
 
           .provider-icon-placeholder-compact {
             font-size: 18px;
-            color: var(--primary-color);
+            color: var(--ds-accent-ink);
           }
         }
 
@@ -146,7 +165,7 @@
 
           .badge-icon-compact {
             font-size: 14px;
-            color: var(--primary-color);
+            color: var(--ds-accent-ink);
           }
 
           .badge-value-compact {
@@ -168,7 +187,7 @@
             width: 28px;
             height: 28px;
             padding: 0;
-            background: white;
+            background: var(--ds-surface);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             font-size: 12px;
@@ -178,9 +197,9 @@
             flex-shrink: 0;
 
             &:hover {
-              background: var(--primary-color);
+              background: var(--ds-accent);
               color: white;
-              border-color: var(--primary-color);
+              border-color: var(--ds-accent-ink);
             }
 
             &.copied {
@@ -233,7 +252,7 @@
     margin-bottom: 1.5rem;
     overflow: hidden;
     animation: slideUp var(--transition-base) ease-out;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--ds-accent-ink);
 
     .status-visual-compact {
       position: relative;
@@ -291,18 +310,18 @@
 
             // Estados de envío: par fuerte / fondo suave del canon.
             &.badge-delivered {
-              background: #E6F7EE;
-              color: #1E874B;
+              background: var(--ds-ok-soft);
+              color: var(--ds-ok);
             }
 
             &.badge-in_transit {
-              background: #E7F1FF;
-              color: #1E6FD9;
+              background: var(--ds-info-soft);
+              color: var(--ds-info);
             }
 
             &.badge-processing {
-              background: #FFF1DF;
-              color: #D9820A;
+              background: var(--ds-warn-soft);
+              color: var(--ds-warn);
             }
           }
         }
@@ -319,7 +338,7 @@
           align-items: center;
           gap: 0.875rem;
           padding: 0.875rem;
-          background: white;
+          background: var(--ds-surface);
           border: 1px solid var(--border-color);
           border-radius: var(--radius-md);
           transition: all var(--transition-base);
@@ -404,7 +423,7 @@
           .progress-bar-modern {
             position: relative;
             height: 12px;
-            background: white;
+            background: var(--ds-surface);
             border-radius: var(--radius-full);
             overflow: hidden;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -412,13 +431,13 @@
             .progress-background {
               position: absolute;
               inset: 0;
-              background: #efe9ff;
+              background: var(--ds-accent-soft);
             }
 
             .progress-fill-modern {
               position: relative;
               height: 100%;
-              background: #5F3FE0;
+              background: var(--ds-accent);
               border-radius: var(--radius-full);
               transition: width var(--transition-slow) ease-out;
               overflow: hidden;
@@ -454,7 +473,7 @@
               position: absolute;
               width: 20px;
               height: 20px;
-              background: white;
+              background: var(--ds-surface);
               border: 2px solid var(--border-color);
               border-radius: 50%;
               transform: translateX(-50%);
@@ -467,8 +486,8 @@
               cursor: pointer;
 
               &.reached {
-                background: var(--primary-color);
-                border-color: var(--primary-color);
+                background: var(--ds-accent);
+                border-color: var(--ds-accent-ink);
                 color: white;
                 transform: translateX(-50%) scale(1.2);
               }
@@ -534,7 +553,7 @@
           min-width: 24px;
           height: 24px;
           padding: 0 8px;
-          background: var(--primary-color);
+          background: var(--ds-accent);
           color: white;
           border-radius: var(--radius-full);
           font-size: 0.875rem;
@@ -558,7 +577,7 @@
         top: 32px;
         bottom: 32px;
         width: 2px;
-        background: #5F3FE0;
+        background: var(--ds-accent);
         opacity: 0.3;
       }
 
@@ -576,8 +595,8 @@
 
         &.is-latest {
           .timeline-card {
-            border-color: var(--primary-color);
-            background: #faf9fe;
+            border-color: var(--ds-accent-ink);
+            background: var(--ds-surface-2);
           }
         }
 
@@ -620,7 +639,7 @@
               width: 40px;
               height: 40px;
               border-radius: 50%;
-              background: var(--primary-color);
+              background: var(--ds-accent);
               opacity: 0.3;
               animation: ripple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
             }
@@ -652,7 +671,7 @@
 
         .timeline-card {
           position: relative;
-          background: white;
+          background: var(--ds-surface);
           border: 1px solid var(--border-color);
           border-radius: var(--radius-lg);
           overflow: hidden;
@@ -760,7 +779,7 @@
       .section-icon-wrapper {
         width: 32px;
         height: 32px;
-        background: #5F3FE0;
+        background: var(--ds-accent);
         border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
@@ -785,7 +804,7 @@
       gap: 0.875rem;
 
       .info-card-modern {
-        background: white;
+        background: var(--ds-surface);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         padding: 0.875rem;
@@ -806,7 +825,7 @@
         &:hover {
           transform: translateY(-4px);
           box-shadow: var(--shadow-lg);
-          border-color: var(--primary-color);
+          border-color: var(--ds-accent-ink);
         }
 
         &.hovered {
@@ -816,7 +835,7 @@
         }
 
         &.success-card {
-          background: #E6F7EE;
+          background: var(--ds-ok-soft);
           border-color: var(--success-color);
         }
 
@@ -834,7 +853,7 @@
           box-shadow: var(--shadow-sm);
 
           &.recipient {
-            background: #5F3FE0;
+            background: var(--ds-accent);
           }
 
           &.delivery {
@@ -872,7 +891,7 @@
             text-overflow: ellipsis;
 
             &.highlight {
-              color: var(--primary-color);
+              color: var(--ds-accent-ink);
               font-weight: 600;
             }
 
@@ -1131,7 +1150,7 @@
     position: sticky;
     bottom: 0;
     z-index: 100;
-    background: white;
+    background: var(--ds-surface);
     border-top: 2px solid var(--border-color);
     padding: 0.75rem 1.5rem;
     margin: 0 -1.5rem -1.5rem;
@@ -1215,20 +1234,20 @@
       }
 
       &:focus-visible {
-        outline: 3px solid #7C5CFF !important;
+        outline: 3px solid var(--ds-focus) !important;
         outline-offset: 2px;
       }
 
       // Principal: morado del canon.
       &.btn-refresh {
-        background: #5F3FE0;
-        border-color: #5F3FE0;
+        background: var(--ds-accent);
+        border-color: var(--ds-accent-ink);
         color: white;
         box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
 
         &:hover:not(:disabled) {
-          background: #4a2fc0;
-          border-color: #4a2fc0;
+          background: var(--ds-accent-hover);
+          border-color: var(--ds-accent-hover);
           color: white;
           transform: translateY(-1px);
         }
@@ -1238,8 +1257,8 @@
       &.btn-download,
       &.btn-external,
       &.btn-close {
-        background: white;
-        border-color: #e4e2ef;
+        background: var(--ds-surface);
+        border-color: var(--ds-line-strong);
         color: var(--text-secondary);
 
         &:hover {

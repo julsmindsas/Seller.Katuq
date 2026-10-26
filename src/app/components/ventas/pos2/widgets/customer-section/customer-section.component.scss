@@ -11,7 +11,7 @@
     color: #344767;
 
     i {
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
     }
   }
 }
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #5F3FE0;
+  background: var(--ds-accent);
   color: white;
   border: none;
   border-radius: 8px;
@@ -49,7 +49,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  background: white;
+  background: var(--ds-surface);
 }
 
 .search-section {
@@ -78,7 +78,7 @@
     right: 45px;
     top: 50%;
     transform: translateY(-50%);
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
     font-size: 1rem;
     z-index: 10;
   }
@@ -98,7 +98,7 @@
     border: 2px solid #d1d5db;
     border-radius: 12px !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    background: white !important;
+    background: var(--ds-surface) !important;
     box-sizing: border-box !important;
 
     &::placeholder {
@@ -107,7 +107,7 @@
   }
 
   input.p-inputtext:enabled:focus {
-    border-color: #5F3FE0 !important;
+    border-color: var(--ds-accent-ink) !important;
     box-shadow: 0 0 0 4px rgba(95, 63, 224, 0.12) !important;
     outline: none !important;
   }
@@ -168,14 +168,14 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 
     i {
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
       font-size: 1rem;
     }
   }
@@ -202,8 +202,8 @@
       .badge-doc {
         display: inline-block;
         padding: 2px 8px;
-        background: #E7F1FF;
-        color: #1E6FD9;
+        background: var(--ds-info-soft);
+        color: var(--ds-info);
         border-radius: 6px;
         font-size: 0.75rem;
         font-weight: 600;
@@ -244,7 +244,7 @@
 
 // Cliente Card (cuando esta seleccionado)
 .cliente-card {
-  background: #E6F7EE;
+  background: var(--ds-ok-soft);
   border: 1px solid #86efac;
   border-radius: 12px;
   overflow: hidden;
@@ -280,7 +280,7 @@
         height: 32px;
         border-radius: 8px;
         border: none;
-        background: white;
+        background: var(--ds-surface);
         color: #6b7280;
         cursor: pointer;
         display: flex;
@@ -320,7 +320,7 @@
       width: 52px;
       height: 52px;
       border-radius: 12px;
-      background: #E6F7EE;
+      background: var(--ds-ok-soft);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -411,8 +411,10 @@
 // a una sola línea. Todos los controles y bindings quedan intactos.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host { @include kc-tokens; display: block; }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .card.customer-sticky {
   border: none;
@@ -420,7 +422,7 @@
   border-bottom: 1px solid var(--kc-line);
   box-shadow: none;
   margin: 0;
-  background: #fff;
+  background: var(--ds-surface);
 
   > .tarjeta-cabeza {
     padding: 11px 16px 0 !important;
@@ -490,7 +492,7 @@
       width: 26px;
       height: 26px;
       border-radius: 8px;
-      background: #fff;
+      background: var(--ds-surface);
       border: 1px solid #cbebd8;
       color: var(--kc-ink2);
       font-size: 11px;
@@ -507,7 +509,7 @@
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: #fff;
+    background: var(--ds-surface);
     color: var(--kc-green);
     font-size: 14px;
   }
@@ -564,14 +566,14 @@
   font-size: 12px;
   color: #1f2433;
 
-  i { color: #5f3fe0; }
+  i { color: var(--ds-accent-ink); }
   .cf-label { font-weight: 700; }
   .cf-valor { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .cf-cambiar {
     border: none;
     background: transparent;
-    color: #5f3fe0;
+    color: var(--ds-accent-ink);
     font-weight: 800;
     font-size: 12px;
     padding: 0 2px;
@@ -734,7 +736,7 @@
     justify-content: center;
     gap: 6px;
     padding: 0 12px;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid #e4e2ef;
     border-radius: 11px;
     color: #5F3FE0;

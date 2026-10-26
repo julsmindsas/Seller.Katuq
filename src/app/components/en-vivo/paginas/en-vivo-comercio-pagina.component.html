@@ -5,20 +5,20 @@
 >
   <!-- Encabezado: botones extra -->
   <ng-container ngProjectAs="[slot=acciones]">
-    <a class="ev-btn" *ngIf="esJulsmind && (empresa$ | async)" routerLink="/en-vivo/katuq" title="Volver a toda Katuq">
+    <a class="ev-btn" *ngIf="esJulsmind && (empresa$ | async)" routerLink="/en-vivo/katuq" [title]="'enVivo.enVivoComercioPagina.volverATodaKatuq' | translate">
       <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
-      <span>Toda Katuq</span>
+      <span>{{ 'enVivo.enVivoComercioPagina.todaKatuq' | translate }}</span>
     </a>
     <!-- Opttia prendido/apagado: el de la empresa propia o, desde Katuq, el del comercio que se mira. -->
     <app-en-vivo-opttia-interruptor [comercio]="(empresa$ | async) || undefined"></app-en-vivo-opttia-interruptor>
     <button
       type="button"
       class="ev-btn ev-btn--ampliar"
-      title="Ampliar la escena: quita los paneles flotantes"
+      [title]="'enVivo.enVivoComercioPagina.ampliarLaEscenaQuitaLos' | translate"
       [attr.aria-pressed]="ampliado"
       (click)="alternarAmpliado()"
     >
-      <span>{{ ampliado ? 'Con paneles' : 'Ampliar' }}</span>
+      <span>{{ ampliado ? ('enVivo.enVivoComercioPagina.conPaneles' | translate) : ('enVivo.enVivoComercioPagina.ampliar' | translate) }}</span>
     </button>
   </ng-container>
 

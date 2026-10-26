@@ -22,10 +22,10 @@
   background: #eef0f3;
   color: #5A6B78;
 
-  &.bg-warning, &.badge-warning { background: #FFF1DF !important; color: #D9820A !important; }
-  &.bg-primary, &.badge-info { background: #efe9ff !important; color: #5F3FE0 !important; }
-  &.bg-success, &.badge-success { background: #E6F7EE !important; color: #1E874B !important; }
-  &.bg-danger, &.badge-danger { background: #FDECEC !important; color: #D64545 !important; }
+  &.bg-warning, &.badge-warning { background: var(--ds-warn-soft) !important; color: var(--ds-warn) !important; }
+  &.bg-primary, &.badge-info { background: var(--ds-accent-soft) !important; color: var(--ds-accent-ink) !important; }
+  &.bg-success, &.badge-success { background: var(--ds-ok-soft) !important; color: var(--ds-ok) !important; }
+  &.bg-danger, &.badge-danger { background: var(--ds-err-soft) !important; color: var(--ds-err) !important; }
   &.bg-secondary, &.badge-secondary { background: #eef0f3 !important; color: #5A6B78 !important; }
 }
 
@@ -35,24 +35,24 @@
 
   .cfg-acciones .p-button,
   .p-button.p-button-primary {
-    background: #5F3FE0;
-    border-color: #5F3FE0;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     color: #fff;
     border-radius: 11px;
     font-weight: 700;
     box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
-    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+    &:enabled:hover { background: var(--ds-accent-hover); border-color: #4a2fc0; }
   }
 
   .p-button.p-button-secondary {
-    background: #fff;
-    border: 1px solid #e4e2ef;
-    color: #5b5878;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line-strong);
+    color: var(--ds-body);
     border-radius: 11px;
     font-weight: 700;
 
-    &:enabled:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+    &:enabled:hover { background: var(--ds-surface-2); border-color: #d9cffb; color: var(--ds-accent-ink); }
   }
 
   // Acciones de fila: íconos redondos en acento suave.
@@ -62,17 +62,17 @@
 
     &.p-button-info,
     &.p-button-success {
-      background: #efe9ff;
+      background: var(--ds-accent-soft);
       border-color: #efe9ff;
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
 
-      &:enabled:hover { background: #5F3FE0; border-color: #5F3FE0; color: #fff; }
+      &:enabled:hover { background: var(--ds-accent); border-color: var(--ds-accent-ink); color: #fff; }
     }
   }
 
   .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-    background: #5F3FE0;
-    border-color: #5F3FE0;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     color: #fff;
     border-radius: 9px;
   }
@@ -86,7 +86,7 @@
   gap: 8px;
   text-align: center;
 }
-.detalle-texto { margin: 0; font-size: 13.5px; color: #8f8bab; }
+.detalle-texto { margin: 0; font-size: 13.5px; color: var(--ds-muted); }
 
 .detalle-cabeza {
   display: flex;
@@ -96,7 +96,7 @@
   gap: 8px 12px;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f1f0f7;
+  border-bottom: 1px solid var(--ds-line-soft);
 
   .cfg-card__titulo { margin: 0; }
 }
@@ -107,27 +107,27 @@
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 .detalle-cuerpo {
-  p { letter-spacing: normal; color: #5b5878; font-size: 13.5px; }
-  strong { color: #211F3A; }
-  .text-muted { color: #8f8bab !important; font-size: 12px; }
-  .p-error { color: #D64545; font-size: 12px; }
+  p { letter-spacing: normal; color: var(--ds-body); font-size: 13.5px; }
+  strong { color: var(--ds-ink); }
+  .text-muted { color: var(--ds-muted) !important; font-size: 12px; }
+  .p-error { color: var(--ds-err); font-size: 12px; }
 }
 
 .table {
   th {
     width: 150px;
-    color: #8f8bab;
+    color: var(--ds-muted);
     font-weight: 700;
   }
 }
 
 .notes-container {
-  background-color: #faf9fe;
-  border: 1px solid #ececf4;
+  background-color: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
   border-radius: 11px;
   padding: 1rem;
   min-height: 200px;
@@ -140,14 +140,14 @@
   border-radius: 11px;
 
   &.alert-danger {
-    background-color: #FDECEC;
+    background-color: var(--ds-err-soft);
     border-color: #FDECEC;
-    color: #D64545;
+    color: var(--ds-err);
   }
 }
 
 .pi-spinner {
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
 }
 
 :host ::ng-deep {
@@ -155,14 +155,14 @@
 
   // Acción principal del flujo (Iniciar / Completar): acento del canon en vez del verde.
   .p-button.p-button-success:not(.p-button-rounded) {
-    background: #5F3FE0;
-    border-color: #5F3FE0;
+    background: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     color: #fff;
     border-radius: 11px;
     font-weight: 700;
     box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
-    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+    &:enabled:hover { background: var(--ds-accent-hover); border-color: #4a2fc0; }
   }
 
   .p-progress-spinner-circle { stroke: #5F3FE0 !important; }

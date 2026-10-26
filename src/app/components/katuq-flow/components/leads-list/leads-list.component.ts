@@ -12,6 +12,7 @@ import { MessageService, ConfirmationService, LazyLoadEvent } from "primeng/api"
 import { environment } from "../../../../../environments/environment";
 import * as XLSX from "xlsx";
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: "app-leads-list",
   templateUrl: "./leads-list.component.html",
@@ -71,6 +72,7 @@ export class LeadsListComponent implements OnInit, OnDestroy {
     private katuqFlowService: KatuqFlowService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
+    private translate: TranslateService,
   ) {
     // Configurar búsqueda con debounce
     this.searchSubject
@@ -143,8 +145,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
           console.error("Error loading leads:", error);
           this.messageService.add({
             severity: "error",
-            summary: "Error",
-            detail: "No se pudieron cargar los leads",
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('katuqFlow.leadsList.noSePudieronCargarLos'),
           });
           this.loading = false;
           this.leads = [];
@@ -298,16 +300,16 @@ export class LeadsListComponent implements OnInit, OnDestroy {
               if (success) {
                 this.messageService.add({
                   severity: "success",
-                  summary: "Estado actualizado",
-                  detail: `El estado del lead se actualizó correctamente`,
+                  summary: this.translate.instant('katuqFlow.leadsList.estadoActualizado'),
+                  detail: this.translate.instant('katuqFlow.leadsList.elEstadoDelLeadSe'),
                 });
                 this.loadLeads();
                 this.loadStats();
               } else {
                 this.messageService.add({
                   severity: "error",
-                  summary: "Error",
-                  detail: "No se pudo actualizar el estado del lead",
+                  summary: this.translate.instant('comun.error'),
+                  detail: this.translate.instant('katuqFlow.leadsList.noSePudoActualizarEl'),
                 });
               }
             },
@@ -315,8 +317,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
               console.error("Error updating lead status:", error);
               this.messageService.add({
                 severity: "error",
-                summary: "Error",
-                detail: "Error al actualizar el estado del lead",
+                summary: this.translate.instant('comun.error'),
+                detail: this.translate.instant('katuqFlow.leadsList.errorAlActualizarElEstado'),
               });
             },
           });
@@ -339,16 +341,16 @@ export class LeadsListComponent implements OnInit, OnDestroy {
           if (success) {
             this.messageService.add({
               severity: "success",
-              summary: "Sincronización completada",
-              detail: "Los datos se sincronizaron correctamente",
+              summary: this.translate.instant('katuqFlow.leadsList.sincronizacionCompletada'),
+              detail: this.translate.instant('katuqFlow.leadsList.losDatosSeSincronizaronCorrectamente'),
             });
             this.loadLeads();
             this.loadStats();
           } else {
             this.messageService.add({
               severity: "warn",
-              summary: "Sincronización incompleta",
-              detail: "La sincronización no se completó correctamente",
+              summary: this.translate.instant('katuqFlow.leadsList.sincronizacionIncompleta'),
+              detail: this.translate.instant('katuqFlow.leadsList.laSincronizacionNoSeCompleto'),
             });
           }
         },
@@ -357,8 +359,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
           this.syncLoading = false;
           this.messageService.add({
             severity: "error",
-            summary: "Error de sincronización",
-            detail: "No se pudo sincronizar con el servidor",
+            summary: this.translate.instant('katuqFlow.leadsList.errorDeSincronizacion'),
+            detail: this.translate.instant('katuqFlow.leadsList.noSePudoSincronizarCon'),
           });
         },
       });
@@ -434,8 +436,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
       
       this.messageService.add({
         severity: "info",
-        summary: "Iniciando exportación",
-        detail: "Generando archivo Excel...",
+        summary: this.translate.instant('katuqFlow.leadsList.iniciandoExportacion'),
+        detail: this.translate.instant('katuqFlow.leadsList.generandoArchivoExcel'),
       });
 
       // Obtener todos los leads para exportar (sin paginación)
@@ -566,8 +568,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
 
             this.messageService.add({
               severity: "success",
-              summary: "Exportación exitosa",
-              detail: `Se exportaron ${allLeads.length} leads a Excel`,
+              summary: this.translate.instant('katuqFlow.leadsList.exportacionExitosa'),
+              detail: this.translate.instant('katuqFlow.leadsList.seExportaronLeads', { cantidad: allLeads.length }),
             });
             
             this.exportingToExcel = false;
@@ -576,8 +578,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
             console.error("Error en exportación:", error);
             this.messageService.add({
               severity: "error",
-              summary: "Error en exportación",
-              detail: "No se pudo exportar los datos a Excel",
+              summary: this.translate.instant('katuqFlow.leadsList.errorEnExportacion'),
+              detail: this.translate.instant('katuqFlow.leadsList.noSePudoExportarLos'),
             });
             this.exportingToExcel = false;
           }
@@ -587,8 +589,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
       console.error("Error al exportar:", error);
       this.messageService.add({
         severity: "error",
-        summary: "Error",
-        detail: "Error al generar el archivo Excel",
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('katuqFlow.leadsList.errorAlGenerarElArchivo'),
       });
       this.exportingToExcel = false;
     }
@@ -802,7 +804,7 @@ export class LeadsListComponent implements OnInit, OnDestroy {
           this.testingConnection = false;
           this.messageService.add({
             severity: result.success ? "success" : "error",
-            summary: result.success ? "Conexión exitosa" : "Error de conexión",
+            summary: result.success ? this.translate.instant('katuqFlow.leadsList.conexionExitosa') : this.translate.instant('katuqFlow.leadsList.errorDeConexion'),
             detail: result.message,
             life: 5000,
           });
@@ -820,8 +822,8 @@ export class LeadsListComponent implements OnInit, OnDestroy {
           console.error("Error testing connection:", error);
           this.messageService.add({
             severity: "error",
-            summary: "Error de prueba",
-            detail: "No se pudo realizar la prueba de conexión",
+            summary: this.translate.instant('katuqFlow.leadsList.errorDePrueba'),
+            detail: this.translate.instant('katuqFlow.leadsList.noSePudoRealizarLa'),
           });
         },
       });

@@ -8,6 +8,7 @@ import {
 } from "@angular/core";
 import { Subject, Subscription, interval } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { TranslateService } from "@ngx-translate/core";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
@@ -85,7 +86,10 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   private refreshSub?: Subscription;
   private fetchSub?: Subscription;
 
-  constructor(private readonly inbox: WhatsappInboxService) {}
+  constructor(
+    private readonly inbox: WhatsappInboxService,
+    private readonly translate: TranslateService,
+  ) {}
 
   ngOnInit(): void {
     this.searchSub = this.searchSubject
@@ -131,13 +135,13 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   tagFor(thread: WhatsappThread): ThreadTag | null {
     const sesion = this.botPorHash.get(thread.phoneHash);
     if (sesion?.cotizacionCreada?.numero) {
-      return { label: "Hizo un pedido", kind: "pedido" };
+      return { label: "notificaciones.whatsapp.list.tagOrder", kind: "pedido" };
     }
     if (sesion && sesion.estado === "bot") {
-      return { label: "Respondió el asistente", kind: "bot" };
+      return { label: "notificaciones.whatsapp.list.tagBot", kind: "bot" };
     }
     if (thread.unreadCount > 0) {
-      return { label: "Te escribió", kind: "cliente" };
+      return { label: "notificaciones.whatsapp.list.tagCustomer", kind: "cliente" };
     }
     return null;
   }
@@ -286,19 +290,19 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     const diffMs = Date.now() - then;
     const sec = Math.floor(diffMs / 1000);
     if (sec < 60) {
-      return "hace un momento";
+      return this.translate.instant('notificaciones.whatsapp.list.justNow');
     }
     const min = Math.floor(sec / 60);
     if (min < 60) {
-      return `hace ${min}m`;
+      return this.translate.instant('notificaciones.whatsapp.list.minutesAgo', { n: min });
     }
     const hr = Math.floor(min / 60);
     if (hr < 24) {
-      return `hace ${hr}h`;
+      return this.translate.instant('notificaciones.whatsapp.list.hoursAgo', { n: hr });
     }
     const d = Math.floor(hr / 24);
     if (d < 7) {
-      return `hace ${d}d`;
+      return this.translate.instant('notificaciones.whatsapp.list.daysAgo', { n: d });
     }
     return new Date(iso).toLocaleDateString();
   }

@@ -19,8 +19,8 @@
     </div>
   </dl>
 
-  <section class="fx-sec" aria-label="Recorrido de hoy">
-    <h3 class="fx-eyebrow">Recorrido de hoy</h3>
+  <section class="fx-sec" [attr.aria-label]="'enVivo.fichaPedido.recorridoDeHoy' | translate">
+    <h3 class="fx-eyebrow">{{ 'enVivo.fichaPedido.recorridoDeHoy' | translate }}</h3>
     <ol class="tl" aria-live="polite" aria-relevant="additions text">
       <li
         *ngFor="let p of contenido.recorrido; trackBy: porPaso"
@@ -31,18 +31,18 @@
         [class.is-new]="p.nuevo"
       >
         <i class="dot" aria-hidden="true"></i>
-        <b>{{ p.nombre }}<span class="sr" *ngIf="p.actual"> (etapa actual)</span></b>
+        <b>{{ p.nombre }}<span class="sr" *ngIf="p.actual"> {{ 'enVivo.fichaPedido.etapaActual' | translate }}</span></b>
         <small [class.is-sin-hora]="p.sinHora">{{ p.detalle }}</small>
       </li>
     </ol>
   </section>
 
-  <section class="fx-sec" aria-label="Productos">
-    <h3 class="fx-eyebrow">Productos</h3>
-    <p class="fx-vacio" *ngIf="contenido.productosFase === 'cargando'" role="status">Cargando los productos…</p>
-    <p class="fx-vacio" *ngIf="contenido.productosFase === 'error'">No pudimos cargar los productos de este pedido.</p>
+  <section class="fx-sec" [attr.aria-label]="'enVivo.fichaPedido.productos' | translate">
+    <h3 class="fx-eyebrow">{{ 'enVivo.fichaPedido.productos' | translate }}</h3>
+    <p class="fx-vacio" *ngIf="contenido.productosFase === 'cargando'" role="status">{{ 'enVivo.fichaPedido.cargandoLosProductos' | translate }}</p>
+    <p class="fx-vacio" *ngIf="contenido.productosFase === 'error'">{{ 'enVivo.fichaPedido.noPudimosCargarLosProductos' | translate }}</p>
     <p class="fx-vacio" *ngIf="contenido.productosFase === 'listo' && contenido.productos.length === 0">
-      Este pedido no tiene productos registrados.
+      {{ 'enVivo.fichaPedido.estePedidoNoTieneProductos' | translate }}
     </p>
     <ul class="fx-items" *ngIf="contenido.productos.length > 0">
       <li *ngFor="let l of contenido.productos; trackBy: porPosicion">
@@ -52,11 +52,11 @@
       </li>
     </ul>
     <div class="fx-linea" *ngIf="contenido.envio">
-      <span>Envío</span>
+      <span>{{ 'enVivo.fichaPedido.envio' | translate }}</span>
       <span>{{ contenido.envio }}</span>
     </div>
     <div class="fx-total" *ngIf="contenido.total">
-      <span>Total</span>
+      <span>{{ 'enVivo.fichaPedido.total' | translate }}</span>
       <span>{{ contenido.total }}</span>
     </div>
   </section>

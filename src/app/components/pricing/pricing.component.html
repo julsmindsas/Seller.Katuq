@@ -2,46 +2,46 @@
   <section class="pricing-hero" aria-labelledby="pricing-title">
     <div class="intro-badge">
       <i class="pi pi-star" aria-hidden="true"></i>
-      Precios de introducción
+      {{ 'pricing.badge' | translate }}
     </div>
 
     <h1 id="pricing-title">
-      Crecemos si tú creces.
-      <span>Todo Katuq sin límites.</span>
+      {{ 'pricing.hero.title' | translate }}
+      <span>{{ 'pricing.hero.titleAccent' | translate }}</span>
     </h1>
     <p class="hero-copy">
-      Empieza gratis y activa toda la plataforma cuando la necesites. Tu tarifa mensual se ajusta al volumen real de ventas de tu negocio.
+      {{ 'pricing.hero.copy' | translate }}
     </p>
 
-    <div class="hero-status" aria-label="Estado de tu suscripción">
+    <div class="hero-status" [attr.aria-label]="'pricing.status.aria' | translate">
       <div class="status-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
       <div>
-        <span>Tu plan actual</span>
+        <span>{{ 'pricing.status.currentPlan' | translate }}</span>
         <strong>{{ currentPlanLabel }}</strong>
       </div>
       <div class="status-divider"></div>
       <div>
-        <span>Compromiso</span>
-        <strong>Sin permanencia</strong>
+        <span>{{ 'pricing.status.commitment' | translate }}</span>
+        <strong>{{ 'pricing.status.noLockIn' | translate }}</strong>
       </div>
       <div class="status-divider"></div>
       <div>
-        <span>Plan anual</span>
-        <strong>{{ annualDiscount }}% de descuento</strong>
+        <span>{{ 'pricing.status.annualPlan' | translate }}</span>
+        <strong>{{ 'pricing.status.annualDiscount' | translate: { percent: annualDiscount } }}</strong>
       </div>
     </div>
   </section>
 
-  <section class="pricing-overview" aria-label="Calculadora de planes">
+  <section class="pricing-overview" [attr.aria-label]="'pricing.calculator.aria' | translate">
     <article class="calculator-card">
       <div class="calculator-heading">
         <div>
-          <span class="eyebrow">Calculadora</span>
-          <h2>¿Cuánto vendes al mes?</h2>
-          <p>Mueve el selector y conoce el tramo que corresponde a tu operación.</p>
+          <span class="eyebrow">{{ 'pricing.calculator.eyebrow' | translate }}</span>
+          <h2>{{ 'pricing.calculator.title' | translate }}</h2>
+          <p>{{ 'pricing.calculator.hint' | translate }}</p>
         </div>
 
-        <div class="currency-switch" role="group" aria-label="Moneda del precio">
+        <div class="currency-switch" role="group" [attr.aria-label]="'pricing.calculator.currencyAria' | translate">
           <button type="button" [class.active]="currency === 'USD'" (click)="setCurrency('USD')">USD</button>
           <button type="button" [class.active]="currency === 'COP'" (click)="setCurrency('COP')">COP</button>
         </div>
@@ -51,7 +51,7 @@
         <div class="selected-plan-main">
           <div class="plan-symbol"><i class="pi {{ tier.icon }}" aria-hidden="true"></i></div>
           <div>
-            <span class="plan-caption">Plan recomendado</span>
+            <span class="plan-caption">{{ 'pricing.calculator.recommended' | translate }}</span>
             <h3>{{ tier.name }}</h3>
             <p>{{ tierSalesLabel(tier) }}</p>
           </div>
@@ -60,7 +60,7 @@
         <div class="selected-plan-price">
           <strong>{{ tierPrice(tier) }}</strong>
           <span>{{ tierCurrencyLabel(tier) }}</span>
-          <small *ngIf="!tier.custom && currency === 'COP'">TRM de referencia: {{ trm | number:'1.0-0' }}</small>
+          <small *ngIf="!tier.custom && currency === 'COP'">{{ 'pricing.calculator.trm' | translate: { trm: (trm | number:'1.0-0') } }}</small>
         </div>
       </div>
 
@@ -72,7 +72,7 @@
           step="1"
           [value]="selectedTierIndex"
           (input)="selectTier(+$any($event.target).value)"
-          aria-label="Seleccionar rango de ventas"
+          [attr.aria-label]="'pricing.calculator.rangeAria' | translate"
           [attr.aria-valuetext]="selectedTier.name">
 
         <div class="tier-scale" aria-hidden="true">
@@ -90,7 +90,7 @@
       <div class="calculator-actions">
         <div class="price-note">
           <i class="pi pi-shield" aria-hidden="true"></i>
-          <span>Todos los planes pagos incluyen la plataforma completa.</span>
+          <span>{{ 'pricing.calculator.allPlansInclude' | translate }}</span>
         </div>
 
         <button *ngIf="!selectedTier.custom" type="button" class="primary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">
@@ -98,77 +98,77 @@
           <i class="pi pi-arrow-right" aria-hidden="true"></i>
         </button>
         <button *ngIf="selectedTier.custom" type="button" class="primary-action" (click)="contactarVentas()">
-          Hablar con ventas
+          {{ 'pricing.calculator.talkToSales' | translate }}
           <i class="pi pi-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
 
       <p class="calculator-footnote">
-        Precios en USD. La conversión a COP usa la TRM vigente. El tramo se calcula sobre las ventas mensuales procesadas.
+        {{ 'pricing.calculator.footnote' | translate }}
       </p>
     </article>
 
     <aside class="free-card" [class.current]="currentPlan === 'freemium'">
-      <div class="current-badge" *ngIf="currentPlan === 'freemium'">Tu plan actual</div>
-      <span class="eyebrow">Empieza sin tarjeta</span>
+      <div class="current-badge" *ngIf="currentPlan === 'freemium'">{{ 'pricing.status.currentPlan' | translate }}</div>
+      <span class="eyebrow">{{ 'pricing.free.eyebrow' | translate }}</span>
       <div class="free-title-row">
         <div>
-          <h2>Gratis</h2>
-          <p>Para validar tu operación</p>
+          <h2>{{ 'pricing.free.title' | translate }}</h2>
+          <p>{{ 'pricing.free.subtitle' | translate }}</p>
         </div>
         <strong>$0</strong>
       </div>
 
-      <span class="free-includes">Lo que incluye tu plan Gratis</span>
+      <span class="free-includes">{{ 'pricing.free.includes' | translate }}</span>
 
       <ul class="free-feature-list">
         <li *ngFor="let feature of freeFeatures" [class.locked]="!feature.enabled">
           <i [class]="feature.enabled ? 'pi pi-check' : 'pi pi-lock'" aria-hidden="true"></i>
-          <span>{{ feature.text }}</span>
+          <span>{{ feature.text | translate }}</span>
         </li>
       </ul>
 
       <button type="button" class="secondary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">
-        {{ hasOutstandingManualInvoice ? 'Pagar cuenta pendiente' : 'Desbloquear Katuq' }}
+        {{ (hasOutstandingManualInvoice ? 'pricing.action.payPending' : 'pricing.free.unlock') | translate }}
         <i class="pi pi-bolt" aria-hidden="true"></i>
       </button>
-      <p class="payment-safety"><i class="pi pi-lock" aria-hidden="true"></i> Premium solo se activa cuando Wompi aprueba el pago.</p>
+      <p class="payment-safety"><i class="pi pi-lock" aria-hidden="true"></i> {{ 'pricing.free.safety' | translate }}</p>
     </aside>
   </section>
 
   <section class="billing-receipt" *ngIf="lastInvoice as invoice" aria-labelledby="billing-receipt-title">
     <div class="receipt-icon"><i class="pi pi-receipt" aria-hidden="true"></i></div>
     <div class="receipt-main">
-      <span class="eyebrow">Último comprobante</span>
-      <h2 id="billing-receipt-title">Tu cobro de suscripción</h2>
+      <span class="eyebrow">{{ 'pricing.receipt.eyebrow' | translate }}</span>
+      <h2 id="billing-receipt-title">{{ 'pricing.receipt.title' | translate }}</h2>
       <p>
-        Referencia <strong>{{ invoice.id }}</strong>
+        {{ 'pricing.receipt.reference' | translate }} <strong>{{ invoice.id }}</strong>
         <ng-container *ngIf="invoiceDate(invoice) as issuedAt"> · {{ issuedAt | date:'d MMM y, h:mm a' }}</ng-container>
       </p>
     </div>
     <div class="receipt-detail">
       <span [class]="'receipt-status status-' + invoice.status">{{ invoiceStatusLabel(invoice.status) }}</span>
       <strong>{{ invoice.amountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-      <small *ngIf="invoice.testMode || invoice.simulation">Simulación Wompi Sandbox · sin dinero real</small>
+      <small *ngIf="invoice.testMode || invoice.simulation">{{ 'pricing.receipt.sandbox' | translate }}</small>
       <small *ngIf="(invoice.status === 'pending_manual' || invoice.status === 'overdue') && invoiceGraceDeadline(invoice) as graceDeadline">
-        {{ invoice.status === 'overdue' ? 'Venció el' : 'Paga antes del' }} {{ graceDeadline | date:'d MMM y, h:mm a' }}
+        {{ (invoice.status === 'overdue' ? 'pricing.receipt.overdueOn' : 'pricing.receipt.payBefore') | translate }} {{ graceDeadline | date:'d MMM y, h:mm a' }}
       </small>
       <small *ngIf="currentSubscription?.nextBillingDate && invoice.status === 'paid'">
-        Próximo cobro: {{ currentSubscription.nextBillingDate | date:'d MMM y' }}
+        {{ 'pricing.receipt.nextCharge' | translate }} {{ currentSubscription.nextBillingDate | date:'d MMM y' }}
       </small>
       <small *ngIf="invoice.manualReconciliationRequired" class="receipt-reconciliation">
-        Estamos confirmando este pago con Wompi. No vuelvas a pagarlo.
+        {{ 'pricing.receipt.reconciling' | translate }}
       </small>
     </div>
     <div class="receipt-actions">
       <a *ngIf="invoice.paymentLink && !invoice.manualReconciliationRequired && invoice.manualPaymentLinkActive !== false && (invoice.status === 'pending_manual' || invoice.status === 'overdue')" class="receipt-pay"
          [href]="invoice.paymentLink" target="_blank" rel="noopener noreferrer">
         <i class="pi pi-credit-card" aria-hidden="true"></i>
-        {{ invoice.status === 'overdue' ? 'Reactivar Premium' : 'Pagar ahora' }}
+        {{ (invoice.status === 'overdue' ? 'pricing.receipt.reactivate' : 'pricing.receipt.payNow') | translate }}
       </a>
       <button type="button" class="receipt-refresh" (click)="refreshBillingState()" [disabled]="billingLoading">
         <i class="pi" [class.pi-spin]="billingLoading" [class.pi-spinner]="billingLoading" [class.pi-refresh]="!billingLoading"></i>
-        Actualizar
+        {{ 'pricing.receipt.refresh' | translate }}
       </button>
     </div>
   </section>
@@ -176,40 +176,39 @@
   <section *ngIf="canManageBillingPeriod" id="billing-period-settings"
            class="billing-period-settings" aria-labelledby="billing-period-title">
     <div class="period-settings-copy">
-      <span class="eyebrow">Periodicidad</span>
-      <h2 id="billing-period-title">¿Mensual o anual?</h2>
-      <p>Tu período actual es <strong>{{ currentBillingPeriodLabel }}</strong>. El cambio se aplica en el próximo cobro; guardar aquí no genera un cargo inmediato.</p>
+      <span class="eyebrow">{{ 'pricing.period.eyebrow' | translate }}</span>
+      <h2 id="billing-period-title">{{ 'pricing.period.title' | translate }}</h2>
+      <p>{{ 'pricing.period.currentBefore' | translate }} <strong>{{ currentBillingPeriodLabel }}</strong>{{ 'pricing.period.currentAfter' | translate }}</p>
       <p>{{ billingModeSummary }}</p>
       <p *ngIf="currentSubscription?.pendingBillingPeriod" class="period-pending">
         <i class="pi pi-clock"></i>
-        Cambio programado a {{ currentSubscription.pendingBillingPeriod === 'yearly' ? 'Anual' : 'Mensual' }}
-        para el {{ currentSubscription.billingPeriodChangeEffectiveAt || currentSubscription.nextBillingDate | date:'d MMM y' }}.
+        {{ 'pricing.period.scheduled' | translate: { period: ((currentSubscription.pendingBillingPeriod === 'yearly' ? 'pricing.period.yearly' : 'pricing.period.monthly') | translate), date: (currentSubscription.billingPeriodChangeEffectiveAt || currentSubscription.nextBillingDate | date:'d MMM y') } }}
       </p>
     </div>
 
-    <div class="period-options" role="group" aria-label="Cambiar periodicidad de facturación">
+    <div class="period-options" role="group" [attr.aria-label]="'pricing.period.groupAria' | translate">
       <button type="button" [class.active]="billingPeriodChoice === 'monthly'"
               (click)="chooseBillingPeriod('monthly')" [disabled]="billingPeriodSaving">
-        <span>Mensual</span>
+        <span>{{ 'pricing.period.monthly' | translate }}</span>
         <strong>{{ billingMonthlyUSD | currency:'USD':'symbol':'1.0-0' }} USD</strong>
-        <small>{{ billingInfo?.billingMode === 'manual' ? 'Una cuenta de cobro cada mes' : 'Un cobro cada mes' }}</small>
+        <small>{{ (billingInfo?.billingMode === 'manual' ? 'pricing.period.monthlyHintManual' : 'pricing.period.monthlyHintAuto') | translate }}</small>
       </button>
       <button type="button" [class.active]="billingPeriodChoice === 'yearly'"
               (click)="chooseBillingPeriod('yearly')" [disabled]="billingPeriodSaving">
-        <span>Anual <em>20% menos</em></span>
+        <span>{{ 'pricing.period.yearly' | translate }} <em>{{ 'pricing.period.yearlyDiscount' | translate }}</em></span>
         <strong>{{ annualAmountUSD | currency:'USD':'symbol':'1.0-2' }} USD</strong>
-        <small>{{ billingInfo?.billingMode === 'manual' ? 'Una cuenta de cobro cada 12 meses' : 'Un cobro cada 12 meses' }}</small>
+        <small>{{ (billingInfo?.billingMode === 'manual' ? 'pricing.period.yearlyHintManual' : 'pricing.period.yearlyHintAuto') | translate }}</small>
       </button>
     </div>
 
     <div class="period-summary">
-      <span>Próximo esquema</span>
+      <span>{{ 'pricing.period.nextScheme' | translate }}</span>
       <strong>{{ billingPeriodChoiceLabel }}</strong>
-      <small>Aproximadamente {{ selectedPeriodAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP con la TRM actual.</small>
+      <small>{{ 'pricing.period.approx' | translate: { amount: (selectedPeriodAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</small>
       <button type="button" class="primary-action" (click)="saveBillingPeriod()"
               [disabled]="billingPeriodSaving || (billingPeriodChoice === (currentSubscription?.billingPeriod || 'monthly') && !currentSubscription?.pendingBillingPeriod)">
         <i class="pi" [class.pi-spin]="billingPeriodSaving" [class.pi-spinner]="billingPeriodSaving" [class.pi-calendar]="!billingPeriodSaving"></i>
-        Guardar para el próximo cobro
+        {{ 'pricing.period.save' | translate }}
       </button>
       <small *ngIf="billingPeriodMessage" class="period-success">{{ billingPeriodMessage }}</small>
       <small *ngIf="billingPeriodError" class="period-error">{{ billingPeriodError }}</small>
@@ -217,13 +216,13 @@
         <button *ngIf="canManagePaymentMethod" type="button" class="payment-method-action"
                 (click)="managePaymentMethod()" [disabled]="cancellingSubscription">
           <i class="pi pi-credit-card"></i>
-          Cambiar tarjeta
+          {{ 'pricing.period.changeCard' | translate }}
         </button>
         <small *ngIf="canManagePaymentMethod">{{ savedPaymentMethodLabel }}</small>
         <button type="button" class="cancel-plan-action" (click)="cancelPaidPlan()"
                 [disabled]="cancellingSubscription || billingPeriodSaving">
           <i [class]="cancellingSubscription ? 'pi pi-spin pi-spinner' : 'pi pi-times-circle'"></i>
-          Cancelar Premium
+          {{ 'pricing.period.cancelPremium' | translate }}
         </button>
       </div>
     </div>
@@ -232,12 +231,12 @@
   <section class="tier-reference" aria-labelledby="tier-reference-title">
     <div class="section-heading">
       <div>
-        <span class="eyebrow">Referencia de rangos</span>
-        <h2 id="tier-reference-title">Un solo plan pago, una tarifa justa</h2>
-        <p>No pierdes funcionalidades al cambiar de tramo: solo cambia el precio según tus ventas.</p>
+        <span class="eyebrow">{{ 'pricing.tiers.eyebrow' | translate }}</span>
+        <h2 id="tier-reference-title">{{ 'pricing.tiers.title' | translate }}</h2>
+        <p>{{ 'pricing.tiers.hint' | translate }}</p>
       </div>
       <a [href]="publicPricingUrl" target="_blank" rel="noopener noreferrer">
-        Ver precios públicos <i class="pi pi-external-link" aria-hidden="true"></i>
+        {{ 'pricing.tiers.publicPrices' | translate }} <i class="pi pi-external-link" aria-hidden="true"></i>
       </a>
     </div>
 
@@ -250,7 +249,7 @@
         [class.current]="isCurrentTier(tier.id)"
         (click)="selectTier(index)">
         <span class="tier-index">{{ index + 1 }}</span>
-        <span class="tier-current" *ngIf="isCurrentTier(tier.id)">Tu tramo</span>
+        <span class="tier-current" *ngIf="isCurrentTier(tier.id)">{{ 'pricing.tiers.yourTier' | translate }}</span>
         <i class="pi {{ tier.icon }}" aria-hidden="true"></i>
         <strong>{{ tier.name }}</strong>
         <span class="tier-limit">{{ tierSalesLabel(tier) }}</span>
@@ -263,9 +262,9 @@
   <section class="included-section" aria-labelledby="included-title">
     <div class="section-heading compact">
       <div>
-        <span class="eyebrow">Acceso total</span>
-        <h2 id="included-title">Todo incluido desde el primer día</h2>
-        <p>Sin módulos ocultos ni cobros por cada herramienta que actives.</p>
+        <span class="eyebrow">{{ 'pricing.included.eyebrow' | translate }}</span>
+        <h2 id="included-title">{{ 'pricing.included.title' | translate }}</h2>
+        <p>{{ 'pricing.included.hint' | translate }}</p>
       </div>
     </div>
 
@@ -273,8 +272,8 @@
       <article class="feature-card" *ngFor="let feature of paidFeatures">
         <div class="feature-icon"><i class="pi {{ feature.icon }}" aria-hidden="true"></i></div>
         <div>
-          <h3>{{ feature.title }}</h3>
-          <p>{{ feature.text }}</p>
+          <h3>{{ feature.title | translate }}</h3>
+          <p>{{ feature.text | translate }}</p>
         </div>
       </article>
     </div>
@@ -283,29 +282,29 @@
   <section class="steps-section" aria-labelledby="steps-title">
     <div class="section-heading compact">
       <div>
-        <span class="eyebrow">Así de simple</span>
-        <h2 id="steps-title">Katuq se ajusta a tu negocio</h2>
+        <span class="eyebrow">{{ 'pricing.steps.eyebrow' | translate }}</span>
+        <h2 id="steps-title">{{ 'pricing.steps.title' | translate }}</h2>
       </div>
     </div>
 
     <div class="steps-grid">
       <article>
         <span>1</span>
-        <div><h3>Vendes normalmente</h3><p>Opera con toda la plataforma y sin contar usuarios o pedidos.</p></div>
+        <div><h3>{{ 'pricing.steps.one.title' | translate }}</h3><p>{{ 'pricing.steps.one.text' | translate }}</p></div>
       </article>
       <article>
         <span>2</span>
-        <div><h3>Calculamos tus ventas</h3><p>Al cierre del ciclo identificamos automáticamente tu rango.</p></div>
+        <div><h3>{{ 'pricing.steps.two.title' | translate }}</h3><p>{{ 'pricing.steps.two.text' | translate }}</p></div>
       </article>
       <article>
         <span>3</span>
-        <div><h3>Pagas lo justo</h3><p>Tu tarifa corresponde al volumen que realmente procesaste.</p></div>
+        <div><h3>{{ 'pricing.steps.three.title' | translate }}</h3><p>{{ 'pricing.steps.three.text' | translate }}</p></div>
       </article>
     </div>
   </section>
 
   <div class="page-actions">
-    <button type="button" class="back-action" routerLink="/welcome"><i class="pi pi-arrow-left"></i> Volver</button>
+    <button type="button" class="back-action" routerLink="/welcome"><i class="pi pi-arrow-left"></i> {{ 'comun.volver' | translate }}</button>
     <button type="button" class="primary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">{{ primaryBillingActionLabel }} <i class="pi pi-arrow-right"></i></button>
   </div>
 </div>

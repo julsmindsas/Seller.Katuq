@@ -15,6 +15,8 @@ import {
 import { NOMBRE_CANAL, NOMBRE_ESTADO_ENCUESTA, NOMBRE_ETAPA, conComercio, esAdministradorSesion, mensajeError } from '../nps-comun';
 import { ResultadoEstado, cambiarEstadoEncuesta, descargarQr, eliminarEncuesta, enlaceDe, nombreArchivo, qrComoImagen } from './encuesta-acciones';
 
+import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 const MAX_PREGUNTA = 200;
 const MAX_OPCION = 80;
 const MIN_OPCIONES = 2;
@@ -52,7 +54,7 @@ function idNuevo(): string {
 @Component({
   selector: 'app-nps-encuesta-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, EscalaNpsComponent],
+  imports: [TranslateModule, CommonModule, ReactiveFormsModule, RouterModule, EscalaNpsComponent],
   templateUrl: './encuesta-editor.component.html',
   styleUrls: ['./encuesta-editor.component.scss'],
 })
@@ -66,9 +68,9 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
   readonly NOMBRE_ETAPA = NOMBRE_ETAPA;
   readonly comercio = this.security.getCompanyInformationLogged()?.nombreComercio || 'tu tienda';
   readonly segmentos = [
-    { key: 'detractor', etiqueta: 'Si responde de 0 a 6' },
-    { key: 'pasivo', etiqueta: 'Si responde 7 u 8' },
-    { key: 'promotor', etiqueta: 'Si responde 9 o 10' },
+    { key: 'detractor', etiqueta: 'nps.encuestaEditor.siResponde06' },
+    { key: 'pasivo', etiqueta: 'nps.encuestaEditor.siResponde78' },
+    { key: 'promotor', etiqueta: 'nps.encuestaEditor.siResponde910' },
   ];
 
   form: FormGroup;
@@ -94,6 +96,7 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
     private nps: NpsService,
     private security: SecurityService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(80)]],
@@ -159,7 +162,7 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
     // Las encuestas solo las lee la familia Administrador (el servidor responde 403).
     if (!esAdministradorSesion()) {
       this.cargando = false;
-      this.error = 'Las encuestas las ven y las cambian los administradores de tu empresa.';
+      this.error = this.translate.instant('nps.encuestaEditor.lasEncuestasLasVenY');
       return of(null);
     }
     this.cargarResponsables();
@@ -184,8 +187,8 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
       catchError((e) => {
         this.cargando = false;
         this.error = e?.status === 404
-          ? 'No encontramos esta encuesta. Puede que la hayan eliminado.'
-          : mensajeError(e, 'No pudimos abrir la encuesta. Intenta de nuevo en unos minutos.');
+          ? this.translate.instant('nps.encuestaEditor.noEncontramosEstaEncuestaPuede')
+          : mensajeError(e, this.translate.instant('nps.encuestaEditor.noPudimosAbrirLaEncuesta'), this.translate);
         return of(null);
       }),
     );
@@ -334,7 +337,7 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
     if (!this.esNueva && this.form.pristine && this.encuesta) return of(this.encuesta);
     this.form.markAllAsTouched();
     if (this.form.invalid) {
-      this.toastr.warning('Revisa los campos marcados en rojo.', 'Falta completar la encuesta');
+      this.toastr.warning(this.translate.instant('nps.encuestaEditor.revisaLosCamposMarcadosEn'), this.translate.instant('nps.encuestaEditor.faltaCompletarLaEncuesta'));
       return of(null);
     }
     this.guardando = true;
@@ -346,7 +349,7 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
       map((r) => {
         this.guardando = false;
         const guardada = r.encuesta;
-        this.toastr.success('Encuesta guardada');
+        this.toastr.success(this.translate.instant('nps.encuestaEditor.encuestaGuardada'));
         if (this.esNueva) {
           // Desde aquí la dirección es la de la encuesta creada.
           this.router.navigate(['/nps/encuestas', guardada.id], { replaceUrl: true });
@@ -357,7 +360,7 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
       }),
       catchError((e) => {
         this.guardando = false;
-        this.toastr.error(mensajeError(e, 'No pudimos guardar la encuesta. Intenta de nuevo.'));
+        this.toastr.error(mensajeError(e, this.translate.instant('nps.encuestaEditor.noPudimosGuardarLaEncuesta'), this.translate));
         return of(null);
       }),
     );
@@ -396,27 +399,27 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
     if (activar && this.faltaResponsable) {
       this.intentoActivar = true;
       this.form.get('responsableEmail')?.markAsTouched();
-      this.toastr.warning('Escoge quién atiende a los clientes inconformes antes de activarla.', 'Falta el responsable');
+      this.toastr.warning(this.translate.instant('nps.encuestaEditor.escogeQuienAtiendeALos'), this.translate.instant('nps.encuestaEditor.faltaElResponsable'));
       return;
     }
     this.cambiandoEstado = true;
     this.guardarSiHaceFalta().pipe(
-      switchMap((e): Observable<ResultadoEstado> => (e ? cambiarEstadoEncuesta(this.nps, e, activar ? 'activa' : 'pausada') : of({ encuesta: null }))),
+      switchMap((e): Observable<ResultadoEstado> => (e ? cambiarEstadoEncuesta(this.nps, e, activar ? 'activa' : 'pausada', this.translate) : of({ encuesta: null }))),
       takeUntil(this.destroy$),
     ).subscribe((r) => {
       this.cambiandoEstado = false;
       if (!r.encuesta) return;
       this.llenar(r.encuesta);
-      this.toastr.success(activar ? 'La encuesta quedó activa' : 'La encuesta quedó pausada');
-      if (r.pausada) this.toastr.info(`"${r.pausada.nombre}" quedó pausada`);
+      this.toastr.success(activar ? this.translate.instant('nps.encuestaEditor.laEncuestaQuedoActiva') : this.translate.instant('nps.encuestaEditor.laEncuestaQuedoPausada'));
+      if (r.pausada) this.toastr.info(this.translate.instant('nps.encuestas.nombreQuedoPausada', { nombre: r.pausada.nombre }));
     });
   }
 
   eliminar(): void {
     if (!this.encuesta || this.soloLectura) return;
-    eliminarEncuesta(this.nps, this.encuesta).pipe(takeUntil(this.destroy$)).subscribe((ok) => {
+    eliminarEncuesta(this.nps, this.encuesta, this.translate).pipe(takeUntil(this.destroy$)).subscribe((ok) => {
       if (!ok) return;
-      this.toastr.success('Encuesta eliminada');
+      this.toastr.success(this.translate.instant('nps.encuestaEditor.encuestaEliminada'));
       this.router.navigate(['/nps/encuestas']);
     });
   }
@@ -425,15 +428,15 @@ export class EncuestaEditorComponent implements OnInit, OnDestroy {
     const url = this.enlace;
     if (!url) return;
     navigator.clipboard.writeText(url).then(
-      () => this.toastr.success('Enlace copiado'),
-      () => this.toastr.info(url, 'Copia el enlace'),
+      () => this.toastr.success(this.translate.instant('nps.encuestaEditor.enlaceCopiado')),
+      () => this.toastr.info(url, this.translate.instant('nps.encuestaEditor.copiaElEnlace')),
     );
   }
 
   async descargarQr(): Promise<void> {
     const url = this.enlace;
     if (url && !(await descargarQr(url, nombreArchivo(this.encuesta?.nombre || 'encuesta')))) {
-      this.toastr.error('No pudimos generar el QR. Intenta de nuevo.');
+      this.toastr.error(this.translate.instant('nps.encuestaEditor.noPudimosGenerarElQr'));
     }
   }
 

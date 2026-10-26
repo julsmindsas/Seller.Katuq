@@ -14,6 +14,7 @@ import {
 } from '../../../shared/models/column-mapping.model';
 import { MobileFileUploadComponent } from '../../../shared/components/import-components/mobile-file-upload/mobile-file-upload.component';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-import-customers-step',
   templateUrl: './import-customers-step.component.html',
@@ -64,7 +65,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
   constructor(
     private messageService: MessageService,
     private importApi: ImportApiService,
-    private columnMappingService: ColumnMappingService
+    private columnMappingService: ColumnMappingService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -100,8 +102,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
     if (file.size > this.maxFileSize) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Archivo muy grande',
-        detail: `El archivo no debe superar ${this.maxFileSize / 1000000}MB`
+        summary: this.translate.instant('onboarding.importCustomersStep.archivoMuyGrande'),
+        detail: this.translate.instant('onboarding.importCustomersStep.archivoNoSuperar', { mb: this.maxFileSize / 1000000 })
       });
       return;
     }
@@ -134,8 +136,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
         if (data.length === 0) {
           this.messageService.add({
             severity: 'warn',
-            summary: 'Archivo vacío',
-            detail: 'El archivo no contiene datos'
+            summary: this.translate.instant('onboarding.importCustomersStep.archivoVacio'),
+            detail: this.translate.instant('onboarding.importCustomersStep.elArchivoNoContieneDatos')
           });
           return;
         }
@@ -153,8 +155,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
         console.error('Error previewing file:', error);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo leer el archivo'
+          summary: this.translate.instant('comun.error'),
+          detail: this.translate.instant('onboarding.importCustomersStep.noSePudoLeerEl')
         });
       }
     };
@@ -194,16 +196,16 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Análisis Completado',
-        detail: `KAI analizó ${this.sourceColumns.length} columnas y sugirió ${Object.keys(this.mappingResult?.mappings || {}).length} mapeos`
+        summary: this.translate.instant('onboarding.importCustomersStep.analisisCompletado'),
+        detail: this.translate.instant('onboarding.importCustomersStep.kaiAnalizo', { columnas: this.sourceColumns.length, mapeos: Object.keys(this.mappingResult?.mappings || {}).length })
       });
 
     } catch (error: any) {
       console.error('Error analyzing columns with KAI:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Análisis',
-        detail: error?.error?.message || 'No se pudo analizar el archivo con KAI'
+        summary: this.translate.instant('onboarding.importCustomersStep.errorEnAnalisis'),
+        detail: error?.error?.message || this.translate.instant('onboarding.importCustomersStep.noSePudoAnalizarEl')
       });
     } finally {
       this.isAnalyzingColumns = false;
@@ -276,8 +278,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
     this.updateConfirmedMappings();
     this.messageService.add({
       severity: 'success',
-      summary: 'Mapeo Confirmado',
-      detail: 'Los mapeos han sido confirmados. Ahora puedes importar los clientes.'
+      summary: this.translate.instant('onboarding.importCustomersStep.mapeoConfirmado'),
+      detail: this.translate.instant('onboarding.importCustomersStep.losMapeosHanSidoConfirmados')
     });
   }
 
@@ -295,8 +297,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
     this.confirmedMappings = finalMappings;
     this.messageService.add({
       severity: 'info',
-      summary: 'Mapeo Confirmado',
-      detail: 'Ahora puedes importar los clientes con el mapeo confirmado'
+      summary: this.translate.instant('onboarding.importCustomersStep.mapeoConfirmado'),
+      detail: this.translate.instant('onboarding.importCustomersStep.ahoraPuedesImportarLosClientes')
     });
   }
 
@@ -313,8 +315,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Sin archivo',
-        detail: 'Por favor selecciona un archivo para importar'
+        summary: this.translate.instant('onboarding.importCustomersStep.sinArchivo'),
+        detail: this.translate.instant('onboarding.importCustomersStep.porFavorSeleccionaUnArchivo')
       });
       return;
     }
@@ -331,8 +333,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
       } else {
         this.messageService.add({
           severity: 'warn',
-          summary: 'Mapeo no disponible',
-          detail: 'Por favor espera el análisis de columnas o confirma el mapeo manualmente'
+          summary: this.translate.instant('onboarding.importCustomersStep.mapeoNoDisponible'),
+          detail: this.translate.instant('onboarding.importCustomersStep.porFavorEsperaElAnalisis')
         });
         return;
       }
@@ -347,8 +349,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
       if (!companyId) {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error de configuracion',
-          detail: 'No se encontro la empresa. Por favor cierra sesion e ingresa nuevamente.'
+          summary: this.translate.instant('onboarding.importCustomersStep.errorDeConfiguracion'),
+          detail: this.translate.instant('onboarding.importCustomersStep.noSeEncontroLaEmpresa')
         });
         this.isUploading = false;
         return;
@@ -388,8 +390,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Importación Completada',
-        detail: `${this.importResult.success} clientes importados correctamente${this.importResult.failed > 0 ? `, ${this.importResult.failed} fallidos` : ''}`
+        summary: this.translate.instant('onboarding.importCustomersStep.importacionCompletada'),
+        detail: this.translate.instant('onboarding.importCustomersStep.clientesImportados', { success: this.importResult.success }) + (this.importResult.failed > 0 ? this.translate.instant('onboarding.importCustomersStep.fallidosSufijo', { failed: this.importResult.failed }) : '')
       });
 
       this.dataChange.emit({ data: this.importResult });
@@ -399,8 +401,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
       console.error('Error importing customers:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Importación',
-        detail: error?.error?.message || 'No se pudieron importar los clientes'
+        summary: this.translate.instant('onboarding.importCustomersStep.errorEnImportacion'),
+        detail: error?.error?.message || this.translate.instant('onboarding.importCustomersStep.noSePudieronImportarLos')
       });
     } finally {
       this.isUploading = false;
@@ -457,8 +459,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla Descargada',
-      detail: 'Completa la plantilla con tus clientes y súbela para importar'
+      summary: this.translate.instant('onboarding.importCustomersStep.plantillaDescargada'),
+      detail: this.translate.instant('onboarding.importCustomersStep.completaLaPlantillaConTus')
     });
   }
 
@@ -469,8 +471,8 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
     this.stepComplete.emit({ data: { skipped: true } });
     this.messageService.add({
       severity: 'info',
-      summary: 'Paso Omitido',
-      detail: 'Podrás importar clientes más tarde desde el módulo de ventas'
+      summary: this.translate.instant('onboarding.firstProductStep.pasoOmitido'),
+      detail: this.translate.instant('onboarding.importCustomersStep.podrasImportarClientesMasTarde')
     });
   }
 

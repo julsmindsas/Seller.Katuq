@@ -189,6 +189,53 @@
         </ng-container>
       </ng-container>
 
+      <!-- F4-40·B16: lo que hizo KAI. Carga y falla aparte; las métricas de
+           atención (conversaciones, tiempos, satisfacción) no van aquí. -->
+      <section class="kai-bloque" *ngIf="!soloHoy" [attr.aria-label]="'sitios.metricas.kai.titulo' | translate">
+        <h6 class="kai-bloque__titulo">{{ 'sitios.metricas.kai.titulo' | translate }}</h6>
+        <p class="kai-bloque__estado" *ngIf="kaiCargando">{{ 'sitios.metricas.kai.cargando' | translate }}</p>
+        <p class="kai-bloque__error" *ngIf="!kaiCargando && kaiError" role="alert">
+          {{ 'sitios.metricas.kai.error' | translate }}
+          <button type="button" class="kai-bloque__reintento" (click)="cargarKai()">{{ 'sitios.metricas.kai.reintentar' | translate }}</button>
+        </p>
+        <div class="kai-bloque__vacio" *ngIf="!kaiCargando && !kaiError && kaiVacio">
+          <i class="feather icon-message-circle" aria-hidden="true"></i>
+          <strong>{{ 'sitios.metricas.kai.vacioTitulo' | translate }}</strong>
+          <span>{{ 'sitios.metricas.kai.vacioTexto' | translate }}</span>
+        </div>
+        <div class="kai-bloque__cifras" *ngIf="!kaiCargando && !kaiError && kai && !kaiVacio">
+          <div class="kai-cifra kai-cifra--principal">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.ventas' | translate }}</span>
+            <span class="kai-cifra__valor">{{ dinero(kai.ventas) }}</span>
+          </div>
+          <div class="kai-cifra">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.pedidos' | translate }}</span>
+            <span class="kai-cifra__valor">{{ kai.pedidos }}</span>
+          </div>
+          <!-- Lo recuperado y lo asistido en la web dependen de marcas que nadie
+               escribe aún: se muestran «pendiente», no como un 0 que parece real. -->
+          <div class="kai-cifra" [class.kai-cifra--pendiente]="kaiPendiente('pagosRecuperados')">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.recuperados' | translate }}</span>
+            <span class="kai-cifra__valor kai-cifra__valor--pendiente" *ngIf="kaiPendiente('pagosRecuperados'); else recuperadosValor">{{ 'sitios.metricas.kai.pendiente' | translate }}</span>
+            <ng-template #recuperadosValor><span class="kai-cifra__valor">{{ kai.pagosRecuperados }}</span></ng-template>
+          </div>
+          <div class="kai-cifra">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.citas' | translate }}</span>
+            <span class="kai-cifra__valor">{{ kai.citas }}</span>
+          </div>
+          <div class="kai-cifra">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.cotizaciones' | translate }}</span>
+            <span class="kai-cifra__valor">{{ kai.cotizaciones }}</span>
+          </div>
+          <div class="kai-cifra" [class.kai-cifra--pendiente]="kaiPendiente('ventasTiendaAsistidas')">
+            <span class="kai-cifra__etiqueta">{{ 'sitios.metricas.kai.asistidas' | translate }}</span>
+            <span class="kai-cifra__valor kai-cifra__valor--pendiente" *ngIf="kaiPendiente('ventasTiendaAsistidas'); else asistidasValor">{{ 'sitios.metricas.kai.pendiente' | translate }}</span>
+            <ng-template #asistidasValor><span class="kai-cifra__valor">{{ kai.ventasTiendaAsistidas }}</span></ng-template>
+          </div>
+        </div>
+        <p class="kai-bloque__nota" *ngIf="kai && kai.truncado">{{ 'sitios.metricas.kai.truncado' | translate }}</p>
+      </section>
+
       <!-- Quién dejó sus datos: fuera del bloque de tráfico, porque la lista
            sirve aunque las visitas del rango sean pocas. -->
       <section class="contactos" *ngIf="!cargando && contactos.length">

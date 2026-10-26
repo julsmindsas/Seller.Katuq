@@ -144,6 +144,9 @@ export interface CrmPaginatedResponse<T> {
 
 // ─── UI Helpers ───────────────────────────────────────────────
 
+// Las listas de opciones guardan la clave de traducción en `label` (el `value` se guarda y no cambia);
+// los componentes las muestran con OpcionesI18n (shared/utils/i18n-opciones.ts).
+
 export function getStageSeverity(stage: string): string {
   const map: Record<string, string> = {
     // Company stages
@@ -162,24 +165,24 @@ export function getPrioritySeverity(priority: string): string {
 }
 
 export const ACTIVITY_TYPE_OPTIONS = [
-  { label: 'Nota', value: 'note', icon: 'pi pi-pencil' },
-  { label: 'Llamada', value: 'call', icon: 'pi pi-phone' },
-  { label: 'Email', value: 'email', icon: 'pi pi-envelope' },
-  { label: 'WhatsApp', value: 'whatsapp', icon: 'pi pi-comments' },
-  { label: 'Reunión', value: 'meeting', icon: 'pi pi-users' },
+  { label: 'crm.opciones.actividad.note', value: 'note', icon: 'pi pi-pencil' },
+  { label: 'crm.opciones.actividad.call', value: 'call', icon: 'pi pi-phone' },
+  { label: 'crm.opciones.actividad.email', value: 'email', icon: 'pi pi-envelope' },
+  { label: 'crm.opciones.actividad.whatsapp', value: 'whatsapp', icon: 'pi pi-comments' },
+  { label: 'crm.opciones.actividad.meeting', value: 'meeting', icon: 'pi pi-users' },
 ];
 
 export const TASK_TYPE_OPTIONS = [
-  { label: 'Llamada', value: 'call' },
-  { label: 'Email', value: 'email' },
-  { label: 'Reunión', value: 'meeting' },
-  { label: 'Seguimiento', value: 'follow_up' },
-  { label: 'Otro', value: 'other' },
+  { label: 'crm.opciones.tarea.call', value: 'call' },
+  { label: 'crm.opciones.tarea.email', value: 'email' },
+  { label: 'crm.opciones.tarea.meeting', value: 'meeting' },
+  { label: 'crm.opciones.tarea.follow_up', value: 'follow_up' },
+  { label: 'crm.opciones.tarea.other', value: 'other' },
 ];
 
 export const PRIORITY_OPTIONS = [
-  { label: 'Baja', value: 'low' },
-  { label: 'Media', value: 'medium' },
-  { label: 'Alta', value: 'high' },
-  { label: 'Urgente', value: 'urgent' },
+  { label: 'crm.opciones.prioridad.low', value: 'low' },
+  { label: 'crm.opciones.prioridad.medium', value: 'medium' },
+  { label: 'crm.opciones.prioridad.high', value: 'high' },
+  { label: 'crm.opciones.prioridad.urgent', value: 'urgent' },
 ];

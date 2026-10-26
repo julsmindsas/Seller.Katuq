@@ -7,6 +7,7 @@
    checkout tomaba el --primary-color global, un lila que no es el acento. */
 :host {
   --primary-color: #5F3FE0;
+  --primary-ink: #5F3FE0;
   --primary-light: #7C5CFF;
   --primary-dark: #4a2fc0;
   --primary-rgb: 95, 63, 224;
@@ -29,6 +30,28 @@
   --shadow-sm: 0 1px 3px rgba(30, 35, 60, 0.04);
   --shadow: 0 1px 3px rgba(30, 35, 60, 0.06);
   --shadow-lg: 0 12px 30px rgba(30, 35, 60, 0.12);
+}
+
+// Oscuro (D-502 F3, bloque TEMA-B14): las variables propias de la pantalla toman los tokens del tema.
+// Solo en oscuro: el claro conserva sus valores. Una sola fuente de color en oscuro: var(--ds-*).
+:host-context(body.dark-only) {
+  --primary-color: var(--ds-accent);
+  --primary-ink: var(--ds-accent-ink);
+  --primary-dark: var(--ds-accent-hover);
+  --success-color: var(--ds-ok);
+  --warning-color: var(--ds-warn);
+  --danger-color: var(--ds-err);
+  --light-color: var(--ds-surface-2);
+  --dark-color: var(--ds-ink);
+  --gray-100: var(--ds-surface-2);
+  --gray-200: var(--ds-line);
+  --gray-300: var(--ds-line-strong);
+  --gray-400: var(--ds-control-border);
+  --gray-500: var(--ds-muted);
+  --gray-600: var(--ds-muted);
+  --gray-700: var(--ds-body);
+  --gray-800: var(--ds-ink);
+  --gray-900: var(--ds-ink);
 }
 
 /* Estilos generales del checkout */
@@ -56,7 +79,7 @@
   font-size: 1.4rem;
 }
 
-.checkout-header .text-primary { color: var(--primary-color) !important; }
+.checkout-header .text-primary { color: var(--primary-ink) !important; }
 
 .order-number .badge {
   font-size: 0.85rem;
@@ -64,7 +87,7 @@
   font-weight: 800;
   border-radius: 999px;
   background: var(--kc-accent-wash) !important;
-  color: var(--primary-color) !important;
+  color: var(--primary-ink) !important;
 }
 
 /* Indicador de fecha estimada de entrega */
@@ -91,7 +114,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-color);
+  color: var(--primary-ink);
 }
 
 /* Selector de forma de entrega */
@@ -116,7 +139,7 @@
     font-size: 0.85rem;
     font-weight: 800;
     color: var(--gray-600);
-    background-color: #fff;
+    background-color: var(--ds-surface);
     border: 1px solid var(--gray-300);
     border-radius: 12px !important;
     transition: var(--transition);
@@ -129,7 +152,7 @@
     &:hover {
       background-color: #faf9ff;
       border-color: var(--primary-light);
-      color: var(--primary-color);
+      color: var(--primary-ink);
     }
 
     &.active {
@@ -200,7 +223,7 @@
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--gray-800);
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border: 1px solid var(--gray-200);
   border-radius: 16px !important;
   box-shadow: var(--shadow-sm);
@@ -208,8 +231,8 @@
 }
 
 .accordion-button:not(.collapsed) {
-  color: var(--primary-color);
-  background-color: #fff;
+  color: var(--primary-ink);
+  background-color: var(--ds-surface);
   box-shadow: var(--shadow);
   border-color: #e2d9fb;
   border-bottom-left-radius: 0 !important;
@@ -227,7 +250,7 @@
 }
 
 .accordion-body {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   padding: 1.25rem;
   border: 1px solid var(--gray-200);
   border-top: none;
@@ -345,7 +368,7 @@
 
 /* Checkout resumen (columna derecha) */
 .checkout-details {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border-radius: 20px;
   box-shadow: var(--shadow);
   height: 100%;
@@ -412,7 +435,7 @@
 
 .price {
   font-weight: 800;
-  color: var(--primary-color);
+  color: var(--primary-ink);
 }
 
 .desc-linea-badge {
@@ -458,7 +481,7 @@
   padding: 0.9rem 1rem;
 
   .count {
-    color: var(--primary-color);
+    color: var(--primary-ink);
     font-family: var(--kc-font-head);
     font-size: 1.5rem;
     font-weight: 800;
@@ -495,7 +518,7 @@
 .two-column-list .value {
   flex: 1;
   text-align: right;
-  color: var(--primary-color);
+  color: var(--primary-ink);
   font-weight: 800;
 }
 
@@ -530,7 +553,7 @@
 .payment-tabs .nav-link i { margin-right: 0.5rem; font-size: 0.9rem; }
 
 .payment-tabs .nav-link.active {
-  color: var(--primary-color);
+  color: var(--primary-ink);
   background-color: transparent;
   border-bottom: 2px solid var(--primary-color);
   font-weight: 800;
@@ -593,7 +616,7 @@
 
 .payment-radio:checked + .payment-method-card i,
 .payment-radio:checked + .payment-method-card span {
-  color: var(--primary-color);
+  color: var(--primary-ink);
   font-weight: 800;
 }
 
@@ -604,8 +627,8 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  color: var(--primary-color);
-  background-color: white;
+  color: var(--primary-ink);
+  background-color: var(--ds-surface);
   border-radius: 50%;
   font-size: 1rem;
 }
@@ -636,7 +659,7 @@
 
 .security-badge i {
   font-size: 1rem;
-  color: var(--primary-color);
+  color: var(--primary-ink);
   margin-bottom: 0.25rem;
 }
 
@@ -709,7 +732,7 @@
 .info-summary-item i {
   font-size: 0.75rem;
   margin-right: 0.4rem;
-  color: var(--primary-color);
+  color: var(--primary-ink);
 }
 
 /* Media Queries */
@@ -763,7 +786,7 @@
 }
 
 .alert-danger {
-  background-color: var(--danger-wash, #FDECEC);
+  background-color: var(--danger-wash, var(--ds-err-soft));
   color: var(--danger-color);
   border: 0;
 }
@@ -810,7 +833,7 @@
 
         .note-product {
           font-size: 0.85rem;
-          color: var(--primary-color);
+          color: var(--primary-ink);
           font-weight: 800;
           background: var(--kc-accent-wash);
           padding: 0.25rem 0.6rem;
@@ -849,7 +872,7 @@
               position: relative;
               width: 100%;
               height: 120px;
-              background: #fff;
+              background: var(--ds-surface);
               display: flex;
               align-items: center;
               justify-content: center;
@@ -866,7 +889,7 @@
                 padding: 1rem;
                 color: var(--gray-600);
 
-                i { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-color); }
+                i { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-ink); }
 
                 .attachment-name {
                   font-size: 0.75rem;

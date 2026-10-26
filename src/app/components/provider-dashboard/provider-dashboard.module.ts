@@ -17,6 +17,7 @@ import { ProviderIssuesTableComponent } from './provider-issues-table/provider-i
 import { ProviderSummaryComponent } from './provider-summary/provider-summary.component';
 import { ProviderDashboardService } from './provider-dashboard.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 const routes: Routes = [
   { path: '', component: ProviderDashboardComponent },
 ];
@@ -28,6 +29,7 @@ const routes: Routes = [
     ProviderSummaryComponent,
   ],
   imports: [
+    TranslateModule,
     CommonModule,
     FormsModule,
     RouterModule.forChild(routes),

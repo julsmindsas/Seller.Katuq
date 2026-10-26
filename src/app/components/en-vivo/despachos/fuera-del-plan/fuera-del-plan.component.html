@@ -1,5 +1,5 @@
 <section class="dz-bloque" *ngIf="bloquesAutomaticos.length" aria-labelledby="dz-automatico">
-  <h3 class="dz-bloque__titulo" id="dz-automatico">Envío automático</h3>
+  <h3 class="dz-bloque__titulo" id="dz-automatico">{{ 'enVivo.fueraDelPlan.envioAutomatico' | translate }}</h3>
   <div class="dz-razon-fila" *ngFor="let b of bloquesAutomaticos; trackBy: trackBloque">
     <p class="dz-razon-fila__nombre">
       <span class="dz-razon-fila__texto">{{ b.razon }}</span>
@@ -14,7 +14,7 @@
 </section>
 
 <section class="dz-bloque" *ngIf="bloques.length" aria-labelledby="dz-fuera">
-  <h3 class="dz-bloque__titulo" id="dz-fuera">No entra al plan</h3>
+  <h3 class="dz-bloque__titulo" id="dz-fuera">{{ 'enVivo.fueraDelPlan.noEntraAlPlan' | translate }}</h3>
   <div class="dz-razon-fila" *ngFor="let b of bloques; trackBy: trackBloque">
     <p class="dz-razon-fila__nombre">
       <span class="dz-razon-fila__texto">{{ b.razon }}</span>

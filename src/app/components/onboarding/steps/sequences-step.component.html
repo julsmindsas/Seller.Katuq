@@ -1,13 +1,13 @@
 <div class="step-container">
   <div class="step-intro">
     <p class="intro-text">
-      Configura los consecutivos de numeración para tus pedidos. Los consecutivos aseguran que cada pedido tenga un número único e incremental.
+      {{ 'onboarding.sequencesStep.configuraLosConsecutivosDeNumeracion' | translate }}
     </p>
   </div>
 
   <p-card class="configuration-card mt-3">
     <ng-template pTemplate="header">
-      <div class="onb-cabeza"><i class="pi pi-list-check"></i><span>Configuración de Consecutivos</span></div>
+      <div class="onb-cabeza"><i class="pi pi-list-check"></i><span>{{ 'onboarding.sequencesStep.configuracionDeConsecutivos' | translate }}</span></div>
     </ng-template>
 
     <div class="consecutivos-grid">
@@ -31,7 +31,7 @@
         </div>
 
         <div class="option-preview">
-          <strong>Formato:</strong>
+          <strong>{{ 'onboarding.sequencesStep.formato' | translate }}</strong>
           <code>{{ tiposInfo.orders.ejemplo }}</code>
         </div>
       </div>
@@ -56,7 +56,7 @@
         </div>
 
         <div class="option-preview">
-          <strong>Formato:</strong>
+          <strong>{{ 'onboarding.sequencesStep.formato' | translate }}</strong>
           <code>{{ tiposInfo.ordersPOS.ejemplo }}</code>
         </div>
       </div>
@@ -69,18 +69,18 @@
   </p-card>
 
   <div class="step-actions mt-4">
-    <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
+    <button pButton type="button" [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate" icon="pi pi-check" iconPos="right"
             class="cfg-btn"
             [disabled]="!isValid() || isSaving"
             [loading]="isSaving"
             (click)="onComplete()"></button>
 
     <p class="form-status" *ngIf="!isValid()">
-      <i class="pi pi-exclamation-triangle"></i>Debes seleccionar al menos un tipo de consecutivo para continuar
+      <i class="pi pi-exclamation-triangle"></i>{{ 'onboarding.sequencesStep.debesSeleccionarAlMenosUn' | translate }}
     </p>
 
     <p class="form-status success" *ngIf="isValid()">
-      <i class="pi pi-check-circle"></i>Configuración lista - Los consecutivos iniciarán en 1
+      <i class="pi pi-check-circle"></i>{{ 'onboarding.sequencesStep.configuracionListaLosConsecutivosIniciaran' | translate }}
     </p>
   </div>
 </div>

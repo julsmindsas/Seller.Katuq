@@ -5,55 +5,55 @@
     <div class="mt-head__copy cfg-cabeza__textos">
       <nav class="mt-crumbs">
         <i class="pi pi-home"></i>
-        <a routerLink="/soporte">Soporte</a>
+        <a routerLink="/soporte">{{ 'soporte.misIdeas.soporte' | translate }}</a>
         <span class="mt-crumbs__sep">/</span>
-        <span class="mt-crumbs__here">Mis tickets</span>
+        <span class="mt-crumbs__here">{{ 'soporte.misTickets.misTickets' | translate }}</span>
       </nav>
-      <h1 class="cfg-titulo">Mis tickets</h1>
-      <p class="cfg-sub">Sigue tus solicitudes de soporte y responde a los agentes.</p>
+      <h1 class="cfg-titulo">{{ 'soporte.misTickets.misTickets' | translate }}</h1>
+      <p class="cfg-sub">{{ 'soporte.misTickets.sigueTusSolicitudesDeSoporte' | translate }}</p>
     </div>
 
     <div class="mt-head__actions cfg-acciones">
       <button type="button" class="mt-iconbtn" (click)="recargar()" [disabled]="isLoading"
-              title="Actualizar" aria-label="Actualizar tickets">
+              [title]="'soporte.misTickets.actualizar' | translate" [attr.aria-label]="'soporte.misTickets.actualizarTickets' | translate">
         <i class="pi" [ngClass]="isLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
       </button>
       <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte">
-        <i class="pi pi-plus"></i> Crear ticket
+        <i class="pi pi-plus"></i> {{ 'soporte.misTickets.crearTicket' | translate }}
       </button>
     </div>
   </header>
 
   <!-- ===== Barra de filtros: los conteos son las pestañas ===== -->
   <div class="mt-toolbar">
-    <div class="mt-tabs" role="tablist" aria-label="Filtrar por estado">
+    <div class="mt-tabs" role="tablist" [attr.aria-label]="'soporte.misTickets.filtrarPorEstado' | translate">
       <button type="button" class="mt-tab" *ngFor="let tab of tabs"
               role="tab"
               [class.is-on]="selectedStatus === tab.key"
               [attr.aria-selected]="selectedStatus === tab.key"
               (click)="setTab(tab.key)">
         <span class="mt-tab__dot" [style.background]="selectedStatus === tab.key ? '#fff' : tab.dot"></span>
-        {{ tab.label }}
-        <span class="mt-tab__count">{{ conteos[tab.key || 'todos'] }}</span>
+        {{ tab.label | translate }}
+        <span class="mt-tab__count">{{ conteos[tab.key || ('soporte.misTickets.todos' | translate)] }}</span>
       </button>
     </div>
 
     <div class="mt-search" [class.is-on]="searchText.trim()">
       <i class="pi pi-search"></i>
       <input type="text" [(ngModel)]="searchText" (ngModelChange)="filterTickets()"
-             placeholder="Buscar por asunto o número…" aria-label="Buscar tickets" />
+             [placeholder]="'soporte.misTickets.buscarPorAsuntoONumero' | translate" [attr.aria-label]="'soporte.misTickets.buscarTickets' | translate" />
       <button type="button" class="mt-search__clear" *ngIf="searchText.trim()"
-              (click)="clearSearch()" aria-label="Limpiar búsqueda">
+              (click)="clearSearch()" [attr.aria-label]="'soporte.misTickets.limpiarBusqueda' | translate">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
     <div class="mt-select" [class.is-on]="dateFilter !== 'all'">
-      <select [(ngModel)]="dateFilter" (ngModelChange)="filterTickets()" aria-label="Filtrar por fecha">
-        <option value="all">Todos los tiempos</option>
-        <option value="today">Hoy</option>
-        <option value="week">Esta semana</option>
-        <option value="month">Este mes</option>
+      <select [(ngModel)]="dateFilter" (ngModelChange)="filterTickets()" [attr.aria-label]="'soporte.misTickets.filtrarPorFecha' | translate">
+        <option value="all">{{ 'soporte.misIdeas.todosLosTiempos' | translate }}</option>
+        <option value="today">{{ 'soporte.misIdeas.hoy' | translate }}</option>
+        <option value="week">{{ 'soporte.misIdeas.estaSemana' | translate }}</option>
+        <option value="month">{{ 'soporte.misIdeas.esteMes' | translate }}</option>
       </select>
       <i class="pi pi-chevron-down"></i>
     </div>
@@ -97,7 +97,7 @@
               <span class="mt-row__id">#{{ ticket.nroTicket || ticket.cd }}</span>
               <span class="mt-row__estado"
                     [style.background]="estadoDe(ticket).bg"
-                    [style.color]="estadoDe(ticket).fg">{{ estadoDe(ticket).label }}</span>
+                    [style.color]="estadoDe(ticket).fg">{{ estadoDe(ticket).label | translate }}</span>
             </span>
 
             <span class="mt-row__asunto">{{ ticket.asunto }}</span>
@@ -121,15 +121,15 @@
       <div class="mt-empty" *ngIf="!isLoading && !filteredTasks.length">
         <span class="mt-empty__icon"><i class="pi" [ngClass]="hayFiltros ? 'pi-search' : 'pi-ticket'"></i></span>
         <ng-container *ngIf="hayFiltros; else sinTickets">
-          <span class="mt-empty__title">Ningún ticket coincide</span>
-          <span class="mt-empty__hint">Prueba con otro filtro o limpia la búsqueda</span>
-          <button type="button" class="mt-btn mt-btn--ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+          <span class="mt-empty__title">{{ 'soporte.misTickets.ningunTicketCoincide' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misTickets.pruebaConOtroFiltroO' | translate }}</span>
+          <button type="button" class="mt-btn mt-btn--ghost" (click)="limpiarFiltros()">{{ 'soporte.misTickets.limpiarFiltros' | translate }}</button>
         </ng-container>
         <ng-template #sinTickets>
-          <span class="mt-empty__title">Aún no tienes tickets</span>
-          <span class="mt-empty__hint">Cuando algo falle o tengas una idea, cuéntanos por aquí</span>
+          <span class="mt-empty__title">{{ 'soporte.misTickets.aunNoTienesTickets' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misTickets.cuandoAlgoFalleOTengas' | translate }}</span>
           <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte">
-            <i class="pi pi-plus"></i> Crear ticket
+            <i class="pi pi-plus"></i> {{ 'soporte.misTickets.crearTicket' | translate }}
           </button>
         </ng-template>
       </div>
@@ -147,15 +147,15 @@
               <span class="mt-pill"
                     [style.background]="estadoDe(selected).bg"
                     [style.color]="estadoDe(selected).fg">
-                <i class="pi" [ngClass]="estadoDe(selected).icon"></i>{{ estadoDe(selected).label }}
+                <i class="pi" [ngClass]="estadoDe(selected).icon"></i>{{ estadoDe(selected).label | translate }}
               </span>
               <span class="mt-pill"
                     [style.background]="tipoDe(selected).bg"
                     [style.color]="tipoDe(selected).fg">
-                <ng-container *ngTemplateOutlet="iconoTipo; context: { key: tipoKey(selected), tam: 11 }"></ng-container>{{ tipoDe(selected).label }}
+                <ng-container *ngTemplateOutlet="iconoTipo; context: { key: tipoKey(selected), tam: 11 }"></ng-container>{{ tipoDe(selected).label | translate }}
               </span>
               <span class="mt-pill mt-pill--soft" *ngIf="selected.prioridad">
-                Prioridad {{ selected.prioridad }}
+                {{ 'soporte.misTickets.prioridad' | translate:{prioridad: selected.prioridad} }}
               </span>
             </div>
             <h2 class="mt-detail__asunto">{{ selected.asunto }}</h2>
@@ -164,40 +164,40 @@
           <!-- Meta alineada en una sola fila -->
           <div class="mt-meta">
             <div class="mt-meta__item">
-              <span class="mt-meta__label">Abierto</span>
+              <span class="mt-meta__label">{{ 'soporte.misTickets.abierto' | translate }}</span>
               <span class="mt-meta__value">
                 <i class="pi pi-calendar"></i>
                 {{ edad(selected.fechaRegistro) }} · {{ selected.fechaRegistro | date:'dd/MM/yyyy' }}
               </span>
             </div>
             <div class="mt-meta__item">
-              <span class="mt-meta__label">Reportado por</span>
+              <span class="mt-meta__label">{{ 'soporte.misTickets.reportadoPor' | translate }}</span>
               <span class="mt-meta__value">
-                <i class="pi pi-user"></i>{{ selected.nombreUsuarioReporta || 'Sin registrar' }}
+                <i class="pi pi-user"></i>{{ selected.nombreUsuarioReporta || ('soporte.misTickets.sinRegistrar' | translate) }}
               </span>
             </div>
             <div class="mt-meta__item">
-              <span class="mt-meta__label">Última respuesta</span>
+              <span class="mt-meta__label">{{ 'soporte.misTickets.ultimaRespuesta' | translate }}</span>
               <span class="mt-meta__value" [class.is-muted]="!tieneRespuestas(selected)">
                 <i class="pi pi-comment"></i>{{ ultimaRespuesta(selected) }}
               </span>
             </div>
             <div class="mt-meta__item" *ngIf="selected.categoria">
-              <span class="mt-meta__label">Categoría</span>
+              <span class="mt-meta__label">{{ 'soporte.misTickets.categoria' | translate }}</span>
               <span class="mt-meta__value"><i class="pi pi-tag"></i>{{ selected.categoria }}</span>
             </div>
           </div>
         </div>
 
         <div class="mt-detail__body">
-          <span class="mt-label">Descripción</span>
+          <span class="mt-label">{{ 'soporte.misIdeas.descripcion' | translate }}</span>
           <p class="mt-desc">{{ descripcionDe(selected) }}</p>
 
           <div class="mt-adj" *ngIf="selected.adjuntos?.length">
             <div class="mt-thumbs" *ngIf="selected.adjuntosImagenes.length">
               <button type="button" class="mt-thumb" *ngFor="let adjunto of selected.adjuntosImagenes"
                       (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
-                <img [src]="adjunto" alt="Adjunto del ticket" (error)="handleImageError($event)" />
+                <img [src]="adjunto" [alt]="'soporte.misTickets.adjuntoDelTicket' | translate" (error)="handleImageError($event)" />
               </button>
             </div>
 
@@ -228,23 +228,23 @@
                *ngIf="resolucionDe(selected) || tareasDe(selected).length || estadoKey(selected) === 'resuelto' || confirmacionVigente(selected)">
         <div class="mt-conv__head">
           <span class="mt-res__icon"><i class="pi pi-check-circle"></i></span>
-          <span class="mt-conv__title">Resolución</span>
+          <span class="mt-conv__title">{{ 'soporte.misTickets.resolucion' | translate }}</span>
           <span class="mt-res__version" *ngIf="resolucionDe(selected)?.version">
-            Disponible desde la versión {{ resolucionDe(selected)?.version }}
+            {{ 'soporte.misTickets.disponibleDesdeLaVersion' | translate:{version: (resolucionDe(selected)?.version)} }}
           </span>
         </div>
 
         <div class="mt-res__body">
           <p class="mt-desc" *ngIf="resolucionDe(selected) as res">{{ res.texto }}</p>
           <p class="mt-res__sin" *ngIf="!resolucionDe(selected) && estadoKey(selected) === 'resuelto'">
-            El equipo marcó este ticket como resuelto.
+            {{ 'soporte.misTickets.elEquipoMarcoEsteTicket' | translate }}
           </p>
 
           <!-- Lo que le queda al comercio -->
           <div class="mt-tareas" *ngIf="tareasDe(selected).length">
             <span class="mt-label">
-              Lo que te toca
-              <ng-container *ngIf="tareasPendientes(selected)"> · {{ tareasPendientes(selected) }} pendiente{{ tareasPendientes(selected) === 1 ? '' : 's' }}</ng-container>
+              {{ 'soporte.misTickets.loQueTeToca' | translate }}
+              <ng-container *ngIf="tareasPendientes(selected)"> {{ (tareasPendientes(selected) === 1 ? 'soporte.misTickets.pendienteUna' : 'soporte.misTickets.pendientesVarias') | translate:{selected: (tareasPendientes(selected))} }}</ng-container>
             </span>
             <button type="button" class="mt-tarea" *ngFor="let tarea of tareasDe(selected)"
                     [class.is-hecha]="tarea.hecha"
@@ -257,54 +257,54 @@
 
           <!-- Pregunta -->
           <div class="mt-confirma" *ngIf="preguntarConfirmacion(selected)">
-            <span class="mt-confirma__titulo">¿Se resolvió tu problema?</span>
+            <span class="mt-confirma__titulo">{{ 'soporte.misTickets.seResolvioTuProblema' | translate }}</span>
             <div class="mt-confirma__opciones">
               <button type="button" class="mt-opcion is-si" [class.is-on]="confirmacionModo === 'si'"
                       [disabled]="enviandoConfirmacion" (click)="elegirConfirmacion('si')">
-                <i class="pi pi-thumbs-up"></i> Sí, quedó resuelto
+                <i class="pi pi-thumbs-up"></i> {{ 'soporte.misTickets.siQuedoResuelto' | translate }}
               </button>
               <button type="button" class="mt-opcion is-no" [class.is-on]="confirmacionModo === 'no'"
                       [disabled]="enviandoConfirmacion" (click)="elegirConfirmacion('no')">
-                <i class="pi pi-thumbs-down"></i> No, sigue fallando
+                <i class="pi pi-thumbs-down"></i> {{ 'soporte.misTickets.noSigueFallando' | translate }}
               </button>
             </div>
 
             <div class="mt-confirma__form" *ngIf="confirmacionModo === 'si'">
-              <span class="mt-label">¿Cómo te atendimos? <span class="mt-opcional">Opcional</span></span>
-              <div class="mt-estrellas" (mouseleave)="calificacionHover = 0" role="radiogroup" aria-label="Calificación de 1 a 5">
+              <span class="mt-label">{{ 'soporte.misTickets.comoTeAtendimos' | translate }} <span class="mt-opcional">{{ 'soporte.misTickets.opcional' | translate }}</span></span>
+              <div class="mt-estrellas" (mouseleave)="calificacionHover = 0" role="radiogroup" [attr.aria-label]="'soporte.misTickets.calificacionDe1A5' | translate">
                 <button type="button" class="mt-estrella" *ngFor="let n of estrellas"
                         [class.is-on]="n <= (calificacionHover || calificacion || 0)"
-                        role="radio" [attr.aria-checked]="calificacion === n" [attr.aria-label]="n + ' de 5'"
+                        role="radio" [attr.aria-checked]="calificacion === n" [attr.aria-label]="('soporte.misTickets.nDe5' | translate:{n: n})"
                         (mouseenter)="calificacionHover = n" (click)="elegirCalificacion(n)">
                   <i class="pi" [ngClass]="n <= (calificacionHover || calificacion || 0) ? 'pi-star-fill' : 'pi-star'"></i>
                 </button>
               </div>
               <textarea [(ngModel)]="comentarioConfirmacion" rows="2" [maxlength]="MAX_TEXTO_CONFIRMACION"
                         [disabled]="enviandoConfirmacion"
-                        placeholder="Si quieres, cuéntanos algo más (opcional)"
-                        aria-label="Comentario opcional"></textarea>
+                        [placeholder]="'soporte.misTickets.siQuieresCuentanosAlgoMas' | translate"
+                        [attr.aria-label]="'soporte.misTickets.comentarioOpcional' | translate"></textarea>
               <div class="mt-confirma__acciones">
                 <button type="button" class="mt-btn mt-btn--primary" [disabled]="!puedeEnviarConfirmacion"
                         (click)="enviarConfirmacion(selected)">
                   <i class="pi" [ngClass]="enviandoConfirmacion ? 'pi-spin pi-spinner' : 'pi-check'"></i>
-                  {{ enviandoConfirmacion ? 'Enviando…' : 'Enviar' }}
+                  {{ enviandoConfirmacion ? ('soporte.misTickets.enviando' | translate) : ('soporte.misTickets.enviar' | translate) }}
                 </button>
               </div>
             </div>
 
             <div class="mt-confirma__form" *ngIf="confirmacionModo === 'no'">
-              <span class="mt-label">¿Qué sigue fallando?</span>
+              <span class="mt-label">{{ 'soporte.misTickets.queSigueFallando' | translate }}</span>
               <textarea [(ngModel)]="motivoRechazo" rows="3" [maxlength]="MAX_TEXTO_CONFIRMACION"
                         [class.is-on]="motivoRechazo.trim()"
                         [disabled]="enviandoConfirmacion"
-                        placeholder="Cuéntanos qué pasa ahora para que el equipo lo retome"
-                        aria-label="Qué sigue fallando"></textarea>
+                        [placeholder]="'soporte.misTickets.cuentanosQuePasaAhoraPara' | translate"
+                        [attr.aria-label]="'soporte.misTickets.queSigueFallando2' | translate"></textarea>
               <div class="mt-confirma__acciones">
-                <span class="mt-composer__hint">El ticket vuelve a Pendiente y se avisa al equipo</span>
+                <span class="mt-composer__hint">{{ 'soporte.misTickets.elTicketVuelveAPendiente' | translate }}</span>
                 <button type="button" class="mt-btn mt-btn--primary" [disabled]="!puedeEnviarConfirmacion"
                         (click)="enviarConfirmacion(selected)">
                   <i class="pi" [ngClass]="enviandoConfirmacion ? 'pi-spin pi-spinner' : 'pi-replay'"></i>
-                  {{ enviandoConfirmacion ? 'Enviando…' : 'Reabrir ticket' }}
+                  {{ enviandoConfirmacion ? ('soporte.misTickets.enviando' | translate) : ('soporte.misTickets.reabrirTicket' | translate) }}
                 </button>
               </div>
             </div>
@@ -316,7 +316,7 @@
             <i class="pi" [ngClass]="conf.resuelto ? 'pi-thumbs-up' : 'pi-replay'"></i>
             <div class="mt-confirmado__texto">
               <span class="mt-confirmado__titulo">
-                {{ conf.resuelto ? 'Confirmaste que quedó resuelto' : 'Nos dijiste que no quedó resuelto' }}
+                {{ conf.resuelto ? ('soporte.misTickets.confirmasteQueQuedoResuelto' | translate) : ('soporte.misTickets.nosDijisteQueNoQuedo' | translate) }}
                 <span class="mt-confirmado__fecha">· {{ conf.fecha | date:'dd MMM yyyy, HH:mm' }}</span>
               </span>
               <span class="mt-estrellas mt-estrellas--quieta" *ngIf="conf.resuelto && conf.calificacion">
@@ -334,14 +334,14 @@
       <article class="mt-card">
         <div class="mt-conv__head">
           <span class="mt-conv__icon"><i class="pi pi-comments"></i></span>
-          <span class="mt-conv__title">Conversación</span>
+          <span class="mt-conv__title">{{ 'soporte.misTickets.conversacion' | translate }}</span>
           <span class="mt-conv__count">{{ selected.comentariosVista.length }}</span>
         </div>
 
         <div class="mt-conv__empty" *ngIf="!selected.comentariosVista.length">
           <span class="mt-empty__icon"><i class="pi pi-comment"></i></span>
-          <span class="mt-empty__title">Aún nadie ha respondido</span>
-          <span class="mt-empty__hint">Si tienes algo más que agregar, escríbelo abajo.</span>
+          <span class="mt-empty__title">{{ 'soporte.misTickets.aunNadieHaRespondido' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misTickets.siTienesAlgoMasQue' | translate }}</span>
         </div>
 
         <div class="mt-conv__list" *ngIf="selected.comentariosVista.length">
@@ -351,8 +351,8 @@
             </span>
             <div class="mt-msg__body">
               <div class="mt-msg__top">
-                <span class="mt-msg__autor">{{ comment.autor?.nombreCompleto || 'Soporte Katuq' }}</span>
-                <span class="mt-msg__tag" *ngIf="!comment.esDelComercio">SOPORTE</span>
+                <span class="mt-msg__autor">{{ comment.autor?.nombreCompleto || ('soporte.misTickets.soporteKatuq' | translate) }}</span>
+                <span class="mt-msg__tag" *ngIf="!comment.esDelComercio">{{ 'soporte.misTickets.soporte' | translate }}</span>
                 <span class="mt-msg__fecha">{{ comment.fechaCreacion | date:'dd MMM yyyy, HH:mm' }}</span>
               </div>
               <div class="mt-bubble" [class.is-agente]="!comment.esDelComercio">
@@ -361,7 +361,7 @@
                 <div class="mt-thumbs" *ngIf="comment.imagenes?.length">
                   <button type="button" class="mt-thumb mt-thumb--sm" *ngFor="let adjunto of comment.imagenes"
                           (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
-                    <img [src]="adjunto" alt="Adjunto del comentario" (error)="handleImageError($event)" />
+                    <img [src]="adjunto" [alt]="'soporte.misTickets.adjuntoDelComentario' | translate" (error)="handleImageError($event)" />
                   </button>
                 </div>
 
@@ -392,15 +392,15 @@
             <textarea [(ngModel)]="newComment" rows="3"
                       [class.is-on]="newComment.trim()"
                       [disabled]="enviandoComentario"
-                      placeholder="Escribe tu respuesta…"
-                      aria-label="Escribe tu respuesta"></textarea>
+                      [placeholder]="'soporte.misTickets.escribeTuRespuesta' | translate"
+                      [attr.aria-label]="'soporte.misTickets.escribeTuRespuesta2' | translate"></textarea>
 
             <div class="mt-files" *ngIf="archivos.length">
               <span class="mt-file mt-file--nuevo" *ngFor="let archivo of archivos; let i = index">
                 <i class="pi" [ngClass]="iconoArchivo(archivo)"></i>
                 <span class="mt-file__name">{{ archivo.file.name }}</span>
                 <button type="button" class="mt-file__del" (click)="quitarArchivo(i)"
-                        title="Quitar" aria-label="Quitar adjunto">
+                        [title]="'soporte.misTickets.quitar' | translate" [attr.aria-label]="'soporte.misTickets.quitarAdjunto' | translate">
                   <i class="pi pi-times"></i>
                 </button>
               </span>
@@ -409,7 +409,7 @@
             <div class="mt-composer__actions">
               <button type="button" class="mt-btn mt-btn--ghost" (click)="fileInput.click()"
                       [disabled]="enviandoComentario">
-                <i class="pi pi-paperclip"></i> Adjuntar
+                <i class="pi pi-paperclip"></i> {{ 'soporte.misTickets.adjuntar' | translate }}
               </button>
               <!-- Ticket 1068: también audios (.ogg/.opus de WhatsApp, mp3, m4a...) y más formatos de video -->
               <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="mt-hidden-input"
@@ -417,13 +417,13 @@
 
               <div class="mt-composer__send">
                 <span class="mt-composer__hint">
-                  {{ puedeResponder ? 'Se avisa al agente' : 'Escribe algo para responder' }}
+                  {{ puedeResponder ? ('soporte.misTickets.seAvisaAlAgente' | translate) : ('soporte.misTickets.escribeAlgoParaResponder' | translate) }}
                 </span>
                 <button type="button" class="mt-btn mt-btn--primary"
                         [disabled]="!puedeResponder"
                         (click)="addNewComment(selected)">
                   <i class="pi" [ngClass]="enviandoComentario ? 'pi-spin pi-spinner' : 'pi-send'"></i>
-                  {{ enviandoComentario ? 'Enviando…' : 'Responder' }}
+                  {{ enviandoComentario ? ('soporte.misTickets.enviando' | translate) : ('soporte.misTickets.responder' | translate) }}
                 </button>
               </div>
             </div>
@@ -436,7 +436,7 @@
   <!-- Aviso de respuesta enviada -->
   <div class="mt-toast" [class.show]="showCommentSuccess">
     <i class="pi pi-check-circle"></i>
-    <span>Tu respuesta se envió correctamente</span>
+    <span>{{ 'soporte.misTickets.tuRespuestaSeEnvioCorrectamente' | translate }}</span>
   </div>
 </div>
 

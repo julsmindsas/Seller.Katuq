@@ -4,21 +4,21 @@
 // Dark mode color variables
 body.dark-only {
   // Core color variables for dark mode
-  --primary-color: #6AB5E8;
-  --primary-light-color: rgba(106, 181, 232, 0.15);
-  --primary-dark-color: #4A95C8;
+  --primary-color: var(--ds-accent-ink);
+  --primary-light-color: rgba(var(--ds-accent-ink-rgb), 0.15);
+  --primary-dark-color: var(--ds-accent);
 
-  --secondary-color: #7A8FE8;
-  --secondary-light-color: rgba(122, 143, 232, 0.15);
-  --secondary-dark-color: #5A6FC8;
+  --secondary-color: var(--ds-info);
+  --secondary-light-color: var(--ds-info-soft);
+  --secondary-dark-color: var(--ds-info);
 
-  --tertiary-color: #4AC5E2;
-  --tertiary-light-color: rgba(74, 197, 226, 0.15);
-  --tertiary-dark-color: #2AA5C2;
+  --tertiary-color: var(--ds-info);
+  --tertiary-light-color: var(--ds-info-soft);
+  --tertiary-dark-color: var(--ds-info);
 
   // Background colors
-  --white-color: #1a1d23;
-  --grey-color: #252830;
+  --white-color: var(--ds-canvas);
+  --grey-color: var(--ds-surface);
   --black-color: #ffffff;
   --orange-color: #ffc107;
 
@@ -32,15 +32,19 @@ body.dark-only {
   --shadow-effect-hover: 0 .5rem 1rem rgba(0, 0, 0, .4);
 
   // Theme colors
-  --theme-default: #6AB5E8;
-  --theme-secondary: #4AC5E2;
+  // Tarea 3.5 (D-502): los siete grises opacos pasan a --ds-* por rol (design-f1.md §2). Sus variantes
+  // con alfa quedan literales a propósito, porque su token no tiene -rgb y no se inventan tokens:
+  // rgba(37, 40, 48, .9) es --ds-surface a .9, rgba(224, 224, 224, α) es --ds-ink-2 a α y #2d313980
+  // es --ds-surface-2 a .5. La de .loader (--ds-canvas a .9) sí usa --ds-canvas-rgb.
+  --theme-default: var(--ds-accent-ink);
+  --theme-secondary: var(--ds-info);
   --light-background: rgba(37, 40, 48, .9);
-  --body-font-color: #e0e0e0;
-  --chart-border: #2d3139;
-  --recent-chart-bg: #1e2128;
+  --body-font-color: var(--ds-ink-2);
+  --chart-border: var(--ds-surface-2);
+  --recent-chart-bg: var(--ds-surface);
   --light-bg: #22252d;
-  --white: #1a1d23;
-  --light2: #252830;
+  --white: var(--ds-canvas);
+  --light2: var(--ds-surface);
   --sidebar-border: rgba(255, 255, 255, .1);
   --chart-text-color: rgba(224, 224, 224, .8);
   --recent-dashed-border: rgba(224, 224, 224, .3);
@@ -48,108 +52,108 @@ body.dark-only {
   --chart-progress-light: rgba(224, 224, 224, .1);
   --recent-box-bg: #22252d;
   --recent-border: rgba(224, 224, 224, .25);
-  --course-light-btn: #2d3139;
-  --course-bg: #252830;
-  --balance-profile-bg: #2d3139;
+  --course-light-btn: var(--ds-surface-2);
+  --course-bg: var(--ds-surface);
+  --balance-profile-bg: var(--ds-surface-2);
   --view-grid-bg: #2d313980;
-  --view-border-marker: #3d4149;
-  --light-slate: #252830;
+  --view-border-marker: var(--ds-line-strong);
+  --light-slate: var(--ds-surface);
   --product-shadow: 0px 1px 0px rgba(0, 0, 0, .5);
-  --light-shade-primary: rgba(106, 181, 232, 0.1);
-  --rgb-primary: rgb(106, 181, 232);
+  --light-shade-primary: rgba(var(--ds-accent-ink-rgb), 0.1);
+  --rgb-primary: rgb(var(--ds-accent-ink-rgb));
   --f-lighter: #b0b0b0;
   --light-datatable-odd: #22252d;
   --dark-light-color: rgba(255, 255, 255, .5);
   --lighter-gray: rgba(224, 224, 224, .75);
-  --primary-70: rgba(106, 181, 232, .7);
+  --primary-70: rgba(var(--ds-accent-ink-rgb), .7);
   --warning-70: rgba(255, 179, 71, .7);
   --success-70: rgba(92, 184, 92, .7);
-  --normal: #3d4149;
-  --normal-shadow: #2d3139;
+  --normal: var(--ds-line-strong);
+  --normal-shadow: var(--ds-surface-2);
   --normal-mouth: #9795A4;
-  --normal-eye: #e0e0e0;
+  --normal-eye: var(--ds-ink-2);
   --bs-emphasis-color-rgb: rgba(37, 40, 48, .9);
-  --bs-border-color: #3d4149;
+  --bs-border-color: var(--ds-line-strong);
   --bs-table-bg: var(--bs-emphasis-color-rgb);
-  --bs-heading-color: #f0f0f0;
+  --bs-heading-color: var(--ds-ink);
 
   // Body and basic elements
-  background-color: #1a1d23;
-  color: #e0e0e0;
+  background-color: var(--ds-canvas);
+  color: var(--ds-ink-2);
 
   // Typography
   h1, h2, h3, h4, h5, h6,
   .h1, .h2, .h3, .h4, .h5, .h6 {
-    color: #f0f0f0;
+    color: var(--ds-ink);
   }
 
   p, span, div {
-    color: #e0e0e0;
+    color: var(--ds-ink-2);
   }
 
   // Links
   a {
-    color: #6AB5E8;
+    color: var(--ds-accent-ink);
 
     &:hover {
-      color: #8AC5F8;
+      color: var(--ds-accent-ink);
     }
   }
 
   // Cards
   .card {
-    background-color: #252830;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background-color: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .card-header {
-      background-color: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      background-color: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .card-body {
-      background-color: #252830;
-      color: #e0e0e0;
+      background-color: var(--ds-surface);
+      color: var(--ds-ink-2);
     }
 
     .card-footer {
-      background-color: #2d3139;
-      border-top-color: #3d4149;
-      color: #e0e0e0;
+      background-color: var(--ds-surface-2);
+      border-top-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
 
     .card-title {
-      color: #f0f0f0;
+      color: var(--ds-ink);
     }
 
     .card-text {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   // Tables
   .table {
-    color: #e0e0e0;
-    border-color: #3d4149;
+    color: var(--ds-ink-2);
+    border-color: var(--ds-line-strong);
 
     thead {
-      background-color: #2d3139;
+      background-color: var(--ds-surface-2);
 
       th {
-        color: #f0f0f0;
-        border-color: #3d4149;
-        background-color: #2d3139;
+        color: var(--ds-ink);
+        border-color: var(--ds-line-strong);
+        background-color: var(--ds-surface-2);
       }
     }
 
     tbody {
       tr {
-        background-color: #252830;
-        color: #e0e0e0;
+        background-color: var(--ds-surface);
+        color: var(--ds-ink-2);
 
         &:hover {
-          background-color: #2d3139;
+          background-color: var(--ds-surface-2);
         }
 
         &:nth-child(even) {
@@ -157,8 +161,8 @@ body.dark-only {
         }
 
         td {
-          border-color: #3d4149;
-          color: #e0e0e0;
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
         }
       }
     }
@@ -177,15 +181,15 @@ body.dark-only {
   input[type="datetime-local"],
   select,
   textarea {
-    background-color: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background-color: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     &:focus {
       background-color: #33363f;
-      border-color: #6AB5E8;
-      color: #e0e0e0;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      color: var(--ds-ink-2);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     &::placeholder {
@@ -193,7 +197,7 @@ body.dark-only {
     }
 
     &:disabled {
-      background-color: #1e2128;
+      background-color: var(--ds-surface);
       color: #606060;
     }
   }
@@ -208,21 +212,36 @@ body.dark-only {
   }
 
   // Buttons
+  // D-502 F1 (3.4): .btn-primary deshabilitado genérico. Con :where() queda en (0,1,1): gana al
+  // !important de _reset.scss (0,1,0) y pierde con el deshabilitado propio de cada pantalla
+  // (por ejemplo `.btn-primary[_ngcontent]:disabled`, (0,3,0)), que conserva su gris.
+  :where(.btn-primary:disabled, .btn-primary.disabled) {
+    background-color: var(--ds-accent) !important;
+    border-color: var(--ds-accent) !important;
+  }
+
   .btn {
+    // D-502 F1 (3.4): relleno #5F3FE0 con texto blanco. !important porque _reset.scss pinta
+    // .btn-primary con var(--primary-color) !important (en oscuro, el tinte de texto #a48bff);
+    // body.dark-only gana por especificidad. El !important no cubre el deshabilitado (ver arriba).
     &.btn-primary {
-      background-color: #6AB5E8;
-      border-color: #6AB5E8;
+      color: var(--ds-on-accent);
+    }
+
+    &.btn-primary:not(:disabled):not(.disabled) {
+      background-color: var(--ds-accent) !important;
+      border-color: var(--ds-accent) !important;
 
       &:hover {
-        background-color: #5AA5D8;
-        border-color: #5AA5D8;
+        background-color: var(--ds-accent-hover) !important;
+        border-color: var(--ds-accent-hover) !important;
       }
     }
 
     &.btn-secondary {
-      background-color: #3d4149;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background-color: var(--ds-line-strong);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:hover {
         background-color: #4d5159;
@@ -231,9 +250,9 @@ body.dark-only {
     }
 
     &.btn-light {
-      background-color: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background-color: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:hover {
         background-color: #33363f;
@@ -242,52 +261,52 @@ body.dark-only {
     }
 
     &.btn-dark {
-      background-color: #e0e0e0;
-      border-color: #e0e0e0;
-      color: #1a1d23;
+      background-color: var(--ds-ink-2);
+      border-color: var(--ds-ink-2);
+      color: var(--ds-canvas);
 
       &:hover {
-        background-color: #f0f0f0;
-        border-color: #f0f0f0;
+        background-color: var(--ds-ink);
+        border-color: var(--ds-ink);
       }
     }
 
     &.btn-outline-primary {
-      color: #6AB5E8;
-      border-color: #6AB5E8;
+      color: var(--ds-accent-ink);
+      border-color: var(--ds-accent-ink);
 
       &:hover {
-        background-color: #6AB5E8;
-        border-color: #6AB5E8;
-        color: #1a1d23;
+        background-color: var(--ds-accent);
+        border-color: var(--ds-accent);
+        color: var(--ds-on-accent);
       }
     }
 
     &.btn-outline-secondary {
       color: #b0b0b0;
-      border-color: #3d4149;
+      border-color: var(--ds-line-strong);
 
       &:hover {
-        background-color: #3d4149;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        background-color: var(--ds-line-strong);
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
       }
     }
   }
 
   // Modals
   .modal-content {
-    background-color: #252830;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background-color: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .modal-header {
-      background-color: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      background-color: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
 
       .modal-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       .btn-close {
@@ -296,22 +315,22 @@ body.dark-only {
     }
 
     .modal-body {
-      background-color: #252830;
-      color: #e0e0e0;
+      background-color: var(--ds-surface);
+      color: var(--ds-ink-2);
     }
 
     .modal-footer {
-      background-color: #2d3139;
-      border-top-color: #3d4149;
+      background-color: var(--ds-surface-2);
+      border-top-color: var(--ds-line-strong);
     }
   }
 
   // Alerts
   .alert {
     &.alert-primary {
-      background-color: rgba(106, 181, 232, 0.15);
-      border-color: #6AB5E8;
-      color: #8AC5F8;
+      background-color: rgba(var(--ds-accent-ink-rgb), 0.15);
+      border-color: var(--ds-accent-ink);
+      color: var(--ds-accent-ink);
     }
 
     &.alert-danger {
@@ -333,20 +352,21 @@ body.dark-only {
     }
 
     &.alert-info {
-      background-color: rgba(74, 197, 226, 0.15);
-      border-color: #4AC5E2;
-      color: #6AD5F2;
+      background-color: var(--ds-info-soft);
+      border-color: var(--ds-info);
+      color: var(--ds-info);
     }
   }
 
   // Badges
   .badge {
     &.bg-primary {
-      background-color: #6AB5E8 !important;
+      background-color: var(--ds-accent) !important;
+      color: var(--ds-on-accent);
     }
 
     &.bg-secondary {
-      background-color: #3d4149 !important;
+      background-color: var(--ds-line-strong) !important;
     }
 
     &.bg-success {
@@ -359,41 +379,41 @@ body.dark-only {
 
     &.bg-warning {
       background-color: #ffb347 !important;
-      color: #1a1d23 !important;
+      color: var(--ds-canvas) !important;
     }
 
     &.bg-info {
-      background-color: #4AC5E2 !important;
+      background-color: var(--ds-info) !important;
     }
 
     &.bg-light {
-      background-color: #2d3139 !important;
-      color: #e0e0e0 !important;
+      background-color: var(--ds-surface-2) !important;
+      color: var(--ds-ink-2) !important;
     }
 
     &.bg-dark {
-      background-color: #e0e0e0 !important;
-      color: #1a1d23 !important;
+      background-color: var(--ds-ink-2) !important;
+      color: var(--ds-canvas) !important;
     }
   }
 
   // Dropdowns
   .dropdown-menu {
-    background-color: #2d3139;
-    border-color: #3d4149;
+    background-color: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     .dropdown-item {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover,
       &:focus {
         background-color: #33363f;
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       &.active {
-        background-color: #6AB5E8;
-        color: #1a1d23;
+        background-color: var(--ds-accent);
+        color: var(--ds-on-accent);
       }
 
       &.disabled {
@@ -402,7 +422,7 @@ body.dark-only {
     }
 
     .dropdown-divider {
-      border-color: #3d4149;
+      border-color: var(--ds-line-strong);
     }
 
     .dropdown-header {
@@ -412,12 +432,12 @@ body.dark-only {
 
   // Navigation
   .navbar {
-    background-color: #252830 !important;
-    border-color: #3d4149;
+    background-color: var(--ds-surface) !important;
+    border-color: var(--ds-line-strong);
 
     &.navbar-light {
       .navbar-brand {
-        color: #e0e0e0 !important;
+        color: var(--ds-ink-2) !important;
       }
 
       .navbar-nav {
@@ -425,11 +445,11 @@ body.dark-only {
           color: #b0b0b0 !important;
 
           &:hover {
-            color: #e0e0e0 !important;
+            color: var(--ds-ink-2) !important;
           }
 
           &.active {
-            color: #6AB5E8 !important;
+            color: var(--ds-accent-ink) !important;
           }
         }
       }
@@ -437,20 +457,20 @@ body.dark-only {
   }
 
   .nav-tabs {
-    border-bottom-color: #3d4149;
+    border-bottom-color: var(--ds-line-strong);
 
     .nav-link {
       color: #b0b0b0;
 
       &:hover {
-        border-color: #3d4149;
-        color: #e0e0e0;
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
       }
 
       &.active {
-        background-color: #252830;
-        border-color: #3d4149 #3d4149 #252830;
-        color: #6AB5E8;
+        background-color: var(--ds-surface);
+        border-color: var(--ds-line-strong) var(--ds-line-strong) var(--ds-surface);
+        color: var(--ds-accent-ink);
       }
     }
   }
@@ -458,27 +478,27 @@ body.dark-only {
   // Pagination
   .pagination {
     .page-link {
-      background-color: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background-color: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:hover {
         background-color: #33363f;
         border-color: #43474f;
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
     }
 
     .page-item {
       &.active .page-link {
-        background-color: #6AB5E8;
-        border-color: #6AB5E8;
-        color: #1a1d23;
+        background-color: var(--ds-accent);
+        border-color: var(--ds-accent);
+        color: var(--ds-on-accent);
       }
 
       &.disabled .page-link {
-        background-color: #1e2128;
-        border-color: #2d3139;
+        background-color: var(--ds-surface);
+        border-color: var(--ds-surface-2);
         color: #606060;
       }
     }
@@ -486,32 +506,32 @@ body.dark-only {
 
   // Progress bars
   .progress {
-    background-color: #2d3139;
+    background-color: var(--ds-surface-2);
 
     .progress-bar {
-      background-color: #6AB5E8;
+      background-color: var(--ds-accent);
     }
   }
 
   // List groups
   .list-group {
     .list-group-item {
-      background-color: #252830;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background-color: var(--ds-surface);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:hover {
-        background-color: #2d3139;
+        background-color: var(--ds-surface-2);
       }
 
       &.active {
-        background-color: #6AB5E8;
-        border-color: #6AB5E8;
-        color: #1a1d23;
+        background-color: var(--ds-accent);
+        border-color: var(--ds-accent);
+        color: var(--ds-on-accent);
       }
 
       &.disabled {
-        background-color: #1e2128;
+        background-color: var(--ds-surface);
         color: #606060;
       }
     }
@@ -519,13 +539,13 @@ body.dark-only {
 
   // Breadcrumbs
   .breadcrumb {
-    background-color: #2d3139;
+    background-color: var(--ds-surface-2);
 
     .breadcrumb-item {
       color: #b0b0b0;
 
       &.active {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
       }
 
       + .breadcrumb-item::before {
@@ -538,7 +558,7 @@ body.dark-only {
   .tooltip {
     .tooltip-inner {
       background-color: #33363f;
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .tooltip-arrow::before {
@@ -551,41 +571,41 @@ body.dark-only {
 
   // Popovers
   .popover {
-    background-color: #2d3139;
-    border-color: #3d4149;
+    background-color: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     .popover-header {
       background-color: #33363f;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .popover-body {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .popover-arrow::before,
     .popover-arrow::after {
-      border-color: #3d4149;
+      border-color: var(--ds-line-strong);
     }
   }
 
   // Spinners
   .spinner-border {
-    color: #6AB5E8;
+    color: var(--ds-accent-ink);
   }
 
   .spinner-grow {
-    color: #6AB5E8;
+    color: var(--ds-accent-ink);
   }
 
   // Offcanvas
   .offcanvas {
-    background-color: #252830;
-    color: #e0e0e0;
+    background-color: var(--ds-surface);
+    color: var(--ds-ink-2);
 
     .offcanvas-header {
-      border-bottom-color: #3d4149;
+      border-bottom-color: var(--ds-line-strong);
 
       .btn-close {
         filter: invert(1);
@@ -593,24 +613,24 @@ body.dark-only {
     }
 
     .offcanvas-body {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   // Accordion
   .accordion {
     .accordion-item {
-      background-color: #252830;
-      border-color: #3d4149;
+      background-color: var(--ds-surface);
+      border-color: var(--ds-line-strong);
 
       .accordion-header {
         .accordion-button {
-          background-color: #2d3139;
-          color: #e0e0e0;
+          background-color: var(--ds-surface-2);
+          color: var(--ds-ink-2);
 
           &:not(.collapsed) {
             background-color: #33363f;
-            color: #6AB5E8;
+            color: var(--ds-accent-ink);
           }
 
           &::after {
@@ -620,8 +640,8 @@ body.dark-only {
       }
 
       .accordion-body {
-        background-color: #252830;
-        color: #e0e0e0;
+        background-color: var(--ds-surface);
+        color: var(--ds-ink-2);
       }
     }
   }
@@ -633,11 +653,11 @@ body.dark-only {
   }
 
   ::-webkit-scrollbar-track {
-    background: #1e2128;
+    background: var(--ds-surface);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #3d4149;
+    background: var(--ds-line-strong);
     border-radius: 4px;
 
     &:hover {
@@ -647,33 +667,33 @@ body.dark-only {
 
   // Dividers and borders
   hr {
-    border-color: #3d4149;
+    border-color: var(--ds-line-strong);
     opacity: 0.5;
   }
 
   .border {
-    border-color: #3d4149 !important;
+    border-color: var(--ds-line-strong) !important;
   }
 
   .border-primary {
-    border-color: #6AB5E8 !important;
+    border-color: var(--ds-accent-ink) !important;
   }
 
   .border-secondary {
-    border-color: #3d4149 !important;
+    border-color: var(--ds-line-strong) !important;
   }
 
   // Backgrounds
   .bg-light {
-    background-color: #2d3139 !important;
+    background-color: var(--ds-surface-2) !important;
   }
 
   .bg-white {
-    background-color: #252830 !important;
+    background-color: var(--ds-surface) !important;
   }
 
   .bg-dark {
-    background-color: #1a1d23 !important;
+    background-color: var(--ds-canvas) !important;
   }
 
   // Text colors
@@ -682,11 +702,11 @@ body.dark-only {
   }
 
   .text-white {
-    color: #1a1d23 !important;
+    color: var(--ds-canvas) !important;
   }
 
   .text-dark {
-    color: #e0e0e0 !important;
+    color: var(--ds-ink-2) !important;
   }
 
   .text-light {
@@ -694,7 +714,7 @@ body.dark-only {
   }
 
   .text-primary {
-    color: #6AB5E8 !important;
+    color: var(--ds-accent-ink) !important;
   }
 
   .text-secondary {
@@ -706,26 +726,22 @@ body.dark-only {
   code,
   kbd,
   samp {
-    background-color: #1e2128;
-    color: #6AB5E8;
-    border-color: #3d4149;
+    background-color: var(--ds-surface);
+    color: var(--ds-accent-ink);
+    border-color: var(--ds-line-strong);
   }
 
-  .pre-scrollable {
-    background-color: #1e2128;
-    border-color: #3d4149;
-  }
 
   // Blockquotes
   blockquote {
-    border-left-color: #6AB5E8;
+    border-left-color: var(--ds-accent-ink);
     color: #b0b0b0;
   }
 
   // Images with borders
   .img-thumbnail {
-    background-color: #252830;
-    border-color: #3d4149;
+    background-color: var(--ds-surface);
+    border-color: var(--ds-line-strong);
   }
 
   // Figures
@@ -742,14 +758,14 @@ body.dark-only {
 
   // Toast notifications
   .toast {
-    background-color: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background-color: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .toast-header {
       background-color: #33363f;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
 
       .btn-close {
         filter: invert(1);
@@ -757,14 +773,14 @@ body.dark-only {
     }
 
     .toast-body {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   // Collapse
   .collapse,
   .collapsing {
-    border-color: #3d4149;
+    border-color: var(--ds-line-strong);
   }
 
   // Carousel
@@ -779,13 +795,13 @@ body.dark-only {
         background-color: #606060;
 
         &.active {
-          background-color: #6AB5E8;
+          background-color: var(--ds-accent);
         }
       }
     }
 
     .carousel-caption {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 }
@@ -795,20 +811,20 @@ body.dark-only {
   // PrimeNG DataTable
   .p-datatable {
     .p-datatable-header {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .p-datatable-thead > tr > th {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .p-datatable-tbody > tr {
-      background: #252830;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
 
       &:nth-child(even) {
         background: #22252d;
@@ -819,47 +835,47 @@ body.dark-only {
       }
 
       &.p-highlight {
-        background: rgba(106, 181, 232, 0.15);
-        color: #6AB5E8;
+        background: rgba(var(--ds-accent-ink-rgb), 0.15);
+        color: var(--ds-accent-ink);
       }
 
       > td {
-        border-color: #3d4149;
-        color: #e0e0e0;
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
       }
     }
 
     .p-datatable-tfoot > tr > td {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
 
     &.p-datatable-gridlines {
       .p-datatable-thead > tr > th,
       .p-datatable-tbody > tr > td,
       .p-datatable-tfoot > tr > td {
-        border-color: #3d4149;
+        border-color: var(--ds-line-strong);
       }
     }
   }
 
   // PrimeNG Paginator
   .p-paginator {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .p-paginator-pages .p-paginator-page {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #33363f;
       }
 
       &.p-highlight {
-        background: #6AB5E8;
-        color: #1a1d23;
+        background: var(--ds-accent);
+        color: var(--ds-on-accent);
       }
     }
 
@@ -867,7 +883,7 @@ body.dark-only {
     .p-paginator-prev,
     .p-paginator-next,
     .p-paginator-last {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #33363f;
@@ -877,17 +893,17 @@ body.dark-only {
 
   // PrimeNG Input components
   .p-inputtext {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     &:enabled:hover {
       border-color: #4d5159;
     }
 
     &:enabled:focus {
-      border-color: #6AB5E8;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     &::placeholder {
@@ -895,33 +911,33 @@ body.dark-only {
     }
 
     &:disabled {
-      background: #1e2128;
+      background: var(--ds-surface);
       color: #606060;
     }
   }
 
   .p-inputnumber-input {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
   }
 
   // PrimeNG Dropdown
   .p-dropdown {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     &:not(.p-disabled):hover {
       border-color: #4d5159;
     }
 
     &:not(.p-disabled).p-focus {
-      border-color: #6AB5E8;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     .p-dropdown-label {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &.p-placeholder {
         color: #808080;
@@ -929,25 +945,25 @@ body.dark-only {
     }
 
     .p-dropdown-trigger {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   .p-dropdown-panel {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     .p-dropdown-items {
       .p-dropdown-item {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
         }
 
         &.p-highlight {
-          background: #6AB5E8;
-          color: #1a1d23;
+          background: var(--ds-accent);
+          color: var(--ds-on-accent);
         }
       }
 
@@ -958,8 +974,8 @@ body.dark-only {
 
     .p-dropdown-filter {
       background: #33363f;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &::placeholder {
         color: #808080;
@@ -969,20 +985,20 @@ body.dark-only {
 
   // PrimeNG Multiselect
   .p-multiselect {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     &:not(.p-disabled):hover {
       border-color: #4d5159;
     }
 
     &:not(.p-disabled).p-focus {
-      border-color: #6AB5E8;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     .p-multiselect-label {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &.p-placeholder {
         color: #808080;
@@ -990,35 +1006,39 @@ body.dark-only {
     }
 
     .p-multiselect-trigger {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   .p-multiselect-panel {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     .p-multiselect-header {
       background: #33363f;
-      border-bottom-color: #3d4149;
+      border-bottom-color: var(--ds-line-strong);
 
       .p-checkbox {
         .p-checkbox-box {
-          background: #2d3139;
-          border-color: #3d4149;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
 
           &.p-highlight {
-            background: #6AB5E8;
-            border-color: #6AB5E8;
+            background: var(--ds-accent);
+            border-color: var(--ds-accent-ink);
+
+            .p-checkbox-icon {
+              color: var(--ds-on-accent);
+            }
           }
         }
       }
 
       .p-multiselect-filter-container {
         .p-inputtext {
-          background: #2d3139;
-          border-color: #3d4149;
-          color: #e0e0e0;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
 
           &::placeholder {
             color: #808080;
@@ -1027,30 +1047,34 @@ body.dark-only {
       }
 
       .p-multiselect-close {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
       }
     }
 
     .p-multiselect-items {
       .p-multiselect-item {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
         }
 
         &.p-highlight {
-          background: rgba(106, 181, 232, 0.15);
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
         }
 
         .p-checkbox {
           .p-checkbox-box {
-            background: #2d3139;
-            border-color: #3d4149;
+            background: var(--ds-surface-2);
+            border-color: var(--ds-line-strong);
 
             &.p-highlight {
-              background: #6AB5E8;
-              border-color: #6AB5E8;
+              background: var(--ds-accent);
+              border-color: var(--ds-accent-ink);
+
+              .p-checkbox-icon {
+                color: var(--ds-on-accent);
+              }
             }
           }
         }
@@ -1065,42 +1089,42 @@ body.dark-only {
   // PrimeNG Calendar
   .p-calendar {
     .p-inputtext {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
 
     .p-datepicker {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       .p-datepicker-header {
         background: #33363f;
-        border-bottom-color: #3d4149;
-        color: #f0f0f0;
+        border-bottom-color: var(--ds-line-strong);
+        color: var(--ds-ink);
 
         .p-datepicker-title {
-          color: #f0f0f0;
+          color: var(--ds-ink);
         }
 
         .p-datepicker-prev,
         .p-datepicker-next {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
 
           &:hover {
-            background: #3d4149;
+            background: var(--ds-line-strong);
           }
         }
       }
 
       table {
         td {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
 
           &.p-datepicker-today > span {
-            background: rgba(106, 181, 232, 0.15);
-            color: #6AB5E8;
+            background: rgba(var(--ds-accent-ink-rgb), 0.15);
+            color: var(--ds-accent-ink);
           }
 
           &.p-datepicker-other-month {
@@ -1108,25 +1132,25 @@ body.dark-only {
           }
 
           span {
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
 
             &:hover {
               background: #33363f;
             }
 
             &.p-highlight {
-              background: #6AB5E8;
-              color: #1a1d23;
+              background: var(--ds-accent);
+              color: var(--ds-on-accent);
             }
           }
         }
       }
 
       .p-timepicker {
-        border-top-color: #3d4149;
+        border-top-color: var(--ds-line-strong);
 
         span {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
 
           &:hover {
             background: #33363f;
@@ -1134,17 +1158,17 @@ body.dark-only {
         }
 
         .p-separator {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
         }
       }
 
       .p-datepicker-buttonbar {
-        border-top-color: #3d4149;
+        border-top-color: var(--ds-line-strong);
 
         .p-button {
-          background: #3d4149;
-          border-color: #3d4149;
-          color: #e0e0e0;
+          background: var(--ds-line-strong);
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
 
           &:hover {
             background: #4d5159;
@@ -1158,19 +1182,20 @@ body.dark-only {
   // PrimeNG Button
   .p-button {
     &.p-button-primary {
-      background: #6AB5E8;
-      border-color: #6AB5E8;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent);
+      color: var(--ds-on-accent);
 
       &:hover {
-        background: #5AA5D8;
-        border-color: #5AA5D8;
+        background: var(--ds-accent-hover);
+        border-color: var(--ds-accent-hover);
       }
     }
 
     &.p-button-secondary {
-      background: #3d4149;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-line-strong);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #4d5159;
@@ -1212,11 +1237,11 @@ body.dark-only {
       background: transparent;
 
       &.p-button-primary {
-        border-color: #6AB5E8;
-        color: #6AB5E8;
+        border-color: var(--ds-accent-ink);
+        color: var(--ds-accent-ink);
 
         &:hover {
-          background: rgba(106, 181, 232, 0.15);
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
         }
       }
     }
@@ -1224,10 +1249,10 @@ body.dark-only {
     &.p-button-text {
       background: transparent;
       border-color: transparent;
-      color: #6AB5E8;
+      color: var(--ds-accent-ink);
 
       &:hover {
-        background: rgba(106, 181, 232, 0.15);
+        background: rgba(var(--ds-accent-ink-rgb), 0.15);
       }
     }
   }
@@ -1235,21 +1260,21 @@ body.dark-only {
   // PrimeNG Dialog
   .p-dialog {
     .p-dialog-content {
-      background: #252830;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
     }
 
     .p-dialog-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
 
       .p-dialog-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       .p-dialog-header-icon {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1258,27 +1283,27 @@ body.dark-only {
     }
 
     .p-dialog-footer {
-      background: #2d3139;
-      border-top-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-top-color: var(--ds-line-strong);
     }
   }
 
   // PrimeNG Panel
   .p-panel {
-    background: #252830;
-    border-color: #3d4149;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
 
     .p-panel-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
 
       .p-panel-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       .p-panel-header-icon {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1287,52 +1312,52 @@ body.dark-only {
     }
 
     .p-panel-content {
-      background: #252830;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
     }
 
     .p-panel-footer {
-      background: #2d3139;
-      border-top-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-top-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
   }
 
   // PrimeNG TabView
   .p-tabview {
     .p-tabview-nav {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
 
       li {
         .p-tabview-nav-link {
-          background: #2d3139;
-          border-color: #3d4149;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
           color: #b0b0b0;
 
           &:hover {
             background: #33363f;
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
           }
         }
 
         &.p-highlight {
           .p-tabview-nav-link {
-            background: #252830;
-            border-color: #3d4149;
-            color: #6AB5E8;
+            background: var(--ds-surface);
+            border-color: var(--ds-line-strong);
+            color: var(--ds-accent-ink);
           }
         }
       }
     }
 
     .p-tabview-panels {
-      background: #252830;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       .p-tabview-panel {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
       }
     }
   }
@@ -1341,12 +1366,12 @@ body.dark-only {
   .p-menu,
   .p-contextmenu,
   .p-tieredmenu {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     .p-menuitem {
       .p-menuitem-link {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1357,73 +1382,36 @@ body.dark-only {
         }
 
         .p-menuitem-text {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
         }
       }
 
       &.p-highlight {
         > .p-menuitem-link {
-          background: rgba(106, 181, 232, 0.15);
-          color: #6AB5E8;
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
+          color: var(--ds-accent-ink);
         }
       }
     }
 
     .p-menu-separator {
-      border-top-color: #3d4149;
-    }
-  }
-
-  // PrimeNG Toast
-  .p-toast {
-    .p-toast-message {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
-
-      &.p-toast-message-info {
-        background: rgba(74, 197, 226, 0.95);
-        border-color: #4AC5E2;
-        color: #1a1d23;
-      }
-
-      &.p-toast-message-success {
-        background: rgba(92, 184, 92, 0.95);
-        border-color: #5cb85c;
-        color: #1a1d23;
-      }
-
-      &.p-toast-message-warn {
-        background: rgba(255, 179, 71, 0.95);
-        border-color: #ffb347;
-        color: #1a1d23;
-      }
-
-      &.p-toast-message-error {
-        background: rgba(255, 107, 125, 0.95);
-        border-color: #ff6b7d;
-        color: #1a1d23;
-      }
-
-      .p-toast-icon-close {
-        color: currentColor;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-      }
+      border-top-color: var(--ds-line-strong);
     }
   }
 
   // PrimeNG Checkbox & Radio
   .p-checkbox {
     .p-checkbox-box {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
 
       &.p-highlight {
-        background: #6AB5E8;
-        border-color: #6AB5E8;
+        background: var(--ds-accent);
+        border-color: var(--ds-accent-ink);
+
+        .p-checkbox-icon {
+          color: var(--ds-on-accent);
+        }
       }
 
       &:hover {
@@ -1434,15 +1422,15 @@ body.dark-only {
 
   .p-radiobutton {
     .p-radiobutton-box {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
 
       &.p-highlight {
-        background: #6AB5E8;
-        border-color: #6AB5E8;
+        background: var(--ds-accent);
+        border-color: var(--ds-accent-ink);
 
         .p-radiobutton-icon {
-          background: #1a1d23;
+          background: var(--ds-on-accent);
         }
       }
 
@@ -1456,9 +1444,9 @@ body.dark-only {
   .p-accordion {
     .p-accordion-header {
       .p-accordion-header-link {
-        background: #2d3139;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        background: var(--ds-surface-2);
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1468,28 +1456,28 @@ body.dark-only {
       &:not(.p-disabled).p-highlight {
         .p-accordion-header-link {
           background: #33363f;
-          color: #6AB5E8;
+          color: var(--ds-accent-ink);
         }
       }
     }
 
     .p-accordion-content {
-      background: #252830;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
   }
 
   // PrimeNG ProgressBar
   .p-progressbar {
-    background: #2d3139;
+    background: var(--ds-surface-2);
 
     .p-progressbar-value {
-      background: #6AB5E8;
+      background: var(--ds-accent);
     }
 
     .p-progressbar-label {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
@@ -1497,13 +1485,13 @@ body.dark-only {
   .p-steps {
     .p-steps-item {
       .p-menuitem-link {
-        background: #2d3139;
+        background: var(--ds-surface-2);
         color: #808080;
 
         .p-steps-number {
-          background: #3d4149;
-          color: #e0e0e0;
-          border-color: #3d4149;
+          background: var(--ds-line-strong);
+          color: var(--ds-ink-2);
+          border-color: var(--ds-line-strong);
         }
 
         .p-steps-title {
@@ -1514,13 +1502,13 @@ body.dark-only {
       &.p-highlight {
         .p-menuitem-link {
           .p-steps-number {
-            background: #6AB5E8;
-            color: #1a1d23;
-            border-color: #6AB5E8;
+            background: var(--ds-accent);
+            color: var(--ds-on-accent);
+            border-color: var(--ds-accent);
           }
 
           .p-steps-title {
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
           }
         }
       }
@@ -1530,34 +1518,34 @@ body.dark-only {
   // PrimeNG Chips
   .p-chips {
     .p-chips-multiple-container {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
 
       &:hover {
         border-color: #4d5159;
       }
 
       &.p-focus {
-        border-color: #6AB5E8;
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        border-color: var(--ds-accent-ink);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
 
       .p-chips-token {
-        background: #3d4149;
-        color: #e0e0e0;
+        background: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         .p-chips-token-icon {
           color: #b0b0b0;
 
           &:hover {
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
           }
         }
       }
 
       .p-chips-input-token {
         input {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
 
           &::placeholder {
             color: #808080;
@@ -1570,41 +1558,41 @@ body.dark-only {
   // PrimeNG FileUpload
   .p-fileupload {
     .p-fileupload-buttonbar {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
     }
 
     .p-fileupload-content {
-      background: #252830;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
 
     .p-fileupload-row {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover {
-        background: #2d3139;
+        background: var(--ds-surface-2);
       }
     }
   }
 
   // PrimeNG Card
   .p-card {
-    background: #252830;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
     .p-card-header {
-      color: #f0f0f0;
+      color: var(--ds-ink);
     }
 
     .p-card-body {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       .p-card-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       .p-card-subtitle {
@@ -1612,25 +1600,25 @@ body.dark-only {
       }
 
       .p-card-content {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
       }
     }
 
     .p-card-footer {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   // PrimeNG Sidebar
   .p-sidebar {
-    background: #252830;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .p-sidebar-header {
       .p-sidebar-close,
       .p-sidebar-icon {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1639,23 +1627,23 @@ body.dark-only {
     }
 
     .p-sidebar-content {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   // PrimeNG OverlayPanel
   .p-overlaypanel {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .p-overlaypanel-content {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .p-overlaypanel-close {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #33363f;
@@ -1666,12 +1654,12 @@ body.dark-only {
   // PrimeNG Message
   .p-message {
     &.p-message-info {
-      background: rgba(74, 197, 226, 0.15);
-      border-color: #4AC5E2;
-      color: #6AD5F2;
+      background: var(--ds-info-soft);
+      border-color: var(--ds-info);
+      color: var(--ds-info);
 
       .p-message-icon {
-        color: #4AC5E2;
+        color: var(--ds-info);
       }
     }
 
@@ -1720,31 +1708,31 @@ body.dark-only {
   // PrimeNG Badge
   .p-badge {
     &.p-badge-info {
-      background: #4AC5E2;
-      color: #1a1d23;
+      background: var(--ds-info);
+      color: var(--ds-canvas);
     }
 
     &.p-badge-success {
       background: #5cb85c;
-      color: #1a1d23;
+      color: var(--ds-canvas);
     }
 
     &.p-badge-warning {
       background: #ffb347;
-      color: #1a1d23;
+      color: var(--ds-canvas);
     }
 
     &.p-badge-danger {
       background: #ff6b7d;
-      color: #1a1d23;
+      color: var(--ds-canvas);
     }
   }
 
   // PrimeNG Tag
   .p-tag {
     &.p-tag-info {
-      background: rgba(74, 197, 226, 0.15);
-      color: #4AC5E2;
+      background: var(--ds-info-soft);
+      color: var(--ds-info);
     }
 
     &.p-tag-success {
@@ -1767,7 +1755,7 @@ body.dark-only {
   .p-tooltip {
     .p-tooltip-text {
       background: #33363f;
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
 
@@ -1778,7 +1766,8 @@ body.dark-only {
 
   // PrimeNG Skeleton
   .p-skeleton {
-    background: linear-gradient(90deg, #2d3139 0%, #33363f 50%, #2d3139 100%);
+    // Shimmer (gradiente permitido por D-399). El brillo #33363f no es de los siete grises: queda literal.
+    background: linear-gradient(90deg, var(--ds-surface-2) 0%, #33363f 50%, var(--ds-surface-2) 100%);
   }
 
   // ===== COMPONENTES PRIMENG ADICIONALES =====
@@ -1786,17 +1775,17 @@ body.dark-only {
   // PrimeNG AutoComplete
   .p-autocomplete {
     .p-autocomplete-input {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:enabled:hover {
         border-color: #4d5159;
       }
 
       &:enabled:focus {
-        border-color: #6AB5E8;
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        border-color: var(--ds-accent-ink);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
 
       &::placeholder {
@@ -1805,26 +1794,26 @@ body.dark-only {
     }
 
     .p-autocomplete-loader {
-      color: #6AB5E8;
+      color: var(--ds-accent-ink);
     }
   }
 
   .p-autocomplete-panel {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .p-autocomplete-items {
       .p-autocomplete-item {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
         }
 
         &.p-highlight {
-          background: #6AB5E8;
-          color: #1a1d23;
+          background: var(--ds-accent);
+          color: var(--ds-on-accent);
         }
       }
 
@@ -1839,9 +1828,9 @@ body.dark-only {
     .p-carousel-content {
       .p-carousel-prev,
       .p-carousel-next {
-        background: #2d3139;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        background: var(--ds-surface-2);
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
@@ -1849,7 +1838,7 @@ body.dark-only {
         }
 
         &:focus {
-          box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+          box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
         }
       }
     }
@@ -1857,8 +1846,8 @@ body.dark-only {
     .p-carousel-indicators {
       .p-carousel-indicator {
         button {
-          background: #3d4149;
-          border-color: #3d4149;
+          background: var(--ds-line-strong);
+          border-color: var(--ds-line-strong);
 
           &:hover {
             background: #4d5159;
@@ -1867,8 +1856,8 @@ body.dark-only {
 
         &.p-highlight {
           button {
-            background: #6AB5E8;
-            border-color: #6AB5E8;
+            background: var(--ds-accent);
+            border-color: var(--ds-accent-ink);
           }
         }
       }
@@ -1883,70 +1872,17 @@ body.dark-only {
   }
 
   // PrimeNG ConfirmDialog
-  .p-confirmdialog {
-    .p-dialog-content {
-      background: #252830;
-      color: #e0e0e0;
-    }
 
-    .p-dialog-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
-    }
-
-    .p-dialog-footer {
-      background: #2d3139;
-      border-top-color: #3d4149;
-    }
-
-    .p-confirmdialog-message {
-      color: #e0e0e0;
-    }
-
-    .p-confirmdialog-icon {
-      color: #ffb347;
-    }
-  }
-
-  .p-confirmpopup {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-
-    .p-confirmpopup-content {
-      .p-confirmpopup-icon {
-        color: #ffb347;
-      }
-
-      .p-confirmpopup-message {
-        color: #e0e0e0;
-      }
-    }
-
-    .p-confirmpopup-footer {
-      border-top-color: #3d4149;
-    }
-
-    &:before,
-    &:after {
-      border-color: transparent transparent #2d3139 transparent;
-    }
-  }
 
   // PrimeNG ColumnFilter
   .p-column-filter-menu {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
-    .p-column-filter-header {
-      border-bottom-color: #3d4149;
-    }
 
     .p-column-filter-clear-button {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #33363f;
@@ -1956,8 +1892,8 @@ body.dark-only {
     .p-column-filter-row {
       .p-column-filter-matchmode-dropdown {
         background: #33363f;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
       }
 
       .p-column-filter-remove-button {
@@ -1978,30 +1914,30 @@ body.dark-only {
     }
 
     .p-column-filter-separator {
-      border-top-color: #3d4149;
+      border-top-color: var(--ds-line-strong);
     }
 
     .p-column-filter-buttonbar {
-      border-top-color: #3d4149;
+      border-top-color: var(--ds-line-strong);
     }
   }
 
   .p-column-filter-overlay {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .p-column-filter-row-items {
       .p-column-filter-row-item {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #33363f;
         }
 
         &.p-highlight {
-          background: rgba(106, 181, 232, 0.15);
-          color: #6AB5E8;
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
+          color: var(--ds-accent-ink);
         }
       }
     }
@@ -2009,15 +1945,17 @@ body.dark-only {
 
   // PrimeNG InputSwitch
   .p-inputswitch {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     &.p-inputswitch-checked {
-      background: #6AB5E8;
-      border-color: #6AB5E8;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent-ink);
 
+      // D-502 F1 (3.4): el slider cubre todo el control (position: absolute; inset: 0),
+      // así que el relleno visible del interruptor encendido es el suyo.
       .p-inputswitch-slider {
-        background: #1a1d23;
+        background: var(--ds-accent);
       }
     }
 
@@ -2025,7 +1963,7 @@ body.dark-only {
       background: #808080;
 
       &:before {
-        background: #e0e0e0;
+        background: var(--ds-ink-2);
       }
     }
 
@@ -2034,23 +1972,23 @@ body.dark-only {
     }
 
     &.p-focus {
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
   }
 
   // PrimeNG InputTextarea
   .p-inputtextarea {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     &:enabled:hover {
       border-color: #4d5159;
     }
 
     &:enabled:focus {
-      border-color: #6AB5E8;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     &::placeholder {
@@ -2058,50 +1996,32 @@ body.dark-only {
     }
 
     &:disabled {
-      background: #1e2128;
+      background: var(--ds-surface);
       color: #606060;
     }
   }
 
   // PrimeNG OrganizationChart
   .p-organizationchart {
-    .p-organizationchart-node {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
-
-      &:hover {
-        background: #33363f;
-      }
-
-      &.p-highlight {
-        background: rgba(106, 181, 232, 0.15);
-        border-color: #6AB5E8;
-
-        .p-node-toggler {
-          color: #6AB5E8;
-        }
-      }
-    }
 
     .p-organizationchart-line-down,
     .p-organizationchart-line-left,
     .p-organizationchart-line-right,
     .p-organizationchart-line-top {
-      background: #3d4149;
+      background: var(--ds-line-strong);
     }
 
     .p-organizationchart-node-content {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .p-node-toggler {
       background: #33363f;
-      border-color: #3d4149;
+      border-color: var(--ds-line-strong);
       color: #b0b0b0;
 
       &:hover {
-        background: #3d4149;
+        background: var(--ds-line-strong);
         border-color: #4d5159;
       }
     }
@@ -2110,17 +2030,17 @@ body.dark-only {
   // PrimeNG Password
   .p-password {
     .p-password-input {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
 
       &:enabled:hover {
         border-color: #4d5159;
       }
 
       &:enabled:focus {
-        border-color: #6AB5E8;
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        border-color: var(--ds-accent-ink);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
 
       &::placeholder {
@@ -2128,24 +2048,17 @@ body.dark-only {
       }
     }
 
-    .p-password-toggle-icon {
-      color: #b0b0b0;
-
-      &:hover {
-        color: #e0e0e0;
-      }
-    }
   }
 
   .p-password-panel {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .p-password-meter {
-      background: #1e2128;
-      border-color: #3d4149;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
 
       .p-password-strength {
         &.weak {
@@ -2170,21 +2083,21 @@ body.dark-only {
   // PrimeNG PickList
   .p-picklist {
     .p-picklist-list-wrapper {
-      background: #252830;
-      border-color: #3d4149;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
     }
 
     .p-picklist-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .p-picklist-filter-container {
       .p-picklist-filter-input {
         background: #33363f;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         &::placeholder {
           color: #808080;
@@ -2197,18 +2110,18 @@ body.dark-only {
     }
 
     .p-picklist-list {
-      background: #252830;
+      background: var(--ds-surface);
 
       .p-picklist-item {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
-          background: #2d3139;
+          background: var(--ds-surface-2);
         }
 
         &.p-highlight {
-          background: rgba(106, 181, 232, 0.15);
-          color: #6AB5E8;
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
+          color: var(--ds-accent-ink);
         }
       }
 
@@ -2219,9 +2132,9 @@ body.dark-only {
 
     .p-picklist-buttons {
       .p-button {
-        background: #3d4149;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        background: var(--ds-line-strong);
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #4d5159;
@@ -2229,8 +2142,8 @@ body.dark-only {
         }
 
         &:disabled {
-          background: #2d3139;
-          border-color: #2d3139;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-surface-2);
           color: #606060;
         }
       }
@@ -2240,40 +2153,31 @@ body.dark-only {
   // PrimeNG ProgressSpinner
   .p-progress-spinner {
     .p-progress-spinner-circle {
-      stroke: #6AB5E8;
+      stroke: var(--ds-accent-ink);
     }
   }
 
-  .p-progress-spinner-determinate {
-    .p-progress-spinner-circle {
-      stroke: #3d4149;
-    }
-
-    .p-progress-spinner-value {
-      stroke: #6AB5E8;
-    }
-  }
 
   // PrimeNG Slider
   .p-slider {
-    background: #3d4149;
+    background: var(--ds-line-strong);
 
     .p-slider-handle {
-      background: #6AB5E8;
-      border-color: #6AB5E8;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent-ink);
 
       &:hover {
-        background: #5AA5D8;
-        border-color: #5AA5D8;
+        background: var(--ds-accent-hover);
+        border-color: var(--ds-accent-hover);
       }
 
       &:focus {
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
     }
 
     .p-slider-range {
-      background: #6AB5E8;
+      background: var(--ds-accent);
     }
 
     &.p-disabled {
@@ -2291,41 +2195,41 @@ body.dark-only {
   // PrimeNG SplitButton
   .p-splitbutton {
     .p-splitbutton-defaultbutton {
-      background: #6AB5E8;
-      border-color: #6AB5E8;
-      color: #1a1d23;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent);
+      color: var(--ds-on-accent);
 
       &:hover {
-        background: #5AA5D8;
-        border-color: #5AA5D8;
+        background: var(--ds-accent-hover);
+        border-color: var(--ds-accent-hover);
       }
 
       &:focus {
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
     }
 
     .p-splitbutton-menubutton {
-      background: #6AB5E8;
-      border-color: #6AB5E8;
-      color: #1a1d23;
+      background: var(--ds-accent);
+      border-color: var(--ds-accent);
+      color: var(--ds-on-accent);
 
       &:hover {
-        background: #5AA5D8;
-        border-color: #5AA5D8;
+        background: var(--ds-accent-hover);
+        border-color: var(--ds-accent-hover);
       }
 
       &:focus {
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+        box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
       }
     }
 
     &.p-button-secondary {
       .p-splitbutton-defaultbutton,
       .p-splitbutton-menubutton {
-        background: #3d4149;
-        border-color: #3d4149;
-        color: #e0e0e0;
+        background: var(--ds-line-strong);
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         &:hover {
           background: #4d5159;
@@ -2377,60 +2281,60 @@ body.dark-only {
   // PrimeNG Timeline
   .p-timeline {
     .p-timeline-event-marker {
-      background: #3d4149;
-      border-color: #6AB5E8;
+      background: var(--ds-line-strong);
+      border-color: var(--ds-accent-ink);
     }
 
     .p-timeline-event-connector {
-      background: #3d4149;
+      background: var(--ds-line-strong);
     }
 
     .p-timeline-event-content {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .p-timeline-event {
       &.p-highlight {
         .p-timeline-event-marker {
-          background: #6AB5E8;
+          background: var(--ds-accent);
         }
       }
     }
 
     &.p-timeline-horizontal {
       .p-timeline-event-connector {
-        background: #3d4149;
+        background: var(--ds-line-strong);
       }
     }
   }
 
   // PrimeNG Toolbar
   .p-toolbar {
-    background: #2d3139;
-    border-color: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     .p-toolbar-separator {
-      background: #3d4149;
+      background: var(--ds-line-strong);
     }
   }
 
   // PrimeNG TreeSelect
   .p-treeselect {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
 
     &:not(.p-disabled):hover {
       border-color: #4d5159;
     }
 
     &:not(.p-disabled).p-focus {
-      border-color: #6AB5E8;
-      box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      border-color: var(--ds-accent-ink);
+      box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
     }
 
     .p-treeselect-label {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
 
       &.p-placeholder {
         color: #808080;
@@ -2438,24 +2342,24 @@ body.dark-only {
     }
 
     .p-treeselect-trigger {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
   }
 
   .p-treeselect-panel {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .p-treeselect-header {
       background: #33363f;
-      border-bottom-color: #3d4149;
+      border-bottom-color: var(--ds-line-strong);
 
       .p-treeselect-filter-container {
         .p-treeselect-filter {
-          background: #2d3139;
-          border-color: #3d4149;
-          color: #e0e0e0;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
 
           &::placeholder {
             color: #808080;
@@ -2468,10 +2372,10 @@ body.dark-only {
       }
 
       .p-treeselect-close {
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         &:hover {
-          background: #3d4149;
+          background: var(--ds-line-strong);
         }
       }
     }
@@ -2479,27 +2383,27 @@ body.dark-only {
     .p-treeselect-items-wrapper {
       .p-tree {
         background: transparent;
-        color: #e0e0e0;
+        color: var(--ds-ink-2);
 
         .p-treenode {
           .p-treenode-content {
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
 
             &:hover {
               background: #33363f;
             }
 
             &.p-highlight {
-              background: rgba(106, 181, 232, 0.15);
-              color: #6AB5E8;
+              background: rgba(var(--ds-accent-ink-rgb), 0.15);
+              color: var(--ds-accent-ink);
             }
 
             .p-tree-toggler {
               color: #b0b0b0;
 
               &:hover {
-                background: #3d4149;
-                color: #e0e0e0;
+                background: var(--ds-line-strong);
+                color: var(--ds-ink-2);
               }
             }
 
@@ -2519,66 +2423,66 @@ body.dark-only {
   // PrimeNG TreeTable
   .p-treetable {
     .p-treetable-header {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .p-treetable-thead > tr > th {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #f0f0f0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .p-treetable-tbody > tr {
-      background: #252830;
-      color: #e0e0e0;
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
 
       &:hover {
         background: #33363f;
       }
 
       &.p-highlight {
-        background: rgba(106, 181, 232, 0.15);
-        color: #6AB5E8;
+        background: rgba(var(--ds-accent-ink-rgb), 0.15);
+        color: var(--ds-accent-ink);
       }
 
       > td {
-        border-color: #3d4149;
-        color: #e0e0e0;
+        border-color: var(--ds-line-strong);
+        color: var(--ds-ink-2);
 
         .p-treetable-toggler {
           color: #b0b0b0;
 
           &:hover {
-            background: #3d4149;
-            color: #e0e0e0;
+            background: var(--ds-line-strong);
+            color: var(--ds-ink-2);
           }
         }
       }
     }
 
     .p-treetable-tfoot > tr > td {
-      background: #2d3139;
-      border-color: #3d4149;
-      color: #e0e0e0;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
+      color: var(--ds-ink-2);
     }
 
     &.p-treetable-gridlines {
       .p-treetable-thead > tr > th,
       .p-treetable-tbody > tr > td,
       .p-treetable-tfoot > tr > td {
-        border-color: #3d4149;
+        border-color: var(--ds-line-strong);
       }
     }
 
     .p-treetable-loading-icon {
-      color: #6AB5E8;
+      color: var(--ds-accent-ink);
     }
 
     .p-treetable-scrollable-header,
     .p-treetable-scrollable-footer {
-      background: #2d3139;
+      background: var(--ds-surface-2);
     }
   }
 }
@@ -2595,9 +2499,6 @@ body.dark-only {
       background: var(--glass-bg-secondary, #231d35);
       border-bottom-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
-      .company-name {
-        color: var(--glass-text-primary, #ffffff);
-      }
 
       .logo {
         filter: brightness(1.2);
@@ -2693,27 +2594,27 @@ body.dark-only {
 
   // Header Component
   .header-wrapper {
-    background: #252830;
-    border-bottom-color: #3d4149;
+    background: var(--ds-surface);
+    border-bottom-color: var(--ds-line-strong);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
     .header-content {
       .header-left {
         .menu-toggle {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
 
           &:hover {
-            background: rgba(106, 181, 232, 0.1);
+            background: rgba(var(--ds-accent-ink-rgb), 0.1);
           }
         }
 
         .search-box {
-          background: #2d3139;
-          border-color: #3d4149;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
 
           input {
             background: transparent;
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
 
             &::placeholder {
               color: #808080;
@@ -2727,60 +2628,23 @@ body.dark-only {
       }
 
       .header-right {
-        .header-item {
-          color: #b0b0b0;
 
-          &:hover {
-            background: rgba(106, 181, 232, 0.1);
-            color: #e0e0e0;
-          }
-
-          .notification-badge {
-            background: #ff6b7d;
-            color: #1a1d23;
-          }
-        }
-
-        .user-menu {
-          .user-avatar {
-            border-color: #3d4149;
-          }
-
-          .user-name {
-            color: #e0e0e0;
-          }
-        }
       }
     }
   }
 
   // Dashboard Components
   .dashboard-card {
-    background: #252830;
-    border-color: #3d4149;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
 
     .card-icon {
-      background: rgba(106, 181, 232, 0.1);
-      color: #6AB5E8;
+      background: rgba(var(--ds-accent-ink-rgb), 0.1);
+      color: var(--ds-accent-ink);
     }
 
-    .card-value {
-      color: #f0f0f0;
-    }
 
-    .card-label {
-      color: #808080;
-    }
 
-    .card-trend {
-      &.trend-up {
-        color: #5cb85c;
-      }
-
-      &.trend-down {
-        color: #ff6b7d;
-      }
-    }
   }
 
   // Charts - ApexCharts Complete Dark Mode
@@ -2798,19 +2662,19 @@ body.dark-only {
 
   .apexcharts-tooltip {
     background: #33363f !important;
-    border: 1px solid #3d4149 !important;
-    color: #e0e0e0 !important;
+    border: 1px solid var(--ds-line-strong) !important;
+    color: var(--ds-ink-2) !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
 
     .apexcharts-tooltip-title {
-      background: #2d3139 !important;
-      border-bottom: 1px solid #3d4149 !important;
-      color: #f0f0f0 !important;
+      background: var(--ds-surface-2) !important;
+      border-bottom: 1px solid var(--ds-line-strong) !important;
+      color: var(--ds-ink) !important;
     }
 
     .apexcharts-tooltip-series-group {
       background: #33363f !important;
-      color: #e0e0e0 !important;
+      color: var(--ds-ink-2) !important;
     }
 
     .apexcharts-tooltip-marker {
@@ -2818,7 +2682,7 @@ body.dark-only {
     }
 
     .apexcharts-tooltip-text {
-      color: #e0e0e0 !important;
+      color: var(--ds-ink-2) !important;
     }
 
     .apexcharts-tooltip-y-group {
@@ -2827,7 +2691,7 @@ body.dark-only {
       }
 
       .apexcharts-tooltip-text-y-value {
-        color: #f0f0f0 !important;
+        color: var(--ds-ink) !important;
       }
     }
   }
@@ -2843,7 +2707,7 @@ body.dark-only {
   }
 
   .apexcharts-gridline {
-    stroke: #3d4149 !important;
+    stroke: var(--ds-line-strong) !important;
   }
 
   .apexcharts-legend {
@@ -2861,28 +2725,28 @@ body.dark-only {
   }
 
   .apexcharts-text {
-    fill: #e0e0e0 !important;
+    fill: var(--ds-ink-2) !important;
   }
 
   .apexcharts-pie-label,
   .apexcharts-datalabels,
   .apexcharts-datalabel {
-    fill: #e0e0e0 !important;
-    color: #e0e0e0 !important;
+    fill: var(--ds-ink-2) !important;
+    color: var(--ds-ink-2) !important;
   }
 
   .apexcharts-datalabel-label,
   .apexcharts-datalabel-value {
-    fill: #e0e0e0 !important;
+    fill: var(--ds-ink-2) !important;
   }
 
   .apexcharts-toolbar {
     .apexcharts-menu {
-      background: #2d3139 !important;
-      border: 1px solid #3d4149 !important;
+      background: var(--ds-surface-2) !important;
+      border: 1px solid var(--ds-line-strong) !important;
 
       .apexcharts-menu-item {
-        color: #e0e0e0 !important;
+        color: var(--ds-ink-2) !important;
 
         &:hover {
           background: #33363f !important;
@@ -2894,174 +2758,119 @@ body.dark-only {
       fill: #b0b0b0 !important;
 
       &:hover {
-        fill: #e0e0e0 !important;
+        fill: var(--ds-ink-2) !important;
       }
     }
   }
 
   .apexcharts-selection-rect {
-    stroke: #6AB5E8 !important;
-    fill: rgba(106, 181, 232, 0.1) !important;
+    stroke: var(--ds-accent-ink) !important;
+    fill: rgba(var(--ds-accent-ink-rgb), 0.1) !important;
   }
 
   .apexcharts-zoom-rect {
-    stroke: #6AB5E8 !important;
-    fill: rgba(106, 181, 232, 0.1) !important;
+    stroke: var(--ds-accent-ink) !important;
+    fill: rgba(var(--ds-accent-ink-rgb), 0.1) !important;
   }
 
   .apexcharts-reset-icon {
     fill: #b0b0b0 !important;
 
     &:hover {
-      fill: #e0e0e0 !important;
+      fill: var(--ds-ink-2) !important;
     }
   }
 
   .apexcharts-annotation-rect {
-    fill: rgba(106, 181, 232, 0.1) !important;
-    stroke: #6AB5E8 !important;
+    fill: rgba(var(--ds-accent-ink-rgb), 0.1) !important;
+    stroke: var(--ds-accent-ink) !important;
   }
 
   .apexcharts-annotation-label {
     background: #33363f !important;
-    color: #e0e0e0 !important;
-    border-color: #3d4149 !important;
+    color: var(--ds-ink-2) !important;
+    border-color: var(--ds-line-strong) !important;
   }
 
   // Radial Bar específico
   .apexcharts-radialbar-track {
-    fill: #2d3139 !important;
+    fill: var(--ds-surface-2) !important;
   }
 
   .apexcharts-radialbar-hollow {
-    fill: #252830 !important;
+    fill: var(--ds-surface) !important;
   }
 
   .apexcharts-radialbar-area {
-    stroke: #3d4149 !important;
+    stroke: var(--ds-line-strong) !important;
   }
 
   // Heatmap específico
   .apexcharts-heatmap-rect {
-    stroke: #3d4149 !important;
+    stroke: var(--ds-line-strong) !important;
   }
 
   // Treemap específico
   .apexcharts-treemap-rect {
-    stroke: #3d4149 !important;
+    stroke: var(--ds-line-strong) !important;
   }
 
   // Radar específico
   .apexcharts-radar-series {
     polygon {
-      fill: rgba(106, 181, 232, 0.15) !important;
-      stroke: #6AB5E8 !important;
+      fill: rgba(var(--ds-accent-ink-rgb), 0.15) !important;
+      stroke: var(--ds-accent-ink) !important;
     }
 
     line {
-      stroke: #3d4149 !important;
+      stroke: var(--ds-line-strong) !important;
     }
   }
 
   // Range Bar específico
   .apexcharts-rangebar-area {
-    fill: rgba(106, 181, 232, 0.15) !important;
+    fill: rgba(var(--ds-accent-ink-rgb), 0.15) !important;
   }
 
   // Polar Area específico
   .apexcharts-polararea-series {
-    stroke: #3d4149 !important;
+    stroke: var(--ds-line-strong) !important;
   }
 
   // ChartJS (si se usa)
-  canvas.chartjs {
-    filter: brightness(0.9);
-  }
 
   // Chart.js específico
-  .chartjs-render-monitor {
-    filter: brightness(0.9);
-  }
 
-  .chartjs-tooltip {
-    background: #33363f !important;
-    border-color: #3d4149 !important;
-    color: #e0e0e0 !important;
-  }
 
   // HighCharts (si se usa)
-  .highcharts-background {
-    fill: transparent;
-  }
 
-  .highcharts-plot-background {
-    fill: transparent;
-  }
 
-  .highcharts-grid-line {
-    stroke: #3d4149;
-  }
 
-  .highcharts-axis-line,
-  .highcharts-tick {
-    stroke: #3d4149;
-  }
 
-  .highcharts-axis-labels text,
-  .highcharts-axis-title {
-    fill: #808080 !important;
-  }
 
-  .highcharts-legend-item text {
-    fill: #b0b0b0 !important;
-  }
 
-  .highcharts-tooltip {
-    filter: none;
 
-    .highcharts-tooltip-box {
-      fill: #33363f;
-      stroke: #3d4149;
-    }
 
-    text {
-      fill: #e0e0e0 !important;
-    }
-  }
 
-  .highcharts-data-label text {
-    fill: #e0e0e0 !important;
-  }
 
-  .highcharts-drilldown-axis-label {
-    fill: #b0b0b0 !important;
-  }
-
-  .highcharts-drilldown-data-label text {
-    fill: #e0e0e0 !important;
-  }
-
-  .highcharts-no-data text {
-    fill: #808080 !important;
-  }
 
   // POS Components
   .pos-container {
-    background: #1a1d23;
+    background: var(--ds-canvas);
 
     .pos-header {
-      background: #252830;
-      border-bottom-color: #3d4149;
+      background: var(--ds-surface);
+      border-bottom-color: var(--ds-line-strong);
 
       .pos-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
 
       .pos-controls {
         .control-btn {
-          background: #2d3139;
-          border-color: #3d4149;
-          color: #e0e0e0;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
 
           &:hover {
             background: #33363f;
@@ -3073,28 +2882,28 @@ body.dark-only {
 
     .pos-content {
       .product-grid {
-        background: #1e2128;
+        background: var(--ds-surface);
 
         .product-card {
-          background: #252830;
-          border-color: #3d4149;
+          background: var(--ds-surface);
+          border-color: var(--ds-line-strong);
 
           &:hover {
-            background: #2d3139;
+            background: var(--ds-surface-2);
             transform: translateY(-2px);
           }
 
           .product-image {
-            background: #2d3139;
-            border-bottom-color: #3d4149;
+            background: var(--ds-surface-2);
+            border-bottom-color: var(--ds-line-strong);
           }
 
           .product-name {
-            color: #e0e0e0;
+            color: var(--ds-ink-2);
           }
 
           .product-price {
-            color: #6AB5E8;
+            color: var(--ds-accent-ink);
           }
 
           .product-stock {
@@ -3106,118 +2915,18 @@ body.dark-only {
           }
         }
 
-        .category-tabs {
-          background: #252830;
-          border-bottom-color: #3d4149;
-
-          .category-tab {
-            color: #b0b0b0;
-            border-bottom-color: transparent;
-
-            &:hover {
-              background: rgba(106, 181, 232, 0.1);
-              color: #e0e0e0;
-            }
-
-            &.active {
-              color: #6AB5E8;
-              border-bottom-color: #6AB5E8;
-            }
-          }
-        }
       }
 
-      .cart-section {
-        background: #252830;
-        border-left-color: #3d4149;
-
-        .cart-header {
-          background: #2d3139;
-          border-bottom-color: #3d4149;
-
-          .cart-title {
-            color: #f0f0f0;
-          }
-
-          .customer-info {
-            background: #33363f;
-            border-color: #3d4149;
-            color: #e0e0e0;
-          }
-        }
-
-        .cart-items {
-          .cart-item {
-            background: #252830;
-            border-bottom-color: #3d4149;
-
-            &:hover {
-              background: #2d3139;
-            }
-
-            .item-name {
-              color: #e0e0e0;
-            }
-
-            .item-price {
-              color: #6AB5E8;
-            }
-
-            .item-quantity {
-              background: #2d3139;
-              border-color: #3d4149;
-              color: #e0e0e0;
-
-              button {
-                background: #33363f;
-                border-color: #3d4149;
-                color: #e0e0e0;
-
-                &:hover {
-                  background: #3d4149;
-                }
-              }
-            }
-
-            .item-remove {
-              color: #ff6b7d;
-
-              &:hover {
-                color: #ff8b9d;
-              }
-            }
-          }
-        }
-
-        .cart-summary {
-          background: #2d3139;
-          border-top-color: #3d4149;
-
-          .summary-row {
-            color: #e0e0e0;
-
-            &.total {
-              color: #f0f0f0;
-              border-top-color: #3d4149;
-            }
-          }
-        }
-
-        .cart-actions {
-          background: #2d3139;
-          border-top-color: #3d4149;
-        }
-      }
     }
   }
 
   // Order & Customer Lists
   .list-container {
-    background: #252830;
+    background: var(--ds-surface);
 
     .list-filters {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
 
       .filter-group {
         .filter-label {
@@ -3228,15 +2937,15 @@ body.dark-only {
 
     .list-content {
       .list-item {
-        background: #252830;
-        border-bottom-color: #3d4149;
+        background: var(--ds-surface);
+        border-bottom-color: var(--ds-line-strong);
 
         &:hover {
-          background: #2d3139;
+          background: var(--ds-surface-2);
         }
 
         &.selected {
-          background: rgba(106, 181, 232, 0.15);
+          background: rgba(var(--ds-accent-ink-rgb), 0.15);
         }
 
         .item-status {
@@ -3246,8 +2955,8 @@ body.dark-only {
           }
 
           &.status-processing {
-            background: rgba(74, 197, 226, 0.15);
-            color: #4AC5E2;
+            background: var(--ds-info-soft);
+            color: var(--ds-info);
           }
 
           &.status-completed {
@@ -3265,225 +2974,39 @@ body.dark-only {
   }
 
   // Checkout & Payment
-  .checkout-container {
-    background: #1a1d23;
-
-    .checkout-step {
-      background: #252830;
-      border-color: #3d4149;
-
-      &.active {
-        border-color: #6AB5E8;
-      }
-
-      .step-header {
-        background: #2d3139;
-        border-bottom-color: #3d4149;
-
-        .step-number {
-          background: #3d4149;
-          color: #e0e0e0;
-
-          &.completed {
-            background: #5cb85c;
-            color: #1a1d23;
-          }
-
-          &.active {
-            background: #6AB5E8;
-            color: #1a1d23;
-          }
-        }
-
-        .step-title {
-          color: #f0f0f0;
-        }
-      }
-
-      .step-content {
-        color: #e0e0e0;
-      }
-    }
-
-    .payment-method {
-      background: #2d3139;
-      border-color: #3d4149;
-
-      &:hover {
-        background: #33363f;
-        border-color: #4d5159;
-      }
-
-      &.selected {
-        background: rgba(106, 181, 232, 0.15);
-        border-color: #6AB5E8;
-      }
-
-      .method-icon {
-        color: #808080;
-      }
-
-      .method-name {
-        color: #e0e0e0;
-      }
-    }
-  }
 
   // Inventory Components
-  .inventory-grid {
-    .inventory-item {
-      background: #252830;
-      border-color: #3d4149;
-
-      &:hover {
-        background: #2d3139;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      }
-
-      .item-image {
-        background: #2d3139;
-        border-bottom-color: #3d4149;
-      }
-
-      .item-details {
-        .item-name {
-          color: #e0e0e0;
-        }
-
-        .item-sku {
-          color: #808080;
-        }
-
-        .item-stock {
-          &.in-stock {
-            color: #5cb85c;
-          }
-
-          &.low-stock {
-            color: #ffb347;
-          }
-
-          &.out-of-stock {
-            color: #ff6b7d;
-          }
-        }
-
-        .item-price {
-          color: #6AB5E8;
-        }
-      }
-    }
-  }
 
   // Production Module
-  .production-board {
-    background: #1a1d23;
-
-    .production-column {
-      background: #252830;
-      border-color: #3d4149;
-
-      .column-header {
-        background: #2d3139;
-        border-bottom-color: #3d4149;
-        color: #f0f0f0;
-
-        .column-count {
-          background: #3d4149;
-          color: #e0e0e0;
-        }
-      }
-
-      .production-card {
-        background: #2d3139;
-        border-color: #3d4149;
-
-        &:hover {
-          background: #33363f;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-priority {
-          &.priority-high {
-            background: rgba(255, 107, 125, 0.15);
-            color: #ff6b7d;
-          }
-
-          &.priority-medium {
-            background: rgba(255, 179, 71, 0.15);
-            color: #ffb347;
-          }
-
-          &.priority-low {
-            background: rgba(92, 184, 92, 0.15);
-            color: #5cb85c;
-          }
-        }
-
-        .card-title {
-          color: #e0e0e0;
-        }
-
-        .card-meta {
-          color: #808080;
-        }
-      }
-    }
-  }
 
   // Settings & Configuration
-  .settings-panel {
-    background: #252830;
-
-    .settings-section {
-      border-bottom-color: #3d4149;
-
-      .section-title {
-        color: #f0f0f0;
-      }
-
-      .setting-item {
-        .setting-label {
-          color: #b0b0b0;
-        }
-
-        .setting-value {
-          color: #e0e0e0;
-        }
-
-        .setting-description {
-          color: #808080;
-        }
-      }
-    }
-  }
 
   // Notifications
   .notification-dropdown {
-    background: #2d3139;
-    border-color: #3d4149;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
     .notification-header {
       background: #33363f;
-      border-bottom-color: #3d4149;
-      color: #f0f0f0;
+      border-bottom-color: var(--ds-line-strong);
+      color: var(--ds-ink);
     }
 
     .notification-list {
       .notification-item {
-        border-bottom-color: #3d4149;
+        border-bottom-color: var(--ds-line-strong);
 
         &:hover {
           background: #33363f;
         }
 
         &.unread {
-          background: rgba(106, 181, 232, 0.05);
+          background: rgba(var(--ds-accent-ink-rgb), 0.05);
         }
 
         .notification-title {
-          color: #e0e0e0;
+          color: var(--ds-ink-2);
         }
 
         .notification-message {
@@ -3499,16 +3022,13 @@ body.dark-only {
 
   // Loading states
   .loader {
-    background: rgba(26, 29, 35, 0.9);
+    background: rgba(var(--ds-canvas-rgb), 0.9);
 
     .spinner {
-      border-color: #3d4149;
-      border-top-color: #6AB5E8;
+      border-color: var(--ds-line-strong);
+      border-top-color: var(--ds-accent-ink);
     }
 
-    .loader-text {
-      color: #e0e0e0;
-    }
   }
 
   // Empty states
@@ -3530,7 +3050,7 @@ body.dark-only {
 
   // Error states
   .error-container {
-    background: #252830;
+    background: var(--ds-surface);
 
     .error-icon {
       color: #ff6b7d;
@@ -3541,12 +3061,12 @@ body.dark-only {
     }
 
     .error-message {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
     }
 
     .error-details {
-      background: #2d3139;
-      border-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-line-strong);
       color: #b0b0b0;
     }
   }
@@ -3568,36 +3088,21 @@ body.dark-only {
     border-color: #ffb347;
     color: #ffc367;
 
-    .warning-icon {
-      color: #ffb347;
-    }
   }
 
   // Info states
-  .info-message {
-    background: rgba(74, 197, 226, 0.15);
-    border-color: #4AC5E2;
-    color: #6AD5F2;
-
-    .info-icon {
-      color: #4AC5E2;
-    }
-  }
 
   // ===== COMPONENTES PRIMENG ADICIONALES - p-avatar y p-chip =====
 
   // PrimeNG Avatar
   .p-avatar {
-    background: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-line-strong);
+    color: var(--ds-ink-2);
 
     &.p-avatar-circle {
       border-radius: 50%;
     }
 
-    &.p-avatar-square {
-      border-radius: 6px;
-    }
 
     &.p-avatar-lg {
       width: 4rem;
@@ -3613,7 +3118,7 @@ body.dark-only {
 
     // Avatar with image
     .p-avatar-image {
-      background: #2d3139;
+      background: var(--ds-surface-2);
     }
 
     // Avatar icon
@@ -3623,7 +3128,7 @@ body.dark-only {
 
     // Avatar label (initials)
     .p-avatar-text {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
       font-weight: 600;
     }
   }
@@ -3631,7 +3136,7 @@ body.dark-only {
   // PrimeNG AvatarGroup
   .p-avatar-group {
     .p-avatar {
-      border: 2px solid #252830;
+      border: 2px solid var(--ds-surface);
 
       &:hover {
         z-index: 2;
@@ -3647,13 +3152,13 @@ body.dark-only {
 
   // PrimeNG Chip (individual)
   .p-chip {
-    background: #3d4149;
-    color: #e0e0e0;
+    background: var(--ds-line-strong);
+    color: var(--ds-ink-2);
     border-radius: 16px;
     padding: 0 0.75rem;
 
     .p-chip-text {
-      color: #e0e0e0;
+      color: var(--ds-ink-2);
       line-height: 1.5;
       margin-top: 0.25rem;
       margin-bottom: 0.25rem;
@@ -3676,22 +3181,6 @@ body.dark-only {
       border-radius: 50%;
     }
 
-    .p-chip-remove-icon {
-      color: #b0b0b0;
-      margin-left: 0.5rem;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-
-      &:hover {
-        color: #e0e0e0;
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      &:focus {
-        outline: 0 none;
-        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
-      }
-    }
 
     // Chip con imagen
     &.p-chip-image {
@@ -3701,55 +3190,10 @@ body.dark-only {
     }
 
     // Variantes de color para Chip
-    &.p-chip-primary {
-      background: rgba(106, 181, 232, 0.15);
-      color: #6AB5E8;
 
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #6AB5E8;
-      }
-    }
 
-    &.p-chip-success {
-      background: rgba(92, 184, 92, 0.15);
-      color: #5cb85c;
 
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #5cb85c;
-      }
-    }
 
-    &.p-chip-warning {
-      background: rgba(255, 179, 71, 0.15);
-      color: #ffb347;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #ffb347;
-      }
-    }
-
-    &.p-chip-danger {
-      background: rgba(255, 107, 125, 0.15);
-      color: #ff6b7d;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #ff6b7d;
-      }
-    }
-
-    &.p-chip-info {
-      background: rgba(74, 197, 226, 0.15);
-      color: #4AC5E2;
-
-      .p-chip-icon,
-      .p-chip-remove-icon {
-        color: #4AC5E2;
-      }
-    }
   }
 
   // ===== MÓDULO VENTAS - CLIENTES OVERRIDES =====
@@ -3757,21 +3201,21 @@ body.dark-only {
   // Modal crear cliente
   .modal-crear-cliente {
     .modal-content {
-      background: #252830;
-      border-color: #3d4149;
+      background: var(--ds-surface);
+      border-color: var(--ds-line-strong);
     }
 
     .modal-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-bottom-color: var(--ds-line-strong);
 
       .modal-title {
-        color: #f0f0f0;
+        color: var(--ds-ink);
       }
     }
 
     .modal-body {
-      background: #252830;
+      background: var(--ds-surface);
 
       .form-group {
         label {
@@ -3779,14 +3223,14 @@ body.dark-only {
         }
 
         input, select, textarea {
-          background: #2d3139;
-          border-color: #3d4149;
-          color: #e0e0e0;
+          background: var(--ds-surface-2);
+          border-color: var(--ds-line-strong);
+          color: var(--ds-ink-2);
 
           &:focus {
             background: #33363f;
-            border-color: #6AB5E8;
-            box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+            border-color: var(--ds-accent-ink);
+            box-shadow: 0 0 0 0.2rem rgba(var(--ds-accent-ink-rgb), 0.25);
           }
 
           &::placeholder {
@@ -3795,238 +3239,117 @@ body.dark-only {
         }
       }
 
-      .cliente-type-selector {
-        .type-option {
-          background: #2d3139;
-          border-color: #3d4149;
-          color: #e0e0e0;
-
-          &:hover {
-            background: #33363f;
-            border-color: #4d5159;
-          }
-
-          &.selected {
-            background: rgba(106, 181, 232, 0.15);
-            border-color: #6AB5E8;
-            color: #6AB5E8;
-          }
-        }
-      }
     }
 
     .modal-footer {
-      background: #2d3139;
-      border-top-color: #3d4149;
+      background: var(--ds-surface-2);
+      border-top-color: var(--ds-line-strong);
     }
   }
 
   // Lista de clientes
   .clientes-lista {
-    background: #252830;
+    background: var(--ds-surface);
 
-    .clientes-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
 
-      .search-box {
-        input {
-          background: #33363f;
-          border-color: #3d4149;
-          color: #e0e0e0;
 
-          &::placeholder {
-            color: #808080;
-          }
+  }
 
-          &:focus {
-            border-color: #6AB5E8;
-            box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
-          }
-        }
-      }
+  // Detalle de cliente
 
-      .filter-dropdown {
-        background: #2d3139;
-        border-color: #3d4149;
-        color: #e0e0e0;
+  // D-502 F1 (3.4): botones del tour (driver.js). styles.scss los pinta con var(--primary-color),
+  // que en oscuro es el tinte de texto (#a48bff) y con blanco encima no llega a 4,5:1. Se pisan aquí
+  // para no tocar el claro; body.dark-only gana por especificidad a .driver-popover .driver-popover-footer button.
+  .driver-popover .driver-popover-footer button {
+    &.driver-popover-next-btn,
+    &.driver-popover-done-btn {
+      background: var(--ds-accent);
+      color: var(--ds-on-accent);
 
-        &:hover {
-          background: #33363f;
-        }
-      }
-    }
-
-    .clientes-table {
-      .table {
-        background: #252830;
-
-        thead {
-          background: #2d3139;
-
-          th {
-            background: #2d3139;
-            border-color: #3d4149;
-            color: #f0f0f0;
-          }
-        }
-
-        tbody {
-          tr {
-            background: #252830;
-            border-color: #3d4149;
-
-            &:nth-child(even) {
-              background: #22252d;
-            }
-
-            &:hover {
-              background: #33363f !important;
-            }
-
-            td {
-              border-color: #3d4149;
-              color: #e0e0e0;
-
-              .cliente-nombre {
-                color: #e0e0e0;
-              }
-
-              .cliente-email {
-                color: #808080;
-              }
-
-              .cliente-badge {
-                &.badge-active {
-                  background: rgba(92, 184, 92, 0.15);
-                  color: #5cb85c;
-                }
-
-                &.badge-inactive {
-                  background: rgba(255, 107, 125, 0.15);
-                  color: #ff6b7d;
-                }
-              }
-
-              .action-buttons {
-                .btn-action {
-                  background: #2d3139;
-                  border-color: #3d4149;
-                  color: #b0b0b0;
-
-                  &:hover {
-                    background: #33363f;
-                    color: #e0e0e0;
-                  }
-
-                  &.btn-edit {
-                    &:hover {
-                      color: #6AB5E8;
-                    }
-                  }
-
-                  &.btn-delete {
-                    &:hover {
-                      color: #ff6b7d;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .clientes-pagination {
-      background: #2d3139;
-      border-top-color: #3d4149;
-
-      .pagination {
-        .page-item {
-          .page-link {
-            background: #2d3139;
-            border-color: #3d4149;
-            color: #e0e0e0;
-
-            &:hover {
-              background: #33363f;
-              border-color: #4d5159;
-            }
-          }
-
-          &.active .page-link {
-            background: #6AB5E8;
-            border-color: #6AB5E8;
-            color: #1a1d23;
-          }
-        }
+      &:hover {
+        background: var(--ds-accent-hover);
       }
     }
   }
 
-  // Detalle de cliente
-  .cliente-detalle {
-    background: #252830;
+  // D-502 F3 (ticket 1180, tarea 3.8, bloque TEMA-B18): terceros en oscuro, solo con tokens --ds-*.
+  // El claro no cambia (todo cuelga de body.dark-only). ApexCharts y FullCalendar no estan en las plantillas
+  // ni instalados; Quill solo trae su CSS. Se cubren por si aparecen, sin tocar sus datos.
+  // ng-select: panel y opcion marcada.
+  .ng-select .ng-select-container {
+    background: var(--ds-surface);
+    border-color: var(--ds-control-border);
+    color: var(--ds-ink);
+  }
 
-    .cliente-header {
-      background: #2d3139;
-      border-bottom-color: #3d4149;
+  .ng-dropdown-panel {
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink);
 
-      .cliente-avatar {
-        background: #3d4149;
-        border-color: #4d5159;
-        color: #e0e0e0;
+    .ng-dropdown-panel-items .ng-option {
+      background: var(--ds-surface);
+      color: var(--ds-ink-2);
+
+      &.ng-option-marked {
+        background: var(--ds-row-hover);
+        color: var(--ds-ink);
       }
 
-      .cliente-info {
-        .cliente-nombre {
-          color: #f0f0f0;
-        }
-
-        .cliente-meta {
-          color: #808080;
-        }
-      }
-    }
-
-    .cliente-tabs {
-      .nav-tabs {
-        background: #2d3139;
-        border-bottom-color: #3d4149;
-
-        .nav-link {
-          color: #b0b0b0;
-          border-color: transparent;
-
-          &:hover {
-            background: rgba(106, 181, 232, 0.1);
-            color: #e0e0e0;
-          }
-
-          &.active {
-            background: #252830;
-            border-color: #3d4149 #3d4149 #252830;
-            color: #6AB5E8;
-          }
-        }
+      &.ng-option-selected,
+      &.ng-option-selected.ng-option-marked {
+        background: var(--ds-accent-soft);
+        color: var(--ds-accent-ink);
       }
 
-      .tab-content {
-        background: #252830;
-
-        .info-row {
-          border-bottom-color: #3d4149;
-
-          .info-label {
-            color: #808080;
-          }
-
-          .info-value {
-            color: #e0e0e0;
-          }
-        }
+      &.ng-option-disabled {
+        color: var(--ds-muted);
       }
     }
+  }
+
+  // SweetAlert2: popup, titulo y boton de confirmar.
+  .swal2-popup {
+    background: var(--ds-surface);
+    color: var(--ds-ink-2);
+
+    .swal2-title { color: var(--ds-ink); }
+    .swal2-html-container { color: var(--ds-body); }
+
+    .swal2-styled.swal2-confirm {
+      background: var(--ds-accent);
+      color: var(--ds-on-accent);
+    }
+  }
+
+  // Quill: barra de herramientas y editor.
+  .ql-toolbar.ql-snow {
+    background: var(--ds-surface-2);
+    border-color: var(--ds-line-strong);
+
+    .ql-stroke { stroke: var(--ds-ink-2); }
+    .ql-fill { fill: var(--ds-ink-2); }
+    .ql-picker { color: var(--ds-ink-2); }
+  }
+
+  .ql-container.ql-snow {
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink);
+
+    .ql-editor.ql-blank::before { color: var(--ds-muted); }
+  }
+
+  // FullCalendar (v5+ lee variables --fc-*): celdas, hoy y eventos.
+  .fc {
+    --fc-page-bg-color: var(--ds-surface);
+    --fc-neutral-bg-color: var(--ds-surface-2);
+    --fc-border-color: var(--ds-line-strong);
+    --fc-today-bg-color: var(--ds-accent-soft);
+    --fc-event-bg-color: var(--ds-accent);
+    --fc-event-border-color: var(--ds-accent);
+    --fc-event-text-color: var(--ds-on-accent);
+
+    color: var(--ds-ink-2);
   }
 }

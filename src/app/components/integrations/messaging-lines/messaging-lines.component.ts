@@ -26,6 +26,7 @@ import {
   getConnectorConfig,
 } from '../connectors/connector-registry';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Lo que el administrador está editando en una línea antes de guardar. */
 interface EdicionLinea {
   nombre: string;
@@ -81,6 +82,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     private readonly zone: NgZone,
     private readonly cdr: ChangeDetectorRef,
     private readonly toastr: ToastrService,
+    private translate: TranslateService,
   ) {
     this.habilitada = features.isEnabled('whatsappMultiNumero');
   }
@@ -290,7 +292,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     if (!ed || this.ocupada || !this.hayCambios(linea)) return;
     const nombre = ed.nombre.trim();
     if (!nombre) {
-      this.toastr.warning('Ponle un nombre al número para reconocerlo en el buzón.');
+      this.toastr.warning(this.translate.instant('integrations.messagingLines.ponleUnNombreAlNumero'));
       return;
     }
     this.actualizar(linea, { displayName: nombre, sellers: [...ed.vendedores] }, 'Cambios guardados.');
@@ -341,12 +343,12 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
   async desconectar(linea: MessagingLine): Promise<void> {
     if (this.ocupada) return;
     const r = await Swal.fire({
-      title: '¿Desconectar este número?',
-      text: `${linea.displayName || linea.displayPhone} deja de recibir y enviar mensajes en Katuq. Sus chats quedan como historial para los administradores.`,
+      title: this.translate.instant('integrations.messagingLines.desconectarEsteNumero'),
+      text: this.translate.instant('integrations.messagingLines.dejaDeRecibirYEnviar', { linea: linea.displayName || linea.displayPhone }),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, desconectar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('integrations.messagingLines.siDesconectar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#D64545',
       reverseButtons: true,
     });
@@ -360,7 +362,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
         next: (nueva) => {
           this.ocupada = null;
           this.ponerLinea(nueva);
-          this.toastr.success('El número quedó desconectado.');
+          this.toastr.success(this.translate.instant('integrations.messagingLines.elNumeroQuedoDesconectado'));
           this.cdr.markForCheck();
         },
         error: (err) => {

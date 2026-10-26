@@ -6,6 +6,7 @@
 // abajo para que el cajero nunca tenga que buscar el botón de cobrar.
 // =============================================================================
 @import '../../../../../shared/styles/katuq-comercial';
+@import '../../pos-oscuro';
 
 :host {
   @include kc-tokens;
@@ -14,6 +15,7 @@
   min-height: 0;
   height: 100%;
 }
+:host-context(body.dark-only) { @include pos-kc-oscuro; }
 
 .pos-checkout-container {
   display: flex;

@@ -9,6 +9,7 @@ import {
   WhatsappIntegrationConfigService,
 } from '../../../../shared/services/notifications/whatsapp-integration-config.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Configuración del BOT DE PEDIDOS por WhatsApp.
  *
@@ -49,7 +50,8 @@ export class WhatsappBotConfigComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private configService: WhatsappIntegrationConfigService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -163,9 +165,9 @@ export class WhatsappBotConfigComponent implements OnInit, OnDestroy {
           this.toastr.success(
             raw.enabled
               ? raw.modoSombra
-                ? 'Bot guardado en modo sombra: piensa pero no envía.'
-                : 'Bot de pedidos encendido.'
-              : 'Bot de pedidos apagado.',
+                ? this.translate.instant('integrations.whatsappBotConfig.botGuardadoEnModoSombra')
+                : this.translate.instant('integrations.whatsappBotConfig.botDePedidosEncendido2')
+              : this.translate.instant('integrations.whatsappBotConfig.botDePedidosApagado'),
             'WhatsApp'
           );
         },
@@ -173,15 +175,15 @@ export class WhatsappBotConfigComponent implements OnInit, OnDestroy {
           const code = err?.error?.error;
           if (code === 'BOT_REQUIERE_NUMERO_PROPIO') {
             this.toastr.warning(
-              'Para prender el bot, primero conectá el número propio de WhatsApp del comercio (sección Credenciales propias).',
-              'Falta el número propio'
+              this.translate.instant('integrations.whatsappBotConfig.paraPrenderElBotPrimero'),
+              this.translate.instant('integrations.whatsappBotConfig.faltaElNumeroPropio')
             );
             this.form.patchValue({ enabled: false }, { emitEvent: false });
             return;
           }
           this.toastr.error(
-            err?.error?.message || err?.message || 'No se pudo guardar.',
-            'Bot de pedidos'
+            err?.error?.message || err?.message || this.translate.instant('integrations.whatsappBotConfig.noSePudoGuardar'),
+            this.translate.instant('integrations.whatsappBotConfig.botDePedidos')
           );
         },
       });

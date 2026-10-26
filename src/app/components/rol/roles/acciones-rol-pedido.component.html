@@ -1,24 +1,24 @@
 <!-- D-547 (F2): acciones principales del pedido de un rol. Clases con prefijo racc- (ninguna lleva «p-»). -->
 <section class="racc-seccion" aria-labelledby="racc-titulo">
-  <h3 id="racc-titulo" class="racc-titulo">Acciones principales del pedido</h3>
+  <h3 id="racc-titulo" class="racc-titulo">Acciones principales del pedido</h3> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
   <p class="racc-sub">
-    Las 4 acciones que verán primero, en el bloque ACCIONES de cada pedido, quienes tengan este rol.
+    Las 4 acciones que verán primero, en el bloque ACCIONES de cada pedido, quienes tengan este rol. <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     No dan ni quitan permisos: si alguien no puede usar una, la verá bloqueada.
   </p>
 
-  <div class="racc-fila" role="group" aria-label="Perfil de partida">
-    <span class="racc-etiqueta">Perfil de partida</span>
+  <div class="racc-fila" role="group" aria-label="Perfil de partida"> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <span class="racc-etiqueta">Perfil de partida</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     <div class="racc-perfiles">
       <button type="button" class="racc-perfil" *ngFor="let p of perfiles"
               [class.racc-perfil-activo]="p.id === estado.profile" [attr.aria-pressed]="p.id === estado.profile"
               (click)="elegirPerfil(p.id)">{{ p.titulo }}</button>
     </div>
-    <span class="racc-nota" *ngIf="personalizado">Cambiaste alguna acción: parte del perfil {{ tituloPerfil }}.</span>
+    <span class="racc-nota" *ngIf="personalizado">Cambiaste alguna acción: parte del perfil {{ tituloPerfil }}.</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
   </div>
 
   <div class="racc-listas">
     <div class="racc-campo" *ngFor="let accion of estado.actions; index as i">
-      <label class="racc-etiqueta" [attr.for]="'racc-accion-' + i">Acción {{ i + 1 }}</label>
+      <label class="racc-etiqueta" [attr.for]="'racc-accion-' + i">Acción {{ i + 1 }}</label> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       <select class="form-control racc-select" [attr.id]="'racc-accion-' + i" (change)="cambiar(i, $any($event.target).value)">
         <option *ngFor="let o of opciones(i)" [value]="o.id" [selected]="o.id === accion">{{ o.titulo }}</option>
       </select>
@@ -27,8 +27,8 @@
 
   <div class="racc-pie">
     <button type="button" class="racc-guardar" [disabled]="guardando" (click)="guardar()">
-      {{ guardando ? 'Guardando…' : 'Guardar acciones' }}
+      {{ guardando ? 'Guardando…' : 'Guardar acciones' }} <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
     </button>
-    <span class="racc-nota" *ngIf="guardado" role="status">Guardado.</span>
+    <span class="racc-nota" *ngIf="guardado" role="status">Guardado.</span> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
   </div>
 </section>

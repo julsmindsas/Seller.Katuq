@@ -1,20 +1,20 @@
-<section class="opttia-chat" *ngIf="hasConsent; else consentView" aria-label="Chat con Opttia">
+<section class="opttia-chat" *ngIf="hasConsent; else consentView" [attr.aria-label]="'asistentes.opttiaChat.chatConOpttia' | translate">
   <div class="opttia-toolbar">
     <div class="opttia-identity">
       <span class="opttia-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
       <div>
-        <strong>Opttia · chat básico</strong>
+        <strong>{{ 'asistentes.opttiaChat.opttiaChatBasico' | translate }}</strong>
         <small><span class="status-dot"></span> {{ opttia.commerceName }}</small>
       </div>
     </div>
 
     <div class="toolbar-actions">
-      <button type="button" (click)="clearConversation()" [disabled]="isSending || opttia.supportSubmitting" title="Nueva conversación"
-        aria-label="Iniciar una conversación nueva">
+      <button type="button" (click)="clearConversation()" [disabled]="isSending || opttia.supportSubmitting" [title]="'asistentes.opttiaChat.nuevaConversacion' | translate"
+        [attr.aria-label]="'asistentes.opttiaChat.iniciarUnaConversacionNueva' | translate">
         <i class="fa fa-plus"></i>
       </button>
-      <button type="button" (click)="withdrawConsent()" [disabled]="isSending || opttia.supportSubmitting" title="Privacidad"
-        aria-label="Retirar permiso para usar Opttia">
+      <button type="button" (click)="withdrawConsent()" [disabled]="isSending || opttia.supportSubmitting" [title]="'asistentes.opttiaChat.privacidad' | translate"
+        [attr.aria-label]="'asistentes.opttiaChat.retirarPermisoParaUsarOpttia' | translate">
         <i class="fa fa-shield"></i>
       </button>
     </div>
@@ -22,13 +22,13 @@
 
   <div class="access-banner" aria-live="polite">
     <ng-container *ngIf="opttia.access$ | async as access; else checkingAccess">
-      <span *ngIf="access.limit === -1">Tu plan incluye mensajes ilimitados.</span>
-      <span *ngIf="access.limit !== -1">{{ access.remaining }} de {{ access.limit }} mensajes disponibles hoy para tu usuario.</span>
-      <small *ngIf="access.resetTime">Se renueva: {{ access.resetTime | date:'d MMM, HH:mm' }}</small>
-      <a *ngIf="access.remaining === 0" routerLink="/pricing">Ver planes</a>
+      <span *ngIf="access.limit === -1">{{ 'asistentes.opttiaChat.tuPlanIncluyeMensajesIlimitados' | translate }}</span>
+      <span *ngIf="access.limit !== -1">{{ access.remaining }} {{ 'asistentes.opttiaChat.deMensajesDisponiblesHoyPara' | translate:{limit: access.limit} }}</span>
+      <small *ngIf="access.resetTime">{{ 'asistentes.opttiaChat.seRenueva' | translate:{resetTime: (access.resetTime | date:'d MMM, HH:mm')} }}</small>
+      <a *ngIf="access.remaining === 0" routerLink="/pricing">{{ 'asistentes.opttiaChat.verPlanes' | translate }}</a>
     </ng-container>
-    <ng-template #checkingAccess><span>{{ opttia.accessLoading ? 'Verificando cupo y permisos…' : 'No se pudo verificar tu acceso.' }}</span></ng-template>
-    <button type="button" (click)="opttia.refreshAccess()" [disabled]="isSending || opttia.accessLoading" aria-label="Actualizar cupo y permisos">Actualizar</button>
+    <ng-template #checkingAccess><span>{{ opttia.accessLoading ? ('asistentes.opttiaChat.verificandoCupoYPermisos' | translate) : ('asistentes.opttiaChat.noSePudoVerificarTu' | translate) }}</span></ng-template>
+    <button type="button" (click)="opttia.refreshAccess()" [disabled]="isSending || opttia.accessLoading" [attr.aria-label]="'asistentes.opttiaChat.actualizarCupoYPermisos' | translate">{{ 'asistentes.moduloIa.actualizar' | translate }}</button>
   </div>
 
   <div class="messages" #messagesContainer aria-live="polite">
@@ -53,10 +53,10 @@
         {{ suggestion }}
       </button>
       <button type="button" *ngIf="canSuggestStore" [disabled]="!opttia.canSend" (click)="fillStoreDraft()">
-        Crear mi tienda con IA
+        {{ 'asistentes.opttiaChat.crearMiTiendaConIa' | translate }}
       </button>
       <button type="button" *ngIf="opttia.hasTool('create_support_ticket')" [disabled]="!opttia.canSend" (click)="fillSupportDraft()">
-        Reportar un problema de Katuq
+        Reportar un problema de Katuq <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
       </button>
     </div>
 
@@ -77,7 +77,7 @@
       </div>
       <ng-template #externalConfirmation>
         <a href="https://www.opttia.com/" target="_blank" rel="noopener noreferrer">
-          Completar en Opttia <i class="fa fa-external-link"></i>
+          {{ 'asistentes.opttiaChat.completarEnOpttia' | translate }} <i class="fa fa-external-link"></i>
         </a>
       </ng-template>
     </article>
@@ -88,56 +88,55 @@
 
     <div class="thinking" *ngIf="isSending">
       <span></span><span></span><span></span>
-      <small>Opttia está pensando…</small>
+      <small>{{ 'asistentes.opttiaChat.opttiaEstaPensando' | translate }}</small>
     </div>
   </div>
 
   <div class="error-banner" *ngIf="errorMessage">
     <i class="fa fa-exclamation-circle"></i>
     <span>{{ errorMessage }}</span>
-    <button type="button" (click)="opttia.dismissError()" aria-label="Cerrar error">
+    <button type="button" (click)="opttia.dismissError()" [attr.aria-label]="'asistentes.opttiaChat.cerrarError' | translate">
       <i class="fa fa-times"></i>
     </button>
   </div>
 
   <div class="ost-reply" *ngIf="replyingToSupport">
-    Completando este reporte.
-    <button type="button" (click)="replyingToSupport = false">Hacer otra consulta</button>
+    Completando este reporte. <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <button type="button" (click)="replyingToSupport = false">Hacer otra consulta</button> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
   </div>
   <form class="composer" (ngSubmit)="send()">
-    <textarea name="opttiaMessage" [(ngModel)]="draft" (keydown)="onKeydown($event)"
+    <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
+    <textarea name="opttiaMessage" [placeholder]="replyingToSupport ? 'Escribe el dato que falta para tu reporte…' : ('asistentes.opttiaChat.preguntaleAOpttiaSobreTu' | translate)" [(ngModel)]="draft" (keydown)="onKeydown($event)"
       [disabled]="isSending || !opttia.canSend" rows="1" maxlength="2000"
-      [placeholder]="replyingToSupport ? 'Escribe el dato que falta para tu reporte…' : 'Pregúntale a Opttia sobre tu negocio…'"
-      aria-label="Mensaje para Opttia"></textarea>
-    <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim() || !opttia.canSend" aria-label="Enviar mensaje">
+      [attr.aria-label]="'asistentes.opttiaChat.mensajeParaOpttia' | translate"></textarea>
+    <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim() || !opttia.canSend" [attr.aria-label]="'asistentes.opttiaChat.enviarMensaje' | translate">
       <i class="fa fa-paper-plane"></i>
     </button>
     <button *ngIf="isSending" type="button" class="stop-button" (click)="opttia.cancel()"
-      aria-label="Detener respuesta">
+      [attr.aria-label]="'asistentes.opttiaChat.detenerRespuesta' | translate">
       <i class="fa fa-stop"></i>
     </button>
   </form>
 
-  <p class="disclaimer">Consultas breves{{ opttia.hasTool('create_support_ticket') ? ' y tickets de soporte con tu confirmación' : ' y de solo lectura' }}. Para agentes y automatizaciones usa opttia.com.</p>
+  <p class="disclaimer">Consultas breves{{ opttia.hasTool('create_support_ticket') ? ' y tickets de soporte con tu confirmación' : ' y de solo lectura' }}. Para agentes y automatizaciones usa opttia.com.</p> <!-- i18n-ignorar: texto nuevo de la rama principal, sin traducir (pendiente en el ticket de Traducción) -->
 </section>
 
 <ng-template #consentView>
   <section class="consent-view" aria-labelledby="opttia-consent-title">
     <span class="consent-icon" aria-hidden="true"><i class="fa fa-bolt"></i></span>
-    <h2 id="opttia-consent-title">Antes de hablar con Opttia</h2>
+    <h2 id="opttia-consent-title">{{ 'asistentes.opttiaChat.antesDeHablarConOpttia' | translate }}</h2>
     <p>
-      Al aceptar, tus mensajes, el identificador de tu empresa y un identificador de sesión se enviarán
-      a SupplyKai, proveedor de inteligencia artificial de Katuq, para generar respuestas y mantener el contexto.
+      {{ 'asistentes.opttiaChat.alAceptarTusMensajesEl' | translate }}
     </p>
     <ul>
-      <li><i class="fa fa-lock"></i> La información se usa para prestar el chat, no para publicidad.</li>
-      <li><i class="fa fa-eye-slash"></i> No compartas contraseñas ni datos bancarios innecesarios.</li>
-      <li><i class="fa fa-undo"></i> Puedes retirar este permiso cuando quieras.</li>
+      <li><i class="fa fa-lock"></i> {{ 'asistentes.opttiaChat.laInformacionSeUsaPara' | translate }}</li>
+      <li><i class="fa fa-eye-slash"></i> {{ 'asistentes.opttiaChat.noCompartasContrasenasNiDatos' | translate }}</li>
+      <li><i class="fa fa-undo"></i> {{ 'asistentes.opttiaChat.puedesRetirarEstePermisoCuando' | translate }}</li>
     </ul>
-    <a href="/privacy-policy" target="_blank">Leer la política de privacidad</a>
+    <a href="/privacy-policy" target="_blank">{{ 'asistentes.opttiaChat.leerLaPoliticaDePrivacidad' | translate }}</a>
     <div class="consent-actions">
-      <button type="button" class="accept" (click)="acceptConsent()">Aceptar y usar Opttia</button>
-      <button type="button" class="decline" (click)="declineConsent()">Ahora no</button>
+      <button type="button" class="accept" (click)="acceptConsent()">{{ 'asistentes.opttiaChat.aceptarYUsarOpttia' | translate }}</button>
+      <button type="button" class="decline" (click)="declineConsent()">{{ 'asistentes.opttiaChat.ahoraNo' | translate }}</button>
     </div>
   </section>
 </ng-template>

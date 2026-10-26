@@ -48,10 +48,10 @@ $chip-borde: #e9e7f3;
 
   &__bloque {
     padding: 14px 0;
-    border-bottom: 1px solid #f1f0f7;
+    border-bottom: 1px solid var(--ds-line-soft);
 
     &--pendiente {
-      background: #faf9fe;
+      background: var(--ds-surface-2);
       border: 1px solid $chip-borde;
       border-radius: 14px;
       padding: 14px;
@@ -93,7 +93,7 @@ $chip-borde: #e9e7f3;
     flex-direction: column;
     width: 100%;
     text-align: left;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $chip-borde;
     border-radius: 10px;
     padding: 9px 12px;
@@ -115,9 +115,9 @@ $chip-borde: #e9e7f3;
   }
   &__cliente-nombre { font-size: 14px; font-weight: 800; }
   &__desvincular {
-    background: #fff;
-    border: 1px solid #e4e2ef;
-    color: #5b5878;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-line-strong);
+    color: var(--ds-body);
     border-radius: 10px;
     padding: 5px 12px;
     font-size: 11.5px;
@@ -131,7 +131,7 @@ $chip-borde: #e9e7f3;
   &__lead-etapa {
     display: inline-block;
     margin-top: 5px;
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     color: $acento;
     border-radius: 20px;
     padding: 2px 10px;
@@ -148,12 +148,12 @@ $chip-borde: #e9e7f3;
     border-radius: 10px;
     text-decoration: none;
     color: $ink;
-    &:hover { background: #faf9ff; }
+    &:hover { background: var(--ds-row-hover); }
   }
   &__pedido-nro {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 12px;
-    color: #1e6fd9;
+    color: var(--ds-info);
   }
   &__pedido-estado {
     font-size: 10px;

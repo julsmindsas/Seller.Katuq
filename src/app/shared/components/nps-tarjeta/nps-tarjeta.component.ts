@@ -9,6 +9,7 @@ import { NovedadesService } from '../../services/novedades.service';
 import { AuthService } from '../../services/firebase/auth.service';
 import { esRutaPublica, rutaSinQuery } from '../../data/rutas-publicas';
 
+import { TranslateModule } from '@ngx-translate/core';
 /**
  * Pregunta NPS de Katuq a los comercios dentro del Seller (D-483, D-506). Montada una vez en
  * `app.component`, decide cuándo preguntar y cómo se ve fuera de Inicio:
@@ -22,7 +23,7 @@ import { esRutaPublica, rutaSinQuery } from '../../data/rutas-publicas';
 @Component({
   selector: 'app-nps-tarjeta',
   standalone: true,
-  imports: [CommonModule, NpsPreguntaComponent],
+  imports: [TranslateModule, CommonModule, NpsPreguntaComponent],
   templateUrl: './nps-tarjeta.component.html',
   styleUrls: ['./nps-tarjeta.component.scss'],
 })

@@ -1,14 +1,14 @@
 <section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-carrera-titulo" [class.es-compacta]="compacta">
   <header class="card__head">
     <div>
-      <div class="card__eyebrow">{{ vm.ocultar ? 'Comercios con más pedidos hoy' : 'Comercios que más venden hoy' }}</div>
-      <h2 class="card__title" id="ev-kq-carrera-titulo">La carrera de hoy</h2>
+      <div class="card__eyebrow">{{ vm.ocultar ? ('enVivo.enVivoCarrera.comerciosConMasPedidosHoy' | translate) : ('enVivo.enVivoCarrera.comerciosQueMasVendenHoy' | translate) }}</div>
+      <h2 class="card__title" id="ev-kq-carrera-titulo">{{ 'enVivo.enVivoCarrera.laCarreraDeHoy' | translate }}</h2>
     </div>
-    <span class="card__chip">Top {{ top }}</span>
+    <span class="card__chip">{{ 'enVivo.enVivoCarrera.top' | translate:{top: top} }}</span>
   </header>
 
   <div class="card__body">
-    <p class="vacio" *ngIf="vm.filas.length === 0">Todavía no hay pedidos en ningún comercio hoy.</p>
+    <p class="vacio" *ngIf="vm.filas.length === 0">{{ 'enVivo.enVivoCarrera.todaviaNoHayPedidosEn' | translate }}</p>
 
     <div class="race" role="list" *ngIf="vm.filas.length > 0" [style.--filas]="vm.visibles">
       <div

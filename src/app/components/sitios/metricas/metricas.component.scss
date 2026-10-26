@@ -369,3 +369,116 @@
 }
 
 .campana__ventas { font-weight: 600; font-size: 0.75rem; color: #6b6890; }
+
+// ── F4-40·B16: bloque «KAI». Plano, lila y morado. ──
+// Ningún nombre de clase lleva «p-» (el reset global le fuerza el font-size).
+.kai-bloque {
+  margin-top: 1.4rem;
+  padding: 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e4e0f5;
+  box-shadow: 0 8px 24px rgba(95, 63, 224, 0.08);
+
+  &__titulo {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b6890;
+  }
+
+  &__estado,
+  &__nota {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b6890;
+    letter-spacing: normal;
+  }
+
+  &__error {
+    margin: 0;
+    padding: 11px 14px;
+    border-radius: 11px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: normal;
+  }
+
+  &__reintento {
+    margin-left: 8px;
+    border: 1px solid #e4e0f5;
+    background: #fff;
+    color: #211f3a;
+    border-radius: 11px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+  }
+
+  &__vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    text-align: center;
+
+    i { font-size: 26px; color: #5f3fe0; }
+    strong { font-size: 14px; font-weight: 800; color: #211f3a; }
+    span { font-size: 13px; font-weight: 600; color: #6b6890; }
+  }
+
+  &__cifras {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+.kai-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f6f4fe;
+  border: 1px solid #e9e3ff;
+
+  &__etiqueta {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b6890;
+  }
+
+  &__valor {
+    font-size: 18px;
+    font-weight: 800;
+    color: #211f3a;
+    overflow-wrap: anywhere;
+  }
+
+  &--principal &__valor { color: #5f3fe0; }
+
+  // «Pendiente · disponible pronto»: más chico y apagado, para que no parezca una cifra.
+  &__valor--pendiente {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b6890;
+    letter-spacing: normal;
+  }
+}

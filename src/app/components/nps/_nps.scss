@@ -89,7 +89,7 @@ $nps-slate-soft: #eef0f3;
     font-size: 13.5px;
     transition: border-color .15s ease, background .15s ease;
 
-    &:focus { border-color: $cfg-accent; background: #fff; outline: none; }
+    &:focus { border-color: $cfg-accent-ink; background: var(--ds-surface); outline: none; }
     &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
     &:disabled { color: $cfg-body; cursor: not-allowed; opacity: .8; }
     &.is-error { border-color: $cfg-err; }
@@ -121,7 +121,7 @@ $nps-slate-soft: #eef0f3;
     width: 38px;
     height: 22px;
     border-radius: 20px;
-    background: #e4e2ef;
+    background: var(--ds-line-strong);
     transition: background .15s ease;
 
     &::after {
@@ -132,7 +132,7 @@ $nps-slate-soft: #eef0f3;
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #fff;
+      background: var(--ds-surface);
       box-shadow: 0 1px 3px rgba(30, 20, 80, .2);
       transition: transform .15s ease;
     }
@@ -180,7 +180,7 @@ $nps-slate-soft: #eef0f3;
     &.is-detractor, &.is-vencido { background: $cfg-err-soft; color: $cfg-err; }
     &.is-nuevo, &.is-pausada, &.is-prueba { background: $cfg-warn-soft; color: $cfg-warn; }
     &.is-contactado { background: $cfg-info-soft; color: $cfg-info; }
-    &.is-canal { background: $cfg-accent-soft; color: $cfg-accent; }
+    &.is-canal { background: $cfg-accent-soft; color: $cfg-accent-ink; }
   }
 
   // Nota 0 a 10 en un cuadro con el color del segmento.
@@ -227,7 +227,7 @@ $nps-slate-soft: #eef0f3;
   }
 
   .nps-indicador__valor {
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
     font-size: 22px;
     font-weight: 800;
     line-height: 1.1;
@@ -276,7 +276,7 @@ $nps-slate-soft: #eef0f3;
   .nps-fila__fecha { margin-left: auto; color: $cfg-muted; font-size: 11.5px; white-space: nowrap; }
 
   .nps-enlace {
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
     font-size: 12.5px;
     font-weight: 700;
     text-decoration: none;

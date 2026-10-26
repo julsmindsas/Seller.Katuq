@@ -5,6 +5,7 @@ import { MaestroService } from 'src/app/shared/services/maestros/maestro.service
 import { ProcesoConCentroTrabajo } from '../../../model/produccion/procesoconcentrotrabajo';
 import Swal from 'sweetalert2';
 import { parse, stringify } from 'flatted';
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-procesos',
   templateUrl: './procesos.component.html',
@@ -15,7 +16,9 @@ export class ProcesosComponent implements OnInit {
   @ViewChild('editDeleteModal') modal: ElementRef;
   @ViewChild('myModal') mymodal: ElementRef;
   editProcesoNuevo: boolean = false;
-  constructor(private modalService: NgbModal, private maestroservice: MaestroService, private chr: ChangeDetectorRef) {
+  constructor(private modalService: NgbModal, private maestroservice: MaestroService, private chr: ChangeDetectorRef,
+    private translate: TranslateService
+  ) {
     this.centrosTrabajoSource = [];
     this.procesoNuevo = {
       nombre: '',
@@ -82,7 +85,7 @@ export class ProcesosComponent implements OnInit {
         contextGeneral.chr.detectChanges();
       },
       error(err) {
-        Swal.fire('Error', 'Error al obtener los centros de trabajo', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.centrotrabajos.errorAlObtenerLosCentros'), 'error');
         console.log(err);
       },
     });
@@ -102,7 +105,7 @@ export class ProcesosComponent implements OnInit {
         }
       },
       error(err) {
-        Swal.fire('Error', 'Error al obtener los procesos', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.errorAlObtenerLosProcesos'), 'error');
         console.log(err);
       },
     });
@@ -110,12 +113,12 @@ export class ProcesosComponent implements OnInit {
 
   createProcessAndCentroTrabajo() {
     if (this.procesoNuevo.nombre === '') {
-      Swal.fire('Error', 'El nombre del proceso es requerido', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.elNombreDelProcesoEs'), 'error');
       return;
     }
 
     if (this.procesoNuevo.centrosTrabajo.length === 0) {
-      Swal.fire('Error', 'Debe seleccionar al menos un centro de trabajo', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.debeSeleccionarAlMenosUn'), 'error');
       return;
     }
 
@@ -125,7 +128,7 @@ export class ProcesosComponent implements OnInit {
       for (let index = 0; index < procesos.length; index++) {
         const proceso = procesos[index];
         if (proceso.label === this.procesoNuevo.nombre) {
-          Swal.fire('Error', 'El nombre del proceso ya existe', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.elNombreDelProcesoYa'), 'error');
           return;
         }
       }
@@ -163,13 +166,13 @@ export class ProcesosComponent implements OnInit {
             centrosTrabajo: []
           }
           contextGeneral.procesosConCentrosTrabajos = [...contextGeneral.procesosConCentrosTrabajos];
-          Swal.fire('Proceso creado', 'Proceso creado correctamente', 'success');
+          Swal.fire(this.translate.instant('empresas.procesos.procesoCreado'), this.translate.instant('empresas.procesos.procesoCreadoCorrectamente'), 'success');
           contextGeneral.modalService.dismissAll();
           contextGeneral.getAllProcesos();
           contextGeneral.chr.detectChanges();
         },
         error(err) {
-          Swal.fire('Error', 'Error al crear el proceso', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.errorAlCrearElProceso'), 'error');
           contextGeneral.chr.detectChanges();
           console.log(err);
         },
@@ -184,13 +187,13 @@ export class ProcesosComponent implements OnInit {
             centrosTrabajo: []
           }
           contextGeneral.procesosConCentrosTrabajos = [...contextGeneral.procesosConCentrosTrabajos];
-          Swal.fire('Proceso editado', 'Proceso editado correctamente', 'success');
+          Swal.fire(this.translate.instant('empresas.procesos.procesoEditado'), this.translate.instant('empresas.procesos.procesoEditadoCorrectamente'), 'success');
           contextGeneral.modalService.dismissAll();
           contextGeneral.chr.detectChanges();
         },
         error(err) {
           contextGeneral.chr.detectChanges();
-          Swal.fire('Error', 'Error al crear el proceso', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.errorAlCrearElProceso'), 'error');
           console.log(err);
         },
       });
@@ -223,13 +226,13 @@ export class ProcesosComponent implements OnInit {
 
   deleteProcess() {
     Swal.fire({
-      title: '¿Está seguro de eliminar el proceso?',
-      text: "No podrá revertir esta acción!",
+      title: this.translate.instant('empresas.procesos.estaSeguroDeEliminarEl'),
+      text: this.translate.instant('empresas.procesos.noPodraRevertirEstaAccion'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Eliminar'
+      confirmButtonText: this.translate.instant('comun.eliminar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.deleteSelectedNode();
@@ -251,12 +254,12 @@ export class ProcesosComponent implements OnInit {
     this.maestroservice.editProcesoProduccion(this.procesoAGuardar).subscribe({
       next(value: any) {
         console.log(value);
-        Swal.fire('Proceso eliminado', 'Proceso eliminado correctamente', 'success');
+        Swal.fire(this.translate.instant('empresas.procesos.procesoEliminado'), this.translate.instant('empresas.procesos.procesoEliminadoCorrectamente'), 'success');
         contextGeneral.modalService.dismissAll();
         contextGeneral.chr.detectChanges();
       },
       error(err) {
-        Swal.fire('Error', 'Error al eliminar el proceso', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('empresas.procesos.errorAlEliminarElProceso'), 'error');
         console.log(err);
       },
     });

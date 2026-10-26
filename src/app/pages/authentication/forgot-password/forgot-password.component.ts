@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/firebase/auth.service';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-forgot-password',
@@ -21,7 +22,8 @@ export class ForgotPasswordComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private serviciosService: ServiciosService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -44,13 +46,13 @@ export class ForgotPasswordComponent implements OnInit {
         next: () => {
           this.emailSent = true;
           this.isLoading = false;
-          this.toastr.success('Si el correo está registrado, recibirás las instrucciones', 'Solicitud recibida');
+          this.toastr.success(this.translate.instant('authentication.forgot.requestReceivedText'), this.translate.instant('authentication.forgot.requestReceivedTitle'));
           
         },
         error: () => {
           this.isLoading = false;
           // El mensaje no confirma si el correo existe y permite volver a intentar.
-          this.toastr.error('No pudimos procesar la solicitud. Intenta nuevamente.', 'Error');
+          this.toastr.error(this.translate.instant('authentication.forgot.requestFailed'), this.translate.instant('comun.error'));
         }
       });
     }

@@ -23,8 +23,8 @@
         width: 40px;
         height: 40px;
         border-radius: 11px;
-        border: 1px solid #e4e2ef;
-        background: #fff;
+        border: 1px solid var(--ds-line-strong);
+        background: var(--ds-surface);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -35,7 +35,7 @@
         &:hover {
           background: $cfg-tint;
           border-color: #d9cffb;
-          color: $cfg-accent;
+          color: $cfg-accent-ink;
         }
 
         i { font-size: 16px; }
@@ -47,7 +47,7 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .4px;
-      color: $cfg-accent;
+      color: $cfg-accent-ink;
       background: $cfg-accent-soft;
       padding: 5px 12px;
       border-radius: 20px;
@@ -99,7 +99,7 @@
       height: 48px;
       border: 4px solid $cfg-accent-soft;
       border-radius: 50%;
-      border-top-color: $cfg-accent;
+      border-top-color: $cfg-accent-ink;
       animation: spin 1s ease-in-out infinite;
       margin-bottom: 16px;
     }
@@ -135,7 +135,7 @@
           width: 32px;
           height: 32px;
           font-size: 14px;
-          background: #fff;
+          background: var(--ds-surface);
           border: 2px solid $cfg-line;
           color: $cfg-muted;
           font-weight: 800;
@@ -154,12 +154,12 @@
         .p-steps-number {
           background: $cfg-accent;
           border-color: $cfg-accent;
-          color: #fff;
+          color: var(--ds-on-accent);
           box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
         }
 
         .p-steps-title {
-          color: $cfg-accent;
+          color: $cfg-accent-ink;
         }
       }
     }

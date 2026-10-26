@@ -35,7 +35,7 @@ assert.ok(
   "un callback abierto en otro navegador no debe llamar endpoints autenticados ni expulsar al usuario",
 );
 assert.ok(
-  template.includes("failed ? 'Pago no aprobado' : 'Pago pendiente'"),
+  template.includes("failed ? 'publica.subscription.failedTitle' : 'publica.payment.pendingTitle'"),
   "un rechazo no puede presentarse visualmente como pago pendiente",
 );
 assert.ok(

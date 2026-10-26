@@ -1,6 +1,6 @@
 <section class="kf-editor">
   <header class="kf-editor__header">
-    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()" aria-label="Volver">
+    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()" [attr.aria-label]="'comun.volver' | translate">
       <i class="pi pi-arrow-left"></i>
     </button>
 
@@ -10,14 +10,14 @@
         class="kf-name-input"
         [(ngModel)]="flowName"
         (ngModelChange)="hasUnsaved = true"
-        placeholder="Nombre de la automatización"
+        [placeholder]="'flows.flowEditor.nombreDeLaAutomatizacion' | translate"
       />
       <input
         type="text"
         class="kf-desc-input"
         [(ngModel)]="flowDescription"
         (ngModelChange)="hasUnsaved = true"
-        placeholder="Descripción corta (opcional)"
+        [placeholder]="'flows.flowEditor.descripcionCortaOpcional' | translate"
       />
     </div>
 
@@ -26,20 +26,20 @@
       <span
         *ngIf="flowStatus === 'active'"
         class="kf-meta-pill kf-meta-pill--success"
-        title="Encendida"
+        [title]="'flows.flowEditor.encendida' | translate"
       >
-        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--active"></i> encendida
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--active"></i> {{ 'flows.flowEditor.encendida2' | translate }}
       </span>
       <span
         *ngIf="flowStatus === 'draft'"
         class="kf-meta-pill"
-        title="Sin terminar"
+        [title]="'flows.flowEditor.sinTerminar' | translate"
       >
-        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--draft"></i> sin terminar
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--draft"></i> {{ 'flows.flowEditor.sinTerminar2' | translate }}
       </span>
-      <span *ngIf="hasUnsaved" class="kf-meta-pill kf-meta-pill--warn">cambios sin guardar</span>
+      <span *ngIf="hasUnsaved" class="kf-meta-pill kf-meta-pill--warn">{{ 'flows.flowEditor.cambiosSinGuardar' | translate }}</span>
       <span *ngIf="saving" class="kf-meta-pill kf-meta-pill--info">
-        <i class="pi pi-spin pi-spinner"></i> guardando
+        <i class="pi pi-spin pi-spinner"></i> {{ 'flows.flowEditor.guardando' | translate }}
       </span>
     </div>
 
@@ -49,20 +49,20 @@
         class="kf-btn"
         (click)="toggleConfigPanel()"
         [class.kf-btn--toggled]="configPanelOpen"
-        title="Etiquetas, cada cuánto arranca y dirección de avisos"
+        [title]="'flows.flowEditor.etiquetasCadaCuantoArrancaY' | translate"
       >
         <i class="pi pi-cog"></i>
-        Ajustes
+        {{ 'flows.flowEditor.ajustes' | translate }}
       </button>
       <button
         *ngIf="!isNew"
         type="button"
         class="kf-btn"
         (click)="goToRuns()"
-        title="Ver el historial"
+        [title]="'flows.flowEditor.verElHistorial' | translate"
       >
         <i class="pi pi-history"></i>
-        Historial
+        {{ 'flows.flowAiAssist.historial' | translate }}
       </button>
       <button
         *ngIf="!isNew"
@@ -73,26 +73,26 @@
         [class.kf-btn--warn]="flowStatus === 'active'"
       >
         <i class="pi" [ngClass]="flowStatus === 'active' ? 'pi-pause' : 'pi-play'"></i>
-        {{ flowStatus === 'active' ? 'Apagar' : 'Encender' }}
+        {{ flowStatus === 'active' ? ('flows.flowEditor.apagar' | translate) : ('flows.flowEditor.encender' | translate) }}
       </button>
       <button type="button" class="kf-btn kf-btn--primary" (click)="save()" [disabled]="saving">
         <i class="pi pi-save"></i>
-        Guardar
+        {{ 'comun.guardar' | translate }}
       </button>
     </div>
   </header>
 
   <!-- Collapsible flow configuration panel -->
-  <div class="kf-config-bar" *ngIf="configPanelOpen" role="region" aria-label="Ajustes de la automatización">
+  <div class="kf-config-bar" *ngIf="configPanelOpen" role="region" [attr.aria-label]="'flows.flowEditor.ajustesDeLaAutomatizacion' | translate">
     <div class="kf-config-bar__inner">
       <div class="kf-config-section">
         <label class="kf-config-label">
-          <i class="pi pi-tag"></i> Etiquetas
+          <i class="pi pi-tag"></i> {{ 'flows.flowEditor.etiquetas' | translate }}
         </label>
         <div class="kf-tag-list">
           <span class="kf-tag-chip" *ngFor="let tag of flowTags">
             {{ tag }}
-            <button type="button" class="kf-tag-chip__remove" (click)="removeTag(tag)" aria-label="Quitar">
+            <button type="button" class="kf-tag-chip__remove" (click)="removeTag(tag)" [attr.aria-label]="'flows.flowEditor.quitar' | translate">
               <i class="pi pi-times"></i>
             </button>
           </span>
@@ -101,7 +101,7 @@
             class="kf-tag-input"
             [(ngModel)]="newTagInput"
             (keyup.enter)="addTag()"
-            placeholder="Nueva etiqueta + Enter"
+            [placeholder]="'flows.flowEditor.nuevaEtiquetaEnter' | translate"
           />
         </div>
       </div>
@@ -111,11 +111,11 @@
         *ngIf="triggerType === 'cron' || triggerType === 'polling'"
       >
         <label class="kf-config-label">
-          <i class="pi pi-clock"></i> Cada cuánto arranca
+          <i class="pi pi-clock"></i> {{ 'flows.flowEditor.cadaCuantoArranca' | translate }}
         </label>
         <div class="kf-schedule-grid">
           <div class="kf-field">
-            <label>Horario (formato avanzado)</label>
+            <label>{{ 'flows.flowEditor.horarioFormatoAvanzado' | translate }}</label>
             <input
               type="text"
               class="kf-input"
@@ -123,26 +123,26 @@
               (ngModelChange)="onScheduleChange()"
               placeholder="*/5 * * * *"
             />
-            <small class="kf-hint">Ej: <code>*/5 * * * *</code> = cada 5 min, <code>0 9 * * *</code> = diario 9am</small>
+            <small class="kf-hint">{{ 'flows.flowEditor.ej' | translate }} <code>*/5 * * * *</code> {{ 'flows.flowEditor.cada5Min' | translate }} <code>0 9 * * *</code> {{ 'flows.flowEditor.diario9am' | translate }}</small>
           </div>
           <div class="kf-field">
-            <label>O cada cuántos minutos</label>
+            <label>{{ 'flows.flowEditor.oCadaCuantosMinutos' | translate }}</label>
             <input
               type="number"
               class="kf-input"
               [(ngModel)]="scheduleDraft.intervalMinutes"
               (ngModelChange)="onScheduleChange()"
               min="1"
-              placeholder="Ej: 60 (cada hora)"
+              [placeholder]="'flows.flowEditor.ej60CadaHora' | translate"
             />
-            <small class="kf-hint">Si llenas este, se ignora el horario.</small>
+            <small class="kf-hint">{{ 'flows.flowEditor.siLlenasEsteSeIgnora' | translate }}</small>
           </div>
         </div>
       </div>
 
       <div class="kf-config-section" *ngIf="triggerType === 'webhook' && webhookUrl">
         <label class="kf-config-label">
-          <i class="pi pi-link"></i> Dirección para los avisos
+          <i class="pi pi-link"></i> {{ 'flows.flowEditor.direccionParaLosAvisos' | translate }}
         </label>
         <div class="kf-webhook-row">
           <input
@@ -152,18 +152,18 @@
             readonly
           />
           <button type="button" class="kf-btn" (click)="copyWebhookUrl()">
-            <i class="pi pi-copy"></i> Copiar
+            <i class="pi pi-copy"></i> {{ 'flows.flowEditor.copiar' | translate }}
           </button>
         </div>
-        <small class="kf-hint">Es la dirección a la que tu tienda manda los avisos. En Shopify va en Configuración → Notificaciones → Webhooks; en WooCommerce, en Ajustes → Avanzado → Webhooks. Si ya está configurada, no tienes que cambiar nada.</small>
+        <small class="kf-hint">{{ 'flows.flowEditor.esLaDireccionALa' | translate }}</small>
       </div>
 
       <div class="kf-config-section" *ngIf="!triggerType">
         <label class="kf-config-label">
-          <i class="pi pi-info-circle"></i> Cuándo arranca
+          <i class="pi pi-info-circle"></i> {{ 'flows.flowEditor.cuandoArranca' | translate }}
         </label>
         <small class="kf-hint">
-          Agrega un paso de inicio desde el catálogo y guarda la automatización para elegir aquí cuándo arranca.
+          {{ 'flows.flowEditor.agregaUnPasoDeInicio' | translate }}
         </small>
       </div>
 
@@ -171,7 +171,7 @@
         type="button"
         class="kf-btn kf-btn--ghost kf-config-bar__close"
         (click)="closeConfigPanel()"
-        aria-label="Cerrar configuración"
+        [attr.aria-label]="'flows.flowEditor.cerrarConfiguracion' | translate"
       >
         <i class="pi pi-times"></i>
       </button>
@@ -181,30 +181,30 @@
   <div *ngIf="avisosGuardado.length" class="kf-avisos" role="status">
     <i class="pi pi-exclamation-triangle kf-avisos__icono" aria-hidden="true"></i>
     <div class="kf-avisos__texto">
-      <strong class="kf-avisos__titulo">Revisa esto antes de encenderla</strong>
+      <strong class="kf-avisos__titulo">{{ 'flows.flowEditor.revisaEstoAntesDeEncenderla' | translate }}</strong>
       <ul class="kf-avisos__lista">
         <li *ngFor="let aviso of avisosGuardado">{{ aviso }}</li>
       </ul>
     </div>
-    <button type="button" class="kf-avisos__cerrar" (click)="avisosGuardado = []" aria-label="Ocultar avisos">
+    <button type="button" class="kf-avisos__cerrar" (click)="avisosGuardado = []" [attr.aria-label]="'flows.flowEditor.ocultarAvisos' | translate">
       <i class="pi pi-times"></i>
     </button>
   </div>
 
   <div *ngIf="loading" class="kf-loading">
     <i class="pi pi-spin pi-spinner"></i>
-    Cargando la automatización…
+    {{ 'flows.flowEditor.cargandoLaAutomatizacion' | translate }}
   </div>
 
   <div *ngIf="!webComponentReady && !errorMessage" class="kf-loading">
     <i class="pi pi-spin pi-spinner"></i>
-    Cargando el editor…
+    {{ 'flows.flowEditor.cargandoElEditor' | translate }}
   </div>
 
   <!-- Si no cargó, no se muestra un lienzo vacío que invite a editar (y que el autoguardado pisaría). -->
   <div *ngIf="!loading && !isNew && !flow && errorMessage" class="kf-carga-fallida" role="alert">
     <strong>{{ errorMessage }}</strong>
-    <button type="button" class="kf-btn" (click)="goBack()">Volver a Automatizaciones</button>
+    <button type="button" class="kf-btn" (click)="goBack()">{{ 'flows.flowEditor.volverAAutomatizaciones' | translate }}</button>
   </div>
 
   <div *ngIf="webComponentReady && !loading && (isNew || flow)" class="kf-canvas-host">
@@ -223,54 +223,54 @@
     class="kf-modal-backdrop"
     role="dialog"
     aria-modal="true"
-    aria-label="Atajos de teclado"
+    [attr.aria-label]="'flows.flowEditor.atajosDeTeclado' | translate"
     (click)="closeShortcutsModal()"
   >
     <div class="kf-modal" (click)="$event.stopPropagation()">
       <div class="kf-modal__header">
-        <h3><i class="pi pi-keyboard"></i> Atajos de teclado</h3>
-        <button type="button" class="kf-btn kf-btn--ghost" (click)="closeShortcutsModal()" aria-label="Cerrar">
+        <h3><i class="pi pi-keyboard"></i> {{ 'flows.flowEditor.atajosDeTeclado' | translate }}</h3>
+        <button type="button" class="kf-btn kf-btn--ghost" (click)="closeShortcutsModal()" [attr.aria-label]="'comun.cerrar' | translate">
           <i class="pi pi-times"></i>
         </button>
       </div>
       <div class="kf-modal__body">
         <div class="kf-shortcut-list">
           <div class="kf-shortcut-row">
-            <kbd>Ctrl</kbd> + <kbd>S</kbd>
-            <span>Guardar los cambios</span>
+            <kbd>{{ 'flows.flowEditor.ctrl' | translate }}</kbd> + <kbd>{{ 'flows.flowEditor.s' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.guardarLosCambios' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
-            <span>Probar ahora</span>
+            <kbd>{{ 'flows.flowEditor.ctrl' | translate }}</kbd> + <kbd>{{ 'flows.flowEditor.enter' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.probarAhora' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Esc</kbd>
-            <span>Cerrar panel / modal</span>
+            <kbd>{{ 'flows.flowEditor.esc' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.cerrarPanelModal' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Delete</kbd>
-            <span>Quitar el paso seleccionado</span>
+            <kbd>{{ 'flows.flowEditor.delete' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.quitarElPasoSeleccionado' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Click derecho</kbd>
-            <span>Sobre un paso: ver qué hizo la última vez</span>
+            <kbd>{{ 'flows.flowEditor.clickDerecho' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.sobreUnPasoVerQue' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>?</kbd>
-            <span>Mostrar este modal</span>
+            <span>{{ 'flows.flowEditor.mostrarEsteModal' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Espacio</kbd> + <kbd>arrastrar</kbd>
-            <span>Mover el lienzo</span>
+            <kbd>{{ 'flows.flowEditor.espacio' | translate }}</kbd> + <kbd>{{ 'flows.flowEditor.arrastrar' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.moverElLienzo' | translate }}</span>
           </div>
           <div class="kf-shortcut-row">
-            <kbd>Scroll</kbd>
-            <span>Acercar o alejar</span>
+            <kbd>{{ 'flows.flowEditor.scroll' | translate }}</kbd>
+            <span>{{ 'flows.flowEditor.acercarOAlejar' | translate }}</span>
           </div>
         </div>
         <div class="kf-shortcut-tip">
           <i class="pi pi-info-circle"></i>
-          En Mac, usa <kbd>Cmd</kbd> en lugar de <kbd>Ctrl</kbd>.
+          {{ 'flows.flowEditor.enMacUsa' | translate }} <kbd>{{ 'flows.flowEditor.cmd' | translate }}</kbd> {{ 'flows.flowEditor.enLugarDe' | translate }} <kbd>{{ 'flows.flowEditor.ctrl' | translate }}</kbd>.
         </div>
       </div>
     </div>

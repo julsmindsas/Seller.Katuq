@@ -34,7 +34,7 @@ export class SubscriptionCallbackComponent implements OnInit {
       } else {
         this.loading = false;
         this.success = false;
-        this.message = 'No se encontró información de la suscripción.';
+        this.message = 'publica.subscription.notFound';
       }
     });
   }
@@ -44,7 +44,7 @@ export class SubscriptionCallbackComponent implements OnInit {
     if (!subscriptionId) {
       this.loading = false;
       this.success = false;
-      this.message = 'No se encontró información de la suscripción.';
+      this.message = 'publica.subscription.notFound';
       return;
     }
 
@@ -64,15 +64,15 @@ export class SubscriptionCallbackComponent implements OnInit {
           if (payment.activated === true) {
             this.success = true;
             this.failed = false;
-            this.message = '¡Tu suscripción Premium ha sido activada exitosamente!';
+            this.message = 'publica.subscription.activated';
           } else if (['failed', 'declined', 'error', 'voided'].includes(paymentStatus)) {
             this.success = false;
             this.failed = true;
-            this.message = 'Wompi no aprobó este pago. Revisa el medio de pago e intenta nuevamente.';
+            this.message = 'publica.subscription.declined';
           } else {
             this.success = false;
             this.failed = false;
-            this.message = 'Tu pago está siendo procesado. Recibirás un correo de confirmación pronto.';
+            this.message = 'publica.subscription.processing';
           }
 
           // Refrescar el estado global solo después de decidir con el pago
@@ -87,7 +87,7 @@ export class SubscriptionCallbackComponent implements OnInit {
           this.loading = false;
           this.success = false;
           this.failed = true;
-          this.message = 'Hubo un error al verificar este pago. Por favor intenta nuevamente o contacta soporte.';
+          this.message = 'publica.subscription.verifyError';
         }
       });
     }, 3000); // Esperar 3 segundos para que el webhook procese

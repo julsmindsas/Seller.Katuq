@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { Role, Menu, RECOMMENDED_PERMISSIONS } from '../../../shared/models/roles/roles';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Step: Roles Configuration
  * Configuración de roles y permisos de usuario
@@ -66,7 +67,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -139,8 +141,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -151,8 +153,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
     if (!roleData.permissions || roleData.permissions.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Permisos Requeridos',
-        detail: 'Debes seleccionar al menos un permiso para este rol'
+        summary: this.translate.instant('onboarding.rolesStep.permisosRequeridos'),
+        detail: this.translate.instant('onboarding.rolesStep.debesSeleccionarAlMenosUn')
       });
       return;
     }
@@ -165,8 +167,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe un rol con este nombre'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.rolesStep.yaExisteUnRolCon')
       });
       return;
     }
@@ -177,16 +179,16 @@ export class RolesStepComponent implements OnInit, OnDestroy {
       this.editingIndex = null;
       this.messageService.add({
         severity: 'success',
-        summary: 'Actualizado',
-        detail: 'Rol actualizado correctamente'
+        summary: this.translate.instant('onboarding.billingZonesStep.actualizado'),
+        detail: this.translate.instant('onboarding.rolesStep.rolActualizadoCorrectamente')
       });
     } else {
       // Agregar nuevo rol
       this.rolesList.push(roleData);
       this.messageService.add({
         severity: 'success',
-        summary: 'Agregado',
-        detail: 'Rol agregado a la lista'
+        summary: this.translate.instant('onboarding.billingZonesStep.agregado'),
+        detail: this.translate.instant('onboarding.rolesStep.rolAgregadoALaLista')
       });
     }
 
@@ -224,8 +226,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'info',
-      summary: 'Eliminado',
-      detail: `Rol "${role.rol}" eliminado`
+      summary: this.translate.instant('onboarding.billingZonesStep.eliminado'),
+      detail: this.translate.instant('onboarding.rolesStep.rolEliminado', { nombre: role.rol })
     });
 
     // Si estaba editando este rol, cancelar
@@ -241,8 +243,8 @@ export class RolesStepComponent implements OnInit, OnDestroy {
     if (this.rolesList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos un rol para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.rolesStep.debesAgregarAlMenosUn')
       });
       return;
     }
@@ -272,15 +274,15 @@ export class RolesStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.rolesList.length} rol(es) configurado(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.rolesStep.rolesConfiguradosDetalle', { cantidad: this.rolesList.length })
       });
     } catch (error) {
       console.error('Error guardando roles:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo guardar la configuración de roles'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.rolesStep.noSePudoGuardarLa')
       });
     } finally {
       this.isSaving = false;

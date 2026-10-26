@@ -1,5 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { TranslateService } from "@ngx-translate/core";
 import { Observable, of } from "rxjs";
 import { catchError, map, retry } from "rxjs/operators";
 
@@ -71,7 +72,7 @@ export interface KapsoTemplate {
 export class WhatsappInboxService extends BaseService {
   private readonly base = "/v1/whatsapp/conversations";
 
-  constructor(http: HttpClient) {
+  constructor(http: HttpClient, private translate: TranslateService) {
     super(http);
   }
 
@@ -292,7 +293,7 @@ export class WhatsappInboxService extends BaseService {
     return {
       phoneHash: it.phoneHash,
       phoneMasked: it.phoneMasked,
-      contactName: it.clienteNombre || it.profileName || "Sin nombre",
+      contactName: it.clienteNombre || it.profileName || this.translate.instant("notificaciones.sinNombre"),
       lastMessageAt: it.lastMessageAt,
       lastMessageSnippet: it.lastMessagePreview || it.lastMessageSnippet || "",
       unreadCount: it.unreadCount || 0,

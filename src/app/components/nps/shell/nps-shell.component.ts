@@ -5,6 +5,7 @@ import { CompanyFeaturesService } from '../../../shared/services/company-feature
 import { npsDisponible } from '../../../shared/services/nps/nps.service';
 import { empresaSesion, esAdministradorSesion } from '../nps-comun';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface Pestana {
   ruta: string;
   texto: string;
@@ -26,7 +27,7 @@ const PESTANAS: Pestana[] = [
 @Component({
   selector: 'app-nps-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [TranslateModule, CommonModule, RouterModule],
   templateUrl: './nps-shell.component.html',
   styleUrls: ['./nps-shell.component.scss'],
 })

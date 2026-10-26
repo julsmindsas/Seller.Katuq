@@ -1,6 +1,7 @@
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 import { NpsService } from '../../../shared/services/nps/nps.service';
 import { Encuesta, EstadoEncuesta } from '../../../shared/services/nps/nps.models';
 import { codigoError, mensajeError } from '../nps-comun';
@@ -17,31 +18,32 @@ export interface ResultadoEstado {
  * `confirmar: true`. Los errores se muestran con Swal y devuelven `{ encuesta: null }`.
  * Lo usan la lista y el editor.
  */
-export function cambiarEstadoEncuesta(nps: NpsService, encuesta: Encuesta, estado: Exclude<EstadoEncuesta, 'borrador'>): Observable<ResultadoEstado> {
+export function cambiarEstadoEncuesta(nps: NpsService, encuesta: Encuesta, estado: Exclude<EstadoEncuesta, 'borrador'>, tr: TranslateService): Observable<ResultadoEstado> {
   return nps.cambiarEstado(encuesta.id, estado).pipe(
     map((r) => ({ encuesta: r.encuesta, pausada: r.pausada })),
     catchError((e) => {
       if (e?.status === 409 && codigoError(e) === 'OTRA_ACTIVA') {
-        const otra = e?.error?.otra?.nombre || 'la encuesta de entrega activa';
+        const otra = e?.error?.otra?.nombre || tr.instant('nps.encuestaAcciones.laEncuestaDeEntregaActiva');
         return confirmar(
-          'Cambiar la encuesta de entrega',
-          `Solo puede haber una encuesta activa después de la entrega. Si activas "${encuesta.nombre}", "${otra}" queda pausada y los pedidos nuevos usan la nueva.`,
-          'Activar y pausar la otra',
+          tr,
+          tr.instant('nps.encuestaAcciones.cambiarLaEncuestaDeEntrega'),
+          tr.instant('nps.encuestaAcciones.soloPuedeHaberUnaEncuesta', { nombre: encuesta.nombre, otra }),
+          tr.instant('nps.encuestaAcciones.activarYPausarLaOtra'),
         ).pipe(
           switchMap((ok) => (ok
             ? nps.cambiarEstado(encuesta.id, estado, true).pipe(
               map((r) => ({ encuesta: r.encuesta, pausada: r.pausada } as ResultadoEstado)),
-              catchError((e2) => avisarError(e2)),
+              catchError((e2) => avisarError(e2, tr)),
             )
             : of({ encuesta: null } as ResultadoEstado))),
         );
       }
-      return avisarError(e);
+      return avisarError(e, tr);
     }),
   );
 }
 
-function confirmar(titulo: string, texto: string, boton: string): Observable<boolean> {
+function confirmar(tr: TranslateService, titulo: string, texto: string, boton: string): Observable<boolean> {
   return new Observable<boolean>((sub) => {
     Swal.fire({
       title: titulo,
@@ -49,7 +51,7 @@ function confirmar(titulo: string, texto: string, boton: string): Observable<boo
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: boton,
-      cancelButtonText: 'Cancelar',
+      cancelButtonText: tr.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#5A6B78',
       reverseButtons: true,
@@ -60,13 +62,13 @@ function confirmar(titulo: string, texto: string, boton: string): Observable<boo
   });
 }
 
-function avisarError(e: any): Observable<ResultadoEstado> {
+function avisarError(e: any, tr: TranslateService): Observable<ResultadoEstado> {
   const incompleta = codigoError(e) === 'INCOMPLETA';
   Swal.fire({
-    title: incompleta ? 'Falta algo para activarla' : 'No pudimos cambiar el estado',
+    title: incompleta ? tr.instant('nps.encuestaAcciones.faltaAlgoParaActivarla') : tr.instant('nps.encuestaAcciones.noPudimosCambiarElEstado'),
     text: mensajeError(e, incompleta
-      ? 'Revisa que tenga la pregunta del 0 al 10 y un responsable de los detractores.'
-      : 'Intenta de nuevo en unos minutos.'),
+      ? tr.instant('nps.encuestaAcciones.revisaQueTengaLaPregunta')
+      : tr.instant('nps.encuestaAcciones.intentaDeNuevoEnUnos'), tr),
     icon: 'warning',
     confirmButtonColor: '#5F3FE0',
   });
@@ -74,17 +76,17 @@ function avisarError(e: any): Observable<ResultadoEstado> {
 }
 
 /** Confirmación y borrado; con respuestas el servidor responde 409 TIENE_RESPUESTAS. */
-export function eliminarEncuesta(nps: NpsService, encuesta: Encuesta): Observable<boolean> {
-  return confirmar('Eliminar la encuesta', `"${encuesta.nombre}" se elimina y no se puede recuperar.`, 'Eliminar').pipe(
+export function eliminarEncuesta(nps: NpsService, encuesta: Encuesta, tr: TranslateService): Observable<boolean> {
+  return confirmar(tr, tr.instant('nps.encuestaAcciones.eliminarLaEncuesta'), tr.instant('nps.encuestaAcciones.nombreSeEliminaYNo', { nombre: encuesta.nombre }), tr.instant('nps.encuestaAcciones.eliminar')).pipe(
     switchMap((ok) => (!ok ? of(false) : nps.eliminarEncuesta(encuesta.id).pipe(
       map(() => true),
       catchError((e) => {
         const conRespuestas = codigoError(e) === 'TIENE_RESPUESTAS';
         Swal.fire({
-          title: conRespuestas ? 'Esta encuesta ya tiene respuestas' : 'No pudimos eliminarla',
+          title: conRespuestas ? tr.instant('nps.encuestaAcciones.estaEncuestaYaTieneRespuestas') : tr.instant('nps.encuestaAcciones.noPudimosEliminarla'),
           text: conRespuestas
-            ? 'Para no perder lo que respondieron tus clientes, no se puede eliminar. Puedes pausarla.'
-            : mensajeError(e, 'Intenta de nuevo en unos minutos.'),
+            ? tr.instant('nps.encuestaAcciones.paraNoPerderLoQue')
+            : mensajeError(e, tr.instant('nps.encuestaAcciones.intentaDeNuevoEnUnos'), tr),
           icon: 'info',
           confirmButtonColor: '#5F3FE0',
         });

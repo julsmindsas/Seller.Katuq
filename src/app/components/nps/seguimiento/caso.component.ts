@@ -14,18 +14,20 @@ import {
   esAdministradorSesion, fechaHora, mensajeError,
 } from '../nps-comun';
 
+import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 const MAX_NOTA = 1000;
 
 const ACCIONES: Record<string, string> = {
-  abierto: 'Se abrió el caso',
-  apertura: 'Se abrió el caso',
-  estado: 'Cambió el estado',
-  responsable: 'Se reasignó',
-  reasignado: 'Se reasignó',
-  nota: 'Agregó una nota',
-  cierre: 'Cerró el caso',
-  aviso: 'Se avisó al responsable',
-  recordatorio: 'Se recordó al responsable',
+  abierto: 'nps.caso.seAbrioElCaso',
+  apertura: 'nps.caso.seAbrioElCaso',
+  estado: 'nps.caso.cambioElEstado',
+  responsable: 'nps.caso.seReasigno',
+  reasignado: 'nps.caso.seReasigno',
+  nota: 'nps.caso.agregoUnaNota',
+  cierre: 'nps.caso.cerroElCaso',
+  aviso: 'nps.caso.seAvisoAlResponsable',
+  recordatorio: 'nps.caso.seRecordoAlResponsable',
 };
 
 /**
@@ -37,7 +39,7 @@ const ACCIONES: Record<string, string> = {
 @Component({
   selector: 'app-nps-caso',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [TranslateModule, CommonModule, FormsModule, RouterModule],
   templateUrl: './caso.component.html',
   styleUrls: ['./caso.component.scss'],
 })
@@ -65,6 +67,7 @@ export class CasoComponent implements OnInit, OnDestroy {
     private nps: NpsService,
     private security: SecurityService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   get whatsapp(): string | null {
@@ -119,10 +122,10 @@ export class CasoComponent implements OnInit, OnDestroy {
         this.cargando = false;
         this.caso = null;
         this.error = e?.status === 404
-          ? 'No encontramos este caso.'
+          ? this.translate.instant('nps.caso.noEncontramosEsteCaso')
           : e?.status === 403
-            ? 'Este caso lo atienden su responsable y los administradores de tu empresa.'
-            : mensajeError(e, 'No pudimos abrir el caso. Intenta de nuevo en unos minutos.');
+            ? this.translate.instant('nps.caso.esteCasoLoAtiendenSu')
+            : mensajeError(e, this.translate.instant('nps.caso.noPudimosAbrirElCaso'), this.translate);
       },
     });
   }
@@ -134,14 +137,14 @@ export class CasoComponent implements OnInit, OnDestroy {
       ? this.pedirNotaCierre(estado).pipe(map((nota) => (nota ? { estado, nota } : null)))
       : of({ estado });
     cambio$.pipe(takeUntil(this.destroy$)).subscribe((cambios) => {
-      if (cambios) this.guardar(cambios, `El caso quedó en "${NOMBRE_ESTADO_CASO[estado]}"`);
+      if (cambios) this.guardar(cambios, this.translate.instant('nps.caso.casoQuedoEn', { estado: this.translate.instant(NOMBRE_ESTADO_CASO[estado]) }));
     });
   }
 
   reasignar(): void {
     if (!this.nuevoResponsable || this.nuevoResponsable === this.caso?.responsable?.email) return;
     const persona = this.responsables.find((u) => u.email === this.nuevoResponsable);
-    this.guardar({ responsableEmail: this.nuevoResponsable }, `Caso reasignado a ${persona?.nombre || this.nuevoResponsable}. Le llega un correo con el aviso.`, () => {
+    this.guardar({ responsableEmail: this.nuevoResponsable }, this.translate.instant('nps.caso.casoReasignado', { nombre: persona?.nombre || this.nuevoResponsable }), () => {
       this.nuevoResponsable = '';
     });
   }
@@ -149,7 +152,7 @@ export class CasoComponent implements OnInit, OnDestroy {
   agregarNota(): void {
     const texto = this.nota.trim();
     if (!texto) return;
-    this.guardar({ nota: texto.slice(0, MAX_NOTA) }, 'Nota agregada', () => (this.nota = ''));
+    this.guardar({ nota: texto.slice(0, MAX_NOTA) }, this.translate.instant('nps.caso.notaAgregada'), () => (this.nota = ''));
   }
 
   private guardar(cambios: CambiosCaso, exito: string, despues?: () => void): void {
@@ -170,28 +173,28 @@ export class CasoComponent implements OnInit, OnDestroy {
           return;
         }
         this.toastr.error(e?.status === 403
-          ? 'Este caso lo atienden su responsable y los administradores de tu empresa.'
-          : mensajeError(e, 'No pudimos guardar el cambio. Intenta de nuevo.'));
+          ? this.translate.instant('nps.caso.esteCasoLoAtiendenSu')
+          : mensajeError(e, this.translate.instant('nps.caso.noPudimosGuardarElCambio'), this.translate));
       },
     });
   }
 
   private pedirNotaCierre(estado: EstadoCaso): Observable<string | null> {
     return from(Swal.fire({
-      title: estado === 'resuelto' ? 'Marcar como resuelto' : 'Cerrar sin solución',
+      title: estado === 'resuelto' ? this.translate.instant('nps.caso.marcarComoResuelto') : this.translate.instant('nps.caso.cerrarSinSolucion'),
       text: estado === 'resuelto'
-        ? '¿Qué se hizo con el cliente? Queda en el historial del caso.'
-        : '¿Por qué se cierra sin solución? Queda en el historial del caso.',
+        ? this.translate.instant('nps.caso.queSeHizoConEl')
+        : this.translate.instant('nps.caso.porQueSeCierraSin'),
       input: 'textarea',
-      inputPlaceholder: estado === 'resuelto' ? 'Ej.: se le reenvió el pedido' : 'Ej.: no respondió después de tres intentos',
-      inputAttributes: { maxlength: String(MAX_NOTA), 'aria-label': 'Nota de cierre' },
+      inputPlaceholder: estado === 'resuelto' ? this.translate.instant('nps.caso.ejSeLeReenvioEl') : this.translate.instant('nps.caso.ejNoRespondioDespuesDe'),
+      inputAttributes: { maxlength: String(MAX_NOTA), 'aria-label': this.translate.instant('nps.caso.notaDeCierre') },
       showCancelButton: true,
-      confirmButtonText: 'Cerrar el caso',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('nps.caso.cerrarElCaso'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#5A6B78',
       reverseButtons: true,
-      inputValidator: (v) => (String(v || '').trim() ? null : 'Escribe la nota de cierre.'),
+      inputValidator: (v) => (String(v || '').trim() ? null : this.translate.instant('nps.caso.escribeLaNotaDeCierre')),
     })).pipe(
       map((r) => (r.isConfirmed ? String(r.value || '').trim().slice(0, MAX_NOTA) : null)),
       catchError(() => of(null)),
@@ -199,13 +202,13 @@ export class CasoComponent implements OnInit, OnDestroy {
   }
 
   accion(h: HistorialCaso): string {
-    return ACCIONES[h.accion] || h.accion;
+    return ACCIONES[h.accion] ? this.translate.instant(ACCIONES[h.accion]) : h.accion;
   }
 
   /** "de Nuevo a Contactado" con los nombres de los estados cuando aplican. */
   detalle(h: HistorialCaso): string {
-    const nombre = (v?: string) => (v && (NOMBRE_ESTADO_CASO as Record<string, string>)[v]) || v || '';
-    if (h.de && h.a) return `de ${nombre(h.de)} a ${nombre(h.a)}`;
+    const nombre = (v?: string) => { const k = v && (NOMBRE_ESTADO_CASO as Record<string, string>)[v]; return k ? this.translate.instant(k) : v || ''; };
+    if (h.de && h.a) return this.translate.instant('nps.caso.deAA', { de: nombre(h.de), a: nombre(h.a) });
     if (h.a) return nombre(h.a);
     return '';
   }

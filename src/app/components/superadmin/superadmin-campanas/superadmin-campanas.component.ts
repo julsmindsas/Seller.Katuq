@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { PromocionesService, Campana, ResultadoCampana } from "../../../shared/services/promociones.service";
 import { ToastrService } from "ngx-toastr";
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Campañas de pauta — `superadmin/campanas`
  *
@@ -32,6 +33,7 @@ export class SuperadminCampanasComponent implements OnInit {
   constructor(
     private promociones: PromocionesService,
     private toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -58,7 +60,7 @@ export class SuperadminCampanasComponent implements OnInit {
         this.cargando = false;
       },
       error: () => {
-        this.toastr.error("No pudimos cargar las campañas");
+        this.toastr.error(this.translate.instant('superadmin.superadminCampanas.noPudimosCargarLasCampanas'));
         this.cargando = false;
       },
     });
@@ -101,7 +103,7 @@ export class SuperadminCampanasComponent implements OnInit {
     };
 
     if (!datos.codigo || !datos.nombre || !datos.diasPremium) {
-      this.toastr.warning("Código, nombre y días de premium son obligatorios");
+      this.toastr.warning(this.translate.instant('superadmin.superadminCampanas.codigoNombreYDiasDe'));
       return;
     }
 
@@ -112,7 +114,7 @@ export class SuperadminCampanasComponent implements OnInit {
 
     peticion.subscribe({
       next: () => {
-        this.toastr.success(this.editandoId ? "Campaña actualizada" : "Campaña creada");
+        this.toastr.success(this.editandoId ? this.translate.instant('superadmin.superadminCampanas.campanaActualizada') : this.translate.instant('superadmin.superadminCampanas.campanaCreada'));
         this.guardando = false;
         this.mostrarFormulario = false;
         this.editandoId = null;
@@ -121,7 +123,7 @@ export class SuperadminCampanasComponent implements OnInit {
       error: (error) => {
         this.guardando = false;
         const detalle = error?.error?.detalles?.join(". ") || error?.error?.error;
-        this.toastr.error(detalle || "No pudimos guardar la campaña");
+        this.toastr.error(detalle || this.translate.instant('superadmin.superadminCampanas.noPudimosGuardarLaCampana'));
       },
     });
   }
@@ -131,16 +133,16 @@ export class SuperadminCampanasComponent implements OnInit {
     this.promociones.cambiarEstado(campana.id, nuevoEstado).subscribe({
       next: () => {
         campana.activo = nuevoEstado;
-        this.toastr.success(nuevoEstado ? "Campaña activada" : "Campaña desactivada");
+        this.toastr.success(nuevoEstado ? this.translate.instant('superadmin.superadminCampanas.campanaActivada') : this.translate.instant('superadmin.superadminCampanas.campanaDesactivada'));
       },
-      error: () => this.toastr.error("No pudimos cambiar el estado"),
+      error: () => this.toastr.error(this.translate.instant('superadmin.superadminCampanas.noPudimosCambiarElEstado')),
     });
   }
 
   verResultado(campana: Campana): void {
     this.promociones.resultadoCampana(campana.id).subscribe({
       next: (resultado) => (this.resultados[campana.id] = resultado),
-      error: () => this.toastr.error("No pudimos cargar el resultado"),
+      error: () => this.toastr.error(this.translate.instant('superadmin.superadminCampanas.noPudimosCargarElResultado')),
     });
   }
 
@@ -160,8 +162,8 @@ export class SuperadminCampanasComponent implements OnInit {
   copiarEnlace(campana: Campana): void {
     const enlace = this.enlaceDeCampana(campana);
     navigator.clipboard.writeText(enlace).then(
-      () => this.toastr.success("Enlace copiado"),
-      () => this.toastr.warning(`Copia el enlace a mano: ${enlace}`),
+      () => this.toastr.success(this.translate.instant('superadmin.superadminCampanas.enlaceCopiado')),
+      () => this.toastr.warning(this.translate.instant('superadmin.superadminCampanas.copiaElEnlaceAMano', { enlace })),
     );
   }
 
@@ -173,8 +175,8 @@ export class SuperadminCampanasComponent implements OnInit {
   }
 
   fechaLegible(valor: any): string {
-    if (!valor) return "Sin fecha límite";
+    if (!valor) return this.translate.instant('superadmin.superadminCampanas.sinFechaLimite');
     const fecha = valor._seconds ? new Date(valor._seconds * 1000) : new Date(valor);
-    return isNaN(fecha.getTime()) ? "Sin fecha límite" : fecha.toLocaleDateString("es-CO");
+    return isNaN(fecha.getTime()) ? this.translate.instant('superadmin.superadminCampanas.sinFechaLimite') : fecha.toLocaleDateString("es-CO");
   }
 }

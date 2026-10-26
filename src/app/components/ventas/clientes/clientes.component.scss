@@ -19,40 +19,40 @@
 :host ::ng-deep .cfg-cabeza .p-button.p-button-outlined {
   min-height: 40px;
   border-radius: 11px;
-  background: #fff !important;
-  border: 1px solid #e4e2ef !important;
-  color: #5b5878 !important;
+  background: var(--ds-surface) !important;
+  border: 1px solid var(--ds-line-strong) !important;
+  color: var(--ds-body) !important;
   font-weight: 700;
   box-shadow: none !important;
 
   .p-button-label, .p-button-icon { color: inherit !important; }
 
   &:enabled:hover {
-    background: #faf9fe !important;
+    background: var(--ds-surface-2) !important;
     border-color: #d9cffb !important;
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
   }
 
   &.p-button-secondary {
-    background: #efe9ff !important;
+    background: var(--ds-accent-soft) !important;
     border-color: #ddd3fb !important;
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
   }
 }
 
 // Botones primarios PrimeNG de la pantalla (buscar, seleccionar).
 :host ::ng-deep .cli-pagina .p-button.p-button-primary {
-  background: #5F3FE0;
-  border-color: #5F3FE0;
+  background: var(--ds-accent);
+  border-color: var(--ds-accent);
   border-radius: 11px;
   font-weight: 700;
 
-  &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+  &:enabled:hover { background: var(--ds-accent-hover); border-color: var(--ds-accent-hover); }
 }
 
 .cli-resultados > p {
   letter-spacing: normal;
-  color: #8f8bab !important;
+  color: var(--ds-muted) !important;
 }
 
 // ==============================================
@@ -71,7 +71,7 @@
 
 .card-body {
   padding: $clientes-spacing-xl;
-  background: $clientes-white;
+  background: var(--ds-surface);
 
   @include clientes-responsive('tablet') {
     padding: $clientes-spacing-md;
@@ -87,7 +87,7 @@
     border-radius: $clientes-border-radius;
     overflow: hidden;
     box-shadow: $clientes-shadow-sm;
-    background: $clientes-white;
+    background: var(--ds-surface);
     border: 1px solid $clientes-border;
     transition: $clientes-transition-base;
 
@@ -160,7 +160,7 @@
   height: 100%;
 
   &:hover {
-    background: $clientes-white;
+    background: var(--ds-surface);
     box-shadow: $clientes-shadow-sm;
   }
 
@@ -231,7 +231,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
   }
 
   tbody tr:hover {
@@ -264,7 +264,7 @@
 }
 
 .invalid-feedback {
-  color: $clientes-error;
+  color: var(--ds-err);
   font-size: $clientes-font-size-small;
   margin-top: $clientes-spacing-xs;
   display: block;
@@ -287,7 +287,7 @@
       text-transform: uppercase;
       font-size: $clientes-font-size-small;
       letter-spacing: 0.5px;
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
       padding: $clientes-spacing-md;
       border-bottom: 2px solid $clientes-border-light;
       white-space: nowrap;
@@ -331,7 +331,7 @@
   margin-bottom: $clientes-spacing-lg;
 
   .nav-link {
-    color: #5F3FE0;
+    color: var(--ds-accent-ink);
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -350,9 +350,9 @@
     }
 
     &.active {
-      color: #5F3FE0;
-      background: $clientes-white;
-      border-bottom: 3px solid #5F3FE0;
+      color: var(--ds-accent-ink);
+      background: var(--ds-surface);
+      border-bottom: 3px solid var(--ds-accent-ink);
 
       &:after {
         content: '';
@@ -361,7 +361,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: #5F3FE0;
+        background: var(--ds-accent);
         border-radius: $clientes-border-radius-pill $clientes-border-radius-pill 0 0;
       }
     }
@@ -381,7 +381,7 @@
 
   &.btn-primary {
     background: $clientes-primary;
-    color: $clientes-white;
+    color: var(--ds-on-accent);
     border-color: $clientes-primary;
 
     &:hover:not(:disabled) {
@@ -399,7 +399,7 @@
 
   &.btn-secondary {
     background: $clientes-secondary;
-    color: $clientes-white;
+    color: var(--ds-on-accent);
     border-color: $clientes-secondary;
 
     &:hover:not(:disabled) {
@@ -410,18 +410,18 @@
 
   &.btn-outline-primary {
     background: transparent;
-    color: $clientes-primary;
+    color: var(--ds-accent-ink);
     border-color: $clientes-primary;
 
     &:hover:not(:disabled) {
       background: $clientes-primary;
-      color: $clientes-white;
+      color: var(--ds-on-accent);
     }
   }
 
   &.btn-danger {
     background: $clientes-error;
-    color: $clientes-white;
+    color: var(--ds-on-accent);
     border-color: $clientes-error;
 
     &:hover:not(:disabled) {
@@ -436,7 +436,7 @@
     border-color: $clientes-border;
 
     &:hover:not(:disabled) {
-      background: $clientes-white;
+      background: var(--ds-surface);
       border-color: $clientes-border;
     }
   }
@@ -578,12 +578,12 @@ input[type="checkbox"] {
 // ==============================================
 // UTILITY CLASSES
 // ==============================================
-.text-primary { color: $clientes-primary !important; }
-.text-secondary { color: $clientes-secondary !important; }
-.text-success { color: $clientes-success !important; }
-.text-danger { color: $clientes-error !important; }
-.text-warning { color: $clientes-warning !important; }
-.text-muted { color: $clientes-grey !important; }
+.text-primary { color: var(--ds-accent-ink) !important; }
+.text-secondary { color: var(--ds-accent-ink) !important; }
+.text-success { color: var(--ds-ok) !important; }
+.text-danger { color: var(--ds-err) !important; }
+.text-warning { color: var(--ds-warn) !important; }
+.text-muted { color: var(--ds-muted) !important; }
 .text-dark { color: $clientes-dark !important; }
 
 .bg-light { background: $clientes-bg-light !important; }
@@ -631,7 +631,7 @@ input[type="checkbox"] {
 // ==============================================
 
 .search-section {
-  background-color: #fff;
+  background-color: var(--ds-surface);
 
   label {
     font-size: 0.875rem;
@@ -641,25 +641,25 @@ input[type="checkbox"] {
   ::ng-deep {
     .p-dropdown {
       border-radius: 6px;
-      border: 1px solid #ececf4;
+      border: 1px solid var(--ds-line);
       height: 40px;
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #5F3FE0 !important;
+        border-color: var(--ds-accent-ink) !important;
         box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
       }
     }
 
     .p-inputtext {
-      border: 1px solid #ececf4 !important;
+      border: 1px solid var(--ds-line) !important;
       border-radius: 6px;
       height: 40px;
       padding: 0 0.75rem !important;
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #5F3FE0 !important;
+        border-color: var(--ds-accent-ink) !important;
         box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
       }
     }
@@ -694,7 +694,7 @@ input[type="checkbox"] {
   .btn-primary {
     background-color: var(--primary-dark-color);
     border-color: var(--primary-dark-color);
-    color: #fff;
+    color: var(--ds-on-accent);
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:hover,
@@ -703,7 +703,7 @@ input[type="checkbox"] {
       background-color: var(--primary-color) !important;
       border-color: var(--primary-color) !important;
       box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25) !important;
-      color: #fff !important;
+      color: var(--ds-on-accent) !important;
     }
   }
 
@@ -718,7 +718,7 @@ input[type="checkbox"] {
     &:focus {
       background-color: var(--primary-color) !important;
       border-color: var(--primary-color) !important;
-      color: #fff !important;
+      color: var(--ds-on-accent) !important;
       box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25) !important;
     }
   }
@@ -727,12 +727,12 @@ input[type="checkbox"] {
 :host ::ng-deep {
   .p-inputtext,
   .p-inputtext-sm {
-    border: 1px solid #ececf4 !important;
+    border: 1px solid var(--ds-line) !important;
     border-radius: 6px;
     transition: all 0.2s ease;
 
     &:focus {
-      border-color: #5F3FE0 !important;
+      border-color: var(--ds-accent-ink) !important;
       box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15) !important;
     }
 
@@ -760,24 +760,24 @@ input[type="checkbox"] {
   transition: all 0.15s ease;
 
   &.btn-tbl-neutral {
-    background: #f5f4fa;
-    color: #5b5878;
-    &:hover { background: #ececf4; color: #211F3A; }
+    background: var(--ds-chip-bg);
+    color: var(--ds-body);
+    &:hover { background: var(--ds-line); color: var(--ds-ink); }
   }
   &.btn-tbl-primary {
-    background: #5F3FE0;
-    color: #fff;
-    &:hover { background: #4a2fc0; }
+    background: var(--ds-accent);
+    color: var(--ds-on-accent);
+    &:hover { background: var(--ds-accent-hover); }
   }
   &.btn-tbl-danger {
-    background: #FDECEC;
-    color: #D64545;
-    &:hover { background: #D64545; color: #fff; }
+    background: var(--ds-err-soft);
+    color: var(--ds-err);
+    &:hover { background: var(--ds-err); color: var(--ds-surface); }
   }
   &.btn-tbl-success {
-    background: #E6F7EE;
-    color: #1E874B;
-    &:hover { background: #1E874B; color: #fff; }
+    background: var(--ds-ok-soft);
+    color: var(--ds-ok);
+    &:hover { background: var(--ds-ok); color: var(--ds-surface); }
   }
 }
 
@@ -799,30 +799,30 @@ input[type="checkbox"] {
   i { font-size: 0.8rem; }
 
   &.btn-client-primary {
-    background: #5F3FE0;
-    color: #fff;
-    &:hover { background: #4a2fc0; }
+    background: var(--ds-accent);
+    color: var(--ds-on-accent);
+    &:hover { background: var(--ds-accent-hover); }
   }
 
   &.btn-client-neutral {
-    background: #fff;
-    color: #5b5878;
-    border: 1px solid #e4e2ef;
-    &:hover { background: #f8f9fa; border-color: #5F3FE0; color: #5F3FE0; }
+    background: var(--ds-surface);
+    color: var(--ds-body);
+    border: 1px solid var(--ds-line-strong);
+    &:hover { background: #f8f9fa; border-color: var(--ds-accent-ink); color: #5F3FE0; }
   }
 
   &.btn-client-danger {
     background: #fff3f4;
     color: #D64545;
     border: 1px solid #f5c2c7;
-    &:hover { background: #D64545; color: #fff; border-color: #D64545; }
+    &:hover { background: var(--ds-err); color: var(--ds-surface); border-color: var(--ds-err); }
   }
 
   &.btn-client-success {
     background: #f0fdf4;
     color: #1E874B;
     border: 1px solid #bbf7d0;
-    &:hover { background: #1E874B; color: #fff; border-color: #1E874B; }
+    &:hover { background: var(--ds-ok); color: var(--ds-surface); border-color: var(--ds-ok); }
   }
 }
 
@@ -834,14 +834,14 @@ input[type="checkbox"] {
   margin-bottom: 0;
 
   thead tr {
-    background: #faf9fe;
+    background: var(--ds-surface-2);
 
     th {
       font-weight: 700;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
       padding: 0.6rem 0.875rem;
       border-bottom: 2px solid #ddd3fb;
       white-space: nowrap;
@@ -853,7 +853,7 @@ input[type="checkbox"] {
     padding: 0.6rem 0.875rem;
     vertical-align: middle;
     border-color: #f0f0f5;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 
   tbody tr:hover td {
@@ -868,8 +868,8 @@ input[type="checkbox"] {
 // ==============================================
 .badge-alias {
   display: inline-block;
-  background: #efe9ff;
-  color: #5F3FE0;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-ink);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -877,8 +877,8 @@ input[type="checkbox"] {
 }
 
 .doc-code {
-  background: #f5f4fa;
-  color: #211F3A;
+  background: var(--ds-chip-bg);
+  color: var(--ds-ink);
   font-size: 0.8rem;
   padding: 2px 6px;
   border-radius: 4px;
@@ -889,18 +889,18 @@ input[type="checkbox"] {
 // TÍTULOS DE SECCIÓN EN PESTAÑAS
 // ==============================================
 .nav-link.nav-link-dark {
-  color: #5b5878 !important;
+  color: var(--ds-body) !important;
 
   &:hover:not(.active) {
-    color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
   }
 
   &.active {
-    color: #5F3FE0 !important;
-    border-bottom-color: #5F3FE0 !important;
+    color: var(--ds-accent-ink) !important;
+    border-bottom-color: var(--ds-accent-ink) !important;
 
     &:after {
-      background: #5F3FE0 !important;
+      background: var(--ds-accent) !important;
     }
   }
 }
@@ -911,7 +911,7 @@ input[type="checkbox"] {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 // ==============================================
@@ -919,7 +919,7 @@ input[type="checkbox"] {
 // ==============================================
 .empty-state {
   text-align: center;
-  color: #8f8bab;
+  color: var(--ds-muted);
   font-size: 0.825rem;
   padding: 1.5rem !important;
   font-style: italic;
@@ -935,8 +935,8 @@ input[type="checkbox"] {
   padding: 0 0.75rem;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #5F3FE0;
-  background: #efe9ff;
+  color: var(--ds-accent-ink);
+  background: var(--ds-accent-soft);
   border: 1px solid #ddd3fb;
   border-radius: 6px;
   cursor: pointer;
@@ -964,7 +964,7 @@ input[type="checkbox"] {
 
 .c360-body {
   padding: 1.25rem 1.5rem 0;
-  background: #fff;
+  background: var(--ds-surface);
 }
 
 .c360-head {
@@ -972,7 +972,7 @@ input[type="checkbox"] {
   align-items: flex-start;
   gap: 1rem;
   padding-bottom: 1.1rem;
-  border-bottom: 1px solid #efe9ff;
+  border-bottom: 1px solid var(--ds-accent-soft);
   flex-wrap: wrap;
 }
 
@@ -980,8 +980,8 @@ input[type="checkbox"] {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #5F3FE0;
-  color: #fff;
+  background: var(--ds-accent);
+  color: var(--ds-on-accent);
   display: grid;
   place-items: center;
   font-weight: 700;
@@ -998,13 +998,13 @@ input[type="checkbox"] {
 .c360-name {
   font-size: 1rem;
   font-weight: 700;
-  color: #211F3A;
+  color: var(--ds-ink);
   margin: 0 0 0.2rem;
 }
 
 .c360-sub {
   font-size: 0.8rem;
-  color: #8f8bab;
+  color: var(--ds-muted);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -1012,7 +1012,7 @@ input[type="checkbox"] {
 
   i {
     font-size: 0.72rem;
-    color: #7C5CFF;
+    color: var(--ds-focus);
   }
 }
 
@@ -1031,7 +1031,7 @@ input[type="checkbox"] {
 .c360-actions-sep {
   width: 1px;
   height: 20px;
-  background: #efe9ff;
+  background: var(--ds-accent-soft);
   margin: 0 0.2rem;
 }
 
@@ -1048,14 +1048,14 @@ input[type="checkbox"] {
   i { font-size: 0.7rem; }
 
   &.chip-ok {
-    background: #E6F7EE;
-    color: #1E874B;
+    background: var(--ds-ok-soft);
+    color: var(--ds-ok);
     border-color: #bfe9cd;
   }
 
   &.chip-danger {
-    background: #FDECEC;
-    color: #D64545;
+    background: var(--ds-err-soft);
+    color: var(--ds-err);
     border-color: #f3c6c6;
   }
 }
@@ -1096,7 +1096,7 @@ input[type="checkbox"] {
 .config-list {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #ececf4;
+  border: 1px solid var(--ds-line);
   border-radius: 8px;
   padding: 0.25rem 0;
 }
@@ -1122,7 +1122,7 @@ input[type="checkbox"] {
 .col-toggle-menu {
   min-width: 200px;
   padding: 0.5rem 0;
-  border: 1px solid #efe9ff;
+  border: 1px solid var(--ds-accent-soft);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(95, 63, 224, 0.12);
 
@@ -1133,12 +1133,12 @@ input[type="checkbox"] {
     padding: 0.45rem 0.9rem;
     cursor: pointer;
     font-size: 0.82rem;
-    color: #211F3A;
+    color: var(--ds-ink);
     transition: background 0.12s ease;
     user-select: none;
 
     &:hover {
-      background: #faf9fe;
+      background: var(--ds-surface-2);
     }
 
     .col-toggle-check {
@@ -1156,12 +1156,12 @@ input[type="checkbox"] {
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ==============================================
 .btn-tags-cfg.p-button.p-button-outlined {
-  color: #5F3FE0 !important;
-  border-color: #5F3FE0 !important;
+  color: var(--ds-accent-ink) !important;
+  border-color: var(--ds-accent-ink) !important;
   background: transparent !important;
 
   &:hover {
-    background: #faf9fe !important;
+    background: var(--ds-surface-2) !important;
     border-color: #4a2fc0 !important;
     color: #4a2fc0 !important;
   }
@@ -1170,39 +1170,39 @@ input[type="checkbox"] {
 // Modal "Resultados de búsqueda" (NgbModal con plantilla de este componente): canon D-131.
 .modal-header {
   padding: 16px 20px;
-  background: #fff;
-  border-bottom: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
 
   .modal-title {
     margin: 0;
     font-size: 17px !important;
     font-weight: 800;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 }
 
 .modal-body .table thead th {
-  background: #faf9fe;
-  color: #8f8bab;
+  background: var(--ds-surface-2);
+  color: var(--ds-muted);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  border-color: #f1f0f7;
+  border-color: var(--ds-line-soft);
 }
 
 .modal-footer {
-  border-top: 1px solid #f1f0f7;
+  border-top: 1px solid var(--ds-line-soft);
 
   .btn-outline-secondary {
     min-height: 40px;
     padding: 0 16px;
-    background: #fff;
-    border-color: #e4e2ef;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
     border-radius: 11px;
-    color: #5b5878;
+    color: var(--ds-body);
     font-weight: 700;
 
-    &:hover { background: #faf9fe; border-color: #d9cffb; color: #5F3FE0; }
+    &:hover { background: var(--ds-surface-2); border-color: #d9cffb; color: var(--ds-accent-ink); }
   }
 }

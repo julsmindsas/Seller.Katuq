@@ -18,16 +18,22 @@ $clientes-warning-dark: #b06a08;
 $clientes-error: #D64545;
 $clientes-error-dark: #b83636;
 
+// Aviso de mantenimiento (TEMA-B10): las variables de abajo con var(--ds-*) son cadenas CSS, no colores de Sass;
+// no sirven dentro de rgba(), darken(), mix() ni aritmética de color. Para eso usar $clientes-white u otro hex.
 // Neutral Colors
-$clientes-dark: #211F3A;
-$clientes-dark-light: #5b5878;
+$clientes-dark: var(--ds-ink);
+$clientes-dark-light: var(--ds-body);
 $clientes-grey: #8f8bab;
 $clientes-grey-light: #a9a6c2;
-$clientes-border: #e4e2ef;
-$clientes-border-light: #ececf4;
-$clientes-bg-light: #f5f4fa;
-$clientes-bg-lighter: #faf9fe;
-$clientes-white: #FFFFFF;
+$clientes-border: var(--ds-line-strong);
+$clientes-border-light: var(--ds-line);
+$clientes-bg-light: var(--ds-chip-bg);
+$clientes-bg-lighter: var(--ds-surface-2);
+$clientes-white: #FFFFFF; // solo para rgba() y texto sobre relleno (rgba no admite var())
+$clientes-surface: var(--ds-surface); // superficie: blanca en claro, oscura en oscuro (D-502)
+$clientes-on-accent: var(--ds-on-accent);
+$clientes-accent-ink: var(--ds-accent-ink); // acento como texto, ícono o borde
+$clientes-muted: var(--ds-muted);
 
 // Typography
 $clientes-font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -83,7 +89,7 @@ $clientes-table-row-striped: $clientes-bg-lighter;
 $clientes-table-border: $clientes-border-light;
 
 // Form Styles
-$clientes-input-bg: $clientes-white;
+$clientes-input-bg: $clientes-surface;
 $clientes-input-border: $clientes-border;
 $clientes-input-focus-border: $clientes-primary;
 $clientes-input-focus-shadow: 0 0 0 3px rgba($clientes-primary, 0.1);
@@ -107,7 +113,7 @@ $clientes-zindex-tooltip: 1070;
 
 // Mixins for consistent styling
 @mixin clientes-card {
-  background: $clientes-white;
+  background: $clientes-surface;
   border: $clientes-border-width solid $clientes-border-light;
   border-radius: $clientes-border-radius-lg;
   box-shadow: $clientes-shadow-card;

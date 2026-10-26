@@ -8,15 +8,16 @@ import {
   ProviderIssue,
 } from '../provider-dashboard.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface CategoryFilter {
   label: string;
   value: IssueCategory | 'all';
 }
 
 const CATEGORY_LABELS: Record<IssueCategory, string> = {
-  missing_osmosis_id: 'Sin enviar al proveedor',
-  push_error: 'Error al enviar',
-  cancelled_in_cereza: 'Cancelado en proveedor',
+  missing_osmosis_id: 'providerDashboard.providerIssuesTable.sinEnviarAlProveedor',
+  push_error: 'providerDashboard.providerIssuesTable.errorAlEnviar',
+  cancelled_in_cereza: 'providerDashboard.providerIssuesTable.canceladoEnProveedor',
 };
 
 const CATEGORY_SEVERITY: Record<IssueCategory, 'warning' | 'danger' | 'info'> = {
@@ -40,19 +41,23 @@ export class ProviderIssuesTableComponent implements OnChanges, OnDestroy {
   summary = { missing_osmosis_id: 0, push_error: 0, cancelled_in_cereza: 0 };
   total = 0;
 
-  categoryFilters: CategoryFilter[] = [
-    { label: 'Todas las categorías', value: 'all' },
-    { label: CATEGORY_LABELS.missing_osmosis_id, value: 'missing_osmosis_id' },
-    { label: CATEGORY_LABELS.push_error, value: 'push_error' },
-    { label: CATEGORY_LABELS.cancelled_in_cereza, value: 'cancelled_in_cereza' },
-  ];
+  categoryFilters: CategoryFilter[] = [];
   selectedCategory: IssueCategory | 'all' = 'all';
   searchText = '';
   pushingIds = new Set<string>();
 
   private destroy$ = new Subject<void>();
 
-  constructor(private svc: ProviderDashboardService) {}
+  constructor(private svc: ProviderDashboardService,
+    private translate: TranslateService
+  ) {
+    this.categoryFilters = [
+      { label: this.translate.instant('providerDashboard.providerIssuesTable.todasLasCategorias'), value: 'all' },
+      { label: this.categoryLabel('missing_osmosis_id'), value: 'missing_osmosis_id' },
+      { label: this.categoryLabel('push_error'), value: 'push_error' },
+      { label: this.categoryLabel('cancelled_in_cereza'), value: 'cancelled_in_cereza' },
+    ];
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['provider'] && this.provider) {
@@ -85,7 +90,7 @@ export class ProviderIssuesTableComponent implements OnChanges, OnDestroy {
           this.error =
             err?.error?.message ||
             err?.message ||
-            'No se pudo cargar la lista de pedidos.';
+            this.translate.instant('providerDashboard.providerIssuesTable.noSePudoCargarLa');
         },
       });
   }
@@ -112,23 +117,23 @@ export class ProviderIssuesTableComponent implements OnChanges, OnDestroy {
   onCategoryChange(): void { this.applyFilters(); }
   onSearchChange(): void { this.applyFilters(); }
 
-  categoryLabel(cat: IssueCategory): string { return CATEGORY_LABELS[cat] || cat; }
+  categoryLabel(cat: IssueCategory): string { return this.translate.instant(CATEGORY_LABELS[cat] || cat); }
   categorySeverity(cat: IssueCategory): 'warning' | 'danger' | 'info' { return CATEGORY_SEVERITY[cat] || 'info'; }
 
   reenviar(issue: ProviderIssue): void {
     if (this.pushingIds.has(issue.cd)) return;
 
     Swal.fire({
-      title: '¿Reenviar al proveedor?',
-      html: `<p>Pedido <strong>${issue.nroPedido}</strong>${
+      title: this.translate.instant('providerDashboard.providerIssuesTable.reenviarAlProveedor'),
+      html: `<p>${this.translate.instant('providerDashboard.providerIssuesTable.pedido')} <strong>${issue.nroPedido}</strong>${
         issue.cliente ? ` (${issue.cliente})` : ''
-      }</p><p class="text-muted">Operación idempotente: si el pedido ya existe, solo refresca cache.</p>`,
+      }</p><p class="text-muted">${this.translate.instant('providerDashboard.providerIssuesTable.operacionIdempotente')}</p>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#4A44C2',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Reenviar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('providerDashboard.providerIssuesTable.reenviar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((result) => {
       if (!result.isConfirmed) return;
       this.pushingIds.add(issue.cd);
@@ -138,10 +143,11 @@ export class ProviderIssuesTableComponent implements OnChanges, OnDestroy {
           const osmId = resp?.osmosisOrderId || resp?.osmosisId;
           Swal.fire({
             icon: 'success',
-            title: 'Pedido enviado',
+            title: this.translate.instant('providerDashboard.providerIssuesTable.pedidoEnviado'),
             html: osmId
-              ? `<p>Identificador asignado: <strong>OSM-${osmId}</strong></p>`
-              : '<p>Sincronización completada.</p>',
+              // i18n-ignorar: el HTML se arma con textos ya traducidos
+              ? `<p>${this.translate.instant('providerDashboard.providerIssuesTable.identificadorAsignado')} <strong>OSM-${osmId}</strong></p>`
+              : `<p>${this.translate.instant('providerDashboard.providerIssuesTable.sincronizacionCompletada')}</p>`,
             confirmButtonColor: '#10B981',
           });
           this.load();
@@ -150,9 +156,9 @@ export class ProviderIssuesTableComponent implements OnChanges, OnDestroy {
           this.pushingIds.delete(issue.cd);
           Swal.fire({
             icon: 'error',
-            title: 'Error al reenviar',
-            text: err?.error?.message || err?.message || 'Error desconocido.',
-            footer: 'Verifica que la integración esté configurada en /integrations.',
+            title: this.translate.instant('providerDashboard.providerIssuesTable.errorAlReenviar'),
+            text: err?.error?.message || err?.message || this.translate.instant('providerDashboard.providerIssuesTable.errorDesconocido'),
+            footer: this.translate.instant('providerDashboard.providerIssuesTable.verificaQueLaIntegracionEste'),
           });
         },
       });

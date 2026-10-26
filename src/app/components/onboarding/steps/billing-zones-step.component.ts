@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface ZonaCobro {
   ciudad: string;
   nombreZonaCobro: string;
@@ -56,7 +57,8 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -209,8 +211,8 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -228,8 +230,8 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe una zona de cobro con este nombre'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.billingZonesStep.yaExisteUnaZonaDe')
       });
       return;
     }
@@ -240,16 +242,16 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
       this.editingIndex = null;
       this.messageService.add({
         severity: 'success',
-        summary: 'Actualizado',
-        detail: 'Zona de cobro actualizada correctamente'
+        summary: this.translate.instant('onboarding.billingZonesStep.actualizado'),
+        detail: this.translate.instant('onboarding.billingZonesStep.zonaDeCobroActualizadaCorrectamente')
       });
     } else {
       // Agregar nueva zona
       this.zonesList.push(zoneData);
       this.messageService.add({
         severity: 'success',
-        summary: 'Agregado',
-        detail: 'Zona de cobro agregada a la lista'
+        summary: this.translate.instant('onboarding.billingZonesStep.agregado'),
+        detail: this.translate.instant('onboarding.billingZonesStep.zonaDeCobroAgregadaA')
       });
     }
 
@@ -287,8 +289,8 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'info',
-      summary: 'Eliminado',
-      detail: `Zona "${zone.nombreZonaCobro}" eliminada`
+      summary: this.translate.instant('onboarding.billingZonesStep.eliminado'),
+      detail: this.translate.instant('onboarding.billingZonesStep.zonaEliminada', { nombre: zone.nombreZonaCobro })
     });
 
     // Si estaba editando esta zona, cancelar
@@ -304,8 +306,8 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
     if (this.zonesList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos una zona de cobro para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.billingZonesStep.debesAgregarAlMenosUna')
       });
       return;
     }
@@ -330,15 +332,15 @@ export class BillingZonesStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.zonesList.length} zona(s) de cobro configurada(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.billingZonesStep.zonasConfiguradas', { cantidad: this.zonesList.length })
       });
     } catch (error) {
       console.error('Error guardando zonas de cobro:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo guardar la configuración de zonas de cobro'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.billingZonesStep.noSePudoGuardarLa')
       });
     } finally {
       this.isSaving = false;

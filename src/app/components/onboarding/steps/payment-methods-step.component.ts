@@ -5,6 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 
+import { TranslateService } from '@ngx-translate/core';
 interface FormaPago {
   id?: string;
   online: string;
@@ -104,7 +105,8 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -183,8 +185,8 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -199,8 +201,8 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
     if (existsName) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Nombre Duplicado',
-        detail: 'Ya existe un método de pago con este nombre'
+        summary: this.translate.instant('onboarding.billingZonesStep.nombreDuplicado'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.yaExisteUnMetodoDe')
       });
       return;
     }
@@ -211,16 +213,16 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
       this.editingIndex = null;
       this.messageService.add({
         severity: 'success',
-        summary: 'Actualizado',
-        detail: 'Método de pago actualizado correctamente'
+        summary: this.translate.instant('onboarding.billingZonesStep.actualizado'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.metodoDePagoActualizadoCorrectamente')
       });
     } else {
       // Agregar nuevo método
       this.paymentMethodsList.push(paymentData);
       this.messageService.add({
         severity: 'success',
-        summary: 'Agregado',
-        detail: 'Método de pago agregado a la lista'
+        summary: this.translate.instant('onboarding.billingZonesStep.agregado'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.metodoDePagoAgregadoA')
       });
     }
 
@@ -266,8 +268,8 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
 
     this.messageService.add({
       severity: 'info',
-      summary: 'Eliminado',
-      detail: `Método de pago "${payment.nombre}" eliminado`
+      summary: this.translate.instant('onboarding.billingZonesStep.eliminado'),
+      detail: this.translate.instant('onboarding.paymentMethodsStep.metodoEliminado', { nombre: payment.nombre })
     });
 
     // Si estaba editando este método, cancelar
@@ -283,8 +285,8 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
     if (this.paymentMethodsList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos un método de pago para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.debesAgregarAlMenosUn')
       });
       return;
     }
@@ -322,15 +324,15 @@ export class PaymentMethodsStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.paymentMethodsList.length} método(s) de pago configurado(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.metodosConfigurados', { cantidad: this.paymentMethodsList.length })
       });
     } catch (error) {
       console.error('Error guardando métodos de pago:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo guardar la configuración de métodos de pago'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.paymentMethodsStep.noSePudoGuardarLa')
       });
     } finally {
       this.isSaving = false;

@@ -1511,94 +1511,100 @@
 
 // =====================================================================
 // MODO OSCURO (body.dark-only del theme)
+// D-502 F1 (ticket 1180, tarea 3.6): los colores con token van en var(--ds-*) de
+// shared/styles/_theme-tokens.scss, con el MISMO valor que tenían (#14121c canvas, #1b1826 surface,
+// #211d30 surface-2, #221e33 row-hover, #251f3a tile, #262233 line, #17151f sidebar, #2c2740 connector,
+// #f2f0fa ink, #b9b5cc body y la sombra en shadow-card). Lo que no tiene token queda literal
+// (--primary-light, --glass-bg-secondary, --text-muted #8f8ba5 y los tintes lila de hover y activo).
+// Prueba: tests/theme/marco-tokens.test.js (oscuro resuelto idéntico al de antes).
 // =====================================================================
 body.dark-only {
   // Variables legacy en versión oscura: las reglas viejas de dark-mode.scss
   // las consumen — con esto resuelven a la paleta nueva y no a blancos/púrpuras.
-  --glass-bg: #17151f;
+  --glass-bg: var(--ds-sidebar);
   --glass-bg-secondary: rgba(255, 255, 255, 0.04);
-  --glass-border: #262233;
-  --glass-text-primary: #f2f0fa;
-  --glass-text-secondary: #b9b5cc;
+  --glass-border: var(--ds-line);
+  --glass-text-primary: var(--ds-ink);
+  --glass-text-secondary: var(--ds-body);
   --glass-text-inactive: #8f8ba5;
-  --item-active-bg: #251f3a;
-  --item-hover-bg: #221e33;
+  --item-active-bg: var(--ds-tile);
+  --item-hover-bg: var(--ds-row-hover);
   --primary-light: rgba(124, 92, 255, .16);
-  --sidebar-border: #262233;
-  --sidebar-bg: #17151f;
-  --text-primary: #f2f0fa;
-  --text-secondary: #b9b5cc;
+  --sidebar-border: var(--ds-line);
+  --sidebar-bg: var(--ds-sidebar);
+  --text-primary: var(--ds-ink);
+  --text-secondary: var(--ds-body);
   --text-muted: #8f8ba5;
-  --bg-hover: #221e33;
-  --bg-active: #251f3a;
-  --bg-section: #211d30;
-  --tree-connector-color: #2c2740;
-  --divider-color: #262233;
+  --bg-hover: var(--ds-row-hover);
+  --bg-active: var(--ds-tile);
+  --bg-section: var(--ds-surface-2);
+  --tree-connector-color: var(--ds-connector);
+  --divider-color: var(--ds-line);
 
   .page-wrapper .page-body-wrapper {
-    background: #14121c;
+    background: var(--ds-canvas);
   }
 
   .sidebar-container {
-    background: #1b1826;
-    border-color: #262233;
-    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .6);
+    background: var(--ds-surface);
+    border-color: var(--ds-line);
+    box-shadow: var(--ds-shadow-card);
   }
 
   .sidebar-header.unified-header {
-    .expanded-info .greeting-section .user-name { color: #f2f0fa; }
+    .expanded-info .greeting-section .user-name { color: var(--ds-ink); }
     .collapse-toggle-btn {
-      background: #211d30;
-      border-color: #2c2740;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-connector);
       color: #8f8ba5;
       &:hover { background: #2a2440; color: #b3a5ff; }
     }
   }
 
   .sidebar-brand-footer {
-    border-top-color: #262233;
+    border-top-color: var(--ds-line);
     .logo-light { display: none; }
     .logo-dark { display: block; }
-    .version-badge { background: #211d30; border-color: #2c2740; color: #8f8ba5; }
+    .version-badge { background: var(--ds-surface-2); border-color: var(--ds-connector); color: #8f8ba5; }
   }
 
   .search-section .search-input-container {
-    background: #211d30;
-    border-color: #2c2740;
+    background: var(--ds-surface-2);
+    border-color: var(--ds-connector);
     .search-input { color: #d9d6e8; }
   }
 
   .search-section .search-results {
-    background: #1b1826;
-    border-color: #2c2740;
+    background: var(--ds-surface);
+    border-color: var(--ds-connector);
   }
 
   .section-header {
-    color: #b9b5cc;
-    &:hover { background: #221e33; }
-    &.expanded { background: #251f3a; color: #b3a5ff; }
+    color: var(--ds-body);
+    &:hover { background: var(--ds-row-hover); }
+    &.expanded { background: var(--ds-tile); color: #b3a5ff; }
   }
 
   .menu-section .section-header .section-icon {
     background: #262138 !important;
   }
 
-  .menu-items { border-left-color: #2c2740; }
-  .submenu { border-left-color: #2c2740; }
+  .menu-items { border-left-color: var(--ds-connector); }
+  .submenu { border-left-color: var(--ds-connector); }
 
   .menu-link, .submenu-link {
     color: #a9a5bf;
-    &:hover { background: #221e33; color: #cfc5ff; }
-    &.active { background: #251f3a; color: #cfc5ff; }
+    &:hover { background: var(--ds-row-hover); color: #cfc5ff; }
+    &.active { background: var(--ds-tile); color: #cfc5ff; }
   }
 
-  .menu-link.collapsed-link .fila-ico { background: #211d30; }
+  .menu-link.collapsed-link .fila-ico { background: var(--ds-surface-2); }
   .search-section .search-results .search-result-link .search-result-grupo { color: #a9a5bf !important; }
-  .panel-flotante { background: #1b1826; border-color: #2c2740; }
-  .panel-flotante .panel-titulo { color: #f2f0fa; }
-  .sidebar-container.collapsed .menu-section + .menu-section .menu-items { border-top-color: #2c2740; }
+  .panel-flotante { background: var(--ds-surface); border-color: var(--ds-connector); }
+  .panel-flotante .panel-titulo { color: var(--ds-ink); }
+  .sidebar-container.collapsed .menu-section + .menu-section .menu-items { border-top-color: var(--ds-connector); }
 
-  .sidebar-container .fila-punto { box-shadow: 0 0 0 2px #1b1826; }
+  .sidebar-container .fila-punto { box-shadow: 0 0 0 2px var(--ds-surface); }
   .sidebar-container .fila-insignia { background: #2a2145; color: #cfc5ff !important; }
   .sidebar-container .fila-insignia--pronto { background: #3a2d12; color: #f5c27a !important; box-shadow: none; }
   .sidebar-container .fila-estrella--activa { color: #b3a5ff; }
@@ -1606,13 +1612,13 @@ body.dark-only {
 
   .favorites-section .favorite-link {
     color: #a9a5bf;
-    &:hover { background: #221e33; color: #cfc5ff; }
+    &:hover { background: var(--ds-row-hover); color: #cfc5ff; }
   }
 
   .plan-card-container {
     .plan-card-header {
-      background: #211d30;
-      border-color: #2c2740;
+      background: var(--ds-surface-2);
+      border-color: var(--ds-connector);
 
       &:hover { background: #2a2440; border-color: #3a3355; }
 
@@ -1623,15 +1629,15 @@ body.dark-only {
 
       .plan-title {
         > i { background: #2a2145; color: #b3a5ff; }
-        small { color: #f2f0fa; }
-        .plan-badge.freemium { background: #2c2740; color: #b9b5cc; }
+        small { color: var(--ds-ink); }
+        .plan-badge.freemium { background: var(--ds-connector); color: var(--ds-body); }
       }
 
-      .plan-balance { color: #f2f0fa; }
+      .plan-balance { color: var(--ds-ink); }
 
       .toggle-plan-btn {
         background: rgba(255, 255, 255, .05);
-        border-color: #2c2740;
+        border-color: var(--ds-connector);
         color: #8f8ba5;
       }
     }

@@ -20,7 +20,7 @@
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    background: #fff;
+    background: var(--ds-surface);
     border-bottom: 1px solid $cfg-line-soft;
     color: $cfg-ink;
   }

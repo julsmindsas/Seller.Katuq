@@ -6,11 +6,11 @@
 
   // Clase para la forma de pago Wompi
   .text-purple {
-    color: #8e44ad; // Un tono púrpura
+    color: var(--km-purple); // Un tono púrpura
   }
 
   .modal-header {
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--km-gray-200);
     padding-bottom: 15px;
     margin-bottom: 20px;
     display: flex;
@@ -20,12 +20,12 @@
     .modal-title {
       font-size: 1.5rem;
       font-weight: 600;
-      color: #2c3e50;
+      color: var(--km-slate);
     }
   }
 
   .fecha-selector {
-    background-color: #f8f9fa;
+    background-color: var(--km-gray-50);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -37,7 +37,7 @@
 
     .form-label {
       font-weight: 500;
-      color: #2c3e50;
+      color: var(--km-slate);
       margin-bottom: 5px;
       font-size: 0.9rem;
     }
@@ -53,17 +53,17 @@
 
         &:focus {
           box-shadow: none;
-          border-color: #5F3FE0;
+          border-color: var(--ds-accent-ink);
         }
       }
 
       .calendar-icon {
-        background-color: white;
+        background-color: var(--ds-surface);
         border-left: 0;
-        color: #6c757d;
+        color: var(--km-gray-600);
 
         &:hover {
-          color: #5F3FE0;
+          color: var(--ds-accent-ink);
         }
       }
     }
@@ -80,7 +80,7 @@
   }
 
   .company-title {
-    color: #2c3e50;
+    color: var(--km-slate);
     font-weight: 700;
     margin-bottom: 10px;
     font-size: 2rem;
@@ -92,11 +92,11 @@
     justify-content: center;
     align-items: center;
     height: 300px;
-    color: #666;
+    color: var(--km-gray-666);
   }
 
   .header-section {
-    background-color: #f8f9fa;
+    background-color: var(--km-gray-50);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -118,7 +118,7 @@
 
     // Ticket 1173: encabezado plano (era azul #1E6FD9, de la plantilla vieja).
     .cch-cabeza {
-      background: #fff;
+      background: var(--ds-surface);
       padding: 14px 18px;
 
       h3 {
@@ -130,7 +130,7 @@
 
     .card-body {
       padding: 24px;
-      background-color: white;
+      background-color: var(--ds-surface);
     }
   }
 
@@ -140,24 +140,24 @@
     .stat-item {
       padding: 15px 10px;
       border-radius: 8px;
-      background-color: #f8f9fa;
+      background-color: var(--km-gray-50);
       transition: all 0.3s ease;
 
       &:hover {
-        background-color: #e9ecef;
+        background-color: var(--km-gray-200);
         transform: translateY(-2px);
       }
 
       .stat-label {
         font-size: 0.9rem;
-        color: #6c757d;
+        color: var(--km-gray-600);
         margin-bottom: 5px;
       }
 
       .stat-value {
         font-size: 1.4rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: var(--km-slate);
       }
     }
   }
@@ -171,16 +171,16 @@
     .payment-method {
       padding: 15px 10px;
       border-radius: 8px;
-      background-color: #f8f9fa;
+      background-color: var(--km-gray-50);
       transition: all 0.3s ease;
 
       &:hover {
-        background-color: #e9ecef;
+        background-color: var(--km-gray-200);
       }
 
       span:first-child {
         font-size: 0.9rem;
-        color: #6c757d;
+        color: var(--km-gray-600);
         margin-bottom: 5px;
       }
 
@@ -193,17 +193,17 @@
 
   .users-section {
     padding: 10px;
-    background-color: #f8f9fa;
+    background-color: var(--km-gray-50);
     border-radius: 6px;
     font-size: 0.95rem;
   }
 
   .section-title {
-    color: #2c3e50;
+    color: var(--km-slate);
     font-weight: 600;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--km-gray-200);
   }
 
   // Nuevos estilos para las tarjetas de cierre
@@ -221,9 +221,9 @@
       }
       
       .closing-header {
-        background-color: #faf9fe;
+        background-color: var(--ds-surface-2);
         padding: 15px;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--km-gray-200);
         
         .closing-date, .closing-user, .closing-total {
           display: flex;
@@ -236,11 +236,11 @@
         }
         
         .closing-date {
-          color: #2c3e50;
+          color: var(--km-slate);
         }
         
         .closing-user {
-          color: #5F3FE0;
+          color: var(--ds-accent-ink);
         }
         
         .closing-total {
@@ -263,13 +263,13 @@
           
           .cch-cabeza {
             padding: 12px 15px;
-            background-color: #faf9fe;
-            border-bottom: 1px solid #ececf4;
+            background-color: var(--ds-surface-2);
+            border-bottom: 1px solid var(--ds-line);
             
             .section-subtitle {
               font-size: 1.1rem;
               font-weight: 600;
-              color: #2c3e50;
+              color: var(--km-slate);
               margin: 0;
             }
           }
@@ -286,30 +286,30 @@
           th {
             width: 40%;
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--km-slate);
           }
           
           td {
             font-weight: 500;
-            color: #5F3FE0;
+            color: var(--ds-accent-ink);
           }
         }
         
         // Estilos para el cuadro de observaciones
         .observation-box {
-          background-color: #f8f9fa;
+          background-color: var(--km-gray-50);
           border-radius: 8px;
           padding: 10px 15px !important;
           height: 100%;
           
           h6 {
-            color: #2c3e50;
+            color: var(--km-slate);
             font-weight: 600;
             font-size: 0.95rem;
           }
           
           p {
-            color: #6c757d;
+            color: var(--km-gray-600);
             font-size: 0.9rem;
           }
         }
@@ -317,14 +317,14 @@
         // Estilos para los totales de formas de pago
         .payment-totals {
           .payment-total-item {
-            background-color: #f8f9fa;
+            background-color: var(--km-gray-50);
             border-radius: 8px;
             padding: 15px 10px;
             height: 100%;
             transition: all 0.3s ease;
             
             &:hover {
-              background-color: #e9ecef;
+              background-color: var(--km-gray-200);
               transform: translateY(-2px);
             }
             
@@ -334,14 +334,14 @@
             
             .payment-method-label {
               font-size: 0.85rem;
-              color: #6c757d;
+              color: var(--km-gray-600);
               margin: 5px 0;
             }
             
             .payment-amount {
               font-size: 1.1rem;
               font-weight: 600;
-              color: #2c3e50;
+              color: var(--km-slate);
             }
           }
         }
@@ -349,7 +349,7 @@
         // Estilos para los contadores
         .counts-row {
           .count-box {
-            background-color: #f8f9fa;
+            background-color: var(--km-gray-50);
             border-radius: 8px;
             padding: 12px;
             display: flex;
@@ -358,14 +358,14 @@
             
             .count-label {
               font-size: 0.85rem;
-              color: #6c757d;
+              color: var(--km-gray-600);
               margin-bottom: 5px;
             }
             
             .count-value {
               font-size: 1.1rem;
               font-weight: 600;
-              color: #2c3e50;
+              color: var(--km-slate);
             }
           }
         }
@@ -380,8 +380,8 @@
             width: 100%;
             
             th {
-              background-color: #f8f9fa;
-              color: #2c3e50;
+              background-color: var(--km-gray-50);
+              color: var(--km-slate);
               font-weight: 600;
               font-size: 0.9rem;
             }
@@ -538,9 +538,9 @@
 
   .input-group-text,
   .btn-outline-secondary {
-    background: #fff;
+    background: var(--ds-surface);
     border-color: var(--kc-line);
-    color: var(--kc-accent);
+    color: var(--kc-accent-texto);
     border-radius: 0 12px 12px 0;
   }
 }
@@ -557,7 +557,7 @@
 }
 
 .card > .cch-cabeza {
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid var(--kc-line);
   border-radius: 16px 16px 0 0;
   padding: 14px 18px;
@@ -618,7 +618,7 @@
 
 // --- lista de cierres -------------------------------------------------------
 .closing-item {
-  background: #fff;
+  background: var(--ds-surface);
   border: 1px solid var(--kc-line);
   border-radius: 16px;
   overflow: hidden;
@@ -631,7 +631,7 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 12px 16px;
-  background: #fbfcfe;
+  background: var(--km-sunken);
   border-bottom: 1px solid var(--kc-line2);
 }
 
@@ -653,7 +653,7 @@
   font-family: var(--kc-font-head);
   font-weight: 800;
   font-size: 18px;
-  color: var(--kc-accent);
+  color: var(--kc-accent-texto);
 }
 
 .closing-body { padding: 14px 16px; }
@@ -664,7 +664,7 @@
 
   thead th,
   &.table-light thead th {
-    background: #fbfcfe !important;
+    background: var(--km-sunken) !important;
     border-bottom: 1px solid var(--kc-line2);
     font-size: 9.5px;
     font-weight: 800;
@@ -675,14 +675,14 @@
   }
 
   tbody td {
-    border-bottom: 1px solid #f5f6fa;
+    border-bottom: 1px solid var(--km-row-line);
     font-size: 13px;
     font-weight: 700;
     color: var(--kc-ink2);
     vertical-align: middle;
   }
 
-  &.table-hover tbody tr:hover > * { background: #fbfaff; }
+  &.table-hover tbody tr:hover > * { background: var(--km-row-hover); }
 }
 
 .badge {
@@ -694,7 +694,7 @@
 
   &.bg-primary {
     background: var(--kc-accent-wash) !important;
-    color: var(--kc-accent) !important;
+    color: var(--kc-accent-texto) !important;
   }
 }
 
@@ -706,14 +706,14 @@
 
   &.alert-info {
     background: var(--kc-blue-wash);
-    border-color: #cfe0fb;
-    color: #1f56b0;
+    border-color: var(--km-info-line);
+    color: var(--km-info-ink);
   }
 
   &.alert-warning {
     background: var(--kc-orange-wash);
-    border-color: #f7e2be;
-    color: #a9660d;
+    border-color: var(--km-warn-line);
+    color: var(--km-warn-ink);
   }
 }
 
@@ -755,15 +755,15 @@
 
   .btn.btn-outline-primary,
   .btn.btn-outline-primary:focus {
-    background-color: #fff !important;
-    color: var(--kc-accent) !important;
-    border-color: #e2d9fb !important;
+    background-color: var(--ds-surface) !important;
+    color: var(--kc-accent-texto) !important;
+    border-color: var(--km-wash-line) !important;
   }
 
   .btn.btn-outline-primary:hover {
     background-color: var(--kc-accent-wash) !important;
     border-color: var(--kc-accent) !important;
-    color: var(--kc-accent) !important;
+    color: var(--kc-accent-texto) !important;
   }
 
   .btn.btn-primary,
@@ -771,14 +771,14 @@
   .btn.btn-primary:focus {
     background-color: var(--kc-accent) !important;
     border-color: var(--kc-accent) !important;
-    color: #fff !important;
+    color: var(--ds-on-accent) !important;
   }
 
   .btn.btn-outline-secondary,
   .btn.btn-outline-secondary:focus {
-    background-color: #fff !important;
+    background-color: var(--ds-surface) !important;
     color: var(--kc-ink2) !important;
-    border-color: #e4e5ee !important;
+    border-color: var(--km-line-strong) !important;
   }
 
   // El botón del datepicker va pegado al input: conserva el radio a la derecha.
@@ -810,15 +810,15 @@
 .cash-closing-history .cch-cabeza {
   margin-bottom: 0;
   padding: 14px 18px;
-  background: #fff;
-  border-bottom: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
 
-  h3, h5 { color: #211F3A; }
+  h3, h5 { color: var(--ds-ink); }
 }
 
-.cash-closing-history .cch-cabeza--sub { background: #faf9fe; }
+.cash-closing-history .cch-cabeza--sub { background: var(--ds-surface-2); }
 
 .cash-closing-history .btn:focus-visible {
-  outline: 3px solid #7C5CFF !important;
+  outline: 3px solid var(--ds-focus) !important;
   outline-offset: 2px;
 }

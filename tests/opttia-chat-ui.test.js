@@ -6,13 +6,18 @@ const fs = require('node:fs');
 const floating = fs.readFileSync('src/app/shared/components/floating-button/floating-button.component.html', 'utf8');
 const floatingComponent = fs.readFileSync('src/app/shared/components/floating-button/floating-button.component.ts', 'utf8');
 const chat = fs.readFileSync('src/app/shared/components/opttia-chat/opttia-chat.component.html', 'utf8');
+const es = JSON.parse(fs.readFileSync('src/assets/i18n/es.json', 'utf8'));
 
 test('el chat ofrece minimizar separado de maximizar y cerrar', () => {
   assert.match(floating, /\(click\)="minimizeChat\(\$event\)"/);
-  assert.match(floating, /aria-label="Minimizar chat de Opttia"/);
+  // IDI-B12f: el texto pasó al traductor; la plantilla pide la clave y es.json conserva el texto.
+  assert.match(floating, /\[attr\.aria-label\]="'asistentes\.floatingButton\.minimizarChatDeOpttia' \| translate"/);
+  assert.equal(es['asistentes.floatingButton.minimizarChatDeOpttia'], 'Minimizar chat de Opttia');
   assert.match(floating, /\(click\)="toggleChatSize\(\$event\)"/);
-  assert.match(floating, /aria-label="Cerrar chat de Opttia"/);
-  assert.match(floating, /aria-label="Restaurar chat de Opttia"/);
+  assert.match(floating, /'asistentes\.floatingButton\.cerrarChatDeOpttia' \| translate/);
+  assert.equal(es['asistentes.floatingButton.cerrarChatDeOpttia'], 'Cerrar chat de Opttia');
+  assert.match(floating, /'asistentes\.floatingButton\.restaurarChatDeOpttia' \| translate/);
+  assert.equal(es['asistentes.floatingButton.restaurarChatDeOpttia'], 'Restaurar chat de Opttia');
   assert.match(floatingComponent, /minimizeChat[\s\S]*?this\.chatMinimized = true;[\s\S]*?this\.chatFormVisible = true;/);
 });
 

@@ -13,7 +13,7 @@
     color: $cfg-ink;
     font-size: 13.5px;
 
-    &:focus { background: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+    &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
   }
 }
 
@@ -43,5 +43,5 @@
 
   .datatable-body .datatable-row-wrapper:hover .datatable-body-row { background: $cfg-row-hover; }
   .datatable-footer { color: $cfg-muted; }
-  .datatable-pager li.active a { background: $cfg-accent !important; color: #fff !important; border-radius: 9px; }
+  .datatable-pager li.active a { background: $cfg-accent !important; color: var(--ds-on-accent) !important; border-radius: 9px; }
 }

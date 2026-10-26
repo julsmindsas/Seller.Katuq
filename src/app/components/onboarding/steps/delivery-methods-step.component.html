@@ -1,8 +1,7 @@
 <div class="step-container">
   <div class="step-intro">
     <p class="intro-text">
-      Configura las formas de entrega que ofrecerás a tus clientes. Puedes incluir domicilio,
-      recogida en tienda, mensajería especializada, etc.
+      {{ 'onboarding.deliveryMethodsStep.configuraLasFormasDeEntrega' | translate }}
     </p>
   </div>
 
@@ -11,7 +10,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-th-large"></i>
-        <span>Plantillas Rápidas</span>
+        <span>{{ 'onboarding.billingZonesStep.plantillasRapidas' | translate }}</span>
       </div>
     </ng-template>
 
@@ -26,7 +25,7 @@
         (click)="useTemplate(template)">
       </button>
     </div>
-    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+    <small class="field-help">{{ 'onboarding.billingZonesStep.hazClicEnUnaPlantilla' | translate }}</small>
   </p-card>
 
   <!-- Add/Edit Delivery Method Form -->
@@ -34,20 +33,20 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-truck"></i>
-        <span>{{ editingIndex !== null ? 'Editar Forma de Entrega' : 'Agregar Forma de Entrega' }}</span>
+        <span>{{ editingIndex !== null ? ('onboarding.deliveryMethodsStep.editarFormaDeEntrega' | translate) : ('onboarding.deliveryMethodsStep.agregarFormaDeEntrega' | translate) }}</span>
       </div>
     </ng-template>
 
     <form [formGroup]="deliveryForm">
       <div class="form-grid">
         <div class="form-field col-12 md:col-6">
-          <label for="nombre" class="required">Nombre de la Forma de Entrega *</label>
+          <label for="nombre" class="required">{{ 'onboarding.deliveryMethodsStep.nombreDeLaFormaDe' | translate }}</label>
           <input
             id="nombre"
             type="text"
             pInputText
             formControlName="nombre"
-            placeholder="Ej: Domicilio, Recogida en Tienda"
+            [placeholder]="'onboarding.deliveryMethodsStep.ejDomicilioRecogidaEnTienda' | translate"
             [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
             {{ getErrorMessage('nombre') }}
@@ -55,30 +54,30 @@
         </div>
 
         <div class="form-field col-12 md:col-6">
-          <label for="posicion" class="required">Posición *</label>
+          <label for="posicion" class="required">{{ 'onboarding.deliveryMethodsStep.posicion' | translate }}</label>
           <input
             id="posicion"
             type="number"
             pInputText
             formControlName="posicion"
-            placeholder="Ej: 1, 2, 3..."
+            [placeholder]="'onboarding.deliveryMethodsStep.ej123' | translate"
             min="1"
             [class.p-invalid]="hasError('posicion', 'required') || hasError('posicion', 'min')" />
-          <small class="field-help">Define el orden en el listado de formas de entrega</small>
+          <small class="field-help">{{ 'onboarding.deliveryMethodsStep.defineElOrdenEnEl' | translate }}</small>
           <small class="p-error" *ngIf="hasError('posicion', 'required') || hasError('posicion', 'min')">
             {{ getErrorMessage('posicion') }}
           </small>
         </div>
 
         <div class="form-field col-12 md:col-6">
-          <label for="ciudad" class="required">Ciudades *</label>
+          <label for="ciudad" class="required">{{ 'onboarding.deliveryMethodsStep.ciudades' | translate }}</label>
           <p-multiSelect
             inputId="ciudad"
             [options]="ciudadesDisponibles"
             formControlName="ciudad"
             optionLabel="label"
             optionValue="value"
-            placeholder="Selecciona ciudades"
+            [placeholder]="'onboarding.deliveryMethodsStep.seleccionaCiudades' | translate"
             [filter]="true"
             filterPlaceHolder="Buscar ciudad"
             [showClear]="true"
@@ -86,26 +85,26 @@
             [class.p-invalid]="hasError('ciudad', 'required')">
             <ng-template let-value pTemplate="selectedItems">
               <div class="flex align-items-center gap-2" *ngIf="value && value.length > 0">
-                <div>{{ value.length }} ciudad(es) seleccionada(s)</div>
+                <div>{{ value.length }} {{ 'onboarding.deliveryMethodsStep.ciudadEsSeleccionadaS' | translate }}</div>
               </div>
-              <span *ngIf="!value || value.length === 0">Selecciona ciudades</span>
+              <span *ngIf="!value || value.length === 0">{{ 'onboarding.deliveryMethodsStep.seleccionaCiudades' | translate }}</span>
             </ng-template>
           </p-multiSelect>
-          <small class="field-help">Selecciona las ciudades para las que aplica esta forma de entrega</small>
+          <small class="field-help">{{ 'onboarding.deliveryMethodsStep.seleccionaLasCiudadesParaLas' | translate }}</small>
           <small class="p-error" *ngIf="hasError('ciudad', 'required')">
             {{ getErrorMessage('ciudad') }}
           </small>
         </div>
 
         <div class="form-field col-12 md:col-6">
-          <label for="horariosSeleccionados" class="required">Horarios *</label>
+          <label for="horariosSeleccionados" class="required">{{ 'onboarding.deliveryMethodsStep.horarios' | translate }}</label>
           <p-multiSelect
             inputId="horariosSeleccionados"
             [options]="horarios"
             formControlName="horariosSeleccionados"
             optionLabel="nombre"
             optionValue="nombre"
-            placeholder="Selecciona horarios"
+            [placeholder]="'onboarding.deliveryMethodsStep.seleccionaHorarios' | translate"
             [filter]="true"
             filterPlaceHolder="Buscar horario"
             [showClear]="true"
@@ -113,12 +112,12 @@
             [class.p-invalid]="hasError('horariosSeleccionados', 'required')">
             <ng-template let-value pTemplate="selectedItems">
               <div class="flex align-items-center gap-2" *ngIf="value && value.length > 0">
-                <div>{{ value.length }} horario(s) seleccionado(s)</div>
+                <div>{{ value.length }} {{ 'onboarding.deliveryMethodsStep.horarioSSeleccionadoS' | translate }}</div>
               </div>
-              <span *ngIf="!value || value.length === 0">Selecciona horarios</span>
+              <span *ngIf="!value || value.length === 0">{{ 'onboarding.deliveryMethodsStep.seleccionaHorarios' | translate }}</span>
             </ng-template>
           </p-multiSelect>
-          <small class="field-help">Selecciona los horarios disponibles para esta forma de entrega</small>
+          <small class="field-help">{{ 'onboarding.deliveryMethodsStep.seleccionaLosHorariosDisponiblesPara' | translate }}</small>
           <small class="p-error" *ngIf="hasError('horariosSeleccionados', 'required')">
             {{ getErrorMessage('horariosSeleccionados') }}
           </small>
@@ -130,9 +129,9 @@
               inputId="activo"
               formControlName="activo"
               [binary]="true"
-              label="Activo">
+              [label]="'onboarding.billingZonesStep.activo' | translate">
             </p-checkbox>
-            <small class="field-help">Las formas de entrega activas estarán disponibles en tu tienda</small>
+            <small class="field-help">{{ 'onboarding.deliveryMethodsStep.lasFormasDeEntregaActivas' | translate }}</small>
           </div>
         </div>
       </div>
@@ -142,7 +141,7 @@
           *ngIf="editingIndex !== null"
           pButton
           type="button"
-          label="Cancelar"
+          [label]="'comun.cancelar' | translate"
           icon="pi pi-times"
           class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
@@ -150,7 +149,7 @@
         <button
           pButton
           type="button"
-          [label]="editingIndex !== null ? 'Actualizar Forma' : 'Agregar a Lista'"
+          [label]="editingIndex !== null ? ('onboarding.deliveryMethodsStep.actualizarForma' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
           class="cfg-btn"
           [disabled]="deliveryForm.invalid"
@@ -165,19 +164,19 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-list"></i>
-        <span>Formas de Entrega Configuradas ({{ deliveryMethodsList.length }})</span>
+        <span>{{ 'onboarding.deliveryMethodsStep.formasDeEntregaConfiguradas' | translate:{length: deliveryMethodsList.length} }}</span>
       </div>
     </ng-template>
 
     <p-table [value]="deliveryMethodsList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th>Nombre</th>
-          <th>Posición</th>
-          <th>Ciudades</th>
-          <th>Horarios</th>
-          <th style="width: 100px">Estado</th>
-          <th style="width: 140px">Acciones</th>
+          <th>{{ 'onboarding.categoriesStep.nombre' | translate }}</th>
+          <th>{{ 'onboarding.deliveryMethodsStep.posicion2' | translate }}</th>
+          <th>{{ 'onboarding.deliveryMethodsStep.ciudades2' | translate }}</th>
+          <th>{{ 'onboarding.deliveryMethodsStep.horarios2' | translate }}</th>
+          <th style="width: 100px">{{ 'onboarding.billingZonesStep.estado' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-delivery let-i="rowIndex">
@@ -186,27 +185,27 @@
           <td>{{ delivery.posicion }}</td>
           <td>
             <span *ngIf="delivery.ciudad && delivery.ciudad.length > 0">
-              {{ delivery.ciudad.length }} ciudad(es)
+              {{ delivery.ciudad.length }} {{ 'onboarding.deliveryMethodsStep.ciudadEs' | translate }}
             </span>
             <span *ngIf="!delivery.ciudad || delivery.ciudad.length === 0">-</span>
           </td>
           <td>
             <span *ngIf="delivery.horariosSeleccionados && delivery.horariosSeleccionados.length > 0">
-              {{ delivery.horariosSeleccionados.length }} horario(s)
+              {{ delivery.horariosSeleccionados.length }} {{ 'onboarding.deliveryMethodsStep.horarioS' | translate }}
             </span>
             <span *ngIf="!delivery.horariosSeleccionados || delivery.horariosSeleccionados.length === 0">-</span>
           </td>
           <td>
             <span class="badge" [class.badge-active]="delivery.activo" [class.badge-inactive]="!delivery.activo">
-              {{ delivery.activo ? 'Activo' : 'Inactivo' }}
+              {{ delivery.activo ? ('onboarding.billingZonesStep.activo' | translate) : ('onboarding.billingZonesStep.inactivo' | translate) }}
             </span>
           </td>
           <td>
             <div class="action-buttons">
               <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm p-button-info"
-                      pTooltip="Editar" tooltipPosition="top" (click)="editDeliveryMethod(i)"></button>
+                      [pTooltip]="'comun.editar' | translate" tooltipPosition="top" (click)="editDeliveryMethod(i)"></button>
               <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
-                      pTooltip="Eliminar" tooltipPosition="top" (click)="removeDeliveryMethod(i)"></button>
+                      [pTooltip]="'comun.eliminar' | translate" tooltipPosition="top" (click)="removeDeliveryMethod(i)"></button>
             </div>
           </td>
         </tr>
@@ -219,7 +218,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -230,11 +229,11 @@
 
     <p class="form-status" *ngIf="deliveryMethodsList.length === 0">
       <i class="pi pi-info-circle"></i>
-      Agrega al menos una forma de entrega para continuar
+      {{ 'onboarding.deliveryMethodsStep.agregaAlMenosUnaForma' | translate }}
     </p>
     <p class="form-status success" *ngIf="deliveryMethodsList.length > 0">
       <i class="pi pi-check-circle"></i>
-      {{ deliveryMethodsList.length }} forma(s) de entrega configurada(s) - ¡Listo para continuar!
+      {{ deliveryMethodsList.length }} {{ 'onboarding.deliveryMethodsStep.formaSDeEntregaConfigurada' | translate }}
     </p>
   </div>
 </div>

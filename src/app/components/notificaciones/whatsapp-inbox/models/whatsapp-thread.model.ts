@@ -129,6 +129,8 @@ export interface BotThreadState {
   totalCarrito: number;
   turnos: number;
   cotizacionCreada?: { id?: string | null; numero?: string | null } | null;
+  /** Último pedido creado por el bot en este hilo (leído de orders). Ausente si no hay. */
+  pedidoCreado?: { nroPedido: string; total: number; estadoPago?: string | null } | null;
 }
 
 /**

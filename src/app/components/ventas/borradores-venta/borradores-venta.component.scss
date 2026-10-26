@@ -23,7 +23,7 @@
   padding: 0 6px;
   border-radius: 999px;
   background: $cfg-accent-soft;
-  color: $cfg-accent !important;
+  color: $cfg-accent-ink !important;
   font-size: 11.5px !important;
   font-weight: 800;
 }
@@ -68,7 +68,7 @@
   align-items: center;
   padding: 12px 14px;
   border-top: 1px solid $cfg-line-soft;
-  background: #fff;
+  background: var(--ds-surface);
 
   &:hover { background: $cfg-row-hover; }
 }
@@ -152,10 +152,10 @@ button:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offs
 
   .p-dialog-header {
     padding: 18px 20px 8px;
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-ink;
     font-weight: 800;
   }
 
-  .p-dialog-content { padding: 0 20px 20px; background: #fff; }
+  .p-dialog-content { padding: 0 20px 20px; background: var(--ds-surface); }
 }

@@ -3,13 +3,13 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Configuración</span>
-      <h1 class="cfg-titulo">Campos Personalizados</h1>
-      <p class="cfg-sub">Define campos adicionales que se capturan en la venta asistida</p>
+      <span class="cfg-eyebrow">{{ 'empresas.camposPersonalizados.configuracion' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'empresas.camposPersonalizados.camposPersonalizados' | translate }}</h1>
+      <p class="cfg-sub">{{ 'empresas.camposPersonalizados.defineCamposAdicionalesQueSe' | translate }}</p>
     </div>
     <div class="cfg-acciones">
       <button class="cfg-btn" (click)="nuevoGrupo()" *ngIf="!showForm">
-        <i class="fa fa-plus"></i><span>Nuevo Grupo</span>
+        <i class="fa fa-plus"></i><span>{{ 'empresas.camposPersonalizados.nuevoGrupo' | translate }}</span>
       </button>
     </div>
   </header>
@@ -17,7 +17,7 @@
   <!-- Loading -->
   <div *ngIf="loading" class="cfg-vacio">
     <div class="cfg-vacio__icono"><i class="fa fa-spinner fa-spin"></i></div>
-    <p class="cfg-vacio__texto">Cargando...</p>
+    <p class="cfg-vacio__texto">{{ 'empresas.camposPersonalizados.cargando' | translate }}</p>
   </div>
 
   <!-- Lista de grupos -->
@@ -27,10 +27,10 @@
     <section *ngIf="grupos.length === 0" class="cfg-card">
       <div class="cfg-vacio">
         <div class="cfg-vacio__icono"><i class="fa fa-list-alt"></i></div>
-        <p class="cfg-vacio__titulo">No hay campos personalizados</p>
-        <p class="cfg-vacio__texto">Crea un grupo de campos para capturar datos adicionales en tus ventas</p>
+        <p class="cfg-vacio__titulo">{{ 'empresas.camposPersonalizados.noHayCamposPersonalizados' | translate }}</p>
+        <p class="cfg-vacio__texto">{{ 'empresas.camposPersonalizados.creaUnGrupoDeCampos' | translate }}</p>
         <button class="cfg-btn" (click)="nuevoGrupo()">
-          <i class="fa fa-plus"></i><span>Crear primer grupo</span>
+          <i class="fa fa-plus"></i><span>{{ 'empresas.camposPersonalizados.crearPrimerGrupo' | translate }}</span>
         </button>
       </div>
     </section>
@@ -41,7 +41,7 @@
         <div class="cfg-grupo__cabeza">
           <p class="cfg-grupo__nombre">{{ grupo.nombre }}</p>
           <span class="cfg-tag" [class.cfg-tag--ok]="grupo.activo">
-            {{ grupo.activo ? 'Activo' : 'Inactivo' }}
+            {{ grupo.activo ? ('empresas.crearEmpresa.activo' | translate) : ('empresas.camposPersonalizados.inactivo' | translate) }}
           </span>
           <span class="cfg-tag cfg-tag--info">{{ grupo.contexto }}</span>
         </div>
@@ -52,11 +52,11 @@
             <small class="cfg-tag__tipo">({{ campo.tipo }})</small>
           </span>
         </div>
-        <small class="cfg-grupo__conteo">{{ grupo.campos?.length || 0 }} campo(s)</small>
+        <small class="cfg-grupo__conteo">{{ grupo.campos?.length || 0 }} {{ 'empresas.camposPersonalizados.campoS' | translate }}</small>
       </div>
       <div class="cfg-acciones">
         <button class="cfg-btn cfg-btn--sec cfg-btn--chico cfg-btn--icono" (click)="toggleActivo(grupo)"
-                [title]="grupo.activo ? 'Desactivar' : 'Activar'">
+                [title]="grupo.activo ? ('empresas.camposPersonalizados.desactivar' | translate) : ('empresas.camposPersonalizados.activar' | translate)">
           <i class="fa" [class.fa-toggle-on]="grupo.activo" [class.fa-toggle-off]="!grupo.activo"></i>
         </button>
         <button class="cfg-btn cfg-btn--sec cfg-btn--chico cfg-btn--icono" (click)="editarGrupo(grupo)">
@@ -73,107 +73,107 @@
   <section *ngIf="showForm" class="cfg-card">
     <p class="cfg-card__titulo">
       <i class="fa fa-list-alt"></i>
-      {{ editingGroup ? 'Editar' : 'Nuevo' }} Grupo de Campos
+      {{ editingGroup ? ('comun.editar' | translate) : ('empresas.camposPersonalizados.nuevo' | translate) }} {{ 'empresas.camposPersonalizados.grupoDeCampos' | translate }}
     </p>
     <div [formGroup]="groupForm">
 
       <!-- Info del grupo -->
       <div class="row mb-4">
         <div class="col-md-4">
-          <label class="cfg-label">Nombre del grupo *</label>
+          <label class="cfg-label">{{ 'empresas.camposPersonalizados.nombreDelGrupo' | translate }}</label>
           <input type="text" class="form-control" formControlName="nombre"
-                 placeholder="Ej: Prescripcion Optica, Tallas, Grabado">
+                 [placeholder]="'empresas.camposPersonalizados.ejPrescripcionOpticaTallasGrabado' | translate">
         </div>
         <div class="col-md-4">
-          <label class="cfg-label">Descripcion</label>
+          <label class="cfg-label">{{ 'empresas.camposPersonalizados.descripcion' | translate }}</label>
           <input type="text" class="form-control" formControlName="descripcion"
-                 placeholder="Descripcion breve">
+                 [placeholder]="'empresas.camposPersonalizados.descripcionBreve' | translate">
         </div>
         <div class="col-md-2">
-          <label class="cfg-label">Contexto</label>
+          <label class="cfg-label">{{ 'empresas.camposPersonalizados.contexto' | translate }}</label>
           <select class="form-control" formControlName="contexto">
-            <option value="carrito">Al agregar al carrito</option>
-            <option value="pedido">En el pedido</option>
-            <option value="producto">En el producto</option>
+            <option value="carrito">{{ 'empresas.camposPersonalizados.alAgregarAlCarrito' | translate }}</option>
+            <option value="pedido">{{ 'empresas.camposPersonalizados.enElPedido' | translate }}</option>
+            <option value="producto">{{ 'empresas.camposPersonalizados.enElProducto' | translate }}</option>
           </select>
         </div>
         <div class="col-md-2">
-          <label class="cfg-label">Activo</label>
+          <label class="cfg-label">{{ 'empresas.crearEmpresa.activo' | translate }}</label>
           <div class="form-check form-switch mt-2">
             <input class="form-check-input" type="checkbox" formControlName="activo">
-            <label class="form-check-label">{{ groupForm.get('activo')?.value ? 'Si' : 'No' }}</label>
+            <label class="form-check-label">{{ groupForm.get('activo')?.value ? ('empresas.camposPersonalizados.si' | translate) : ('comun.no' | translate) }}</label>
           </div>
         </div>
       </div>
 
       <!-- Campos -->
       <div class="cfg-seccion">
-        <span class="cfg-label"><i class="fa fa-th-list"></i> Campos</span>
+        <span class="cfg-label"><i class="fa fa-th-list"></i> {{ 'empresas.camposPersonalizados.campos' | translate }}</span>
         <button class="cfg-btn cfg-btn--sec cfg-btn--chico" type="button" (click)="agregarCampo()">
-          <i class="fa fa-plus"></i><span>Agregar campo</span>
+          <i class="fa fa-plus"></i><span>{{ 'empresas.camposPersonalizados.agregarCampo' | translate }}</span>
         </button>
       </div>
 
       <div formArrayName="campos">
         <div *ngIf="camposArray.length === 0" class="cfg-nota">
-          Agrega al menos un campo
+          {{ 'empresas.camposPersonalizados.agregaAlMenosUnCampo' | translate }}
         </div>
 
         <div *ngFor="let campo of camposArray.controls; let i = index" [formGroupName]="i"
              class="cfg-campo">
           <div class="row align-items-end">
             <div class="col-md-3">
-              <label class="cfg-label">Etiqueta *</label>
+              <label class="cfg-label">{{ 'empresas.camposPersonalizados.etiqueta' | translate }}</label>
               <input type="text" class="form-control form-control-sm" formControlName="etiqueta"
-                     placeholder="Ej: OD Esfera">
+                     [placeholder]="'empresas.camposPersonalizados.ejOdEsfera' | translate">
             </div>
             <div class="col-md-2">
-              <label class="cfg-label">Tipo</label>
+              <label class="cfg-label">{{ 'empresas.constructorMetricas.tipo' | translate }}</label>
               <select class="form-control form-control-sm" formControlName="tipo">
-                <option *ngFor="let t of tiposCampo" [value]="t.valor">{{ t.etiqueta }}</option>
+                <option *ngFor="let t of tiposCampo" [value]="t.valor">{{ t.etiqueta | translate }}</option>
               </select>
             </div>
             <div class="col-md-2">
-              <label class="cfg-label">Sub-grupo</label>
+              <label class="cfg-label">{{ 'empresas.camposPersonalizados.subGrupo' | translate }}</label>
               <input type="text" class="form-control form-control-sm" formControlName="grupo"
-                     placeholder="Ej: Ojo Derecho">
+                     [placeholder]="'empresas.camposPersonalizados.ejOjoDerecho' | translate">
             </div>
             <div class="col-md-1">
               <div class="form-check mt-4">
                 <input class="form-check-input" type="checkbox" formControlName="requerido">
-                <label class="form-check-label small">Req.</label>
+                <label class="form-check-label small">{{ 'empresas.camposPersonalizados.req' | translate }}</label>
               </div>
             </div>
 
             <!-- Validaciones para number -->
             <div class="col-md-1" *ngIf="campo.get('tipo')?.value === 'number'">
-              <label class="cfg-label">Min</label>
+              <label class="cfg-label">{{ 'empresas.camposPersonalizados.min' | translate }}</label>
               <input type="number" class="form-control form-control-sm" formControlName="min">
             </div>
             <div class="col-md-1" *ngIf="campo.get('tipo')?.value === 'number'">
-              <label class="cfg-label">Max</label>
+              <label class="cfg-label">{{ 'empresas.camposPersonalizados.max' | translate }}</label>
               <input type="number" class="form-control form-control-sm" formControlName="max">
             </div>
 
             <!-- Opciones para select -->
             <div class="col-md-3" *ngIf="campo.get('tipo')?.value === 'select'">
-              <label class="cfg-label">Opciones (separadas por coma)</label>
+              <label class="cfg-label">{{ 'empresas.camposPersonalizados.opcionesSeparadasPorComa' | translate }}</label>
               <input type="text" class="form-control form-control-sm" formControlName="opciones"
-                     placeholder="Opcion 1, Opcion 2, Opcion 3">
+                     [placeholder]="'empresas.camposPersonalizados.opcion1Opcion2Opcion' | translate">
             </div>
 
             <!-- Acciones -->
             <div class="col-auto ms-auto">
               <div class="cfg-acciones">
                 <button type="button" class="cfg-btn cfg-btn--sec cfg-btn--chico cfg-btn--icono" (click)="moverCampo(i, -1)"
-                        [disabled]="i === 0" title="Subir">
+                        [disabled]="i === 0" [title]="'empresas.camposPersonalizados.subir' | translate">
                   <i class="fa fa-arrow-up"></i>
                 </button>
                 <button type="button" class="cfg-btn cfg-btn--sec cfg-btn--chico cfg-btn--icono" (click)="moverCampo(i, 1)"
-                        [disabled]="i === camposArray.length - 1" title="Bajar">
+                        [disabled]="i === camposArray.length - 1" [title]="'empresas.camposPersonalizados.bajar' | translate">
                   <i class="fa fa-arrow-down"></i>
                 </button>
-                <button type="button" class="cfg-btn cfg-btn--peligro cfg-btn--chico cfg-btn--icono" (click)="eliminarCampo(i)" title="Eliminar">
+                <button type="button" class="cfg-btn cfg-btn--peligro cfg-btn--chico cfg-btn--icono" (click)="eliminarCampo(i)" [title]="'comun.eliminar' | translate">
                   <i class="fa fa-trash"></i>
                 </button>
               </div>
@@ -184,9 +184,9 @@
 
       <!-- Botones -->
       <div class="cfg-acciones cfg-pie">
-        <button class="cfg-btn cfg-btn--sec" (click)="cancelar()">Cancelar</button>
+        <button class="cfg-btn cfg-btn--sec" (click)="cancelar()">{{ 'comun.cancelar' | translate }}</button>
         <button class="cfg-btn" (click)="guardar()" [disabled]="groupForm.invalid || camposArray.length === 0">
-          <i class="fa fa-save"></i><span>{{ editingGroup ? 'Actualizar' : 'Crear' }} Grupo</span>
+          <i class="fa fa-save"></i><span>{{ editingGroup ? ('empresas.consolaPlataforma.actualizar' | translate) : ('empresas.camposPersonalizados.crear' | translate) }} {{ 'empresas.camposPersonalizados.grupo' | translate }}</span>
         </button>
       </div>
     </div>

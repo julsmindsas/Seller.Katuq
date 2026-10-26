@@ -14,7 +14,7 @@
     <div class="step-info" *ngIf="currentConfig">
       <div class="step-name">{{ currentConfig.stepName | titlecase }}</div>
       <div class="animation-type">{{ currentConfig.animationType | uppercase }}</div>
-      <div class="particle-count">{{ currentConfig.particleCount }} partículas</div>
+      <div class="particle-count">{{ currentConfig.particleCount }} {{ 'asistentes.sphereVisualContainer.particulas' | translate }}</div>
     </div>
 
     <!-- Controles de visualización -->
@@ -23,7 +23,7 @@
         class="control-btn audio-btn" 
         [class.active]="isAudioReactive"
         (click)="toggleAudioReactivity(!isAudioReactive)"
-        title="Activar/Desactivar reactividad al audio">
+        [title]="'asistentes.sphereVisualContainer.activarDesactivarReactividadAlAudio' | translate">
         <i class="fa fa-volume-up"></i>
       </button>
       
@@ -31,14 +31,14 @@
         class="control-btn celebration-btn" 
         [class.active]="isCelebrationMode"
         (click)="toggleCelebrationMode(!isCelebrationMode)"
-        title="Activar/Desactivar modo celebración">
+        [title]="'asistentes.sphereVisualContainer.activarDesactivarModoCelebracion' | translate">
         <i class="fa fa-star"></i>
       </button>
       
       <button 
         class="control-btn clear-btn"
         (click)="clearVisual()"
-        title="Limpiar visualización">
+        [title]="'asistentes.sphereVisualContainer.limpiarVisualizacion' | translate">
         <i class="fa fa-times"></i>
       </button>
     </div>
@@ -54,15 +54,15 @@
 
   <!-- Botones de prueba para desarrollo -->
   <div class="test-controls" *ngIf="false">
-    <button (click)="createSphereVisual('bodega')">Bodega</button>
-    <button (click)="createSphereVisual('productos')">Productos</button>
-    <button (click)="createSphereVisual('carrito')">Carrito</button>
-    <button (click)="createSphereVisual('cliente')">Cliente</button>
-    <button (click)="createSphereVisual('envio')">Envío</button>
-    <button (click)="createSphereVisual('facturacion')">Facturación</button>
-    <button (click)="createSphereVisual('pago')">Pago</button>
-    <button (click)="createSphereVisual('confirmacion')">Confirmación</button>
-    <button (click)="activateCelebration('success')">Celebración</button>
-    <button (click)="showNotification('¡Prueba exitosa!', 'success')">Notificación</button>
+    <button (click)="createSphereVisual('bodega')">{{ 'asistentes.sphereVisualContainer.bodega' | translate }}</button>
+    <button (click)="createSphereVisual('productos')">{{ 'asistentes.sphereVisualContainer.productos' | translate }}</button>
+    <button (click)="createSphereVisual('carrito')">{{ 'asistentes.sphereVisualContainer.carrito' | translate }}</button>
+    <button (click)="createSphereVisual('cliente')">{{ 'asistentes.sphereVisualContainer.cliente' | translate }}</button>
+    <button (click)="createSphereVisual('envio')">{{ 'asistentes.sphereVisualContainer.envio' | translate }}</button>
+    <button (click)="createSphereVisual('facturacion')">{{ 'asistentes.sphereVisualContainer.facturacion' | translate }}</button>
+    <button (click)="createSphereVisual('pago')">{{ 'asistentes.sphereVisualContainer.pago' | translate }}</button>
+    <button (click)="createSphereVisual('confirmacion')">{{ 'asistentes.sphereVisualContainer.confirmacion' | translate }}</button>
+    <button (click)="activateCelebration('success')">{{ 'asistentes.sphereVisualContainer.celebracion' | translate }}</button>
+    <button (click)="showNotification('¡Prueba exitosa!', 'success')">{{ 'asistentes.sphereVisualContainer.notificacion' | translate }}</button>
   </div>
 </div> 

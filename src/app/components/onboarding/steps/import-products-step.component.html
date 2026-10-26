@@ -3,8 +3,7 @@
   <!-- Step Introduction -->
   <div class="step-intro">
     <p class="intro-text">
-      Importa tu catálogo de productos desde un archivo Excel o JSON. Este paso es opcional,
-      puedes agregar productos manualmente más tarde.
+      {{ 'onboarding.importProductsStep.importaTuCatalogoDeProductos' | translate }}
     </p>
   </div>
 
@@ -14,16 +13,16 @@
       <ng-template pTemplate="header">
         <div class="onb-cabeza">
           <i class="pi pi-download"></i>
-          <span>Plantilla de Importación</span>
+          <span>{{ 'onboarding.importCustomersStep.plantillaDeImportacion' | translate }}</span>
         </div>
       </ng-template>
 
       <div class="template-info">
-        <p>Descarga la plantilla, complétala con tus productos y súbela para importar.</p>
+        <p>{{ 'onboarding.importProductsStep.descargaLaPlantillaCompletalaCon' | translate }}</p>
         <button
           pButton
           type="button"
-          label="Descargar Plantilla CSV"
+          [label]="'onboarding.importCustomersStep.descargarPlantillaCsv' | translate"
           icon="pi pi-download"
           class="cfg-btn cfg-btn--sec"
           (click)="downloadTemplate()">
@@ -33,7 +32,7 @@
       <p-divider></p-divider>
 
       <div class="required-fields">
-        <h4>Campos de la Plantilla</h4>
+        <h4>{{ 'onboarding.importCustomersStep.camposDeLaPlantilla' | translate }}</h4>
         <div class="fields-grid">
           <div
             *ngFor="let col of templateColumns"
@@ -48,7 +47,7 @@
         </div>
         <small class="field-help mt-2">
           <i class="pi pi-info-circle"></i>
-          Los campos marcados con <i class="pi pi-star-fill"></i> son obligatorios
+          {{ 'onboarding.importCustomersStep.losCamposMarcadosCon' | translate }} <i class="pi pi-star-fill"></i> {{ 'onboarding.importCustomersStep.sonObligatorios' | translate }}
         </small>
       </div>
     </p-card>
@@ -59,7 +58,7 @@
     <button
       pButton
       type="button"
-      label="Descargar Plantilla CSV"
+      [label]="'onboarding.importCustomersStep.descargarPlantillaCsv' | translate"
       icon="pi pi-download"
       class="cfg-btn cfg-btn--sec"
       (click)="downloadTemplate()">
@@ -81,10 +80,9 @@
   <div *ngIf="isAnalyzingColumns" class="analysis-loading">
     <div class="loading-card">
       <i class="pi pi-spin pi-spinner loading-icon"></i>
-      <h3 class="loading-title">KAI está analizando tu archivo</h3>
+      <h3 class="loading-title">{{ 'onboarding.importCustomersStep.kaiEstaAnalizandoTuArchivo' | translate }}</h3>
       <p class="loading-text">
-        El asistente inteligente está mapeando las columnas automáticamente.
-        Esto puede tomar unos segundos...
+        {{ 'onboarding.importCustomersStep.elAsistenteInteligenteEstaMapeando' | translate }}
       </p>
     </div>
   </div>
@@ -96,10 +94,10 @@
     <div class="mapping-header">
       <h3 class="mapping-title">
         <i class="pi pi-sparkles"></i>
-        Mapeo de Columnas
+        {{ 'onboarding.importCustomersStep.mapeoDeColumnas' | translate }}
       </h3>
       <p class="mapping-subtitle">
-        KAI sugirió estos mapeos. Puedes ajustarlos si es necesario.
+        {{ 'onboarding.importCustomersStep.kaiSugirioEstosMapeosPuedes' | translate }}
       </p>
     </div>
 
@@ -107,15 +105,15 @@
     <div class="mapping-stats show-mobile">
       <div class="stat-chip">
         <i class="pi pi-check-circle"></i>
-        <span>{{ getMappedCount() }} mapeados</span>
+        <span>{{ getMappedCount() }} {{ 'onboarding.importCustomersStep.mapeados' | translate }}</span>
       </div>
       <div class="stat-chip required" *ngIf="hasUnmappedRequired()">
         <i class="pi pi-exclamation-triangle"></i>
-        <span>{{ getRequiredCount() - getMappedRequiredCount() }} requeridos faltantes</span>
+        <span>{{ getRequiredCount() - getMappedRequiredCount() }} {{ 'onboarding.importCustomersStep.requeridosFaltantes' | translate }}</span>
       </div>
       <div class="stat-chip adjusted" *ngIf="getAdjustedCount() > 0">
         <i class="pi pi-pencil"></i>
-        <span>{{ getAdjustedCount() }} ajustados</span>
+        <span>{{ getAdjustedCount() }} {{ 'onboarding.importCustomersStep.ajustados' | translate }}</span>
       </div>
     </div>
 
@@ -134,8 +132,8 @@
     <div *ngIf="hasUnmappedRequired()" class="warning-message">
       <i class="pi pi-exclamation-triangle"></i>
       <div class="warning-content">
-        <strong>Campos requeridos sin mapear</strong>
-        <p>Algunos campos obligatorios no tienen columna asignada. Por favor asigna las columnas necesarias antes de importar.</p>
+        <strong>{{ 'onboarding.importCustomersStep.camposRequeridosSinMapear' | translate }}</strong>
+        <p>{{ 'onboarding.importCustomersStep.algunosCamposObligatoriosNoTienen' | translate }}</p>
       </div>
     </div>
 
@@ -159,25 +157,25 @@
           <i class="pi pi-check-circle"></i>
           <div>
             <strong>{{ importResult.success }}</strong>
-            <span>Importados exitosamente</span>
+            <span>{{ 'onboarding.importCustomersStep.importadosExitosamente' | translate }}</span>
           </div>
         </div>
         <div class="result-item error" *ngIf="importResult.failed > 0">
           <i class="pi pi-times-circle"></i>
           <div>
             <strong>{{ importResult.failed }}</strong>
-            <span>Fallidos</span>
+            <span>{{ 'onboarding.importCustomersStep.fallidos' | translate }}</span>
           </div>
         </div>
       </div>
 
       <div *ngIf="importResult.errors && importResult.errors.length > 0" class="errors-list">
-        <h4>Errores Detectados</h4>
+        <h4>{{ 'onboarding.importCustomersStep.erroresDetectados' | translate }}</h4>
         <ul>
           <li *ngFor="let error of importResult.errors.slice(0, 5)">{{ error }}</li>
         </ul>
         <small *ngIf="importResult.errors.length > 5">
-          ...y {{ importResult.errors.length - 5 }} errores más
+          {{ 'onboarding.importCustomersStep.yErroresMas' | translate:{length: (importResult.errors.length - 5)} }}
         </small>
       </div>
     </div>
@@ -188,15 +186,15 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-info-circle"></i>
-        <span>Información Importante</span>
+        <span>{{ 'onboarding.importCustomersStep.informacionImportante' | translate }}</span>
       </div>
     </ng-template>
 
     <ul class="info-list">
-      <li><i class="pi pi-sparkles"></i> KAI analizará automáticamente las columnas de tu archivo</li>
-      <li><i class="pi pi-check"></i> Los productos duplicados (misma referencia) se actualizarán</li>
-      <li><i class="pi pi-check"></i> Puedes importar tantos archivos como necesites</li>
-      <li><i class="pi pi-check"></i> Este paso es opcional, puedes omitirlo y agregar productos manualmente después</li>
+      <li><i class="pi pi-sparkles"></i> {{ 'onboarding.importCustomersStep.kaiAnalizaraAutomaticamenteLasColumnas' | translate }}</li>
+      <li><i class="pi pi-check"></i> {{ 'onboarding.importProductsStep.losProductosDuplicadosMismaReferencia' | translate }}</li>
+      <li><i class="pi pi-check"></i> {{ 'onboarding.importCustomersStep.puedesImportarTantosArchivosComo' | translate }}</li>
+      <li><i class="pi pi-check"></i> {{ 'onboarding.importProductsStep.estePasoEsOpcionalPuedes' | translate }}</li>
     </ul>
   </p-card>
 
@@ -205,13 +203,13 @@
     <div class="footer-summary">
       <div class="summary-chips">
         <p-chip
-          [label]="getMappedCount() + ' mapeados'"
+          [label]="getMappedCount() + ' ' + ('onboarding.importCustomersStep.mapeados' | translate)"
           icon="pi pi-check"
           styleClass="summary-chip">
         </p-chip>
         <p-chip
           *ngIf="hasUnmappedRequired()"
-          [label]="(getRequiredCount() - getMappedRequiredCount()) + ' faltantes'"
+          [label]="(getRequiredCount() - getMappedRequiredCount()) + ' ' + ('onboarding.importCustomersStep.faltantes' | translate)"
           icon="pi pi-exclamation-triangle"
           styleClass="summary-chip warning">
         </p-chip>
@@ -222,7 +220,7 @@
       <button
         pButton
         type="button"
-        label="Importar Productos"
+        [label]="'onboarding.importProductsStep.importarProductos' | translate"
         icon="pi pi-upload"
         class="cfg-btn"
         [disabled]="!canImport()"
@@ -232,7 +230,7 @@
       <button
         pButton
         type="button"
-        label="Omitir Paso"
+        [label]="'onboarding.importCustomersStep.omitirPaso' | translate"
         icon="pi pi-forward"
         class="p-button-text"
         [disabled]="isUploading"
@@ -246,19 +244,19 @@
     <button
       pButton
       type="button"
-      label="Importar Productos"
+      [label]="'onboarding.importProductsStep.importarProductos' | translate"
       icon="pi pi-upload"
       class="cfg-btn"
       [disabled]="!canImport()"
       [loading]="isUploading"
       (click)="importProducts()"
-      pTooltip="Confirma el mapeo de columnas antes de importar"
+      [pTooltip]="'onboarding.importCustomersStep.confirmaElMapeoDeColumnas' | translate"
       [tooltipDisabled]="canImport()">
     </button>
     <button
       pButton
       type="button"
-      label="Omitir Paso"
+      [label]="'onboarding.importCustomersStep.omitirPaso' | translate"
       icon="pi pi-forward"
       class="p-button-text"
       [disabled]="isUploading"

@@ -3,14 +3,14 @@
   <!-- Header -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Seguridad</span>
+      <span class="cfg-eyebrow">{{ 'rol.rol.seguridad' | translate }}</span>
       <h1 class="cfg-titulo">{{ 'Roles' | translate }}</h1>
-      <p class="cfg-sub">{{ 'Administra los roles y permisos de tus usuarios.' | translate }}</p>
+      <p class="cfg-sub">{{ 'rol.rol.administraLosRoles' | translate }}</p>
     </div>
     <div class="cfg-acciones">
       <button class="cfg-btn" type="button" (click)="crearRol()">
         <i class="icofont icofont-plus"></i>
-        {{ 'Crear Rol' | translate }}
+        {{ 'rol.rol.crearRol' | translate }}
       </button>
     </div>
   </header>
@@ -36,25 +36,25 @@
                   <div class="search-wrapper">
                     <i class="pi pi-search search-icon"></i>
                     <input type="text" (input)="dt.filterGlobal($event.target.value, 'contains')"
-                      placeholder="Buscar rol..." class="form-control search-input" />
+                      [placeholder]="'rol.rol.buscarRol' | translate" class="form-control search-input" />
                   </div>
-                  <span class="roles-count">{{ roles?.length || 0 }} {{ 'roles' | translate }}</span>
+                  <span class="roles-count">{{ roles?.length || 0 }} {{ 'rol.rol.unidadRoles' | translate }}</span>
                 </div>
               </ng-template>
 
               <ng-template pTemplate="header">
                 <tr>
                   <th pSortableColumn="rol">
-                    {{ 'Rol' | translate }}
+                    {{ 'rol.rol.rolColumna' | translate }}
                     <p-sortIcon field="rol"></p-sortIcon>
                   </th>
                   <th pSortableColumn="empresa">
                     {{ 'Empresa' | translate }}
                     <p-sortIcon field="empresa"></p-sortIcon>
                   </th>
-                  <th>{{ 'Prefijos' | translate }}</th>
+                  <th>{{ 'rol.rol.prefijos' | translate }}</th>
                   <th pSortableColumn="user_edit">
-                    {{ 'Editado por' | translate }}
+                    {{ 'rol.rol.editadoPor' | translate }}
                     <p-sortIcon field="user_edit"></p-sortIcon>
                   </th>
                   <th class="rol-col-acciones">{{ 'Acciones' | translate }}</th>
@@ -76,7 +76,7 @@
                       </span>
                     </ng-container>
                     <ng-template #sinPrefijo>
-                      <span class="default-label">Default empresa</span>
+                      <span class="default-label">{{ 'rol.rol.defaultEmpresa' | translate }}</span>
                     </ng-template>
                   </td>
                   <td>
@@ -84,11 +84,11 @@
                   </td>
                   <td>
                     <button class="action-btn action-edit" (click)="editarRol(role)"
-                      placement="top" ngbTooltip="Editar">
+                      placement="top" [ngbTooltip]="'comun.editar' | translate">
                       <i class="icofont icofont-pencil-alt-5"></i>
                     </button>
                     <button class="action-btn action-delete" (click)="eliminarRol(role)"
-                      placement="top" ngbTooltip="Eliminar">
+                      placement="top" [ngbTooltip]="'comun.eliminar' | translate">
                       <i class="icofont icofont-trash"></i>
                     </button>
                   </td>
@@ -100,8 +100,8 @@
                   <td colspan="5">
                     <div class="cfg-vacio">
                       <i class="icofont icofont-people cfg-vacio__icono"></i>
-                      <p class="cfg-vacio__titulo">{{ 'No hay roles configurados' | translate }}</p>
-                      <p class="cfg-vacio__texto">Crea un rol para asignar permisos a tus usuarios.</p>
+                      <p class="cfg-vacio__titulo">{{ 'rol.rol.noHayRoles' | translate }}</p>
+                      <p class="cfg-vacio__texto">{{ 'rol.rol.creaUnRolParaAsignar' | translate }}</p>
                     </div>
                   </td>
                 </tr>

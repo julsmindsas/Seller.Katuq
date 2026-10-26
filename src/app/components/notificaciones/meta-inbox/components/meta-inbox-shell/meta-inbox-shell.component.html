@@ -2,9 +2,9 @@
   <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
   <header class="cfg-cabeza titulo-pantalla">
       <div class="cfg-cabeza__textos">
-          <span class="cfg-eyebrow">Mensajes</span>
-          <h1 class="cfg-titulo">Conversaciones de {{ canalLabel }}</h1>
-          <p class="cfg-sub">Lo que tus clientes te escriben por {{ canalLabel }}, en un solo lugar.</p>
+          <span class="cfg-eyebrow">{{ 'notificaciones.meta.eyebrow' | translate }}</span>
+          <h1 class="cfg-titulo">{{ 'notificaciones.meta.title' | translate: { canal: canalLabel } }}</h1>
+          <p class="cfg-sub">{{ 'notificaciones.meta.subtitle' | translate: { canal: canalLabel } }}</p>
       </div>
   </header>
 
@@ -12,20 +12,20 @@
   <div class="mb-aviso mb-aviso--alerta" *ngIf="!cargandoConexion && !conectado">
     <div class="mb-aviso__texto">
       <span class="mb-aviso__titulo" *ngIf="necesitaReconectar">
-        La conexión con {{ canalLabel }} se venció
+        {{ 'notificaciones.meta.expired' | translate: { canal: canalLabel } }}
       </span>
       <span class="mb-aviso__titulo" *ngIf="!necesitaReconectar">
-        Todavía no has conectado {{ canalLabel }}
+        {{ 'notificaciones.meta.notConnected' | translate: { canal: canalLabel } }}
       </span>
       <span class="mb-aviso__detalle" *ngIf="necesitaReconectar">
-        Mientras tanto no llegan mensajes nuevos. Vuelve a conectarla para seguir recibiendo.
+        {{ 'notificaciones.meta.expiredDetail' | translate }}
       </span>
       <span class="mb-aviso__detalle" *ngIf="!necesitaReconectar">
-        Conecta tu cuenta para empezar a recibir los mensajes aquí.
+        {{ 'notificaciones.meta.notConnectedDetail' | translate }}
       </span>
     </div>
     <button type="button" class="mb-btn mb-btn--primario" (click)="irAConexion()">
-      {{ necesitaReconectar ? 'Reconectar' : 'Conectar' }}
+      {{ (necesitaReconectar ? 'notificaciones.meta.reconnect' : 'notificaciones.meta.connect') | translate }}
     </button>
   </div>
 
@@ -39,13 +39,13 @@
 
       <div class="mb-vacio" *ngIf="!cargandoHilos && hilos.length === 0">
         <div class="mb-vacio__icono"><i class="pi pi-inbox"></i></div>
-        <p class="mb-vacio__titulo">Sin conversaciones todavía</p>
+        <p class="mb-vacio__titulo">{{ 'notificaciones.meta.emptyTitle' | translate }}</p>
         <p class="mb-vacio__sub">
-          Cuando alguien te escriba por {{ canalLabel }}, la conversación aparece aquí.
+          {{ 'notificaciones.meta.emptyText' | translate: { canal: canalLabel } }}
         </p>
       </div>
 
-      <p class="mb-cargando" *ngIf="cargandoHilos">Cargando conversaciones…</p>
+      <p class="mb-cargando" *ngIf="cargandoHilos">{{ 'notificaciones.meta.loadingThreads' | translate }}</p>
 
       <button
         type="button"
@@ -56,10 +56,10 @@
       >
         <span class="mb-hilo__avatar">{{ (h.contactoNombre || '?').charAt(0) }}</span>
         <span class="mb-hilo__cuerpo">
-          <span class="mb-hilo__nombre">{{ h.contactoNombre || 'Contacto de ' + canalLabel }}</span>
+          <span class="mb-hilo__nombre">{{ h.contactoNombre || ('notificaciones.meta.contactOf' | translate: { canal: canalLabel }) }}</span>
           <span class="mb-hilo__snippet">{{ h.ultimoMensajeResumen }}</span>
         </span>
-        <span class="mb-hilo__cerrada" *ngIf="!h.ventana.abierta" title="Fuera de las 24 horas">
+        <span class="mb-hilo__cerrada" *ngIf="!h.ventana.abierta" [title]="'notificaciones.meta.outside24h' | translate">
           <i class="pi pi-clock"></i>
         </span>
       </button>
@@ -69,7 +69,7 @@
     <section class="mb-chat">
       <div class="mb-vacio mb-vacio--centro" *ngIf="!hiloActivo">
         <div class="mb-vacio__icono"><i class="pi pi-comments"></i></div>
-        <p class="mb-vacio__titulo">Elige una conversación</p>
+        <p class="mb-vacio__titulo">{{ 'notificaciones.meta.chooseThread' | translate }}</p>
       </div>
 
       <ng-container *ngIf="hiloActivo">
@@ -79,7 +79,7 @@
         </header>
 
         <div class="mb-chat__mensajes">
-          <p class="mb-cargando" *ngIf="cargandoMensajes">Cargando mensajes…</p>
+          <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
           <div
             class="mb-msg"
             *ngFor="let m of mensajes; trackBy: trackMensaje"
@@ -88,17 +88,17 @@
             <span class="mb-msg__burbuja">
               <span *ngIf="m.body">{{ m.body }}</span>
               <span class="mb-msg__adjunto" *ngIf="!m.body && m.mediaUrl">
-                <i class="pi pi-paperclip"></i> Archivo adjunto
+                <i class="pi pi-paperclip"></i> {{ 'notificaciones.meta.attachment' | translate }}
               </span>
               <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
-                No se envió
+                {{ 'notificaciones.meta.notSent' | translate }}
                 <button
                   type="button"
                   class="mb-msg__reintentar"
                   [disabled]="enviando"
                   (click)="reintentar(m)"
                 >
-                  Reintentar
+                  {{ 'notificaciones.meta.retry' | translate }}
                 </button>
               </span>
             </span>
@@ -123,9 +123,9 @@
             rows="2"
             [disabled]="!ventana?.abierta || enviando"
             [placeholder]="
-              ventana?.abierta
-                ? 'Escribe tu respuesta…'
-                : 'No puedes responder hasta que te escriban de nuevo'
+              (ventana?.abierta
+                ? 'notificaciones.meta.replyPlaceholder'
+                : 'notificaciones.meta.replyClosed') | translate
             "
           ></textarea>
           <button
@@ -133,7 +133,7 @@
             class="mb-btn mb-btn--primario"
             [disabled]="!puedeEnviar"
           >
-            {{ enviando ? 'Enviando…' : 'Enviar' }}
+            {{ (enviando ? 'notificaciones.meta.sending' : 'notificaciones.meta.send') | translate }}
           </button>
         </form>
       </ng-container>

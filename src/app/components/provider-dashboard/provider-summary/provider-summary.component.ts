@@ -6,6 +6,7 @@ import {
   SummaryResponse,
 } from '../provider-dashboard.service';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-provider-summary',
   templateUrl: './provider-summary.component.html',
@@ -21,7 +22,9 @@ export class ProviderSummaryComponent implements OnChanges, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private svc: ProviderDashboardService) {}
+  constructor(private svc: ProviderDashboardService,
+    private translate: TranslateService
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['provider'] && this.provider) {
@@ -49,7 +52,7 @@ export class ProviderSummaryComponent implements OnChanges, OnDestroy {
         error: (err) => {
           this.loading = false;
           this.error =
-            err?.error?.message || err?.message || 'No se pudo cargar el resumen.';
+            err?.error?.message || err?.message || this.translate.instant('providerDashboard.providerSummary.noSePudoCargarEl');
         },
       });
   }
@@ -67,16 +70,16 @@ export class ProviderSummaryComponent implements OnChanges, OnDestroy {
   }
 
   fechaRelativa(iso: string | null): string {
-    if (!iso) return 'sin registro';
+    if (!iso) return this.translate.instant('providerDashboard.providerSummary.sinRegistro');
     const ms = Date.now() - new Date(iso).getTime();
-    if (ms < 0) return 'recién';
+    if (ms < 0) return this.translate.instant('providerDashboard.providerSummary.recien');
     const min = Math.floor(ms / 60000);
-    if (min < 1) return 'hace segundos';
-    if (min < 60) return `hace ${min} min`;
+    if (min < 1) return this.translate.instant('providerDashboard.providerSummary.haceSegundos');
+    if (min < 60) return this.translate.instant('providerDashboard.providerSummary.haceMin', { n: min });
     const hr = Math.floor(min / 60);
-    if (hr < 24) return `hace ${hr} h`;
+    if (hr < 24) return this.translate.instant('providerDashboard.providerSummary.haceHoras', { n: hr });
     const dia = Math.floor(hr / 24);
-    if (dia < 7) return `hace ${dia} día${dia === 1 ? '' : 's'}`;
+    if (dia < 7) return this.translate.instant(dia === 1 ? 'providerDashboard.providerSummary.haceUnDia' : 'providerDashboard.providerSummary.haceDias', { n: dia });
     return this.formatFecha(iso);
   }
 }

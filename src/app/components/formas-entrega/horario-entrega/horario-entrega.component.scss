@@ -2,14 +2,14 @@
 @import '../../../shared/styles/config-pagina';
 @include config-pagina;
 
-.he-marco { background: #fff; border-radius: 16px; overflow: hidden; }
-.he-cabeza { border-bottom: 1px solid #ececf4; padding: 16px 20px; }
-.he-titulo { margin: 0; font-size: 18px; font-weight: 800; color: #211F3A; letter-spacing: normal; }
+.he-marco { background: var(--ds-surface); border-radius: 16px; overflow: hidden; }
+.he-cabeza { border-bottom: 1px solid var(--ds-line); padding: 16px 20px; }
+.he-titulo { margin: 0; font-size: 18px; font-weight: 800; color: var(--ds-ink); letter-spacing: normal; }
 .he-cerrar { background: transparent; border: 0; padding: 0 4px; line-height: 1; cursor: pointer; }
-.he-cerrar__x { color: #8f8bab !important; font-size: 24px !important; }
-.he-cerrar:hover .he-cerrar__x { color: #5F3FE0 !important; }
-.he-pie { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #f1f0f7; padding: 12px 20px; }
+.he-cerrar__x { color: var(--ds-muted) !important; font-size: 24px !important; }
+.he-cerrar:hover .he-cerrar__x { color: var(--ds-accent-ink) !important; }
+.he-pie { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--ds-line-soft); padding: 12px 20px; }
 .he-color { height: 40px; padding: 4px; }
 .checkboxK { accent-color: #5F3FE0; width: 18px; height: 18px; }
-.modal-body { padding: 20px; color: #211F3A; }
+.modal-body { padding: 20px; color: var(--ds-ink); }
 .modal-body p, .modal-body label, .modal-body span, .modal-body a { letter-spacing: normal; }

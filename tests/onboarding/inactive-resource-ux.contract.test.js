@@ -24,7 +24,12 @@ assert.match(component, /this\.activeId === 'payment'.*?this\.paymentNeedsManual
 assert.match(component, /managePaymentMethods\(\).*?navigate\(\['\/extras\/formasPago'\]\)/);
 assert.match(
   template,
-  /\*ngIf="paymentNeedsManualActivation".*?\(click\)="managePaymentMethods\(\)".*?Revisar métodos de pago/,
+  /\*ngIf="paymentNeedsManualActivation".*?\(click\)="managePaymentMethods\(\)".*?onboarding\.onboardingWizard\.revisarMetodosDePago/,
+);
+// IDI-B12b: el texto vive en es.json bajo esa clave.
+assert.equal(
+  JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../src/assets/i18n/es.json"), "utf8"))["onboarding.onboardingWizard.revisarMetodosDePago"],
+  "Revisar métodos de pago",
 );
 
 // Una forma de entrega inactiva no queda en un loop de "éxito" falso: el CTA

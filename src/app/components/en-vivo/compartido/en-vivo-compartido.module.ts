@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { EnVivoCelebracionComponent } from '../celebracion/en-vivo-celebracion.component';
 import { EnVivoCifrasComponent } from '../cifras/en-vivo-cifras.component';
@@ -38,7 +39,7 @@ const PIEZAS = [
  * comercio) importando este módulo, sin duplicarlas.
  */
 @NgModule({
-  imports: [CommonModule],
+  imports: [TranslateModule, CommonModule],
   declarations: PIEZAS,
   exports: PIEZAS,
 })

@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { DataStoreService } from '../../../shared/services/dataStoreService';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-plan-selector',
@@ -19,14 +20,14 @@ export class PlanSelectorComponent {
     {
       id: 'earlyAdopter',
       name: 'EARLY ADOPTER',
-      price: '6 meses GRATIS + 6 meses con 60% DCTO',
+      price: 'shell.planSelector.priceEarly',
       features: [
-        'Integraciones Individuales: Costo bajo demanda',
-        'Integraciones Comunes: Sin costo adicional',
-        'Notificaciones avanzadas: Incluido en el plan',
-        'KAI (Creación de producto y Asistente): Incluido en el plan',
-        'Rango de ventas: 10M - 200M',
-        'Oferta limitada para comercios seleccionados'
+        'shell.planSelector.featIndividual',
+        'shell.planSelector.featCommon',
+        'shell.planSelector.featNotifIncluded',
+        'shell.planSelector.featKaiIncluded',
+        'shell.planSelector.featRange200',
+        'shell.planSelector.featLimitedOffer'
       ],
       isHighlighted: true,
       showPorcentaje: false,
@@ -41,13 +42,13 @@ export class PlanSelectorComponent {
     {
       id: 'plan1',
       name: 'PLAN #1',
-      price: '77 USD',
+      price: 'shell.planSelector.pricePlan1',
       features: [
-        'Integraciones Individuales: Costo bajo demanda',
-        'Integraciones Comunes: Sin costo adicional',
-        'Notificaciones avanzadas: Costo Por consumo',
-        'KAI (Creación de producto y Asistente): Costo Por consumo',
-        'Rango de ventas: 10M - 60M'
+        'shell.planSelector.featIndividual',
+        'shell.planSelector.featCommon',
+        'shell.planSelector.featNotifUsage',
+        'shell.planSelector.featKaiUsage',
+        'shell.planSelector.featRange60'
       ],
       isHighlighted: false,
       showPorcentaje: false
@@ -55,13 +56,13 @@ export class PlanSelectorComponent {
     {
       id: 'plan2',
       name: 'PLAN #2',
-      price: '47 USD + 1% por transacción exitosa',
+      price: 'shell.planSelector.pricePlan2',
       features: [
-        'Integraciones Individuales: Costo bajo demanda',
-        'Integraciones Comunes: Sin costo adicional',
-        'Notificaciones avanzadas: 30% de Dcto',
-        'KAI (Creación de producto y Asistente): 30% de Dcto',
-        'Rango de ventas: 10M - 60M'
+        'shell.planSelector.featIndividual',
+        'shell.planSelector.featCommon',
+        'shell.planSelector.featNotifDiscount',
+        'shell.planSelector.featKaiDiscount',
+        'shell.planSelector.featRange60'
       ],
       isHighlighted: false,
       showPorcentaje: true
@@ -69,13 +70,13 @@ export class PlanSelectorComponent {
     {
       id: 'plan3',
       name: 'PLAN #3',
-      price: '2.99% / por transacción exitosa',
+      price: 'shell.planSelector.pricePlan3',
       features: [
-        'Integraciones Individuales: Costo bajo demanda',
-        'Integraciones Comunes: Sin costo adicional',
-        'Notificaciones avanzadas: Incluido en el plan',
-        'KAI (Creación de producto y Asistente): Incluido en el plan',
-        'Rango de ventas: 10M - 200M'
+        'shell.planSelector.featIndividual',
+        'shell.planSelector.featCommon',
+        'shell.planSelector.featNotifIncluded',
+        'shell.planSelector.featKaiIncluded',
+        'shell.planSelector.featRange200'
       ],
       isHighlighted: false,
       showPorcentaje: true
@@ -83,14 +84,14 @@ export class PlanSelectorComponent {
     {
       id: 'planPOS',
       name: 'PLAN POS',
-      price: '24 USD por punto de venta',
-      subtitle: 'INCLUYE INVENTARIOS + KAI + GRÁFICOS ANÁLISIS DATA',
+      price: 'shell.planSelector.pricePos',
+      subtitle: 'shell.planSelector.subtitlePos',
       features: [
-        'Integraciones Individuales: Costo bajo demanda',
-        'Integraciones Comunes: Sin costo adicional',
-        'Notificaciones avanzadas: Costo Por consumo',
-        'KAI (Creación de producto y Asistente): Costo Por consumo',
-        'Rango de ventas: 10M - 60M'
+        'shell.planSelector.featIndividual',
+        'shell.planSelector.featCommon',
+        'shell.planSelector.featNotifUsage',
+        'shell.planSelector.featKaiUsage',
+        'shell.planSelector.featRange60'
       ],
       isHighlighted: false,
       showPorcentaje: false
@@ -99,7 +100,8 @@ export class PlanSelectorComponent {
 
   constructor(
     private service: MaestroService,
-    private dataStoreService: DataStoreService
+    private dataStoreService: DataStoreService,
+    private translate: TranslateService
   ) {}
 
   close() {
@@ -144,10 +146,10 @@ export class PlanSelectorComponent {
           this.dataStoreService.set('infoFormsCompany', datosActualizados).then(() => {
             // Notificar al usuario
             Swal.fire({
-              title: 'Plan actualizado',
-              text: `Se ha actualizado el plan a ${planSeleccionado.name}`,
+              title: this.translate.instant('shell.planSelector.updatedTitle'),
+              text: this.translate.instant('shell.planSelector.updatedText', { plan: planSeleccionado.name }),
               icon: 'success',
-              confirmButtonText: 'Ok'
+              confirmButtonText: this.translate.instant('shell.planSelector.ok')
             });
             
             // Emitir el plan seleccionado
@@ -157,10 +159,10 @@ export class PlanSelectorComponent {
         error => {
           // Manejar error
           Swal.fire({
-            title: 'Error',
-            text: 'No se pudo actualizar el plan. Intente nuevamente.',
+            title: this.translate.instant('shell.planSelector.errorTitle'),
+            text: this.translate.instant('shell.planSelector.errorText'),
             icon: 'error',
-            confirmButtonText: 'Ok'
+            confirmButtonText: this.translate.instant('shell.planSelector.ok')
           });
         }
       );

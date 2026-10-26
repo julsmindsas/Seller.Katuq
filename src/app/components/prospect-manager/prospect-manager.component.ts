@@ -8,6 +8,8 @@ import { Router } from '@angular/router';
 import { of, Subscription, interval } from 'rxjs';
 import { startWith, switchMap } from 'rxjs/operators';
 
+import { TranslateService } from '@ngx-translate/core';
+import { etiquetaDeValor } from '../../shared/utils/i18n-opciones';
 // Datos mock para demostración
 const MOCK_PROSPECTS: Prospect[] = [
   {
@@ -186,10 +188,10 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   ];
   
   taskTypes: any[] = [
-    { id: 'call', icon: 'fa-phone', label: 'Llamada' },
-    { id: 'meeting', icon: 'fa-calendar', label: 'Reunión' },
-    { id: 'email', icon: 'fa-envelope', label: 'Correo' },
-    { id: 'follow-up', icon: 'fa-reply', label: 'Seguimiento' }
+    { id: 'call', icon: 'fa-phone', label: 'prospectManager.tiposTarea.call' },
+    { id: 'meeting', icon: 'fa-calendar', label: 'prospectManager.tiposTarea.meeting' },
+    { id: 'email', icon: 'fa-envelope', label: 'prospectManager.tiposTarea.email' },
+    { id: 'follow-up', icon: 'fa-reply', label: 'prospectManager.tiposTarea.follow_up' }
   ];
 
   // Nuevas propiedades para funcionalidades mejoradas
@@ -219,7 +221,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
     private formBuilder: FormBuilder,
     private prospectosService: ProspectosService,
     private modalService: NgbModal,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {
     this.initializeForms();
   }
@@ -366,8 +369,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
           this.loading = false;
           Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: 'No se pudieron cargar los prospectos'
+            title: this.translate.instant('comun.error'),
+            text: this.translate.instant('prospectManager.noSePudieronCargarLos')
           });
         }
       });
@@ -567,8 +570,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         const taskTime = task.dueTime;
         
         this.showNotification(
-          'Recordatorio de tarea',
-          `Tienes una tarea de tipo "${taskType}" programada con ${prospectName} a las ${taskTime}.`,
+          this.translate.instant('prospectManager.recordatorioDeTarea'),
+          this.translate.instant('prospectManager.tienesUnaTareaDeTipo', { taskType, prospectName, taskTime }),
           'info'
         );
       });
@@ -588,8 +591,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         const taskType = this.getTaskTypeLabel(task.taskType);
         
         this.showNotification(
-          'Tarea vencida',
-          `No completaste la tarea de tipo "${taskType}" con ${prospectName}.`,
+          this.translate.instant('prospectManager.tareaVencida'),
+          this.translate.instant('prospectManager.noCompletasteLaTareaDe', { taskType, prospectName }),
           'warning'
         );
       });
@@ -717,17 +720,17 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
       }
       this.selectedProspect.timeline.push(note);
       this.noteForm.reset();
-      Swal.fire('Nota Agregada', 'La nota ha sido agregada al historial.', 'success');
+      Swal.fire(this.translate.instant('prospectManager.notaAgregada'), this.translate.instant('prospectManager.laNotaHaSidoAgregada'), 'success');
     } else {
       this.prospectosService.addProspectoNote(this.selectedProspect.id, note).subscribe({
         next: () => {
           this.loadProspects();
           this.noteForm.reset();
-          Swal.fire('Nota Agregada', 'La nota ha sido agregada al historial.', 'success');
+          Swal.fire(this.translate.instant('prospectManager.notaAgregada'), this.translate.instant('prospectManager.laNotaHaSidoAgregada'), 'success');
         },
         error: (error) => {
           console.error('Error al agregar nota:', error);
-          Swal.fire('Error', 'No se pudo agregar la nota.', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoAgregarLa'), 'error');
         }
       });
     }
@@ -752,8 +755,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         
         Swal.fire({
           icon: 'success',
-          title: 'Éxito',
-          text: 'Estado actualizado correctamente'
+          title: this.translate.instant('comun.exito'),
+          text: this.translate.instant('prospectManager.estadoActualizadoCorrectamente')
         });
       } else {
         // Actualizar estado vía API
@@ -762,16 +765,16 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
             this.loadProspects();
             Swal.fire({
               icon: 'success',
-              title: 'Éxito',
-              text: 'Estado actualizado correctamente'
+              title: this.translate.instant('comun.exito'),
+              text: this.translate.instant('prospectManager.estadoActualizadoCorrectamente')
             });
           },
           error: (error) => {
             console.error('Error updating status:', error);
             Swal.fire({
               icon: 'error',
-              title: 'Error',
-              text: 'No se pudo actualizar el estado'
+              title: this.translate.instant('comun.error'),
+              text: this.translate.instant('prospectManager.noSePudoActualizarEl')
             });
           }
         });
@@ -806,7 +809,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
           this.selectedProspect = newProspect;
           this.isNewProspect = false;
           this.isEdit = false;
-          Swal.fire('Prospecto Creado', 'El prospecto ha sido creado correctamente.', 'success');
+          Swal.fire(this.translate.instant('prospectManager.prospectoCreado'), this.translate.instant('prospectManager.elProspectoHaSidoCreado'), 'success');
         } else {
           this.prospectosService.createProspecto(prospectData).subscribe({
             next: (prospect) => {
@@ -814,11 +817,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
               this.selectedProspect = prospect;
               this.isNewProspect = false;
               this.isEdit = false;
-              Swal.fire('Prospecto Creado', 'El prospecto ha sido creado correctamente.', 'success');
+              Swal.fire(this.translate.instant('prospectManager.prospectoCreado'), this.translate.instant('prospectManager.elProspectoHaSidoCreado'), 'success');
             },
             error: (error) => {
               console.error('Error al crear prospecto:', error);
-              Swal.fire('Error', 'No se pudo crear el prospecto.', 'error');
+              Swal.fire(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoCrearEl'), 'error');
             }
           });
         }
@@ -835,7 +838,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
             this.selectedProspect = updatedProspect;
           }
           this.isEdit = false;
-          Swal.fire('Prospecto Actualizado', 'El prospecto ha sido actualizado correctamente.', 'success');
+          Swal.fire(this.translate.instant('prospectManager.prospectoActualizado'), this.translate.instant('prospectManager.elProspectoHaSidoActualizado'), 'success');
         } else {
           this.prospectosService.updateProspecto(this.selectedProspect.id, prospectData).subscribe({
             next: (prospect) => {
@@ -845,11 +848,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
                 this.selectedProspect = prospect;
               }
               this.isEdit = false;
-              Swal.fire('Prospecto Actualizado', 'El prospecto ha sido actualizado correctamente.', 'success');
+              Swal.fire(this.translate.instant('prospectManager.prospectoActualizado'), this.translate.instant('prospectManager.elProspectoHaSidoActualizado'), 'success');
             },
             error: (error) => {
               console.error('Error al actualizar prospecto:', error);
-              Swal.fire('Error', 'No se pudo actualizar el prospecto.', 'error');
+              Swal.fire(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoActualizarEl2'), 'error');
             }
           });
         }
@@ -871,14 +874,19 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   
   getStatusLabel(status: string): string {
     const labels = {
-      'new': 'Nuevo',
-      'contacted': 'Contactado',
-      'meeting-scheduled': 'Cita Programada',
-      'demo-completed': 'Demo Realizada',
-      'started': 'Iniciado',
-      'closed': 'Cerrado'
+      'new': 'prospectManager.estados.nuevo',
+      'contacted': 'prospectManager.estados.contactado',
+      'meeting-scheduled': 'prospectManager.estados.citaProgramada',
+      'demo-completed': 'prospectManager.estados.demoRealizada',
+      'started': 'prospectManager.estados.iniciado',
+      'closed': 'prospectManager.estados.cerrado'
     };
-    return labels[status] || status;
+    return labels[status] ? this.translate.instant(labels[status]) : status;
+  }
+
+  /** Prioridad guardada ('Alta', 'Media', 'Baja'; sin valor = Media) con su etiqueta en el idioma activo. */
+  prioridadEtiqueta(prioridad?: string | null): string {
+    return etiquetaDeValor(this.translate, 'prospectManager.prioridades', prioridad || 'Media');
   }
 
   getStatusIcon(status: string): string {
@@ -910,12 +918,12 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
     if (!prospect) return;
     
     Swal.fire({
-      title: 'Convertir a cliente',
-      text: `¿Estás seguro que deseas convertir a ${prospect.companyName} en cliente?`,
+      title: this.translate.instant('prospectManager.convertirACliente'),
+      text: this.translate.instant('prospectManager.estasSeguroQueDeseasConvertir', { companyName: prospect.companyName }),
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, convertir',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('prospectManager.siConvertir'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         if (this.useMockData) {
@@ -933,11 +941,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
                 this.prospects[idx] = updatedProspect;
                 this.selectedProspect = updatedProspect;
               }
-              Swal.fire('¡Convertido!', 'El prospecto ha sido convertido a cliente.', 'success');
+              Swal.fire(this.translate.instant('prospectManager.convertido'), this.translate.instant('prospectManager.elProspectoHaSidoConvertido'), 'success');
             },
             error: (error) => {
               console.error('Error al convertir prospecto:', error);
-              Swal.fire('Error', 'No se pudo convertir el prospecto a cliente.', 'error');
+              Swal.fire(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoConvertirEl'), 'error');
             }
           });
         }
@@ -974,11 +982,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         next: () => {
           this.loadPendingTasks();
           this.loadProspects();
-          Swal.fire('Tarea Programada', 'La tarea ha sido programada correctamente.', 'success');
+          Swal.fire(this.translate.instant('prospectManager.tareaProgramada'), this.translate.instant('prospectManager.laTareaHaSidoProgramada'), 'success');
         },
         error: (error) => {
           console.error('Error al programar tarea:', error);
-          Swal.fire('Error', 'No se pudo programar la tarea.', 'error');
+          Swal.fire(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoProgramarLa'), 'error');
         }
       });
     }
@@ -1008,8 +1016,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
     } else {
       Swal.fire({
         icon: 'warning',
-        title: 'Atención',
-        text: 'Por favor, seleccione un prospecto primero'
+        title: this.translate.instant('prospectManager.atencion'),
+        text: this.translate.instant('prospectManager.porFavorSeleccioneUnProspecto')
       });
     }
   }
@@ -1033,7 +1041,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         
         Swal.fire({
           icon: 'success',
-          title: 'Tarea completada',
+          title: this.translate.instant('prospectManager.tareaCompletada'),
           timer: 1500,
           showConfirmButton: false
         });
@@ -1044,7 +1052,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
           this.loadPendingTasks();
           Swal.fire({
             icon: 'success',
-            title: 'Tarea completada',
+            title: this.translate.instant('prospectManager.tareaCompletada'),
             timer: 1500,
             showConfirmButton: false
           });
@@ -1053,8 +1061,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
           console.error('Error completing task:', error);
           Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: 'No se pudo completar la tarea'
+            title: this.translate.instant('comun.error'),
+            text: this.translate.instant('prospectManager.noSePudoCompletarLa')
           });
         }
       });
@@ -1063,7 +1071,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   
   getTaskTypeLabel(taskType: string): string {
     const task = this.taskTypes.find(t => t.id === taskType);
-    return task ? task.label : taskType;
+    return task ? this.translate.instant(task.label) : taskType;
   }
 
   getTaskTypeIcon(taskType: string): string {
@@ -1085,8 +1093,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
     if (!this.selectedProspect) {
       Swal.fire({
         icon: 'warning',
-        title: 'Atención',
-        text: 'Por favor, seleccione un prospecto primero'
+        title: this.translate.instant('prospectManager.atencion'),
+        text: this.translate.instant('prospectManager.porFavorSeleccioneUnProspecto')
       });
       return;
     }
@@ -1111,8 +1119,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
       } else {
         Swal.fire({
           icon: 'warning',
-          title: 'Atención',
-          text: 'No hay número de WhatsApp disponible para este prospecto'
+          title: this.translate.instant('prospectManager.atencion'),
+          text: this.translate.instant('prospectManager.noHayNumeroDeWhatsapp')
         });
       }
     } else if (channel === 'phone') {
@@ -1125,8 +1133,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
       } else {
         Swal.fire({
           icon: 'warning',
-          title: 'Atención',
-          text: 'No hay número de teléfono disponible para este prospecto'
+          title: this.translate.instant('prospectManager.atencion'),
+          text: this.translate.instant('prospectManager.noHayNumeroDeTelefono')
         });
       }
     }
@@ -1145,8 +1153,8 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         
         Swal.fire({
           icon: 'success',
-          title: 'Correo enviado',
-          text: 'El correo electrónico ha sido enviado correctamente',
+          title: this.translate.instant('prospectManager.correoEnviado'),
+          text: this.translate.instant('prospectManager.elCorreoElectronicoHaSido'),
           timer: 2000,
           showConfirmButton: false
         });
@@ -1160,16 +1168,16 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
             
             Swal.fire({
               icon: 'success',
-              title: 'Correo enviado',
-              text: 'El correo electrónico ha sido enviado correctamente'
+              title: this.translate.instant('prospectManager.correoEnviado'),
+              text: this.translate.instant('prospectManager.elCorreoElectronicoHaSido')
             });
           },
           error: (error) => {
             console.error('Error sending email:', error);
             Swal.fire({
               icon: 'error',
-              title: 'Error',
-              text: 'No se pudo enviar el correo electrónico'
+              title: this.translate.instant('comun.error'),
+              text: this.translate.instant('prospectManager.noSePudoEnviarEl')
             });
           }
         });
@@ -1228,7 +1236,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         
         Swal.fire({
           icon: 'success',
-          title: 'Exportación completada',
+          title: this.translate.instant('prospectManager.exportacionCompletada'),
           text: message,
           timer: 2000,
           showConfirmButton: false
@@ -1251,16 +1259,16 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
             
             Swal.fire({
               icon: 'success',
-              title: 'Exportación completada',
-              text: 'Los datos han sido exportados correctamente'
+              title: this.translate.instant('prospectManager.exportacionCompletada'),
+              text: this.translate.instant('prospectManager.losDatosHanSidoExportados')
             });
           },
           error: (error) => {
             console.error('Error exporting data:', error);
             Swal.fire({
               icon: 'error',
-              title: 'Error',
-              text: 'No se pudieron exportar los datos'
+              title: this.translate.instant('comun.error'),
+              text: this.translate.instant('prospectManager.noSePudieronExportarLos')
             });
           }
         });
@@ -1326,11 +1334,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         this.modalService.dismissAll();
         
         if (this.filteredProspects.length === 0) {
-          this.showNotification('Sin resultados', 'No hay prospectos que coincidan con los filtros aplicados.', 'info');
+          this.showNotification(this.translate.instant('comun.sinResultados'), this.translate.instant('prospectManager.noHayProspectosQueCoincidan'), 'info');
         } else {
           this.showNotification(
-            'Filtros aplicados', 
-            `Se encontraron ${this.filteredProspects.length} prospectos que coinciden con los filtros.`, 
+            this.translate.instant('prospectManager.filtrosAplicados'), 
+            this.translate.instant('prospectManager.seEncontraronProspectosQueCoinciden', { length: this.filteredProspects.length }), 
             'success'
           );
         }
@@ -1342,18 +1350,18 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
             this.modalService.dismissAll();
             
             if (this.filteredProspects.length === 0) {
-              this.showNotification('Sin resultados', 'No hay prospectos que coinciden con los filtros aplicados.', 'info');
+              this.showNotification(this.translate.instant('comun.sinResultados'), this.translate.instant('prospectManager.noHayProspectosQueCoincidan'), 'info');
             } else {
               this.showNotification(
-                'Filtros aplicados',
-                `Se encontraron ${this.filteredProspects.length} prospectos que coinciden con los filtros.`,
+                this.translate.instant('prospectManager.filtrosAplicados'),
+                this.translate.instant('prospectManager.seEncontraronProspectosQueCoinciden', { length: this.filteredProspects.length }),
                 'success'
               );
             }
           },
           error: (error) => {
             console.error('Error applying filters:', error);
-            this.showNotification('Error', 'No se pudieron aplicar los filtros', 'error');
+            this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudieronAplicarLos'), 'error');
           }
         });
       }
@@ -1363,7 +1371,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   // Gestión de documentos de prospectos
   openDocumentsModal() {
     if (!this.selectedProspect) {
-      this.showNotification('Atención', 'Selecciona un prospecto primero', 'warning');
+      this.showNotification(this.translate.instant('prospectManager.atencion'), this.translate.instant('prospectManager.seleccionaUnProspectoPrimero'), 'warning');
       return;
     }
     
@@ -1377,7 +1385,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   // Cargar documentos asociados al prospecto seleccionado
   loadProspectDocuments() {
     if (!this.selectedProspect) {
-      this.showNotification('Error', 'No hay prospecto seleccionado', 'error');
+      this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noHayProspectoSeleccionado'), 'error');
       return;
     }
 
@@ -1411,7 +1419,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading documents:', error);
-          this.showNotification('Error', 'No se pudieron cargar los documentos', 'error');
+          this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudieronCargarLos'), 'error');
         }
       });
     }
@@ -1437,7 +1445,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         this.documentsList.unshift(newDoc);
         this.documentsForm.reset();
         
-        this.showNotification('Documento subido', 'El documento ha sido asociado al prospecto correctamente', 'success');
+        this.showNotification(this.translate.instant('prospectManager.documentoSubido'), this.translate.instant('prospectManager.elDocumentoHaSidoAsociado'), 'success');
       } else {
         // Código para API real
         const formData = new FormData();
@@ -1451,11 +1459,11 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
           next: (response) => {
             this.loadProspectDocuments();
             this.documentsForm.reset();
-            this.showNotification('Documento subido', 'El documento ha sido asociado al prospecto correctamente', 'success');
+            this.showNotification(this.translate.instant('prospectManager.documentoSubido'), this.translate.instant('prospectManager.elDocumentoHaSidoAsociado'), 'success');
           },
           error: (error) => {
             console.error('Error uploading document:', error);
-            this.showNotification('Error', 'No se pudo subir el documento', 'error');
+            this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoSubirEl'), 'error');
           }
         });
       }
@@ -1465,35 +1473,35 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   // Eliminar documento
   deleteDocument(docId: string) {
     if (!this.selectedProspect) {
-      this.showNotification('Error', 'No hay prospecto seleccionado', 'error');
+      this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noHayProspectoSeleccionado'), 'error');
       return;
     }
 
     const selectedProspect = this.selectedProspect; // Guardar referencia local
 
     Swal.fire({
-      title: '¿Eliminar documento?',
-      text: 'Esta acción no se puede deshacer',
+      title: this.translate.instant('prospectManager.eliminarDocumento'),
+      text: this.translate.instant('prospectManager.estaAccionNoSePuede'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('prospectManager.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         if (this.useMockData) {
           // Eliminar documento de la lista local
           this.documentsList = this.documentsList.filter(doc => doc.id !== docId);
-          this.showNotification('Documento eliminado', 'El documento ha sido eliminado correctamente', 'success');
+          this.showNotification(this.translate.instant('prospectManager.documentoEliminado'), this.translate.instant('prospectManager.elDocumentoHaSidoEliminado'), 'success');
         } else {
           // Código para API real
           this.prospectosService.deleteDocument(selectedProspect.id, docId).subscribe({
             next: () => {
               this.loadProspectDocuments();
-              this.showNotification('Documento eliminado', 'El documento ha sido eliminado correctamente', 'success');
+              this.showNotification(this.translate.instant('prospectManager.documentoEliminado'), this.translate.instant('prospectManager.elDocumentoHaSidoEliminado'), 'success');
             },
             error: (error) => {
               console.error('Error deleting document:', error);
-              this.showNotification('Error', 'No se pudo eliminar el documento', 'error');
+              this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoEliminarEl'), 'error');
             }
           });
         }
@@ -1533,7 +1541,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
         size: 'lg'
       });
     } else {
-      this.showNotification('Sin tareas', 'No hay tareas programadas para mostrar en el calendario', 'info');
+      this.showNotification(this.translate.instant('prospectManager.sinTareas'), this.translate.instant('prospectManager.noHayTareasProgramadasPara'), 'info');
     }
   }
 
@@ -1556,7 +1564,7 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
   // Método para exportar a CSV
   exportToCSV() {
     if (!this.selectedProspect) {
-      this.showNotification('Error', 'No hay prospecto seleccionado', 'error');
+      this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noHayProspectoSeleccionado'), 'error');
       return;
     }
 
@@ -1744,16 +1752,16 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
 
     if (this.useMockData) {
       this.pendingTasks.push(task);
-      this.showNotification('Seguimiento Programado', 'El seguimiento ha sido programado correctamente', 'success');
+      this.showNotification(this.translate.instant('prospectManager.seguimientoProgramado'), this.translate.instant('prospectManager.elSeguimientoHaSidoProgramado'), 'success');
     } else {
       this.prospectosService.scheduleTask(this.selectedProspect.id, task).subscribe({
         next: () => {
           this.loadPendingTasks();
-          this.showNotification('Seguimiento Programado', 'El seguimiento ha sido programado correctamente', 'success');
+          this.showNotification(this.translate.instant('prospectManager.seguimientoProgramado'), this.translate.instant('prospectManager.elSeguimientoHaSidoProgramado'), 'success');
         },
         error: (error) => {
           console.error('Error al programar seguimiento:', error);
-          this.showNotification('Error', 'No se pudo programar el seguimiento', 'error');
+          this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoProgramarEl'), 'error');
         }
       });
     }
@@ -1774,16 +1782,16 @@ export class ProspectManagerComponent implements OnInit, OnDestroy {
 
     if (this.useMockData) {
       this.pendingTasks.push(task);
-      this.showNotification('Recordatorio Enviado', 'El recordatorio ha sido enviado correctamente', 'success');
+      this.showNotification(this.translate.instant('prospectManager.recordatorioEnviado'), this.translate.instant('prospectManager.elRecordatorioHaSidoEnviado'), 'success');
     } else {
       this.prospectosService.scheduleTask(this.selectedProspect.id, task).subscribe({
         next: () => {
           this.loadPendingTasks();
-          this.showNotification('Recordatorio Enviado', 'El recordatorio ha sido enviado correctamente', 'success');
+          this.showNotification(this.translate.instant('prospectManager.recordatorioEnviado'), this.translate.instant('prospectManager.elRecordatorioHaSidoEnviado'), 'success');
         },
         error: (error) => {
           console.error('Error al enviar recordatorio:', error);
-          this.showNotification('Error', 'No se pudo enviar el recordatorio', 'error');
+          this.showNotification(this.translate.instant('comun.error'), this.translate.instant('prospectManager.noSePudoEnviarEl'), 'error');
         }
       });
     }

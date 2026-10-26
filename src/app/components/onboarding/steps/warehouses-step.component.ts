@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Step: Warehouses Configuration
  * Configuración de bodegas para gestión de inventario
@@ -53,7 +54,8 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
     private fb: FormBuilder,
     private messageService: MessageService,
     private http: HttpClient,
-    private bodegaService: BodegaService
+    private bodegaService: BodegaService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -325,8 +327,8 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
       this.markFormAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Incompleto',
-        detail: 'Por favor completa todos los campos requeridos'
+        summary: this.translate.instant('onboarding.billingZonesStep.formularioIncompleto'),
+        detail: this.translate.instant('onboarding.billingZonesStep.porFavorCompletaTodosLos')
       });
       return;
     }
@@ -341,8 +343,8 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
     if (existsId) {
       this.messageService.add({
         severity: 'error',
-        summary: 'ID Duplicado',
-        detail: 'Ya existe una bodega con este ID'
+        summary: this.translate.instant('onboarding.warehousesStep.idDuplicado'),
+        detail: this.translate.instant('onboarding.warehousesStep.yaExisteUnaBodegaCon')
       });
       return;
     }
@@ -353,16 +355,16 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
       this.editingIndex = null;
       this.messageService.add({
         severity: 'success',
-        summary: 'Actualizado',
-        detail: 'Bodega actualizada correctamente'
+        summary: this.translate.instant('onboarding.billingZonesStep.actualizado'),
+        detail: this.translate.instant('onboarding.warehousesStep.bodegaActualizadaCorrectamente')
       });
     } else {
       // Agregar nueva bodega
       this.warehousesList.push(warehouseData);
       this.messageService.add({
         severity: 'success',
-        summary: 'Agregado',
-        detail: 'Bodega agregada a la lista'
+        summary: this.translate.instant('onboarding.billingZonesStep.agregado'),
+        detail: this.translate.instant('onboarding.warehousesStep.bodegaAgregadaALaLista')
       });
     }
 
@@ -400,8 +402,8 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
 
     this.messageService.add({
       severity: 'info',
-      summary: 'Eliminado',
-      detail: `Bodega "${warehouse.nombre}" eliminada`
+      summary: this.translate.instant('onboarding.billingZonesStep.eliminado'),
+      detail: this.translate.instant('onboarding.warehousesStep.bodegaEliminada', { nombre: warehouse.nombre })
     });
 
     // Si estaba editando esta bodega, cancelar
@@ -417,8 +419,8 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
     if (this.warehousesList.length === 0) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Configuración Incompleta',
-        detail: 'Debes agregar al menos una bodega para continuar'
+        summary: this.translate.instant('onboarding.billingZonesStep.configuracionIncompleta'),
+        detail: this.translate.instant('onboarding.warehousesStep.debesAgregarAlMenosUna')
       });
       return;
     }
@@ -436,15 +438,15 @@ export class WarehousesStepComponent implements OnInit, OnDestroy, AfterViewInit
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Guardado',
-        detail: `${this.warehousesList.length} bodega(s) configurada(s) correctamente`
+        summary: this.translate.instant('onboarding.billingZonesStep.guardado'),
+        detail: this.translate.instant('onboarding.warehousesStep.bodegasConfiguradasDetalle', { cantidad: this.warehousesList.length })
       });
     } catch (error) {
       console.error('Error guardando bodegas:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo guardar la configuración de bodegas'
+        summary: this.translate.instant('comun.error'),
+        detail: this.translate.instant('onboarding.warehousesStep.noSePudoGuardarLa')
       });
     } finally {
       this.isSaving = false;

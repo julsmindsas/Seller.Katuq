@@ -9,80 +9,80 @@
 
   <ng-container *ngIf="!loading && !error && kpis">
     <!-- Operacional: pendientes y errores -->
-    <h3 class="section-title">Operación actual</h3>
+    <h3 class="section-title">{{ 'providerDashboard.providerSummary.operacionActual' | translate }}</h3>
     <div class="kpi-grid">
       <div class="kpi-card" [class.alert]="kpis.pendientes > 0">
-        <div class="kpi-label">Sin enviar al proveedor</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerIssuesTable.sinEnviarAlProveedor' | translate }}</div>
         <div class="kpi-value">{{ kpis.pendientes }}</div>
-        <div class="kpi-hint">Pedidos pendientes de push</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.pedidosPendientesDePush' | translate }}</div>
       </div>
       <div class="kpi-card" [class.danger]="kpis.errores > 0">
-        <div class="kpi-label">Errores activos</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.erroresActivos' | translate }}</div>
         <div class="kpi-value">{{ kpis.errores }}</div>
-        <div class="kpi-hint">Push falló, requiere revisión</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.pushFalloRequiereRevision' | translate }}</div>
       </div>
       <div class="kpi-card" [class.info]="kpis.cancelados > 0">
-        <div class="kpi-label">Cancelados por proveedor</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.canceladosPorProveedor' | translate }}</div>
         <div class="kpi-value">{{ kpis.cancelados }}</div>
-        <div class="kpi-hint">Cereza marcó como cancelled</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.cerezaMarcoComoCancelled' | translate }}</div>
       </div>
     </div>
 
     <!-- Throughput: enviados/despachados últimos N días -->
-    <h3 class="section-title">Últimos {{ days }} días</h3>
+    <h3 class="section-title">{{ 'providerDashboard.providerSummary.ultimosDias' | translate:{days: days} }}</h3>
     <div class="kpi-grid">
       <div class="kpi-card success">
-        <div class="kpi-label">Enviados hoy</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.enviadosHoy' | translate }}</div>
         <div class="kpi-value">{{ kpis.enviadosHoy }}</div>
-        <div class="kpi-hint">Push exitoso últimas 24h</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.pushExitosoUltimas24h' | translate }}</div>
       </div>
       <div class="kpi-card success">
-        <div class="kpi-label">Enviados {{ days }}d</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.enviadosD' | translate:{days: days} }}</div>
         <div class="kpi-value">{{ kpis.enviados7d }}</div>
-        <div class="kpi-hint">Total exitosos en ventana</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.totalExitososEnVentana' | translate }}</div>
       </div>
       <div class="kpi-card success">
-        <div class="kpi-label">Despachados {{ days }}d</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.despachadosD' | translate:{days: days} }}</div>
         <div class="kpi-value">{{ kpis.despachados7d }}</div>
-        <div class="kpi-hint">Cereza marcó como shipped</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.cerezaMarcoComoShipped' | translate }}</div>
       </div>
       <div class="kpi-card success">
-        <div class="kpi-label">Entregados {{ days }}d</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.entregadosD' | translate:{days: days} }}</div>
         <div class="kpi-value">{{ kpis.entregados7d }}</div>
-        <div class="kpi-hint">Cereza marcó como delivered</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.cerezaMarcoComoDelivered' | translate }}</div>
       </div>
       <div class="kpi-card highlight">
-        <div class="kpi-label">Tasa éxito {{ days }}d</div>
+        <div class="kpi-label">{{ 'providerDashboard.providerSummary.tasaExitoD' | translate:{days: days} }}</div>
         <div class="kpi-value">
           <ng-container *ngIf="kpis.tasaExito7d !== null; else sinDatos">
             {{ kpis.tasaExito7d }}%
           </ng-container>
           <ng-template #sinDatos>—</ng-template>
         </div>
-        <div class="kpi-hint">Enviados / (enviados + errores)</div>
+        <div class="kpi-hint">{{ 'providerDashboard.providerSummary.enviadosEnviadosErrores' | translate }}</div>
       </div>
     </div>
 
     <!-- Ultima actividad del cron -->
-    <h3 class="section-title">Última actividad automática</h3>
+    <h3 class="section-title">{{ 'providerDashboard.providerSummary.ultimaActividadAutomatica' | translate }}</h3>
     <div class="activity-grid">
       <div class="activity-item">
-        <div class="activity-label">Último push exitoso</div>
+        <div class="activity-label">{{ 'providerDashboard.providerSummary.ultimoPushExitoso' | translate }}</div>
         <div class="activity-value">{{ fechaRelativa(kpis.lastPushAt) }}</div>
         <div class="activity-detail">{{ formatFecha(kpis.lastPushAt) }}</div>
       </div>
       <div class="activity-item">
-        <div class="activity-label">Último sync de estados</div>
+        <div class="activity-label">{{ 'providerDashboard.providerSummary.ultimoSyncDeEstados' | translate }}</div>
         <div class="activity-value">{{ fechaRelativa(kpis.lastStatusSyncAt) }}</div>
         <div class="activity-detail">
           {{ formatFecha(kpis.lastStatusSyncAt) }}
-          <span class="muted">(cron */30 min)</span>
+          <span class="muted">{{ 'providerDashboard.providerSummary.cron30Min' | translate }}</span>
         </div>
       </div>
       <div class="activity-item">
-        <div class="activity-label">Pedidos con OSM-ID asignado</div>
+        <div class="activity-label">{{ 'providerDashboard.providerSummary.pedidosConOsmIdAsignado' | translate }}</div>
         <div class="activity-value">{{ kpis.totalConOsmosisId }}</div>
-        <div class="activity-detail muted">de {{ kpis.scannedOrders }} pedidos escaneados</div>
+        <div class="activity-detail muted">{{ 'providerDashboard.providerSummary.dePedidosEscaneados' | translate:{scannedOrders: kpis.scannedOrders} }}</div>
       </div>
     </div>
 
@@ -91,13 +91,13 @@
         pButton
         type="button"
         icon="pi pi-refresh"
-        label="Refrescar KPIs"
+        [label]="'providerDashboard.providerSummary.refrescarKpis' | translate"
         class="p-button-text"
         (click)="load()"
         [disabled]="loading"
       ></button>
       <a routerLink="/flows" class="link-btn">
-        <i class="pi pi-sitemap"></i> Ver flujos del proveedor
+        <i class="pi pi-sitemap"></i> {{ 'providerDashboard.providerSummary.verFlujosDelProveedor' | translate }}
       </a>
     </div>
   </ng-container>

@@ -1,0 +1,108 @@
+// D-502 F1 (ticket 1180, tarea 3.2): tokens del tema, juego claro y juego oscuro.
+// Valores de openspec/changes/modo-oscuro-seller/design-f1.md §1. Prueba: tests/theme/theme-tokens.test.js.
+//
+// - Se importa UNA sola vez, en src/styles.scss, antes de dark-mode.scss. Las bases (config-pagina,
+//   katuq-builder, katuq-modal) no lo importan: solo consumen var(--ds-*).
+// - El claro es igual a los $cfg-* de _config-pagina.scss y a los del marco: migrar un consumidor
+//   a var(--ds-*) no cambia el claro (se verifica con tests/theme/comparar-claro.js).
+// - accent / accent-hover son relleno (texto encima: on-accent). accent-ink es el acento como texto,
+//   ícono o borde: en oscuro sube a #a48bff para pasar 4,5:1 contra todas las superficies.
+// - Prefijo --ds-: --ktq-* es del sidebar y --primary-color tiene muchas definiciones.
+
+:root {
+  // Superficies
+  --ds-canvas: #f4f3fa;
+  --ds-canvas-rgb: 244, 243, 250;
+  --ds-surface: #fff;
+  --ds-surface-2: #faf9fe;
+  --ds-sidebar: #fff;
+  --ds-connector: #efeaff;
+  --ds-row-hover: #faf9ff;
+  --ds-tile: #f3f1fb;
+  --ds-chip-bg: #f5f4fa;
+
+  // Texto
+  --ds-ink: #211F3A;
+  --ds-ink-2: #4a4760;
+  --ds-body: #5b5878;
+  --ds-muted: #8f8bab;
+
+  // Líneas y controles
+  --ds-line: #ececf4;
+  --ds-line-soft: #f1f0f7;
+  --ds-line-strong: #e4e2ef;
+  --ds-control-border: #e9e7f3;
+
+  // Acento
+  --ds-accent: #5F3FE0;
+  --ds-accent-hover: #4a2fc0;
+  --ds-on-accent: #fff;
+  --ds-accent-ink: #5F3FE0;
+  --ds-accent-ink-rgb: 95, 63, 224;
+  --ds-accent-soft: #efe9ff;
+  --ds-focus: #7C5CFF;
+
+  // Semánticos (par fuerte / fondo suave)
+  --ds-ok: #1E874B;
+  --ds-ok-soft: #E6F7EE;
+  --ds-warn: #D9820A;
+  --ds-warn-soft: #FFF1DF;
+  --ds-err: #D64545;
+  --ds-err-soft: #FDECEC;
+  --ds-info: #1E6FD9;
+  --ds-info-soft: #E7F1FF;
+
+  // Sombras
+  --ds-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+  --ds-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+  --ds-shadow-card: 0 24px 60px -30px rgba(80, 60, 180, .28);
+}
+
+body.dark-only {
+  // Superficies (las del sidebar y el header oscuros)
+  --ds-canvas: #14121c;
+  --ds-canvas-rgb: 20, 18, 28;
+  --ds-surface: #1b1826;
+  --ds-surface-2: #211d30;
+  --ds-sidebar: #17151f;
+  --ds-connector: #2c2740;
+  --ds-row-hover: #221e33;
+  --ds-tile: #251f3a;
+  --ds-chip-bg: #211d30;
+
+  // Texto
+  --ds-ink: #f2f0fa;
+  --ds-ink-2: #e0ddef;
+  --ds-body: #b9b5cc;
+  --ds-muted: #9d99b5;
+
+  // Líneas y controles
+  --ds-line: #262233;
+  --ds-line-soft: #221e33;
+  --ds-line-strong: #3a3450;
+  --ds-control-border: #7a7498;
+
+  // Acento
+  --ds-accent: #5F3FE0;
+  --ds-accent-hover: #4a2fc0;
+  --ds-on-accent: #fff;
+  --ds-accent-ink: #a48bff;
+  --ds-accent-ink-rgb: 164, 139, 255;
+  --ds-accent-soft: #2c244d;
+  --ds-focus: #a48bff;
+
+  // Semánticos
+  --ds-ok: #4cc38a;
+  --ds-ok-soft: #1b2a2c;
+  --ds-warn: #f2a640;
+  --ds-warn-soft: #392922;
+  --ds-err: #ff7a7a;
+  --ds-err-soft: #391f2b;
+  --ds-info: #6aa6ff;
+  --ds-info-soft: #1b2643;
+
+  // Sombras
+  --ds-shadow-panel: 0 1px 3px rgba(0, 0, 0, .4);
+  --ds-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+  --ds-shadow-card: 0 24px 60px -30px rgba(0, 0, 0, .6);
+}

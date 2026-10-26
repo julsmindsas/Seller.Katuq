@@ -62,7 +62,7 @@
   height: 32px;
   border: 1px solid $cfg-chip-border;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   color: $cfg-muted;
   cursor: pointer;
 
@@ -74,7 +74,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: $cfg-accent !important;
+  color: $cfg-accent-ink !important;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: normal;

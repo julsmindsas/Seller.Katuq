@@ -9,68 +9,68 @@
 
   <div class="ag-detalle">
     <header class="ag-detalle-cab">
-      <span class="ag-estado" [ngClass]="ESTADOS[cita.status].clase">{{ ESTADOS[cita.status].texto }}</span>
+      <span class="ag-estado" [ngClass]="ESTADOS[cita.status].clase">{{ ESTADOS[cita.status].texto | translate }}</span>
       <h2 class="ag-detalle-titulo">{{ cita.customer?.name }}</h2>
       <span class="ag-detalle-cuando">{{ cuando }}</span>
     </header>
 
     <dl class="ag-datos">
-      <div><dt>Servicio</dt><dd>{{ servicios }}<ng-container *ngIf="total > 0"> · {{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container></dd></div>
-      <div><dt>Atiende</dt><dd>{{ cita.staffName || 'Sin asignar' }}</dd></div>
-      <div *ngIf="cita.customer?.phone"><dt>Celular</dt><dd>{{ cita.customer.phone }}</dd></div>
-      <div *ngIf="cita.customer?.email"><dt>Correo</dt><dd>{{ cita.customer.email }}</dd></div>
-      <div *ngIf="cita.location?.mode === 'home'"><dt>Dónde</dt><dd>{{ cita.location?.address }}<ng-container *ngIf="cita.location?.city">, {{ cita.location?.city }}</ng-container></dd></div>
-      <div *ngIf="cita.location?.mode === 'virtual'"><dt>Dónde</dt><dd>Virtual</dd></div>
-      <div><dt>Origen</dt><dd>{{ ORIGEN[cita.source] || cita.source }}</dd></div>
-      <div *ngIf="cita.orderId"><dt>Pedido</dt><dd>Cobrada</dd></div>
+      <div><dt>{{ 'agenda.citaForm.servicio' | translate }}</dt><dd>{{ servicios }}<ng-container *ngIf="total > 0"> · {{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container></dd></div>
+      <div><dt>{{ 'agenda.citaPanel.atiende' | translate }}</dt><dd>{{ cita.staffName || ('agenda.citaPanel.sinAsignar' | translate) }}</dd></div>
+      <div *ngIf="cita.customer?.phone"><dt>{{ 'agenda.citaForm.celular' | translate }}</dt><dd>{{ cita.customer.phone }}</dd></div>
+      <div *ngIf="cita.customer?.email"><dt>{{ 'agenda.citaPanel.correo' | translate }}</dt><dd>{{ cita.customer.email }}</dd></div>
+      <div *ngIf="cita.location?.mode === 'home'"><dt>{{ 'agenda.citaPanel.donde' | translate }}</dt><dd>{{ cita.location?.address }}<ng-container *ngIf="cita.location?.city">, {{ cita.location?.city }}</ng-container></dd></div>
+      <div *ngIf="cita.location?.mode === 'virtual'"><dt>{{ 'agenda.citaPanel.donde' | translate }}</dt><dd>{{ 'agenda.citaPanel.virtual' | translate }}</dd></div>
+      <div><dt>{{ 'agenda.citaPanel.origen' | translate }}</dt><dd>{{ (ORIGEN[cita.source] || cita.source) | translate }}</dd></div>
+      <div *ngIf="cita.orderId"><dt>{{ 'agenda.citaPanel.pedido' | translate }}</dt><dd>{{ 'agenda.citaPanel.cobrada' | translate }}</dd></div>
     </dl>
 
     <div class="cfg-aviso cfg-aviso--warn" *ngIf="cita.status === 'requested'">
-      <span class="ag-txt">Llegó de tu página web. Confírmala para que quede en firme.</span>
+      <span class="ag-txt">{{ 'agenda.citaPanel.llegoDeTuPaginaWeb' | translate }}</span>
     </div>
 
     <!-- Acciones -->
     <div class="ag-acciones">
       <button type="button" class="cfg-btn" *ngIf="cita.status === 'requested'" [disabled]="ocupado" (click)="cambiarEstado('confirmed')">
-        <span class="ag-txt">Confirmar</span>
+        <span class="ag-txt">{{ 'comun.confirmar' | translate }}</span>
       </button>
       <button type="button" class="cfg-btn" [class.cfg-btn--sec]="cita.status === 'requested'" *ngIf="activa" [disabled]="ocupado" (click)="cambiarEstado('completed')">
-        <span class="ag-txt">Atendida</span>
+        <span class="ag-txt">{{ 'agenda.citaPanel.atendida' | translate }}</span>
       </button>
       <a class="cfg-btn cfg-btn--sec" *ngIf="enlaceWhatsapp" [href]="enlaceWhatsapp" target="_blank" rel="noopener">
         <i class="fa fa-whatsapp" aria-hidden="true"></i><span class="ag-txt">WhatsApp</span>
       </a>
       <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="activa && !moviendo" [disabled]="ocupado" (click)="empezarAMover()">
-        <span class="ag-txt">Mover</span>
+        <span class="ag-txt">{{ 'agenda.citaPanel.mover' | translate }}</span>
       </button>
       <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="activa" [disabled]="ocupado" (click)="cambiarEstado('no_show')">
-        <span class="ag-txt">No asistió</span>
+        <span class="ag-txt">{{ 'agenda.citaPanel.noAsistio' | translate }}</span>
       </button>
       <button type="button" class="cfg-btn cfg-btn--peligro" *ngIf="activa" [disabled]="ocupado" (click)="cambiarEstado('cancelled')">
-        <span class="ag-txt">Cancelar</span>
+        <span class="ag-txt">{{ 'comun.cancelar' | translate }}</span>
       </button>
       <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="cita.status === 'cancelled'" [disabled]="ocupado" (click)="cambiarEstado('confirmed')">
-        <span class="ag-txt">Reabrir</span>
+        <span class="ag-txt">{{ 'agenda.citaPanel.reabrir' | translate }}</span>
       </button>
     </div>
 
     <!-- Mover -->
     <section class="ag-mover" *ngIf="moviendo">
-      <h3 class="ag-subtitulo">Mover la cita</h3>
+      <h3 class="ag-subtitulo">{{ 'agenda.citaPanel.moverLaCita' | translate }}</h3>
       <div class="ag-dos">
         <div class="ag-campo">
-          <span class="ag-etiqueta">Fecha</span>
-          <input class="ag-input" type="date" [(ngModel)]="mover.fecha" [min]="hoy" (ngModelChange)="alCambiarCriterio()" aria-label="Nueva fecha">
+          <span class="ag-etiqueta">{{ 'agenda.citaForm.fecha' | translate }}</span>
+          <input class="ag-input" type="date" [(ngModel)]="mover.fecha" [min]="hoy" (ngModelChange)="alCambiarCriterio()" [attr.aria-label]="'agenda.citaPanel.nuevaFecha' | translate">
         </div>
         <div class="ag-campo" *ngIf="config.staff.length">
-          <span class="ag-etiqueta">Quién atiende</span>
-          <select class="ag-input" [(ngModel)]="mover.staffId" (ngModelChange)="alCambiarCriterio()" aria-label="Quién atiende">
-            <option [ngValue]="null">Sin asignar</option>
+          <span class="ag-etiqueta">{{ 'agenda.citaForm.quienAtiende' | translate }}</span>
+          <select class="ag-input" [(ngModel)]="mover.staffId" (ngModelChange)="alCambiarCriterio()" [attr.aria-label]="'agenda.citaForm.quienAtiende' | translate">
+            <option [ngValue]="null">{{ 'agenda.citaPanel.sinAsignar' | translate }}</option>
             <option *ngFor="let p of personas" [ngValue]="p.id">{{ p.name }}</option>
           </select>
         </div>
       </div>
-      <span class="ag-muted" *ngIf="cargandoHoras">Buscando horas libres…</span>
+      <span class="ag-muted" *ngIf="cargandoHoras">{{ 'agenda.citaForm.buscandoHorasLibres' | translate }}</span>
       <ng-container *ngIf="!cargandoHoras && !modoFranjas">
         <div class="ag-opciones" *ngIf="disponibilidad?.horas?.length; else sinHoras">
           <button type="button" class="ag-opcion" *ngFor="let h of disponibilidad?.horas"
@@ -78,10 +78,10 @@
             {{ horaLegible(h.hora) }}
           </button>
         </div>
-        <ng-template #sinHoras><span class="ag-muted">Sin horas libres con ese criterio.</span></ng-template>
+        <ng-template #sinHoras><span class="ag-muted">{{ 'agenda.citaPanel.sinHorasLibresConEse' | translate }}</span></ng-template>
         <div class="ag-otra-hora">
-          <span class="ag-muted">¿Otra hora?</span>
-          <input class="ag-input ag-input--hora" type="time" [(ngModel)]="mover.horaManual" aria-label="Otra hora">
+          <span class="ag-muted">{{ 'agenda.citaForm.otraHora' | translate }}</span>
+          <input class="ag-input ag-input--hora" type="time" [(ngModel)]="mover.horaManual" [attr.aria-label]="'agenda.citaForm.otraHora2' | translate">
         </div>
       </ng-container>
       <div class="ag-opciones" *ngIf="!cargandoHoras && modoFranjas">
@@ -90,8 +90,8 @@
           [class.ag-opcion--activa]="mover.franja === f.franja" (click)="mover.franja = f.franja">{{ f.franja }}</button>
       </div>
       <div class="ag-acciones">
-        <button type="button" class="cfg-btn" [disabled]="!puedeMover" (click)="confirmarMovida()"><span class="ag-txt">Mover aquí</span></button>
-        <button type="button" class="cfg-btn cfg-btn--sec" (click)="moviendo = false"><span class="ag-txt">Cancelar</span></button>
+        <button type="button" class="cfg-btn" [disabled]="!puedeMover" (click)="confirmarMovida()"><span class="ag-txt">{{ 'agenda.citaPanel.moverAqui' | translate }}</span></button>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="moviendo = false"><span class="ag-txt">{{ 'comun.cancelar' | translate }}</span></button>
       </div>
     </section>
 
@@ -99,18 +99,18 @@
 
     <!-- Notas -->
     <section class="ag-campo">
-      <span class="ag-etiqueta">Notas</span>
-      <textarea class="ag-input" rows="3" maxlength="600" [(ngModel)]="notas" (ngModelChange)="notasCambiadas = true" aria-label="Notas de la cita"></textarea>
+      <span class="ag-etiqueta">{{ 'agenda.citaForm.notas' | translate }}</span>
+      <textarea class="ag-input" rows="3" maxlength="600" [(ngModel)]="notas" (ngModelChange)="notasCambiadas = true" [attr.aria-label]="'agenda.citaPanel.notasDeLaCita' | translate"></textarea>
       <div>
         <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="notasCambiadas" [disabled]="ocupado" (click)="guardarNotas()">
-          <span class="ag-txt">Guardar notas</span>
+          <span class="ag-txt">{{ 'agenda.citaPanel.guardarNotas' | translate }}</span>
         </button>
       </div>
     </section>
 
     <!-- Historial -->
     <section class="ag-historial" *ngIf="cita.history?.length">
-      <h3 class="ag-subtitulo">Historial</h3>
+      <h3 class="ag-subtitulo">{{ 'agenda.citaPanel.historial' | translate }}</h3>
       <ol class="ag-linea">
         <li *ngFor="let h of cita.history">
           <span class="ag-linea-txt">{{ textoHistorial(h) }}</span>

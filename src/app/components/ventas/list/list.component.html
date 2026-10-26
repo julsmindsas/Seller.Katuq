@@ -2443,6 +2443,20 @@
                         <tr *ngFor="let l of vp.lineas">
                             <td>
                                 <div class="fvp-producto">{{ l.descripcion }}</div>
+                                <!-- Ticket 1229 (D-504, 1b.2): código del producto y si existe en SIIGO o se creará.
+                                     Solo con `enSiigo` (bandera siigoProductEquivalence encendida y línea revisada): con la
+                                     bandera apagada, backend viejo u otro proveedor la celda queda igual que hoy (spec EARS).
+                                     En `equivalente` el código pequeño es el de Katuq y el chip trae el de SIIGO (A → B). -->
+                                <div class="fv-siigo-fila" *ngIf="l.enSiigo">
+                                    <small class="fv-codigo" *ngIf="l.codigo || l.codigoSiigo">{{ l.codigo || l.codigoSiigo }}</small>
+                                    <ng-container [ngSwitch]="l.enSiigo">
+                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'existente'">En SIIGO</span>
+                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'equivalente'">En SIIGO<ng-container *ngIf="l.codigoSiigo"> como <span class="fv-siigo-cod">{{ l.codigoSiigo }}</span></ng-container></span>
+                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'nuevo'">Se creará en SIIGO</span>
+                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'ambiguo'">Se creará: varios posibles en SIIGO</span>
+                                        <span class="fv-siigo fv-siigo--sin" *ngSwitchCase="'error'">No se pudo revisar en SIIGO</span>
+                                    </ng-container>
+                                </div>
                                 <small class="text-muted">
                                     {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} c/u
                                     <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>

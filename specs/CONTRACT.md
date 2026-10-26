@@ -1346,6 +1346,77 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-21 — D-502 F1: implementada, sin publicar (ticket 1180, cd CCNcDB3JQKPTb8XtYLuK, bloques TEMA-B01 a TEMA-B06)
+- **Hecho, en `feature/tickets-web` y sin desplegar:**
+  - tokens `--ds-*` en `_theme-tokens.scss` (3.1 y 3.2);
+  - `dark-mode.scss` sobre los tokens: variables, la familia del azul (169) y los siete grises (3.3 a 3.5);
+  - sidebar, header y toasts en `var(--ds-*)` (3.6);
+  - PrimeNG oscuro `katuq-dark` sobre lara-dark-purple (3.7): `_primeng-katuq-base.scss` en la misma posición en los dos temas, `_primeng-dark.scss`, bundle `katuq-dark` en `angular.json`, `BUNDLE_OSCURO` y `theme-md-dark-deeppurple.scss` borrado. En claro, el botón PrimeNG sigue en `#8b5cf6` (valor por defecto 8).
+- **Desvío registrado en 3.7:** el orden de `design-f1.md` §4 cambiaba los tamaños en celular. `_primeng-katuq-base` va después de `primeng-overrides`, como en el claro, y `_primeng-dark` iguala las 20 declaraciones de geometría en que lara-dark difiere de lara-light. Las superficies de lara (azul marino y lila) se pisan regla por regla en una región generada por `tests/theme/primeng-dark-generar.js`. Daniel debe ratificar el desvío y esas dos piezas: la aprobación en bloque no cubre desvíos.
+- **Correcciones de la revisión de 3.7:** las opciones de `p-selectButton` y `p-toggleButton` (div.p-button sin severidad) quedaban todas en `accent` porque el primario de 10 clases les ganaba por especificidad; ahora la marcada se distingue. El generador suma `p-toggleButton`, `p-avatar`, `p-organizationChart`, `p-inputNumber`, `p-message` y `p-toast`, que conservaban el azul marino de lara. `firebase.json` redirige `/md-dark-deeppurple.css` a `/katuq-dark.css` (302) para las sesiones abiertas antes de publicar.
+- **Pruebas:**
+  - `npm run test:theme`: 115 de 115 (suma `primeng-dark.test.js`, 19);
+  - `comparar-claro.js` da «claro idéntico» en `theme-lara-light-blue.scss` (base 35717c33) y, en los bloques anteriores, en `src/styles.scss`;
+  - `sass` compila `theme-katuq-dark.scss`;
+  - `tsc` sin errores (con candado);
+  - conteos sin subir.
+  - Deuda medida de rellenos con `var(--primary-color)`: 42 en 16 archivos (detalle en 3.9 de `tasks.md`).
+- **Pendiente, sin lo cual F1 no se publica ni se cierra:**
+  - el build sin errores, con `katuq-dark.css` en `dist/cuba`;
+  - la línea base nueva de 0.2;
+  - la auditoría sobre el build: `f1RellenosPrimarios`, `f1TamanosPrimeNG`, `f1SinAzulHeredado`, axe en oscuro del marco y de Inicio, y los toasts;
+  - las capturas de terceros (3.8), con su base tomada sobre el build de F0;
+  - la revisión de Daniel, que incluye los puntos abiertos de 3.4 (rellenos sin texto), 3.5 (textos grises, bordes de control y capas) y 3.8 (ECharts y CKEditor en lugar de ApexCharts, Quill y FullCalendar).
+- Por la pregunta 2, F1 sale en el mismo release que D-516 y D-519 o después. El ticket sigue abierto; el comentario de avance va cuando se publique. Sin push ni despliegue.
+
+### 2026-10-21 — D-504 y D-561: ticket 1229 SIIGO de ALMACEN BOMBAS (cd nF3GLH3F2sZGnKsqNODM), bloques 1229-B01 a 1229-B05
+- D-504 pasa a APROBADA (Daniel, 21-oct, en bloque) y EN PRODUCCIÓN con `siigoProductEquivalence` apagada (nace apagada; no se releyó Firestore): backend ee5ee2e7 y front 2026.10.21.2. Los desvíos (bandera por comercio, `stock_control` solo en servicios y la vista previa entera detrás de la bandera, con cambio de front) quedan en `design.md`.
+- D-561 (candado de emisión) queda como PROPUESTA commiteada y apagada: no estaba en lo aprobado en bloque y Daniel la ratifica antes de 3.1.
+- En la rama `feature/tickets-web`, commiteado y sin desplegar: S.1 candado de emisión (D-561, backend cb6aad91 y front 693069ce), 1.9 aviso en la vista previa (70f97a54 y 7b7dcca1), 1b.2 chips (9a57fab7), y 2.3/2.4/2.6 scripts de carga endurecidos (f9f89660 y 4290122d). Pruebas en verde: 185 de `test:codigo-siigo`, 32 del candado, 4 de `siigoClienteNitConDv` y 14 del front.
+- **Referencia de D-453:** no estaba errada. En Support hay dos tickets con el número 1229: «Web · F2-20» (cd b0t5fO5a8aA4ZHiKnsIC, 12-oct, catálogo para Google y Meta, Resuelto) y el de SIIGO de Bombas (cd nF3GLH3F2sZGnKsqNODM, 18-oct). Se aclaró la línea de D-453 citando el cd (regla de D-531 para números repetidos). **Para el dueño de `openspec/changes/atributos-por-categoria/`:** su `proposal.md` (l.68) y `specs/catalogo-feed-atributos/spec.md` (l.4) dicen «ticket 1229» por el F2-20; es correcto, pero conviene citar el cd. No se tocaron sus archivos. El commit 081fabb4 del 16-oct también dice «ticket 1229» por el F2-20.
+- `tasks.md` del cambio: 3.3 (parte documental) hecha; 0.2, 2.3, 2.4, 2.5, 2.7, 3.1, 3.2, 3.4, 3.5, 3.6, S.2 y S.3 abiertas con quién las desbloquea. Dos borradores para el comercio, que Daniel manda: el aviso previo (2.7, antes de prender la bandera: bodega 31, bloqueo por falta de stock y los 2 ambiguos) y la nota de cierre (3.4). No se escribió en el ticket.
+- Correcciones de la revisión: la nota ya no dice que la API de SIIGO no permite compras (solo está comprobado que no expone ajustes ni movimientos de inventario; `POST /v1/purchases` no se revisó y Katuq hoy no envía compras); el recordatorio del 1099 reconoce que el comercio ya llamó a SIIGO (comentario del 30-sep en el 1096, cd PkAckfh8DWlSQe5pDVC8) y pide la respuesta. El informe del ticket (pregunta 2) repite la afirmación de las compras.
+- Bloqueado (no lo hace un agente en modo automático): la revisión de Laura de los dos Excel, `--apply` de 2.3 y 2.4, prender la bandera, la primera factura real (3.2), la revisión en navegador a 1440 y 390 px, push y despliegue (3.1), y el comentario y cierre del ticket.
+- Commit con sello sugerido: `docs(contrato,openspec): D-504 aprobada y en producción con la bandera apagada, D-561 candado de emisión, D-453 citada por cd y nota de cierre para Bombas (ticket 1229, bloque 1229-B05, D-518)`. «D-518» es el sello que usan todos los commits de la rama; en el contrato equivale a D-531.
+
+### 2026-10-21 — D-560: idiomas del panel (ticket cd CMNdBkVZXgYoOCvqfGZc), apertura y bloque IDI-B00a
+- Se aprobó y se asentó la propuesta `idiomas-plataforma` (D-560).
+- En el backend, el login devuelve `visibleLanguages` (`config/feature_flags`, D-505), apagado por defecto: `['es','en','pt']`. El script `set-idiomas-visibles.js` simula por defecto.
+- Pruebas: caracterización 7/7 antes y después, contrato 0/10 → 13/13 y golden de sitios 20/20. `passwordResetRoutes.contract.test.js` ya estaba en rojo (aserción vieja sobre `diagnostics.js` desde D-319); queda pendiente fuera de este bloque.
+- Siguen IDI-B00b a IDI-B00f (front base) y los bloques de módulo. Sin push ni despliegue.
+
+### 2026-10-21 — D-560: bloque IDI-B00c, verificación `npm run i18n:check`
+- `scripts/i18n-check.js` (Node puro) y `scripts/i18n-check.config.json`: las revisiones de D6, `--modulo`, `--bloques` y `--json`. `modulosCerrados` vacío. Mientras `de.json` no exista, su falta es un aviso. No se engancha a `prebuild` ni a `predeploy` (se decide en 2.8).
+- Pruebas: `tests/i18n/i18n-check.test.js` 22/23 en rojo antes y 23/23 después; `test:i18n` 66/66; tsc sin errores; menos de 1 s sobre `src/app`.
+- Corrección del bloque: `claveInexistente` es error solo en los módulos cerrados y aviso (`claveInexistenteAbierta`) en el resto, para leer juntas D3 y D6 (**pendiente de ratificar por Daniel**); listas separadas para «igual al español» (`igualesPermitidos`, por idioma) y para textos sueltos (`nombresPropios`, `textosIgnorados`); detecta el ternario sin paréntesis antes de `| translate`, plantillas en línea, `swal`/`toast`/`toster`/`notificationService` y más atributos de texto (`ngbTooltip`, `alt`, textos de PrimeNG); configuración ilegible sale con 2; fixtures con `.gitkeep`; `auth/login` a IDI-B02 y `components/ventas/clientes` a IDI-B05. Pruebas 29/29 y `test:i18n` 72/72.
+- Línea base en `tasks.md` 1.8: 28 errores (claves faltantes en en/pt, 1.10), 2.257 avisos (1.405 usos de claves literales que no están en `es.json`, cada bloque deja en cero las suyas) y 20.192 textos sueltos repartidos por bloque de D10. Sin push ni despliegue.
+
+### 2026-10-21 — D-560: bloque IDI-B00e [S], ortografía de las 11 claves (tarea 1.11)
+- Las 11 claves con faltas de `es.json` pasan a su forma corregida en `es`, `en` y `pt`, y en el único uso por traductor (`ventas/facturacion/pedido-facturacion`). Ninguna entra en la excepción D3 (no son menú, ruta ni valor comparado).
+- La traducción visible no cambia: en `en`, «Los datos de facturación electrónica…» conserva «Electronic billing data are same as the customer's». Única excepción, sin efecto visible: `pt` de «Número de teléfono fijo» (ninguna pantalla la pide).
+- Los mismos textos escritos directo en plantillas (POS facturación, POS crear venta, POS conf-product-to-cart, Ventas > Entrega, Empresas, reglas de despacho y logs de Shopify) se corrigen en el sitio, solo el literal; su extracción a clave sigue en los bloques de módulo. `import-modal` («Nombre/Razon Social», cabecera de mapeo) queda para IDI-B12b.
+- `test:i18n` suma `diccionarios.test.js` y `ortografia-claves.test.js`. Pruebas 98/98, `i18n:check` 0 errores, tsc sin errores. **Diff pendiente de aprobación de Daniel** antes de unir a main. Sin push ni despliegue.
+
+### 2026-10-21 — D-560: bloque IDI-B00f y cierre del bloque base (tareas 1.13, 1.14 y la parte local de 1.16)
+- **Bitácora atrasada de IDI-B00b** (5f9888ed; no se pudo escribir en su bloque porque este archivo tenía cambios de otro agente): catálogo de idiomas con «Deutsch (CH)» (`de`, `htmlLang` `de-CH`) oculto por los idiomas visibles del login, selector filtrado que guarda `users.lang` con la forma de antes, `addLangs(['es','en','pt','de'])`, `fr.json` retirado y `PrimengI18nService` (textos de calendarios y filtros, sin `dateFormat` ni `firstDayOfWeek`). 1.9 sigue sin marcar hasta el navegador.
+- **Bitácora atrasada de IDI-B00d** (193848fd): `en.json` y `pt.json` completos, glosario de D7 en todos sus valores y las 11 claves `comun.*` en es, en y pt.
+- **1.13, backend:** `services/ai/prompts/traduccionPanelPrompt.js` (glosario de D7, «Sie», nombres propios de D4, conservar `{{x}}`/`{x}` y HTML, «ss» en vez de «ß», comillas «», «Offerte») con el validador puro `validarTraducciones`, y `scripts/i18n-borrador.js` (`pedirJsonAOpttia` por lotes de 80; `--entrada`, `--base`, `--idioma de-CH|en|pt-BR`, `--solo-faltantes`, `--lote`, `--limite`, `--salida`, `--dry-run`). Solo desarrollo: se niega con `NODE_ENV=production` o con un ADK que no sea local, no imprime el token, no toca Firestore y nada en tiempo de ejecución lo importa. Prueba `tests/ai/traduccionPanelPrompt.test.js` 21/21. `--dry-run` sobre el `es.json` real: 771 claves en 10 lotes.
+- **Corrección del bloque:** el validador compara también los atributos HTML y rechaza arreglos con elementos vacíos; el script no corre donde existe la unidad systemd `kai-adk` (en producción el ADK está en 127.0.0.1:8080, así que «local» no bastaba) y lee el token de `functions/.env` como el backend; las pruebas del token buscan su valor y una pasa por el `pedirJsonAOpttia` real con `fetch` simulado. Si Daniel cambia el diff [S] de 1.11, `de.json` se completa con `--solo-faltantes` en ese mismo cambio.
+- **Lote real de 20 claves: no se hizo.** En este entorno no hay ADK local (127.0.0.1:8080 rechaza la conexión) ni `WHATSAPP_BOT_TOKEN`; no se llamó a ningún servicio de producción. El script lo dice y sale con 2.
+- **1.14, front:** `src/assets/i18n/de.json` con las 771 claves de `es.json` (incluidos `primeng`, `comun.*` y `notificaciones.*`), en alemán estándar de Suiza. Como Opttia no respondió, lo tradujo el agente con las mismas reglas y lo validó con el mismo `validarTraducciones` del backend. **Borrador sin revisión nativa (de-CH pendiente de revisión nativa, tarea 0.5)**; de-CH sigue oculto en el selector. En `i18n:check`, `de` sale de `idiomasOpcionales` (su falta ya es error) e `igualesPermitidos.de` suma «Editor» y «Total». Prueba nueva `tests/i18n/aleman.test.js` (15 casos) en `test:i18n`.
+- **Verificación local:** tsc sin errores (con candado), `i18n:check` 0 errores y 0 avisos de `de` fuera de `claveSinUso`, `test:i18n` 114/114, `test:theme` 83/83, `test:idiomas-login` 7/7 + 13/13 + 6/6.
+- **Queda para producción (1.15 y 1.16):** `build:prod`; desplegar el backend de IDI-B00a; con orden de Daniel, `set-idiomas-visibles.js --visibles es,en,pt --prueba Julsmind` (primero simulado); revisar en el navegador a 1440 y 390 px con la empresa de prueba (selector con 3 y 4 idiomas, cambio sin recargar, recarga, cierre de sesión en español, calendario y filtro de Todos los pedidos en es/en/pt). Pendiente fuera del bloque: agregar `test:i18n-borrador` al `package.json` del backend (tenía cambios de otro agente). Sin push ni despliegue.
+
+### 2026-10-21 — D-560: bloque IDI-B01a, menú lateral, navegación y encabezado (tareas 2.1, 2.2 y parte de 2.3)
+- **Línea base (2.1)** en `tasks.md`. Textos sueltos: header 52 (24 de componentes Cuba que nadie pinta), sidebar 54, bottom-navigation 1, breadcrumb 0, adaptive-navigation 8. Bloque IDI-B01 completo: 695.
+- **Menú (2.2), excepción D3:** `nav.service.ts` no cambia. Un snapshot de títulos, encabezados, rutas e insignias, tomado antes del bloque, lo fija. Las 107 claves del menú que faltaban y los 3 canales futuros de Mensajes entran a `es`, `en`, `pt` y `de`. La ortografía se corrige solo en el valor de `es` (16 valores, solo mayúsculas, por ejemplo «Activación módulos»): así los buscadores del menú, que comparan contra la clave sin mayúsculas, siguen encontrando lo que se lee en español. El submenú flotante del menú plegado traduce al mostrar. Favoritos y secciones plegadas se siguen guardando por el título en español: hay una prueba con traductor en inglés.
+- **Plantillas (2.3, parte IDI-B01a):** encabezado, selector de idioma, cuenta, buscador, logo de la empresa, menú lateral con la tarjeta del plan, barra inferior y navegación adaptable, con 100 claves `shell.*`. Las concatenaciones de `aria-label` pasan a claves con parámetro. Los nombres de idioma no se traducen. Plurales `.one`/`.other` en «pedidos restantes» y «días». El español conserva la redacción: solo tildes, mayúsculas, puntuación y plurales. No hay `.scss`, rutas, servicios ni datos guardados.
+- **Desvíos por aprobar (Daniel):** (1) D9 punto 2: en `sidebar.component.ts` la fecha de renovación sin valor pasa de `'No definida'` a `null` (`formatDate` devuelve `string | null`; la plantilla muestra el texto traducido con `??`; `getDaysLeft` sigue dando 0 y `renewalDate` no se guarda ni se envía), el saludo guarda la clave, y `bottom-navigation` retira `getAriaLabel` (solo lo usaba la plantilla). (2) Tarea 2.2: de los 153 títulos entran los que el panel pinta; los 26 de `MEGAMENUITEMS`/`LEVELMENUITEMS` (plantilla Cuba, solo `app-mega-menu`, que nadie pinta) se retiran con los componentes Cuba sin uso.
+- **Después:** sidebar, barra inferior y navegación adaptable con 0 textos sueltos; header 24 (solo los componentes Cuba sin uso). Bloque IDI-B01: 612; el resto es de IDI-B01b (perfil, notificaciones, inicio y mensajes en TS).
+- **Corrección del bloque:** se devolvió la redacción original a los textos del shell que se habían reescrito (aviso del plan gratuito, «Buscar menú…», «Analytics y KPIs», «Senior (51-70)»…); `adaptive-navigation` entra en `bloques["IDI-B01 Shell"]` del `i18n-check`; 2.2 queda sin marcar hasta la revisión en el navegador (2.7); de-CH corrige «Firmenkunden», «Termine», «Kostenloser Plan» y «Upgrade», y «Treasury» queda para el revisor nativo; `en` pasa «Customer list» y «Create customer» a mayúscula inicial.
+- **Pruebas:** `tests/i18n/menu-titulos.test.js` 16/16 (sumada a `test:i18n`; incluye el submenú flotante en inglés), `test:i18n` 130/130, `test:theme` 96/96, `tests/navigation` 18/18, contratos de suscripción OK, tsc sin errores (con candado) y plantillas tocadas parseadas con `@angular/compiler` sin errores. `i18n:check`: 0 errores. Se adaptaron dos pruebas ajenas sin cambiar lo que comprueban (`sidebar-menu`, `free-plan-ui`).
+- **Pendientes:** revisión en el navegador (2.7); retirar los componentes Cuba sin uso y `MEGAMENUITEMS`/`LEVELMENUITEMS` en un cambio aparte; buscar en el menú por el título traducido (no-objetivo de `proposal.md`, va en otro cambio si se pide); `de` sigue en borrador sin revisión nativa. Sin push ni despliegue.
+
 ### 2026-10-02 (sesión tiket-apoyo — OH MY STORE en cero)
 - **1087 cerrado solo con configuración:** el envío de las facturas de OH MY STORE sale con el producto SIIGO `TSV` "TRANSPORTE DOMICILIO EN VENTAS" (código encontrado recorriendo su catálogo SIIGO en solo lectura; guardado con `IntegrationConfigService.saveConfig`, verificado con la vista previa del ORE-001355).
 - **1110 cerrado:** ver D-340. OH MY STORE queda sin tickets abiertos.
@@ -10288,7 +10359,7 @@ Daniel: «arreglalo y te autorizo a corregir los pedidos». Sigue a D-438.
 - **Ya existían:** SSR, URLs amigables, meta editable, sitemap y robots, Product/Offer/Breadcrumb/Organization y WebP con carga diferida.
 - **Fuera:** Core Web Vitals por página y blog.
 
-## D-453 (2026-10-16) — Sitio: catálogo para Google Shopping y Meta (ticket 1229) — PUBLICADO: backend f67f222b, front 2026.10.16.7
+## D-453 (2026-10-16) — Sitio: catálogo para Google Shopping y Meta (ticket 1229 «Web · F2-20», cd b0t5fO5a8aA4ZHiKnsIC; no el 1229 de SIIGO de D-504) — PUBLICADO: backend f67f222b, front 2026.10.16.7
 
 - **El feed ya existía** (`feed.xml`, RSS de Merchant, que también sirve para Meta). Se le agregan:
   - `sale_price` con vigencia cuando hay oferta;
@@ -11128,14 +11199,37 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **D-498 importador: base desplegada apagada.** Backend 97f634a4 y front 3cefd2d5. Bandera `storeMigrationImport` apagada. La simulación no escribe nada del comercio. El lote y las redirecciones responden 501 hasta las tareas 6.1 y 7.1. La 3.1, aprobada por Daniel, es el bloque de categorías de `importProducts` movido a un módulo compartido, con el mismo comportamiento (dorado). Los fixtures son sintéticos: 0.4 sigue abierta hasta tener exports reales.
   - **D-496 pedido por WhatsApp: base.** Backend af1bd54c. La cotización enviada por el bot deja historial (1.2), y quedan las pruebas de caracterización 2.1 a 2.3 sin código de producción. La revisión de seguridad (0.5) espera a Daniel.
   - **Corregido (aprobado por Daniel):** en el plan gratis, cada pedido de la tienda en línea contaba dos veces para el tope del mes (`createOrderWithinLimit` + `consumeStoreOrderSlot`). Un tope de 15 bloqueaba hacia el pedido 8. Ahora cuenta una vez.
+- **2026-10-21, D-496 ampliación F4-40 (todo APAGADO, código local en `feature/tickets-web`, sin push ni despliegue):** Daniel aprobó la ampliación en bloque («dale pues y aprobado todo»); las preguntas 1 a 18 se resolvieron con la recomendación escrita. Revisión de seguridad aprobada; vive en el openspec privado del backend. Hecho en los bloques F440-B01 a B16: banderas `whatsappBotDirectOrder`, `whatsappBotAttention` y `whatsappBotFollowUp` con su interruptor general en `platformFlags.js`; modo del pedido directo solo por script (sombra por defecto); propuesta, confirmación y repetición en el bot; recordatorio de pago y seguimientos dentro de 24 h; memoria con cotizaciones, origen y políticas; cita por el bot con origen `opttia`; «Vendido con Opttia» con pedidos directos; métricas de KAI y pedido en el panel del hilo; capacidades en kai (`feature/tickets-web` desde `feat/claude-agent-sdk`). Pendiente: lo que espera la fila de la tienda (`controllers/sites.js`: extracción del núcleo de `crearPedido`, `/pagar`, `/gracias`, cableado del pago aprobado y del origen del contacto), el despliegue de kai antes del backend (8.7), la recuperación fuera de 24 h (costo de plantillas, OK de Daniel) y el piloto en FLORECER. Verificación final (16.3): 196 archivos de prueba del backend, sin fallos nuevos frente a la línea base; golden del pedido de tienda sin cambios; tsc del front sin errores; falta el build de producción y la revisión visual a 1440 y 390 px. Detalle en `openspec/changes/pedido-whatsapp-con-link-de-pago/`.
 
-## D-504 (2026-10-18) — Facturar en SIIGO con el código del producto que ya existe allá, y bodegas de Bombas conectadas (ticket 1229) — PROPUESTA
+## D-504 (2026-10-18) — Facturar en SIIGO con el código del producto que ya existe allá, y bodegas de Bombas conectadas (ticket 1229, cd nF3GLH3F2sZGnKsqNODM) — APROBADA (Daniel, 21-oct, en bloque) y EN PRODUCCIÓN con la bandera `siigoProductEquivalence` apagada
 
 - **Contexto:** ALMACEN BOMBAS factura en SIIGO, pero su código de producto lleva el bloque de categoría (`GLD-00-01-4SSFR`) y en SIIGO no (`GLD-01-4SSFR`). Solo 41 de 1.286 casan tal cual, y al facturar `findOrCreateProduct` crea otro producto en SIIGO: 11 repetidos ya. Ninguna bodega estaba conectada, así que SIIGO descontaba de su bodega por defecto.
 - **Hecho (datos, 2026-10-18):** se conectaron BOD-005 Bogotá → 6, BOD-006 Cali → 7 y BOD-001 Zona Franca LD → 31, en `warehouses.integrations.siigo` (mismo formato que la pantalla D-046, `mappedBy: ticket-1229`). Medellín (4 bodegas Katuq contra Medellin 4 y BMedellin 64) y Zona Franca Exterior quedan para el comercio.
 - **Propuesta:** `products.integrations.siigo.productCode`, que se usa antes de la referencia al facturar. Carga inicial de 666 equivalencias únicas con prueba sin escribir. Sin código y sin referencia en SIIGO, la regla busca un único equivalente antes de crear. Write-set en `products` limitado a `integrations.siigo.productCode*`.
 - **No toca:** referencia de Katuq, precios, catálogo, inventario de Katuq, World Office. D-500 (facturación a Integraciones) es aparte.
-- [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). Pendiente: aprobación de Daniel para pasar a diseño y tareas.
+- [Propuesta](../openspec/changes/siigo-codigo-producto-y-bodega/proposal.md). ~~Pendiente: aprobación de Daniel para pasar a diseño y tareas.~~ (estado del 18-oct; ver abajo)
+- **Aprobación (2026-10-21):** Daniel aprobó en bloque propuesta, diseño, spec y tareas; cada pregunta abierta se resuelve con la recomendación escrita en el informe del ticket.
+- **En producción:** backend ee5ee2e7 (contiene 4030ec8c, 91c5f916 y 83202c51; 4030ec8c y 91c5f916 ya iban en 80bb73ce del 19-oct) y front release 2026.10.21.2 (bdb74e32, contiene 6d7d00a1 y 55059eab). La bandera por comercio `siigoProductEquivalence` nace apagada (catálogo de banderas) y ningún script de este ticket la ha prendido; no se releyó Firestore para confirmar que ninguna empresa la tenga encendida a mano. Sin ella, nadie busca equivalentes y la vista previa es la de antes. El código guardado (`integrations.siigo.productCode`) sí se lee en toda factura y vista previa SIIGO, pero como la carga (2.3) no se ha aplicado y la bandera nunca se prendió, ningún producto debería tenerlo (no se releyó Firestore).
+- **Desvíos frente al diseño** (anotados en `design.md`, sección «Desvíos»):
+  - la búsqueda del equivalente (D3) va detrás de la bandera por comercio, porque hay comercios con SIIGO sin inventario y otra forma de codificar (ALMARA, OH MY STORE). Dueño Daniel; se revisa el 2027-04-30 (Art. XII, tarea 3.5);
+  - `stock_control` (D6): solo los servicios pasan a crearse sin control de inventario; los productos siguen con control, aunque el mapper diga otra cosa;
+  - aviso de la vista previa (1.9, recomendación 5 del informe): la recomendación pedía la búsqueda exacta para todos los comercios (candidatos solo con la bandera) y decía que el front no cambiaba. Se implementó con la vista previa entera detrás de `siigoProductEquivalence`, porque lo nuevo nace apagado y el circuit breaker de SIIGO es compartido por todas las empresas (D7 del diseño); con la bandera apagada ningún comercio ve si el producto existe en SIIGO. Y el front sí cambió (1b.2, chips por línea), porque los avisos solos no dicen a qué línea se refieren.
+- **Nuevo en la rama `feature/tickets-web`, commiteado y SIN desplegar** (bloques 1229-B01 a 1229-B04):
+  - S.1, candado de empresa en la emisión: backend cb6aad91, front 693069ce. Decisión propia: D-561.
+  - 1.9, aviso en la vista previa («existe», «con su equivalente», «se creará»), solo con la bandera, tope de 20 códigos y 15 s, sin reintentos: backend 70f97a54, front 7b7dcca1.
+  - 1b.2, código y chip por línea en la vista previa: front 9a57fab7. **Excepción de color:** el texto del chip de alerta va en `#8a5300` (el de `.fvp-aviso`) y no en `#D9820A`, porque sobre `#FFF1DF` da 5,7:1 contra 2,6:1. **Falta la revisión en navegador a 1440 y 390 px** (no hay navegador en el servidor).
+  - 2.3, 2.4 y 2.6, scripts de carga endurecidos (`--aprobado`, `--verificar`, el Excel aprobado nunca se pisa, write-set probado): backend f9f89660, front 4290122d.
+  - Pruebas del 21-oct en la punta de la rama: `npm run test:codigo-siigo` 185 (22 + 125 + 38), `npm run test:candado-empresa-factura` 32, `siigoClienteNitConDv` 4 y `node --test tests/ventas/vista-previa-siigo.test.js` 14, todo en verde.
+- **Pendiente de datos y verificación (nada de esto lo hace un agente en modo automático):**
+  - 2.3: cargar los 666 códigos. Desbloquea Laura (OK al Excel `Codigos SIIGO ALMACEN BOMBAS.xlsx`, que está en Descargas de la máquina donde corrió la prueba, no en el servidor) y luego Daniel con una sesión con permiso de escritura. Antes se repite la prueba sin escribir, porque el catálogo pudo cambiar desde el 19-oct.
+  - 2.4: guardar las 54 conexiones de categoría. Desbloquea Laura (confirmar que las categorías nuevas 1647–1679 tienen las cuentas de inventario, costo, ingreso y devolución).
+  - 2.5: prender la bandera en ALMACEN BOMBAS. Desbloquea Daniel, después de 2.3, de `--verificar` de 2.4, de D-561 en `shadow` sin desajustes y de S.2 resuelta o en sombra.
+  - 2.7: aviso previo al comercio, antes de 2.5 (inventario inicial de la bodega 31, bloqueo por falta de stock apagado y elegir entre los 2 ambiguos). Desbloquea Daniel al mandarlo; el comercio responde.
+  - 0.2: bodegas de Medellín (MED-VIT, MED-MOT, MED-VIR, MED-REP) y Zona Franca Exterior. Desbloquea el comercio al crearlas en Siigo Nube.
+  - 3.2: primera factura real de Bombas con un producto de código largo, revisada contra SIIGO, más la revisión visual de la vista previa.
+  - Spec `specs/siigo-codigo-producto/spec.md` (lo aprueba Daniel, porque cambia una spec aprobada fuera de lo que cubrió la recomendación 5):
+    - el requisito «Equivalencia única antes de crear» debe pasar a «WHILE la empresa tiene `siigoProductEquivalence` encendida», como ya está en producción (tarea 3.6);
+    - requisitos EARS de la carga (`--aprobado`, `--verificar`) y del candado (D-561).
 
 ## D-505 (2026-10-19) — Toda configuración de empresa vive en Firestore; no más interruptores en el `.env` — APROBADA (Daniel, 19-oct)
 
@@ -11637,6 +11731,10 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
 - Los `::ng-deep` sin `:host` de agent-session apuntan a un `p-sidebar` que se pinta en `body`, así que no se acotaron.
 
 > **Renumeración (2026-10-21).** Al unir la rama principal, D-517 y D-518 ya eran otras decisiones (Punto Verde Vidagas y residuos de D-516). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-517» (pago a cuotas Addi y Sistecrédito) es **D-530**, y lo que llaman «D-518» (las 70 decisiones de los tickets Web) es **D-531**. Los números D-520 a D-529 quedan libres para la rama principal.
+>
+> **Renumeración (2026-10-21, segunda).** Al unir `origin/feature/venta-asistida-mejorada` por segunda vez, D-540, D-541, D-534 y D-535 ya eran decisiones de la rama principal (WooCommerce, export de productos). En la rama `feature/tickets-web`, lo que sus documentos y commits llaman «D-540» (idiomas del panel Seller, ticket «Traducción») es **D-540**, y lo que llaman «D-541» (candado de empresa en la emisión, ticket 1229) es **D-541**. Los comentarios de código y los commits ya hechos conservan el número viejo; los archivos que solo tocó esta rama se corrigieron en la unión.
+
+> **Renumeración (2026-10-26).** Al unir otra vez `origin/feature/venta-asistida-mejorada`, D-540 (POS, panel del ticket compacto, ticket 1340) y D-541 (historial del pedido, ticket 1351) son decisiones de la rama principal. Las nuestras pasan a **D-560** (idiomas del panel Seller, ticket «Traducción») y **D-561** (candado de empresa en la emisión, ticket 1229). Se corrigieron aquí (encabezados y bitácora), en `openspec/changes/idiomas-plataforma/`, en `openspec/changes/siigo-codigo-producto-y-bodega/` y en `scripts/i18n-check*`. Los comentarios de código, las pruebas y los commits ya hechos conservan el número viejo.
 
 ## D-530 (2026-10-20) — Pago a cuotas en la tienda en línea con Addi y Sistecrédito (ticket 1233, F2-41) — APROBADA (Daniel, 20-oct), COMMITEADA en la rama `feature/tickets-web` (backend d954a833, front f8b985d4), sin desplegar y con la bandera apagada
 
@@ -11776,6 +11874,94 @@ Daniel aprobó las nueve propuestas en el chat. Cada una sigue el método: el di
   - **TX-34·9** Promesa de las plantillas sobre el tiempo de entrega. → El carrito y el checkout muestran el tiempo de entrega.
 - **Orden de trabajo:** 1) arreglos de F2-41 con sus diffs; 2) bugs de F5-29 y su seguridad; 3) arreglos que no necesitan diseño nuevo (D-505, cotizable, Shopify CSV, feed JPEG de Meta, choque de categorías de D-498, 500 del árbol de categorías); 4) diseños OpenSpec para aprobar: 1230 (suscripción fase A), TX-34, facetas/plantilla/comparador de F2-42, TX-37 fases 1b y 2, comparar de F5-29, resto de F4-40; 5) implementación por ticket.
 - **Seguridad:** los hallazgos de esta lectura van al openspec privado del backend, no a este contrato.
+
+## D-560 (2026-10-21) — Idiomas del panel Seller: español, inglés, portugués y alemán de Suiza (ticket «Traducción», cd CMNdBkVZXgYoOCvqfGZc) — APROBADA (Daniel, 21-oct: «Base + módulo por módulo»; artefactos aprobados en bloque)
+
+> Ticket citado por su `cd` y no por el número 1231, que D-446 ya usa para otro ticket (las estrellas del sitio). Retoma los tickets 1181 (`urpQiIDjXO9W9FuQQ4fk`) y 1182 (`ZQy5r70gskWzdbp3NfBg`), que Daniel archivó el 16-oct.
+
+- **Propuesta:** `openspec/changes/idiomas-plataforma/` (proposal, design, `tasks.md` y las specs `seller-language` y `seller-translation-coverage`).
+  - Daniel la aprobó en bloque el 2026-10-21 (tarea 0.2), incluida la asignación de carpetas de D10 tal como está escrita.
+  - Cada pregunta abierta se resuelve con la recomendación escrita.
+- **Recomendaciones aprobadas (1 a 9):**
+  1. Este ticket es el paraguas. El trabajo sale en un bloque base (`IDI-B00`) y doce bloques de módulo (`IDI-B01` a `IDI-B12`), sin abrir un ticket por módulo.
+  2. Alemán estándar de Suiza (`de-CH`, sin «ß»), mostrado como «Deutsch (CH)» con la bandera `ch`.
+  3. Preguntar a Jairo para qué comercio o mercado es el alemán (tarea 0.4). Si hay uno concreto, sus módulos se revisan primero en alemán.
+  4. Esta entrega cubre solo el panel Seller. La tienda pública, los correos, WhatsApp, los PDF y los formatos de número, moneda y fecha quedan para el idioma por empresa de la Ola 0 (`company-locale-profile`).
+  5. El borrador se genera con Opttia en desarrollo (D-257), nunca en tiempo de ejecución. La revisión nativa es obligatoria antes de mostrar de-CH en el selector; Daniel decide la persona o agencia y aprueba el costo (tarea 0.5). Para pt-BR, revisión nativa antes de vender en Brasil.
+  6. Claves semánticas por módulo para lo nuevo y lo que se migre. Excepción: los títulos del menú y todo valor que se guarde o se compare siguen como clave literal.
+  7. La ortografía se corrige por módulo, dentro de cada bloque. Además, el bloque base hace una pasada sobre las 11 claves de `es.json`.
+  8. Se retiran `fr.json` y los idiomas `cn`, `ae` y `fr` declarados.
+  9. El idioma del panel es por usuario (`users.lang`). El de lo que ven los clientes del comercio queda para la Ola 0. No se mezclan.
+- **Idiomas visibles (D-505):** el login devuelve `visibleLanguages`, leído de `config/feature_flags`.
+  - `visibleAppLanguages` es configuración permanente. Si falta, no es un arreglo o trae algún elemento que no es texto, vale `['es','en','pt']`, que es lo de hoy. Los códigos fuera del catálogo se ignoran y `es` siempre se agrega, así que `[]` deja solo el español.
+  - de-CH nace oculto. Interruptor de emergencia: quitar `de` y vaciar la lista de prueba. El cambio llega al siguiente inicio de sesión.
+  - Si la lectura falla o tarda más de 2,5 s, el login sigue y deja un log estructurado sin correo, nombre ni empresa. La confirmación del registro reusa `construirSesion` y también devuelve el campo.
+- **Bandera temporal (Art. XII):** `appLanguagePreviewCompanies` contiene las empresas de prueba que ven todo el catálogo.
+  - Dueño: Daniel.
+  - Se retira al publicar de-CH o el 2027-06-30, lo que pase primero (tarea 14.3).
+- **Excepción acotada al Art. IX:** Angular 14.3 no tiene signals ni `@if`.
+  - El código de este cambio sigue el estilo de cada módulo que toca (NgModule y sus directivas).
+  - El servicio nuevo de PrimeNG es un servicio raíz pequeño.
+  - La excepción vale solo para este cambio.
+- **Write-set:**
+  - En `config/feature_flags`, solo los campos `visibleAppLanguages` y `appLanguagePreviewCompanies`. Se escriben a mano o con `functions/scripts/set-idiomas-visibles.js`, que simula por defecto, y siempre por orden de Daniel.
+  - `users.lang`, como hoy, desde el selector.
+  - Ninguna escritura en `orders`, `products`, precios, `inventory` ni `inventoryMovement`.
+- **Bloque base:**
+  - `IDI-B00a` (tareas 0.2, 0.3, 1.2, 1.4 y 1.5), en el backend de la rama `feature/tickets-web`:
+    - `services/appLanguages.js`, más el campo `visibleLanguages` y su `require` en `construirSesion`, sin ningún otro cambio en el login.
+    - Caracterización del login: 7/7 antes y después.
+    - Contrato: 0/10 antes del cambio y 10/10 después; con los tres casos de la corrección, 13/13.
+    - Pruebas del script: 6/6.
+    - Golden de `tests/sitios`: 20/20 idéntico.
+    - Se corre con `npm run test:idiomas-login`.
+  - `IDI-B00c` (tareas 1.3 y 1.8), en el front: `npm run i18n:check` (`scripts/i18n-check.js` y su configuración), con las pruebas de `tests/i18n/i18n-check.test.js` en `test:i18n`. Línea base anotada en la tarea 1.8.
+  - `IDI-B00b` (1.1, 1.6, 1.7 y el código de 1.9), `IDI-B00d` (1.10 y 1.12) e `IDI-B00e` (1.11, diff [S] pendiente de Daniel): catálogo y selector, `fr.json` retirado, textos de PrimeNG, en/pt completos, `comun.*` y la ortografía de las 11 claves.
+  - `IDI-B00f` (1.13 y 1.14): borrador con Opttia solo en desarrollo (`functions/scripts/i18n-borrador.js` y `services/ai/prompts/traduccionPanelPrompt.js`) y `de.json` completo en **borrador sin revisión nativa**. Opttia no respondía en el entorno del agente, así que el borrador lo tradujo el agente con las mismas reglas y el mismo validador. Desde aquí la falta de `de.json` es error en `i18n:check`.
+  - Sin push ni despliegue. La configuración no se escribió en ninguna base.
+
+## D-561 (2026-10-21) — Candado de empresa en la emisión de facturas, interruptor `invoiceTenantLock` (ticket 1229, cd nF3GLH3F2sZGnKsqNODM, tarea S.1) — PROPUESTA, COMMITEADA en la rama `feature/tickets-web` (backend cb6aad91, front 693069ce), sin desplegar y APAGADA; pendiente de ratificar por Daniel
+
+- **Estado:** el candado no estaba en lo que Daniel aprobó en bloque el 21-oct (propuesta, diseño, spec y tareas del cambio, y las recomendaciones del informe del ticket). Entró como hallazgo de planificación en el bloque 1229-B01 (S.1 de `tasks.md`, commit 693069ce). Por eso queda como propuesta: el código está commiteado y apagado, y ni el despliegue con el modo en `off` (3.1), ni pasar a `shadow` u `on`, ni llevar sus EARS a la spec se hacen sin la aprobación explícita de Daniel.
+- **Por qué (hallazgo de planificación del 21-oct):** `POST /v1/accounting/:provider/invoices/from-order` y `from-order-async` solo tenían `auth` + `validateCompany`, que le cree al header `company`. Una sesión de un comercio podía emitir en el proveedor contable de otra empresa (la ruta vale para todo `:provider`) y, con `siigoProductEquivalence` encendida, guardar códigos SIIGO en sus productos. La vista previa ya usaba `requireJwtTenant`.
+- **Decisión:** `functions/middleware/candadoEmpresaFactura.js`, después de `auth` y solo en esas dos rutas (`routers/accounting.js`).
+  - Compara la empresa del JWT con el header `company`, `body.company`, `body.companyId`, `body.empresa` y `query.companyId` (`pistasDe` en el middleware; lo leen `validateCompany` y el controlador). Julsmind entra a cualquier empresa (D-359).
+  - Es síncrono: lee el modo con `platformFlags.interruptorSync`, así que la emisión nunca espera a Firestore. Si la caché venció, `interruptorSync` lanza un refresco en segundo plano (puede haber una lectura de `config/feature_flags` durante la petición, sin esperarla). Si el servidor no inició los flags, vale `off`.
+- **Interruptor global (D-505):** `config/feature_flags.invoiceTenantLock`, catálogo en `services/platformFlags.js`.
+  - `off` (por defecto, y sin el campo): igual que antes del cambio; la petición no espera a Firestore ni escribe nada.
+  - `shadow`: deja pasar y anota `tenant_mismatch_shadow` en `accounting_invoice_errors` con la empresa del JWT, la pedida, la ruta, `requestedOrderId` (no `orderId`, para no ensuciar la bandeja de D-499) y una huella del usuario, sin correo.
+  - `on`: 403 `TENANT_MISMATCH` o `TENANT_NOT_IN_JWT`, con `error`, `code` y `source` como `requireJwtTenant` y un `message` en español para el comercio.
+  - Se cambia con `node scripts/platform-flags.js invoiceTenantLock shadow --execute` (simula sin `--execute`), siempre por orden de Daniel.
+- **Requisitos EARS** (propuestos; pasan a `specs/siigo-codigo-producto/spec.md` cuando Daniel apruebe esta decisión, porque el candado no estaba en el plan aprobado. El requisito de la vista previa sí entró a la spec en 1229-B02 porque era la recomendación 5, aprobada):
+  - CUANDO `invoiceTenantLock` falte o valga `off`, el sistema DEBERÁ emitir como antes del cambio, sin esperar a Firestore ni escribir eventos.
+  - CUANDO valga `shadow` y la empresa pedida no sea la del JWT, el sistema DEBERÁ dejar pasar la emisión y registrar el evento sin correo ni datos personales.
+  - CUANDO valga `on` y la empresa pedida no sea la del JWT, el sistema DEBERÁ responder 403 sin emitir; SI la sesión no trae empresa en el JWT (API key), DEBERÁ responder 403 `TENANT_NOT_IN_JWT`.
+  - MIENTRAS la sesión sea de Julsmind, el sistema DEBERÁ dejar emitir para la empresa pedida.
+- **Lo que no cierra:** que el `orderId` sea de esa empresa. Queda como S.2 (propuesta propia, interruptor propio que nace en `off`, aprobación de Daniel) y debe estar resuelta, o al menos en sombra sin desajustes, antes de prender `siigoProductEquivalence` en ALMACEN BOMBAS (2.5).
+- **Pruebas:** `npm run test:candado-empresa-factura`, 32 en verde el 21-oct (caracterización del router antes y después, la decisión en los tres modos y el middleware con el interruptor real en memoria).
+- **Encendido:** primero `shadow`, revisar los eventos y después `on`. Antes de 2.5 debe estar al menos en `shadow` sin desajustes. Antes de `on`, decidir si el interceptor del front deja de mostrar el 403 con el título fijo «Suscripción» (cambio de front aparte).
+- **Art. XII:** dueño Daniel. Se ratifica antes de 3.1 y se revisa el **2027-01-31**: o queda en `on` y el interruptor se retira dejando el candado fijo, o se elimina. Tarea S.3 en `tasks.md`.
+
+### 2026-10-21 — D-560: bloque IDI-B02, páginas públicas y de sesión (tareas 3.1 a 3.5)
+- **Línea base:** 485 textos sueltos en `--modulo IDI-B02`. Después: 268, todos fuera de las carpetas cerradas: `privacy-policy` (85, texto legal, no se traduce) y 9 plantillas de demostración de `pages/authentication` (183, rutas redirigidas, nadie las pinta; se retiran con los componentes sin uso en otro cambio).
+- **Pantallas:** login, código del correo, recuperar contraseña, nueva contraseña por enlace, las dos de cambio de contraseña, resultado de pago y de suscripción, términos (solo la interfaz del visor), Pricing, 404 y marco `publica`. 285 claves nuevas (`authentication` 75, `publica` 55, `changePassword` 18, `pricing` 131, `comun` 6) en es/en/pt/de; de-CH en borrador a la espera de la revisión nativa. Sin sesión el español no cambia; los mensajes del servidor se muestran como llegan. Sin `.scss`, rutas, guards ni interceptor.
+- **Pruebas:** `test:i18n` 164/164 (incluye `publicas-cierre`), `test:theme` verde, tsc con candado sin errores, contratos de suscripciones en verde (`wompi-recurring-ui` se ajustó a las claves de IDI-B01b).
+- **Pendiente:** `build:prod` y revisión en navegador a 1440 y 390 px (3.6 y 3.7 sin marcar); Daniel debe aceptar el cierre del bloque sin las plantillas de demostración ni `privacy-policy`.
+
+### 2026-10-21 — D-501 / D-531 (los documentos de la rama dicen «D-518»): TX-37, ampliación de fotos uniformes implementada y apagada (bloque TX37-B15)
+- **Qué quedó implementado, todo en commits locales de `feature/tickets-web` (sin push ni despliegue), con cada pieza nueva apagada y con el valor por defecto igual al comportamiento actual:**
+  - **Endurecimiento de la herramienta de fotos y de Tienda en un paso (B01):** detalle solo en la revisión privada del backend.
+  - **Interruptor del modo (B02):** `config/feature_flags.productPhotoUniformMode`, leído sin caché (D-505), con script de configuración en simulación por defecto.
+  - **Exclusión (B03):** solo las integraciones y nodos que escriben fotos excluyen un producto, con lista cerrada y sub-flow resuelto.
+  - **Categoría por ruta y marca de agua (B04), series de lotes de 100 (B05) y front (B06, B07):** servicio, diálogo con series, elección de categoría y entradas en el editor del sitio, Productos y Catálogos por link.
+  - **Fase 1b (B08, B09):** pieza `photoCopy` y copia de enlaces y de archivos sin dueño, detrás de `config/feature_flags.productPhotoCopyMode` (`off`/`shadow`/`on`, apagada).
+  - **Fase 2 (B10 a B14):** recorte de fondo con IA, proveedor y lista de usos en `config/feature_flags`, bandera `productPhotoBackground`, cupo mensual `photoBackgrounds` por empresa con devolución, «Quitar fondo» en el lote y la vista previa y su diálogo. Nace apagada y sin proveedor; las pruebas usan dobles, nunca el servicio real.
+  - **Observabilidad (B15, 3.5):** todo el módulo emite una línea JSON con `scope`, `event` y `code` (y `correlationId` del lote o la serie cuando aplica), sin `console.log`, sin URLs con token, imágenes ni correos. Se cambiaron a ese formato los avisos del recorte de fondo, de la compuerta de banderas del router y del rechazo de aprobación de la herramienta del conector. Prueba nueva `observabilidad.test.js`.
+- **Pruebas del cierre:** las 28 suites de `tests/productos/productPhotos/` en verde (ahora con `observabilidad.test.js`, 6 casos), `companyFeatureFlags` (40) y `candadoEmpresaRutas` (14), las del recorte de fondo (`media`) y de la ficha desde foto, el golden del pedido de tienda idéntico (20 casos) y `tiendaEnUnPasoRuta`, `tiendaEnUnPasoContenido` y `getSingleStepStoreLink` en verde. En el front, 224 pruebas de fotos y `photo-quality` en verde y tsc sin errores. Ningún bloque toca `crearPedido`.
+- **Pendiente de la suite:** `tiendaEnUnPaso.test.js` falla en un escenario de generación de texto con Opttia caído (línea 1077), previo al cambio y ajeno a las fotos; `tests/mcp/updateProductPhotos.test.js` exige credenciales reales y no se corrió.
+- **Desvío de 5.2, pendiente de que Daniel lo asiente:** el backend de la fase 1 salió en `off` y sin `PRODUCT_PHOTO_UNIFORM_MODE` (la bitácora de D-501 «SUBIDA APAGADA»). Por D-505 el modo ya no vive en el `.env`: se enciende en `config/feature_flags.productPhotoUniformMode`, y la sombra se pone allí, después de 0.6. Falta confirmar qué proceso de producción tiene `CRON_ENABLED=true` y decidir si se retiran de `platformFlags` las llaves duplicadas del modo y del proveedor.
+- **Sin marcar hasta que Daniel lo apruebe:** los diffs sensibles (7.7, 7.8, 8.4, 8.5, 9.4, 9.7, 9.8), 0.5, la ruta del recorte en el ADK (9.5), la revisión en navegador a 1440 y 390 px, la compilación de producción y 7.0. Para encender la sombra en FLORECER faltan además 0.2 (medir WebP en WhatsApp y correo), 0.3 y 0.4 (auditoría de solo lectura) y la orden de Daniel. La resolución del ticket sigue remitiendo a «TX-37b», que no existe (tarea 10.1).
+- **Esta sesión no tocó** el ticket, el feed de Meta (F2-20), Firestore, Storage ni Bedrock reales.
 
 ## D-520 (2026-10-21) — Modales y componentes internos con la regla de diseño Katuq — COMMITEADO, sin desplegar
 
@@ -12067,3 +12253,60 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - Decisiones del mismo día:
   - D-551: se dispensa la evidencia del 403 en producción (tarea 1.1) y no se aprueba el detalle por clic (3.9 y 3.12).
   - D-550: se aceptan los pedidos sin `date_upd`. El cierre de «el modelo puede aprobar» va en un cambio aparte, `mcp-aprobacion-solo-humano`, antes de encender la edición desde Claude.
+
+### 2026-10-21 — D-560: bloque IDI-B10, facturación electrónica, cartera, tesorería, contabilidad y billing (tareas 11.1 a 11.5)
+- **Qué cambió:** las cinco carpetas pasan al traductor (903 claves nuevas en es, en, pt y de) y quedan en `modulosCerrados`: 953 textos sueltos antes, 0 después. Solo presentación; se inyecta `TranslateService` y no cambia ningún evento, servicio, validación ni valor guardado.
+- **Lo que viaja a la DIAN no se traduce:** observaciones de las plantillas del compositor, descripción de la nota de anulación y mensaje de WhatsApp. Prueba de caracterización `tests/i18n/facturacion-caracterizacion.test.js` (sin emitir): el payload que arma el compositor es idéntico con `translate` en `es` y en `en`; `test:dian-config` 37/37 y `test:dian-invoice` con las mismas 9 fallas previas (del arnés de pruebas) antes y después.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa. Lista para el revisor: «Debitoren», «Belastungsanzeige», «Gutschrift», «Probebilanz», «E-Rechnung» y los términos contables de los 903 textos.
+- **Sin marcar:** 11.6 (falta `build:prod`) y 11.7 (revisión en navegador a 1440 y 390 px y visto bueno de Daniel, bloque sensible). Los mensajes en propiedades de los componentes auxiliares del compositor (pickers y formulario) y las etiquetas de `PAYMENT_METHODS` quedan en español como pendiente.
+- Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-560: bloque IDI-B12a, integraciones, flows y katuq-flow (tareas 13.1 a 13.7, parcial)
+- **Qué cambió:** `components/integrations`, `components/flows` y `components/katuq-flow` pasan al traductor (1.498 claves nuevas en es, en, pt y de) y quedan en `modulosCerrados`: 1.825 textos sueltos antes, 0 después. Solo presentación; se inyecta `TranslateService` y no cambia ningún evento, servicio, llamada HTTP, validación ni valor guardado. Los nombres de proveedores, nodos de flows y campos `integrations.<provider>.*` no se traducen.
+- **Partición del bloque 12:** IDI-B12a a IDI-B12f anotada en `tasks.md` (13.1). Quedan b a f.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. `tests/integrations/mcp-guides.test.js` falla desde antes del bloque (su lista de métodos no incluye `entradasDe`).
+- Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-560: bloque IDI-B12b, onboarding e importador (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** `components/onboarding`, `shared/components/import-modal` y `shared/components/import-components` pasan al traductor (unas 860 claves nuevas `onboarding.*` e `importador.*` en es, en, pt y de) y quedan en `modulosCerrados`: 1.075 textos sueltos antes, 0 después. Solo presentación: se inyecta `TranslateService` y no cambia ningún evento, servicio, llamada HTTP, mapeo ni valor guardado. En el asistente de inicio también se tradujeron los textos de datos (pasos, tipos de negocio, botones, errores), que el verificador no detecta.
+- **No se traduce:** los encabezados de columnas que el importador espera (`Foto principal (URL)`, `Referencia (SKU)`, `Activo`, `Página Web`, `Categoria`), los valores `SI/NO`, los mapeos enviados a `/v1/onboarding/import-*` y a KAI column-mapping, las respuestas de KAI y los métodos de pago que el asistente guarda con su nombre.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 191/191 (prueba nueva `onboarding-cierre.test.js`), tsc con candado sin errores, `tests/onboarding` 7/8: `subscription-onboarding.contract.test.js` falla desde antes del bloque (línea 65, texto de `diagnostic-survey`, de IDI-B12c).
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-560: bloque IDI-B12c, NPS, agenda, soporte, superadmin y pantallas menores (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** `components/nps`, `agenda`, `soporte`, `superadmin`, `centro-operaciones`, `kuvo`, `chat`, `provider-dashboard`, `diagnostic-survey` (el registro) y `maestros`, y las piezas compartidas `nps-pregunta`, `nps-tarjeta`, `escala-nps`, `opinar-modal`, `selector-equipo`, `filters`, `dynamic-field`, `visor-imagen` y `feather-icons`, pasan al traductor: 1.138 textos sueltos a 0 y 1.309 claves nuevas por carpeta (`nps.*`, `agenda.*`, `soporte.*`, `superadmin.*`, `centroOperaciones.*`, `kuvo.*`, `chat.*`, `providerDashboard.*`, `diagnosticSurvey.*`, `filters.*`…) en es, en, pt y de. Las 19 carpetas quedan en `modulosCerrados`.
+- **Textos en datos del `.ts`:** los mapas de NPS (segmento, canal, estado de encuesta y de caso, etapa), los estados, orígenes, modalidades y días de la agenda, las etiquetas de Mis tickets y del crear ticket, las opciones del registro y las listas por omisión de los filtros guardan la clave y la plantilla las traduce; los valores que se guardan no cambian.
+- **No se traduce:** la escala 0 a 10 ni las preguntas y respuestas guardadas (la pregunta por omisión de la encuesta, las respuestas del diagnóstico largo), las categorías de ticket (`CATEGORIAS_TICKET`), el saludo de WhatsApp al comprador de `caso.component.ts` ni la encuesta pública (`encuesta-publica`, fuera de alcance). El formato de fechas de la agenda (`fechaCorta`, `fechaLarga`) y de NPS (`es-CO`) sigue en español: pendiente de un cambio aparte con su spec.
+- **Desvíos por aprobar:** `mensajeError` y `duracionHoras` (NPS) y las funciones de `encuesta-acciones.ts` reciben el traductor como parámetro; `SharedFiltersComponent` reconstruye sus listas y su calendario con `onLangChange`; «En progresos» (título de Mis tickets) pasa a «En progreso».
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno); sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 200/200 (prueba nueva `resto3-cierre.test.js`), tsc con candado sin errores, `tests/theme` 231/231, `subscription-onboarding.contract.test.js` en verde (aserciones del registro actualizadas). `tests/kuvo/merchant-panel.test.js` ya fallaba antes del bloque (carga `nav.service.ts`).
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador. Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-560: bloque IDI-B12d, empresas, roles y usuarios (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** `components/empresas` (consola de la plataforma, crear/editar empresa, módulos variables), `components/rol` y `components/usuarios` pasan al traductor (1.078 claves nuevas `empresas.*`, `rol.*` y `usuarios.*` en es, en, pt y de) y quedan en `modulosCerrados`: 1.187 textos sueltos antes, 0 después. Solo presentación: se inyecta `TranslateService` y no cambia ningún evento, servicio, validación, llamada HTTP (`/v1/users/edit`) ni valor guardado.
+- **No se traduce:** los nombres de roles (`Super Administrador`, `Administrador`, que se comparan en `NavService` y en `ROLES_QUE_GUARDAN`), los permisos, los nombres de menú guardados en roles, los `featureFlags`, la etiqueta `Produccion` del árbol de procesos y el motivo de cortesía `Empresa de Katuq / demo` que se guarda. Solo se traducen sus etiquetas.
+- **Textos en datos del `.ts`:** etiquetas de modo de cobro, periodo, estado de factura, tipo y estado de ticket, estado de salud de la empresa, tipos de campo personalizado, modos de precio, estado Activo/Inactivo y rutas de bienvenida; el dato guarda la clave y la plantilla (o `translate.instant`) la traduce, y `path` y los valores de los filtros no cambian.
+- **Desvío por aprobar:** `NOMBRE_MODO` pasa de constante a getter y el filtro de estado se rearma con `onLangChange`. `roles.module` importa `TranslateModule`. 32 pipes con el texto español como clave pasan a claves propias.
+- **de-CH:** borrador escrito por el agente (Opttia no responde en este entorno), con tratamiento «Sie»; sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 207/207 (prueba nueva `empresas-cierre.test.js`), tsc con candado sin errores, las 15 plantillas pasan el analizador de Angular. `tests/theme` 230/231: falla `claro idéntico al de 5a1982da`, que compara el SCSS del modo oscuro (otro agente); este bloque no toca estilos.
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador a 1440 y 390 px. Pendiente: los tooltips largos de la consola armados en TypeScript (`tituloMes`, `tituloPlan`, `tituloRenovacion`, `tituloIntegraciones`, frases de salud) y el CSV de cobros siguen en español. Sin push, despliegue ni escrituras en Firestore.
+
+### 2026-10-21 — D-560: bloque IDI-B12e, En vivo (tareas 13.2 a 13.7, parcial)
+- **Qué cambió:** las 39 plantillas de `components/en-vivo` pasan al traductor (165 claves `enVivo.*` más 17 del interruptor de Opttia, en es, en, pt y de). El interruptor de Opttia traduce su aviso `Swal`, los botones y el error. Los 9 módulos con declaraciones importan `TranslateModule`. Textos sueltos: de 203 a 0; `components/en-vivo` queda en `modulosCerrados`.
+- **No se traduce:** cifras, nombres de comercios, textos que genera Opttia; servicios, escenas y utilidades no usan el traductor. Sin cambios de estilos ni animaciones.
+- **Pendiente:** textos armados en funciones puras de TypeScript (`utilidades/*`, `ficha/utilidades/*`, `propuestas.reglas.ts`, `en-vivo-propuestas.service.ts`, `opttia-puntos.ts`, etiquetas de `en-vivo.component.ts`, canvas de las escenas): el verificador no los cuenta y quedan en español hasta un bloque aparte.
+- **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 215/215 (prueba nueva `en-vivo-cierre.test.js`), tsc con candado sin errores, las 39 plantillas pasan el analizador de Angular.
+- **Sin marcar:** 13.2 a 13.7 (cierran con IDI-B12f), `build:prod` y la revisión en navegador a 1440 y 390 px.
+
+
+### 2026-10-21 — D-560: bloque IDI-B12f, asistentes de shared (tareas 13.2 a 13.7)
+- **Qué cambió:** 12 plantillas y 4 componentes con mensajes (`images-manager`, `katuq-intelligence`, `voice-sales-demo`, `voice-sales-wizard`, 49 avisos) de `chat-form`, `floating-button`, `gemini-asistant`, `images-manager`, `katuq-intelligence`, `modulo-ia`, `opttia-chat` y `voice-agent` pasan al traductor con 294 claves `asistentes.*` (más `comun.*`) en es, en, pt y de. `modulo-ia` (standalone) importa `TranslateModule` y guarda claves en sus mapas de títulos, segmentos y tipos de pedido. `images-manager` se tomó aquí porque IDI-B06a no lo había hecho.
+- **No se traduce:** respuestas de Opttia y KAI, las preguntas que `modulo-ia` y el chat envían al asistente, los comandos de voz de la demo, las herramientas de `ToolRegistryService`, los servicios y los códigos de segmento o tipo de pedido. Una prueba fija que ningún servicio del asistente usa el traductor.
+- **Pendiente (el verificador no lo cuenta):** el `confirm()` y los paneles `innerHTML` del `floating-button` (código `@deprecated` sin llamadores), los estados y registros técnicos de `gemini-asistant` y los textos de pasos del asistente de ventas por voz que vienen de `voice-agent-sales.service.ts`.
+- **Desvío por aprobar:** `SEGMENTOS`, `TIPOS_PEDIDO`, `TITULOS` y `SIN_ACCESO` de `modulo-ia` guardan claves y los getters traducen; «Generate» (inglés en la plantilla) pasa a «Generar» en español.
+- **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
+- **Pruebas:** `test:i18n` 222/222 (prueba nueva `asistentes-cierre.test.js`, 7 casos), `opttia-chat-ui` y `opttia-markdown` en verde, `i18n:check` 0 errores, tsc con candado sin errores.
+- **Sin marcar:** 13.6 y 13.7 (falta `build:prod` y la revisión en navegador a 1440 y 390 px). 13.2 a 13.5 quedan marcadas con los seis sub-bloques B12a a B12f hechos.

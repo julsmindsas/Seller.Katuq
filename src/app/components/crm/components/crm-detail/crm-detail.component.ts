@@ -16,6 +16,8 @@ import {
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
+import { TranslateService } from '@ngx-translate/core';
+import { OpcionesI18n } from '../../../../shared/utils/i18n-opciones';
 @Component({
   selector: 'app-crm-detail',
   templateUrl: './crm-detail.component.html',
@@ -46,9 +48,9 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   opcionesComercial: { label: string; value: string | null }[] = [];
 
   // Options
-  activityTypes = ACTIVITY_TYPE_OPTIONS;
-  taskTypes = TASK_TYPE_OPTIONS;
-  priorityOptions = PRIORITY_OPTIONS;
+  activityTypes = new OpcionesI18n(this.translate, ACTIVITY_TYPE_OPTIONS);
+  taskTypes = new OpcionesI18n(this.translate, TASK_TYPE_OPTIONS);
+  priorityOptions = new OpcionesI18n(this.translate, PRIORITY_OPTIONS);
   readonly tipoDocOptions = [
     { label: 'CC — Cédula de ciudadanía', value: 'CC' },
     { label: 'NIT', value: 'NIT' },
@@ -83,6 +85,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     private corpConfig: CorporateConfigService,
     private features: CompanyFeaturesService,
     private agenda: AgendaService,
+    private translate: TranslateService,
   ) {
     this.activityForm = this.fb.group({
       type: ['note'],
@@ -121,7 +124,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
       .subscribe(eq => {
         this.equipo = eq;
         this.opcionesComercial = [
-          { label: 'Sin asignar', value: null },
+          { label: this.translate.instant('crm.detalle.sinAsignar'), value: null },
           ...eq.comerciales.map(c => ({ label: c.nombre, value: c.email })),
         ];
       });
@@ -153,8 +156,8 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         if (!res.success || !res.data) {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo cargar el lead. Verifica que el backend esté corriendo.',
+            summary: this.translate.instant('comun.error'),
+            detail: this.translate.instant('crm.detalle.noSePudoCargarEl2'),
             life: 5000,
           });
           return;
@@ -207,17 +210,17 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
           if (stageConfig?.isWon) {
             if (res.verifiedBuyer) {
-              this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+              this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.leadCerrado'), detail: this.translate.instant('crm.detalle.compraVerificadaContraLosPedidos') });
             } else if (res.forcedClose) {
-              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
+              this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.detalle.leadCerradoForzado'), detail: this.translate.instant('crm.detalle.cierreConfirmadoManualmenteSinPedido') });
             } else {
-              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+              this.messageService.add({ severity: 'warn', summary: this.translate.instant('crm.detalle.leadCerrado'), detail: this.translate.instant('crm.detalle.noSeEncontroUnPedido') });
             }
           } else if (stageConfig?.isLost) {
             if (this.lead.pipeline) { this.lead.pipeline.lostReason = res.lostReason ?? lostReason; }
-            this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+            this.messageService.add({ severity: 'info', summary: this.translate.instant('crm.detalle.leadArchivadoComoPerdido') });
           } else {
-            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+            this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.etapaActualizada') });
           }
           this.loadActivities();
         }
@@ -228,23 +231,23 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   private promptForceClose(newStage: string): void {
     Swal.fire({
       icon: 'warning',
-      title: 'No se encontró una compra verificada',
-      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      title: this.translate.instant('crm.detalle.noSeEncontroUnaCompra'),
+      text: this.translate.instant('crm.detalle.noHayUnPedidoAsociado'),
       showCancelButton: true,
-      confirmButtonText: 'Forzar cierre de todas formas',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('crm.detalle.forzarCierreDeTodasFormas'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#d97706',
     }).then(result => {
       if (!result.isConfirmed) return;
 
       Swal.fire({
-        title: 'Motivo del cierre forzado',
+        title: this.translate.instant('crm.detalle.motivoDelCierreForzado'),
         input: 'text',
-        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
-        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        inputPlaceholder: this.translate.instant('crm.detalle.ejPagoEnEfectivoFactura'),
+        inputValidator: (value) => (!value ? this.translate.instant('crm.detalle.debesIndicarUnMotivoParaForzar') : undefined),
         showCancelButton: true,
-        confirmButtonText: 'Confirmar cierre',
-        cancelButtonText: 'Cancelar',
+        confirmButtonText: this.translate.instant('crm.detalle.confirmarCierre'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
       }).then(reasonResult => {
         if (!reasonResult.isConfirmed || !reasonResult.value) return;
         this.changeStage(newStage, true, reasonResult.value);
@@ -256,13 +259,13 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   private promptLostReason(newStage: string): void {
     Swal.fire({
       icon: 'question',
-      title: 'Motivo de la pérdida',
+      title: this.translate.instant('crm.detalle.motivoDeLaPerdida'),
       input: 'text',
-      inputPlaceholder: 'Ej: precio, se fue con la competencia, no respondió, fuera de presupuesto...',
-      inputValidator: (value) => (!value ? 'Indica por qué se perdió el lead' : undefined),
+      inputPlaceholder: this.translate.instant('crm.detalle.ejPrecioSeFueCon'),
+      inputValidator: (value) => (!value ? this.translate.instant('crm.detalle.indicaPorQueSePerdio') : undefined),
       showCancelButton: true,
-      confirmButtonText: 'Marcar como perdido',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('crm.detalle.marcarComoPerdido'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#dc2626',
     }).then(result => {
       if (!result.isConfirmed || !result.value) return;
@@ -272,7 +275,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   /** Ticket 1064: nombre del comercial (o su correo si no está en el equipo). */
   nombreComercial(email?: string | null): string {
-    if (!email) return 'Sin asignar';
+    if (!email) return this.translate.instant('crm.detalle.sinAsignar');
     const c = this.equipo?.comerciales.find(x => x.email === String(email).trim().toLowerCase());
     return c ? c.nombre : email;
   }
@@ -319,7 +322,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         if (res.success) {
-          this.messageService.add({ severity: 'success', summary: 'Actualizado' });
+          this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.actualizado') });
         }
       });
   }
@@ -350,10 +353,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         this.saving = false;
         if (res.success) {
           this.showEditDialog = false;
-          this.messageService.add({ severity: 'success', summary: 'Lead actualizado' });
+          this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.leadActualizado') });
           this.loadLead();
         } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el lead' });
+          this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('crm.detalle.noSePudoActualizarEl') });
         }
       });
   }
@@ -405,9 +408,9 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         if (activity) {
           this.activities = [activity, ...this.activities];
           this.activityForm.reset({ type: 'note', description: '', detail: '' });
-          this.messageService.add({ severity: 'success', summary: 'Actividad registrada' });
+          this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.actividadRegistrada') });
         } else {
-          this.messageService.add({ severity: 'error', summary: 'No se guardó la actividad', detail: 'Intenta de nuevo. Si el lead no es tuyo, pídele al administrador que la registre.' });
+          this.messageService.add({ severity: 'error', summary: this.translate.instant('crm.detalle.noSeGuardoLaActividad'), detail: this.translate.instant('crm.detalle.intentaDeNuevoSiEl') });
         }
       });
   }
@@ -427,21 +430,21 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.tasks = [task, ...this.tasks];
           this.taskForm.reset({ type: 'follow_up', priority: 'medium', assignedTo: null });
           this.showTaskForm = false;
-          this.messageService.add({ severity: 'success', summary: 'Tarea creada' });
+          this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.tareaCreada') });
         } else {
           // Revisión 1064: antes un rechazo del servidor (p. ej. responsable fuera del equipo) no decía nada.
-          this.messageService.add({ severity: 'error', summary: 'No se creó la tarea', detail: 'Revisa el responsable e intenta de nuevo.' });
+          this.messageService.add({ severity: 'error', summary: this.translate.instant('crm.detalle.noSeCreoLaTarea'), detail: this.translate.instant('crm.detalle.revisaElResponsableEIntenta') });
         }
       });
   }
 
   completeTask(task: CrmTask): void {
     this.confirmationService.confirm({
-      message: `¿Marcar la tarea "${task.title}" como completada?`,
-      header: 'Confirmar',
+      message: this.translate.instant('crm.detalle.marcarLaTareaComoCompletada', { title: task.title }),
+      header: this.translate.instant('comun.confirmar'),
       icon: 'pi pi-question-circle',
-      acceptLabel: 'Sí, completar',
-      rejectLabel: 'Cancelar',
+      acceptLabel: this.translate.instant('crm.detalle.siCompletar'),
+      rejectLabel: this.translate.instant('comun.cancelar'),
       accept: () => this.doCompleteTask(task),
     });
   }
@@ -453,7 +456,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         if (updated) {
           const idx = this.tasks.findIndex(t => t.id === task.id);
           if (idx >= 0) this.tasks[idx] = updated;
-          this.messageService.add({ severity: 'success', summary: 'Tarea completada' });
+          this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.tareaCompletada') });
         }
       });
   }
@@ -492,7 +495,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     this.agenda.config().pipe(takeUntil(this.destroy$)).subscribe({
       next: ({ config, configurada }) => {
         if (!configurada) {
-          this.messageService.add({ severity: 'info', summary: 'Agenda', detail: 'Primero configura el horario de la Agenda.' });
+          this.messageService.add({ severity: 'info', summary: this.translate.instant('crm.detalle.agenda'), detail: this.translate.instant('crm.detalle.primeroConfiguraElHorarioDe') });
           return;
         }
         this.agendaConfig = config;
@@ -502,20 +505,20 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         });
       },
       error: (e) => {
-        this.messageService.add({ severity: 'error', summary: 'Agenda', detail: e?.error?.message || 'No pudimos abrir la Agenda.' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('crm.detalle.agenda'), detail: e?.error?.message || this.translate.instant('crm.detalle.noPudimosAbrirLaAgenda') });
       },
     });
   }
 
   alAgendar(c: Cita): void {
     this.agendarAbierto = false;
-    this.messageService.add({ severity: 'success', summary: 'Cita agendada', detail: `${c.date} · ${c.startTime || c.window || ''}` });
+    this.messageService.add({ severity: 'success', summary: this.translate.instant('crm.detalle.citaAgendada'), detail: `${c.date} · ${c.startTime || c.window || ''}` });
   }
 
   get entityName(): string {
     const e = this.lead?.entity;
     if (!e) return '';
-    return e.nomComercial || e.nombre || e.nombres_completos || 'Sin nombre';
+    return e.nomComercial || e.nombre || e.nombres_completos || this.translate.instant('crm.detalle.sinNombre');
   }
 
   getStageSeverity = getStageSeverity;

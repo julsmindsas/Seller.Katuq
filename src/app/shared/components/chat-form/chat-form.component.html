@@ -1,5 +1,5 @@
 <div class="chat-form">
-    <h3>Chat de Servicio al Cliente</h3>
-    <textarea placeholder="Escribe tu mensaje aquí..."></textarea>
-    <button (click)="sendMessage()">Enviar</button>
+    <h3>{{ 'asistentes.chatForm.chatDeServicioAlCliente' | translate }}</h3>
+    <textarea [placeholder]="'asistentes.chatForm.escribeTuMensajeAqui' | translate"></textarea>
+    <button (click)="sendMessage()">{{ 'asistentes.chatForm.enviar' | translate }}</button>
 </div>

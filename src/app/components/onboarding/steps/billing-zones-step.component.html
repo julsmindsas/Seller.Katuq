@@ -2,8 +2,7 @@
   <!-- Header Info -->
   <div class="step-intro">
     <p class="intro-text">
-      Configura las zonas de cobro y tarifas de envío para tu negocio. Define diferentes
-      costos de envío según la ubicación geográfica de tus clientes.
+      {{ 'onboarding.billingZonesStep.configuraLasZonasDeCobro' | translate }}
     </p>
   </div>
 
@@ -12,7 +11,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-th-large"></i>
-        <span>Plantillas Rápidas</span>
+        <span>{{ 'onboarding.billingZonesStep.plantillasRapidas' | translate }}</span>
       </div>
     </ng-template>
 
@@ -32,7 +31,7 @@
         </div>
       </button>
     </div>
-    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+    <small class="field-help">{{ 'onboarding.billingZonesStep.hazClicEnUnaPlantilla' | translate }}</small>
   </p-card>
 
   <!-- Add/Edit Zone Form -->
@@ -40,7 +39,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-map"></i>
-        <span>{{ editingIndex !== null ? 'Editar Zona de Cobro' : 'Agregar Zona de Cobro' }}</span>
+        <span>{{ editingIndex !== null ? ('onboarding.billingZonesStep.editarZonaDeCobro' | translate) : ('onboarding.billingZonesStep.agregarZonaDeCobro' | translate) }}</span>
       </div>
     </ng-template>
 
@@ -48,14 +47,14 @@
       <div class="form-grid">
         <!-- Ciudad -->
         <div class="form-field col-12 md:col-6">
-          <label for="ciudad" class="required">Ciudad *</label>
+          <label for="ciudad" class="required">{{ 'onboarding.billingZonesStep.ciudad' | translate }}</label>
           <p-dropdown
             inputId="ciudad"
             [options]="availableCities"
             formControlName="ciudad"
             optionLabel="label"
             optionValue="value"
-            placeholder="Selecciona una ciudad"
+            [placeholder]="'onboarding.billingZonesStep.seleccionaUnaCiudad' | translate"
             [showClear]="true"
             [filter]="true"
             filterPlaceholder="Buscar..."
@@ -64,18 +63,18 @@
           <small class="p-error" *ngIf="hasError('ciudad', 'required')">
             {{ getErrorMessage('ciudad') }}
           </small>
-          <small class="field-help">Ciudad donde aplica esta zona de cobro</small>
+          <small class="field-help">{{ 'onboarding.billingZonesStep.ciudadDondeAplicaEstaZona' | translate }}</small>
         </div>
 
         <!-- Nombre de la Zona -->
         <div class="form-field col-12 md:col-6">
-          <label for="nombreZonaCobro" class="required">Nombre de la Zona *</label>
+          <label for="nombreZonaCobro" class="required">{{ 'onboarding.billingZonesStep.nombreDeLaZona' | translate }}</label>
           <input
             id="nombreZonaCobro"
             type="text"
             pInputText
             formControlName="nombreZonaCobro"
-            placeholder="Ej: Zona Norte, Zona Sur"
+            [placeholder]="'onboarding.billingZonesStep.ejZonaNorteZonaSur' | translate"
             [class.p-invalid]="hasError('nombreZonaCobro', 'required') || hasError('nombreZonaCobro', 'minlength')" />
           <small class="p-error" *ngIf="hasError('nombreZonaCobro', 'required') || hasError('nombreZonaCobro', 'minlength')">
             {{ getErrorMessage('nombreZonaCobro') }}
@@ -84,7 +83,7 @@
 
         <!-- Valor de Envío -->
         <div class="form-field col-12 md:col-6">
-          <label for="valorZonaCobro" class="required">Valor de Envío (COP) *</label>
+          <label for="valorZonaCobro" class="required">{{ 'onboarding.billingZonesStep.valorDeEnvioCop' | translate }}</label>
           <p-inputNumber
             inputId="valorZonaCobro"
             formControlName="valorZonaCobro"
@@ -103,7 +102,7 @@
 
         <!-- Impuesto -->
         <div class="form-field col-12 md:col-6">
-          <label for="impuestoZonaCobro" class="required">Impuesto (%) *</label>
+          <label for="impuestoZonaCobro" class="required">{{ 'onboarding.billingZonesStep.impuesto' | translate }}</label>
           <p-inputNumber
             inputId="impuestoZonaCobro"
             formControlName="impuestoZonaCobro"
@@ -117,7 +116,7 @@
           <small class="p-error" *ngIf="hasError('impuestoZonaCobro', 'required') || hasError('impuestoZonaCobro', 'min') || hasError('impuestoZonaCobro', 'max')">
             {{ getErrorMessage('impuestoZonaCobro') }}
           </small>
-          <small class="field-help">Porcentaje de impuesto aplicable al envío</small>
+          <small class="field-help">{{ 'onboarding.billingZonesStep.porcentajeDeImpuestoAplicableAl' | translate }}</small>
         </div>
 
         <!-- Activo -->
@@ -127,9 +126,9 @@
               inputId="activo"
               formControlName="activo"
               [binary]="true"
-              label="Activo">
+              [label]="'onboarding.billingZonesStep.activo' | translate">
             </p-checkbox>
-            <small class="field-help">Las zonas activas estarán disponibles en el proceso de envío</small>
+            <small class="field-help">{{ 'onboarding.billingZonesStep.lasZonasActivasEstaranDisponibles' | translate }}</small>
           </div>
         </div>
       </div>
@@ -140,7 +139,7 @@
           *ngIf="editingIndex !== null"
           pButton
           type="button"
-          label="Cancelar"
+          [label]="'comun.cancelar' | translate"
           icon="pi pi-times"
           class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
@@ -148,7 +147,7 @@
         <button
           pButton
           type="button"
-          [label]="editingIndex !== null ? 'Actualizar Zona' : 'Agregar a Lista'"
+          [label]="editingIndex !== null ? ('onboarding.billingZonesStep.actualizarZona' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
           class="cfg-btn"
           [disabled]="zoneForm.invalid"
@@ -163,20 +162,20 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-list"></i>
-        <span>Zonas de Cobro Configuradas ({{ zonesList.length }})</span>
+        <span>{{ 'onboarding.billingZonesStep.zonasDeCobroConfiguradas' | translate:{length: zonesList.length} }}</span>
       </div>
     </ng-template>
 
     <p-table [value]="zonesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th>Ciudad</th>
-          <th>Zona</th>
-          <th>Valor Envío</th>
-          <th>Impuesto</th>
-          <th>Total</th>
-          <th style="width: 100px">Estado</th>
-          <th style="width: 140px">Acciones</th>
+          <th>{{ 'onboarding.onboardingWizard.ciudad' | translate }}</th>
+          <th>{{ 'onboarding.billingZonesStep.zona' | translate }}</th>
+          <th>{{ 'onboarding.billingZonesStep.valorEnvio' | translate }}</th>
+          <th>{{ 'onboarding.billingZonesStep.impuesto2' | translate }}</th>
+          <th>{{ 'onboarding.billingZonesStep.total' | translate }}</th>
+          <th style="width: 100px">{{ 'onboarding.billingZonesStep.estado' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-zone let-i="rowIndex">
@@ -196,7 +195,7 @@
           </td>
           <td>
             <span class="badge" [class.badge-active]="zone.activo" [class.badge-inactive]="!zone.activo">
-              {{ zone.activo ? 'Activo' : 'Inactivo' }}
+              {{ zone.activo ? ('onboarding.billingZonesStep.activo' | translate) : ('onboarding.billingZonesStep.inactivo' | translate) }}
             </span>
           </td>
           <td>
@@ -206,7 +205,7 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-info"
-                pTooltip="Editar"
+                [pTooltip]="'comun.editar' | translate"
                 tooltipPosition="top"
                 (click)="editZone(i)">
               </button>
@@ -215,7 +214,7 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
-                pTooltip="Eliminar"
+                [pTooltip]="'comun.eliminar' | translate"
                 tooltipPosition="top"
                 (click)="removeZone(i)">
               </button>
@@ -228,7 +227,7 @@
           <td colspan="7" class="text-center">
             <div class="empty-message">
               <i class="pi pi-inbox"></i>
-              <p>No hay zonas de cobro configuradas aún</p>
+              <p>{{ 'onboarding.billingZonesStep.noHayZonasDeCobro' | translate }}</p>
             </div>
           </td>
         </tr>
@@ -241,7 +240,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -252,11 +251,11 @@
 
     <p class="form-status" *ngIf="zonesList.length === 0">
       <i class="pi pi-info-circle"></i>
-      Agrega al menos una zona de cobro para continuar
+      {{ 'onboarding.billingZonesStep.agregaAlMenosUnaZona' | translate }}
     </p>
     <p class="form-status success" *ngIf="zonesList.length > 0">
       <i class="pi pi-check-circle"></i>
-      {{ zonesList.length }} zona(s) de cobro configurada(s) - ¡Listo para continuar!
+      {{ zonesList.length }} {{ 'onboarding.billingZonesStep.zonaSDeCobroConfigurada' | translate }}
     </p>
   </div>
 </div>

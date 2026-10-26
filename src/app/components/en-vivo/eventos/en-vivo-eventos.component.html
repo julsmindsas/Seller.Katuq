@@ -1,19 +1,19 @@
 <section class="feed" aria-labelledby="ev-eventos-titulo">
   <header class="feed__head">
     <div>
-      <div class="feed__eyebrow">Lo que está pasando</div>
+      <div class="feed__eyebrow">{{ 'enVivo.enVivoEventos.loQueEstaPasando' | translate }}</div>
       <h2 class="feed__title" id="ev-eventos-titulo">{{ titulo }}</h2>
     </div>
-    <span class="feed__chip">{{ filas.length }} {{ filas.length === 1 ? 'evento' : 'eventos' }}</span>
+    <span class="feed__chip">{{ filas.length }} {{ filas.length === 1 ? ('enVivo.enVivoEventos.evento' | translate) : ('enVivo.enVivoEventos.eventos' | translate) }}</span>
   </header>
 
-  <p class="feed__vacio" *ngIf="filas.length === 0">Todavía no hay movimiento hoy. Cuando entre un pedido, lo verás aquí.</p>
+  <p class="feed__vacio" *ngIf="filas.length === 0">{{ 'enVivo.enVivoEventos.todaviaNoHayMovimientoHoy' | translate }}</p>
 
   <ol
     class="feed__list"
     [attr.aria-live]="anunciar ? 'polite' : 'off'"
     aria-relevant="additions"
-    aria-label="Eventos recientes"
+    [attr.aria-label]="'enVivo.enVivoEventos.eventosRecientes' | translate"
     (pointerleave)="alSalir()"
   >
     <li *ngFor="let f of filas; trackBy: porId" class="feed__item">

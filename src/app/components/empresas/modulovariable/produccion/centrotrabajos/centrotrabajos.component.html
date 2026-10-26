@@ -1,9 +1,9 @@
 <div class="cfg-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Configuración</span>
-      <h1 class="cfg-titulo">Centros de trabajo</h1>
-      <p class="cfg-sub">Módulos variables · Producción</p>
+      <span class="cfg-eyebrow">{{ 'empresas.camposPersonalizados.configuracion' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'empresas.modulovariable.centrosDeTrabajo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'empresas.centrotrabajos.modulosVariablesProduccion' | translate }}</p>
     </div>
   </header>
 
@@ -50,7 +50,7 @@
                 <td>
                   <!-- <button class="btn btn-primary" (click)="editarCentroTrabajo(centro.id)">{{'Editar' | translate}}</button> -->
                   <i placement="top" (click)="eliminarCentroTrabajo(centro)" ngbTooltip="{{'Eliminar' | translate}}"
-                    class="icofont icofont-trash ct-eliminar" alt="vista previa" title="{{'Eliminar' | translate}}"></i>
+                    class="icofont icofont-trash ct-eliminar" [alt]="'empresas.centrotrabajos.vistaPrevia' | translate" title="{{'Eliminar' | translate}}"></i>
               </tr>
             </tbody>
           </table>
@@ -63,7 +63,7 @@
 <ng-template #modalCrearCentroTrabajo let-modal>
   <div class="modal-header mo-cabeza">
     <h4 class="modal-title mo-titulo">{{'Nuevo Centro de Trabajo' | translate}}</h4>
-    <button type="button" class="close mo-cerrar" aria-label="Close" (click)="modal.dismiss()">
+    <button type="button" class="close mo-cerrar" [attr.aria-label]="'empresas.centrotrabajos.close' | translate" (click)="modal.dismiss()">
       <span aria-hidden="true" class="mo-cerrar__x">&times;</span>
     </button>
   </div>

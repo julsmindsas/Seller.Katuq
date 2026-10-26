@@ -1,34 +1,34 @@
 <section class="pauta">
   <header class="pauta__head">
     <div>
-      <h5 class="pauta__titulo">Registros por campaña</h5>
-      <p class="pauta__sub">Vendedores activos = responden que reciben 10 o más pedidos a la semana (solo en campañas con <code>perfil=vendedor</code>). Sin cuentas de prueba ni registros sin confirmar su correo.</p>
+      <h5 class="pauta__titulo">{{ 'empresas.pautaCampanas.registrosPorCampana' | translate }}</h5>
+      <p class="pauta__sub">{{ 'empresas.pautaCampanas.vendedoresActivosRespondenQueReciben' | translate }} <code>{{ 'empresas.pautaCampanas.perfilVendedor' | translate }}</code>{{ 'empresas.pautaCampanas.sinCuentasDePruebaNi' | translate }}</p>
     </div>
     <div class="pauta__acciones">
-      <a class="pauta__embudo" routerLink="/marketing/pauta">Ver embudo hasta el pago</a>
+      <a class="pauta__embudo" routerLink="/marketing/pauta">{{ 'empresas.pautaCampanas.verEmbudoHastaElPago' | translate }}</a>
       <label class="pauta__desde">
-        <span>Desde</span>
+        <span>{{ 'empresas.pautaCampanas.desde' | translate }}</span>
         <input type="date" [(ngModel)]="desde" (change)="cargar()" />
       </label>
     </div>
   </header>
 
   <p class="pauta__error" *ngIf="error" role="alert">{{ error }}</p>
-  <p class="pauta__vacio" *ngIf="cargando">Cargando…</p>
-  <p class="pauta__vacio" *ngIf="!cargando && !error && !filas.length">No hay registros desde esa fecha.</p>
+  <p class="pauta__vacio" *ngIf="cargando">{{ 'comun.cargando' | translate }}</p>
+  <p class="pauta__vacio" *ngIf="!cargando && !error && !filas.length">{{ 'empresas.pautaCampanas.noHayRegistrosDesdeEsa' | translate }}</p>
 
   <div class="pauta__tabla-wrap" *ngIf="!cargando && filas.length">
     <table class="pauta__tabla">
       <thead>
         <tr>
-          <th>Campaña</th>
-          <th class="num">Registros</th>
-          <th class="num">Respondieron</th>
-          <th class="num">Vendedores activos</th>
+          <th>{{ 'empresas.pautaCampanas.campana' | translate }}</th>
+          <th class="num">{{ 'empresas.pautaCampanas.registros' | translate }}</th>
+          <th class="num">{{ 'empresas.pautaCampanas.respondieron' | translate }}</th>
+          <th class="num">{{ 'empresas.pautaCampanas.vendedoresActivos' | translate }}</th>
           <th class="num">%</th>
-          <th class="num">Costo (COP)</th>
-          <th class="num">Por registro</th>
-          <th class="num">Por vendedor activo</th>
+          <th class="num">{{ 'empresas.pautaCampanas.costoCop' | translate }}</th>
+          <th class="num">{{ 'empresas.pautaCampanas.porRegistro' | translate }}</th>
+          <th class="num">{{ 'empresas.pautaCampanas.porVendedorActivo' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -40,8 +40,8 @@
           <td class="num">{{ f.porcentajeActivos }} %</td>
           <td class="num">
             <div class="pauta__costo">
-              <input type="number" min="0" step="1000" [(ngModel)]="costos[f.campana]" [attr.aria-label]="'Costo de ' + f.campana" />
-              <button type="button" (click)="guardarCosto(f)" [disabled]="guardando === f.campana">{{ guardando === f.campana ? '…' : 'Guardar' }}</button>
+              <input type="number" min="0" step="1000" [(ngModel)]="costos[f.campana]" [attr.aria-label]="('empresas.pautaCampanas.costoDe' | translate) + f.campana" />
+              <button type="button" (click)="guardarCosto(f)" [disabled]="guardando === f.campana">{{ guardando === f.campana ? '…' : ('comun.guardar' | translate) }}</button>
             </div>
           </td>
           <td class="num">{{ f.costoPorRegistro !== null ? (f.costoPorRegistro | number:'1.0-0') : '—' }}</td>

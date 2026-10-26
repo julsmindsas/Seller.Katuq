@@ -78,6 +78,7 @@ import Swal from 'sweetalert2';
 import { KatuqintelligenceService } from '../../services/katuqintelligence/katuqintelligence.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { Observable } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -107,7 +108,8 @@ export class KatuqIntelligenceComponent implements OnInit {
 
   constructor(
     katuqIntelligenceService: KatuqintelligenceService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private translate: TranslateService
   ) {
     this.katuqIntelligenceService = katuqIntelligenceService;
   }
@@ -131,12 +133,12 @@ export class KatuqIntelligenceComponent implements OnInit {
 
   IA(): void {
     Swal.fire({
-      title: 'K.A.I.',
+      title: this.translate.instant('asistentes.katuqIntelligence.kai'),
       text: this.textToQuiestionSwal,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Enviar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('asistentes.katuqIntelligence.enviar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.processIARequest();
@@ -166,16 +168,16 @@ export class KatuqIntelligenceComponent implements OnInit {
         };
         this.katuqIntelligenceResponse.emit(objToText);
         Swal.fire(
-          'Éxito',
-          'K.A.I ha finalizado exitosamente.',
+          this.translate.instant('comun.exito'),
+          this.translate.instant('asistentes.katuqIntelligence.finalizoExitosamente'),
           'success'
         );
       },
       error: (error) => {
         console.error(error);
         Swal.fire(
-          'Error',
-          `Request failed: ${error.error}`,
+          this.translate.instant('comun.error'),
+          this.translate.instant('asistentes.katuqIntelligence.solicitudFallida', { detalle: error.error }),
           'error'
         );
       }

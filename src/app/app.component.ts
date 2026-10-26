@@ -22,7 +22,8 @@ import { NgpThemeService } from './shared/services/ngtheme.service';
 import { ThemeModeService } from './shared/services/theme-mode.service';
 import { IdleInterruptService, IdleConfiguration } from './shared/services/idle-interrupt.service';
 import { Subject } from 'rxjs';
-import { DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from './shared/utils/app-language.utils';
+import { DEFAULT_APP_LANGUAGE, idiomasVisibles, normalizeAppLanguage } from './shared/utils/app-language.utils';
+import { PrimengI18nService } from './shared/services/i18n/primeng-i18n.service';
 
 @Component({
   selector: 'app-root',
@@ -84,7 +85,9 @@ export class AppComponent implements OnInit, OnDestroy {
     // private updates: SwUpdate, // SW desactivado (2026-03-25)
     private cdr: ChangeDetectorRef,
     // D-502: inyectarlo aquí decide el tema al arrancar, antes del primer evento del router
-    private themeMode: ThemeModeService
+    private themeMode: ThemeModeService,
+    // D-540: textos de PrimeNG en el idioma del panel; se arranca una sola vez aquí
+    private primengI18n: PrimengI18nService
   ) {
     // Initialize loader
     this.loaders = this.loader.progress$.pipe(
@@ -95,11 +98,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (isPlatformBrowser(this.platformId)) {
       const storedUser = this.readStoredUser();
-      const activeLanguage = normalizeAppLanguage(storedUser?.lang);
+      // D-540: con los idiomas visibles del login; uno oculto arranca en español.
+      const activeLanguage = normalizeAppLanguage(storedUser?.lang, idiomasVisibles(storedUser));
       translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
       translate.use(activeLanguage.code);
-      document.documentElement.lang = activeLanguage.code;
-      translate.addLangs(['en', 'de', 'es', 'fr', 'pt', 'cn', 'ae']);
+      document.documentElement.lang = activeLanguage.htmlLang;
+      translate.addLangs(['es', 'en', 'pt', 'de']);
+      this.primengI18n.iniciar();
     }
     // Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
     // updates.checkForUpdate().then(() => { }).catch(err => { });
@@ -109,7 +114,7 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(
         notifications => {
           if (notifications.length > 0) {
-            this.toastrService.info("Tienes notificaciones pendientes", 'Notification', {
+            this.toastrService.info(translate.instant('shell.app.pendingNotifications'), translate.instant('shell.app.pendingNotificationsTitle'), {
               timeOut: 5000,
               progressBar: true,
               positionClass: 'toast-top-right'

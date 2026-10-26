@@ -2,7 +2,7 @@
 
   <!-- Estado de carga -->
   <section *ngIf="isLoading" class="cfg-card">
-    <p class="wa-muted">Cargando saldo de WhatsApp Business...</p>
+    <p class="wa-muted">{{ 'notificaciones.billing.loading' | translate }}</p>
   </section>
 
   <!-- Estado de error -->
@@ -12,7 +12,7 @@
     </div>
     <div class="wa-actions">
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadBalance()">
-        Reintentar
+        {{ 'notificaciones.billing.retry' | translate }}
       </button>
     </div>
   </section>
@@ -21,7 +21,7 @@
   <section *ngIf="!isLoading && !errorMessage && balance" class="cfg-card">
     <h2 class="cfg-card__titulo wa-titulo">
       <app-feather-icons class="wa-icono wa-icono--whatsapp" [icon]="'message-circle'"></app-feather-icons>
-      Saldo WhatsApp Business
+      {{ 'notificaciones.billing.whatsappBalance' | translate }}
     </h2>
 
     <div class="wa-balance">
@@ -29,34 +29,34 @@
         {{ balance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
       </div>
       <div class="wa-balance__sub">
-        Precio por mensaje:
+        {{ 'notificaciones.billing.pricePerMessage' | translate }}
         <strong>{{ balance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-        — equivale a ~{{ equivalentMessages | number:'1.0-0' }} mensajes
+        {{ 'notificaciones.billing.equivalentMessages' | translate: { count: (equivalentMessages | number:'1.0-0') } }}
       </div>
     </div>
 
     <!-- Banner saldo bajo / cuenta closing -->
     <div *ngIf="showLowBalanceBanner" class="cfg-aviso cfg-aviso--warn wa-aviso">
       <app-feather-icons [icon]="'alert-triangle'"></app-feather-icons>
-      <p class="wa-aviso__texto">{{ lowBalanceMessage }}</p>
+      <p class="wa-aviso__texto">{{ lowBalanceMessage | translate }}</p>
     </div>
 
     <!-- KPIs -->
     <div class="wa-kpis">
       <div class="wa-kpi">
-        <div class="wa-kpi__label">Mensajes del mes</div>
+        <div class="wa-kpi__label">{{ 'notificaciones.billing.messagesMonth' | translate }}</div>
         <div class="wa-kpi__value">{{ balance.messagesMonth | number:'1.0-0' }}</div>
       </div>
       <div class="wa-kpi">
-        <div class="wa-kpi__label">Costo del mes</div>
+        <div class="wa-kpi__label">{{ 'notificaciones.billing.costMonth' | translate }}</div>
         <div class="wa-kpi__value">{{ balance.costMonthCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="wa-kpi">
-        <div class="wa-kpi__label">Total recargado</div>
+        <div class="wa-kpi__label">{{ 'notificaciones.billing.totalToppedUp' | translate }}</div>
         <div class="wa-kpi__value">{{ balance.totalToppedUpCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="wa-kpi">
-        <div class="wa-kpi__label">Total consumido</div>
+        <div class="wa-kpi__label">{{ 'notificaciones.billing.totalConsumed' | translate }}</div>
         <div class="wa-kpi__value">{{ balance.totalConsumedCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
     </div>
@@ -65,7 +65,7 @@
     <div class="wa-actions">
       <button type="button" class="cfg-btn" (click)="openTopupModal('whatsapp')">
         <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
-        <span>Recargar con tarjeta / PSE</span>
+        <span>{{ 'notificaciones.billing.topupWhatsapp' | translate }}</span>
       </button>
 
       <button
@@ -75,8 +75,8 @@
         [disabled]="isClaimingBonus"
         (click)="claimWelcomeBonus()">
         <app-feather-icons [icon]="'gift'"></app-feather-icons>
-        <span *ngIf="!isClaimingBonus">Activar bonus de bienvenida ($20.000)</span>
-        <span *ngIf="isClaimingBonus">Activando...</span>
+        <span *ngIf="!isClaimingBonus">{{ 'notificaciones.billing.claimBonus' | translate }}</span>
+        <span *ngIf="isClaimingBonus">{{ 'notificaciones.billing.claimingBonus' | translate }}</span>
       </button>
     </div>
   </section>
@@ -85,7 +85,7 @@
   <section *ngIf="!isLoadingSms && smsBalance" class="cfg-card wa-tarjeta-sms">
     <h2 class="cfg-card__titulo wa-titulo">
       <app-feather-icons class="wa-icono" [icon]="'smartphone'"></app-feather-icons>
-      Saldo SMS
+      {{ 'notificaciones.billing.smsBalance' | translate }}
     </h2>
 
     <div class="wa-balance">
@@ -93,19 +93,19 @@
         {{ smsBalance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
       </div>
       <div class="wa-balance__sub">
-        Precio por SMS:
+        {{ 'notificaciones.billing.pricePerSms' | translate }}
         <strong>{{ smsBalance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-        — equivale a ~{{ smsEquivalentMessages | number:'1.0-0' }} SMS
+        {{ 'notificaciones.billing.equivalentSms' | translate: { count: (smsEquivalentMessages | number:'1.0-0') } }}
       </div>
     </div>
     <div *ngIf="!smsBalance.billingEnabled" class="cfg-aviso cfg-aviso--warn wa-aviso">
       <app-feather-icons [icon]="'info'"></app-feather-icons>
-      <p class="wa-aviso__texto">El cobro de SMS aún no está activo para tu comercio; los SMS se envían sin descontar saldo por ahora.</p>
+      <p class="wa-aviso__texto">{{ 'notificaciones.billing.smsBillingInactive' | translate }}</p>
     </div>
     <div class="wa-actions">
       <button type="button" class="cfg-btn" (click)="openTopupModal('sms')">
         <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
-        <span>Recargar SMS con tarjeta / PSE</span>
+        <span>{{ 'notificaciones.billing.topupSms' | translate }}</span>
       </button>
     </div>
   </section>
@@ -114,13 +114,13 @@
   <div *ngIf="showTopupModal" class="wa-modal-backdrop" (click)="closeTopupModal()">
     <div class="wa-modal" (click)="$event.stopPropagation()">
       <div class="wa-modal__header">
-        <h5 class="wa-modal__title">Recargar saldo {{ topupChannel === 'sms' ? 'SMS' : 'WhatsApp' }}</h5>
+        <h5 class="wa-modal__title">{{ 'notificaciones.billing.topupTitle' | translate: { channel: topupChannel === 'sms' ? 'SMS' : 'WhatsApp' } }}</h5>
         <button type="button" class="wa-modal__close" (click)="closeTopupModal()" [disabled]="isToppingUp">
           <app-feather-icons [icon]="'x'"></app-feather-icons>
         </button>
       </div>
       <div class="wa-modal__body">
-        <label class="wa-field-label" for="wa-topup-amount">Monto a recargar (COP)</label>
+        <label class="wa-field-label" for="wa-topup-amount">{{ 'notificaciones.billing.amountLabel' | translate }}</label>
         <input
           id="wa-topup-amount"
           type="number"
@@ -129,7 +129,7 @@
           [min]="minTopupAmount"
           step="10000"
           placeholder="50000" />
-        <p class="wa-field-helper">Mínimo $50.000. Pagas con tarjeta, PSE o Nequi vía Wompi.</p>
+        <p class="wa-field-helper">{{ 'notificaciones.billing.amountHelp' | translate }}</p>
 
         <div class="wa-actions wa-rapidos">
           <button type="button" class="cfg-btn cfg-btn--sec" (click)="topupAmount = 50000">$50.000</button>
@@ -143,11 +143,11 @@
       </div>
       <div class="wa-modal__footer">
         <button type="button" class="cfg-btn cfg-btn--sec" (click)="closeTopupModal()" [disabled]="isToppingUp">
-          Cancelar
+          {{ 'comun.cancelar' | translate }}
         </button>
         <button type="button" class="cfg-btn" (click)="confirmTopup()" [disabled]="isToppingUp">
-          <span *ngIf="!isToppingUp">Pagar {{ topupAmount | currency:'COP':'symbol-narrow':'1.0-0' }} con Wompi</span>
-          <span *ngIf="isToppingUp">Procesando…</span>
+          <span *ngIf="!isToppingUp">{{ 'notificaciones.billing.payWithWompi' | translate: { amount: (topupAmount | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+          <span *ngIf="isToppingUp">{{ 'notificaciones.billing.processing' | translate }}</span>
         </button>
       </div>
     </div>

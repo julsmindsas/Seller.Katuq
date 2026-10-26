@@ -87,14 +87,14 @@ $rl-err: #D64545;
     border-color: $rl-accent;
     border-radius: 11px;
 
-    &:enabled:hover { background: #4a2fc0; border-color: #4a2fc0; }
+    &:enabled:hover { background: var(--ds-accent-hover); border-color: #4a2fc0; }
   }
 
   .p-picklist-filter-container .p-inputtext {
     border-radius: 10px;
     font-size: 13px;
-    background: #f5f4fa;
-    border: 1px solid #e9e7f3;
+    background: var(--ds-chip-bg);
+    border: 1px solid var(--ds-control-border);
 
     &:enabled:focus { border-color: $rl-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
   }
@@ -169,7 +169,7 @@ $rl-err: #D64545;
 
 // ===== Modal de configuraciones =====
 .config-modal-header {
-  background: #fff;
+  background: var(--ds-surface);
   border-bottom: 1px solid $rl-line;
   padding: 16px 20px;
 
@@ -257,7 +257,7 @@ $rl-err: #D64545;
     width: 48px;
     height: 48px;
     border-radius: 11px;
-    background: #fff;
+    background: var(--ds-surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -298,7 +298,7 @@ $rl-err: #D64545;
 }
 
 .template-modal-box {
-  background: #fff;
+  background: var(--ds-surface);
   border-radius: 20px;
   width: 100%;
   max-width: 880px;
@@ -360,7 +360,7 @@ $rl-err: #D64545;
   border-radius: 16px;
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease, transform .15s ease;
-  background: #fff;
+  background: var(--ds-surface);
 
   &:hover {
     border-color: #ddd3fb;

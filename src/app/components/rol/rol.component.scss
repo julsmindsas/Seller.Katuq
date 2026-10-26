@@ -9,9 +9,9 @@
 // Caption (búsqueda) dentro de la tabla tematizada por cfg-card
 :host ::ng-deep .roles-table .p-datatable {
   .p-datatable-header {
-    background: #fff;
+    background: var(--ds-surface);
     border: 0;
-    border-bottom: 1px solid #f1f0f7;
+    border-bottom: 1px solid var(--ds-line-soft);
     padding: 0 0 12px;
   }
 
@@ -37,7 +37,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #8f8bab;
+    color: var(--ds-muted);
     font-size: 14px;
     pointer-events: none;
   }
@@ -46,15 +46,15 @@
     width: 100%;
     min-height: 40px;
     padding-left: 36px;
-    background-color: #f5f4fa;
-    border: 1px solid #e9e7f3;
+    background-color: var(--ds-chip-bg);
+    border: 1px solid var(--ds-control-border);
     border-radius: 10px;
     font-size: 13.5px;
-    color: #211F3A;
+    color: var(--ds-ink);
 
     &:focus {
-      background-color: #fff;
-      border-color: #7C5CFF;
+      background-color: var(--ds-surface);
+      border-color: var(--ds-focus);
       box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
     }
   }
@@ -65,28 +65,28 @@
   font-weight: 800;
   letter-spacing: .5px;
   text-transform: uppercase;
-  color: #8f8bab !important;
+  color: var(--ds-muted) !important;
 }
 
 // ===== Celdas =====
-.role-name { font-weight: 700; color: #211F3A !important; font-size: 13px !important; }
-.role-empresa { color: #5b5878 !important; font-size: 13px !important; }
+.role-name { font-weight: 700; color: var(--ds-ink) !important; font-size: 13px !important; }
+.role-empresa { color: var(--ds-body) !important; font-size: 13px !important; }
 
 .prefijo-badge {
   display: inline-block;
   padding: 3px 10px;
   margin: 1px 3px;
   border-radius: 20px;
-  background: #efe9ff;
-  color: #5F3FE0 !important;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-ink) !important;
   font-size: 10.5px !important;
   font-weight: 800;
   letter-spacing: .4px;
   text-transform: uppercase;
 }
 
-.default-label { color: #8f8bab !important; font-size: 12px !important; font-style: italic; }
-.user-edit { color: #8f8bab !important; font-size: 13px !important; }
+.default-label { color: var(--ds-muted) !important; font-size: 12px !important; font-style: italic; }
+.user-edit { color: var(--ds-muted) !important; font-size: 13px !important; }
 
 // ===== Botones de acción =====
 .action-btn {
@@ -97,23 +97,23 @@
   height: 34px;
   margin-right: 4px;
   border-radius: 11px;
-  border: 1px solid #e4e2ef;
-  background: #fff;
+  border: 1px solid var(--ds-line-strong);
+  background: var(--ds-surface);
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease, color .15s ease;
   padding: 0;
 
   i { font-size: 15px; }
-  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
 
   &.action-edit {
-    color: #5F3FE0;
-    &:hover { background: #efe9ff; border-color: #ddd3fb; }
+    color: var(--ds-accent-ink);
+    &:hover { background: var(--ds-accent-soft); border-color: #ddd3fb; }
   }
 
   &.action-delete {
-    color: #D64545;
+    color: var(--ds-err);
     border-color: #f3c9c9;
-    &:hover { background: #FDECEC; border-color: #D64545; }
+    &:hover { background: var(--ds-err-soft); border-color: var(--ds-err); }
   }
 }

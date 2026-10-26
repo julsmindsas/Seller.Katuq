@@ -15,6 +15,7 @@ import {
   FavoritoGuardado, FavoritoVista, agregarFavorito, cargarFavoritos, esFavorito, guardarFavoritos, quitarFavorito, resolverFavoritos
 } from './menu-favoritos';
 import { ModoMenu, guardarModo, modoInicial } from './menu-modo';
+import { TranslateService } from '@ngx-translate/core';
 // Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
@@ -96,7 +97,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public userName: string = '';
   public userInitials: string = '';
   public userAvatarUrl: string = '';
-  public greeting: string = 'Hola'; // saludo dinámico en español según la hora
+  public greeting: string = 'shell.sidebar.greetingHello'; // clave del saludo según la hora (D-540: la plantilla la traduce)
 
   // Solo el primer nombre, para un saludo más limpio
   get firstName(): string {
@@ -143,7 +144,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private elementRef: ElementRef,
     private notificationManager: NotificationManagerService,
     private subscriptionService: SubscriptionService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService
   ) {
     // Procesar items del menú en secciones cada vez que cambian
     this.navServices.items.pipe(takeUntil(this.destroy$)).subscribe(menuItems => {
@@ -595,7 +597,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.currentPlan.renewalDate = renewalDate
           ? this.formatDate(renewalDate)
-          : 'No definida';
+          : null; // D-540: sin fecha, la plantilla muestra «No definida» traducido
         this.currentPlan.daysLeft = renewalDate
           ? this.calculateDaysUntilReset(renewalDate)
           : 0;
@@ -661,12 +663,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private formatDate(date: any): string {
+  private formatDate(date: any): string | null {
     try {
       const d = new Date(date);
       return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
-      return 'No definida';
+      return null;
     }
   }
 
@@ -1199,7 +1201,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Nombre accesible de la estrella. */
   public etiquetaEstrella(estrella: { fav: FavoritoGuardado; alt?: FavoritoGuardado } | null | undefined): string {
-    return this.esFavorita(estrella) ? 'Quitar de favoritos' : 'Agregar a favoritos';
+    return this.translate.instant(this.esFavorita(estrella) ? 'shell.sidebar.removeFavorite' : 'shell.sidebar.addFavorite');
   }
 
   /**
@@ -1281,9 +1283,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Saludo en español según la franja horaria
   private computeGreeting(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'Buenos días';
-    if (h < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (h < 12) return 'shell.sidebar.greetingMorning';
+    if (h < 19) return 'shell.sidebar.greetingAfternoon';
+    return 'shell.sidebar.greetingEvening';
   }
 
   onAvatarError(event: Event): void {

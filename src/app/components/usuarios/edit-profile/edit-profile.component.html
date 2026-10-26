@@ -4,10 +4,10 @@
 <div class="cfg-pagina edit-profile">
         <header class="cfg-cabeza">
           <div class="cfg-cabeza__textos">
-                <span class="cfg-eyebrow">Seguridad</span>
-                <h1 class="cfg-titulo">Perfil de usuario</h1>
+                <span class="cfg-eyebrow">{{ 'usuarios.editProfile.eyebrow' | translate }}</span>
+                <h1 class="cfg-titulo">{{ 'usuarios.editProfile.title' | translate }}</h1>
                 <p class="cfg-sub">
-                    Edita la imagen del usuario o la contraseña de ingreso.
+                    {{ 'usuarios.editProfile.subtitle' | translate }}
                 </p>
           </div>
         </header>
@@ -15,7 +15,7 @@
         <section class="cfg-card">
             <div class="row mb-2 g-3 align-items-center">
               <div class="col-auto">
-                <img class="img-90 perfil-foto" [src]="this.img ? this.img : 'assets/images/user/user.png'" alt="profile">
+                <img class="img-90 perfil-foto" [src]="this.img ? this.img : 'assets/images/user/user.png'" [alt]="'usuarios.editProfile.photoAlt' | translate">
               </div>
               <div class="col">
                 <h3 class="mb-1 perfil-nombre">{{name}}</h3>
@@ -24,7 +24,7 @@
               </div>
               <div class="col-auto">
                 <label for="photoprofile" class="cfg-btn perfil-subir">
-                  {{'Cambiar foto del perfil' | translate}}
+                  {{ 'usuarios.editProfile.changePhoto' | translate }}
                 </label>
                 <input type="file" #subirfoto (change)="uploadImage()" id="photoprofile" style='display: none;' />
               </div>
@@ -33,15 +33,15 @@
             <!-- Sección para Prompt KAI -->
             <div class="kai-prompt-section cfg-form">
               <hr class="perfil-linea">
-              <h5 class="cfg-card__titulo">{{ 'Personalizar K.A.I Prompt' | translate }}</h5>
-              <p class="cfg-sub perfil-ayuda">{{ 'Define cómo quieres que K.A.I interactúe contigo o qué personalidad prefieres.' | translate }}</p>
+              <h5 class="cfg-card__titulo">{{ 'usuarios.editProfile.kaiTitle' | translate }}</h5>
+              <p class="cfg-sub perfil-ayuda">{{ 'usuarios.editProfile.kaiHelp' | translate }}</p>
               <div class="form-group">
-                <label for="kaiPromptTextarea">{{ 'Tu Prompt Personalizado' | translate }}</label>
+                <label for="kaiPromptTextarea">{{ 'usuarios.editProfile.kaiLabel' | translate }}</label>
                 <textarea class="form-control" id="kaiPromptTextarea" rows="4" [(ngModel)]="kaiPrompt"
-                  [placeholder]="kaiPromptPlaceholder"></textarea> <!-- Cambiado a property binding -->
+                  [placeholder]="kaiPromptPlaceholder | translate: { rol: UserLogged?.rol, nombre: UserLogged?.name }"></textarea> <!-- Cambiado a property binding -->
               </div>
               <div class="form-group perfil-acciones">
-                 <button class="cfg-btn" type="button" (click)="saveKaiPrompt()">{{'Guardar Prompt' | translate}}</button>
+                 <button class="cfg-btn" type="button" (click)="saveKaiPrompt()">{{ 'usuarios.editProfile.kaiSave' | translate }}</button>
               </div>
             </div>
             <!-- Fin Sección para Prompt KAI -->

@@ -15,6 +15,7 @@ import {
   textoOrigenCorrida,
 } from '../flows-lenguaje';
 
+import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-flow-runs',
   templateUrl: './flow-runs.component.html',
@@ -41,7 +42,8 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
     private router: Router,
     private flowsService: FlowsService,
     private state: FlowsStateService,
-    private runStream: RunStreamService
+    private runStream: RunStreamService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -146,12 +148,12 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
   cancel(runId: string, event: Event): void {
     event.stopPropagation();
     Swal.fire({
-      title: '¿Detener esta corrida?',
-      text: 'Lo que ya alcanzó a hacer no se deshace.',
+      title: this.translate.instant('flows.flowRuns.detenerEstaCorrida'),
+      text: this.translate.instant('flows.flowRuns.loQueYaAlcanzoA'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, detener',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('flows.flowRuns.siDetener'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: '#B83232',
     }).then((r) => {
       if (!r.isConfirmed) return;

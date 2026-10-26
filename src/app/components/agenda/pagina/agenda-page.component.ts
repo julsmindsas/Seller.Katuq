@@ -24,6 +24,7 @@ import {
   sumarDias,
 } from '../agenda-fechas';
 
+import { TranslateService } from '@ngx-translate/core';
 /** Alto de una fila de 30 minutos en la grilla del día, en px. */
 const ALTO_MEDIA_HORA = 44;
 const SIN_ASIGNAR = '__sin_asignar__';
@@ -92,6 +93,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly toastr: ToastrService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -124,7 +126,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
         },
         error: (e) => {
           this.cargando = false;
-          this.error = e?.error?.message || 'No pudimos abrir la Agenda. Intenta de nuevo.';
+          this.error = e?.error?.message || this.translate.instant('agenda.agendaPage.noPudimosAbrirLaAgenda');
         },
       });
   }
@@ -147,7 +149,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
         },
         error: (e) => {
           this.cargando = false;
-          this.error = e?.error?.message || 'No pudimos traer las citas.';
+          this.error = e?.error?.message || this.translate.instant('agenda.agendaPage.noPudimosTraerLasCitas');
         },
       });
   }
@@ -172,7 +174,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
     const personas: PersonaAgenda[] = this.config.staff.filter((p) => p.active || conCita.has(p.id));
     this.columnas = personas.map((p) => ({ id: p.id, nombre: p.name, inactiva: !p.active }));
     if (!this.columnas.length || delDia.some((c) => !c.staffId)) {
-      this.columnas.push({ id: SIN_ASIGNAR, nombre: this.config.staff.length ? 'Sin asignar' : 'Citas', inactiva: false });
+      this.columnas.push({ id: SIN_ASIGNAR, nombre: this.config.staff.length ? this.translate.instant('agenda.citaPanel.sinAsignar') : this.translate.instant('agenda.agendaPage.citas2'), inactiva: false });
     }
     // Filas: del primer al último minuto de atención, más las citas que se salgan.
     let [ini, fin] = rangoDelDia(this.config.hours, [this.fecha]);
@@ -300,7 +302,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
 
   nuevaCita(preset?: Partial<PresetCita>): void {
     if (!this.configurada) {
-      this.toastr.info('Primero configura tu horario y quién atiende.');
+      this.toastr.info(this.translate.instant('agenda.agendaPage.primeroConfiguraTuHorarioY'));
       return;
     }
     this.preset = { fecha: this.fecha, ...(preset || {}) };
@@ -322,7 +324,7 @@ export class AgendaPageComponent implements OnInit, OnDestroy {
 
   alCrear(c: Cita): void {
     this.formAbierto = false;
-    this.toastr.success(`Cita agendada: ${fechaCorta(c.date)} · ${c.startTime ? horaLegible(c.startTime) : c.window}`);
+    this.toastr.success(this.translate.instant('agenda.agendaPage.citaAgendada', { fecha: fechaCorta(c.date), hora: c.startTime ? horaLegible(c.startTime) : c.window }));
     if (this.rango()[0] <= c.date && c.date <= this.rango()[1]) {
       this.citas = [...this.citas, c];
       this.armarVista();

@@ -9,14 +9,14 @@
   h5 {
     font-size: 1.1rem;
     margin-bottom: 15px;
-    color: #333;
+    color: var(--km-gray-333);
     font-weight: 500;
     border-bottom: 1px solid #eee;
     padding-bottom: 8px;
     
     i {
       margin-right: 5px;
-      color: #5F3FE0;
+      color: var(--ds-accent-ink);
     }
   }
 }
@@ -28,19 +28,19 @@
 }
 
 .payment-option {
-  background-color: #fff;
+  background-color: var(--ds-surface);
   border-radius: 8px;
   padding: 15px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #ddd;
+  border: 1px solid var(--km-gray-300);
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: #5F3FE0;
+    border-color: var(--ds-accent-ink);
   }
   
   .payment-option-icon {
@@ -59,7 +59,7 @@
   .payment-option-name {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #333;
+    color: var(--km-gray-333);
   }
 }
 
@@ -69,7 +69,7 @@
   
   .modal-title {
     font-weight: 500;
-    color: #333;
+    color: var(--km-gray-333);
   }
 }
 
@@ -108,7 +108,7 @@
   letter-spacing: normal;
 
   i {
-    color: var(--kc-accent);
+    color: var(--kc-accent-texto);
     font-size: 14px;
   }
 }
@@ -125,7 +125,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  background: #fff;
+  background: var(--ds-surface);
   border: 1.5px solid var(--kc-line);
   border-radius: 14px;
   padding: 14px 10px;
@@ -133,8 +133,8 @@
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    border-color: #c9b9f7;
-    background: #f6f4ff;
+    border-color: var(--km-accent-line);
+    background: var(--km-hover-bg);
     box-shadow: 0 6px 18px rgba(108, 76, 224, 0.12);
   }
 
@@ -165,14 +165,14 @@
 }
 
 .cd-empty {
-  border: 2px dashed #e4e5ee;
+  border: 2px dashed var(--km-line-strong);
   border-radius: 16px;
   padding: 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  background: #fbfcfe;
+  background: var(--km-sunken);
   text-align: center;
 }
 
@@ -180,8 +180,8 @@
   width: 50px;
   height: 50px;
   border-radius: 15px;
-  background: #f1f2f5;
-  color: #b7bccb;
+  background: var(--km-chip);
+  color: var(--km-faint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,13 +190,13 @@
 .cd-empty-title {
   font-weight: 800;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--km-subtle);
 }
 
 .cd-empty-sub {
   font-size: 12.5px;
   font-weight: 600;
-  color: #9aa0b2;
+  color: var(--km-faint-2);
   max-width: 320px;
   line-height: 1.55;
 }

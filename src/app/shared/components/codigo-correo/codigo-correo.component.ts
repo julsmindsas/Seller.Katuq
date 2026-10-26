@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { RegistroVerificacionService, SesionConfirmada } from '../../services/registro-verificacion.service';
+import { TranslateService } from '@ngx-translate/core';
 
 /**
  * La pantalla del código que confirma el correo antes de entrar (D-323).
@@ -27,7 +28,7 @@ export class CodigoCorreoComponent implements OnInit, OnDestroy {
   segundos = 0;
   private reloj: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private verificacion: RegistroVerificacionService) {}
+  constructor(private verificacion: RegistroVerificacionService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     if (this.recienEnviado) this.esperar(60);
@@ -58,13 +59,13 @@ export class CodigoCorreoComponent implements OnInit, OnDestroy {
         if (sesion && sesion.token) {
           this.entro.emit(sesion);
         } else {
-          this.error = 'No pudimos abrir tu sesión. Entra con tu correo y tu contraseña.';
+          this.error = this.translate.instant('authentication.emailCode.noSession');
         }
       },
       error: (err) => {
         this.confirmando = false;
         this.codigo = '';
-        this.error = (err && err.error && err.error.message) || 'No pudimos confirmar el código. Intenta de nuevo.';
+        this.error = (err && err.error && err.error.message) || this.translate.instant('authentication.emailCode.confirmFailed');
       },
     });
   }
@@ -76,12 +77,12 @@ export class CodigoCorreoComponent implements OnInit, OnDestroy {
     this.verificacion.pedirCodigo(this.email).subscribe({
       next: () => {
         this.reenviando = false;
-        this.aviso = 'Te enviamos un código nuevo. El anterior ya no sirve.';
+        this.aviso = this.translate.instant('authentication.emailCode.newCodeSent');
         this.esperar(60);
       },
       error: (err) => {
         this.reenviando = false;
-        this.error = (err && err.error && err.error.message) || 'No pudimos enviar el código. Intenta en un momento.';
+        this.error = (err && err.error && err.error.message) || this.translate.instant('authentication.emailCode.sendFailed');
       },
     });
   }

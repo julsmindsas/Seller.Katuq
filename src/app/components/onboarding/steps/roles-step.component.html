@@ -2,8 +2,7 @@
   <!-- Header Info -->
   <div class="step-intro">
     <p class="intro-text">
-      Configura los roles y permisos para los usuarios de tu sistema. Define qué acciones
-      puede realizar cada tipo de usuario en la plataforma. Al menos un rol es requerido para continuar.
+      {{ 'onboarding.rolesStep.configuraLosRolesYPermisos' | translate }}
     </p>
   </div>
 
@@ -12,7 +11,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-th-large"></i>
-        <span>Plantillas Rápidas</span>
+        <span>{{ 'onboarding.billingZonesStep.plantillasRapidas' | translate }}</span>
       </div>
     </ng-template>
 
@@ -27,7 +26,7 @@
         (click)="useTemplate(template)">
       </button>
     </div>
-    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+    <small class="field-help">{{ 'onboarding.billingZonesStep.hazClicEnUnaPlantilla' | translate }}</small>
   </p-card>
 
   <!-- Add/Edit Role Form -->
@@ -35,7 +34,7 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-users"></i>
-        <span>{{ editingIndex !== null ? 'Editar Rol' : 'Agregar Rol' }}</span>
+        <span>{{ editingIndex !== null ? ('onboarding.rolesStep.editarRol' | translate) : ('onboarding.rolesStep.agregarRol' | translate) }}</span>
       </div>
     </ng-template>
 
@@ -43,13 +42,13 @@
       <div class="form-grid">
         <!-- Nombre del Rol -->
         <div class="form-field col-12">
-          <label for="rol" class="required">Nombre del Rol *</label>
+          <label for="rol" class="required">{{ 'onboarding.rolesStep.nombreDelRol' | translate }}</label>
           <input
             id="rol"
             type="text"
             pInputText
             formControlName="rol"
-            placeholder="Ej: Administrador, Vendedor, Bodeguero"
+            [placeholder]="'onboarding.rolesStep.ejAdministradorVendedorBodeguero' | translate"
             [class.p-invalid]="hasError('rol', 'required') || hasError('rol', 'minlength')" />
           <small class="p-error" *ngIf="hasError('rol', 'required') || hasError('rol', 'minlength')">
             {{ getErrorMessage('rol') }}
@@ -58,7 +57,7 @@
 
         <!-- Permisos -->
         <div class="form-field col-12">
-          <label for="permissions" class="required">Permisos *</label>
+          <label for="permissions" class="required">{{ 'onboarding.rolesStep.permisos' | translate }}</label>
           <div class="permissions-list">
             <div *ngFor="let permission of availablePermissions" class="permission-item">
               <p-checkbox
@@ -72,7 +71,7 @@
           <small class="p-error" *ngIf="hasError('permissions', 'required')">
             {{ getErrorMessage('permissions') }}
           </small>
-          <small class="field-help">Selecciona al menos un permiso para este rol</small>
+          <small class="field-help">{{ 'onboarding.rolesStep.seleccionaAlMenosUnPermiso' | translate }}</small>
         </div>
       </div>
 
@@ -82,7 +81,7 @@
           *ngIf="editingIndex !== null"
           pButton
           type="button"
-          label="Cancelar"
+          [label]="'comun.cancelar' | translate"
           icon="pi pi-times"
           class="cfg-btn cfg-btn--sec"
           (click)="cancelEdit()">
@@ -90,7 +89,7 @@
         <button
           pButton
           type="button"
-          [label]="editingIndex !== null ? 'Actualizar Rol' : 'Agregar a Lista'"
+          [label]="editingIndex !== null ? ('onboarding.rolesStep.actualizarRol' | translate) : ('onboarding.billingZonesStep.agregarALista' | translate)"
           [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
           class="cfg-btn"
           [disabled]="roleForm.invalid"
@@ -105,16 +104,16 @@
     <ng-template pTemplate="header">
       <div class="onb-cabeza">
         <i class="pi pi-list"></i>
-        <span>Roles Configurados ({{ rolesList.length }})</span>
+        <span>{{ 'onboarding.rolesStep.rolesConfigurados' | translate:{length: rolesList.length} }}</span>
       </div>
     </ng-template>
 
     <p-table [value]="rolesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th>Rol</th>
-          <th>Permisos</th>
-          <th style="width: 140px">Acciones</th>
+          <th>{{ 'onboarding.rolesStep.rol' | translate }}</th>
+          <th>{{ 'onboarding.rolesStep.permisos2' | translate }}</th>
+          <th style="width: 140px">{{ 'onboarding.billingZonesStep.acciones' | translate }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-role let-i="rowIndex">
@@ -138,7 +137,7 @@
                 type="button"
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-info"
-                pTooltip="Editar"
+                [pTooltip]="'comun.editar' | translate"
                 tooltipPosition="top"
                 (click)="editRole(i)">
               </button>
@@ -147,7 +146,7 @@
                 type="button"
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
-                pTooltip="Eliminar"
+                [pTooltip]="'comun.eliminar' | translate"
                 tooltipPosition="top"
                 (click)="removeRole(i)">
               </button>
@@ -160,7 +159,7 @@
           <td colspan="3" class="text-center">
             <div class="empty-message">
               <i class="pi pi-inbox"></i>
-              <p>No hay roles configurados aún</p>
+              <p>{{ 'onboarding.rolesStep.noHayRolesConfiguradosAun' | translate }}</p>
             </div>
           </td>
         </tr>
@@ -173,7 +172,7 @@
     <button
       pButton
       type="button"
-      label="Guardar y Continuar"
+      [label]="'onboarding.billingZonesStep.guardarYContinuar' | translate"
       icon="pi pi-check"
       iconPos="right"
       class="cfg-btn"
@@ -184,11 +183,11 @@
 
     <p class="form-status" *ngIf="rolesList.length === 0">
       <i class="pi pi-info-circle"></i>
-      Agrega al menos un rol para continuar
+      {{ 'onboarding.rolesStep.agregaAlMenosUnRol' | translate }}
     </p>
     <p class="form-status success" *ngIf="rolesList.length > 0">
       <i class="pi pi-check-circle"></i>
-      {{ rolesList.length }} rol(es) configurado(s) - ¡Listo para continuar!
+      {{ rolesList.length }} {{ 'onboarding.rolesStep.rolEsConfiguradoSListo' | translate }}
     </p>
   </div>
 </div>

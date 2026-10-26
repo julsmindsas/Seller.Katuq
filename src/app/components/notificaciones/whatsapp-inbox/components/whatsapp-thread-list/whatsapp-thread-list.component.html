@@ -6,7 +6,7 @@
         <input
           type="search"
           class="thread-list__search"
-          placeholder="Buscar contacto o mensaje"
+          [placeholder]="'notificaciones.whatsapp.list.searchPlaceholder' | translate"
           [ngModel]="searchQuery"
           (ngModelChange)="onSearchChange($event)"
         />
@@ -15,8 +15,8 @@
         type="button"
         class="thread-list__new-btn"
         (click)="openNewConversation()"
-        title="Iniciar nueva conversación"
-        aria-label="Iniciar nueva conversación"
+        [title]="'notificaciones.whatsapp.list.newConversation' | translate"
+        [attr.aria-label]="'notificaciones.whatsapp.list.newConversation' | translate"
       >
         +
       </button>
@@ -24,14 +24,14 @@
 
     <!-- [D-437] Filtro por número del comercio (solo si hay números conectados) -->
     <label class="thread-list__linea" *ngIf="opcionesLinea.length > 0">
-      <span class="thread-list__linea-label">Número</span>
+      <span class="thread-list__linea-label">{{ 'notificaciones.whatsapp.list.line' | translate }}</span>
       <select
         class="thread-list__linea-select"
         [ngModel]="lineaFiltro"
         (ngModelChange)="onLineaFiltroChange($event)"
-        aria-label="Filtrar por número"
+        [attr.aria-label]="'notificaciones.whatsapp.list.lineFilterAria' | translate"
       >
-        <option value="">Todos los números</option>
+        <option value="">{{ 'notificaciones.whatsapp.list.allLines' | translate }}</option>
         <option *ngFor="let l of opcionesLinea" [value]="l.id">
           {{ l.displayName || l.displayPhone }}{{ l.displayName ? " · " + l.displayPhone : "" }}
         </option>
@@ -45,7 +45,7 @@
         [class.is-active]="filtro === 'pendientes'"
         (click)="setFiltro('pendientes')"
       >
-        Sin responder
+        {{ 'notificaciones.whatsapp.list.unanswered' | translate }}
         <span class="thread-list__chip-count" *ngIf="pendientesCount > 0">{{ pendientesCount }}</span>
       </button>
       <button
@@ -54,7 +54,7 @@
         [class.is-active]="filtro === 'todas'"
         (click)="setFiltro('todas')"
       >
-        Todas
+        {{ 'notificaciones.whatsapp.list.all' | translate }}
       </button>
       <button
         type="button"
@@ -62,7 +62,7 @@
         [class.is-active]="filtro === 'bot'"
         (click)="setFiltro('bot')"
       >
-        Atendidas por el bot
+        {{ 'notificaciones.whatsapp.list.byBot' | translate }}
       </button>
     </div>
   </header>
@@ -72,22 +72,22 @@
     class="thread-list__banner"
     role="status"
   >
-    Algunas conversaciones tienen mensajes anteriores a 90 días no disponibles.
+    {{ 'notificaciones.whatsapp.list.truncatedBanner' | translate }}
   </div>
 
   <div class="thread-list__body">
-    <div *ngIf="loading" class="thread-list__state">Cargando…</div>
+    <div *ngIf="loading" class="thread-list__state">{{ 'notificaciones.whatsapp.list.loading' | translate }}</div>
 
     <div *ngIf="!loading && errorCarga" class="thread-list__state thread-list__state--error" role="alert">
-      <span class="thread-list__state-texto">No pudimos cargar las conversaciones.</span>
-      <button type="button" class="thread-list__retry" (click)="fetchThreads()">Reintentar</button>
+      <span class="thread-list__state-texto">{{ 'notificaciones.whatsapp.list.loadError' | translate }}</span>
+      <button type="button" class="thread-list__retry" (click)="fetchThreads()">{{ 'notificaciones.whatsapp.list.retry' | translate }}</button>
     </div>
 
     <div
       *ngIf="!loading && !errorCarga && visibleThreads.length === 0"
       class="thread-list__state"
     >
-      No hay conversaciones para este filtro.
+      {{ 'notificaciones.whatsapp.list.emptyFilter' | translate }}
     </div>
 
     <button
@@ -116,9 +116,9 @@
           <span
             *ngIf="thread.flags?.inboundTruncatedAt90d"
             class="thread-list__badge thread-list__badge--warn"
-            title="Mensajes anteriores a 90 días no disponibles"
+            [title]="'notificaciones.whatsapp.list.truncatedBadgeTitle' | translate"
           >
-            90d
+            {{ 'notificaciones.whatsapp.list.truncatedBadge' | translate }}
           </span>
         </div>
 
@@ -134,7 +134,7 @@
                 }"
                 aria-hidden="true"
               ></i>
-              {{ tag.label }}
+              {{ tag.label | translate }}
             </span>
           </ng-container>
           <span class="thread-list__snippet" *ngIf="!tagFor(thread)">

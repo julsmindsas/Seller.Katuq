@@ -54,18 +54,17 @@ export class ChatDuenoComponent implements OnChanges {
   }
 
   get titulo(): string {
-    if (!this.dueno) return 'Sin asignar';
-    return this.esMio ? 'Atiende: tú' : `Atiende: ${this.dueno.nombre || this.dueno.email}`;
+    if (!this.dueno) return 'notificaciones.owner.unassigned';
+    return this.esMio ? 'notificaciones.owner.mine' : 'notificaciones.owner.other';
   }
 
   /** Por qué no se puede escribir, o qué hacer para que nadie más responda. */
   get motivo(): string {
-    if (!this.dueno) return 'Tómalo para responder sin que otro vendedor le escriba al mismo cliente.';
+    if (!this.dueno) return 'notificaciones.owner.takeHint';
     if (this.esMio) return '';
-    const nombre = this.dueno.nombre || this.dueno.email;
     return this.esAdministrador
-      ? `Solo ${nombre} puede escribir en este chat. Para responder tú, pásatelo.`
-      : `Solo ${nombre} puede escribir en este chat. Si necesitas responder, pídele que lo suelte.`;
+      ? 'notificaciones.owner.onlyOwnerAdmin'
+      : 'notificaciones.owner.onlyOwner';
   }
 
   abrirPasar(): void {

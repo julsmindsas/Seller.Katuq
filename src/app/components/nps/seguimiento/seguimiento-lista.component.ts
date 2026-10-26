@@ -10,6 +10,8 @@ import {
   ESTADOS_CASO, NOMBRE_CANAL, NOMBRE_ESTADO_CASO, casoAbierto, duracionHoras, esAdministradorSesion, fechaCorta, mensajeError,
 } from '../nps-comun';
 
+import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 type FiltroEstado = 'abiertos' | 'todos' | EstadoCaso;
 
 /** Abiertos primero y, entre ellos, los vencidos; dentro de cada grupo, lo más reciente arriba. */
@@ -28,7 +30,7 @@ function orden(a: Caso, b: Caso): number {
 @Component({
   selector: 'app-nps-seguimiento-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [TranslateModule, CommonModule, FormsModule, RouterModule],
   templateUrl: './seguimiento-lista.component.html',
   styleUrls: ['./seguimiento-lista.component.scss'],
 })
@@ -54,7 +56,9 @@ export class SeguimientoListaComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private nps: NpsService) {}
+  constructor(private nps: NpsService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     if (this.esAdmin) {
@@ -94,7 +98,7 @@ export class SeguimientoListaComponent implements OnInit, OnDestroy {
           this.casos = [];
           this.visibles = [];
           this.estadoConsultado = null;
-          this.error = mensajeError(e, 'No pudimos cargar los casos. Intenta de nuevo en unos minutos.');
+          this.error = mensajeError(e, this.translate.instant('nps.seguimientoLista.noPudimosCargarLosCasos'), this.translate);
         },
       });
   }
@@ -115,11 +119,11 @@ export class SeguimientoListaComponent implements OnInit, OnDestroy {
   }
 
   duracion(h: number | null | undefined): string {
-    return duracionHoras(h);
+    return duracionHoras(h, this.translate);
   }
 
   quien(c: Caso): string {
-    return c.comprador?.nombre || c.empresaQueResponde || c.comprador?.email || 'Cliente sin nombre';
+    return c.comprador?.nombre || c.empresaQueResponde || c.comprador?.email || this.translate.instant('nps.caso.clienteSinNombre');
   }
 
   fecha(iso: string): string {

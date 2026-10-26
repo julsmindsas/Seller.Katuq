@@ -1,6 +1,7 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 interface UploadFile {
   file: File;
@@ -22,7 +23,7 @@ export class ImagesManagerComponent {
   @Input() initialFiles: { name: string; url: string }[] = []; // Archivos iniciales
   @Output() fileDeleted = new EventEmitter<string>();
 
-  constructor(private storage: AngularFireStorage) { }
+  constructor(private storage: AngularFireStorage, private translate: TranslateService) { }
 
   uploadFiles(event: Event): void {
     const target = event.target as HTMLInputElement;
@@ -31,12 +32,12 @@ export class ImagesManagerComponent {
     if (selectedFiles) {
       const nombresArchivos = Array.from(selectedFiles).map((file) => file.name).join(', ');
       Swal.fire({
-        title: 'Confirmar subida de archivos',
-        text: `¿Estás seguro de que deseas subir los siguientes archivos: ${nombresArchivos}?`,
+        title: this.translate.instant('asistentes.imagesManager.confirmarSubidaDeArchivos'),
+        text: this.translate.instant('asistentes.imagesManager.seguroSubirArchivos', { archivos: nombresArchivos }),
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Sí, subir archivos',
-        cancelButtonText: 'No, cancelar',
+        confirmButtonText: this.translate.instant('asistentes.imagesManager.siSubirArchivos'),
+        cancelButtonText: this.translate.instant('asistentes.imagesManager.noCancelar'),
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
       }).then((result) => {
@@ -60,13 +61,13 @@ export class ImagesManagerComponent {
         }
       },
       error: (error) => {
-        Swal.fire('Error', `Error al subir el archivo ${file.name}: ${error.message}`, 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('asistentes.imagesManager.errorAlSubirArchivo', { archivo: file.name, mensaje: error.message }), 'error');
       },
     });
 
     task.then(async () => {
       uploadFile.url = await this.storage.ref(filePath).getDownloadURL().toPromise();
-      Swal.fire('Éxito', `Archivo ${file.name} subido con éxito`, 'success');
+      Swal.fire(this.translate.instant('comun.exito'), this.translate.instant('asistentes.imagesManager.archivoSubido', { archivo: file.name }), 'success');
       this.emitUrls();
     });
 

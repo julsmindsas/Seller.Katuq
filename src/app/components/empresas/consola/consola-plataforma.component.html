@@ -3,35 +3,35 @@
   <!-- Encabezado -->
   <header class="consola-head">
     <div>
-      <span class="consola-eyebrow">Plataforma Katuq</span>
-      <h1 class="consola-titulo">Consola de <span>plataforma</span></h1>
+      <span class="consola-eyebrow">{{ 'empresas.consolaPlataforma.plataformaKatuq' | translate }}</span>
+      <h1 class="consola-titulo">{{ 'empresas.consolaPlataforma.consolaDe' | translate }} <span>{{ 'empresas.consolaPlataforma.plataforma' | translate }}</span></h1>
       <p class="consola-sub">
-        Las empresas que usan Katuq y cómo se están moviendo
-        <span class="sello" *ngIf="generadoEn && !cargando">· datos {{ antiguedad(generadoEn) }}</span>
+        {{ 'empresas.consolaPlataforma.lasEmpresasQueUsanKatuq' | translate }}
+        <span class="sello" *ngIf="generadoEn && !cargando">{{ 'empresas.consolaPlataforma.datos' | translate:{generadoEn: (antiguedad(generadoEn))} }}</span>
       </p>
     </div>
     <div class="head-acciones">
       <!-- Dos oficios, una pantalla: administrar empresas y cobrarles. -->
       <div class="vista-switch" role="tablist">
         <button type="button" role="tab" [class.activa]="vista === 'empresas'"
-                (click)="cambiarVista('empresas')">Empresas</button>
+                (click)="cambiarVista('empresas')">{{ 'empresas.consolaPlataforma.empresas2' | translate }}</button>
         <button type="button" role="tab" [class.activa]="vista === 'cobros'"
-                (click)="cambiarVista('cobros')">Cobros del mes</button>
+                (click)="cambiarVista('cobros')">{{ 'empresas.consolaPlataforma.cobrosDelMes' | translate }}</button>
         <button type="button" role="tab" [class.activa]="vista === 'pauta'"
                 (click)="cambiarVista('pauta')"
-                title="Registros y vendedores activos por campaña de pauta">Pauta</button>
+                [title]="'empresas.consolaPlataforma.registrosYVendedoresActivosPor' | translate">{{ 'empresas.consolaPlataforma.pauta' | translate }}</button>
         <button type="button" role="tab" [class.activa]="vista === 'constructor'"
                 (click)="cambiarVista('constructor')"
-                title="Sitios, ventas de las webs y comercios para acompañar">Constructor web</button>
+                [title]="'empresas.consolaPlataforma.sitiosVentasDeLasWebs' | translate">{{ 'empresas.consolaPlataforma.constructorWeb' | translate }}</button>
       </div>
 
       <button type="button" class="btn-refrescar" (click)="refrescar()" [disabled]="cargando"
-              title="Vuelve a calcular las métricas de todas las empresas, sin usar el caché">
+              [title]="'empresas.consolaPlataforma.vuelveACalcularLasMetricas' | translate">
         <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
-        {{ cargando ? (recalculando ? 'Recalculando…' : 'Cargando…') : 'Actualizar' }}
+        {{ cargando ? (recalculando ? ('empresas.consolaPlataforma.recalculando' | translate) : ('comun.cargando' | translate)) : ('empresas.consolaPlataforma.actualizar' | translate) }}
       </button>
       <button type="button" class="btn-primario" (click)="crearEmpresa()">
-        <i class="fa fa-plus"></i> Crear empresa
+        <i class="fa fa-plus"></i> {{ 'empresas.consolaPlataforma.crearEmpresa' | translate }}
       </button>
     </div>
   </header>
@@ -40,17 +40,17 @@
   <div class="aviso-error" *ngIf="error && !cargando">
     <i class="fa fa-exclamation-triangle"></i>
     <div>
-      <strong>No se pudieron cargar los datos</strong>
+      <strong>{{ 'empresas.consolaPlataforma.noSePudieronCargarLos' | translate }}</strong>
       <p>{{ error }}</p>
     </div>
-    <button type="button" class="btn-reintentar" (click)="refrescar()">Reintentar</button>
+    <button type="button" class="btn-reintentar" (click)="refrescar()">{{ 'empresas.consolaPlataforma.reintentar' | translate }}</button>
   </div>
 
   <!-- Cargando -->
   <div class="cargando" *ngIf="cargando">
     <i class="fa fa-spinner fa-spin"></i>
-    <span *ngIf="!recalculando">Calculando el panorama de la plataforma…</span>
-    <span *ngIf="recalculando">Recalculando todas las empresas sin caché… puede tardar un poco.</span>
+    <span *ngIf="!recalculando">{{ 'empresas.consolaPlataforma.calculandoElPanoramaDeLa' | translate }}</span>
+    <span *ngIf="recalculando">{{ 'empresas.consolaPlataforma.recalculandoTodasLasEmpresasSin' | translate }}</span>
   </div>
 
   <ng-container *ngIf="vista === 'empresas' && !cargando && !error && totales">
@@ -70,8 +70,8 @@
            misma función que usa la facturación — ver planPricing en el back. -->
       <button type="button" class="kpi kpi--principal" [class.kpi--activo]="filtroEstado === 'premium'"
               (click)="filtrarPor('premium')"
-              title="Suma del escalón de precio de cada cliente con plan pago, deducido de sus ventas. Es una estimación: el cobro real usa el período de cada empresa y excluye pedidos cancelados.">
-        <span class="kpi-label">Ingreso del mes</span>
+              [title]="'empresas.consolaPlataforma.sumaDelEscalonDePrecio' | translate">
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.ingresoDelMes' | translate }}</span>
         <!-- En PESOS, que es como se razona acá. Los planes están en dólares y
              se convierten con la TRM del día, la misma con la que se factura.
              Si la TRM no se pudo leer se muestran los dólares sin convertir:
@@ -83,23 +83,23 @@
         </span>
         <span class="kpi-pie">
           <ng-container *ngIf="totales.ingresoEstimadoCOP !== null && totales.ingresoEstimadoCOP !== undefined">
-            {{ dineroUSD(totales.ingresoEstimadoUSD) }} a TRM {{ num(totales.trm) }} ·
+            {{ dineroUSD(totales.ingresoEstimadoUSD) }} {{ 'empresas.consolaPlataforma.aTrm' | translate:{trm: (num(totales.trm))} }}
           </ng-container>
-          estimado · {{ num(totales.empresasQuePagan) }} clientes con plan pago
+          {{ 'empresas.consolaPlataforma.estimadoClientesConPlanPago' | translate:{empresasQuePagan: (num(totales.empresasQuePagan))} }}
           <em class="kpi-salvedad" *ngIf="totales.empresasSinPrecio">
-            · {{ num(totales.empresasSinPrecio) }} sin ventas medidas
+            {{ 'empresas.consolaPlataforma.sinVentasMedidas' | translate:{empresasSinPrecio: (num(totales.empresasSinPrecio))} }}
           </em>
           <em class="kpi-salvedad" *ngIf="totales.empresasPrecioAMedida">
-            · {{ num(totales.empresasPrecioAMedida) }} a medida
+            {{ 'empresas.consolaPlataforma.aMedida2' | translate:{empresasPrecioAMedida: (num(totales.empresasPrecioAMedida))} }}
           </em>
         </span>
       </button>
 
       <button type="button" class="kpi" [class.kpi--activo]="filtroEstado === 'activas'"
               (click)="filtrarPor('activas')">
-        <span class="kpi-label">Empresas activas</span>
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.empresasActivas' | translate }}</span>
         <span class="kpi-valor">{{ num(totales.activas) }}<small class="kpi-de">/ {{ num(totales.empresas) }}</small></span>
-        <span class="kpi-pie">{{ num(totales.empresasQuePagan) }} pagan · {{ num(totales.freemium) }} en el plan gratis</span>
+        <span class="kpi-pie">{{ num(totales.empresasQuePagan) }} {{ 'empresas.consolaPlataforma.paganEnElPlanGratis' | translate:{freemium: (num(totales.freemium))} }}</span>
       </button>
 
       <!-- Las inactivas tienen tarjeta propia, no un renglón escondido en el
@@ -111,14 +111,14 @@
            es una decisión tomada, no algo que se acaba de romper. -->
       <button type="button" class="kpi" [class.kpi--activo]="filtroEstado === 'inactivas'"
               (click)="filtrarPor('inactivas')"
-              title="Empresas desactivadas o bloqueadas. Tócala para ver solo esas: es la lista para recuperar clientes.">
-        <span class="kpi-label">Inactivas</span>
+              [title]="'empresas.consolaPlataforma.empresasDesactivadasOBloqueadasTocala' | translate">
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.inactivas' | translate }}</span>
         <span class="kpi-valor">{{ num(totales.inactivas) }}</span>
         <span class="kpi-pie">
           <ng-container *ngIf="totales.inactivasQuePagaban">
-            {{ num(totales.inactivasQuePagaban) }} tenían plan pago
+            {{ num(totales.inactivasQuePagaban) }} {{ 'empresas.consolaPlataforma.tenianPlanPago' | translate }}
           </ng-container>
-          <ng-container *ngIf="!totales.inactivasQuePagaban">ninguna tenía plan pago</ng-container>
+          <ng-container *ngIf="!totales.inactivasQuePagaban">{{ 'empresas.consolaPlataforma.ningunaTeniaPlanPago' | translate }}</ng-container>
         </span>
       </button>
 
@@ -129,34 +129,34 @@
       <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'enRiesgo'"
               [class.kpi--encendida]="totales.empresasEnRiesgo > 0"
               (click)="filtrarPor('enRiesgo')"
-              title="Empresas activas que dejaron de vender o donde nadie entra hace 30 días. Las que cumplen las dos cosas se cuentan una sola vez.">
-        <span class="kpi-label">En riesgo</span>
+              [title]="'empresas.consolaPlataforma.empresasActivasQueDejaronDe' | translate">
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.enRiesgo' | translate }}</span>
         <span class="kpi-valor">{{ num(totales.empresasEnRiesgo) }}</span>
-        <span class="kpi-pie">sin vender o sin entrar en {{ ventanaDias }} días</span>
+        <span class="kpi-pie">{{ 'empresas.consolaPlataforma.sinVenderOSinEntrar' | translate:{ventanaDias: ventanaDias} }}</span>
       </button>
 
       <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'porVencer'"
               [class.kpi--encendida]="totales.planesVencidos > 0 || totales.planesPorVencer > 0"
               (click)="filtrarPor('porVencer')">
-        <span class="kpi-label">Por cobrar</span>
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.porCobrar' | translate }}</span>
         <span class="kpi-valor">{{ num(totales.planesVencidos + totales.planesPorVencer) }}</span>
-        <span class="kpi-pie">{{ num(totales.planesVencidos) }} vencidos · {{ num(totales.planesPorVencer) }} esta semana</span>
+        <span class="kpi-pie">{{ num(totales.planesVencidos) }} {{ 'empresas.consolaPlataforma.vencidosEstaSemana' | translate:{planesPorVencer: (num(totales.planesPorVencer))} }}</span>
       </button>
 
       <button type="button" class="kpi" [class.kpi--activo]="orden === 'pedidos30d'"
               (click)="ordenarPor('pedidos30d')"
-              title="Pedidos de toda la plataforma por FECHA DE ENTREGA en el mes calendario (hora de Colombia), como filtra la pantalla de Pedidos, SIN los cancelados ni rechazados. El cobro sigue por fecha de creación. Tócala para subir arriba las empresas con más pedidos.">
+              [title]="'empresas.consolaPlataforma.pedidosDeTodaLaPlataforma' | translate">
         <!-- D-345: mes calendario por FECHA DE ENTREGA, como la pantalla de Pedidos
              del comercio. Con los 30 días móviles por creación ninguna cifra cuadraba. -->
-        <span class="kpi-label">Pedidos de {{ nombreMes(mesTotales()) }} <small>({{ rangoMes(mesTotales()) }})</small></span>
-        <span class="kpi-valor">{{ num(mesTotales()?.pedidos) }}<small class="kpi-de">pedidos</small></span>
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.pedidosDe' | translate:{mesTotales: (nombreMes(mesTotales()))} }} <small>({{ rangoMes(mesTotales()) }})</small></span>
+        <span class="kpi-valor">{{ num(mesTotales()?.pedidos) }}<small class="kpi-de">{{ 'empresas.consolaPlataforma.pedidos' | translate }}</small></span>
         <!-- Los cancelados se nombran: sin ellos, el número bajaba de un día para
              otro (de "todo lo que entró" a "solo lo vendido") y parecía que se
              habían perdido pedidos. -->
         <span class="kpi-pie" *ngIf="mesTotales()?.caidos">
-          + {{ num(mesTotales()?.caidos) }} cancelados o rechazados = {{ num((mesTotales()?.pedidos || 0) + (mesTotales()?.caidos || 0)) }} en total
+          {{ 'empresas.consolaPlataforma.canceladosORechazadosEnTotal' | translate:{caidos: (num(mesTotales()?.caidos)), pedidos: (num((mesTotales()?.pedidos || 0) + (mesTotales()?.caidos || 0)))} }}
         </span>
-        <span class="kpi-pie">{{ dinero(mesTotales()?.facturado) }} en ventas</span>
+        <span class="kpi-pie">{{ dinero(mesTotales()?.facturado) }} {{ 'empresas.consolaPlataforma.enVentas' | translate }}</span>
       </button>
 
     </section>
@@ -172,33 +172,33 @@
          rotos. Ordenar ya vive en el desplegable "Ordenar por", que es donde se
          busca; acá volvieron a ser lo que son, cifras. -->
     <section class="kpis-contexto">
-      <span class="ctx-rotulo">Filtrar:</span>
+      <span class="ctx-rotulo">{{ 'empresas.consolaPlataforma.filtrar' | translate }}</span>
 
       <!-- Las que se acaban de registrar: las que hay que acompañar en el arranque. -->
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'nuevas'"
               (click)="filtrarPor('nuevas')"
-              [title]="'Empresas que se registraron en Katuq en los últimos ' + diasEmpresaNueva + ' días'">
+              [title]="('empresas.consolaPlataforma.empresasQueSeRegistraronEn' | translate) + diasEmpresaNueva + ('empresas.consolaPlataforma.dias' | translate)">
         <i class="fa fa-star"></i>
-        <strong>{{ num(cuantasNuevas) }}</strong> nuevas
+        <strong>{{ num(cuantasNuevas) }}</strong> {{ 'empresas.consolaPlataforma.nuevas' | translate }}
       </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'cortesia'"
               (click)="filtrarPor('cortesia')"
-              title="Empresas de cortesía: tienen todo y no se les cobra (las de Katuq y las demo)">
+              [title]="'empresas.consolaPlataforma.empresasDeCortesiaTienenTodo' | translate">
         <i class="fa fa-gift"></i>
-        <strong>{{ num(cuantasCortesia) }}</strong> cortesía
+        <strong>{{ num(cuantasCortesia) }}</strong> {{ 'empresas.consolaPlataforma.cortesia' | translate }}
       </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinMovimiento'"
               (click)="filtrarPor('sinMovimiento')"
-              title="Activas que no han vendido nada en la ventana">
-        <strong>{{ num(totales.empresasSinMovimiento) }}</strong> sin vender
+              [title]="'empresas.consolaPlataforma.activasQueNoHanVendido' | translate">
+        <strong>{{ num(totales.empresasSinMovimiento) }}</strong> {{ 'empresas.consolaPlataforma.sinVender' | translate }}
       </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinEntrar'"
               (click)="filtrarPor('sinEntrar')"
-              [title]="num(totales.empresasSinIngresoConocido) + ' empresas no tienen dato de ingreso: no se cuentan acá, porque no saber cuándo entró alguien no es lo mismo que saber que no entra'">
-        <strong>{{ num(totales.empresasSinEntrar30d) }}</strong> sin entrar
+              [title]="num(totales.empresasSinIngresoConocido) + ('empresas.consolaPlataforma.empresasNoTienenDatoDe' | translate)">
+        <strong>{{ num(totales.empresasSinEntrar30d) }}</strong> {{ 'empresas.consolaPlataforma.sinEntrar' | translate }}
       </button>
 
       <!-- Las dos caras del cobro, juntas: quién se cobra solo y a quién hay
@@ -206,39 +206,38 @@
            resta da mal porque la cortesía no está en ninguno de los dos. -->
       <button type="button" class="ctx ctx--ok" [class.ctx--activo]="filtroEstado === 'conTarjeta'"
               (click)="filtrarPor('conTarjeta')"
-              title="Clientes con tarjeta inscrita: el día del corte se les cobra solo, sin que nadie haga nada">
+              [title]="'empresas.consolaPlataforma.clientesConTarjetaInscritaEl' | translate">
         <i class="fa fa-credit-card"></i>
-        <strong>{{ num(totales.empresasConTarjeta) }}</strong> con tarjeta
+        <strong>{{ num(totales.empresasConTarjeta) }}</strong> {{ 'empresas.consolaPlataforma.conTarjeta' | translate }}
       </button>
 
       <button type="button" class="ctx ctx--pendiente" [class.ctx--activo]="filtroEstado === 'sinTarjeta'"
               (click)="filtrarPor('sinTarjeta')"
-              title="Clientes con plan pago que NO tienen tarjeta inscrita: hay que enviarles link de pago y perseguir el cobro">
+              [title]="'empresas.consolaPlataforma.clientesConPlanPagoQue' | translate">
         <i class="fa fa-link"></i>
-        <strong>{{ num(totales.empresasSinTarjeta) }}</strong> sin tarjeta
+        <strong>{{ num(totales.empresasSinTarjeta) }}</strong> {{ 'empresas.consolaPlataforma.sinTarjeta' | translate }}
       </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinIntegrar'"
               (click)="filtrarPor('sinIntegrar')"
-              [title]="num(totales.empresasEnLimiteIntegraciones) + ' toparon el límite de su plan: son la lista de upgrade'">
-        <strong>{{ num(totales.empresasSinIntegrar) }}</strong> sin integrar
+              [title]="num(totales.empresasEnLimiteIntegraciones) + ('empresas.consolaPlataforma.toparonElLimiteDeSu' | translate)">
+        <strong>{{ num(totales.empresasSinIntegrar) }}</strong> {{ 'empresas.consolaPlataforma.sinIntegrar' | translate }}
       </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="panelIntegraciones"
               (click)="alternarPanelIntegraciones()"
-              title="Ver cuántas empresas tiene conectada cada integración. Cuenta conectadas, no usadas.">
+              [title]="'empresas.consolaPlataforma.verCuantasEmpresasTieneConectada' | translate">
         <i class="fa fa-plug"></i>
-        <strong>{{ num(totales.integracionesActivas) }}</strong> integraciones
+        <strong>{{ num(totales.integracionesActivas) }}</strong> {{ 'empresas.consolaPlataforma.integraciones' | translate }}
       </button>
     </section>
 
     <!-- Cifras de tamaño de la plataforma. No se tocan: para ordenar por ellas
          está el desplegable "Ordenar por". -->
     <p class="kpis-datos">
-      Ticket promedio <strong>{{ dinero(totales.ticketPromedio30d) }}</strong>
-      · <strong>{{ num(totales.usuarios) }}</strong> usuarios
-      · <strong>{{ antiguedadMedia() }}</strong> de antigüedad media
-      <span class="kpis-datos-nota">(sobre {{ num(totales.empresasConFechaAlta) }} de {{ num(totales.empresas) }} con fecha de alta)</span>
+      {{ 'empresas.consolaPlataforma.ticketPromedio' | translate }} <strong>{{ dinero(totales.ticketPromedio30d) }}</strong>
+      · <strong>{{ num(totales.usuarios) }}</strong> {{ 'empresas.consolaPlataforma.usuarios' | translate }} <strong>{{ antiguedadMedia() }}</strong> {{ 'empresas.consolaPlataforma.deAntiguedadMedia' | translate }}
+      <span class="kpis-datos-nota">{{ 'empresas.consolaPlataforma.sobreDeConFechaDe' | translate:{empresasConFechaAlta: (num(totales.empresasConFechaAlta)), empresas: (num(totales.empresas))} }}</span>
     </p>
 
     <!-- ── DESGLOSE POR PROVEEDOR ───────────────────────────────────────────
@@ -248,9 +247,9 @@
     <section class="panel-integraciones" *ngIf="panelIntegraciones">
 
       <div class="panel-head">
-        <h5>Qué integración usa cada empresa</h5>
+        <h5>{{ 'empresas.consolaPlataforma.queIntegracionUsaCadaEmpresa' | translate }}</h5>
         <button type="button" class="btn-cerrar-panel" (click)="alternarPanelIntegraciones()"
-                title="Cerrar">
+                [title]="'comun.cerrar' | translate">
           <i class="fa fa-times"></i>
         </button>
       </div>
@@ -258,15 +257,14 @@
       <!-- Sin esta advertencia el número se lee como uso, y no lo es. -->
       <p class="panel-nota">
         <i class="fa fa-info-circle"></i>
-        Cuenta integraciones <strong>conectadas</strong>, no usadas: no existe el dato de cuántos
-        pedidos entró cada una.
+        {{ 'empresas.consolaPlataforma.cuentaIntegraciones' | translate }} <strong>{{ 'empresas.consolaPlataforma.conectadas' | translate }}</strong>{{ 'empresas.consolaPlataforma.noUsadasNoExisteEl' | translate }}
       </p>
 
       <div class="aviso-error aviso-error--suave" *ngIf="!censoIntegracionesOk">
         <i class="fa fa-exclamation-triangle"></i>
         <div>
-          <strong>No se pudo leer el censo de integraciones</strong>
-          <p>Los conteos de esta sección aparecen como "—". El resto de la consola no se ve afectado.</p>
+          <strong>{{ 'empresas.consolaPlataforma.noSePudoLeerEl' | translate }}</strong>
+          <p>{{ 'empresas.consolaPlataforma.losConteosDeEstaSeccion' | translate }}</p>
         </div>
       </div>
 
@@ -277,30 +275,30 @@
               {{ p.nombre }}
               <small class="prov-cat">{{ etiquetaCategoria(p.categoria) }}</small>
               <small class="chip chip--mini chip--alerta" *ngIf="p.desconocido"
-                     title="El backend ya no reconoce este proveedor: alguien lo configuró y después se quitó del catálogo">
-                sin catálogo
+                     [title]="'empresas.consolaPlataforma.elBackendYaNoReconoce' | translate">
+                {{ 'empresas.consolaPlataforma.sinCatalogo' | translate }}
               </small>
             </span>
             <span class="prov-num">
               <strong>{{ num(p.empresasActivas) }}</strong>
-              <small>{{ p.empresasActivas === 1 ? 'empresa' : 'empresas' }}</small>
+              <small>{{ p.empresasActivas === 1 ? ('empresas.consolaPlataforma.empresa' | translate) : ('empresas.consolaPlataforma.empresas' | translate) }}</small>
             </span>
             <!-- Una configuración apagada no es lo mismo que no haberla tenido
                  nunca: esa diferencia es la que dice si la integración se probó
                  y se abandonó. -->
             <small class="prov-apagadas" *ngIf="p.empresas > p.empresasActivas">
-              + {{ num(p.empresas - p.empresasActivas) }} la desconectaron
+              {{ 'empresas.consolaPlataforma.laDesconectaron' | translate:{empresasActivas: (num(p.empresas - p.empresasActivas))} }}
             </small>
           </div>
         </div>
 
         <ng-template #ningunaConectada>
-          <p class="panel-vacio">Ninguna empresa tiene integraciones configuradas todavía.</p>
+          <p class="panel-vacio">{{ 'empresas.consolaPlataforma.ningunaEmpresaTieneIntegracionesConfiguradas' | translate }}</p>
         </ng-template>
 
         <!-- La mitad incómoda de la respuesta: lo que se construyó y nadie usa. -->
         <div class="prov-sin-nadie" *ngIf="integracionesSinNadie.length > 0">
-          <span class="prov-sin-nadie-label">Sin ninguna empresa conectada:</span>
+          <span class="prov-sin-nadie-label">{{ 'empresas.consolaPlataforma.sinNingunaEmpresaConectada' | translate }}</span>
           <span class="chip chip--mini" *ngFor="let p of integracionesSinNadie"
                 [title]="etiquetaCategoria(p.categoria)">{{ p.nombre }}</span>
         </div>
@@ -317,15 +315,15 @@
          pantalla no había nada que explicara por qué. Parecía un filtro roto. -->
     <div class="filtro-activo" *ngIf="filtroEstado !== 'todas' || filtroEscalon !== 'todos'">
       <span>
-        Mostrando solo<ng-container *ngIf="filtroEstado !== 'todas'">
+        {{ 'empresas.consolaPlataforma.mostrandoSolo' | translate }}<ng-container *ngIf="filtroEstado !== 'todas'">
           <strong>{{ etiquetaFiltro() }}</strong></ng-container><ng-container
-          *ngIf="filtroEstado !== 'todas' && filtroEscalon !== 'todos'"> y</ng-container><ng-container
+          *ngIf="filtroEstado !== 'todas' && filtroEscalon !== 'todos'"> {{ 'empresas.consolaPlataforma.y' | translate }}</ng-container><ng-container
           *ngIf="filtroEscalon !== 'todos'">
-          escalón <strong>{{ etiquetaEscalon() }}</strong></ng-container>
-        — {{ empresas.length - empresasFiltradas.length }} empresas ocultas
+          {{ 'empresas.consolaPlataforma.escalon' | translate }} <strong>{{ etiquetaEscalon() }}</strong></ng-container>
+        {{ 'empresas.consolaPlataforma.empresasOcultas' | translate:{length: (empresas.length - empresasFiltradas.length)} }}
       </span>
       <button type="button" (click)="quitarFiltrosDeLista()">
-        <i class="fa fa-times"></i> Ver todas
+        <i class="fa fa-times"></i> {{ 'empresas.consolaPlataforma.verTodas' | translate }}
       </button>
     </div>
 
@@ -334,7 +332,7 @@
       <div class="buscador">
         <i class="fa fa-search"></i>
         <input type="text" [(ngModel)]="busqueda" (ngModelChange)="buscarDesdeElPrincipio()"
-               placeholder="Buscar por nombre, NIT, correo o ciudad…" />
+               [placeholder]="'empresas.consolaPlataforma.buscarPorNombreNitCorreo' | translate" />
         <button type="button" class="limpiar-busqueda" *ngIf="busqueda" (click)="busqueda=''; buscarDesdeElPrincipio()">
           <i class="fa fa-times"></i>
         </button>
@@ -342,7 +340,7 @@
 
       <div class="controles">
         <label class="control" [class.control--activo]="filtroEstado !== 'todas'">
-          <span class="control-label">Estado</span>
+          <span class="control-label">{{ 'empresas.consolaPlataforma.estado2' | translate }}</span>
           <!-- TODOS los valores que puede tomar el filtro tienen su opción. Si
                falta una, tocar la tarjeta correspondiente deja este desplegable
                en blanco: la lista queda filtrada y el control que debería
@@ -351,34 +349,34 @@
                tiene sentido para quien las escribió: quien busca "Inactivas"
                recorre la lista con la I en la cabeza, no con la categoría. -->
           <select [(ngModel)]="filtroEstado" (ngModelChange)="buscarDesdeElPrincipio()">
-            <option value="todas">Todas</option>
-            <option value="activas">Activas</option>
-            <option value="conTarjeta">Con tarjeta inscrita</option>
-            <option value="cortesia">Cortesía (no se cobra)</option>
-            <option value="enRiesgo">En riesgo</option>
-            <option value="freemium">Freemium (gratis)</option>
-            <option value="inactivas">Inactivas</option>
-            <option value="nuevas">Nuevas (últimos 30 días)</option>
-            <option value="anual">Pagan por año</option>
-            <option value="porVencer">Plan vencido o por vencer</option>
-            <option value="pactado">Precio pactado a mano</option>
-            <option value="premium">Premium (de pago)</option>
-            <option value="sinEntrar">Sin entrar hace 30 días</option>
-            <option value="sinMovimiento">Sin vender hace 30 días</option>
-            <option value="sinIntegrar">Sin ninguna integración</option>
-            <option value="sinTarjeta">Sin tarjeta inscrita</option>
+            <option value="todas">{{ 'empresas.consolaPlataforma.todas' | translate }}</option>
+            <option value="activas">{{ 'empresas.consolaPlataforma.activas' | translate }}</option>
+            <option value="conTarjeta">{{ 'empresas.consolaPlataforma.conTarjetaInscrita' | translate }}</option>
+            <option value="cortesia">{{ 'empresas.consolaPlataforma.cortesiaNoSeCobra' | translate }}</option>
+            <option value="enRiesgo">{{ 'empresas.consolaPlataforma.enRiesgo' | translate }}</option>
+            <option value="freemium">{{ 'empresas.consolaPlataforma.freemiumGratis' | translate }}</option>
+            <option value="inactivas">{{ 'empresas.consolaPlataforma.inactivas' | translate }}</option>
+            <option value="nuevas">{{ 'empresas.consolaPlataforma.nuevasUltimos30Dias' | translate }}</option>
+            <option value="anual">{{ 'empresas.consolaPlataforma.paganPorAno' | translate }}</option>
+            <option value="porVencer">{{ 'empresas.consolaPlataforma.planVencidoOPorVencer' | translate }}</option>
+            <option value="pactado">{{ 'empresas.consolaPlataforma.precioPactadoAMano' | translate }}</option>
+            <option value="premium">{{ 'empresas.consolaPlataforma.premiumDePago' | translate }}</option>
+            <option value="sinEntrar">{{ 'empresas.consolaPlataforma.sinEntrarHace30Dias' | translate }}</option>
+            <option value="sinMovimiento">{{ 'empresas.consolaPlataforma.sinVenderHace30Dias' | translate }}</option>
+            <option value="sinIntegrar">{{ 'empresas.consolaPlataforma.sinNingunaIntegracion' | translate }}</option>
+            <option value="sinTarjeta">{{ 'empresas.consolaPlataforma.sinTarjetaInscrita' | translate }}</option>
           </select>
         </label>
 
         <!-- El escalón va en su PROPIO desplegable, no mezclado con el estado:
              así se puede pedir "los de Liderazgo que están en riesgo". -->
         <label class="control" [class.control--activo]="filtroEscalon !== 'todos'">
-          <span class="control-label">Escalón</span>
+          <span class="control-label">{{ 'empresas.consolaPlataforma.escalon2' | translate }}</span>
           <select [(ngModel)]="filtroEscalon" (ngModelChange)="buscarDesdeElPrincipio()">
-            <option value="todos">Todos</option>
-            <option value="freemium">Freemium (no se cobra)</option>
+            <option value="todos">{{ 'empresas.consolaPlataforma.todos' | translate }}</option>
+            <option value="freemium">{{ 'empresas.consolaPlataforma.freemiumNoSeCobra' | translate }}</option>
             <option *ngFor="let e of escalones" [value]="e.id">
-              {{ e.nombre }}{{ e.usd ? ' — US$' + e.usd : '' }}
+              {{ e.nombre }}{{ e.usd ? ('empresas.consolaPlataforma.us' | translate) + e.usd : '' }}
             </option>
           </select>
         </label>
@@ -387,7 +385,7 @@
              pedidos. Arranca en el último mes COMPLETO: el mes en curso, a
              principio de mes, sale casi todo en cero. -->
         <label class="control" [class.control--activo]="mesTabla === 'mesActual'">
-          <span class="control-label">Mes</span>
+          <span class="control-label">{{ 'empresas.consolaPlataforma.mes' | translate }}</span>
           <select [(ngModel)]="mesTabla" (ngModelChange)="buscarDesdeElPrincipio()">
             <option value="mesAnterior">{{ nombreMesMayus(totales?.mesAnterior) }} ({{ rangoMes(totales?.mesAnterior) }})</option>
             <option value="mesActual">{{ nombreMesMayus(totales?.mesActual) }} ({{ rangoMes(totales?.mesActual) }})</option>
@@ -395,44 +393,43 @@
         </label>
 
         <label class="control">
-          <span class="control-label">Ordenar por</span>
+          <span class="control-label">{{ 'empresas.consolaPlataforma.ordenarPor' | translate }}</span>
           <select [(ngModel)]="orden" (ngModelChange)="buscarDesdeElPrincipio()">
             <!-- Alfabético, salvo Nombre que va primero por ser el de salida. -->
-            <option value="nombre">Nombre (A–Z)</option>
-            <option value="ultimoPedido">Venta más reciente</option>
-            <option value="precio">Más caras (escalón)</option>
-            <option value="facturado">Más facturado</option>
-            <option value="antiguedad">Más antiguas</option>
-            <option value="integraciones">Más integraciones</option>
-            <option value="pedidos30d">Más pedidos</option>
-            <option value="ultimoIngreso">Ingreso más reciente</option>
+            <option value="nombre">{{ 'empresas.consolaPlataforma.nombreAZ' | translate }}</option>
+            <option value="ultimoPedido">{{ 'empresas.consolaPlataforma.ventaMasReciente' | translate }}</option>
+            <option value="precio">{{ 'empresas.consolaPlataforma.masCarasEscalon' | translate }}</option>
+            <option value="facturado">{{ 'empresas.consolaPlataforma.masFacturado' | translate }}</option>
+            <option value="antiguedad">{{ 'empresas.consolaPlataforma.masAntiguas' | translate }}</option>
+            <option value="integraciones">{{ 'empresas.consolaPlataforma.masIntegraciones' | translate }}</option>
+            <option value="pedidos30d">{{ 'empresas.consolaPlataforma.masPedidos' | translate }}</option>
+            <option value="ultimoIngreso">{{ 'empresas.consolaPlataforma.ingresoMasReciente' | translate }}</option>
           </select>
         </label>
 
-        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">{{ 'empresas.consolaPlataforma.limpiar' | translate }}</button>
       </div>
     </section>
 
     <p class="conteo-resultados">
-      Mostrando {{ num(desdeVisible) }}–{{ num(hastaVisible) }}
-      de {{ num(empresasFiltradas.length) }} empresas<span *ngIf="empresasFiltradas.length !== empresas.length">
-        (filtradas de {{ num(empresas.length) }})</span>
+      {{ 'empresas.consolaPlataforma.mostrandoDeEmpresas' | translate:{desdeVisible: (num(desdeVisible)), hastaVisible: (num(hastaVisible)), length: (num(empresasFiltradas.length))} }}<span *ngIf="empresasFiltradas.length !== empresas.length">
+        {{ 'empresas.consolaPlataforma.filtradasDe' | translate:{length: (num(empresas.length))} }}</span>
     </p>
 
     <!-- ── LISTADO ──────────────────────────────────────────────────────── -->
     <section class="tabla">
 
       <div class="tabla-head">
-        <span class="col-empresa">Empresa</span>
-        <span class="col-num" [title]="tituloMes('Pedidos')">Pedidos</span>
-        <span class="col-num" [title]="tituloMes('Plata vendida')">Ventas</span>
-        <span class="col-num" [title]="tituloMes('Ticket promedio')">Ticket</span>
-        <span class="col-num">Última venta</span>
-        <span class="col-num">Último ingreso</span>
-        <span class="col-num">Integr.</span>
-        <span class="col-estado">Estado</span>
-        <span class="col-plan">Plan</span>
-        <span class="col-acciones">Acciones</span>
+        <span class="col-empresa">{{ 'empresas.consolaPlataforma.empresa2' | translate }}</span>
+        <span class="col-num" [title]="tituloMes('Pedidos')">{{ 'empresas.consolaPlataforma.pedidos2' | translate }}</span>
+        <span class="col-num" [title]="tituloMes('Plata vendida')">{{ 'empresas.consolaPlataforma.ventas' | translate }}</span>
+        <span class="col-num" [title]="tituloMes('Ticket promedio')">{{ 'empresas.consolaPlataforma.ticket' | translate }}</span>
+        <span class="col-num">{{ 'empresas.consolaPlataforma.ultimaVenta' | translate }}</span>
+        <span class="col-num">{{ 'empresas.consolaPlataforma.ultimoIngreso' | translate }}</span>
+        <span class="col-num">{{ 'empresas.consolaPlataforma.integr' | translate }}</span>
+        <span class="col-estado">{{ 'empresas.consolaPlataforma.estado2' | translate }}</span>
+        <span class="col-plan">{{ 'empresas.consolaPlataforma.plan' | translate }}</span>
+        <span class="col-acciones">{{ 'empresas.consolaPlataforma.acciones' | translate }}</span>
       </div>
 
       <!-- Un "no hay resultados" a secas no dice si el filtro está mal puesto o
@@ -441,23 +438,21 @@
       <div class="fila-vacia" *ngIf="empresasFiltradas.length === 0">
         <i class="fa fa-inbox"></i>
         <p *ngIf="filtroEstado !== 'todas'">
-          Ninguna de las {{ num(empresas.length) }} empresas es
+          {{ 'empresas.consolaPlataforma.ningunaDeLasEmpresasEs' | translate:{length: (num(empresas.length))} }}
           <strong>{{ etiquetaFiltro() }}</strong><ng-container *ngIf="filtroEscalon !== 'todos'">
-            con escalón <strong>{{ etiquetaEscalon() }}</strong></ng-container>
+            {{ 'empresas.consolaPlataforma.conEscalon' | translate }} <strong>{{ etiquetaEscalon() }}</strong></ng-container>
         </p>
 
         <!-- Estos dos salen vacíos mientras nadie haya guardado el acuerdo, y
              sin esta nota el filtro parece roto en vez de vacío. -->
         <p class="vacia-pista" *ngIf="filtroEstado === 'anual' || filtroEstado === 'pactado'">
-          Se guarda en el chip del <strong>Plan</strong> de cada empresa: ahí se elige el
-          escalón pactado y si paga mensual o anual. Mientras no se guarde, el sistema
-          la trata como mensual y le calcula el escalón por sus ventas.
+          {{ 'empresas.consolaPlataforma.seGuardaEnElChip' | translate }} <strong>{{ 'empresas.consolaPlataforma.plan' | translate }}</strong> {{ 'empresas.consolaPlataforma.deCadaEmpresaAhiSe' | translate }}
         </p>
         <p *ngIf="filtroEstado === 'todas' && busqueda">
-          Ninguna empresa coincide con «{{ busqueda }}»
+          {{ 'empresas.consolaPlataforma.ningunaEmpresaCoincideCon' | translate:{busqueda: busqueda} }}
         </p>
-        <p *ngIf="filtroEstado === 'todas' && !busqueda">Ninguna empresa coincide con el filtro</p>
-        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Quitar filtros</button>
+        <p *ngIf="filtroEstado === 'todas' && !busqueda">{{ 'empresas.consolaPlataforma.ningunaEmpresaCoincideConEl' | translate }}</p>
+        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">{{ 'empresas.consolaPlataforma.quitarFiltros' | translate }}</button>
       </div>
 
       <ng-container *ngFor="let empresa of empresasPagina; trackBy: trackPorId">
@@ -472,7 +467,7 @@
           <div class="col-empresa">
             <span class="avatar" [class.avatar--off]="!empresa.activo">{{ iniciales(empresa.nomComercial || empresa.nombre) }}</span>
             <span class="empresa-txt">
-              <strong [title]="empresa.nomComercial || empresa.nombre">{{ empresa.nomComercial || empresa.nombre || 'Sin nombre' }}</strong>
+              <strong [title]="empresa.nomComercial || empresa.nombre">{{ empresa.nomComercial || empresa.nombre || ('empresas.consolaPlataforma.sinNombre' | translate) }}</strong>
               <small class="empresa-meta">
                 <span class="empresa-nit">NIT {{ nitCompleto(empresa) }}</span>
                 <span *ngIf="empresa.ciudad" class="empresa-ciudad">· {{ empresa.ciudad }}</span>
@@ -486,8 +481,8 @@
                       [class.chip--lectura]="empresa.estadoCicloInfo?.entra && !empresa.estadoCicloInfo?.escribe"
                       [class.chip--alerta]="empresa.estadoCiclo === 'past_due'"
                       [title]="(empresa.estadoCicloInfo?.descripcion || '') +
-                        (empresa.estadoMotivo ? ' Motivo: ' + empresa.estadoMotivo : '') +
-                        (empresa.estadoCambiadoPor ? ' — lo cambió ' + empresa.estadoCambiadoPor : '')">
+                        (empresa.estadoMotivo ? ('empresas.consolaPlataforma.motivo' | translate) + empresa.estadoMotivo : '') +
+                        (empresa.estadoCambiadoPor ? ('empresas.consolaPlataforma.loCambio' | translate) + empresa.estadoCambiadoPor : '')">
                   <i class="fa"
                      [ngClass]="!empresa.estadoCicloInfo?.entra
                         ? 'fa-lock'
@@ -496,7 +491,7 @@
                 </span>
                 <span class="chip chip--mini chip--alerta"
                       *ngIf="empresa.activo && sinMovimiento(empresa)"
-                      title="Activa, pero no ha vendido en 30 días">Sin movimiento</span>
+                      [title]="'empresas.consolaPlataforma.activaPeroNoHaVendido' | translate">{{ 'empresas.consolaPlataforma.sinMovimiento' | translate }}</span>
               </small>
             </span>
           </div>
@@ -508,11 +503,11 @@
                abrirla: los válidos arriba y, si hubo, los caídos y el total que
                cuadra con "Listado de pedidos" de la pantalla de Pedidos. -->
           <div class="col-num" data-label="Pedidos"
-               [title]="num(mesDe(empresa)?.pedidos) + ' pedidos válidos por fecha de entrega' + (mesDe(empresa)?.caidos ? ' + ' + num(mesDe(empresa)?.caidos) + ' cancelados o rechazados = ' + num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)) + ', el total de la pantalla de Pedidos' : '')">
+               [title]="num(mesDe(empresa)?.pedidos) + ('empresas.consolaPlataforma.pedidosValidosPorFechaDe' | translate) + (mesDe(empresa)?.caidos ? ' + ' + num(mesDe(empresa)?.caidos) + ('empresas.consolaPlataforma.canceladosORechazados' | translate) + num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)) + ('empresas.consolaPlataforma.elTotalDeLaPantalla' | translate) : '')">
             <strong>{{ num(mesDe(empresa)?.pedidos) }}</strong>
             <ng-container *ngIf="mesDe(empresa)?.caidos">
-              <small class="col-num-nota">+ {{ num(mesDe(empresa)?.caidos) }} cancelados</small>
-              <small class="col-num-nota">= {{ num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)) }} total</small>
+              <small class="col-num-nota">{{ 'empresas.consolaPlataforma.cancelados' | translate:{caidos: (num(mesDe(empresa)?.caidos))} }}</small>
+              <small class="col-num-nota">{{ 'empresas.consolaPlataforma.total' | translate:{pedidos: (num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)))} }}</small>
             </ng-container>
           </div>
 
@@ -532,7 +527,7 @@
               {{ fechaCorta(empresa.metricas?.ultimoPedido) }}
               <small class="col-num-nota">{{ haceDias(diasDesdeUltimoPedido(empresa)) }}</small>
             </span>
-            <ng-template #nunca><span class="muted">Nunca</span></ng-template>
+            <ng-template #nunca><span class="muted">{{ 'empresas.consolaPlataforma.nunca' | translate }}</span></ng-template>
           </div>
 
           <!-- Último ingreso: la señal de cuenta abandonada. "Nunca" NO es
@@ -542,7 +537,7 @@
               {{ fechaCorta(empresa.ultimoIngreso) }}
               <small class="col-num-nota">{{ haceDias(diasDesdeUltimoIngreso(empresa)) }}</small>
             </span>
-            <ng-template #nuncaEntro><span class="muted">Nunca</span></ng-template>
+            <ng-template #nuncaEntro><span class="muted">{{ 'empresas.consolaPlataforma.nunca' | translate }}</span></ng-template>
           </div>
 
           <!-- Integraciones conectadas. Sin censo va "—", nunca 0: no saber
@@ -551,7 +546,7 @@
             <strong *ngIf="integracionesDe(empresa) as i; else sinCenso">{{ num(i.activas) }}</strong>
             <ng-template #sinCenso><span class="muted">—</span></ng-template>
             <small class="col-num-nota col-num-nota--alerta" *ngIf="enLimiteIntegraciones(empresa)">
-              tope del plan
+              {{ 'empresas.consolaPlataforma.topeDelPlan' | translate }}
             </small>
           </div>
 
@@ -584,7 +579,7 @@
                    el cliente. El escalón —cuánto paga— va debajo: son dos datos
                    distintos y ninguno reemplaza al otro. -->
               <ng-container *ngIf="!cambiandoPlan.has(empresa._docId)">
-                {{ empresa.plan === 'premium' ? '★ Premium' : 'Freemium' }}
+                {{ empresa.plan === 'premium' ? ('empresas.consolaPlataforma.premium' | translate) : ('empresas.consolaPlataforma.freemium' | translate) }}
               </ng-container>
             </span>
             <!-- Cortesía: donde iría el precio va la razón. Antes esta empresa
@@ -592,7 +587,7 @@
                  cobrarle, que es justo lo que no hay que hacer. -->
             <small class="plan-escalon plan-escalon--cortesia" *ngIf="esCortesia(empresa)"
                    [title]="escalonTitulo(empresa)">
-              <i class="fa fa-gift"></i> Cortesía · no se cobra
+              <i class="fa fa-gift"></i> {{ 'empresas.consolaPlataforma.cortesiaNoSeCobra2' | translate }}
             </small>
 
             <small class="plan-escalon" *ngIf="empresa.escalon?.aplica && !esCortesia(empresa)"
@@ -604,13 +599,13 @@
                 <i class="fa fa-lock plan-pactado" *ngIf="escalonPactado(empresa)"></i>
                 {{ empresa.escalon?.nombre }} ·
                 {{ empresa.escalon?.aMedida
-                    ? 'a medida'
+                    ? ('empresas.consolaPlataforma.aMedida' | translate)
                     : (empresa.escalon?.periodo === 'anual'
-                        ? dineroUSD(empresa.escalon?.precioPeriodoUSD) + '/año'
+                        ? dineroUSD(empresa.escalon?.precioPeriodoUSD) + ('empresas.consolaPlataforma.ano' | translate)
                         : dineroUSD(empresa.escalon?.precioUSD)) }}
               </ng-container>
               <ng-template #escalonDesconocido>
-                <span class="muted">escalón sin calcular</span>
+                <span class="muted">{{ 'empresas.consolaPlataforma.escalonSinCalcular' | translate }}</span>
               </ng-template>
             </small>
 
@@ -618,7 +613,7 @@
                  descuento. Sin esto, US$4.099/año no se reconoce como el plan de
                  US$427 y parece un precio equivocado. -->
             <small class="plan-desglose-anual" *ngIf="desgloseAnual(empresa) as d">
-              {{ dineroUSD(d.mensual) }}/mes × 12 − {{ d.descuento }}% por ser anual
+              {{ dineroUSD(d.mensual) }}{{ 'empresas.consolaPlataforma.mes12PorSerAnual' | translate:{descuento: d.descuento} }}
             </small>
 
             <!-- Antes esta línea aparecía SOLO si el plan estaba vencido o por
@@ -642,10 +637,10 @@
                    'fa-gift plan-modo--cortesia': empresa.modoCobro === 'cortesia'
                  }"></i>
               <ng-container [ngSwitch]="empresa.renovacion?.estado">
-                <span *ngSwitchCase="'vencido'">venció {{ fechaDiaMes(empresa.renovacion?.fecha) }}</span>
-                <span *ngSwitchCase="'sinFecha'">sin fecha</span>
+                <span *ngSwitchCase="'vencido'">{{ 'empresas.consolaPlataforma.vencio' | translate:{fecha: (fechaDiaMes(empresa.renovacion?.fecha))} }}</span>
+                <span *ngSwitchCase="'sinFecha'">{{ 'empresas.consolaPlataforma.sinFecha' | translate }}</span>
                 <span *ngSwitchDefault>
-                  cobra {{ fechaDiaMes(empresa.renovacion?.fecha) }}<em *ngIf="empresa.renovacion?.estimada">*</em>
+                  {{ 'empresas.consolaPlataforma.cobra' | translate:{fecha: (fechaDiaMes(empresa.renovacion?.fecha))} }}<em *ngIf="empresa.renovacion?.estimada">*</em>
                 </span>
               </ng-container>
             </small>
@@ -653,7 +648,7 @@
             <!-- Aparece al pasar el mouse. Un chip de colores se lee como una
                  etiqueta, no como algo que se pueda tocar; sin esta pista no
                  hay forma de saber que ahí se edita el plan. -->
-            <span class="plan-editar"><i class="fa fa-pencil"></i> editar plan</span>
+            <span class="plan-editar"><i class="fa fa-pencil"></i> {{ 'empresas.consolaPlataforma.editarPlan' | translate }}</span>
           </button>
 
           <!-- Acciones -->
@@ -671,7 +666,7 @@
             <button type="button" class="btn-icono btn-icono--plan"
                     [disabled]="cambiandoPlan.has(empresa._docId)"
                     (click)="cambiarPlan(empresa, $event)"
-                    title="Editar el plan: Premium/Freemium, escalón pactado, mensual o anual, y fecha de cobro">
+                    [title]="'empresas.consolaPlataforma.editarElPlanPremiumFreemium' | translate">
               <i class="fa" [ngClass]="cambiandoPlan.has(empresa._docId)
                    ? 'fa-spinner fa-spin'
                    : 'fa-dollar'"></i>
@@ -679,7 +674,7 @@
 
             <button type="button" class="btn-icono"
                     (click)="editarEmpresa(empresa, $event)"
-                    title="Editar datos de la empresa">
+                    [title]="'empresas.consolaPlataforma.editarDatosDeLaEmpresa' | translate">
               <i class="fa fa-pencil"></i>
             </button>
 
@@ -693,9 +688,9 @@
                     [class.btn-icono--alerta]="empresa.estadoCicloInfo?.entra && !empresa.estadoCicloInfo?.escribe"
                     [disabled]="cambiandoCiclo.has(empresa._docId)"
                     (click)="cambiarEstadoCiclo(empresa, $event)"
-                    [title]="'Estado: ' + (empresa.estadoCicloInfo?.etiqueta || '—') +
+                    [title]="('empresas.consolaPlataforma.estado' | translate) + (empresa.estadoCicloInfo?.etiqueta || '—') +
                              ' — ' + (empresa.estadoCicloInfo?.descripcion || '') +
-                             ' Clic para cambiarlo.'">
+                             ('empresas.consolaPlataforma.clicParaCambiarlo' | translate)">
               <i class="fa" [ngClass]="cambiandoCiclo.has(empresa._docId)
                    ? 'fa-spinner fa-spin'
                    : (!empresa.estadoCicloInfo?.entra
@@ -719,7 +714,7 @@
           <header class="ficha-head">
             <div class="ficha-head-quien">
               <strong class="ficha-head-nombre">
-                {{ empresa.nomComercial || empresa.nombre || 'Sin nombre' }}
+                {{ empresa.nomComercial || empresa.nombre || ('empresas.consolaPlataforma.sinNombre' | translate) }}
               </strong>
               <span class="ficha-head-nit" *ngIf="empresa.nit">
                 NIT {{ empresa.nit }}<ng-container *ngIf="empresa.digitoVerificacion">-{{ empresa.digitoVerificacion }}</ng-container>
@@ -740,14 +735,14 @@
                    Juntarlos en una sola línea los hacía parecer lo mismo. -->
               <span class="ficha-head-plan-nombre"
                     [class.ficha-head-plan-nombre--pago]="empresa.plan === 'premium'">
-                {{ empresa.plan === 'premium' ? '★ PREMIUM' : 'FREEMIUM' }}
+                {{ empresa.plan === 'premium' ? ('empresas.consolaPlataforma.premium2' | translate) : ('empresas.consolaPlataforma.freemium2' | translate) }}
                 <!-- La cortesía se anuncia arriba, junto al plan: es lo que
                      explica por qué abajo no hay precio ni fecha de cobro. -->
                 <em class="ficha-head-periodo ficha-head-periodo--cortesia" *ngIf="esCortesia(empresa)"
-                    title="No se le factura: empresa de Katuq o demo">· CORTESÍA</em>
-                <em class="ficha-head-periodo" *ngIf="empresa.escalon?.periodo === 'anual'">· ANUAL</em>
+                    [title]="'empresas.consolaPlataforma.noSeLeFacturaEmpresa' | translate">{{ 'empresas.consolaPlataforma.cortesia2' | translate }}</em>
+                <em class="ficha-head-periodo" *ngIf="empresa.escalon?.periodo === 'anual'">{{ 'empresas.consolaPlataforma.anual' | translate }}</em>
                 <em class="ficha-head-periodo" *ngIf="escalonPactado(empresa)"
-                    title="Escalón pactado con el cliente: no depende de sus ventas">· PACTADO</em>
+                    [title]="'empresas.consolaPlataforma.escalonPactadoConElCliente' | translate">{{ 'empresas.consolaPlataforma.pactado' | translate }}</em>
               </span>
               <span class="ficha-head-escalon"
                     [class.ficha-head-escalon--pago]="empresa.escalon?.aplica">
@@ -755,30 +750,29 @@
               </span>
               <small class="ficha-head-renueva">
                 <ng-container *ngIf="esCortesia(empresa)">
-                  no vence · no se le cobra ni mensual ni anualmente
+                  {{ 'empresas.consolaPlataforma.noVenceNoSeLe' | translate }}
                 </ng-container>
                 <ng-container [ngSwitch]="empresa.renovacion?.estado"
                               *ngIf="!esCortesia(empresa)">
-                  <span *ngSwitchCase="'noAplica'">el plan gratis no vence</span>
+                  <span *ngSwitchCase="'noAplica'">{{ 'empresas.consolaPlataforma.elPlanGratisNoVence' | translate }}</span>
                   <span *ngSwitchCase="'vencido'" class="ficha-head-alerta">
                     <i class="fa fa-exclamation-triangle"></i>
-                    se le venció el {{ fechaCorta(empresa.renovacion?.fecha) }}
-                    (hace {{ -(empresa.renovacion?.diasRestantes || 0) }} d)
+                    {{ 'empresas.consolaPlataforma.seLeVencioElHace' | translate:{fecha: (fechaCorta(empresa.renovacion?.fecha)), diasRestantes: (-(empresa.renovacion?.diasRestantes || 0))} }}
                   </span>
-                  <span *ngSwitchCase="'sinFecha'" class="muted">sin fecha de renovación</span>
+                  <span *ngSwitchCase="'sinFecha'" class="muted">{{ 'empresas.consolaPlataforma.sinFechaDeRenovacion' | translate }}</span>
                   <span *ngSwitchDefault>
                     <!-- El período medido va primero cuando se fijó a mano: es
                          el dato que decide el escalón, y hasta ahora solo se
                          veía la fecha de cobro. -->
                     <ng-container *ngIf="empresa.billingPeriodStart">
-                      período del <strong>{{ fechaCorta(empresa.billingPeriodStart) }}</strong>
-                      al <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong> ·
+                      {{ 'empresas.consolaPlataforma.periodoDel' | translate }} <strong>{{ fechaCorta(empresa.billingPeriodStart) }}</strong>
+                      {{ 'empresas.consolaPlataforma.al' | translate }} <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong> ·
                     </ng-container>
-                    próximo cobro el <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong>
+                    {{ 'empresas.consolaPlataforma.proximoCobroEl' | translate }} <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong>
                     <ng-container *ngIf="empresa.renovacion?.diasRestantes !== null">
-                      (en {{ empresa.renovacion?.diasRestantes }} d)</ng-container><ng-container
-                      *ngIf="empresa.renovacion?.periodo">, cobro {{ empresa.renovacion?.periodo }}</ng-container>
-                    <em *ngIf="empresa.renovacion?.estimada" class="muted">· fecha estimada</em>
+                      {{ 'empresas.consolaPlataforma.enD' | translate:{diasRestantes: empresa.renovacion?.diasRestantes} }}</ng-container><ng-container
+                      *ngIf="empresa.renovacion?.periodo">{{ 'empresas.consolaPlataforma.cobro' | translate:{periodo: empresa.renovacion?.periodo} }}</ng-container>
+                    <em *ngIf="empresa.renovacion?.estimada" class="muted">{{ 'empresas.consolaPlataforma.fechaEstimada' | translate }}</em>
                   </span>
                 </ng-container>
               </small>
@@ -790,13 +784,13 @@
                      [class.ficha-head-modo--manual]="empresa.modoCobro === 'manual'">
                 <ng-container [ngSwitch]="empresa.modoCobro">
                   <span *ngSwitchCase="'automatico'">
-                    <i class="fa fa-credit-card"></i> tarjeta inscrita · se cobra solo
+                    <i class="fa fa-credit-card"></i> {{ 'empresas.consolaPlataforma.tarjetaInscritaSeCobraSolo' | translate }}
                   </span>
                   <span *ngSwitchCase="'manual'">
-                    <i class="fa fa-link"></i> sin tarjeta · hay que enviarle link de pago
+                    <i class="fa fa-link"></i> {{ 'empresas.consolaPlataforma.sinTarjetaHayQueEnviarle' | translate }}
                   </span>
                   <span *ngSwitchCase="'cortesia'">
-                    <i class="fa fa-gift"></i> cortesía · no se le cobra
+                    <i class="fa fa-gift"></i> {{ 'empresas.consolaPlataforma.cortesiaNoSeLeCobra' | translate }}
                   </span>
                 </ng-container>
               </small>
@@ -809,8 +803,8 @@
                 <i class="fa fa-envelope-o"></i> {{ empresa.emailContactoGeneral }}
               </span>
               <ng-template #sinCorreo>
-                <span class="ficha-head-alerta" title="Sin correo no se le puede emitir la factura electrónica de la membresía">
-                  <i class="fa fa-exclamation-triangle"></i> sin correo
+                <span class="ficha-head-alerta" [title]="'empresas.consolaPlataforma.sinCorreoNoSeLe' | translate">
+                  <i class="fa fa-exclamation-triangle"></i> {{ 'empresas.consolaPlataforma.sinCorreo' | translate }}
                 </span>
               </ng-template>
               <span *ngIf="empresa.cel || empresa.fijo">
@@ -824,62 +818,61 @@
                meterlos en la rejilla de 5 dejaba una fila coja. -->
           <p class="ficha-meta">
             <span *ngIf="empresa.creadaEn; else sinFechaAlta">
-              Creada el <strong>{{ fechaCorta(empresa.creadaEn) }}</strong>
-              · <strong>{{ antiguedadEmpresa(empresa) }}</strong> en Katuq
+              {{ 'empresas.consolaPlataforma.creadaEl' | translate }} <strong>{{ fechaCorta(empresa.creadaEn) }}</strong>
+              · <strong>{{ antiguedadEmpresa(empresa) }}</strong> {{ 'empresas.consolaPlataforma.enKatuq' | translate }}
             </span>
             <ng-template #sinFechaAlta>
-              <span class="muted">Sin fecha de creación registrada</span>
+              <span class="muted">{{ 'empresas.consolaPlataforma.sinFechaDeCreacionRegistrada' | translate }}</span>
             </ng-template>
 
             <span class="ficha-meta-sep">·</span>
 
             <span *ngIf="empresa.ultimoIngreso; else sinIngreso">
-              Último ingreso <strong>{{ fechaCorta(empresa.ultimoIngreso) }}</strong>
-              (hace {{ diasDesdeUltimoIngreso(empresa) }} d)
+              {{ 'empresas.consolaPlataforma.ultimoIngreso' | translate }} <strong>{{ fechaCorta(empresa.ultimoIngreso) }}</strong>
+              {{ 'empresas.consolaPlataforma.haceD' | translate:{empresa: (diasDesdeUltimoIngreso(empresa))} }}
             </span>
             <ng-template #sinIngreso>
-              <span class="muted">Nadie ha iniciado sesión todavía</span>
+              <span class="muted">{{ 'empresas.consolaPlataforma.nadieHaIniciadoSesionTodavia' | translate }}</span>
             </ng-template>
 
           </p>
 
           <div class="ficha-grid">
-            <div class="dato"><span class="dato-label">Productos</span><span class="dato-valor">{{ num(empresa.metricas?.productos) }}</span></div>
-            <div class="dato"><span class="dato-label">Clientes</span><span class="dato-valor">{{ num(empresa.metricas?.clientes) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.productos' | translate }}</span><span class="dato-valor">{{ num(empresa.metricas?.productos) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.clientes' | translate }}</span><span class="dato-valor">{{ num(empresa.metricas?.clientes) }}</span></div>
 
             <div class="dato">
-              <span class="dato-label">Unidades en inventario</span>
+              <span class="dato-label">{{ 'empresas.consolaPlataforma.unidadesEnInventario' | translate }}</span>
               <span class="dato-valor" *ngIf="unidadesDe(empresa) as u">{{ num(u.unidades) }}</span>
               <span class="dato-valor dato-valor--cargando" *ngIf="cargandoUnidades.has(empresa._docId)">
                 <i class="fa fa-spinner fa-spin"></i>
               </span>
               <span class="dato-valor muted" *ngIf="errorUnidades.get(empresa._docId)">—</span>
               <small class="dato-nota" *ngIf="unidadesDe(empresa) as u">
-                {{ num(u.registros) }} registros<span *ngIf="u.duplicadosDescartados > 0">
-                  · {{ num(u.duplicadosDescartados) }} espejos descartados</span>
+                {{ num(u.registros) }} {{ 'empresas.consolaPlataforma.registros' | translate }}<span *ngIf="u.duplicadosDescartados > 0">
+                  {{ 'empresas.consolaPlataforma.espejosDescartados' | translate:{duplicadosDescartados: (num(u.duplicadosDescartados))} }}</span>
               </small>
               <small class="dato-nota dato-nota--error" *ngIf="errorUnidades.get(empresa._docId) as e">{{ e }}</small>
             </div>
 
-            <div class="dato"><span class="dato-label">Pedidos (histórico)</span><span class="dato-valor">{{ num(empresa.metricas?.pedidos) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.pedidosHistorico' | translate }}</span><span class="dato-valor">{{ num(empresa.metricas?.pedidos) }}</span></div>
             <!-- D-345: los dos meses calendario, en hora de Colombia. "Pedidos" ya
                  viene SIN caídos; los caídos se dicen aparte para que la cifra
                  se pueda cuadrar contra la pantalla de Pedidos del comercio. -->
             <div class="dato" *ngFor="let mes of [empresa.metricas?.mesActual, empresa.metricas?.mesAnterior]">
-              <span class="dato-label">Pedidos {{ nombreMes(mes) }} <small>({{ rangoMes(mes) }})</small></span>
+              <span class="dato-label">{{ 'empresas.consolaPlataforma.pedidos3' | translate:{mes: (nombreMes(mes))} }} <small>({{ rangoMes(mes) }})</small></span>
               <span class="dato-valor">{{ num(mes?.pedidos) }}</span>
               <small class="dato-nota">
-                Por fecha de entrega.<ng-container *ngIf="mes?.caidos"> + {{ num(mes?.caidos) }} cancelados o rechazados
-                = {{ num((mes?.pedidos || 0) + (mes?.caidos || 0)) }}, el total de la pantalla de Pedidos</ng-container>
+                {{ 'empresas.consolaPlataforma.porFechaDeEntrega' | translate }}<ng-container *ngIf="mes?.caidos"> {{ 'empresas.consolaPlataforma.canceladosORechazadosElTotal' | translate:{caidos: (num(mes?.caidos)), pedidos: (num((mes?.pedidos || 0) + (mes?.caidos || 0)))} }}</ng-container>
               </small>
             </div>
-            <div class="dato"><span class="dato-label">Ticket promedio {{ nombreMes(empresa.metricas?.mesAnterior) }}</span><span class="dato-valor">{{ dinero(empresa.metricas?.mesAnterior?.ticketPromedio) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.ticketPromedio2' | translate:{mesAnterior: (nombreMes(empresa.metricas?.mesAnterior))} }}</span><span class="dato-valor">{{ dinero(empresa.metricas?.mesAnterior?.ticketPromedio) }}</span></div>
             <!-- LA CUENTA COMPLETA, en una sola tarjeta y con la resta HECHA.
                  Antes eran dos cifras sueltas —lo vendido y lo caído— y para
                  saber sobre qué se cobra había que restarlas a mano. La cifra
                  grande es la que importa: la base del cobro. -->
             <div class="dato dato--cobro">
-              <span class="dato-label">Sobre esto se cobra</span>
+              <span class="dato-label">{{ 'empresas.consolaPlataforma.sobreEstoSeCobra' | translate }}</span>
               <span class="dato-valor">
                 <i class="fa fa-spinner fa-spin muted" *ngIf="cargandoExcluidos.has(empresa._docId)"></i>
                 <ng-container *ngIf="!cargandoExcluidos.has(empresa._docId)">
@@ -890,42 +883,42 @@
               </span>
               <small class="dato-cuenta" *ngIf="excluidosDe(empresa) as ex">
                 <span class="cuenta-linea">
-                  <span *ngIf="ex.ventana === 'ciclo'">Vendió en el ciclo, desde el {{ fechaCorta(ex.desde) }}</span>
-                  <span *ngIf="ex.ventana !== 'ciclo'">Vendió en {{ ex.ventanaDias }} días</span>
+                  <span *ngIf="ex.ventana === 'ciclo'">{{ 'empresas.consolaPlataforma.vendioEnElCicloDesde' | translate:{desde: (fechaCorta(ex.desde))} }}</span>
+                  <span *ngIf="ex.ventana !== 'ciclo'">{{ 'empresas.consolaPlataforma.vendioEnDias' | translate:{ventanaDias: ex.ventanaDias} }}</span>
                   <b>{{ dinero(ex.totalFacturableCOP + ex.totalExcluidoCOP) }}</b>
                 </span>
                 <span class="cuenta-linea cuenta-linea--resta" *ngIf="ex.totalExcluidoCOP">
                   <span>
-                    Ventas caídas ({{ num(ex.pedidosExcluidos) }})
+                    {{ 'empresas.consolaPlataforma.ventasCaidas' | translate:{pedidosExcluidos: (num(ex.pedidosExcluidos))} }}
                     <button type="button" class="ver-caidas" (click)="alternarDetalleExcluidos(empresa, $event)">
-                      {{ detalleExcluidosAbierto.has(empresa._docId) ? 'ocultar' : 'ver cuáles' }}
+                      {{ detalleExcluidosAbierto.has(empresa._docId) ? ('empresas.consolaPlataforma.ocultar' | translate) : ('empresas.consolaPlataforma.verCuales' | translate) }}
                     </button>
                   </span>
                   <b>− {{ dinero(ex.totalExcluidoCOP) }}</b>
                 </span>
                 <span class="cuenta-linea cuenta-linea--total">
-                  <span>Base del cobro</span>
+                  <span>{{ 'empresas.consolaPlataforma.baseDelCobro' | translate }}</span>
                   <b>{{ dinero(ex.totalFacturableCOP) }}</b>
                 </span>
                 <span class="cuenta-nota" *ngIf="!ex.totalExcluidoCOP">
-                  ninguna venta se cayó: se cobra sobre todo lo vendido
+                  {{ 'empresas.consolaPlataforma.ningunaVentaSeCayoSe' | translate }}
                 </span>
                 <!-- D-344: lo que se cae después del corte no se descuenta. -->
                 <span class="cuenta-nota" *ngIf="ex.caidasDespuesDelCorte">
-                  {{ num(ex.caidasDespuesDelCorte) }} se cayeron después del corte ({{ dinero(ex.caidasDespuesDelCorteCOP) }}): se cobran
+                  {{ num(ex.caidasDespuesDelCorte) }} {{ 'empresas.consolaPlataforma.seCayeronDespuesDelCorte' | translate:{caidasDespuesDelCorteCOP: (dinero(ex.caidasDespuesDelCorteCOP))} }}
                 </span>
               </small>
               <!-- Sin el detalle no se puede afirmar nada: se dice que falta el
                    dato, nunca que no se cayó ninguna venta. -->
               <small class="dato-nota" *ngIf="!excluidosDe(empresa) && !cargandoExcluidos.has(empresa._docId)">
-                no se pudieron leer las ventas caídas: esta cifra puede incluirlas
+                {{ 'empresas.consolaPlataforma.noSePudieronLeerLas' | translate }}
               </small>
             </div>
-            <div class="dato"><span class="dato-label">Usuarios</span><span class="dato-valor">{{ num(empresa.metricas?.usuarios) }}</span></div>
-            <div class="dato"><span class="dato-label">Roles</span><span class="dato-valor">{{ num(empresa.metricas?.roles) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.usuarios2' | translate }}</span><span class="dato-valor">{{ num(empresa.metricas?.usuarios) }}</span></div>
+            <div class="dato"><span class="dato-label">{{ 'empresas.consolaPlataforma.roles' | translate }}</span><span class="dato-valor">{{ num(empresa.metricas?.roles) }}</span></div>
 
             <div class="dato">
-              <span class="dato-label">Último pedido</span>
+              <span class="dato-label">{{ 'empresas.consolaPlataforma.ultimoPedido' | translate }}</span>
               <span class="dato-valor dato-valor--sm">{{ fechaCorta(empresa.metricas?.ultimoPedido) }}</span>
               <small class="dato-nota" *ngIf="empresa.metricas?.ultimoPedidoNro">{{ empresa.metricas?.ultimoPedidoNro }}</small>
             </div>
@@ -938,10 +931,9 @@
                la columna "se cayó" y la marca de otro mes. -->
           <div class="ficha-caidas" *ngIf="detalleExcluidosAbierto.has(empresa._docId) && excluidosDe(empresa) as ex">
             <div class="caidas-head">
-              <strong>Ventas que no se cobran</strong>
+              <strong>{{ 'empresas.consolaPlataforma.ventasQueNoSeCobran' | translate }}</strong>
               <span class="caidas-resumen">
-                {{ num(ex.pedidosExcluidos) }} pedidos · {{ dinero(ex.totalExcluidoCOP) }}
-                · {{ ex.ventana === 'ciclo' ? 'ciclo de cobro desde el ' + fechaCorta(ex.desde) : 'últimos ' + ex.ventanaDias + ' días' }}
+                {{ num(ex.pedidosExcluidos) }} {{ 'empresas.consolaPlataforma.pedidos4' | translate:{totalExcluidoCOP: (dinero(ex.totalExcluidoCOP)), cicloDeCobroDesdeEl: (ex.ventana === 'ciclo' ? ('empresas.consolaPlataforma.cicloDeCobroDesdeEl' | translate) + fechaCorta(ex.desde) : ('empresas.consolaPlataforma.ultimos' | translate) + ex.ventanaDias + ('empresas.consolaPlataforma.dias' | translate))} }}
               </span>
             </div>
 
@@ -950,23 +942,22 @@
                  se tocó el documento. -->
             <p class="caidas-aviso" *ngIf="ex.fechasAproximadas">
               <i class="fa fa-info-circle"></i>
-              {{ num(ex.fechasAproximadas) }} de estas se cayeron antes de que se guardara la fecha exacta:
-              su fecha de caída es <b>aproximada</b> (la última edición del pedido).
+              {{ num(ex.fechasAproximadas) }} {{ 'empresas.consolaPlataforma.deEstasSeCayeronAntes' | translate }} <b>{{ 'empresas.consolaPlataforma.aproximada' | translate }}</b> {{ 'empresas.consolaPlataforma.laUltimaEdicionDelPedido' | translate }}
             </p>
 
             <div class="caidas-tabla">
               <div class="caidas-fila caidas-fila--head">
-                <span>Pedido</span><span>Vendido</span><span>Se cayó</span><span>Motivo</span><span>Valor</span>
+                <span>{{ 'empresas.consolaPlataforma.pedido' | translate }}</span><span>{{ 'empresas.consolaPlataforma.vendido' | translate }}</span><span>{{ 'empresas.consolaPlataforma.seCayo' | translate }}</span><span>{{ 'empresas.consolaPlataforma.motivo2' | translate }}</span><span>{{ 'empresas.consolaPlataforma.valor' | translate }}</span>
               </div>
               <div class="caidas-fila" *ngFor="let p of ex.pedidos">
                 <span class="caidas-nro">{{ p.nroPedido }}</span>
                 <span>{{ fechaCorta(p.fecha) }}</span>
                 <span [class.caidas-otromes]="p.caidaEnOtroMes"
                       [title]="p.caidaEnOtroMes
-                        ? 'Se cayó en un mes distinto al de la venta: pudo haberse contado en un cobro anterior'
-                        : 'Se cayó dentro del mismo mes de la venta'">
+                        ? ('empresas.consolaPlataforma.seCayoEnUnMes' | translate)
+                        : ('empresas.consolaPlataforma.seCayoDentroDelMismo' | translate)">
                   {{ p.fechaCaida ? fechaCorta(p.fechaCaida) : '—' }}
-                  <small *ngIf="p.diasHastaLaCaida !== null">({{ p.diasHastaLaCaida }} d)</small>
+                  <small *ngIf="p.diasHastaLaCaida !== null">{{ 'empresas.consolaPlataforma.d' | translate:{diasHastaLaCaida: p.diasHastaLaCaida} }}</small>
                 </span>
                 <span class="caidas-motivo">{{ p.motivo }}</span>
                 <span class="caidas-valor">{{ dinero(p.valorCOP) }}</span>
@@ -974,7 +965,7 @@
             </div>
 
             <p class="caidas-nota" *ngIf="ex.truncado">
-              Se muestran los 200 de mayor valor. El total de arriba sí las incluye todas.
+              {{ 'empresas.consolaPlataforma.seMuestranLos200De' | translate }}
             </p>
           </div>
 
@@ -983,16 +974,16 @@
                variable, y meterla ahí dejaba filas de alturas distintas. -->
           <div class="ficha-integraciones">
             <span class="ficha-bloque-label">
-              Integraciones conectadas
-              <small class="ficha-bloque-nota">conectadas, no necesariamente en uso</small>
+              {{ 'empresas.consolaPlataforma.integracionesConectadas' | translate }}
+              <small class="ficha-bloque-nota">{{ 'empresas.consolaPlataforma.conectadasNoNecesariamenteEnUso' | translate }}</small>
             </span>
 
             <ng-container *ngIf="integracionesDe(empresa) as i; else fichaSinCenso">
               <div class="integr-chips" *ngIf="i.proveedores.length > 0; else sinIntegraciones">
                 <span class="integr" *ngFor="let p of i.proveedores"
                       [class.integr--off]="!p.activa"
-                      [title]="(p.activa ? 'Conectada' : 'Desconectada (estado: ' + (p.estado || 'sin estado') + ')')
-                        + (p.conectadaPor ? ' · la conectó ' + p.conectadaPor : '')">
+                      [title]="(p.activa ? ('empresas.consolaPlataforma.conectada' | translate) : ('empresas.consolaPlataforma.desconectadaEstado' | translate) + (p.estado || ('empresas.consolaPlataforma.sinEstado' | translate)) + ')')
+                        + (p.conectadaPor ? ('empresas.consolaPlataforma.laConecto' | translate) + p.conectadaPor : '')">
                   <i class="fa" [ngClass]="p.activa ? 'fa-plug' : 'fa-ban'"></i>
                   {{ p.nombre }}
                   <small class="integr-cat">{{ etiquetaCategoria(p.categoria) }}</small>
@@ -1002,20 +993,19 @@
 
               <ng-template #sinIntegraciones>
                 <p class="integr-vacio">
-                  No tiene ninguna integración configurada.
-                  <span *ngIf="empresa.plan !== 'premium'">Su plan freemium permite una.</span>
+                  {{ 'empresas.consolaPlataforma.noTieneNingunaIntegracionConfigurada' | translate }}
+                  <span *ngIf="empresa.plan !== 'premium'">{{ 'empresas.consolaPlataforma.suPlanFreemiumPermiteUna' | translate }}</span>
                 </p>
               </ng-template>
 
               <p class="integr-tope" *ngIf="enLimiteIntegraciones(empresa)">
                 <i class="fa fa-lock"></i>
-                Ya usó la única integración que permite el plan freemium: para conectar otra
-                tiene que pasar a un plan pago.
+                {{ 'empresas.consolaPlataforma.yaUsoLaUnicaIntegracion' | translate }}
               </p>
             </ng-container>
 
             <ng-template #fichaSinCenso>
-              <p class="integr-vacio muted">No se pudo leer el censo de integraciones.</p>
+              <p class="integr-vacio muted">{{ 'empresas.consolaPlataforma.noSePudoLeerEl2' | translate }}</p>
             </ng-template>
           </div>
 
@@ -1032,17 +1022,17 @@
                  que no se puede llegar filtrado por esta empresa. -->
             <div class="sop-head">
               <span class="ficha-bloque-label">
-                Soporte
-                <small class="ficha-bloque-nota">lo que este cliente ha reportado</small>
+                {{ 'empresas.consolaPlataforma.soporte' | translate }}
+                <small class="ficha-bloque-nota">{{ 'empresas.consolaPlataforma.loQueEsteClienteHa' | translate }}</small>
               </span>
               <a class="sop-bandeja" [href]="urlBandejaSoporte" target="_blank" rel="noopener"
-                 title="Abre la bandeja completa de soporte en otra pestaña. No llega filtrada por esta empresa: hay que filtrarla allá.">
-                Abrir la bandeja <i class="fa fa-external-link"></i>
+                 [title]="'empresas.consolaPlataforma.abreLaBandejaCompletaDe' | translate">
+                {{ 'empresas.consolaPlataforma.abrirLaBandeja' | translate }} <i class="fa fa-external-link"></i>
               </a>
             </div>
 
             <p class="sop-vacio" *ngIf="cargandoSoporte">
-              <i class="fa fa-spinner fa-spin"></i> Cargando tickets…
+              <i class="fa fa-spinner fa-spin"></i> {{ 'empresas.consolaPlataforma.cargandoTickets' | translate }}
             </p>
 
             <!-- Sin el dato no se dice "0 tickets": un cero afirma que el
@@ -1066,11 +1056,11 @@
                           [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'errores'"
                           [disabled]="!s.errores"
                           [attr.aria-pressed]="filtroTicketsDe(empresa) === 'errores'"
-                          [title]="s.errores ? 'Ver solo los errores' : 'No ha reportado ningún error'"
+                          [title]="s.errores ? ('empresas.consolaPlataforma.verSoloLosErrores' | translate) : ('empresas.consolaPlataforma.noHaReportadoNingunError' | translate)"
                           (click)="alternarFiltroTickets(empresa, 'errores')">
                     <span class="sop-num">{{ num(s.errores) }}</span>
-                    <span class="sop-lbl">Errores</span>
-                    <small class="sop-hint">algo no le funciona</small>
+                    <span class="sop-lbl">{{ 'empresas.consolaPlataforma.errores' | translate }}</span>
+                    <small class="sop-hint">{{ 'empresas.consolaPlataforma.algoNoLeFunciona' | translate }}</small>
                   </button>
 
                   <button type="button"
@@ -1078,11 +1068,11 @@
                           [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'consultas'"
                           [disabled]="!s.consultas"
                           [attr.aria-pressed]="filtroTicketsDe(empresa) === 'consultas'"
-                          [title]="s.consultas ? 'Ver solo las consultas' : 'No ha hecho ninguna consulta'"
+                          [title]="s.consultas ? ('empresas.consolaPlataforma.verSoloLasConsultas' | translate) : ('empresas.consolaPlataforma.noHaHechoNingunaConsulta' | translate)"
                           (click)="alternarFiltroTickets(empresa, 'consultas')">
                     <span class="sop-num">{{ num(s.consultas) }}</span>
-                    <span class="sop-lbl">Consultas</span>
-                    <small class="sop-hint">dudas de cómo usarlo</small>
+                    <span class="sop-lbl">{{ 'empresas.consolaPlataforma.consultas' | translate }}</span>
+                    <small class="sop-hint">{{ 'empresas.consolaPlataforma.dudasDeComoUsarlo' | translate }}</small>
                   </button>
 
                   <button type="button"
@@ -1091,11 +1081,11 @@
                           [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'abiertos'"
                           [disabled]="!s.abiertos"
                           [attr.aria-pressed]="filtroTicketsDe(empresa) === 'abiertos'"
-                          [title]="s.abiertos ? 'Ver solo los que siguen abiertos' : 'No le queda ninguno abierto'"
+                          [title]="s.abiertos ? ('empresas.consolaPlataforma.verSoloLosQueSiguen' | translate) : ('empresas.consolaPlataforma.noLeQuedaNingunoAbierto' | translate)"
                           (click)="alternarFiltroTickets(empresa, 'abiertos')">
                     <span class="sop-num">{{ num(s.abiertos) }}</span>
-                    <span class="sop-lbl">Abiertos</span>
-                    <small class="sop-hint">{{ num(s.resueltos) }} ya resueltos</small>
+                    <span class="sop-lbl">{{ 'empresas.consolaPlataforma.abiertos' | translate }}</span>
+                    <small class="sop-hint">{{ num(s.resueltos) }} {{ 'empresas.consolaPlataforma.yaResueltos' | translate }}</small>
                   </button>
 
                   <!-- Esta no filtra: lleva al ticket. Filtrar por "el último"
@@ -1103,11 +1093,11 @@
                   <a class="sop-cifra sop-cifra--enlace"
                      *ngIf="ultimoTicket(empresa) as ult"
                      [href]="urlTicket(ult.cd)" target="_blank" rel="noopener"
-                     [title]="'Abrir el último ticket: ' + ult.asunto">
+                     [title]="('empresas.consolaPlataforma.abrirElUltimoTicket' | translate) + ult.asunto">
                     <span class="sop-num sop-num--sm">{{ fechaCorta(s.ultimo) }}</span>
-                    <span class="sop-lbl">Último ticket <i class="fa fa-external-link"></i></span>
+                    <span class="sop-lbl">{{ 'empresas.consolaPlataforma.ultimoTicket' | translate }} <i class="fa fa-external-link"></i></span>
                     <small class="sop-hint" *ngIf="s.ideas">
-                      + {{ num(s.ideas) }} {{ s.ideas === 1 ? 'idea' : 'ideas' }}
+                      + {{ num(s.ideas) }} {{ s.ideas === 1 ? ('empresas.consolaPlataforma.idea' | translate) : ('empresas.consolaPlataforma.ideas' | translate) }}
                     </small>
                   </a>
                 </div>
@@ -1118,13 +1108,12 @@
                 <p class="sop-sinclasificar" *ngIf="s.sinClasificar">
                   <i class="fa fa-info-circle"></i>
                   <span>
-                    {{ num(s.sinClasificar) }} de sus {{ num(s.total) }} tickets son anteriores
-                    a que se preguntara el tipo: no se sabe si eran errores o consultas.
+                    {{ num(s.sinClasificar) }} {{ 'empresas.consolaPlataforma.deSusTicketsSonAnteriores' | translate:{total: (num(s.total))} }}
                   </span>
                   <button type="button" class="sop-verlos"
                           [attr.aria-pressed]="filtroTicketsDe(empresa) === 'sinClasificar'"
                           (click)="alternarFiltroTickets(empresa, 'sinClasificar')">
-                    {{ filtroTicketsDe(empresa) === 'sinClasificar' ? 'ver todos' : 'ver cuáles' }}
+                    {{ filtroTicketsDe(empresa) === 'sinClasificar' ? ('empresas.consolaPlataforma.verTodos' | translate) : ('empresas.consolaPlataforma.verCuales' | translate) }}
                   </button>
                 </p>
 
@@ -1132,9 +1121,9 @@
                      lista corta sin explicación se lee como "solo tiene estos". -->
                 <p class="sop-filtro-activo" *ngIf="filtroTicketsDe(empresa) !== 'todos'">
                   <i class="fa fa-filter"></i>
-                  Viendo {{ ticketsFiltrados(empresa).length }} de {{ num(s.total) }} tickets.
+                  {{ 'empresas.consolaPlataforma.viendoDeTickets' | translate:{length: (ticketsFiltrados(empresa).length), total: (num(s.total))} }}
                   <button type="button" class="sop-verlos" (click)="alternarFiltroTickets(empresa, filtroTicketsDe(empresa))">
-                    quitar el filtro
+                    {{ 'empresas.consolaPlataforma.quitarElFiltro' | translate }}
                   </button>
                 </p>
 
@@ -1155,20 +1144,19 @@
 
                 <p class="sop-pie" *ngIf="ticketsOcultos(empresa) as ocultos">
                   <button type="button" class="sop-verlos" (click)="desplegarTickets(empresa)">
-                    Ver los {{ ocultos }} restantes
+                    {{ 'empresas.consolaPlataforma.verLosRestantes' | translate:{ocultos: ocultos} }}
                   </button>
                 </p>
               </ng-container>
 
               <ng-template #sinTickets>
-                <p class="sop-vacio">Nunca ha abierto un ticket.</p>
+                <p class="sop-vacio">{{ 'empresas.consolaPlataforma.nuncaHaAbiertoUnTicket' | translate }}</p>
                 <!-- Solo acá: si hay tickets que no calzaron con ninguna ficha,
                      este es el sitio donde alguien se preguntaría por qué esta
                      empresa no tiene ninguno. -->
                 <p class="sop-huerfanos" *ngIf="ticketsHuerfanos">
                   <i class="fa fa-question-circle"></i>
-                  Hay {{ num(ticketsHuerfanos) }} tickets cuya empresa no coincide con
-                  ninguna ficha ({{ huerfanosTexto }}): si alguno era suyo, está ahí.
+                  {{ 'empresas.consolaPlataforma.hayTicketsCuyaEmpresaNo' | translate:{ticketsHuerfanos: (num(ticketsHuerfanos)), huerfanosTexto: huerfanosTexto} }}
                 </p>
               </ng-template>
             </ng-container>
@@ -1191,18 +1179,18 @@
               <strong>{{ empresa.estadoCicloInfo?.etiqueta || empresa.estadoCiclo }}.</strong>
               {{ empresa.estadoCicloInfo?.descripcion }}
               <ng-container *ngIf="empresa.estadoMotivo">
-                <br>Motivo: <em>{{ empresa.estadoMotivo }}</em>
+                <br>{{ 'empresas.consolaPlataforma.motivo' | translate }} <em>{{ empresa.estadoMotivo }}</em>
               </ng-container>
               <ng-container *ngIf="empresa.estadoCambiadoPor">
-                — lo cambió <strong>{{ empresa.estadoCambiadoPor }}</strong>
+                {{ 'empresas.consolaPlataforma.loCambio' | translate }} <strong>{{ empresa.estadoCambiadoPor }}</strong>
                 <ng-container *ngIf="empresa.estadoCambiadoEl">
-                  el {{ fechaCorta(empresa.estadoCambiadoEl) }}
+                  {{ 'empresas.consolaPlataforma.el' | translate:{estadoCambiadoEl: (fechaCorta(empresa.estadoCambiadoEl))} }}
                 </ng-container>
               </ng-container>
               <!-- El bloqueo viejo no guardaba nada: distinguirlo evita que
                    parezca una caída del sistema sin explicación. -->
               <ng-container *ngIf="!empresa.estadoMotivo && !empresa.bloqueo">
-                <br><small>No hay registro de quién ni por qué (viene de antes del ciclo de vida).</small>
+                <br><small>{{ 'empresas.consolaPlataforma.noHayRegistroDeQuien' | translate }}</small>
               </ng-container>
             </span>
           </div>
@@ -1219,13 +1207,13 @@
             </div>
             <div class="ficha-pie-acciones">
               <small class="ficha-sello" *ngIf="empresa._cachedAt">
-                Métricas calculadas {{ antiguedad(empresa._cachedAt) }}
+                {{ 'empresas.consolaPlataforma.metricasCalculadas' | translate:{_cachedAt: (antiguedad(empresa._cachedAt))} }}
               </small>
               <button type="button" class="btn-informe" (click)="verInformeVentas(empresa)"
                       [disabled]="generandoInforme.has(empresa._docId)"
-                      title="Resumen de ventas del período en PDF, con los pedidos contados por fecha de entrega">
+                      [title]="'empresas.consolaPlataforma.resumenDeVentasDelPeriodo' | translate">
                 <i class="fa" [ngClass]="generandoInforme.has(empresa._docId) ? 'fa-spinner fa-spin' : 'fa-file-pdf-o'"></i>
-                Informe de ventas
+                {{ 'empresas.consolaPlataforma.informeDeVentas' | translate }}
               </button>
             </div>
           </div>
@@ -1237,24 +1225,24 @@
          ficha de una del final había que recorrerla entera cada vez. -->
     <div class="paginador" *ngIf="empresasFiltradas.length > 0">
       <div class="paginador-tamano">
-        <label for="porPagina">Filas por página</label>
+        <label for="porPagina">{{ 'empresas.consolaPlataforma.filasPorPagina' | translate }}</label>
         <select id="porPagina" [ngModel]="porPagina" (ngModelChange)="cambiarTamanoPagina($event)">
           <option *ngFor="let t of tamanosPagina" [ngValue]="t">{{ t }}</option>
         </select>
       </div>
 
       <div class="paginador-controles" *ngIf="totalPaginas > 1">
-        <button type="button" (click)="irAPagina(1)" [disabled]="pagina === 1" title="Primera">
+        <button type="button" (click)="irAPagina(1)" [disabled]="pagina === 1" [title]="'empresas.consolaPlataforma.primera' | translate">
           <i class="fa fa-angle-double-left"></i>
         </button>
-        <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1" title="Anterior">
+        <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1" [title]="'empresas.consolaPlataforma.anterior' | translate">
           <i class="fa fa-angle-left"></i>
         </button>
-        <span class="paginador-pos">Página {{ num(pagina) }} de {{ num(totalPaginas) }}</span>
-        <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina === totalPaginas" title="Siguiente">
+        <span class="paginador-pos">{{ 'empresas.consolaPlataforma.paginaDe' | translate:{pagina: (num(pagina)), totalPaginas: (num(totalPaginas))} }}</span>
+        <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina === totalPaginas" [title]="'empresas.consolaPlataforma.siguiente' | translate">
           <i class="fa fa-angle-right"></i>
         </button>
-        <button type="button" (click)="irAPagina(totalPaginas)" [disabled]="pagina === totalPaginas" title="Última">
+        <button type="button" (click)="irAPagina(totalPaginas)" [disabled]="pagina === totalPaginas" [title]="'empresas.consolaPlataforma.ultima' | translate">
           <i class="fa fa-angle-double-right"></i>
         </button>
       </div>
@@ -1267,16 +1255,16 @@
   <ng-container *ngIf="vista === 'cobros'">
 
     <div class="cargando" *ngIf="cargandoCobros">
-      <i class="fa fa-spinner fa-spin"></i> Cargando los cobros del mes…
+      <i class="fa fa-spinner fa-spin"></i> {{ 'empresas.consolaPlataforma.cargandoLosCobrosDelMes' | translate }}
     </div>
 
     <div class="aviso-error" *ngIf="errorCobros && !cargandoCobros">
       <i class="fa fa-exclamation-triangle"></i>
       <div>
-        <strong>No se pudieron cargar los cobros</strong>
+        <strong>{{ 'empresas.consolaPlataforma.noSePudieronCargarLos2' | translate }}</strong>
         <p>{{ errorCobros }}</p>
       </div>
-      <button type="button" class="btn-reintentar" (click)="cargarCobros()">Reintentar</button>
+      <button type="button" class="btn-reintentar" (click)="cargarCobros()">{{ 'empresas.consolaPlataforma.reintentar' | translate }}</button>
     </div>
 
     <ng-container *ngIf="cobros && !cargandoCobros && !errorCobros">
@@ -1284,45 +1272,45 @@
       <section class="kpis kpis--cobros">
         <button type="button" class="kpi" [class.kpi--activo]="filtroCobros === 'aCobrar'"
                 (click)="filtrarCobros('aCobrar')"
-                title="Ver solo las empresas que suman en este total">
-          <span class="kpi-label">A cobrar este periodo</span>
+                [title]="'empresas.consolaPlataforma.verSoloLasEmpresasQue' | translate">
+          <span class="kpi-label">{{ 'empresas.consolaPlataforma.aCobrarEstePeriodo' | translate }}</span>
           <span class="kpi-valor kpi-valor--money">{{ dinero(cobros.totales.montoTotalCOP) }}</span>
           <span class="kpi-pie">
-            {{ num(cobros.totales.empresasConMonto) }} de {{ num(cobros.totales.aCobrar) }} empresas calculadas
+            {{ num(cobros.totales.empresasConMonto) }} {{ 'empresas.consolaPlataforma.deEmpresasCalculadas' | translate:{aCobrar: (num(cobros.totales.aCobrar))} }}
           </span>
         </button>
 
         <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroCobros === 'sinTarjeta'"
                 [class.kpi--encendida]="cobros.totales.cobroManual > 0"
                 (click)="filtrarCobros('sinTarjeta')"
-                title="Ver solo las que no tienen tarjeta y reciben link de pago">
-          <span class="kpi-label">Sin tarjeta inscrita</span>
+                [title]="'empresas.consolaPlataforma.verSoloLasQueNo' | translate">
+          <span class="kpi-label">{{ 'empresas.consolaPlataforma.sinTarjetaInscrita' | translate }}</span>
           <span class="kpi-valor">{{ num(cobros.totales.cobroManual) }}</span>
-          <span class="kpi-pie">{{ num(cobros.totales.cobroAutomatico) }} se cobran solas con tarjeta</span>
+          <span class="kpi-pie">{{ num(cobros.totales.cobroAutomatico) }} {{ 'empresas.consolaPlataforma.seCobranSolasConTarjeta' | translate }}</span>
         </button>
 
         <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroCobros === 'vencidas'"
                 [class.kpi--encendida]="cobros.totales.vencidas > 0"
                 (click)="filtrarCobros('vencidas')"
-                title="Ver solo las que ya pasaron su fecha de corte">
-          <span class="kpi-label">Corte vencido</span>
+                [title]="'empresas.consolaPlataforma.verSoloLasQueYa' | translate">
+          <span class="kpi-label">{{ 'empresas.consolaPlataforma.corteVencido' | translate }}</span>
           <span class="kpi-valor">{{ num(cobros.totales.vencidas) }}</span>
-          <span class="kpi-pie">{{ num(cobros.totales.porVencer) }} vencen esta semana</span>
+          <span class="kpi-pie">{{ num(cobros.totales.porVencer) }} {{ 'empresas.consolaPlataforma.vencenEstaSemana' | translate }}</span>
         </button>
 
         <button type="button" class="kpi" [class.kpi--activo]="filtroCobros === 'todas'"
                 (click)="filtrarCobros('todas')"
-                title="Ver todas las empresas a las que hay que cobrarles">
-          <span class="kpi-label">Clientes que pagan</span>
+                [title]="'empresas.consolaPlataforma.verTodasLasEmpresasA' | translate">
+          <span class="kpi-label">{{ 'empresas.consolaPlataforma.clientesQuePagan' | translate }}</span>
           <span class="kpi-valor">
-            {{ num(cobros.totales.aCobrar) }}<small class="kpi-de">de {{ num(cobros.totales.totalEmpresas) }}</small>
+            {{ num(cobros.totales.aCobrar) }}<small class="kpi-de">{{ 'empresas.consolaPlataforma.de' | translate:{totalEmpresas: (num(cobros.totales.totalEmpresas))} }}</small>
           </span>
           <span class="kpi-pie">
-            {{ num(cobros.totales.sinPlanPago) }} freemium, no se cobran
+            {{ num(cobros.totales.sinPlanPago) }} {{ 'empresas.consolaPlataforma.freemiumNoSeCobran' | translate }}
           </span>
           <span class="kpi-pie" *ngIf="cobros.totales.sinCobroPorEstado"
                 [title]="nombresSinCobroPorEstado()">
-            {{ num(cobros.totales.sinCobroPorEstado) }} bloqueadas o pausadas, fuera del cobro
+            {{ num(cobros.totales.sinCobroPorEstado) }} {{ 'empresas.consolaPlataforma.bloqueadasOPausadasFueraDel' | translate }}
           </span>
         </button>
 
@@ -1333,10 +1321,10 @@
         <button type="button" class="kpi kpi--cortesia" *ngIf="cuantasDeCortesia"
                 [class.kpi--activo]="filtroCobros === 'cortesia'"
                 (click)="filtrarCobros('cortesia')"
-                title="Empresas de Katuq y demo: tienen premium y acceso a todo, y no se les factura. No entran en el total de arriba.">
-          <span class="kpi-label">De cortesía</span>
+                [title]="'empresas.consolaPlataforma.empresasDeKatuqYDemo' | translate">
+          <span class="kpi-label">{{ 'empresas.consolaPlataforma.deCortesia' | translate }}</span>
           <span class="kpi-valor">{{ num(cuantasDeCortesia) }}</span>
-          <span class="kpi-pie">fuera de la lista · no se les cobra</span>
+          <span class="kpi-pie">{{ 'empresas.consolaPlataforma.fueraDeLaListaNo' | translate }}</span>
         </button>
       </section>
 
@@ -1344,12 +1332,12 @@
            empresas desaparecieron. Muestra además lo que suma lo filtrado. -->
       <div class="filtro-activo" *ngIf="filtroCobros !== 'todas'">
         <span>
-          Mostrando solo <strong>{{ etiquetaFiltroCobros() }}</strong>
-          — {{ num(cobrosFiltrados.length) }} de {{ num(cobros.empresas.length) }}<ng-container
+          {{ 'empresas.consolaPlataforma.mostrandoSolo' | translate }} <strong>{{ etiquetaFiltroCobros() }}</strong>
+          {{ 'empresas.consolaPlataforma.de2' | translate:{length: (num(cobrosFiltrados.length)), length2: (num(cobros.empresas.length))} }}<ng-container
             *ngIf="filtroCobros !== 'cortesia'">,
             <strong>{{ dinero(montoFiltrado) }}</strong></ng-container>
         </span>
-        <button type="button" class="btn-limpiar" (click)="filtrarCobros('todas')">Quitar filtro</button>
+        <button type="button" class="btn-limpiar" (click)="filtrarCobros('todas')">{{ 'empresas.consolaPlataforma.quitarFiltro' | translate }}</button>
       </div>
 
       <!-- Sin decir CUÁNTO tarda, un spinner que no se mueve en cinco minutos
@@ -1359,14 +1347,10 @@
       <div class="filtro-activo" *ngIf="cobros.meta.recalculando">
         <span>
           <i class="fa fa-spinner fa-spin"></i>
-          Calculando los montos de <strong>{{ num(cobros.meta.empresasPorRecalcular) }}</strong> empresas.
-          Las filas con <i class="fa fa-spinner fa-spin"></i> muestran “—” hasta que termine:
-          un monto a medio calcular sería peor que ninguno.
+          {{ 'empresas.consolaPlataforma.calculandoLosMontosDe' | translate }} <strong>{{ num(cobros.meta.empresasPorRecalcular) }}</strong> {{ 'empresas.consolaPlataforma.empresasLasFilasCon' | translate }} <i class="fa fa-spinner fa-spin"></i> {{ 'empresas.consolaPlataforma.muestranHastaQueTermineUn' | translate }}
           <br>
           <small>
-            Puede tardar <b>varios minutos</b> — en las empresas con muchos pedidos, la suma
-            del mes es lenta. Sigue corriendo aunque cierres la pantalla: vuelve a entrar
-            más tarde y ya estarán.
+            {{ 'empresas.consolaPlataforma.puedeTardar' | translate }} <b>{{ 'empresas.consolaPlataforma.variosMinutos' | translate }}</b> {{ 'empresas.consolaPlataforma.enLasEmpresasConMuchos' | translate }}
           </small>
         </span>
       </div>
@@ -1376,10 +1360,9 @@
       <div class="aviso-error aviso-error--tibio" *ngIf="!cobros.meta.cobroAutomaticoEncendido">
         <i class="fa fa-pause-circle"></i>
         <div>
-          <strong>El cobro automático está apagado</strong>
+          <strong>{{ 'empresas.consolaPlataforma.elCobroAutomaticoEstaApagado' | translate }}</strong>
           <p>
-            Hoy no se cobra ninguna tarjeta ni se envía ningún link de pago. Las fechas de abajo
-            son las que corresponden, pero nadie las está ejecutando todavía.
+            {{ 'empresas.consolaPlataforma.hoyNoSeCobraNinguna' | translate }}
           </p>
         </div>
       </div>
@@ -1387,25 +1370,25 @@
       <div class="cobros-barra">
         <span class="cobros-nota">{{ cobros.meta.nota }}</span>
         <button type="button" class="btn-refrescar" (click)="exportarCobros()"
-                title="Baja la lista que estás viendo, con el filtro aplicado">
+                [title]="'empresas.consolaPlataforma.bajaLaListaQueEstas' | translate">
           <i class="fa fa-download"></i>
-          Descargar CSV<span *ngIf="filtroCobros !== 'todas'"> ({{ num(cobrosFiltrados.length) }})</span>
+          {{ 'empresas.consolaPlataforma.descargarCsv' | translate }}<span *ngIf="filtroCobros !== 'todas'"> ({{ num(cobrosFiltrados.length) }})</span>
         </button>
       </div>
 
       <section class="tabla tabla--cobros">
         <div class="tabla-head">
-          <span class="col-empresa">Empresa</span>
-          <span class="col-num">Renueva</span>
-          <span class="col-num">Periodo</span>
-          <span class="col-num">Plan</span>
-          <span class="col-num">Ventas del mes</span>
-          <span class="col-num">A cobrar</span>
-          <span class="col-plan">Cómo se cobra</span>
-          <span class="col-plan">Última factura</span>
+          <span class="col-empresa">{{ 'empresas.consolaPlataforma.empresa2' | translate }}</span>
+          <span class="col-num">{{ 'empresas.consolaPlataforma.renueva' | translate }}</span>
+          <span class="col-num">{{ 'empresas.consolaPlataforma.periodo' | translate }}</span>
+          <span class="col-num">{{ 'empresas.consolaPlataforma.plan' | translate }}</span>
+          <span class="col-num">{{ 'empresas.consolaPlataforma.ventasDelMes' | translate }}</span>
+          <span class="col-num">{{ 'empresas.consolaPlataforma.aCobrar' | translate }}</span>
+          <span class="col-plan">{{ 'empresas.consolaPlataforma.comoSeCobra' | translate }}</span>
+          <span class="col-plan">{{ 'empresas.consolaPlataforma.ultimaFactura' | translate }}</span>
           <!-- "Hito" es la palabra que usa el backend; acá se explica una vez,
                en el encabezado, para no repetirla en cada fila. -->
-          <span class="col-plan" [title]="ayudaAvisos">Avisos <i class="fa fa-question-circle-o"></i></span>
+          <span class="col-plan" [title]="ayudaAvisos">{{ 'empresas.consolaPlataforma.avisos' | translate }} <i class="fa fa-question-circle-o"></i></span>
         </div>
 
         <div class="fila" *ngFor="let c of cobrosPagina; trackBy: trackPorId"
@@ -1425,14 +1408,14 @@
                ese día se le va a cobrar algo, y no. -->
           <div class="col-num col-num--fecha" data-label="Renueva">
             <span *ngIf="c.modoCobro === 'cortesia'; else conCorte"
-                  class="muted" [title]="motivoDeCortesia(c)">No vence</span>
+                  class="muted" [title]="motivoDeCortesia(c)">{{ 'empresas.consolaPlataforma.noVence' | translate }}</span>
             <ng-template #conCorte>
               <span *ngIf="c.renovacion?.fecha; else sinCorte"
                     [class.texto-vencido]="c.renovacion?.estado === 'vencido'">
                 {{ fechaCorta(c.renovacion?.fecha) }}
-                <small class="dias-restantes">{{ c.renovacion?.diasRestantes }} d</small>
+                <small class="dias-restantes">{{ c.renovacion?.diasRestantes }} {{ 'empresas.consolaPlataforma.d2' | translate }}</small>
               </span>
-              <ng-template #sinCorte><span class="muted">Sin fecha</span></ng-template>
+              <ng-template #sinCorte><span class="muted">{{ 'empresas.consolaPlataforma.sinFecha2' | translate }}</span></ng-template>
             </ng-template>
           </div>
 
@@ -1461,8 +1444,8 @@
             <span *ngIf="c.modoCobro === 'cortesia'; else montoNormal"
                   class="muted sin-cobro"
                   [title]="motivoDeCortesia(c) +
-                    (c.montoPeriodoCOP !== null ? ' (si se le cobrara, serían ' + dinero(c.montoPeriodoCOP) + ')' : '')">
-              No se cobra
+                    (c.montoPeriodoCOP !== null ? ('empresas.consolaPlataforma.siSeLeCobraraSerian' | translate) + dinero(c.montoPeriodoCOP) + ')' : '')">
+              {{ 'empresas.consolaPlataforma.noSeCobra' | translate }}
             </span>
             <ng-template #montoNormal>
               <strong [title]="detalleProrrateo(c)">{{ c.montoPeriodoCOP === null ? '—' : dinero(c.montoPeriodoCOP) }}</strong>
@@ -1478,7 +1461,7 @@
               <small class="prorrateo-nota" *ngIf="c.prorrateo?.aplicado"
                      [title]="detalleProrrateo(c)">
                 <i class="fa fa-scissors"></i>
-                prorrateado · {{ c.prorrateo.saltos }} salto{{ c.prorrateo.saltos === 1 ? '' : 's' }}
+                {{ 'empresas.consolaPlataforma.prorrateadoSalto' | translate:{saltos: c.prorrateo.saltos, s: (c.prorrateo.saltos === 1 ? '' : ('empresas.consolaPlataforma.s' | translate))} }}
               </small>
             </ng-template>
           </div>
@@ -1488,9 +1471,9 @@
                   [class.chip--alerta]="c.modoCobro === 'manual'"
                   [class.chip--off]="c.modoCobro === 'cortesia'"
                   [title]="c.modoCobro === 'manual'
-                    ? 'No tiene tarjeta guardada: el sistema le genera factura y link de pago, y el cobro depende de que el cliente lo pague'
+                    ? ('empresas.consolaPlataforma.noTieneTarjetaGuardadaEl' | translate)
                     : (c.modoCobro === 'automatico'
-                        ? 'Tiene tarjeta inscrita y cobro recurrente: el sistema le cobra solo'
+                        ? ('empresas.consolaPlataforma.tieneTarjetaInscritaYCobro' | translate)
                         : motivoDeCortesia(c))">
               {{ etiquetaModo(c.modoCobro) }}
             </span>
@@ -1507,19 +1490,19 @@
               <!-- Emitida: enlace al documento en Facturación electrónica. -->
               <button type="button" class="link-dian" *ngIf="f.facturaDian as dian"
                       (click)="verFacturaDian(dian, $event)"
-                      [title]="'Factura ' + (dian.numero || '') + ' · CUFE ' + (dian.cufe || '') + ' — abrir en Facturación electrónica'">
-                <i class="fa fa-file-text-o"></i> {{ dian.numero || 'Emitida' }}
+                      [title]="('empresas.consolaPlataforma.factura' | translate) + (dian.numero || '') + ('empresas.consolaPlataforma.cufe' | translate) + (dian.cufe || '') + ('empresas.consolaPlataforma.abrirEnFacturacionElectronica' | translate)">
+                <i class="fa fa-file-text-o"></i> {{ dian.numero || ('empresas.consolaPlataforma.emitida' | translate) }}
               </button>
 
               <!-- Se intentó y falló: es distinto de "todavía no se intentó". -->
               <small class="dian-problema" *ngIf="!f.facturaDian && f.facturaDianProblema"
                      [title]="f.facturaDianProblema">
-                <i class="fa fa-exclamation-triangle"></i> No se pudo facturar
+                <i class="fa fa-exclamation-triangle"></i> {{ 'empresas.consolaPlataforma.noSePudoFacturar' | translate }}
               </small>
 
               <!-- Pagado y sin documento fiscal: el hueco que importa ver. -->
               <small class="dian-pendiente" *ngIf="!f.facturaDian && !f.facturaDianProblema && f.estado === 'paid'">
-                Pendiente de facturar
+                {{ 'empresas.consolaPlataforma.pendienteDeFacturar' | translate }}
               </small>
             </ng-container>
           </div>
@@ -1537,38 +1520,37 @@
 
         <div class="fila-vacia" *ngIf="cobrosFiltrados.length === 0">
           <i class="fa fa-inbox"></i>
-          <p *ngIf="filtroCobros === 'todas'">No hay empresas con plan de pago</p>
-          <p *ngIf="filtroCobros !== 'todas'">Ninguna empresa coincide con este filtro</p>
+          <p *ngIf="filtroCobros === 'todas'">{{ 'empresas.consolaPlataforma.noHayEmpresasConPlan' | translate }}</p>
+          <p *ngIf="filtroCobros !== 'todas'">{{ 'empresas.consolaPlataforma.ningunaEmpresaCoincideConEste' | translate }}</p>
           <button type="button" class="btn-limpiar" *ngIf="filtroCobros !== 'todas'"
-                  (click)="filtrarCobros('todas')">Quitar filtro</button>
+                  (click)="filtrarCobros('todas')">{{ 'empresas.consolaPlataforma.quitarFiltro' | translate }}</button>
         </div>
       </section>
 
       <div class="paginador" *ngIf="cobrosFiltrados.length > 0">
         <div class="paginador-tamano">
-          <label for="porPaginaCobros">Filas por página</label>
+          <label for="porPaginaCobros">{{ 'empresas.consolaPlataforma.filasPorPagina' | translate }}</label>
           <select id="porPaginaCobros" [ngModel]="porPaginaCobros"
                   (ngModelChange)="cambiarTamanoPaginaCobros($event)">
             <option *ngFor="let t of tamanosPagina" [ngValue]="t">{{ t }}</option>
           </select>
           <span class="paginador-conteo">
-            Mostrando {{ num(desdeVisibleCobros) }}–{{ num(hastaVisibleCobros) }}
-            de {{ num(cobrosFiltrados.length) }}
+            {{ 'empresas.consolaPlataforma.mostrandoDe' | translate:{desdeVisibleCobros: (num(desdeVisibleCobros)), hastaVisibleCobros: (num(hastaVisibleCobros)), length: (num(cobrosFiltrados.length))} }}
           </span>
         </div>
 
         <div class="paginador-controles" *ngIf="totalPaginasCobros > 1">
-          <button type="button" (click)="irAPaginaCobros(1)" [disabled]="paginaCobros === 1" title="Primera">
+          <button type="button" (click)="irAPaginaCobros(1)" [disabled]="paginaCobros === 1" [title]="'empresas.consolaPlataforma.primera' | translate">
             <i class="fa fa-angle-double-left"></i>
           </button>
-          <button type="button" (click)="irAPaginaCobros(paginaCobros - 1)" [disabled]="paginaCobros === 1" title="Anterior">
+          <button type="button" (click)="irAPaginaCobros(paginaCobros - 1)" [disabled]="paginaCobros === 1" [title]="'empresas.consolaPlataforma.anterior' | translate">
             <i class="fa fa-angle-left"></i>
           </button>
-          <span class="paginador-pos">Página {{ num(paginaCobros) }} de {{ num(totalPaginasCobros) }}</span>
-          <button type="button" (click)="irAPaginaCobros(paginaCobros + 1)" [disabled]="paginaCobros === totalPaginasCobros" title="Siguiente">
+          <span class="paginador-pos">{{ 'empresas.consolaPlataforma.paginaDe2' | translate:{paginaCobros: (num(paginaCobros)), totalPaginasCobros: (num(totalPaginasCobros))} }}</span>
+          <button type="button" (click)="irAPaginaCobros(paginaCobros + 1)" [disabled]="paginaCobros === totalPaginasCobros" [title]="'empresas.consolaPlataforma.siguiente' | translate">
             <i class="fa fa-angle-right"></i>
           </button>
-          <button type="button" (click)="irAPaginaCobros(totalPaginasCobros)" [disabled]="paginaCobros === totalPaginasCobros" title="Última">
+          <button type="button" (click)="irAPaginaCobros(totalPaginasCobros)" [disabled]="paginaCobros === totalPaginasCobros" [title]="'empresas.consolaPlataforma.ultima' | translate">
             <i class="fa fa-angle-double-right"></i>
           </button>
         </div>

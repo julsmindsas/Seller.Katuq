@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, Output, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { TranslateModule } from '@ngx-translate/core';
 /**
  * Escala NPS de 0 a 10 (D-483). La usan la tarjeta del Seller y la página pública de la
  * encuesta a compradores.
@@ -12,7 +13,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-escala-nps',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TranslateModule, CommonModule],
   templateUrl: './escala-nps.component.html',
   styleUrls: ['./escala-nps.component.scss'],
 })
@@ -25,7 +26,7 @@ export class EscalaNpsComponent {
   get valor(): number | null { return this._valor; }
 
   /** Nombre del grupo para lectores de pantalla, si no hay un título que lo nombre. */
-  @Input() etiqueta = 'Nota del 0 al 10';
+  @Input() etiqueta = 'escalaNps.escalaNps.notaDel0Al10';
   /** Id del elemento que nombra el grupo (p. ej. la pregunta); tiene prioridad sobre `etiqueta`. */
   @Input() etiquetadoPor: string | null = null;
 

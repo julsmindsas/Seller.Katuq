@@ -2,7 +2,7 @@
 <div class="company-brand" *ngIf="companyInformation">
     <img *ngIf="companyInformation?.imgUrlLogo"
          [src]="getLogoUrl()"
-         alt="logo"
+         [alt]="'shell.company.logoAlt' | translate"
          class="company-brand-logo"
          (error)="onLogoError($event)">
     <span class="company-brand-name">{{ companyInformation?.nomComercial || companyInformation?.razonSocial }}</span>

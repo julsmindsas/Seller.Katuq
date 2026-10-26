@@ -11,6 +11,8 @@ import { Menu, NavService } from '../../services/nav.service';
 import { CATEGORIA_POR_DEFECTO } from '../../data/clasificacion-tickets';
 import { rutaSinQuery } from '../../data/rutas-publicas';
 
+import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 type TipoOpinion = 'idea' | 'bug';
 
 interface OpcionOpinion {
@@ -25,12 +27,12 @@ interface OpcionOpinion {
 
 const TIPOS: OpcionOpinion[] = [
   {
-    key: 'idea', motivo: 'idea', label: 'Una idea', ayuda: 'Algo que te gustaría que Katuq hiciera',
-    icono: 'pi-star', destino: { ruta: '/misIdeas', nombre: 'Mis ideas' },
+    key: 'idea', motivo: 'idea', label: 'opinarModal.tipos.ideaLabel', ayuda: 'opinarModal.tipos.ideaAyuda',
+    icono: 'pi-star', destino: { ruta: '/misIdeas', nombre: 'opinarModal.tipos.ideaDestino' },
   },
   {
-    key: 'bug', motivo: 'soporte', label: 'Algo no funciona', ayuda: 'Un error o algo que no se comporta como esperas',
-    icono: 'pi-exclamation-triangle', destino: { ruta: '/misTickets', nombre: 'Mis tickets' },
+    key: 'bug', motivo: 'soporte', label: 'opinarModal.tipos.bugLabel', ayuda: 'opinarModal.tipos.bugAyuda',
+    icono: 'pi-exclamation-triangle', destino: { ruta: '/misTickets', nombre: 'opinarModal.tipos.bugDestino' },
   },
 ];
 
@@ -82,7 +84,7 @@ function nombreEnMenu(item: Menu, padre?: Menu): string {
 @Component({
   selector: 'app-opinar-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [TranslateModule, CommonModule, FormsModule],
   templateUrl: './opinar-modal.component.html',
   styleUrls: ['./opinar-modal.component.scss'],
 })
@@ -108,6 +110,7 @@ export class OpinarModalComponent {
     private ticketsSoporte: TicketsSoporteService,
     private toastr: ToastrService,
     nav: NavService,
+    private translate: TranslateService,
   ) {
     this.pantalla = rutaSinQuery(this.router.url);
     this.nombrePantalla = nombreDePantalla(this.pantalla, nav.ALLMENUITEMS);
@@ -127,7 +130,7 @@ export class OpinarModalComponent {
     // Empresa activa desde la fuente canónica; sin ella no se crea un ticket huérfano
     const empresa = this.security.getCompanyInformationLogged();
     if (!empresa?.nombreComercio) {
-      this.error = 'No pudimos identificar tu comercio. Cierra sesión, vuelve a entrar e inténtalo de nuevo.';
+      this.error = this.translate.instant('opinarModal.opinarModal.noPudimosIdentificarTuComercio');
       return;
     }
     const usuario = this.usuarioActual();
@@ -179,8 +182,8 @@ export class OpinarModalComponent {
 
   private avisarEnviado(numero: string | number, opcion: OpcionOpinion): void {
     const aviso = this.toastr.success(
-      `Quedó con el número #${numero}. Toca aquí para verlo en ${opcion.destino.nombre}.`,
-      'Gracias, lo leemos todo',
+      this.translate.instant('opinarModal.opinarModal.quedoConElNumero', { numero, destino: this.translate.instant(opcion.destino.nombre) }),
+      this.translate.instant('opinarModal.opinarModal.graciasLoLeemosTodo'),
       { timeOut: 8000, closeButton: true, progressBar: true },
     );
     aviso.onTap.pipe(take(1)).subscribe(() => this.router.navigate([opcion.destino.ruta]));
@@ -188,7 +191,7 @@ export class OpinarModalComponent {
 
   private fallo(): void {
     this.enviando = false;
-    this.error = 'No pudimos enviarlo. Revisa tu conexión e inténtalo de nuevo; lo que escribiste sigue aquí.';
+    this.error = this.translate.instant('opinarModal.opinarModal.noPudimosEnviarloRevisaTu');
   }
 
   private usuarioActual(): any {

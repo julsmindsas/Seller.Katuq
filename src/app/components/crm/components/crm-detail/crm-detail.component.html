@@ -5,31 +5,31 @@
 <!-- Error / not found -->
 <div *ngIf="!loading && !lead" class="text-center p-5">
   <i class="pi pi-exclamation-triangle crm-icono-error"></i>
-  <p class="mt-2">No se pudo cargar el lead. Verifica que el backend esté corriendo en localhost:3300.</p>
-  <button pButton label="Volver al listado" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()"></button>
+  <p class="mt-2">{{ 'crm.detalle.noSePudoCargarEl' | translate }}</p>
+  <button pButton label="{{ 'crm.detalle.volverAlListado' | translate }}" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()"></button>
 </div>
 
 <div class="cfg-pagina crm-detalle" *ngIf="!loading && lead">
 
   <!-- Header (D-516: marco canónico) -->
   <header class="cfg-cabeza crm-detalle__cabeza">
-    <span class="cfg-eyebrow">CRM</span>
+    <span class="cfg-eyebrow">{{ 'crm.detalle.crm' | translate }}</span>
     <div class="d-flex align-items-center flex-wrap gap-3">
       <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
       <h1 class="cfg-titulo">{{ entityName }}</h1>
       <p-tag [value]="getStageLabel(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
       <span class="stat-badge badge-sm crm-par--ok" *ngIf="lead.pipeline?.verifiedBuyer === true">
-        <i class="fa fa-check-circle me-1"></i>Comprador verificado
+        <i class="fa fa-check-circle me-1"></i>{{ 'crm.detalle.compradorVerificado' | translate }}
       </span>
       <span class="stat-badge badge-sm crm-par--warn" *ngIf="lead.pipeline?.verifiedBuyer === false">
-        <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
+        <i class="fa fa-exclamation-triangle me-1"></i>{{ 'crm.detalle.sinVerificar' | translate }}
       </span>
       <span class="crm-detalle__correo ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
       <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
-        pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
+        pTooltip="{{ 'crm.detalle.corregirLosDatosIngresadosDe' | translate }}" tooltipPosition="bottom"
         (click)="openEditDialog()"></button>
       <!-- D-491: agendar una cita de servicio para este cliente -->
-      <button *ngIf="agendaActiva" pButton icon="pi pi-calendar-plus" label="Agendar" class="p-button-sm"
+      <button *ngIf="agendaActiva" pButton icon="pi pi-calendar-plus" label="{{ 'crm.detalle.agendar' | translate }}" class="p-button-sm"
         (click)="abrirAgendar()"></button>
     </div>
 
@@ -49,58 +49,58 @@
   <p-tabView [(activeIndex)]="activeTab">
 
     <!-- Tab: Info -->
-    <p-tabPanel header="{{ 'Información' | translate }}" leftIcon="pi pi-info-circle">
+    <p-tabPanel header="{{ 'crm.detalle.informacion' | translate }}" leftIcon="pi pi-info-circle">
       <div class="row mt-3">
         <div class="col-md-6">
           <div class="info-card">
-            <h6>{{ 'Datos de contacto' | translate }}</h6>
+            <h6>{{ 'crm.detalle.datosDeContacto' | translate }}</h6>
             <div class="info-row" *ngIf="lead.entity?.email || lead.entity?.correo_electronico_comprador">
-              <span class="info-label"><i class="pi pi-envelope"></i> Email</span>
+              <span class="info-label"><i class="pi pi-envelope"></i> {{ 'crm.detalle.email' | translate }}</span>
               <span>{{ lead.entity?.email || lead.entity?.correo_electronico_comprador }}</span>
             </div>
             <div class="info-row" *ngIf="lead.entity?.phone || lead.entity?.numero_celular_comprador">
-              <span class="info-label"><i class="pi pi-phone"></i> Teléfono</span>
+              <span class="info-label"><i class="pi pi-phone"></i> {{ 'crm.detalle.telefono' | translate }}</span>
               <span>{{ lead.entity?.phone || lead.entity?.numero_celular_comprador }}</span>
             </div>
             <div class="info-row" *ngIf="lead.entity?.nit || lead.entity?.documento">
-              <span class="info-label"><i class="pi pi-id-card"></i> NIT/Doc</span>
+              <span class="info-label"><i class="pi pi-id-card"></i> {{ 'crm.detalle.nitDoc' | translate }}</span>
               <span>{{ lead.entity?.nit || lead.entity?.documento }}</span>
             </div>
             <div class="info-row" *ngIf="lead.entity?.city">
-              <span class="info-label"><i class="pi pi-map-marker"></i> Ciudad</span>
+              <span class="info-label"><i class="pi pi-map-marker"></i> {{ 'crm.detalle.ciudad' | translate }}</span>
               <span>{{ lead.entity?.city }}</span>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="info-card">
-            <h6>{{ 'Datos CRM' | translate }}</h6>
+            <h6>{{ 'crm.detalle.datosCrm' | translate }}</h6>
             <div class="info-row">
-              <span class="info-label">{{ 'Prioridad' | translate }}</span>
-              <p-dropdown [options]="priorityOptions" [ngModel]="lead.pipeline?.priority || 'medium'"
+              <span class="info-label">{{ 'crm.detalle.prioridad' | translate }}</span>
+              <p-dropdown [options]="priorityOptions.lista" [ngModel]="lead.pipeline?.priority || 'medium'"
                 (onChange)="updateField('priority', $event.value)" [style]="{'width':'140px'}">
               </p-dropdown>
             </div>
             <div class="info-row">
-              <span class="info-label">{{ 'Comercial' | translate }}</span>
+              <span class="info-label">{{ 'crm.detalle.comercial' | translate }}</span>
               <p-dropdown *ngIf="equipo?.puedeAsignar && equipo?.comerciales?.length; else soloNombre"
                 [options]="opcionesComercial" [ngModel]="duenoDelLead"
                 (onChange)="cambiarComercial($event.value)" [style]="{'width':'220px'}" [filter]="true"
-                filterBy="label" placeholder="Sin asignar"></p-dropdown>
+                filterBy="label" placeholder="{{ 'crm.detalle.sinAsignar' | translate }}"></p-dropdown>
               <ng-template #soloNombre><span>{{ nombreComercial(duenoDelLead) }}</span></ng-template>
             </div>
             <div class="info-row" *ngIf="lead.entity?.subscriptionPlan">
-              <span class="info-label">{{ 'Plan' | translate }}</span>
+              <span class="info-label">{{ 'crm.detalle.plan' | translate }}</span>
               <p-tag [value]="lead.entity.subscriptionPlan"
                 [severity]="lead.entity.subscriptionPlan === 'premium' ? 'success' : 'info'"></p-tag>
             </div>
             <div class="info-row" style="border-bottom:none;">
-              <span class="info-label"><i class="pi pi-tags"></i>{{ 'Etiquetas' | translate }}</span>
+              <span class="info-label"><i class="pi pi-tags"></i>{{ 'crm.detalle.etiquetas' | translate }}</span>
               <div class="card-tags">
                 <span *ngFor="let e of (lead.entity?.etiquetas || [])" class="tag-chip-sm"
                   [style.background-color]="getTagBgColor(getTagColorByName(e))"
                   [style.color]="getTagFgColor(getTagColorByName(e))">{{ e }}</span>
-                <small class="text-muted" *ngIf="!(lead.entity?.etiquetas?.length)">{{ 'Sin etiquetas' | translate }}</small>
+                <small class="text-muted" *ngIf="!(lead.entity?.etiquetas?.length)">{{ 'crm.detalle.sinEtiquetas' | translate }}</small>
               </div>
             </div>
           </div>
@@ -109,19 +109,19 @@
     </p-tabPanel>
 
     <!-- Tab: Timeline -->
-    <p-tabPanel header="Historial" leftIcon="pi pi-clock">
+    <p-tabPanel header="{{ 'crm.detalle.historial' | translate }}" leftIcon="pi pi-clock">
       <!-- Add activity form -->
       <div class="card mb-3 mt-3">
         <div class="card-body py-2">
           <form [formGroup]="activityForm" (ngSubmit)="addActivity()" class="d-flex gap-2 align-items-end flex-wrap">
-            <p-dropdown [options]="activityTypes" formControlName="type" optionLabel="label" optionValue="value"
+            <p-dropdown [options]="activityTypes.lista" formControlName="type" optionLabel="label" optionValue="value"
               [style]="{'width':'140px'}"></p-dropdown>
             <input pInputText formControlName="description"
-              placeholder="{{ 'Anota lo que pasó con el cliente. Ej: Llamé y quedó en confirmar la compra el viernes…' | translate }}"
-              pTooltip="Registra cada interacción con el cliente (llamadas, correos, notas) para llevar la bitácora del lead"
+              placeholder="{{ 'crm.detalle.anotaLoQuePasoCon' | translate }}"
+              pTooltip="{{ 'crm.detalle.registraCadaInteraccionConEl' | translate }}"
               tooltipPosition="top"
               style="flex:1; min-width:200px;" />
-            <button pButton type="submit" icon="pi pi-plus" label="{{ 'Agregar' | translate }}"
+            <button pButton type="submit" icon="pi pi-plus" label="{{ 'crm.detalle.agregar' | translate }}"
               class="p-button-sm" [disabled]="activityForm.invalid"></button>
           </form>
         </div>
@@ -146,21 +146,21 @@
             </div>
             <div *ngIf="a.createdBy !== 'Automático'; else autor"><small class="text-muted">{{ a.createdBy }}</small></div>
             <ng-template #autor>
-              <div><small class="crm-automatico"><i class="fa fa-magic" aria-hidden="true"></i> Automático</small></div>
+              <div><small class="crm-automatico"><i class="fa fa-magic" aria-hidden="true"></i> {{ 'crm.detalle.automatico' | translate }}</small></div>
             </ng-template>
           </div>
         </div>
       </div>
       <div *ngIf="activities.length === 0" class="text-center p-4 text-muted">
         <i class="pi pi-clock" style="font-size:2rem;"></i>
-        <p class="mt-2">{{ 'Sin actividades' | translate }}</p>
+        <p class="mt-2">{{ 'crm.detalle.sinActividades' | translate }}</p>
       </div>
     </p-tabPanel>
 
     <!-- Tab: Tasks -->
-    <p-tabPanel header="{{ 'Tareas' | translate }} ({{ tasks.length }})" leftIcon="pi pi-check-square">
+    <p-tabPanel header="{{ 'crm.detalle.tareas' | translate }} ({{ tasks.length }})" leftIcon="pi pi-check-square">
       <div class="mt-3">
-        <button pButton label="{{ 'Nueva tarea' | translate }}" icon="pi pi-plus" class="p-button-sm mb-3"
+        <button pButton label="{{ 'crm.detalle.nuevaTarea' | translate }}" icon="pi pi-plus" class="p-button-sm mb-3"
           (click)="toggleTaskForm()"></button>
 
         <!-- Task form -->
@@ -170,16 +170,16 @@
               <div class="row">
                 <div class="mb-2" [ngClass]="puedeEscogerResponsable ? 'col-md-12' : 'col-md-5'">
                   <input pInputText formControlName="title"
-                    placeholder="¿Qué hay que hacer? Ej: Llamar al cliente para confirmar la cotización"
-                    pTooltip="Describe la acción pendiente con el cliente (una tarea concreta de seguimiento)"
+                    placeholder="{{ 'crm.detalle.queHayQueHacerEj' | translate }}"
+                    pTooltip="{{ 'crm.detalle.describeLaAccionPendienteCon' | translate }}"
                     tooltipPosition="top" class="w-100" />
                 </div>
                 <div class="col-md-3 mb-2">
-                  <p-dropdown [options]="taskTypes" formControlName="type" optionLabel="label" optionValue="value"
+                  <p-dropdown [options]="taskTypes.lista" formControlName="type" optionLabel="label" optionValue="value"
                     [style]="{'width':'100%'}"></p-dropdown>
                 </div>
                 <div class="col-md-2 mb-2">
-                  <p-dropdown [options]="priorityOptions" formControlName="priority" optionLabel="label" optionValue="value"
+                  <p-dropdown [options]="priorityOptions.lista" formControlName="priority" optionLabel="label" optionValue="value"
                     [style]="{'width':'100%'}"></p-dropdown>
                 </div>
                 <div class="col-md-2 mb-2">
@@ -190,13 +190,13 @@
                 <!-- Ticket 1064: responsable de la tarea (le llegan los recordatorios) -->
                 <div class="col-md-5 mb-2" *ngIf="puedeEscogerResponsable">
                   <p-dropdown [options]="opcionesComercial.slice(1)" formControlName="assignedTo" optionLabel="label" optionValue="value"
-                    placeholder="Responsable" [filter]="true" filterBy="label" appendTo="body"
+                    placeholder="{{ 'crm.detalle.responsable' | translate }}" [filter]="true" filterBy="label" appendTo="body"
                     [style]="{'width':'100%'}"></p-dropdown>
                 </div>
               </div>
               <div class="d-flex justify-content-end gap-2 mt-1">
-                <button pButton type="button" icon="pi pi-times" label="Cancelar" class="p-button-text p-button-sm" (click)="showTaskForm=false"></button>
-                <button pButton type="submit" icon="pi pi-check" label="Guardar" class="p-button-sm" [disabled]="taskForm.invalid"></button>
+                <button pButton type="button" icon="pi pi-times" label="{{ 'comun.cancelar' | translate }}" class="p-button-text p-button-sm" (click)="showTaskForm=false"></button>
+                <button pButton type="submit" icon="pi pi-check" label="{{ 'comun.guardar' | translate }}" class="p-button-sm" [disabled]="taskForm.invalid"></button>
               </div>
             </form>
           </div>
@@ -208,7 +208,7 @@
           <div class="d-flex align-items-center gap-2">
             <button *ngIf="task.status === 'pending'" pButton icon="pi pi-circle"
               class="p-button-text p-button-sm p-button-rounded"
-              pTooltip="Marcar como completada" tooltipPosition="right"
+              pTooltip="{{ 'crm.detalle.marcarComoCompletada' | translate }}" tooltipPosition="right"
               (click)="completeTask(task)"></button>
             <i *ngIf="task.status === 'completed'" class="pi pi-check-circle text-success"></i>
             <div class="flex-grow-1">
@@ -224,7 +224,7 @@
         </div>
         <div *ngIf="tasks.length === 0" class="text-center p-4 text-muted">
           <i class="pi pi-check-square" style="font-size:2rem;"></i>
-          <p class="mt-2">{{ 'Sin tareas' | translate }}</p>
+          <p class="mt-2">{{ 'crm.detalle.sinTareas' | translate }}</p>
         </div>
       </div>
     </p-tabPanel>
@@ -234,24 +234,24 @@
 </div>
 
 <!-- ═══════ DIALOG EDITAR LEAD ═══════ -->
-<p-dialog header="{{ 'Editar lead' | translate }}" [(visible)]="showEditDialog"
+<p-dialog header="{{ 'crm.detalle.editarLead' | translate }}" [(visible)]="showEditDialog"
   [modal]="true" [style]="{width: '480px'}" [closable]="true" [draggable]="false">
 
   <form [formGroup]="editForm" autocomplete="off">
     <div class="row g-3 mt-1">
 
       <div class="col-12">
-        <label class="form-label fw-semibold">{{ 'Nombre completo' | translate }} <span class="text-danger">*</span></label>
-        <input pInputText formControlName="name" placeholder="Ej: Laura Gómez" class="w-100" />
+        <label class="form-label fw-semibold">{{ 'crm.detalle.nombreCompleto' | translate }} <span class="text-danger">*</span></label>
+        <input pInputText formControlName="name" placeholder="{{ 'crm.detalle.ejLauraGomez' | translate }}" class="w-100" />
         <small class="text-danger d-block mt-1"
           *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched">
-          {{ 'El nombre es obligatorio' | translate }}
+          {{ 'crm.detalle.elNombreEsObligatorio' | translate }}
         </small>
       </div>
 
       <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">{{ 'Correo electrónico' | translate }}</label>
-        <input pInputText formControlName="email" placeholder="correo@ejemplo.com" class="w-100" />
+        <label class="form-label fw-semibold">{{ 'crm.detalle.correoElectronico' | translate }}</label>
+        <input pInputText formControlName="email" placeholder="{{ 'crm.detalle.correoEjemploCom' | translate }}" class="w-100" />
         <small class="text-danger d-block mt-1"
           *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
           {{ 'Correo inválido' | translate }}
@@ -259,35 +259,35 @@
       </div>
 
       <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">{{ 'Teléfono / WhatsApp' | translate }}</label>
+        <label class="form-label fw-semibold">{{ 'crm.detalle.telefonoWhatsapp' | translate }}</label>
         <input pInputText formControlName="phone" placeholder="3142087654" class="w-100" />
       </div>
 
       <div class="col-12 col-sm-5">
-        <label class="form-label fw-semibold">{{ 'Tipo de documento' | translate }}</label>
+        <label class="form-label fw-semibold">{{ 'crm.detalle.tipoDeDocumento' | translate }}</label>
         <p-dropdown formControlName="tipoDocumento" [options]="tipoDocOptions"
           optionLabel="label" optionValue="value"
           styleClass="w-100" appendTo="body"></p-dropdown>
       </div>
 
       <div class="col-12 col-sm-7">
-        <label class="form-label fw-semibold">{{ 'Número de documento' | translate }}</label>
-        <input pInputText formControlName="nit" placeholder="Ej: 1045234567" class="w-100" />
+        <label class="form-label fw-semibold">{{ 'crm.detalle.numeroDeDocumento' | translate }}</label>
+        <input pInputText formControlName="nit" placeholder="{{ 'crm.detalle.ej1045234567' | translate }}" class="w-100" />
       </div>
 
       <div class="col-12">
         <label class="form-label fw-semibold">
-          <i class="fa fa-tag me-1 crm-acento"></i>{{ '¿Qué le vas a vender?' | translate }}
+          <i class="fa fa-tag me-1 crm-acento"></i>{{ 'crm.detalle.queLeVasAVender' | translate }}
         </label>
         <textarea pInputTextarea formControlName="productoInteres" rows="2"
-          placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
+          placeholder="{{ 'crm.detalle.ejPlanBasicoDeVentas' | translate }}"
           class="w-100" style="resize:none; font-size:0.875rem;"></textarea>
       </div>
 
       <!-- Etiquetas -->
       <div class="col-12">
         <label class="form-label fw-semibold mb-1">
-          <i class="pi pi-tags me-1 crm-acento"></i>{{ 'Etiquetas' | translate }}
+          <i class="pi pi-tags me-1 crm-acento"></i>{{ 'crm.detalle.etiquetas' | translate }}
         </label>
         <div class="tags-picker" *ngIf="clientTagsCatalog.length > 0">
           <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
@@ -299,7 +299,7 @@
           </span>
         </div>
         <div class="tags-empty-hint" *ngIf="clientTagsCatalog.length === 0">
-          <i class="pi pi-info-circle me-1"></i>{{ 'No hay etiquetas configuradas.' | translate }}
+          <i class="pi pi-info-circle me-1"></i>{{ 'crm.detalle.noHayEtiquetasConfiguradas' | translate }}
         </div>
       </div>
 

@@ -5,7 +5,7 @@
     <div class="canvas-overlay">
       <div class="status-indicator" [class.active]="isActive">
         <span class="status-dot"></span>
-        <span class="status-text">{{ isActive ? 'ACTIVO' : 'INACTIVO' }}</span>
+        <span class="status-text">{{ isActive ? ('asistentes.visual.activo' | translate) : ('asistentes.visual.inactivo' | translate) }}</span>
       </div>
     </div>
   </div>
@@ -13,9 +13,9 @@
   <!-- Panel de logs en tiempo real -->
   <div class="logs-panel">
     <div class="logs-header">
-      <h3>📊 Logs del Sistema</h3>
+      <h3>{{ 'asistentes.visual.logsDelSistema' | translate }}</h3>
       <div class="logs-controls">
-        <button class="btn-clear" (click)="clearLogs()">🗑️ Limpiar</button>
+        <button class="btn-clear" (click)="clearLogs()">{{ 'asistentes.visual.limpiar' | translate }}</button>
         <button class="btn-pause" (click)="togglePause()">
           {{ isPaused ? '▶️' : '⏸️' }}
         </button>
@@ -34,19 +34,19 @@
     <!-- Métricas del sistema -->
     <div class="metrics-panel">
       <div class="metric-item">
-        <span class="metric-label">🎤 Entrada:</span>
+        <span class="metric-label">{{ 'asistentes.visual.entrada' | translate }}</span>
         <span class="metric-value">{{ inputLevel }}%</span>
       </div>
       <div class="metric-item">
-        <span class="metric-label">🔊 Salida:</span>
+        <span class="metric-label">{{ 'asistentes.visual.salida' | translate }}</span>
         <span class="metric-value">{{ outputLevel }}%</span>
       </div>
       <div class="metric-item">
-        <span class="metric-label">📝 Logs:</span>
+        <span class="metric-label">{{ 'asistentes.visual.logs' | translate }}</span>
         <span class="metric-value">{{ logs.length }}</span>
       </div>
       <div class="metric-item">
-        <span class="metric-label">⚡ FPS:</span>
+        <span class="metric-label">{{ 'asistentes.visual.fps' | translate }}</span>
         <span class="metric-value">{{ currentFPS }}</span>
       </div>
     </div>

@@ -3,15 +3,15 @@
                     <!-- Header de la página -->
                     <header class="cfg-cabeza">
                         <div class="cfg-cabeza__textos">
-                            <span class="cfg-eyebrow">Seguridad</span>
-                            <h1 class="cfg-titulo">Crear / Editar Usuario</h1>
+                            <span class="cfg-eyebrow">{{ 'usuarios.crearUsuarios.seguridad' | translate }}</span>
+                            <h1 class="cfg-titulo">{{ 'usuarios.crearUsuarios.crearEditarUsuario' | translate }}</h1>
                             <p class="cfg-sub">
-                                Información personal, accesos al sistema y configuración avanzada del usuario.
+                                {{ 'usuarios.crearUsuarios.informacionPersonalAccesosAlSistema' | translate }}
                             </p>
                         </div>
                         <div class="cfg-acciones">
                         <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAlListado()"
-                                placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}">
+                                placement="top" ngbTooltip="{{ 'usuarios.crearUsuarios.regresarAlListado' | translate }}">
                             <i class="icofont icofont-arrow-left"></i>
                         </button>
                         </div>
@@ -25,32 +25,32 @@
                             <div class="section-title">
                                 <i class="fa fa-user-circle section-icon"></i>
                                 <div>
-                                    <h6 class="mb-0">Datos personales</h6>
-                                    <small class="us-tenue">Nombre completo e identificación.</small>
+                                    <h6 class="mb-0">{{ 'usuarios.crearUsuarios.datosPersonales' | translate }}</h6>
+                                    <small class="us-tenue">{{ 'usuarios.crearUsuarios.nombreCompletoEIdentificacion' | translate }}</small>
                                 </div>
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label" for="nombre">Nombres <span class="req">*</span></label>
+                                    <label class="form-label" for="nombre">{{ 'usuarios.crearUsuarios.nombres' | translate }} <span class="req">*</span></label>
                                     <input formControlName="nombre" class="form-control" id="nombre" type="text"
-                                           placeholder="Ej: Juan Carlos">
+                                           [placeholder]="'usuarios.crearUsuarios.ejJuanCarlos' | translate">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label" for="apellido">Apellidos <span class="req">*</span></label>
+                                    <label class="form-label" for="apellido">{{ 'usuarios.crearUsuarios.apellidos' | translate }} <span class="req">*</span></label>
                                     <input formControlName="apellido" class="form-control" id="apellido" type="text"
-                                           placeholder="Ej: Pérez García">
+                                           [placeholder]="'usuarios.crearUsuarios.ejPerezGarcia' | translate">
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label" for="tipoIdentificacion">Tipo doc. <span class="req">*</span></label>
+                                    <label class="form-label" for="tipoIdentificacion">{{ 'usuarios.crearUsuarios.tipoDoc' | translate }} <span class="req">*</span></label>
                                     <select formControlName="tipoIdentificacion" class="form-control" id="tipoIdentificacion">
-                                        <option value="CC">CC</option>
-                                        <option value="TI">TI</option>
-                                        <option value="CE">CE</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
+                                        <option value="CC">{{ 'usuarios.crearUsuarios.cc' | translate }}</option>
+                                        <option value="TI">{{ 'usuarios.crearUsuarios.ti' | translate }}</option>
+                                        <option value="CE">{{ 'usuarios.crearUsuarios.ce' | translate }}</option>
+                                        <option value="PASAPORTE">{{ 'usuarios.crearUsuarios.pasaporte' | translate }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label" for="identificacion">Identificación <span class="req">*</span></label>
+                                    <label class="form-label" for="identificacion">{{ 'usuarios.crearUsuarios.identificacion' | translate }} <span class="req">*</span></label>
                                     <input formControlName="identificacion" class="form-control" id="identificacion"
                                            type="text" placeholder="123456789">
                                 </div>
@@ -62,30 +62,30 @@
                             <div class="section-title">
                                 <i class="fa fa-lock section-icon"></i>
                                 <div>
-                                    <h6 class="mb-0">Acceso al sistema</h6>
-                                    <small class="us-tenue">Credenciales y rol del usuario.</small>
+                                    <h6 class="mb-0">{{ 'usuarios.crearUsuarios.accesoAlSistema' | translate }}</h6>
+                                    <small class="us-tenue">{{ 'usuarios.crearUsuarios.credencialesYRolDelUsuario' | translate }}</small>
                                 </div>
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-5">
-                                    <label class="form-label" for="email">Email <span class="req">*</span></label>
+                                    <label class="form-label" for="email">{{ 'usuarios.crearUsuarios.email' | translate }} <span class="req">*</span></label>
                                     <input formControlName="email" autocomplete="off" class="form-control" id="email"
-                                           type="email" placeholder="usuario@empresa.com">
+                                           type="email" [placeholder]="'usuarios.crearUsuarios.usuarioEmpresaCom' | translate">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label" for="password">
-                                        Contraseña
+                                        {{ 'usuarios.crearUsuarios.contrasena' | translate }}
                                         <span class="req" *ngIf="!esModoEdicion">*</span>
-                                        <small class="us-tenue ms-1" *ngIf="esModoEdicion">(opcional al editar)</small>
+                                        <small class="us-tenue ms-1" *ngIf="esModoEdicion">{{ 'usuarios.crearUsuarios.opcionalAlEditar' | translate }}</small>
                                     </label>
                                     <input formControlName="password" autocomplete="new-password" class="form-control"
                                            id="password" type="password"
-                                           [placeholder]="esModoEdicion ? 'Dejar vacío para mantener la actual' : '••••••••'">
+                                           [placeholder]="esModoEdicion ? ('usuarios.crearUsuarios.dejarVacioParaMantenerLa' | translate) : '••••••••'">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label" for="roles">Rol <span class="req">*</span></label>
+                                    <label class="form-label" for="roles">{{ 'usuarios.crearUsuarios.rol' | translate }} <span class="req">*</span></label>
                                     <select formControlName="roles" class="form-control" id="roles">
-                                        <option value="">Seleccionar…</option>
+                                        <option value="">{{ 'usuarios.crearUsuarios.seleccionar' | translate }}</option>
                                         <option *ngFor="let role of roles" [value]="role.rol">{{ role.rol }}</option>
                                     </select>
                                 </div>
@@ -93,12 +93,12 @@
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" formControlName="activo" id="activoSwitch">
                                         <label class="form-check-label" for="activoSwitch">
-                                            Usuario <strong>activo</strong> (puede iniciar sesión)
+                                            {{ 'usuarios.crearUsuarios.usuario' | translate }} <strong>{{ 'usuarios.crearUsuarios.activo' | translate }}</strong> {{ 'usuarios.crearUsuarios.puedeIniciarSesion' | translate }}
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6" *ngIf="showCompanySelect">
-                                    <label class="form-label" for="empresa">Empresa</label>
+                                    <label class="form-label" for="empresa">{{ 'usuarios.crearUsuarios.empresa' | translate }}</label>
                                     <select formControlName="empresa" class="form-control" id="empresa">
                                         <option *ngFor="let company of empresas" [value]="company.nomComercial">{{ company.nomComercial }}</option>
                                     </select>
@@ -111,35 +111,35 @@
                             <div class="section-title">
                                 <i class="fa fa-phone section-icon"></i>
                                 <div>
-                                    <h6 class="mb-0">Contacto</h6>
-                                    <small class="us-tenue">Teléfonos para contactar al usuario.</small>
+                                    <h6 class="mb-0">{{ 'usuarios.crearUsuarios.contacto' | translate }}</h6>
+                                    <small class="us-tenue">{{ 'usuarios.crearUsuarios.telefonosParaContactarAlUsuario' | translate }}</small>
                                 </div>
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Teléfono fijo</label>
+                                    <label class="form-label">{{ 'usuarios.crearUsuarios.telefonoFijo' | translate }}</label>
                                     <div class="d-flex gap-2">
                                         <select formControlName="indicativoFijoLocal" class="form-control select-default flex-shrink-0 us-indicativo">
-                                            <option disabled selected class="select-default">Indicativo</option>
+                                            <option disabled selected class="select-default">{{ 'usuarios.crearUsuarios.indicativo' | translate }}</option>
                                             <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
                                                 {{item.Ciudad}} (+{{item.CodigoArea}})
                                             </option>
                                         </select>
-                                        <input formControlName="fijo" class="form-control" type="number" placeholder="Número fijo">
+                                        <input formControlName="fijo" class="form-control" type="number" [placeholder]="'usuarios.crearUsuarios.numeroFijo' | translate">
                                         <input formControlName="extensionFijo" class="form-control flex-shrink-0 us-extension"
-                                               type="number" placeholder="Ext.">
+                                               type="number" [placeholder]="'usuarios.crearUsuarios.ext' | translate">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Celular</label>
+                                    <label class="form-label">{{ 'usuarios.crearUsuarios.celular' | translate }}</label>
                                     <div class="d-flex gap-2">
                                         <select formControlName="indicativoCel" class="form-control select-default flex-shrink-0 us-indicativo">
-                                            <option disabled selected class="select-default">País</option>
+                                            <option disabled selected class="select-default">{{ 'usuarios.crearUsuarios.pais' | translate }}</option>
                                             <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
                                                 {{item.nombre}} (+{{item.phone_code}})
                                             </option>
                                         </select>
-                                        <input formControlName="cel" class="form-control" type="number" placeholder="Número celular">
+                                        <input formControlName="cel" class="form-control" type="number" [placeholder]="'usuarios.crearUsuarios.numeroCelular' | translate">
                                     </div>
                                 </div>
                             </div>
@@ -150,8 +150,8 @@
                             <div class="section-title">
                                 <i class="fa fa-cog section-icon"></i>
                                 <div>
-                                    <h6 class="mb-0">Configuración avanzada</h6>
-                                    <small class="us-tenue">Opciones específicas para este usuario.</small>
+                                    <h6 class="mb-0">{{ 'usuarios.crearUsuarios.configuracionAvanzada' | translate }}</h6>
+                                    <small class="us-tenue">{{ 'usuarios.crearUsuarios.opcionesEspecificasParaEsteUsuario' | translate }}</small>
                                 </div>
                             </div>
 
@@ -159,16 +159,15 @@
                             <div class="advanced-block" *ngIf="hasWOVendedores">
                                 <div class="advanced-label">
                                     <i class="fa fa-link"></i>
-                                    <span>Vendedor en World Office</span>
+                                    <span>{{ 'usuarios.crearUsuarios.vendedorEnWorldOffice' | translate }}</span>
                                 </div>
                                 <small class="us-tenue d-block mb-2">
-                                    Si este usuario es vendedor en WO, asigná el mapeo. Sus reportes WO se filtrarán
-                                    automáticamente para que solo vea SUS ventas.
+                                    {{ 'usuarios.crearUsuarios.siEsteUsuarioEsVendedor' | translate }}
                                 </small>
                                 <div class="row g-2">
                                     <div class="col-md-8">
                                         <input formControlName="vendedorNombreWO" class="form-control" id="vendedorNombreWO"
-                                               list="vendedoresWOList" placeholder="Empezá a escribir el nombre del vendedor…"
+                                               list="vendedoresWOList" [placeholder]="'usuarios.crearUsuarios.empezaAEscribirElNombre' | translate"
                                                (change)="onVendedorNombreChange($any($event.target).value)" />
                                         <datalist id="vendedoresWOList">
                                             <option *ngFor="let v of vendedoresWO" [value]="v.nombre">{{ v.id }} — {{ v.nombre }}</option>
@@ -176,7 +175,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <input formControlName="vendedorIdWO" class="form-control" id="vendedorIdWO"
-                                               type="number" placeholder="ID auto" readonly />
+                                               type="number" [placeholder]="'usuarios.crearUsuarios.idAuto' | translate" readonly />
                                     </div>
                                 </div>
                             </div>
@@ -185,23 +184,23 @@
                             <div class="advanced-block" *ngIf="!esRolAdmin && f.controls['roles'].value">
                                 <div class="advanced-label">
                                     <i class="fa fa-home"></i>
-                                    <span>Pantalla de bienvenida</span>
+                                    <span>{{ 'usuarios.crearUsuarios.pantallaDeBienvenida' | translate }}</span>
                                 </div>
                                 <small class="us-tenue d-block mb-2">
-                                    Al iniciar sesión, este usuario verá: <strong>{{ bienvenidaLabelActual }}</strong>
+                                    {{ 'usuarios.crearUsuarios.alIniciarSesionEsteUsuario' | translate }} <strong>{{ bienvenidaLabelActual }}</strong>
                                 </small>
                                 <button type="button" class="cfg-btn cfg-btn--sec us-btn-chico"
                                         (click)="abrirBienvenidaModal()">
-                                    <i class="fa fa-cog"></i> Cambiar pantalla de bienvenida
+                                    <i class="fa fa-cog"></i> {{ 'usuarios.crearUsuarios.cambiarPantallaDeBienvenida' | translate }}
                                 </button>
                             </div>
                         </div>
 
                         <!-- Footer con acciones -->
                         <div class="cfg-form__pie">
-                            <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAlListado()">Cancelar</button>
+                            <button type="button" class="cfg-btn cfg-btn--sec" (click)="irAlListado()">{{ 'comun.cancelar' | translate }}</button>
                             <button type="button" (click)="guardar()" class="cfg-btn">
-                                <i class="fa fa-save me-1"></i> Guardar usuario
+                                <i class="fa fa-save me-1"></i> {{ 'usuarios.crearUsuarios.guardarUsuario' | translate }}
                             </button>
                         </div>
 
@@ -212,19 +211,19 @@
             <div class="modal-overlay" *ngIf="showBienvenidaModal" (click)="cerrarBienvenidaModal()">
                 <div class="modal-box" (click)="$event.stopPropagation()">
                     <div class="modal-header">
-                        <h5 class="mb-0 us-modal-titulo"><i class="fa fa-home"></i> Pantalla de bienvenida</h5>
-                        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarBienvenidaModal()"></button>
+                        <h5 class="mb-0 us-modal-titulo"><i class="fa fa-home"></i> {{ 'usuarios.crearUsuarios.pantallaDeBienvenida' | translate }}</h5>
+                        <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrarBienvenidaModal()"></button>
                     </div>
                     <div class="modal-body-custom cfg-form">
-                        <p class="us-tenue small">Elegí a qué pantalla irá este usuario justo después de iniciar sesión.</p>
+                        <p class="us-tenue small">{{ 'usuarios.crearUsuarios.elegiAQuePantallaIra' | translate }}</p>
 
                         <div class="bienvenida-option">
                             <input class="form-check-input" type="radio" id="bienvDefault"
                                    name="bienvTipo" value="default"
                                    [(ngModel)]="bienvenidaTipoSeleccionado" />
                             <label class="form-check-label" for="bienvDefault">
-                                <strong>Pantalla de bienvenida (Default)</strong>
-                                <br><small class="us-tenue">Va a la pantalla con accesos rápidos y resumen del día.</small>
+                                <strong>{{ 'usuarios.crearUsuarios.pantallaDeBienvenidaDefault' | translate }}</strong>
+                                <br><small class="us-tenue">{{ 'usuarios.crearUsuarios.vaALaPantallaCon' | translate }}</small>
                             </label>
                         </div>
 
@@ -233,12 +232,12 @@
                                    name="bienvTipo" value="ruta"
                                    [(ngModel)]="bienvenidaTipoSeleccionado" />
                             <label class="form-check-label" for="bienvRuta">
-                                <strong>Una página específica de la app</strong>
+                                <strong>{{ 'usuarios.crearUsuarios.unaPaginaEspecificaDeLa' | translate }}</strong>
                             </label>
                             <select class="form-select form-select-sm mt-2" *ngIf="bienvenidaTipoSeleccionado === 'ruta'"
                                     [(ngModel)]="bienvenidaRutaSeleccionada">
-                                <option value="">Elegir página…</option>
-                                <option *ngFor="let r of rutasDisponibles" [value]="r.path">{{ r.label }}</option>
+                                <option value="">{{ 'usuarios.crearUsuarios.elegirPagina' | translate }}</option>
+                                <option *ngFor="let r of rutasDisponibles" [value]="r.path">{{ r.label | translate }}</option>
                             </select>
                         </div>
 
@@ -247,21 +246,21 @@
                                    name="bienvTipo" value="reporte"
                                    [(ngModel)]="bienvenidaTipoSeleccionado" />
                             <label class="form-check-label" for="bienvReporte">
-                                <strong>Un reporte guardado</strong>
-                                <br><small class="us-tenue">Va directo al reporte ejecutado con sus datos filtrados.</small>
+                                <strong>{{ 'usuarios.crearUsuarios.unReporteGuardado' | translate }}</strong>
+                                <br><small class="us-tenue">{{ 'usuarios.crearUsuarios.vaDirectoAlReporteEjecutado' | translate }}</small>
                             </label>
                             <select class="form-select form-select-sm mt-2" *ngIf="bienvenidaTipoSeleccionado === 'reporte'"
                                     [(ngModel)]="bienvenidaReporteSeleccionado">
-                                <option value="">Elegir reporte…</option>
+                                <option value="">{{ 'usuarios.crearUsuarios.elegirReporte' | translate }}</option>
                                 <option *ngFor="let r of reportesGuardados" [value]="r.id">{{ r.nombre }}</option>
                             </select>
                             <small *ngIf="bienvenidaTipoSeleccionado === 'reporte' && reportesGuardados.length === 0"
-                                   class="us-tenue d-block mt-2">No hay reportes guardados todavía.</small>
+                                   class="us-tenue d-block mt-2">{{ 'usuarios.crearUsuarios.noHayReportesGuardadosTodavia' | translate }}</small>
                         </div>
                     </div>
                     <div class="modal-footer-custom">
-                        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarBienvenidaModal()">Cancelar</button>
-                        <button type="button" class="cfg-btn" (click)="guardarBienvenida()">Guardar</button>
+                        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrarBienvenidaModal()">{{ 'comun.cancelar' | translate }}</button>
+                        <button type="button" class="cfg-btn" (click)="guardarBienvenida()">{{ 'comun.guardar' | translate }}</button>
                     </div>
                 </div>
             </div>

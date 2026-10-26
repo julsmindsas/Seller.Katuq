@@ -27,30 +27,40 @@
 // Ojo con las trampas globales (memoria css-globales): nada de clases con "p-" dentro,
 // todo span con texto lleva clase con color propio y los h1 globales traen !important.
 
-$cfg-accent: #5F3FE0;
-$cfg-accent-hover: #4a2fc0;
-$cfg-accent-2: #7C5CFF;
-$cfg-accent-soft: #efe9ff;
-$cfg-ink: #211F3A;
-$cfg-body: #5b5878;
-$cfg-muted: #8f8bab;
-$cfg-line: #ececf4;
-$cfg-line-soft: #f1f0f7;
-$cfg-chip-bg: #f5f4fa;
-$cfg-chip-border: #e9e7f3;
-$cfg-tint: #faf9fe;
-$cfg-row-hover: #faf9ff;
-$cfg-tile: #f3f1fb;
-$cfg-ok: #1E874B;
-$cfg-ok-soft: #E6F7EE;
-$cfg-warn: #D9820A;
-$cfg-warn-soft: #FFF1DF;
-$cfg-err: #D64545;
-$cfg-err-soft: #FDECEC;
-$cfg-info: #1E6FD9;
-$cfg-info-soft: #E7F1FF;
-$cfg-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
-$cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+// D-502 F2a (ticket 1180, tarea 4.1): los $cfg-* apuntan a los tokens --ds-* de _theme-tokens.scss.
+// El valor claro de cada token es el hex que tenía la variable, así que el claro no cambia; el juego oscuro
+// lo da body.dark-only. Son var(): ningún consumidor puede aplicarles funciones de color de Sass
+// (rgba(), darken(), mix()…). Lo vigila tests/theme/config-pagina-tokens.test.js.
+//
+// Acento de relleno y acento de texto (design-f2a.md):
+//   - $cfg-accent / $cfg-accent-hover: rellenos (botón, paginador, interruptor, fondo del check). Encima va
+//     var(--ds-on-accent).
+//   - $cfg-accent-ink: el acento como texto, ícono, borde o indicador. En oscuro sube a #a48bff.
+$cfg-accent: var(--ds-accent);
+$cfg-accent-hover: var(--ds-accent-hover);
+$cfg-accent-ink: var(--ds-accent-ink);
+$cfg-accent-2: var(--ds-focus);
+$cfg-accent-soft: var(--ds-accent-soft);
+$cfg-ink: var(--ds-ink);
+$cfg-body: var(--ds-body);
+$cfg-muted: var(--ds-muted);
+$cfg-line: var(--ds-line);
+$cfg-line-soft: var(--ds-line-soft);
+$cfg-chip-bg: var(--ds-chip-bg);
+$cfg-chip-border: var(--ds-control-border);
+$cfg-tint: var(--ds-surface-2);
+$cfg-row-hover: var(--ds-row-hover);
+$cfg-tile: var(--ds-tile);
+$cfg-ok: var(--ds-ok);
+$cfg-ok-soft: var(--ds-ok-soft);
+$cfg-warn: var(--ds-warn);
+$cfg-warn-soft: var(--ds-warn-soft);
+$cfg-err: var(--ds-err);
+$cfg-err-soft: var(--ds-err-soft);
+$cfg-info: var(--ds-info);
+$cfg-info-soft: var(--ds-info-soft);
+$cfg-shadow-panel: var(--ds-shadow-panel);
+$cfg-shadow-btn: var(--ds-shadow-btn);
 
 @mixin config-pagina {
   .cfg-pagina {
@@ -75,7 +85,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     justify-content: space-between;
     gap: 16px;
     padding: 20px;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $cfg-line;
     border-radius: 16px;
     box-shadow: $cfg-shadow-panel;
@@ -95,7 +105,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     font-weight: 800;
     letter-spacing: .7px !important;
     text-transform: uppercase;
-    color: $cfg-accent !important;
+    color: $cfg-accent-ink !important;
     background: $cfg-accent-soft;
     border: 1px solid #ddd3fb;
     border-radius: 20px;
@@ -136,7 +146,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     border: 1px solid $cfg-accent;
     border-radius: 11px;
     background: $cfg-accent;
-    color: #fff !important;
+    color: var(--ds-on-accent) !important;
     font-size: 13.5px;
     font-weight: 700;
     line-height: 1;
@@ -153,16 +163,16 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
   }
 
   .cfg-btn--sec {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-body !important;
-    border-color: #e4e2ef;
+    border-color: var(--ds-line-strong);
     box-shadow: none;
 
-    &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent !important; }
+    &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink !important; }
   }
 
   .cfg-btn--peligro {
-    background: #fff;
+    background: var(--ds-surface);
     color: $cfg-err !important;
     border-color: #f3c9c9;
     box-shadow: none;
@@ -174,7 +184,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
   .cfg-card {
     position: relative;
     padding: 16px;
-    background: #fff;
+    background: var(--ds-surface);
     border: 1px solid $cfg-line;
     border-radius: 16px;
     box-shadow: $cfg-shadow-panel;
@@ -231,7 +241,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     height: 64px;
     border-radius: 16px;
     background: $cfg-tile;
-    color: $cfg-accent;
+    color: $cfg-accent-ink;
     font-size: 26px;
   }
   .cfg-vacio__titulo { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
@@ -251,7 +261,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     text-transform: uppercase;
     white-space: nowrap;
     background: $cfg-accent-soft;
-    color: $cfg-accent !important;
+    color: $cfg-accent-ink !important;
   }
   .cfg-pill--ok { background: $cfg-ok-soft; color: $cfg-ok !important; }
   .cfg-pill--warn { background: $cfg-warn-soft; color: $cfg-warn !important; }
@@ -288,7 +298,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
   .cfg-stat__valor {
     font-size: 18px !important;
     font-weight: 800;
-    color: $cfg-accent !important;
+    color: $cfg-accent-ink !important;
     line-height: 1.2;
   }
 
@@ -313,11 +323,13 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
       box-shadow: none;
       transition: border-color .15s ease, background-color .15s ease;
 
-      &:focus { background-color: #fff; border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
+      &:focus { background-color: var(--ds-surface); border-color: $cfg-accent-2; box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); }
     }
     textarea.form-control { min-height: 88px; }
 
-    .form-check-input:checked { background-color: $cfg-accent; border-color: $cfg-accent; }
+    // Relleno con el acento; el borde con el acento de texto separa el control del fondo en oscuro (criterio
+    // de TEMA-B03/B06 para los controles marcados). En claro los dos valen #5F3FE0.
+    .form-check-input:checked { background-color: $cfg-accent; border-color: $cfg-accent-ink; }
     .invalid-feedback, .text-danger { color: $cfg-err !important; font-size: 12px; }
   }
   .cfg-form__grupo {
@@ -359,8 +371,8 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
       font-weight: 700;
       .p-tabview-title { color: inherit !important; }
     }
-    .p-tabview-nav li.p-highlight .p-tabview-nav-link { color: $cfg-accent; border-color: $cfg-accent; }
-    .p-tabview-ink-bar { background: $cfg-accent; }
+    .p-tabview-nav li.p-highlight .p-tabview-nav-link { color: $cfg-accent-ink; border-color: $cfg-accent-ink; }
+    .p-tabview-ink-bar { background: $cfg-accent-ink; } // indicador sin texto: va con el acento de texto
     .p-tabview-panels { background: transparent; padding: 16px 0 0; }
   }
 
@@ -382,12 +394,12 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
     .p-datatable-thead > tr > th.p-highlight,
     .p-datatable-thead > tr > th.p-sortable-column:not(.p-highlight):hover {
       background: $cfg-accent-soft !important;
-      color: $cfg-accent !important;
-      .p-sortable-column-icon { color: $cfg-accent !important; }
+      color: $cfg-accent-ink !important;
+      .p-sortable-column-icon { color: $cfg-accent-ink !important; }
     }
 
     .p-datatable-tbody > tr {
-      background: #fff;
+      background: var(--ds-surface);
       color: $cfg-ink;
       transition: background .12s ease;
 
@@ -403,7 +415,7 @@ $cfg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
       .p-paginator-page.p-highlight {
         background: $cfg-accent !important;
         border-color: $cfg-accent !important;
-        color: #fff !important;
+        color: var(--ds-on-accent) !important;
       }
       .p-paginator-page,
       .p-paginator-first,

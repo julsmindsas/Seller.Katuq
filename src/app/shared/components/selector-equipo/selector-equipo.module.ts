@@ -6,9 +6,10 @@ import { MultiSelectModule } from 'primeng/multiselect';
 
 import { SelectorEquipoComponent } from './selector-equipo.component';
 
+import { TranslateModule } from '@ngx-translate/core';
 /** Selector de personas del comercio (D-437). Lo usan las líneas de mensajería y el dueño del chat. */
 @NgModule({
-  imports: [CommonModule, FormsModule, DropdownModule, MultiSelectModule],
+  imports: [TranslateModule, CommonModule, FormsModule, DropdownModule, MultiSelectModule],
   declarations: [SelectorEquipoComponent],
   exports: [SelectorEquipoComponent],
 })

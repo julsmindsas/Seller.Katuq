@@ -6,6 +6,7 @@ import { OnboardingStepId } from '../models/onboarding-state.model';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { MessageService } from 'primeng/api';
 
+import { TranslateService } from '@ngx-translate/core';
 /**
  * Componente genérico para steps del onboarding
  * Permite completar pasos con datos básicos o configuración manual detallada
@@ -23,7 +24,7 @@ import { MessageService } from 'primeng/api';
 
         <div class="step-status">
           <p-chip
-            [label]="'Tiempo estimado: ' + stepConfig.estimatedTime + ' min'"
+            [label]="('onboarding.genericStep.tiempoEstimado' | translate) + ' ' + stepConfig.estimatedTime + ' ' + ('onboarding.genericStep.min' | translate)"
             [style]="{'background-color': 'var(--blue-100)', 'color': 'var(--blue-800)'}">
           </p-chip>
         </div>
@@ -45,24 +46,24 @@ import { MessageService } from 'primeng/api';
       <!-- AI Suggestion Notice -->
       <div class="ai-notice" *ngIf="aiSuggestion && stepConfig.hasAI">
         <i class="pi pi-sparkles"></i>
-        <span>Tenemos sugerencias inteligentes para este paso basadas en tu sector de negocio</span>
+        <span>{{ 'onboarding.genericStep.tenemosSugerenciasInteligentesParaEste' | translate }}</span>
       </div>
 
       <!-- Datos Existentes -->
       <p-card *ngIf="hasExistingData()">
         <div class="existing-data-notice">
           <i class="pi pi-check-circle"></i>
-          <h4>¡Ya tienes esto configurado!</h4>
-          <p>Encontramos {{ getDataCount() }} elementos ya configurados para este paso.</p>
+          <h4>{{ 'onboarding.genericStep.yaTienesEstoConfigurado' | translate }}</h4>
+          <p>{{ 'onboarding.genericStep.encontramosElementosYaConfiguradosPara' | translate:{getDataCount: (getDataCount())} }}</p>
 
           <div class="existing-data-summary">
             <p-chip
-              [label]="getDataCount() + ' configurados'"
+              [label]="getDataCount() + ' ' + ('onboarding.genericStep.configurados' | translate)"
               [style]="{'background-color': 'var(--green-100)', 'color': 'var(--green-800)', 'font-size': '1.1rem'}">
             </p-chip>
           </div>
 
-          <p class="edit-hint">Puedes editar estos datos desde el menú de configuración o continuar al siguiente paso.</p>
+          <p class="edit-hint">{{ 'onboarding.genericStep.puedesEditarEstosDatosDesde' | translate }}</p>
         </div>
       </p-card>
 
@@ -70,11 +71,11 @@ import { MessageService } from 'primeng/api';
       <p-card *ngIf="!isConfigured && !hasExistingData() && !showConfigForm">
         <div class="configuration-notice">
           <i class="pi pi-wrench"></i>
-          <h4>Configuración Pendiente</h4>
-          <p>Este paso se configurará automáticamente según los datos de tu negocio, o puedes configurarlo manualmente ahora haciendo clic en "Configurar Ahora".</p>
+          <h4>{{ 'onboarding.genericStep.configuracionPendiente' | translate }}</h4>
+          <p>{{ 'onboarding.genericStep.estePasoSeConfiguraraAutomaticamente' | translate }}</p>
 
           <div class="quick-options mt-4" *ngIf="stepConfig.quickOptions">
-            <h5>Opciones Rápidas:</h5>
+            <h5>{{ 'onboarding.genericStep.opcionesRapidas' | translate }}</h5>
             <div class="options-list">
               <div
                 *ngFor="let option of stepConfig.quickOptions"
@@ -93,34 +94,34 @@ import { MessageService } from 'primeng/api';
         <div class="config-form-container">
           <h4 class="config-form-title">
             <i class="pi pi-pencil"></i>
-            Configuración Manual - {{ stepConfig.title }}
+            {{ 'onboarding.genericStep.configuracionManual' | translate:{title: stepConfig.title} }}
           </h4>
-          <p class="config-form-description">Complete los siguientes datos para configurar este paso:</p>
+          <p class="config-form-description">{{ 'onboarding.genericStep.completeLosSiguientesDatosPara' | translate }}</p>
 
           <!-- Formulario: Formas de Entrega -->
           <form *ngIf="stepId === 'delivery-methods'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreFormaEntrega">Nombre de Forma de Entrega *</label>
+                <label for="nombreFormaEntrega">{{ 'onboarding.genericStep.nombreDeFormaDeEntrega' | translate }}</label>
                 <input
                   id="nombreFormaEntrega"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Domicilio, Recogida en tienda"
+                  [placeholder]="'onboarding.genericStep.ejDomicilioRecogidaEnTienda' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionFormaEntrega">Descripción</label>
+                <label for="descripcionFormaEntrega">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionFormaEntrega"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe esta forma de entrega"
+                  [placeholder]="'onboarding.genericStep.describeEstaFormaDeEntrega' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -131,7 +132,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoFormaEntrega"
                 ></p-checkbox>
-                <label for="activoFormaEntrega">Activo</label>
+                <label for="activoFormaEntrega">{{ 'onboarding.billingZonesStep.activo' | translate }}</label>
               </div>
             </div>
           </form>
@@ -140,26 +141,26 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'delivery-types'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreTipoEntrega">Nombre del Tipo de Entrega *</label>
+                <label for="nombreTipoEntrega">{{ 'onboarding.genericStep.nombreDelTipoDeEntrega' | translate }}</label>
                 <input
                   id="nombreTipoEntrega"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Estándar, Express, Same Day"
+                  [placeholder]="'onboarding.genericStep.ejEstandarExpressSameDay' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionTipoEntrega">Descripción</label>
+                <label for="descripcionTipoEntrega">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionTipoEntrega"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe este tipo de entrega"
+                  [placeholder]="'onboarding.genericStep.describeEsteTipoDeEntrega' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -170,7 +171,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoTipoEntrega"
                 ></p-checkbox>
-                <label for="activoTipoEntrega">Activo</label>
+                <label for="activoTipoEntrega">{{ 'onboarding.billingZonesStep.activo' | translate }}</label>
               </div>
             </div>
           </form>
@@ -179,54 +180,54 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'delivery-times'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreTiempoEntrega">Nombre del Tiempo de Entrega *</label>
+                <label for="nombreTiempoEntrega">{{ 'onboarding.genericStep.nombreDelTiempoDeEntrega' | translate }}</label>
                 <input
                   id="nombreTiempoEntrega"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: 24 horas, 2-3 días, 1 semana"
+                  [placeholder]="'onboarding.genericStep.ej24Horas23' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="diasMinimos">Días Mínimos *</label>
+                <label for="diasMinimos">{{ 'onboarding.deliveryTimesStep.diasMinimos' | translate }}</label>
                 <p-inputNumber
                   id="diasMinimos"
                   formControlName="diasMinimos"
                   [min]="0"
                   [max]="365"
-                  placeholder="Ej: 1"
+                  [placeholder]="'onboarding.genericStep.ej1' | translate"
                 ></p-inputNumber>
                 <small class="p-error" *ngIf="configForm.get('diasMinimos')?.invalid && configForm.get('diasMinimos')?.touched">
-                  Los días mínimos son requeridos
+                  {{ 'onboarding.genericStep.losDiasMinimosSonRequeridos' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="diasMaximos">Días Máximos *</label>
+                <label for="diasMaximos">{{ 'onboarding.genericStep.diasMaximos' | translate }}</label>
                 <p-inputNumber
                   id="diasMaximos"
                   formControlName="diasMaximos"
                   [min]="0"
                   [max]="365"
-                  placeholder="Ej: 3"
+                  [placeholder]="'onboarding.genericStep.ej3' | translate"
                 ></p-inputNumber>
                 <small class="p-error" *ngIf="configForm.get('diasMaximos')?.invalid && configForm.get('diasMaximos')?.touched">
-                  Los días máximos son requeridos
+                  {{ 'onboarding.genericStep.losDiasMaximosSonRequeridos' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionTiempoEntrega">Descripción</label>
+                <label for="descripcionTiempoEntrega">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionTiempoEntrega"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe este tiempo de entrega"
+                  [placeholder]="'onboarding.genericStep.describeEsteTiempoDeEntrega' | translate"
                   rows="2"
                 ></textarea>
               </div>
@@ -237,7 +238,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoTiempoEntrega"
                 ></p-checkbox>
-                <label for="activoTiempoEntrega">Activo</label>
+                <label for="activoTiempoEntrega">{{ 'onboarding.billingZonesStep.activo' | translate }}</label>
               </div>
             </div>
           </form>
@@ -246,26 +247,26 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'payment-methods'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreFormaPago">Nombre de Forma de Pago *</label>
+                <label for="nombreFormaPago">{{ 'onboarding.genericStep.nombreDeFormaDePago' | translate }}</label>
                 <input
                   id="nombreFormaPago"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Efectivo, Tarjeta de Crédito, PSE"
+                  [placeholder]="'onboarding.genericStep.ejEfectivoTarjetaDeCredito' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionFormaPago">Descripción</label>
+                <label for="descripcionFormaPago">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionFormaPago"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe esta forma de pago"
+                  [placeholder]="'onboarding.genericStep.describeEstaFormaDePago' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -276,7 +277,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoFormaPago"
                 ></p-checkbox>
-                <label for="activoFormaPago">Activo</label>
+                <label for="activoFormaPago">{{ 'onboarding.billingZonesStep.activo' | translate }}</label>
               </div>
             </div>
           </form>
@@ -285,26 +286,26 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'categories'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreCategoria">Nombre de Categoría *</label>
+                <label for="nombreCategoria">{{ 'onboarding.genericStep.nombreDeCategoria' | translate }}</label>
                 <input
                   id="nombreCategoria"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Electrónicos, Ropa, Alimentos"
+                  [placeholder]="'onboarding.genericStep.ejElectronicosRopaAlimentos' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionCategoria">Descripción</label>
+                <label for="descripcionCategoria">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionCategoria"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe esta categoría"
+                  [placeholder]="'onboarding.genericStep.describeEstaCategoria' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -315,7 +316,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoCategoria"
                 ></p-checkbox>
-                <label for="activoCategoria">Activa</label>
+                <label for="activoCategoria">{{ 'onboarding.genericStep.activa' | translate }}</label>
               </div>
             </div>
           </form>
@@ -324,21 +325,21 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'billing-zones'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreZona">Nombre de Zona *</label>
+                <label for="nombreZona">{{ 'onboarding.genericStep.nombreDeZona' | translate }}</label>
                 <input
                   id="nombreZona"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Zona Norte, Centro, Sur"
+                  [placeholder]="'onboarding.genericStep.ejZonaNorteCentroSur' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="costoEnvio">Costo de Envío *</label>
+                <label for="costoEnvio">{{ 'onboarding.genericStep.costoDeEnvio' | translate }}</label>
                 <p-inputNumber
                   id="costoEnvio"
                   formControlName="costoEnvio"
@@ -346,20 +347,20 @@ import { MessageService } from 'primeng/api';
                   currency="COP"
                   locale="es-CO"
                   [min]="0"
-                  placeholder="Ej: 5000"
+                  [placeholder]="'onboarding.genericStep.ej5000' | translate"
                 ></p-inputNumber>
                 <small class="p-error" *ngIf="configForm.get('costoEnvio')?.invalid && configForm.get('costoEnvio')?.touched">
-                  El costo de envío es requerido
+                  {{ 'onboarding.genericStep.elCostoDeEnvioEs' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionZona">Descripción</label>
+                <label for="descripcionZona">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionZona"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe esta zona de cobro (ciudades, barrios incluidos)"
+                  [placeholder]="'onboarding.genericStep.describeEstaZonaDeCobro' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -370,7 +371,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoZona"
                 ></p-checkbox>
-                <label for="activoZona">Activa</label>
+                <label for="activoZona">{{ 'onboarding.genericStep.activa' | translate }}</label>
               </div>
             </div>
           </form>
@@ -379,21 +380,21 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="stepId === 'addons'" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreAdicion">Nombre de Adición *</label>
+                <label for="nombreAdicion">{{ 'onboarding.genericStep.nombreDeAdicion' | translate }}</label>
                 <input
                   id="nombreAdicion"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ej: Tarjeta de regalo, Empaque especial"
+                  [placeholder]="'onboarding.genericStep.ejTarjetaDeRegaloEmpaque' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="precioAdicion">Precio</label>
+                <label for="precioAdicion">{{ 'onboarding.genericStep.precio' | translate }}</label>
                 <p-inputNumber
                   id="precioAdicion"
                   formControlName="precio"
@@ -401,17 +402,17 @@ import { MessageService } from 'primeng/api';
                   currency="COP"
                   locale="es-CO"
                   [min]="0"
-                  placeholder="Ej: 2000"
+                  [placeholder]="'onboarding.genericStep.ej2000' | translate"
                 ></p-inputNumber>
               </div>
 
               <div class="field">
-                <label for="descripcionAdicion">Descripción</label>
+                <label for="descripcionAdicion">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionAdicion"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe esta adición"
+                  [placeholder]="'onboarding.genericStep.describeEstaAdicion' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -422,7 +423,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoAdicion"
                 ></p-checkbox>
-                <label for="activoAdicion">Activa</label>
+                <label for="activoAdicion">{{ 'onboarding.genericStep.activa' | translate }}</label>
               </div>
             </div>
           </form>
@@ -431,26 +432,26 @@ import { MessageService } from 'primeng/api';
           <form *ngIf="shouldShowGenericForm()" [formGroup]="configForm" class="onboarding-form">
             <div class="p-fluid">
               <div class="field">
-                <label for="nombreGenerico">Nombre *</label>
+                <label for="nombreGenerico">{{ 'onboarding.genericStep.nombre' | translate }}</label>
                 <input
                   id="nombreGenerico"
                   type="text"
                   pInputText
                   formControlName="nombre"
-                  placeholder="Ingrese un nombre descriptivo"
+                  [placeholder]="'onboarding.genericStep.ingreseUnNombreDescriptivo' | translate"
                 />
                 <small class="p-error" *ngIf="configForm.get('nombre')?.invalid && configForm.get('nombre')?.touched">
-                  El nombre es requerido
+                  {{ 'onboarding.genericStep.elNombreEsRequerido' | translate }}
                 </small>
               </div>
 
               <div class="field">
-                <label for="descripcionGenerica">Descripción</label>
+                <label for="descripcionGenerica">{{ 'onboarding.categoriesStep.descripcion' | translate }}</label>
                 <textarea
                   id="descripcionGenerica"
                   pInputTextarea
                   formControlName="descripcion"
-                  placeholder="Describe este elemento"
+                  [placeholder]="'onboarding.genericStep.describeEsteElemento' | translate"
                   rows="3"
                 ></textarea>
               </div>
@@ -461,7 +462,7 @@ import { MessageService } from 'primeng/api';
                   [binary]="true"
                   inputId="activoGenerico"
                 ></p-checkbox>
-                <label for="activoGenerico">Activo</label>
+                <label for="activoGenerico">{{ 'onboarding.billingZonesStep.activo' | translate }}</label>
               </div>
             </div>
           </form>
@@ -471,7 +472,7 @@ import { MessageService } from 'primeng/api';
             <button
               pButton
               type="button"
-              label="Cancelar"
+              [label]="'comun.cancelar' | translate"
               icon="pi pi-times"
               class="p-button-outlined p-button-secondary"
               (click)="cancelConfiguration()"
@@ -481,7 +482,7 @@ import { MessageService } from 'primeng/api';
             <button
               pButton
               type="button"
-              label="Guardar Configuración"
+              [label]="'onboarding.genericStep.guardarConfiguracion' | translate"
               icon="pi pi-save"
               class="p-button-success"
               (click)="saveConfiguration()"
@@ -497,7 +498,7 @@ import { MessageService } from 'primeng/api';
         <button
           pButton
           type="button"
-          label="Configurar Ahora"
+          [label]="'onboarding.genericStep.configurarAhora' | translate"
           icon="pi pi-cog"
           class="p-button-outlined"
           *ngIf="!hasExistingData() && !showConfigForm && !isConfigured"
@@ -517,12 +518,12 @@ import { MessageService } from 'primeng/api';
 
       <p class="skip-notice" *ngIf="!stepConfig.isRequired && !hasExistingData()">
         <i class="pi pi-info-circle"></i>
-        Este paso es opcional y puede completarse más tarde
+        {{ 'onboarding.genericStep.estePasoEsOpcionalY' | translate }}
       </p>
 
       <p class="required-notice" *ngIf="stepConfig.isRequired && !canComplete()">
         <i class="pi pi-exclamation-triangle"></i>
-        Este paso es obligatorio. Debes configurarlo para continuar.
+        {{ 'onboarding.genericStep.estePasoEsObligatorioDebes' | translate }}
       </p>
     </div>
   `,
@@ -721,7 +722,8 @@ export class GenericStepComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private maestroService: MaestroService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -877,8 +879,8 @@ export class GenericStepComponent implements OnInit, OnDestroy {
       this.markFormGroupTouched(this.configForm);
       this.messageService.add({
         severity: 'warn',
-        summary: 'Formulario Inválido',
-        detail: 'Por favor complete todos los campos requeridos'
+        summary: this.translate.instant('onboarding.genericStep.formularioInvalido'),
+        detail: this.translate.instant('onboarding.genericStep.porFavorCompleteTodosLos')
       });
       return;
     }
@@ -933,8 +935,8 @@ export class GenericStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Configuración Guardada',
-        detail: `${ this.stepConfig.title } configurado exitosamente`
+        summary: this.translate.instant('onboarding.genericStep.configuracionGuardada'),
+        detail: this.translate.instant('onboarding.genericStep.configuradoExitosamente', { paso: this.stepConfig.title })
       });
 
       this.isConfigured = true;
@@ -953,8 +955,8 @@ export class GenericStepComponent implements OnInit, OnDestroy {
       console.error('Error guardando configuración:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: error?.error?.message || 'No se pudo guardar la configuración. Intente nuevamente.'
+        summary: this.translate.instant('comun.error'),
+        detail: error?.error?.message || this.translate.instant('onboarding.genericStep.noSePudoGuardarLa')
       });
     } finally {
       this.isSaving = false;

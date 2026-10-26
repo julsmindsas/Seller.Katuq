@@ -1,5 +1,5 @@
 <div class="cfg-pagina nps-seccion">
-  <a class="caso-volver" routerLink="/nps/seguimiento"><i class="pi pi-arrow-left" aria-hidden="true"></i><span class="nps-heredar">Seguimiento</span></a>
+  <a class="caso-volver" routerLink="/nps/seguimiento"><i class="pi pi-arrow-left" aria-hidden="true"></i><span class="nps-heredar">{{ 'nps.caso.seguimiento' | translate }}</span></a>
 
   <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
     <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
@@ -9,7 +9,7 @@
   <section class="cfg-card" *ngIf="cargando">
     <div class="cfg-vacio">
       <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
-      <p class="cfg-vacio__titulo">Abriendo el caso…</p>
+      <p class="cfg-vacio__titulo">{{ 'nps.caso.abriendoElCaso' | translate }}</p>
     </div>
   </section>
 
@@ -17,18 +17,18 @@
     <!-- ── Encabezado del caso ───────────────────────── -->
     <section class="cfg-card caso-cabeza">
       <div class="nps-nota nps-nota--grande" [ngClass]="'is-' + c.segmento">
-        <span class="nps-oculto">Nota</span>
+        <span class="nps-oculto">{{ 'nps.resultados.nota' | translate }}</span>
         <span class="nps-heredar">{{ c.nota }}</span>
       </div>
       <div class="caso-cabeza__textos">
-        <h2 class="nps-barra__titulo">{{ c.comprador.nombre || c.empresaQueResponde || 'Cliente sin nombre' }}</h2>
+        <h2 class="nps-barra__titulo">{{ c.comprador.nombre || c.empresaQueResponde || ('nps.caso.clienteSinNombre' | translate) }}</h2>
         <div class="nps-fila__cabeza">
-          <span class="nps-pastilla" [ngClass]="'is-' + c.estado">{{ NOMBRE_ESTADO[c.estado] }}</span>
-          <span class="nps-pastilla is-vencido" *ngIf="c.vencido">Vencido</span>
-          <span class="nps-pastilla" [ngClass]="'is-' + c.segmento">{{ NOMBRE_SEGMENTO[c.segmento] }}</span>
-          <span class="nps-pastilla is-canal" *ngIf="c.encuesta?.canal">{{ NOMBRE_CANAL[c.encuesta.canal] }}</span>
+          <span class="nps-pastilla" [ngClass]="'is-' + c.estado">{{ NOMBRE_ESTADO[c.estado] | translate }}</span>
+          <span class="nps-pastilla is-vencido" *ngIf="c.vencido">{{ 'nps.caso.vencido' | translate }}</span>
+          <span class="nps-pastilla" [ngClass]="'is-' + c.segmento">{{ NOMBRE_SEGMENTO[c.segmento] | translate }}</span>
+          <span class="nps-pastilla is-canal" *ngIf="c.encuesta?.canal">{{ NOMBRE_CANAL[c.encuesta.canal] | translate }}</span>
         </div>
-        <p class="nps-fila__meta">Respondió el {{ fecha(c.fecha) }} · {{ c.encuesta?.nombre }}</p>
+        <p class="nps-fila__meta">{{ 'nps.caso.respondioEl' | translate:{fecha: (fecha(c.fecha)), nombre: c.encuesta?.nombre} }}</p>
       </div>
     </section>
 
@@ -36,9 +36,9 @@
       <div class="caso-columna">
         <!-- ── Lo que respondió ───────────────────────── -->
         <section class="cfg-card caso-bloque" aria-labelledby="caso-respuesta-titulo">
-          <h3 class="caso-bloque__titulo" id="caso-respuesta-titulo">Lo que respondió</h3>
+          <h3 class="caso-bloque__titulo" id="caso-respuesta-titulo">{{ 'nps.caso.loQueRespondio' | translate }}</h3>
           <p class="caso-comentario" *ngIf="c.comentario; else sinComentario">“{{ c.comentario }}”</p>
-          <ng-template #sinComentario><p class="caso-comentario is-vacio">No dejó comentario.</p></ng-template>
+          <ng-template #sinComentario><p class="caso-comentario is-vacio">{{ 'nps.caso.noDejoComentario' | translate }}</p></ng-template>
           <dl class="caso-adicionales" *ngIf="c.adicionales?.length">
             <div class="caso-adicional" *ngFor="let a of c.adicionales">
               <dt class="cfg-label">{{ a.texto }}</dt>
@@ -49,10 +49,10 @@
 
         <!-- ── Atender ─────────────────────────────────── -->
         <section class="cfg-card caso-bloque" aria-labelledby="caso-atender-titulo">
-          <h3 class="caso-bloque__titulo" id="caso-atender-titulo">Atender</h3>
+          <h3 class="caso-bloque__titulo" id="caso-atender-titulo">{{ 'nps.caso.atender' | translate }}</h3>
 
           <div class="caso-campo">
-            <span class="nps-campo__label" id="caso-estado-label">Estado</span>
+            <span class="nps-campo__label" id="caso-estado-label">{{ 'nps.caso.estado' | translate }}</span>
             <div class="caso-estados" role="group" aria-labelledby="caso-estado-label">
               <button
                 type="button"
@@ -63,36 +63,36 @@
                 [attr.aria-pressed]="c.estado === e"
                 [disabled]="guardando"
                 (click)="cambiarEstado(e)"
-              >{{ NOMBRE_ESTADO[e] }}</button>
+              >{{ NOMBRE_ESTADO[e] | translate }}</button>
             </div>
             <p class="caso-cierre" *ngIf="c.cerradoAt">
               <i class="pi pi-check-circle" aria-hidden="true"></i>
-              <span class="nps-heredar">Cerrado el {{ fecha(c.cerradoAt) }}<ng-container *ngIf="c.notaCierre">: “{{ c.notaCierre }}”</ng-container></span>
+              <span class="nps-heredar">{{ 'nps.caso.cerradoEl' | translate:{cerradoAt: (fecha(c.cerradoAt))} }}<ng-container *ngIf="c.notaCierre">: “{{ c.notaCierre }}”</ng-container></span>
             </p>
           </div>
 
           <div class="caso-campo">
-            <span class="nps-campo__label">Responsable</span>
-            <span class="caso-responsable">{{ c.responsable ? (c.responsable.nombre || c.responsable.email) : 'Sin responsable' }}</span>
+            <span class="nps-campo__label">{{ 'nps.encuestasLista.responsable' | translate }}</span>
+            <span class="caso-responsable">{{ c.responsable ? (c.responsable.nombre || c.responsable.email) : ('nps.encuestasLista.sinResponsable' | translate) }}</span>
             <div class="caso-reasignar" *ngIf="otrosResponsables.length">
-              <select class="nps-select" name="responsable" [(ngModel)]="nuevoResponsable" [disabled]="guardando" aria-label="Reasignar a">
-                <option value="">Reasignar a…</option>
+              <select class="nps-select" name="responsable" [(ngModel)]="nuevoResponsable" [disabled]="guardando" [attr.aria-label]="'nps.caso.reasignarA' | translate">
+                <option value="">{{ 'nps.caso.reasignarA2' | translate }}</option>
                 <option *ngFor="let u of otrosResponsables" [value]="u.email">{{ u.nombre || u.email }}</option>
               </select>
               <button type="button" class="cfg-btn cfg-btn--sec" (click)="reasignar()" [disabled]="guardando || !nuevoResponsable">
-                <i class="pi pi-user-edit" aria-hidden="true"></i><span>Reasignar</span>
+                <i class="pi pi-user-edit" aria-hidden="true"></i><span>{{ 'nps.caso.reasignar' | translate }}</span>
               </button>
             </div>
           </div>
 
           <form class="caso-campo" (ngSubmit)="agregarNota()">
-            <label class="nps-campo__label" for="caso-nota">Agregar una nota</label>
+            <label class="nps-campo__label" for="caso-nota">{{ 'nps.caso.agregarUnaNota' | translate }}</label>
             <textarea id="caso-nota" class="nps-textarea" name="nota" rows="3" [(ngModel)]="nota" [maxlength]="MAX_NOTA"
-                      placeholder="Ej.: lo llamé y quedamos de reenviarle el pedido el lunes"></textarea>
+                      [placeholder]="'nps.caso.ejLoLlameYQuedamos' | translate"></textarea>
             <div class="caso-nota__pie">
               <span class="nps-ayuda">{{ nota.length }}/{{ MAX_NOTA }}</span>
               <button type="submit" class="cfg-btn" [disabled]="guardando || !nota.trim()">
-                <i class="pi pi-plus" aria-hidden="true"></i><span>Agregar nota</span>
+                <i class="pi pi-plus" aria-hidden="true"></i><span>{{ 'nps.caso.agregarNota' | translate }}</span>
               </button>
             </div>
           </form>
@@ -100,16 +100,16 @@
 
         <!-- ── Notas e historial ──────────────────────── -->
         <section class="cfg-card caso-bloque" aria-labelledby="caso-notas-titulo">
-          <h3 class="caso-bloque__titulo" id="caso-notas-titulo">Notas</h3>
+          <h3 class="caso-bloque__titulo" id="caso-notas-titulo">{{ 'nps.caso.notas' | translate }}</h3>
           <ul class="caso-notas" *ngIf="notasRecientes.length; else sinNotas">
             <li class="caso-nota" *ngFor="let n of notasRecientes">
               <p class="caso-nota__texto">{{ n.texto }}</p>
               <span class="caso-nota__meta">{{ n.autor }} · {{ fecha(n.fecha) }}</span>
             </li>
           </ul>
-          <ng-template #sinNotas><p class="nps-muted">Todavía no hay notas.</p></ng-template>
+          <ng-template #sinNotas><p class="nps-muted">{{ 'nps.caso.todaviaNoHayNotas' | translate }}</p></ng-template>
 
-          <h3 class="caso-bloque__titulo caso-bloque__titulo--sep">Historial</h3>
+          <h3 class="caso-bloque__titulo caso-bloque__titulo--sep">{{ 'nps.caso.historial' | translate }}</h3>
           <ol class="caso-historial" *ngIf="historialReciente.length; else sinHistorial">
             <li class="caso-paso" *ngFor="let h of historialReciente">
               <span class="caso-paso__punto" aria-hidden="true"></span>
@@ -119,64 +119,64 @@
               </div>
             </li>
           </ol>
-          <ng-template #sinHistorial><p class="nps-muted">Sin movimientos todavía.</p></ng-template>
+          <ng-template #sinHistorial><p class="nps-muted">{{ 'nps.caso.sinMovimientosTodavia' | translate }}</p></ng-template>
         </section>
       </div>
 
       <!-- ── Contacto ─────────────────────────────────── -->
       <aside class="caso-columna caso-lado">
         <section class="cfg-card caso-bloque" aria-labelledby="caso-contacto-titulo">
-          <h3 class="caso-bloque__titulo" id="caso-contacto-titulo">Contacto</h3>
+          <h3 class="caso-bloque__titulo" id="caso-contacto-titulo">{{ 'nps.caso.contacto' | translate }}</h3>
           <dl class="caso-datos">
             <div class="caso-dato" *ngIf="c.empresaQueResponde">
-              <dt class="cfg-label">Comercio</dt>
+              <dt class="cfg-label">{{ 'nps.caso.comercio' | translate }}</dt>
               <dd class="caso-dato__valor">{{ c.empresaQueResponde }}</dd>
             </div>
             <div class="caso-dato" *ngIf="c.comprador.nombre">
-              <dt class="cfg-label">Nombre</dt>
+              <dt class="cfg-label">{{ 'nps.caso.nombre' | translate }}</dt>
               <dd class="caso-dato__valor">{{ c.comprador.nombre }}</dd>
             </div>
             <div class="caso-dato" *ngIf="c.comprador.email">
-              <dt class="cfg-label">Correo</dt>
+              <dt class="cfg-label">{{ 'nps.caso.correo' | translate }}</dt>
               <dd class="caso-dato__valor"><a class="nps-enlace" [href]="'mailto:' + c.comprador.email">{{ c.comprador.email }}</a></dd>
             </div>
             <div class="caso-dato" *ngIf="c.comprador.telefono">
-              <dt class="cfg-label">Teléfono</dt>
+              <dt class="cfg-label">{{ 'nps.caso.telefono' | translate }}</dt>
               <dd class="caso-dato__valor">{{ c.comprador.telefono }}</dd>
             </div>
             <div class="caso-dato" *ngIf="c.pedido">
-              <dt class="cfg-label">Pedido</dt>
+              <dt class="cfg-label">{{ 'nps.caso.pedido' | translate }}</dt>
               <dd class="caso-dato__valor"><span class="nps-doc">{{ c.pedido.nroPedido }}</span></dd>
             </div>
             <div class="caso-dato" *ngIf="c.nroTicket">
-              <dt class="cfg-label">Ticket de soporte</dt>
+              <dt class="cfg-label">{{ 'nps.caso.ticketDeSoporte' | translate }}</dt>
               <dd class="caso-dato__valor"><span class="nps-doc">#{{ c.nroTicket }}</span></dd>
             </div>
           </dl>
-          <p class="nps-muted" *ngIf="!c.comprador.email && !c.comprador.telefono && !c.empresaQueResponde">El cliente no dejó cómo contactarlo.</p>
+          <p class="nps-muted" *ngIf="!c.comprador.email && !c.comprador.telefono && !c.empresaQueResponde">{{ 'nps.caso.elClienteNoDejoComo' | translate }}</p>
 
           <div class="caso-contactar" *ngIf="llamada || whatsapp">
             <a class="cfg-btn" *ngIf="whatsapp as wa" [href]="wa" target="_blank" rel="noopener">
-              <i class="pi pi-whatsapp" aria-hidden="true"></i><span>Escribir por WhatsApp</span>
+              <i class="pi pi-whatsapp" aria-hidden="true"></i><span>{{ 'nps.caso.escribirPorWhatsapp' | translate }}</span>
             </a>
             <a class="cfg-btn cfg-btn--sec" *ngIf="llamada as tel" [href]="tel">
-              <i class="pi pi-phone" aria-hidden="true"></i><span>Llamar</span>
+              <i class="pi pi-phone" aria-hidden="true"></i><span>{{ 'nps.caso.llamar' | translate }}</span>
             </a>
-            <span class="nps-ayuda">WhatsApp se abre con un saludo listo; lo envías tú.</span>
+            <span class="nps-ayuda">{{ 'nps.caso.whatsappSeAbreConUn' | translate }}</span>
           </div>
         </section>
 
         <section class="cfg-card caso-bloque caso-fechas">
           <div class="caso-dato">
-            <span class="cfg-label">Abierto</span>
+            <span class="cfg-label">{{ 'nps.caso.abierto' | translate }}</span>
             <span class="caso-dato__valor">{{ fecha(c.abiertoAt) }}</span>
           </div>
           <div class="caso-dato" *ngIf="c.primerContactoAt">
-            <span class="cfg-label">Primer contacto</span>
+            <span class="cfg-label">{{ 'nps.caso.primerContacto' | translate }}</span>
             <span class="caso-dato__valor">{{ fecha(c.primerContactoAt) }}</span>
           </div>
           <div class="caso-dato" *ngIf="c.cerradoAt">
-            <span class="cfg-label">Cerrado</span>
+            <span class="cfg-label">{{ 'nps.caso.cerrado' | translate }}</span>
             <span class="caso-dato__valor">{{ fecha(c.cerradoAt) }}</span>
           </div>
         </section>
