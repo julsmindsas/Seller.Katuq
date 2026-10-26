@@ -12051,3 +12051,19 @@ Daniel aprobó en bloque, con las opciones recomendadas de cada propuesta, «cer
   - D-484, backend `700357a3`. Cero rechazos en los 10 minutos siguientes.
   - D-546, el menú, front 2026.10.23.9 y .10. La .10 se publicó forzando el candado, con autorización de Daniel: la .9 llevaba sin commitear un archivo de memoria de agente que no era código.
 - **Tickets de ALMARA cerrados el 23-oct:** 1332, 1334, 1335, 1336, 1337, 1338, 1352, 1353, 1354 y 1359.
+
+### 2026-10-26 — Autorización permanente de Daniel para D-541, D-547, D-548, D-549, D-550 y D-551
+
+Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
+
+> «Todo lo que esté dentro de los diseños que ya aprobé (D-541, D-547, D-548, D-549, D-550, D-551), con pruebas en verde y la revisión de los agentes sin hallazgos graves, guárdalo y publícalo sin preguntarme. Pregúntame solo si hay algo nuevo fuera del diseño, un riesgo de dinero o datos, o una prueba que necesite mi sesión.»
+
+- Esta autorización reemplaza, solo para estos seis cambios, la aprobación de cada diff en módulos sensibles (`openspec/config.yaml`).
+- Siguen pidiendo aprobación expresa:
+  - lo que quede fuera del diseño;
+  - las escrituras masivas o migraciones de datos;
+  - encender banderas que cambian cifras o cobros;
+  - las pruebas que necesitan la sesión de Daniel.
+- Decisiones del mismo día:
+  - D-551: se dispensa la evidencia del 403 en producción (tarea 1.1) y no se aprueba el detalle por clic (3.9 y 3.12).
+  - D-550: se aceptan los pedidos sin `date_upd`. El cierre de «el modelo puede aprobar» va en un cambio aparte, `mcp-aprobacion-solo-humano`, antes de encender la edición desde Claude.
