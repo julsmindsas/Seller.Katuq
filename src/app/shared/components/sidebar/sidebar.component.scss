@@ -897,6 +897,14 @@
 // =====================================================================
 // Tickets 1178 y 1184: pie del menú con el logo de Katuq y la versión
 // (reemplaza al botón "Notificaciones", que se retiró).
+// Ticket 1378: la «A» de Katuq al final del riel compacto.
+.sidebar-brand-footer.sidebar-brand-footer--compacto {
+  align-items: center;
+  padding: 10px 0 8px;
+
+  img { max-height: 26px; }
+}
+
 .sidebar-brand-footer {
   flex-shrink: 0;
   display: flex;

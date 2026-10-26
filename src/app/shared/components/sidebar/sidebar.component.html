@@ -45,11 +45,17 @@
       <div class="brand-profile">
         <!-- Logo/Avatar clickeable -->
         <a routerLink='/welcome' class="brand-avatar-link" [attr.aria-label]="'shell.sidebar.goHome' | translate">
-          <!-- Logo compacto cuando está colapsado -->
+          <!-- Ticket 1378: compacto, va la foto del usuario (antes la «A» de Katuq, que se
+               sentía vacía); la «A» baja al final del riel. -->
           <div class="logo-avatar" *ngIf="compacto">
-            <img src="assets/images/logo/Katuq/katuq_logo_solo.svg"
-                 alt="Katuq"
-                 class="logo-icon">
+            <img *ngIf="userAvatarUrl"
+                 [src]="userAvatarUrl"
+                 [alt]="userName"
+                 class="avatar-image"
+                 (error)="onAvatarError($event)">
+            <div *ngIf="!userAvatarUrl" class="avatar-placeholder">
+              <span>{{userInitials}}</span>
+            </div>
           </div>
 
           <!-- Avatar del usuario cuando está expandido -->
@@ -443,6 +449,12 @@
     <img class="logo-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq">
     <img class="logo-dark" src="assets/images/logo/Katuq/katuq-dark.png" alt="Katuq">
     <span class="version-badge">v{{version}}</span><!-- i18n-ignorar: «v» de versión, no es texto -->
+  </div>
+
+  <!-- Ticket 1378: en el riel compacto, la «A» de Katuq al final de la fila -->
+  <div class="sidebar-brand-footer sidebar-brand-footer--compacto"
+       *ngIf="compacto">
+    <img src="assets/images/logo/Katuq/katuq_logo_solo.svg" alt="Katuq" [attr.title]="'v' + version">
   </div>
 
   <!-- Plan Card -->

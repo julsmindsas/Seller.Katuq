@@ -1640,12 +1640,33 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   /** El puntero entra a una fila del riel (el panel no se abre con el dedo: ahí manda el toque). */
   public alEntrarPuntero(fila: FilaMenu, evento: PointerEvent): void {
     if (evento.pointerType === 'touch') { return; }
+    this.cancelarCierrePanel();
     this.abrirPanel(fila, evento);
+  }
+
+  /**
+   * Ticket 1379 (ALMARA): entre el ícono y el panel queda la barra de desplazamiento
+   * del riel; al cruzarla el puntero «sale» de la fila y el panel se cerraba antes del
+   * clic. Se espera un momento: si el puntero llega al panel (o vuelve a la fila), sigue abierto.
+   */
+  private cierrePanelTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly ESPERA_CIERRE_PANEL_MS = 300;
+
+  private cancelarCierrePanel(): void {
+    if (this.cierrePanelTimer) {
+      clearTimeout(this.cierrePanelTimer);
+      this.cierrePanelTimer = null;
+    }
   }
 
   public alSalirPuntero(evento: PointerEvent): void {
     if (evento.pointerType === 'touch') { return; }
-    this.cerrarPanel();
+    this.cancelarCierrePanel();
+    this.cierrePanelTimer = setTimeout(() => {
+      this.cierrePanelTimer = null;
+      this.cerrarPanel();
+      this.cdr.markForCheck();
+    }, SidebarComponent.ESPERA_CIERRE_PANEL_MS);
   }
 
   /** El foco sale de la fila y de su panel: se cierra. */
@@ -1889,6 +1910,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    * Limpia los recursos cuando el componente se destruye
    */
   ngOnDestroy(): void {
+    this.cancelarCierrePanel();
     // Limpiar suscripciones
     this.destroy$.next();
     this.destroy$.complete();
