@@ -1086,9 +1086,51 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     return this.failOnCrmError<any>(this.crmService.updateLead(payload.cd, payload, true));
   }
 
+  /**
+   * Ticket 1416: el número de documento de un cliente se puede corregir. Antes
+   * de guardar se confirma, porque los pedidos ya creados guardan su propia
+   * copia y conservan el documento anterior. El backend rechaza uno repetido.
+   *
+   * El documento solo viaja si el usuario lo cambió: la ficha puede venir de
+   * la copia de un pedido o cotización viejos, y reenviar ese documento
+   * revertiría una corrección hecha después.
+   */
   private ejecutarEdicion(clienteData: any) {
+    const anterior = String(this.clienteData?.documento ?? '').trim();
+    const nuevo = String(clienteData.documento ?? '').trim();
+    const cambiado = this.documentoEditable && !!this.formulario.get('documento')?.dirty && nuevo !== anterior;
+    if (!cambiado) {
+      this.guardarEdicion(clienteData, false);
+      return;
+    }
+    Swal.fire({
+      icon: 'warning',
+      title: '¿Cambiar el número de documento?',
+      html: `<p>Pasa de <strong>${this.escaparHtml(anterior || 'sin documento')}</strong> a <strong>${this.escaparHtml(nuevo)}</strong>.</p>
+             <p>Los otros pedidos ya creados conservan el documento anterior; los nuevos y sus facturas usarán el nuevo.</p>`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cambiarlo',
+      cancelButtonText: 'Volver',
+      reverseButtons: true,
+    }).then((r) => {
+      if (r.isConfirmed) this.guardarEdicion(clienteData, true);
+    });
+  }
+
+  /** Ticket 1416: el documento se corrige solo en clientes con ficha identificada. */
+  get documentoEditable(): boolean {
+    return this.isEdit && this.target !== 'corporate' && !!(this.clienteData?.cd || this.clienteData?.id);
+  }
+
+  private escaparHtml(texto: string): string {
+    return texto.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c]);
+  }
+
+  private guardarEdicion(clienteData: any, enviarDocumento: boolean) {
     const payload = { ...clienteData, cd: this.clienteData.cd || this.clienteData.id };
-    this.persistEdit(payload).subscribe({
+    const enviado = { ...payload };
+    if (!enviarDocumento && this.target !== 'corporate') delete enviado.documento;
+    this.persistEdit(enviado).subscribe({
       next: () => {
         this.lookupByDocument(payload.documento).subscribe({
           next: (resultadoLookup: any) => {
@@ -1113,7 +1155,16 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           }
         });
       },
-      error: () => {
+      error: (err: any) => {
+        if (err?.error?.code === 'DOCUMENT_IN_USE') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Ese documento ya está en uso',
+            text: `Otro cliente ya tiene el documento ${payload.documento}. Búscalo por ese número; no se guardó el cambio.`,
+            confirmButtonText: 'Entendido',
+          });
+          return;
+        }
         Swal.fire("Error", `Ocurrió un error al actualizar el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });

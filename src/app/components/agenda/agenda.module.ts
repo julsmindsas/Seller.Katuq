@@ -1,3 +1,4 @@
+import { TranslateModule } from '@ngx-translate/core';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,6 +24,7 @@ const routes: Routes = [
   declarations: [AgendaPageComponent, AgendaConfigComponent, CitaPanelComponent],
   imports: [
     CommonModule,
+    TranslateModule,
     FormsModule,
     RouterModule.forChild(routes),
     DialogModule,

@@ -986,7 +986,7 @@ addTicket(newTicket: any): Observable<any>  {
   });
 
   // Hacemos el POST a la API
-  return this.httpClient.post('https://api.katuq.com/v1/support/ticket/create', newTicket);
+  return this.httpClient.post(`${environment.urlApi}/v1/support/ticket/create`, newTicket);
 }
 getTickets(): Observable<any[]> {
   const headers = new HttpHeaders({
@@ -994,7 +994,7 @@ getTickets(): Observable<any[]> {
     'Authorization': sessionStorage.getItem('tk') || ''
   });
 
-  return this.httpClient.get<any[]>('https://api.katuq.com/v1/support/ticket/all');
+  return this.httpClient.get<any[]>(`${environment.urlApi}/v1/support/ticket/all`);
 }
 editTicket(newTicket: any): Observable<any>  {
     
@@ -1004,7 +1004,7 @@ editTicket(newTicket: any): Observable<any>  {
     'Authorization': sessionStorage.getItem('tk')  // Reemplaza 'TU_TOKEN' por el token correcto
   });
 
-  return this.httpClient.put('https://api.katuq.com/v1/support/ticket/'+newTicket.cd, newTicket);
+  return this.httpClient.put(`${environment.urlApi}/v1/support/ticket/${newTicket.cd}`, newTicket);
 }
 
 /**
@@ -1013,7 +1013,7 @@ editTicket(newTicket: any): Observable<any>  {
  * backend reabre el ticket. El interceptor pone el token.
  */
 confirmarResolucionTicket(ticketId: string, confirmacion: any): Observable<any> {
-  return this.httpClient.post('https://api.katuq.com/v1/support/ticket/' + ticketId + '/confirmacion', confirmacion);
+  return this.httpClient.post(`${environment.urlApi}/v1/support/ticket/${ticketId}/confirmacion`, confirmacion);
 }
 
 addNotification(message: string, ticketId: string) {
@@ -1047,6 +1047,6 @@ getContacts(): Observable<any[]> {
     'Authorization': sessionStorage.getItem('tk') || ''
   });
 
-  return this.httpClient.get<any[]>('https://api.katuq.com/v1/contacts');
+  return this.httpClient.get<any[]>(`${environment.urlApi}/v1/contacts`);
 }
 }

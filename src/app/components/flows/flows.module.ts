@@ -1,3 +1,4 @@
+import { TranslateModule } from '@ngx-translate/core';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -30,7 +31,7 @@ import { FlowCanvasLoaderService } from './services/flow-canvas-loader.service';
     FlowDiffComponent,
     FlowAiAssistComponent
   ],
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbModalModule, FlowsRoutingModule],
+  imports: [CommonModule, TranslateModule, FormsModule, ReactiveFormsModule, NgbModalModule, FlowsRoutingModule],
   providers: [FlowCanvasLoaderService],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   exports: [FlowAiAssistComponent]

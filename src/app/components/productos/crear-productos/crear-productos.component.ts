@@ -1121,11 +1121,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       showCloseButton: true,
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // this.filesPaths[index].delete();
-        this.imageService.eliminarImagen(imgToDelete);
-        Swal.fire("Eliminada!", "La imágen ha sido eliminada.", "success");
+        // Ticket 1413: se espera la respuesta; antes decía «Eliminada» sin saberlo.
+        const borrada = await this.imageService.eliminarImagenConResultado(imgToDelete);
+        if (borrada) {
+          Swal.fire("Eliminada", "La imagen se quitó del producto.", "success");
+        } else {
+          Swal.fire("Quitada del producto", "La imagen se quitó del producto, pero no pudimos borrar el archivo del almacenamiento.", "info");
+        }
         var values = this.crearProducto.controls["imagenesPrincipales"].value;
         values = values.filter((p) => p.path != imgToDelete);
         this.crearProducto.controls["imagenesPrincipales"].setValue(values);

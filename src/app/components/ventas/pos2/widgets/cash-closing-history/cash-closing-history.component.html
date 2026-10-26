@@ -157,8 +157,8 @@
                               <td>{{ formatCurrency(item.efectivoFinal) }}</td>
                             </tr>
                             <tr>
-                              <th scope="row">Diferencia</th>
-                              <td>{{ formatCurrency(item.efectivoFinal - item.efectivoInicial) }}</td>
+                              <th scope="row">Diferencia (contado − debía haber)</th>
+                              <td>{{ estadoCuadre(item) }}</td>
                             </tr>
                           </tbody>
                         </table>

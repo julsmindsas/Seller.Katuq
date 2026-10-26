@@ -80,6 +80,22 @@ export class ImagenService {
         });
     }
 
+    /**
+     * Ticket 1413: igual que `eliminarImagen`, pero espera la respuesta para que
+     * la pantalla diga lo que de verdad pasó. `true` si se quitó (o el archivo
+     * viejo sin dueño se conservó en el almacenamiento); `false` si el
+     * almacenamiento no la dejó borrar.
+     */
+    async eliminarImagenConResultado(imagenPath: string): Promise<boolean> {
+        if (!imagenPath) return true;
+        try {
+            await firstValueFrom(this.http.post(`${this.urlApi}/v1/media/delete-file`, { path: imagenPath }));
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     private buildForm(file: File, nombre?: string, carpeta?: string): FormData {
         const formData = new FormData();
         formData.append('file', file, nombre || file.name);

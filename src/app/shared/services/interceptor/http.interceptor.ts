@@ -71,7 +71,10 @@ export class HttpInterceptor2 implements HttpInterceptor {
           }
 
           if ([401, 403].indexOf(err.status) !== -1 && !isPublicRoute) {
-            if (this.esSesionInvalida(err)) {
+            if (err.error?.code === 'FILE_NOT_OWNED') {
+              // Ticket 1413: no es suscripción; la pantalla que borra la imagen
+              // explica qué pasó.
+            } else if (this.esSesionInvalida(err)) {
               // Sesión inservible: seguir "adentro" de la app solo produce
               // fallos sueltos en cada llamada hasta que el usuario intenta
               // guardar algo. Se saca al login.

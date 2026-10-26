@@ -170,7 +170,7 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
    * Obtiene el total de ventas en efectivo
    */
   get totalEfectivo(): number {
-    return this.datosCierre.formasPago.find(fp => fp.nombre === 'Efectivo')?.total || 0;
+    return this.datosCierre.formasPago.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
   }
 
   /**

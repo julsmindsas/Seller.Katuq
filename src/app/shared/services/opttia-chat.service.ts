@@ -77,7 +77,9 @@ interface OpttiaSseEvent {
 @Injectable({ providedIn: 'root' })
 export class OpttiaChatService implements OnDestroy {
   private readonly accessEndpoint = (environment as typeof environment & { opttiaAccessApi?: string }).opttiaAccessApi
-    || 'https://back.katuq.com/v1/opttia/access';
+    // Ticket 1373: sin la dirección fija de producción; la copia migrada
+    // (app.katuq.com) mandaba su token al servidor de producción.
+    || `${environment.urlApi}/v1/opttia/access`;
   private readonly accessSubject = new BehaviorSubject<OpttiaAccess | null>(null);
   readonly access$ = this.accessSubject.asObservable();
   accessLoading = false;
@@ -151,7 +153,8 @@ export class OpttiaChatService implements OnDestroy {
   }
   private readonly endpoint = (environment as typeof environment & { opttiaBasicApi?: string }).opttiaBasicApi || `${(
     (environment as typeof environment & { opttiaApi?: string }).opttiaApi
-    || 'https://back.katuq.com/adk'
+    || (environment as typeof environment & { adkBackendApi?: string }).adkBackendApi
+    || `${environment.urlApi}/adk`
   ).replace(/\/$/, '')}/agui/basic/v1`;
   private readonly initialMessage: OpttiaChatMessage = {
     id: 'opttia-welcome',

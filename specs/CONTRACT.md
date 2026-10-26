@@ -12321,3 +12321,38 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - Subida, sin desplegar: la publica Daniel.
 - Siguen, sensibles y con diff: 2.5 (`requestId` y códigos en `from-order`), 2.6 y 2.7 (`verify-invoice`), 2.9 y 2.11.
 - La rama local del front en el equipo del agente tiene 139 commits del 21-oct (fusión de `feature/tickets-web`) que no están en `origin` y chocan con él en 13 archivos (reportes, menú lateral, `company-features`, `CONTRACT.md`, `package.json`). No se subieron; hay que resolverlos antes.
+
+
+### 2026-10-26 — D-562: POS, recuperar los arreglos de cálculo del 14-oct sobre el rediseño del equipo
+- **Contexto:** los arreglos del POS del 14-oct quedaron sin commitear y chocaron con D-520/D-531/D-540. Se recupera solo la lógica; el diseño se queda el del equipo.
+- **Qué cambió:** alerta Swal al Agregar sin existencias (`agregarDesdeTarjeta`); el cierre propone la fecha LOCAL (`toISOString` daba el día siguiente desde las 7 p. m.); "Sin ventas" es aviso informativo, no error; el efectivo se reconoce sin importar mayúsculas (cierre y reporte impreso).
+- **Historial de cierres:** la fila Diferencia usa la fórmula única aprobada el 14-oct, contado − (inicial + ventas en efectivo), y muestra Cuadra / Sobra / Falta. Antes era final − inicial, y un mismo cierre daba un número al cerrarlo y otro al consultarlo. `formasPagoComoNumeros` pasa las claves a minúscula para que "Efectivo" y "efectivo" no queden duplicados ni se sume el efectivo doble. Se conserva el normalizador del ticket 1173.
+- **Verificado:** compila (`ng serve`); la consulta del historial devuelve 14 cierres de ALMARA en octubre. **Sin revisar en navegador.**
+- **Pendiente:** el servidor sigue cortando los días en UTC; los descuentos e impuestos no se guardan en los cierres nuevos.
+
+
+### 2026-10-26 — D-563: WooCommerce, imágenes sin duplicar (punto 18), fecha en el inventario importado y punto 15 cerrado
+- **Punto 18:** cada edición en Katuq mandaba todas las imágenes como `{ src }` y WooCommerce creaba un adjunto nuevo por cada una. Ahora `woocommerceService` lee las imágenes que la tienda tiene (GET del producto o la variación) y manda `{ id }` para las que ya están, reconocidas por `integrations.woocommerce.imagenes` ([{ src: URL de Katuq, id }], que el adapter anota al crear o editar) o por la misma URL (productos importados). Solo las nuevas van como `{ src }`. Si la tienda no responde, no se mandan imágenes: conserva las suyas. Un id anotado que la tienda ya borró no se reusa.
+- **Importador WooCommerce:** `createInitialInventory` guarda `updatedAt`. Sin ese campo la fila era invisible para `katuq-inventory-changed` (D-515) hasta el primer ajuste. En producción solo había 3 filas así (las de prueba de FLORECER).
+- **Punto 15 cerrado sin código:** un producto recién creado no tiene inventario en Katuq, así que 0 en la tienda es correcto. El stock viaja con el ajuste (`syncInventoryByProduct`) o con el envío automático de D-515.
+- **D-515 probado de punta a punta en FLORECER** contra la tienda local: un ajuste +1 de la Gorra en BOD-006 se detectó en sombra y luego llegó a la tienda (7 → 8), sin tocar otros productos ni el inventario de Katuq, con `inventory_audit` `publicado`. El índice `inventory(company, updatedAt)` ya existe en producción.
+- **Pruebas:** `tests/integrations/woocommerceImagenesSinDuplicar.test.js` 8/8. `woocommerceVariantes` se ajusta al GET previo; el padre sigue sin tocarse. Las 9 pruebas de WooCommerce pasan. Contra la tienda local, tres ediciones de la Gorra con la misma foto dejan el mismo adjunto (#18).
+- **Sin desplegar.**
+
+
+### 2026-10-26 — D-564: WooCommerce, pedido con productos que no existen en Katuq (punto 7)
+- **Problema:** en la entrada por automatizaciones (`woocommerce-order-map`), una línea cuyo SKU no existe en Katuq se quedaba por fuera del carrito y solo dejaba un `logger.warn`. El pago queda por el total de WooCommerce, así que el pedido queda descuadrado y nadie se entera. Caso real: BAR-000109 de CAFÉ ESCOBAR entró con el carrito vacío (1 de 93 pedidos Woo; los faltantes parciales no se pueden contar porque el pedido no guarda las líneas de Woo).
+- **Decisión (aprobada por ella):** el pedido se sigue creando. No se inventan líneas ni se toca el inventario. Se reusa la marca existente `requiereAtencionLogistica` (la de Cereza) con `motivoAtencion: woo_productos_no_encontrados`. Se agrega una nota en `notasPedido.notasFacturacionPagos` con nombre, SKU, cantidad y valor de cada faltante, y la lista en `integrations.woocommerce.productosNoEncontrados`. La lista de pedidos muestra el triángulo con su texto (`list.component.ts`).
+- **No toca:** `katuq-order-upsert`, pagos, inventario ni consecutivos. Los pedidos con todos los productos salen idénticos.
+- **Hallazgo aparte, sin arreglar:** en el UPDATE de `katuq-order-upsert`, `notasPedido` del proveedor reemplaza las notas que escribió el operador (no está en los campos protegidos). Afecta a Shopify, Cereza y Woo; requiere su propia propuesta.
+- **Pruebas:** `tests/integrations/woocommercePedidoProductoFaltante.test.js` (3 casos), las 10 de WooCommerce y `webhooksVivosRegresion` en verde. `scripts/smoke-test-woo-mapper.js` falla en 3 casos (on-hold, formaEntrega y estado en update) también SIN este cambio: es deuda previa del script.
+- **Sin desplegar.**
+
+
+### 2026-10-26 — D-565: WooCommerce, llaves en la cabecera y solo https (punto 23)
+- **Problema:** `getWooCommerceApiClient` y "Probar conexión" mandaban `consumer_key`/`consumer_secret` como parámetros de la URL, que quedan escritos en los registros de la tienda y de los proxies. Además se podía guardar una tienda con http.
+- **Qué cambió:** las llaves van como Basic auth (`auth` de axios). Si la tienda responde 401 (hostings que quitan la cabecera Authorization), se reintenta UNA vez con las llaves en la URL. La empresa queda en ese modo mientras el proceso viva (`llavesEnUrl`) y se avisa una vez. El reintento usa `auth: null` y no `delete`, porque `mergeConfig` de axios 0.21 heredaría la cabecera del cliente. "Probar conexión" hace lo mismo.
+- **Solo https:** `protocoloTiendaPermitido` (`storeUrlGuard.js`) se aplica al guardar (`validateConfig`) y antes de cada llamada (`WC_STORE_NOT_HTTPS`). Única excepción: `http://127.0.0.1` o `localhost` fuera de producción (`NODE_ENV !== production`), para la tienda de prueba local. En producción esa dirección sería el propio servidor.
+- **Verificado:** CAFÉ ESCOBAR, Mi Campo Verde y la demo usan https (siguen permitidas). FLORECER local queda bloqueada en producción, donde igual no era alcanzable. Contra la tienda local con axios real, la respuesta llegó con llaves solo en la cabecera.
+- **Pruebas:** `woocommerceLlavesEnCabecera.test.js` nueva; `woocommercePruebaConexion` ajustada a los dos intentos; las 11 de WooCommerce y `webhooksVivosRegresion` en verde.
+- **Sin desplegar.**

@@ -7,6 +7,7 @@ import { InventarioService } from '../../../../../shared/services/inventarios/in
 import { ImageOptimizerDirective } from '../../../../../shared/directives/image-optimizer.directive';
 import { ImageCacheService } from '../../../../../shared/services/image-cache.service';
 import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
+import Swal from 'sweetalert2';
 
 /** Máximo de filas del desplegable de autocompletado. */
 const LIMITE_SUGERENCIAS = 8;
@@ -247,7 +248,35 @@ export class ProductComponent implements OnInit, OnDestroy {
       product.cantidad -= 1;
     } else if (value === 1 && product.cantidad >= stockDisponible) {
       console.warn(`No hay suficiente stock para ${product.crearProducto?.titulo}. Disponible: ${stockDisponible}`);
+      this.avisarSinExistencias(product);
     }
+  }
+
+  /** Botón "Agregar" de la tarjeta: si el stock lo impide, se avisa en grande. */
+  agregarDesdeTarjeta(product: any): void {
+    if (!this.addToCart(product)) {
+      this.avisarSinExistencias(product);
+    }
+  }
+
+  // El rótulo "0 disp." de la tarjeta es pequeño y el botón no hacía nada
+  // visible: el cajero creía que el producto había entrado al ticket.
+  private avisarSinExistencias(product: any): void {
+    // El título lo escribe el comercio: se escapa antes de meterlo en el HTML.
+    const nombre = String(product?.crearProducto?.titulo || 'Este producto')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const disponible = product?.disponibilidad?.cantidadDisponible ?? 0;
+    const agotado = disponible <= 0;
+
+    Swal.fire({
+      icon: 'warning',
+      title: agotado ? 'Producto no disponible' : 'No hay suficientes unidades',
+      html: agotado
+        ? `<b>${nombre}</b> no tiene existencias en esta bodega, así que no se puede agregar a la venta.`
+        : `De <b>${nombre}</b> solo hay <b>${disponible}</b> ${disponible === 1 ? 'unidad disponible' : 'unidades disponibles'} en esta bodega.`,
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#5F3FE0',
+    });
   }
 
   // Devuelve true si el producto realmente entró al carrito. Las mismas reglas

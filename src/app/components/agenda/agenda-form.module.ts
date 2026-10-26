@@ -1,3 +1,4 @@
+import { TranslateModule } from '@ngx-translate/core';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +13,7 @@ import { CitaFormComponent } from './cita-form/cita-form.component';
  */
 @NgModule({
   declarations: [CitaFormComponent],
-  imports: [CommonModule, FormsModule, DialogModule, MultiSelectModule, PrimeSharedModule],
+  imports: [CommonModule, TranslateModule, FormsModule, DialogModule, MultiSelectModule, PrimeSharedModule],
   exports: [CitaFormComponent],
 })
 export class AgendaFormModule {}

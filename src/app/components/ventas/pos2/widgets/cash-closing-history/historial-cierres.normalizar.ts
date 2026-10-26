@@ -20,12 +20,16 @@ export function valorFormaPago(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** `{ efectivo: { valor: 4500 } }` → `{ efectivo: 4500 }` (claves sin espacios sobrantes). */
+/**
+ * `{ Efectivo: { valor: 4500 } }` → `{ efectivo: 4500 }` (claves en minúscula y sin
+ * espacios sobrantes). Las calculadas desde los pedidos vienen en minúscula: si el
+ * backend trae "Efectivo", sin esto quedaban LAS DOS y el efectivo se sumaba doble.
+ */
 export function formasPagoComoNumeros(formas: unknown): { [k: string]: number } {
   const out: { [k: string]: number } = {};
   if (!formas || typeof formas !== 'object') return out;
   for (const [clave, v] of Object.entries(formas as { [k: string]: unknown })) {
-    const k = String(clave || '').trim() || 'Sin especificar';
+    const k = String(clave || '').trim().toLowerCase() || 'sin especificar';
     out[k] = (out[k] || 0) + valorFormaPago(v);
   }
   return out;
