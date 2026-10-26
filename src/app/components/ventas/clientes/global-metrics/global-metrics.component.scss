@@ -23,16 +23,16 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
 }
 .gm-stale {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.72rem;
-  color: #8f8bab;
-  background: #faf9fe;
-  border: 1px solid #ececf4;
+  color: var(--ds-muted);
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
   border-radius: 12px;
   padding: 0.1rem 0.55rem;
 }
@@ -42,9 +42,9 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #5F3FE0;
-  background: #faf9fe;
-  border: 1px solid #e4e2ef;
+  color: var(--ds-accent-ink);
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line-strong);
   border-radius: 20px;
   padding: 0.3rem 0.85rem;
   cursor: pointer;
@@ -64,7 +64,7 @@
 }
 
 .gm-card {
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   border: 1px solid #eeecf7;
   border-radius: 11px;
   transition: transform .15s ease;
@@ -84,18 +84,18 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #8f8bab;
+  color: var(--ds-muted);
   margin-bottom: 0.2rem;
 }
 .gm-value {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
   line-height: 1.2;
 }
 .gm-sub {
   font-size: 0.72rem;
-  color: #8f8bab;
+  color: var(--ds-muted);
   margin-top: 0.15rem;
 }
 
@@ -116,8 +116,8 @@
   padding: 0.6rem 0.8rem;
   border: 0;
   border-radius: 11px;
-  background: #FFF1DF;
-  color: #D9820A;
+  background: var(--ds-warn-soft);
+  color: var(--ds-warn);
   font-size: 0.85rem;
 }
 
@@ -133,9 +133,9 @@
   gap: 0.4rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #5F3FE0;
-  background: #faf9fe;
-  border: 1px solid #e4e2ef;
+  color: var(--ds-accent-ink);
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line-strong);
   border-radius: 20px;
   padding: 0.3rem 0.9rem;
   cursor: pointer;
@@ -146,10 +146,10 @@
 // ── Panel expandible ────────────────────────────────────────────────────────
 .gm-panel {
   margin-top: 0.5rem;
-  border: 1px solid #efe9ff;
+  border: 1px solid var(--ds-accent-soft);
   border-radius: 10px;
   padding: 1rem 1.1rem;
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   animation: gm-fade-in 0.2s ease;
 }
 @keyframes gm-fade-in {
@@ -163,9 +163,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #5F3FE0;
+  color: var(--ds-accent-ink);
   margin-bottom: 0.5rem;
-  border-bottom: 1px solid #efe9ff;
+  border-bottom: 1px solid var(--ds-accent-soft);
   padding-bottom: 0.25rem;
 }
 
@@ -206,17 +206,17 @@
   gap: 0.35rem;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #211F3A;
-  background: #f5f4fa;
-  border: 1px solid #e9e7f3;
+  color: var(--ds-ink);
+  background: var(--ds-chip-bg);
+  border: 1px solid var(--ds-control-border);
   border-radius: 16px;
   padding: 0.2rem 0.65rem;
 }
 .gm-chip-qty {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #5F3FE0;
-  background: #efe9ff;
+  color: var(--ds-accent-ink);
+  background: var(--ds-accent-soft);
   border-radius: 10px;
   padding: 0.02rem 0.4rem;
 }
@@ -237,8 +237,8 @@
   min-width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  background: #efe9ff;
-  color: #5F3FE0;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent-ink);
   font-weight: 700;
   font-size: 0.7rem;
   display: flex;
@@ -247,14 +247,14 @@
 }
 .gm-top-name {
   flex: 1;
-  color: #211F3A;
+  color: var(--ds-ink);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .gm-top-qty {
-  color: #8f8bab;
+  color: var(--ds-muted);
   font-size: 0.75rem;
   white-space: nowrap;
 }
@@ -269,5 +269,5 @@
 
 .gm-muted {
   font-size: 0.8rem;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }

@@ -91,7 +91,7 @@
 
 .notes-form {
   .note-input-container {
-    background: white;
+    background: var(--ds-surface);
     border-radius: var(--border-radius, 8px);
     padding: 1rem;
     box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
@@ -198,7 +198,7 @@
    ================================================================= */
 
 .product-note {
-  background-color: white;
+  background-color: var(--ds-surface);
   border-radius: var(--border-radius-xl, 12px);
   padding: 1.5rem;
   box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
@@ -315,7 +315,7 @@
     }
 
     .existing-note-item {
-      background-color: white;
+      background-color: var(--ds-surface);
       border-radius: var(--border-radius, 8px);
       padding: 0.75rem;
       margin-bottom: 0.5rem;
@@ -413,7 +413,7 @@
   }
 
   table {
-    background: white;
+    background: var(--ds-surface);
     border-radius: var(--border-radius-xl, 12px);
     box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
     overflow: hidden;
@@ -464,7 +464,7 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  background: white;
+  background: var(--ds-surface);
   border-radius: var(--border-radius-xl, 12px);
   box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
   border: 2px dashed var(--gray-300, #e9ecef);
@@ -564,7 +564,7 @@
 
   .input-group {
     .input-group-text {
-      background-color: white;
+      background-color: var(--ds-surface);
       border-color: var(--gray-200, #e9ecef);
       color: var(--gray-600, #6c757d);
       border-right: none;
@@ -703,7 +703,7 @@
 
 .preview-item {
   position: relative;
-  background: white;
+  background: var(--ds-surface);
   border-radius: var(--border-radius-xl, 12px);
   border: 1px solid var(--gray-200, #e9ecef);
   overflow: hidden;
@@ -766,7 +766,7 @@
 
   .file-info {
     padding: 0.75rem;
-    background: white;
+    background: var(--ds-surface);
 
     .file-name {
       font-weight: var(--font-weight-semibold, 600);
@@ -862,7 +862,7 @@
 
   .file-info {
     padding: 0.75rem;
-    background: white;
+    background: var(--ds-surface);
 
     .file-name {
       font-weight: var(--font-weight-semibold, 600);
@@ -915,7 +915,7 @@
 .file-preview {
   padding: 1rem;
   text-align: center;
-  background: white;
+  background: var(--ds-surface);
 
   .file-icon {
     font-size: 2.5rem;

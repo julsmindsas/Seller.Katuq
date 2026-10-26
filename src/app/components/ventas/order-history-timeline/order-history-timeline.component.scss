@@ -112,7 +112,7 @@
 
 // Timeline Content
 .timeline-content {
-  background: white;
+  background: var(--ds-surface);
   border-radius: 11px;
   padding: 1rem;
   border: 1px solid $cfg-line;

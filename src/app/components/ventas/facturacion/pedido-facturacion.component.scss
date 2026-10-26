@@ -31,8 +31,8 @@
     width: 34px;
     height: 34px;
     border-radius: 11px;
-    background: #efe9ff;
-    color: #5F3FE0;
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
     font-size: 15px;
   }
 
@@ -66,8 +66,8 @@
 /* Secundario blanco con borde lila; quitar en el par de error */
 .btn-outline-secondary {
   background: var(--ds-surface);
-  border-color: #e4e2ef;
-  color: #5b5878;
+  border-color: var(--ds-line-strong);
+  color: var(--ds-body);
 
   &:hover:not(:disabled) { background: #faf9fe; border-color: #d9cffb; color: var(--kc-accent); }
 }
@@ -75,7 +75,7 @@
 .btn-outline-danger {
   background: var(--ds-surface);
   border-color: #f3c9c9;
-  color: #D64545;
+  color: var(--ds-err);
 
   &:hover:not(:disabled) { background: #FDECEC; border-color: #D64545; color: #D64545; }
 }
@@ -104,7 +104,7 @@
 
   .badge {
     background: var(--ds-surface) !important;
-    color: #1E874B !important;
+    color: var(--ds-ok) !important;
     border-radius: 20px;
     font-weight: 800;
   }
@@ -116,7 +116,7 @@
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8f8bab;
+  color: var(--ds-muted);
 }
 
 .form-control,
@@ -124,9 +124,9 @@
 select.form-control {
   min-height: 40px;
   border-radius: 10px;
-  background-color: #f5f4fa;
-  border-color: #e9e7f3;
-  color: #211F3A;
+  background-color: var(--ds-chip-bg);
+  border-color: var(--ds-control-border);
+  color: var(--ds-ink);
 
   &:focus {
     background-color: var(--ds-surface);
@@ -145,7 +145,7 @@ select.form-control {
   align-items: center;
   padding: 16px 20px;
   background: var(--ds-surface);
-  border-bottom: 1px solid #ececf4;
+  border-bottom: 1px solid var(--ds-line);
 
   .modal-title {
     display: flex;
@@ -154,7 +154,7 @@ select.form-control {
     margin: 0;
     font-size: 17px;
     font-weight: 800;
-    color: #211F3A;
+    color: var(--ds-ink);
   }
 
   .fx-modal-icono {
@@ -163,8 +163,8 @@ select.form-control {
     width: 34px;
     height: 34px;
     border-radius: 11px;
-    background: #efe9ff;
-    color: #5F3FE0;
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
     font-size: 15px;
   }
 }
@@ -174,7 +174,7 @@ select.form-control {
 .modal-footer {
   gap: 8px;
   padding: 14px 20px;
-  border-top: 1px solid #f1f0f7;
+  border-top: 1px solid var(--ds-line-soft);
 
   > * { margin: 0; }
 }

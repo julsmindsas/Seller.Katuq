@@ -54,7 +54,7 @@ $color-text-light: #636e72;
     height: 84px;
     object-fit: contain;
     flex-shrink: 0;
-    background: #fff;
+    background: var(--ds-surface);
   }
 
   .doc-brand-txt { min-width: 0; }
@@ -308,7 +308,7 @@ $color-text-light: #636e72;
 
     // Ticket 1195: botón Imprimir
     &.btn-outline {
-      background: #fff;
+      background: var(--ds-surface);
       color: $color-primary;
       border-color: $color-primary;
 
@@ -365,7 +365,7 @@ $color-text-light: #636e72;
   }
 
   .loading-content {
-    background: white;
+    background: var(--ds-surface);
     padding: 40px 60px;
     border-radius: 20px;
     text-align: center;

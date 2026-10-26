@@ -27,7 +27,7 @@ $input-border: #e9e7f3;
 
 // ── Header compacto ─────────────────────────────────────────────
 .modal-header-modern {
-  background: white;
+  background: var(--ds-surface);
   border-bottom: 1px solid $border-color;
   padding: 0.875rem 1.25rem;
 
@@ -100,7 +100,7 @@ $input-border: #e9e7f3;
 
 // ── Sección de formulario ────────────────────────────────────────
 .form-section-modern {
-  background: white;
+  background: var(--ds-surface);
   border: 1px solid $border-color;
   border-radius: 16px;
   padding: 1rem;
@@ -186,7 +186,7 @@ $input-border: #e9e7f3;
     transition: border-color 0.15s, background-color 0.15s;
 
     &:focus {
-      background: #fff;
+      background: var(--ds-surface);
       border-color: #7C5CFF !important;
       box-shadow: 0 0 0 3px rgba(124, 92, 255, .15) !important;
     }
@@ -257,9 +257,9 @@ $input-border: #e9e7f3;
     }
 
     &.p-button-outlined.p-button-secondary {
-      background: #fff;
+      background: var(--ds-surface);
       color: #5b5878;
-      border: 1px solid #e4e2ef;
+      border: 1px solid var(--ds-line-strong);
 
       &:hover {
         background: $bg-light;
@@ -324,15 +324,15 @@ $input-border: #e9e7f3;
   font-size: 0.75rem;
   color: $text-muted;
   background: $bg-light;
-  border: 1px dashed #e4e2ef;
+  border: 1px dashed var(--ds-line-strong);
   border-radius: 10px;
   padding: 0.4rem 0.65rem;
 }
 
 // ── Footer ────────────────────────────────────────────────────────
 .modal-footer-modern {
-  background: white;
-  border-top: 1px solid #f1f0f7;
+  background: var(--ds-surface);
+  border-top: 1px solid var(--ds-line-soft);
   padding: 0.75rem 1.25rem;
   display: flex;
   justify-content: flex-end;
@@ -458,7 +458,7 @@ $border-soft:#ece8f7;
   font-size: 10px;
   font-weight: 900;
   color: #D64545;
-  background: #FDECEC;
+  background: var(--ds-err-soft);
 }
 
 // Listas de direcciones, perfiles y notas
@@ -474,7 +474,7 @@ $border-soft:#ece8f7;
   padding: 10px 12px;
   border: 1px solid $border-soft;
   border-radius: 11px;
-  background: #fff;
+  background: var(--ds-surface);
   transition: border-color .15s, background .15s;
 
   &:hover { border-color: #d9cffb; background: #fcfbff; }

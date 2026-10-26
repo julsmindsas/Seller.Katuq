@@ -3,8 +3,8 @@
 .modal-header {
   align-items: center;
   padding: 16px 20px;
-  background: #fff;
-  border-bottom: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-line);
 
   .modal-title {
     margin: 0;
@@ -26,8 +26,8 @@
 /* Selector de tipo de dirección: segmented control lila */
 .btn-group {
   .btn-outline-primary {
-    background: #fff;
-    border-color: #e9e7f3;
+    background: var(--ds-surface);
+    border-color: var(--ds-control-border);
     color: #5b5878;
     font-weight: 700;
 
@@ -35,7 +35,7 @@
   }
 
   .btn-check:checked + .btn-outline-primary {
-    background: #efe9ff;
+    background: var(--ds-accent-soft);
     border-color: #d9cffb;
     color: #5F3FE0;
   }
@@ -60,14 +60,14 @@
 
   .form-control, .form-select {
     border-radius: 10px;
-    border: 1px solid #e9e7f3;
-    background-color: #f5f4fa;
+    border: 1px solid var(--ds-control-border);
+    background-color: var(--ds-chip-bg);
     color: #211F3A;
     padding: 0.375rem 0.75rem;
     height: 40px; /* Altura fija para todos los controles */
 
     &:focus {
-      background-color: #fff;
+      background-color: var(--ds-surface);
       box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       border-color: #7C5CFF;
     }
@@ -82,8 +82,8 @@
   
   .input-group {
     .input-group-text {
-      background-color: #f3f1fb;
-      border-color: #e9e7f3;
+      background-color: var(--ds-tile);
+      border-color: var(--ds-control-border);
       color: #5F3FE0;
       height: 40px; /* Misma altura que los controles */
       display: flex;
@@ -111,7 +111,7 @@
 
 /* Estilos para la vista previa de dirección */
 .alert-info {
-  background-color: #E7F1FF;
+  background-color: var(--ds-info-soft);
   border: 0;
   border-radius: 11px;
   color: #1E6FD9;
@@ -134,7 +134,7 @@
 
 /* Vista previa de la dirección */
 .direccion-preview {
-  background-color: #faf9fe;
+  background-color: var(--ds-surface-2);
   border-radius: 11px;
   padding: 1rem;
   margin-top: 1.5rem;
@@ -160,7 +160,7 @@
     &.text-success {
       color: #1E874B !important;
       font-weight: 700;
-      background: #E6F7EE;
+      background: var(--ds-ok-soft);
       border-radius: 10px;
       padding: 0.5rem 0.75rem;
     }
@@ -168,7 +168,7 @@
     &.text-warning {
       color: #D9820A !important;
       font-style: italic;
-      background: #FFF1DF;
+      background: var(--ds-warn-soft);
       border-radius: 10px;
       padding: 0.5rem 0.75rem;
     }
@@ -188,7 +188,7 @@
 
 /* Contenedor del mapa */
 .map-container {
-  border: 1px solid #ececf4;
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
   overflow: hidden;
   height: 400px;
@@ -204,7 +204,7 @@
   .alert-warning {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
-    background-color: #FFF1DF;
+    background-color: var(--ds-warn-soft);
     border: 0;
     border-radius: 11px;
     color: #D9820A;
@@ -227,7 +227,7 @@
 .modal-footer {
   gap: 8px;
   padding: 14px 20px;
-  border-top: 1px solid #f1f0f7;
+  border-top: 1px solid var(--ds-line-soft);
 
   > * { margin: 0; }
 
@@ -239,8 +239,8 @@
   }
 
   .btn-primary {
-    background-color: #5F3FE0;
-    border-color: #5F3FE0;
+    background-color: var(--ds-accent);
+    border-color: var(--ds-accent-ink);
     box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 
     &:hover:not(:disabled) {
@@ -256,12 +256,12 @@
   }
 
   .btn-outline-secondary {
-    background: #fff;
-    border-color: #e4e2ef;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
     color: #5b5878;
 
     &:hover {
-      background-color: #faf9fe;
+      background-color: var(--ds-surface-2);
       border-color: #d9cffb;
       color: #5F3FE0;
     }
@@ -296,7 +296,7 @@
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
     
     &:checked {
-      background-color: #5F3FE0;
+      background-color: var(--ds-accent);
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
     }
     
@@ -314,7 +314,7 @@
 
 /* Formularios rurales y urbanos */
 .rural-form, .urban-form {
-  background-color: #faf9fe;
+  background-color: var(--ds-surface-2);
   border-radius: 16px;
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -386,7 +386,7 @@
 
 /* Estilos específicos para selección de ubicación geográfica */
 .alert-success {
-  background-color: #E6F7EE;
+  background-color: var(--ds-ok-soft);
   border: 0;
   color: #1E874B;
   border-radius: 11px;
@@ -459,18 +459,18 @@
   border: 1px solid #eeecf7;
   border-radius: 11px;
   padding: 0.75rem;
-  background: #faf9fe;
+  background: var(--ds-surface-2);
 }
 
 .ubicacion-herramientas {
   .btn-outline-primary {
-    background: #fff;
+    background: var(--ds-surface);
     color: #5F3FE0;
-    border-color: #e4e2ef;
+    border-color: var(--ds-line-strong);
 
     &:hover:not(:disabled) {
       color: #5F3FE0;
-      background-color: #faf9fe;
+      background-color: var(--ds-surface-2);
       border-color: #d9cffb;
     }
   }
@@ -485,12 +485,12 @@
 .btn-outline-info,
 .btn-outline-warning,
 .input-group .btn-outline-primary {
-  background: #fff;
-  border-color: #e4e2ef;
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
   color: #5b5878;
 
   &:hover:not(:disabled) {
-    background: #faf9fe;
+    background: var(--ds-surface-2);
     border-color: #d9cffb;
     color: #5F3FE0;
   }

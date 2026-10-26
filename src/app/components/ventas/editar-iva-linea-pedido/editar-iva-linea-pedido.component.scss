@@ -34,7 +34,7 @@ $eiv-error-bg: #FDECEC;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  background: #faf9fe;
+  background: var(--ds-surface-2);
   border: 1px solid $eiv-line;
   border-radius: 11px;
   cursor: pointer;
@@ -42,7 +42,7 @@ $eiv-error-bg: #FDECEC;
   transition: border-color 0.15s ease, background 0.15s ease;
 
   &:hover {
-    background: #faf9ff;
+    background: var(--ds-row-hover);
   }
 
   &--activa {
@@ -134,9 +134,9 @@ $eiv-error-bg: #FDECEC;
   transition: background 0.15s ease, box-shadow 0.15s ease;
 
   &--ghost {
-    background: #fff;
-    border-color: #e4e2ef;
-    color: #5b5878;
+    background: var(--ds-surface);
+    border-color: var(--ds-line-strong);
+    color: var(--ds-body);
 
     &:hover:not(:disabled) {
       background: $eiv-chip-bg;

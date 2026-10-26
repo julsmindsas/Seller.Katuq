@@ -27,20 +27,20 @@
   thead th {
     position: sticky;
     top: 0;
-    background: #faf9fe;
+    background: var(--ds-surface-2);
     z-index: 2;
-    border-bottom: 1px solid #ececf4;
+    border-bottom: 1px solid var(--ds-line);
     font-weight: 800;
     color: #8f8bab;
   }
   tbody tr:nth-child(even) {
-    background: #faf9fe;
+    background: var(--ds-surface-2);
   }
   tbody tr:hover {
-    background: #faf9ff;
+    background: var(--ds-row-hover);
   }
   td:last-child, th:last-child {
-    background: #f5f4fa;
+    background: var(--ds-chip-bg);
     text-align: center;
   }
 }
@@ -55,9 +55,9 @@
   font-weight: 600;
 }
 .btn-outline-primary:hover {
-  background: #5F3FE0;
+  background: var(--ds-accent);
   color: #fff;
-  border-color: #5F3FE0;
+  border-color: var(--ds-accent-ink);
   box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
 }
 
@@ -182,7 +182,7 @@
 // ESTILOS ESPECÍFICOS PARA BADGE DE REVISADO
 // Pill de éxito del canon (par fuerte / fondo suave) sobre el .badge de Bootstrap.
 .revisado-badge {
-  background: #E6F7EE !important;
+  background: var(--ds-ok-soft) !important;
   color: #1E874B;
   border: none;
   border-radius: 20px;
@@ -322,17 +322,17 @@
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #efe9ff;
+    background-color: var(--ds-accent-soft);
     color: #5F3FE0;
 
     .metric-badge {
-      background-color: #5F3FE0;
+      background-color: var(--ds-accent);
       color: white;
     }
 
     &:hover {
       background-color: #e4dcff;
-      border-color: #5F3FE0;
+      border-color: var(--ds-accent-ink);
     }
   }
 
@@ -620,7 +620,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1px;
-    background: #faf9fe;
+    background: var(--ds-surface-2);
     border: 1px solid #eeecf7;
     border-radius: 10px;
     padding: 6px 12px;
@@ -676,8 +676,8 @@
      saturado de la misma paleta en vez del oscuro previo, que desentonaba
      entre los chips pastel. */
   .metric-chip.active {
-    background: #5F3FE0 !important;
-    border-color: #5F3FE0 !important;
+    background: var(--ds-accent) !important;
+    border-color: var(--ds-accent-ink) !important;
 
     .metric-label,
     .metric-label-full,
