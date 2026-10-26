@@ -127,6 +127,13 @@ $dom-actual: #FF9800;
   // El reset global quita las viñetas de todas las listas: se devuelven donde hacen falta.
   .dom-aviso__lista { margin: 6px 0 0; padding-left: 18px; color: inherit; list-style: disc; }
   .dom-aviso__acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .dom-preparar { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .dom-preparar__pago { max-width: 220px; }
+
+  // ── «Más datos (opcional)»: lo que casi nadie llena queda plegado ──
+  .dom-mas { margin-top: 14px; }
+  .dom-mas > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--dom-texto-suave, inherit); padding: 6px 0; }
+  .dom-mas[open] > summary { margin-bottom: 10px; }
 
   // ── Cargando / vacío ──
   .dom-estado-carga {

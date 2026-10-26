@@ -75,7 +75,7 @@
       </div>
 
       <div class="dom-campo">
-        <label class="cfg-label" [for]="id('entrega.ciudad')">{{ 'Ciudad' | translate }} <span class="dom-obligatorio" aria-hidden="true">*</span></label>
+        <label class="cfg-label" [for]="id('entrega.ciudad')">{{ 'Ciudad' | translate }}</label>
         <input
           class="dom-input"
           type="text"
@@ -83,14 +83,19 @@
           formControlName="ciudad"
           maxlength="80"
           autocomplete="off"
-          required
+          [placeholder]="recogida.controls.ciudad.value"
           [attr.aria-invalid]="error('entrega.ciudad') ? 'true' : null"
           [attr.aria-describedby]="id('entrega.ciudad') + '-ayuda' + (error('entrega.ciudad') ? ' ' + id('entrega.ciudad') + '-error' : '')"
         />
-        <p class="dom-ayuda" [id]="id('entrega.ciudad') + '-ayuda'">{{ 'Escríbela como la ciudad, por ejemplo Bogotá o Medellín: de ella depende qué mensajeros lo ven.' | translate }}</p>
+        <p class="dom-ayuda" [id]="id('entrega.ciudad') + '-ayuda'">{{ 'Si la dejas vacía usamos la ciudad de recogida: de ella depende qué mensajeros lo ven.' | translate }}</p>
         <p class="dom-error" role="alert" [id]="id('entrega.ciudad') + '-error'" *ngIf="error('entrega.ciudad') as e">{{ e }}</p>
       </div>
 
+    </div>
+
+    <details class="dom-mas" [attr.open]="errorEnOpcionales ? '' : null">
+      <summary>{{ 'Más datos de la entrega (opcional)' | translate }}</summary>
+      <div class="dom-rejilla">
       <div class="dom-campo">
         <label class="cfg-label" [for]="id('entrega.barrio')">{{ 'Barrio' | translate }}</label>
         <input class="dom-input" type="text" [id]="id('entrega.barrio')" formControlName="barrio" maxlength="80" autocomplete="off" />
@@ -108,7 +113,8 @@
           [placeholder]="'Por ejemplo, torre 2, portería' | translate"
         />
       </div>
-    </div>
+      </div>
+    </details>
   </section>
 
   <!-- El domicilio -->
@@ -136,6 +142,11 @@
         <p class="dom-error" role="alert" [id]="id('valorDomicilio') + '-error'" *ngIf="error('valorDomicilio') as e">{{ e }}</p>
       </div>
 
+    </div>
+
+    <details class="dom-mas" [attr.open]="errorEnOpcionales ? '' : null">
+      <summary>{{ 'Más datos del domicilio (opcional)' | translate }}</summary>
+      <div class="dom-rejilla dom-rejilla--tres">
       <div class="dom-campo">
         <label class="cfg-label" [for]="id('valorPedido')">{{ 'Valor del pedido ($)' | translate }}</label>
         <input
@@ -201,7 +212,8 @@
         <p class="dom-ayuda" [id]="id('idExterno') + '-ayuda'">{{ 'Tu número de pedido. Si lo repites, no creamos otro domicilio: te devolvemos el mismo.' | translate }}</p>
         <p class="dom-error" role="alert" [id]="id('idExterno') + '-error'" *ngIf="error('idExterno') as e">{{ e }}</p>
       </div>
-    </div>
+      </div>
+    </details>
   </section>
 
   <!-- Resultado -->

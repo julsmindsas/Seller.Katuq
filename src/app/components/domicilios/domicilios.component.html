@@ -9,18 +9,45 @@
     </div>
   </header>
 
-  <!-- Los domicilios están apagados: sin esto, crear uno falla con un mensaje que parece raro -->
-  <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="config && !config.habilitado">
+  <!-- Falta preparar algo: un solo botón lo deja todo listo -->
+  <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="pasosPendientes.length">
+    <i class="pi pi-info-circle dom-aviso__icono" aria-hidden="true"></i>
+    <div class="dom-aviso__textos">
+      <strong class="dom-aviso__titulo">{{ 'Falta un paso para crear tu primer domicilio' | translate }}</strong>
+      <ul class="dom-aviso__detalle dom-aviso__lista">
+        <li *ngFor="let frase of frasesPendientes">{{ frase | translate }}</li>
+      </ul>
+      <div class="dom-aviso__acciones dom-preparar" *ngIf="pedirPago">
+        <label class="cfg-label" for="dom-preparar-pago">{{ 'Pago al mensajero por entrega ($)' | translate }}</label>
+        <input
+          id="dom-preparar-pago"
+          class="dom-input dom-preparar__pago"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="500000"
+          [placeholder]="'Por ejemplo, 5000' | translate"
+          [(ngModel)]="pagoPreparacion"
+          [disabled]="preparando"
+          (keydown.enter)="prepararTodo()"
+        />
+      </div>
+      <div class="dom-aviso__detalle text-danger" role="alert" *ngIf="errorPreparacion">{{ errorPreparacion }}</div>
+      <div class="dom-aviso__acciones">
+        <button type="button" class="cfg-btn dom-boton-chico" [disabled]="!puedePreparar" (click)="prepararTodo()">
+          <i class="pi" [ngClass]="preparando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i>{{ (preparando ? 'Preparando…' : 'Dejar todo listo') | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Los domicilios están apagados y quien mira no es administrador: no puede encenderlos, solo se le avisa -->
+  <div class="cfg-aviso cfg-aviso--warn dom-aviso" role="status" *ngIf="config && !config.habilitado && !esAdmin">
     <i class="pi pi-info-circle dom-aviso__icono" aria-hidden="true"></i>
     <div class="dom-aviso__textos">
       <strong class="dom-aviso__titulo">{{ 'Los domicilios están desactivados' | translate }}</strong>
       <div class="dom-aviso__detalle">
-        {{ 'Mientras estén desactivados no puedes crear domicilios ni recibirlos por API.' | translate }}
-      </div>
-      <div class="dom-aviso__acciones" *ngIf="esAdmin">
-        <button type="button" class="cfg-btn cfg-btn--sec dom-boton-chico" (click)="seleccionar('integracion')">
-          {{ 'Activarlos en Integración' | translate }}
-        </button>
+        {{ 'Pídele a un administrador de tu comercio que los active.' | translate }}
       </div>
     </div>
   </div>

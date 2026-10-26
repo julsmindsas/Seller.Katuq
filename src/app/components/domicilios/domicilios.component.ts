@@ -1,13 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
+import { concatMap, finalize, takeUntil } from 'rxjs/operators';
+import { LogisticaServiceV2 } from '../../shared/services/despachos/logistica.service.v2';
 import { crearGrupoPunto, GrupoRecogida } from './domicilios.formularios';
 import { puedeAdministrarIntegracion } from './domicilios.integracion';
 import { ConfiguracionDomicilios, PuntoDomicilio } from './domicilios.models';
 import { DomiciliosService } from './domicilios.service';
 import { interpretarErrorDomicilios } from './domicilios.errores';
 import { PUNTO_VACIO } from './domicilios.utils';
+import { pagoValido, PasoPreparacion, pasosQueFaltan, textoPasos } from './domicilios.preparacion';
 
 export type PestanaDomicilios = 'nuevo' | 'archivo' | 'lista' | 'integracion';
 
@@ -55,8 +57,16 @@ export class DomiciliosComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
+  /** Lo que ya tiene la configuración de mensajeros (pago y oferta a independientes); `null` si no se pudo leer. */
+  mensajeros: { pagoDefinido: boolean; ofrece: boolean } | null = null;
+  /** Pago fijo por entrega que escribe la persona cuando todavía no hay uno. */
+  pagoPreparacion: number | null = null;
+  preparando = false;
+  errorPreparacion: string | null = null;
+
   constructor(
     private readonly servicio: DomiciliosService,
+    private readonly logistica: LogisticaServiceV2,
     private readonly ruta: ActivatedRoute
   ) {}
 
@@ -64,6 +74,7 @@ export class DomiciliosComponent implements OnInit, OnDestroy {
     const pedida = this.ruta.snapshot.queryParamMap.get('pestana') as PestanaDomicilios | null;
     if (pedida && this.pestanas.some(p => p.clave === pedida)) this.seleccionar(pedida);
     this.cargarConfiguracion();
+    this.cargarMensajeros();
   }
 
   ngOnDestroy(): void {
@@ -83,6 +94,76 @@ export class DomiciliosComponent implements OnInit, OnDestroy {
           if (e.status !== 403) {
             this.avisoConfig = 'No pudimos traer tu dirección de recogida guardada. Escríbela a mano.';
           }
+        }
+      });
+  }
+
+  /** Solo un administrador puede leer esto; para los demás no hay botón de «Dejar todo listo». */
+  private cargarMensajeros(): void {
+    if (!this.esAdmin) return;
+    this.logistica
+      .getMensajerosConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: r => {
+          this.mensajeros = { pagoDefinido: !!r?.config?.pagoMensajero, ofrece: r?.config?.ofrecerAIndependientes === true };
+        },
+        error: () => (this.mensajeros = null)
+      });
+  }
+
+  // --- Dejar todo listo -----------------------------------------------------
+
+  /** Pasos que faltan; vacío mientras no se sepa el estado (así el aviso no aparece por error). */
+  get pasosPendientes(): PasoPreparacion[] {
+    if (!this.esAdmin || !this.config || !this.mensajeros) return [];
+    return pasosQueFaltan({
+      domiciliosActivados: this.config.habilitado,
+      pagoDefinido: this.mensajeros.pagoDefinido,
+      ofreceAIndependientes: this.mensajeros.ofrece
+    });
+  }
+
+  get frasesPendientes(): string[] {
+    return textoPasos(this.pasosPendientes);
+  }
+
+  get pedirPago(): boolean {
+    return this.pasosPendientes.includes('pago');
+  }
+
+  get puedePreparar(): boolean {
+    return !this.preparando && (!this.pedirPago || pagoValido(this.pagoPreparacion));
+  }
+
+  /** Activa los domicilios, define el pago y enciende la oferta a independientes, en ese orden y con un solo clic. */
+  prepararTodo(): void {
+    if (!this.puedePreparar) return;
+    const pasos = this.pasosPendientes;
+    this.preparando = true;
+    this.errorPreparacion = null;
+    of(null)
+      .pipe(
+        concatMap(() => (pasos.includes('activar') ? this.servicio.guardarConfiguracion({ habilitado: true }) : of(undefined))),
+        concatMap(() =>
+          pasos.includes('pago')
+            ? this.logistica.saveMensajerosConfig({ pagoMensajero: { tipo: 'fijo', valor: Number(this.pagoPreparacion) } })
+            : of(null)
+        ),
+        concatMap(() => (pasos.includes('ofrecer') ? this.logistica.saveMensajerosConfig({ ofrecerAIndependientes: true }) : of(null))),
+        finalize(() => (this.preparando = false)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {},
+        error: err => {
+          this.errorPreparacion = interpretarErrorDomicilios(err).texto;
+          this.cargarConfiguracion();
+          this.cargarMensajeros();
+        },
+        complete: () => {
+          this.cargarConfiguracion();
+          this.cargarMensajeros();
         }
       });
   }

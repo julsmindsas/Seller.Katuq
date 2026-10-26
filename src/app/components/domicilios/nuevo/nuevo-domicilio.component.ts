@@ -157,12 +157,19 @@ export class NuevoDomicilioComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Algún dato de «Más datos» tiene un error: se deja abierto para que se vea. */
+  get errorEnOpcionales(): boolean {
+    return ['entrega.barrio', 'entrega.indicaciones', 'valorPedido', 'cobrarAlEntregar', 'descripcion', 'idExterno'].some(c => !!this.error(c));
+  }
+
   private armar(): DomicilioNuevo {
     const v = this.form.getRawValue();
+    const recogida = this.recogida.getRawValue();
     return {
       idExterno: v.idExterno,
-      recogida: this.recogida.getRawValue(),
-      entrega: v.entrega,
+      recogida,
+      // Casi siempre se entrega en la misma ciudad de la recogida: se escribe una sola vez.
+      entrega: { ...v.entrega, ciudad: v.entrega.ciudad.trim() || recogida.ciudad },
       valorDomicilio: Number(v.valorDomicilio) || 0,
       valorPedido: Number(v.valorPedido) || 0,
       cobrarAlEntregar: Number(v.cobrarAlEntregar) || 0,
