@@ -12384,3 +12384,26 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Dónde quedó:** sección «Notas de versión (D-567)» de `AGENTS.md`.
 - **Arranque:** 9 notas de los arreglos subidos y aún no publicados (tickets 1378-1381, 1386, 1410, 1411, 1384, 1360, 1419 y este).
 - **Sin publicar.**
+
+### 2026-10-27 — Ticket 1423 (OH MY STORE): 7 productos de Cereza sin fotos en Shopify; D-568 propuesta
+
+- **Revisión de crones de OH MY STORE (solo lectura, autorizada por Daniel):**
+  - Corren bien Cereza → Shopify (cada 5 min), Katuq → Shopify (10 min), estados de Cereza, Shopify → Cereza, el barrido de existencias y la verificación diaria.
+  - Fullpi → inventario falló 32 veces en 7 días con HTTP 404 del servidor de Fullpi.
+- **Fotos:**
+  - Shopify tiene 7.464 productos de OH MY STORE; 50 sin fotos (28 activos).
+  - 31 no tienen foto ni en Katuq (pendiente del comercio).
+  - 7 de Cereza tenían foto en Katuq y no en Shopify: el disparador `osmosis-product-changed` no incluye las fotos en la huella, así que un producto cuyas fotos llegan después de crearse en Shopify no se vuelve a emitir.
+- **Arreglo puntual en producción (aprobado por Daniel en el chat, «dale» y «hazlo tú»):**
+  - Se borró `lastSeenHashes` de los ids de Cereza 39996, 39233, 39349, 40038, 40117, 40124 y 40019 en `flow_polling_state/OH MY STORE_cereza-products-to-shopify-a5156643_trigger`.
+  - El script solo escribe si no hay corrida activa; antes guarda respaldo de las huellas (en la carpeta de informes del agente).
+  - La corrida de las 17:00 UTC los reemitió y a las 17:02 UTC los 7 tenían en Shopify las mismas fotos que en Cereza (1, 8, 6, 2, 5, 2 y 3).
+- **Productos marcados con «params is not defined» (falla del 24-ago al 14-sep):** son 260.
+  - 228 se actualizaron en Shopify después de la marca, así que la marca quedó vieja.
+  - 23 de Cereza siguen sin actualizarse desde septiembre.
+  - 8 nunca se crearon en Shopify, pero tienen stock 0, que es lo correcto con `onlyWithStock`.
+  - No se reenvió nada de este grupo.
+- **D-568 (propuesta, pendiente de aprobación):** barrido aparte de fotos faltantes en Shopify. Agrega fotos solo a productos con 0 fotos en Shopify y foto en Katuq. Bandera `featureFlags.shopifyPhotoBackfill` (off/shadow/on) y modo sombra primero. Write-set: solo media de Shopify y `shopify_push_log`. Artefactos en `katuq_admin_back_firebase/openspec/changes/fotos-faltantes-shopify/`. Se descartó meter las fotos en la huella, porque reemite el producto completo y va contra D-134.
+- **Hallazgos aparte:**
+  - `specs/002-flows-osmosis-shopify-marco/runbook-debug-flow.md` tiene en texto plano el token del webhook de Osmosis de OH MY STORE (mismo caso que D-566: rotar y limpiar).
+  - Las fotos de los productos de Cereza en Katuq son enlaces a `images2.guiacereza.com` (8.392 productos), no archivos en el storage de Katuq.
