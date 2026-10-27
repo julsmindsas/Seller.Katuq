@@ -375,6 +375,31 @@
 										</div>
 									</div>
 								</div>
+								<!-- Ticket 1405: videos por enlace; se ven en la ficha de la tienda. -->
+								<div class="form-group videos-producto">
+									<label class="form-label" for="enlaceVideo">Videos (YouTube, TikTok, Instagram o Vimeo):</label>
+									<div class="videos-producto__agregar">
+										<input type="url" id="enlaceVideo" class="form-control" placeholder="Pega el enlace del video"
+											[(ngModel)]="enlaceVideo" [ngModelOptions]="{standalone: true}" (keydown.enter)="$event.preventDefault(); agregarVideo()">
+										<button type="button" class="btn btn-outline-primary" (click)="agregarVideo()"
+											[disabled]="!enlaceVideo || videosProducto.length >= maxVideos">Agregar video</button>
+										<label class="btn btn-outline-secondary mb-0" [class.disabled]="subiendoVideo || videosProducto.length >= maxVideos">
+											<i class="pi" [class.pi-upload]="!subiendoVideo" [class.pi-spin]="subiendoVideo" [class.pi-spinner]="subiendoVideo"></i>
+											{{ subiendoVideo ? ('Subiendo ' + progresoVideo + ' %') : 'Subir video' }}
+											<input type="file" accept="video/mp4,video/webm" hidden (change)="subirVideo($event)"
+												[disabled]="subiendoVideo || videosProducto.length >= maxVideos">
+										</label>
+									</div>
+									<small class="mp-hint d-block">Pega un enlace o sube un MP4 o WebM corto (hasta 1 minuto según tu plan). Se muestran en la ficha del producto de tu tienda. Máximo {{ maxVideos }}.</small>
+									<div class="error-message" *ngIf="errorVideo">{{ errorVideo }}</div>
+									<ul class="videos-producto__lista" *ngIf="videosProducto.length">
+										<li *ngFor="let v of videosProducto; let i = index">
+											<span class="videos-producto__proveedor">{{ nombreProveedor[v.proveedor] }}</span>
+											<a [href]="v.url" target="_blank" rel="noopener noreferrer" class="videos-producto__url">{{ v.url }}</a>
+											<button type="button" class="btn btn-link btn-sm text-danger" (click)="quitarVideo(i)">Quitar</button>
+										</li>
+									</ul>
+								</div>
 							</div>
 						</p-tabPanel>
 						<p-tabPanel header="Precio">

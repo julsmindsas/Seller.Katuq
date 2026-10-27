@@ -1079,3 +1079,10 @@ td {
 .galeria-foto .card .btn { cursor: pointer; }
 .galeria-foto--principal { outline: 2px solid #5F3FE0; outline-offset: 2px; }
 .galeria-foto .cdk-drag-placeholder { opacity: 0.3; }
+
+// Ticket 1405: videos del producto por enlace.
+.videos-producto__agregar { display: flex; gap: 8px; max-width: 640px; }
+.videos-producto__lista { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; max-width: 640px; }
+.videos-producto__lista li { display: flex; align-items: center; gap: 10px; border: 1px solid #ececf4; border-radius: 10px; padding: 6px 10px; }
+.videos-producto__proveedor { font-size: 12px; font-weight: 700; color: #5F3FE0; flex: none; }
+.videos-producto__url { font-size: 12.5px; color: #211F3A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }

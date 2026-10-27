@@ -96,6 +96,31 @@ export class ImagenService {
         }
     }
 
+    /**
+     * Ticket 1405: sube un video del producto directo al almacenamiento con una URL firmada
+     * (tope por plan) y devuelve su dirección final. El PUT va con XMLHttpRequest y no con
+     * HttpClient: el interceptor le pondría la sesión y la URL firmada la rechaza.
+     */
+    async subirVideoProducto(file: File, segundos: number, onProgreso?: (porcentaje: number) => void): Promise<{ url: string; path: string }> {
+        const firma: any = await firstValueFrom(this.http.post(`${this.urlApi}/v1/media/video/firmar`, {
+            nombre: file.name, contentType: file.type, bytes: file.size,
+        }));
+        // La duración la mide el navegador; el tope es el del plan de la empresa.
+        if (firma.maxSeconds && segundos > firma.maxSeconds) {
+            throw new Error(`El video dura ${Math.round(segundos)} s; el máximo de tu plan es ${firma.maxSeconds} s.`);
+        }
+        await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', firma.uploadUrl);
+            Object.entries(firma.encabezados || {}).forEach(([k, v]) => xhr.setRequestHeader(k, String(v)));
+            xhr.upload.onprogress = (e) => { if (e.lengthComputable && onProgreso) onProgreso(Math.round((e.loaded / e.total) * 100)); };
+            xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error('No se pudo subir el video.')));
+            xhr.onerror = () => reject(new Error('No se pudo subir el video.'));
+            xhr.send(file);
+        });
+        return firstValueFrom(this.http.post<{ url: string; path: string }>(`${this.urlApi}/v1/media/video/confirmar`, { ruta: firma.ruta }));
+    }
+
     private buildForm(file: File, nombre?: string, carpeta?: string): FormData {
         const formData = new FormData();
         formData.append('file', file, nombre || file.name);

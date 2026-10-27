@@ -7,6 +7,11 @@
         <div class="product-details col-md-6 text-start">
           <div class="product-page-details">
             <h3>{{producto?.crearProducto?.titulo}}</h3>
+            <!-- Ticket 1405: abre el video del producto en otra pestaña -->
+            <a *ngIf="$any(producto)?.crearProducto?.videos?.length" class="btn btn-outline-primary btn-sm mb-2"
+               [href]="$any(producto).crearProducto.videos[0].url" target="_blank" rel="noopener noreferrer">
+              <i class="fa fa-play-circle me-1"></i>Ver video
+            </a>
             <h4>{{producto?.identificacion?.referencia}}</h4>
             <h6>{{ 'MINIMUM_SALE_QUANTITY' | translate }} {{producto?.disponibilidad?.cantidadMinVenta}}</h6>
             

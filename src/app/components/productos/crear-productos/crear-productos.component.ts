@@ -67,6 +67,7 @@ import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-
 import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
 import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
+import { duracionDeVideo, MAX_VIDEOS_PRODUCTO, NOMBRE_PROVEEDOR, reconocerVideo, TIPOS_VIDEO_ARCHIVO, VideoProducto } from "../../../shared/utils/videos-producto";
 // D-495: pestaña «Especificaciones» (bandera categoryAttributes).
 import { EspecificacionesProductoComponent, ResultadoEspecificaciones } from "./especificaciones-producto/especificaciones-producto.component";
 import {
@@ -371,6 +372,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       cuidadoConsumo: ["", [Validators.required]],
       imagenesPrincipales: [""],
       imagenesSecundarias: [""],
+      // Ticket 1405: videos por enlace (YouTube, TikTok, Instagram, Vimeo).
+      videos: [[]],
       paraProduccion: [false, [Validators.required]],
     });
     this.seoForm = this.fb.group({
@@ -3431,7 +3434,78 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.edit.crearProducto.imagenesPrincipales = galeria;
     this.crearProducto.controls["imagenesPrincipales"].setValue(galeria);
     this.crearProducto.controls["imagenesSecundarias"].setValue([]);
+    const videos = Array.isArray((this.edit.crearProducto as any).videos) ? (this.edit.crearProducto as any).videos : [];
+    this.crearProducto.controls["videos"].setValue(videos);
     this.cdr.detectChanges();
+  }
+
+  // ── Ticket 1405: videos del producto por enlace ─────────────────────────────
+  readonly maxVideos = MAX_VIDEOS_PRODUCTO;
+  readonly nombreProveedor = NOMBRE_PROVEEDOR;
+  enlaceVideo = "";
+  errorVideo = "";
+
+  get videosProducto(): VideoProducto[] {
+    return this.crearProducto?.controls["videos"]?.value || [];
+  }
+
+  agregarVideo(): void {
+    this.errorVideo = "";
+    const video = reconocerVideo(this.enlaceVideo);
+    if (!video) {
+      this.errorVideo = "Pega el enlace completo de un video de YouTube, TikTok, Instagram o Vimeo (en TikTok, el que tiene /video/ y un número).";
+      return;
+    }
+    const actuales = this.videosProducto;
+    if (actuales.some((v) => v.proveedor === video.proveedor && v.id === video.id)) {
+      this.errorVideo = "Ese video ya está en el producto.";
+      return;
+    }
+    if (actuales.length >= this.maxVideos) {
+      this.errorVideo = `Máximo ${this.maxVideos} videos por producto.`;
+      return;
+    }
+    this.crearProducto.controls["videos"].setValue([...actuales, video]);
+    this.enlaceVideo = "";
+  }
+
+  subiendoVideo = false;
+  progresoVideo = 0;
+
+  /** Sube un MP4 o WebM corto (tope de tamaño y duración del plan) y lo agrega al producto. */
+  async subirVideo(evento: Event): Promise<void> {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    input.value = "";
+    if (!archivo) return;
+    this.errorVideo = "";
+    if (!TIPOS_VIDEO_ARCHIVO.includes(archivo.type)) {
+      this.errorVideo = "El video tiene que ser MP4 o WebM.";
+      return;
+    }
+    if (this.videosProducto.length >= this.maxVideos) {
+      this.errorVideo = `Máximo ${this.maxVideos} videos por producto.`;
+      return;
+    }
+    const segundos = await duracionDeVideo(archivo);
+    this.subiendoVideo = true;
+    this.progresoVideo = 0;
+    try {
+      const subido = await this.imageService.subirVideoProducto(archivo, segundos, (p) => { this.progresoVideo = p; this.cdr.detectChanges(); });
+      const video: VideoProducto = { tipo: "archivo", proveedor: "katuq", id: subido.path, url: subido.url, path: subido.path };
+      this.crearProducto.controls["videos"].setValue([...this.videosProducto, video]);
+    } catch (e: any) {
+      this.errorVideo = e?.error?.error || e?.message || "No se pudo subir el video.";
+    } finally {
+      this.subiendoVideo = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  quitarVideo(index: number): void {
+    const videos = [...this.videosProducto];
+    videos.splice(index, 1);
+    this.crearProducto.controls["videos"].setValue(videos);
   }
 
   /** Ticket 1406: arrastrar una foto guardada a otra posición. */
