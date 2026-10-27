@@ -1,11 +1,9 @@
 import { ChangeDetectorRef, Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { environment } from '../../../../environments/environment';
 import { ImagenService } from '../../../shared/utils/image.service';
+import { FotosPorReferenciaService } from '../../../shared/services/productos/fotos-por-referencia.service';
 
 /** Estados que devuelve el backend por archivo (services/productos/fotosPorReferencia.js). */
 type Estado = 'asignada' | 'sin_producto' | 'ambiguo' | 'repetida' | 'formato_no_valido' | 'nombre_no_valido' | 'muy_pesada';
@@ -73,9 +71,7 @@ export class ImportarFotosReferenciaComponent {
   aplicados = 0;
   huboCambios = false;
 
-  private readonly urlApi = `${environment.urlApi}/v1/productos/fotos-por-referencia`;
-
-  constructor(private http: HttpClient, private imagenes: ImagenService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: FotosPorReferenciaService, private imagenes: ImagenService, private cdr: ChangeDetectorRef) {}
 
   get asignadas(): Fila[] { return this.filas.filter((f) => f.estado === 'asignada'); }
   get noAsignadas(): Fila[] { return this.filas.filter((f) => f.estado !== 'asignada'); }
@@ -91,9 +87,7 @@ export class ImportarFotosReferenciaComponent {
     try {
       // En una carpeta pueden venir otros archivos: solo cuentan los que parecen imágenes.
       const imagenes = archivos.filter((a) => a.type.startsWith('image/') || EXTENSIONES.includes(this.extension(a.name)));
-      const respuesta: any = await firstValueFrom(this.http.post(`${this.urlApi}/previsualizar`, {
-        archivos: imagenes.map((a) => a.name),
-      }));
+      const respuesta: any = await this.api.previsualizar(imagenes.map((a) => a.name));
       this.filas = (respuesta?.archivos || []).map((fila: Fila, i: number) => {
         const archivo = imagenes[i];
         const pesada = fila.estado === 'asignada' && archivo.size > MAX_BYTES;
@@ -162,9 +156,7 @@ export class ImportarFotosReferenciaComponent {
       }
       if (!productos.length) continue;
       try {
-        const r: any = await firstValueFrom(this.http.post(`${this.urlApi}/aplicar`, {
-          modo: this.modo, archivo: 'Importar fotos por referencia', productos,
-        }));
+        const r: any = await this.api.aplicar({ modo: this.modo, archivo: 'Importar fotos por referencia', productos });
         const fallidos = new Set((r?.resultado || []).filter((x: any) => !x.ok).map((x: any) => x.productoId));
         for (const grupo of tanda) {
           if (fallidos.has(grupo.productoId)) grupo.filas.forEach((f) => (f.resultado = 'error'));
@@ -210,7 +202,7 @@ export class ImportarFotosReferenciaComponent {
   async descargarReferencias(): Promise<void> {
     this.descargandoReferencias = true;
     try {
-      const r: any = await firstValueFrom(this.http.get(`${this.urlApi}/referencias`));
+      const r: any = await this.api.referencias();
       const filas = (r?.productos || []).map((p: any) => ({ Referencia: p.referencia, Producto: p.titulo, 'Fotos actuales': p.fotos }));
       const libro = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(filas), 'Referencias');
