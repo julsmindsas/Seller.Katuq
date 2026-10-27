@@ -1,6 +1,6 @@
 {
-  "version": "2026.10.27.3 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T16:20:52.863Z",
+  "version": "2026.10.27.4 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:24:40.793Z",
   "notas": [
     {
       "tipo": "CORRIGE",
@@ -9,8 +9,12 @@
     {
       "tipo": "MEJORA",
       "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia."
+    },
+    {
+      "tipo": "CORRIGE",
+      "texto": "La ventana de novedades de cada versión sale centrada en la pantalla y con sus textos completos."
     }
   ],
-  "commit": "2b3224cca3058814f667acfcee7fc47fd740345d",
+  "commit": "9e56ff3029062d328376200608a3eaad596233b1",
   "cambiosSinCommit": 0
 }
