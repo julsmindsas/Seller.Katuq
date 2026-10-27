@@ -1198,6 +1198,16 @@
 										Maestros &gt; Categorías.
 									</small>
 								</div>
+								<!-- Ticket 1409: el producto también aparece al filtrar por estas categorías. -->
+								<div class="row mt-3">
+									<h5>Otras categorías</h5>
+									<p-treeSelect [options]="categorias" formControlName="adicionales" selectionMode="multiple"
+										display="chip" [metaKeySelection]="false" placeholder="Opcional: elige otras categorías"></p-treeSelect>
+									<small class="mp-hint">
+										El producto también aparece al filtrar por estas categorías en el punto de venta, la venta asistida,
+										el listado de productos y la tienda. La de arriba sigue siendo la principal (facturación, Shopify y reportes).
+									</small>
+								</div>
 							</form>
 						</p-tabPanel>
 						<!-- D-495: especificaciones de la categoría (solo con la bandera categoryAttributes).

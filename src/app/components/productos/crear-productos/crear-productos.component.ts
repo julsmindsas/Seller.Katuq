@@ -502,6 +502,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     this.categoriasForm = this.fb.group({
       categorias: ["", Validators.required],
+      // Ticket 1409: otras categorías donde también aparece el producto.
+      adicionales: [[]],
     });
     this.exposicion = this.fb.group({
       activar: [false, [Validators.required]],
@@ -1904,6 +1906,40 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     return seoParaGuardar(this.seoForm.value, !!(this.edit && this.edit.seo));
   }
 
+  /** Ticket 1409: ruta de un nodo del árbol de categorías (["Navidad", "Anchetas"]). */
+  private rutaDeNodo(nodo: any): string[] {
+    if (Array.isArray(nodo?.ruta) && nodo.ruta.length) return nodo.ruta.map(String);
+    const ruta: string[] = [];
+    for (let n = nodo, i = 0; n && i < 8; n = n.parent, i++) {
+      const etiqueta = n.label || n.data?.nombre;
+      if (etiqueta) ruta.unshift(String(etiqueta));
+    }
+    return ruta;
+  }
+
+  /**
+   * Ticket 1409: las categorías adicionales viajan como `{ label, ruta }`. La principal sigue en
+   * `categorias` (sin cambios); si la persona marcó la principal también como adicional, se quita.
+   */
+  private categoriasAdicionalesParaGuardar(): { categoriasAdicionales: { label: string; ruta: string[] }[] } {
+    const principal = String(this.categoriasForm.get("categorias")?.value?.label || "").trim().toLowerCase();
+    const nodos = this.categoriasForm.get("adicionales")?.value || [];
+    const categoriasAdicionales = (Array.isArray(nodos) ? nodos : [])
+      .map((n: any) => ({ label: String(n?.label || n?.data?.nombre || "").trim(), ruta: this.rutaDeNodo(n) }))
+      .filter((c) => c.label && c.label.toLowerCase() !== principal);
+    return { categoriasAdicionales };
+  }
+
+  /** Ticket 1409: al abrir un producto, sus adicionales se marcan en el árbol (o quedan como etiqueta si ya no existen). */
+  private cargarCategoriasAdicionales(): void {
+    const guardadas = Array.isArray((this.edit as any)?.categoriasAdicionales) ? (this.edit as any).categoriasAdicionales : [];
+    const nodos = guardadas.map((c: any) => {
+      const ruta = Array.isArray(c?.ruta) && c.ruta.length ? c.ruta : [c?.label];
+      return buscarNodoEnArbol(this.categorias, { nombre: c?.label, ruta } as any) || { label: c?.label, ruta, key: `adicional-${c?.label}` };
+    }).filter((n: any) => n && n.label);
+    this.categoriasForm.get("adicionales")?.setValue(nodos, { emitEvent: false });
+  }
+
   private datosDeTipoParaGuardar(): { itemType?: 'product' | 'service'; service?: any } {
     if (this.esServicio) return { itemType: 'service', service: { ...this.servicioForm.value } };
     if (this.tipoItemInicial === 'service') return { itemType: 'product' };
@@ -2127,6 +2163,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       identificacion: this.identificacionParaGuardar(),
       ...this.datosDeTipoParaGuardar(),
       ...this.seoParaGuardar(),
+      ...this.categoriasAdicionalesParaGuardar(),
     };
 
     const context = this;
@@ -2268,7 +2305,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       stringify(this.categoriasForm.controls["categorias"].value),
     );
 
-    const formGeneralEditar = { ...this.formGeneral.value, ...this.datosDeTipoParaGuardar(), ...this.seoParaGuardar() };
+    const formGeneralEditar = { ...this.formGeneral.value, ...this.datosDeTipoParaGuardar(), ...this.seoParaGuardar(), ...this.categoriasAdicionalesParaGuardar() };
     formGeneralEditar["cd"] = this.cd;
 
     this.edit = formGeneralEditar;
@@ -3393,6 +3430,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         this.categoriasForm.controls["categorias"].setValue(this.edit.categorias);
       }
     }
+    this.cargarCategoriasAdicionales();
 
     if (this.edit.procesoComercial?.variablesForm && this.edit.procesoComercial.variablesForm !== "[]") {
       try {
