@@ -18,11 +18,14 @@ import 'hammerjs';
 import 'mousetrap';
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 import { FotosUniformesComponent } from './fotos-uniformes/fotos-uniformes.component';
+import { ImportarFotosReferenciaComponent } from './importar-fotos-referencia/importar-fotos-referencia.component';
 @NgModule({
   imports: [
     ImagenProductoPipe,
     // D-501: diálogo standalone «Uniformar fotos».
     FotosUniformesComponent,
+    // Ticket 1425: importar fotos por la referencia del nombre del archivo.
+    ImportarFotosReferenciaComponent,
     CommonModule,
     SharedModule,
     ProductosRoutingModule,

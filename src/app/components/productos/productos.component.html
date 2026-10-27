@@ -79,6 +79,10 @@
                                     <button ngbDropdownItem (click)="descargarPlantillaProductos()">
                                         <i class="pi pi-download me-1"></i>Descargar plantilla de ejemplo
                                     </button>
+                                    <!-- Ticket 1425 -->
+                                    <button ngbDropdownItem (click)="mostrarImportarFotos = true">
+                                        <i class="pi pi-images me-1"></i>Importar fotos de productos
+                                    </button>
                                     <div class="dropdown-divider" *ngIf="fulfillmentEnabled"></div>
                                     <button ngbDropdownItem *ngIf="fulfillmentEnabled"
                                             [disabled]="importandoProductosFulfillment"
@@ -877,6 +881,9 @@
 >
     <i class="icofont icofont-plus"></i>
 </button>
+
+<!-- Ticket 1425: importar fotos por referencia -->
+<app-importar-fotos-referencia *ngIf="mostrarImportarFotos" (cerrado)="cerrarImportarFotos($event)"></app-importar-fotos-referencia>
 
 <!-- Import Modal -->
 <app-import-modal

@@ -1,0 +1,81 @@
+// Ticket 1425. Tokens del design system (mismos de «Uniformar fotos»): plano, acento #5F3FE0.
+// Ninguna clase lleva "p-" ([class*="p-"] global pisa el tamaño de letra) y cada texto tiene
+// color y tamaño propios (span.ng-star-inserted global).
+
+$ifr-accent: #5F3FE0;
+$ifr-accent-hover: #4a2fc0;
+$ifr-ink: #211F3A;
+$ifr-muted: #8f8bab;
+$ifr-line: #ececf4;
+$ifr-surface: #faf9fe;
+$ifr-sec-border: #e4e2ef;
+$ifr-sec-text: #5b5878;
+$ifr-ok: #1E874B;
+$ifr-ok-soft: #E6F7EE;
+$ifr-alerta: #B86E05;
+$ifr-alerta-soft: #FFF1DF;
+$ifr-error: #D64545;
+$ifr-error-soft: #FDECEC;
+
+:host { position: fixed; inset: 0; z-index: 1060; }
+
+.ifr-fondo {
+  position: absolute; inset: 0; background: rgba(33, 31, 58, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+
+.ifr-dialogo {
+  background: #fff; border-radius: 16px; width: min(760px, 100%); max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column; color: $ifr-ink; box-shadow: 0 20px 60px rgba(33, 31, 58, 0.25);
+}
+
+.ifr-cabeza { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 22px 12px; border-bottom: 1px solid $ifr-line; }
+.ifr-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: $ifr-accent; }
+.ifr-titulo { margin: 2px 0 0; font-size: 18px; font-weight: 700; color: $ifr-ink; }
+.ifr-cerrar { border: 0; background: transparent; color: $ifr-muted; font-size: 16px; cursor: pointer; padding: 4px; }
+
+.ifr-cuerpo { padding: 16px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.ifr-pie { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; padding: 12px 22px 18px; border-top: 1px solid $ifr-line; }
+
+.ifr-texto { font-size: 13px; line-height: 1.45; color: $ifr-ink; }
+.ifr-muted { color: $ifr-muted; }
+
+.ifr-guia { background: $ifr-surface; border: 1px solid $ifr-line; border-radius: 11px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ifr-guia-titulo { font-size: 13px; font-weight: 700; color: $ifr-ink; }
+.ifr-guia-titulo--mal { color: $ifr-error; }
+.ifr-lista { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: $ifr-ink;
+  code { font-size: 12.5px; background: #fff; border: 1px solid $ifr-line; border-radius: 6px; padding: 1px 6px; color: $ifr-ink; }
+}
+
+.ifr-elegir { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+.ifr-btn {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 9px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; margin: 0;
+  &:disabled, &.is-disabled { opacity: .55; cursor: not-allowed; pointer-events: none; }
+  &:focus-visible { outline: 2px solid $ifr-accent; outline-offset: 2px; }
+}
+.ifr-btn--pri { background: $ifr-accent; color: #fff; &:hover { background: $ifr-accent-hover; } }
+.ifr-btn--sec { background: #fff; color: $ifr-sec-text; border-color: $ifr-sec-border; &:hover { border-color: $ifr-accent; color: $ifr-accent; } }
+
+.ifr-resumen { display: flex; flex-wrap: wrap; gap: 8px; }
+.ifr-chip { font-size: 12px; font-weight: 600; border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+.ifr-chip--ok { background: $ifr-ok-soft; color: $ifr-ok; }
+.ifr-chip--alerta { background: $ifr-alerta-soft; color: $ifr-alerta; }
+
+.ifr-modo { display: flex; flex-direction: column; gap: 6px; }
+.ifr-radio { display: flex; gap: 8px; align-items: flex-start; margin: 0; cursor: pointer; input { margin-top: 3px; accent-color: $ifr-accent; } }
+
+.ifr-tabla { display: flex; flex-direction: column; gap: 8px; }
+.ifr-producto { border: 1px solid $ifr-line; border-radius: 11px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ifr-producto--alerta { border-color: $ifr-alerta-soft; background: #fffaf2; }
+.ifr-producto-cabeza { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.ifr-ref { font-size: 13px; font-weight: 700; color: $ifr-ink; }
+.ifr-archivos { display: flex; flex-wrap: wrap; gap: 6px; }
+.ifr-archivo { font-size: 12px; color: $ifr-sec-text; background: $ifr-surface; border: 1px solid $ifr-line; border-radius: 8px; padding: 2px 8px; }
+.ifr-fila { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+
+.ifr-barra { height: 8px; background: $ifr-line; border-radius: 20px; overflow: hidden; }
+.ifr-barra-valor { height: 100%; background: $ifr-accent; transition: width .2s ease; }
+
+.ifr-error { background: $ifr-error-soft; color: $ifr-error; border-radius: 10px; padding: 10px 12px; font-size: 13px; }

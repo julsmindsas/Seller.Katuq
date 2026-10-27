@@ -212,6 +212,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // Import modal
   showImportModal: boolean = false;
+  /** Ticket 1425: modal «Importar fotos de productos». */
+  mostrarImportarFotos = false;
   onboardingReturnUrl = '';
   private onboardingLoaderSuppressed = false;
 
@@ -1903,6 +1905,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
       return;
     }
     this.importModal.downloadTemplate();
+  }
+
+  cerrarImportarFotos(huboCambios: boolean): void {
+    this.mostrarImportarFotos = false;
+    if (huboCambios) this.cargarDatos();
   }
 
   async onImportComplete(result: ImportResult): Promise<void> {

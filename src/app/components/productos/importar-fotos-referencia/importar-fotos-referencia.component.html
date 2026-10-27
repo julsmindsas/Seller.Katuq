@@ -1,0 +1,126 @@
+<!-- Ticket 1425: importar fotos de productos por la referencia del nombre del archivo. -->
+<div class="ifr-fondo">
+  <section class="ifr-dialogo" role="dialog" aria-modal="true" aria-labelledby="ifr-titulo">
+    <header class="ifr-cabeza">
+      <div>
+        <div class="ifr-eyebrow">Fotos de producto</div>
+        <h2 id="ifr-titulo" class="ifr-titulo">Importar fotos de productos</h2>
+      </div>
+      <button type="button" class="ifr-cerrar" (click)="cerrar()" [disabled]="paso === 'aplicando'" aria-label="Cerrar">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="ifr-cuerpo">
+      <!-- 1. Elegir -->
+      <ng-container *ngIf="paso === 'elegir'">
+        <div class="ifr-guia">
+          <div class="ifr-guia-titulo">Cómo nombrar las fotos</div>
+          <div class="ifr-texto">Cada foto se asigna por la referencia del producto que lleva en el nombre.</div>
+          <ul class="ifr-lista">
+            <li><code>ALM-4789.jpg</code> <span class="ifr-texto">→ foto principal de ALM-4789</span></li>
+            <li><code>ALM-4789-1.jpg</code>, <code>ALM-4789-2.jpg</code> <span class="ifr-texto">→ más fotos, en ese orden (la -1 es la principal si no hay una sin número)</span></li>
+          </ul>
+          <div class="ifr-guia-titulo ifr-guia-titulo--mal">No se reconocen</div>
+          <ul class="ifr-lista">
+            <li><code>ALM 4789.jpg</code> <span class="ifr-texto">espacio en vez de guion</span></li>
+            <li><code>ALM4789.jpg</code> <span class="ifr-texto">sin el guion de la referencia</span></li>
+            <li><code>ALM-4789 rojo.jpg</code> <span class="ifr-texto">texto extra</span></li>
+            <li><code>ALM-4789_1.jpg</code> <span class="ifr-texto">guion bajo en vez de guion</span></li>
+            <li><code>ALM-04789.jpg</code> <span class="ifr-texto">cero a la izquierda que la referencia no tiene</span></li>
+            <li><code>ALM-4789 (1).jpg</code> <span class="ifr-texto">copia hecha por Windows</span></li>
+          </ul>
+          <div class="ifr-texto">Formatos JPG, PNG o WebP, hasta 5 MB por foto. No importa si el nombre va en mayúsculas o minúsculas.</div>
+          <button type="button" class="ifr-btn ifr-btn--sec" (click)="descargarReferencias()" [disabled]="descargandoReferencias">
+            <i class="pi" [class.pi-download]="!descargandoReferencias" [class.pi-spin]="descargandoReferencias" [class.pi-spinner]="descargandoReferencias"></i>
+            Descargar lista de referencias
+          </button>
+        </div>
+
+        <div class="ifr-elegir">
+          <label class="ifr-btn ifr-btn--pri" [class.is-disabled]="revisando">
+            <i class="pi pi-images"></i> Elegir fotos
+            <input type="file" multiple accept="image/jpeg,image/png,image/webp" (change)="elegirArchivos($event)" [disabled]="revisando" hidden>
+          </label>
+          <label class="ifr-btn ifr-btn--sec" [class.is-disabled]="revisando">
+            <i class="pi pi-folder-open"></i> Elegir una carpeta
+            <input type="file" webkitdirectory multiple (change)="elegirArchivos($event)" [disabled]="revisando" hidden>
+          </label>
+          <span class="ifr-texto" *ngIf="revisando"><i class="pi pi-spin pi-spinner"></i> Revisando nombres…</span>
+        </div>
+      </ng-container>
+
+      <!-- 2. Vista previa -->
+      <ng-container *ngIf="paso === 'vista'">
+        <div class="ifr-resumen">
+          <span class="ifr-chip ifr-chip--ok">{{ asignadas.length }} fotos para {{ grupos.length }} productos</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="noAsignadas.length">{{ noAsignadas.length }} sin asignar</span>
+        </div>
+
+        <div class="ifr-modo">
+          <label class="ifr-radio"><input type="radio" name="ifr-modo" value="agregar" [(ngModel)]="modo">
+            <span class="ifr-texto"><strong>Agregar</strong> a las fotos que ya tiene cada producto (la foto sin número pasa a ser la principal)</span></label>
+          <label class="ifr-radio"><input type="radio" name="ifr-modo" value="reemplazar" [(ngModel)]="modo">
+            <span class="ifr-texto"><strong>Reemplazar</strong> las fotos de cada producto por las nuevas</span></label>
+        </div>
+
+        <div class="ifr-tabla">
+          <div class="ifr-producto" *ngFor="let g of grupos">
+            <div class="ifr-producto-cabeza">
+              <span class="ifr-ref">{{ g.referencia }}</span>
+              <span class="ifr-texto">{{ g.titulo }}</span>
+              <span class="ifr-texto ifr-muted">{{ g.fotosActuales }} fotos hoy</span>
+            </div>
+            <div class="ifr-archivos">
+              <span class="ifr-archivo" *ngFor="let f of g.filas; let i = index">
+                {{ i + 1 }}. {{ f.nombre }}
+              </span>
+            </div>
+          </div>
+
+          <div class="ifr-producto ifr-producto--alerta" *ngIf="noAsignadas.length">
+            <div class="ifr-producto-cabeza"><span class="ifr-ref">No se asignan</span></div>
+            <div class="ifr-fila" *ngFor="let f of noAsignadas">
+              <span class="ifr-texto">{{ f.nombre }}</span>
+              <span class="ifr-chip ifr-chip--alerta">{{ textoEstado[f.estado] }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- 3. Aplicando -->
+      <ng-container *ngIf="paso === 'aplicando'">
+        <div class="ifr-texto">Subiendo y asignando fotos… no cierres esta ventana.</div>
+        <div class="ifr-barra"><div class="ifr-barra-valor" [style.width.%]="progreso"></div></div>
+        <div class="ifr-texto ifr-muted">{{ progreso }} %</div>
+      </ng-container>
+
+      <!-- 4. Resumen -->
+      <ng-container *ngIf="paso === 'resumen'">
+        <div class="ifr-resumen">
+          <span class="ifr-chip ifr-chip--ok">{{ aplicados }} productos con fotos nuevas</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="fallidas">{{ fallidas }} fotos no se pudieron subir</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="noAsignadas.length">{{ noAsignadas.length }} sin asignar</span>
+        </div>
+        <div class="ifr-texto">Descarga el reporte para ver qué pasó con cada foto.</div>
+      </ng-container>
+
+      <div class="ifr-error" *ngIf="error">{{ error }}</div>
+    </div>
+
+    <footer class="ifr-pie">
+      <ng-container *ngIf="paso === 'vista'">
+        <button type="button" class="ifr-btn ifr-btn--sec" (click)="volver()">Elegir otras</button>
+        <button type="button" class="ifr-btn ifr-btn--sec" (click)="descargarReporte()">Descargar reporte</button>
+        <button type="button" class="ifr-btn ifr-btn--pri" (click)="aplicar()" [disabled]="!grupos.length">
+          {{ modo === 'reemplazar' ? 'Reemplazar' : 'Agregar' }} fotos en {{ grupos.length }} productos
+        </button>
+      </ng-container>
+      <ng-container *ngIf="paso === 'resumen'">
+        <button type="button" class="ifr-btn ifr-btn--sec" (click)="descargarReporte()">Descargar reporte</button>
+        <button type="button" class="ifr-btn ifr-btn--pri" (click)="cerrar()">Listo</button>
+      </ng-container>
+      <button *ngIf="paso === 'elegir'" type="button" class="ifr-btn ifr-btn--sec" (click)="cerrar()">Cancelar</button>
+    </footer>
+  </section>
+</div>

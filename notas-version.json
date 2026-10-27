@@ -15,5 +15,6 @@
   { "fecha": "2026-10-27T16:45:00Z", "tipo": "CORRIGE", "texto": "En Tipos de cliente la descripción se lee completa en hasta tres renglones, en vez de salir cortada en una sola línea." },
   { "fecha": "2026-10-27T16:55:00Z", "tipo": "CORRIGE", "texto": "Ya puedes corregir el nombre de un rol en Roles y permisos; sus usuarios quedan con el nombre nuevo al volver a iniciar sesión." },
   { "fecha": "2026-10-27T19:30:00Z", "tipo": "MEJORA", "texto": "Si facturaste con SIIGO o World Office, ya puedes corregir el IVA de un producto del pedido: te avisamos antes de guardar y el pedido queda marcado «Por refacturar» hasta que lo refactures." },
-  { "fecha": "2026-10-27T20:00:00Z", "tipo": "MEJORA", "texto": "Las fotos de un producto se cargan en un solo lugar: arrástralas para cambiar el orden y elige cuál es la principal con «Hacer principal». Al eliminar una foto se quita solo esa." }
+  { "fecha": "2026-10-27T20:00:00Z", "tipo": "MEJORA", "texto": "Las fotos de un producto se cargan en un solo lugar: arrástralas para cambiar el orden y elige cuál es la principal con «Hacer principal». Al eliminar una foto se quita solo esa." },
+  { "fecha": "2026-10-27T20:30:00Z", "tipo": "NUEVO", "texto": "En Productos → Importar → «Importar fotos de productos» subes muchas fotos a la vez y cada una llega a su producto por la referencia del nombre del archivo (ALM-4789.jpg, ALM-4789-1.jpg…). Antes de aplicar ves a qué producto va cada foto y al final puedes descargar el reporte." }
 ]
