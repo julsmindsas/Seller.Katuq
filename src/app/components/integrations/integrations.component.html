@@ -1345,10 +1345,10 @@
             </small>
           </div>
 
-          <!-- Webhook Secret (OPCIONAL en MVP — se completa después de crear el webhook en WC) -->
+          <!-- Webhook Secret: sin él el servidor rechaza los avisos (D-513); se completa después de crear el webhook en WC -->
           <div class="form-group">
             <label for="webhookSecret">
-              <i class="fa fa-shield-alt"></i> {{ 'integrations.integrations.secretoDelWebhook' | translate }} <small class="text-muted">{{ 'integrations.integrations.opcional' | translate }}</small>
+              <i class="fa fa-shield-alt"></i> {{ 'integrations.integrations.secretoDelWebhook' | translate }}
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-shield-alt prefix-icon"></i>

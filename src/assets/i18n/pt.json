@@ -4597,7 +4597,7 @@
   "integrations.integrations.copiaEstaDireccionYPegala": "Copie este endereço e cole no seu WooCommerce, em",
   "integrations.integrations.ajustesAvanzadoWebhooksAnadirWebhook": "Ajustes → Avançado → Webhooks → Adicionar webhook",
   "integrations.integrations.estadoActivoTemaPedidoCreado": "(Status: Ativo. Tópico: Pedido criado e Pedido atualizado).",
-  "integrations.integrations.alCrearElWebhookWoocommerce": "Ao criar o webhook, o WooCommerce pede um \"Segredo\". Digite-o também abaixo.",
+  "integrations.integrations.alCrearElWebhookWoocommerce": "Ao criar o webhook, o WooCommerce pede um \"Segredo\". Digite-o também abaixo: sem ele, o Katuq não recebe os pedidos.",
   "integrations.integrations.secretoDelWebhook": "Segredo do webhook",
   "integrations.integrations.conElKatuqCompruebaQue": "Com ele o Katuq verifica que cada aviso realmente vem da sua loja.",
   "integrations.integrations.versionDeWoocommerce": "Versão do WooCommerce",

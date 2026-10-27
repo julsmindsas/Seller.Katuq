@@ -4429,7 +4429,7 @@
     "integrations.integrations.copiaEstaDireccionYPegala": "Kopieren Sie diese Adresse und fügen Sie sie in Ihrem WooCommerce ein, unter",
     "integrations.integrations.ajustesAvanzadoWebhooksAnadirWebhook": "Einstellungen → Erweitert → Webhooks → Webhook hinzufügen",
     "integrations.integrations.estadoActivoTemaPedidoCreado": "(Status: Aktiv. Thema: Bestellung erstellt und Bestellung aktualisiert).",
-    "integrations.integrations.alCrearElWebhookWoocommerce": "Beim Erstellen des Webhooks verlangt WooCommerce ein «Secret». Geben Sie es auch unten ein.",
+    "integrations.integrations.alCrearElWebhookWoocommerce": "Beim Erstellen des Webhooks verlangt WooCommerce ein «Secret». Geben Sie es auch unten ein: ohne es erhält Katuq keine Bestellungen.",
     "integrations.integrations.secretoDelWebhook": "Webhook-Secret",
     "integrations.integrations.conElKatuqCompruebaQue": "Damit prüft Katuq, dass jeder Hinweis wirklich von Ihrem Shop stammt.",
     "integrations.integrations.versionDeWoocommerce": "WooCommerce-Version",

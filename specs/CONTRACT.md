@@ -12407,3 +12407,41 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Hallazgos aparte:**
   - `specs/002-flows-osmosis-shopify-marco/runbook-debug-flow.md` tiene en texto plano el token del webhook de Osmosis de OH MY STORE (mismo caso que D-566: rotar y limpiar).
   - Las fotos de los productos de Cereza en Katuq son enlaces a `images2.guiacereza.com` (8.392 productos), no archivos en el storage de Katuq.
+
+### 2026-10-27 — D-569: WooCommerce, la entrada oficial de pedidos usa el camino del flow (puntos 1, 2 y 4)
+- **Problema:** `POST /v1/woocommerce/webhook/:companyId` encola el aviso y el worker lo pasaba al controller legacy con un `req` falso sin `get()`: todo `order.*` moría (500 → `dead`). Arreglar solo eso era peor: el legacy tomaba la empresa de un caché GLOBAL de 5 min (o de la primera integración WooCommerce activa), `orderUpdated` buscaba el pedido sin filtrar `company`, `orderCreated` no revisaba si ya existía y, sin empresa, creaba el pedido en la empresa `"woocommerce"`. Además la pantalla de Integraciones daba `/v1/woocommerceWebhook/{empresa}`, que responde 410.
+- **Decisión (aprobada por ella, opción 1):** un solo camino para crear el pedido, el que ya funciona en CAFÉ ESCOBAR. `services/woocommerce/processors/orders.js` ahora corre `woocommerce-order-map` → `katuq-order-upsert` (`matchBy: externalId`): crea o actualiza, nunca duplica (empresa + `integrations.woocommerce.orderId`). La empresa sale siempre de `evt.companyId`. Borradores y avisos sin líneas se omiten (mismo criterio del trigger). `order.deleted` no hace nada.
+- **Inventario:** no se descuenta al entrar. Verificado en producción (solo lectura): el flow de CAFÉ ESCOBAR tiene el nodo `katuq-inventory-adjust` SIN arista, y `orderService.createOrder` no toca stock. Se replica eso.
+- **Legacy (`controllers/woocommerceWebhook.js`):** caché por tienda (`Map`), sin tienda no hay empresa, sin el respaldo `|| storeDomain || "woocommerce"`, y `orderUpdated` filtra por `company`. Hoy no lo alcanza ninguna ruta, pero se cierra igual.
+- **Front:** `webhookUrlForWooCommerce` → `/v1/woocommerce/webhook/{empresa}`; el secreto del webhook ya no dice "opcional" y la ayuda avisa que sin él no llegan pedidos (D-513 los rechaza).
+- **Pruebas:** `woocommerceEntradaOficialPedidos.test.js` (local, D-566) 10/10; las 11 de WooCommerce en verde. `historialPedido.puntos.contract` sigue con 2 fallas previas ajenas (E5 `logistica.js`, E9 `ejecutarPlan.js`).
+- **Sin desplegar.** Falta la prueba real con la tienda local en FLORECER. Artefactos: `katuq_admin_back_firebase/openspec/changes/woocommerce-entrada-oficial-pedidos/`.
+
+### 2026-10-27 — D-570: WooCommerce, un solo camino de pedidos (puntos 5, 6, 8 y 9)
+- **Contexto:** censo de producción (solo lectura). CAFÉ ESCOBAR tiene 93 pedidos de la tienda: `integrations.woocommerce.orderId` es número en 63 (camino viejo, hasta may-2026) y texto en 30. Hay repetidos: Woo 1104 ×5 (BAR-000076/080/081/083 abiertos, 082 despachado), 1385 ×3, 8888 ×3 (prueba) y 1970 ×2 (BAR-000297 con id número, BAR-000303 con id texto: el punto 5 en vivo). **No se tocan: ella se los pasa a CAFÉ.**
+- **Decisión (aprobada por ella):** para empresas nuevas el camino es la entrada oficial (D-569); la plantilla de flow queda armada con las mismas piezas. CAFÉ ESCOBAR no se mueve.
+- **Qué cambió (todo en `katuq-order-upsert`, solo si el pedido trae `integrations.woocommerce`):**
+  - **5:** `_findOrderByExternalId` busca el id de WooCommerce como texto y como número.
+  - **6:** no crea pedido si el estado de la tienda es `draft`, `auto-draft` o `checkout-draft`, o si el id no es numérico (el flowExecutor salta el trigger, así que su guard nunca corría). El processor de D-569 suma `checkout-draft`. Los pedidos con productos sin reconocer sí se crean (D-564).
+  - **8:** un aviso de la tienda no hace retroceder el pedido: Entregado/Cerrado no vuelven a Despachado y `estadoPago` Aprobado no baja a PreAprobado/Pendiente. Cancelado y Rechazado entran siempre. Shopify/Osmosis sin cambio (probado).
+  - **9:** plantilla `woo-orders-to-katuq` (`scripts/seed-woocommerce-templates.js`) con `woocommerce-order-map` en vez de `katuq-canonical-mapper` y sin nodo de inventario (igual que el flow real de CAFÉ). No toca flows instalados; hace falta re-sembrar la plantilla al desplegar (`npm run seed:woocommerce-templates`, idempotente).
+- **Pruebas:** `woocommerceEntradaOficialPedidos.test.js` 17/17 (las 4 nuevas de 5/6/8/9 fallan con el código anterior). Pruebas de WooCommerce, flows, orderSplit y historial de creación en verde. Fallas previas ajenas: `historialPedido.puntos.contract` (E5, E9) y `productPhotos/auditoria`.
+- **Sin commitear ni desplegar.** Artefactos: `katuq_admin_back_firebase/openspec/changes/woocommerce-un-solo-camino-pedidos/`.
+
+### 2026-10-27 — D-571: reenviar un pedido ya no borra las notas del operador (Shopify, Cereza, WooCommerce)
+- **Problema:** `katuq-order-upsert` (UPDATE) hacía `ref.update({ ...canonical })`. Los mappers de los tres canales traen `notasPedido` con las listas vacías, así que cada reenvío de la tienda reemplazaba el objeto entero y se perdían las notas de despachos, entregas, producción y facturación.
+- **Qué cambió:** `_mezclarNotas` conserva todas las notas del pedido y agrega solo las nuevas (misma nota + usuario + descripción = repetida). La nota de productos faltantes (D-564) ya no se duplica en cada reenvío. Aprobado por ella ("haz lo recomendado").
+- **Fuera de alcance (anotado):** el reenvío también reemplaza `carrito`; si el operador editó cantidades, la tienda las pisa.
+- **Pruebas:** casos 18–20 de `woocommerceEntradaOficialPedidos.test.js` (fallan con el código anterior). Las pruebas `*.emulator.test.js` de Shopify/Cereza no se pudieron correr (no hay emulador en este equipo).
+
+### 2026-10-27 — D-572: el importador de productos WooCommerce solo liga por SKU o nombre exacto
+- **Problema:** `findProductByName` aceptaba coincidencia parcial (un nombre contenido en el otro, y un producto sin título coincidía con todo) y después `importAllProducts` le cambiaba `identificacion.referencia` al producto de Katuq.
+- **Qué cambió:** solo nombre exacto sin importar mayúsculas; se quita `calculateSimilarity`. Con nombre exacto se sigue homologando el SKU. Lo demás se crea como producto nuevo. Los contadores `linkedByNamePartial` quedan en 0 (no se cambia la forma de la respuesta).
+- **Pruebas:** `woocommerceImportadorNombreExacto.test.js` (local, D-566) 5/5.
+
+### 2026-10-27 — D-573: CAFÉ ESCOBAR, borrada la fila de inventario con la bodega como docId
+- Fila `inventory/LWFzKLW3OTP1nIwruBjT` ("Café Especial PRESENTE. 500 g. Grano", 1 unidad, `idBodega` = docId de BOD-005), creada por el importador el 27-oct-2025, antes de D-514. La fila buena BOD-005 del mismo producto (`jb1IDtudCLHTf1MQekkB`, 14) se conserva: es la que se mueve y ningún movimiento apuntaba a la mala.
+- Simulación primero (6 chequeos), luego borrado en transacción con copia completa en `inventory_audit` (`decision: 'D-573'`). Verificado: 185 filas, 0 con bodega rara, BOD-005 en 14.
+- **Ya aplicado en producción** (no requiere despliegue).
+- **No se hizo (recomendado dejarlo así):** igualar "Tiempo de Entrega (dias)" del exportar con "Tiempo de Entrega" de la plantilla. El exportar saca el número viejo y la plantilla espera una opción de Maestros: igualar solo el título haría fallar la reimportación.
+- **Punto 3 del reporte (CRON_ENABLED):** documentado en `functions/CLAUDE.md` (troubleshooting), sin código.

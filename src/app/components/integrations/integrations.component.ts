@@ -3320,7 +3320,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
    * URL pública del webhook entrante WooCommerce para este comercio.
    * Spec 003.1 AC-003.1-05.
    *
-   * Pattern: `{API_BASE}/v1/woocommerceWebhook/{companyId-url-encoded}`.
+   * Pattern: `{API_BASE}/v1/woocommerce/webhook/{companyId-url-encoded}` (la ruta vieja
+   * `/v1/woocommerceWebhook/...` responde 410).
    * companyId viene de localStorage.user.company (consistente con
    * HttpInterceptor2 que ya lo lee de ahí — ver CLAUDE.md frontend).
    */
@@ -3335,9 +3336,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     } catch (_) {
       // localStorage corrupto — devolver placeholder visible al usuario.
     }
-    if (!companyId) return 'https://back.katuq.com/v1/woocommerceWebhook/{COMPANY}';
+    if (!companyId) return 'https://back.katuq.com/v1/woocommerce/webhook/{COMPANY}';
     const base = (environment as any).urlApi || 'https://back.katuq.com';
-    return `${base}/v1/woocommerceWebhook/${encodeURIComponent(companyId)}`;
+    return `${base}/v1/woocommerce/webhook/${encodeURIComponent(companyId)}`;
   }
 
   /**
