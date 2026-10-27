@@ -1,44 +1,12 @@
 {
-  "version": "2026.10.27.1 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T15:51:58.414Z",
+  "version": "2026.10.27.2 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:11:01.118Z",
   "notas": [
     {
-      "tipo": "MEJORA",
-      "texto": "El logo de tu comercio en la parte de arriba se ve más grande y completo, también si es horizontal."
-    },
-    {
       "tipo": "CORRIGE",
-      "texto": "Con el menú compacto, las opciones ya no desaparecen antes de alcanzar a hacer clic."
-    },
-    {
-      "tipo": "MEJORA",
-      "texto": "El menú compacto muestra tu foto arriba y el logo de Katuq al final."
-    },
-    {
-      "tipo": "MEJORA",
-      "texto": "Al pegar texto en la descripción de un producto se respetan los párrafos y las listas."
-    },
-    {
-      "tipo": "NUEVO",
-      "texto": "Al guardar un producto te avisamos si ya existe otro con el mismo nombre."
-    },
-    {
-      "tipo": "NUEVO",
-      "texto": "En Cartera, el número de pedido abre el pedido en otra pestaña, y ves la factura electrónica y la fecha de compra de cada pedido (también en Excel y PDF)."
-    },
-    {
-      "tipo": "NUEVO",
-      "texto": "En el punto de venta ves el IVA por separado en el resumen de la compra."
-    },
-    {
-      "tipo": "CORRIGE",
-      "texto": "La plantilla de precios por tipo de cliente usa el nombre de cada tipo de cliente como título de columna."
-    },
-    {
-      "tipo": "MEJORA",
-      "texto": "Cada versión nueva te muestra una vez, en palabras sencillas, qué mejoró."
+      "texto": "Al facturar, si el sistema de facturación no responde te lo decimos claro y puedes intentar de nuevo en unos minutos; además, un problema momentáneo de una empresa ya no frena la facturación de las demás."
     }
   ],
-  "commit": "d5e7146bc5ebf43112c9e95169070e8941d48722",
+  "commit": "c170e0c74ffdfaee07a9639a500ceb18c851ae49",
   "cambiosSinCommit": 0
 }
