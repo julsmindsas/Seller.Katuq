@@ -26,6 +26,7 @@ import { ImagenProductoPipe } from '../../../shared/pipes/imagen-producto.pipe';
 import { FotosUniformesComponent } from '../fotos-uniformes/fotos-uniformes.component';
 import { EspecificacionesProductoComponent } from './especificaciones-producto/especificaciones-producto.component';
 import { HistorialProductoModule } from '../historial-producto/historial-producto.module';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 @NgModule({
   imports: [
     ImagenProductoPipe,
@@ -35,6 +36,8 @@ import { HistorialProductoModule } from '../historial-producto/historial-product
     EspecificacionesProductoComponent,
     // D-548 (F1): pestaña «Historial» del producto, con la bandera productHistoryLog.
     HistorialProductoModule,
+    // Ticket 1406: reordenar las fotos del producto arrastrando.
+    DragDropModule,
     NgSelectModule,
     CommonModule,
     DropdownModule,

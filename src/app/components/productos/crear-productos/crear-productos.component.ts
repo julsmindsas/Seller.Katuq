@@ -66,6 +66,7 @@ import { editorDeProducto, fechaHoraColombia } from "../historial-producto/histo
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
 import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
 import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
+import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 // D-495: pestaña «Especificaciones» (bandera categoryAttributes).
 import { EspecificacionesProductoComponent, ResultadoEspecificaciones } from "./especificaciones-producto/especificaciones-producto.component";
 import {
@@ -111,6 +112,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   file$: Observable<File>;
   files: File | null = null;
   fileImg: { img: File; tipo: string; preview?: string; }[] = [];
+  /** Ticket 1406: la foto pendiente reemplaza la portada (K.A.I.) y va de primera al subir. */
+  private portadaPendiente = false;
   filesNames: string[] = [];
   croppedImage: any = "";
   carrouselImg: any[] = [];
@@ -856,12 +859,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         this.filesNames.splice(i, 1);
       }
     }
-    // Si una principal ya subida se quedara, `uploadPendingImages` la pone DE PRIMERA ([...actuales, ...nuevas])
-    // y la foto nueva quedaría detrás aunque el aviso diga que se reemplazó.
+    // Ticket 1406: la galería es una sola. Se quita solo la portada actual y la foto
+    // nueva entra de primera al subir (`portadaPendiente`); las demás fotos se quedan.
     const subidas = this.crearProducto.get("imagenesPrincipales");
     if (Array.isArray(subidas.value) && subidas.value.length > 0) {
-      subidas.setValue([]);
+      subidas.setValue(subidas.value.slice(1));
     }
+    this.portadaPendiente = true;
     const entrada = { img: archivo, tipo: "principal", preview: undefined };
     this.fileImg.push(entrada);
     this.filesNames.push(this.buildUniqueFileName(archivo.name));
@@ -1075,8 +1079,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     if (principales.length > 0) {
       const current = this.crearProducto.controls['imagenesPrincipales'].value || [];
-      this.crearProducto.controls['imagenesPrincipales'].setValue([...current, ...principales]);
+      this.crearProducto.controls['imagenesPrincipales'].setValue(
+        this.portadaPendiente ? [...principales, ...current] : [...current, ...principales]);
     }
+    this.portadaPendiente = false;
     if (secundarias.length > 0) {
       const current = this.crearProducto.controls['imagenesSecundarias'].value || [];
       this.crearProducto.controls['imagenesSecundarias'].setValue([...current, ...secundarias]);
@@ -1150,8 +1156,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         } else {
           Swal.fire("Quitada del producto", "La imagen se quitó del producto, pero no pudimos borrar el archivo del almacenamiento.", "info");
         }
-        var values = this.crearProducto.controls["imagenesPrincipales"].value;
-        values = values.filter((p) => p.path != imgToDelete);
+        // Por posición: las fotos importadas por URL no tienen `path` y, filtrando
+        // por él, borrar una quitaba todas (ticket 1406).
+        const values = [...(this.crearProducto.controls["imagenesPrincipales"].value || [])];
+        values.splice(index, 1);
         this.crearProducto.controls["imagenesPrincipales"].setValue(values);
       } else if (result.isDismissed) {
         Swal.fire({
@@ -3042,6 +3050,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   removePendingImage(index: number) {
     this.fileImg.splice(index, 1);
     this.filesNames.splice(index, 1);
+    if (this.fileImg.length === 0) this.portadaPendiente = false;
     this.cdr.detectChanges();
   }
 
@@ -3402,14 +3411,46 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.coberturaNacionalEntrega = this.edit.ciudades?.coberturaNacionalEntrega || false;
   }
 
+  /**
+   * Ticket 1406: una sola galería. Toda va en `imagenesPrincipales`, la portada
+   * primero (D-385; es la lista que leen Shopify, WooCommerce y Opttia). Las
+   * «secundarias» viejas se suman al final, sin repetir, y al guardar quedan vacías.
+   */
   private loadImageData() {
-    if (Array.isArray(this.edit.crearProducto.imagenesPrincipales)) {
-      this.crearProducto.get("imagenesPrincipales").setValue(this.edit.crearProducto.imagenesPrincipales);
-    } else {
-      this.edit.crearProducto.imagenesPrincipales = [];
-      this.crearProducto.controls["imagenesPrincipales"].setValue([]);
-    }
+    const principales = Array.isArray(this.edit.crearProducto.imagenesPrincipales)
+      ? this.edit.crearProducto.imagenesPrincipales : [];
+    const secundarias = Array.isArray(this.edit.crearProducto.imagenesSecundarias)
+      ? this.edit.crearProducto.imagenesSecundarias : [];
+    const vistas = new Set<string>();
+    const galeria = [...principales, ...secundarias].filter((img: any) => {
+      const url = typeof img === "string" ? img : img?.urls;
+      if (!url || vistas.has(url)) return false;
+      vistas.add(url);
+      return true;
+    });
+    this.edit.crearProducto.imagenesPrincipales = galeria;
+    this.crearProducto.controls["imagenesPrincipales"].setValue(galeria);
+    this.crearProducto.controls["imagenesSecundarias"].setValue([]);
     this.cdr.detectChanges();
+  }
+
+  /** Ticket 1406: arrastrar una foto guardada a otra posición. */
+  reordenarImagenes(evento: CdkDragDrop<number>): void {
+    const desde = evento.previousContainer.data;
+    const hasta = evento.container.data;
+    if (desde === hasta) return;
+    const fotos = [...(this.crearProducto.controls["imagenesPrincipales"].value || [])];
+    moveItemInArray(fotos, desde, hasta);
+    this.crearProducto.controls["imagenesPrincipales"].setValue(fotos);
+  }
+
+  /** Ticket 1406: la foto elegida pasa a ser la portada (primera de la galería). */
+  hacerPrincipal(index: number): void {
+    if (index <= 0) return;
+    const fotos = [...(this.crearProducto.controls["imagenesPrincipales"].value || [])];
+    const [foto] = fotos.splice(index, 1);
+    fotos.unshift(foto);
+    this.crearProducto.controls["imagenesPrincipales"].setValue(fotos);
   }
 
   /**

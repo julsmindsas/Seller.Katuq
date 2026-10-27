@@ -315,17 +315,12 @@
 
 								<label class="form-label" for="validationCustom01">Imágenes y videos
 									<strong>(Aquí puedes subir imágenes y videos)</strong></label>
+								<!-- Ticket 1406: una sola carga de imágenes; la primera es la principal. -->
 								<div class="form-group">
-									<label class="form-label" id="lblImagenPrincipal" for="imagenPrincipal">Imagen
-										Principal:</label>
-									<input type="file" class="form-control-file"
+									<label class="form-label" id="lblImagenPrincipal" for="imagenPrincipal">Agregar imágenes:</label>
+									<input type="file" class="form-control-file" accept="image/*"
 										(change)="fileChangeEvent($event,'principal') " id="imagenPrincipal" multiple>
-
-									<label class="form-label" id="lblimagenSecundaria" for="imagenSecundaria">Imágenes
-										Secundarias:</label>
-
-									<input type="file" class="form-control-file" id="imagenSecundaria"
-										(change)="fileChangeEvent($event,'secundaria')">
+									<small class="mp-hint d-block">La primera foto es la principal. Arrastra las fotos para cambiar el orden o usa «Hacer principal».</small>
 								</div>
 								<!-- D-501: aviso de calidad al subir (informativo, no bloquea) y «Uniformar fotos» del producto guardado. Solo con la bandera productPhotoUniform. -->
 								<div *ngIf="avisoCalidadFoto" class="fu-aviso-subida" role="status">
@@ -344,19 +339,26 @@
 								</div>
 								<div class="form-group">
 									<label>{{'Images to save:' | translate}}</label>
-									<div class="row">
-										<!-- Imágenes ya guardadas -->
-										<div class="col-md-2 item"
+									<!-- Imágenes ya guardadas: se reordenan arrastrando (ticket 1406) -->
+									<!-- Cada foto es su propia zona (cdkDropListGroup): CDK 14 no ordena en grilla de varias filas. -->
+									<div class="row galeria-fotos" cdkDropListGroup>
+										<div class="col-md-2 item galeria-foto" cdkDropList [cdkDropListData]="i"
+											(cdkDropListDropped)="reordenarImagenes($event)"
 											*ngFor="let img of crearProducto.value.imagenesPrincipales; let i = index">
-											<div class="card" style="width: 10rem;">
+											<div class="card" style="width: 10rem;" cdkDrag [cdkDragData]="i" [class.galeria-foto--principal]="i === 0">
 												<img src="{{img.urls | imagenProducto}}" class="card-img-top" alt="Image"
-													style="width: 100%; height: auto;">
-												<div class="text-center maestro-nota">Guardada</div>
-												<button class="btn btn-danger btn-sm" (click)="deleteImg(img?.path,i)">
+													style="width: 100%; height: auto;" draggable="false">
+												<div class="text-center maestro-nota">{{ i === 0 ? 'Principal' : 'Foto ' + (i + 1) }}</div>
+												<button *ngIf="i > 0" type="button" class="btn btn-outline-primary btn-sm" (click)="hacerPrincipal(i)">
+													Hacer principal
+												</button>
+												<button type="button" class="btn btn-danger btn-sm" (click)="deleteImg(img?.path,i)">
 													Eliminar
 												</button>
 											</div>
 										</div>
+									</div>
+									<div class="row">
 										<!-- Imágenes pendientes (preview local, aún no subidas) -->
 										<div class="col-md-2 item"
 											*ngFor="let img of fileImg; let i = index">
@@ -364,7 +366,7 @@
 												<img [src]="img.preview" class="card-img-top" alt="Preview"
 													style="width: 100%; height: auto;">
 												<div class="text-center maestro-nota maestro-nota--aviso">
-													Pendiente ({{img.tipo}})
+													Pendiente
 												</div>
 												<button class="btn btn-warning btn-sm" (click)="removePendingImage(i)">
 													Quitar

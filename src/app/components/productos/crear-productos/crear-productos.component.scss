@@ -1073,3 +1073,9 @@ td {
 
 .fu-entrada-editor:focus-visible,
 .fu-aviso-subida-cerrar:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
+
+// Ticket 1406: galería única que se reordena arrastrando.
+.galeria-foto .card { cursor: grab; }
+.galeria-foto .card .btn { cursor: pointer; }
+.galeria-foto--principal { outline: 2px solid #5F3FE0; outline-offset: 2px; }
+.galeria-foto .cdk-drag-placeholder { opacity: 0.3; }
