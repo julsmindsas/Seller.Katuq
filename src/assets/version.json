@@ -1,12 +1,12 @@
 {
-  "version": "2026.10.27.6 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T16:48:34.592Z",
+  "version": "2026.10.27.7 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:53:56.010Z",
   "notas": [
     {
       "tipo": "CORRIGE",
-      "texto": "En Tipos de cliente la descripción se lee completa en hasta tres renglones, en vez de salir cortada en una sola línea."
+      "texto": "Ya puedes corregir el nombre de un rol en Roles y permisos; sus usuarios quedan con el nombre nuevo al volver a iniciar sesión."
     }
   ],
-  "commit": "36af54344e20288937674cbc93bd281fa1736a53",
+  "commit": "b215fcdcb055c31d272056adbf4404832c0e532f",
   "cambiosSinCommit": 0
 }
