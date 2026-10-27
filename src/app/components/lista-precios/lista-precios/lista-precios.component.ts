@@ -730,11 +730,20 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     return `de ${desde} a ${hasta} uds: ${valor}`;
   }
 
-  /** Nombre visible de un tipo de cliente, con el mismo criterio en plantilla, import y export. */
+  /**
+   * Nombre visible de un tipo de cliente, con el mismo criterio en plantilla, import y export.
+   * Ticket 1419 (Baudio): primero el NOMBRE («B2B - Almacenes»); antes iba la descripción
+   * larga y la plantilla no se entendía. La descripción solo si el tipo no tiene nombre.
+   */
   private nombreTipoCliente(tipo: any, index = 0): string {
     const descripcion = (tipo.descripcion || tipo.description || '').trim();
     const nombre = (tipo.nombre || tipo.name || '').trim();
-    return descripcion || nombre || `Tipo_${tipo.id || index}`;
+    return nombre || descripcion || `Tipo_${tipo.id || index}`;
+  }
+
+  /** Ticket 1419: los archivos descargados antes traen la descripción como encabezado; se siguen leyendo. */
+  private nombreTipoClienteAnterior(tipo: any): string {
+    return (tipo.descripcion || tipo.description || '').trim();
   }
 
   private generarPlantillaExcel() {
@@ -1401,7 +1410,11 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         const nombreTipo = this.nombreTipoCliente(tipo, index);
         if (!nombreTipo) return;
 
-        const celda = this.resolverCeldaTipoCliente(row, nombreTipo);
+        let celda = this.resolverCeldaTipoCliente(row, nombreTipo);
+        const anterior = this.nombreTipoClienteAnterior(tipo);
+        if ((!celda || celda.valor === undefined || celda.valor === null || celda.valor === '') && anterior && anterior !== nombreTipo) {
+          celda = this.resolverCeldaTipoCliente(row, anterior);
+        }
         if (!celda || celda.valor === undefined || celda.valor === null || celda.valor === '') return;
 
         const precioNumero = this.numeroDeCelda(celda.valor);
