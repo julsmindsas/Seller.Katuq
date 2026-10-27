@@ -36,10 +36,6 @@
 
                 <ng-template pTemplate="header">
                     <tr>
-                        <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">
-                            {{ "Id" | translate }}
-                            <p-sortIcon field="id"></p-sortIcon>
-                        </th>
                         <th class="text-center" pSortableColumn="nombre">
                             {{ "Nombre" | translate }}
                             <p-sortIcon field="nombre"></p-sortIcon>
@@ -64,7 +60,6 @@
 
                 <ng-template pTemplate="body" let-row>
                     <tr>
-                        <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
                         <td>{{ row.nombre }}</td>
                         <!-- Estas descripciones son párrafos ("Lista B - Aquel cliente que
                              asume la propiedad de los productos para..."). Sin tope se van
@@ -110,7 +105,7 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
+                        <td [attr.colspan]="isMobile ? 4 : 5">{{ "No hay datos disponibles" | translate }}</td>
                     </tr>
                 </ng-template>
 
