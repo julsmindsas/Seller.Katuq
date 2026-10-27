@@ -265,10 +265,15 @@ export class RolesComponent implements OnInit {
       if (this.editingRoleId) {
         // Actualizar rol en edición
         this.maestroService.updateRol(this.editingRoleId, newRole).subscribe({
-          next: (response) => {
+          next: (response: any) => {
+            // Ticket 1364: al renombrar, los usuarios del rol pasan al nombre nuevo y lo
+            // ven al volver a entrar.
+            const movidos = Number(response?.usuariosMovidos) || 0;
             Swal.fire({
               title: this.translate.instant('rol.roles.actualizado'),
-              text: this.translate.instant('rol.roles.rolActualizadoConExito'),
+              text: this.translate.instant('rol.roles.rolActualizadoConExito') + (movidos
+                ? ` ${movidos} usuario(s) quedaron con el nombre nuevo; lo verán al volver a iniciar sesión.`
+                : ''),
               icon: 'success',
               confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });
@@ -276,9 +281,12 @@ export class RolesComponent implements OnInit {
             localStorage.removeItem('currentRole');
           },
           error: (error) => {
+            // El backend explica los casos que se pueden corregir (nombre repetido,
+            // rol de administrador); lo demás sigue con el texto general.
+            const motivo = ['ROLE_NAME_IN_USE', 'ADMIN_ROLE_RENAME'].includes(error?.error?.code) ? error.error.msg : '';
             Swal.fire({
               title: this.translate.instant('rol.roles.error'),
-              text: this.translate.instant('rol.roles.huboUnProblemaAlActualizar'),
+              text: motivo || this.translate.instant('rol.roles.huboUnProblemaAlActualizar'),
               icon: 'error',
               confirmButtonText: this.translate.instant('rol.crearRol.ok')
             });

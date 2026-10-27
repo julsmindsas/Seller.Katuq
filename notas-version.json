@@ -12,5 +12,6 @@
   { "fecha": "2026-10-27T16:15:00Z", "tipo": "MEJORA", "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia." },
   { "fecha": "2026-10-27T16:22:00Z", "tipo": "CORRIGE", "texto": "La ventana de novedades de cada versión sale centrada en la pantalla y con sus textos completos." },
   { "fecha": "2026-10-27T16:40:00Z", "tipo": "CORRIGE", "texto": "Al convertir una cotización en pedido puedes escoger cualquier municipio del país en «Otra ciudad del país», no solo tus ciudades de entrega." },
-  { "fecha": "2026-10-27T16:45:00Z", "tipo": "CORRIGE", "texto": "En Tipos de cliente la descripción se lee completa en hasta tres renglones, en vez de salir cortada en una sola línea." }
+  { "fecha": "2026-10-27T16:45:00Z", "tipo": "CORRIGE", "texto": "En Tipos de cliente la descripción se lee completa en hasta tres renglones, en vez de salir cortada en una sola línea." },
+  { "fecha": "2026-10-27T16:55:00Z", "tipo": "CORRIGE", "texto": "Ya puedes corregir el nombre de un rol en Roles y permisos; sus usuarios quedan con el nombre nuevo al volver a iniciar sesión." }
 ]
