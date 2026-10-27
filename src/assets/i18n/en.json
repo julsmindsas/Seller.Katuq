@@ -3207,6 +3207,8 @@
   "cartera.carteraClientes.estado": "Status",
   "cartera.carteraClientes.entrega": "Delivery",
   "cartera.carteraClientes.limitePago": "Payment deadline",
+  "cartera.carteraClientes.fechaCompra": "Purchase date",
+  "cartera.carteraClientes.factura": "Invoice",
   "cartera.carteraClientes.pagado": "Paid",
   "cartera.carteraClientes.saldo": "Balance",
   "cartera.carteraClientes.vencimiento": "Due date",

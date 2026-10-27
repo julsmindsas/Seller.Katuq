@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
-import { lineaDesdeItemPos, precioUnitarioPos, tieneCambios } from '../../../../../shared/utils/pos-linea-precio';
+import { lineaDesdeItemPos, precioUnitarioPos, resolverLineaPos, tieneCambios } from '../../../../../shared/utils/pos-linea-precio';
 
 @Component({
   selector: 'app-cart-summary',
@@ -56,6 +56,25 @@ export class CartSummaryComponent {
 
   get subtotalTicket(): number {
     return this.totalNumerico;
+  }
+
+  /**
+   * Ticket 1360 (OH MY STORE): el IVA del ticket por separado. Cada línea se cobra
+   * con IVA incluido; su IVA se separa con la tarifa de la línea (la misma que usa
+   * el editor de precio: manual → escalón → producto), así base + IVA = lo cobrado.
+   */
+  get ivaTicket(): number {
+    const lineas = this.cartService.posCartItems || [];
+    const iva = lineas.reduce((suma: number, item: any) => {
+      const total = this.subtotalLinea(item);
+      const tarifa = Number(resolverLineaPos(lineaDesdeItemPos(item)).tarifa) || 0;
+      return tarifa > 0 ? suma + (total - total / (1 + tarifa / 100)) : suma;
+    }, 0);
+    return Math.round(iva * 100) / 100;
+  }
+
+  get baseSinIvaTicket(): number {
+    return Math.round((this.totalNumerico - this.ivaTicket) * 100) / 100;
   }
 
   /** D-536: precio unitario con IVA que se cobra (con los cambios de la línea, si hay). */

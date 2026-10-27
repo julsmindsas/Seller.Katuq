@@ -200,7 +200,9 @@
             <thead>
               <tr>
                 <th>{{ 'cartera.carteraClientes.pedido' | translate }}</th>
+                <th>{{ 'cartera.carteraClientes.factura' | translate }}</th>
                 <th class="text-center">{{ 'cartera.carteraClientes.estado' | translate }}</th>
+                <th>{{ 'cartera.carteraClientes.fechaCompra' | translate }}</th>
                 <th>{{ 'cartera.carteraClientes.entrega' | translate }}</th>
                 <th>{{ 'cartera.carteraClientes.limitePago' | translate }}</th>
                 <th class="text-end">{{ 'cartera.carteraAging.total' | translate }}</th>
@@ -222,9 +224,12 @@
                      (click)="$event.stopPropagation()">{{ p.nroPedido }} <i class="pi pi-external-link"></i></a>
                   <ng-template #sinNroPedido>—</ng-template>
                 </td>
+                <!-- Ticket 1384: factura electrónica y fecha de compra -->
+                <td>{{ p.factura || '—' }}</td>
                 <td class="text-center">
                   <span class="cx-badge" [ngClass]="metaPago(p.estadoPago).badgeClass">{{ metaPago(p.estadoPago).label }}</span>
                 </td>
+                <td>{{ p.fechaCompra ? (p.fechaCompra | date:'dd/MM/yyyy') : '—' }}</td>
                 <td>{{ p.fechaEntrega ? (p.fechaEntrega | date:'dd/MM/yyyy') : '—' }}</td>
                 <td>{{ p.payDueDate ? (p.payDueDate | date:'dd/MM/yyyy') : '—' }}</td>
                 <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>

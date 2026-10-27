@@ -100,10 +100,21 @@
         <span class="text-gray">{{ 'Cupón de descuento' | translate }}</span>
         <span>${{ cuponTicket | number:'1.2-2' }}</span>
       </div>
-      <div class="item-number border-bottom" [class.fila-cero]="subtotalTicket === 0 || subtotalTicket === totalNumerico">
+      <div class="item-number" [class.border-bottom]="ivaTicket === 0" [class.fila-cero]="subtotalTicket === 0 || subtotalTicket === totalNumerico">
         <span class="text-gray">Subtotal</span>
         <span>${{ subtotalTicket | number:'1.2-2' }}</span>
       </div>
+      <!-- Ticket 1360: los impuestos por separado (base sin IVA + IVA = Total) -->
+      <ng-container *ngIf="ivaTicket > 0">
+        <div class="item-number">
+          <span class="text-gray">{{ 'Subtotal sin IVA' | translate }}</span>
+          <span>${{ baseSinIvaTicket | number:'1.2-2' }}</span>
+        </div>
+        <div class="item-number border-bottom">
+          <span class="text-gray">IVA</span>
+          <span>${{ ivaTicket | number:'1.2-2' }}</span>
+        </div>
+      </ng-container>
       <div class="item-number pt-3 pb-0">
         <span class="f-w-600">Total</span>
         <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.2-2' }}</h6>

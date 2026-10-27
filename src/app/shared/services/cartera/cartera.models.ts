@@ -20,6 +20,10 @@ export interface AgingBuckets {
 export interface CarteraPedido {
   orderId: string;
   nroPedido: string;
+  /** Ticket 1384: número de la factura electrónica del pedido ('' si no tiene). */
+  factura?: string;
+  /** Ticket 1384: fecha de compra = creación del pedido (ISO) o null. */
+  fechaCompra?: string | null;
   estadoPago: string;
   /** Fecha de entrega (ISO) o null si el pedido no la tiene. */
   fechaEntrega: string | null;

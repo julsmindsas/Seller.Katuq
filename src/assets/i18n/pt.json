@@ -3195,6 +3195,8 @@
   "cartera.carteraClientes.estado": "Status",
   "cartera.carteraClientes.entrega": "Entrega",
   "cartera.carteraClientes.limitePago": "Prazo de pagamento",
+  "cartera.carteraClientes.fechaCompra": "Compra",
+  "cartera.carteraClientes.factura": "Fatura",
   "cartera.carteraClientes.pagado": "Pago",
   "cartera.carteraClientes.saldo": "Saldo",
   "cartera.carteraClientes.vencimiento": "Vencimento",

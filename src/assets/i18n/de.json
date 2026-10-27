@@ -3027,6 +3027,8 @@
     "cartera.carteraClientes.estado": "Status",
     "cartera.carteraClientes.entrega": "Lieferung",
     "cartera.carteraClientes.limitePago": "Zahlungsfrist",
+    "cartera.carteraClientes.fechaCompra": "Kaufdatum",
+    "cartera.carteraClientes.factura": "Rechnung",
     "cartera.carteraClientes.pagado": "Bezahlt",
     "cartera.carteraClientes.saldo": "Saldo",
     "cartera.carteraClientes.vencimiento": "Fälligkeit",

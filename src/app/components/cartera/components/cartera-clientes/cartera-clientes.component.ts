@@ -35,6 +35,8 @@ interface FilaCartera {
   vendedor: string;
   plazo: string;
   pedido: string;
+  factura: string;
+  compra: string;
   entrega: string;
   limite: string;
   total: number;
@@ -263,6 +265,8 @@ export class CarteraClientesComponent implements OnChanges {
           vendedor: c.vendedor || '',
           plazo: this.textoPlazo(c),
           pedido: p.nroPedido || '',
+          factura: p.factura || '',
+          compra: this.fechaCorta(p.fechaCompra),
           entrega: this.fechaCorta(p.fechaEntrega),
           limite: this.fechaCorta(p.payDueDate),
           total: Number(p.total) || 0,
@@ -285,6 +289,8 @@ export class CarteraClientesComponent implements OnChanges {
       'Vendedor': f.vendedor,
       'Plazo': f.plazo,
       'Pedido': f.pedido,
+      'Factura': f.factura,
+      'Fecha de compra': f.compra,
       'Fecha de entrega': f.entrega,
       'Límite de pago': f.limite,
       'Total': f.total,
@@ -300,6 +306,8 @@ export class CarteraClientesComponent implements OnChanges {
       'Vendedor': '',
       'Plazo': '',
       'Pedido': '',
+      'Factura': '',
+      'Fecha de compra': '',
       'Fecha de entrega': '',
       'Límite de pago': '',
       'Total': suma('total'),
@@ -309,7 +317,7 @@ export class CarteraClientesComponent implements OnChanges {
       'Antigüedad': '',
     });
     const hoja = XLSX.utils.json_to_sheet(datos);
-    hoja['!cols'] = [34, 14, 22, 12, 14, 15, 15, 14, 14, 14, 12, 22].map((wch) => ({ wch }));
+    hoja['!cols'] = [34, 14, 22, 12, 14, 14, 15, 15, 15, 14, 14, 14, 12, 22].map((wch) => ({ wch }));
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, 'Cartera');
     XLSX.writeFile(libro, `${this.nombreArchivo()}.xlsx`);
@@ -338,11 +346,11 @@ export class CarteraClientesComponent implements OnChanges {
       pdf.text(`${this.descripcionFiltros()} · Generado el ${this.fechaCorta(new Date().toISOString())}`, margen, 52);
 
       autoTable(pdf, {
-        head: [['Cliente', 'Documento', 'Vendedor', 'Plazo', 'Pedido', 'Entrega', 'Límite de pago',
+        head: [['Cliente', 'Documento', 'Vendedor', 'Plazo', 'Pedido', 'Factura', 'Compra', 'Entrega', 'Límite de pago',
           'Total', 'Pagado', 'Saldo', 'Días vencido', 'Antigüedad']],
-        body: filas.map((f) => [f.cliente, f.documento, f.vendedor, f.plazo, f.pedido, f.entrega, f.limite,
+        body: filas.map((f) => [f.cliente, f.documento, f.vendedor, f.plazo, f.pedido, f.factura, f.compra, f.entrega, f.limite,
           dinero(f.total), dinero(f.pagado), dinero(f.saldo), String(f.diasVencido), f.antiguedad]),
-        foot: [['TOTAL', '', '', '', '', '', '', dinero(suma('total')), dinero(suma('pagado')),
+        foot: [['TOTAL', '', '', '', '', '', '', '', '', dinero(suma('total')), dinero(suma('pagado')),
           dinero(suma('saldo')), '', '']],
         showFoot: 'lastPage',
         startY: 64,
@@ -353,7 +361,7 @@ export class CarteraClientesComponent implements OnChanges {
         footStyles: { fillColor: [238, 233, 253] as any, textColor: [42, 46, 60] as any, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [247, 248, 252] as any },
         columnStyles: {
-          7: { halign: 'right' }, 8: { halign: 'right' }, 9: { halign: 'right' }, 10: { halign: 'center' },
+          9: { halign: 'right' }, 10: { halign: 'right' }, 11: { halign: 'right' }, 12: { halign: 'center' },
         },
       });
       pdf.save(`${this.nombreArchivo()}.pdf`);
