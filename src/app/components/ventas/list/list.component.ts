@@ -1538,6 +1538,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const documentTypes = this.extraerListaFactura(docs, 'documentTypes');
         const paymentTypes = this.extraerListaFactura(pays, 'paymentTypes');
 
+        // Ticket 1421: si el proveedor no respondió, el backend devuelve la lista vacía con
+        // success:false; decirle al comercio que es momentáneo, no que revise su configuración.
+        if (!documentTypes.length && (docs?.data?.success === false || docs?.success === false)) {
+          Swal.fire({
+            title: `${providerDisplayName} no respondió`,
+            text: `No pudimos conectarnos con ${providerDisplayName} en este momento. Intenta de nuevo en unos minutos.`,
+            icon: 'warning',
+            confirmButtonColor: '#5F3FE0'
+          });
+          return;
+        }
+
         if (!documentTypes.length) {
           Swal.fire({
             title: 'Error',
