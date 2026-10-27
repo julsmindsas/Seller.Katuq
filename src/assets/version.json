@@ -1,24 +1,12 @@
 {
-  "version": "2026.10.27.5 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T16:43:39.781Z",
+  "version": "2026.10.27.6 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:48:34.592Z",
   "notas": [
     {
       "tipo": "CORRIGE",
-      "texto": "Al facturar, si el sistema de facturación no responde te lo decimos claro y puedes intentar de nuevo en unos minutos; además, un problema momentáneo de una empresa ya no frena la facturación de las demás."
-    },
-    {
-      "tipo": "MEJORA",
-      "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia."
-    },
-    {
-      "tipo": "CORRIGE",
-      "texto": "La ventana de novedades de cada versión sale centrada en la pantalla y con sus textos completos."
-    },
-    {
-      "tipo": "CORRIGE",
-      "texto": "Al convertir una cotización en pedido puedes escoger cualquier municipio del país en «Otra ciudad del país», no solo tus ciudades de entrega."
+      "texto": "En Tipos de cliente la descripción se lee completa en hasta tres renglones, en vez de salir cortada en una sola línea."
     }
   ],
-  "commit": "4c7d076e7e42078ff0f5c1c16e3804841b00bc9c",
+  "commit": "36af54344e20288937674cbc93bd281fa1736a53",
   "cambiosSinCommit": 0
 }
