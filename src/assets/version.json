@@ -1,6 +1,6 @@
 {
-  "version": "2026.10.27.4 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T16:24:40.793Z",
+  "version": "2026.10.27.5 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:43:39.781Z",
   "notas": [
     {
       "tipo": "CORRIGE",
@@ -13,8 +13,12 @@
     {
       "tipo": "CORRIGE",
       "texto": "La ventana de novedades de cada versión sale centrada en la pantalla y con sus textos completos."
+    },
+    {
+      "tipo": "CORRIGE",
+      "texto": "Al convertir una cotización en pedido puedes escoger cualquier municipio del país en «Otra ciudad del país», no solo tus ciudades de entrega."
     }
   ],
-  "commit": "9e56ff3029062d328376200608a3eaad596233b1",
+  "commit": "4c7d076e7e42078ff0f5c1c16e3804841b00bc9c",
   "cambiosSinCommit": 0
 }
