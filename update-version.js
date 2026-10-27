@@ -148,17 +148,46 @@ function origenDelBuild() {
   }
 }
 
+/**
+ * Ticket 1377 (ALMARA): cada versión explica en palabras sencillas qué mejoró.
+ * Quien sube un cambio que ve el comercio agrega su nota a `notas-version.json`
+ * (raíz del repo): `{ "fecha": "2026-10-26T20:00", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "texto": "..." }`.
+ * La versión lleva las notas agregadas DESPUÉS de la última publicación (la
+ * `publicada` del version.json que trae git). No se vacía el archivo: este
+ * script corre en cada build, también en los locales, y no debe comerse las notas.
+ * Antes se copiaban las notas de la versión anterior.
+ */
+const NOTAS_VERSION = path.join(__dirname, 'notas-version.json');
+
+/** Fecha de la última publicación según git (el version.json local cambia en cada build). */
+function ultimaPublicacionEnGit() {
+  try {
+    const { execFileSync } = require('child_process');
+    const json = execFileSync('git', ['show', 'HEAD:src/assets/version.json'], { cwd: __dirname, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return JSON.parse(json).publicada || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function notasDeEstaVersion() {
+  try {
+    const lista = JSON.parse(fs.readFileSync(NOTAS_VERSION, 'utf8'));
+    if (!Array.isArray(lista)) return [];
+    const desde = Date.parse(ultimaPublicacionEnGit()) || 0;
+    return lista
+      .filter((n) => n && typeof n.texto === 'string' && n.texto.trim())
+      .filter((n) => (Date.parse(n.fecha) || 0) > desde)
+      .map((n) => ({ tipo: String(n.tipo || 'MEJORA').toUpperCase(), texto: n.texto.trim() }));
+  } catch (e) {
+    return [];
+  }
+}
+
 function writeVersionJson(version) {
   const outPath = path.join(__dirname, 'src', 'assets', 'version.json');
 
-  // Conservar las notas que ya estuvieran escritas para esta publicación.
-  let notas = [];
-  try {
-    const previo = JSON.parse(fs.readFileSync(outPath, 'utf8'));
-    if (Array.isArray(previo.notas)) notas = previo.notas;
-  } catch (e) {
-    // No existe todavía o está corrupto: se crea desde cero.
-  }
+  const notas = notasDeEstaVersion();
 
   const payload = {
     version,
@@ -172,6 +201,11 @@ function writeVersionJson(version) {
 
   fs.writeFileSync(outPath, JSON.stringify(payload, null, 2) + '\n');
   console.log(`Versión publicada en assets/version.json: ${version}`);
+  if (notas.length) {
+    console.log(`Notas de la versión: ${notas.length} (de notas-version.json, agregadas después de la última publicación)`);
+  } else {
+    console.log('Esta versión sale sin notas: agrega las de los cambios visibles en notas-version.json.');
+  }
 }
 
 // Rutas de los archivos

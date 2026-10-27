@@ -289,3 +289,40 @@
   .act-sep { display: none; }
   .act-badge { display: none; }
 }
+
+// Ticket 1377: «¿Qué hay de nuevo?» al entrar a una versión nueva con notas.
+.act-novedades-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(20, 18, 35, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.act-novedades {
+  width: 440px;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(30, 35, 60, 0.22);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.act-novedades-ok {
+  align-self: flex-end;
+  margin-top: 4px;
+}
+
+:host-context(body.dark-only) .act-novedades {
+  background: #1b1826;
+  border-color: #2c2740;
+}

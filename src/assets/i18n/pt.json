@@ -1139,6 +1139,7 @@
   "shell.update.remindLater": "Lembrar mais tarde",
   "shell.update.applying": "Atualizando para {{version}}…",
   "shell.update.notesTitle": "Novidades da {{version}}",
+  "shell.update.gotIt": "Entendi",
   "shell.update.tagNew": "NOVO",
   "shell.update.tagImprovement": "MELHORIA",
   "shell.update.tagFix": "CORREÇÃO",

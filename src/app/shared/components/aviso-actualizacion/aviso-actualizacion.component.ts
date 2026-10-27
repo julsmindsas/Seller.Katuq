@@ -54,6 +54,40 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
     // no aporta nada y estorba.
     if (this.authService.isLoggedIn) {
       this.versionCheck.iniciar();
+      this.mostrarNovedadesSiCorresponde();
+    }
+  }
+
+  // ── Ticket 1377: «¿Qué hay de nuevo?» una sola vez por versión ─────────────
+  private readonly CLAVE_NOTAS_VISTAS = 'notasVersionVistas';
+  novedadesVisibles = false;
+  novedadesVersion = '';
+  novedades: NotaVersion[] = [];
+
+  /** Si la versión que se acaba de cargar trae notas y no se han visto, se muestran. */
+  private async mostrarNovedadesSiCorresponde(): Promise<void> {
+    const actual = this.soloNumero(this.versionCheck.versionActual);
+    if (!actual) return;
+    try {
+      if (localStorage.getItem(this.CLAVE_NOTAS_VISTAS) === actual) return;
+    } catch (e) {
+      return;
+    }
+    const data = await this.versionCheck.leerPublicada();
+    if (!data || this.soloNumero(data.version) !== actual) return;
+    const notas = Array.isArray(data.notas) ? data.notas.filter((n) => n && n.texto) : [];
+    if (!notas.length) return;
+    this.novedadesVersion = actual;
+    this.novedades = notas;
+    this.novedadesVisibles = true;
+  }
+
+  cerrarNovedades(): void {
+    this.novedadesVisibles = false;
+    try {
+      localStorage.setItem(this.CLAVE_NOTAS_VISTAS, this.novedadesVersion);
+    } catch (e) {
+      // Sin localStorage se vuelve a mostrar en la próxima carga; no es grave.
     }
   }
 

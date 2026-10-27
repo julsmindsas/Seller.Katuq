@@ -1151,6 +1151,7 @@
   "shell.update.remindLater": "Remind me later",
   "shell.update.applying": "Updating to {{version}}…",
   "shell.update.notesTitle": "What is new in {{version}}",
+  "shell.update.gotIt": "Got it",
   "shell.update.tagNew": "NEW",
   "shell.update.tagImprovement": "IMPROVEMENT",
   "shell.update.tagFix": "FIX",

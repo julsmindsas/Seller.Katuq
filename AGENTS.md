@@ -58,6 +58,14 @@ Muchas pruebas llevan contraseñas, tokens o datos reales. Por eso, desde el 202
 - **La evidencia va en el mensaje de commit o en el contrato:** qué pruebas se corrieron y su resultado.
 - **Los subagentes siguen la misma regla:** `git commit -- <archivos>` nunca incluye pruebas nuevas.
 
+## Notas de versión (D-567)
+
+Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Por eso:
+
+- **Quien sube un cambio que el comercio ve** agrega una nota a `notas-version.json` (raíz del front): `{ "fecha": "<ISO de hoy>", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "texto": "..." }`. Una línea, sin jerga, sin números de ticket ni D-XXX, hablándole al comercio («Ahora puedes…», «Ya no…»).
+- **No se borran notas.** `update-version.js` publica solo las de fecha posterior a la última publicación (`publicada` del `src/assets/version.json` en git).
+- **Cambios internos** (refactors, pruebas, documentación) no llevan nota.
+
 ## Subagentes y workflows
 
 Cuando una sesión delega trabajo en subagentes o workflows (Agent, Workflow, Task):

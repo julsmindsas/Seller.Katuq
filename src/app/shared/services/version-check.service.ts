@@ -124,6 +124,19 @@ export class VersionCheckService implements OnDestroy {
     }
   }
 
+  /**
+   * Ticket 1377: la versión publicada tal cual (o null sin red). Sirve para
+   * mostrar las notas de la versión que el usuario acaba de cargar.
+   */
+  async leerPublicada(): Promise<VersionPublicada | null> {
+    try {
+      const r = await fetch(`assets/version.json?t=${Date.now()}`, { cache: 'no-store' });
+      return r.ok ? await r.json() : null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Parte numérica de una versión (`2026.07.28.9`), sin fecha en texto ni "(Beta)". */
   numero(version: string): string {
     return ((version || '').match(/\d{4}\.\d{2}\.\d{2}\.\d+/) || [''])[0];

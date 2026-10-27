@@ -58,3 +58,19 @@
     </div>
   </div>
 </div>
+
+<!-- Ticket 1377: al entrar a una versión nueva con notas, se muestran una sola vez -->
+<div class="act-novedades-fondo" *ngIf="novedadesVisibles" (click)="cerrarNovedades()">
+  <div class="act-novedades" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="act-notas-head">
+      <span class="act-notas-titulo">{{ 'shell.update.notesTitle' | translate: { version: novedadesVersion } }}</span>
+    </div>
+    <div class="act-nota" *ngFor="let n of novedades">
+      <span [ngClass]="claseEtiqueta(n.tipo)">{{ textoEtiqueta(n.tipo) | translate }}</span>
+      <span class="act-nota-texto">{{ n.texto }}</span>
+    </div>
+    <button type="button" class="act-actualizar act-novedades-ok" (click)="cerrarNovedades()">
+      {{ 'shell.update.gotIt' | translate }}
+    </button>
+  </div>
+</div>

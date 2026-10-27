@@ -12372,3 +12372,15 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - **Real:** `functions/scripts/test-360-acceptance.js` (backend) tiene un token de OH MY STORE desde mayo (`6fdc5fac`). Hay que rotarlo y limpiar el archivo en un cambio aparte.
   - **Revisar:** una contraseña por defecto escrita en código de producción del backend (`controllers/authentication.js`, `controllers/users.js`, `services/registrationSecurity.js`, `scripts/clone-company.js`), repetida en dos pruebas de auth y onboarding.
   - El resto de coincidencias son valores de mentira evidentes (`secreto-de-prueba`, `fake`, `synthetic`, `PRIVATE_CONFIRM_SENTINEL`).
+
+### 2026-10-27 — D-567: notas de versión en palabras sencillas
+
+- **Pedido:** ticket 1377 (ALMARA): «cada que se carga una actualización, explique en palabras sencillas qué mejora se planteó y salga la ventana emergente».
+- **Qué pasaba:** el aviso de versión nueva ya tenía «Ver notas», pero todas las versiones salían con `"notas": []`, y `update-version.js` copiaba las notas de la versión anterior.
+- **Regla:**
+  - Quien sube un cambio que el comercio ve agrega una nota a `notas-version.json` (raíz del front) con `fecha`, `tipo` (NUEVO, MEJORA o CORRIGE) y `texto` en una línea, sin jerga ni números de ticket.
+  - `update-version.js` publica en `version.json` solo las notas con fecha posterior a la última publicación (`publicada` del `version.json` que trae git). No vacía el archivo: el script corre en cada build, también en los locales.
+  - Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).
+- **Dónde quedó:** sección «Notas de versión (D-567)» de `AGENTS.md`.
+- **Arranque:** 9 notas de los arreglos subidos y aún no publicados (tickets 1378-1381, 1386, 1410, 1411, 1384, 1360, 1419 y este).
+- **Sin publicar.**
