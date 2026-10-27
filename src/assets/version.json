@@ -1,12 +1,16 @@
 {
-  "version": "2026.10.27.2 - 27 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-27T16:11:01.118Z",
+  "version": "2026.10.27.3 - 27 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-27T16:20:52.863Z",
   "notas": [
     {
       "tipo": "CORRIGE",
       "texto": "Al facturar, si el sistema de facturación no responde te lo decimos claro y puedes intentar de nuevo en unos minutos; además, un problema momentáneo de una empresa ya no frena la facturación de las demás."
+    },
+    {
+      "tipo": "MEJORA",
+      "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia."
     }
   ],
-  "commit": "c170e0c74ffdfaee07a9639a500ceb18c851ae49",
+  "commit": "2b3224cca3058814f667acfcee7fc47fd740345d",
   "cambiosSinCommit": 0
 }
