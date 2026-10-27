@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import {
   NotaVersion,
@@ -20,7 +20,9 @@ import { AuthService } from '../../services/firebase/auth.service';
   templateUrl: './aviso-actualizacion.component.html',
   styleUrls: ['./aviso-actualizacion.component.scss'],
 })
-export class AvisoActualizacionComponent implements OnInit, OnDestroy {
+export class AvisoActualizacionComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  @ViewChild('capaNovedades') private capaNovedades?: ElementRef<HTMLElement>;
 
   /** Clave para "recordar mañana": guarda hasta cuándo no molestar. */
   private readonly CLAVE_POSPUESTO = 'actualizacionPospuestaHasta';
@@ -91,7 +93,13 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewInit(): void {
+    const capa = this.capaNovedades?.nativeElement;
+    if (capa) document.body.appendChild(capa);
+  }
+
   ngOnDestroy(): void {
+    this.capaNovedades?.nativeElement.remove();
     this.sub?.unsubscribe();
   }
 

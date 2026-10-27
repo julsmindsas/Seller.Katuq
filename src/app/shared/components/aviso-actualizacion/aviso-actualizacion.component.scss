@@ -291,6 +291,12 @@
 }
 
 // Ticket 1377: «¿Qué hay de nuevo?» al entrar a una versión nueva con notas.
+// Fuera del host (vive en el <body>): necesita sus propios tokens.
+.act-capa {
+  @include kc-tokens;
+  font-family: var(--kc-font-body);
+}
+
 .act-novedades-fondo {
   position: fixed;
   inset: 0;
@@ -322,7 +328,8 @@
   margin-top: 4px;
 }
 
-:host-context(body.dark-only) .act-novedades {
+:host-context(body.dark-only) .act-novedades,
+::ng-deep body.dark-only .act-novedades {
   background: #1b1826;
   border-color: #2c2740;
 }

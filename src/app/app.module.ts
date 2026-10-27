@@ -75,7 +75,10 @@ import { OrderToolsRegistrarService } from './shared/services/tools/order-tools-
 import { PublicaModule } from './shared/components/publica/publica.module';
 
 export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
+  // /assets/** se sirve con caché de un día: sin la versión en la URL, una versión nueva
+  // mostraba sus textos nuevos como claves («shell.update.gotIt») hasta el día siguiente.
+  const v = encodeURIComponent(((environment.version || '').match(/\d{4}\.\d{2}\.\d{2}\.\d+/) || [''])[0]);
+  return new TranslateHttpLoader(http, "./assets/i18n/", v ? `.json?v=${v}` : ".json");
 }
 
 @NgModule({

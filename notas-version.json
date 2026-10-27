@@ -9,5 +9,6 @@
   { "fecha": "2026-10-27T01:30:00Z", "tipo": "CORRIGE", "texto": "La plantilla de precios por tipo de cliente usa el nombre de cada tipo de cliente como título de columna." },
   { "fecha": "2026-10-27T01:30:00Z", "tipo": "MEJORA", "texto": "Cada versión nueva te muestra una vez, en palabras sencillas, qué mejoró." },
   { "fecha": "2026-10-27T16:30:00Z", "tipo": "CORRIGE", "texto": "Al facturar, si el sistema de facturación no responde te lo decimos claro y puedes intentar de nuevo en unos minutos; además, un problema momentáneo de una empresa ya no frena la facturación de las demás." },
-  { "fecha": "2026-10-27T16:25:00Z", "tipo": "MEJORA", "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia." }
+  { "fecha": "2026-10-27T16:25:00Z", "tipo": "MEJORA", "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia." },
+  { "fecha": "2026-10-27T16:40:00Z", "tipo": "CORRIGE", "texto": "La ventana de novedades de cada versión sale centrada en la pantalla y con sus textos completos." }
 ]

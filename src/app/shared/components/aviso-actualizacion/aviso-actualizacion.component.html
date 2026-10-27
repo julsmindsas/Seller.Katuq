@@ -59,7 +59,10 @@
   </div>
 </div>
 
-<!-- Ticket 1377: al entrar a una versión nueva con notas, se muestran una sola vez -->
+<!-- Ticket 1377: al entrar a una versión nueva con notas, se muestran una sola vez.
+     La capa se mueve al <body>: el header tiene backdrop-filter y dentro de él un
+     position:fixed queda encerrado en sus 72 px (salía pegada arriba y cortada). -->
+<div #capaNovedades class="act-capa">
 <div class="act-novedades-fondo" *ngIf="novedadesVisibles" (click)="cerrarNovedades()">
   <div class="act-novedades" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="act-notas-head">
@@ -73,4 +76,5 @@
       {{ 'shell.update.gotIt' | translate }}
     </button>
   </div>
+</div>
 </div>
