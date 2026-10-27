@@ -498,7 +498,15 @@ export class CrearVentasComponent
     // que limpian el carrito). Estos actualizan pedidoGral.bodegaId / envio.ciudad.
     try {
       if (ctx.bodega) this.aplicarCambioBodega(ctx.bodega);
-      if (ctx.ciudad) this.aplicarCambioCiudad(ctx.ciudad);
+      // Ticket 1422: un municipio escogido en el buscador DANE se aplica como lo
+      // hace el selector «DANE» de esta pantalla (departamento, zona de cobro).
+      if (ctx.ciudadDane && ctx.ciudadDane.nombre) {
+        this.usarDaneCiudadEntrega = true;
+        this.aplicarCambioCiudad(ctx.ciudadDane.nombre);
+        this.aplicarCambioCiudadDane(ctx.ciudadDane);
+      } else if (ctx.ciudad) {
+        this.aplicarCambioCiudad(ctx.ciudad);
+      }
     } catch (e) {
       console.error("Conversión cotización: error seteando bodega/ciudad", e);
     }
