@@ -17,9 +17,13 @@
    layout automático, donde el ancho de columna sale del contenido y `max-width`
    sobre el `td` es apenas una sugerencia. Acotando el bloque de adentro, el
    ancho máximo del contenido queda cerrado y la columna no puede crecer más. */
-.col-descripcion {
+/* Ticket 1363: la tabla es redimensionable y PrimeNG le pone `white-space: nowrap`
+   a sus celdas (`.p-datatable-resizable-table > .p-datatable-tbody > tr > td`),
+   que gana por especificidad: la descripción salía en una línea cortada en seco.
+   Por eso el `!important`, aquí y en el span (hereda el nowrap). */
+td.col-descripcion {
   min-width: 240px;
-  white-space: normal;
+  white-space: normal !important;
   vertical-align: top;
 }
 
@@ -30,6 +34,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere; /* una palabra larguísima parte en vez de desbordar */
+  white-space: normal !important;
   line-height: 1.45;
   text-align: left;
   color: var(--ds-ink);
