@@ -26,6 +26,11 @@
       </select>
     </div>
 
+    <div class="eiv-aviso" *ngIf="facturaPorRefacturar">
+      La factura {{ facturaPorRefacturar }} quedó con el IVA anterior. Después de guardar, refactura el pedido
+      y anula la factura anterior en {{ sistemaContable }}. Si el total sube, la diferencia queda por cobrar.
+    </div>
+
     <div class="eiv-error" *ngIf="error">{{ error }}</div>
 
     <div class="eiv-acciones">

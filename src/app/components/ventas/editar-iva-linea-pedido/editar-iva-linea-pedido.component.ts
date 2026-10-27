@@ -36,6 +36,22 @@ export class EditarIvaLineaPedidoComponent implements OnChanges {
     }
   }
 
+  /**
+   * Ticket 1415: con SIIGO o World Office un pedido facturado sí deja cambiar el IVA, y
+   * queda pendiente de refacturar. Devuelve el número de la factura, o '' si no aplica.
+   */
+  get facturaPorRefacturar(): string {
+    const p: any = this.pedido;
+    if (!p || !(p.nroFactura || p.pdfUrlInvoice)) return '';
+    const fiscal = p.facturacionElectronica || {};
+    if (fiscal.provider !== 'siigo' && fiscal.provider !== 'world_office') return '';
+    return String(fiscal.invoiceNumber || p.nroFactura || fiscal.invoiceId || '');
+  }
+
+  get sistemaContable(): string {
+    return (this.pedido as any)?.facturacionElectronica?.provider === 'world_office' ? 'World Office' : 'SIIGO';
+  }
+
   get lineas(): any[] {
     return this.pedido?.carrito || [];
   }

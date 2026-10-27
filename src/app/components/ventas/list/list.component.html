@@ -515,6 +515,10 @@
                                                                     </a>
                                                                     <span *ngIf="pedidoDetalle.nroFactura && !(pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl)">{{ pedidoDetalle.nroFactura }}</span>
                                                                     <span *ngIf="!pedidoDetalle.nroFactura" class="is-muted">—</span>
+                                                                    <!-- Ticket 1415 -->
+                                                                    <small *ngIf="$any(pedidoDetalle).pendienteRefacturar" class="d-block text-warning">
+                                                                        Por refacturar: el IVA cambió después de la factura {{ $any(pedidoDetalle).pendienteRefacturar.factura }}
+                                                                    </small>
                                                                     <!-- Ticket 1145: facturas anuladas con nota crédito y liberadas -->
                                                                     <small *ngFor="let fa of pedidoDetalle.facturasAnuladas" class="is-muted d-block">
                                                                         Anulada: {{ fa.invoiceNumber }} · NC {{ fa.notaCredito }}
@@ -1194,6 +1198,12 @@
                                                             <i class="pi pi-check-circle mr-1"></i>{{ pedido.nroFactura }}
                                                         </span>
                                                     </ng-template>
+                                                    <!-- Ticket 1415: el IVA cambió después de facturar -->
+                                                    <span *ngIf="$any(pedido).pendienteRefacturar" class="badge bg-warning text-dark ms-1"
+                                                          [style.cursor]="puedeRefacturar(pedido) ? 'pointer' : null"
+                                                          (click)="puedeRefacturar(pedido) && refacturarPedido(pedido)"
+                                                          pTooltip="El IVA cambió después de facturar. Refactura y anula la factura anterior en el sistema contable."
+                                                          tooltipPosition="top">Por refacturar</span>
                                                 </ng-container>
                                                 <ng-template #sinFactura>
                                                     <span *ngIf="pedido._facturando" class="text-warning">
