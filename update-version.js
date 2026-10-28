@@ -131,7 +131,8 @@ function updateVersion(filePath, isBeta = true) {
  */
 /**
  * Commit de HEAD y archivos de código con cambios sin commitear (sin contar la
- * versión ni los environments, que cambian en cada build). Sin git, vacío.
+ * versión ni los environments, que cambian en cada build, ni la documentación,
+ * que no entra al build: misma regla SOLO_DOCS de guard-publicacion.js). Sin git, vacío.
  */
 function origenDelBuild() {
   try {
@@ -141,7 +142,8 @@ function origenDelBuild() {
     const sucios = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], opts)
       .split('\n')
       .map((l) => l.slice(3).trim())
-      .filter((f) => f && !/^src\/assets\/version\.json$|^src\/environments\//.test(f));
+      .filter((f) => f && !/^src\/assets\/version\.json$|^src\/environments\//.test(f))
+      .filter((f) => !/^(specs\/|openspec\/|docs\/|ops\/|.*\.md$)/.test(f));
     return { commit, cambiosSinCommit: sucios.length };
   } catch (e) {
     return {};
