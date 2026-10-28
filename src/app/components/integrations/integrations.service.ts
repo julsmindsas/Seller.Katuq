@@ -1250,6 +1250,7 @@ export class IntegrationsService {
     if (options?.observaciones) body.observaciones = options.observaciones;
     if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
     if (options?.iva && Object.keys(options.iva).length) body.iva = options.iva; // ticket 1241: IVA de SIIGO escogido
+    if (options?.porLinea && Object.keys(options.porLinea).length) body.porLinea = options.porLinea; // ticket 1417: retefuente e IVA por renglón
     // Ticket 1052: vendedor y centro de costo elegidos en la ventana de factura.
     if (options?.sellerId) body.sellerId = options.sellerId;
     if (options?.costCenterId) body.costCenterId = options.costCenterId;
@@ -1276,6 +1277,7 @@ export class IntegrationsService {
     if (options?.observaciones) body.observaciones = options.observaciones;
     if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
     if (options?.iva && Object.keys(options.iva).length) body.iva = options.iva; // ticket 1241: IVA de SIIGO escogido
+    if (options?.porLinea && Object.keys(options.porLinea).length) body.porLinea = options.porLinea; // ticket 1417: retefuente e IVA por renglón
     if (options?.sellerId) body.sellerId = options.sellerId;
     if (options?.costCenterId) body.costCenterId = options.costCenterId;
     if (options?.reemplazarFactura) body.reemplazarFactura = options.reemplazarFactura;

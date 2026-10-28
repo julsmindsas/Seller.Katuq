@@ -12445,3 +12445,17 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Ya aplicado en producción** (no requiere despliegue).
 - **No se hizo (recomendado dejarlo así):** igualar "Tiempo de Entrega (dias)" del exportar con "Tiempo de Entrega" de la plantilla. El exportar saca el número viejo y la plantilla espera una opción de Maestros: igualar solo el título haría fallar la reimportación.
 - **Punto 3 del reporte (CRON_ENABLED):** documentado en `functions/CLAUDE.md` (troubleshooting), sin código.
+
+### 2026-10-28 — D-574: SIIGO, retención en la fuente e IVA por renglón (ticket 1417, ALMACEN BOMBAS)
+- **Problema:** Bombas factura servicios con «IVA SERVICIOS 19%» y retefuente del 4 %, y productos con «Iva 19%» y retefuente del 2,5 %. Katuq solo permitía una retefuente para toda la factura, así que el comercio separaba el servicio en otro pedido (BAS-000049 y BAS-000066). SIIGO sí acepta estas facturas mixtas: FV-2-6310 y FV-2-6246, hechas en su pantalla, fueron aceptadas por la DIAN.
+- **Decisión (Daniel, 28-oct):** cada renglón se escoge en la ventana de la factura; no se marcan productos como servicio. El IVA por renglón va en el mismo cambio, pero solo por otro IVA del **mismo porcentaje**, para que el total del pedido no cambie. Todo va detrás de la bandera `invoiceItemWithholding`, **solo ALMACEN BOMBAS**; sin ella, el servidor ignora `porLinea` y la factura sale como hoy.
+- **Backend (c0b8c644):**
+  - `accountingController.leerPorLinea` / `conPorLinea`.
+  - `siigoProvider.impuestosPorLinea`, pura. Un id inválido, el envío con retefuente o un IVA de otro % dan error y no se emite nada.
+  - La vista previa trae `ivaId`, `retefuenteId` y `esEnvio` por renglón.
+- **Front:** dos listas en cada renglón de la vista previa de la factura (`list.component`) y `porLinea` en el cuerpo de la vista previa y de la facturación.
+- **Pruebas:**
+  - `impuestosPorLinea.test.js` 14/14, local (D-566).
+  - En verde las que ya existían de SIIGO: 1054, 1074, 1052, IVA por línea, descuentos, `vistaPreviaProductosSiigo`, regalos, envío y `companyFeatureFlags`.
+  - Vista previa real del BAS-000049 contra el SIIGO de Bombas, sin emitir: el renglón con «IVA SERVICIOS» y 4 % y el resto al 2,5 %; total igual y cuadra.
+- **Pendiente:** la primera factura mixta real desde Katuq es la prueba de que la API de SIIGO la acepta igual que su pantalla. Rosa queda avisada en el ticket.

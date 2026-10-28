@@ -6497,6 +6497,15 @@ $pd-chip-border: #e9e7f3;
     td { border-color: var(--ds-line); vertical-align: top; }
     .fvp-producto { font-weight: 600; line-height: 1.25; }
 
+    // Ticket 1417: retefuente e IVA del renglón. Sin "p-" en la clase (regla global [class*="p-"]).
+    .fv-impuestos-linea {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+      margin-top: 4px;
+      select { width: auto; max-width: 100%; font-size: 12px; }
+    }
+
     // Ticket 1229 (D-504, 1b.2): código SIIGO y estado del producto en cada línea.
     // Clases sin la secuencia "p-" (regla global [class*="p-"]); el chip es un span
     // con *ngSwitchCase, así que lleva color y tamaño propios (span.ng-star-inserted).

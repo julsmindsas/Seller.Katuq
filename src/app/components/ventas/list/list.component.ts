@@ -204,6 +204,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaIvasPorPct: { pct: string; opciones: { id: number; name: string }[] }[] = [];
   facturaIvaSel: { [pct: string]: number | null } = {};
   /**
+   * Ticket 1417: retefuente e IVA de renglones puntuales (el servicio al 4 % con «IVA SERVICIOS»,
+   * los productos al 2,5 %). Clave = renglón de la vista previa. Sin clave, el renglón va con lo
+   * de la factura. retefuente null = ese renglón sin retención. Solo con invoiceItemWithholding.
+   */
+  facturaPorLinea: { [renglon: string]: { retefuente?: number | null; iva?: number } } = {};
+  /**
    * Ticket 1052: vendedor y centro de costo de la factura, de los del SIIGO de la empresa.
    * Vienen ya marcados (quien factura si es vendedor en SIIGO, o lo último usado en ese tipo
    * de factura) y se pueden cambiar en cada factura.
@@ -1571,6 +1577,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaObservaciones = '';
         this.facturaRetencionesPorTipo = this.agruparRetencionesFactura(this.extraerListaFactura(taxes, 'taxes'));
         this.facturaRetencionSel = {};
+        this.facturaPorLinea = {}; // ticket 1417
         this.facturaRetencionesPorTipo.forEach((g) => (this.facturaRetencionSel[g.tipo] = null));
         this.prepararIvasFactura(this.extraerListaFactura(taxes, 'taxes'), config?.config?.config ?? config?.config ?? {});
         this.facturaVendedores = this.extraerListaFactura(sellers, 'sellers')
@@ -1822,8 +1829,64 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       sellerId: this.facturaVendedorId || undefined,
       costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
       iva: this.facturaIvaElegido(),
+      porLinea: this.facturaPorLineaElegido(), // ticket 1417
       reemplazarFactura: this.facturaReemplazo?.pedidoId === this.facturaPedido?._id ? this.facturaReemplazo?.invoiceId : undefined,
     };
+  }
+
+  /** Ticket 1417: la ventana deja escoger retefuente e IVA por renglón (solo ALMACEN BOMBAS). */
+  get facturaImpuestosPorLinea(): boolean {
+    return this.companyFeatures.isEnabled('invoiceItemWithholding');
+  }
+
+  /** Ticket 1417: las retefuentes activas del SIIGO de la empresa. */
+  get facturaRetefuentes(): { id: number; name: string }[] {
+    return this.facturaRetencionesPorTipo.find((g) => g.tipo === 'Retefuente')?.opciones || [];
+  }
+
+  /** Ticket 1417: los IVA del mismo porcentaje del renglón (solo si hay más de uno). */
+  facturaIvasDeLinea(tarifa: number): { id: number; name: string }[] {
+    return this.facturaIvasPorPct.find((g) => Number(g.pct) === Number(tarifa))?.opciones || [];
+  }
+
+  /** Ticket 1417: 'factura' = la de la factura; null = sin retención; o el id escogido. */
+  facturaRetefuenteDeLinea(renglon: number): number | null | 'factura' {
+    const c = this.facturaPorLinea[String(renglon)];
+    return c && Object.prototype.hasOwnProperty.call(c, 'retefuente') ? (c.retefuente ?? null) : 'factura';
+  }
+
+  cambiarRetefuenteDeLinea(renglon: number, valor: number | null | 'factura'): void {
+    const clave = String(renglon);
+    const c = { ...(this.facturaPorLinea[clave] || {}) };
+    if (valor === 'factura') delete c.retefuente;
+    else c.retefuente = valor === null ? null : Number(valor);
+    this.guardarLinea(clave, c);
+  }
+
+  /** Ticket 1417: el IVA del renglón; sin escoger, el de la factura para ese porcentaje. */
+  facturaIvaDeLinea(renglon: number, tarifa: number): number | null {
+    return this.facturaPorLinea[String(renglon)]?.iva ?? this.facturaIvaSel[String(tarifa)] ?? null;
+  }
+
+  cambiarIvaDeLinea(renglon: number, tarifa: number, valor: number): void {
+    const clave = String(renglon);
+    const c = { ...(this.facturaPorLinea[clave] || {}) };
+    if (Number(valor) === Number(this.facturaIvaSel[String(tarifa)])) delete c.iva;
+    else c.iva = Number(valor);
+    this.guardarLinea(clave, c);
+  }
+
+  private guardarLinea(clave: string, c: { retefuente?: number | null; iva?: number }): void {
+    const resto = { ...this.facturaPorLinea };
+    if (Object.keys(c).length) resto[clave] = c;
+    else delete resto[clave];
+    this.facturaPorLinea = resto;
+  }
+
+  /** Ticket 1417: lo escogido por renglón, o undefined si no hay nada o la bandera está apagada. */
+  private facturaPorLineaElegido(): { [renglon: string]: { retefuente?: number | null; iva?: number } } | undefined {
+    if (!this.facturaImpuestosPorLinea || !Object.keys(this.facturaPorLinea).length) return undefined;
+    return this.facturaPorLinea;
   }
 
   /** Ticket 1074: la vista previa ya no corresponde a lo elegido en la ventana. */
@@ -1886,6 +1949,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       sellerId: this.facturaVendedorId || undefined,
       costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
       iva: this.facturaIvaElegido(), // ticket 1241
+      porLinea: this.facturaPorLineaElegido(), // ticket 1417
     };
     if (documentTypeId && (extras.sellerId || extras.costCenterId)) {
       this.recordarFactura(String(documentTypeId), { sellerId: extras.sellerId, costCenterId: extras.costCenterId });
@@ -2032,7 +2096,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
    * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number; iva?: { [pct: string]: number } }): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number; iva?: { [pct: string]: number }; porLinea?: { [renglon: string]: { retefuente?: number | null; iva?: number } } }): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -2057,6 +2121,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (extras?.sellerId) options.sellerId = extras.sellerId; // ticket 1052
     if (extras?.costCenterId) options.costCenterId = extras.costCenterId; // ticket 1052
     if (extras?.iva) options.iva = extras.iva; // ticket 1241
+    if (extras?.porLinea) options.porLinea = extras.porLinea; // ticket 1417
     // REFACTURAR: el servidor solo reemplaza si el pedido sigue con esta factura.
     const reemplazo = this.facturaReemplazo?.pedidoId === pedido._id ? this.facturaReemplazo : null;
     if (reemplazo) options.reemplazarFactura = reemplazo.invoiceId;

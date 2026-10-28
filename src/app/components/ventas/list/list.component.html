@@ -2423,6 +2423,7 @@
                 </div>
             </div>
             <small class="text-muted">Salen de tu SIIGO. SIIGO calcula el valor de cada retención.</small>
+            <small class="text-muted d-block" *ngIf="facturaImpuestosPorLinea">Si un producto o servicio lleva otra retención u otro IVA, ábrelo en la vista previa y cámbialo en su renglón.</small>
         </div>
 
         <!-- Ticket 1074: vista previa de lo que saldrá en la factura -->
@@ -2450,7 +2451,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let l of vp.lineas">
+                        <tr *ngFor="let l of vp.lineas; let i = index">
                             <td>
                                 <div class="fvp-producto">{{ l.descripcion }}</div>
                                 <!-- Ticket 1229 (D-504, 1b.2): código del producto y si existe en SIIGO o se creará.
@@ -2471,6 +2472,22 @@
                                     {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} c/u
                                     <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>
                                 </small>
+                                <!-- Ticket 1417: retefuente e IVA de este renglón, distintos a los de la factura
+                                     (solo con invoiceItemWithholding; el envío no lleva retefuente). -->
+                                <div class="fv-impuestos-linea" *ngIf="facturaImpuestosPorLinea && !l.esEnvio && (facturaRetefuentes.length || facturaIvasDeLinea(l.tarifaIva).length)">
+                                    <select *ngIf="facturaRetefuentes.length" class="form-select form-control form-control-sm"
+                                            [ngModel]="facturaRetefuenteDeLinea(i)" (ngModelChange)="cambiarRetefuenteDeLinea(i, $event)"
+                                            [attr.aria-label]="'Retención de ' + l.descripcion">
+                                        <option [ngValue]="'factura'">Retención de la factura</option>
+                                        <option [ngValue]="null">Sin retención</option>
+                                        <option *ngFor="let r of facturaRetefuentes" [ngValue]="r.id">{{ r.name }}</option>
+                                    </select>
+                                    <select *ngIf="facturaIvasDeLinea(l.tarifaIva).length" class="form-select form-control form-control-sm"
+                                            [ngModel]="facturaIvaDeLinea(i, l.tarifaIva)" (ngModelChange)="cambiarIvaDeLinea(i, l.tarifaIva, $event)"
+                                            [attr.aria-label]="'IVA de ' + l.descripcion">
+                                        <option *ngFor="let o of facturaIvasDeLinea(l.tarifaIva)" [ngValue]="o.id">{{ o.name }}</option>
+                                    </select>
+                                </div>
                             </td>
                             <td class="text-end">{{ l.cantidad }}</td>
                             <td class="text-end">{{ l.base | currency:'USD':'symbol':'1.0-2' }}</td>
