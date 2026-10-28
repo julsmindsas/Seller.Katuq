@@ -72,7 +72,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ESTADOPEDIDO = [
     { id: 1, nombre: 'Pendiente' },
-    { id: 2, nombre: 'Pagado' },
     { id: 3, nombre: 'Anulado' },
     { id: 4, nombre: 'Devuelto' }
   ];

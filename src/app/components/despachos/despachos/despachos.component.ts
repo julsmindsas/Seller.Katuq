@@ -457,7 +457,6 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.estadosPago = Object.values(EstadoPago);
     this.ESTADOPAGO = [
       { id: 1, nombre: "Pendiente" },
-      { id: 2, nombre: "Pagado" },
       { id: 3, nombre: "Anulado" },
       { id: 4, nombre: "Devuelto" },
       { id: 5, nombre: "Pospendiente" },
