@@ -13,7 +13,7 @@ import { clearOnboardingStorage } from "../../../components/onboarding/utils/onb
 import { LoaderService } from "../loader.service";
 import { ThemeModeService } from "../theme-mode.service";
 import { AppLanguage, DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from "../../utils/app-language.utils";
-import { INICIO_JULSMIND } from "../../guards/inicio-julsmind.guard";
+import { INICIO_JULSMIND } from "../../guards/inicio.guard";
 import { sesionEsJulsmind } from "../../../components/en-vivo/paginas/sesion-katuq";
 
 export interface User {

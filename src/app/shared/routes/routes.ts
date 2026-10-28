@@ -2,7 +2,7 @@ import { Routes } from "@angular/router";
 import { AuthGuard } from "../guards/auth.guard"; // Importar el guard
 import { AdminGuard } from "../guard/admin.guard"; // Importar AdminGuard
 import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar SubscriptionGuard
-import { InicioJulsmindGuard } from "../guards/inicio-julsmind.guard";
+import { InicioGuard } from "../guards/inicio.guard";
 import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
 
 export const content: Routes = [
@@ -343,11 +343,11 @@ export const content: Routes = [
   },
 
   {
-    // D-386: para los administradores de Julsmind el inicio es "Katuq en vivo".
+    // D-386 y D-575: el inicio es "En vivo" (Julsmind: "Katuq en vivo"; comercio: su "En vivo").
     path: "welcome",
     loadChildren: () =>
       import("../../welcome/welcome.module").then((m) => m.WelcomeModule),
-    canActivate: [AuthGuard, InicioJulsmindGuard],
+    canActivate: [AuthGuard, InicioGuard],
   },
   {
     path: "superadmin", // Ruta correcta para superadmin

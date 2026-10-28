@@ -12459,3 +12459,23 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - En verde las que ya existían de SIIGO: 1054, 1074, 1052, IVA por línea, descuentos, `vistaPreviaProductosSiigo`, regalos, envío y `companyFeatureFlags`.
   - Vista previa real del BAS-000049 contra el SIIGO de Bombas, sin emitir: el renglón con «IVA SERVICIOS» y 4 % y el resto al 2,5 %; total igual y cuadra.
 - **Pendiente:** la primera factura mixta real desde Katuq es la prueba de que la API de SIIGO la acepta igual que su pantalla. Rosa queda avisada en el ticket.
+
+### 2026-10-28 — D-575: el inicio de cada comercio es su «En vivo»
+- **Pedido de Daniel (28-oct):** "quiero que el welcome sea el envivo de cada comercio". Extiende la adenda de D-386 que hizo de «Katuq en vivo» el inicio de Julsmind.
+- **Decisión (Daniel, 28-oct, en dos preguntas):**
+  - Llegan a `/en-vivo` la familia Administrador del comercio y los roles que tengan «En vivo» en Roles. Los demás roles siguen en la bienvenida.
+  - El administrador que no ha terminado el onboarding sigue en la bienvenida, que le muestra «Continuar configuración». Al terminar, entra a En vivo.
+- **Front:**
+  - `InicioJulsmindGuard` pasa a `InicioGuard` (`shared/guards/inicio.guard.ts`). Julsmind va a `/en-vivo/katuq`; con `sesionPuedeVerEnVivo()` y sin `showOnboardingBanner` se va a `/en-vivo`; los demás, a la bienvenida.
+  - Basta el guard, porque todo camino al inicio pasa por `/welcome`: login, logo, barra inferior, fin del onboarding y del cambio de clave, y la página 404.
+  - La barra inferior marca «Inicio» también en `/en-vivo`.
+- **Backend:** `analyticsEnVivo.js` deja entrar a su propio comercio a la familia Administrador (`isAdminFamilyRole`, la misma de `requireMenu`) aunque no tenga el menú `en-vivo`. Antes el menú se lo mostraba (ticket 1177) y el servidor decía «no disponible». Julsmind conserva la regla exacta de D-386, porque desde ahí se mira cualquier comercio con `?empresa=`.
+- **Qué deja de verse al entrar:** la bienvenida (acciones rápidas, «Negocio hoy», primeros pasos del plan gratis). La pregunta NPS (D-506) queda como el botón pequeño de fuera de Inicio.
+- **Capacidad, a vigilar:**
+  - El distribuidor observa en vivo hasta `EN_VIVO_MAX_EMPRESAS` comercios a la vez (5 por defecto). Del sexto en adelante, la pantalla se actualiza cada 30 s, sin canal en vivo.
+  - En ese modo, cada comercio con la pantalla abierta lee sus pedidos de los últimos 7 días cada 30 s. Es una lectura compartida entre pantallas, y se pausa con la pestaña oculta más de 5 min.
+  - Opttia resume 1 vez cada 30 min por comercio con pantallas abiertas.
+- **Pruebas:**
+  - `tests/enVivo/rutas.contract.test.js`, versionada: 63/63. El caso «menú de otra empresa» pasa a usar Vendedor y hay dos casos nuevos de D-575. El nuevo falla si se quita el cambio.
+  - Las 15 pruebas de `tests/enVivo` en verde.
+  - Front: `tsc` y `ng build` sin errores.

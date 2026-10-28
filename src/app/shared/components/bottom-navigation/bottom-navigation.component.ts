@@ -39,6 +39,8 @@ export class BottomNavigationComponent implements OnInit, OnDestroy {
       label: 'shell.bottomNav.home',
       icon: 'fa fa-home',
       route: '/welcome',
+      // D-575: el inicio de quien puede verlo es "En vivo" (el guard de /welcome lo lleva allá).
+      otrasRutas: ['/en-vivo'],
       color: '#5F3FE0',
       alwaysVisible: true
     },

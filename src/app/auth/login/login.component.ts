@@ -8,7 +8,7 @@ import { UtilsService } from '../../shared/services/utils.service';
 import { environment } from '../../../environments/environment';
 import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
 import { SesionConfirmada } from '../../shared/services/registro-verificacion.service';
-import { INICIO_JULSMIND } from '../../shared/guards/inicio-julsmind.guard';
+import { INICIO_JULSMIND } from '../../shared/guards/inicio.guard';
 import { sesionEsJulsmind } from '../../components/en-vivo/paginas/sesion-katuq';
 
 @Component({

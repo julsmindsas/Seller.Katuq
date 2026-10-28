@@ -21,5 +21,6 @@
   { "fecha": "2026-10-27T21:30:00Z", "tipo": "NUEVO", "texto": "Un producto puede estar en varias categorías: en la pestaña Categorías elige «Otras categorías» y el producto también aparece al filtrar por ellas en el punto de venta, la venta asistida, el listado de productos y tu tienda. Además, el filtro de categoría del punto de venta ahora sí filtra." },
   { "fecha": "2026-10-28T15:00:00Z", "tipo": "CORRIGE", "texto": "Con Tesorería activa, si editas un pedido aprobado y el total sube por encima de lo pagado, el pedido pasa a PreAprobado y aparece en Cartera con lo que falta por pagar." },
   { "fecha": "2026-10-28T15:05:00Z", "tipo": "CORRIGE", "texto": "Al reenviar un pedido desde tu tienda en línea ya no se borran las notas que escribiste en él." },
-  { "fecha": "2026-10-28T15:10:00Z", "tipo": "MEJORA", "texto": "La pantalla de WooCommerce te da la dirección correcta para conectar tu tienda y te avisa que, sin la clave secreta, los pedidos no llegan." }
+  { "fecha": "2026-10-28T15:10:00Z", "tipo": "MEJORA", "texto": "La pantalla de WooCommerce te da la dirección correcta para conectar tu tienda y te avisa que, sin la clave secreta, los pedidos no llegan." },
+  { "fecha": "2026-10-28T20:10:00Z", "tipo": "MEJORA", "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida." }
 ]
