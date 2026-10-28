@@ -1,7 +1,12 @@
 {
-  "version": "2026.10.28.3 - 28 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-28T16:26:16.225Z",
-  "notas": [],
-  "commit": "00718bc4a2ea6557c3151913ec462b0231e210f5",
+  "version": "2026.10.28.4 - 28 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-28T20:36:42.343Z",
+  "notas": [
+    {
+      "tipo": "MEJORA",
+      "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida."
+    }
+  ],
+  "commit": "016a4f40ad0a6ce4ba8799aeb6c7520089c06293",
   "cambiosSinCommit": 0
 }
