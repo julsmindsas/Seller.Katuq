@@ -12479,3 +12479,4 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - `tests/enVivo/rutas.contract.test.js`, versionada: 63/63. El caso «menú de otra empresa» pasa a usar Vendedor y hay dos casos nuevos de D-575. El nuevo falla si se quita el cambio.
   - Las 15 pruebas de `tests/enVivo` en verde.
   - Front: `tsc` y `ng build` sin errores.
+- **Estado: EN PROD el 28-oct.** Backend a9d66319 (pull limpio desde d4c85ed6, `pm2 reload katuq-api`, conserva `--max-old-space-size=2560`). Front 2026.10.28.4 (016a4f40, release ec2608bd), comprobado en el bundle servido. No se probó con la sesión de un comercio.
