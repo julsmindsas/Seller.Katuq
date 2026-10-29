@@ -122,6 +122,8 @@ export class BorradoresVentaComponent implements OnInit {
           id: b.id,
           nombre: b.nombre || "",
           documento,
+          // Ticket 1434: con varias fichas del mismo documento, esta desempata.
+          cd: estado.cliente?.cd ? String(estado.cliente.cd) : "",
           bodega: estado.bodega || null,
           ciudad: estado.ciudad || "",
           items: lineas,

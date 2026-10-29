@@ -686,6 +686,7 @@ export class CrearVentasComponent
               id: guardado.id,
               nombre: guardado.nombre || "",
               documento,
+              cd: estado.cliente?.cd ? String(estado.cliente.cd) : "",
               bodega: estado.bodega,
               ciudad: estado.ciudad,
               items: estado.items,
@@ -2037,9 +2038,24 @@ export class CrearVentasComponent
 
     this.documentoBuscar = valorBusqueda;
 
-    // Búsqueda por documento (comportamiento por defecto)
-    const data = { documento: valorBusqueda };
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    // Búsqueda por documento (comportamiento por defecto).
+    // Ticket 1434: al retomar un borrador se manda su ficha (`cd`); con varias
+    // fichas del mismo documento el backend la usa para desempatar (como en 1067).
+    const data: any = { documento: valorBusqueda };
+    const cdBorrador = this.fichaDelBorradorPendiente(valorBusqueda);
+    if (cdBorrador) data.cd = cdBorrador;
+    this.service.getClientByDocument(data).subscribe({
+      error: (err) => {
+        if (err?.status !== 409) return;
+        Swal.fire({
+          title: "Varias fichas con ese documento",
+          text: "Este documento está en más de una ficha de cliente. Búsquelo por nombre y elija la ficha correcta.",
+          icon: "warning",
+          confirmButtonText: "Entendido",
+          confirmButtonColor: "#5F3FE0",
+        });
+      },
+      next: (res: any) => {
         console.log("🔍 Respuesta del servicio getClientByDocument:", res);
 
         // Manejar respuesta: puede ser array vacío, array con cliente, u objeto directo
@@ -2180,7 +2196,19 @@ export class CrearVentasComponent
           this.originalDataEntregas =
             this.utils.deepClone(this.datosEntregas) || [];
         }
+      },
       });
+  }
+
+  /** Ticket 1434: ficha del borrador por retomar, si es de este documento. */
+  private fichaDelBorradorPendiente(documento: string): string {
+    try {
+      const ctx = JSON.parse(sessionStorage.getItem(CLAVE_CONTEXTO_BORRADOR) || "null");
+      if (!ctx || String(ctx.documento || "") !== documento) return "";
+      return typeof ctx.cd === "string" ? ctx.cd : "";
+    } catch {
+      return "";
+    }
   }
 
   /**
@@ -3468,11 +3496,17 @@ export class CrearVentasComponent
       if (!result.isConfirmed) return;
     }
 
-    // Validar que la dirección de envío pertenezca al cliente actual
+    // Validar que la dirección de envío pertenezca al cliente actual.
+    // Ticket 1434: sin distinguir mayúsculas, tildes ni espacios; "#27A" y "#27a"
+    // son la misma dirección y frenaban el pedido.
     if (this.pedidoGral.envio?.direccionEntrega && this.pedidoGral.formaEntrega !== 'Recoge' && !this.esRecogeEnTienda) {
       const envioActual = this.pedidoGral.envio;
+      const normalizar = (valor: any) => String(valor ?? '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/\s+/g, ' ').trim().toLowerCase();
+      const direccionEnvio = normalizar(envioActual.direccionEntrega);
       const direccionExisteEnCliente = this.originalDataEntregas?.some(
-        (d) => d.direccionEntrega === envioActual.direccionEntrega
+        (d) => normalizar(d?.direccionEntrega) === direccionEnvio
       );
       if (!direccionExisteEnCliente && this.originalDataEntregas?.length > 0) {
         Swal.fire({
