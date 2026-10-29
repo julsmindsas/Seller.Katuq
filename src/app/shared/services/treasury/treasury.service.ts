@@ -74,6 +74,11 @@ export class TreasuryService extends BaseService {
     return this.post<ReviewPaymentResponse>(`${this.base}/payments/${paymentId}/review`, { action, motivo });
   }
 
+  /** POST /payments/:id/annul — ticket 1361: deshace un pago Aprobado (motivo obligatorio). */
+  annulPayment(paymentId: string, motivo: string): Observable<{ success: boolean; estadoPago: string; valorRestante: number }> {
+    return this.post<{ success: boolean; estadoPago: string; valorRestante: number }>(`${this.base}/payments/${paymentId}/annul`, { motivo });
+  }
+
   /** POST /payments/direct — pago del tesorero desde cero, aprobado directo. */
   directPayment(payload: SubmitPaymentPayload): Observable<SubmitPaymentResponse> {
     return this.post<SubmitPaymentResponse>(`${this.base}/payments/direct`, payload);

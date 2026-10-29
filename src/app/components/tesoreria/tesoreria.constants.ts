@@ -81,6 +81,7 @@ export const PAYMENT_STATE_META: { [estado: string]: PaymentStateMeta } = {
   PreAprobado:  { label: 'Pre-aprobado',  icon: 'pi-eye',          badgeClass: 'tk-badge-preaprobado',  descripcion: 'Pago parcial verificado, con saldo pendiente' },
   Aprobado:     { label: 'Aprobado',      icon: 'pi-check-circle', badgeClass: 'tk-badge-aprobado',     descripcion: 'Pago total verificado' },
   Rechazado:    { label: 'Rechazado',     icon: 'pi-times-circle', badgeClass: 'tk-badge-rechazado',    descripcion: 'Comprobante rechazado' },
+  Anulado:      { label: 'Anulado',       icon: 'pi-undo',         badgeClass: 'tk-badge-cancelado',    descripcion: 'Pago aprobado que Tesorería deshizo (ticket 1361)' },
   Precancelado: { label: 'Pre-cancelado', icon: 'pi-ban',          badgeClass: 'tk-badge-cancelado',    descripcion: 'Pedido pre-cancelado' },
   Cancelado:    { label: 'Cancelado',     icon: 'pi-ban',          badgeClass: 'tk-badge-cancelado',    descripcion: 'Pedido cancelado' },
 };
@@ -105,4 +106,5 @@ export const HISTORIAL_STATUS_OPTIONS: { label: string; value: string }[] = [
   { label: 'Pendiente', value: 'Pendiente' },
   { label: 'Aprobado', value: 'Aprobado' },
   { label: 'Rechazado', value: 'Rechazado' },
+  { label: 'Anulado', value: 'Anulado' },
 ];

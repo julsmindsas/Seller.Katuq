@@ -41,6 +41,7 @@
         <th style="min-width: 170px">{{ 'tesoreria.historialPagos.subidoPor' | translate }}</th>
         <th style="min-width: 170px">{{ 'tesoreria.historialPagos.revisadoPor' | translate }}</th>
         <th style="min-width: 200px">{{ 'tesoreria.historialPagos.notas' | translate }}</th>
+        <th style="min-width: 110px"></th>
       </tr>
     </ng-template>
 
@@ -75,12 +76,22 @@
         <td class="tk-cell-user">{{ item?.revisadoPor || '—' }}</td>
         <!-- Ticket 1140: nota escrita al asentar el pago -->
         <td class="tk-cell-notas" [title]="item?.notas || ''">{{ item?.notas || '—' }}</td>
+        <!-- Ticket 1361: deshacer un pago aprobado por error -->
+        <td>
+          <button *ngIf="sePuedeAnular(item)" type="button" class="btn btn-outline-danger btn-sm"
+                  [disabled]="anulando === item?.id" (click)="anular(item)">
+            <i class="pi" [ngClass]="anulando === item?.id ? 'pi-spin pi-spinner' : 'pi-undo'"></i> Anular
+          </button>
+          <small *ngIf="item?.estadoVerificacion === 'Anulado'" class="text-muted d-block" [title]="item?.motivoAnulacion || ''">
+            {{ item?.motivoAnulacion }}
+          </small>
+        </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="9">
+        <td colspan="10">
           <div class="tk-empty"><i class="pi pi-list"></i> {{ 'tesoreria.historialPagos.noHayPagosEnEl' | translate }}</div>
         </td>
       </tr>
