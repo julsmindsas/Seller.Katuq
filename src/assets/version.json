@@ -1,12 +1,20 @@
 {
-  "version": "2026.10.28.4 - 28 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-28T20:36:42.343Z",
+  "version": "2026.10.29.1 - 29 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-29T14:24:41.064Z",
   "notas": [
     {
       "tipo": "MEJORA",
-      "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida."
+      "texto": "Opttia aplica el tono compartido de tu comercio a los colaboradores autorizados y te ayuda a responder quejas sin ofrecer abonos o gestiones que no se han aprobado."
+    },
+    {
+      "tipo": "MEJORA",
+      "texto": "En Cartera, el número de factura de cada pedido abre su PDF, igual que en el detalle del pedido."
+    },
+    {
+      "tipo": "MEJORA",
+      "texto": "Al abrir un pedido ves los archivos adjuntos a sus notas, como la orden de compra que manda el comercial, y los abres con un clic."
     }
   ],
-  "commit": "016a4f40ad0a6ce4ba8799aeb6c7520089c06293",
+  "commit": "439891f7d4e2c4a12a8e25b8b56f40549b7ed01b",
   "cambiosSinCommit": 0
 }
