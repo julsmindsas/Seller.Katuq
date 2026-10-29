@@ -12508,3 +12508,11 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Verificado:** en Chrome (localhost contra producción, sin escrituras), el borrador «ProblemaS CON LA DIRECCION» carga cliente, carrito, envío y facturación. No se tocó «Pago».
 - **Sin desplegar** (front y backend).
 - **Aparte (no se tocó):** las otras 2 fichas de ese NIT están casi vacías y parecen repetidas.
+
+### 2026-10-29 — D-576: pedido de WooCommerce sin impuesto aparte → el IVA del catálogo va DENTRO del precio
+- **Problema (prueba real de la entrada oficial, D-569):** pedido Woo #20 de la tienda de prueba → FLORECER CER-000014. El cliente pagó $30.000 y Woo no cobró impuesto (`total_tax` 0), pero la línea guardaba `precioUnitarioSinIva` = `precioUnitarioConIva` = 30.000 con el `precioUnitarioIva` "19" del catálogo. La pantalla del pedido recalculaba IVA 19 % encima: $5.700 de IVA, total $35.700 y «Falta por pagar $5.700» falso.
+- **Decisión (aprobada por ella, opción A):** si una línea llega con impuesto 0 y el producto en Katuq tiene tarifa > 0, el precio pagado YA incluye el IVA: sin IVA = precio / (1 + tarifa), IVA = la diferencia. El total no cambia y la tarifa se conserva para facturar. Si la tienda sí cobró impuesto aparte, se usa el de Woo (sin cambios). Se decide pedido por pedido: no depende de saber cómo está configurada la tienda.
+- **Qué cambió:** `services/woocommerce/mappers/order.js` (`calculateTaxFromLineItem` con la tarifa del catálogo, `porcentajeIvaCatalogo`, y `totalImpuesto`/`subtotal` del pedido = suma del IVA de las líneas cuando Woo manda 0). Aplica a la entrada oficial y al flow de pedidos (mismo mapper).
+- **Censo:** CAFÉ ESCOBAR, 94 pedidos Woo, Woo nunca mandó impuesto; solo 1 tiene producto con IVA (BAR-000085). No se corrigen pedidos viejos.
+- **Pruebas:** `woocommerceIvaDentroDelPrecio.test.js` (local, D-566) 5/5, 3 fallan sin el cambio; `woocommerceEntradaOficialPedidos` 20/20, `woocommercePedidoProductoFaltante` 3/3. Real: CER-000014 reprocesado con el código local → actualizado (no duplicado): total 30.000, IVA 4.789,92, sin IVA 25.210,08.
+- **Hallazgo de la prueba:** el evento de la cola lo procesó PRODUCCIÓN con el formato de D-569 → todo indica que el back de prod ya tiene D-569 desplegado (confirmar con quien despliega). D-576 está sin commitear ni desplegar.
