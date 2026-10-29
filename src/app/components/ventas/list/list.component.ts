@@ -11235,6 +11235,41 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return item?.cartItemId ?? item?._cartUuid ?? item?.producto?.identificacion?.referencia ?? index;
   }
 
+  /**
+   * Ticket 1432 (ALMACEN BOMBAS): los archivos que el comercial adjunta a las notas
+   * del pedido, para abrirlos desde el detalle sin entrar a «Notas».
+   */
+  adjuntosDelPedido(pedido: any): { url: string; nombre: string; esImagen: boolean; nota: string }[] {
+    const grupos: [string, string][] = [
+      ['notasProduccion', 'Producción'],
+      ['notasCliente', 'Cliente'],
+      ['notasDespachos', 'Despachos'],
+      ['notasEntregas', 'Entregas'],
+      ['notasFacturacionPagos', 'Facturación'],
+    ];
+    const adjuntos = [];
+    grupos.forEach(([campo, etiqueta]) => {
+      const notas = pedido?.notasPedido?.[campo];
+      (Array.isArray(notas) ? notas : []).forEach((nota) => {
+        (Array.isArray(nota?.archivos) ? nota.archivos : []).forEach((archivo) => {
+          if (!archivo?.url) return;
+          const texto = [etiqueta, nota.nota || nota.descripcion, nota.producto].filter(Boolean).join(' · ');
+          adjuntos.push({
+            url: archivo.url,
+            nombre: archivo.nombre || 'Archivo adjunto',
+            esImagen: archivo.tipo === 'imagen',
+            nota: texto,
+          });
+        });
+      });
+    });
+    return adjuntos;
+  }
+
+  trackByUrl(index: number, item: { url?: string }): string | number {
+    return item?.url ?? index;
+  }
+
   trackByPref(index: number, item: any): string | number {
     return item?.titulo ?? index;
   }

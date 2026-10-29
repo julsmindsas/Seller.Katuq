@@ -224,8 +224,16 @@
                      (click)="$event.stopPropagation()">{{ p.nroPedido }} <i class="pi pi-external-link"></i></a>
                   <ng-template #sinNroPedido>—</ng-template>
                 </td>
-                <!-- Ticket 1384: factura electrónica y fecha de compra -->
-                <td>{{ p.factura || '—' }}</td>
+                <!-- Ticket 1384: factura electrónica y fecha de compra. Ticket 1430: el número abre su PDF -->
+                <td>
+                  <a *ngIf="p.factura && p.facturaUrl; else facturaSinPdf"
+                     class="cx-link-pedido"
+                     [href]="p.facturaUrl"
+                     target="_blank"
+                     rel="noopener"
+                     (click)="$event.stopPropagation()">{{ p.factura }} <i class="pi pi-file-pdf"></i></a>
+                  <ng-template #facturaSinPdf>{{ p.factura || '—' }}</ng-template>
+                </td>
                 <td class="text-center">
                   <span class="cx-badge" [ngClass]="metaPago(p.estadoPago).badgeClass">{{ metaPago(p.estadoPago).label }}</span>
                 </td>

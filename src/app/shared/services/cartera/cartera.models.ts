@@ -22,6 +22,8 @@ export interface CarteraPedido {
   nroPedido: string;
   /** Ticket 1384: número de la factura electrónica del pedido ('' si no tiene). */
   factura?: string;
+  /** Ticket 1430: PDF de esa factura ('' si no tiene); el mismo que abre el detalle del pedido. */
+  facturaUrl?: string;
   /** Ticket 1384: fecha de compra = creación del pedido (ISO) o null. */
   fechaCompra?: string | null;
   estadoPago: string;

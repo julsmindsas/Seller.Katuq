@@ -569,6 +569,25 @@
                                                             </div>
                                                         </div>
 
+                                                        <!-- Ticket 1432: archivos adjuntos a las notas del pedido -->
+                                                        <ng-container *ngIf="adjuntosDelPedido(pedidoDetalle) as adjuntos">
+                                                            <ng-container *ngIf="adjuntos.length">
+                                                                <div class="pedido-detail__sectionlabel">{{ 'ADJUNTOS' | translate }} · {{ adjuntos.length }}</div>
+                                                                <div class="pedido-detail__productos">
+                                                                    <a *ngFor="let adj of adjuntos; trackBy: trackByUrl" class="pedido-adj"
+                                                                       [href]="adj.url" target="_blank" rel="noopener" [title]="'Abrir ' + adj.nombre">
+                                                                        <img *ngIf="adj.esImagen" class="pedido-adj__img" [src]="adj.url" [alt]="adj.nombre" loading="lazy" />
+                                                                        <i *ngIf="!adj.esImagen" class="pedido-adj__ico fa fa-file-o" aria-hidden="true"></i>
+                                                                        <div class="pedido-adj__info">
+                                                                            <div class="pedido-adj__name">{{ adj.nombre }}</div>
+                                                                            <div class="pedido-adj__nota">{{ adj.nota }}</div>
+                                                                        </div>
+                                                                        <i class="pedido-adj__abrir pi pi-external-link" aria-hidden="true"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </ng-container>
+                                                        </ng-container>
+
                                                         <!-- acciones rápidas -->
                                                         <div class="pedido-detail__sectionlabel">{{ 'ACCIONES' | translate }}</div>
                                                         <!-- D-547 (F2): con la bandera orderPinnedActions, el bloque de 8 (4 del rol y 4 del usuario) -->
