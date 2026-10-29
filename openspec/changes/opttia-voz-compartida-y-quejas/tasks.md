@@ -1,6 +1,6 @@
 # Tareas — D-569
 
-Estado: **Git y despliegue completados; comprobación del botón pendiente**, 29-oct-2026. Spec/diseño/tareas/diff aprobados; Daniel autorizó expresamente subir y desplegar backend/Opttia. Código publicado en `62796de7` y `257e62b`, salud y rechazo sin sesión verificados. T-14 conserva pendiente solo la prueba desde el botón con sesión legítima; no se marca como comprobada con los ensayos sintéticos. Evidencia en `publicacion.md`. Sin cambios de roles/perfiles reales.
+Estado: **T-01 a T-14 completadas; publicado y comprobado desde ALMARA**, 29-oct-2026. Spec/diseño/tareas/diff aprobados; Daniel autorizó expresamente subir y desplegar backend/Opttia. Código publicado en `62796de7` y `257e62b`, salud y rechazo sin sesión verificados. T-14 se cierra con dos mensajes ficticios desde el botón en una sesión legítima de ALMARA: saludo y queja con tono compatible, sin culpas, compensaciones o gestiones inventadas. Esa prueba se distingue de los ensayos sintéticos y no cubre todos los roles/planes productivos. Evidencia en `publicacion.md`. Sin cambios de roles/perfiles reales.
 
 Ejecución secuencial, sin delegación. Rutas backend relativas a `katuq_admin_back_firebase/`, rutas ADK a `kai/`; artefactos de esta propuesta y nota de versión en Seller. Cada tarea de código debe compilar y pasar sus checks antes de avanzar. Pruebas nuevas sintéticas locales, ignoradas y fuera de Git (D-566); nunca `git add -f`.
 
@@ -92,8 +92,8 @@ Ejecución secuencial, sin delegación. Rutas backend relativas a `katuq_admin_b
   - **Éxito:** describir tono compartido, límites de fidelidad y permisos conservados; registrar pruebas, cobertura y limitaciones reales. Ninguna prueba nueva o dato privado en archivos a subir; no incluir cambios ajenos o conflictos previos del contrato. Lista explícita de commits/archivos y secuencia backend→ADK/reversión lista para revisión. No commit/push/deploy incidental.
   - **Archivos:** artefactos D-569, su sección de `specs/CONTRACT.md` y `notas-version.json`. **Dependencias:** T-12.
 
-- [ ] T-14 — Publicar y verificar operativamente solo después de la autorización correspondiente.
-  - **Estado 29-oct:** autorización recibida; commits/push/despliegue/salud completados. Pendiente únicamente consulta autenticada desde el botón: última pestaña observada en login, sin sesión legítima acreditada.
+- [x] T-14 — Publicar y verificar operativamente solo después de la autorización correspondiente.
+  - **Estado 29-oct:** autorización recibida; commits/push/despliegue/salud completados. Sesión legítima ALMARA acreditada y dos respuestas reales desde el botón revisadas: saludo cercano/profesional y queja prudente. Evidencia y límites en `publicacion.md`; sin cambios de roles/perfiles/documentos ni creación de tickets.
   - **Entrada:** entrega T-13 revisada y autorización explícita de Git/despliegue; sesión legítima de comercio para la comprobación final cuando esté disponible.
   - **Salida:** backend compatible primero y ADK después, versiones/commits realmente servidos y prueba desde el botón con datos no sensibles.
   - **Éxito:** punta y árboles verificados, salud y compatibilidad correctas; no copiar archivos sucios completos. Confirmar tono y quejas por el carril publicado, distinguirlo de las pruebas locales. Sin activar flags, editar roles/perfiles, reindexar, crear tickets o mandar avisos por efecto lateral. Ante fallo, reversión acotada según diseño, comunicando pérdida de voz común o degradación neutral.

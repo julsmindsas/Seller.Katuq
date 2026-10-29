@@ -1,6 +1,6 @@
 # Evidencia de implementación local — D-569
 
-Ensayos del 28-oct-2026. T-01 a T-13 completas tras aprobarse tareas/diff. El 29-oct Daniel autorizó Git/despliegue; backend/Opttia publicados según `publicacion.md`. Este documento conserva las pruebas de implementación previas, que no equivalen a la consulta autenticada del botón aún pendiente.
+Ensayos del 28-oct-2026. T-01 a T-13 completas tras aprobarse tareas/diff. El 29-oct Daniel autorizó Git/despliegue; backend/Opttia publicados según `publicacion.md`. Este documento conserva las pruebas de implementación previas. La comprobación operacional posterior, con dos mensajes ficticios desde una sesión legítima de ALMARA, está separada en `publicacion.md`; T-14 completada.
 
 ## T-01: base y aislamiento
 
@@ -74,6 +74,6 @@ Capturas fuera de Git en el directorio de visualizaciones de esta conversación:
 
 Entrega aislada en `delivery.md`, parches backend/ADK y manifiesto de hashes. `git apply --check` de ambos parches contra checkouts productivos, sin aplicarlos; el formato de alta de archivos nuevos del parche se corrigió al detectarlo en ese check. La versión ADK local conserva otros candidatos y **no se publica completa**. Parche ADK basado en `4a61ae4`; backend en `2dbcf48b`.
 
-## Pendiente y límites actuales
+## Publicación y límites actuales
 
-Git/publicación de T-14 autorizados y realizados el 29-oct: commits `62796de7` backend y `257e62b` ADK, con salud y rechazo anónimo verificados. Pendiente únicamente probar el botón con sesión legítima. Sin integrar ranking anterior, perfiles/roles/documentos, tickets o avisos escritos. La publicación usa los archivos aislados, no el endpoint local que conserva trabajo previo. Ver `publicacion.md`.
+Git/publicación de T-14 autorizados y realizados el 29-oct: commits `62796de7` backend y `257e62b` ADK, con salud y rechazo anónimo verificados. Comprobación del botón completada en ALMARA con saludo y queja ficticia: tono compatible y sin culpa/compensación/gestión inventada. No es un ensayo en producción de todos los roles/planes ni una inspección de trazas MCP privadas. Sin integrar ranking anterior, perfiles/roles/documentos, tickets o avisos escritos. La publicación usa los archivos aislados, no el endpoint local que conserva trabajo previo. Ver `publicacion.md`.

@@ -1,6 +1,6 @@
-# Entrega local lista para publicar — D-569
+# Entrega publicada y comprobada — D-569
 
-Preparada el 28-oct-2026 (America/Bogota). Daniel autorizó Git/despliegue el **29-oct**: backend `62796de7` y ADK `257e62b` subidos y publicados; salud y rechazo anónimo verificados en `publicacion.md`. Solo queda pendiente la comprobación del botón con sesión legítima. Los apartados siguientes conservan la preparación de la entrega.
+Preparada el 28-oct-2026 (America/Bogota). Daniel autorizó Git/despliegue el **29-oct**: backend `62796de7` y ADK `257e62b` subidos y publicados; salud y rechazo anónimo verificados en `publicacion.md`. La comprobación autenticada desde el botón se completó con un saludo y una queja ficticia en ALMARA, con los límites documentados en ese archivo. Los apartados siguientes conservan la preparación de la entrega.
 
 ## Archivos y bases
 
@@ -30,6 +30,6 @@ No hay credenciales del modelo disponibles en la copia local. Para no exportarla
 
 ## Plan de publicación ejecutado el 29-oct
 
-Se integraron los cambios aislados desde la punta actual, verificaron hashes y compilaron; backend primero y ADK después. Salud verificada; consulta del botón pendiente de sesión legítima. La nota de versión se integra con la publicación Seller que corresponda. Sin flag nuevo, migración o edición de roles/perfiles/documentos. Los checks del 28-oct en `/tmp` no fueron un despliegue; la actualización por Git y reinicios del 29-oct sí están acreditados en `publicacion.md`.
+Se integraron los cambios aislados desde la punta actual, verificaron hashes y compilaron; backend primero y ADK después. Salud y consulta del botón verificadas: dos respuestas reales desde una sesión legítima de ALMARA, sin presentar los ensayos sintéticos previos como esa evidencia. Otra sesión incluyó la nota en el artefacto Seller `2026.10.29.1` (`cd09ab77`); su aviso de actualización se observó en el navegador. Esta sesión no publicó Hosting. Sin flag nuevo, migración o edición de roles/perfiles/documentos. Los checks del 28-oct en `/tmp` no fueron un despliegue; la actualización por Git y reinicios del 29-oct sí están acreditados en `publicacion.md`.
 
 Git se preparó en grupos separados backend, ADK y documentación/nota, con archivos explícitos y sin pruebas nuevas, usando sello D-569. Commits de código en `publicacion.md`. La reversión sigue el diseño: ADK nuevo con backend anterior degrada a neutral; volver ADK anterior termina la garantía de tono común. No borrar datos o retroceder contadores.

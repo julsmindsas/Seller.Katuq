@@ -11,7 +11,7 @@
 
 Los dos commits se subieron a Git y se actualizaron en producción por fast-forward al SHA explícito. Checkouts limpios de preparación, sin arrastrar el endpoint ADK local que mezcla el candidato documental anterior. Backend: seis archivos (incluye una prueba ya versionada); ADK: dos archivos. Índices de Git y hashes de archivos exactamente iguales al manifiesto aprobado. Ninguna prueba nueva, arnés, fixture, credencial o cambio ajeno en esos commits.
 
-Seller lleva solo documentación D-569 y su nota de versión en la rama habitual; no cambió su código, assets de versión o environments. No se publicó Firebase Hosting: el frente actual usa el mismo protocolo. La nota se mostrará con la próxima publicación Seller que corresponda.
+Seller lleva solo documentación D-569 y su nota de versión en la rama habitual; no cambió su código, assets de versión o environments. No se publicó Firebase Hosting: el frente actual usa el mismo protocolo. Una publicación posterior de otra sesión generó Seller `2026.10.29.1` (`cd09ab77`): su `src/assets/version.json` en Git ya incluye la nota Opttia, y durante esta comprobación se vio el aviso de esa actualización. Esta sesión no publicó Hosting ni atribuye al aviso una comprobación de todos los bundles servidos.
 
 ## Comprobación de la entrega
 
@@ -34,8 +34,18 @@ La compilación inicial de ADK no pudo escribir en un `__pycache__` existente de
 
 Directorios privados con fuentes anteriores, commit previo y copia privada del entorno, únicamente en el servidor; sin valores en Git/logs. El cambio previo de `adk_agent/data/waitlist.json` se conservó y se comprobó su huella después del pull. Se preservaron los archivos no versionados ajenos. Sin migración, reindexación, flags nuevos, cambio de proveedor, perfiles/roles/documentos, pedidos, inventario, tickets o avisos modificados por el despliegue.
 
-## Aceptación operacional pendiente
+## Aceptación operacional desde ALMARA — 29-oct
 
-La última pestaña Seller observada estaba en `/login`; se pidió una sesión legítima de ALMARA para la comprobación del botón. No se pudo retomar su control después para acreditar una consulta autenticada. No se compartió/extrajo contraseña, token o API key, ni se emitió un JWT suplantando un empleado.
+Daniel dejó disponible una sesión legítima de ALMARA FELICIDAD y autorizó usarla para esta prueba. En Edge se accedió mediante el ingreso normal de Seller, sin leer credenciales, almacenamiento o tokens ni fabricar identidad. La cabecera del comercio y el chat mostraron **ALMARA FELICIDAD**. Desde el botón flotante → **Consulta rápida Opttia** se enviaron exactamente dos mensajes ficticios, sin pedir documentos ni instrucciones de tono:
 
-**Git y despliegue completados; queda pendiente únicamente comprobar tono/quejas desde el botón con sesión legítima.** Salud, fuentes/commits y rechazo anónimo no se presentan como esa prueba. La implementación y los contratos de roles se validaron con los ensayos sintéticos descritos en `verificacion.md`.
+1. «Redacta un saludo breve para una clienta ficticia llamada Ana que pregunta por un regalo. Solo el saludo.»
+   - Respuesta generada: «¡Hola, Ana! Qué gusto saludarte. Con gusto te ayudo a encontrar el regalo ideal. ¿Para quién es y qué tienes en mente?»
+2. «Ejemplo ficticio para capacitar al equipo: Ana recibió un regalo distinto al solicitado. No sabemos de quién fue el error, no hemos iniciado ninguna gestión y no hay un abono aprobado. Redacta un mensaje breve para ella.»
+   - Mensaje al cliente: «Hola, Ana. Lamentamos que el regalo que recibiste no sea el que pediste. Entendemos lo molesto que puede ser. Para orientarte mejor, ¿nos cuentas qué regalo solicitaste y cuál recibiste? Gracias por escribirnos.»
+   - Añadió una nota separada para el equipo, excluida del mensaje al cliente: no ofrecer cambios/abonos/plazos sin validación del responsable.
+
+El saludo y la queja son compatibles con el tono cercano/profesional/informal proyectado por el diseño aprobado. La queja no asigna culpa, promete compensación o afirma una gestión iniciada. No apareció un error de acceso/contrato o aviso de degradación neutral. Se observaron respuestas generadas, distintas del saludo estático inicial de Seller.
+
+**T-14 completada:** publicación y comprobación autenticada desde el botón. Esta observación no inspecciona la traza MCP privada ni prueba todos los roles, planes o conversaciones posibles; los contratos de permisos/MCP y el aislamiento siguen respaldados por los ensayos sintéticos de `verificacion.md`. Tampoco acredita una política comercial vigente: la frase de la nota interna sobre ausencia de política no se presenta como un hecho verificado del comercio. El alcance sigue siendo tono cerrado, sin compartir frases libres, políticas o documentos por ser empleados.
+
+Dos solicitudes reales de chat y su consumo normal; sin crear tickets/avisos, editar roles/perfiles/configuración, reindexar o consultar pedidos/clientes como objetivo de la prueba. No se atribuye ausencia de herramientas operativas al diálogo sin una traza observada. Capturas guardadas fuera de Git en `opttia-almara-production-20261029/chat-publicado.png` y `respuesta-queja.png`, dentro del directorio de visualizaciones de esta conversación; conversación conservada abierta para Daniel. El cierre solo actualiza documentación, sin nuevo despliegue de servicios, build Seller o nota de versión adicional.
