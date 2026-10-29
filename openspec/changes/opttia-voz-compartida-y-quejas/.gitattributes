@@ -1,0 +1,2 @@
+# Las líneas de contexto vacías de un diff unificado conservan su espacio marcador.
+*.patch whitespace=-blank-at-eol

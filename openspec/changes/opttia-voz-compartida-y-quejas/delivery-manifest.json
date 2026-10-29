@@ -1,0 +1,22 @@
+{
+  "backend": {
+    "base": "2dbcf48bb6d5c59651f42733aea20bd1c574fc97",
+    "patchSha256": "e6b8065ee48c73513473738dd1df4d1d938ab7d3336772cc310a832736b787ad",
+    "files": {
+      "functions/services/brandVoice.js": "79f5287b15e450cff0e71936b9facc39c2e3bc56dde51fcfcf7c15a621a710db",
+      "functions/services/brandKnowledge.js": "a19e7b2f80e3e7b2a8e2b13519aadcb62a3089b34555e77e208663db44dd93e7",
+      "functions/tools/getCompanyBrandVoice.js": "a8cc2944dea199f10bef19e5de15702f7ec2093e26d645706a53754ae3ba07d2",
+      "functions/routers/opttia.js": "fac9ab119901bbff8bd0f9beccf4e2768aeff58ab9ed8ec56e6e4db2c3e5aca7",
+      "functions/tools/toolRegistry.js": "8aa22f6c4fa9777579a76fe40ed4abe98b1a3720460499bb88b86f188354a7a4",
+      "functions/tests/opttia-access.test.js": "3c393a2ab89e399a5648c113ef4e929348992f49da6b56e1c1d55bea67902a36"
+    }
+  },
+  "adk": {
+    "base": "4a61ae4a441d1053b139532761d5bd57d6a87c38",
+    "patchSha256": "3866c0603520fae4c9974568af767b42fa5d0ac83e649883f94b3dd232fd1b2f",
+    "files": {
+      "adk_agent/services/katuq_brand_voice.py": "fdf9ca6006bafec6b964f0e343145301fbbdc58c781b01251fb5e2aba10f196a",
+      "adk_agent/endpoints/katuq_basic_chat_endpoint.py": "34167233d6fa821704f178fcecb6faea97cc951280781f3e81fd593e125b9291"
+    }
+  }
+}

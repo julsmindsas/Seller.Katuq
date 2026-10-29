@@ -1,0 +1,107 @@
+diff --git a/functions/routers/opttia.js b/functions/routers/opttia.js
+--- a/functions/routers/opttia.js
++++ b/functions/routers/opttia.js
+@@ -13,6 +13,7 @@
+ const mcpGrant = require('../services/opttiaMcpGrant')(require('../config').SECRET_TOKEN);
+ const burstLimit = require('../services/opttiaBurstLimit');
+ const supportMcp = require('../services/opttiaSupportMcp').createSupportMcp(require('../config').SECRET_TOKEN);
++const BRAND_VOICE_TOOL = 'get_company_brand_voice';
+ 
+ router.use(auth, requireJwtTenant);
+ 
+@@ -74,6 +75,9 @@
+     };
+     req.opttia.supportTicketCreation = await supportMcp.allowed(req, companies.docs[0].data());
+     if (req.opttia.supportTicketCreation) req.opttia.tools.push('create_support_ticket');
++    // La lectura de tono no vuelve elegible a un rol sin acceso previo al chat.
++    req.opttia.chatEligible = req.opttia.tools.length > 0;
++    if (req.opttia.chatEligible) req.opttia.tools.push(BRAND_VOICE_TOOL);
+     next();
+   } catch (_) {
+     res.status(503).json({ message: 'No se pudieron verificar tus permisos. Intenta nuevamente.' });
+@@ -85,7 +89,7 @@
+     if (consume && req.body.audio && !req.opttia.voiceAllowed) {
+       return res.status(403).json({ allowed: false, message: 'La voz no está incluida en tu plan.' });
+     }
+-    if (!req.opttia.tools.length) {
++    if (!req.opttia.chatEligible) {
+       return res.status(403).json({ allowed: false, message: 'Tu rol no tiene permisos para consultar Katuq con Opttia. Solicítalos al administrador.' });
+     }
+     if (consume) {
+@@ -145,11 +149,14 @@
+     return res.status(400).json({ message: 'Los argumentos deben ser un objeto.' });
+   }
+   const name = req.body.name;
+-  if (typeof name !== 'string' || !canUseTool(req.opttia.permissions, name)) {
++  const isBrandVoice = name === BRAND_VOICE_TOOL;
++  const permitted = isBrandVoice ? req.opttia.chatEligible === true && req.opttia.tools.includes(name)
++    : typeof name === 'string' && canUseTool(req.opttia.permissions, name);
++  if (!permitted) {
+     // Decir qué permiso falta, en palabras del negocio (ticket 1354).
+     return res.status(403).json({ allowed: false, message: deniedToolMessage(name) });
+   }
+-  if (TOOL_PERMISSIONS[name].action !== 'view') {
++  if (!isBrandVoice && TOOL_PERMISSIONS[name].action !== 'view') {
+     return res.status(403).json({ allowed: false, message: 'Opttia está en modo consulta. Realiza las modificaciones desde Katuq.' });
+   }
+   // Una herramienta con compuerta (bandera de la empresa + administrador) solo se llama si estaba en la lista de esta consulta.
+@@ -158,6 +165,9 @@
+   }
+   if (!mcpGrant.verify(req)) {
+     return res.status(403).json({ allowed: false, message: 'La consulta necesita un cupo reservado vigente. Envía un nuevo mensaje.' });
++  }
++  if (isBrandVoice && Object.keys(req.body.arguments || {}).length) {
++    return res.status(400).json({ allowed: false, message: 'La consulta de tono no admite parámetros.' });
+   }
+   if (req.body.arguments?.forceOverride) {
+     return res.status(403).json({ allowed: false, message: 'Los cambios forzados se realizan desde Katuq, no desde Opttia.' });
+@@ -206,6 +216,7 @@
+     if (!valid) return failure('Los parámetros de la herramienta no son válidos.');
+     try {
+       const result = await registry.executeTool(params.name, args, { mcpCompany: req.tenant,
++        ...(params.name === BRAND_VOICE_TOOL ? { mcpEmbeddedBasic: true } : {}),
+         mcpClientName: `opttia:${req.opttia.email}`, mcpPermissions: ['read'],
+         mcpUserEmail: req.opttia.email,
+         userEmail: req.opttia.email, userRole: req.opttia.role });
+diff --git a/functions/tools/toolRegistry.js b/functions/tools/toolRegistry.js
+--- a/functions/tools/toolRegistry.js
++++ b/functions/tools/toolRegistry.js
+@@ -250,6 +250,7 @@
+     // Registro de herramientas
+     this.tools = new Map();
+     this.registerTool(require('./getCompanyBrandProfile'));
++    this.registerTool(require('./getCompanyBrandVoice'));
+     this.registerTool(require('./searchCompanyBrandKnowledge'));
+ 
+     // Registrar herramientas de Ordenes
+@@ -522,7 +523,8 @@
+     // filtra por audiencia (compatibilidad), pero `executeTool` igual cierra:
+     // la lista es higiene del catalogo, la puerta es la ejecucion.
+     const soloComercio = company !== undefined && !hasFullAccess(company);
+-    const visible = (tool) => !(soloComercio && tool.audiencia === 'interno');
++    const visible = (tool) => tool.name !== 'get_company_brand_voice'
++      && !(soloComercio && tool.audiencia === 'interno');
+     if (permisos.includes('admin')) return this.getTools().filter(visible);
+     return this.getTools().filter((tool) =>
+       visible(tool) && (tool.requiredPermissions || []).some((p) => permisos.includes(p))
+diff --git a/functions/tests/opttia-access.test.js b/functions/tests/opttia-access.test.js
+--- a/functions/tests/opttia-access.test.js
++++ b/functions/tests/opttia-access.test.js
+@@ -107,7 +107,7 @@
+   assert.equal(canUseTool({ marca: ['view'] }, 'search_company_brand_knowledge'), true);
+   assert.equal(canUseTool({ ventas: ['view'] }, 'get_company_brand_profile'), false);
+ });
+-test('usuario solo soporte obtiene únicamente crear ticket y se revoca al retirar rol o bandera', async () => {
++test('usuario solo soporte obtiene crear ticket y tono, y se revoca al retirar rol o bandera', async () => {
+   const writePermission = require('../services/mcp/permisoDeEscritura');
+   const f = fixture({ permissions: {}, role: 'Soporte', featureFlags: { opttiaSupportTickets: true } });
+   let menus = ['misTickets'];
+@@ -118,7 +118,7 @@
+   try {
+     const access = await f.request('GET /access');
+     assert.equal(access.statusCode, 200); assert.equal(access.body.supportTicketCreation, true);
+-    assert.equal(JSON.stringify(access.body.tools), JSON.stringify(['create_support_ticket']));
++    assert.equal(JSON.stringify(access.body.tools), JSON.stringify(['create_support_ticket', 'get_company_brand_voice']));
+     const admission = await f.request('POST /admit');
+     assert.equal(admission.statusCode, 200); assert.ok(admission.body.mcpAdmission);
+     menus = [];
