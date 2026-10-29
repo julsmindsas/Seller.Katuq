@@ -10772,6 +10772,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Clonar profundamente el pedido seleccionado
       const cloned: Pedido = JSON.parse(JSON.stringify(order));
 
+      // Ticket 1445: con el original, el backend no toma la copia por un doble
+      // envío (pedido gemelo de los últimos 2 minutos) y sí la crea.
+      (cloned as any).duplicadoDe = (order as any)._id || (order as any).cd || "";
+
       // Limpiar identificadores y campos que no deben heredarse
       delete (cloned as any)._id;
       delete (cloned as any).transaccionId;
@@ -10874,9 +10878,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ventasService
             .createOrder({ order: cloned, emailHtml: html })
             .subscribe({
-              next: () => {
+              next: (res: any) => {
+                // Ticket 1445: el backend devuelve el pedido que ya existía cuando
+                // la copia llega dos veces; no es una copia nueva.
+                if (res?._duplicadoEvitado) {
+                  this.toastrService.warning(
+                    `No se creó otra copia: ${res.nroPedido || "ese pedido"} ya se había creado hace un momento.`,
+                    "Pedido ya creado",
+                  );
+                  this.refrescarDatos(true);
+                  return;
+                }
+                const nuevo = res?.order?.nroPedido || res?.nroPedido || "";
                 this.toastrService.success(
-                  "Pedido duplicado correctamente",
+                  nuevo ? `Pedido duplicado como ${nuevo}` : "Pedido duplicado correctamente",
                   "Éxito",
                 );
                 this.refrescarDatos(true); // Forzar refresco después de duplicar
@@ -10888,6 +10903,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 );
               },
             });
+          }).catch(() => {
+            // Ticket 1445: si armar el correo falla, antes no pasaba nada en pantalla.
+            this.toastrService.error(
+              "No se pudo preparar el pedido duplicado. Intente de nuevo.",
+              "Error",
+            );
           });
         },
         error: () => {
