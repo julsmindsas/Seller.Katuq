@@ -25,5 +25,6 @@
   { "fecha": "2026-10-28T20:10:00Z", "tipo": "MEJORA", "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida." },
   { "fecha": "2026-10-29T14:08:45Z", "tipo": "MEJORA", "texto": "Opttia aplica el tono compartido de tu comercio a los colaboradores autorizados y te ayuda a responder quejas sin ofrecer abonos o gestiones que no se han aprobado." },
   { "fecha": "2026-10-29T14:24:00Z", "tipo": "MEJORA", "texto": "En Cartera, el número de factura de cada pedido abre su PDF, igual que en el detalle del pedido." },
-  { "fecha": "2026-10-29T14:24:30Z", "tipo": "MEJORA", "texto": "Al abrir un pedido ves los archivos adjuntos a sus notas, como la orden de compra que manda el comercial, y los abres con un clic." }
+  { "fecha": "2026-10-29T14:24:30Z", "tipo": "MEJORA", "texto": "Al abrir un pedido ves los archivos adjuntos a sus notas, como la orden de compra que manda el comercial, y los abres con un clic." },
+  { "fecha": "2026-10-29T15:05:00Z", "tipo": "CORRIGE", "texto": "Si Tesorería aprueba el pago mientras tienes el pedido abierto, ya no se devuelve a su estado anterior cuando guardas: te pedimos recargar para ver el cambio." }
 ]

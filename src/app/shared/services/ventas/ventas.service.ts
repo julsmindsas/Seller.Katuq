@@ -317,13 +317,17 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/restore-product-inventory', { orderId, productoId, cantidad });
   }
 
-  editOrder(order: Pedido): Observable<any> {
+  editOrder(order: Pedido, opciones?: { exigirVersion?: boolean }): Observable<any> {
     // Capturar el estado anterior para comparar cambios
     const previousOrder = { ...order };
 
     // Lock optimista: enviar en `_baseVersion` la versión (date_upd) con la que se cargó el
     // pedido. Si en el servidor la BD ya avanzó, responde 409 (otra persona editó en medio).
-    const payload: any = { ...order, _baseVersion: (order as any).date_upd || null };
+    // Tickets 1431/1433: un pedido que se cargó sin versión (aún nadie lo editaba) iba sin
+    // lock y una pantalla vieja devolvía el pago que Tesorería ya aprobó. Con `exigirVersion`
+    // va «SIN_VERSION» (como Opttia): si alguien lo editó en medio, ya tiene date_upd y choca.
+    const base = (order as any).date_upd || (opciones?.exigirVersion ? 'SIN_VERSION' : null);
+    const payload: any = { ...order, _baseVersion: base };
     // "Facturando..." es solo de pantalla: guardado en el pedido lo dejaba sin botón de Facturar (ticket 1227).
     delete payload._facturando;
 

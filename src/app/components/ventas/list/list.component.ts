@@ -4043,7 +4043,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       debounceTime(400),
       // Ticket 1094: el error se atrapa en cada guardado. Antes el primero terminaba el
       // flujo y los guardados siguientes de la sesión ya no salían, sin ningún aviso.
-      switchMap(order => this.ventasService.editOrder(order).pipe(
+      switchMap(order => this.ventasService.editOrder(order, { exigirVersion: true }).pipe(
         catchError((e) => {
           Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
                       text: e?.isStaleWrite ? e.message : 'No se pudieron guardar los cambios. Intenta nuevamente.' });
@@ -6284,7 +6284,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isFromProduction) {
       const now = new Date().toISOString();
       order.ultimaImpresion = now;
-      this.ventasService.editOrder(order).subscribe({
+      this.ventasService.editOrder(order, { exigirVersion: true }).subscribe({
         next: () => {
           // Opcional: mostrar notificación de éxito
           this.toastrService.success(
@@ -7639,7 +7639,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // skip check: el usuario cambió el estado manualmente.
     this.prepararParaGuardar(orderToUpdate as Pedido, true);
     Swal.fire({ title: "Guardando…", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    this.ventasService.editOrder(orderToUpdate as Pedido).pipe(takeUntil(this.destroy$)).subscribe({
+    this.ventasService.editOrder(orderToUpdate as Pedido, { exigirVersion: true }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.refrescarDatos(true);
         const bloqueo = res?.details?.estadoPagoBloqueado;
@@ -8463,7 +8463,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.recalcularEnvioYTotalizarPedido(pedidoOriginal);
 
     // Actualizar el pedido en el backend
-    this.ventasService.editOrder(pedidoOriginal).subscribe({
+    this.ventasService.editOrder(pedidoOriginal, { exigirVersion: true }).subscribe({
       next: (response) => {
         this.guardandoDescuento = false;
         this.toastrService.success(
@@ -10667,7 +10667,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     order.revisadoParaProduccion = "Revisado";
 
     // Guardar cambios
-    this.ventasService.editOrder(order).subscribe({
+    this.ventasService.editOrder(order, { exigirVersion: true }).subscribe({
       next: () => {
         const mensaje =
           order.estadoProceso === EstadoProceso.EnProduccion
@@ -10705,7 +10705,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Mantener el estado de proceso actual - NO modificar estadoProceso
 
       // Guardar cambios
-      this.ventasService.editOrder(order).subscribe({
+      this.ventasService.editOrder(order, { exigirVersion: true }).subscribe({
         next: () => {
           this.toastrService.success(
             "Revisión removida correctamente",
