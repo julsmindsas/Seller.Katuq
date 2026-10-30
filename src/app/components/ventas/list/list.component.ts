@@ -1119,7 +1119,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .guardarPines(lista)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.guardandoPines = false; }))
       .subscribe({
-        error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
+        error: (e) => this.toastrService.error(motivoAccionesNoGuardadas(e), "Acciones del pedido"),
       });
   }
 
@@ -1141,8 +1141,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: (sale: string) =>
-        firstValueFrom(this.orderActions.guardarPines(reemplazarPin(actuales, sale, entra))).catch(() => {
-          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
+        firstValueFrom(this.orderActions.guardarPines(reemplazarPin(actuales, sale, entra))).catch((e) => {
+          Swal.showValidationMessage(motivoAccionesNoGuardadas(e));
           return null;
         }),
     }).then(() => { this.guardandoPines = false; });
@@ -11306,4 +11306,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   trackByBodega(index: number, item: any): string | number {
     return item?.idBodega ?? index;
   }
+}
+
+/**
+ * Ticket 1471: el motivo que da el servidor (p. ej. «Puedes fijar hasta 4…»), en vez del aviso genérico.
+ * Un fallo inesperado (o sin respuesta) sigue con «No pudimos guardar tus acciones».
+ */
+function motivoAccionesNoGuardadas(e: any): string {
+  const m = e?.error?.message;
+  const conocido = typeof m === "string" && m.length < 200 && e?.error?.code && e.error.code !== "ORDER_ACTIONS_ERROR";
+  return conocido ? m : "No pudimos guardar tus acciones. Intenta de nuevo.";
 }
