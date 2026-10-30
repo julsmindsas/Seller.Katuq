@@ -28,5 +28,6 @@
   { "fecha": "2026-10-29T14:24:30Z", "tipo": "MEJORA", "texto": "Al abrir un pedido ves los archivos adjuntos a sus notas, como la orden de compra que manda el comercial, y los abres con un clic." },
   { "fecha": "2026-10-29T15:05:00Z", "tipo": "CORRIGE", "texto": "Si Tesorería aprueba el pago mientras tienes el pedido abierto, ya no se devuelve a su estado anterior cuando guardas: te pedimos recargar para ver el cambio." },
   { "fecha": "2026-10-29T16:00:00Z", "tipo": "NUEVO", "texto": "En Tesorería → Historial puedes anular un pago aprobado que se aplicó por error: escribes el motivo, el pago queda anulado (no se borra) y el pedido se recalcula solo con los pagos que le quedan." },
-  { "fecha": "2026-10-30T13:44:00Z", "tipo": "CORRIGE", "texto": "Ya puedes fijar tus acciones del pedido aunque tu usuario esté creado dos veces en tu empresa, y si una acción no se puede guardar te decimos por qué." }
+  { "fecha": "2026-10-30T13:44:00Z", "tipo": "CORRIGE", "texto": "Ya puedes fijar tus acciones del pedido aunque tu usuario esté creado dos veces en tu empresa, y si una acción no se puede guardar te decimos por qué." },
+  { "fecha": "2026-10-30T16:20:00Z", "tipo": "NUEVO", "texto": "Cuando le asignas un pedido a un mensajero, le llega un aviso al celular para que pase a recogerlo." }
 ]
