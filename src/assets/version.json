@@ -1,12 +1,16 @@
 {
-  "version": "2026.10.29.2 - 29 de Octubre 2026 (Beta)",
-  "publicada": "2026-10-29T15:05:27.665Z",
+  "version": "2026.10.30.1 - 30 de Octubre 2026 (Beta)",
+  "publicada": "2026-10-30T13:44:30.879Z",
   "notas": [
     {
+      "tipo": "NUEVO",
+      "texto": "En Tesorería → Historial puedes anular un pago aprobado que se aplicó por error: escribes el motivo, el pago queda anulado (no se borra) y el pedido se recalcula solo con los pagos que le quedan."
+    },
+    {
       "tipo": "CORRIGE",
-      "texto": "Si Tesorería aprueba el pago mientras tienes el pedido abierto, ya no se devuelve a su estado anterior cuando guardas: te pedimos recargar para ver el cambio."
+      "texto": "Ya puedes fijar tus acciones del pedido aunque tu usuario esté creado dos veces en tu empresa, y si una acción no se puede guardar te decimos por qué."
     }
   ],
-  "commit": "a2f2345f5d64555a2f59ffba4f92030f1081cf21",
+  "commit": "38c89c71ae63044b3b0d945f1e976bc6c81dd2c5",
   "cambiosSinCommit": 0
 }
