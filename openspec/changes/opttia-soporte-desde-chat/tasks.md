@@ -149,24 +149,29 @@ Referencias: `proposal.md`, spec `opttia-support-ticket-creation`, `design.md`, 
   - Dependencias: 5.4 y autorización de publicación. Esta tarea no está autorizada por aprobar las tareas de implementación local.
   - Cierre 23-oct: autorización posterior explícita de Git y solo Opttia; lote ADK separado de cambios ajenos sobre revisión productiva, pruebas locales y 25/25 con runtime productivo antes de reiniciar. Respaldo privado/reversión en `publicacion.md`; Katuq queda para otra sesión y no se hereda activación/ticket real.
 
-- [ ] 6.2 Publicar los componentes con la función todavía apagada.
+- [x] 6.2 Publicar los componentes con la función todavía apagada.
   - Entrada: 6.1 autorizado y versiones concretas identificadas.
   - Salida: backend Katuq → ADK → Seller, siguiendo sus manuales y gates de salud entre componentes; sin activación de comercios.
   - Éxito: backend/ADK/Hosting sanos, hashes/versiones coinciden y `/mcp` sigue cerrado sin sesión. ADK se gestiona por systemd, no por el PM2 legacy. Compatibilidad con clientes sin soporte nuevo comprobada; ante falla, aplicar la reversión acordada sin borrar datos.
   - Dependencias: 6.1. Coordinar previamente si otra sesión cambia runtime o despliega los mismos servicios.
   - Parcial 23-oct: Opttia `4a61ae4` publicado y verificado (salud200, hashes y rechazo sin sesión); Katuq backend/Seller solo en Git por instrucción expresa de Daniel. Tarea conjunta abierta hasta que su otra sesión publique ambos. Primer intento revertido por timeout y segundo sano, según `publicacion.md`.
+  - Cierre 27-oct: otra sesión publicó Katuq; frontend vivo `2026.10.27.7`/commit `b215fcdc`, descendiente de `81d675c4`, con tarjeta, evento de propuesta y metadata de confirmación presentes en el bundle público. Backend vivo `1c9ddaed`, descendiente de `aea0ab2d`, proceso correcto online y fuentes de soporte sin drift; Opttia conserva `4a61ae4` y sus tres hashes. Salud ADK200 y MCP sin sesión401. Bandera aún ausente al iniciar esta comprobación; después se activó solo FLORECER por autorización nueva.
 
-- [ ] 6.3 Autorizar y ejecutar la activación piloto por comercio.
+- [x] 6.3 Autorizar y ejecutar la activación piloto por comercio.
   - Entrada: 6.2 sano y autorización del comercio piloto; FLORECER primero según canon, sin extender a todos automáticamente.
   - Salida: simulación del script de flags existente, comprobación de empresa exacta y aplicación autorizada de `opttiaSupportTickets`.
   - Éxito: solo la bandera prevista cambia; usuario autorizado de soporte obtiene la capacidad sin herramientas comerciales nuevas. Apagarla bloquea nuevas propuestas y confirmaciones; no se alteran roles, planes u otras banderas. Registrar dueño y revisión/retiro 2027-01-31.
   - Dependencias: 6.2 y autorización explícita de activación; `--dry-run` antes de escribir configuración.
+  - Avance 27-oct: Daniel autorizó revisar publicación y continuar activación/prueba desde chat. Simulación y ejecución del script canónico sobre FLORECER `1RVP9U8fGdHQ0p6Omj5S`: solo `opttiaSupportTickets` pasó de ausente a `true`, con relectura correcta y resto del mapa conservado. Consulta posterior de todas las empresas habilitadas devuelve únicamente FLORECER. Sin roles/planes/permisos modificados. Falta comprobar `/access` desde una sesión legítima del piloto: Edge muestra Julsmind y rechazo de identidad; no se simula un JWT ni se cambia el tenant en storage. Por ese criterio pendiente no se marca todavía la tarea completa.
+  - Cierre posterior 27-oct: Daniel indicó «probemos con ALMARA SIN PROBLEMA», excepción expresa y acotada al piloto FLORECER primero. Se respetó la activación inicial de FLORECER sin inventar una prueba suya; ALMARA se habilitó después de simulación y resolución inequívoca `ct9emhY6ZE1u9Y6IJCPb`. Sesión legítima de ALMARA iniciada por el usuario, chat con comercio correcto, acceso vigente y opción de soporte visibles. Solo FLORECER y ALMARA quedan habilitados; demás banderas/roles/planes intactos. Se marca completa la activación/autorización, no las validaciones operativas aún no ejecutadas de6.4.
 
 - [ ] 6.4 Ejecutar prueba operacional autorizada y cerrar publicación.
   - Entrada: 6.3, sesión legítima del piloto y permiso explícito para abrir un ticket controlado que genera los avisos normales.
   - Salida: evidencia del chat real: preparar sin alta, cancelar sin alta, confirmar una vez y verificar número/ticket/tablero; reintento sin duplicado y rechazo al retirar acceso/bandera en un entorno autorizado.
   - Éxito: propósito y datos de prueba acordados, sin mensajes sorpresa al equipo ni datos sensibles en evidencia. Verificar el guardado real; no asumir entrega de correo/Slack. Restaurar configuración de prueba autorizada y dejar las limitaciones/remanentes documentados. No borrar/cerrar un ticket de prueba ni tocar un rol real sin autorización específica.
   - Dependencias: 6.3 y autorización de la prueba con efectos reales. Si no se autoriza, informar este gate pendiente, sin declararlo completado.
+  - Estado 27-oct: prueba solicitada por Daniel, prevista con reporte inequívoco de QA y avisos normales; requiere iniciar sesión de FLORECER. No se envió mensaje al modelo, preparó propuesta ni creó ticket/aviso real. Se pidió esa sesión sin solicitar contraseña. Evidencia y límites en `publicacion.md`.
+  - Prueba básica real posterior 27-oct, ALMARA autorizada: propuesta/cancelación y lectura0 tickets; segunda propuesta y un clic Crear ticket → #1424 guardado por MCP con intención integrada; repetir el mismo reporte por nueva consulta → #1424 existente, un único documento y siete marcas habituales de notificación sin aumento. Navegación real a `/misTickets` y QA1424 visibles. No equivale a reenviar la misma confirmación ni simular respuesta perdida; esos casos y revocación continúan solo acreditados por contratos offline. No se tocó un rol/flag para ejecutar el rechazo en vivo; tarea permanece parcial por esos criterios. Detalle de presentación detectado: texto del duplicado muestra id técnico/menciona herramienta, tarjeta correcta; sin modificar producto en esta sesión.
 
 ## Criterio de salida
 

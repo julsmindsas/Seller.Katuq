@@ -1,0 +1,86 @@
+{
+  "verifiedAtUTC": "2026-10-23T20:24:17Z",
+  "scheduledLocal": "2026-10-23T23:00:00-05:00",
+  "server": "13.222.206.185",
+  "operationDirectory": "/opt/katuq-node/operations/20261023-2300-cot",
+  "timers": {
+    "katuq-node22-20261023.timer": {
+      "enabled": true,
+      "active": true,
+      "nextRunUTC": "Sat 2026-10-24 04:00:00 UTC",
+      "serviceNotStarted": true
+    },
+    "katuq-node22-20261023-watchdog.timer": {
+      "enabled": true,
+      "active": true,
+      "nextRunUTC": "Sat 2026-10-24 04:00:03 UTC",
+      "serviceNotStarted": true
+    }
+  },
+  "state": "prepared",
+  "productionCutoverPerformed": false,
+  "productionInventoryUnchanged": true,
+  "nativeOriginalUnchanged": true,
+  "backupsVerified": 33,
+  "testedCopyFiles": 103369,
+  "sealedFiles": 153855,
+  "credentials": {
+    "root": {
+      "uid": 0,
+      "gid": 0,
+      "supplementaryGids": [
+        0
+      ]
+    },
+    "ubuntu": {
+      "uid": 1000,
+      "gid": 1000,
+      "supplementaryGids": [
+        4,
+        24,
+        27,
+        30,
+        105,
+        1000
+      ]
+    }
+  },
+  "executorRehearsal": {
+    "status": "PASS",
+    "results": [
+      {
+        "case": "success",
+        "phase": "completed",
+        "exit": 0,
+        "driftRejected": true,
+        "recovery": "not_needed",
+        "duplicateRejected": true
+      },
+      {
+        "case": "startup-failure",
+        "phase": "reverted",
+        "exit": 1,
+        "driftRejected": true,
+        "recovery": "PASS",
+        "duplicateRejected": true
+      },
+      {
+        "case": "watchdog",
+        "phase": "reverted",
+        "exit": -9,
+        "driftRejected": true,
+        "recovery": "PASS",
+        "duplicateRejected": true
+      }
+    ],
+    "executorSha256": "49fd2058438c4da0c36b43e336acd9b5dda4964928d4b6b64db220f84179dbc7",
+    "harnessSha256": "fdeb4b43fdf06e255ac27748620980f21ff3755206c2cf899778e843a131bca2"
+  },
+  "unitHashes": {
+    "katuq-node22-20261023-watchdog.service": "4836aa950eec04dca47c8463bff578fa7d1d1a89a3b6db308c4c8bc988730e8f",
+    "katuq-node22-20261023-watchdog.timer": "82ebe9ff1989e556876c9224c12cd728f9b9629330bc58ef165cfe11bfb7a701",
+    "katuq-node22-20261023.service": "82e693e6b705cda3f029edcf7efa3f39aebed71c51ad6c0e8a64cb454c185a23",
+    "katuq-node22-20261023.timer": "11345c1dbe80d64c20c9f791d5cef1474a8ac29e3f38b8e48b77a6ec28e907ab"
+  }
+}
+

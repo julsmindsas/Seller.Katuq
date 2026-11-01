@@ -38,3 +38,46 @@ Integrar el commit backend `aea0ab2d` (ya en su rama), revisar solo sus archivos
 Verificación Git: se prepara una entrada selectiva del contrato, sin las demás secciones concurrentes. El primer intento de preparar esa entrada agotó el buffer de lectura del documento; no se staged ese archivo y se cerró en el commit documental posterior. El patch histórico aprobado contiene líneas de contexto vacías con un espacio, propias del formato unified diff: se conserva byte a byte (no es whitespace del código productivo); los checks de código y documentos restantes no se exceptúan.
 
 La publicación de Opttia usa su rama explícita; futuros despliegues desde `feat/claude-agent-sdk` deben integrar D-545 o podrían retirar esta capacidad. No adelantar el trabajo de marca o cotizaciones como parte de esa integración. Reversión de Opttia: revisión respaldada y restart de `kai-adk`, conservando datos, entorno y waitlist; sin reset --hard ni rollback de contadores/tickets.
+
+## 27-oct-2026 — Primera comprobación: Katuq publicado y FLORECER activado
+
+Daniel pidió: «revisa si ya quedó desplegado katuq y sigue con la activación del piloto para probar que opttia cree tickets desde el chat». Autoriza este piloto y una prueba identificada como QA por el recorrido normal; se avisó que generará las notificaciones habituales. No autoriza extender la función a otros comercios, alterar roles, fabricar sesiones, borrar/cerrar tickets o corregir una identidad ajena.
+
+Comprobación actual, sin reinicios/despliegues:
+
+- Seller público `2026.10.27.7`, publicada `2026-10-27T16:53:56.010Z`, fuente `b215fcdcb055c31d272056adbf4404832c0e532f`, metadato de árbol limpio. Su fuente contiene `81d675c4`. Bundle público `main.8278310f52f1888a.js`, SHA256 `1955202cf3d876066b12a28b3d6339a77234fe539664d634c2c4c14e28653f76`, contiene `katuq:SUPPORT_PROPOSAL`, `katuqSupportConfirmation` y `app-opttia-support-ticket`.
+- Backend productivo `1c9ddaedb55f5124e596380a48c37315b1e5235a`, rama `backend-aws-security`, contiene `aea0ab2d`; `katuq-api` online como ubuntu, PID2632433, entrypoint/directorio correctos. Siete archivos de la integración sin modificaciones remotas contra HEAD. Router/puente/firma/admisión/herramienta conservan los hashes previos; el servicio común amplió el prefijo de intención para D-549 sin retirar los controles D-545. Regresiones locales existentes:57/57 verdes con persistencia/modelos falsos, sin pruebas nuevas en Git (D-566).
+- Opttia continúa en `4a61ae4a441d1053b139532761d5bd57d6a87c38`, rama aislada; tres hashes sin cambios, systemd activo, PID1676954 y NRestarts0. Health público200; MCP integrado sin sesión401. Esta comprobación no consumió cuota ni llamó a un modelo.
+
+Activación: `node scripts/set-company-feature.js FLORECER opttiaSupportTickets on --dry-run` resolvió inequívocamente `1RVP9U8fGdHQ0p6Omj5S`, antes ausente. Después se ejecutó el mismo comando con `--execute`; relectura `true` y demás banderas conservadas. Consulta posterior de empresas con ese booleano devuelve **solo FLORECER**, activo y no suspendido. Dueño Daniel y revisión/retiro2027-01-31 siguen en el contrato/catálogo. No se escribieron roles, plan, permisos, secretos o configuración de otros comercios. Reversión acotada si se solicita o el piloto presenta una falla: apagar únicamente esa bandera con el mismo script (simulación primero), preservando tickets y contador.
+
+Prueba de navegador pendiente: la pestaña Edge inicialmente figuraba en login; después apareció una sesión de Daniel de **Julsmind**, no FLORECER. En una pestaña propia separada se abrió el chat sin enviar mensajes: muestra Julsmind y «No se pudo validar el usuario en esta empresa». No se usa esa sesión para otro tenant ni se intenta fabricar/editar JWT o storage. Se pidió al usuario dejar iniciada una sesión legítima de FLORECER, sin compartir contraseña. Captura acotada al chat, sin cifras del tablero: `/Users/danielga/.codex/visualizations/2026/09/03/01a06913-e34d-7df3-abba-b0b27c2aca1f/opttia-support-pilot-20261027/sesion-otro-comercio.png`.
+
+Todavía **cero consultas al modelo, propuestas, tickets o avisos reales de esta comprobación**. La activación de configuración está hecha; falta acceso autenticado del piloto y recorrido preparar→cancelar sin alta→preparar→Crear ticket→número guardado/reintento. No marcar6.3/6.4 completas ni certificar operación a partir de salud, bundle o mocks. Se conservan cambios ajenos de CONTRACT (incluidos conflictos ya presentes); sin commit/push nuevo, cambios de producto, build o despliegue en esta sesión. La nota de versión D-567 se incorpora al subir un cambio visible; aquí solo se ejecutó el piloto ya publicado, sin nueva versión.
+
+## 27-oct-2026 — ALMARA autorizada y creación real del ticket #1424
+
+**Cambio autorizado por Daniel:** «probemos con ALMARA SIN PROBLEMA». Excepción acotada a probar en ALMARA sin esperar una sesión de FLORECER, no autorización general para habilitar todos los comercios. Se anunció el reporte de QA y sus avisos normales. El usuario inició una sesión legítima de ALMARA en Edge; se reutilizó en una pestaña propia, sin exportar tokens, pedir contraseña, cambiar tenant en storage, fabricar JWT o modificar permisos.
+
+Activación ALMARA: el script canónico con `--dry-run` resolvió `ALMARA FELICIDAD/ct9emhY6ZE1u9Y6IJCPb`, con bandera ausente. El mismo script con `--execute` guardó y releyó solo `opttiaSupportTickets:true`; resto de banderas conservadas. En el chat real: ALMARA visible, plan con mensajes ilimitados, acceso validado, sugerencia Reportar un problema de Katuq y leyenda de tickets con confirmación. Consulta final global de esta bandera: **ALMARA FELICIDAD y FLORECER**, nadie más. No se alteró el plan para obtener cupo ni se habilitó otra herramienta comercial.
+
+Reporte controlado: asunto exacto **QA-OPTTIA-20261027 - Prueba de soporte desde el chat**. Descripción de prueba técnica autorizada, declarando que no es un incidente real ni afecta pedidos/pagos/inventario; sin adjuntos ni datos de clientes. Tres mensajes reales al chat básico y un solo clic de creación, sin usar el formulario habitual para simular el resultado del chat.
+
+| Paso | Evidencia real |
+|---|---|
+| Antes del mensaje | Consulta exacta empresa+asunto:0 documentos |
+| Primera preparación por Opttia | Tarjeta con empresa/autor correctos, datos revisables, caducidad y Crear ticket/Cancelar; todavía0 documentos |
+| Cancelar | Propuesta descartada; consulta exacta posterior0 documentos |
+| Segunda preparación y clic Crear ticket | Tarjeta «Ticket #1424 creado», estado Pendiente; confirmación por el MCP existente |
+| Lectura independiente | Un documento en `support`, empresa ALMARA FELICIDAD, `canal:mcp`, intención integrada presente, fecha `2026-10-27T17:27:07.809Z`, número1424 |
+| Repetir reporte mediante nueva consulta | Tarjeta estructurada «Ticket #1424 existente», sin botón de otra creación; consulta exacta sigue en1 documento |
+| Avisos habituales | Siete marcas de alta en `support_notificaciones`, mismo conteo antes/después de repetir; no certifica entrega SMTP/Slack |
+| Ver mis tickets | Navegación real a `/misTickets`, fila y detalle con #1424/asunto QA visibles |
+
+DocId opaco de trazabilidad: `opttia_b150e54b5a3bcef28fd64cff0c6ede27d1815276823e82e9b1a7348bd989f27a`. Las lecturas de comprobación estuvieron limitadas a empresa+asunto exactos y al prefijo de avisos de ese ticket; sin exponer destinatarios, autorizaciones privadas o contenido de otros tickets. No se borró/cerró ni asignó el reporte; continúa Pendiente como evidencia. No se retrocedió el contador ni se invocaron avisos adicionales desde esta verificación.
+
+**Límites:** repetir una consulta y recibir el duplicado reciente no prueba el replay de la misma intención, una respuesta perdida, revocación productiva o concurrencia real. Esos controles conservan57/57 pruebas offline, pero no se certifican como ejecutados en producción. No se tocaron roles ni se interrumpió temporalmente soporte del comercio para ampliar la prueba.6.3 completa para los dos pilotos autorizados;6.4 básica real aprobada y sus escenarios adicionales pendientes. No se extiende disponibilidad a todos los comercios.
+
+**Hallazgos de UX, sin cambiar código:** la respuesta textual al duplicado mostró el docId técnico y «La herramienta devolvió…», aunque la tarjeta se mantuvo correcta con número/estado/enlace. Debe pulirse la comunicación, sin confundir ese id con una credencial. Además, la primera captura tras éxito quedó sobre una parte anterior del mensaje por el scroll; se desplazó el chat para mostrar el resultado. Captura final útil: `/Users/danielga/.codex/visualizations/2026/09/03/01a06913-e34d-7df3-abba-b0b27c2aca1f/opttia-support-pilot-20261027/almara-ticket-1424-existente.png`, solo chat, comercio y ticket de QA; sin correo/credenciales ni datos del tablero.
+
+No hubo build, cambios productivos de código, reinicios, despliegue, commit o push en esta prueba. Documentación local y estados actualizados; cambios concurrentes de CONTRACT conservados. Los arneses/pruebas nuevas siguen fuera de Git según D-566. Las banderas de ambos pilotos quedan encendidas conforme a las autorizaciones; apagar solo la que se requiera con el script canónico y simulación previa conserva el ticket y su número.

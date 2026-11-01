@@ -1,0 +1,503 @@
+{
+  "runId": "20261023T162255Z-d542",
+  "exportedAt": "2026-10-23T16:55:12.537798+00:00",
+  "productionCutoverPerformed": false,
+  "runtimeTarget": "22.23.4",
+  "compatibility": [
+    {
+      "version": "v20.20.0",
+      "results": [
+        {
+          "name": "isolation",
+          "status": "PASS"
+        },
+        {
+          "name": "native-re2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-sharp",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-express",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-axios",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-firebase-admin",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-ws",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-jwt-simple",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/express",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/firebase",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/googleai",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-genkit",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-genkitx-aws-bedrock",
+          "status": "PASS"
+        },
+        {
+          "name": "crypto-jwt",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-api",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-watcher",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-genkit",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-pm2",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-scripts/test-inventory-safety-contract.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/inventory/transactionalAbsoluteStock.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/inventory/orderInventoryEffectPolicy.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/flows/resolverIdentidadProveedor.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/flows/webhooksVivosRegresion.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/messaging/webhook.contract.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/messaging/tenantWhatsapp.contract.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-typescript-build",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "version": "v22.23.4",
+      "results": [
+        {
+          "name": "isolation",
+          "status": "PASS"
+        },
+        {
+          "name": "native-re2",
+          "status": "PASS"
+        },
+        {
+          "name": "native-sharp",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-express",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-axios",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-firebase-admin",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-ws",
+          "status": "PASS"
+        },
+        {
+          "name": "api-import-jwt-simple",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/express",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/firebase",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-@genkit-ai/googleai",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-genkit",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-import-genkitx-aws-bedrock",
+          "status": "PASS"
+        },
+        {
+          "name": "crypto-jwt",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-api",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-watcher",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-genkit",
+          "status": "PASS"
+        },
+        {
+          "name": "syntax-pm2",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-scripts/test-inventory-safety-contract.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/inventory/transactionalAbsoluteStock.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/inventory/orderInventoryEffectPolicy.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/flows/resolverIdentidadProveedor.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/flows/webhooksVivosRegresion.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/messaging/webhook.contract.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "contract-tests/messaging/tenantWhatsapp.contract.test.js",
+          "status": "PASS"
+        },
+        {
+          "name": "genkit-typescript-build",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "startup": [
+    {
+      "name": "api",
+      "versionMajor": "20",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 1,
+      "exit": 0,
+      "signal": null,
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 0,
+        "reads": 4,
+        "writesInMemory": 3,
+        "firebaseMocked": true
+      }
+    },
+    {
+      "name": "genkit",
+      "versionMajor": "20",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 0,
+      "exit": 0,
+      "signal": null,
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 0,
+        "reads": 0,
+        "writesInMemory": 0,
+        "firebaseMocked": true
+      }
+    },
+    {
+      "name": "watcher",
+      "versionMajor": "20",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 0,
+      "exit": null,
+      "signal": "SIGINT",
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 1,
+        "reads": 0,
+        "writesInMemory": 0,
+        "firebaseMocked": true
+      }
+    },
+    {
+      "name": "api",
+      "versionMajor": "22",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 1,
+      "exit": 0,
+      "signal": null,
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 0,
+        "reads": 4,
+        "writesInMemory": 2,
+        "firebaseMocked": true
+      }
+    },
+    {
+      "name": "genkit",
+      "versionMajor": "22",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 0,
+      "exit": 0,
+      "signal": null,
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 0,
+        "reads": 0,
+        "writesInMemory": 0,
+        "firebaseMocked": true
+      }
+    },
+    {
+      "name": "watcher",
+      "versionMajor": "22",
+      "status": "PASS",
+      "reachable": true,
+      "readyCount": 0,
+      "exit": null,
+      "signal": "SIGINT",
+      "forcedKill": false,
+      "diagnostics": {
+        "missingModules": [],
+        "errorTypes": []
+      },
+      "mockedTransport": {
+        "subscriptions": 1,
+        "reads": 0,
+        "writesInMemory": 0,
+        "firebaseMocked": true
+      }
+    }
+  ],
+  "rollbackRehearsal": {
+    "startedAt": "2026-10-23T16:49:29.005Z",
+    "status": "PASS",
+    "groups": {
+      "root": {
+        "migrationSeconds": 8.626,
+        "migration": "PASS",
+        "rollbackSeconds": 7.693,
+        "rollback": "PASS",
+        "nativeRestored": false
+      },
+      "ubuntu": {
+        "migrationSeconds": 9.439,
+        "migration": "PASS",
+        "rollbackSeconds": 5.387,
+        "rollback": "PASS",
+        "nativeRestored": true
+      }
+    },
+    "failureInjection": {
+      "detected": true,
+      "cliExit": 0,
+      "reportedStatus": "online",
+      "pid": 0,
+      "applicationExit": 73,
+      "httpReachable": false,
+      "independentStateCheck": "PASS"
+    },
+    "cleanup": {
+      "root": {
+        "daemonRemaining": false
+      },
+      "ubuntu": {
+        "daemonRemaining": false
+      }
+    },
+    "exactModuleVariantsTested": [
+      "root",
+      "ubuntu"
+    ]
+  },
+  "finalProductionAudit": {
+    "backupVerifiedFiles": 33,
+    "backupValid": true,
+    "groups": {
+      "root": {
+        "daemonPid": 1424,
+        "daemonRuntime": "v20.19.4",
+        "unchanged": true,
+        "processes": [
+          {
+            "name": "index",
+            "pid": 2767158,
+            "runtime": "20.20.0",
+            "unchanged": true
+          },
+          {
+            "name": "pm2-logrotate",
+            "pid": 513512,
+            "runtime": "20.20.0",
+            "unchanged": true
+          },
+          {
+            "name": "shopify-watcher",
+            "pid": 531233,
+            "runtime": "20.20.0",
+            "unchanged": true
+          }
+        ]
+      },
+      "ubuntu": {
+        "daemonPid": 838628,
+        "daemonRuntime": "v20.20.0",
+        "unchanged": true,
+        "processes": [
+          {
+            "name": "katuq-api",
+            "pid": 1619944,
+            "runtime": "20.20.0",
+            "unchanged": true
+          },
+          {
+            "name": "pm2-logrotate",
+            "pid": 3477709,
+            "runtime": "20.20.0",
+            "unchanged": true
+          }
+        ]
+      }
+    },
+    "sources": {
+      "api": {
+        "commit": "04060ac9bd78fecc031f70488bdddb018da0bff5",
+        "sameCommit": true,
+        "trackedFilesMatched": true
+      },
+      "genkit": {
+        "commit": "944c5e2c490d49170001284a5a1cdfe8812c743c",
+        "sameCommit": true,
+        "trackedFilesMatched": true
+      }
+    },
+    "http": {
+      "api": "404",
+      "auth": "401",
+      "adk": "200"
+    },
+    "node20Unchanged": true,
+    "nativeUnchanged": true,
+    "moduleConfigUnchanged": true,
+    "dropinsUnchanged": true,
+    "wrapperUnchanged": true,
+    "services": [
+      "active",
+      "active"
+    ]
+  },
+  "candidateManifests": [
+    {
+      "owner": "root",
+      "allowlistVerified": true,
+      "apps": [
+        {
+          "name": "index",
+          "changedFields": [
+            "/PATH",
+            "/env/PATH",
+            "/exec_interpreter"
+          ]
+        },
+        {
+          "name": "shopify-watcher",
+          "changedFields": [
+            "/PATH",
+            "/env/PATH",
+            "/exec_interpreter"
+          ]
+        }
+      ]
+    },
+    {
+      "owner": "ubuntu",
+      "allowlistVerified": true,
+      "apps": [
+        {
+          "name": "katuq-api",
+          "changedFields": [
+            "/PATH",
+            "/env/PATH",
+            "/exec_interpreter"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Estado: alcance/spec, diseño/contratos y tareas aprobados por Daniel el 23-oct-2026. Gate concreto del servicio compartido aprobado después mediante «si aprobado, aplica el diff y sigue con el MCP y el chat». Implementación verificada en `verificacion.md`; autorización posterior de Git y solo despliegue Opttia ejecutada según `publicacion.md`. Katuq lo despliega otra sesión. No se autoriza activación ni un ticket/aviso real.
 
+Actualización operacional27-oct: Katuq ya publicado por otra sesión; Daniel autorizó activar el piloto y luego probar en ALMARA expresamente. Activación FLORECER/ALMARA y ticket real de QA1424 acreditados en `publicacion.md`. No cambia este diseño ni autoriza rollout general; escenarios operativos adicionales y ajuste de comunicación pendientes en tareas.
+
 ## 1. Decisión y recorrido
 
 Reutilizar `create_support_ticket` y `services/soporte/crearTicket.js`. El agente solo organiza el reporte y solicita una propuesta por MCP. La confirmación la envía Angular directamente al MCP integrado existente (`POST /v1/opttia/mcp`), sin modelo, reanudación ADK ni segundo consumo del mensaje. No hay endpoint nuevo de alta o confirmación ni se usa el alta pública como respaldo.
