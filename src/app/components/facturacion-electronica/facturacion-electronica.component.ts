@@ -67,6 +67,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   activeTab: DashboardTab = 'documents';
   composerOpened = false;
   @ViewChild('composerPanel', { static: true }) composerPanel: ElementRef<HTMLElement>;
+  @ViewChild('tabsNav', { static: true }) tabsNav: ElementRef<HTMLElement>;
   @ViewChild(InvoiceComposerComponent) composer?: InvoiceComposerComponent;
   documents: DianDocument[] = [];
   technicalHistory: any[] = [];
@@ -258,8 +259,27 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return this.documents.filter((document) => document.status === 'accepted').length;
   }
 
+  /** Ticket 1476: rechazados que aún piden acción; los ya reemplazados o rehechos no cuentan. */
   get rejectedCount(): number {
-    return this.documents.filter((document) => this.statusGroup(document) === 'rejected').length;
+    return this.documents.filter((document) => this.necesitaRevision(document)).length;
+  }
+
+  necesitaRevision(document: DianDocument): boolean {
+    return this.statusGroup(document) === 'rejected' && !document.reemplazadaPor && !this.notaRechazadaYaRehecha(document);
+  }
+
+  /** Ticket 1477: pedidos sin factura que quedan fuera del período de las cifras. */
+  get pendientesFueraDelPeriodo(): number {
+    if (!this.feDesde || !this.feHasta) return 0;
+    return this.pendingOrders.filter((order) => {
+      const fecha = this.orderDate(order);
+      const dia = fecha ? fecha.toISOString().slice(0, 10) : '';
+      return !dia || dia < this.feDesde || dia > this.feHasta;
+    }).length;
+  }
+
+  get valorPorFacturar(): number {
+    return this.pendingOrders.reduce((suma, order) => suma + this.orderTotal(order), 0);
   }
 
   get pendingCount(): number {
@@ -275,7 +295,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     const desde = this.fechaDesde ? new Date(this.fechaDesde + 'T00:00:00') : null;
     const hasta = this.fechaHasta ? new Date(this.fechaHasta + 'T23:59:59') : null;
     return this.documents.filter((document) => {
-      const matchesStatus = this.statusFilter === 'all' || this.statusGroup(document) === this.statusFilter;
+      const matchesStatus = this.statusFilter === 'all'
+        || (this.statusFilter === 'rejected' ? this.necesitaRevision(document) : this.statusGroup(document) === this.statusFilter);
       const matchesType = this.typeFilter === 'all'
         || (this.typeFilter === 'notes' ? document.type !== 'invoice' : document.type === this.typeFilter);
       const fecha = this.documentDate(document);
@@ -520,7 +541,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.cargarIndicadores();
   }
 
-  selectTab(tab: DashboardTab): void {
+  /** `desplazar`: llamado desde arriba de la página (aviso, ayuda, tarjetas), lleva la vista a las pestañas (ticket 1484). */
+  selectTab(tab: DashboardTab, desplazar = false): void {
     this.activeTab = tab;
     this.openMenu = '';
     if (tab === 'compose') {
@@ -531,6 +553,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       const panel = this.composerPanel.nativeElement;
       panel.focus({ preventScroll: true });
       panel.scrollIntoView({ behavior: 'auto', block: 'start' });
+    } else if (desplazar) {
+      this.changeDetector.detectChanges();
+      this.tabsNav.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -538,7 +563,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.statusFilter = status;
     this.typeFilter = type;
     this.search = '';
-    this.selectTab('documents');
+    this.selectTab('documents', true);
   }
 
   doNextTask(): void {
@@ -551,7 +576,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       this.showDocuments('rejected');
       return;
     }
-    if (this.pendingOrders.length > 0) this.selectTab('invoice');
+    if (this.pendingOrders.length > 0) this.selectTab('invoice', true);
     else this.showDocuments('all');
   }
 
@@ -988,6 +1013,12 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     if (document.status === 'accepted') return 'accepted';
     if (document.status === 'rejected' || document.status === 'failed') return 'rejected';
     return 'pending';
+  }
+
+  /** Ticket 1476: un rechazo ya reemplazado o rehecho se rotula aparte. */
+  etiquetaEstado(document: DianDocument): string {
+    if (this.statusGroup(document) === 'rejected' && !this.necesitaRevision(document)) return 'Reemplazada';
+    return this.statusLabel(document.status);
   }
 
   statusLabel(status: DianStatus): string {

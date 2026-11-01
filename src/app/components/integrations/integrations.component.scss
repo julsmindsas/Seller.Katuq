@@ -109,7 +109,9 @@
     &[readonly] { background: #f1f2f5; color: var(--kc-ink2); } &.ng-invalid.ng-touched { border-color: #e0483f !important; }
   }
   .dk-municipality { position: relative; }
-  .dk-searchfield { position: relative; > i { position: absolute; top: 50%; left: 12px; z-index: 1; color: #9aa0b2; font-size: 13px; transform: translateY(-50%); } .form-control { padding-left: 34px; } }
+  .dk-searchfield { position: relative; > i { position: absolute; top: 50%; left: 12px; z-index: 1; color: #9aa0b2; font-size: 13px; transform: translateY(-50%); } .form-control { padding-left: 34px; }
+    // Ticket 1500: la regla general de form[formGroup] pisaba el espacio del ícono con !important.
+    > input.form-control:not(.input-group .form-control) { padding-left: 34px !important; } }
   .dk-results {
     position: absolute; top: calc(100% - 4px); right: 0; left: 0; z-index: 20; overflow: hidden; border: 1px solid var(--kc-line); border-radius: 13px; background: var(--ds-surface); box-shadow: 0 12px 32px rgba(30, 35, 60, .16);
     button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; border: 0; border-bottom: 1px solid #f7f8fc; background: var(--ds-surface); text-align: left; font-family: inherit; cursor: pointer; &:last-child { border-bottom: 0; } &:hover { background: #f7f5fe; }

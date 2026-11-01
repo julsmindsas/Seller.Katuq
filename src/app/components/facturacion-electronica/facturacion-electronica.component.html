@@ -17,7 +17,7 @@
       <button type="button" class="fe-iconbtn fe-iconbtn--accent" [title]="'facturacionElectronica.invoiceDrafts.actualizar' | translate" [attr.aria-label]="'facturacionElectronica.invoiceDrafts.actualizar' | translate" (click)="loadDashboard()" [disabled]="loading">
         <i class="pi pi-refresh" [class.pi-spin]="loading"></i>
       </button>
-      <button type="button" class="fe-iconbtn" [title]="'facturacionElectronica.facturacionElectronica.comoSeUsa' | translate" [attr.aria-label]="'facturacionElectronica.facturacionElectronica.comoSeUsa' | translate" (click)="selectTab('guide')">
+      <button type="button" class="fe-iconbtn" [title]="'facturacionElectronica.facturacionElectronica.comoSeUsa' | translate" [attr.aria-label]="'facturacionElectronica.facturacionElectronica.comoSeUsa' | translate" (click)="selectTab('guide', true)">
         <i class="pi pi-question-circle"></i>
       </button>
       <button type="button" class="fe-btn fe-btn--ghost" (click)="goToConfiguration()">
@@ -102,13 +102,16 @@
         <span class="fe-cifra__nombre">{{ 'facturacionElectronica.facturacionElectronica.neto' | translate }}</span><strong>{{ money(i.neto) }}</strong>
         <small><em [class]="claseVariacionFe('neto')">{{ variacionFe('neto') }}</em></small>
       </div>
-      <button type="button" class="fe-cifra fe-cifra--boton" (click)="selectTab('invoice')" [title]="'facturacionElectronica.facturacionElectronica.pedidosDelPeriodoConProductos' | translate">
+      <!-- Ticket 1477: el período cuenta sus pedidos; los de otras fechas se dicen aparte (la tarjeta POR FACTURAR los suma todos). -->
+      <button type="button" class="fe-cifra fe-cifra--boton" (click)="selectTab('invoice', true)" [title]="'facturacionElectronica.facturacionElectronica.pedidosDelPeriodoConProductos' | translate">
         <span class="fe-cifra__nombre">{{ 'facturacionElectronica.facturacionElectronica.pendientePorFacturar' | translate }}</span><strong>{{ money(i.pendientePorFacturar?.valor) }}</strong>
-        <small>{{ i.pendientePorFacturar?.pedidos || 0 }} {{ 'facturacionElectronica.facturacionElectronica.pedidos' | translate }}</small>
+        <small>{{ i.pendientePorFacturar?.pedidos || 0 }} {{ 'facturacionElectronica.facturacionElectronica.pedidos' | translate }} {{ 'facturacionElectronica.facturacionElectronica.enElPeriodo' | translate }}<ng-container *ngIf="pendientesFueraDelPeriodo"> · {{ 'facturacionElectronica.facturacionElectronica.masDeOtrasFechas' | translate:{cantidad: pendientesFueraDelPeriodo} }}</ng-container></small>
       </button>
+      <!-- Ticket 1476: la tasa es del período; lo que falta revisar (de cualquier fecha) es el mismo número del aviso y del filtro. -->
       <div class="fe-cifra" [title]="'facturacionElectronica.facturacionElectronica.facturasRechazadasFacturasEnviadasEn' | translate">
         <span class="fe-cifra__nombre">{{ 'facturacionElectronica.facturacionElectronica.tasaDeRechazo' | translate }}</span><strong>{{ i.tasaRechazo }}%</strong>
-        <small>{{ i.rechazadas }} {{ (i.rechazadas === 1 ? 'facturacionElectronica.facturacionElectronica.rechazada' : 'facturacionElectronica.facturacionElectronica.rechazadaPlural') | translate }} <em [class]="claseVariacionFe('tasaRechazo', true)">{{ variacionFe('tasaRechazo') }}</em></small>
+        <small>{{ i.rechazadas }} {{ (i.rechazadas === 1 ? 'facturacionElectronica.facturacionElectronica.rechazada' : 'facturacionElectronica.facturacionElectronica.rechazadaPlural') | translate }} {{ 'facturacionElectronica.facturacionElectronica.enElPeriodo' | translate }} <em [class]="claseVariacionFe('tasaRechazo', true)">{{ variacionFe('tasaRechazo') }}</em></small>
+        <button type="button" class="fe-cifra__enlace" *ngIf="rejectedCount" (click)="showDocuments('rejected')">{{ 'facturacionElectronica.facturacionElectronica.porRevisar' | translate:{cantidad: rejectedCount} }} <i class="pi pi-arrow-right"></i></button>
       </div>
       <div class="fe-cifra" [title]="'facturacionElectronica.facturacionElectronica.diasPromedioEntreElPedido' | translate">
         <span class="fe-cifra__nombre">{{ 'facturacionElectronica.facturacionElectronica.delPedidoALaFactura' | translate }}</span><strong>{{ i.diasPedidoAFactura === null ? '—' : ('facturacionElectronica.facturacionElectronica.diasCantidad' | translate:{cantidad: i.diasPedidoAFactura}) }}</strong>
@@ -139,8 +142,8 @@
       <div><span class="fe-kpi__label">{{ 'facturacionElectronica.facturacionElectronica.aceptados' | translate }}</span><strong>{{ acceptedCount }}</strong><small>{{ 'facturacionElectronica.facturacionElectronica.facturasYNotasValidas' | translate }}</small></div>
       <span class="fe-kpi__icon"><i class="pi pi-check"></i></span>
     </button>
-    <button type="button" class="fe-kpi fe-kpi--orange" (click)="selectTab('invoice')">
-      <div><span class="fe-kpi__label">{{ 'facturacionElectronica.invoiceOrderPicker.porFacturar' | translate }}</span><strong>{{ pendingOrders.length }}</strong><small>{{ 'facturacionElectronica.facturacionElectronica.pedidosRecientesSinFactura' | translate }}</small></div>
+    <button type="button" class="fe-kpi fe-kpi--orange" (click)="selectTab('invoice', true)">
+      <div><span class="fe-kpi__label">{{ 'facturacionElectronica.invoiceOrderPicker.porFacturar' | translate }}</span><strong>{{ pendingOrders.length }}</strong><small>{{ money(valorPorFacturar) }} · {{ 'facturacionElectronica.facturacionElectronica.sinFacturaDeCualquierFecha' | translate }}</small></div>
       <span class="fe-kpi__icon"><i class="pi pi-send"></i></span>
     </button>
     <button type="button" class="fe-kpi fe-kpi--slate" (click)="showDocuments('all', 'notes')">
@@ -150,7 +153,7 @@
   </div>
 
   <!-- ===== Pestañas ===== -->
-  <nav class="fe-tabs" [attr.aria-label]="'facturacionElectronica.facturacionElectronica.opcionesDeFacturacion' | translate">
+  <nav #tabsNav class="fe-tabs" [attr.aria-label]="'facturacionElectronica.facturacionElectronica.opcionesDeFacturacion' | translate">
     <button type="button" [class.is-active]="activeTab === 'documents'" (click)="selectTab('documents')">
       <i class="pi pi-file"></i> {{ 'facturacionElectronica.facturacionElectronica.facturasYNotas' | translate }} <span class="fe-tabs__count">{{ documents.length }}</span>
     </button>
@@ -303,7 +306,7 @@
                 <small class="fe-saldo" *ngIf="document.saldo?.notas" [title]="'facturacionElectronica.facturacionElectronica.valorDeLaFacturaMenos' | translate">{{ 'facturacionElectronica.facturacionElectronica.saldo' | translate:{saldo: (money(document.saldo?.saldo))} }}</small>
               </td>
               <td class="text-center">
-                <span class="fe-pill fe-pill--{{ statusGroup(document) }}"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ statusLabel(document.status) }}</span>
+                <span class="fe-pill fe-pill--{{ statusGroup(document) }}" [class.fe-pill--reemplazada]="statusGroup(document) === 'rejected' && !necesitaRevision(document)"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ etiquetaEstado(document) }}</span>
               </td>
               <td>
                 <div class="fe-rowactions" data-menu-cell="1">
@@ -393,7 +396,7 @@
         <div>
           <span class="fe-detalle__tipo">{{ documentTypeLabel(d.type) }}</span>
           <h2>{{ d.number || ('facturacionElectronica.facturacionElectronica.sinConsecutivo' | translate) }}</h2>
-          <span class="fe-pill fe-pill--{{ statusGroup(d) }}"><i class="pi" [ngClass]="statusIcon(d)"></i>{{ statusLabel(d.status) }}</span>
+          <span class="fe-pill fe-pill--{{ statusGroup(d) }}" [class.fe-pill--reemplazada]="statusGroup(d) === 'rejected' && !necesitaRevision(d)"><i class="pi" [ngClass]="statusIcon(d)"></i>{{ etiquetaEstado(d) }}</span>
         </div>
         <button type="button" class="fe-iconbtn" (click)="cerrarDetalle()" [attr.aria-label]="'comun.cerrar' | translate"><i class="pi pi-times"></i></button>
       </header>
