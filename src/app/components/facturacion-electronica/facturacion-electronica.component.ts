@@ -1319,6 +1319,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   private isPendingInvoice(order: any): boolean {
     if (!order || order.nroFactura || order.facturacionElectronica?.invoiceId) return false;
+    // Ticket 1478: los pedidos del set de habilitación DIAN no son ventas por facturar.
+    if (order.dianTestData === true || order.typeOrder === 'Prueba DIAN') return false;
     if (!Array.isArray(order.carrito) || order.carrito.length === 0) return false;
     return true;
   }
