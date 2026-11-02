@@ -407,7 +407,7 @@
           <!-- Ticket 1279: saldo y notas de la factura; factura que cita la nota. -->
           <div *ngIf="d.saldo as sd"><dt>{{ 'facturacionElectronica.facturacionElectronica.saldo2' | translate }}</dt><dd>{{ money(sd.saldo) }}<small *ngIf="sd.notas"> · {{ sd.notas }} {{ sd.notas === 1 ? ('facturacionElectronica.facturacionElectronica.nota' | translate) : ('facturacionElectronica.facturacionElectronica.notas' | translate) }}</small></dd></div>
           <div *ngIf="notasDeFactura(d).length"><dt>{{ 'facturacionElectronica.facturacionElectronica.notas2' | translate }}</dt><dd class="fe-notas-factura">
-            <button type="button" class="fe-link" *ngFor="let n of notasDeFactura(d)" (click)="abrirDetalle(n)">{{ n.number || ('facturacionElectronica.facturacionElectronica.sinConsecutivo' | translate) }} · {{ documentTypeLabel(n.type) }} · {{ money(n.amount) }} · {{ statusLabel(n.status) }}</button>
+            <button type="button" class="fe-link" *ngFor="let n of notasDeFactura(d)" (click)="abrirDetalle(n)">{{ n.number || ('facturacionElectronica.facturacionElectronica.sinConsecutivo' | translate) }} · {{ documentTypeLabel(n.type) }} · {{ money(n.amount) }} · {{ etiquetaEstado(n) }}</button>
           </dd></div>
           <div *ngIf="d.type !== 'invoice' && d.reference?.number"><dt>{{ 'facturacionElectronica.facturacionElectronica.factura2' | translate }}</dt><dd>
             <button type="button" class="fe-link" *ngIf="facturaDeNota(d) as f; else sinFactura" (click)="abrirDetalle(f)">{{ d.reference?.number }}</button>

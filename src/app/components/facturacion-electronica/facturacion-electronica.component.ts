@@ -1018,7 +1018,19 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   /** Ticket 1476: un rechazo ya reemplazado o rehecho se rotula aparte. */
   etiquetaEstado(document: DianDocument): string {
     if (this.statusGroup(document) === 'rejected' && !this.necesitaRevision(document)) return 'Reemplazada';
+    if (this.rechazadaPorDian(document)) return 'Rechazada por DIAN';
     return this.statusLabel(document.status);
+  }
+
+  /**
+   * Ticket 1479: una nota que la DIAN rechazó podía quedar guardada como "failed"
+   * (NC5). Sí llegó a la DIAN: no es "No enviada".
+   */
+  rechazadaPorDian(document: DianDocument | any): boolean {
+    if (document?.status === 'rejected') return true;
+    if (document?.status !== 'failed') return false;
+    const error = document.error || {};
+    return error.code === 'DIAN_REJECTED' || /^DIAN_REJECTED\b/.test(String(error.message || ''));
   }
 
   statusLabel(status: DianStatus): string {
