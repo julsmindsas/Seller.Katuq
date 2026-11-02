@@ -479,7 +479,22 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     for (const r of document.emailResends || []) {
       lista.push({ texto: r.sent ? `Reenviado a ${r.recipient}` : `No se pudo reenviar a ${r.recipient}`, fecha: r.fecha ? new Date(r.fecha) : null, tono: r.sent ? 'ok' : 'error', detalle: r.error });
     }
+    // Ticket 1481: las notas que citan la factura también son parte de su historia.
+    for (const n of this.notasDeFactura(document)) {
+      const gn = this.statusGroup(n);
+      lista.push({
+        texto: `${this.documentTypeLabel(n.type)} ${n.number || ''} · ${this.etiquetaEstado(n)} · ${this.money(n.amount)}`,
+        fecha: this.asDate(n.createdAt), tono: gn === 'accepted' ? 'ok' : gn === 'rejected' ? 'error' : 'neutro',
+      });
+    }
     return lista;
+  }
+
+  /** Ticket 1481: factura aceptada que sus notas crédito dejaron en $0. */
+  facturaSaldada(document: DianDocument | any): boolean {
+    const s = document?.saldo;
+    return document?.type === 'invoice' && document?.status === 'accepted'
+      && !!s && Number(s.notasCredito) > 0 && Number(s.saldo) <= 0;
   }
 
   /** Ticket 1262: el correo al comprador falló y no se ha reenviado con éxito. */
@@ -911,6 +926,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       this.openAdjustmentForm(document, 'debit');
       return;
     }
+    // Ticket 1481: con saldo $0 no hay nada que acreditar.
+    if (this.facturaSaldada(document)) {
+      Swal.fire({ icon: 'info', title: 'La factura ya está en $0', text: `${document.number} quedó anulada con sus notas crédito: no admite otra nota crédito.` });
+      return;
+    }
     Swal.fire({
       title: this.translate.instant('facturacionElectronica.facturacionElectronica.laNotaCreditoEsPor'),
       input: 'select',
@@ -1019,6 +1039,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   etiquetaEstado(document: DianDocument): string {
     if (this.statusGroup(document) === 'rejected' && !this.necesitaRevision(document)) return 'Reemplazada';
     if (this.rechazadaPorDian(document)) return 'Rechazada por DIAN';
+    if (this.facturaSaldada(document)) return 'Anulada con nota crédito';
     return this.statusLabel(document.status);
   }
 

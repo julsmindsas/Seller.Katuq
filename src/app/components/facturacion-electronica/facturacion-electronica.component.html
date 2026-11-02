@@ -329,7 +329,7 @@
                     <ng-container *ngIf="document.type === 'invoice'">
                       <div class="fe-menu__sep"></div>
                       <!-- Ticket 1279: nota crédito o débito citando esta factura. -->
-                      <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--orange" (click)="iniciarNota(document, 'credit')" [disabled]="document.status !== 'accepted'">
+                      <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--orange" (click)="iniciarNota(document, 'credit')" [disabled]="document.status !== 'accepted' || facturaSaldada(document)">
                         <i class="pi pi-replay"></i> {{ 'facturacionElectronica.facturacionElectronica.notaCredito' | translate }}
                       </button>
                       <button type="button" role="menuitem" class="fe-menu__item" (click)="iniciarNota(document, 'debit')" [disabled]="document.status !== 'accepted'">
@@ -434,7 +434,7 @@
           <button type="button" class="fe-btn fe-btn--sm fe-btn--primary" (click)="reenviarCorreo(d)" [disabled]="reenviando"><i class="pi pi-envelope"></i> {{ reenviando ? ('facturacionElectronica.facturacionElectronica.reenviando' | translate) : ('facturacionElectronica.facturacionElectronica.reenviarPorCorreo' | translate) }}</button>
           <a class="fe-btn fe-btn--sm fe-btn--ghost" [href]="enlaceWhatsApp(d)" target="_blank" rel="noopener"><i class="pi pi-whatsapp"></i> WhatsApp</a>
           <ng-container *ngIf="d.type === 'invoice'">
-            <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="cerrarDetalle(); iniciarNota(d, 'credit')"><i class="pi pi-replay"></i> {{ 'facturacionElectronica.facturacionElectronica.notaCredito' | translate }}</button>
+            <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="cerrarDetalle(); iniciarNota(d, 'credit')" [disabled]="facturaSaldada(d)"><i class="pi pi-replay"></i> {{ 'facturacionElectronica.facturacionElectronica.notaCredito' | translate }}</button>
             <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="cerrarDetalle(); iniciarNota(d, 'debit')"><i class="pi pi-plus-circle"></i> {{ 'facturacionElectronica.facturacionElectronica.notaDebito' | translate }}</button>
           </ng-container>
         </div>
