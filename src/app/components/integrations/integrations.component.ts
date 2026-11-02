@@ -1341,6 +1341,32 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Ticket 1482: aviso (no bloquea) de una dirección del emisor que sale en todas las
+   * facturas: «#8056» sin guion o un tramo repetido («Local Almara, Local Almara»).
+   */
+  avisoDireccionDian(): string | null {
+    const valor = String(this.integrationForm?.get('issuer.address')?.value || '').trim();
+    if (!valor) return null;
+    const tramos = valor.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+    if (new Set(tramos).size < tramos.length) return 'Hay una parte repetida en la dirección. Revísala contra el RUT: sale en todas las facturas.';
+    const sinGuion = valor.match(/#\s*(\d{3,5})\b(?!\s*-)/);
+    if (sinGuion) {
+      const n = sinGuion[1];
+      return `¿Falta el guion? «#${n}» suele escribirse «# ${n.slice(0, -2)}-${n.slice(-2)}». Revísala contra el RUT: sale en todas las facturas.`;
+    }
+    return null;
+  }
+
+  /** Ticket 1482: sugiere un buzón de equipo para el correo que sale en la factura. */
+  avisoCorreoDian(): string | null {
+    const valor = String(this.integrationForm?.get('issuer.email')?.value || '').trim().toLowerCase();
+    const local = valor.split('@')[0];
+    if (!local || !valor.includes('@')) return null;
+    const deEquipo = /^(factura|facturacion|facturación|fe|contabilidad|contable|contacto|info|admin|administracion|ventas|cartera|tesoreria|gerencia|servicio|soporte|hola|notificaciones)/;
+    return deEquipo.test(local) ? null : 'Te recomendamos un buzón del equipo (por ejemplo facturacion@): las respuestas de los clientes llegan a ese correo.';
+  }
+
   createDianForm(): FormGroup {
     return this.fb.group({
       name: ['DIAN directo', Validators.required],

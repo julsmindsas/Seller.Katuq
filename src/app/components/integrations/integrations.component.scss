@@ -35,7 +35,7 @@
 
   .dk-eyebrow { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .8px; color: var(--kc-accent-texto); text-transform: uppercase; margin-bottom: 3px; }
   .dk-label { display: flex; align-items: center; gap: 4px; margin: 0 0 7px; font-size: 11.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--kc-muted); b { color: #e0483f; } }
-  .dk-hint { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; line-height: 1.45; color: #9aa0b2; text-wrap: pretty; i { flex-shrink: 0; margin-top: 2px; } &--ok { color: var(--kc-green); i { color: var(--kc-green); } } }
+  .dk-hint { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; line-height: 1.45; color: #9aa0b2; text-wrap: pretty; i { flex-shrink: 0; margin-top: 2px; } &--ok { color: var(--kc-green); i { color: var(--kc-green); } } &--warn { color: #a15c00; i { color: #a15c00; } } }
   .dk-mono { font-family: $head; font-weight: 800; color: #4f5bd5; }
   .dk-amount { font-family: $head; font-weight: 800; font-size: 14px; color: var(--kc-ink); white-space: nowrap; }
   .dk-sep { height: 1px; background: var(--kc-line2); margin: 4px 0; }

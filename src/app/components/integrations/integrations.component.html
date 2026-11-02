@@ -1954,7 +1954,7 @@
                 <label><span class="dk-label">{{ 'integrations.integrations.dv' | translate }}</span><input type="text" class="form-control" formControlName="dv" maxlength="1"></label>
               </div>
               <div class="dk-fields dk-fields--3">
-                <label><span class="dk-label">{{ 'integrations.integrations.direccion' | translate }} <b>*</b></span><input type="text" class="form-control" formControlName="address"></label>
+                <label><span class="dk-label">{{ 'integrations.integrations.direccion' | translate }} <b>*</b></span><input type="text" class="form-control" formControlName="address"><small class="dk-hint dk-hint--warn" *ngIf="avisoDireccionDian() as aviso"><i class="pi pi-exclamation-circle"></i>{{ aviso }}</small></label>
                 <div class="dk-municipality">
                   <span class="dk-label">{{ 'integrations.integrations.ciudadOMunicipio' | translate }} <b>*</b></span>
                   <div class="dk-searchfield"><i class="pi pi-search"></i><input type="text" class="form-control" [ngModel]="dianMunicipalitySearch" (input)="searchDianMunicipalities($event)" [ngModelOptions]="{standalone: true}" [placeholder]="'integrations.integrations.escribeBogotaMedellinCali' | translate" autocomplete="off" [attr.aria-label]="'integrations.integrations.buscarMunicipio' | translate"></div>
@@ -1965,7 +1965,7 @@
                   </div>
                   <small class="dk-hint dk-hint--ok" *ngIf="integrationForm.get('issuer.municipalityCode')?.value"><i class="pi pi-check"></i>{{ integrationForm.get('issuer.cityName')?.value }} · {{ integrationForm.get('issuer.department')?.value }}</small>
                 </div>
-                <label><span class="dk-label">{{ 'integrations.integrations.correoQueApareceraEnLa' | translate }}</span><input type="email" class="form-control" formControlName="email"></label>
+                <label><span class="dk-label">{{ 'integrations.integrations.correoQueApareceraEnLa' | translate }}</span><input type="email" class="form-control" formControlName="email"><small class="dk-hint dk-hint--warn" *ngIf="avisoCorreoDian() as aviso"><i class="pi pi-info-circle"></i>{{ aviso }}</small></label>
               </div>
               <button type="button" class="dk-disclosure" (click)="dianShowFiscalDetails = !dianShowFiscalDetails" [attr.aria-expanded]="dianShowFiscalDetails">
                 <i class="pi pi-chevron-down" [class.is-open]="dianShowFiscalDetails"></i>
