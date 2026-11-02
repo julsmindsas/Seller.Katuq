@@ -84,6 +84,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   search = '';
   statusFilter: 'all' | DianStatusGroup = 'all';
   typeFilter: 'all' | 'notes' | DianDocumentType = 'all';
+  /** Ticket 1475: la franja de arriba abre solo los documentos con el correo sin enviar. */
+  soloCorreoFallido = false;
   // Ticket 1276: más filtros de la bandeja (fecha, valor y tipo), además del estado y la búsqueda.
   masFiltros = false;
   fechaDesde = '';
@@ -240,6 +242,15 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         button: 'Revisar inconvenientes',
       };
     }
+    // Ticket 1475: aceptados por la DIAN cuyo correo no le llegó al comprador.
+    if (this.correosFallidosCount > 0) {
+      const n = this.correosFallidosCount;
+      return {
+        tone: 'warning', icon: 'pi-envelope', title: `${n} documento${n === 1 ? '' : 's'} sin correo al comprador`,
+        description: 'La DIAN los aceptó, pero el correo no le llegó al comprador. Ábrelos y reenvíalo desde el detalle.',
+        button: n === 1 ? 'Ver cuál' : 'Ver cuáles',
+      };
+    }
     if (this.pendingOrders.length > 0) {
       const n = this.pendingOrders.length;
       return {
@@ -262,6 +273,23 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   /** Ticket 1476: rechazados que aún piden acción; los ya reemplazados o rehechos no cuentan. */
   get rejectedCount(): number {
     return this.documents.filter((document) => this.necesitaRevision(document)).length;
+  }
+
+  /** Ticket 1475: documentos aceptados con el correo al comprador sin enviar. */
+  get correosFallidosCount(): number {
+    return this.documents.filter((document) => this.correoFallido(document)).length;
+  }
+
+  /**
+   * Ticket 1475: el error del servidor de correo en palabras del comercio; el texto
+   * técnico queda solo en el historial técnico.
+   */
+  mensajeCorreo(error: any): string {
+    const t = String(error || '');
+    if (/AUTH|credential|EAUTH|Invalid login|535/i.test(t)) return 'El servidor de correo de Katuq no aceptó el envío. Reenvíalo desde aquí; si vuelve a fallar, avísale a soporte.';
+    if (/recipient|mailbox|550|553|no existe|does not exist/i.test(t)) return 'La dirección del comprador rechazó el correo. Revísala y reenvíalo.';
+    if (/ETIMEDOUT|ECONN|timeout|ESOCKET|network/i.test(t)) return 'No hubo conexión con el servidor de correo. Reenvíalo en unos minutos.';
+    return 'El correo no salió. Reenvíalo desde aquí; si vuelve a fallar, avísale a soporte.';
   }
 
   necesitaRevision(document: DianDocument): boolean {
@@ -315,7 +343,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         document.cliente?.nombre,
         document.cliente?.documento,
       ].filter(Boolean).join(' ').toLowerCase();
-      return matchesStatus && matchesType && matchesDate && matchesAmount && (!term || haystack.includes(term));
+      const matchesCorreo = !this.soloCorreoFallido || this.correoFallido(document);
+      return matchesStatus && matchesType && matchesDate && matchesAmount && matchesCorreo && (!term || haystack.includes(term));
     });
   }
 
@@ -474,7 +503,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     });
     const e = document.emailDelivery;
     if (e && e.requested) {
-      lista.push({ texto: e.sent ? `Correo enviado a ${e.recipient || 'el comprador'}` : 'El correo al comprador no salió', fecha: this.asDate(document.createdAt), tono: e.sent ? 'ok' : 'error', detalle: e.sent ? undefined : ((e as any).error || '') });
+      lista.push({ texto: e.sent ? `Correo enviado a ${e.recipient || 'el comprador'}` : 'El correo al comprador no salió', fecha: this.asDate(document.createdAt), tono: e.sent ? 'ok' : 'error', detalle: e.sent ? undefined : this.mensajeCorreo((e as any).error) });
     }
     for (const r of document.emailResends || []) {
       lista.push({ texto: r.sent ? `Reenviado a ${r.recipient}` : `No se pudo reenviar a ${r.recipient}`, fecha: r.fecha ? new Date(r.fecha) : null, tono: r.sent ? 'ok' : 'error', detalle: r.error });
@@ -578,6 +607,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.statusFilter = status;
     this.typeFilter = type;
     this.search = '';
+    this.soloCorreoFallido = false;
     this.selectTab('documents', true);
   }
 
@@ -589,6 +619,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     }
     if (this.rejectedCount > 0) {
       this.showDocuments('rejected');
+      return;
+    }
+    if (this.correosFallidosCount > 0) {
+      this.showDocuments('all');
+      this.soloCorreoFallido = true;
       return;
     }
     if (this.pendingOrders.length > 0) this.selectTab('invoice', true);

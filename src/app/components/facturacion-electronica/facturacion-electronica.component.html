@@ -202,6 +202,9 @@
           <button type="button" [class.is-active]="statusFilter === 'pending'" (click)="statusFilter = 'pending'">{{ 'facturacionElectronica.facturacionElectronica.enProceso' | translate }} <b>{{ pendingCount }}</b></button>
           <button type="button" [class.is-active]="statusFilter === 'rejected'" (click)="statusFilter = 'rejected'">{{ 'facturacionElectronica.facturacionElectronica.rechazadas' | translate }} <b>{{ rejectedCount }}</b></button>
         </div>
+        <button type="button" class="fe-filterchip" *ngIf="soloCorreoFallido" (click)="soloCorreoFallido = false" title="Quitar filtro">
+          Solo correo no enviado <i class="pi pi-times"></i>
+        </button>
         <button type="button" class="fe-filterchip" *ngIf="typeFilter === 'notes'" (click)="typeFilter = 'all'" [title]="'facturacionElectronica.facturacionElectronica.quitarFiltro' | translate">
           {{ 'facturacionElectronica.facturacionElectronica.soloNotas' | translate }} <i class="pi pi-times"></i>
         </button>
@@ -424,7 +427,7 @@
 
         <div class="fe-alert fe-alert--error" *ngIf="correoFallido(d)">
           <i class="pi pi-exclamation-triangle"></i>
-          <div><strong>{{ 'facturacionElectronica.facturacionElectronica.elCorreoAlCompradorNo' | translate }}</strong><span>{{ $any(d.emailDelivery)?.error || ('facturacionElectronica.facturacionElectronica.reenvialoDesdeAqui' | translate) }}</span></div>
+          <div><strong>{{ 'facturacionElectronica.facturacionElectronica.elCorreoAlCompradorNo' | translate }}</strong><span [title]="$any(d.emailDelivery)?.error || ''">{{ $any(d.emailDelivery)?.error ? mensajeCorreo($any(d.emailDelivery)?.error) : ('facturacionElectronica.facturacionElectronica.reenvialoDesdeAqui' | translate) }}</span></div>
         </div>
 
         <div class="fe-detalle__acciones" *ngIf="d.status === 'accepted'">
