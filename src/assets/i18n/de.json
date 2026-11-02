@@ -9070,5 +9070,19 @@
     "asistentes.voiceSalesWizard.navegacion": "Navigation",
     "asistentes.voiceSalesWizard.navegacionFallida": "Navigation fehlgeschlagen",
     "asistentes.voiceSalesWizard.historialLimpiado": "Befehlsverlauf geleert",
-    "asistentes.voiceSalesWizard.historial": "Verlauf"
+    "asistentes.voiceSalesWizard.historial": "Verlauf",
+    "rol.roles.usuariosMovidos": "{{movidos}} Benutzer haben jetzt den neuen Namen; sie sehen ihn bei der nächsten Anmeldung.",
+    "tesoreria.historialPagos.anular": "Stornieren",
+    "tesoreria.historialPagos.anularPagoDe": "Zahlung der Bestellung {{pedido}} stornieren",
+    "tesoreria.historialPagos.estePedido": "diese Bestellung",
+    "tesoreria.historialPagos.sinReferencia": "ohne Referenz",
+    "tesoreria.historialPagos.anularEfectoHtml": "Die Zahlung von <b>{{valor}}</b> ({{referencia}}) wird <b>storniert</b>: Sie wird nicht gelöscht, zählt aber nicht mehr.<br>Die Bestellung schuldet wieder {{valor}} mehr, und ihr Status wird mit den verbleibenden Zahlungen neu berechnet.<br><small>Dies kann nicht rückgängig gemacht werden. Hat die Bestellung bereits eine elektronische Rechnung, wird die Zahlung mit einer Gutschrift rückgängig gemacht.</small>",
+    "tesoreria.historialPagos.motivoObligatorio": "Grund (Pflichtfeld)",
+    "tesoreria.historialPagos.motivoPlaceholder": "Z. B.: wurde der falschen Bestellung zugeordnet",
+    "tesoreria.historialPagos.escribeElMotivo": "Grund eingeben",
+    "tesoreria.historialPagos.anularPago": "Zahlung stornieren",
+    "tesoreria.historialPagos.pagoAnulado": "Zahlung storniert",
+    "tesoreria.historialPagos.pedidoQuedoEn": "Die Bestellung ist jetzt {{estado}} und schuldet {{saldo}}.",
+    "tesoreria.historialPagos.noSeAnulo": "Nicht storniert",
+    "tesoreria.historialPagos.intentaDeNuevo": "Bitte erneut versuchen."
 }

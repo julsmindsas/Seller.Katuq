@@ -18,6 +18,7 @@ import { ClientConfigService, ClientTag } from '../services/client-config.servic
 import Swal from 'sweetalert2';
 import { SitiosService } from '../../../sitios/sitios.service';
 import { clientBillingProfiles, matchesClientSearch } from '../../../../shared/utils/client-search';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -48,8 +49,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     // Opciones para dropdown de estado
     estadoOptions = [
-        { label: 'Activo', value: 'activo' },
-        { label: 'Bloqueado', value: 'bloqueado' }
+        { label: 'ventas.clientes.activo', value: 'activo' },
+        { label: 'ventas.clientes.bloqueado', value: 'bloqueado' }
     ];
 
     // Opciones para dropdown de tipo de cliente
@@ -83,7 +84,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private messageService: MessageService,
         private http: HttpClient,
         private clientConfig: ClientConfigService,
-        private sitiosService: SitiosService
+        private sitiosService: SitiosService,
+        private translate: TranslateService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -181,8 +183,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 console.error(error);
                 this.messageService.add({
                     severity: 'error',
-                    summary: 'Error',
-                    detail: 'Error al cargar los clientes'
+                    summary: this.translate.instant('comun.error'),
+                    detail: this.translate.instant('ventas.clientesLista.errorCargar')
                 });
                 this.cargando = false;
             }
@@ -252,15 +254,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         if (this.clientes.length === 0) {
             this.messageService.add({
                 severity: 'info',
-                summary: 'Sin resultados',
-                detail: 'No se encontraron clientes que coincidan con los filtros',
+                summary: this.translate.instant('comun.sinResultados'),
+                detail: this.translate.instant('ventas.clientesLista.sinCoincidencias'),
                 life: 3000
             });
         } else {
             this.messageService.add({
                 severity: 'success',
-                summary: 'Búsqueda completada',
-                detail: `Se encontraron ${this.clientes.length} cliente(s)`,
+                summary: this.translate.instant('ventas.clientesLista.busquedaCompletada'),
+                detail: this.translate.instant('ventas.clientesLista.seEncontraron', { n: this.clientes.length }),
                 life: 2000
             });
         }
@@ -287,8 +289,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.messageService.add({
             severity: 'info',
-            summary: 'Filtros limpios',
-            detail: 'Se muestran todos los clientes nuevamente',
+            summary: this.translate.instant('ventas.clientesLista.filtrosLimpios'),
+            detail: this.translate.instant('ventas.clientesLista.filtrosLimpiosTexto'),
             life: 2000
         });
     }
@@ -355,14 +357,14 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     removeTag(index: number): void {
         const tag = this.editableTags[index];
         Swal.fire({
-            title: `¿Eliminar etiqueta "${tag.name}"?`,
-            text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
+            title: this.translate.instant('ventas.clientes.eliminarEtiquetaTitulo', { nombre: tag.name }),
+            text: this.translate.instant('ventas.clientes.eliminarEtiquetaTexto'),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#D64545',
             cancelButtonColor: '#8f8bab',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
+            confirmButtonText: this.translate.instant('ventas.clientes.siEliminar'),
+            cancelButtonText: this.translate.instant('comun.cancelar'),
             didOpen: () => {
                 const container = document.querySelector('.swal2-container') as HTMLElement;
                 if (container) container.style.zIndex = '99999';
@@ -385,8 +387,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                     etiquetas: Array.isArray(c.etiquetas) ? c.etiquetas.filter((e: string) => e !== tag.name) : []
                 }));
                 Swal.fire({
-                    title: 'Etiqueta eliminada',
-                    text: `La etiqueta "${tag.name}" fue eliminada del catálogo y de los clientes asignados.`,
+                    title: this.translate.instant('ventas.clientes.etiquetaEliminada'),
+                    text: this.translate.instant('ventas.clientes.etiquetaEliminadaTexto', { nombre: tag.name }),
                     icon: 'success',
                     timer: 2500,
                     timerProgressBar: true,
@@ -409,8 +411,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             this.showConfigModal = false;
             this.messageService.add({
                 severity: 'success',
-                summary: 'Configuración guardada',
-                detail: 'Etiquetas actualizadas correctamente.',
+                summary: this.translate.instant('ventas.clientesLista.configuracionGuardada'),
+                detail: this.translate.instant('ventas.clientesLista.etiquetasActualizadas'),
                 life: 3000
             });
         });
@@ -498,8 +500,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.messageService.add({
             severity: 'success',
-            summary: 'Exportado',
-            detail: 'Cliente exportado correctamente',
+            summary: this.translate.instant('ventas.clientesLista.exportado'),
+            detail: this.translate.instant('ventas.clientesLista.clienteExportado'),
             life: 3000
         });
     }
@@ -591,16 +593,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
-            detail: `${this.clientes.length} clientes exportados en 4 hojas`,
+            summary: this.translate.instant('comun.exito'),
+            detail: this.translate.instant('ventas.clientesLista.clientesExportados', { n: this.clientes.length }),
             life: 3000
         });
       } catch (err) {
         console.error('[exportarExcel] error:', err);
         this.messageService.add({
             severity: 'error',
-            summary: 'Error al exportar',
-            detail: 'No se pudo generar el Excel. Revisa la consola para más detalle.',
+            summary: this.translate.instant('ventas.clientesLista.errorExportar'),
+            detail: this.translate.instant('ventas.clientesLista.errorExportarTexto'),
             life: 5000
         });
       }
@@ -736,7 +738,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     async deleteAllClients(): Promise<void> {
-        if (!confirm('⚠️ ESTO ELIMINARÁ TODOS LOS CLIENTES DE LA EMPRESA. ¿Estás seguro?')) return;
+        if (!confirm(this.translate.instant('ventas.clientesLista.confirmarEliminarTodos'))) return;
         try {
             // El interceptor agrega Authorization, company y demás headers automáticamente
             const response = await this.http.delete<{ success: boolean; deleted: number }>(
@@ -744,15 +746,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             ).toPromise();
             this.messageService.add({
                 severity: 'warn',
-                summary: 'Clientes eliminados',
-                detail: `Se eliminaron ${response?.deleted || 0} clientes`
+                summary: this.translate.instant('ventas.clientesLista.clientesEliminados'),
+                detail: this.translate.instant('ventas.clientesLista.clientesEliminadosTexto', { n: response?.deleted || 0 })
             });
             this.cargarClientes();
         } catch (error: any) {
             this.messageService.add({
                 severity: 'error',
-                summary: 'Error',
-                detail: error?.error?.error || 'No se pudieron eliminar los clientes'
+                summary: this.translate.instant('comun.error'),
+                detail: error?.error?.error || this.translate.instant('ventas.clientesLista.errorEliminar')
             });
         }
     }
@@ -765,20 +767,20 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     generarAccesoTienda(cliente: any): void {
         const cd = cliente?.cd;
         if (!cd) {
-            Swal.fire('Sin identificador', 'Este cliente no tiene identificador interno; ábrelo y guárdalo una vez.', 'warning');
+            Swal.fire(this.translate.instant('ventas.clientesLista.sinIdentificador'), this.translate.instant('ventas.clientesLista.sinIdentificadorTexto'), 'warning');
             return;
         }
         this.sitiosService.generarAccesoCliente(cd).subscribe({
             next: (res) => {
                 const data = res && res.data;
                 if (!data) {
-                    Swal.fire('Error', 'No pudimos generar el acceso.', 'error');
+                    Swal.fire(this.translate.instant('comun.error'), this.translate.instant('ventas.clientesLista.errorAcceso'), 'error');
                     return;
                 }
                 if (!data.links.length) {
                     Swal.fire(
-                        'Acceso creado, pero sin tienda',
-                        data.aviso || 'Ningún sitio publicado tiene la tienda encendida todavía. Enciéndela en Sitio web › Mis sitios y vuelve a generar el link.',
+                        this.translate.instant('ventas.clientesLista.accesoSinTienda'),
+                        data.aviso || this.translate.instant('ventas.clientesLista.accesoSinTiendaTexto'),
                         'info'
                     );
                     return;
@@ -786,18 +788,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 const link = data.links[0].url;
                 navigator.clipboard?.writeText(link).catch(() => undefined);
                 Swal.fire({
-                    title: 'Link copiado',
+                    title: this.translate.instant('ventas.clientesLista.linkCopiado'),
                     html:
-                        `<p style="margin-bottom:.5rem">Compárteselo a <strong>${cliente.nombres_completos || 'tu cliente'}</strong>` +
-                        (data.categoria ? ` (${data.categoria})` : '') +
-                        ` por WhatsApp. Al abrirlo verá los precios de su lista en toda la tienda.</p>` +
+                        `<p style="margin-bottom:.5rem">${this.translate.instant('ventas.clientesLista.linkCopiadoTexto', { nombre: cliente.nombres_completos || this.translate.instant('ventas.clientesLista.tuCliente'), categoria: data.categoria ? ` (${data.categoria})` : '' })}</p>` +
                         `<code style="font-size:.75rem;word-break:break-all">${link}</code>` +
-                        `<p style="margin-top:.75rem;font-size:.8rem;opacity:.75">Generarlo de nuevo revoca el link anterior.</p>`,
+                        `<p style="margin-top:.75rem;font-size:.8rem;opacity:.75">${this.translate.instant('ventas.clientesLista.linkRevoca')}</p>`,
                     icon: 'success',
-                    confirmButtonText: 'Listo',
+                    confirmButtonText: this.translate.instant('ventas.clientesLista.listo'),
                 });
             },
-            error: () => Swal.fire('Error', 'No pudimos generar el acceso.', 'error'),
+            error: () => Swal.fire(this.translate.instant('comun.error'), this.translate.instant('ventas.clientesLista.errorAcceso'), 'error'),
         });
     }
 }

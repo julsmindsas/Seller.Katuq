@@ -4,6 +4,7 @@ import { VentasService } from '../../../../../shared/services/ventas/ventas.serv
 import Swal from 'sweetalert2';
 import { Pedido } from '../../../modelo/pedido';
 import { ReporteCierreComponent } from './reporte-cierre/reporte-cierre.component';
+import { TranslateService } from '@ngx-translate/core';
 
 interface CierreData {
   efectivoInicial: number;
@@ -56,7 +57,8 @@ export class CashClosingComponent {
 
   constructor(
     private ventasService: VentasService,
-    public modal: NgbModal
+    public modal: NgbModal,
+    private translate: TranslateService
   ) {
     const companyData = localStorage.getItem("currentCompany");
     if (companyData) {
@@ -122,8 +124,8 @@ export class CashClosingComponent {
         } else {
           // No es un error: simplemente no hubo ventas POS en esas fechas.
           Swal.fire({
-            title: 'Sin ventas',
-            text: 'No se encontraron ventas en el período seleccionado',
+            title: this.translate.instant('ventas.cashClosing.sinVentas'),
+            text: this.translate.instant('ventas.cashClosing.noSeEncontraronVentas'),
             icon: 'info',
             confirmButtonColor: '#5F3FE0'
           });
@@ -131,8 +133,8 @@ export class CashClosingComponent {
       },
       (error) => {
         Swal.fire({
-          title: 'Error',
-          text: 'Error al obtener las ventas del período',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('ventas.cashClosing.errorObtenerVentas'),
           icon: 'error'
         });
       }
@@ -259,8 +261,8 @@ export class CashClosingComponent {
   completarCierre() {
     if (!this.efectivoFinal) {
       Swal.fire({
-        title: 'Error',
-        text: 'Debe ingresar el saldo final',
+        title: this.translate.instant('comun.error'),
+        text: this.translate.instant('ventas.cashClosing.debeIngresarSaldoFinal'),
         icon: 'error'
       });
       return;
@@ -288,15 +290,15 @@ export class CashClosingComponent {
         this.cierreFinalizado = true;
         
         Swal.fire({
-          title: 'Cierre de Caja Exitoso',
-          text: 'El cierre de caja se ha realizado exitosamente',
+          title: this.translate.instant('ventas.cashClosing.cierreExitoso'),
+          text: this.translate.instant('ventas.cashClosing.cierreRealizado'),
           icon: 'success',
           showConfirmButton: true,
-          confirmButtonText: 'Imprimir',
+          confirmButtonText: this.translate.instant('ventas.cashClosing.imprimir'),
           showDenyButton: true,
-          denyButtonText: 'Imprimir POS',
+          denyButtonText: this.translate.instant('ventas.cashClosing.imprimirPos'),
           showCancelButton: true,
-          cancelButtonText: 'Cerrar'
+          cancelButtonText: this.translate.instant('comun.cerrar')
         }).then((result) => {
           if (result.isConfirmed) {
             this.imprimir();
@@ -309,8 +311,8 @@ export class CashClosingComponent {
       },
       (error) => {
         Swal.fire({
-          title: 'Error',
-          text: 'Error al realizar el cierre de caja',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('ventas.cashClosing.errorRealizarCierre'),
           icon: 'error'
         });
       }

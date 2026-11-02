@@ -3,7 +3,7 @@
   <span class="sug-icono"><app-icono-tabler nombre="pin" [tamano]="18"></app-icono-tabler></span>
   <span class="sug-texto">{{ texto }}</span>
   <span class="sug-botones">
-    <button type="button" class="sug-boton sug-boton-principal" (click)="fijar.emit()">Fijar</button>
-    <button type="button" class="sug-boton" (click)="ahoraNo.emit()">Ahora no</button>
+    <button type="button" class="sug-boton sug-boton-principal" (click)="fijar.emit()">{{ 'ventas.actionSuggestion.fijar' | translate }}</button>
+    <button type="button" class="sug-boton" (click)="ahoraNo.emit()">{{ 'ventas.actionSuggestion.ahoraNo' | translate }}</button>
   </span>
 </div>

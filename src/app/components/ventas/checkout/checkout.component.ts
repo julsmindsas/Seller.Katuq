@@ -62,8 +62,8 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
   // Opciones de forma de entrega disponibles
   formasEntregaOptions: { value: string; label: string; icon: string }[] = [
-    { value: 'Domicilio', label: 'Envío a Domicilio', icon: 'fa-truck' },
-    { value: 'Recoge', label: 'Recoge en Tienda', icon: 'fa-store' }
+    { value: 'Domicilio', label: 'ventas.checkout.envioDomicilio', icon: 'fa-truck' },
+    { value: 'Recoge', label: 'ventas.checkout.recogeEnTienda', icon: 'fa-store' }
   ];
 
   // Forma de entrega seleccionada

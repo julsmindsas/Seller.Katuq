@@ -2,7 +2,7 @@
     <span class="cfg-head-ic">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
     </span>
-    <h4 class="modal-title">{{'Configuración del producto' | translate}}</h4>
+    <h4 class="modal-title">{{'ventas.confProductToCart.titulo' | translate}}</h4>
     <span class="cfg-head-ref" *ngIf="producto?.identificacion?.referencia">{{producto?.identificacion?.referencia}}</span>
 </div>
 <div class="container-fluid modal-body">
@@ -17,7 +17,7 @@
                             </ks-carousel>
                             <div *ngIf="!imagesRect?.length" class="text-center py-4">
                                 <img src="assets/images/placeholders/product-not-found.svg"
-                                     alt="Sin imagen" style="max-height: 200px; opacity: 0.5;">
+                                     [alt]="'ventas.confProductToCart.sinImagen' | translate" style="max-height: 200px; opacity: 0.5;">
                             </div>
                         </section>
                         <section class="product-compact-info">
@@ -25,19 +25,19 @@
                                 <h3 class="product-title">{{producto?.crearProducto?.titulo}}</h3>
                                 <div class="product-meta">
                                     <div class="meta-item">
-                                        <span class="meta-label">{{'Referencia:' | translate}}</span>
+                                        <span class="meta-label">{{'ventas.confProductToCart.referencia' | translate}}</span>
                                         <span>{{producto?.identificacion?.referencia}}</span>
                                     </div>
                                     <div class="meta-item">
-                                        <span class="meta-label">{{'Cantidad mínima:' | translate}}</span>
+                                        <span class="meta-label">{{'ventas.confProductToCart.cantidadMinima' | translate}}</span>
                                         <span>{{producto?.disponibilidad?.cantidadMinVenta}}</span>
                                     </div>
                                     <div class="meta-item">
-                                        <span class="meta-label">{{'Tiempo de entrega:' | translate}}</span>
+                                        <span class="meta-label">{{'ventas.confProductToCart.tiempoDeEntrega' | translate}}</span>
                                         <span>{{getTituloTiempoEntrega()}}</span>
                                     </div>
                                     <div class="meta-item">
-                                        <span class="meta-label">{{'Disponibilidad:' | translate}}</span>
+                                        <span class="meta-label">{{'ventas.confProductToCart.disponibilidad' | translate}}</span>
                                         <span 
                                             [class]="getStockStatusClass()"
                                             [title]="getStockStatusMessage()">
@@ -56,29 +56,29 @@
                                 
                                 <div class="alert alert-light p-2 small">
                                     <i class="fa fa-info-circle me-1"></i>
-                                    {{'NO se incluye valor del domicilio. Incluye impuestos.' | translate}}
+                                    {{'ventas.confProductToCart.noIncluyeDomicilio' | translate}}
                                 </div>
                             </div>
                             <div>
                                 <!-- Precio y botón de tabla de cantidades optimizado para evitar saltos de línea -->
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <div>
-                                        <p class="product-price f-28 mb-0" title="{{'precio' | translate}}">
+                                        <p class="product-price f-28 mb-0" title="{{'ventas.confProductToCart.precio' | translate}}">
                                             {{getPrecioMostrar() | currency:'USD':'symbol':'1.0-0'}}*
                                         </p>
                                         <!-- Mostrar precio original tachado si hay descuento por categoría -->
                                         <small *ngIf="tienePrecioCategoria()" class="text-muted">
                                             <del>{{producto?.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
-                                            <span class="badge bg-success ms-1">Precio especial</span>
+                                            <span class="badge bg-success ms-1">{{ 'ventas.confProductToCart.precioEspecial' | translate }}</span>
                                         </small>
                                     </div>
                                     <div>
                                         <button type="button" class="btn btn-secondary btn-sm" data-toggle="tooltip"
                                             data-placement="top"
-                                            title="{{'Ver tabla de precios por volumen' | translate}}"
+                                            title="{{'ventas.confProductToCart.verTablaPrecios' | translate}}"
                                             (click)="mostrarTabla = !mostrarTabla">
                                             <i class="fa fa-table me-1"></i>
-                                            {{'Tabla de Cantidades' | translate}}
+                                            {{'ventas.confProductToCart.tablaDeCantidades' | translate}}
                                         </button>
                                     </div>
                                 </div>
@@ -88,15 +88,15 @@
                                         <table class="table table-sm table-compact">
                                             <thead>
                                                 <tr>
-                                                    <th>{{'Desde' | translate}}</th>
-                                                    <th>{{'Hasta' | translate}}</th>
-                                                    <th>{{'Valor Unitario Con IVA' | translate}}</th>
+                                                    <th>{{'ventas.confProductToCart.desde' | translate}}</th>
+                                                    <th>{{'ventas.confProductToCart.hasta' | translate}}</th>
+                                                    <th>{{'ventas.confProductToCart.valorUnitarioConIva' | translate}}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr *ngFor="let item of producto.precio.preciosVolumen">
-                                                    <td>{{item.numeroUnidadesInicial}} UND</td>
-                                                    <td>{{item.numeroUnidadesLimite}} UND</td>
+                                                    <td>{{ 'ventas.confProductToCart.nUnd' | translate: { n: item.numeroUnidadesInicial } }}</td>
+                                                    <td>{{ 'ventas.confProductToCart.nUnd' | translate: { n: item.numeroUnidadesLimite } }}</td>
                                                     <td>{{item.valorUnitarioPorVolumenConIVA | currency}}</td>
                                                 </tr>
                                             </tbody>
@@ -111,7 +111,7 @@
                                     </div>
                                     <button class="toggle-text-btn"
                                         (click)="mostrarDescripcionCompleta = !mostrarDescripcionCompleta">
-                                        {{mostrarDescripcionCompleta ? 'Ver menos' : 'Ver más' | translate}}
+                                        {{ (mostrarDescripcionCompleta ? 'ventas.confProductToCart.verMenos' : 'ventas.confProductToCart.verMas') | translate }}
                                         <i class="fa"
                                             [ngClass]="mostrarDescripcionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                     </button>
@@ -126,31 +126,31 @@
                                 <!-- Resto del contenido solo si se selecciona ver más detalles -->
                                 <div *ngIf="mostrarDetallesCompletos">
                                     <ngb-accordion [closeOthers]="true" class="details-accordion">
-                                        <ngb-panel id="detallesPanel" title="{{ 'Detalles del producto' | translate }}">
+                                        <ngb-panel id="detallesPanel" title="{{ 'ventas.confProductToCart.detallesDelProducto' | translate }}">
                                             <ng-template ngbPanelContent>
                                                 <table class="product-page-width">
                                                     <tbody>
                                                         <tr>
-                                                            <td><b>{{'Marca :' | translate}}</b></td>
+                                                            <td><b>{{'ventas.confProductToCart.marca' | translate}}</b></td>
                                                             <td>{{producto?.identificacion?.marca}}</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><b>{{'Habilitado :' | translate}} &nbsp;&nbsp;&nbsp;</b>
+                                                            <td><b>{{'ventas.confProductToCart.habilitado' | translate}} &nbsp;&nbsp;&nbsp;</b>
                                                             </td>
-                                                            <td class="txt-success">{{'In stock' | translate}}</td>
+                                                            <td class="txt-success">{{'ventas.confProductToCart.enStock' | translate}}</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
                                             </ng-template>
                                         </ngb-panel>
 
-                                        <ngb-panel id="calificacionPanel" title="{{ 'Calificación' | translate }}">
+                                        <ngb-panel id="calificacionPanel" title="{{ 'ventas.confProductToCart.calificacion' | translate }}">
                                             <ng-template ngbPanelContent>
                                                 <div class="rating">
                                                     <form [formGroup]="ratingForm" class="rating">
                                                         <ngx-star-rating formControlName="rating"
                                                             [id]="'rating'"></ngx-star-rating>
-                                                        <div>Rating: {{ratingForm.value.rating}}</div>
+                                                        <div>{{ 'ventas.confProductToCart.rating' | translate: { n: ratingForm.value.rating } }}</div>
                                                     </form>
                                                 </div>
                                             </ng-template>
@@ -163,7 +163,7 @@
                                     (click)="mostrarDetallesCompletos = !mostrarDetallesCompletos">
                                     <i class="fa"
                                         [ngClass]="mostrarDetallesCompletos ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                    {{mostrarDetallesCompletos ? 'Ocultar detalles' : 'Ver más detalles' | translate}}
+                                    {{ (mostrarDetallesCompletos ? 'ventas.confProductToCart.ocultarDetalles' : 'ventas.confProductToCart.verMasDetalles') | translate }}
                                 </button>
 
                                 <!-- Panel colapsable de preferencias seleccionadas -->
@@ -174,7 +174,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <button ngbPanelToggle class="accordion-button">
                                                         <i class="fa fa-check-circle me-2"></i>
-                                                        {{'Preferencias seleccionadas' | translate}}
+                                                        {{'ventas.confProductToCart.preferenciasSeleccionadas' | translate}}
                                                     </button>
                                                 </div>
                                             </ng-template>
@@ -183,21 +183,21 @@
                                                     <table class="table table-dashed table-compact">
                                                         <thead>
                                                             <tr>
-                                                                <th>Imagen</th>
-                                                                <th>Título</th>
-                                                                <th>Subtitulo</th>
-                                                                <th>Valor Unitario sin IVA</th>
-                                                                <th>% IVA</th>
-                                                                <th>Valor IVA</th>
-                                                                <th>Precio Total con IVA</th>
-                                                                <th>Cantidad</th>
-                                                                <th>Acciones</th>
+                                                                <th>{{ 'ventas.confProductToCart.colImagen' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colTitulo' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colSubtitulo' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colValorUnitarioSinIva' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colPorcentajeIva' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colValorIva' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colPrecioTotalConIva' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colCantidad' | translate }}</th>
+                                                                <th>{{ 'ventas.confProductToCart.colAcciones' | translate }}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <!-- Sección de Preferencia -->
                                                             <tr *ngIf="hasPreferencia()">
-                                                                <td colspan="9"><strong>Sección de Preferencias</strong>
+                                                                <td colspan="9"><strong>{{ 'ventas.confProductToCart.seccionPreferencias' | translate }}</strong>
                                                                 </td>
                                                             </tr>
                                                             <ng-container *ngFor="let preference of productPreference">
@@ -235,7 +235,7 @@
                                                                                 type="button" 
                                                                                 class="btn btn-outline-danger btn-sm"
                                                                                 (click)="deleteImageFromPreferenceTable(preference)"
-                                                                                title="Eliminar imagen"
+                                                                                [title]="'ventas.confProductToCart.eliminarImagen' | translate"
                                                                                 style="padding: 2px 6px; font-size: 12px;">
                                                                             <i class="fa fa-trash"></i>
                                                                         </button>
@@ -245,7 +245,7 @@
 
                                                             <!-- Sección de Adición -->
                                                             <tr *ngIf="hasAdicion()">
-                                                                <td colspan="8"><strong>Sección de adiciones</strong>
+                                                                <td colspan="8"><strong>{{ 'ventas.confProductToCart.seccionAdiciones' | translate }}</strong>
                                                                 </td>
                                                             </tr>
                                                             <ng-container *ngFor="let preference of productPreference">
@@ -280,8 +280,7 @@
 
                                                             <!-- Opciones de personalización -->
                                                             <tr *ngIf="hasOpcionesPersonalizacion()">
-                                                                <td colspan="8"><strong>Sección de opciones de
-                                                                        personalización</strong></td>
+                                                                <td colspan="8"><strong>{{ 'ventas.confProductToCart.seccionOpcionesPersonalizacion' | translate }}</strong></td>
                                                             </tr>
                                                             <ng-container *ngFor="let preference of productPreference">
                                                                 <tr *ngIf="preference.tipo === 'opcionPersonalizacion'">
@@ -291,7 +290,7 @@
                                                                             <div class="row"
                                                                                 *ngIf="datosEntrega?.controls?.colores?.value?.length > 0">
                                                                                 <div class="col-sm-6">
-                                                                                    <strong>Color:</strong>
+                                                                                    <strong>{{ 'ventas.confProductToCart.color' | translate }}</strong>
                                                                                 </div>
                                                                                 <div class="col-sm-6"
                                                                                     style="margin-top: -1rem;">
@@ -311,8 +310,7 @@
                                                                             class="toggle-text-btn"
                                                                             [ngClass]="{'expanded': mostrarPersonalizacionCompleta}"
                                                                             (click)="mostrarPersonalizacionCompleta = !mostrarPersonalizacionCompleta">
-                                                                            {{mostrarPersonalizacionCompleta ? 'Ver
-                                                                            menos' : 'Ver más' | translate}}
+                                                                            {{ (mostrarPersonalizacionCompleta ? 'ventas.confProductToCart.verMenos' : 'ventas.confProductToCart.verMas') | translate }}
                                                                             <i class="fa"
                                                                                 [ngClass]="mostrarPersonalizacionCompleta ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                                                         </button>
@@ -322,18 +320,18 @@
 
                                                             <!-- Sección Tarjetas -->
                                                             <tr *ngIf="!SinTarjeta">
-                                                                <td colspan="8"><strong>Sección Tarjetas</strong></td>
+                                                                <td colspan="8"><strong>{{ 'ventas.confProductToCart.seccionTarjetas' | translate }}</strong></td>
                                                             </tr>
                                                             <ng-container *ngIf="!SinTarjeta">
                                                                 <tr
                                                                     *ngFor="let tarjeta of this.tarjetas.value; let i = index">
                                                                     <td colspan="8">
                                                                         <div class="card p-2 mb-2">
-                                                                            <div><strong>{{'Para:' |
+                                                                            <div><strong>{{'ventas.confProductToCart.para' |
                                                                                     translate}}</strong> {{ tarjeta.para
                                                                                 }}</div>
                                                                             <div class="mt-1">
-                                                                                <strong>{{'Mensaje:' |
+                                                                                <strong>{{'ventas.confProductToCart.mensaje' |
                                                                                     translate}}</strong>
                                                                                 <div class="collapsible-text"
                                                                                     [ngClass]="{'collapsed': !tarjetaMostrada[i]}"
@@ -345,13 +343,12 @@
                                                                                     class="toggle-text-btn"
                                                                                     [ngClass]="{'expanded': tarjetaMostrada[i]}"
                                                                                     (click)="toggleTarjeta(i)">
-                                                                                    {{tarjetaMostrada[i] ? 'Ver menos' :
-                                                                                    'Ver más' | translate}}
+                                                                                    {{ (tarjetaMostrada[i] ? 'ventas.confProductToCart.verMenos' : 'ventas.confProductToCart.verMas') | translate }}
                                                                                     <i class="fa"
                                                                                         [ngClass]="tarjetaMostrada[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                                                                 </button>
                                                                             </div>
-                                                                            <div class="mt-1"><strong>{{'De:' |
+                                                                            <div class="mt-1"><strong>{{'ventas.confProductToCart.de' |
                                                                                     translate}}</strong> {{ tarjeta.de
                                                                                 }}</div>
                                                                         </div>
@@ -362,7 +359,7 @@
                                                         <tfoot>
                                                             <tr>
                                                                 <td colspan="2"></td>
-                                                                <td><strong>Resumen:</strong></td>
+                                                                <td><strong>{{ 'ventas.confProductToCart.resumen' | translate }}</strong></td>
                                                                 <td>{{ getTotalValorUnitarioSinIva() |
                                                                     currency:'USD':'symbol':'1.2-2' }}
                                                                 </td>
@@ -392,18 +389,18 @@
                     <div class="d-flex align-items-center">
                         <i class="fa fa-exclamation-triangle me-2"></i>
                         <div class="flex-grow-1">
-                            <strong>{{'Error de configuración' | translate}}</strong>
-                            <p class="mb-2 mt-1">{{'No se pudieron cargar los datos de configuración necesarios para este producto.' | translate}}</p>
+                            <strong>{{'ventas.confProductToCart.errorDeConfiguracion' | translate}}</strong>
+                            <p class="mb-2 mt-1">{{'ventas.confProductToCart.noSePudieronCargarDatos' | translate}}</p>
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-2">
                         <button class="btn btn-sm btn-primary" (click)="reintentarCargaDatosMaestros()">
                             <i class="fa fa-refresh me-1"></i>
-                            {{'Reintentar' | translate}}
+                            {{'ventas.confProductToCart.reintentar' | translate}}
                         </button>
                         <button class="btn btn-sm btn-outline-secondary" (click)="dismissCurrentModal()">
                             <i class="fa fa-times me-1"></i>
-                            {{'Cerrar' | translate}}
+                            {{'comun.cerrar' | translate}}
                         </button>
                     </div>
                 </div>
@@ -412,9 +409,9 @@
                 <div *ngIf="!datosMaestrosCargados && !errorCargaDatosMaestros" class="alert alert-info mb-3" role="alert">
                     <div class="d-flex align-items-center">
                         <div class="spinner-border spinner-border-sm me-2" role="status">
-                            <span class="visually-hidden">{{'Cargando...' | translate}}</span>
+                            <span class="visually-hidden">{{'comun.cargando' | translate}}</span>
                         </div>
-                        <span>{{'Cargando configuración del producto...' | translate}}</span>
+                        <span>{{'ventas.confProductToCart.cargandoConfiguracion' | translate}}</span>
                     </div>
                 </div>
 
@@ -423,35 +420,35 @@
                     <div class="loading-overlay" *ngIf="isConfigLoading || maestrosCargando">
                         <div class="d-flex flex-column align-items-center">
                             <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">{{'Cargando...' | translate}}</span>
+                                <span class="visually-hidden">{{'comun.cargando' | translate}}</span>
                             </div>
-                            <small class="text-muted mt-2">{{'Preparando configuración...' | translate}}</small>
+                            <small class="text-muted mt-2">{{'ventas.confProductToCart.preparandoConfiguracion' | translate}}</small>
                         </div>
                     </div>
                     <!-- Navegación de secciones (mockup): solo presentación, salta a cada sección -->
                     <div class="cfg-secnav">
                         <button type="button" class="cfg-secnav-pill" [class.active]="seccionActiva === 'datosEntregaPanel'"
                                 (click)="irASeccion('datosEntregaPanel')">
-                            <span class="cfg-secnav-dot">1</span> {{'Entrega' | translate}}
+                            <span class="cfg-secnav-dot">1</span> {{'ventas.confProductToCart.entrega' | translate}}
                         </button>
                         <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.aceptaVariable"
                                 [class.active]="seccionActiva === 'preferenciasPanel'"
                                 (click)="irASeccion('preferenciasPanel')">
-                            <span class="cfg-secnav-dot">2</span> {{'Preferencias' | translate}}
+                            <span class="cfg-secnav-dot">2</span> {{'ventas.confProductToCart.preferencias' | translate}}
                         </button>
                         <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.llevaTarjeta"
                                 [class.active]="seccionActiva === 'tarjetasPanel'"
                                 (click)="irASeccion('tarjetasPanel')">
-                            <span class="cfg-secnav-dot">3</span> {{'Tarjetas' | translate}}
+                            <span class="cfg-secnav-dot">3</span> {{'ventas.confProductToCart.tarjetas' | translate}}
                         </button>
                         <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.aceptaAdiciones"
                                 [class.active]="seccionActiva === 'adicionesPanel'"
                                 (click)="irASeccion('adicionesPanel')">
-                            <span class="cfg-secnav-dot">4</span> {{'Adiciones' | translate}}
+                            <span class="cfg-secnav-dot">4</span> {{'ventas.confProductToCart.adiciones' | translate}}
                         </button>
                         <button type="button" class="cfg-secnav-pill" [class.active]="seccionActiva === 'cantidadPanel'"
                                 (click)="irASeccion('cantidadPanel')">
-                            <span class="cfg-secnav-dot">5</span> {{'Cantidad' | translate}}
+                            <span class="cfg-secnav-dot">5</span> {{'ventas.confProductToCart.cantidad' | translate}}
                         </button>
                     </div>
 
@@ -462,11 +459,11 @@
                         <ng-template ngbPanelHeader>
                             <div id="sec-datosEntregaPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-calendar me-2"></i> {{'Datos para la entrega' | translate}}
+                                    <i class="fa fa-calendar me-2"></i> {{'ventas.confProductToCart.datosParaLaEntrega' | translate}}
                                 </button>
                                 <span *ngIf="datosEntrega.valid"
                                     class="badge bg-success me-4 d-flex align-items-center">
-                                    <i class="fa fa-check me-1"></i> {{'Completado' | translate}}
+                                    <i class="fa fa-check me-1"></i> {{'ventas.confProductToCart.completado' | translate}}
                                 </span>
                             </div>
                         </ng-template>
@@ -474,10 +471,10 @@
                             <form [formGroup]="datosEntrega" class="datos-entrega-form">
                                 <!-- Sección de fecha de entrega -->
                                 <div *ngIf="usaCalendario" class="mb-3">
-                                    <h5 class="section-title">{{'1. Fecha de entrega' | translate}}</h5>
+                                    <h5 class="section-title">{{'ventas.confProductToCart.paso1FechaDeEntrega' | translate}}</h5>
                                     <div class="form-group">
                                         <div class="input-group">
-                                            <input class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('fechaEntrega')?.invalid && datosEntrega.get('fechaEntrega')?.touched}" placeholder="{{'Fecha de entrega' | translate}}"
+                                            <input class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('fechaEntrega')?.invalid && datosEntrega.get('fechaEntrega')?.touched}" placeholder="{{'ventas.confProductToCart.fechaDeEntrega' | translate}}"
                                                 name="dp" formControlName="fechaEntrega" ngbDatepicker
                                                 #d3="ngbDatepicker" [minDate]="minDate" [placement]="placement"
                                                 [positionTarget]="buttonEl" readonly />
@@ -487,30 +484,30 @@
                                             </button>
                                         </div>
                                         <div *ngIf="datosEntrega.get('fechaEntrega')?.invalid && datosEntrega.get('fechaEntrega')?.touched" class="invalid-feedback d-block">
-                                            {{'La fecha de entrega es obligatoria' | translate}}
+                                            {{'ventas.confProductToCart.fechaObligatoria' | translate}}
                                         </div>
                                     </div>
 
                                     <!-- Forma de entrega -->
                                     <div *ngIf="hasFechaEntrega()" class="mt-3">
-                                        <h5 class="section-title">{{'2. Forma de entrega' | translate}}</h5>
+                                        <h5 class="section-title">{{'ventas.confProductToCart.paso2FormaDeEntrega' | translate}}</h5>
                                         <div class="form-group">
                                             <!-- Alerta cuando no hay formas de entrega -->
                                             <div *ngIf="!formasEntregaProducto || formasEntregaProducto.length === 0" 
                                                  class="alert alert-warning p-2 mb-2">
                                                 <i class="fa fa-exclamation-triangle me-1"></i>
-                                                <small>{{'No hay formas de entrega disponibles para este producto' | translate}}</small>
+                                                <small>{{'ventas.confProductToCart.noHayFormasDeEntrega' | translate}}</small>
                                             </div>
                                             
                                             <ng-select [items]="formasEntregaProducto" bindLabel="nombre"
-                                                bindValue="nombre" placeholder="{{'Forma de entrega' | translate}}"
+                                                bindValue="nombre" placeholder="{{'ventas.confProductToCart.formaDeEntrega' | translate}}"
                                                 class="form-control" [ngClass]="{'is-invalid': datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched}"
                                                 style="font-family: roboto;" [closeOnSelect]="true"
                                                 [disabled]="!formasEntregaProducto || formasEntregaProducto.length === 0"
                                                 formControlName="formaEntrega" (change)="changeTipoEntrega($event)">
                                             </ng-select>
                                             <div *ngIf="datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched" class="invalid-feedback d-block">
-                                                {{'La forma de entrega es obligatoria' | translate}}
+                                                {{'ventas.confProductToCart.formaObligatoria' | translate}}
                                             </div>
                                             <small *ngIf="avisoFormaEntregaUnica" class="text-muted d-block mt-1">{{ avisoFormaEntregaUnica }}</small>
                                         </div>
@@ -518,16 +515,16 @@
 
                                     <!-- Horarios -->
                                     <div *ngIf="hasFechaEntrega()" class="mt-3">
-                                        <h5 class="section-title">{{'3. Horarios' | translate}}</h5>
+                                        <h5 class="section-title">{{'ventas.confProductToCart.paso3Horarios' | translate}}</h5>
                                         <div class="form-group">
                                             <ng-select [items]="horarios" class="form-control"
-                                                placeholder="{{'Horarios' | translate}}" class="form-control"
+                                                placeholder="{{'ventas.confProductToCart.horarios' | translate}}" class="form-control"
                                                 [ngClass]="{'is-invalid': datosEntrega.get('horarioEntrega')?.invalid && datosEntrega.get('horarioEntrega')?.touched}"
                                                 formControlName="horarioEntrega" style="font-family: roboto;"
                                                 [closeOnSelect]="true">
                                             </ng-select>
                                             <div *ngIf="datosEntrega.get('horarioEntrega')?.invalid && datosEntrega.get('horarioEntrega')?.touched" class="invalid-feedback d-block">
-                                                {{'El horario de entrega es obligatorio' | translate}}
+                                                {{'ventas.confProductToCart.horarioObligatorio' | translate}}
                                             </div>
                                         </div>
                                     </div>
@@ -538,76 +535,76 @@
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="fa fa-calendar-o mt-1"></i>
                                         <div class="flex-grow-1">
-                                            <p class="mb-1 fw-semibold">{{'Este producto no tiene calendario definido: su fecha de entrega es ' | translate}}{{ fechaEntregaTexto }}.</p>
-                                            <small class="text-muted d-block">{{'Se entrega con la forma y el horario estándar del comercio. Si este pedido necesita otra fecha, forma u hora, elígela aquí.' | translate}}</small>
+                                            <p class="mb-1 fw-semibold">{{ 'ventas.confProductToCart.sinCalendario' | translate: { fecha: fechaEntregaTexto } }}</p>
+                                            <small class="text-muted d-block">{{'ventas.confProductToCart.seEntregaConLaForma' | translate}}</small>
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-outline-primary btn-sm mt-2" (click)="activarCalendario()">
-                                        <i class="fa fa-calendar me-1"></i>{{'Elegir fecha, forma y hora de entrega' | translate}}
+                                        <i class="fa fa-calendar me-1"></i>{{'ventas.confProductToCart.elegirFechaFormaHora' | translate}}
                                     </button>
                                 </div>
 
                                 <!-- Sección de personalización -->
                                 <div *ngIf="hasAceptaOcasion || hasAceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion"
                                     class="mt-4">
-                                    <h5 class="section-title">{{'Personalización' | translate}}</h5>
+                                    <h5 class="section-title">{{'ventas.confProductToCart.personalizacion' | translate}}</h5>
 
                                     <!-- Ocasión -->
                                     <div *ngIf="hasAceptaOcasion" class="form-group">
-                                        <label>{{'Ocasión' | translate}} <span class="text-danger">*</span></label>
+                                        <label>{{'ventas.confProductToCart.ocasion' | translate}} <span class="text-danger">*</span></label>
                                         <ng-select [items]="ocasiones" formControlName="ocasion" class="form-control"
                                             [ngClass]="{'is-invalid': datosEntrega.get('ocasion')?.invalid && datosEntrega.get('ocasion')?.touched}"
-                                            placeholder="{{'Ocasión' | translate}}"
+                                            placeholder="{{'ventas.confProductToCart.ocasion' | translate}}"
                                             (change)="addOpcionesPersonalizacion()" style="font-family: roboto;"
                                             bindLabel="name" bindValue="id" [closeOnSelect]="true">
                                         </ng-select>
                                         <div *ngIf="datosEntrega.get('ocasion')?.invalid && datosEntrega.get('ocasion')?.touched" class="invalid-feedback d-block">
-                                            {{'La ocasión es obligatoria' | translate}}
+                                            {{'ventas.confProductToCart.ocasionObligatoria' | translate}}
                                         </div>
                                     </div>
 
                                     <!-- Género -->
                                     <div *ngIf="hasAceptaGenero" class="form-group">
-                                        <label>{{'Género' | translate}} <span class="text-danger">*</span></label>
+                                        <label>{{'ventas.confProductToCart.genero' | translate}} <span class="text-danger">*</span></label>
                                         <ng-select style="height:auto !important" [items]="generos"
                                             formControlName="genero" bindLabel="name" bindValue="id"
                                             [ngClass]="{'is-invalid': datosEntrega.get('genero')?.invalid && datosEntrega.get('genero')?.touched}"
                                             (change)="addOpcionesPersonalizacion()" class="form-control"
-                                            placeholder="{{'Genero' | translate}}" style="font-family: roboto;"
+                                            placeholder="{{'ventas.confProductToCart.generoPlaceholder' | translate}}" style="font-family: roboto;"
                                             [multiple]="false" [closeOnSelect]="true">
                                         </ng-select>
                                         <div *ngIf="datosEntrega.get('genero')?.invalid && datosEntrega.get('genero')?.touched" class="invalid-feedback d-block">
-                                            {{'El género es obligatorio' | translate}}
+                                            {{'ventas.confProductToCart.generoObligatorio' | translate}}
                                         </div>
                                     </div>
 
                                     <!-- Observaciones -->
                                     <div *ngIf="producto?.procesoComercial?.aceptaComentarios" class="form-group">
-                                        <label>{{'Observaciones' | translate}} <span class="text-danger">*</span></label>
+                                        <label>{{'ventas.confProductToCart.observaciones' | translate}} <span class="text-danger">*</span></label>
                                         <textarea class="form-control" formControlName="observaciones"
                                             [ngClass]="{'is-invalid': datosEntrega.get('observaciones')?.invalid && datosEntrega.get('observaciones')?.touched}"
                                             id="exampleFormControlTextarea1" rows="3"
                                             (keyup)="addOpcionesPersonalizacion()"
-                                            placeholder="{{'Observaciones' | translate}}"></textarea>
+                                            placeholder="{{'ventas.confProductToCart.observaciones' | translate}}"></textarea>
                                         <div *ngIf="datosEntrega.get('observaciones')?.invalid && datosEntrega.get('observaciones')?.touched" class="invalid-feedback d-block">
-                                            {{'Las observaciones son obligatorias' | translate}}
+                                            {{'ventas.confProductToCart.observacionesObligatorias' | translate}}
                                         </div>
                                     </div>
 
                                     <!-- Colores -->
                                     <div *ngIf="producto?.procesoComercial.aceptaColorDecoracion" class="form-group">
-                                        <label>{{'Seleccione el color' | translate}} <span class="text-danger">*</span></label>
+                                        <label>{{'ventas.confProductToCart.seleccioneElColor' | translate}} <span class="text-danger">*</span></label>
                                         <div>
                                             <ul class="product-color m-t-15">
                                                 <li *ngFor="let item of producto.procesoComercial?.colorDecoracion"
                                                     [style.backgroundColor]="item" (click)="selectedColor($event,item)"
-                                                    title="{{'Dale click para seleccionar' | translate}}"
+                                                    title="{{'ventas.confProductToCart.clickParaSeleccionar' | translate}}"
                                                     style="cursor: pointer;">
                                                 </li>
                                             </ul>
                                         </div>
                                         <div *ngIf="datosEntrega.get('colores')?.invalid && datosEntrega.get('colores')?.touched" class="invalid-feedback d-block">
-                                            {{'Debe seleccionar al menos un color' | translate}}
+                                            {{'ventas.confProductToCart.debeSeleccionarColor' | translate}}
                                         </div>
                                     </div>
                                 </div>
@@ -620,7 +617,7 @@
                         <ng-template ngbPanelHeader>
                             <div id="sec-preferenciasPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-list-alt me-2"></i> {{'Preferencias del producto' | translate}}
+                                    <i class="fa fa-list-alt me-2"></i> {{'ventas.confProductToCart.preferenciasDelProducto' | translate}}
                                 </button>
                                 <span *ngIf="getVariablesControls().length > 0 && hasPreferencia()"
                                     class="badge bg-success me-4 d-flex align-items-center">
@@ -647,7 +644,7 @@
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'texto'"
                                                     class="form-group mt-2">
                                                     <textarea formControlName="textoIngresado"
-                                                        placeholder="{{'Texto' | translate}}"
+                                                        placeholder="{{'ventas.confProductToCart.texto' | translate}}"
                                                         (keyup)="selectedProductPreference($event, item)"
                                                         class="form-control" rows="3"></textarea>
                                                 </div>
@@ -659,18 +656,18 @@
                                                              class="mb-2 p-2 border rounded bg-light">
                                                             <div class="d-flex align-items-center">
                                                                 <img [src]="currentImage" 
-                                                                     alt="Imagen actual" 
+                                                                     [alt]="'ventas.confProductToCart.imagenActual' | translate" 
                                                                      class="me-2" 
                                                                      style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                                                 <div class="flex-grow-1">
-                                                                    <small class="text-muted d-block">Imagen actual:</small>
-                                                                    <small class="text-dark">{{getCurrentImageSubtitle(item) || 'Imagen cargada'}}</small>
+                                                                    <small class="text-muted d-block">{{ 'ventas.confProductToCart.imagenActualDosPuntos' | translate }}</small>
+                                                                    <small class="text-dark">{{getCurrentImageSubtitle(item) || ('ventas.confProductToCart.imagenCargada' | translate)}}</small>
                                                                 </div>
                                                                 <div class="ms-2">
                                                                     <button type="button" 
                                                                             class="btn btn-outline-danger btn-sm"
                                                                             (click)="deleteImageFromPreference(item)"
-                                                                            title="Eliminar imagen"
+                                                                            [title]="'ventas.confProductToCart.eliminarImagen' | translate"
                                                                             style="padding: 2px 6px; font-size: 12px;">
                                                                         <i class="fa fa-trash"></i>
                                                                     </button>
@@ -684,21 +681,21 @@
                                                         <input formControlName="imagenIngresado" type="file"
                                                             accept="image/*" class="form-control"
                                                             (change)="selectedProductPreference($event, item)"
-                                                            placeholder="{{'Subir imagen' | translate}}">
+                                                            placeholder="{{'ventas.confProductToCart.subirImagen' | translate}}">
                                                         <div class="input-group-text">
                                                             <i class="fa fa-image"></i>
                                                         </div>
                                                     </div>
                                                     <small class="text-muted">
                                                         <i class="fa fa-info-circle me-1"></i>
-                                                        {{'Al subir una nueva imagen, reemplazará la imagen actual' | translate}}
+                                                        {{'ventas.confProductToCart.reemplazaraImagen' | translate}}
                                                     </small>
                                                 </div>
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'archivo'"
                                                     class="form-group mt-2">
                                                     <input formControlName="archivoIngresado" type="file"
                                                         (change)="selectedProductPreference($event, item)"
-                                                        placeholder="{{'Adjuntar archivo' | translate}}"
+                                                        placeholder="{{'ventas.confProductToCart.adjuntarArchivo' | translate}}"
                                                         class="form-control">
                                                 </div>
                                             </div>
@@ -709,7 +706,7 @@
                                                     [ngModel]="getSelectedChildControl(item)"
                                                     [ngModelOptions]="{standalone: true}"
                                                     (change)="selectedProductPreferenceForNgSelect($event, item)"
-                                                    placeholder="{{'Selecciona una opción' | translate}}"
+                                                    placeholder="{{'ventas.confProductToCart.seleccionaUnaOpcion' | translate}}"
                                                     [multiple]="false" [closeOnSelect]="true">
                                                     <ng-template ng-label-tmp let-item="item">
                                                         {{ item.value.data.titulo}} +
@@ -718,7 +715,7 @@
                                                         | currency}}
                                                     </ng-template>
                                                     <ng-template ng-option-tmp let-item="item">
-                                                        <img [src]="getImgAdicion(item.value.data.titulo)" alt="image"
+                                                        <img [src]="getImgAdicion(item.value.data.titulo)" [alt]="'ventas.confProductToCart.imagen' | translate"
                                                             width="50" height="50" />
                                                         {{ item.value.data.titulo}} +
                                                         {{
@@ -739,7 +736,7 @@
                         <ng-template ngbPanelHeader>
                             <div id="sec-tarjetasPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-gift me-2"></i> {{'Tarjetas' | translate}} <span
+                                    <i class="fa fa-gift me-2"></i> {{'ventas.confProductToCart.tarjetas' | translate}} <span
                                         *ngIf="!SinTarjeta">({{tarjetas.length}})</span>
                                 </button>
                                 <span *ngIf="SinTarjeta || tarjetas.length > 0"
@@ -752,12 +749,12 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="d-flex align-items-center">
-                                        <h5 class="m-15" *ngIf="!SinTarjeta">{{'Tarjetas' | translate}}
+                                        <h5 class="m-15" *ngIf="!SinTarjeta">{{'ventas.confProductToCart.tarjetas' | translate}}
                                             ({{tarjetas.length}})</h5>
-                                        <h5 class="m-15" *ngIf="SinTarjeta">{{'Sin tarjetas' | translate}} </h5>
+                                        <h5 class="m-15" *ngIf="SinTarjeta">{{'ventas.confProductToCart.sinTarjetas' | translate}} </h5>
                                         <button class="btn btn-sm btn-primary ms-2" *ngIf="!SinTarjeta"
-                                            title="{{'Agregar otra tarjeta' | translate}}" (click)="agregarTarjeta()">
-                                            <i class="fa fa-plus me-1"></i> {{'Agregar' | translate}}
+                                            title="{{'ventas.confProductToCart.agregarOtraTarjeta' | translate}}" (click)="agregarTarjeta()">
+                                            <i class="fa fa-plus me-1"></i> {{'ventas.confProductToCart.agregar' | translate}}
                                         </button>
                                     </div>
                                     <div class="form-check mt-2">
@@ -765,8 +762,7 @@
                                             value="tarjetas" 
                                             [checked]="isOnlyOneTarjeta" 
                                             (change)="onChangeTarjetas($event)">
-                                        <label class="form-check-label" for="tarjetas">{{'Solo quiero una tarjeta para
-                                            este producto' | translate}}
+                                        <label class="form-check-label" for="tarjetas">{{ 'ventas.confProductToCart.soloUnaTarjeta' | translate }}
                                         </label>
                                     </div>
                                     <div class="form-check">
@@ -774,8 +770,7 @@
                                             name="notarjetas" value="notarjetas" 
                                             [checked]="SinTarjeta" 
                                             (change)="onChangeNoTarjetas($event)">
-                                        <label class="form-check-label" for="notarjetas">{{'No quiero tarjeta para este
-                                            producto' | translate}}
+                                        <label class="form-check-label" for="notarjetas">{{ 'ventas.confProductToCart.noQuieroTarjeta' | translate }}
                                         </label>
                                     </div>
                                 </div>
@@ -786,7 +781,7 @@
                                         <div *ngFor="let tarjeta of tarjetas.controls; let i = index">
                                             <div [formGroupName]="i" class="card p-3 mb-3">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h5 class="mb-0">{{'Tarjeta #' | translate}}{{ i + 1 }}</h5>
+                                                    <h5 class="mb-0">{{ 'ventas.confProductToCart.tarjetaN' | translate: { n: i + 1 } }}</h5>
                                                     <div>
                                                         <app-katuqintelligence class="me-2"
                                                             [titleInput]="'Generate text with IA for tarjeta' + (i + 1)"
@@ -802,30 +797,30 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group mb-2">
-                                                    <label class="form-label">{{'Para:' | translate}}</label>
+                                                    <label class="form-label">{{'ventas.confProductToCart.para' | translate}}</label>
                                                     <input class="form-control" formControlName="para" 
                                                            [ngClass]="{'is-invalid': tarjeta.get('para')?.invalid && tarjeta.get('para')?.touched}" />
                                                     <div *ngIf="tarjeta.get('para')?.invalid && tarjeta.get('para')?.touched" 
                                                          class="invalid-feedback">
-                                                        {{'Este campo es obligatorio' | translate}}
+                                                        {{'ventas.confProductToCart.campoObligatorio' | translate}}
                                                     </div>
                                                 </div>
                                                 <div class="form-group mb-2">
-                                                    <label class="form-label">{{'Mensaje Para La Tarjeta:' | translate}}</label>
+                                                    <label class="form-label">{{'ventas.confProductToCart.mensajeTarjeta' | translate}}</label>
                                                     <textarea class="form-control" formControlName="mensaje" rows="3"
                                                               [ngClass]="{'is-invalid': tarjeta.get('mensaje')?.invalid && tarjeta.get('mensaje')?.touched}"></textarea>
                                                     <div *ngIf="tarjeta.get('mensaje')?.invalid && tarjeta.get('mensaje')?.touched" 
                                                          class="invalid-feedback">
-                                                        {{'Este campo es obligatorio' | translate}}
+                                                        {{'ventas.confProductToCart.campoObligatorio' | translate}}
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label class="form-label">{{'De:' | translate}}</label>
+                                                    <label class="form-label">{{'ventas.confProductToCart.de' | translate}}</label>
                                                     <input class="form-control" formControlName="de" 
                                                            [ngClass]="{'is-invalid': tarjeta.get('de')?.invalid && tarjeta.get('de')?.touched}" />
                                                     <div *ngIf="tarjeta.get('de')?.invalid && tarjeta.get('de')?.touched" 
                                                          class="invalid-feedback">
-                                                        {{'Este campo es obligatorio' | translate}}
+                                                        {{'ventas.confProductToCart.campoObligatorio' | translate}}
                                                     </div>
                                                 </div>
                                             </div>
@@ -841,7 +836,7 @@
                         <ng-template ngbPanelHeader>
                             <div id="sec-adicionesPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-plus-circle me-2"></i> {{'Adiciones' | translate}}
+                                    <i class="fa fa-plus-circle me-2"></i> {{'ventas.confProductToCart.adiciones' | translate}}
                                 </button>
                                 <span *ngIf="hasAdicion()" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i> {{getAdicionesCount()}}
@@ -852,20 +847,20 @@
                             <div class="container-fluid px-0">
                                 <div class="row">
                                     <div class="col-sm-12 col-sm-12 input-group">
-                                        <h5 class="m-15">{{'Selecciona uno o varios' | translate}}</h5>
+                                        <h5 class="m-15">{{'ventas.confProductToCart.seleccionaUnoOVarios' | translate}}</h5>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="card">
                                             <div class="adic-cabeza col-sm-12 input-group py-2">
-                                                <h5 class="mb-0">{{'Adiciones disponibles' | translate}}</h5>
+                                                <h5 class="mb-0">{{'ventas.confProductToCart.adicionesDisponibles' | translate}}</h5>
                                             </div>
                                             <div class="card-body scrollable-div p-2">
                                                 <!-- Mensaje cuando no hay adiciones disponibles -->
                                                 <div *ngIf="!adicionesrows || adicionesrows.length === 0" class="text-center p-4">
                                                     <i class="fa fa-info-circle text-muted mb-2" style="font-size: 2em;"></i>
-                                                    <p class="text-muted">{{'No hay adiciones disponibles para este producto' | translate}}</p>
+                                                    <p class="text-muted">{{'ventas.confProductToCart.noHayAdiciones' | translate}}</p>
                                                 </div>
                                                 
                                                 <div class="row g-sm-4 g-2" *ngFor="let item of adicionesrows">
@@ -883,7 +878,7 @@
                                                                 <div class="media-body">
                                                                     <h6 class="mb-1">{{item.titulo}}</h6>
                                                                     <div class="price">
-                                                                        <span class="text-muted me-1">{{'Precio:' |
+                                                                        <span class="text-muted me-1">{{'ventas.confProductToCart.precioDosPuntos' |
                                                                             translate}}</span>
                                                                         {{item.precioTotal |
                                                                         currency:'USD':'symbol':'1.2-2'}}
@@ -924,7 +919,7 @@
                                             <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
                                             <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
                                             <select *ngIf="campo.tipo === 'select'" class="form-control form-control-sm" [formControlName]="campo.id">
-                                                <option value="">-- Seleccionar --</option>
+                                                <option value="">{{ 'ventas.confProductToCart.seleccionarOpcion' | translate }}</option>
                                                 <option *ngFor="let opt of campo.opciones" [value]="opt.valor">{{ opt.etiqueta }}</option>
                                             </select>
                                             <div *ngIf="campo.tipo === 'checkbox'" class="form-check mt-1">
@@ -946,7 +941,7 @@
                                                 <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
                                                 <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
                                                 <select *ngIf="campo.tipo === 'select'" class="form-control form-control-sm" [formControlName]="campo.id">
-                                                    <option value="">-- Seleccionar --</option>
+                                                    <option value="">{{ 'ventas.confProductToCart.seleccionarOpcion' | translate }}</option>
                                                     <option *ngFor="let opt of campo.opciones" [value]="opt.valor">{{ opt.etiqueta }}</option>
                                                 </select>
                                                 <div *ngIf="campo.tipo === 'checkbox'" class="form-check mt-1">
@@ -968,7 +963,7 @@
                         <ng-template ngbPanelHeader>
                             <div id="sec-cantidadPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-shopping-basket me-2"></i> {{'Cantidad' | translate}}
+                                    <i class="fa fa-shopping-basket me-2"></i> {{'ventas.confProductToCart.cantidad' | translate}}
                                 </button>
                                 <span *ngIf="cantidad > 0" class="badge bg-primary me-4 d-flex align-items-center">
                                     {{cantidad}}
@@ -980,18 +975,18 @@
                                 <div class="alert alert-light small mb-3">
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="fa fa-info-circle me-2 text-primary"></i>
-                                        <strong>{{'Información importante' | translate}}:</strong>
+                                        <strong>{{'ventas.confProductToCart.informacionImportante' | translate}}:</strong>
                                     </div>
                                     <ul class="mb-0 ps-4">
-                                        <li>{{'Cantidad mínima de venta:' | translate}}
+                                        <li>{{'ventas.confProductToCart.cantidadMinimaDeVenta' | translate}}
                                             {{producto?.disponibilidad?.cantidadMinVenta}}</li>
-                                        <li>{{'Unidades disponibles:' | translate}}
+                                        <li>{{'ventas.confProductToCart.unidadesDisponibles' | translate}}
                                             {{producto?.disponibilidad?.cantidadDisponible}}</li>
                                     </ul>
                                 </div>
 
                                 <div class="d-flex align-items-center justify-content-center my-3">
-                                    <label class="me-3 fw-bold">{{'Cantidad a Comprar' | translate}}</label>
+                                    <label class="me-3 fw-bold">{{'ventas.confProductToCart.cantidadAComprar' | translate}}</label>
                                     <div class="qty-box">
                                         <div class="input-group">
                                             <button class="btn btn-outline-secondary" type="button"
@@ -1020,10 +1015,7 @@
 
                                 <div class="alert alert-info small mt-3">
                                     <i class="fa fa-lightbulb-o me-2"></i>
-                                    {{'Las elecciones en este producto aplican a todos los productos idénticos en tu
-                                    compra. Si deseas productos iguales con elecciones diferentes completa la
-                                    configuración para cada uno agrégales al carrito y luego dale en continuar
-                                    comprando.' | translate}}
+                                    {{ 'ventas.confProductToCart.eleccionesAplican' | translate }}
                                 </div>
                             </div>
                         </ng-template>
@@ -1046,7 +1038,7 @@
                     <input class="form-check-input" type="checkbox" [(ngModel)]="mostrarCaracteristicas"
                         id="showFeaturesCheck">
                     <label class="form-check-label" for="showFeaturesCheck">
-                        {{'Mostrar características del producto' | translate}}
+                        {{'ventas.confProductToCart.mostrarCaracteristicas' | translate}}
                     </label>
                 </div>
 
@@ -1055,7 +1047,7 @@
                     <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
                         <li [ngbNavItem]="1">
                             <a ngbNavLink>
-                                {{'Características Adicionales *' | translate}}
+                                {{'ventas.confProductToCart.caracteristicasAdicionales' | translate}}
                                 <i *ngIf="caracteristicasRevisadas" class="fa fa-check feature-check"></i>
                             </a>
                             <ng-template ngbNavContent>
@@ -1066,7 +1058,7 @@
                                     <button *ngIf="producto?.crearProducto?.descripcion?.length > 150"
                                         class="toggle-text-btn my-2" [ngClass]="{'expanded': mostrarDetallesCompletos}"
                                         (click)="mostrarDetallesCompletos = !mostrarDetallesCompletos">
-                                        {{mostrarDetallesCompletos ? 'Ver menos' : 'Ver más' | translate}}
+                                        {{ (mostrarDetallesCompletos ? 'ventas.confProductToCart.verMenos' : 'ventas.confProductToCart.verMas') | translate }}
                                         <i class="fa"
                                             [ngClass]="mostrarDetallesCompletos ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                     </button>
@@ -1076,7 +1068,7 @@
                                             <input class="form-check-input" type="checkbox"
                                                 [(ngModel)]="caracteristicasRevisadas" id="featureCheck1">
                                             <label class="form-check-label" for="featureCheck1">
-                                                {{'Marcar como revisado' | translate}}
+                                                {{'ventas.confProductToCart.marcarComoRevisado' | translate}}
                                             </label>
                                         </div>
                                     </div>
@@ -1085,22 +1077,19 @@
                         </li>
                         <li [ngbNavItem]="2">
                             <a ngbNavLink>
-                                {{'Garantías propias del producto*' | translate}}
+                                {{'ventas.confProductToCart.garantias' | translate}}
                                 <i *ngIf="garantiasRevisadas" class="fa fa-check feature-check"></i>
                             </a>
                             <ng-template ngbNavContent>
                                 <div class="feature-content">
-                                    <p class="mb-0">{{'Lorem Ipsum is simply dummy text of the printing and typesetting
-                                        industry. Lorem Ipsum has been the industry\'s standard dummy text ever since
-                                        the 1500s, when an unknown printer took a galley of type and scrambled it to
-                                        make a type specimen book.' | translate}}</p>
+                                    <p class="mb-0">{{ 'ventas.confProductToCart.textoDeEjemplo' | translate }}</p>
 
                                     <div class="d-flex justify-content-end mt-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox"
                                                 [(ngModel)]="garantiasRevisadas" id="featureCheck2">
                                             <label class="form-check-label" for="featureCheck2">
-                                                {{'Marcar como revisado' | translate}}
+                                                {{'ventas.confProductToCart.marcarComoRevisado' | translate}}
                                             </label>
                                         </div>
                                     </div>
@@ -1109,22 +1098,19 @@
                         </li>
                         <li [ngbNavItem]="3">
                             <a ngbNavLink>
-                                {{'Condiciones/Restricciones*' | translate}}
+                                {{'ventas.confProductToCart.condiciones' | translate}}
                                 <i *ngIf="condicionesRevisadas" class="fa fa-check feature-check"></i>
                             </a>
                             <ng-template ngbNavContent>
                                 <div class="feature-content">
-                                    <p class="mb-0">{{'Lorem Ipsum is simply dummy text of the printing and typesetting
-                                        industry. Lorem Ipsum has been the industry\'s standard dummy text ever since
-                                        the 1500s, when an unknown printer took a galley of type and scrambled it to
-                                        make a type specimen book.' | translate}}</p>
+                                    <p class="mb-0">{{ 'ventas.confProductToCart.textoDeEjemplo' | translate }}</p>
 
                                     <div class="d-flex justify-content-end mt-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox"
                                                 [(ngModel)]="condicionesRevisadas" id="featureCheck3">
                                             <label class="form-check-label" for="featureCheck3">
-                                                {{'Marcar como revisado' | translate}}
+                                                {{'ventas.confProductToCart.marcarComoRevisado' | translate}}
                                             </label>
                                         </div>
                                     </div>
@@ -1155,12 +1141,12 @@
                                 {{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}
                             </div>
                             <div class="compact-quantity" *ngIf="(sumar1() || 1) > 1">
-                                x{{ sumar1() || 1 }}
+                                {{ 'ventas.confProductToCart.porCantidad' | translate: { n: sumar1() || 1 } }}
                             </div>
                         </div>
                         
                         <button class="cfg-footer-cancel" type="button" (click)="dismissCurrentModal()">
-                            {{'Cancelar' | translate}}
+                            {{'comun.cancelar' | translate}}
                         </button>
 
                         <button class="btn-compact-cart" type="button" (click)="addToCar()"
@@ -1168,8 +1154,8 @@
                                 [class]="getCompactCartButtonClass()">
                             <i class="fa fa-shopping-basket"></i>
                             <span class="d-none d-sm-inline ms-1">
-                                {{errorCargaDatosMaestros ? 'Error de configuración' : 
-                                  (isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar')) | translate}}
+                                {{ (errorCargaDatosMaestros ? 'ventas.confProductToCart.errorDeConfiguracion' :
+                                  (isEdit ? 'ventas.confProductToCart.actualizar' : (isStockUnavailable() ? 'ventas.confProductToCart.sinStock' : 'ventas.confProductToCart.agregar'))) | translate }}
                             </span>
                         </button>
                     </div>
@@ -1178,12 +1164,12 @@
                     <div class="cart-expanded-view" *ngIf="isCartExpanded && !isCartMinimized">
                         <div class="price-summary-expanded">
                             <div class="price-row">
-                                <div class="price-label">{{'Producto:' | translate}}</div>
+                                <div class="price-label">{{'ventas.confProductToCart.productoDosPuntos' | translate}}</div>
                                 <div class="price-value">{{ precioproducto * (sumar1() || 1) |
                                     currency:'USD':'symbol':'1.0-0' }}</div>
                             </div>
                             <div class="price-row" *ngIf="getTotalPrecioTotalConIva() > 0">
-                                <div class="price-label">{{'Adiciones:' | translate}}</div>
+                                <div class="price-label">{{'ventas.confProductToCart.adicionesDosPuntos' | translate}}</div>
                                 <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions() -
                                     precioproducto) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</div>
                             </div>
@@ -1194,22 +1180,22 @@
                     <div *ngIf="isCartButtonDisabled() && !isCartMinimized" class="cart-error-info">
                         <div class="error-message" *ngIf="errorCargaDatosMaestros">
                             <i class="fa fa-exclamation-triangle"></i>
-                            <span>{{'Error de configuración' | translate}}</span>
-                            <button (click)="reintentarCargaDatosMaestros()" class="btn-debug" title="{{'Reintentar carga' | translate}}">
+                            <span>{{'ventas.confProductToCart.errorDeConfiguracion' | translate}}</span>
+                            <button (click)="reintentarCargaDatosMaestros()" class="btn-debug" title="{{'ventas.confProductToCart.reintentarCarga' | translate}}">
                                 <i class="fa fa-refresh"></i>
                             </button>
                         </div>
                         <div class="error-message" *ngIf="isStockUnavailable() && !errorCargaDatosMaestros">
                             <i class="fa fa-exclamation-triangle"></i>
-                            <span>{{'Sin stock' | translate}}</span>
+                            <span>{{'ventas.confProductToCart.sinStock' | translate}}</span>
                         </div>
                         <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && usaCalendario">
                             <i class="fa fa-truck"></i>
-                            <span class="d-none d-sm-inline">{{'Sin formas de entrega' | translate}}</span>
+                            <span class="d-none d-sm-inline">{{'ventas.confProductToCart.sinFormasDeEntrega' | translate}}</span>
                         </div>
                         <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (formasEntregaProducto && formasEntregaProducto.length > 0)">
                             <i class="fa fa-info-circle"></i>
-                            <span class="d-none d-sm-inline">{{'Faltan campos' | translate}}</span>
+                            <span class="d-none d-sm-inline">{{'ventas.confProductToCart.faltanCampos' | translate}}</span>
                             <button (click)="showDebugInfo()" class="btn-debug">
                                 <i class="fa fa-bug"></i>
                             </button>

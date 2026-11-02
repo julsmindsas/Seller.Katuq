@@ -6,18 +6,18 @@
     <!-- Encabezado -->
     <header class="opm-cabeza">
       <div class="opm-titulos">
-        <h2 id="opm-titulo" class="opm-titulo">Opciones del pedido</h2>
-        <div class="opm-numero" *ngIf="numeroPedido">Pedido #{{ numeroPedido }}</div>
+        <h2 id="opm-titulo" class="opm-titulo">{{ 'ventas.orderOptions.opcionesDelPedido' | translate }}</h2>
+        <div class="opm-numero" *ngIf="numeroPedido">{{ 'ventas.orderOptions.pedidoNumero' | translate: { numero: numeroPedido } }}</div>
       </div>
       <div class="opm-buscar">
         <app-icono-tabler class="opm-buscar-icono" nombre="search" [tamano]="18"></app-icono-tabler>
         <input #buscador class="opm-buscar-campo" type="search" autocomplete="off" spellcheck="false"
-               placeholder="Buscar acción" aria-label="Buscar acción"
+               [placeholder]="'ventas.orderOptions.buscarAccion' | translate" [attr.aria-label]="'ventas.orderOptions.buscarAccion' | translate"
                [value]="texto"
                (input)="alEscribir($any($event.target).value)"
                (keydown.enter)="alEnter($event)">
       </div>
-      <button type="button" class="opm-cerrar-x" aria-label="Cerrar" (click)="cerrar.emit()">
+      <button type="button" class="opm-cerrar-x" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar.emit()">
         <app-icono-tabler nombre="x" [tamano]="20"></app-icono-tabler>
       </button>
     </header>
@@ -57,16 +57,16 @@
 
         <div class="opm-vacio" *ngIf="vista.sinCoincidencias" role="status">
           <app-icono-tabler nombre="search" [tamano]="28"></app-icono-tabler>
-          <div class="opm-vacio-titulo">Ninguna acción con ese nombre</div>
-          <div class="opm-vacio-texto">Prueba con otra palabra, por ejemplo «pdf», «cliente» o «pagos».</div>
+          <div class="opm-vacio-titulo">{{ 'ventas.orderOptions.ningunaAccionConEseNombre' | translate }}</div>
+          <div class="opm-vacio-texto">{{ 'ventas.orderOptions.pruebaConOtraPalabraPor' | translate }}</div>
         </div>
       </div>
 
       <!-- Para este pedido: solo existe si aplica alguna acción de contexto -->
       <section class="opm-contexto" *ngIf="vista.contexto.length && !vista.sinCoincidencias && !buscando"
-               aria-label="Para este pedido">
+               [attr.aria-label]="'ventas.orderOptions.paraEstePedido' | translate">
         <div class="opm-contexto-fila">
-          <div class="opm-contexto-etiqueta">Para este pedido</div>
+          <div class="opm-contexto-etiqueta">{{ 'ventas.orderOptions.paraEstePedido' | translate }}</div>
           <div class="opm-contexto-botones">
             <button type="button" class="opm-contexto-boton" *ngFor="let c of vista.contexto; trackBy: trackTarjeta"
                     [disabled]="!c.habilitada" [attr.aria-disabled]="!c.habilitada ? 'true' : null"
@@ -82,7 +82,7 @@
           </div>
         </div>
         <div class="opm-contexto-fila opm-contexto-hijos" *ngIf="facturaAbierta">
-          <div class="opm-contexto-etiqueta">Factura electrónica</div>
+          <div class="opm-contexto-etiqueta">{{ 'ventas.orderOptions.facturaElectronica' | translate }}</div>
           <div class="opm-contexto-botones">
             <button type="button" class="opm-contexto-boton opm-contexto-hijo" *ngFor="let h of vista.hijosFactura; trackBy: trackTarjeta"
                     (click)="elegir(h)">
@@ -97,9 +97,9 @@
     <!-- Pie -->
     <footer class="opm-pie">
       <button type="button" class="opm-eliminar" *ngIf="vista?.puedeEliminar" (click)="accion.emit('deleteOrder')">
-        Eliminar pedido <span class="opm-eliminar-nota">· se borra para siempre</span>
+        {{ 'ventas.orderOptions.eliminarPedido' | translate }} <span class="opm-eliminar-nota">{{ 'ventas.orderOptions.seBorraParaSiempre' | translate }}</span>
       </button>
-      <button type="button" class="opm-cerrar" (click)="cerrar.emit()">Cerrar</button>
+      <button type="button" class="opm-cerrar" (click)="cerrar.emit()">{{ 'comun.cerrar' | translate }}</button>
     </footer>
   </div>
 </div>

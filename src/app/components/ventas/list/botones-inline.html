@@ -28,7 +28,7 @@
                     class="action-btn action-btn-secondary edit-btn" 
                     type="button"
                     (click)="editDatosClientes(clientesModal, pedido)"
-                    [title]="'Editar Cliente' | translate">
+                    [title]="'ventas.list.editarCliente' | translate">
                 <i class="fa fa-user"></i>
             </button>
             
@@ -36,7 +36,7 @@
             <button class="action-btn action-btn-expand more-btn" 
                     type="button"
                     (click)="toggleExpanded(pedido.nroPedido)"
-                    [title]="'Más opciones' | translate">
+                    [title]="'ventas.list.masOpciones' | translate">
                 <i class="fa" [ngClass]="expandedRow === pedido.nroPedido ? 'fa-times' : 'fa-ellipsis-h'"></i>
             </button>
         </div>
@@ -48,7 +48,7 @@
                 <button class="action-btn action-btn-outline address-btn" 
                         type="button"
                         (click)="editDatosEntrega(datosEnregaModal, pedido)"
-                        [title]="'Editar Dirección' | translate">
+                        [title]="'ventas.list.editarDireccion' | translate">
                     <i class="fa fa-map-marker"></i>
                     <span class="btn-label">{{ 'Dirección' | translate }}</span>
                 </button>
@@ -56,7 +56,7 @@
                 <button class="action-btn action-btn-outline billing-btn" 
                         type="button"
                         (click)="editDatosFacturacion(datosFacturacionModal, pedido)"
-                        [title]="'Editar Facturación' | translate">
+                        [title]="'ventas.list.editarFacturacion' | translate">
                     <i class="fa fa-credit-card"></i>
                     <span class="btn-label">{{ 'Facturación' | translate }}</span>
                 </button>
@@ -64,7 +64,7 @@
                 <button class="action-btn action-btn-outline notes-btn" 
                         type="button"
                         (click)="editNotas(notasModal, pedido)"
-                        [title]="'Editar Notas' | translate">
+                        [title]="'ventas.list.editarNotas' | translate">
                     <i class="fa fa-sticky-note"></i>
                     <span class="btn-label">{{ 'Notas' | translate }}</span>
                 </button>
@@ -77,13 +77,13 @@
                         (click)="editarEstadoPago(cambioEstadoPagoModal, pedido)"
                         [title]="'Estado de Pago' | translate">
                     <i class="fa fa-credit-card-alt"></i>
-                    <span class="btn-label">{{ 'Estado Pago' | translate }}</span>
+                    <span class="btn-label">{{ 'ventas.list.estadoDePago' | translate }}</span>
                 </button>
                 
                 <button class="action-btn action-btn-outline cart-btn" 
                         type="button"
                         (click)="addProductToCart(recompraModal, pedido)"
-                        [title]="'Agregar Productos' | translate">
+                        [title]="'ventas.list.agregarProductos' | translate">
                     <i class="fa fa-shopping-cart"></i>
                     <span class="btn-label">{{ 'Productos' | translate }}</span>
                 </button>
@@ -91,9 +91,9 @@
                 <button class="action-btn action-btn-outline seller-btn" 
                         type="button"
                         (click)="editSeller(pedido)"
-                        [title]="'Asignar Asesor' | translate">
+                        [title]="'ventas.list.asignarAsesor' | translate">
                     <i class="fa fa-users"></i>
-                    <span class="btn-label">{{ 'Asesor' | translate }}</span>
+                    <span class="btn-label">{{ 'ventas.list.asesor' | translate }}</span>
                 </button>
             </div>
             
@@ -102,7 +102,7 @@
                 <button class="action-btn action-btn-outline history-btn" 
                         type="button"
                         (click)="AsentarPago(pagosModal, pedido)"
-                        [title]="'Historial Pagos' | translate">
+                        [title]="'ventas.list.historialDePagos' | translate">
                     <i class="fa fa-history"></i>
                     <span class="btn-label">{{ 'Historial' | translate }}</span>
                 </button>
@@ -112,7 +112,7 @@
                         class="action-btn action-btn-danger delete-btn" 
                         type="button"
                         (click)="confirmDeleteOrder(pedido)"
-                        [title]="'Eliminar Pedido' | translate">
+                        [title]="'ventas.list.eliminarPedido' | translate">
                     <i class="fa fa-trash"></i>
                     <span class="btn-label">{{ 'Eliminar' | translate }}</span>
                 </button>

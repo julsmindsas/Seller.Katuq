@@ -18,6 +18,7 @@ import Swal from "sweetalert2";
 import { Subject, Subscription } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
 import { of } from "rxjs";
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: "app-customer-section",
@@ -54,6 +55,7 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
     private checkoutService: PosCheckoutService,
     private cdr: ChangeDetectorRef,
     private host: ElementRef<HTMLElement>,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -135,8 +137,8 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
       }, 100);
 
       Swal.fire({
-        title: "¡Cliente encontrado!",
-        text: `${cliente.nombres_completos || ""} ${cliente.apellidos_completos || ""} ha sido asociado a la venta`,
+        title: this.translate.instant('ventas.customerSection.clienteEncontrado'),
+        text: this.translate.instant('ventas.customerSection.clienteAsociadoALaVenta', { nombre: `${cliente.nombres_completos || ""} ${cliente.apellidos_completos || ""}`.trim() }),
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
@@ -199,11 +201,11 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
           // Determinar el mensaje apropiado basado en la acción realizada
           const mensaje =
             result.action === "updated"
-              ? "Cliente actualizado y asociado a la venta"
-              : "Cliente creado y asociado automáticamente a la venta";
+              ? this.translate.instant('ventas.customerSection.clienteActualizadoYAsociado')
+              : this.translate.instant('ventas.customerSection.clienteCreadoYAsociado');
 
           Swal.fire({
-            title: "¡Perfecto!",
+            title: this.translate.instant('ventas.customerSection.perfecto'),
             text: mensaje,
             icon: "success",
             timer: 3000,
@@ -225,7 +227,7 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
   editarCliente(): void {
     // Verificar que tenemos datos de cliente válidos
     if (!this.datosCliente) {
-      this.showAlert("Error", "No hay cliente seleccionado para editar");
+      this.showAlert(this.translate.instant('comun.error'), this.translate.instant('ventas.customerSection.noHayClienteParaEditar'));
       return;
     }
 
@@ -272,8 +274,8 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
 
           // Mostrar mensaje de éxito
           Swal.fire({
-            title: "¡Cliente actualizado!",
-            text: "Los datos del cliente han sido actualizados y permanece asociado a la venta",
+            title: this.translate.instant('ventas.customerSection.clienteActualizado'),
+            text: this.translate.instant('ventas.customerSection.datosActualizados'),
             icon: "success",
             timer: 3000,
             showConfirmButton: false,
@@ -321,8 +323,8 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
 
     if (!documento) {
       this.showAlert(
-        "Campo requerido",
-        "Por favor ingrese un documento para buscar",
+        this.translate.instant('ventas.customerSection.campoRequerido'),
+        this.translate.instant('ventas.customerSection.ingreseDocumento'),
       );
       return;
     }
@@ -335,12 +337,12 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         if (!res.company) {
           Swal.fire({
-            title: "Cliente no encontrado",
-            text: "No se encuentra el documento. ¿Desea crear un nuevo cliente con este documento?",
+            title: this.translate.instant('ventas.customerSection.clienteNoEncontrado'),
+            text: this.translate.instant('ventas.customerSection.noSeEncuentraDocumento'),
             icon: "question",
             showCancelButton: true,
-            confirmButtonText: "Sí, crear cliente",
-            cancelButtonText: "Cancelar",
+            confirmButtonText: this.translate.instant('ventas.customerSection.siCrearCliente'),
+            cancelButtonText: this.translate.instant('comun.cancelar'),
           }).then((result) => {
             if (result.isConfirmed) {
               // Abrir modal con documento pre-llenado
@@ -369,8 +371,8 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
           } catch (error) {
             console.log(error);
             this.showAlert(
-              "Error",
-              "Ocurrió un error al cargar los datos del cliente",
+              this.translate.instant('comun.error'),
+              this.translate.instant('ventas.customerSection.errorCargarDatos'),
             );
           }
         }
@@ -378,8 +380,8 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error("Error al buscar cliente:", error);
         this.showAlert(
-          "Error",
-          "Ocurrió un error al buscar el cliente. Intente nuevamente.",
+          this.translate.instant('comun.error'),
+          this.translate.instant('ventas.customerSection.errorBuscar'),
         );
       },
     });
@@ -479,7 +481,7 @@ export class CustomerSectionComponent implements OnInit, OnDestroy {
       title,
       text,
       icon,
-      confirmButtonText: "Ok",
+      confirmButtonText: this.translate.instant('ventas.pos.ok'),
     });
   }
 }

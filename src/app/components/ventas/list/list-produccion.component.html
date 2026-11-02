@@ -3,9 +3,9 @@
 <div class="produccion-embedded">
           <!-- Selector de columnas -->
           <div class="d-flex align-items-center mb-1">
-            <label class="me-2 fw-bold">Columnas:</label>
+            <label class="me-2 fw-bold">{{ 'ventas.listProduccion.columnas' | translate }}</label>
             <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" optionLabel="header"
-              defaultLabel="Seleccionar columnas" selectedItemsLabel="{0} columnas seleccionadas"
+              [defaultLabel]="'ventas.listProduccion.seleccionarColumnas' | translate" [selectedItemsLabel]="'ventas.listProduccion.columnasSeleccionadas' | translate"
               styleClass="me-2 column-selector" [style]="{'min-width': '250px'}"
               (onChange)="handleColumnSelectionChange($event.value)">
             </p-multiSelect>
@@ -18,10 +18,10 @@
               <div class="metric-chip metric-chip-primary"
                    [class.active]="selectedEstadoFilter === 'all'"
                    (click)="onMetricClick('all')"
-                   pTooltip="{{ 'Ver todos los productos' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.verTodosLosProductos' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-shopping-cart"></i>
-                <span class="metric-label">Total</span>
+                <span class="metric-label">{{ 'ventas.listProduccion.total' | translate }}</span>
                 <span class="metric-badge">{{ productsView?.length || 0 }}</span>
               </div>
 
@@ -31,11 +31,11 @@
               <div class="metric-chip metric-chip-secondary metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'SinProducir'"
                    (click)="onMetricClick('SinProducir')"
-                   pTooltip="{{ 'Filtrar productos sin producir' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosSinProducir' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-circle"></i>
-                <span class="metric-label-short">SP</span>
-                <span class="metric-label-full">Sin Producir</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevSP' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.sinProducir' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('SinProducir') }}</span>
               </div>
 
@@ -45,11 +45,11 @@
               <div class="metric-chip metric-chip-info metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'EnProduccion'"
                    (click)="onMetricClick('EnProduccion')"
-                   pTooltip="{{ 'Filtrar productos en producción' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosEnProduccion' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-cog"></i>
-                <span class="metric-label-short">EP</span>
-                <span class="metric-label-full">En Producción</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevEP' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.enProduccion' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('EnProduccion') }}</span>
               </div>
 
@@ -59,11 +59,11 @@
               <div class="metric-chip metric-chip-warning metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'ProducidoParcialmente'"
                    (click)="onMetricClick('ProducidoParcialmente')"
-                   pTooltip="{{ 'Filtrar productos producidos parcialmente' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosProducidosParcialmente' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-check"></i>
-                <span class="metric-label-short">PP</span>
-                <span class="metric-label-full">Prod. Parcial</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevPP' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.prodParcial' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('ProducidoParcialmente') }}</span>
               </div>
 
@@ -73,11 +73,11 @@
               <div class="metric-chip metric-chip-success metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'ProducidoTotalmente'"
                    (click)="onMetricClick('ProducidoTotalmente')"
-                   pTooltip="{{ 'Filtrar productos producidos totalmente' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosProducidosTotalmente' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-check-circle"></i>
-                <span class="metric-label-short">PT</span>
-                <span class="metric-label-full">Prod. Total</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevPT' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.prodTotal' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('ProducidoTotalmente') }}</span>
               </div>
 
@@ -87,11 +87,11 @@
               <div class="metric-chip metric-chip-packed metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'ParaDespachar'"
                    (click)="onMetricClick('ParaDespachar')"
-                   pTooltip="{{ 'Filtrar productos listos para despachar' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosListosParaDespachar' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-box"></i>
-                <span class="metric-label-short">PD</span>
-                <span class="metric-label-full">P/ Despachar</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevPD' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.pDespachar' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
               </div>
 
@@ -101,11 +101,11 @@
               <div class="metric-chip metric-chip-primary metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'Empacado'"
                    (click)="onMetricClick('Empacado')"
-                   pTooltip="{{ 'Filtrar productos empacados' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosEmpacados' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-inbox"></i>
-                <span class="metric-label-short">EM</span>
-                <span class="metric-label-full">Empacado</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevEM' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.empacado' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('Empacado') }}</span>
               </div>
 
@@ -115,11 +115,11 @@
               <div class="metric-chip metric-chip-warning metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'Despachado'"
                    (click)="onMetricClick('Despachado')"
-                   pTooltip="{{ 'Filtrar productos despachados' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosDespachados' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-truck"></i>
-                <span class="metric-label-short">DE</span>
-                <span class="metric-label-full">Despachado</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevDE' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.despachado' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('Despachado') }}</span>
               </div>
 
@@ -129,11 +129,11 @@
               <div class="metric-chip metric-chip-success metric-chip-compact"
                    [class.active]="selectedEstadoFilter === 'Entregado'"
                    (click)="onMetricClick('Entregado')"
-                   pTooltip="{{ 'Filtrar productos entregados' | translate }}"
+                   pTooltip="{{ 'ventas.listProduccion.filtrarProductosEntregados' | translate }}"
                    tooltipPosition="top">
                 <i class="pi pi-check-circle"></i>
-                <span class="metric-label-short">EN</span>
-                <span class="metric-label-full">Entregado</span>
+                <span class="metric-label-short">{{ 'ventas.listProduccion.abrevEN' | translate }}</span>
+                <span class="metric-label-full">{{ 'ventas.listProduccion.entregado' | translate }}</span>
                 <span class="metric-badge">{{ getProcesoCount('Entregado') }}</span>
               </div>
             </div>
@@ -143,22 +143,22 @@
             styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped"
             [scrollable]="true" scrollHeight="80vh" [rows]="200" [paginator]="true"
             [rowsPerPageOptions]="[5,10,25,50,100,200]" [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+            [currentPageReportTemplate]="'ventas.listProduccion.mostrandoFirstALastDe' | translate"
             [globalFilterFields]="['nroPedido','producto.crearProducto.titulo','producto.identificacion.referencia','cliente.nombres_completos','estadoPago','estadoProceso']"
             [sortMode]="'multiple'" (sortFunction)="customSort($event)"
             [customSort]="true">
             <ng-template pTemplate="header">
               <tr style="font-size: 0.8em;">
                 <!-- Columna Imagen -->
-                <th style="width: 56px; text-align: center;">Imagen</th>
+                <th style="width: 56px; text-align: center;">{{ 'ventas.listProduccion.imagen' | translate }}</th>
 
                 <!-- Columna Producto -->
                 <th *ngIf="isColumnVisibleProduccion('producto')" pSortableColumn="productoTitulo" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Producto
+                    {{ 'ventas.listProduccion.producto' | translate }}
                     <p-sortIcon field="productoTitulo"></p-sortIcon>
                     <p-columnFilter type="text" field="producto.crearProducto.titulo"
-                      matchMode="contains" placeholder="Buscar producto"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.buscarProducto' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -167,31 +167,31 @@
                 <!-- Columna Referencia -->
                 <th *ngIf="isColumnVisibleProduccion('referencia')" pSortableColumn="referencia" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Referencia
+                    {{ 'ventas.listProduccion.referencia' | translate }}
                     <p-sortIcon field="referencia"></p-sortIcon>
                     <p-columnFilter type="text" field="producto.identificacion.referencia"
-                      matchMode="contains" placeholder="Buscar referencia"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.buscarReferencia' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
                 </th>
 
                 <!-- Columna Opciones -->
-                <th style="width: 3rem; text-align: center;">Opciones</th>
+                <th style="width: 3rem; text-align: center;">{{ 'ventas.listProduccion.opciones' | translate }}</th>
                 <!-- Columna Última Impresión -->
                 <th *ngIf="isColumnVisibleProduccion('ultimaImpresion')" pSortableColumn="ultimaImpresion" style= "white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Última impresión
+                    {{ 'ventas.listProduccion.ultimaImpresion' | translate }}
                     <p-sortIcon field="ultimaImpresion"></p-sortIcon>
                   </div>
                 </th>
                 <!-- Columna Revisado -->
                 <th *ngIf="isColumnVisibleProduccion('revisadoParaProduccion')" pSortableColumn="revisadoParaProduccion" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Revisado
+                    {{ 'ventas.listProduccion.revisado' | translate }}
                     <p-sortIcon field="revisadoParaProduccion"></p-sortIcon>
                     <p-columnFilter type="text" field="revisadoParaProduccion"
-                      matchMode="contains" placeholder="Revisado"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.revisado' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -199,10 +199,10 @@
                 <!-- Columna # Pedido -->
                 <th *ngIf="isColumnVisibleProduccion('nroPedido')" pSortableColumn="nroPedido" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    # Pedido
+                    {{ 'ventas.listProduccion.numeroPedido' | translate }}
                     <p-sortIcon field="nroPedido"></p-sortIcon>
                     <p-columnFilter type="text" field="nroPedido"
-                      matchMode="contains" placeholder="Buscar pedido"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.buscarPedido' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -211,10 +211,10 @@
                 <!-- Columna Cantidad -->
                 <th *ngIf="isColumnVisibleProduccion('cantidad')" pSortableColumn="cantidad" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Cantidad
+                    {{ 'ventas.listProduccion.cantidad' | translate }}
                     <p-sortIcon field="cantidad"></p-sortIcon>
                     <p-columnFilter type="numeric" field="cantidad"
-                      matchMode="contains" placeholder="Cantidad"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.cantidad' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -223,10 +223,10 @@
                 <!-- Columna Cliente -->
                 <th *ngIf="isColumnVisibleProduccion('cliente')" pSortableColumn="clienteNombre" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Cliente
+                    {{ 'ventas.listProduccion.cliente' | translate }}
                     <p-sortIcon field="clienteNombre"></p-sortIcon>
                     <p-columnFilter type="text" field="cliente.nombres_completos"
-                      matchMode="contains" placeholder="Cliente"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.cliente' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -235,13 +235,13 @@
                 <!-- Columna Estado Pago -->
                 <th *ngIf="isColumnVisibleProduccion('estadoPago')" pSortableColumn="estadoPago" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Estado de Pago
+                    {{ 'ventas.listProduccion.estadoDePago' | translate }}
                     <p-sortIcon field="estadoPago"></p-sortIcon>
                     <p-columnFilter field="estadoPago" matchMode="equals"
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                         <p-multiSelect [ngModel]="value" [options]="estadosPago"
-                          placeholder="Seleccione" (onChange)="filter($event.value)"
+                          [placeholder]="'ventas.listProduccion.seleccione' | translate" (onChange)="filter($event.value)"
                           style="width: 100%; font-size: 0.8em;">
                         </p-multiSelect>
                       </ng-template>
@@ -252,13 +252,13 @@
                 <!-- Columna Estado Proceso -->
                 <th *ngIf="isColumnVisibleProduccion('estadoProceso')" pSortableColumn="estadoProceso" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Estado de Proceso
+                    {{ 'ventas.listProduccion.estadoDeProceso' | translate }}
                     <p-sortIcon field="estadoProceso"></p-sortIcon>
                     <p-columnFilter field="estadoProceso" matchMode="equals"
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                         <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
-                          placeholder="Seleccione" (onChange)="filter($event.value)"
+                          [placeholder]="'ventas.listProduccion.seleccione' | translate" (onChange)="filter($event.value)"
                           style="width: 100%; font-size: 0.8em;">
                         </p-multiSelect>
                       </ng-template>
@@ -269,14 +269,14 @@
                 <!-- Columna Validación -->
                 <th *ngIf="isColumnVisibleProduccion('validacion')" pSortableColumn="validacion" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Validación
+                    {{ 'ventas.listProduccion.validacion' | translate }}
                     <p-sortIcon field="validacion"></p-sortIcon>
                     <p-columnFilter field="validacion" matchMode="equals"
                       [showMenu]="true" display="menu">
                       <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                         <p-multiSelect [ngModel]="value" [options]="validaciones"
                           optionLabel="nombre" optionValue="value"
-                          placeholder="Seleccione" (onChange)="filter($event.value)"
+                          [placeholder]="'ventas.listProduccion.seleccione' | translate" (onChange)="filter($event.value)"
                           style="width: 100%; font-size: 0.8em;">
                         </p-multiSelect>
                       </ng-template>
@@ -286,10 +286,10 @@
                 <!-- Columna Valor Bruto -->
                 <th *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')" pSortableColumn="totalPedidoSinDescuento" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Valor Bruto
+                    {{ 'ventas.listProduccion.valorBruto' | translate }}
                     <p-sortIcon field="totalPedidoSinDescuento"></p-sortIcon>
                     <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
-                      matchMode="contains" placeholder="V. Bruto"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.vBruto' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -298,10 +298,10 @@
                 <!-- Columna Descuento -->
                 <th *ngIf="isColumnVisibleProduccion('totalDescuento')" pSortableColumn="totalDescuento" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Descuento
+                    {{ 'ventas.listProduccion.descuento' | translate }}
                     <p-sortIcon field="totalDescuento"></p-sortIcon>
                     <p-columnFilter type="numeric" field="totalDescuento"
-                      matchMode="contains" placeholder="Desc."
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.desc' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -310,10 +310,10 @@
                 <!-- Columna Domicilio -->
                 <th *ngIf="isColumnVisibleProduccion('totalEnvio')" pSortableColumn="totalEnvio" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Domicilio
+                    {{ 'ventas.listProduccion.domicilio' | translate }}
                     <p-sortIcon field="totalEnvio"></p-sortIcon>
                     <p-columnFilter type="numeric" field="totalEnvio"
-                      matchMode="contains" placeholder="Domicilio"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.domicilio' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -322,10 +322,10 @@
                 <!-- Columna Subtotal -->
                 <th *ngIf="isColumnVisibleProduccion('subtotal')" pSortableColumn="subtotal" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Subtotal
+                    {{ 'ventas.listProduccion.subtotal' | translate }}
                     <p-sortIcon field="subtotal"></p-sortIcon>
                     <p-columnFilter type="numeric" field="subtotal"
-                      matchMode="contains" placeholder="Subt."
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.subt' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -334,10 +334,10 @@
                 <!-- Columna IVA -->
                 <th *ngIf="isColumnVisibleProduccion('totalImpuesto')" pSortableColumn="totalImpuesto" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    IVA
+                    {{ 'ventas.listProduccion.iva' | translate }}
                     <p-sortIcon field="totalImpuesto"></p-sortIcon>
                     <p-columnFilter type="numeric" field="totalImpuesto"
-                      matchMode="contains" placeholder="IVA"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.iva' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -346,10 +346,10 @@
                 <!-- Columna Total -->
                 <th *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')" pSortableColumn="totalPedididoConDescuento" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Total
+                    {{ 'ventas.listProduccion.total' | translate }}
                     <p-sortIcon field="totalPedididoConDescuento"></p-sortIcon>
                     <p-columnFilter type="numeric" field="totalPedididoConDescuento"
-                      matchMode="contains" placeholder="Total"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.total' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -358,10 +358,10 @@
                 <!-- Columna Anticipo -->
                 <th *ngIf="isColumnVisibleProduccion('anticipo')" pSortableColumn="anticipo" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Anticipo
+                    {{ 'ventas.listProduccion.anticipo' | translate }}
                     <p-sortIcon field="anticipo"></p-sortIcon>
                     <p-columnFilter type="numeric" field="anticipo"
-                      matchMode="contains" placeholder="Anticipo"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.anticipo' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -370,10 +370,10 @@
                 <!-- Columna Falta por Pagar -->
                 <th *ngIf="isColumnVisibleProduccion('faltaPorPagar')" pSortableColumn="faltaPorPagar" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Falta por Pagar
+                    {{ 'ventas.listProduccion.faltaPorPagar' | translate }}
                     <p-sortIcon field="faltaPorPagar"></p-sortIcon>
                     <p-columnFilter type="numeric" field="faltaPorPagar"
-                      matchMode="contains" placeholder="Falta"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.falta' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -381,7 +381,7 @@
                 <!-- Columna Fecha Entrega -->
                 <th *ngIf="isColumnVisibleProduccion('fechaEntrega')" pSortableColumn="fechaEntrega" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Fecha Entrega
+                    {{ 'ventas.listProduccion.fechaDeEntrega' | translate }}
                     <p-sortIcon field="fechaEntrega"></p-sortIcon>
                     <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
                       type="date" display="menu" [showMatchModes]="false"
@@ -397,7 +397,7 @@
                 <!-- Columna Fecha de compra -->
                 <th *ngIf="isColumnVisibleProduccion('fechaCreacion')" pSortableColumn="fechaCreacion" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Fecha de compra
+                    {{ 'ventas.listProduccion.fechaDeCompra' | translate }}
                     <p-sortIcon field="fechaCreacion"></p-sortIcon>
                     <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
                       type="date" display="menu" [showMatchModes]="false"
@@ -412,10 +412,10 @@
                 <!-- Columna Ciudad -->
                 <th *ngIf="isColumnVisibleProduccion('ciudad')" pSortableColumn="ciudad" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Ciudad
+                    {{ 'ventas.listProduccion.ciudad' | translate }}
                     <p-sortIcon field="ciudad"></p-sortIcon>
                     <p-columnFilter type="text" field="ciudad"
-                      matchMode="contains" placeholder="Ciudad"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.ciudad' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -424,10 +424,10 @@
                 <!-- Columna Zona de Entrega -->
                 <th *ngIf="isColumnVisibleProduccion('zonaCobro')" pSortableColumn="zonaCobro" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Zona de Entrega
+                    {{ 'ventas.listProduccion.zonaDeEntrega' | translate }}
                     <p-sortIcon field="zonaCobro"></p-sortIcon>
                     <p-columnFilter type="text" field="zonaCobro"
-                      matchMode="contains" placeholder="Zona"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.zona' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -436,10 +436,10 @@
                 <!-- Columna Forma de Entrega -->
                 <th *ngIf="isColumnVisibleProduccion('formaEntrega')" pSortableColumn="formaEntrega" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Forma de Entrega
+                    {{ 'ventas.listProduccion.formaDeEntrega' | translate }}
                     <p-sortIcon field="formaEntrega"></p-sortIcon>
                     <p-columnFilter type="text" field="formaEntrega"
-                      matchMode="contains" placeholder="Entrega"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.entrega' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -448,10 +448,10 @@
                 <!-- Columna Horario de Entrega -->
                 <th *ngIf="isColumnVisibleProduccion('horarioEntrega')" pSortableColumn="horarioEntrega" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Horario de Entrega
+                    {{ 'ventas.listProduccion.horarioDeEntrega' | translate }}
                     <p-sortIcon field="horarioEntrega"></p-sortIcon>
                     <p-columnFilter type="text" field="horarioEntrega"
-                      matchMode="contains" placeholder="Horario"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.horario' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -460,10 +460,10 @@
                 <!-- Columna Canal -->
                 <th *ngIf="isColumnVisibleProduccion('channel')" pSortableColumn="channelName" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Canal
+                    {{ 'ventas.listProduccion.canal' | translate }}
                     <p-sortIcon field="channelName"></p-sortIcon>
                     <p-columnFilter type="text" field="channel.name"
-                      matchMode="contains" placeholder="Canal"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.canal' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -472,10 +472,10 @@
                 <!-- Columna Vendedor -->
                 <th *ngIf="isColumnVisibleProduccion('vendedor')" pSortableColumn="vendedor" style="white-space: nowrap;">
                   <div class="flex align-items-center">
-                    Vendedor
+                    {{ 'ventas.listProduccion.vendedor' | translate }}
                     <p-sortIcon field="vendedor"></p-sortIcon>
                     <p-columnFilter type="text" field="vendedor"
-                      matchMode="contains" placeholder="Vendedor"
+                      matchMode="contains" [placeholder]="'ventas.listProduccion.vendedor' | translate"
                       [showMenu]="true" display="menu">
                     </p-columnFilter>
                   </div>
@@ -510,7 +510,7 @@
                   </span>
                 </td>
                 <td style="width: 3rem; text-align: center;">
-                  <p-button *ngIf="isFromProduction" icon="pi pi-cog" class="p-button-text p-button-rounded p-button-secondary" (onClick)="openOptionsModalProduccion(row)" pTooltip="Opciones" tooltipPosition="top"></p-button>
+                  <p-button *ngIf="isFromProduction" icon="pi pi-cog" class="p-button-text p-button-rounded p-button-secondary" (onClick)="openOptionsModalProduccion(row)" [pTooltip]="'ventas.listProduccion.opciones' | translate" tooltipPosition="top"></p-button>
                 </td>
                 <!-- Columna Última Impresión -->
                 <td *ngIf="isColumnVisibleProduccion('ultimaImpresion')">
@@ -565,7 +565,7 @@
                     'badge-clickable': canAdvanceEstado(row)
                   }"
                   (click)="confirmAdvanceEstado(row)"
-                  [pTooltip]="canAdvanceEstado(row) ? ('Clic para avanzar a ' + ESTADO_PRODUCCION_LABELS[getNextEstadoProceso(row.estadoProceso)]) : ''"
+                  [pTooltip]="canAdvanceEstado(row) ? ('ventas.listProduccion.clicParaAvanzarA' | translate: { estado: (ESTADO_PRODUCCION_LABELS[getNextEstadoProceso(row.estadoProceso)] | translate) }) : ''"
                   tooltipPosition="top">
                     <i class="status-icon pi" [ngClass]="{
                       'pi-circle': row?.estadoProceso === 'SinProducir',
@@ -591,7 +591,7 @@
                       'pi-check': row.validacion == true,
                       'pi-times': row.validacion == false
                     }"></i>
-                    {{ row.validacion ? 'Validado' : 'No validado' }}
+                    {{ (row.validacion ? 'ventas.listProduccion.validado' : 'ventas.listProduccion.noValidado') | translate }}
                   </span>
                 </td>
                 <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">{{ row.totalPedidoSinDescuento | currency }}</td>
@@ -612,7 +612,7 @@
                 <td *ngIf="isColumnVisibleProduccion('zonaCobro')">{{ row.zonaCobro }}</td>
                 <td *ngIf="isColumnVisibleProduccion('formaEntrega')">{{ row.formaEntrega }}</td>
                 <td *ngIf="isColumnVisibleProduccion('horarioEntrega')">{{ row.horarioEntrega }}</td>
-                <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || 'Regular' }}</td>
+                <td *ngIf="isColumnVisibleProduccion('channel')">{{ row.channel?.name || ('ventas.listProduccion.canalRegular' | translate) }}</td>
                 <td *ngIf="isColumnVisibleProduccion('vendedor')">{{ row.vendedor }}</td>
               </tr>
             </ng-template>
@@ -625,7 +625,7 @@
 
                 <!-- Columna Producto -->
                 <td *ngIf="isColumnVisibleProduccion('producto')" style="border-top: 2px solid #007bff;">
-                  <span class="text-primary">TOTAL:</span>
+                  <span class="text-primary">{{ 'ventas.listProduccion.totalDosPuntos' | translate }}</span>
                 </td>
 
                 <!-- Columna Referencia -->
@@ -678,7 +678,7 @@
           <!-- Ayuda: cambio de estado en línea (rediseño 1a) -->
           <div *ngIf="isFromProduction" class="advance-hint">
             <i class="pi pi-info-circle"></i>
-            Haz clic en la etiqueta de estado para avanzar el pedido a la siguiente fase.
+            {{ 'ventas.listProduccion.hazClicEnLaEtiqueta' | translate }}
           </div>
 </div>
 

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IconoTablerComponent } from '../../../../shared/icons/icono-tabler.component';
 import { OrderOptionsModalComponent } from './order-options-modal.component';
 import { EntradaEstadoAcciones, estadoAcciones } from './acciones-pedido.estado';
@@ -35,7 +36,9 @@ describe('OrderOptionsModalComponent (D-547)', () => {
     todos(el, '.opm-tarjeta').find(t => (t.querySelector('.opm-tarjeta-titulo') as HTMLElement).textContent!.trim() === titulo) as HTMLButtonElement;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ declarations: [OrderOptionsModalComponent], imports: [IconoTablerComponent] });
+    TestBed.configureTestingModule({ declarations: [OrderOptionsModalComponent], imports: [IconoTablerComponent, TranslateModule.forRoot()] });
+    TestBed.inject(TranslateService).setTranslation('es', {"ventas.orderOptions.pedidoNumero":"Pedido #{{numero}}","ventas.orderOptions.ningunaAccionConEseNombre":"Ninguna acción con ese nombre","ventas.orderOptions.eliminarPedido":"Eliminar pedido"});
+    TestBed.inject(TranslateService).use('es');
     fixture = TestBed.createComponent(OrderOptionsModalComponent);
     acciones = []; cierres = 0;
     fixture.componentInstance.accion.subscribe((id: string) => acciones.push(id));

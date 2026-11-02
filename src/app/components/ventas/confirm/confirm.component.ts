@@ -3,6 +3,7 @@ import { Pedido } from '../modelo/pedido';
 import { PaymentService } from '../../../shared/services/ventas/payment.service';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 @Component({
@@ -16,7 +17,7 @@ export class ConfirmComponent implements OnInit {
   @Input() pedido: Pedido;
   @ViewChild('contentToPrint', { static: true }) contentToPrint: ElementRef;
   htmlContent: SafeHtml | null = null;
-  constructor( private renderer: Renderer2,private router: Router,public paymentService: PaymentService,private ventasService: VentasService,private sanitizer: DomSanitizer) {
+  constructor( private renderer: Renderer2,private router: Router,public paymentService: PaymentService,private ventasService: VentasService,private sanitizer: DomSanitizer, private translate: TranslateService) {
 
   }
 
@@ -48,19 +49,19 @@ export class ConfirmComponent implements OnInit {
       next: (res: any) => {
         
         Swal.fire({
-          title: "Pedido creado!",
-          text: "Pedido creado con exito",
+          title: this.translate.instant('ventas.confirm.creadoTitulo'),
+          text: this.translate.instant('ventas.confirm.creadoTexto'),
           icon: "success",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.aceptar'),
         });
       },
       error: (err: any) => {
         console.log(err);
         Swal.fire({
-          title: "Error!",
-          text: "Error al crear el pedido",
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('ventas.confirm.errorCrear'),
           icon: "error",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.aceptar'),
         });
       }
     });

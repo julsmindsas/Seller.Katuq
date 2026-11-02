@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IconoTablerComponent } from '../../../../shared/icons/icono-tabler.component';
 import { OrderPinnedActionsComponent } from './order-pinned-actions.component';
 import { EntradaEstadoAcciones, estadoAcciones } from './acciones-pedido.estado';
@@ -41,7 +42,9 @@ describe('OrderPinnedActionsComponent (D-547 F2)', () => {
     todos(el, '.opa-accion').find(b => titulo(b) === t) as HTMLButtonElement;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ declarations: [OrderPinnedActionsComponent], imports: [IconoTablerComponent] });
+    TestBed.configureTestingModule({ declarations: [OrderPinnedActionsComponent], imports: [IconoTablerComponent, TranslateModule.forRoot()] });
+    TestBed.inject(TranslateService).setTranslation('es', {"ventas.pinnedActions.restablecerAcciones":"Restablecer acciones"});
+    TestBed.inject(TranslateService).use('es');
     fixture = TestBed.createComponent(OrderPinnedActionsComponent);
     emitidas = []; restablecidas = 0;
     fixture.componentInstance.accion.subscribe((id: AccionPedidoId) => emitidas.push(id));

@@ -2,20 +2,20 @@
     <div class="modal-content">
       <h2>{{ title }}</h2>
       <ng-container *ngIf="paymentType === 'Efectivo'">
-        <p>Ingrese la cantidad recibida:</p>
-        <input type="number" [(ngModel)]="amountReceived" placeholder="Monto recibido" />
-        <p>Cambio: {{ calculateChange() }}</p>
+        <p>{{ 'ventas.paymentModal.ingreseCantidadRecibida' | translate }}</p>
+        <input type="number" [(ngModel)]="amountReceived" [placeholder]="'ventas.paymentModal.montoRecibido' | translate" />
+        <p>{{ 'ventas.paymentModal.cambio' | translate: { monto: calculateChange() } }}</p>
       </ng-container>
       <ng-container *ngIf="paymentType === 'Tarjeta'">
-        <p>Ingrese el número de autorización:</p>
-        <input type="text" [(ngModel)]="authorizationCode" placeholder="Código de autorización" />
+        <p>{{ 'ventas.paymentModal.ingreseNumeroAutorizacion' | translate }}</p>
+        <input type="text" [(ngModel)]="authorizationCode" [placeholder]="'ventas.paymentModal.codigoAutorizacion' | translate" />
       </ng-container>
       <ng-container *ngIf="paymentType === 'E-Wallet'">
-        <p>Escanee o ingrese el ID de la billetera electrónica:</p>
-        <input type="text" [(ngModel)]="walletId" placeholder="ID de la billetera" />
+        <p>{{ 'ventas.paymentModal.escaneeIdBilletera' | translate }}</p>
+        <input type="text" [(ngModel)]="walletId" [placeholder]="'ventas.paymentModal.idBilletera' | translate" />
       </ng-container>
-      <button (click)="onPay()">Pagar</button>
-      <button (click)="closeModal()">Cancelar</button>
+      <button (click)="onPay()">{{ 'ventas.paymentModal.pagar' | translate }}</button>
+      <button (click)="closeModal()">{{ 'comun.cancelar' | translate }}</button>
     </div>
   </div>
   

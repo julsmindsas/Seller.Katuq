@@ -60,11 +60,11 @@ export class VistaVentaGuard implements CanActivate {
   selector: "app-selector-vista-venta",
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="vista-venta" role="group" aria-label="Vista de la venta asistida">
+    <div class="vista-venta" role="group" [attr.aria-label]="'ventas.selectorVistaVenta.aria' | translate">
       <button type="button" class="vista-venta__op" [class.is-activa]="actual === 'rapida'" [attr.aria-pressed]="actual === 'rapida'"
-              (click)="cambiar('rapida')" title="Todo en una sola pantalla">Rápida</button>
+              (click)="cambiar('rapida')" [title]="'ventas.selectorVistaVenta.rapidaTitle' | translate">{{ 'ventas.selectorVistaVenta.rapida' | translate }}</button>
       <button type="button" class="vista-venta__op" [class.is-activa]="actual === 'pasos'" [attr.aria-pressed]="actual === 'pasos'"
-              (click)="cambiar('pasos')" title="Paso a paso: cliente, productos, entrega y pago">Por pasos</button>
+              (click)="cambiar('pasos')" [title]="'ventas.selectorVistaVenta.pasosTitle' | translate">{{ 'ventas.selectorVistaVenta.pasos' | translate }}</button>
     </div>
   `,
   styles: [

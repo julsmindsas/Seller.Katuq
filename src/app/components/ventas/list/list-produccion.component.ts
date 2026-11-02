@@ -20,6 +20,7 @@ import { ToastrService } from "ngx-toastr";
 import { Table } from "primeng/table";
 import { FilterService } from "primeng/api";
 import Swal from "sweetalert2";
+import { TranslateService } from "@ngx-translate/core";
 
 @Component({
   selector: "app-list-produccion-orders",
@@ -62,17 +63,18 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     "ParaDespachar",
   ];
   readonly ESTADO_PRODUCCION_LABELS: { [key: string]: string } = {
-    SinProducir: "Sin producir",
-    EnProduccion: "En producción",
-    ProducidoParcialmente: "Producido parcial",
-    ProducidoTotalmente: "Producido total",
-    ParaDespachar: "Listo para despachar",
+    SinProducir: "ventas.listProduccion.estado.sinProducir",
+    EnProduccion: "ventas.listProduccion.estado.enProduccion",
+    ProducidoParcialmente: "ventas.listProduccion.estado.producidoParcial",
+    ProducidoTotalmente: "ventas.listProduccion.estado.producidoTotal",
+    ParaDespachar: "ventas.listProduccion.estado.paraDespachar",
   };
 
   constructor(
     private ventasService: VentasService,
     private toastrService: ToastrService,
     private filterService: FilterService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -157,14 +159,14 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     this.ventasService.editOrder(row.pedidoOriginal).subscribe({
       next: () => {
         this.toastrService.success(
-          "Fecha de impresión registrada",
-          "Pedido actualizado",
+          this.translate.instant("ventas.listProduccion.fechaDeImpresionRegistrada"),
+          this.translate.instant("ventas.listProduccion.pedidoActualizado"),
         );
       },
       error: () => {
         this.toastrService.error(
-          "No se pudo actualizar la fecha de impresión",
-          "Error",
+          this.translate.instant("ventas.listProduccion.noSePudoActualizarLa"),
+          this.translate.instant("comun.error"),
         );
       },
     });
@@ -493,18 +495,18 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       return;
     }
     const siguienteEstado = this.getNextEstadoProceso(row.estadoProceso);
-    const labelActual =
-      this.ESTADO_PRODUCCION_LABELS[row.estadoProceso] || row.estadoProceso;
-    const labelSiguiente =
-      this.ESTADO_PRODUCCION_LABELS[siguienteEstado] || siguienteEstado;
+    const labelActual = this.translate.instant(
+      this.ESTADO_PRODUCCION_LABELS[row.estadoProceso] || row.estadoProceso);
+    const labelSiguiente = this.translate.instant(
+      this.ESTADO_PRODUCCION_LABELS[siguienteEstado] || siguienteEstado);
 
     Swal.fire({
       icon: "question",
-      title: "¿Avanzar estado del pedido?",
-      html: `Pedido <b>${row.nroPedido}</b><br>${labelActual} &rarr; <b>${labelSiguiente}</b>`,
+      title: this.translate.instant("ventas.listProduccion.avanzarEstadoDelPedido"),
+      html: this.translate.instant("ventas.listProduccion.avanzarHtml", { pedido: row.nroPedido, actual: labelActual, siguiente: labelSiguiente }),
       showCancelButton: true,
-      confirmButtonText: "Sí, avanzar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: this.translate.instant("ventas.listProduccion.siAvanzar"),
+      cancelButtonText: this.translate.instant("comun.cancelar"),
       confirmButtonColor: "#6D28D9",
     }).then((result) => {
       if (result.isConfirmed) {
@@ -521,16 +523,16 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       next: () => {
         row.estadoProceso = siguienteEstado;
         this.toastrService.success(
-          `Pedido ${row.nroPedido} → ${this.ESTADO_PRODUCCION_LABELS[siguienteEstado]}`,
-          "Estado actualizado",
+          this.translate.instant("ventas.listProduccion.pedidoAEstado", { pedido: row.nroPedido, estado: this.translate.instant(this.ESTADO_PRODUCCION_LABELS[siguienteEstado]) }),
+          this.translate.instant("ventas.listProduccion.estadoActualizado"),
         );
       },
       error: () => {
         // Revertir el cambio optimista si el backend rechaza la actualización
         row.pedidoOriginal.estadoProceso = estadoAnterior;
         this.toastrService.error(
-          "No se pudo actualizar el estado del pedido",
-          "Error",
+          this.translate.instant("ventas.listProduccion.noSePudoActualizarEl"),
+          this.translate.instant("comun.error"),
         );
       },
     });

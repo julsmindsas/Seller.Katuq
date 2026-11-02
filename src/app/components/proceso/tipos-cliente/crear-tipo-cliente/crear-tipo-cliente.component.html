@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h5 class="modal-title">{{ mostrarCrear ? 'Crear Tipo de Cliente' : 'Editar Tipo de Cliente' }}</h5>
+  <h5 class="modal-title">{{ (mostrarCrear ? 'proceso.crearTipoCliente.tituloCrear' : 'proceso.crearTipoCliente.tituloEditar') | translate }}</h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
 
@@ -9,10 +9,10 @@
       <!-- Nombre -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label for="nombre" class="form-label fw-bold">Nombre</label>
-          <input class="form-control" type="text" id="nombre" formControlName="nombre" placeholder="Nombre del tipo de cliente">
+          <label for="nombre" class="form-label fw-bold">{{ 'proceso.tabla.nombre' | translate }}</label>
+          <input class="form-control" type="text" id="nombre" formControlName="nombre" [placeholder]="'proceso.crearTipoCliente.nombrePlaceholder' | translate">
           <div *ngIf="tipoClienteForm.get('nombre')?.invalid && tipoClienteForm.get('nombre')?.touched" class="text-danger">
-            Este campo es requerido
+            {{ 'proceso.comun.campoRequerido' | translate }}
           </div>
         </div>
       </div>
@@ -20,13 +20,13 @@
       <!-- Activo -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label d-block fw-bold mb-2">Activo</label>
+          <label class="form-label d-block fw-bold mb-2">{{ 'proceso.tabla.activo' | translate }}</label>
           <div class="d-flex align-items-center">
             <label class="toggle-switch me-3">
               <input type="checkbox" id="active" formControlName="active">
               <span class="slider round"></span>
             </label>
-            <span class="text-muted">{{ tipoClienteForm.get('active')?.value ? 'Activado' : 'Inactivo' }}</span>
+            <span class="text-muted">{{ (tipoClienteForm.get('active')?.value ? 'proceso.comun.activado' : 'proceso.comun.inactivo') | translate }}</span>
           </div>
         </div>
       </div>
@@ -34,11 +34,11 @@
       <!-- Descripción -->
       <div class="col-12">
         <div class="mb-3">
-          <label for="descripcion" class="form-label fw-bold">Descripción</label>
+          <label for="descripcion" class="form-label fw-bold">{{ 'proceso.tabla.descripcion' | translate }}</label>
           <textarea class="form-control" id="descripcion" formControlName="descripcion" 
-                    placeholder="Describe el tipo de cliente y sus características" rows="3"></textarea>
+                    [placeholder]="'proceso.crearTipoCliente.descripcionPlaceholder' | translate" rows="3"></textarea>
           <div *ngIf="tipoClienteForm.get('descripcion')?.invalid && tipoClienteForm.get('descripcion')?.touched" class="text-danger">
-            Este campo es requerido
+            {{ 'proceso.comun.campoRequerido' | translate }}
           </div>
         </div>
       </div>
@@ -50,19 +50,16 @@
           <label class="tc-precio-base-check">
             <input type="checkbox" formControlName="esPrecioBase" />
             <span>
-              <strong>Este precio es el precio base del producto</strong>
+              <strong>{{ 'proceso.crearTipoCliente.precioBaseCheck' | translate }}</strong>
               <small>
-                Al guardar o importar precios por tipo de cliente, el precio de este tipo queda
-                también como <b>precio base</b> del producto, y la pestaña “Precio unitario”
-                desaparece de Lista de precios.
+                <span [innerHTML]="'proceso.crearTipoCliente.precioBaseAyuda' | translate"></span>
               </small>
             </span>
           </label>
 
           <div class="tc-precio-base-nota" *ngIf="tipoClienteForm.get('esPrecioBase')?.value">
             <i class="pi pi-info-circle me-1"></i>
-            Solo un tipo de cliente puede ser el precio base: al marcar este, se desmarca el que
-            lo fuera antes.
+            {{ 'proceso.crearTipoCliente.precioBaseNota' | translate }}
           </div>
         </div>
       </div>
@@ -71,9 +68,9 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
   <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
-    {{ mostrarCrear ? 'Crear' : 'Actualizar' }}
+    {{ (mostrarCrear ? 'proceso.comun.crear' : 'proceso.comun.actualizar') | translate }}
   </button>
 </div>
 

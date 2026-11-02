@@ -4,19 +4,19 @@
 <div class="cfg-pagina cli-lista">
             <header class="cfg-cabeza">
                     <div class="cfg-cabeza__textos">
-                        <span class="cfg-eyebrow">Clientes</span>
-                        <h1 class="cfg-titulo">{{ "Listado de clientes" | translate }}</h1>
+                        <span class="cfg-eyebrow">{{ 'ventas.clientes.eyebrow' | translate }}</span>
+                        <h1 class="cfg-titulo">{{ 'ventas.clientesLista.titulo' | translate }}</h1>
                         <p class="cfg-sub">
-                            {{ "Consulta, filtra y gestiona tus clientes" | translate }}
+                            {{ 'ventas.clientesLista.subtitulo' | translate }}
                         </p>
                     </div>
                     <div class="cfg-acciones">
                         <button pButton type="button"
                                 icon="pi pi-upload"
-                                label="{{ 'Importar' | translate }}"
+                                label="{{ 'ventas.clientesLista.importar' | translate }}"
                                 class="p-button-outlined p-button-primary p-button-sm"
                                 (click)="openImportModal()"
-                                pTooltip="{{ 'Importar clientes desde Excel' | translate }}"></button>
+                                pTooltip="{{ 'ventas.clientesLista.importarTooltip' | translate }}"></button>
                         <!-- <button pButton type="button"
                                 icon="pi pi-trash"
                                 label="Eliminar Todos"
@@ -25,23 +25,23 @@
                                 pTooltip="Eliminar TODOS los clientes de la empresa"></button> -->
                         <button pButton type="button"
                                 icon="pi pi-tags"
-                                label="{{ 'Etiquetas' | translate }}"
+                                label="{{ 'ventas.clientes.etiquetas' | translate }}"
                                 class="p-button-outlined p-button-sm btn-tags-cfg"
                                 (click)="abrirConfigModal()"
-                                pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
+                                pTooltip="{{ 'ventas.clientes.gestionarEtiquetas' | translate }}"></button>
                         <button pButton type="button"
                                 icon="pi pi-plus"
-                                label="{{ 'Crear cliente' | translate }}"
+                                label="{{ 'ventas.clientes.titulo' | translate }}"
                                 class="p-button-primary p-button-sm"
                                 (click)="openCrearModal()"
-                                pTooltip="{{ 'Nuevo cliente' | translate }}"></button>
+                                pTooltip="{{ 'ventas.clientesLista.nuevoCliente' | translate }}"></button>
                         <button pButton type="button"
                                 icon="pi pi-file-excel"
-                                label="{{ 'Exportar Excel' | translate }}"
+                                label="{{ 'ventas.clientesLista.exportarExcel' | translate }}"
                                 class="p-button-outlined p-button-sm cli-btn-excel d-none d-md-flex"
                                 (click)="exportarExcel()"
                                 [disabled]="clientes.length === 0"
-                                pTooltip="{{ 'Exportar todos los clientes a Excel' | translate }}"></button>
+                                pTooltip="{{ 'ventas.clientesLista.exportarExcelTooltip' | translate }}"></button>
                     </div>
             </header>
 
@@ -61,7 +61,7 @@
                 <div class="cli-filtros-cabeza d-flex justify-content-between align-items-center cursor-pointer"
                      (click)="toggleFiltros()">
                     <h6 class="m-0 cli-subtitulo">
-                        {{ "Filtros de búsqueda" | translate }}
+                        {{ 'ventas.clientesLista.filtrosBusqueda' | translate }}
                     </h6>
                     <i [class]="mostrarFiltros ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="cli-acento"></i>
                 </div>
@@ -72,71 +72,74 @@
                             <!-- Cliente -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    {{ "Cliente" | translate }}
+                                    {{ 'ventas.clientesLista.cliente' | translate }}
                                 </label>
                                 <input pInputText
                                        type="text"
                                        formControlName="cliente"
-                                       placeholder="{{ 'Buscar cliente' | translate }}"
+                                       placeholder="{{ 'ventas.clientes.buscarCliente' | translate }}"
                                        class="w-100" />
                             </div>
 
                             <!-- Documento -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    {{ "Documento" | translate }}
+                                    {{ 'ventas.clientes.colDocumento' | translate }}
                                 </label>
                                 <input pInputText
                                        type="text"
                                        formControlName="documento"
-                                       placeholder="{{ 'Documento' | translate }}"
+                                       placeholder="{{ 'ventas.clientes.colDocumento' | translate }}"
                                        class="w-100" />
                             </div>
 
                             <!-- Email -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    {{ "Email" | translate }}
+                                    {{ 'ventas.clientes.colEmail' | translate }}
                                 </label>
                                 <input pInputText
                                        type="text"
                                        formControlName="email"
-                                       placeholder="{{ 'Email' | translate }}"
+                                       placeholder="{{ 'ventas.clientes.colEmail' | translate }}"
                                        class="w-100" />
                             </div>
 
                             <!-- Estado -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    {{ "Estado" | translate }}
+                                    {{ 'ventas.clientesLista.estado' | translate }}
                                 </label>
                                 <p-dropdown [options]="estadoOptions"
                                             formControlName="estado"
                                             optionLabel="label"
                                             optionValue="value"
                                             [showClear]="true"
-                                            placeholder="{{ 'Todos los estados' | translate }}"
-                                            styleClass="w-100"></p-dropdown>
+                                            placeholder="{{ 'ventas.clientesLista.todosLosEstados' | translate }}"
+                                            styleClass="w-100">
+                                    <ng-template pTemplate="selectedItem" let-opcion>{{ opcion.label | translate }}</ng-template>
+                                    <ng-template pTemplate="item" let-opcion>{{ opcion.label | translate }}</ng-template>
+                                </p-dropdown>
                             </div>
 
                             <!-- Tipo de Cliente -->
                             <div class="col-12 col-md-6 col-lg-3" *ngIf="clientTypes.length > 0">
                                 <label class="form-label fw-semibold">
-                                    {{ "Tipo de Cliente" | translate }}
+                                    {{ 'ventas.clientesLista.tipoCliente' | translate }}
                                 </label>
                                 <p-dropdown [options]="clientTypes"
                                             formControlName="tipoCliente"
                                             optionLabel="label"
                                             optionValue="value"
                                             [showClear]="true"
-                                            placeholder="{{ 'Todos los tipos' | translate }}"
+                                            placeholder="{{ 'ventas.clientesLista.todosLosTipos' | translate }}"
                                             styleClass="w-100"
                                             appendTo="body"
                                             scrollHeight="180px"
                                             [filter]="true"
                                             filterBy="label"
                                             filterMatchMode="contains"
-                                            filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
+                                            filterPlaceholder="{{ 'ventas.clientesLista.buscarTipo' | translate }}">
                                 </p-dropdown>
                             </div>
                         </div>
@@ -146,10 +149,10 @@
                             <div class="col-12">
                                 <label class="form-label fw-semibold">
                                     <i class="pi pi-tag me-1 cli-acento"></i>
-                                    {{ "Etiquetas" | translate }}
+                                    {{ 'ventas.clientes.etiquetas' | translate }}
                                     <span *ngIf="selectedTagNames.length > 0"
                                           class="ms-1 badge cli-badge-activas">
-                                        {{selectedTagNames.length}} activa(s)
+                                        {{ 'ventas.clientesLista.activas' | translate: { n: selectedTagNames.length } }}
                                     </span>
                                 </label>
                                 <div class="d-flex flex-wrap gap-2 mt-1">
@@ -173,11 +176,11 @@
                         <div class="row mt-3">
                             <div class="col-12 text-end">
                                 <button pButton type="submit"
-                                        label="{{ 'Buscar' | translate }}"
+                                        label="{{ 'comun.buscar' | translate }}"
                                         icon="pi pi-search"
                                         class="p-button-primary me-2"></button>
                                 <button pButton type="button"
-                                        label="{{ 'Limpiar' | translate }}"
+                                        label="{{ 'ventas.clientesLista.limpiar' | translate }}"
                                         icon="pi pi-refresh"
                                         class="p-button-secondary"
                                         (click)="limpiarFiltros()"></button>
@@ -194,10 +197,10 @@
                             <div class="metric-chip metric-chip-primary"
                                  [class.active]="selectedEstadoFilter === 'todos'"
                                  (click)="applyEstadoFilter('todos')"
-                                 pTooltip="{{ 'Mostrar todos los clientes' | translate }}"
+                                 pTooltip="{{ 'ventas.clientesLista.mostrarTodos' | translate }}"
                                  tooltipPosition="top">
                                 <i class="pi pi-list"></i>
-                                <span class="metric-label">{{ "Todos" | translate }}</span>
+                                <span class="metric-label">{{ 'ventas.clientesLista.todos' | translate }}</span>
                                 <span class="metric-badge" *ngIf="totalRecords > 0">{{totalRecords}}</span>
                             </div>
 
@@ -207,10 +210,10 @@
                             <div class="metric-chip metric-chip-success"
                                  [class.active]="selectedEstadoFilter === 'activo'"
                                  (click)="applyEstadoFilter('activo')"
-                                 pTooltip="{{ 'Mostrar solo clientes activos' | translate }}"
+                                 pTooltip="{{ 'ventas.clientesLista.mostrarActivos' | translate }}"
                                  tooltipPosition="top">
                                 <i class="pi pi-check-circle"></i>
-                                <span class="metric-label">{{ "Activos" | translate }}</span>
+                                <span class="metric-label">{{ 'ventas.clientesLista.activos' | translate }}</span>
                             </div>
 
                             <span class="separator">/</span>
@@ -219,17 +222,17 @@
                             <div class="metric-chip metric-chip-danger"
                                  [class.active]="selectedEstadoFilter === 'bloqueado'"
                                  (click)="applyEstadoFilter('bloqueado')"
-                                 pTooltip="{{ 'Mostrar solo clientes bloqueados' | translate }}"
+                                 pTooltip="{{ 'ventas.clientesLista.mostrarBloqueados' | translate }}"
                                  tooltipPosition="top">
                                 <i class="pi pi-times-circle"></i>
-                                <span class="metric-label">{{ "Bloqueados" | translate }}</span>
+                                <span class="metric-label">{{ 'ventas.clientesLista.bloqueados' | translate }}</span>
                             </div>
 
                             <!-- Tags activos como chips removibles -->
                             <ng-container *ngIf="selectedTagNames.length > 0">
                                 <span class="separator">/</span>
                                 <span class="small me-1 cli-texto-muted">
-                                    <i class="pi pi-tag"></i> Etiquetas:
+                                    <i class="pi pi-tag"></i> {{ 'ventas.clientesLista.etiquetasDosPuntos' | translate }}
                                 </span>
                                 <ng-container *ngFor="let tagName of selectedTagNames">
                                     <ng-container *ngFor="let tag of availableTagsForFilter">
@@ -239,7 +242,7 @@
                                               [style.color]="getTagFgColor(tag.color)"
                                               [style.border-color]="getTagFgColor(tag.color)"
                                               (click)="toggleTagFilter(tagName)"
-                                              pTooltip="Quitar filtro por '{{tagName}}'"
+                                              [pTooltip]="'ventas.clientesLista.quitarFiltro' | translate: { nombre: tagName }"
                                               tooltipPosition="top">
                                             {{ tagName }}
                                             <i class="pi pi-times ms-1" style="font-size: 0.65rem;"></i>
@@ -256,7 +259,7 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
                             <h6 class="m-0 cli-subtitulo">
-                                {{ "Resultados" | translate }}
+                                {{ 'ventas.clientesLista.resultados' | translate }}
                             </h6>
                             <span class="badge-count">{{totalRecords}}</span>
                         </div>
@@ -264,7 +267,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <!-- Buscador global -->
                             <input pInputText type="text"
-                                   placeholder="{{ 'Buscar...' | translate }}"
+                                   placeholder="{{ 'ventas.clientesLista.buscarPlaceholder' | translate }}"
                                    [value]="globalFilterValue"
                                    (input)="onGlobalFilter($event)"
                                    class="p-inputtext-sm" />
@@ -273,12 +276,12 @@
                             <button pButton icon="pi pi-list"
                                     class="p-button-text p-button-sm"
                                     [class.p-button-primary]="viewMode === 'compact'"
-                                    pTooltip="{{ 'Vista compacta' | translate }}"
+                                    pTooltip="{{ 'ventas.clientesLista.vistaCompacta' | translate }}"
                                     (click)="setViewMode('compact')"></button>
                             <button pButton icon="pi pi-th-large"
                                     class="p-button-text p-button-sm"
                                     [class.p-button-primary]="viewMode === 'detailed'"
-                                    pTooltip="{{ 'Vista detallada' | translate }}"
+                                    pTooltip="{{ 'ventas.clientesLista.vistaDetallada' | translate }}"
                                     (click)="setViewMode('detailed')"></button>
                         </div>
                     </div>
@@ -294,7 +297,7 @@
                              [totalRecords]="totalRecords"
                              [rowsPerPageOptions]="[10,25,50]"
                              [showCurrentPageReport]="true"
-                             currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} registros' | translate }}"
+                             currentPageReportTemplate="{{ 'ventas.clientesLista.paginacion' | translate }}"
                              (onPage)="onPageChange($event)"
                              styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
                              [scrollable]="true"
@@ -319,23 +322,23 @@
                             <tr>
                                 <th *ngIf="viewMode === 'detailed'" style="width: 60px"></th>
                                 <th pSortableColumn="nombres_completos" style="width: 200px">
-                                    {{ "Cliente" | translate }} <p-sortIcon field="nombres_completos"></p-sortIcon>
+                                    {{ 'ventas.clientesLista.cliente' | translate }} <p-sortIcon field="nombres_completos"></p-sortIcon>
                                 </th>
                                 <th pSortableColumn="documento" style="width: 150px">
-                                    {{ "Documento" | translate }} <p-sortIcon field="documento"></p-sortIcon>
+                                    {{ 'ventas.clientes.colDocumento' | translate }} <p-sortIcon field="documento"></p-sortIcon>
                                 </th>
                                 <th pSortableColumn="correo_electronico_comprador" style="width: 200px">
-                                    {{ "Email" | translate }} <p-sortIcon field="correo_electronico_comprador"></p-sortIcon>
+                                    {{ 'ventas.clientes.colEmail' | translate }} <p-sortIcon field="correo_electronico_comprador"></p-sortIcon>
                                 </th>
                                 <th pSortableColumn="numero_celular_comprador" style="width: 150px">
-                                    {{ "Celular" | translate }} <p-sortIcon field="numero_celular_comprador"></p-sortIcon>
+                                    {{ 'ventas.clientesLista.celular' | translate }} <p-sortIcon field="numero_celular_comprador"></p-sortIcon>
                                 </th>
                                 <th pSortableColumn="estado" style="width: 120px">
-                                    {{ "Estado" | translate }} <p-sortIcon field="estado"></p-sortIcon>
+                                    {{ 'ventas.clientesLista.estado' | translate }} <p-sortIcon field="estado"></p-sortIcon>
                                 </th>
-                                <th style="width: 140px">{{ "Tipo de Cliente" | translate }}</th>
-                                <th style="width: 180px">{{ "Etiquetas" | translate }}</th>
-                                <th style="width: 100px" class="text-center">{{ "Acciones" | translate }}</th>
+                                <th style="width: 140px">{{ 'ventas.clientesLista.tipoCliente' | translate }}</th>
+                                <th style="width: 180px">{{ 'ventas.clientes.etiquetas' | translate }}</th>
+                                <th style="width: 100px" class="text-center">{{ 'ventas.clientesLista.acciones' | translate }}</th>
                             </tr>
                         </ng-template>
 
@@ -354,36 +357,36 @@
                                 <td>
                                     <span class="text-truncate" style="max-width: 160px"
                                           [pTooltip]="cliente.nombres_completos">
-                                        {{cliente.nombres_completos || 'Sin nombre'}}
+                                        {{cliente.nombres_completos || ('ventas.clientesLista.sinNombre' | translate)}}
                                     </span>
                                     <div *ngFor="let fiscal of billingProfiles(cliente)" class="small mt-2 text-wrap">
-                                        <span class="text-muted">Datos de facturación:</span>
-                                        <strong class="d-block">{{ fiscal.name || fiscal.alias || 'Perfil fiscal' }}</strong>
+                                        <span class="text-muted">{{ 'ventas.clientes.datosFacturacionPerfil' | translate }}</span>
+                                        <strong class="d-block">{{ fiscal.name || fiscal.alias || ('ventas.clientesLista.perfilFiscal' | translate) }}</strong>
                                         <span class="d-block">{{ fiscal.document }}<ng-container *ngIf="fiscal.email"> · {{ fiscal.email }}</ng-container></span>
                                     </div>
                                 </td>
 
                                 <!-- Documento -->
                                 <td>
-                                    {{cliente.documento || 'N/A'}}
+                                    {{cliente.documento || ('ventas.clientes.na' | translate)}}
                                 </td>
 
                                 <!-- Email -->
                                 <td>
                                     <span class="text-truncate" style="max-width: 160px"
                                           [pTooltip]="cliente.correo_electronico_comprador">
-                                        {{cliente.correo_electronico_comprador || 'N/A'}}
+                                        {{cliente.correo_electronico_comprador || ('ventas.clientes.na' | translate)}}
                                     </span>
                                 </td>
 
                                 <!-- Celular -->
                                 <td>
-                                    {{cliente.numero_celular_comprador || 'N/A'}}
+                                    {{cliente.numero_celular_comprador || ('ventas.clientes.na' | translate)}}
                                 </td>
 
                                 <!-- Estado -->
                                 <td>
-                                    {{cliente.estado | titlecase}}
+                                    {{ cliente.estado === 'activo' ? ('ventas.clientes.activo' | translate) : cliente.estado === 'bloqueado' ? ('ventas.clientes.bloqueado' | translate) : (cliente.estado | titlecase) }}
                                 </td>
 
                                 <!-- Tipo de Cliente -->
@@ -419,7 +422,7 @@
                                 <td class="text-center">
                                     <button type="button"
                                             class="btn-options"
-                                            pTooltip="{{ 'Acciones' | translate }}"
+                                            pTooltip="{{ 'ventas.clientesLista.acciones' | translate }}"
                                             (click)="toggleActionMenu($event, cliente)">
                                         <i class="pi pi-ellipsis-v"></i>
                                     </button>
@@ -430,20 +433,20 @@
                                         [id]="'menu-' + cliente.documento">
                                         <li (click)="editarCliente(cliente)">
                                             <i class="pi pi-pencil"></i>
-                                            <span>{{ "Editar" | translate }}</span>
+                                            <span>{{ 'comun.editar' | translate }}</span>
                                         </li>
                                         <li (click)="verDetalles(cliente)">
                                             <i class="pi pi-eye"></i>
-                                            <span>{{ "Ver detalles" | translate }}</span>
+                                            <span>{{ 'ventas.clientesLista.verDetalles' | translate }}</span>
                                         </li>
                                         <li (click)="generarAccesoTienda(cliente)">
                                             <i class="pi pi-shopping-bag"></i>
-                                            <span>{{ "Acceso a la tienda" | translate }}</span>
+                                            <span>{{ 'ventas.clientesLista.accesoTienda' | translate }}</span>
                                         </li>
                                         <li class="separator"></li>
                                         <li (click)="exportarCliente(cliente)">
                                             <i class="pi pi-download"></i>
-                                            <span>{{ "Exportar" | translate }}</span>
+                                            <span>{{ 'ventas.clientesLista.exportar' | translate }}</span>
                                         </li>
                                     </ul>
                                 </td>
@@ -460,41 +463,41 @@
                                             <div class="col-md-6">
                                                 <div class="detail-section">
                                                     <h6 class="detail-title">
-                                                        {{ "Información del Cliente" | translate }}
+                                                        {{ 'ventas.clientesLista.infoCliente' | translate }}
                                                     </h6>
                                                     <div class="detail-row">
-                                                        <span class="detail-label">{{ "Nombre:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.nombreDosPuntos' | translate }}</span>
                                                         <span class="detail-value fw-bold">
-                                                            {{cliente.nombres_completos || 'N/A'}}
+                                                            {{cliente.nombres_completos || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row">
-                                                        <span class="detail-label">{{ "Documento:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.documentoDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
                                                             {{cliente.tipo_documento_comprador}}: {{cliente.documento}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row">
-                                                        <span class="detail-label">{{ "Email:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.emailDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.correo_electronico_comprador || 'N/A'}}
+                                                            {{cliente.correo_electronico_comprador || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row">
-                                                        <span class="detail-label">{{ "Celular:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.celularDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.numero_celular_comprador || 'N/A'}}
+                                                            {{cliente.numero_celular_comprador || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row">
-                                                        <span class="detail-label">{{ "Estado:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.estadoDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.estado | titlecase}}
+                                                            {{ cliente.estado === 'activo' ? ('ventas.clientes.activo' | translate) : cliente.estado === 'bloqueado' ? ('ventas.clientes.bloqueado' | translate) : (cliente.estado | titlecase) }}
                                                         </span>
                                                     </div>
                                                     <!-- Etiquetas del cliente -->
                                                     <div class="detail-row" *ngIf="cliente.etiquetas && cliente.etiquetas.length > 0">
-                                                        <span class="detail-label">{{ "Etiquetas:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.etiquetasDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
                                                             <span class="d-flex flex-wrap gap-1">
                                                                 <ng-container *ngFor="let tagName of cliente.etiquetas">
@@ -517,29 +520,29 @@
                                             <div class="col-md-6">
                                                 <div class="detail-section">
                                                     <h6 class="detail-title">
-                                                        {{ "Información de Facturación" | translate }}
+                                                        {{ 'ventas.clientesLista.infoFacturacion' | translate }}
                                                     </h6>
                                                     <div class="detail-row" *ngIf="cliente.datosFacturacionElectronica && cliente.datosFacturacionElectronica.length > 0; else noFacturacion">
-                                                        <span class="detail-label">{{ "Dirección:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.direccionDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.datosFacturacionElectronica[0].direccion || 'N/A'}}
+                                                            {{cliente.datosFacturacionElectronica[0].direccion || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row" *ngIf="cliente.datosFacturacionElectronica && cliente.datosFacturacionElectronica.length > 0">
-                                                        <span class="detail-label">{{ "Ciudad:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.ciudadDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.datosFacturacionElectronica[0].ciudad || 'N/A'}}
+                                                            {{cliente.datosFacturacionElectronica[0].ciudad || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row" *ngIf="cliente.datosFacturacionElectronica && cliente.datosFacturacionElectronica.length > 0">
-                                                        <span class="detail-label">{{ "Departamento:" | translate }}</span>
+                                                        <span class="detail-label">{{ 'ventas.clientesLista.departamentoDosPuntos' | translate }}</span>
                                                         <span class="detail-value">
-                                                            {{cliente.datosFacturacionElectronica[0].departamento || 'N/A'}}
+                                                            {{cliente.datosFacturacionElectronica[0].departamento || ('ventas.clientes.na' | translate)}}
                                                         </span>
                                                     </div>
                                                     <ng-template #noFacturacion>
                                                         <div class="alert alert-info small mb-0">
-                                                            {{ "No hay información de facturación registrada" | translate }}
+                                                            {{ 'ventas.clientesLista.sinInfoFacturacion' | translate }}
                                                         </div>
                                                     </ng-template>
                                                 </div>
@@ -556,7 +559,7 @@
                                 <td [attr.colspan]="viewMode === 'detailed' ? 7 : 6" class="text-center py-5">
                                     <div class="cfg-vacio">
                                         <span class="cfg-vacio__icono"><i class="pi pi-inbox"></i></span>
-                                        <p class="cfg-vacio__titulo">{{ "No se encontraron clientes" | translate }}</p>
+                                        <p class="cfg-vacio__titulo">{{ 'ventas.clientesLista.sinClientes' | translate }}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -576,7 +579,7 @@
            (onHide)="cerrarDetallePanel()">
     <ng-template pTemplate="header">
         <span class="fw-bold cli-sidebar-titulo">
-            <i class="pi pi-user me-2"></i>Detalles del cliente
+            <i class="pi pi-user me-2"></i>{{ 'ventas.clientesLista.detallesCliente' | translate }}
         </span>
     </ng-template>
 
@@ -593,20 +596,20 @@
                 <span class="badge mt-1" [style.background]="clienteDetalle.estado === 'activo' ? '#d1fae5' : '#fee2e2'"
                       [style.color]="clienteDetalle.estado === 'activo' ? '#065f46' : '#991b1b'">
                     <i class="pi" [ngClass]="clienteDetalle.estado === 'activo' ? 'pi-check-circle' : 'pi-lock'"></i>
-                    {{ clienteDetalle.estado | titlecase }}
+                    {{ clienteDetalle.estado === 'activo' ? ('ventas.clientes.activo' | translate) : clienteDetalle.estado === 'bloqueado' ? ('ventas.clientes.bloqueado' | translate) : (clienteDetalle.estado | titlecase) }}
                 </span>
             </div>
         </div>
 
         <!-- Ticket 1328: métricas de compra del cliente (spec 009), las mismas de Crear cliente -->
         <div class="mb-3">
-            <div class="detalle-section-title">Métricas</div>
+            <div class="detalle-section-title">{{ 'ventas.clientesLista.metricas' | translate }}</div>
             <app-customer-metrics [documento]="clienteDetalle.documento" [compacto]="true"></app-customer-metrics>
         </div>
 
         <!-- Etiquetas -->
         <div class="mb-3" *ngIf="clienteDetalle.etiquetas?.length > 0">
-            <div class="detalle-section-title">Etiquetas</div>
+            <div class="detalle-section-title">{{ 'ventas.clientes.etiquetas' | translate }}</div>
             <div class="d-flex flex-wrap gap-1 mt-1">
                 <span *ngFor="let tagName of clienteDetalle.etiquetas"
                       class="tag-chip-sm"
@@ -619,7 +622,7 @@
 
         <!-- Contacto -->
         <div class="detalle-card mb-3">
-            <div class="detalle-section-title">Contacto</div>
+            <div class="detalle-section-title">{{ 'ventas.clientesLista.contacto' | translate }}</div>
             <div class="detalle-row">
                 <i class="pi pi-envelope"></i>
                 <span>{{ clienteDetalle.correo_electronico_comprador || '—' }}</span>
@@ -634,21 +637,21 @@
             </div>
             <div class="detalle-row" *ngIf="clienteDetalle.categoria?.nombre || clienteDetalle.tipoCliente">
                 <i class="pi pi-tag"></i>
-                <span>Tipo: {{ clienteDetalle.categoria?.nombre || clienteDetalle.tipoCliente }}</span>
+                <span>{{ 'ventas.clientesLista.tipoDosPuntos' | translate }} {{ clienteDetalle.categoria?.nombre || clienteDetalle.tipoCliente }}</span>
             </div>
             <div class="detalle-row" *ngIf="clienteDetalle.fechaCumpleanos">
                 <i class="pi pi-gift"></i>
-                <span>Cumpleaños: {{ clienteDetalle.fechaCumpleanos }}</span>
+                <span>{{ 'ventas.clientesLista.cumpleanosDosPuntos' | translate }} {{ clienteDetalle.fechaCumpleanos }}</span>
             </div>
             <div class="detalle-row" *ngIf="clienteDetalle.comoNosConocio">
                 <i class="pi pi-compass"></i>
-                <span>Nos conoció por: {{ clienteDetalle.comoNosConocio }}</span>
+                <span>{{ 'ventas.clientesLista.nosConocioPor' | translate }} {{ clienteDetalle.comoNosConocio }}</span>
             </div>
         </div>
 
         <!-- Facturación -->
         <div class="detalle-card mb-3" *ngIf="clienteDetalle.datosFacturacionElectronica?.length > 0">
-            <div class="detalle-section-title">Facturación</div>
+            <div class="detalle-section-title">{{ 'ventas.clientes.tabFacturacion' | translate }}</div>
             <div *ngFor="let f of clienteDetalle.datosFacturacionElectronica" class="mb-2">
                 <div class="detalle-row" *ngIf="f.alias">
                     <i class="pi pi-bookmark"></i><span class="fw-semibold">{{ f.alias }}</span>
@@ -661,7 +664,7 @@
 
         <!-- Entrega -->
         <div class="detalle-card mb-4" *ngIf="clienteDetalle.datosEntrega?.length > 0">
-            <div class="detalle-section-title">Direcciones de entrega</div>
+            <div class="detalle-section-title">{{ 'ventas.clientesLista.direccionesEntrega' | translate }}</div>
             <div *ngFor="let e of clienteDetalle.datosEntrega" class="mb-2">
                 <div class="detalle-row" *ngIf="e.alias">
                     <i class="pi pi-bookmark"></i><span class="fw-semibold">{{ e.alias }}</span>
@@ -675,9 +678,9 @@
 
         <!-- Acciones -->
         <div class="d-flex gap-2">
-            <button pButton type="button" icon="pi pi-pencil" label="Editar"
+            <button pButton type="button" icon="pi pi-pencil" [label]="'comun.editar' | translate"
                     class="p-button-primary flex-grow-1" (click)="editarDesdeDetalle()"></button>
-            <button pButton type="button" icon="pi pi-times" label="Cerrar"
+            <button pButton type="button" icon="pi pi-times" [label]="'comun.cerrar' | translate"
                     class="p-button-outlined p-button-secondary" (click)="cerrarDetallePanel()"></button>
         </div>
 
@@ -693,7 +696,7 @@
 
 <!-- Modal de Configuración: Etiquetas -->
 <p-dialog
-    header="{{ 'Configuración de Etiquetas' | translate }}"
+    header="{{ 'ventas.clientesLista.configuracionEtiquetas' | translate }}"
     [(visible)]="showConfigModal"
     [modal]="true"
     [closable]="true"
@@ -701,7 +704,7 @@
     [style]="{ width: '480px' }"
     styleClass="config-clientes-dialog">
 
-    <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
+    <p class="text-muted small mb-3">{{ 'ventas.clientes.configurarEtiquetasAyuda' | translate }}</p>
 
     <div class="config-list mb-3">
         <div *ngFor="let tag of editableTags; let i = index" class="config-list-item">
@@ -712,11 +715,11 @@
                 <i class="pi pi-times-circle"></i>
             </button>
         </div>
-        <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
+        <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">{{ 'ventas.clientes.sinEtiquetas' | translate }}</div>
     </div>
 
     <div class="d-flex gap-2 align-items-center flex-wrap">
-        <input pInputText type="text" [(ngModel)]="newTagName" placeholder="Nombre etiqueta..."
+        <input pInputText type="text" [(ngModel)]="newTagName" [placeholder]="'ventas.clientes.nombreEtiquetaPlaceholder' | translate"
                class="flex-grow-1 min-w-0" style="min-width: 140px;" (keyup.enter)="addTag()" />
         <div class="d-flex gap-1 flex-wrap">
             <span *ngFor="let c of availableColors"
@@ -731,9 +734,9 @@
     </div>
 
     <ng-template pTemplate="footer">
-        <button pButton type="button" label="{{ 'Cancelar' | translate }}" icon="pi pi-times"
+        <button pButton type="button" label="{{ 'comun.cancelar' | translate }}" icon="pi pi-times"
                 class="p-button-text" (click)="cerrarConfigModal()"></button>
-        <button pButton type="button" label="{{ 'Guardar' | translate }}" icon="pi pi-check"
+        <button pButton type="button" label="{{ 'comun.guardar' | translate }}" icon="pi pi-check"
                 class="p-button-primary" (click)="guardarConfig()"></button>
     </ng-template>
 </p-dialog>

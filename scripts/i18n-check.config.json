@@ -10,6 +10,11 @@
     "de"
   ],
   "idiomasOpcionales": [],
+  "_notaIdiomasPendientes": "Solo inglés (2026-11-02): pt y de quedan pendientes. Una clave de es que les falta es aviso (clavePendiente) y en pantalla sale en español por el idioma por defecto. El inglés sigue siendo obligatorio. Al retomar un idioma se quita de esta lista y se completan sus claves.",
+  "idiomasPendientes": [
+    "pt",
+    "de"
+  ],
   "nombresPropios": [
     "Katuq",
     "Opttia",
@@ -958,7 +963,9 @@
       "Requisitos faltantes:",
       "Comandos de Voz",
       "Último Comando",
-      "Agente de voz"
+      "Agente de voz",
+      "Anular",
+      "este pedido"
     ],
     "de": [
       "Original",

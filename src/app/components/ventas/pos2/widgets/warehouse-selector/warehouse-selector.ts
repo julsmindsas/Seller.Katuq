@@ -5,6 +5,7 @@ import { BodegaService } from '../../../../../shared/services/bodegas/bodega.ser
 import { ToastrService } from 'ngx-toastr';
 import { CartService } from '../../../../../shared/services/cart.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-warehouse-selector',
@@ -27,6 +28,7 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
         private bodegaService: BodegaService,
         private toastr: ToastrService,
         public cartService: CartService,
+        private translate: TranslateService,
     ) {
 
     }
@@ -132,7 +134,7 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
             next: (bodegas) => this.aplicarBodegas(bodegas),
             error: (error) => {
                 console.error('Error al cargar bodegas:', error);
-                this.toastr.error('Error al cargar las bodegas', 'Error');
+                this.toastr.error(this.translate.instant('ventas.warehouseSelector.errorCargarBodegas'), this.translate.instant('comun.error'));
                 this.cargando = false;
             }
         });
@@ -155,10 +157,10 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
 
         if (total1 > 0) {
             Swal.fire({
-                title: 'Cambio bodega.',
-                text: 'No se puede cambiar de bodega si hay productos seleccionados en el carrito.',
+                title: this.translate.instant('ventas.warehouseSelector.cambioBodega'),
+                text: this.translate.instant('ventas.warehouseSelector.noSePuedeCambiar'),
                 icon: 'error',
-                confirmButtonText: 'Ok',
+                confirmButtonText: this.translate.instant('ventas.pos.ok'),
             });
             // Restaurar la selección anterior
             this.actualizarSeleccionBodega();

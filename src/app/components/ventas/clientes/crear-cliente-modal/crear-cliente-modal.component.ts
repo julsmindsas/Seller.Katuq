@@ -16,6 +16,7 @@ import { normalizeZonasCobro, zonaCubreCiudad } from "../../../../shared/util/zo
 import Swal from "sweetalert2";
 import { ContactoCliente } from "../../modelo/pedido";
 import { mayusculaInicial } from '../../../../shared/utils/mayuscula-inicial';
+import { TranslateService } from '@ngx-translate/core';
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
 export interface ResultadoFormularioCliente {
@@ -83,7 +84,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   /** Encabezado del modal. Por defecto habla de "Cliente". */
   @Input() title: string = "";
   /** Textos opcionales del correo; conserva el mismo campo persistido en Clientes. */
-  @Input() emailLabel: string = "Correo Electrónico";
+  @Input() emailLabel: string = "ventas.crearClienteModal.correoElectronico";
   @Input() emailHint: string = "";
   /**
    * Catálogo de etiquetas a mostrar. Si el caller no lo pasa, se cargan las de
@@ -156,18 +157,18 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   private tocado = { entrega: false, facturacion: false, notas: false, contactos: false };
 
   readonly tipoDocOptions = [
-    { label: 'CC - Cédula de ciudadanía', value: 'CC' },
-    { label: 'NIT', value: 'NIT' },
-    { label: 'TI - Tarjeta de identidad', value: 'TI' },
-    { label: 'RC - Registro civil', value: 'RC' },
-    { label: 'CE - Cédula de extranjería', value: 'CE' },
-    { label: 'TE - Tarjeta de extranjería', value: 'TE' },
-    { label: 'PA - Pasaporte', value: 'PA' },
-    { label: 'DIE - Doc. identificación extranjero', value: 'DIE' },
-    { label: 'PEP - Permiso Especial de Permanencia', value: 'PEP' },
-    { label: 'PPT - Permiso por Protección Temporal', value: 'PPT' },
-    { label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT' },
-    { label: 'NUIP', value: 'NUIP' },
+    { label: 'ventas.crearClienteModal.tipoDocCC', value: 'CC' },
+    { label: 'ventas.crearClienteModal.tipoDocNIT', value: 'NIT' },
+    { label: 'ventas.crearClienteModal.tipoDocTI', value: 'TI' },
+    { label: 'ventas.crearClienteModal.tipoDocRC', value: 'RC' },
+    { label: 'ventas.crearClienteModal.tipoDocCE', value: 'CE' },
+    { label: 'ventas.crearClienteModal.tipoDocTE', value: 'TE' },
+    { label: 'ventas.crearClienteModal.tipoDocPA', value: 'PA' },
+    { label: 'ventas.crearClienteModal.tipoDocDIE', value: 'DIE' },
+    { label: 'ventas.crearClienteModal.tipoDocPEP', value: 'PEP' },
+    { label: 'ventas.crearClienteModal.tipoDocPPT', value: 'PPT' },
+    { label: 'ventas.crearClienteModal.tipoDocNITEXT', value: 'NIT_EXT' },
+    { label: 'ventas.crearClienteModal.tipoDocNUIP', value: 'NUIP' },
   ];
 
   constructor(
@@ -180,6 +181,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     private clientConfig: ClientConfigService,
     private modalService: NgbModal,
     private daneCodes: DaneCodesService,
+    private translate: TranslateService,
   ) {
     this.initForm();
   }
@@ -567,20 +569,20 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
   private getCamposFaltantes(): string[] {
     const labels: Record<string, string> = {
-      tipo_documento_comprador:      'Tipo de Documento',
-      documento:                     'Número de Documento',
-      nombres_completos:             'Nombres Completos',
-      apellidos_completos:           'Apellidos Completos',
-      indicativo_celular_comprador:  'Indicativo Celular',
-      numero_celular_comprador:      'Teléfono Celular',
-      telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
-      correo_electronico_comprador:  'Correo Electrónico',
-      whatsappUsername:              'Usuario de WhatsApp (2 a 60 caracteres: letras, números, espacios, punto o guion)',
+      tipo_documento_comprador:      this.translate.instant('ventas.clientes.colTipoDocumento'),
+      documento:                     this.translate.instant('ventas.crearClienteModal.numeroDocumento'),
+      nombres_completos:             this.translate.instant('ventas.crearClienteModal.nombresCompletos'),
+      apellidos_completos:           this.translate.instant('ventas.crearClienteModal.apellidosCompletos'),
+      indicativo_celular_comprador:  this.translate.instant('ventas.crearClienteModal.indicativoCelular'),
+      numero_celular_comprador:      this.translate.instant('ventas.crearClienteModal.telefonoCelular'),
+      telefono_fijo:                 this.translate.instant('ventas.crearClienteModal.faltaTelefonoFijo'),
+      correo_electronico_comprador:  this.translate.instant(this.emailLabel),
+      whatsappUsername:              this.translate.instant('ventas.crearClienteModal.faltaUsuarioWhatsapp'),
     };
     const faltantes = Object.entries(labels)
       .filter(([key]) => this.formulario.get(key)?.invalid)
       .map(([, label]) => label);
-    if (this.formulario.hasError('sinTelefono')) faltantes.push('Un teléfono: celular o fijo');
+    if (this.formulario.hasError('sinTelefono')) faltantes.push(this.translate.instant('ventas.crearClienteModal.faltaUnTelefono'));
     return faltantes;
   }
 
@@ -666,10 +668,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!this.entregaEditando) return;
     if (!esEntregaCompleta(this.entregaEditando)) {
       Swal.fire({
-        title: 'Falta completar la dirección',
-        text: 'Escribe la dirección o marca la ubicación, con su ciudad, o descártala si no la vas a registrar ahora.',
+        title: this.translate.instant('ventas.crearClienteModal.faltaDireccion'),
+        text: this.translate.instant('ventas.crearClienteModal.faltaDireccionTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -804,10 +806,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!this.perfilEditando) return;
     if (!this.perfilCompleto(this.perfilEditando)) {
       Swal.fire({
-        title: 'Falta completar el perfil',
-        text: 'Razón social, tipo y número de documento son obligatorios.',
+        title: this.translate.instant('ventas.crearClienteModal.faltaPerfil'),
+        text: this.translate.instant('ventas.crearClienteModal.faltaPerfilTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -863,10 +865,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!this.contactoEditando) return;
     if (!this.contactoCompleto(this.contactoEditando)) {
       Swal.fire({
-        title: 'Falta completar el contacto',
-        text: 'El nombre y un correo o un celular son obligatorios.',
+        title: this.translate.instant('ventas.crearClienteModal.faltaContacto'),
+        text: this.translate.instant('ventas.crearClienteModal.faltaContactoTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -926,7 +928,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   // ── Guardar ────────────────────────────────────────────────────────
   guardarCliente() {
     if (!this.canPersist()) {
-      Swal.fire('Comercio cambiado', 'Cierra este formulario y vuelve a abrir Crear cliente en el comercio correcto.', 'warning');
+      Swal.fire(this.translate.instant('ventas.crearClienteModal.comercioCambiado'), this.translate.instant('ventas.crearClienteModal.comercioCambiadoTexto'), 'warning');
       return;
     }
     this.onUsernameBlur();
@@ -936,10 +938,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       const faltantes = this.getCamposFaltantes();
       const lista = faltantes.map(f => `• ${f}`).join('<br>');
       Swal.fire({
-        title: 'Campos incompletos',
-        html: `Por favor completa los siguientes campos:<br><br>${lista}`,
+        title: this.translate.instant('ventas.crearClienteModal.camposIncompletos'),
+        html: `${this.translate.instant('ventas.crearClienteModal.camposIncompletosTexto')}<br><br>${lista}`,
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -948,10 +950,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (this.permiteExtras && this.contactoPendiente) {
       this.pestana = 1;
       Swal.fire({
-        title: 'Hay un contacto sin terminar',
-        text: 'Complétalo con "Agregar a la lista" o descártalo antes de guardar.',
+        title: this.translate.instant('ventas.crearClienteModal.contactoPendiente'),
+        text: this.translate.instant('ventas.crearClienteModal.contactoPendienteTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -959,10 +961,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (this.permiteExtras && this.entregaPendiente) {
       this.pestana = 2;
       Swal.fire({
-        title: 'Hay una dirección sin terminar',
-        text: 'Complétala con "Agregar a la lista" o descártala antes de guardar.',
+        title: this.translate.instant('ventas.crearClienteModal.direccionPendiente'),
+        text: this.translate.instant('ventas.crearClienteModal.direccionPendienteTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -970,10 +972,10 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (this.permiteExtras && this.perfilPendiente) {
       this.pestana = 3;
       Swal.fire({
-        title: 'Hay un perfil de facturación sin terminar',
-        text: 'Complétalo con "Agregar a la lista" o descártalo antes de guardar.',
+        title: this.translate.instant('ventas.crearClienteModal.perfilPendiente'),
+        text: this.translate.instant('ventas.crearClienteModal.perfilPendienteTexto'),
         icon: 'warning',
-        confirmButtonText: 'Entendido',
+        confirmButtonText: this.translate.instant('comun.entendido'),
         confirmButtonColor: '#5F3FE0',
       });
       return;
@@ -1105,12 +1107,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     }
     Swal.fire({
       icon: 'warning',
-      title: '¿Cambiar el número de documento?',
-      html: `<p>Pasa de <strong>${this.escaparHtml(anterior || 'sin documento')}</strong> a <strong>${this.escaparHtml(nuevo)}</strong>.</p>
-             <p>Los otros pedidos ya creados conservan el documento anterior; los nuevos y sus facturas usarán el nuevo.</p>`,
+      title: this.translate.instant('ventas.crearClienteModal.cambiarDocumento'),
+      html: `<p>${this.translate.instant('ventas.crearClienteModal.cambiarDocumentoDeA', { anterior: this.escaparHtml(anterior || this.translate.instant('ventas.crearClienteModal.sinDocumento')), nuevo: this.escaparHtml(nuevo) })}</p>
+             <p>${this.translate.instant('ventas.crearClienteModal.cambiarDocumentoTexto')}</p>`,
       showCancelButton: true,
-      confirmButtonText: 'Sí, cambiarlo',
-      cancelButtonText: 'Volver',
+      confirmButtonText: this.translate.instant('ventas.crearClienteModal.siCambiarlo'),
+      cancelButtonText: this.translate.instant('comun.volver'),
       reverseButtons: true,
     }).then((r) => {
       if (r.isConfirmed) this.guardarEdicion(clienteData, true);
@@ -1138,8 +1140,8 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
               ? (resultadoLookup[0] || payload)
               : (resultadoLookup || payload);
             Swal.fire({
-              title: `¡${this.entityLabel} actualizado!`,
-              text: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''} fue actualizado exitosamente.`,
+              title: this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.corporativoActualizado' : 'ventas.crearClienteModal.clienteActualizado'),
+              text: this.translate.instant('ventas.crearClienteModal.actualizadoTexto', { nombre: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''}` }),
               icon: 'success',
               timer: 2500,
               timerProgressBar: true,
@@ -1159,13 +1161,13 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         if (err?.error?.code === 'DOCUMENT_IN_USE') {
           Swal.fire({
             icon: 'warning',
-            title: 'Ese documento ya está en uso',
-            text: `Otro cliente ya tiene el documento ${payload.documento}. Búscalo por ese número; no se guardó el cambio.`,
-            confirmButtonText: 'Entendido',
+            title: this.translate.instant('ventas.crearClienteModal.documentoEnUso'),
+            text: this.translate.instant('ventas.crearClienteModal.documentoEnUsoTexto', { documento: payload.documento }),
+            confirmButtonText: this.translate.instant('comun.entendido'),
           });
           return;
         }
-        Swal.fire("Error", `Ocurrió un error al actualizar el ${this.entityLabel.toLowerCase()}`, "error");
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.errorActualizarCorporativo' : 'ventas.crearClienteModal.errorActualizarCliente'), "error");
       },
     });
   }
@@ -1178,12 +1180,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           const clienteEncontrado = Array.isArray(res) ? res[0] : res;
           const traeExtras = (clienteData.datosEntrega?.length || 0) + (clienteData.datosFacturacionElectronica?.length || 0) + (clienteData.notas?.length || 0) + (clienteData.contactos?.length || 0) > 0;
           Swal.fire({
-            title: `${this.entityLabel} ya registrado`,
-            html: `<p>El documento <strong>${clienteData.documento}</strong> ya está registrado.</p>
-                   <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
-                   ${traeExtras ? '<p class="text-muted" style="font-size:0.9em;">Las direcciones, perfiles, contactos o notas que escribiste no se guardaron: se cargó el cliente existente para que las agregues ahí.</p>' : ''}`,
+            title: this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.corporativoYaRegistrado' : 'ventas.crearClienteModal.clienteYaRegistrado'),
+            html: `<p>${this.translate.instant('ventas.crearClienteModal.documentoYaRegistrado', { documento: clienteData.documento })}</p>
+                   <p><strong>${this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.corporativoDosPuntos' : 'ventas.crearClienteModal.clienteDosPuntos')}</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
+                   ${traeExtras ? '<p class="text-muted" style="font-size:0.9em;">' + this.translate.instant('ventas.crearClienteModal.extrasNoGuardados') + '</p>' : ''}`,
             icon: "info",
-            confirmButtonText: "Entendido",
+            confirmButtonText: this.translate.instant('comun.entendido'),
           }).then(() => {
             if (this.modo === 'inline') {
               // En la pantalla el formulario sigue abierto: pasa a editar el existente.
@@ -1207,8 +1209,8 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       next: (response: any) => {
         const clienteCreado = response.cliente || response || clienteData;
         Swal.fire({
-          title: `¡${this.entityLabel} creado!`,
-          text: `${clienteCreado.nombres_completos || clienteData.nombres_completos} fue guardado exitosamente.`,
+          title: this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.corporativoCreado' : 'ventas.crearClienteModal.clienteCreado'),
+          text: this.translate.instant('ventas.crearClienteModal.guardadoTexto', { nombre: clienteCreado.nombres_completos || clienteData.nombres_completos }),
           icon: 'success',
           timer: 2500,
           timerProgressBar: true,
@@ -1236,13 +1238,13 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         if (err?.code === 'EXISTE_OTRO_COMERCIAL') {
           Swal.fire({
             icon: 'warning',
-            title: 'Este cliente ya existe',
-            text: `${clienteData.nombres_completos || 'Este cliente'} ya está registrado y lo atiende otro comercial, así que no se creó de nuevo. Si crees que debería ser tuyo, pídele al administrador que te lo asigne.`,
-            confirmButtonText: 'Entendido',
+            title: this.translate.instant('ventas.crearClienteModal.clienteYaExiste'),
+            text: this.translate.instant('ventas.crearClienteModal.clienteDeOtroComercial', { nombre: clienteData.nombres_completos || this.translate.instant('ventas.crearClienteModal.esteCliente') }),
+            confirmButtonText: this.translate.instant('comun.entendido'),
           });
           return;
         }
-        Swal.fire("Error", `Ocurrió un error al crear el ${this.entityLabel.toLowerCase()}`, "error");
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.errorCrearCorporativo' : 'ventas.crearClienteModal.errorCrearCliente'), "error");
       },
     });
   }

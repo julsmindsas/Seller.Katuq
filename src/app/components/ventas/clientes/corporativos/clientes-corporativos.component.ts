@@ -11,6 +11,7 @@ import { CrmService } from '../../../crm/services/crm.service';
 import { ClientTag } from '../services/client-config.service';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
 import { resolverNombreApellido } from '../../../../shared/utils/nombre-apellido.util';
+import { TranslateService } from '@ngx-translate/core';
 
 /**
  * Listado de Clientes Corporativos (spec 011).
@@ -41,6 +42,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     private crmService: CrmService,
     private modalService: NgbModal,
     private messageService: MessageService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +82,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
       error: () => {
         this.corporativos = [];
         this.cargando = false;
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los clientes corporativos' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('ventas.clientesCorporativos.errorCargar') });
       },
     });
   }
@@ -157,8 +159,8 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     XLSX.writeFile(wb, 'plantilla-clientes-corporativos.xlsx');
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla descargada',
-      detail: 'Solo "Nombre / Razón social" es obligatorio. Trae 2 filas de ejemplo (persona natural y empresa): bórralas antes de importar.',
+      summary: this.translate.instant('ventas.clientesCorporativos.plantillaDescargada'),
+      detail: this.translate.instant('ventas.clientesCorporativos.plantillaDescargadaTexto'),
       life: 7000,
     });
   }
@@ -212,7 +214,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
   /** Exporta el listado actual de corporativos a un .xlsx. */
   exportarExcel(): void {
     if (!this.corporativos.length) {
-      this.messageService.add({ severity: 'warn', summary: 'Sin datos', detail: 'No hay corporativos para exportar' });
+      this.messageService.add({ severity: 'warn', summary: this.translate.instant('ventas.clientesCorporativos.sinDatos'), detail: this.translate.instant('ventas.clientesCorporativos.sinDatosTexto') });
       return;
     }
     const data = this.corporativos.map((c) => ({
@@ -231,7 +233,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     XLSX.utils.book_append_sheet(wb, ws, 'Corporativos');
     const ts = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `clientes-corporativos-${ts}.xlsx`);
-    this.messageService.add({ severity: 'success', summary: 'Exportado', detail: `${data.length} corporativos exportados` });
+    this.messageService.add({ severity: 'success', summary: this.translate.instant('ventas.clientesLista.exportado'), detail: this.translate.instant('ventas.clientesCorporativos.exportados', { n: data.length }) });
   }
 
   /**
@@ -252,7 +254,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows: any[] = XLSX.utils.sheet_to_json(ws);
         if (!rows.length) {
-          this.messageService.add({ severity: 'warn', summary: 'Archivo vacío' });
+          this.messageService.add({ severity: 'warn', summary: this.translate.instant('ventas.clientesCorporativos.archivoVacio') });
           event.target.value = '';
           return;
         }
@@ -363,13 +365,16 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
         });
 
         if (!tasks.length) {
-          const nada = [`${skipped} sin nombre`, `${dupInFile} duplicados en archivo`].filter((p) => !p.startsWith('0 ')).join(', ');
-          this.messageService.add({ severity: 'info', summary: 'Nada que importar', detail: nada || 'Sin registros válidos' });
+          const nada = [
+            skipped ? this.translate.instant('ventas.clientesCorporativos.importSinNombre', { n: skipped }) : '',
+            dupInFile ? this.translate.instant('ventas.clientesCorporativos.importDuplicados', { n: dupInFile }) : '',
+          ].filter(Boolean).join(', ');
+          this.messageService.add({ severity: 'info', summary: this.translate.instant('ventas.clientesCorporativos.nadaQueImportar'), detail: nada || this.translate.instant('ventas.clientesCorporativos.sinRegistrosValidos') });
           event.target.value = '';
           return;
         }
 
-        this.messageService.add({ severity: 'info', summary: 'Importando', detail: `Procesando ${tasks.length} registros...` });
+        this.messageService.add({ severity: 'info', summary: this.translate.instant('ventas.clientesCorporativos.importando'), detail: this.translate.instant('ventas.clientesCorporativos.procesando', { n: tasks.length }) });
         forkJoin(tasks.map((t) => t.obs)).subscribe({
           next: (results: any[]) => {
             let created = 0;
@@ -379,22 +384,25 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
               if (tasks[i].op === 'create') created++; else updated++;
             });
             const failed = tasks.length - created - updated;
-            const parts = [`${created} creados`, `${updated} actualizados`];
-            if (dupInFile) parts.push(`${dupInFile} duplicados en archivo`);
-            if (skipped) parts.push(`${skipped} sin nombre`);
-            if (clampedStages) parts.push(`${clampedStages} con etapa "convertido" → "negociación" (requiere compra verificada)`);
-            if (failed) parts.push(`${failed} con error`);
+            const parts = [
+              this.translate.instant('ventas.clientesCorporativos.importCreados', { n: created }),
+              this.translate.instant('ventas.clientesCorporativos.importActualizados', { n: updated }),
+            ];
+            if (dupInFile) parts.push(this.translate.instant('ventas.clientesCorporativos.importDuplicados', { n: dupInFile }));
+            if (skipped) parts.push(this.translate.instant('ventas.clientesCorporativos.importSinNombre', { n: skipped }));
+            if (clampedStages) parts.push(this.translate.instant('ventas.clientesCorporativos.importEtapaDegradada', { n: clampedStages }));
+            if (failed) parts.push(this.translate.instant('ventas.clientesCorporativos.importConError', { n: failed }));
             this.messageService.add({
               severity: failed ? 'warn' : 'success',
-              summary: 'Importación completada',
+              summary: this.translate.instant('ventas.clientesCorporativos.importacionCompletada'),
               detail: parts.join(', '), life: 5000,
             });
             this.cargarCorporativos();
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Falló la importación' }),
+          error: () => this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('ventas.clientesCorporativos.fallaImportacion') }),
         });
       } catch (err) {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo leer el archivo' });
+        this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('ventas.clientesCorporativos.errorLeerArchivo') });
       }
       event.target.value = '';
     };
@@ -421,7 +429,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     const modalRef = this.modalService.open(CrearClienteModalComponent, { size: 'lg', centered: true });
     modalRef.componentInstance.isEdit = false;
     modalRef.componentInstance.target = 'corporate';
-    modalRef.componentInstance.title = 'Nuevo corporativo';
+    modalRef.componentInstance.title = this.translate.instant('ventas.clientesCorporativos.nuevo');
     modalRef.componentInstance.tagsCatalog = this.tagsCatalog;
 
     modalRef.result.then((res) => {
@@ -433,7 +441,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     const modalRef = this.modalService.open(CrearClienteModalComponent, { size: 'lg', centered: true });
     modalRef.componentInstance.isEdit = true;
     modalRef.componentInstance.target = 'corporate';
-    modalRef.componentInstance.title = 'Editar corporativo';
+    modalRef.componentInstance.title = this.translate.instant('ventas.clientesCorporativos.editar');
     modalRef.componentInstance.clienteData = cliente;
     modalRef.componentInstance.tagsCatalog = this.tagsCatalog;
 
@@ -451,16 +459,16 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
   toggleBloqueo(cliente: any): void {
     const bloquear = cliente.estado !== 'bloqueado';
     Swal.fire({
-      title: `¿${bloquear ? 'Bloquear' : 'Desbloquear'} a "${cliente.nombres_completos || cliente.documento}"?`,
+      title: this.translate.instant(bloquear ? 'ventas.clientesCorporativos.bloquearTitulo' : 'ventas.clientesCorporativos.desbloquearTitulo', { nombre: cliente.nombres_completos || cliente.documento }),
       text: bloquear
-        ? 'Se ocultará de la lista activa pero se conserva su historial en el CRM. Podrás reactivarlo cuando quieras.'
-        : 'Volverá a estar activo en la lista.',
+        ? this.translate.instant('ventas.clientesCorporativos.bloquearTexto')
+        : this.translate.instant('ventas.clientesCorporativos.desbloquearTexto'),
       icon: bloquear ? 'warning' : 'question',
       showCancelButton: true,
       confirmButtonColor: bloquear ? '#D9820A' : '#1E874B',
       cancelButtonColor: '#8f8bab',
-      confirmButtonText: bloquear ? 'Sí, bloquear' : 'Sí, desbloquear',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant(bloquear ? 'ventas.clientesCorporativos.siBloquear' : 'ventas.clientesCorporativos.siDesbloquear'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((result) => {
       if (!result.isConfirmed) return;
       const nuevoEstado = bloquear ? 'bloqueado' : 'activo';
@@ -473,11 +481,11 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
             (c) => (c.cd === cliente.cd ? { ...c, estado: nuevoEstado } : c));
           this.messageService.add({
             severity: 'success',
-            summary: bloquear ? 'Bloqueado' : 'Desbloqueado',
-            detail: `Cliente corporativo ${bloquear ? 'bloqueado' : 'reactivado'}`,
+            summary: this.translate.instant(bloquear ? 'ventas.clientes.bloqueado' : 'ventas.clientesCorporativos.desbloqueado'),
+            detail: this.translate.instant(bloquear ? 'ventas.clientesCorporativos.corporativoBloqueado' : 'ventas.clientesCorporativos.corporativoReactivado'),
           });
         },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cambiar el estado' }),
+        error: () => this.messageService.add({ severity: 'error', summary: this.translate.instant('comun.error'), detail: this.translate.instant('ventas.clientesCorporativos.errorCambiarEstado') }),
       });
     });
   }

@@ -9,6 +9,7 @@ import { PaymentService } from '../../../../../shared/services/ventas/payment.se
 import { FacturacionIntegracionService } from '../../../../../shared/services/integraciones/facturas/facturacion.service';
 import { CustomerSectionComponent } from '../customer-section/customer-section.component';
 import { PaymentSelectorComponent } from '../payment-selector/payment-selector.component';
+import { TranslateService } from '@ngx-translate/core';
 
 /**
  * D-540 (ticket 1340): alto mínimo de la lista del ticket en escritorio.
@@ -55,6 +56,7 @@ export class PosCheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
     private host: ElementRef<HTMLElement>,
     private renderer: Renderer2,
     private zone: NgZone,
+    private translate: TranslateService,
   ) { }
 
   ngOnInit(): void {
@@ -210,10 +212,10 @@ export class PosCheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
               });
             }
             Swal.fire({
-              title: "Pago aprobado",
-              text: "El pago fue aprobado exitosamente.",
+              title: this.translate.instant('ventas.posCheckout.pagoAprobado'),
+              text: this.translate.instant('ventas.posCheckout.pagoAprobadoTexto'),
               icon: "success",
-              confirmButtonText: "Ok",
+              confirmButtonText: this.translate.instant('ventas.pos.ok'),
             });
             this.limpiarDatosDespuesDeVenta();
           } else {
@@ -227,29 +229,29 @@ export class PosCheckoutComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             console.log("ℹ️ [Wompi Widget] Pago no completado por el usuario.");
             Swal.fire({
-              title: "Pago rechazado",
-              text: "El pago fue rechazado o cancelado.",
+              title: this.translate.instant('ventas.posCheckout.pagoRechazado'),
+              text: this.translate.instant('ventas.posCheckout.pagoRechazadoTexto'),
               icon: "warning",
-              confirmButtonText: "Ok",
+              confirmButtonText: this.translate.instant('ventas.pos.ok'),
             });
           }
           this.processingPayment = false;
         }).catch(error => {
           console.error("❌ [Wompi Widget] Error en el proceso de pago:", error);
           Swal.fire({
-            title: "Error en el pago",
-            text: "Ocurrió un error durante el proceso de pago.",
+            title: this.translate.instant('ventas.posCheckout.errorEnElPago'),
+            text: this.translate.instant('ventas.posCheckout.errorEnElPagoTexto'),
             icon: "error",
-            confirmButtonText: "Ok",
+            confirmButtonText: this.translate.instant('ventas.pos.ok'),
           });
           this.processingPayment = false;
         });
       } else {
         Swal.fire({
-          title: "Error",
-          text: "No se pudo guardar el pedido para procesar el pago.",
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('ventas.posCheckout.noSePudoGuardarPedido'),
           icon: "error",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('ventas.pos.ok'),
         });
         this.processingPayment = false;
       }

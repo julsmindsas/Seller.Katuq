@@ -7,9 +7,9 @@
     <span class="cd-chip">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
     </span>
-    Métodos de pago electrónico
+    {{ 'ventas.cardPayment.metodosDePagoElectronico' | translate }}
   </h4>
-  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
@@ -40,13 +40,13 @@
         <span class="cd-empty-ic">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
         </span>
-        <span class="cd-empty-title">No hay métodos de pago configurados</span>
-        <span class="cd-empty-sub">Configúralos en las formas de pago de la empresa para cobrarlos aquí.</span>
+        <span class="cd-empty-title">{{ 'ventas.cardPayment.noHayMetodosDePago' | translate }}</span>
+        <span class="cd-empty-sub">{{ 'ventas.cardPayment.configuralosEnLasFormas' | translate }}</span>
       </div>
     </ng-template>
   </div>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
 </div>

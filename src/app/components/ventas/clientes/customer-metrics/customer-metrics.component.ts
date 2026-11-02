@@ -82,6 +82,18 @@ export class CustomerMetricsComponent implements OnChanges {
     this.mostrarDetalles = !this.mostrarDetalles;
   }
 
+  /** Clave de traducción del segmento RFM (solo para pintarlo; el valor no cambia). */
+  rfmEtiqueta(segmento: string | null): string {
+    const map: Record<string, string> = {
+      'Campeón':    'ventas.customerMetrics.rfmCampeon',
+      'Fiel':       'ventas.customerMetrics.rfmFiel',
+      'En riesgo':  'ventas.customerMetrics.rfmEnRiesgo',
+      'Hibernando': 'ventas.customerMetrics.rfmHibernando',
+      'Perdido':    'ventas.customerMetrics.rfmPerdido',
+    };
+    return map[segmento ?? ''] ?? (segmento || '');
+  }
+
   rfmColor(segmento: string | null): string {
     const map: Record<string, string> = {
       'Campeón':    '#1E874B',

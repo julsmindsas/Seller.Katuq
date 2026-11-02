@@ -3,6 +3,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-crear-generos',
@@ -20,7 +21,8 @@ export class CrearGenerosComponent implements OnInit {
   constructor(
     private fb: FormBuilder, 
     private service: MaestroService,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private translate: TranslateService
   ) {
     this.genreForm = this.fb.group({
       id: [''],
@@ -49,30 +51,30 @@ export class CrearGenerosComponent implements OnInit {
 
   guardar() {
     if (this.genreForm.invalid) {
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
 
     this.service.createEditGenrre(this.genreForm.value).subscribe({
       next: (r) => {
         Swal.fire({
-          title: 'Guardado!',
-          text: 'Género creado con éxito',
+          title: this.translate.instant('proceso.comun.guardado'),
+          text: this.translate.instant('proceso.crearGeneros.creadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
-        Swal.fire('Error', 'Ocurrió un error al guardar el género', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.crearGeneros.errorGuardar'), 'error');
       }
     });
   }
 
   editar() {
     if (this.genreForm.invalid) {
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
 
@@ -88,16 +90,16 @@ export class CrearGenerosComponent implements OnInit {
     this.service.createEditGenrre(formData).subscribe({
       next: (r) => {
         Swal.fire({
-          title: 'Actualizado!',
-          text: 'Género actualizado con éxito',
+          title: this.translate.instant('proceso.comun.actualizado'),
+          text: this.translate.instant('proceso.crearGeneros.actualizadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
-        Swal.fire('Error', 'Ocurrió un error al actualizar el género', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.crearGeneros.errorActualizar'), 'error');
       }
     });
   }

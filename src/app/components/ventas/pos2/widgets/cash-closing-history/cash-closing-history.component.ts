@@ -4,6 +4,7 @@ import { VentasService } from '../../../../../shared/services/ventas/ventas.serv
 import swal from 'sweetalert2';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { formasPagoComoNumeros, normalizarHistorialCierres } from './historial-cierres.normalizar';
+import { TranslateService } from '@ngx-translate/core';
 
 // Interfaz para un pedido individual dentro del historial
 interface Pedido {
@@ -80,7 +81,8 @@ export class CashClosingHistoryComponent implements OnInit {
   constructor(
     public activeModal: NgbActiveModal,
     private ventasService: VentasService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private translate: TranslateService
   ) { 
     // Inicializar con el mes actual
     const today = new Date();
@@ -146,10 +148,10 @@ export class CashClosingHistoryComponent implements OnInit {
       error: (error) => {
         console.error('Error loading cash closing history:', error);
         swal.fire({
-          title: 'Error',
-          text: 'No se pudo cargar el historial de cierres de caja. Por favor, intente de nuevo.',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('ventas.cashClosingHistory.errorCargar'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
         this.loading = false;
       }
@@ -274,10 +276,10 @@ export class CashClosingHistoryComponent implements OnInit {
     
     if (fechaInicio > fechaFin) {
       swal.fire({
-        title: 'Error',
-        text: 'La fecha de inicio no puede ser mayor que la fecha de fin.',
+        title: this.translate.instant('comun.error'),
+        text: this.translate.instant('ventas.cashClosingHistory.fechaInicioMayor'),
         icon: 'error',
-        confirmButtonText: 'Entendido'
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
       return;
     }
@@ -310,8 +312,8 @@ export class CashClosingHistoryComponent implements OnInit {
   /** Texto corto para la cajera: Cuadra / Sobra $X / Falta $X. */
   estadoCuadre(item: HistorialItem): string {
     const d = this.diferenciaCierre(item);
-    if (d === 0) return 'Cuadra';
-    return (d > 0 ? 'Sobra ' : 'Falta ') + this.formatCurrency(Math.abs(d));
+    if (d === 0) return this.translate.instant('ventas.cashClosingHistory.cuadra');
+    return this.translate.instant(d > 0 ? 'ventas.cashClosingHistory.sobra' : 'ventas.cashClosingHistory.falta', { monto: this.formatCurrency(Math.abs(d)) });
   }
 
   // Funciones de formato (mantener las que aún se necesiten)

@@ -3,6 +3,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-crear-tipo-cliente',
@@ -18,7 +19,8 @@ export class CrearTipoClienteComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private service: MaestroService,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private translate: TranslateService
   ) {
     this.tipoClienteForm = this.fb.group({
       id: [''],
@@ -54,18 +56,14 @@ export class CrearTipoClienteComponent implements OnInit {
     const yaEstaba = this.tipoClienteData?.esPrecioBase === true;
     if (!marcado || yaEstaba) return true;
 
-    const nombre = this.tipoClienteForm.value.nombre || 'este tipo';
+    const nombre = this.tipoClienteForm.value.nombre || this.translate.instant('proceso.crearTipoCliente.esteTipo');
     const res = await Swal.fire({
-      title: '¿Que este tipo defina el precio base?',
-      html: `Cada vez que guardes o importes precios por tipo de cliente, el precio de
-             <strong>${nombre}</strong> quedará también como <strong>precio base</strong>
-             del producto.<br><br>
-             La pestaña <strong>Precio unitario</strong> desaparece de Lista de precios, y si
-             otro tipo era el precio base, deja de serlo.`,
+      title: this.translate.instant('proceso.crearTipoCliente.confirmarTitulo'),
+      html: this.translate.instant('proceso.crearTipoCliente.confirmarHtml', { nombre }),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, que defina el precio base',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: this.translate.instant('proceso.crearTipoCliente.confirmarBoton'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       focusCancel: true
     });
     return res.isConfirmed;
@@ -73,7 +71,7 @@ export class CrearTipoClienteComponent implements OnInit {
 
   async guardar() {
     if (this.tipoClienteForm.invalid) {
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
     if (!(await this.confirmarPrecioBaseSiAplica())) return;
@@ -88,24 +86,24 @@ export class CrearTipoClienteComponent implements OnInit {
     this.service.createTipoCliente(data).subscribe({
       next: () => {
         Swal.fire({
-          title: 'Guardado!',
-          text: 'Tipo de cliente creado con éxito',
+          title: this.translate.instant('proceso.comun.guardado'),
+          text: this.translate.instant('proceso.crearTipoCliente.creadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
         console.error('Error guardando:', error);
-        Swal.fire('Error', 'Ocurrió un error al guardar', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.errorGuardar'), 'error');
       }
     });
   }
 
   async editar() {
     if (this.tipoClienteForm.invalid) {
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
     if (!(await this.confirmarPrecioBaseSiAplica())) return;
@@ -121,17 +119,17 @@ export class CrearTipoClienteComponent implements OnInit {
     this.service.editTipoCliente(data).subscribe({
       next: () => {
         Swal.fire({
-          title: 'Actualizado!',
-          text: 'Tipo de cliente actualizado con éxito',
+          title: this.translate.instant('proceso.comun.actualizado'),
+          text: this.translate.instant('proceso.crearTipoCliente.actualizadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
         console.error('Error actualizando:', error);
-        Swal.fire('Error', 'Ocurrió un error al actualizar', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.errorActualizar'), 'error');
       }
     });
   }

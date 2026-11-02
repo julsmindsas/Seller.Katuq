@@ -15,23 +15,23 @@
                         <!-- En produccion este contador es de pedidos, pero la tabla de abajo
                              lista lineas de producto: dos cifras distintas que confundian. -->
                         <small class="pedidos-topbar__sub" *ngIf="!isFromProduction">
-                            {{ "Listado de pedidos" | translate }} ·
-                            <b>{{ totalRecords || orders.length }}</b> {{ "resultados" | translate }}
+                            {{ 'ventas.list.listadoDePedidos' | translate }} ·
+                            <b>{{ totalRecords || orders.length }}</b> {{ 'ventas.list.resultados' | translate }}
                             <!-- D-346: de qué está hecho este número. Antes decía 1334 arriba y
                                  1307 en TOTAL sin explicar que la diferencia son los POS. -->
                             <span class="pedidos-desglose" *ngIf="totalPOS">
-                                = {{ getTotalPedidos() }} pedidos + {{ totalPOS }} de punto de venta (POS)
+                                {{ 'ventas.list.desglosePos' | translate: { pedidos: getTotalPedidos(), pos: totalPOS } }}
                             </span>
                             <span class="pedidos-desglose pedidos-desglose--linea">
-                                Por fecha de {{ nombreFechaFiltro }}<ng-container *ngIf="getCaidosCount()">
-                                · incluye {{ getCaidosCount() }} cancelados o rechazados</ng-container>
+                                {{ 'ventas.list.porFechaDe' | translate: { fecha: (nombreFechaFiltro | translate) } }}<ng-container *ngIf="getCaidosCount()">
+                                {{ 'ventas.list.incluyeCaidos' | translate: { n: getCaidosCount() } }}</ng-container>
                             </span>
                         </small>
                     </div>
                     <div class="pedidos-topbar__actions">
                         <!-- En produccion la vista siempre la pinta app-list-produccion-orders,
                              asi que el toggle Panel/Tabla no aplica. -->
-                        <div class="pedidos-viewtoggle" role="group" aria-label="Cambiar vista"
+                        <div class="pedidos-viewtoggle" role="group" [attr.aria-label]="'ventas.list.cambiarVista' | translate"
                              *ngIf="!isFromProduction">
                             <button type="button" class="pedidos-viewtoggle__btn"
                                     [class.is-active]="modoVista === 'split'"
@@ -41,7 +41,7 @@
                             <button type="button" class="pedidos-viewtoggle__btn"
                                     [class.is-active]="modoVista === 'tabla'"
                                     (click)="modoVista = 'tabla'">
-                                <i class="pi pi-table"></i> {{ "Tabla" | translate }}
+                                <i class="pi pi-table"></i> {{ 'ventas.list.tabla' | translate }}
                             </button>
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                                                             <span class="badge" [ngClass]="getLocalSearchResultsCount() > 0 ? 'bg-primary' : 'bg-warning'">
                                                                 <i class="pi" [ngClass]="getLocalSearchResultsCount() > 0 ? 'pi-filter' : 'pi-exclamation-triangle'"></i>
                                                                 <span *ngIf="getLocalSearchResultsCount() > 0">
-                                                                {{ getLocalSearchResultsCount() }} {{ 'resultados' | translate }}
+                                                                {{ getLocalSearchResultsCount() }} {{ 'ventas.list.resultados' | translate }}
                                                                 </span>
                                                                 <span *ngIf="getLocalSearchResultsCount() === 0">
                                                                     {{ 'Sin resultados' | translate }}
@@ -160,10 +160,10 @@
                                             <!-- Total Pedidos -->
                                             <div class="metric-chip metric-chip-primary"
                                                  (click)="onMetricClick('all')"
-                                                 [pTooltip]="'Pedidos de venta normal por fecha de ' + nombreFechaFiltro + (totalPOS ? ', SIN los ' + totalPOS + ' de punto de venta (POS)' : '') + (getCaidosCount() ? '. Incluye ' + getCaidosCount() + ' cancelados o rechazados.' : '.')"
+                                                 [pTooltip]="('ventas.list.tooltipTotal' | translate: { fecha: (nombreFechaFiltro | translate) }) + (totalPOS ? ('ventas.list.tooltipTotalSinPos' | translate: { pos: totalPOS }) : '') + (getCaidosCount() ? ('ventas.list.tooltipTotalCaidos' | translate: { n: getCaidosCount() }) : '.')"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-shopping-cart"></i>
-                                                <span class="metric-label">Total<small class="metric-nota" *ngIf="totalPOS"> sin POS</small></span>
+                                                <span class="metric-label">{{ 'ventas.list.total3' | translate }}<small class="metric-nota" *ngIf="totalPOS"> {{ 'ventas.list.sinPos' | translate }}</small></span>
                                                 <span class="metric-badge">{{ getTotalPedidos() }}</span>
                                             </div>
 
@@ -175,11 +175,11 @@
                                             <!-- Sin Producir (Compacto) -->
                                             <div class="metric-chip metric-chip-secondary metric-chip-sm metric-chip-compact"
                                                  (click)="onMetricClick('SinProducir')"
-                                                 pTooltip="{{ 'Pedidos pendientes de iniciar producción' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosPendientesDeIniciarProduccion' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-circle"></i>
-                                                <span class="metric-label-short">SP</span>
-                                                <span class="metric-label-full">Sin Prod.</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevSP' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.sinProd' | translate }}</span>
                                                 <span class="metric-badge">{{ getProcesoCount('SinProducir') }}</span>
                                             </div>
 
@@ -188,11 +188,11 @@
                                             <!-- Para Despachar (Compacto) -->
                                             <div class="metric-chip metric-chip-packed metric-chip-sm metric-chip-compact"
                                                  (click)="onMetricClick('ParaDespachar')"
-                                                 pTooltip="{{ 'Pedidos listos para despachar - Acción inmediata' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosListosParaDespacharAccion' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-box"></i>
-                                                <span class="metric-label-short">PD</span>
-                                                <span class="metric-label-full">P/ Desp.</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevPD' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.pDesp' | translate }}</span>
                                                 <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
                                             </div>
 
@@ -204,11 +204,11 @@
                                             <!-- Pendientes de Pago -->
                                             <div class="metric-chip metric-chip-warning metric-chip-compact"
                                                  (click)="onMetricClick('pendientesPago')"
-                                                 pTooltip="{{ 'Pedidos pendientes de pago - Requieren seguimiento' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosPendientesDePagoRequieren' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-dollar"></i>
-                                                <span class="metric-label-short">PP</span>
-                                                <span class="metric-label-full">Pend. Pago</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevPP' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.pendPago' | translate }}</span>
                                                 <span class="metric-badge">{{ getPendientesPagoCount() }}</span>
                                             </div>
 
@@ -217,11 +217,11 @@
                                             <!-- Pagos Aprobados Hoy -->
                                             <div class="metric-chip metric-chip-success metric-chip-compact"
                                                  (click)="onMetricClick('aprobadosHoy')"
-                                                 pTooltip="{{ 'Pedidos con pago aprobado hoy - KPI de conversión diaria' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosConPagoAprobadoHoy' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-check-circle"></i>
-                                                <span class="metric-label-short">AH</span>
-                                                <span class="metric-label-full">Aprob. Hoy</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevAH' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.aprobHoy' | translate }}</span>
                                                 <span class="metric-badge">{{ getPagosAprobadosHoyCount() }}</span>
                                             </div>
 
@@ -229,11 +229,11 @@
 
                                             <!-- Ventas del Día -->
                                             <div class="metric-chip metric-chip-info metric-chip-compact metric-chip-currency"
-                                                 pTooltip="{{ 'Valor total de pedidos creados hoy - Métrica financiera diaria' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.valorTotalDePedidosCreados' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-chart-line"></i>
-                                                <span class="metric-label-short">VH</span>
-                                                <span class="metric-label-full">Ventas Hoy</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevVH' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.ventasHoy' | translate }}</span>
                                                 <span class="metric-badge">{{ getVentasDelDia() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                             </div>
 
@@ -241,11 +241,11 @@
 
                                             <!-- Ticket Promedio -->
                                             <div class="metric-chip metric-chip-primary metric-chip-compact metric-chip-currency"
-                                                 pTooltip="{{ 'Valor promedio por pedido - Indicador de pricing' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.valorPromedioPorPedidoIndicador' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-calculator"></i>
-                                                <span class="metric-label-short">TP</span>
-                                                <span class="metric-label-full">Ticket Prom.</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevTP' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.ticketProm' | translate }}</span>
                                                 <span class="metric-badge">{{ getTicketPromedio() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                             </div>
 
@@ -254,11 +254,11 @@
                                             <!-- Pedidos Urgentes -->
                                             <div class="metric-chip metric-chip-danger metric-chip-compact"
                                                  (click)="onMetricClick('urgentes')"
-                                                 pTooltip="{{ 'Pedidos con entrega próxima (hoy o mañana) no completados - Atención urgente' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosConEntregaProximaHoy' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-exclamation-triangle"></i>
-                                                <span class="metric-label-short">URG</span>
-                                                <span class="metric-label-full">Urgentes</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevURG' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.urgentes' | translate }}</span>
                                                 <span class="metric-badge">{{ getPedidosUrgentesCount() }}</span>
                                             </div>
 
@@ -267,11 +267,11 @@
                                             <!-- Anticipo Pendiente -->
                                             <div class="metric-chip metric-chip-warning metric-chip-compact"
                                                  (click)="onMetricClick('anticipoPendiente')"
-                                                 pTooltip="{{ 'Pedidos con saldo pendiente después de anticipo - Cuentas por cobrar' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosConSaldoPendienteDespues' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-wallet"></i>
-                                                <span class="metric-label-short">CS</span>
-                                                <span class="metric-label-full">C/ Saldo</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevCS' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.cSaldo' | translate }}</span>
                                                 <span class="metric-badge">{{ getAnticiposPendientesCount() }}</span>
                                             </div>
 
@@ -280,11 +280,11 @@
                                             <!-- Con Descuento -->
                                             <div class="metric-chip metric-chip-info metric-chip-compact"
                                                  (click)="onMetricClick('conDescuento')"
-                                                 pTooltip="{{ 'Pedidos con descuento aplicado - Monitoreo de promociones' | translate }}"
+                                                 pTooltip="{{ 'ventas.list.pedidosConDescuentoAplicadoMonitoreo' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-tag"></i>
-                                                <span class="metric-label-short">CD</span>
-                                                <span class="metric-label-full">C/ Desc.</span>
+                                                <span class="metric-label-short">{{ 'ventas.list.abrevCD' | translate }}</span>
+                                                <span class="metric-label-full">{{ 'ventas.list.cDesc' | translate }}</span>
                                                 <span class="metric-badge">{{ getPedidosConDescuentoCount() }}</span>
                                             </div>
                                         </div>
@@ -303,23 +303,23 @@
                                                 </div>
                                                 <div class="pedidos-triage">
                                                     <button type="button" class="pedidos-triage__chip is-active" (click)="onMetricClick('all')"
-                                                            [title]="totalPOS ? 'Pedidos de venta normal. Los ' + totalPOS + ' de punto de venta (POS) se suman al número de arriba.' : 'Todos los pedidos del filtro'">
+                                                            [title]="totalPOS ? ('ventas.list.tituloTodosConPos' | translate: { pos: totalPOS }) : ('ventas.list.todosLosPedidosDelFiltro' | translate)">
                                                         {{ 'Todos' | translate }} · {{ getTotalPedidos() }}
                                                     </button>
                                                     <button type="button" class="pedidos-triage__chip pedidos-triage__chip--danger" (click)="onMetricClick('urgentes')">
-                                                        {{ 'Urgentes' | translate }} · {{ getPedidosUrgentesCount() }}
+                                                        {{ 'ventas.list.urgentes' | translate }} · {{ getPedidosUrgentesCount() }}
                                                     </button>
                                                     <button type="button" class="pedidos-triage__chip pedidos-triage__chip--warning" (click)="onMetricClick('pendientesPago')">
-                                                        {{ 'Pend. pago' | translate }} · {{ getPendientesPagoCount() }}
+                                                        {{ 'ventas.list.pendPago' | translate }} · {{ getPendientesPagoCount() }}
                                                     </button>
                                                     <button type="button" class="pedidos-triage__chip" (click)="onMetricClick('SinProducir')">
-                                                        {{ 'Sin producir' | translate }} · {{ getProcesoCount('SinProducir') }}
+                                                        {{ 'ventas.list.sinProducir' | translate }} · {{ getProcesoCount('SinProducir') }}
                                                     </button>
                                                 </div>
                                             </div>
 
                                             <div *ngIf="loading" class="pedidos-list-pane__loading">
-                                                <i class="pi pi-spin pi-spinner"></i> {{ 'Cargando…' | translate }}
+                                                <i class="pi pi-spin pi-spinner"></i> {{ 'comun.cargando' | translate }}
                                             </div>
 
                                             <div class="pedidos-list-scroll">
@@ -334,18 +334,18 @@
                                                         <div class="pedido-row__top">
                                                             <span class="pedido-row__nro">{{ pedido.nroPedido }}</span>
                                                             <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
-                                                            <span *ngIf="isPedidoUrgente(pedido)" class="pedido-row__urg">URG</span>
+                                                            <span *ngIf="isPedidoUrgente(pedido)" class="pedido-row__urg">{{ 'ventas.list.abrevURG' | translate }}</span>
                                                             <i *ngIf="isPedidoCongelado(pedido)" class="fa fa-snowflake-o pedido-row__frozen"
-                                                               [title]="'Pedido congelado' | translate"></i>
+                                                               [title]="'ventas.list.pedidoCongelado' | translate"></i>
                                                             <!-- Ticket 1185: la vista panel también muestra los números externos
                                                                  (SH-xxx Shopify, OSM-xxx Osmosis) que ya tenía la vista tabla. -->
                                                             <span *ngFor="let ref of getExternalOrderNumbers(pedido)"
                                                                   class="pedido-row__ext"
-                                                                  [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                                  [pTooltip]="ref.tooltip || ('ventas.list.ordenDePlataforma' | translate: { plataforma: ref.platform })"
                                                                   [escape]="false"
                                                                   tooltipPosition="top">
                                                                 {{ ref.label }}
-                                                                <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                                <i *ngIf="ref.hasNote" class="pi pi-truck" [attr.aria-label]="'ventas.list.conTracking' | translate"></i>
                                                             </span>
                                                         </div>
                                                         <div class="pedido-row__cliente">{{ getClienteNombre(pedido) }}</div>
@@ -356,7 +356,7 @@
                                                                     'badge-success': pedido?.estadoPago === 'Aprobado',
                                                                     'badge-info': pedido?.estadoPago === 'PreAprobado',
                                                                     'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
-                                                                }">{{ getPaymentStatusDisplay(pedido?.estadoPago).short }}</span>
+                                                                }">{{ getPaymentStatusDisplay(pedido?.estadoPago).short | translate }}</span>
                                                             <span class="modern-badge pedido-pill"
                                                                 [ngClass]="{
                                                                     'badge-secondary': pedido?.estadoProceso === 'SinProducir',
@@ -366,7 +366,7 @@
                                                                     'badge-success': pedido?.estadoProceso === 'Entregado',
                                                                     'badge-danger': pedido?.estadoProceso === 'Rechazado',
                                                                     'badge-dark': pedido?.estadoProceso === 'Cerrado'
-                                                                }">{{ getStatusDisplay(pedido?.estadoProceso).short }}</span>
+                                                                }">{{ getStatusDisplay(pedido?.estadoProceso).short | translate }}</span>
                                                             <span *ngIf="etiquetaConfirmacionWhatsapp(pedido) as confWa" class="modern-badge pedido-pill"
                                                                 [ngClass]="confWa.clase" [title]="confWa.titulo | translate">{{ confWa.texto | translate }}</span>
                                                         </div>
@@ -379,7 +379,7 @@
 
                                                 <div *ngIf="!loading && orders.length === 0" class="pedidos-empty-list">
                                                     <i class="pi pi-inbox"></i>
-                                                    <span>{{ 'No hay pedidos' | translate }}</span>
+                                                    <span>{{ 'ventas.list.noHayPedidos' | translate }}</span>
                                                 </div>
                                             </div>
 
@@ -410,26 +410,26 @@
                                                         <div class="pedido-detail__id">
                                                             <div class="pedido-detail__cliente">
                                                                 {{ getClienteNombre(pedidoDetalle) }}
-                                                                <span *ngIf="isPedidoUrgente(pedidoDetalle)" class="pedido-row__urg">⚠ {{ 'URGENTE' | translate }}</span>
+                                                                <span *ngIf="isPedidoUrgente(pedidoDetalle)" class="pedido-row__urg">⚠ {{ 'ventas.list.urgente' | translate }}</span>
                                                             </div>
                                                             <div class="pedido-detail__meta">
                                                                 <span class="pedido-detail__nro">{{ pedidoDetalle.nroPedido }}</span>
                                                                 <!-- Ticket 1185: números externos (Shopify / Osmosis) en el detalle -->
                                                                 <span *ngFor="let ref of getExternalOrderNumbers(pedidoDetalle)"
                                                                       class="pedido-detail__ext"
-                                                                      [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                                      [pTooltip]="ref.tooltip || ('ventas.list.ordenDePlataforma' | translate: { plataforma: ref.platform })"
                                                                       [escape]="false"
                                                                       tooltipPosition="top">
                                                                     {{ ref.label }}
-                                                                    <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                                    <i *ngIf="ref.hasNote" class="pi pi-truck" [attr.aria-label]="'ventas.list.conTracking' | translate"></i>
                                                                 </span>
                                                                 <span class="pedido-detail__entrega">
-                                                                    {{ 'Entrega' | translate }} {{ convertFechaEntregaString(pedidoDetalle?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
+                                                                    {{ 'ventas.list.entrega' | translate }} {{ convertFechaEntregaString(pedidoDetalle?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <div class="pedido-detail__total">
-                                                            <span class="pedido-detail__total-label">{{ 'TOTAL' | translate }}</span>
+                                                            <span class="pedido-detail__total-label">{{ 'ventas.list.total' | translate }}</span>
                                                             <span class="pedido-detail__total-value">{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                         </div>
                                                     </div>
@@ -443,7 +443,7 @@
                                                                     'badge-success': pedidoDetalle?.estadoPago === 'Aprobado',
                                                                     'badge-info': pedidoDetalle?.estadoPago === 'PreAprobado',
                                                                     'badge-danger': pedidoDetalle?.estadoPago === 'Rechazado' || pedidoDetalle?.estadoPago === 'Cancelado' || pedidoDetalle?.estadoPago === 'Precancelado'
-                                                                }">{{ 'Pago' | translate }}: {{ getPaymentStatusDisplay(pedidoDetalle?.estadoPago).short }}</span>
+                                                                }">{{ 'ventas.list.pago' | translate }}: {{ getPaymentStatusDisplay(pedidoDetalle?.estadoPago).short | translate }}</span>
                                                             <span class="modern-badge pedido-pill"
                                                                 [ngClass]="{
                                                                     'badge-secondary': pedidoDetalle?.estadoProceso === 'SinProducir',
@@ -453,13 +453,13 @@
                                                                     'badge-success': pedidoDetalle?.estadoProceso === 'Entregado',
                                                                     'badge-danger': pedidoDetalle?.estadoProceso === 'Rechazado',
                                                                     'badge-dark': pedidoDetalle?.estadoProceso === 'Cerrado'
-                                                                }">{{ 'Proceso' | translate }}: {{ getStatusDisplay(pedidoDetalle?.estadoProceso).short }}</span>
+                                                                }">{{ 'ventas.list.proceso' | translate }}: {{ getStatusDisplay(pedidoDetalle?.estadoProceso).short | translate }}</span>
                                                             <span *ngIf="etiquetaConfirmacionWhatsapp(pedidoDetalle) as confWa" class="modern-badge pedido-pill"
                                                                 [ngClass]="confWa.clase" [title]="confWa.titulo | translate">{{ confWa.texto | translate }}</span>
                                                             <span *ngIf="isPedidoCongelado(pedidoDetalle)" class="pedido-frozen-chip">
-                                                                <i class="fa fa-snowflake-o"></i> {{ 'Congelado' | translate }}
+                                                                <i class="fa fa-snowflake-o"></i> {{ 'ventas.list.congelado' | translate }}
                                                             </span>
-                                                            <span class="pedido-valid-chip">{{ 'Validación' | translate }}: {{ pedidoDetalle.validacion ? ('Sí' | translate) : ('No' | translate) }}</span>
+                                                            <span class="pedido-valid-chip">{{ 'ventas.list.validacion' | translate }}: {{ pedidoDetalle.validacion ? ('comun.si' | translate) : ('No' | translate) }}</span>
                                                         </div>
 
                                                         <!-- D-361: pedido de tienda repartido en un pedido por bodega -->
@@ -470,7 +470,7 @@
                                                         <app-pedido-3d [completados]="getProgresoCompletados(pedidoDetalle?.estadoProceso)" [estadoProceso]="pedidoDetalle?.estadoProceso" [carrito]="pedidoDetalle?.carrito" [ciudad]="pedidoDetalle?.envio?.ciudad" [transportador]="pedidoDetalle?.transportador" [urgente]="isPedidoUrgente(pedidoDetalle)"></app-pedido-3d>
                                                         <!-- línea de progreso -->
                                                         <div class="pedido-timeline" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) >= 0">
-                                                            <div class="pedido-timeline__label">{{ 'PROGRESO DEL PEDIDO' | translate }}</div>
+                                                            <div class="pedido-timeline__label">{{ 'ventas.list.progresoDelPedido' | translate }}</div>
                                                             <div class="pedido-timeline__track">
                                                                 <div class="pedido-timeline__step"
                                                                      *ngFor="let paso of ['Producido','Empacado','Despachado','Entregado']; let i = index"
@@ -484,30 +484,30 @@
                                                             </div>
                                                         </div>
                                                         <div class="pedido-timeline pedido-timeline--rejected" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) === -1">
-                                                            <i class="pi pi-times-circle"></i> {{ 'Pedido rechazado' | translate }}
+                                                            <i class="pi pi-times-circle"></i> {{ 'ventas.list.pedidoRechazado' | translate }}
                                                         </div>
 
                                                         <!-- desglose de valores (columnas financieras de la tabla) -->
-                                                        <div class="pedido-detail__sectionlabel">{{ 'DESGLOSE' | translate }}</div>
+                                                        <div class="pedido-detail__sectionlabel">{{ 'ventas.list.desglose' | translate }}</div>
                                                         <div class="pedido-desglose">
-                                                            <div class="pedido-desglose__row"><span>{{ 'Valor bruto' | translate }}</span><b>{{ pedidoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.totalDescuento"><span>{{ 'Descuento' | translate }}</span><b class="is-neg">− {{ pedidoDetalle.totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'ventas.list.valorBruto' | translate }}</span><b>{{ pedidoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.totalDescuento"><span>{{ 'ventas.list.descuento' | translate }}</span><b class="is-neg">− {{ pedidoDetalle.totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
                                                             <div class="pedido-desglose__row"><span>{{ 'Domicilio' | translate }}</span><b>{{ pedidoDetalle.totalEnvio | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row"><span>{{ 'Subtotal' | translate }}</span><b>{{ getSubtotalConDomicilio(pedidoDetalle) | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row"><span>{{ 'IVA' | translate }}</span><b>{{ pedidoDetalle.totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'ventas.list.subtotal' | translate }}</span><b>{{ getSubtotalConDomicilio(pedidoDetalle) | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'ventas.list.iva' | translate }}</span><b>{{ pedidoDetalle.totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
                                                             <div class="pedido-desglose__row pedido-desglose__row--total"><span>{{ 'Total' | translate }}</span><b>{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.anticipo"><span>{{ 'Anticipo' | translate }}</span><b>{{ pedidoDetalle.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'Falta por pagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.anticipo"><span>{{ 'ventas.list.anticipo' | translate }}</span><b>{{ pedidoDetalle.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'ventas.list.faltaPorPagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
                                                         </div>
 
                                                         <!-- D-517: pedido de tienda pagado a cuotas (Addi o Sistecrédito); no se pinta en los demás -->
                                                         <app-pedido-pago-cuotas [pedido]="pedidoDetalle"></app-pedido-pago-cuotas>
 
                                                         <!-- datos del pedido (resto de columnas de la tabla) -->
-                                                        <div class="pedido-detail__sectionlabel">{{ 'DATOS DEL PEDIDO' | translate }}</div>
+                                                        <div class="pedido-detail__sectionlabel">{{ 'ventas.list.datosDelPedido' | translate }}</div>
                                                         <div class="pedido-datos">
                                                             <div class="pedido-datos__item">
-                                                                <span class="pedido-datos__k">{{ 'Factura' | translate }}</span>
+                                                                <span class="pedido-datos__k">{{ 'ventas.list.factura' | translate }}</span>
                                                                 <span class="pedido-datos__v">
                                                                     <a *ngIf="pedidoDetalle.nroFactura && (pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl)"
                                                                        [href]="pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl" target="_blank">
@@ -517,34 +517,34 @@
                                                                     <span *ngIf="!pedidoDetalle.nroFactura" class="is-muted">—</span>
                                                                     <!-- Ticket 1415 -->
                                                                     <small *ngIf="$any(pedidoDetalle).pendienteRefacturar" class="d-block text-warning">
-                                                                        Por refacturar: el IVA cambió después de la factura {{ $any(pedidoDetalle).pendienteRefacturar.factura }}
+                                                                        {{ 'ventas.list.porRefacturarFactura' | translate: { factura: $any(pedidoDetalle).pendienteRefacturar.factura } }}
                                                                     </small>
                                                                     <!-- Ticket 1145: facturas anuladas con nota crédito y liberadas -->
                                                                     <small *ngFor="let fa of pedidoDetalle.facturasAnuladas" class="is-muted d-block">
-                                                                        Anulada: {{ fa.invoiceNumber }} · NC {{ fa.notaCredito }}
+                                                                        {{ 'ventas.list.anuladaConNota' | translate: { factura: fa.invoiceNumber, nota: fa.notaCredito } }}
                                                                     </small>
                                                                 </span>
                                                             </div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Fecha de compra' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaCreacion ? (pedidoDetalle.fechaCreacion | date:'dd/MM/yyyy') : '—' }}</span></div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Canal' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.channel?.name || 'Regular' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.fechaDeCompra' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaCreacion ? (pedidoDetalle.fechaCreacion | date:'dd/MM/yyyy') : '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.canal' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.channel?.name || ('ventas.list.canalRegular' | translate) }}</span></div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Vendedor' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.asesorAsignado?.name || '—' }}</span></div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Forma de entrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.formaDeEntrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega || '—' }}</span></div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Horario' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega || '—' }}</span></div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Ciudad' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.envio?.ciudad || '—' }}</span></div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Zona de entrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.envio?.zonaCobro || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.zonaDeEntrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.envio?.zonaCobro || '—' }}</span></div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Despachador' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.despachador?.name || '—' }}</span></div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Transportador' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.transportador || '—' }}</span></div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Despachado' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaYHorarioDespachado ? (pedidoDetalle.fechaYHorarioDespachado | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
-                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Última impresión' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.ultimaImpresion ? (pedidoDetalle.ultimaImpresion | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.despachado' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaYHorarioDespachado ? (pedidoDetalle.fechaYHorarioDespachado | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'ventas.list.ultimaImpresion' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.ultimaImpresion ? (pedidoDetalle.ultimaImpresion | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
                                                         </div>
 
                                                         <!-- productos -->
-                                                        <div class="pedido-detail__sectionlabel">{{ 'PRODUCTOS' | translate }} · {{ pedidoDetalle.carrito?.length || 0 }}</div>
+                                                        <div class="pedido-detail__sectionlabel">{{ 'ventas.list.productos' | translate }} · {{ pedidoDetalle.carrito?.length || 0 }}</div>
                                                         <div class="pedido-detail__productos">
                                                             <div *ngFor="let item of pedidoDetalle.carrito; let i = index; trackBy: trackByCartItem" class="pedido-prod">
                                                                 <img class="pedido-prod__img"
                                                                      [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
-                                                                     [alt]="item.producto?.crearProducto?.titulo || 'Producto'" />
+                                                                     [alt]="item.producto?.crearProducto?.titulo || ('ventas.list.producto' | translate)" />
                                                                 <div class="pedido-prod__info">
                                                                     <div class="pedido-prod__name">{{ item.producto?.crearProducto?.titulo }}</div>
                                                                     <div class="pedido-prod__qty">{{ 'Cantidad' | translate }}: {{ item.cantidad }}</div>
@@ -553,15 +553,15 @@
                                                                 <div class="pedido-prod__acciones" *ngIf="!isFromProduction">
                                                                     <button type="button" class="pedido-prod__btn"
                                                                             [disabled]="!canModifyProducts(pedidoDetalle)"
-                                                                            [title]="canModifyProducts(pedidoDetalle) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedidoDetalle.estadoProceso"
-                                                                            [attr.aria-label]="'Configurar ' + (item.producto?.crearProducto?.titulo || 'producto')"
+                                                                            [title]="canModifyProducts(pedidoDetalle) ? ('ventas.list.configurarProducto' | translate) : ('ventas.list.noModificarCongelado' | translate: { estado: pedidoDetalle.estadoProceso })"
+                                                                            [attr.aria-label]="'ventas.list.configurarNombre' | translate: { producto: item.producto?.crearProducto?.titulo || ('ventas.list.productoMinuscula' | translate) }"
                                                                             (click)="confProductToCart(confProductToCartModal, item, pedidoDetalle, i)">
                                                                         <i class="fa fa-cogs"></i>
                                                                     </button>
                                                                     <button type="button" class="pedido-prod__btn pedido-prod__btn--peligro"
                                                                             [disabled]="!canDeleteProducts(pedidoDetalle) && !isGhostProduct(item)"
                                                                             [title]="getDeleteButtonTitle(item, pedidoDetalle)"
-                                                                            [attr.aria-label]="'Eliminar ' + (item.producto?.crearProducto?.titulo || 'producto')"
+                                                                            [attr.aria-label]="'ventas.list.eliminarNombre' | translate: { producto: item.producto?.crearProducto?.titulo || ('ventas.list.productoMinuscula' | translate) }"
                                                                             (click)="eliminarProductoDelPedido(item, pedidoDetalle)">
                                                                         <i class="fa fa-trash"></i>
                                                                     </button>
@@ -572,10 +572,10 @@
                                                         <!-- Ticket 1432: archivos adjuntos a las notas del pedido -->
                                                         <ng-container *ngIf="adjuntosDelPedido(pedidoDetalle) as adjuntos">
                                                             <ng-container *ngIf="adjuntos.length">
-                                                                <div class="pedido-detail__sectionlabel">{{ 'ADJUNTOS' | translate }} · {{ adjuntos.length }}</div>
+                                                                <div class="pedido-detail__sectionlabel">{{ 'ventas.list.adjuntos' | translate }} · {{ adjuntos.length }}</div>
                                                                 <div class="pedido-detail__productos">
                                                                     <a *ngFor="let adj of adjuntos; trackBy: trackByUrl" class="pedido-adj"
-                                                                       [href]="adj.url" target="_blank" rel="noopener" [title]="'Abrir ' + adj.nombre">
+                                                                       [href]="adj.url" target="_blank" rel="noopener" [title]="'ventas.list.abrirNombre' | translate: { nombre: adj.nombre }">
                                                                         <img *ngIf="adj.esImagen" class="pedido-adj__img" [src]="adj.url" [alt]="adj.nombre" loading="lazy" />
                                                                         <i *ngIf="!adj.esImagen" class="pedido-adj__ico fa fa-file-o" aria-hidden="true"></i>
                                                                         <div class="pedido-adj__info">
@@ -589,7 +589,7 @@
                                                         </ng-container>
 
                                                         <!-- acciones rápidas -->
-                                                        <div class="pedido-detail__sectionlabel">{{ 'ACCIONES' | translate }}</div>
+                                                        <div class="pedido-detail__sectionlabel">{{ 'ventas.list.acciones' | translate }}</div>
                                                         <!-- D-547 (F2): con la bandera orderPinnedActions, el bloque de 8 (4 del rol y 4 del usuario) -->
                                                         <app-order-action-suggestion *ngIf="sugerenciaVisible as sug" [accion]="sug"
                                                                 (fijar)="fijarSugerencia(sug)" (ahoraNo)="rechazarSugerencia(sug)"></app-order-action-suggestion>
@@ -617,7 +617,7 @@
                                                                 <span class="pedido-action__icon ico-fac"><i class="fa fa-credit-card"></i></span>
                                                                 <span class="pedido-action__txt"><b>{{ accionCat('billingData').titulo | translate }}</b>
                                                                     <small *ngIf="canEditBilling(pedidoDetalle)">{{ accionCat('billingData').resena | translate }}</small>
-                                                                    <small *ngIf="!canEditBilling(pedidoDetalle)">{{ 'Ya tiene factura' | translate }}</small></span>
+                                                                    <small *ngIf="!canEditBilling(pedidoDetalle)">{{ 'ventas.list.yaTieneFactura' | translate }}</small></span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && puedeFacturarSiigo(pedidoDetalle)"
                                                                     (click)="facturarPedidoSiigo(pedidoDetalle)">
@@ -665,7 +665,7 @@
                                                                 <span class="pedido-action__txt">
                                                                     <b>{{ accionCat('editProducts').titulo | translate }}</b>
                                                                     <small *ngIf="canAddProducts(pedidoDetalle)">{{ accionCat('editProducts').resena | translate }}</small>
-                                                                    <small *ngIf="!canAddProducts(pedidoDetalle)">{{ 'Congelado' | translate }} · {{ pedidoDetalle?.estadoProceso }}</small>
+                                                                    <small *ngIf="!canAddProducts(pedidoDetalle)">{{ 'ventas.list.congelado' | translate }} · {{ pedidoDetalle?.estadoProceso }}</small>
                                                                 </span>
                                                             </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction"
@@ -675,7 +675,7 @@
                                                                 <span class="pedido-action__txt">
                                                                     <b>{{ accionCat('editAddress').titulo | translate }}</b>
                                                                     <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ accionCat('editAddress').resena | translate }}</small>
-                                                                    <small *ngIf="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Solo domicilios' | translate }}</small>
+                                                                    <small *ngIf="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'ventas.list.soloDomicilios' | translate }}</small>
                                                                 </span>
                                                             </button>
                                                         </div>
@@ -687,7 +687,7 @@
                                                             <i class="pi pi-history"></i> {{ 'Historial' | translate }}
                                                         </button>
                                                         <button type="button" class="pedido-detail__btn pedido-detail__btn--primary" (click)="openOptionsModal(pedidoDetalle)">
-                                                            <i class="pi pi-ellipsis-h"></i> {{ 'Más opciones' | translate }}
+                                                            <i class="pi pi-ellipsis-h"></i> {{ 'ventas.list.masOpciones' | translate }}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -696,8 +696,8 @@
                                             <ng-template #detalleVacio>
                                                 <div class="pedidos-detail-empty">
                                                     <div class="pedidos-detail-empty__icon"><i class="pi pi-shopping-cart"></i></div>
-                                                    <div class="pedidos-detail-empty__title">{{ 'Selecciona un pedido' | translate }}</div>
-                                                    <div class="pedidos-detail-empty__sub">{{ 'Elige un pedido de la lista para ver su detalle y acciones' | translate }}</div>
+                                                    <div class="pedidos-detail-empty__title">{{ 'ventas.list.seleccionaUnPedido' | translate }}</div>
+                                                    <div class="pedidos-detail-empty__sub">{{ 'ventas.list.eligeUnPedidoDeLa' | translate }}</div>
                                                 </div>
                                             </ng-template>
                                         </div>
@@ -706,23 +706,23 @@
                                     <!-- ===== Footer de métricas (resumen/totales de la tabla original) ===== -->
                                     <div *ngIf="modoVista === 'split' && !isFromProduction" class="pedidos-footer-metrics">
                                         <div class="pfm-group">
-                                            <span class="pfm-group__label">{{ 'RESUMEN' | translate }}</span>
+                                            <span class="pfm-group__label">{{ 'ventas.list.resumen' | translate }}</span>
                                             <div class="pfm-item"><span class="pfm-item__k">{{ 'Pedidos' | translate }}</span><b class="pfm-item__v">{{ getTotalPedidos() }}</b></div>
                                             <div class="pfm-item"><span class="pfm-item__k">{{ 'Clientes' | translate }}</span><b class="pfm-item__v">{{ getClientesUnicos() }}</b></div>
                                             <div class="pfm-item"><span class="pfm-item__k">{{ 'Ciudades' | translate }}</span><b class="pfm-item__v">{{ getCiudadesUnicas() }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Vendedores' | translate }}</span><b class="pfm-item__v">{{ getVendedoresUnicos() }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Validados' | translate }}</span><b class="pfm-item__v pfm-ok">{{ getValidacionCount() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.vendedores' | translate }}</span><b class="pfm-item__v">{{ getVendedoresUnicos() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.validados' | translate }}</span><b class="pfm-item__v pfm-ok">{{ getValidacionCount() }}</b></div>
                                         </div>
                                         <div class="pfm-group">
-                                            <span class="pfm-group__label">{{ 'VALORES' | translate }}</span>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Bruto' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateValorBruto() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Desc.' | translate }}</span><b class="pfm-item__v pfm-warn">{{ getFilteredCalculateDescuento() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Envío' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateEnvio() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Subtotal' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateSubtotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'IVA' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotalImpuestos() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item pfm-item--total"><span class="pfm-item__k">{{ 'TOTAL' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Anticipo' | translate }}</span><b class="pfm-item__v pfm-info">{{ getFilteredCalculateAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Pendiente' | translate }}</span><b class="pfm-item__v pfm-danger">{{ getFilteredCalculateFaltaPorPagar() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <span class="pfm-group__label">{{ 'ventas.list.valores' | translate }}</span>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.bruto' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateValorBruto() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.desc' | translate }}</span><b class="pfm-item__v pfm-warn">{{ getFilteredCalculateDescuento() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.envio' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateEnvio() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.subtotal' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateSubtotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.iva' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotalImpuestos() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item pfm-item--total"><span class="pfm-item__k">{{ 'ventas.list.total' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.anticipo' | translate }}</span><b class="pfm-item__v pfm-info">{{ getFilteredCalculateAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'ventas.list.pendiente' | translate }}</span><b class="pfm-item__v pfm-danger">{{ getFilteredCalculateFaltaPorPagar() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
                                         </div>
                                     </div>
 
@@ -780,10 +780,10 @@
                                             <!-- Columna Factura Electrónica -->
                                             <th *ngIf="isColumnVisible('nroFactura')" class="text-center" pSortableColumn="nroFactura"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Factura' | translate }}
+                                                {{ 'ventas.list.factura' | translate }}
                                                 <p-sortIcon field="nroFactura"></p-sortIcon>
                                                 <p-columnFilter type="text" field="nroFactura"
-                                                    matchMode="contains" placeholder="{{'Factura' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.factura' | translate}}"
                                                     [showMenu]="true" display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -852,7 +852,7 @@
                                             <!-- Columna Validación (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('validacion') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="validacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Validación' | translate }}
+                                                {{ 'ventas.list.validacion' | translate }}
                                                 <p-sortIcon field="validacion"></p-sortIcon>
                                                 <p-columnFilter field="validacion" matchMode="equals"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false"
@@ -890,10 +890,10 @@
                                             <!-- Columna Valor Bruto (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalPedidoSinDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Valor Bruto' | translate }}
+                                                {{ 'ventas.list.valorBruto' | translate }}
                                                 <p-sortIcon field="totalPedidoSinDescuento"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
-                                                    matchMode="contains" placeholder="{{'V. Bruto' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.vBruto' | translate}}"
                                                     [showMenu]="true" display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -902,10 +902,10 @@
                                             <!-- Columna Descuento (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('descuento') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Descuento' | translate }}
+                                                {{ 'ventas.list.descuento' | translate }}
                                                 <p-sortIcon field="totalDescuento"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalDescuento"
-                                                    matchMode="contains" placeholder="{{'Desc.' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.desc' | translate}}"
                                                     [showMenu]="true" display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -926,10 +926,10 @@
                                             <!-- Columna Subtotal (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="subtotal"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Subtotal' | translate }}
+                                                {{ 'ventas.list.subtotal' | translate }}
                                                 <p-sortIcon field="subtotal"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
-                                                    placeholder="{{'Subt.' | translate}}" [showMenu]="true"
+                                                    placeholder="{{'ventas.list.subt' | translate}}" [showMenu]="true"
                                                     display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -938,10 +938,10 @@
                                             <!-- Columna IVA (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('iva') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalImpuesto"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'IVA' | translate }}
+                                                {{ 'ventas.list.iva' | translate }}
                                                 <p-sortIcon field="totalImpuesto"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalImpuesto"
-                                                    matchMode="contains" placeholder="{{'IVA' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.iva' | translate}}"
                                                     [showMenu]="true" display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -962,10 +962,10 @@
                                             <!-- Columna Anticipo (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="anticipo"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Anticipo' | translate }}
+                                                {{ 'ventas.list.anticipo' | translate }}
                                                 <p-sortIcon field="anticipo"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
-                                                    placeholder="{{'Anticipo' | translate}}" [showMenu]="true"
+                                                    placeholder="{{'ventas.list.anticipo' | translate}}" [showMenu]="true"
                                                     display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -977,7 +977,7 @@
                                                 {{ 'Falta por Pagar' | translate }}
                                                 <p-sortIcon field="faltaPorPagar"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="faltaPorPagar"
-                                                    matchMode="contains" placeholder="{{'Falta' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.falta' | translate}}"
                                                     [showMenu]="true" display="menu"
                                                     [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
@@ -986,7 +986,7 @@
                                             <!-- Columna Fecha de compra (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('fechaCreacion')" class="text-center d-none d-lg-table-cell" pSortableColumn="fechaCreacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Fecha de compra' | translate }}
+                                                {{ 'ventas.list.fechaDeCompra' | translate }}
                                                 <p-sortIcon field="fechaCreacion"></p-sortIcon>
                                                 <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
                                                     type="date" display="menu" [showMatchModes]="false"
@@ -1025,7 +1025,7 @@
                                                 {{ 'Zona de Entrega' | translate }}
                                                 <p-sortIcon field="envio.zonaCobro"></p-sortIcon>
                                                 <p-columnFilter type="text" field="envio.zonaCobro"
-                                                    matchMode="contains" placeholder="{{'Zona' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.zona' | translate}}"
                                                     [showMenu]="true" display="menu">
                                                 </p-columnFilter>
                                             </th>
@@ -1036,7 +1036,7 @@
                                                 {{ 'Forma de Entrega' | translate }}
                                                 <p-sortIcon field="formaEntrega"></p-sortIcon>
                                                 <p-columnFilter type="text" field="formaEntrega"
-                                                    matchMode="contains" placeholder="{{'Entrega' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.entrega' | translate}}"
                                                     [showMenu]="true" display="menu">
                                                 </p-columnFilter>
                                             </th>
@@ -1055,10 +1055,10 @@
                                             <!-- Columna Canal (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('channel')" class="text-center d-none d-lg-table-cell" pSortableColumn="channel.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Canal' | translate }}
+                                                {{ 'ventas.list.canal' | translate }}
                                                 <p-sortIcon field="channel.name"></p-sortIcon>
                                                 <p-columnFilter type="text" field="channel.name"
-                                                    matchMode="contains" placeholder="{{'Canal' | translate}}"
+                                                    matchMode="contains" placeholder="{{'ventas.list.canal' | translate}}"
                                                     [showMenu]="true" display="menu">
                                                 </p-columnFilter>
                                             </th>
@@ -1077,7 +1077,7 @@
                                             <!-- Columna Fecha Última Impresión (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('ultimaImpresion')" class="text-center d-none d-lg-table-cell" pSortableColumn="ultimaImpresion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Última impresión' | translate }}
+                                                {{ 'ventas.list.ultimaImpresion' | translate }}
                                                 <p-sortIcon field="ultimaImpresion"></p-sortIcon>
                                             </th>
 
@@ -1180,7 +1180,7 @@
                                                            class="pi pi-exclamation-triangle ml-1 pedido-alerta-icon"
                                                            [pTooltip]="getAtencionTooltip(pedido)"
                                                            tooltipPosition="top"
-                                                           aria-label="Pedido requiere atención"></i>
+                                                           [attr.aria-label]="'ventas.list.pedidoRequiereAtencion' | translate"></i>
                                                     </span>
 
                                                     <!-- Numeros externos (Shopify / Osmosis / WooCommerce / etc).
@@ -1188,14 +1188,14 @@
                                                          capturado por el flow cereza-orders-status-pull cada 30 min. -->
                                                     <span *ngFor="let ref of getExternalOrderNumbers(pedido)"
                                                           class="external-order-number"
-                                                          [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                          [pTooltip]="ref.tooltip || ('ventas.list.ordenDePlataforma' | translate: { plataforma: ref.platform })"
                                                           [escape]="false"
                                                           tooltipPosition="top">
                                                         {{ ref.label }}
                                                         <i *ngIf="ref.hasNote"
                                                            class="pi pi-truck ml-1"
                                                            style="font-size: 0.75rem; color: #1E874B; vertical-align: middle;"
-                                                           aria-label="Con tracking"></i>
+                                                           [attr.aria-label]="'ventas.list.conTracking' | translate"></i>
                                                     </span>
                                                     <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
                                                 </div>
@@ -1208,7 +1208,7 @@
                                                        [href]="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl"
                                                        target="_blank"
                                                        class="text-primary"
-                                                       pTooltip="Ver factura electrónica"
+                                                       [pTooltip]="'ventas.list.verFacturaElectronica' | translate"
                                                        tooltipPosition="top">
                                                         <i class="pi pi-file-pdf mr-1"></i>{{ pedido.nroFactura }}
                                                     </a>
@@ -1221,12 +1221,12 @@
                                                     <span *ngIf="$any(pedido).pendienteRefacturar" class="badge bg-warning text-dark ms-1"
                                                           [style.cursor]="puedeRefacturar(pedido) ? 'pointer' : null"
                                                           (click)="puedeRefacturar(pedido) && refacturarPedido(pedido)"
-                                                          pTooltip="El IVA cambió después de facturar. Refactura y anula la factura anterior en el sistema contable."
-                                                          tooltipPosition="top">Por refacturar</span>
+                                                          [pTooltip]="'ventas.list.ivaCambioTooltip' | translate"
+                                                          tooltipPosition="top">{{ 'ventas.list.porRefacturar' | translate }}</span>
                                                 </ng-container>
                                                 <ng-template #sinFactura>
                                                     <span *ngIf="pedido._facturando" class="text-warning">
-                                                        <i class="pi pi-spin pi-spinner mr-1"></i>Facturando...
+                                                        <i class="pi pi-spin pi-spinner mr-1"></i>{{ 'ventas.list.facturando' | translate }}
                                                     </span>
                                                     <span *ngIf="!pedido._facturando" class="text-muted">-</span>
                                                 </ng-template>
@@ -1248,14 +1248,14 @@
                                                     icon="pi pi-ellipsis-v"
                                                     class="p-button-rounded p-button-text p-button-sm"
                                                     (click)="onRowMenuClick($event, rowMenu, pedido)"
-                                                    [title]="'Opciones del pedido' | translate">
+                                                    [title]="'ventas.list.opcionesDelPedido' | translate">
                                                 </button>
                                             </td>
 
                                             <!-- Columna Estado de Pago -->
                                             <td *ngIf="isColumnVisible('estadoPago')" class="estado-cell text-center">
                                                 <span class="modern-badge"
-                                                    [pTooltip]="getPaymentStatusDisplay(pedido?.estadoPago).full"
+                                                    [pTooltip]="getPaymentStatusDisplay(pedido?.estadoPago).full | translate"
                                                     tooltipPosition="top"
                                                     [ngClass]="{
                                                         'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
@@ -1269,7 +1269,7 @@
                                                         'pi-eye': pedido?.estadoPago === 'PreAprobado',
                                                         'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                     }"></i>
-                                                    {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
+                                                    {{ getPaymentStatusDisplay(pedido?.estadoPago).short | translate }}
                                                 </span>
                                             </td>
 
@@ -1278,7 +1278,7 @@
                                                 class="estado-cell text-center">
                                                 <div class="estado-container">
                                                     <span class="modern-badge"
-                                                        [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
+                                                        [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full | translate"
                                                         tooltipPosition="top"
                                                         [ngClass]="{
                                                             'badge-secondary': pedido?.estadoProceso === 'SinProducir',
@@ -1298,13 +1298,13 @@
                                                             'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
                                                             'pi-lock': pedido?.estadoProceso === 'Cerrado'
                                                         }"></i>
-                                                        {{ getStatusDisplay(pedido?.estadoProceso).short }}
+                                                        {{ getStatusDisplay(pedido?.estadoProceso).short | translate }}
                                                     </span>
                                                     <!-- Indicador de pedido congelado -->
                                                     <div *ngIf="isPedidoCongelado(pedido)" class="frozen-indicator"
-                                                        [title]="'Pedido congelado - No se pueden modificar productos'">
+                                                        [title]="'ventas.list.congeladoNoProductos' | translate">
                                                         <i class="fa fa-snowflake-o frozen-icon"></i>
-                                                        <span class="frozen-text">Congelado</span>
+                                                        <span class="frozen-text">{{ 'ventas.list.congelado' | translate }}</span>
                                                     </div>
                                                     <!-- Confirmación por WhatsApp (solo pedidos con el mensaje enviado) -->
                                                     <span *ngIf="etiquetaConfirmacionWhatsapp(pedido) as confWa" class="modern-badge"
@@ -1323,7 +1323,7 @@
                                                         'pi-check': pedido.validacion == true,
                                                         'pi-minus': pedido.validacion == false
                                                     }"></i>
-                                                    {{ pedido.validacion == true ? 'Sí' : 'No' }}
+                                                    {{ (pedido.validacion == true ? 'comun.si' : 'comun.no') | translate }}
                                                 </span>
                                             </td>
 
@@ -1413,7 +1413,7 @@
 
                                             <!-- Columna Canal (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('channel')" class="text-nowrap d-none d-lg-table-cell">{{
-                                                pedido.channel?.name || 'Regular' }}</td>
+                                                pedido.channel?.name || ('ventas.list.canalRegular' | translate) }}</td>
 
                                             <!-- Columna Vendedor (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('vendedor') && !isFromProduction"
@@ -1480,7 +1480,7 @@
                                                                     <div class="product-main-info">
                                                                         <div class="product-image">
                                                                             <img [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
-                                                                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen || 'Producto'"
+                                                                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen || ('ventas.list.producto' | translate)"
                                                                                  class="product-thumb" />
                                                                         </div>
                                                                         
@@ -1501,7 +1501,7 @@
                                                                                 <button type="button" 
                                                                                         class="btn btn-outline-primary"
                                                                                         [disabled]="!canModifyProducts(pedido)"
-                                                                                        [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
+                                                                                        [title]="canModifyProducts(pedido) ? ('ventas.list.configurarProducto' | translate) : ('ventas.list.noModificarCongelado' | translate: { estado: pedido.estadoProceso })"
                                                                                         (click)="confProductToCart(confProductToCartModal,item,pedido,i)">
                                                                                     <i class="fa fa-cogs"></i>
                                                                                 </button>
@@ -1547,7 +1547,7 @@
                                                                                         <button type="button" 
                                                                                                 class="btn btn-outline-danger btn-sm"
                                                                                                 (click)="deleteImageFromOrderPreference(pedido, item, pref)"
-                                                                                                title="Eliminar imagen"
+                                                                                                [title]="'ventas.list.eliminarImagen' | translate"
                                                                                                 style="padding: 2px 6px; font-size: 12px;">
                                                                                             <i class="fa fa-trash"></i>
                                                                                         </button>
@@ -1575,7 +1575,7 @@
                                                                 <!-- Mensaje si no hay productos -->
                                                                 <div *ngIf="!pedido.carrito || pedido.carrito.length === 0" class="no-products-message">
                                                                     <i class="fa fa-shopping-cart text-muted"></i>
-                                                                    <span class="text-muted">{{ 'No hay productos en el carrito para este pedido.' | translate }}</span>
+                                                                    <span class="text-muted">{{ 'ventas.list.noHayProductosEnEl' | translate }}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1594,10 +1594,10 @@
                                             <i class="pi pi-database"></i>
                                         </div>
                                         <span class="pedidos-tabla-vacio__titulo">
-                                            {{'No hay datos cargados.' | translate}}
+                                            {{'ventas.list.noHayDatosCargados' | translate}}
                                         </span>
                                         <span class="pedidos-tabla-vacio__texto">
-                                            {{'Use los filtros de fecha y estado para cargar los pedidos.' | translate}}
+                                            {{'ventas.list.useLosFiltrosDeFecha' | translate}}
                                         </span>
                                     </div>
                                 </td>
@@ -1618,7 +1618,7 @@
                                 <td *ngIf="isColumnVisible('nroPedido')" class="summary-cell"
                                     style="width: 8rem; text-align: center; font-weight: bold; color: #495057;">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Pedidos' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalPedidos' | translate }}</div>
                                         <div class="summary-value">{{ getTotalPedidos() }}</div>
                                     </div>
                                 </td>
@@ -1641,15 +1641,15 @@
                                 <!-- Columna Estado de Pago -->
                                 <td *ngIf="isColumnVisible('estadoPago')" class="summary-cell text-center">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Estados' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.estados' | translate }}</div>
                                         <div class="summary-badges">
                                             <div class="d-flex flex-wrap gap-1 justify-content-center">
                                                 <span class="mini-badge badge-success"
-                                                    [title]="'Aprobados: ' + getEstadoCount('Aprobado')">
+                                                    [title]="'ventas.list.aprobadosN' | translate: { n: getEstadoCount('Aprobado') }">
                                                     {{ getEstadoCount('Aprobado') }}
                                                 </span>
                                                 <span class="mini-badge badge-warning"
-                                                    [title]="'Pendientes: ' + getEstadoCount('Pendiente')">
+                                                    [title]="'ventas.list.pendientesN' | translate: { n: getEstadoCount('Pendiente') }">
                                                     {{ getEstadoCount('Pendiente') }}
                                                 </span>
                                             </div>
@@ -1660,15 +1660,15 @@
                                 <!-- Columna Estado de Proceso -->
                                 <td *ngIf="isColumnVisible('estadoProceso')" class="summary-cell text-center">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Procesos' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.procesos' | translate }}</div>
                                         <div class="summary-badges">
                                             <div class="d-flex flex-wrap gap-1 justify-content-center">
                                                 <span class="mini-badge badge-secondary"
-                                                    [title]="'Sin Producir: ' + getProcesoCount('SinProducir')">
+                                                    [title]="'ventas.list.sinProducirN' | translate: { n: getProcesoCount('SinProducir') }">
                                                     {{ getProcesoCount('SinProducir') }}
                                                 </span>
                                                 <span class="mini-badge badge-success"
-                                                    [title]="'Entregados: ' + getProcesoCount('Entregado')">
+                                                    [title]="'ventas.list.entregadosN' | translate: { n: getProcesoCount('Entregado') }">
                                                     {{ getProcesoCount('Entregado') }}
                                                 </span>
                                             </div>
@@ -1680,7 +1680,7 @@
                                 <td *ngIf="isColumnVisible('validacion') && !isFromProduction"
                                     class="summary-cell text-center d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Validados' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.validados' | translate }}</div>
                                         <div class="summary-value text-success">{{ getValidacionCount() }}</div>
                                     </div>
                                 </td>
@@ -1688,7 +1688,7 @@
                                 <!-- Columna Cliente -->
                                 <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Clientes Únicos' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.clientesUnicos' | translate }}</div>
                                         <div class="summary-value">{{ getClientesUnicos() }}</div>
                                     </div>
                                 </td>
@@ -1697,7 +1697,7 @@
                                 <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Bruto' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalBruto' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() |
                                             currency }}</div>
                                     </div>
@@ -1707,7 +1707,7 @@
                                 <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Desc.' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalDesc' | translate }}</div>
                                         <div class="summary-value money-value text-warning">{{
                                             getFilteredCalculateDescuento() | currency }}</div>
                                     </div>
@@ -1717,7 +1717,7 @@
                                 <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Envío' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalEnvio' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency
                                             }}</div>
                                     </div>
@@ -1727,7 +1727,7 @@
                                 <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Subtotal' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalSubtotal' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() |
                                             currency }}</div>
                                     </div>
@@ -1737,7 +1737,7 @@
                                 <td *ngIf="isColumnVisible('iva') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total IVA' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalIva' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() |
                                             currency }}</div>
                                     </div>
@@ -1747,7 +1747,7 @@
                                 <td *ngIf="isColumnVisible('total') && !isFromProduction"
                                     class="summary-cell summary-money summary-total">
                                     <div class="summary-content total-highlight">
-                                        <div class="summary-label">{{ 'TOTAL GENERAL' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalGeneral' | translate }}</div>
                                         <div class="summary-value total-value">{{ getFilteredCalculateTotal() | currency
                                             }}</div>
                                     </div>
@@ -1757,7 +1757,7 @@
                                 <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Anticipo' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalAnticipo' | translate }}</div>
                                         <div class="summary-value money-value text-info">{{
                                             getFilteredCalculateAnticipo() | currency }}</div>
                                     </div>
@@ -1767,7 +1767,7 @@
                                 <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Total Pendiente' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.totalPendiente' | translate }}</div>
                                         <div class="summary-value money-value text-danger">{{
                                             getFilteredCalculateFaltaPorPagar() | currency }}</div>
                                     </div>
@@ -1809,7 +1809,7 @@
                                 <!-- Columna Vendedor -->
                                 <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <div class="summary-content">
-                                        <div class="summary-label">{{ 'Vendedores' | translate }}</div>
+                                        <div class="summary-label">{{ 'ventas.list.vendedores' | translate }}</div>
                                         <div class="summary-value">{{ getVendedoresUnicos() }}</div>
                                     </div>
                                 </td>
@@ -1862,13 +1862,13 @@
                     {{ 'Vista pedido para imprimir' | translate }}
                 </h5>
                 <small class="text-muted d-none d-sm-inline">
-                    {{ 'Revise la información antes de imprimir' | translate }}
+                    {{ 'ventas.list.reviseLaInformacionAntesDe' | translate }}
                 </small>
             </div>
             <button
                 type="button"
                 class="btn-close pdf-print-modal-close"
-                aria-label="Close"
+                [attr.aria-label]="'comun.cerrar' | translate"
                 (click)="modal.dismiss('Cross click')">
             </button>
         </div>
@@ -1891,7 +1891,7 @@
 <ng-template #clientesModal let-modal>
     <div class="modal-header">
         <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -1913,11 +1913,11 @@
             <div class="d-flex align-items-center gap-2">
                 <i class="fa fa-truck" style="color: #5F3FE0; font-size: 1.1rem;"></i>
                 <div>
-                    <h5 class="modal-title mb-0" id="modal-basic-title">Editar dirección de entrega</h5>
+                    <h5 class="modal-title mb-0" id="modal-basic-title">{{ 'ventas.list.editarDireccionDeEntrega' | translate }}</h5>
                     <small class="text-muted d-none d-sm-inline">{{ pedidoSeleccionado?.nroPedido }}</small>
                 </div>
             </div>
-            <button type="button" class="btn-close pdf-print-modal-close" aria-label="Close"
+            <button type="button" class="btn-close pdf-print-modal-close" [attr.aria-label]="'comun.cerrar' | translate"
                 (click)="modal.dismiss('Cross click')"></button>
         </div>
     </div>
@@ -1937,7 +1937,7 @@
 <ng-template #datosFacturacionModal let-modal>
     <div class="modal-header">
         <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -1951,7 +1951,7 @@
 <ng-template #notasModal let-modal>
     <div class="modal-header">
         <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -1981,11 +1981,11 @@
             </div>
             <div class="header-content">
                 <h4 class="header-title">
-                    {{ isFromProduction ? ('Cambiar estado de proceso' | translate) : ('Cambiar estado' | translate) }}
+                    {{ isFromProduction ? ('ventas.list.cambiarEstadoDeProceso' | translate) : ('ventas.list.cambiarEstado' | translate) }}
                 </h4>
-                <span class="header-subtitle">{{ 'Pedido' | translate }} #{{ pedidoSeleccionado?.nroPedido }}</span>
+                <span class="header-subtitle">{{ 'ventas.list.pedido' | translate }} #{{ pedidoSeleccionado?.nroPedido }}</span>
             </div>
-            <button type="button" class="btn-close-custom" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <button type="button" class="btn-close-custom" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
                 <i class="pi pi-times"></i>
             </button>
         </div>
@@ -1996,7 +1996,7 @@
             <div class="current-status-card">
                 <div class="status-row">
                     <div class="status-item">
-                        <span class="status-label">{{ 'Estado de pago' | translate }}</span>
+                        <span class="status-label">{{ 'ventas.list.estadoDePago' | translate }}</span>
                         <span class="status-badge" [ngClass]="{
                             'badge-warning': pedidoSeleccionado?.estadoPago === 'Pendiente' || pedidoSeleccionado?.estadoPago === 'Pospendiente',
                             'badge-success': pedidoSeleccionado?.estadoPago === 'Aprobado',
@@ -2010,7 +2010,7 @@
                         <i class="pi pi-arrow-right"></i>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">{{ 'Estado de proceso' | translate }}</span>
+                        <span class="status-label">{{ 'ventas.list.estadoDeProceso' | translate }}</span>
                         <span class="status-badge badge-process">
                             {{ pedidoSeleccionado?.estadoProceso }}
                         </span>
@@ -2024,10 +2024,10 @@
                 <div class="selector-group" *ngIf="!isFromProduction">
                     <label class="selector-label">
                         <i class="pi pi-credit-card"></i>
-                        {{ 'Nuevo estado de pago' | translate }}
+                        {{ 'ventas.list.nuevoEstadoDePago' | translate }}
                     </label>
                     <select class="form-select estado-select" [(ngModel)]="tempEstadoPago">
-                        <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
+                        <option value="" disabled>{{ 'ventas.list.seleccionarEstado' | translate }}</option>
                         <option *ngFor="let estado of getAvailablePaymentStates(); trackBy: trackByEstado" [value]="estado">
                             {{ estado }}
                         </option>
@@ -2038,21 +2038,21 @@
                 <div class="selector-group">
                     <label class="selector-label">
                         <i class="pi pi-cog"></i>
-                        {{ 'Estado de proceso' | translate }}
+                        {{ 'ventas.list.estadoDeProceso' | translate }}
                         <span class="lock-indicator" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
                             <i class="pi pi-lock"></i>
                         </span>
                     </label>
                     <select class="form-select estado-select" [(ngModel)]="tempEstadoProceso"
                         [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
-                        <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
+                        <option value="" disabled>{{ 'ventas.list.seleccionarEstado' | translate }}</option>
                         <option *ngFor="let estado of estadosProcesos; trackBy: trackByEstado" [value]="estado">
                             {{ estado }}
                         </option>
                     </select>
                     <small class="selector-hint" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
                         <i class="pi pi-info-circle"></i>
-                        {{ 'Solo administradores pueden cambiar el estado de proceso' | translate }}
+                        {{ 'ventas.list.soloAdministradoresPuedenCambiarEl' | translate }}
                     </small>
                 </div>
             </div>
@@ -2062,24 +2062,24 @@
                 <div class="custom-alert alert-info-custom" *ngIf="isPedidoGrupo1(pedidoSeleccionado)">
                     <i class="pi pi-snowflake"></i>
                     <div>
-                        <strong>{{ 'GRUPO 1' | translate }}</strong>
-                        <p>{{ 'Se congelarán: Productos, Notas de producción, Personalizaciones' | translate }}</p>
+                        <strong>{{ 'ventas.list.grupo1' | translate }}</strong>
+                        <p>{{ 'ventas.list.seCongelaranProductosNotasDe' | translate }}</p>
                     </div>
                 </div>
 
                 <div class="custom-alert alert-warning-custom" *ngIf="isPedidoGrupo2(pedidoSeleccionado)">
                     <i class="pi pi-lock"></i>
                     <div>
-                        <strong>{{ 'GRUPO 2' | translate }}</strong>
-                        <p>{{ 'Se congelará: Dirección de entrega' | translate }}</p>
+                        <strong>{{ 'ventas.list.grupo2' | translate }}</strong>
+                        <p>{{ 'ventas.list.seCongelaraDireccionDeEntrega' | translate }}</p>
                     </div>
                 </div>
 
                 <div class="custom-alert alert-warning-custom" *ngIf="tempEstadoPago === 'PreAprobado'">
                     <i class="pi pi-exclamation-triangle"></i>
                     <div>
-                        <strong>{{ 'Nota' | translate }}</strong>
-                        <p>{{ 'Se marcará como aprobación manual.' | translate }}</p>
+                        <strong>{{ 'ventas.list.nota' | translate }}</strong>
+                        <p>{{ 'ventas.list.seMarcaraComoAprobacionManual' | translate }}</p>
                     </div>
                 </div>
 
@@ -2087,8 +2087,8 @@
                     *ngIf="tempEstadoPago === 'Cancelado' || tempEstadoPago === 'Rechazado'">
                     <i class="pi pi-exclamation-circle"></i>
                     <div>
-                        <strong>{{ 'Advertencia' | translate }}</strong>
-                        <p>{{ 'Este cambio afectará el pedido permanentemente.' | translate }}</p>
+                        <strong>{{ 'ventas.list.advertencia' | translate }}</strong>
+                        <p>{{ 'ventas.list.esteCambioAfectaraElPedido' | translate }}</p>
                     </div>
                 </div>
             </div>
@@ -2102,7 +2102,7 @@
             <button type="button" class="btn-confirm" (click)="cambiarEstadoPago(pedidoSeleccionado)"
                 [disabled]="!tempEstadoPago && !isFromProduction">
                 <i class="pi pi-check"></i>
-                {{ 'Confirmar' | translate }}
+                {{ 'comun.confirmar' | translate }}
             </button>
         </div>
     </div>
@@ -2119,7 +2119,7 @@
                 <h4 class="header-title">{{'Configurar producto' | translate}}</h4>
                 <span class="header-subtitle">{{ configuracionCarritoSeleccionado?.producto?.crearProducto?.titulo }}</span>
             </div>
-            <button type="button" class="btn-close-custom" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <button type="button" class="btn-close-custom" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
                 <i class="pi pi-times"></i>
             </button>
         </div>
@@ -2134,8 +2134,8 @@
 
 <ng-template #recompraModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Agregar producto' | translate}}</h4>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+        <h4 class="modal-title" id="modal-basic-title">{{'ventas.list.agregarProducto' | translate}}</h4>
+        <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')"></button>
     </div>
     <div class="modal-body">
 
@@ -2145,13 +2145,13 @@
                 <div class="col-auto">
                     <div class="select-header">
                         <i class="fa fa-warehouse me-1"></i>
-                        <span class="warehouse-title">{{ 'Bodega' | translate }}</span>
+                        <span class="warehouse-title">{{ 'ventas.list.bodega' | translate }}</span>
                     </div>
                 </div>
                 <div class="col">
                     <div class="position-relative">
                         <select class="form-select custom-select" (change)="onWarehouseChange($event)">
-                            <option value="">{{ 'Seleccione una bodega' | translate }}</option>
+                            <option value="">{{ 'ventas.list.seleccioneUnaBodega' | translate }}</option>
                             <option *ngFor="let bodega of bodegas; trackBy: trackByBodega" [value]="bodega.idBodega"
                                     [selected]="selectedWarehouse?.idBodega === bodega.idBodega">
                                 {{ bodega.nombre }} ({{ bodega.idBodega }})
@@ -2173,12 +2173,12 @@
                     <small class="text-muted d-block mt-2">
                         <i class="fa fa-info-circle me-1"></i>
                         <ng-container *ngIf="bodegaHeredadaDelPedido">
-                            Viendo el catálogo de <strong>{{ selectedWarehouse?.nombre }}</strong>, la bodega de este pedido.
+                            <span [innerHTML]="'ventas.list.viendoCatalogoBodegaPedido' | translate: { bodega: selectedWarehouse?.nombre }"></span>
                         </ng-container>
                         <ng-container *ngIf="!bodegaHeredadaDelPedido">
-                            Viendo el catálogo de <strong>{{ selectedWarehouse?.nombre }}</strong>.
+                            <span [innerHTML]="'ventas.list.viendoCatalogoBodega' | translate: { bodega: selectedWarehouse?.nombre }"></span>
                         </ng-container>
-                        Hay {{ bodegas.length }} bodegas: si no encuentras un producto, cámbiala arriba o toca la bodega en el detalle de existencias.
+                        {{ 'ventas.list.hayBodegas' | translate: { n: bodegas.length } }}
                     </small>
                 </div>
             </div>
@@ -2196,8 +2196,8 @@
 
 <ng-template #pagosModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Historial pagos' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <h4 class="modal-title" id="modal-basic-title">{{'ventas.list.historialDePagos' | translate}}</h4>
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -2231,7 +2231,7 @@
 
         <!-- DEBUG: Si no hay datos -->
         <div *ngIf="!pedidoEntregaData" class="entrega-sin-datos">
-            No hay datos de pedidoEntregaData
+            {{ 'ventas.list.sinDatosEntrega' | translate }}
         </div>
     </div>
 </div>
@@ -2239,14 +2239,14 @@
 <!-- Modal para aplicar código de descuento -->
 <ng-template #descuentoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Aplicar Código de Descuento' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <h4 class="modal-title" id="modal-basic-title">{{'ventas.list.aplicarCodigoDeDescuento' | translate}}</h4>
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body">
         <div class="form-group">
-            <label for="codigoDescuento">{{'Código de Descuento' | translate}}</label>
+            <label for="codigoDescuento">{{'ventas.list.codigoDeDescuento' | translate}}</label>
             <div class="input-group">
                 <span class="input-group-text">
                     <i class="fa fa-ticket"></i>
@@ -2255,7 +2255,7 @@
                        class="form-control" 
                        id="codigoDescuento"
                        [(ngModel)]="codigoDescuentoIngresado"
-                       placeholder="{{'Ingresa tu código de cupón' | translate}}"
+                       placeholder="{{'ventas.list.ingresaTuCodigoDeCupon' | translate}}"
                        [class.is-invalid]="errorCodigoDescuento">
                 <button class="btn btn-primary" 
                         (click)="validarYAplicarDescuento(pedidoSeleccionadoDescuento)"
@@ -2273,12 +2273,12 @@
         <!-- Mostrar información del descuento aplicado -->
         <div class="alert alert-success" *ngIf="descuentoAplicado">
             <i class="fa fa-check-circle me-2"></i>
-            <strong>{{'Descuento aplicado exitosamente' | translate}}</strong>
+            <strong>{{'ventas.list.descuentoAplicadoExitosamente' | translate}}</strong>
             <div class="mt-2">
-                <p class="mb-1"><strong>{{'Código:' | translate}}</strong> {{descuentoAplicado.codigo}}</p>
-                <p class="mb-1" *ngIf="descuentoAplicado.tipo !== 'envio_gratis' && descuentoAplicado.porcentaje"><strong>{{'Porcentaje:' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
-                <p class="mb-1" *ngIf="descuentoAplicado.tipo === 'envio_gratis'"><strong>{{'Envío gratis' | translate}}</strong></p>
-                <p class="mb-0"><strong>{{'Valor del descuento:' | translate}}</strong> {{descuentoAplicado.valor | currency:'USD':'symbol':'1.0-0'}}</p>
+                <p class="mb-1"><strong>{{'ventas.list.codigo' | translate}}</strong> {{descuentoAplicado.codigo}}</p>
+                <p class="mb-1" *ngIf="descuentoAplicado.tipo !== 'envio_gratis' && descuentoAplicado.porcentaje"><strong>{{'ventas.list.porcentaje' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
+                <p class="mb-1" *ngIf="descuentoAplicado.tipo === 'envio_gratis'"><strong>{{'ventas.list.envioGratis' | translate}}</strong></p>
+                <p class="mb-0"><strong>{{'ventas.list.valorDelDescuento' | translate}}</strong> {{descuentoAplicado.valor | currency:'USD':'symbol':'1.0-0'}}</p>
             </div>
         </div>
     </div>
@@ -2293,8 +2293,8 @@
 <!-- Modal de facturación SIIGO: tipo doc + forma de pago + vencimiento de crédito (D-042) -->
 <ng-template #facturaSiigoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="factura-siigo-title">{{ facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?' }}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <h4 class="modal-title" id="factura-siigo-title">{{ (facturaReemplazo ? 'ventas.list.refacturarPedido' : 'ventas.list.generarFacturaPregunta') | translate }}</h4>
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -2303,51 +2303,50 @@
         <div class="factura-aviso-cf mb-3" *ngIf="facturaReemplazo && facturaReemplazo.pedidoId === facturaPedido._id" role="alert">
             <p class="mb-1">
                 <i class="fa fa-exclamation-triangle me-1"></i>
-                <strong>Este pedido ya está facturado</strong> con la factura
+                <strong>{{ 'ventas.list.estePedidoYaEstaFacturado' | translate }}</strong> {{ 'ventas.list.conLaFactura' | translate }}
                 <a *ngIf="facturaReemplazo.url" [href]="facturaReemplazo.url" target="_blank" rel="noopener noreferrer"><strong>{{ facturaReemplazo.numero }}</strong></a>
                 <strong *ngIf="!facturaReemplazo.url">{{ facturaReemplazo.numero }}</strong>.
-                Esta nueva la reemplazará.
+                {{ 'ventas.list.estaNuevaLaReemplazara' | translate }}
             </p>
-            <p class="mb-2">Recuerda anular la anterior en {{ getAccountingProviderDisplayName() }} para no duplicar.</p>
+            <p class="mb-2">{{ 'ventas.list.recuerdaAnular' | translate: { proveedor: getAccountingProviderDisplayName() } }}</p>
             <!-- Si la anterior salió a otro cliente/NIT, se corrige aquí (fuera de REFACTURAR sigue bloqueado) -->
-            <p class="mb-1">¿Salió a otro cliente o NIT? Corrige primero los datos de facturación y vuelve a abrir Refacturar.</p>
+            <p class="mb-1">{{ 'ventas.list.salioOtroCliente' | translate }}</p>
             <button type="button" class="btn btn-sm btn-outline-primary"
                     (click)="modal.dismiss('corregir-facturacion'); editDatosFacturacion(datosFacturacionModal, facturaPedido)">
-                Corregir datos de facturación
+                {{ 'ventas.list.corregirDatosDeFacturacion' | translate }}
             </button>
         </div>
-        <p class="mb-1">Se generará una factura electrónica para el pedido:</p>
+        <p class="mb-1">{{ 'ventas.list.seGeneraraFactura' | translate }}</p>
         <p class="mb-1"><strong>{{ facturaPedido.nroPedido }}</strong></p>
         <!-- Ticket 1145: a quién sale la factura (sección Facturación del pedido), no el cliente -->
-        <p class="mb-1">Se factura a: <strong>{{ facturaDestino?.nombre || 'N/A' }}</strong>
+        <p class="mb-1">{{ 'ventas.list.seFacturaA' | translate }} <strong>{{ facturaDestino?.nombre || ('ventas.list.noAplica' | translate) }}</strong>
             <span class="text-muted"> · {{ facturaDestino?.tipoDocumento }} {{ facturaDestino?.documento }}</span></p>
         <p class="text-muted mb-1" *ngIf="facturaPedido.cliente?.documento && facturaDestino?.documento !== facturaPedido.cliente?.documento">
-            Cliente del pedido: {{ facturaPedido.cliente?.nombres_completos || 'N/A' }} · {{ facturaPedido.cliente?.documento }}</p>
-        <p class="text-muted">Total: {{ (facturaPedido.totalPedididoConDescuento || facturaPedido.subtotal || 0) | currency:'USD':'symbol':'1.0-0' }}</p>
+            {{ 'ventas.list.clienteDelPedido' | translate }} {{ facturaPedido.cliente?.nombres_completos || ('ventas.list.noAplica' | translate) }} · {{ facturaPedido.cliente?.documento }}</p>
+        <p class="text-muted">{{ 'ventas.list.total2' | translate }} {{ (facturaPedido.totalPedididoConDescuento || facturaPedido.subtotal || 0) | currency:'USD':'symbol':'1.0-0' }}</p>
         <div class="factura-aviso-cf mb-3" *ngIf="facturaAConsumidorFinalPorError" role="alert">
             <p class="mb-2">
                 <i class="fa fa-exclamation-triangle me-1"></i>
-                <strong>Esta factura saldrá a CONSUMIDOR FINAL</strong>, no a {{ facturaPedido.cliente?.nombres_completos }}
-                ({{ facturaPedido.cliente?.documento }}). El pedido se creó sin los datos de facturación del cliente.
+                <strong>{{ 'ventas.list.saldraConsumidorFinal' | translate }}</strong>{{ 'ventas.list.noAClienteSinDatos' | translate: { cliente: facturaPedido.cliente?.nombres_completos, documento: facturaPedido.cliente?.documento } }}
             </p>
             <button type="button" class="btn btn-sm btn-outline-primary mb-2"
                     (click)="modal.dismiss('corregir-facturacion'); editDatosFacturacion(datosFacturacionModal, facturaPedido)">
-                Corregir datos de facturación
+                {{ 'ventas.list.corregirDatosDeFacturacion' | translate }}
             </button>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="facturaConfirmaCF" [(ngModel)]="facturaConfirmaConsumidorFinal">
-                <label class="form-check-label" for="facturaConfirmaCF">Sí, es una venta a Consumidor Final</label>
+                <label class="form-check-label" for="facturaConfirmaCF">{{ 'ventas.list.siConsumidorFinal' | translate }}</label>
             </div>
         </div>
         <hr>
 
         <!-- 1. Tipo de documento -->
         <div class="form-group mb-3">
-            <label for="facturaDocumentType">Tipo de factura (talonario de {{ getAccountingProviderDisplayName() }}) <span class="text-danger">*</span></label>
+            <label for="facturaDocumentType">{{ 'ventas.list.tipoFacturaTalonario' | translate: { proveedor: getAccountingProviderDisplayName() } }} <span class="text-danger">*</span></label>
             <select id="facturaDocumentType" class="form-select form-control"
                     [(ngModel)]="facturaDocumentTypeId"
                     (ngModelChange)="onFacturaDocumentTypeChange()">
-                <option [ngValue]="null" disabled>Seleccione el tipo de factura</option>
+                <option [ngValue]="null" disabled>{{ 'ventas.list.seleccioneElTipoDeFactura' | translate }}</option>
                 <option *ngFor="let dt of facturaDocumentTypes" [ngValue]="dt.id">
                     {{ dt.etiqueta }}
                 </option>
@@ -2357,16 +2356,16 @@
         <!-- Ticket 1052: vendedor y centro de costo, ya marcados; se pueden cambiar en cada factura -->
         <div class="row g-2 mb-3" *ngIf="facturaDocumentTypeId && (facturaVendedores.length || facturaUsaCentroCosto)">
             <div class="col-12" [class.col-sm-6]="facturaUsaCentroCosto" *ngIf="facturaVendedores.length">
-                <label for="facturaVendedor">Vendedor</label>
+                <label for="facturaVendedor">{{ 'ventas.list.vendedor' | translate }}</label>
                 <select id="facturaVendedor" class="form-select form-control" [(ngModel)]="facturaVendedorId">
-                    <option [ngValue]="null">Automático</option>
+                    <option [ngValue]="null">{{ 'ventas.list.automatico' | translate }}</option>
                     <option *ngFor="let v of facturaVendedores" [ngValue]="v.id">{{ v.nombre }}</option>
                 </select>
             </div>
             <div class="col-12" [class.col-sm-6]="facturaVendedores.length" *ngIf="facturaUsaCentroCosto">
-                <label for="facturaCentroCosto">Centro de costo <span class="text-danger" *ngIf="facturaExigeCentroCosto">*</span></label>
+                <label for="facturaCentroCosto">{{ 'ventas.list.centroDeCosto' | translate }} <span class="text-danger" *ngIf="facturaExigeCentroCosto">*</span></label>
                 <select id="facturaCentroCosto" class="form-select form-control" [(ngModel)]="facturaCentroCostoId">
-                    <option [ngValue]="null" [disabled]="facturaExigeCentroCosto">{{ facturaExigeCentroCosto ? 'Seleccione un centro de costo' : 'Sin centro de costo' }}</option>
+                    <option [ngValue]="null" [disabled]="facturaExigeCentroCosto">{{ (facturaExigeCentroCosto ? 'ventas.list.seleccioneUnCentroDeCosto' : 'ventas.list.sinCentroDeCosto') | translate }}</option>
                     <option *ngFor="let c of facturaCentrosCosto" [ngValue]="c.id">{{ c.nombre }}</option>
                 </select>
             </div>
@@ -2374,75 +2373,75 @@
 
         <!-- 2. Forma de pago (deshabilitada hasta elegir tipo de documento) -->
         <div class="form-group mb-3">
-            <label for="facturaPaymentType">Forma de pago <span class="text-danger">*</span></label>
+            <label for="facturaPaymentType">{{ 'ventas.list.formaDePago' | translate }} <span class="text-danger">*</span></label>
             <select id="facturaPaymentType" class="form-select form-control"
                     [(ngModel)]="facturaPaymentTypeId"
                     (ngModelChange)="onFacturaPaymentTypeChange()"
                     [disabled]="!facturaDocumentTypeId">
-                <option [ngValue]="null" disabled>Seleccione una forma de pago</option>
+                <option [ngValue]="null" disabled>{{ 'ventas.list.seleccioneUnaFormaDePago' | translate }}</option>
                 <option *ngFor="let pt of facturaPaymentTypes" [ngValue]="pt.id">
-                    {{ pt.name || pt.nombre || ('Medio ' + pt.id) }}
+                    {{ pt.name || pt.nombre || ('ventas.list.medioId' | translate: { id: pt.id }) }}
                 </option>
             </select>
             <small class="text-muted" *ngIf="!facturaDocumentTypeId">
-                Primero seleccione el tipo de factura.
+                {{ 'ventas.list.primeroSeleccioneElTipoDe' | translate }}
             </small>
         </div>
 
         <!-- 3. Vencimiento (solo si la forma de pago es a crédito) -->
         <div *ngIf="facturaEsCredito" class="ps-3 mb-2 factura-credito-bloque">
             <div class="form-group mb-2">
-                <label for="facturaPlazo">Plazo de crédito <span class="text-danger">*</span></label>
+                <label for="facturaPlazo">{{ 'ventas.list.plazoDeCredito' | translate }} <span class="text-danger">*</span></label>
                 <select id="facturaPlazo" class="form-select form-control"
                         [(ngModel)]="facturaPlazo" (ngModelChange)="onFacturaPlazoChange()">
-                    <option value="" disabled>Seleccione un plazo</option>
-                    <option *ngFor="let p of facturaPlazosCredito" [value]="p.value">{{ p.label }}</option>
+                    <option value="" disabled>{{ 'ventas.list.seleccioneUnPlazo' | translate }}</option>
+                    <option *ngFor="let p of facturaPlazosCredito" [value]="p.value">{{ p.label | translate: { n: p.value } }}</option>
                 </select>
             </div>
             <div class="form-group mb-1" *ngIf="facturaPlazo === 'exacta'">
-                <label for="facturaDueDate">Fecha de vencimiento <span class="text-danger">*</span></label>
+                <label for="facturaDueDate">{{ 'ventas.list.fechaDeVencimiento' | translate }} <span class="text-danger">*</span></label>
                 <input id="facturaDueDate" type="date" class="form-control"
                        [(ngModel)]="facturaDueDate" [min]="facturaHoy">
             </div>
             <p class="text-muted mb-0" *ngIf="facturaDueDate && facturaPlazo !== 'exacta'">
-                Vence: <strong>{{ facturaDueDate }}</strong>
+                {{ 'ventas.list.vence' | translate }} <strong>{{ facturaDueDate }}</strong>
             </p>
         </div>
 
         <!-- 4. Observaciones y retenciones (ticket 1054) -->
         <div class="form-group mb-3 mt-2">
-            <label for="facturaObservaciones">Observaciones <small class="text-muted">(opcional)</small></label>
+            <label for="facturaObservaciones">{{ 'ventas.list.observaciones' | translate }} <small class="text-muted">{{ 'ventas.list.opcional' | translate }}</small></label>
             <textarea id="facturaObservaciones" class="form-control" rows="2" maxlength="1000"
                       [(ngModel)]="facturaObservaciones"
-                      placeholder="Ej: Orden de compra 4500123"></textarea>
-            <small class="text-muted">Sale en la factura. {{ facturaObservaciones?.length || 0 }}/1000</small>
+                      [placeholder]="'ventas.list.ejOrdenCompra' | translate"></textarea>
+            <small class="text-muted">{{ 'ventas.list.saleEnLaFactura' | translate }} {{ facturaObservaciones?.length || 0 }}/1000</small>
         </div>
         <!-- Ticket 1241: varios IVA del mismo % en SIIGO -->
         <div class="form-group mb-3" *ngIf="facturaIvasPorPct.length">
-            <label class="mb-1">IVA de SIIGO</label>
+            <label class="mb-1">{{ 'ventas.list.ivaDeSiigo' | translate }}</label>
             <div class="row g-2">
                 <div class="col-12 col-sm-6" *ngFor="let g of facturaIvasPorPct">
                     <select class="form-select form-control form-control-sm"
-                            [(ngModel)]="facturaIvaSel[g.pct]" [attr.aria-label]="'IVA del ' + g.pct + '%'">
+                            [(ngModel)]="facturaIvaSel[g.pct]" [attr.aria-label]="'ventas.list.ivaDelPct' | translate: { pct: g.pct }">
                         <option *ngFor="let o of g.opciones" [ngValue]="o.id">{{ g.pct }}%: {{ o.name }}</option>
                     </select>
                 </div>
             </div>
-            <small class="text-muted">Tu SIIGO tiene más de un IVA con ese porcentaje. Se usa para los productos con ese IVA.</small>
+            <small class="text-muted">{{ 'ventas.list.siigoVariosIva' | translate }}</small>
         </div>
         <div class="form-group mb-1" *ngIf="facturaRetencionesPorTipo.length">
-            <label class="mb-1">Retenciones <small class="text-muted">(opcional)</small></label>
+            <label class="mb-1">{{ 'ventas.list.retenciones' | translate }} <small class="text-muted">{{ 'ventas.list.opcional' | translate }}</small></label>
             <div class="row g-2">
                 <div class="col-12 col-sm-6" *ngFor="let g of facturaRetencionesPorTipo">
                     <select class="form-select form-control form-control-sm"
                             [(ngModel)]="facturaRetencionSel[g.tipo]" [attr.aria-label]="g.etiqueta">
-                        <option [ngValue]="null">{{ g.etiqueta }}: ninguna</option>
+                        <option [ngValue]="null">{{ 'ventas.list.etiquetaNinguna' | translate: { etiqueta: g.etiqueta } }}</option>
                         <option *ngFor="let r of g.opciones" [ngValue]="r.id">{{ r.name }}</option>
                     </select>
                 </div>
             </div>
-            <small class="text-muted">Salen de tu SIIGO. SIIGO calcula el valor de cada retención.</small>
-            <small class="text-muted d-block" *ngIf="facturaImpuestosPorLinea">Si un producto o servicio lleva otra retención u otro IVA, ábrelo en la vista previa y cámbialo en su renglón.</small>
+            <small class="text-muted">{{ 'ventas.list.salenDeSiigo' | translate }}</small>
+            <small class="text-muted d-block" *ngIf="facturaImpuestosPorLinea">{{ 'ventas.list.otraRetencionLinea' | translate }}</small>
         </div>
 
         <!-- Ticket 1074: vista previa de lo que saldrá en la factura -->
@@ -2451,22 +2450,22 @@
         </div>
         <div class="factura-vista-previa mt-3" *ngIf="facturaVistaPrevia as vp">
             <div class="fvp-titulo">
-                <span>Vista previa de la factura</span>
+                <span>{{ 'ventas.list.vistaPreviaDeLaFactura' | translate }}</span>
                 <small class="text-muted" *ngIf="vp.tipoFactura?.nombre">{{ vp.tipoFactura.nombre }}</small>
             </div>
             <p class="fvp-aviso" *ngIf="facturaVistaPreviaDesactualizada">
-                Cambiaste opciones de la factura. Vuelve a ver la vista previa.
+                {{ 'ventas.list.cambiasteOpciones' | translate }}
             </p>
-            <p class="mb-2" *ngIf="vp.cliente">Factura a: <strong>{{ vp.cliente.nombre }}</strong> · {{ vp.cliente.documento }}</p>
+            <p class="mb-2" *ngIf="vp.cliente">{{ 'ventas.list.facturaA' | translate }} <strong>{{ vp.cliente.nombre }}</strong> · {{ vp.cliente.documento }}</p>
             <p class="fvp-aviso" *ngFor="let a of vp.avisos">{{ a }}</p>
             <div class="table-responsive">
                 <table class="table table-sm fvp-tabla mb-2">
                     <thead>
                         <tr>
-                            <th>Producto</th>
-                            <th class="text-end">Cant.</th>
-                            <th class="text-end">Base</th>
-                            <th class="text-end">IVA</th>
+                            <th>{{ 'ventas.list.producto' | translate }}</th>
+                            <th class="text-end">{{ 'ventas.list.cant' | translate }}</th>
+                            <th class="text-end">{{ 'ventas.list.base' | translate }}</th>
+                            <th class="text-end">{{ 'ventas.list.iva' | translate }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2480,30 +2479,30 @@
                                 <div class="fv-siigo-fila" *ngIf="l.enSiigo">
                                     <small class="fv-codigo" *ngIf="l.codigo || l.codigoSiigo">{{ l.codigo || l.codigoSiigo }}</small>
                                     <ng-container [ngSwitch]="l.enSiigo">
-                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'existente'">En SIIGO</span>
-                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'equivalente'">En SIIGO<ng-container *ngIf="l.codigoSiigo"> como <span class="fv-siigo-cod">{{ l.codigoSiigo }}</span></ng-container></span>
-                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'nuevo'">Se creará en SIIGO</span>
-                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'ambiguo'">Se creará: varios posibles en SIIGO</span>
-                                        <span class="fv-siigo fv-siigo--sin" *ngSwitchCase="'error'">No se pudo revisar en SIIGO</span>
+                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'existente'">{{ 'ventas.list.enSiigo' | translate }}</span>
+                                        <span class="fv-siigo fv-siigo--ok" *ngSwitchCase="'equivalente'">{{ 'ventas.list.enSiigo' | translate }}<ng-container *ngIf="l.codigoSiigo"> {{ 'ventas.list.comoCodigo' | translate }} <span class="fv-siigo-cod">{{ l.codigoSiigo }}</span></ng-container></span>
+                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'nuevo'">{{ 'ventas.list.seCrearaEnSiigo' | translate }}</span>
+                                        <span class="fv-siigo fv-siigo--nuevo" *ngSwitchCase="'ambiguo'">{{ 'ventas.list.seCrearaVarios' | translate }}</span>
+                                        <span class="fv-siigo fv-siigo--sin" *ngSwitchCase="'error'">{{ 'ventas.list.noSePudoRevisarEn' | translate }}</span>
                                     </ng-container>
                                 </div>
                                 <small class="text-muted">
-                                    {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} c/u
-                                    <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>
+                                    {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} {{ 'ventas.list.cadaUno' | translate }}
+                                    <span *ngIf="l.descuento > 0"> · {{ 'ventas.list.descAbrev' | translate }} −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>
                                 </small>
                                 <!-- Ticket 1417: retefuente e IVA de este renglón, distintos a los de la factura
                                      (solo con invoiceItemWithholding; el envío no lleva retefuente). -->
                                 <div class="fv-impuestos-linea" *ngIf="facturaImpuestosPorLinea && !l.esEnvio && (facturaRetefuentes.length || facturaIvasDeLinea(l.tarifaIva).length)">
                                     <select *ngIf="facturaRetefuentes.length" class="form-select form-control form-control-sm"
                                             [ngModel]="facturaRetefuenteDeLinea(i)" (ngModelChange)="cambiarRetefuenteDeLinea(i, $event)"
-                                            [attr.aria-label]="'Retención de ' + l.descripcion">
-                                        <option [ngValue]="'factura'">Retención de la factura</option>
-                                        <option [ngValue]="null">Sin retención</option>
+                                            [attr.aria-label]="'ventas.list.retencionDe' | translate: { producto: l.descripcion }">
+                                        <option [ngValue]="'factura'">{{ 'ventas.list.retencionDeLaFactura' | translate }}</option>
+                                        <option [ngValue]="null">{{ 'ventas.list.sinRetencion' | translate }}</option>
                                         <option *ngFor="let r of facturaRetefuentes" [ngValue]="r.id">{{ r.name }}</option>
                                     </select>
                                     <select *ngIf="facturaIvasDeLinea(l.tarifaIva).length" class="form-select form-control form-control-sm"
                                             [ngModel]="facturaIvaDeLinea(i, l.tarifaIva)" (ngModelChange)="cambiarIvaDeLinea(i, l.tarifaIva, $event)"
-                                            [attr.aria-label]="'IVA de ' + l.descripcion">
+                                            [attr.aria-label]="'ventas.list.ivaDe' | translate: { producto: l.descripcion }">
                                         <option *ngFor="let o of facturaIvasDeLinea(l.tarifaIva)" [ngValue]="o.id">{{ o.name }}</option>
                                     </select>
                                 </div>
@@ -2519,37 +2518,37 @@
                 </table>
             </div>
             <dl class="fvp-totales">
-                <div *ngIf="vp.totales.descuento > 0"><dt>Descuentos</dt><dd>−{{ vp.totales.descuento | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div><dt>Subtotal (base)</dt><dd>{{ vp.totales.base | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div><dt>IVA</dt><dd>{{ vp.totales.iva | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div class="fvp-fuerte"><dt>Total factura</dt><dd>{{ vp.totales.totalFactura | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div *ngIf="vp.totales.descuento > 0"><dt>{{ 'ventas.list.descuentos' | translate }}</dt><dd>−{{ vp.totales.descuento | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>{{ 'ventas.list.subtotalBase' | translate }}</dt><dd>{{ vp.totales.base | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>{{ 'ventas.list.iva' | translate }}</dt><dd>{{ vp.totales.iva | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div class="fvp-fuerte"><dt>{{ 'ventas.list.totalFactura' | translate }}</dt><dd>{{ vp.totales.totalFactura | currency:'USD':'symbol':'1.0-2' }}</dd></div>
                 <div *ngFor="let r of vp.totales.retenciones" [class.fvp-informativa]="r.informativa">
-                    <dt>{{ r.nombre }}<small *ngIf="r.informativa"> (la paga tu empresa, no se descuenta)</small></dt>
+                    <dt>{{ r.nombre }}<small *ngIf="r.informativa"> {{ 'ventas.list.laPagaTuEmpresa' | translate }}</small></dt>
                     <dd>{{ r.informativa ? '' : '−' }}{{ r.valor | currency:'USD':'symbol':'1.0-2' }}</dd>
                 </div>
-                <div class="fvp-fuerte fvp-pagar"><dt>Valor a pagar</dt><dd>{{ vp.totales.aPagar | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div class="fvp-fuerte fvp-pagar"><dt>{{ 'ventas.list.valorAPagar' | translate }}</dt><dd>{{ vp.totales.aPagar | currency:'USD':'symbol':'1.0-2' }}</dd></div>
             </dl>
             <p class="fvp-aviso mb-0" *ngIf="!vp.cuadra">
-                El valor a pagar no coincide con el total menos las retenciones. Revisa antes de facturar.
+                {{ 'ventas.list.valorNoCoincide' | translate }}
             </p>
-            <small class="text-muted">Así se enviará a SIIGO. Todavía no se ha generado nada.</small>
+            <small class="text-muted">{{ 'ventas.list.asiSeEnviara' | translate }}</small>
         </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
-            <i class="fa fa-times me-1"></i> Cancelar
+            <i class="fa fa-times me-1"></i> {{ 'comun.cancelar' | translate }}
         </button>
         <button type="button" class="btn btn-outline-primary"
                 *ngIf="(activeAccountingProvider || 'siigo') === 'siigo'"
                 [disabled]="!facturaFormValido || facturaVistaPreviaCargando"
                 (click)="verVistaPreviaFactura()">
             <i class="fa me-1" [ngClass]="facturaVistaPreviaCargando ? 'fa-spinner fa-spin' : 'fa-eye'"></i>
-            {{ facturaVistaPreviaDesactualizada ? 'Actualizar vista previa' : 'Ver vista previa' }}
+            {{ (facturaVistaPreviaDesactualizada ? 'ventas.list.actualizarVistaPrevia' : 'ventas.list.verVistaPrevia') | translate }}
         </button>
         <button type="button" class="btn btn-primary"
                 [disabled]="!facturaFormValido || !facturaDestinoConfirmado"
                 (click)="confirmarFacturaSiigo(modal)">
-            <i class="fa fa-file-invoice me-1"></i> {{ facturaReemplazo ? 'Refacturar' : 'Generar factura' }}
+            <i class="fa fa-file-invoice me-1"></i> {{ (facturaReemplazo ? 'ventas.list.refacturar' : 'ventas.list.generarFactura') | translate }}
         </button>
     </div>
 </ng-template>
@@ -2557,8 +2556,8 @@
 <!-- Modal para editar/eliminar descuento -->
 <ng-template #editarDescuentoModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Editar/Eliminar Descuento' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <h4 class="modal-title" id="modal-basic-title">{{'ventas.list.editarEliminarDescuento' | translate}}</h4>
+        <button type="button" class="close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -2566,21 +2565,21 @@
         <div *ngIf="pedidoDescuentoEditando" class="edit-discount-container">
             <!-- Información del descuento actual -->
             <div class="alert alert-info mb-3">
-                <h6 class="mb-2"><i class="fa fa-info-circle me-2"></i>{{'Descuento Actual' | translate}}</h6>
+                <h6 class="mb-2"><i class="fa fa-info-circle me-2"></i>{{'ventas.list.descuentoActual' | translate}}</h6>
                 <div class="row">
                     <div class="col-md-6">
-                        <p class="mb-1"><strong>{{'Porcentaje:' | translate}}</strong> {{pedidoDescuentoEditando.porceDescuento}}%</p>
-                        <p class="mb-1"><strong>{{'Valor del descuento:' | translate}}</strong> {{pedidoDescuentoEditando.totalDescuento | currency}}</p>
+                        <p class="mb-1"><strong>{{'ventas.list.porcentaje' | translate}}</strong> {{pedidoDescuentoEditando.porceDescuento}}%</p>
+                        <p class="mb-1"><strong>{{'ventas.list.valorDelDescuento' | translate}}</strong> {{pedidoDescuentoEditando.totalDescuento | currency}}</p>
                     </div>
                     <div class="col-md-6" *ngIf="pedidoDescuentoEditando.cuponAplicado">
-                        <p class="mb-1"><strong>{{'Código de cupón:' | translate}}</strong> {{pedidoDescuentoEditando.cuponAplicado}}</p>
+                        <p class="mb-1"><strong>{{'ventas.list.codigoDeCupon' | translate}}</strong> {{pedidoDescuentoEditando.cuponAplicado}}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Formulario para editar descuento -->
             <div class="form-group mb-3">
-                <label for="nuevoPorcentajeDescuento">{{'Nuevo Porcentaje de Descuento' | translate}} (%)</label>
+                <label for="nuevoPorcentajeDescuento">{{'ventas.list.nuevoPorcentajeDeDescuento' | translate}} (%)</label>
                 <div class="input-group">
                     <input type="number" 
                            class="form-control" 
@@ -2589,29 +2588,29 @@
                            min="0"
                            max="100"
                            step="0.01"
-                           placeholder="{{'Ingrese el porcentaje (0-100)' | translate}}"
+                           placeholder="{{'ventas.list.ingreseElPorcentaje0100' | translate}}"
                            (input)="calcularPreviewTotales(pedidoDescuentoEditando, nuevoPorcentajeDescuento)"
                            [class.is-invalid]="nuevoPorcentajeDescuento < 0 || nuevoPorcentajeDescuento > 100">
                     <span class="input-group-text">%</span>
                 </div>
-                <small class="form-text text-muted">{{'Ingrese un valor entre 0 y 100' | translate}}</small>
+                <small class="form-text text-muted">{{'ventas.list.ingreseUnValorEntre0' | translate}}</small>
                 <div class="invalid-feedback" *ngIf="nuevoPorcentajeDescuento < 0 || nuevoPorcentajeDescuento > 100">
-                    {{'El porcentaje debe estar entre 0 y 100' | translate}}
+                    {{'ventas.list.elPorcentajeDebeEstarEntre' | translate}}
                 </div>
             </div>
 
             <!-- Preview de totales -->
             <div class="preview-totales-container" *ngIf="previewTotales && nuevoPorcentajeDescuento >= 0 && nuevoPorcentajeDescuento <= 100">
-                <h6 class="mb-3"><i class="fa fa-calculator me-2"></i>{{'Vista Previa de Totales' | translate}}</h6>
+                <h6 class="mb-3"><i class="fa fa-calculator me-2"></i>{{'ventas.list.vistaPreviaDeTotales' | translate}}</h6>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
                         <tbody>
                             <tr>
-                                <td><strong>{{'Valor Bruto:' | translate}}</strong></td>
+                                <td><strong>{{'ventas.list.valorBruto2' | translate}}</strong></td>
                                 <td class="text-end">{{previewTotales.totalPedidoSinDescuento | currency}}</td>
                             </tr>
                             <tr>
-                                <td><strong>{{'Descuento:' | translate}}</strong></td>
+                                <td><strong>{{'ventas.list.descuento2' | translate}}</strong></td>
                                 <td class="text-end text-danger">-{{previewTotales.totalDescuento | currency}}</td>
                             </tr>
                             <tr>
@@ -2619,15 +2618,15 @@
                                 <td class="text-end">{{previewTotales.totalEnvio | currency}}</td>
                             </tr>
                             <tr>
-                                <td><strong>{{'Subtotal:' | translate}}</strong></td>
+                                <td><strong>{{'ventas.list.subtotal2' | translate}}</strong></td>
                                 <td class="text-end">{{previewTotales.subtotal | currency}}</td>
                             </tr>
                             <tr>
-                                <td><strong>{{'IVA:' | translate}}</strong></td>
+                                <td><strong>{{'ventas.list.iva2' | translate}}</strong></td>
                                 <td class="text-end">{{previewTotales.totalImpuesto | currency}}</td>
                             </tr>
                             <tr class="table-primary">
-                                <td><strong>{{'Total:' | translate}}</strong></td>
+                                <td><strong>{{'ventas.list.total2' | translate}}</strong></td>
                                 <td class="text-end"><strong>{{previewTotales.totalPedididoConDescuento | currency}}</strong></td>
                             </tr>
                         </tbody>
@@ -2641,7 +2640,7 @@
                 (click)="eliminarDescuentoPedido()"
                 [disabled]="guardandoDescuento">
             <i class="fa fa-trash me-1"></i>
-            {{'Eliminar Descuento' | translate}}
+            {{'ventas.list.eliminarDescuento' | translate}}
         </button>
         <button type="button" class="btn btn-outline-secondary" 
                 (click)="modal.dismiss('cancel')"
@@ -2675,7 +2674,7 @@
 
 <p-dialog 
   [(visible)]="showHistoryModal" 
-  [header]="'Historial de Estados - ' + (currentOrderForHistory?.nroPedido || 'Pedido')"
+  [header]="'ventas.list.historialEstadosDe' | translate: { pedido: currentOrderForHistory?.nroPedido || ('ventas.list.pedido' | translate) }"
   [modal]="true"
   [closable]="true"
   [dismissableMask]="true"
@@ -2689,9 +2688,9 @@
     <div class="d-flex align-items-center w-100">
       <i class="pi pi-history me-2" style="font-size: 1.2rem; color: #5F3FE0;"></i>
       <div class="flex-grow-1">
-        <h5 class="mb-0">Historial de Estados</h5>
+        <h5 class="mb-0">{{ 'ventas.list.historialDeEstados' | translate }}</h5>
         <small class="text-muted" *ngIf="currentOrderForHistory">
-          Pedido: <strong>{{ currentOrderForHistory.nroPedido }}</strong>
+          {{ 'ventas.list.pedido3' | translate }} <strong>{{ currentOrderForHistory.nroPedido }}</strong>
         </small>
       </div>
     </div>
@@ -2703,13 +2702,13 @@
     <!-- Estado de carga -->
     <div *ngIf="loadingHistory" class="text-center py-5">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #5F3FE0;"></i>
-      <p class="mt-3 text-muted">Cargando historial...</p>
+      <p class="mt-3 text-muted">{{ 'ventas.list.cargandoHistorial' | translate }}</p>
     </div>
 
     <!-- Error -->
     <div *ngIf="!loadingHistory && historyError" class="alert alert-danger" role="alert">
       <i class="pi pi-exclamation-triangle me-2"></i>
-      <strong>Error:</strong> {{ historyError }}
+      <strong>{{ 'ventas.list.errorDosPuntos' | translate }}</strong> {{ historyError }}
     </div>
 
     <!-- Timeline Component -->
@@ -2731,7 +2730,7 @@
       class="btn btn-secondary"
       (click)="cerrarHistorialModal()">
       <i class="pi pi-times me-2"></i>
-      Cerrar
+      {{ 'comun.cerrar' | translate }}
     </button>
   </ng-template>
 
@@ -2745,7 +2744,7 @@
 -->
 <p-dialog
   [(visible)]="showEditarIvaModal"
-  [header]="'Editar IVA - ' + (pedidoIvaEditando?.nroPedido || 'Pedido')"
+  [header]="'ventas.list.editarIvaDe' | translate: { pedido: pedidoIvaEditando?.nroPedido || ('ventas.list.pedido' | translate) }"
   [modal]="true"
   [closable]="true"
   [dismissableMask]="true"

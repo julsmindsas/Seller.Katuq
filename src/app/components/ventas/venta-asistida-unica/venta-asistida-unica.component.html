@@ -16,10 +16,10 @@
         </span>
         <div class="va-page-head-text">
           <div class="va-page-head-titlerow">
-            <h1 class="va-title mb-0">Venta asistida</h1>
-            <span class="badge">Preventa #{{pedidoGral?.nroPedido || 'TEMP-000000'}}</span>
+            <h1 class="va-title mb-0">{{ 'ventas.ventaAsistidaUnica.titulo' | translate }}</h1>
+            <span class="badge">{{ 'ventas.ventaAsistidaUnica.preventaNro' | translate: { n: pedidoGral?.nroPedido || 'TEMP-000000' } }}</span>
           </div>
-          <div class="va-page-sub">Arma el pedido con el cliente en línea y cobra al instante</div>
+          <div class="va-page-sub">{{ 'ventas.ventaAsistidaUnica.subtitulo' | translate }}</div>
         </div>
       </div>
       <div class="va-page-head-actions">
@@ -35,7 +35,7 @@
         ></app-borradores-venta>
         <button type="button" class="va-discard-btn" (click)="nuevoPedido()" *ngIf="!showPedidoConfirm">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          Descartar
+          {{ 'ventas.ventaAsistidaUnica.descartar' | translate }}
         </button>
       </div>
     </div>
@@ -59,9 +59,9 @@
           <span class="va-ic">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </span>
-          <span class="va-card-title">Cliente</span>
-          <span class="va-req" *ngIf="!encontrado">Requerido</span>
-          <span class="va-step">Paso 1 de 4</span>
+          <span class="va-card-title">{{ 'ventas.ventaAsistidaUnica.cliente' | translate }}</span>
+          <span class="va-req" *ngIf="!encontrado">{{ 'ventas.ventaAsistidaUnica.requerido' | translate }}</span>
+          <span class="va-step">{{ 'ventas.ventaAsistidaUnica.pasoDe' | translate: { n: 1, total: 4 } }}</span>
         </div>
 
         <!-- Buscador de clientes con Autocompletado PrimeNG -->
@@ -79,7 +79,7 @@
                 [minLength]="3"
                 [forceSelection]="false"
                 [showClear]="true"
-                placeholder="Buscar por documento, nombre, correo o celular..."
+                [placeholder]="'ventas.ventaAsistidaUnica.phBuscarCliente' | translate"
                 styleClass="cliente-autocomplete-full"
                 inputStyleClass="cliente-input"
               >
@@ -107,7 +107,7 @@
                 <ng-template pTemplate="empty">
                   <div class="empty-results">
                     <i class="fa fa-user-slash"></i>
-                    <span>No se encontraron clientes</span>
+                    <span>{{ 'ventas.ventaAsistidaUnica.noClientes' | translate }}</span>
                   </div>
                 </ng-template>
               </p-autoComplete>
@@ -119,7 +119,7 @@
             <!-- Botón nuevo cliente -->
             <button class="new-client-btn" (click)="mostrarFormularioNuevoCliente()">
               <i class="fa fa-plus"></i>
-              <span>Nuevo Cliente</span>
+              <span>{{ 'ventas.ventaAsistidaUnica.nuevoCliente' | translate }}</span>
             </button>
           </div>
         </div>
@@ -161,7 +161,7 @@
                     (change)="onCategoriaClienteChange($event)"
                     [disabled]="cargandoTiposCliente"
                     #categoriaSelect>
-              <option value="" [selected]="!categoriaClienteSeleccionada">Sin categoría</option>
+              <option value="" [selected]="!categoriaClienteSeleccionada">{{ 'ventas.ventaAsistidaUnica.sinCategoria' | translate }}</option>
               <option *ngFor="let tipo of tiposCliente"
                       [value]="tipo.id"
                       [selected]="categoriaClienteSeleccionada?.id === tipo.id">
@@ -197,7 +197,7 @@
         <div *ngIf="encontrado" class="step1-notes-section mb-3">
           <button type="button" class="notes-toggle-btn" (click)="notasClienteExpanded = !notasClienteExpanded">
             <i class="fa fa-comment-alt"></i>
-            <span>Notas del cliente</span>
+            <span>{{ 'ventas.ventaAsistidaUnica.notasCliente' | translate }}</span>
             <span class="notes-count-badge" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length">
               {{ pedidoGral.notasPedido.notasCliente.length }}
             </span>
@@ -205,9 +205,9 @@
           </button>
           <div *ngIf="notasClienteExpanded" class="notes-body">
             <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-input-area">
-              <textarea formControlName="nota" placeholder="Agregar nota sobre el cliente..." rows="2"></textarea>
+              <textarea formControlName="nota" [placeholder]="'ventas.ventaAsistidaUnica.phNotaCliente' | translate" rows="2"></textarea>
               <button type="submit" [disabled]="notasClienteForm.invalid">
-                <i class="fa fa-plus"></i> Agregar
+                <i class="fa fa-plus"></i> {{ 'ventas.ventaAsistidaUnica.agregar' | translate }}
               </button>
             </form>
             <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
@@ -222,7 +222,7 @@
               </div>
             </div>
             <div class="notes-empty" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
-              Sin notas registradas
+              {{ 'ventas.ventaAsistidaUnica.sinNotas' | translate }}
             </div>
           </div>
         </div>
@@ -234,8 +234,8 @@
           <span class="va-ic">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
           </span>
-          <span class="va-card-title">Productos</span>
-          <span class="va-step">Paso 2 de 4</span>
+          <span class="va-card-title">{{ 'ventas.ventaAsistidaUnica.productos' | translate }}</span>
+          <span class="va-step">{{ 'ventas.ventaAsistidaUnica.pasoDe' | translate: { n: 2, total: 4 } }}</span>
         </div>
 
         <!-- BARRA DE FILTROS - Siempre visible en pantalla plana (gate currentStepIndex removido) -->
@@ -247,13 +247,13 @@
             <div class="filter-item filter-item--modo" [class.filter-completed]="catalogoSinInventario">
               <label class="filter-label">
                 <i class="fa fa-cubes"></i>
-                Modo
+                {{ 'ventas.ventaAsistidaUnica.modo' | translate }}
               </label>
-              <label class="modo-toggle" title="Muestra solo los productos que se venden bajo pedido, sin depender de una bodega">
+              <label class="modo-toggle" [title]="'ventas.ventaAsistidaUnica.tituloSinInventario' | translate">
                 <input type="checkbox"
                        [ngModel]="catalogoSinInventario"
                        (ngModelChange)="onCatalogoSinInventarioChange($event)">
-                <span>Sin inventario</span>
+                <span>{{ 'ventas.ventaAsistidaUnica.sinInventario' | translate }}</span>
               </label>
             </div>
 
@@ -261,13 +261,13 @@
             <div class="filter-item" [class.filter-completed]="selectedWarehouse" [class.filter-disabled]="catalogoSinInventario">
               <label class="filter-label">
                 <i class="fa fa-warehouse"></i>
-                Bodega
+                {{ 'ventas.ventaAsistidaUnica.bodega' | translate }}
               </label>
               <select class="filter-select"
                       (change)="onWarehouseChange($event)"
                       [class.has-value]="selectedWarehouse"
                       [disabled]="catalogoSinInventario">
-                <option value="">Seleccionar...</option>
+                <option value="">{{ 'ventas.ventaAsistidaUnica.seleccionar' | translate }}</option>
                 <!-- [selected] mantiene el selector sincronizado cuando la bodega
                      se cambia desde el catálogo (popover de existencias). -->
                 <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega"
@@ -282,11 +282,11 @@
               <div class="filter-label-row">
                 <label class="filter-label">
                   <i class="fa fa-map-marker-alt"></i>
-                  Ciudad
+                  {{ 'ventas.ventaAsistidaUnica.ciudad' | translate }}
                 </label>
                 <label class="dane-toggle" *ngIf="selectedWarehouse">
                   <input type="checkbox" [(ngModel)]="usarDaneCiudadEntrega">
-                  <span>DANE</span>
+                  <span>{{ 'ventas.ventaAsistidaUnica.dane' | translate }}</span>
                 </label>
               </div>
 
@@ -296,7 +296,7 @@
                         (change)="onSelectCity($event)"
                         [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
                         [disabled]="!selectedWarehouse">
-                  <option value="seleccione">Seleccionar...</option>
+                  <option value="seleccione">{{ 'ventas.ventaAsistidaUnica.seleccionar' | translate }}</option>
                   <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
                           [value]="ciudad.value"
                           [selected]="selectedCity === ciudad.value">
@@ -311,14 +311,14 @@
                   <div class="dane-inputs">
                     <input type="text" class="dane-input"
                            [(ngModel)]="searchQueryCiudadDane"
-                           placeholder="Buscar municipio..."
+                           [placeholder]="'ventas.ventaAsistidaUnica.phBuscarMunicipio' | translate"
                            (input)="buscarMunicipioDane(searchQueryCiudadDane)"
                            [disabled]="!selectedWarehouse">
                     <select class="dane-depto"
                             [(ngModel)]="departamentoDaneSeleccionado"
                             (ngModelChange)="onDepartamentoDaneChange($event)"
                             [disabled]="!selectedWarehouse">
-                      <option value="">Depto</option>
+                      <option value="">{{ 'ventas.ventaAsistidaUnica.depto' | translate }}</option>
                       <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
                     </select>
                   </div>
@@ -344,12 +344,12 @@
             <div class="filter-item filter-search" [class.filter-disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               <label class="filter-label">
                 <i class="fa fa-search"></i>
-                Buscar productos
+                {{ 'ventas.ventaAsistidaUnica.buscarProductos' | translate }}
               </label>
               <div class="search-wrapper">
                 <i class="fa fa-search"></i>
                 <input type="search" class="search-input"
-                       placeholder="Nombre o referencia..."
+                       [placeholder]="'ventas.ventaAsistidaUnica.phNombreReferencia' | translate"
                        (keyup)="onProductSearch($event)"
                        [disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               </div>
@@ -370,27 +370,27 @@
           <div class="filters-status" *ngIf="!pedidoGral?.cliente">
             <span class="fs-ic"><i class="fa fa-user"></i></span>
             <div class="fs-text">
-              <span class="fs-title">Selecciona primero un cliente</span>
-              <span class="fs-sub">Los precios dependen del tipo de cliente, por eso el catálogo se habilita después.</span>
+              <span class="fs-title">{{ 'ventas.ventaAsistidaUnica.seleccionaCliente' | translate }}</span>
+              <span class="fs-sub">{{ 'ventas.ventaAsistidaUnica.preciosDependen' | translate }}</span>
             </div>
           </div>
 
           <div class="filters-status" *ngIf="pedidoGral?.cliente && catalogoSinInventario">
             <span class="fs-ic"><i class="fa fa-cubes"></i></span>
             <div class="fs-text">
-              <span class="fs-title">Catálogo sin inventario</span>
-              <span class="fs-sub">Productos que se venden bajo pedido: no dependen de una bodega.</span>
+              <span class="fs-title">{{ 'ventas.ventaAsistidaUnica.catalogoSinInventario' | translate }}</span>
+              <span class="fs-sub">{{ 'ventas.ventaAsistidaUnica.bajoPedido' | translate }}</span>
             </div>
           </div>
 
           <div class="filters-status" *ngIf="pedidoGral?.cliente && !catalogoSinInventario && (!selectedWarehouse || !selectedCity || selectedCity === 'seleccione')">
             <span class="fs-ic"><i class="fa fa-exclamation-circle"></i></span>
             <div class="fs-text">
-              <span class="fs-title" *ngIf="!selectedWarehouse">Selecciona una bodega y ciudad para ver el catálogo</span>
+              <span class="fs-title" *ngIf="!selectedWarehouse">{{ 'ventas.ventaAsistidaUnica.seleccionaBodegaCiudad' | translate }}</span>
               <span class="fs-title" *ngIf="selectedWarehouse && (!selectedCity || selectedCity === 'seleccione')">
-                Selecciona una ciudad para ver el catálogo
+                {{ 'ventas.ventaAsistidaUnica.seleccionaCiudad' | translate }}
               </span>
-              <span class="fs-sub">El stock disponible depende de la bodega elegida.</span>
+              <span class="fs-sub">{{ 'ventas.ventaAsistidaUnica.stockDepende' | translate }}</span>
             </div>
           </div>
         </div>
@@ -427,13 +427,13 @@
           <span class="va-ic">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
           </span>
-          <span class="va-card-title">Carrito</span>
+          <span class="va-card-title">{{ 'ventas.ventaAsistidaUnica.carrito' | translate }}</span>
           <!-- Marco del mockup: badge lila con el conteo + acción "Vaciar" a la derecha.
                El carrito NO lleva rótulo de paso. -->
-          <span class="va-cart-count" *ngIf="tieneProductosEnCarrito">{{cantidadItemsCarrito}} ítem(s)</span>
+          <span class="va-cart-count" *ngIf="tieneProductosEnCarrito">{{ 'ventas.ventaAsistidaUnica.items' | translate: { n: cantidadItemsCarrito } }}</span>
           <button type="button" class="va-cart-clear" *ngIf="tieneProductosEnCarrito" (click)="vaciarCarrito()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
-            Vaciar
+            {{ 'ventas.ventaAsistidaUnica.vaciar' | translate }}
           </button>
         </div>
 
@@ -451,7 +451,7 @@
         <div class="step3-notes-accordion mb-4">
           <button type="button" class="accordion-toggle" (click)="notasPedidoExpanded = !notasPedidoExpanded">
             <i class="fa fa-comment-alt"></i>
-            <span>Notas del pedido</span>
+            <span>{{ 'ventas.ventaAsistidaUnica.notasPedido' | translate }}</span>
             <i class="fa accordion-chevron" [ngClass]="notasPedidoExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
           </button>
           <div *ngIf="notasPedidoExpanded" class="accordion-body">
@@ -467,8 +467,8 @@
           <span class="va-ic">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
           </span>
-          <span class="va-card-title">Envío y Facturación</span>
-          <span class="va-step">Paso 3 de 4</span>
+          <span class="va-card-title">{{ 'ventas.ventaAsistidaUnica.envioFacturacion' | translate }}</span>
+          <span class="va-step">{{ 'ventas.ventaAsistidaUnica.pasoDe' | translate: { n: 3, total: 4 } }}</span>
         </div>
 
         <!-- TABS para Envío y Facturación - Diseño compacto -->
@@ -478,7 +478,7 @@
           <!-- Marco del mockup: 2 tarjetas radio grandes, cableadas a la misma
                lógica (formasEntregaOptions / onFormaEntregaChange / selectedFormaEntrega). -->
           <div class="forma-entrega-selector-container mb-4" *ngIf="mostrarSelectorFormaEntrega">
-            <div class="fe-label">Forma de entrega</div>
+            <div class="fe-label">{{ 'ventas.ventaAsistidaUnica.formaEntrega' | translate }}</div>
             <div class="fe-cards">
               <button *ngFor="let opcion of formasEntregaOptions"
                 type="button"
@@ -487,8 +487,8 @@
                 (click)="onFormaEntregaChange(opcion.value)">
                 <span class="fe-card-ic"><i class="fa {{opcion.icon}}"></i></span>
                 <span class="fe-card-text">
-                  <span class="fe-card-title">{{opcion.label}}</span>
-                  <span class="fe-card-sub">{{ opcion.value === 'Recoge' ? 'Sin costo de envío' : 'Se cobra según la ciudad' }}</span>
+                  <span class="fe-card-title">{{opcion.label | translate}}</span>
+                  <span class="fe-card-sub">{{ (opcion.value === 'Recoge' ? 'ventas.ventaAsistidaUnica.sinCostoEnvio' : 'ventas.ventaAsistidaUnica.cobroSegunCiudad') | translate }}</span>
                 </span>
                 <span class="fe-card-radio">
                   <i class="fa fa-check" *ngIf="selectedFormaEntrega === opcion.value"></i>
@@ -497,7 +497,7 @@
             </div>
             <div class="fe-hint">
               <i class="fa fa-info-circle me-1"></i>
-              Seleccione cómo desea recibir el pedido
+              {{ 'ventas.ventaAsistidaUnica.seleccioneComoRecibir' | translate }}
             </div>
           </div>
 
@@ -509,16 +509,16 @@
           <div class="va-note mb-4" *ngIf="!mostrarSelectorFormaEntrega">
             <i class="fa fa-info-circle"></i>
             <span>
-              <strong>Forma de entrega ya configurada:</strong> Este pedido ya tiene su forma de entrega definida.
-              <ng-container *ngIf="selectedFormaEntrega === 'Recoge'">El cliente recogerá en tienda.</ng-container>
-              <ng-container *ngIf="selectedFormaEntrega === 'Domicilio'">Se enviará a domicilio.</ng-container>
+              <strong>{{ 'ventas.ventaAsistidaUnica.formaEntregaConfigurada' | translate }}</strong> {{ 'ventas.ventaAsistidaUnica.formaEntregaDefinida' | translate }}
+              <ng-container *ngIf="selectedFormaEntrega === 'Recoge'">{{ 'ventas.ventaAsistidaUnica.clienteRecogera' | translate }}</ng-container>
+              <ng-container *ngIf="selectedFormaEntrega === 'Domicilio'">{{ 'ventas.ventaAsistidaUnica.seEnviaraDomicilio' | translate }}</ng-container>
             </span>
           </div>
 
           <div class="va-note mb-3" *ngIf="esRecogeEnTienda">
             <i class="fa fa-info-circle"></i>
             <span>
-              <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
+              <strong>{{ 'ventas.ventaAsistidaUnica.recogeTienda' | translate }}</strong> {{ 'ventas.ventaAsistidaUnica.noRequiereEnvio' | translate }}
             </span>
           </div>
 
@@ -527,7 +527,7 @@
             <li class="nav-item" role="presentation" *ngIf="!esRecogeEnTienda">
               <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
                       type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
-                <i class="fa fa-truck me-2"></i>Envío
+                <i class="fa fa-truck me-2"></i>{{ 'ventas.ventaAsistidaUnica.envio' | translate }}
                 <span class="tab-badge" *ngIf="pedidoGral?.envio">
                   <i class="fa fa-check-circle"></i>
                 </span>
@@ -536,7 +536,7 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" [class.active]="esRecogeEnTienda" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
                       type="button" role="tab" aria-controls="panel-facturacion" [attr.aria-selected]="esRecogeEnTienda">
-                <i class="fa fa-file-invoice me-2"></i>Facturación
+                <i class="fa fa-file-invoice me-2"></i>{{ 'ventas.ventaAsistidaUnica.facturacion' | translate }}
                 <span class="tab-badge" *ngIf="pedidoGral?.facturacion">
                   <i class="fa fa-check-circle"></i>
                 </span>
@@ -589,8 +589,8 @@
           <span class="va-ic">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
           </span>
-          <span class="va-card-title">Resumen y Pago</span>
-          <span class="va-step">Paso 4</span>
+          <span class="va-card-title">{{ 'ventas.ventaAsistidaUnica.resumenPago' | translate }}</span>
+          <span class="va-step">{{ 'ventas.ventaAsistidaUnica.paso' | translate: { n: 4 } }}</span>
         </div>
         <div class="section-content">
           <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
@@ -607,8 +607,8 @@
   <div *ngIf="showPedidoConfirm" id="va-confirmacion" class="step6-section step6-success mb-4">
     <div class="section-header section-header-success">
       <i class="fa fa-check-circle"></i>
-      <span>¡Pedido Procesado Exitosamente!</span>
-      <span class="order-badge">Pedido #{{pedidoGral?.nroPedido || 'N/A'}}</span>
+      <span>{{ 'ventas.ventaAsistidaUnica.pedidoProcesado' | translate }}</span>
+      <span class="order-badge">{{ 'ventas.ventaAsistidaUnica.pedidoNro' | translate: { n: pedidoGral?.nroPedido || ('ventas.ventaAsistidaUnica.noDisponible' | translate) } }}</span>
     </div>
     <div class="section-content">
       <!-- Componente de confirmación que muestra el HTML del pedido -->
@@ -620,11 +620,11 @@
   <div *ngIf="showPedidoConfirm" class="step6-actions">
     <button class="btn btn-outline-secondary btn-lg" type="button" (click)="imprimirPedido()">
       <i class="fa fa-print me-2"></i>
-      Imprimir Pedido
+      {{ 'ventas.ventaAsistidaUnica.imprimirPedido' | translate }}
     </button>
     <button class="btn btn-primary btn-lg" type="button" (click)="nuevoPedido()">
       <i class="fa fa-plus-circle me-2"></i>
-      Crear Nuevo Pedido
+      {{ 'ventas.ventaAsistidaUnica.crearNuevoPedido' | translate }}
     </button>
   </div>
 
@@ -634,28 +634,28 @@
 <!-- Modal para crear datos de entrega -->
 <ng-template #entregaModal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-truck me-2"></i>Crear Datos de Entrega</h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-truck me-2"></i>{{ 'ventas.ventaAsistidaUnica.crearDatosEntrega' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     <div class="row g-3">
       <div class="col-sm-12">
-        <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
+        <label class="form-label" for="alias_entrega">{{ 'ventas.ventaAsistidaUnica.referenciaEntrega' | translate }}</label>
         <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
       </div>
 
       <div class="col-sm-6">
-        <label class="form-label" for="nombres_entrega">Nombres:</label>
+        <label class="form-label" for="nombres_entrega">{{ 'ventas.ventaAsistidaUnica.nombres' | translate }}</label>
         <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
       </div>
 
       <div class="col-sm-6">
-        <label class="form-label" for="apellidos_entrega">Apellidos:</label>
+        <label class="form-label" for="apellidos_entrega">{{ 'ventas.ventaAsistidaUnica.apellidos' | translate }}</label>
         <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
       </div>
 
       <div class="col-sm-12">
-        <label class="form-label" for="numero_celular_entrega">Número de Celular:</label>
+        <label class="form-label" for="numero_celular_entrega">{{ 'ventas.ventaAsistidaUnica.numeroCelular' | translate }}</label>
         <div class="input-group">
           <span class="input-group-text bg-light select-container" style="min-width: 90px;">
             <select class="form-select form-select-sm border-0 bg-transparent custom-select-sm"
@@ -667,17 +667,17 @@
             </select>
           </span>
           <input class="form-control" type="text" id="numero_celular_entrega" [(ngModel)]="celular_entrega"
-            placeholder="Número de celular" />
+            [placeholder]="'ventas.ventaAsistidaUnica.phNumeroCelular' | translate" />
         </div>
       </div>
     </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
-      <i class="fa fa-times me-1"></i> Cancelar
+      <i class="fa fa-times me-1"></i> {{ 'comun.cancelar' | translate }}
     </button>
     <button type="button" class="cfg-btn" (click)="guardarDatosEntrega()">
-      <i class="fa fa-save me-1"></i> Guardar
+      <i class="fa fa-save me-1"></i> {{ 'comun.guardar' | translate }}
     </button>
   </div>
 </ng-template>
@@ -685,9 +685,9 @@
 <!-- Modal para crear datos de facturación -->
 <ng-template #facturacionModal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-file-invoice me-2"></i>Crear Datos de Facturación
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-file-invoice me-2"></i>{{ 'ventas.ventaAsistidaUnica.crearDatosFacturacion' | translate }}
     </h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     <!-- Contenido del modal de facturación -->
@@ -695,10 +695,10 @@
   </div>
   <div class="modal-footer">
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
-      <i class="fa fa-times me-1"></i> Cancelar
+      <i class="fa fa-times me-1"></i> {{ 'comun.cancelar' | translate }}
     </button>
     <button type="button" class="cfg-btn" (click)="guardarDatosFacturacion()">
-      <i class="fa fa-save me-1"></i> Guardar
+      <i class="fa fa-save me-1"></i> {{ 'comun.guardar' | translate }}
     </button>
   </div>
 </ng-template>

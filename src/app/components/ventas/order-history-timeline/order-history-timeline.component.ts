@@ -10,6 +10,7 @@
 
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { OrderStatusHistory, TransitionType } from '../../../shared/models/order-history.interface';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-order-history-timeline',
@@ -29,7 +30,7 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
   // Timeline events procesados para PrimeNG
   timelineEvents: any[] = [];
 
-  constructor() {}
+  constructor(private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.processHistoryForTimeline();
@@ -105,7 +106,7 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
    * Formatea el timestamp a string legible
    */
   formatTimestamp(timestamp: any): string {
-    if (!timestamp) return 'Fecha desconocida';
+    if (!timestamp) return this.translate.instant('ventas.orderHistoryTimeline.fechaDesconocida');
     
     try {
       let date: Date;
@@ -127,7 +128,7 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
         date = new Date(timestamp._seconds * 1000);
       }
       else {
-        return 'Formato de fecha inválido';
+        return this.translate.instant('ventas.orderHistoryTimeline.fechaInvalida');
       }
 
       // Formato: "21 Oct 2025, 3:45 PM"
@@ -141,7 +142,7 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
       });
     } catch (error) {
       console.error('Error formateando timestamp:', error);
-      return 'Error en fecha';
+      return this.translate.instant('ventas.orderHistoryTimeline.errorFecha');
     }
   }
 
@@ -173,13 +174,23 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
       const diffHours = Math.floor(diffMinutes / 60);
       const diffDays = Math.floor(diffHours / 24);
 
-      if (diffSeconds < 60) return 'Hace unos segundos';
-      if (diffMinutes < 60) return `Hace ${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minutos'}`;
-      if (diffHours < 24) return `Hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
-      if (diffDays < 7) return `Hace ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`;
-      if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} ${Math.floor(diffDays / 7) === 1 ? 'semana' : 'semanas'}`;
-      if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} ${Math.floor(diffDays / 30) === 1 ? 'mes' : 'meses'}`;
-      return `Hace ${Math.floor(diffDays / 365)} ${Math.floor(diffDays / 365) === 1 ? 'año' : 'años'}`;
+      const claves: Record<string, [string, string]> = {
+        minutos: ['ventas.orderHistoryTimeline.hace.minutos.one', 'ventas.orderHistoryTimeline.hace.minutos.other'],
+        horas: ['ventas.orderHistoryTimeline.hace.horas.one', 'ventas.orderHistoryTimeline.hace.horas.other'],
+        dias: ['ventas.orderHistoryTimeline.hace.dias.one', 'ventas.orderHistoryTimeline.hace.dias.other'],
+        semanas: ['ventas.orderHistoryTimeline.hace.semanas.one', 'ventas.orderHistoryTimeline.hace.semanas.other'],
+        meses: ['ventas.orderHistoryTimeline.hace.meses.one', 'ventas.orderHistoryTimeline.hace.meses.other'],
+        anios: ['ventas.orderHistoryTimeline.hace.anios.one', 'ventas.orderHistoryTimeline.hace.anios.other'],
+      };
+      const hace = (unidad: string, n: number) =>
+        this.translate.instant(claves[unidad][n === 1 ? 0 : 1], { n });
+      if (diffSeconds < 60) return this.translate.instant('ventas.orderHistoryTimeline.haceSegundos');
+      if (diffMinutes < 60) return hace('minutos', diffMinutes);
+      if (diffHours < 24) return hace('horas', diffHours);
+      if (diffDays < 7) return hace('dias', diffDays);
+      if (diffDays < 30) return hace('semanas', Math.floor(diffDays / 7));
+      if (diffDays < 365) return hace('meses', Math.floor(diffDays / 30));
+      return hace('anios', Math.floor(diffDays / 365));
     } catch (error) {
       return '';
     }
@@ -208,13 +219,18 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
    */
   getUserLabel(userEmail: string): string {
     if (!userEmail || userEmail === 'Sistema') {
-      return 'Sistema Automático';
+      return 'ventas.orderHistoryTimeline.sistemaAutomatico';
     }
     // Si es transportador (formato: placa o transportador:placa)
     if (userEmail.includes('transportador:')) {
-      return `Transportador (${userEmail.split(':')[1]})`;
+      return 'ventas.orderHistoryTimeline.transportador';
     }
     return userEmail;
+  }
+
+  /** Placa del transportador para la etiqueta del usuario (vacía si no es transportador). */
+  placaTransportador(userEmail: string): string {
+    return userEmail && userEmail.includes('transportador:') ? userEmail.split(':')[1] : '';
   }
 
   /**
@@ -237,14 +253,14 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
    */
   getTransitionLabel(type: TransitionType): string {
     const labels = {
-      'forward': 'Avance',
-      'backward': 'Retroceso',
-      'rejection': 'Rechazo',
-      'cancellation': 'Cancelación',
-      'same': 'Sin cambio',
-      'unknown': 'Desconocido'
+      'forward': 'ventas.orderHistoryTimeline.transicion.forward',
+      'backward': 'ventas.orderHistoryTimeline.transicion.backward',
+      'rejection': 'ventas.orderHistoryTimeline.transicion.rejection',
+      'cancellation': 'ventas.orderHistoryTimeline.transicion.cancellation',
+      'same': 'ventas.orderHistoryTimeline.transicion.same',
+      'unknown': 'ventas.orderHistoryTimeline.transicion.unknown'
     };
-    return labels[type] || 'Desconocido';
+    return labels[type] || 'ventas.orderHistoryTimeline.transicion.unknown';
   }
 
   /**
@@ -274,7 +290,7 @@ export class OrderHistoryTimelineComponent implements OnInit, OnChanges {
   formatMetadataValue(value: any): string {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'object') return JSON.stringify(value);
-    if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+    if (typeof value === 'boolean') return value ? 'comun.si' : 'comun.no';
     return String(value);
   }
 

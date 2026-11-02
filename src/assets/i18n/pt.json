@@ -9238,5 +9238,19 @@
   "asistentes.voiceSalesWizard.navegacion": "Navegação",
   "asistentes.voiceSalesWizard.navegacionFallida": "Falha na navegação",
   "asistentes.voiceSalesWizard.historialLimpiado": "Histórico de comandos limpo",
-  "asistentes.voiceSalesWizard.historial": "Histórico"
+  "asistentes.voiceSalesWizard.historial": "Histórico",
+  "rol.roles.usuariosMovidos": "{{movidos}} usuário(s) ficaram com o novo nome; verão ao entrar novamente.",
+  "tesoreria.historialPagos.anular": "Anular",
+  "tesoreria.historialPagos.anularPagoDe": "Anular o pagamento de {{pedido}}",
+  "tesoreria.historialPagos.estePedido": "este pedido",
+  "tesoreria.historialPagos.sinReferencia": "sem referência",
+  "tesoreria.historialPagos.anularEfectoHtml": "O pagamento de <b>{{valor}}</b> ({{referencia}}) fica <b>anulado</b>: não é apagado, mas deixa de contar.<br>O pedido volta a dever {{valor}} a mais e seu status é recalculado com os pagamentos restantes.<br><small>Não pode ser desfeito. Se o pedido já tem nota fiscal eletrônica, o pagamento é desfeito com uma nota de crédito.</small>",
+  "tesoreria.historialPagos.motivoObligatorio": "Motivo (obrigatório)",
+  "tesoreria.historialPagos.motivoPlaceholder": "Ex.: foi aplicado ao pedido errado",
+  "tesoreria.historialPagos.escribeElMotivo": "Escreva o motivo",
+  "tesoreria.historialPagos.anularPago": "Anular pagamento",
+  "tesoreria.historialPagos.pagoAnulado": "Pagamento anulado",
+  "tesoreria.historialPagos.pedidoQuedoEn": "O pedido ficou em {{estado}} e deve {{saldo}}.",
+  "tesoreria.historialPagos.noSeAnulo": "Não foi anulado",
+  "tesoreria.historialPagos.intentaDeNuevo": "Tente novamente."
 }

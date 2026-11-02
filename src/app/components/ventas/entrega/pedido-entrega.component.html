@@ -3,7 +3,7 @@
     <div class="entrega-header">
         <div class="entrega-header__title">
             <i class="fa fa-truck ent-icono"></i>
-            <h5 style="margin: 0; font-weight: 800; color: #211F3A;">Direcciones de Entrega</h5>
+            <h5 style="margin: 0; font-weight: 800; color: #211F3A;">{{ 'ventas.pedidoEntrega.titulo' | translate }}</h5>
         </div>
         <div class="entrega-header__actions">
             <input
@@ -16,33 +16,33 @@
                 class="btn btn-outline-secondary btn-sm me-2"
                 (click)="excelFileInput.click()"
                 placement="top"
-                ngbTooltip="Importar direcciones desde Excel"
+                [ngbTooltip]="'ventas.pedidoEntrega.importarTooltip' | translate"
             >
-                <i class="icofont icofont-file-excel"></i> Importar
+                <i class="icofont icofont-file-excel"></i> {{ 'ventas.pedidoEntrega.importar' | translate }}
             </button>
             <button
                 class="btn btn-outline-secondary btn-sm me-2"
                 (click)="readExcel()"
                 placement="top"
-                ngbTooltip="Procesar archivo Excel cargado"
+                [ngbTooltip]="'ventas.pedidoEntrega.cargarTooltip' | translate"
                 [disabled]="!file"
             >
-                <i class="fa fa-upload"></i> Cargar
+                <i class="fa fa-upload"></i> {{ 'ventas.pedidoEntrega.cargar' | translate }}
             </button>
             <button
                 class="btn btn-outline-secondary btn-sm me-2"
                 (click)="downloadExcel()"
                 placement="top"
-                ngbTooltip="Descargar plantilla Excel"
+                [ngbTooltip]="'ventas.pedidoEntrega.plantillaTooltip' | translate"
             >
-                <i class="fa fa-download"></i> Plantilla
+                <i class="fa fa-download"></i> {{ 'ventas.pedidoEntrega.plantilla' | translate }}
             </button>
             <button
                 class="btn btn-sm"
                 style="background-color: #5F3FE0; color: #fff; border: none;"
                 (click)="abrirModalCrearEntrega(crearEntrega)"
             >
-                <i class="fa fa-plus me-1"></i> Nueva Direcci&oacute;n
+                <i class="fa fa-plus me-1"></i> {{ 'ventas.pedidoEntrega.nuevaDireccion' | translate }}
             </button>
         </div>
     </div>
@@ -53,11 +53,8 @@
         class="alert alert-warning mb-3 mt-3"
         style="border-radius: 11px;"
     >
-        <i class="fa fa-exclamation-triangle me-2"></i> Este cliente no tiene
-        direcciones registradas en <strong>{{ pedidoGral?.envio?.ciudad || ciudad }}</strong>.
-        Se muestran todas sus direcciones (pueden ser de otras ciudades) — si
-        buscas una que acabas de crear, probablemente sí se guardó, solo que
-        es para otra ciudad.
+        <i class="fa fa-exclamation-triangle me-2"></i> {{ 'ventas.pedidoEntrega.sinDireccionesCiudadA' | translate }}
+        <strong>{{ pedidoGral?.envio?.ciudad || ciudad }}</strong>{{ 'ventas.pedidoEntrega.sinDireccionesCiudadB' | translate }}
     </div>
 
     <!-- Currently selected address (highlighted card) -->
@@ -90,7 +87,7 @@
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                     <span style="font-weight: 600; color: #1E874B; font-size: 0.85rem;">
-                        Direcci&oacute;n seleccionada
+                        {{ 'ventas.pedidoEntrega.direccionSeleccionada' | translate }}
                     </span>
                     <span
                         style="
@@ -102,7 +99,7 @@
                             font-weight: 500;
                         "
                     >
-                        Activa
+                        {{ 'ventas.pedidoEntrega.activa' | translate }}
                     </span>
                 </div>
                 <p style="margin: 0; color: #1E874B; font-size: 0.95rem; font-weight: 500;">
@@ -138,9 +135,9 @@
                 "
                 (click)="editarDireccionSeleccionada(entrega)"
                 placement="top"
-                ngbTooltip="Editar direcci&oacute;n seleccionada"
+                [ngbTooltip]="'ventas.pedidoEntrega.editarSeleccionadaTooltip' | translate"
             >
-                <i class="fa fa-pencil me-1"></i> Editar
+                <i class="fa fa-pencil me-1"></i> {{ 'comun.editar' | translate }}
             </button>
             <button
                 class="btn btn-sm"
@@ -155,9 +152,9 @@
                 "
                 (click)="noUsarDireccion()"
                 placement="top"
-                ngbTooltip="Quitar direcci&oacute;n seleccionada"
+                [ngbTooltip]="'ventas.pedidoEntrega.quitarSeleccionadaTooltip' | translate"
             >
-                <i class="fa fa-times me-1"></i> Quitar
+                <i class="fa fa-times me-1"></i> {{ 'ventas.pedidoEntrega.quitar' | translate }}
             </button>
         </div>
     </div>
@@ -240,14 +237,14 @@
                         "
                         (click)="seleccionarDireccionEntrega(i)"
                     >
-                        <i class="fa fa-check me-1"></i> Usar
+                        <i class="fa fa-check me-1"></i> {{ 'ventas.pedidoEntrega.usar' | translate }}
                     </button>
                     <button
                         class="btn btn-sm btn-light"
                         style="border-radius: 8px; padding: 5px 8px;"
                         (click)="editarDatos(entrega, i)"
                         placement="top"
-                        ngbTooltip="{{ 'Editar' | translate }}"
+                        [ngbTooltip]="'comun.editar' | translate"
                     >
                         <i class="icofont icofont-pencil-alt-5" style="color: #5F3FE0; font-size: 14px;"></i>
                     </button>
@@ -256,7 +253,7 @@
                         style="border-radius: 8px; padding: 5px 8px;"
                         (click)="eliminarDato1(i)"
                         placement="top"
-                        ngbTooltip="{{ 'Eliminar' | translate }}"
+                        [ngbTooltip]="'comun.eliminar' | translate"
                     >
                         <i class="icofont icofont-trash" style="color: #D64545; font-size: 14px;"></i>
                     </button>
@@ -292,17 +289,17 @@
             <i class="fa fa-map-marker" style="color: #5F3FE0; font-size: 1.5rem;"></i>
         </div>
         <h6 style="color: #211F3A; font-weight: 600; margin-bottom: 6px;">
-            No hay direcciones registradas
+            {{ 'ventas.pedidoEntrega.sinDirecciones' | translate }}
         </h6>
         <p style="color: #8f8bab; font-size: 0.85rem; margin-bottom: 16px;">
-            Crea tu primera direcci&oacute;n de entrega para continuar.
+            {{ 'ventas.pedidoEntrega.creaPrimera' | translate }}
         </p>
         <button
             class="btn btn-sm"
             style="background-color: #5F3FE0; color: #fff; border: none; border-radius: 8px; padding: 6px 16px;"
             (click)="abrirModalCrearEntrega(crearEntrega)"
         >
-            <i class="fa fa-plus me-1"></i> Crear Direcci&oacute;n
+            <i class="fa fa-plus me-1"></i> {{ 'ventas.pedidoEntrega.crearDireccion' | translate }}
         </button>
     </div>
 
@@ -313,7 +310,7 @@
             class="text-muted small"
             style="cursor: pointer; text-decoration: underline;"
         >
-            No usar direcci&oacute;n de entrega
+            {{ 'ventas.pedidoEntrega.noUsarDireccion' | translate }}
         </a>
     </div>
 </div>
@@ -323,9 +320,9 @@
     <div class="modal-header ent-modal-cabeza">
         <h5 class="modal-title">
             <i class="fa fa-plus-circle ent-modal-icono"></i>
-            Nueva Dirección de Entrega
+            {{ 'ventas.pedidoEntrega.nuevaDireccionEntrega' | translate }}
         </h5>
-        <button type="button" class="btn-close" aria-label="Cerrar"
+        <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate"
             (click)="modal.dismiss('Cross click')">
         </button>
     </div>
@@ -339,34 +336,34 @@
                 style="margin-right: 6px;"
             />
             <label class="form-label" for="checkDatosIguales" style="cursor: pointer;">
-                Los datos de Entrega son iguales a los datos de cliente
+                {{ 'ventas.pedidoEntrega.datosIgualesCliente' | translate }}
             </label>
         </div>
 
         <div class="row mb-3">
             <div class="col-sm-12">
                 <label class="form-label" for="alias_entrega">
-                    Referencia Para Datos de Entrega
+                    {{ 'ventas.pedidoEntrega.referencia' | translate }}
                 </label>
                 <input
                     class="form-control"
                     type="text"
                     id="alias_entrega"
                     [(ngModel)]="alias_entrega"
-                    placeholder="Ej: Casa principal, Oficina..."
+                    [placeholder]="'ventas.pedidoEntrega.phReferencia' | translate"
                 />
             </div>
         </div>
 
         <div class="row">
             <div class="col-sm-3">
-                <label class="form-label" for="nombres_entrega">Nombres: <span class="text-danger">*</span></label>
+                <label class="form-label" for="nombres_entrega">{{ 'ventas.pedidoEntrega.nombres' | translate }} <span class="text-danger">*</span></label>
             </div>
             <div class="col-sm-3">
-                <label class="form-label" for="apellidos_entrega">Apellidos:</label>
+                <label class="form-label" for="apellidos_entrega">{{ 'ventas.pedidoEntrega.apellidos' | translate }}</label>
             </div>
             <div class="col-sm-6">
-                <label class="form-label" for="indicativo_entrega">N&uacute;mero de Celular: <span class="text-danger">*</span></label>
+                <label class="form-label" for="indicativo_entrega">{{ 'ventas.pedidoEntrega.celular' | translate }} <span class="text-danger">*</span></label>
             </div>
         </div>
         <div class="row mb-3">
@@ -416,10 +413,10 @@
 
         <div class="row">
             <div class="col-sm-6">
-                <label class="form-label" for="otro_numero_entrega">Agregar Otro N&uacute;mero:</label>
+                <label class="form-label" for="otro_numero_entrega">{{ 'ventas.pedidoEntrega.otroNumero' | translate }}</label>
             </div>
             <div class="col-sm-6">
-                <label class="form-label" for="direccion_entrega">Direcci&oacute;n: <span class="text-danger">*</span></label>
+                <label class="form-label" for="direccion_entrega">{{ 'ventas.pedidoEntrega.direccion' | translate }} <span class="text-danger">*</span></label>
             </div>
         </div>
         <div class="row mb-3">
@@ -455,7 +452,7 @@
                         type="text"
                         id="direccion_entrega"
                         [(ngModel)]="direccion_entrega"
-                        placeholder="Haz clic para crear una direcci&oacute;n estructurada"
+                        [placeholder]="'ventas.pedidoEntrega.phDireccion' | translate"
                         (click)="abrirModalDireccion()"
                         readonly
                     />
@@ -471,7 +468,7 @@
         <div class="row mb-3">
             <div class="col-sm-6">
                 <label class="form-label" for="nombre_unidad_entrega">
-                    Nombre de la Unidad o Edificio
+                    {{ 'ventas.pedidoEntrega.nombreUnidad' | translate }}
                 </label>
                 <input
                     class="form-control"
@@ -482,7 +479,7 @@
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="especificaciones_internas">
-                    Especificaciones Internas: Torre, Apto, Oficina
+                    {{ 'ventas.pedidoEntrega.especificaciones' | translate }}
                 </label>
                 <input
                     class="form-control"
@@ -496,7 +493,7 @@
         <div class="row mb-3">
             <div class="col-sm-12">
                 <label class="form-label" for="observaciones">
-                    Observaciones Adicionales / Generales para la entrega:
+                    {{ 'ventas.pedidoEntrega.observaciones' | translate }}
                 </label>
                 <textarea
                     class="form-control"
@@ -508,7 +505,7 @@
 
         <div class="row mb-3">
             <div class="col-sm-12">
-                <label class="form-label" for="barrio_entrega">Barrio/Sector</label>
+                <label class="form-label" for="barrio_entrega">{{ 'ventas.pedidoEntrega.barrio' | translate }}</label>
                 <input
                     class="form-control"
                     type="text"
@@ -522,7 +519,7 @@
         <div class="row mb-3" *ngIf="ciudadesEntregaEmpresa && ciudadesEntregaEmpresa.length > 0">
             <div class="col-12">
                 <label class="form-label">
-                    <i class="fa fa-building"></i> Ciudades configuradas en tu empresa
+                    <i class="fa fa-building"></i> {{ 'ventas.pedidoEntrega.ciudadesEmpresa' | translate }}
                 </label>
                 <div class="d-flex flex-wrap gap-2">
                     <span
@@ -538,41 +535,41 @@
                         {{ c.label }}
                     </span>
                 </div>
-                <small class="text-muted">Elegir una de aquí asegura que la dirección aparezca en el listado filtrado por ciudad del paso de selección de productos.</small>
+                <small class="text-muted">{{ 'ventas.pedidoEntrega.ayudaCiudadesEmpresa' | translate }}</small>
             </div>
         </div>
 
         <small class="text-muted d-block mb-2" *ngIf="ciudadesEntregaEmpresa && ciudadesEntregaEmpresa.length > 0">
-            ¿La ciudad que necesitas no está arriba? Búscala abajo — la dirección se guardará igual, pero no aparecerá en el listado filtrado hasta que esa ciudad se seleccione en el paso de productos.
+            {{ 'ventas.pedidoEntrega.ayudaCiudadNoListada' | translate }}
         </small>
 
         <!-- Buscador DANE de municipios -->
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">
-                    <i class="fa fa-search"></i> Buscar ciudad/municipio (DANE)
+                    <i class="fa fa-search"></i> {{ 'ventas.pedidoEntrega.buscarCiudadDane' | translate }}
                 </label>
                 <div class="input-group">
                     <input
                         type="text"
                         class="form-control"
                         [(ngModel)]="searchQueryCiudadDane"
-                        placeholder="Buscar por nombre o c&oacute;digo DANE..."
+                        [placeholder]="'ventas.pedidoEntrega.phBuscarDane' | translate"
                         (input)="buscarMunicipioDane(searchQueryCiudadDane)"
                     />
                     <button class="btn btn-outline-primary" type="button">
                         <i class="fa fa-search"></i>
                     </button>
                 </div>
-                <small class="text-muted">Base de datos DANE con 1122 municipios de Colombia</small>
+                <small class="text-muted">{{ 'ventas.pedidoEntrega.baseDane' | translate }}</small>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Filtrar por departamento (DANE)</label>
+                <label class="form-label">{{ 'ventas.pedidoEntrega.filtrarDepartamentoDane' | translate }}</label>
                 <select
                     class="form-control"
                     (change)="onDepartamentoDaneChange($event.target.value)"
                 >
-                    <option value="">-- Todos los departamentos --</option>
+                    <option value="">{{ 'ventas.pedidoEntrega.todosDepartamentos' | translate }}</option>
                     <option *ngFor="let depto of departamentosDane" [value]="depto">
                         {{ depto }}
                     </option>
@@ -583,7 +580,7 @@
         <!-- Lista de municipios DANE encontrados -->
         <div class="row mb-3" *ngIf="municipiosDane.length > 0">
             <div class="col-12">
-                <label class="form-label">Municipios encontrados (click para seleccionar)</label>
+                <label class="form-label">{{ 'ventas.pedidoEntrega.municipiosEncontrados' | translate }}</label>
                 <div class="d-flex flex-wrap gap-2" style="max-height: 150px; overflow-y: auto;">
                     <span
                         *ngFor="let municipio of municipiosDane"
@@ -600,7 +597,7 @@
 
         <div class="row mb-2" *ngIf="cargandoCiudadesDane">
             <div class="col-12 text-center">
-                <i class="fa fa-spinner fa-spin"></i> Cargando municipios...
+                <i class="fa fa-spinner fa-spin"></i> {{ 'ventas.pedidoEntrega.cargandoMunicipios' | translate }}
             </div>
         </div>
 
@@ -618,28 +615,28 @@
 
         <div class="row">
             <div class="col-sm-4 mb-3">
-                <label class="form-label" for="pais_crear">Pa&iacute;s</label>
+                <label class="form-label" for="pais_crear">{{ 'ventas.pedidoEntrega.pais' | translate }}</label>
                 <select
                     [(ngModel)]="pais_entrega"
                     class="form-control select-default"
                     id="pais_crear"
                     (change)="onPaisChange()"
                 >
-                    <option disabled selected>Pa&iacute;s</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.pais' | translate }}</option>
                     <option *ngFor="let item of paises" value="{{ item }}">
                         {{ item }}
                     </option>
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="form-label" for="zona_cobro_crear">Zona Cobro</label>
+                <label class="form-label" for="zona_cobro_crear">{{ 'ventas.pedidoEntrega.zonaCobro' | translate }}</label>
                 <select
                     class="form-control select-default"
                     [(ngModel)]="zona_cobro"
                     id="zona_cobro_crear"
                     (ngModelChange)="onZonaCobroSelected()"
                 >
-                    <option disabled selected>Zona Cobro</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.zonaCobro' | translate }}</option>
                     <option
                         *ngFor="let item of filteredResults"
                         value="{{ item.nombreZonaCobro }}"
@@ -649,7 +646,7 @@
                 </select>
             </div>
             <div class="col-md-4 mb-3" *ngIf="valor_zona_cobro">
-                <label class="form-label">Valor Domicilio</label>
+                <label class="form-label">{{ 'ventas.pedidoEntrega.valorDomicilio' | translate }}</label>
                 <div class="form-control-plaintext fw-semibold" style="color: #5F3FE0;">
                     {{ valor_zona_cobro | currency }}
                 </div>
@@ -662,7 +659,7 @@
             class="btn btn-outline-secondary"
             (click)="modal.dismiss('Cancel')"
         >
-            Cancelar
+            {{ 'comun.cancelar' | translate }}
         </button>
         <button
             type="button"
@@ -670,7 +667,7 @@
             style="background-color: #5F3FE0; color: #fff; border: none;"
             (click)="guardarDatosEntrega(); modal.dismiss('Save')"
         >
-            <i class="fa fa-save me-1"></i> Guardar
+            <i class="fa fa-save me-1"></i> {{ 'comun.guardar' | translate }}
         </button>
     </div>
 </ng-template>
@@ -679,9 +676,9 @@
 <ng-template #entrega let-modal>
     <div class="modal-header ent-modal-cabeza">
         <h5 class="modal-title">
-            <i class="fa fa-edit ent-modal-icono"></i>Editar Datos de Entrega
+            <i class="fa fa-edit ent-modal-icono"></i>{{ 'ventas.pedidoEntrega.editarDatosEntrega' | translate }}
         </h5>
-        <button type="button" class="btn-close" aria-label="Cerrar"
+        <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate"
             (click)="modal.dismiss('Cross click')">
         </button>
     </div>
@@ -689,7 +686,7 @@
         <div class="row">
             <div class="col-sm-12">
                 <label class="form-label" for="alias_entrega"
-                    >Referencia Para Datos de Entrega</label
+                    >{{ 'ventas.pedidoEntrega.referencia' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -702,17 +699,17 @@
 
         <div class="row">
             <div class="col-sm-3">
-                <label class="form-label" for="nombres_entrega">Nombres:</label>
+                <label class="form-label" for="nombres_entrega">{{ 'ventas.pedidoEntrega.nombres' | translate }}</label>
             </div>
             <div class="col-sm-3">
                 <label class="form-label" for="nombres_entrega"
-                    >Apellidos:</label
+                    >{{ 'ventas.pedidoEntrega.apellidos' | translate }}</label
                 >
             </div>
 
             <div class="col-sm-6">
                 <label class="form-label" for="indicativo_entrega"
-                    >N&uacute;mero de Celular:</label
+                    >{{ 'ventas.pedidoEntrega.celular' | translate }}</label
                 >
             </div>
         </div>
@@ -764,13 +761,13 @@
         <div class="row">
             <div class="col-sm-6">
                 <label class="form-label" for="otro_numero_entrega"
-                    >Agregar Otro N&uacute;mero:</label
+                    >{{ 'ventas.pedidoEntrega.otroNumero' | translate }}</label
                 >
             </div>
 
             <div class="col-sm-6">
                 <label class="form-label" for="direccion_entrega"
-                    >Direcci&oacute;n:</label
+                    >{{ 'ventas.pedidoEntrega.direccion' | translate }}</label
                 >
             </div>
         </div>
@@ -808,7 +805,7 @@
                         type="text"
                         id="direccion_entrega"
                         [(ngModel)]="direccion_entrega"
-                        placeholder="Haz clic para crear una direcci&oacute;n estructurada"
+                        [placeholder]="'ventas.pedidoEntrega.phDireccion' | translate"
                         (click)="abrirModalDireccion()"
                         readonly
                     />
@@ -823,7 +820,7 @@
         <div class="row">
             <div class="col-sm-6">
                 <label class="form-label" for="observaciones"
-                    >Nombre de la Unidad o Edificio</label
+                    >{{ 'ventas.pedidoEntrega.nombreUnidad' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -834,7 +831,7 @@
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="observaciones"
-                    >Especificaciones Internas: Torre, Apto, Oficina</label
+                    >{{ 'ventas.pedidoEntrega.especificaciones' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -848,8 +845,7 @@
         <div class="row">
             <div class="col-sm-12">
                 <label class="form-label" for="observaciones"
-                    >Observaciones Adicionales / Generales para la
-                    entrega:</label
+                    >{{ 'ventas.pedidoEntrega.observaciones' | translate }}</label
                 >
                 <textarea
                     class="form-control"
@@ -861,7 +857,7 @@
         <div class="row">
             <div class="col-sm-12">
                 <label class="form-label" for="observaciones"
-                    >Barrio/Sector</label
+                    >{{ 'ventas.pedidoEntrega.barrio' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -876,29 +872,29 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">
-                    <i class="fa fa-search"></i> Buscar ciudad/municipio (DANE)
+                    <i class="fa fa-search"></i> {{ 'ventas.pedidoEntrega.buscarCiudadDane' | translate }}
                 </label>
                 <div class="input-group">
                     <input
                         type="text"
                         class="form-control"
                         [(ngModel)]="searchQueryCiudadDane"
-                        placeholder="Buscar por nombre o c&oacute;digo DANE..."
+                        [placeholder]="'ventas.pedidoEntrega.phBuscarDane' | translate"
                         (input)="buscarMunicipioDane(searchQueryCiudadDane)"
                     />
                     <button class="btn btn-outline-primary" type="button">
                         <i class="fa fa-search"></i>
                     </button>
                 </div>
-                <small class="text-muted">Base de datos DANE con 1122 municipios de Colombia</small>
+                <small class="text-muted">{{ 'ventas.pedidoEntrega.baseDane' | translate }}</small>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Filtrar por departamento (DANE)</label>
+                <label class="form-label">{{ 'ventas.pedidoEntrega.filtrarDepartamentoDane' | translate }}</label>
                 <select
                     class="form-control"
                     (change)="onDepartamentoDaneChange($event.target.value)"
                 >
-                    <option value="">-- Todos los departamentos --</option>
+                    <option value="">{{ 'ventas.pedidoEntrega.todosDepartamentos' | translate }}</option>
                     <option *ngFor="let depto of departamentosDane" [value]="depto">
                         {{ depto }}
                     </option>
@@ -909,7 +905,7 @@
         <!-- Lista de municipios DANE encontrados -->
         <div class="row mb-3" *ngIf="municipiosDane.length > 0">
             <div class="col-12">
-                <label class="form-label">Municipios encontrados (click para seleccionar)</label>
+                <label class="form-label">{{ 'ventas.pedidoEntrega.municipiosEncontrados' | translate }}</label>
                 <div class="d-flex flex-wrap gap-2" style="max-height: 150px; overflow-y: auto;">
                     <span
                         *ngFor="let municipio of municipiosDane"
@@ -926,7 +922,7 @@
 
         <div class="row mb-2" *ngIf="cargandoCiudadesDane">
             <div class="col-12 text-center">
-                <i class="fa fa-spinner fa-spin"></i> Cargando municipios...
+                <i class="fa fa-spinner fa-spin"></i> {{ 'ventas.pedidoEntrega.cargandoMunicipios' | translate }}
             </div>
         </div>
 
@@ -944,21 +940,21 @@
 
         <div class="row">
             <div class="col-sm-4 mb-3">
-                <label class="form-label" for="pais_editar">Pa&iacute;s</label>
+                <label class="form-label" for="pais_editar">{{ 'ventas.pedidoEntrega.pais' | translate }}</label>
                 <select
                     [(ngModel)]="pais_entrega"
                     class="form-control select-default"
                     id="pais_editar"
                     (change)="onPaisChange()"
                 >
-                    <option disabled selected>Pa&iacute;s</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.pais' | translate }}</option>
                     <option *ngFor="let item of paises" value="{{ item }}">
                         {{ item }}
                     </option>
                 </select>
             </div>
             <div class="col-sm-4 mb-3">
-                <label class="form-label" for="zona_cobro_editar">Zona Cobro</label>
+                <label class="form-label" for="zona_cobro_editar">{{ 'ventas.pedidoEntrega.zonaCobro' | translate }}</label>
             </div>
         </div>
         <div class="row">
@@ -969,7 +965,7 @@
                     id="zona_cobro_editar"
                     (ngModelChange)="onZonaCobroSelected()"
                 >
-                    <option disabled selected>Zona Cobro</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.zonaCobro' | translate }}</option>
                     <option
                         *ngFor="let item of filteredResults"
                         value="{{ item.nombreZonaCobro }}"
@@ -989,7 +985,7 @@
             class="btn btn-primary"
             (click)="editarDatosEntrega()"
         >
-            Guardar
+            {{ 'comun.guardar' | translate }}
         </button>
     </div>
 </ng-template>
@@ -998,9 +994,9 @@
 <ng-template #facturacion let-modal>
     <div class="modal-header ent-modal-cabeza">
         <h5 class="modal-title">
-            <i class="fa fa-edit ent-modal-icono"></i>Editar Datos Facturación Electrónica
+            <i class="fa fa-edit ent-modal-icono"></i>{{ 'ventas.pedidoEntrega.editarFacturacion' | translate }}
         </h5>
-        <button type="button" class="btn-close" aria-label="Cerrar"
+        <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate"
             (click)="modal.dismiss('Cross click')">
         </button>
     </div>
@@ -1008,10 +1004,10 @@
         <div class="row">
             <div class="col-sm-6">
                 <label class="form-label" for="razon_social"
-                    >Referencia para guardar datos:</label
+                    >{{ 'ventas.pedidoEntrega.referenciaFacturacion' | translate }}</label
                 >
                 <input
-                    placeholder="Ej: Factura para compras de la empresa"
+                    [placeholder]="'ventas.pedidoEntrega.phReferenciaFacturacion' | translate"
                     class="form-control"
                     type="text"
                     id="razon_social"
@@ -1020,7 +1016,7 @@
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="razon_social"
-                    >Raz&oacute;n Social / Nombre Completo:</label
+                    >{{ 'ventas.pedidoEntrega.razonSocial' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -1031,14 +1027,14 @@
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="tipo_documento_facturacion"
-                    >Tipo de Documento:</label
+                    >{{ 'ventas.pedidoEntrega.tipoDocumento' | translate }}</label
                 >
                 <select
                     class="form-control"
                     id="tipo_documento_facturacion"
                     [(ngModel)]="tipo_documento_facturacion"
                 >
-                    <option value="CC-NIT">Cedula de Ciudadania</option>
+                    <option value="CC-NIT">{{ 'ventas.pedidoEntrega.cedulaCiudadania' | translate }}</option>
                     <option value="PA">PA</option>
                     <option value="TI">TI</option>
                     <option value="NIT">NIT</option>
@@ -1046,7 +1042,7 @@
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="tipo_documento_facturacion"
-                    >Documento:</label
+                    >{{ 'ventas.pedidoEntrega.documento' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -1059,12 +1055,12 @@
         <div class="row">
             <div class="col-sm-6">
                 <label class="form-label" for="indicativo"
-                    >N&uacute;mero de Celular:</label
+                    >{{ 'ventas.pedidoEntrega.celular' | translate }}</label
                 >
             </div>
             <div class="col-sm-6">
                 <label class="form-label" for="correo_electronico"
-                    >Correo Electr&oacute;nico:</label
+                    >{{ 'ventas.pedidoEntrega.correo' | translate }}</label
                 >
             </div>
         </div>
@@ -1078,7 +1074,7 @@
                     type="number"
                     required=""
                 >
-                    <option disabled selected>Indicativo Celular</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.indicativoCelular' | translate }}</option>
                     <option
                         value="{{ item.phone_code }}"
                         *ngFor="let item of indicativos"
@@ -1108,7 +1104,7 @@
         <div class="row">
             <div class="col-sm-12">
                 <label class="form-label" for="direccion"
-                    >Direcci&oacute;n del Comprador:</label
+                    >{{ 'ventas.pedidoEntrega.direccionComprador' | translate }}</label
                 >
                 <input
                     class="form-control"
@@ -1122,7 +1118,7 @@
                     class="form-label"
                     class="form-label"
                     for="validationCustom01"
-                    >Pa&iacute;s</label
+                    >{{ 'ventas.pedidoEntrega.pais' | translate }}</label
                 >
 
                 <select
@@ -1132,7 +1128,7 @@
                     id=""
                     (change)="identificarDepto()"
                 >
-                    <option disabled selected>Pa&iacute;s</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.pais' | translate }}</option>
                     <option *ngFor="let item of paises" value="{{ item }}">
                         {{ item }}
                     </option>
@@ -1143,18 +1139,18 @@
                     class="form-label"
                     class="form-label"
                     for="validationCustom01"
-                    >Departamento</label
+                    >{{ 'ventas.pedidoEntrega.departamento' | translate }}</label
                 >
                 <select
                     [(ngModel)]="departamento"
                     class="form-control select-default"
                     id="validationCustom01"
                     type="text"
-                    placeholder="Departamento"
+                    [placeholder]="'ventas.pedidoEntrega.departamento' | translate"
                     required=""
                     (change)="identificarCiu()"
                 >
-                    <option disabled selected>Departamento</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.departamento' | translate }}</option>
                     <option
                         *ngFor="let item of departamentos"
                         value="{{ item }}"
@@ -1168,17 +1164,17 @@
                     class="form-label"
                     class="form-label"
                     for="validationCustom01"
-                    >Ciudad</label
+                    >{{ 'ventas.pedidoEntrega.ciudad' | translate }}</label
                 >
                 <select
                     [(ngModel)]="ciudad_municipio"
                     class="form-control select-default"
                     id="validationCustom01"
                     type="text"
-                    placeholder="Ciudad"
+                    [placeholder]="'ventas.pedidoEntrega.ciudad' | translate"
                     required=""
                 >
-                    <option disabled selected>Ciudad / Municipio</option>
+                    <option disabled selected>{{ 'ventas.pedidoEntrega.ciudadMunicipio' | translate }}</option>
                     <option *ngFor="let item of ciudades" value="{{ item }}">
                         {{ item }}
                     </option>
@@ -1188,7 +1184,7 @@
         <div class="row">
             <div class="col-sm-4">
                 <label class="form-label" for="codigo_postal"
-                    >C&oacute;digo Postal:</label
+                    >{{ 'ventas.pedidoEntrega.codigoPostal' | translate }}</label
                 >
             </div>
         </div>
@@ -1206,7 +1202,7 @@
                     class="btn btn-primary"
                     (click)="redirectToPostalCode()"
                 >
-                    Conoce tu código postal
+                    {{ 'ventas.pedidoEntrega.conoceCodigoPostal' | translate }}
                 </button>
             </div>
         </div>
@@ -1218,7 +1214,7 @@
             class="btn btn-primary"
             (click)="editarDatosFacturacion()"
         >
-            Guardar
+            {{ 'comun.guardar' | translate }}
         </button>
     </div>
 </ng-template>

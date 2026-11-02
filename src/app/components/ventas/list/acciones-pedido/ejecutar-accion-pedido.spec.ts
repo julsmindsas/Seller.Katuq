@@ -10,6 +10,7 @@ import { PLAN_ACCIONES } from './acciones-pedido.plan';
  */
 function crearListado(): any {
   const listado: any = Object.create(ListOrdersComponent.prototype);
+  listado.translate = { instant: (k: string, p: any = {}) => String(({"ventas.list.noPudimosGuardarTusAcciones":"No pudimos guardar tus acciones. Intenta de nuevo.","ventas.list.accionesDelPedido":"Acciones del pedido"} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
   listado.llamadas = [] as any[];
   // D-547 (F2, 11.4): el conteo de uso (sin estado cargado no hace nada, como con la bandera apagada).
   listado.orderActions = { registrarUso: jasmine.createSpy('registrarUso') };
@@ -117,6 +118,7 @@ describe('ListOrdersComponent.ejecutarAccionPedido (D-547)', () => {
 describe('ListOrdersComponent.estadosAccionesDe (D-547)', () => {
   function listado(): any {
     const l: any = Object.create(ListOrdersComponent.prototype);
+    l.translate = { instant: (k: string, p: any = {}) => String(({"ventas.list.noPudimosGuardarTusAcciones":"No pudimos guardar tus acciones. Intenta de nuevo.","ventas.list.accionesDelPedido":"Acciones del pedido"} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
     l.isFromProduction = false;
     l.accionesPrecioPedido = [];
     l.canEditDeliveryAddressByDeliveryType = () => true;
@@ -171,6 +173,7 @@ describe('ListOrdersComponent.fijarAccionDelModal (D-547 F2, 11.3)', () => {
 
   function listado(pinned: string[] = [], bandera = true): any {
     const l: any = Object.create(ListOrdersComponent.prototype);
+    l.translate = { instant: (k: string, p: any = {}) => String(({"ventas.list.noPudimosGuardarTusAcciones":"No pudimos guardar tus acciones. Intenta de nuevo.","ventas.list.accionesDelPedido":"Acciones del pedido"} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
     l.isFromProduction = false;
     l.destroy$ = new Subject<void>();
     l.guardandoPines = false;
@@ -249,6 +252,7 @@ describe('ListOrdersComponent.fijarAccionDelModal (D-547 F2, 11.3)', () => {
 describe('ListOrdersComponent: conteo de uso en el «⋯» de cada fila (D-547 F2, 11.4)', () => {
   function listado(): any {
     const l: any = Object.create(ListOrdersComponent.prototype);
+    l.translate = { instant: (k: string, p: any = {}) => String(({"ventas.list.noPudimosGuardarTusAcciones":"No pudimos guardar tus acciones. Intenta de nuevo.","ventas.list.accionesDelPedido":"Acciones del pedido"} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
     l.orderActions = { registrarUso: jasmine.createSpy('registrarUso') };
     return l;
   }
@@ -283,6 +287,7 @@ describe('ListOrdersComponent: sugerencia de fijar (D-547 F2, 11.4)', () => {
 
   function listado(me: any = {}, bandera = true): any {
     const l: any = Object.create(ListOrdersComponent.prototype);
+    l.translate = { instant: (k: string, p: any = {}) => String(({"ventas.list.noPudimosGuardarTusAcciones":"No pudimos guardar tus acciones. Intenta de nuevo.","ventas.list.accionesDelPedido":"Acciones del pedido"} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
     l.isFromProduction = false;
     l.destroy$ = new Subject<void>();
     l.guardandoPines = false;
