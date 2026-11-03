@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
+  Output,
   SimpleChanges,
 } from '@angular/core';
 import {
@@ -11,10 +13,20 @@ import {
   CarteraResponse,
 } from '../../../../shared/services/cartera/cartera.models';
 import { AGING_BUCKETS } from '../../cartera.constants';
+import { agingDeFila, aplicarFiltros, CarteraFiltros, filtrosVacios, hayFiltrosActivos } from '../../cartera-filtros.util';
+
+/** Un renglón de la tabla: el cliente con el aging de lo que se ve con los filtros. */
+interface FilaAging {
+  documento: string;
+  nombre: string;
+  aging: AgingBuckets;
+  saldoPendiente: number;
+}
 
 /** KPI de un rango de aging (o el total). */
 interface AgingKpi {
-  label: string;
+  /** Clave i18n de la etiqueta. */
+  labelKey: string;
   cssClass: string;
   accentClass: string;
   monto: number;
@@ -25,7 +37,8 @@ interface AgingKpi {
 /** Segmento de la barra horizontal grande. */
 interface AgingBarSegment {
   cssClass: string;
-  label: string;
+  /** Clave i18n de la etiqueta. */
+  labelKey: string;
   monto: number;
   pct: number;
   /** Mostrar el monto dentro del segmento (se oculta si es muy angosto). */
@@ -51,47 +64,81 @@ interface AgingTotals extends AgingBuckets {
 })
 export class CarteraAgingComponent implements OnChanges {
   @Input() data: CarteraResponse | null = null;
+  /** Ticket 1467: los mismos filtros de «Cartera por cliente» (los guarda la pantalla). */
+  @Input() filtros: CarteraFiltros = filtrosVacios();
+  @Output() filtrosChange = new EventEmitter<CarteraFiltros>();
+  /** Pide volver a «Cartera por cliente», donde están los controles de los filtros. */
+  @Output() editarFiltros = new EventEmitter<void>();
+
+  /** Hay filtros activos (para el aviso de «sin resultados»). */
+  hayFiltros = false;
 
   /** Umbral de ancho (%) bajo el cual el monto no cabe dentro del segmento. */
   private static readonly LABEL_MIN_PCT = 9;
 
-  /** Acentos de KPI card por rango (border-left). */
-  private static readonly ACCENTS = ['cx-accent-green', 'cx-accent-amber', 'cx-accent-orange', 'cx-accent-red'];
-
-  rows: CarteraCliente[] = [];
+  rows: FilaAging[] = [];
   kpis: AgingKpi[] = [];
   segments: AgingBarSegment[] = [];
-  totals: AgingTotals = { corriente: 0, d16_30: 0, d31_60: 0, d60: 0, total: 0 };
+  totals: AgingTotals = { ...CarteraAgingComponent.emptyBuckets(), total: 0 };
   totalCartera = 0;
 
   readonly agingBuckets = AGING_BUCKETS;
 
+  /** Tarjeta cuya ayuda está abierta ('total' o la clase del rango): se lee con teclado y al tocar (ticket 1464). */
+  ayudaAbierta: string | null = null;
+
+  alternarAyuda(tarjeta: string): void {
+    this.ayudaAbierta = this.ayudaAbierta === tarjeta ? null : tarjeta;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] || changes['filtros']) {
       this.build();
     }
   }
 
   private build(): void {
-    const aging: AgingBuckets = this.data?.kpis?.aging || { corriente: 0, d16_30: 0, d31_60: 0, d60: 0 };
-    const total = this.data?.kpis?.carteraTotal?.monto || this.sumBuckets(aging);
+    // Ticket 1467: los mismos filtros y la misma función que «Cartera por cliente»; así los números cuadran.
+    this.hayFiltros = hayFiltrosActivos(this.filtros);
+    const vista = aplicarFiltros(this.data?.clientes, this.filtros);
+    this.rows = vista.filas
+      .map((fila) => ({
+        documento: fila.cliente.documento,
+        nombre: fila.cliente.nombre,
+        aging: agingDeFila(fila, vista.recortaPedidos) as AgingBuckets,
+        saldoPendiente: fila.saldo,
+      }))
+      .filter((r) => r.saldoPendiente > 0);
+
+    // Sin filtros se usan los totales del servidor; con filtros, la suma de lo que se ve.
+    let aging: AgingBuckets;
+    let total: number;
+    if (this.hayFiltros) {
+      aging = this.rows.reduce<AgingBuckets>((acc, r) => {
+        AGING_BUCKETS.forEach((b) => { acc[b.key] += r.aging[b.key] || 0; });
+        return acc;
+      }, CarteraAgingComponent.emptyBuckets());
+      total = this.rows.reduce((suma, r) => suma + r.saldoPendiente, 0);
+    } else {
+      aging = this.data?.kpis?.aging || CarteraAgingComponent.emptyBuckets();
+      total = this.data?.kpis?.carteraTotal?.monto || this.sumBuckets(aging);
+    }
     this.totalCartera = total;
 
-    this.rows = (this.data?.clientes || []).filter((c) => (c.saldoPendiente || 0) > 0);
-
     // KPIs por rango + total
-    this.kpis = AGING_BUCKETS.map((b, i) => {
+    this.kpis = AGING_BUCKETS.map((b) => {
       const monto = aging[b.key] || 0;
       return {
-        label: b.label,
+        labelKey: b.labelKey,
         cssClass: b.cssClass,
-        accentClass: CarteraAgingComponent.ACCENTS[i],
+        // Mismo color que el punto, la barra y la columna del rango (cx-seg-xxx → cx-accent-xxx).
+        accentClass: b.cssClass.replace('cx-seg-', 'cx-accent-'),
         monto,
         pct: total > 0 ? (monto / total) * 100 : 0,
       };
     });
     this.kpis.push({
-      label: 'Total cartera',
+      labelKey: 'cartera.carteraClientes.carteraTotal',
       cssClass: '',
       accentClass: 'cx-accent-purple',
       monto: total,
@@ -105,7 +152,7 @@ export class CarteraAgingComponent implements OnChanges {
       const pct = total > 0 ? (monto / total) * 100 : 0;
       return {
         cssClass: b.cssClass,
-        label: b.label,
+        labelKey: b.labelKey,
         monto,
         pct,
         showText: pct >= CarteraAgingComponent.LABEL_MIN_PCT,
@@ -115,22 +162,30 @@ export class CarteraAgingComponent implements OnChanges {
     // Totales por columna (footer)
     this.totals = this.rows.reduce<AgingTotals>(
       (acc, c) => {
-        acc.corriente += c.aging?.corriente || 0;
-        acc.d16_30 += c.aging?.d16_30 || 0;
-        acc.d31_60 += c.aging?.d31_60 || 0;
-        acc.d60 += c.aging?.d60 || 0;
+        AGING_BUCKETS.forEach((b) => {
+          acc[b.key] += c.aging?.[b.key] || 0;
+        });
         acc.total += c.saldoPendiente || 0;
         return acc;
       },
-      { corriente: 0, d16_30: 0, d31_60: 0, d60: 0, total: 0 },
+      { ...CarteraAgingComponent.emptyBuckets(), total: 0 },
     );
   }
 
-  private sumBuckets(a: AgingBuckets): number {
-    return (a.corriente || 0) + (a.d16_30 || 0) + (a.d31_60 || 0) + (a.d60 || 0);
+  private static emptyBuckets(): AgingBuckets {
+    return { sin_vencer: 0, d1_15: 0, d16_30: 0, d31_60: 0, d61_90: 0, d90: 0 };
   }
 
-  trackByDoc(_index: number, cliente: CarteraCliente): string {
+  private sumBuckets(a: AgingBuckets): number {
+    return AGING_BUCKETS.reduce((suma, b) => suma + (a[b.key] || 0), 0);
+  }
+
+  /** Clase de color de texto (cx-seg-xxx → cx-c-xxx). */
+  colClass(segClass: string): string {
+    return segClass.replace('cx-seg-', 'cx-c-');
+  }
+
+  trackByDoc(_index: number, cliente: { documento?: string }): string {
     return cliente.documento || `row-${_index}`;
   }
 }

@@ -1,0 +1,18 @@
+<div class="cx-multi" [class.is-abierto]="abierto">
+  <button type="button" class="cx-multi-boton" [id]="idBoton" (click)="alternarPanel()"
+          [attr.aria-expanded]="abierto" [attr.aria-controls]="idLista" aria-haspopup="true"
+          [class.is-activo]="seleccion.length > 0">
+    <span class="cx-multi-texto">{{ resumen }}</span>
+    <i class="pi" [ngClass]="abierto ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+  </button>
+
+  <div class="cx-multi-panel" [id]="idLista" role="group" [attr.aria-label]="etiqueta" *ngIf="abierto">
+    <label class="cx-multi-opcion" *ngFor="let o of opciones; trackBy: trackPorValor">
+      <input type="checkbox" [checked]="estaElegida(o.value)" (change)="alternarOpcion(o.value)">
+      <span class="cx-multi-opcion-texto">{{ o.labelKey ? (o.labelKey | translate) : o.label }}</span>
+    </label>
+    <button type="button" class="cx-multi-limpiar" *ngIf="seleccion.length > 0" (click)="limpiar()">
+      {{ textoLimpiar }}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+<div class="ca-caja" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation(); alTeclado($event)">
+  <button type="button" class="ca-boton" aria-haspopup="menu" [attr.aria-expanded]="abierto"
+          [attr.aria-label]="('cartera.acciones.menuDe' | translate) + ' ' + (cliente.nombre || cliente.documento)"
+          (click)="abierto ? cerrar() : abrirMenu()">
+    <i class="pi pi-bolt" aria-hidden="true"></i>
+    <span class="ca-boton-texto">{{ 'cartera.acciones.menu' | translate }}</span>
+    <i class="pi pi-chevron-down ca-flecha" aria-hidden="true"></i>
+  </button>
+  <div class="ca-menu" role="menu" *ngIf="abierto" [ngStyle]="estiloMenu">
+    <button type="button" role="menuitem" class="ca-item" *ngFor="let e of entradas; trackBy: trackByModo"
+            [class.ca-item-peligro]="e.peligro" (click)="elegir(e)">
+      <i class="pi" [ngClass]="e.icono" aria-hidden="true"></i>
+      <span class="ca-item-texto">{{ e.claveTexto | translate }}</span>
+    </button>
+  </div>
+</div>

@@ -12,7 +12,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
-import { TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
+import { HistorialResumen, TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
 import { metaEstado, PaymentStateMeta, HISTORIAL_STATUS_OPTIONS } from '../../tesoreria.constants';
 import Swal from 'sweetalert2';
 
@@ -38,11 +38,19 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
 
   // Filtros
   status = '';
+  formaPago = '';
+  registradoPor = '';
   search = '';
   fechaDesde = '';
   fechaHasta = '';
 
   readonly statusOptions = HISTORIAL_STATUS_OPTIONS;
+
+  /** Ticket 1454: recaudado por forma de pago del filtro, y opciones de los filtros. */
+  resumen: HistorialResumen | null = null;
+  formasPagoOpciones: string[] = [];
+  usuariosOpciones: string[] = [];
+  truncado = false;
 
   private loadedOnce = false;
   private search$ = new Subject<void>();
@@ -76,6 +84,8 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
     this.treasury
       .getPayments({
         status: this.status || undefined,
+        formaPago: this.formaPago || undefined,
+        registradoPor: this.registradoPor || undefined,
         desde: this.fechaDesde || undefined,
         hasta: this.fechaHasta || undefined,
         search: this.search?.trim() || undefined,
@@ -87,14 +97,38 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.items = res?.items || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
+          this.resumen = res?.resumen || null;
+          this.truncado = res?.truncado === true;
+          if (res?.opciones) {
+            // Si lo elegido ya no está en las opciones del nuevo periodo, se conserva para que el
+            // select no quede en blanco con el filtro aplicado.
+            const formas = this.conservarOpcion(res.opciones.formasPago || [], this.formaPago);
+            const usuarios = this.conservarOpcion(res.opciones.usuarios || [], this.registradoPor);
+            this.formasPagoOpciones = formas.opciones;
+            this.formaPago = formas.elegida;
+            this.usuariosOpciones = usuarios.opciones;
+            this.registradoPor = usuarios.elegida;
+          }
           this.loading = false;
         },
         error: () => {
           this.items = [];
+          this.resumen = null;
           this.totalRecords = 0;
           this.loading = false;
         },
       });
+  }
+
+  /**
+   * Opciones del filtro con lo elegido incluido. El servidor compara sin mayúsculas, así que si la
+   * opción del periodo solo difiere en mayúsculas («CXC MARKETPLACE» / «CXC Marketplace») se usa esa.
+   */
+  private conservarOpcion(opciones: string[], elegida: string): { opciones: string[]; elegida: string } {
+    if (!elegida) return { opciones, elegida };
+    const igual = opciones.find((o) => o.toLowerCase() === elegida.toLowerCase());
+    if (igual) return { opciones, elegida: igual };
+    return { opciones: [...opciones, elegida].sort((x, y) => x.localeCompare(y, 'es')), elegida };
   }
 
   onSearchInput(): void {

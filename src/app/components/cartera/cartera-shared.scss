@@ -11,9 +11,11 @@
 // Se alinean al lenguaje comercial para que el módulo no traiga su propia paleta.
 $cx-aging-corriente: #17994f;
 $cx-aging-16:        #e0b41b;
-$cx-aging-16-ink:    #c99a0f; // versión legible sobre blanco (textos/columnas)
+$cx-aging-16-ink:    #8a5a10; // versión legible sobre blanco y sobre #fdf6dc (textos/columnas, contraste AA)
 $cx-aging-31:        #e0891b;
 $cx-aging-60:        #e0483f;
+$cx-aging-61:        #c0302b; // 61 a 90 días (ticket 1460)
+$cx-aging-90:        #8e1d1d; // más de 90 días
 
 // ── Grid de KPI cards ─────────────────────────────────────────────────────
 .cx-grid {
@@ -47,6 +49,13 @@ $cx-aging-60:        #e0483f;
   }
 }
 
+// Acento por rango de antigüedad: el mismo color del punto, la barra y la columna (ticket 1460).
+.cx-accent-sin { --cx-bar: #{$cx-aging-corriente}; --cx-fg: #{$cx-aging-corriente}; --cx-wash: var(--kc-green-wash); }
+.cx-accent-d1  { --cx-bar: #{$cx-aging-16};        --cx-fg: #{$cx-aging-16-ink};    --cx-wash: #fdf6dc; }
+.cx-accent-d16 { --cx-bar: #{$cx-aging-31};        --cx-fg: #{$cx-aging-31};        --cx-wash: var(--kc-orange-wash); }
+.cx-accent-d31 { --cx-bar: #{$cx-aging-60};        --cx-fg: #{$cx-aging-60};        --cx-wash: #fce9e8; }
+.cx-accent-d61 { --cx-bar: #{$cx-aging-61};        --cx-fg: #{$cx-aging-61};        --cx-wash: #fbe3e1; }
+.cx-accent-d90 { --cx-bar: #{$cx-aging-90};        --cx-fg: #{$cx-aging-90};        --cx-wash: #f6dcdc; }
 .cx-accent-green  { --cx-bar: #{$cx-aging-corriente}; --cx-fg: #{$cx-aging-corriente}; --cx-wash: var(--kc-green-wash); }
 .cx-accent-amber  { --cx-bar: #{$cx-aging-16};        --cx-fg: #{$cx-aging-16-ink};    --cx-wash: #fdf6dc; }
 .cx-accent-orange { --cx-bar: #{$cx-aging-31};        --cx-fg: #{$cx-aging-31};        --cx-wash: var(--kc-orange-wash); }
@@ -54,6 +63,81 @@ $cx-aging-60:        #e0483f;
 .cx-accent-purple { --cx-bar: var(--kc-accent);       --cx-fg: var(--kc-accent);       --cx-wash: var(--kc-accent-wash); }
 .cx-accent-blue   { --cx-bar: var(--kc-blue);         --cx-fg: var(--kc-blue);         --cx-wash: var(--kc-blue-wash); }
 .cx-accent-gray   { --cx-bar: #{$katuq-gray-300};     --cx-fg: var(--kc-ink);          --cx-wash: var(--kc-canvas); }
+
+// Segunda línea de una tarjeta (dato secundario)
+.cx-sub-second { margin-top: 2px; }
+
+// Tarjeta que aplica un filtro al hacer clic (ticket 1464)
+.cx-card-click {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover { box-shadow: 0 8px 22px rgba(95, 63, 224, 0.14); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &.is-active { box-shadow: 0 0 0 2px #5F3FE0; }
+}
+
+// Botón de ayuda de las tarjetas y filtros: se enfoca con el teclado y, al abrirlo (clic o toque),
+// el texto aparece a la vista (ticket 1464). Un tooltip no abre al tocar en el celular.
+.cx-info {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--kc-muted2);
+  font-size: 15px;
+
+  i { font-size: 15px; }
+  &:hover { color: var(--kc-accent); background: var(--kc-accent-wash); }
+  &[aria-expanded='true'] { color: var(--kc-accent); background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; color: var(--kc-accent); }
+}
+
+// Texto de ayuda abierto dentro de la tarjeta o del campo
+.cx-ayuda-texto {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-ink2);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: default;
+}
+
+// Fila de etiqueta + botón de ayuda de un campo del filtro
+.cx-label-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 28px;
+  .cx-info { margin-left: 0; }
+}
+
+// Texto solo para lector de pantalla (aria-describedby)
+.cx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 // Cabecera del KPI: chip de ícono + etiqueta
 .cx-kpi-head {
@@ -231,10 +315,12 @@ $cx-aging-60:        #e0483f;
 }
 
 // ── Segmentos de aging (mini-bar y barra grande) ──────────────────────────
-.cx-seg-corriente { background: $cx-aging-corriente; }
-.cx-seg-d16       { background: $cx-aging-16; }
-.cx-seg-d31       { background: $cx-aging-31; }
-.cx-seg-d60       { background: $cx-aging-60; }
+.cx-seg-sin { background: $cx-aging-corriente; }
+.cx-seg-d1  { background: $cx-aging-16; }
+.cx-seg-d16 { background: $cx-aging-31; }
+.cx-seg-d31 { background: $cx-aging-60; }
+.cx-seg-d61 { background: $cx-aging-61; }
+.cx-seg-d90 { background: $cx-aging-90; }
 
 .cx-dot {
   width: 10px;
@@ -245,10 +331,12 @@ $cx-aging-60:        #e0483f;
 }
 
 // Tinte de texto por rango (columnas de tabla y leyendas)
-.cx-c-corriente { color: $cx-aging-corriente; }
-.cx-c-d16       { color: $cx-aging-16-ink; }
-.cx-c-d31       { color: $cx-aging-31; }
-.cx-c-d60       { color: $cx-aging-60; }
+.cx-c-sin { color: $cx-aging-corriente; }
+.cx-c-d1  { color: $cx-aging-16-ink; }
+.cx-c-d16 { color: $cx-aging-31; }
+.cx-c-d31 { color: $cx-aging-60; }
+.cx-c-d61 { color: $cx-aging-61; }
+.cx-c-d90 { color: $cx-aging-90; }
 
 .cx-cell-strong { font-weight: 800; color: var(--kc-ink); }
 // Ticket 1386: número de pedido que abre el pedido en otra pestaña.

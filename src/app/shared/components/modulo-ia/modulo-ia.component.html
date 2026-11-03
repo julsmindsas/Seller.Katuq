@@ -77,7 +77,7 @@
         <div class="mi-stat"><span class="ins-label">{{ 'asistentes.moduloIa.diasPromedioDeCobro' | translate }}</span><strong>{{ d.dso | number }}</strong></div>
         <div class="mi-stat"><span class="ins-label">{{ 'asistentes.moduloIa.pasaronSuCupo' | translate }}</span><strong [class.is-warning]="d.excedenCupo">{{ d.excedenCupo | number }}</strong></div>
       </div>
-      <div class="mi-chips mi-pad"><span class="ins-pill" *ngFor="let t of d.tramos" [ngClass]="t.id === 'd60' ? 'is-danger' : t.id === 'corriente' ? 'is-success' : 'is-warning'">{{ t.texto }} · {{ dinero(t.valor) }}</span></div>
+      <div class="mi-chips mi-pad"><span class="ins-pill" *ngFor="let t of d.tramos" [ngClass]="(t.id === 'd61_90' || t.id === 'd90') ? 'is-danger' : t.id === 'sin_vencer' ? 'is-success' : 'is-warning'">{{ t.texto }} · {{ dinero(t.valor) }}</span></div>
       <div class="mi-lista">
         <div class="mi-item" *ngFor="let f of d.deudores.filas | slice:0:10">
           <div class="mi-item__top">

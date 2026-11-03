@@ -59,3 +59,39 @@
 .mt-1 {
   margin-top: 0.35rem;
 }
+
+// Ticket 1461: cliente interno (empleado, socio o empresa propia). Plano, lila y morado.
+.tk-interno {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--kc-accent-wash, #f3f0ff);
+  color: #5F3FE0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.tk-aviso-interno {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: var(--kc-accent-wash, #f3f0ff);
+  color: #211F3A;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+// Tickets 1385 y 1457: mora por fila y «Recordar pago». Plano, sin gradientes; ningún nombre lleva «p-».
+.tk-mora { font-size: 13.5px; font-weight: 700; color: var(--kc-ink); letter-spacing: normal; }
+.tk-mora-vencida { color: #b42318; }
+.tk-btn-recordar {
+  margin-left: 6px;
+  border: 1px solid #d9d3f0;
+  background: #fff;
+  color: #5f3fe0;
+  &:hover:not(:disabled) { background: #f3f0ff; }
+}

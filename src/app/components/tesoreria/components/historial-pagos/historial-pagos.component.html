@@ -1,7 +1,7 @@
 <div class="tk-hist-wrap">
 
   <!-- Toolbar -->
-  <div class="tk-toolbar">
+  <div class="tk-toolbar tk-toolbar-ancho">
     <div class="tk-field tk-field-search">
       <label for="tk-hist-search">{{ 'comun.buscar' | translate }}</label>
       <input id="tk-hist-search" type="text" [(ngModel)]="search" (input)="onSearchInput()"
@@ -14,6 +14,20 @@
       </select>
     </div>
     <div class="tk-field">
+      <label for="tk-hist-forma">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</label>
+      <select id="tk-hist-forma" [(ngModel)]="formaPago" (change)="applyFilters()">
+        <option value="">{{ 'tesoreria.tablaPagosPedidos.todas' | translate }}</option>
+        <option *ngFor="let f of formasPagoOpciones" [value]="f">{{ f }}</option>
+      </select>
+    </div>
+    <div class="tk-field">
+      <label for="tk-hist-usuario">{{ 'tesoreria.historialPagos.subidoPor' | translate }}</label>
+      <select id="tk-hist-usuario" [(ngModel)]="registradoPor" (change)="applyFilters()">
+        <option value="">{{ 'tesoreria.tablaPagosPedidos.todas' | translate }}</option>
+        <option *ngFor="let u of usuariosOpciones" [value]="u">{{ u }}</option>
+      </select>
+    </div>
+    <div class="tk-field">
       <label for="tk-hist-desde">{{ 'tesoreria.historialPagos.desde' | translate }}</label>
       <input id="tk-hist-desde" type="date" [(ngModel)]="fechaDesde" (change)="applyFilters()">
     </div>
@@ -21,6 +35,26 @@
       <label for="tk-hist-hasta">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
       <input id="tk-hist-hasta" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
     </div>
+  </div>
+
+  <!-- Ticket 1454: recaudado (pagos aprobados) por forma de pago, del filtro y periodo elegidos -->
+  <div class="tk-metodos" *ngIf="resumen && resumen.porMetodo.length > 0" role="region"
+       [attr.aria-label]="'tesoreria.historialPagos.recaudadoPorMetodo' | translate">
+    <div class="tk-metodos-titulo">
+      <strong>{{ 'tesoreria.historialPagos.recaudadoPorMetodo' | translate }}</strong>
+      <span class="tk-metodos-total">{{ resumen.montoAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}
+        · {{ resumen.cantidadAprobada | number }} {{ 'tesoreria.historialPagos.pagosAprobados' | translate }}</span>
+    </div>
+    <div class="tk-metodos-lista">
+      <div class="tk-metodo-item" *ngFor="let m of resumen.porMetodo">
+        <span class="tk-metodo-nombre">{{ m.formaPago }}</span>
+        <span class="tk-metodo-monto">{{ m.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <span class="tk-metodo-cant">{{ m.cantidad | number }} {{ 'tesoreria.historialPagos.pagosAbrev' | translate }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="tk-error" *ngIf="truncado" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.historialPagos.periodoMuyGrande' | translate }}
   </div>
 
   <p-table #dt [value]="items" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"

@@ -13,6 +13,8 @@ import {
   PaymentsHistoryResponse,
   PaymentsHistoryFilters,
   AlertsResponse,
+  AlertGroupsResponse,
+  OrdersTotals,
   ReviewAction,
   ReviewQueueFilters,
   ReviewQueueResponse,
@@ -120,6 +122,30 @@ export class TreasuryService extends BaseService {
   getAlerts(resolved?: boolean): Observable<AlertsResponse> {
     const qs = resolved === undefined ? '' : `?resolved=${resolved}`;
     return this.get<AlertsResponse>(`${this.base}/alerts${qs}`);
+  }
+
+  /** Alertas agrupadas por referencia, con números de pedido (ticket 1451). */
+  getAlertGroups(resolved: boolean | undefined, page = 1, pageSize = 15): Observable<AlertGroupsResponse> {
+    const qs = this.buildQuery({ agrupar: true, resolved, page, pageSize });
+    return this.get<AlertGroupsResponse>(`${this.base}/alerts?${qs}`);
+  }
+
+  /** Resuelve de una vez las alertas de un grupo (máx. 500 por llamada). */
+  resolveAlerts(alertIds: string[]): Observable<{ success: boolean; resueltas: number }> {
+    return this.post<{ success: boolean; resueltas: number }>(`${this.base}/alerts/resolve-many`, { alertIds });
+  }
+
+  /** Totales (pedidos, anticipos, falta por pagar) de todo el resultado filtrado (ticket 1454). */
+  getOrdersTotals(filtros: {
+    estadosPago: string[];
+    fechaInicial?: string;
+    fechaFinal?: string;
+    nroPedido?: string;
+    cliente?: string;
+    formaPago?: string;
+  }): Observable<OrdersTotals> {
+    const qs = this.buildQuery({ ...filtros, estadosPago: filtros.estadosPago.join(',') });
+    return this.get<OrdersTotals>(`${this.base}/orders/totals?${qs}`);
   }
 
   /** POST /alerts/:id/resolve — marca la alerta como resuelta. */

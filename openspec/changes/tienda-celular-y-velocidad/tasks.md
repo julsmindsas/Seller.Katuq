@@ -43,6 +43,10 @@
   - **Éxito:** cifras en `design.md`.
 - [ ] 0.6 Confirmar en Storage qué anchos crea TX-37 para la portada (`-cover.jpg`) y las demás
   fotos, y el formato de las variantes del constructor. **Éxito:** D14 con los anchos reales.
+  — **Avance (bloque TX34-B17):** anchos deducidos del código y escritos en D14 de `design.md` (constructor y
+  TX-37 usan `procesarImagenSitio`: 320/640/1280/1920 sin pasar del original, más el ancho del original; TX-37 guarda
+  la variante hasta 1280 en `urls` y su portada es un JPEG sin `srcset`). **Pendiente:** confirmarlo contra el Storage
+  real (bloqueado).
 
 ## 1. Medición base y caracterización (sin cambiar comportamiento)
 
@@ -113,18 +117,30 @@
   tope de longitud, nunca categorías ocultas.
   — `tests/sitios/sugerencias.contract.test.js` (19 pruebas; incluye `Cache-Control`, solo con `search` en `on`,
   plan gratis y límites del router).
-- [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
+- [x] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
-  — **Avance (bloque TX34-B10): parte `sugerencias` con total 0 hecha** (`buscadorTienda.test.js`, sin
-  cantidades vendidas ni existencias). Faltan los 5 órdenes (TX34-B12).
+  — Hecha. Parte `sugerencias` con total 0 (bloque TX34-B10, `buscadorTienda.test.js`). Parte de los 5 órdenes
+  (bloque TX34-B13): `tests/sitios/catalogoOrdenes.contract.test.js` (38 pruebas: vocabulario cerrado, novedad
+  con producto sin fecha al final y empate estable, más vendidos con cálculo completo / incompleto / ausente /
+  viejo o sin ventas, ocultas y agotadas fuera, plan gratis, orden + búsqueda tolerante + paginación, una sola lectura,
+  sin cantidades ni escrituras).
 - [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
   — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
   bloque TX34-B03.**
 - [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
   — **Avance (bloque TX34-B08): parte proyección hecha** (revisión estática de `indiceTienda.js` con
-  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`). Faltan la
-  tarea nocturna (TX34-B12) y el buscador (TX34-B10).
+  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`).
+  **Parte tarea nocturna hecha (bloque TX34-B12):** `ventasRecientes.writeSet.test.js` (29 pruebas: canario
+  que falla con una escritura en `products`, `orders`, `inventory` o `inventoryMovement`, revisión estática del
+  módulo y corrida con la Firestore falsa que solo escribe `storeProductStats/{docId de la empresa}`). Falta el
+  buscador (TX34-B10).
+  **Parte `storeImageVariants` hecha (bloque TX34-B17):** `variantesFotosTienda.writeSet.test.js` (56 pruebas, con
+  Storage y Firestore falsos): el dry-run no escribe ni abre el Storage; `compute` solo crea archivos nuevos con la
+  precondición de que no existan y escribe solo `storeImageVariants/{docId}` (un `set` sin merge); `products`,
+  `inventory`, `orders` y consecutivos quedan intactos; destino ocupado (otro token o empresa) omite la foto sin
+  escribir nada de ella; revisión estática con canarios (un `update`, un `set`, un `batch`, un borrado o un segundo
+  `save` agregados al módulo la hacen fallar); `indiceTienda.js` sigue leyendo solo `products`.
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
@@ -224,24 +240,106 @@
   «Ver todo el catálogo» y WhatsApp) solo con `search` en `on`; el HTML y el script las pintan con enlaces y
   `textContent`. Evento `busqueda_sin_resultado` por `POST /vista` con su filtro de robots, solo con la búsqueda
   enviada (Enter, cabecera o `?q=`), una vez por término y sesión, saneado en el servidor y guardado solo con
-  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B12.
-- [ ] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
+  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B13.
+- [x] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
   (pedidos leídos, líneas sin resolver, si llegó al tope); luego modo `compute`. Resuelve cada
   línea por id y, si no, por referencia → docId; documento por docId de empresa; `completo:
   false` al llegar al tope. **Éxito:** dos corridas dan el mismo documento; un ranking truncado
   no se ofrece; registro estructurado.
-- [ ] 3.10 Orden por novedad y más vendidos (D6). **Éxito:** BO «Orden por novedad y por más
+  — Hecho (TX34-B12): `services/sites/ventasRecientes.js`, `scripts/ventas-recientes-tienda.js` (`--dry-run` por
+  defecto, solo la copia `katuq_dev`) y `initStoreSalesRankingJob` en `cronService.js` (2:30 a. m. Colombia, con
+  latido; con `storeMobile.salesRanking` en `off` no lee ni escribe nada). Nace apagada. La regla que cierra la
+  colección nueva se despliega antes de la primera escritura (ver el diseño). «Alcanzar el tope» se lee como
+  «quedaron pedidos sin leer»: con exactamente el tope el cálculo sale completo. Dos tiendas de la misma empresa se
+  calculan una sola vez. **Para la 3.10:** el lector debe ofrecer «Lo más vendido» solo si el documento está completo
+  y se calculó hace menos de 48 horas (`esCalculoVigente`); la tarea no toca el documento de una empresa que dejó
+  de cumplir las condiciones.
+- [x] 3.10 Orden por novedad y más vendidos (D6). **Éxito:** BO «Orden por novedad y por más
   vendidos».
-- [ ] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
+  — Hecho (TX34-B13): `services/sites/ordenTienda.js` y su conexión en `consultarCatalogo`. Valores cerrados
+  `relevancia` (orden de hoy), `precio-asc`, `precio-desc`, `novedad` y `mas-vendidos`; cualquier otro cae al
+  orden de hoy. Con `storeMobile.salesRanking` en `off` o `compute` el catálogo y su HTML son los de hoy (la
+  respuesta no lleva la clave `ordenes`); en `show` Y con un cálculo de ventas completo, de menos de 48 horas
+  y con al menos una venta, la respuesta de `/catalogo` informa las claves ofrecidas (sin cifras) y el selector
+  suma «Lo más nuevo» y «Lo más vendido» juntos; sin ventas vigentes (tienda nueva, documento ausente,
+  incompleto, viejo o vacío) el HTML sale idéntico al de hoy. Las unidades se leen una vez por empresa (documento por docId de la empresa del sitio,
+  solo lectura) y solo comparan: nunca salen en la respuesta, el HTML ni los registros. Con la proyección en
+  `off`, la novedad usa las fechas de `products` (select de dos campos, memorizadas 5 min por empresa).
+  Pendiente para B19: `?orden=` de la URL de entrada no se aplica en la primera carga (el estado del script nace
+  vacío, como hoy, para no cambiar el HTML apagado); sí se conserva al paginar, filtrar y abrir el panel.
+- [x] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
   **Éxito:** escenarios de EE con zonas, fijo, gratis desde, retiro y ciudad sin zona.
+  — **Parte 1 hecha (TX34-B14):** «Calcula tu envío» en la ficha (bajo el precio y el
+  plazo) y en el carrito (en lugar de «Según tu ciudad», solo con zonas), con la ciudad recordada y preseleccionada
+  en el checkout. Nace apagado: `storeMobile.shippingEstimate` en `off` deja el HTML, el script y los estilos como
+  hoy (los estilos van en la página, no en la hoja compartida). Zonas (una ciudad con varias muestra todas con
+  nombre y tarifa; en el carrito es un solo selector compacto con «Mi ciudad no está» como última opción),
+  envío fijo, gratis desde (cuánto falta), puntos de retiro y «Mi ciudad no está»
+  (WhatsApp de la tienda o, sin él, el contacto del pie; nunca costo ni plazo). Solo se guarda en el navegador la
+  zona elegida (id y ciudad), vence a las 24 h y al pagar; el cuerpo del POST del pedido y el cálculo del
+  servidor no cambian.
+  — **Parte 2 hecha (TX34-B15):** tiempo de entrega e «IVA incluido» en el carrito y el checkout, con el mismo
+  interruptor `shippingEstimate` (apagado = idéntico a hoy, byte a byte). El botón de agregar de la ficha, la tarjeta, el
+  destacado y las tarjetas que pinta el navegador lleva `data-plazo` (el mismo texto de `tiempoDeEntrega`) y `data-iva`
+  (solo si el precio lleva IVA); la línea del carrito los guarda al agregarse. El carrito dice «Entrega desde N días» con
+  el mayor de los plazos en días (también si otras líneas traen texto libre, D11), o el texto libre del comercio si
+  ninguna línea da días y es uno solo; con textos libres distintos y sin días no dice nada (no hay «mayor» entre textos y
+  elegir uno sería prometer lo que no se sabe). Sin plazo en ninguna línea no dice nada.
+  «Precios con IVA incluido» solo si TODAS las líneas lo llevan (un carrito mixto, o con líneas de un carrito viejo o
+  agregadas desde «Completa tu pedido» o favoritos, que hoy no traen el dato, no lo dice: es conservador a propósito). Dónde: en el carrito, al final de la
+  lista de productos (el pie ya carga el cálculo del envío y a 640 px de alto una nota más dejaba la lista en menos de
+  100 px); en «Tus datos» y «Revisa tu pedido», bajo el total. Solo presentación: el POST del pedido y los totales no
+  cambian (hay prueba). Los carritos viejos del navegador no rompen y no aportan plazo.
 - [ ] 3.12 [si P14] Aviso de la promesa de plazo en la revisión de publicación.
-- [ ] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
+  — **Parte servidor hecha (TX34-B15); queda `[ ]` hasta que el editor la pinte:** `GET /v1/sites/:id/avisos-publicacion` (empresa del token) devuelve
+  `data.avisos[]`; hoy el aviso `PLAZO_SIN_DATOS` cuando una sección visible (también dentro de las secciones libres)
+  dice que el comprador ve el tiempo de entrega antes de pagar y ningún producto vendible de la empresa tiene tiempo de
+  entrega que el comprador pueda ver (lectura mínima de `products`, por páginas de 300 y con tope de 3.000; no cuenta un
+  producto de categoría oculta ni fuera del tope del plan gratis; con el tope alcanzado sin hallar plazo no afirma
+  «ninguno»). No bloquea publicar y respeta el interruptor `shippingEstimate` (apagado, no avisa ni lee).
+  **Pendiente (front, aparte; sin esto el escenario «Plantilla con la promesa» no se cumple de punta a punta):** que
+  `sitio-editor.component.ts` llame a ese endpoint y sume el aviso a su lista de «lo que falta para vender»
+  (`get pendientes`, que hoy se arma en el navegador y no sabe de los productos).
+- [x] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
   sin JavaScript. **Éxito:** escenarios de TC; revisión visual de las 15 plantillas a 360, 390,
   767 y 768 px con y sin `data-kq-ajustes`, y sin JavaScript.
-- [ ] 3.14 [si P6 = a] Variantes de las fotos originales (D16): primero `--dry-run` que cuenta
+  — **Hecho (TX34-B16), nace apagado:** `storeMobile.drawer` (global) + bandera `storeDrawer` (empresa), `off` por defecto;
+  apagado, la página sale byte a byte como hoy (45 páginas del laboratorio idénticas) y no pide ni estilos ni script del
+  cajón. Encendido, el encabezado pinta el botón «Menú» (tres rayas, 44 px) antes de la marca, y en ≤767 px esconde la fila de
+  categorías, los enlaces sueltos y «Mi cuenta»/«Favoritos» de la barra (el buscador y el carrito se quedan); desde 768 px y en
+  modo conversión, igual que hoy. Si no hay nada que mostrar en el panel, no hay botón.
+  **Marcado final (lo espeja el editor, 5.1):** `<header class="… cabecera--cajon">` → `<details class="kq-menu" data-kq-menu>` →
+  `<summary class="kq-menu__boton" aria-label="Menú">` (svg de tres rayas) + `<div class="kq-menu__panel" id="kq-menu-N"
+  data-kq-menu-panel>` con `div.kq-menu__cabeza` (`span.kq-menu__titulo` «Menú» + `button.kq-menu__cerrar[data-kq-menu-cerrar]` ✕),
+  `nav.kq-menu__grupo.kq-menu__grupo--cats[aria-label="Categorías"]` (las mismas categorías visibles de la fila, nunca las
+  ocultas), `nav.kq-menu__grupo[aria-label="Enlaces de la tienda"]` (enlaces del menú), `div.kq-menu__grupo` con
+  `button.kq-menu__item[data-kq-mi-cuenta]` y `button.kq-menu__item[data-kq-favoritos]` (si la tienda vende) y `div.kq-menu__grupo`
+  con `a.kq-menu__item` de WhatsApp (bloque de WhatsApp de la página, con `data-clic="whatsapp"` y `data-bloque` del bloque de WhatsApp, o celular del pie, sin `data-clic`). «Mi cuenta» y «Favoritos» de la barra
+  llevan además `cabecera__solo-ancho`. Sin JavaScript, el panel es una lista absoluta bajo la cabecera (`<details>` nativo);
+  con JavaScript el script lo saca a `div.kq-menu__capa` en el `body` (z-index 90, por encima de la pila fija; así no lo atrapa el
+  contexto de apilamiento de una cabecera `sticky`), con `role="dialog"`, `aria-modal`, foco atrapado, Escape, ✕, toque fuera,
+  enlace seguido y ensanchar a ≥768 px; bloquea el scroll del fondo con `kq-sin-scroll` y devuelve el foco al botón. Ninguna clase
+  contiene «p-». Estilos y script salen en el `<style>`/`<script nonce>` de la página solo con el cajón encendido
+  (`utils/siteCajonLateral.js`); `/estilos.css` no cambia.
+  **Medido (una vez, sobre la plantilla afectada):** barrido de 150 capturas (15 plantillas × 360/390/767/768, con y sin
+  `data-kq-ajustes`, y 30 sin JavaScript): 0 cruces, 0 desplazamientos laterales, botón y renglones de 44 px o más.
+- [x] 3.14 [si P6 = a] Variantes de las fotos originales (D16): primero `--dry-run` que cuenta
   fotos y bytes por empresa; luego la tarea con tope. Contract test del write-set: no escribe
   `products` ni pisa archivos. **Éxito:** la proyección pinta `srcset` en esas fotos; el
   laboratorio y PageSpeed con originales mejoran el LCP.
+  — **Código hecho (bloque TX34-B17), apagado:** interruptor global `storeMobile.imageVariants` (`off | compute |
+  on`, por defecto `off`) con topes por empresa (50) y por corrida (300); `services/sites/variantesFotosTienda.js`,
+  `scripts/variantes-fotos-tienda.js` (`--dry-run` por defecto, `--compute --confirmo-storage-real`), tarea
+  `storeImageVariants` a las 3:45 a. m. con latido; con `on`, `consultarCatalogo`, los bloques de producto y la
+  ficha pintan `srcset` en las fotos con variantes (el documento lo lee la tienda, una vez cada 5 minutos por
+  empresa, no al cargar la proyección: desvío anotado en D16). Las fotos que fallan se recuerdan con plazo de
+  reintento, el documento se limita por bytes y el JSON-LD conserva la foto original. Con todo apagado,
+  la respuesta y el HTML son idénticos (golden del catálogo en verde; prueba que lo compara con los modos `off`,
+  `compute`, documento ausente y token cambiado). Detalle en D16 de `design.md`.
+  **Bloqueado (no se hizo en esta sesión):** (1) la regla de Firebase que cierra `storeImageVariants` debe
+  desplegarla Daniel antes de la primera corrida en `compute`, como con `storeProductStats`; (2) correr el dry-run contra
+  `katuq_dev` y la primera corrida real en el Storage (necesita el OK de Daniel); (3) medir el LCP con el
+  laboratorio y PageSpeed con originales ya convertidos; (4) confirmar los anchos contra el Storage real (0.6).
 
 ## 4. Pedidos, pagos y reserva [S] — después de F2-41, D-496 y suscripciones (T·2)
 

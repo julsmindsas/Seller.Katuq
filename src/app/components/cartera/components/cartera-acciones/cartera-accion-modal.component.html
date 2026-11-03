@@ -1,0 +1,291 @@
+<div class="modal-header ca-cabeza">
+  <div>
+    <h5 class="modal-title ca-titulo"><i class="pi" [ngClass]="iconoTitulo" aria-hidden="true"></i> {{ tituloClave | translate }}</h5>
+    <div class="ca-cliente">{{ cliente?.nombre || '—' }} · {{ cliente?.documento }}</div>
+  </div>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body ca-cuerpo">
+  <div class="ca-aviso ca-aviso-error" role="alert" *ngIf="error">{{ error }}</div>
+  <div class="ca-aviso ca-aviso-ok" role="status" *ngIf="exito">{{ exito }}</div>
+
+  <!-- ═════════ Estado de cuenta ═════════ -->
+  <ng-container *ngIf="modo === 'estadoCuenta'">
+    <div class="ca-aviso ca-aviso-alerta" *ngIf="pideConfirmarInterno" role="alert">
+      <div>{{ 'cartera.acciones.esInternoAviso' | translate }}</div>
+      <button type="button" class="ca-btn ca-btn-sec ca-mt" (click)="confirmarEsInterno()">{{ 'cartera.acciones.esInternoSeguir' | translate }}</button>
+    </div>
+
+    <div class="ca-etiqueta">{{ 'cartera.acciones.pedidosIncluidos' | translate }}</div>
+    <div class="ca-tabla-caja">
+      <table class="ca-tabla">
+        <thead>
+          <tr>
+            <th class="ca-col-check">
+              <input type="checkbox" [checked]="todosElegidos" (change)="alternarTodos()" [attr.aria-label]="'cartera.acciones.todosLosPedidos' | translate">
+            </th>
+            <th>{{ 'cartera.carteraClientes.pedido' | translate }}</th>
+            <th>{{ 'cartera.carteraClientes.factura' | translate }}</th>
+            <th>{{ 'cartera.carteraClientes.limitePago' | translate }}</th>
+            <th class="ca-der">{{ 'cartera.carteraClientes.saldo' | translate }}</th>
+            <th class="ca-der">{{ 'cartera.carteraClientes.vencimiento' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pedidos; trackBy: trackByOrder">
+            <td class="ca-col-check"><input type="checkbox" [checked]="seleccion.has(p.orderId)" (change)="alternarPedido(p.orderId)" [attr.aria-label]="p.nroPedido"></td>
+            <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
+            <td>{{ p.factura || '—' }}</td>
+            <td>{{ p.payDueDate ? (p.payDueDate | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="ca-der ca-fuerte">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ca-cargando" *ngIf="cargandoVista" aria-live="polite"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'cartera.acciones.calculando' | translate }}</div>
+
+    <ng-container *ngIf="vista && !cargandoVista">
+      <div class="ca-totales">
+        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalAdeudado' | translate }}</div><div class="ca-total-val ca-acento">{{ vista.estado.totalAdeudado | currency:'COP':'symbol-narrow':'1.0-0' }}</div></div>
+        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalVencido' | translate }}</div><div class="ca-total-val" [class.ca-rojo]="vista.estado.totalVencido > 0">{{ vista.estado.totalVencido | currency:'COP':'symbol-narrow':'1.0-0' }}</div></div>
+        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.proximoVencimiento' | translate }}</div>
+          <div class="ca-total-val ca-total-chico">{{ vista.estado.proximoVencimiento ? ((vista.estado.proximoVencimiento.saldo | currency:'COP':'symbol-narrow':'1.0-0') + ' · ' + (vista.estado.proximoVencimiento.fecha | date:'dd/MM/yyyy')) : '—' }}</div></div>
+      </div>
+
+      <div class="ca-aviso ca-aviso-alerta" *ngIf="hayPagoEnRevision">
+        {{ 'cartera.acciones.pagoEnRevision' | translate:{ valor: (vista.estado.totalEnRevision | currency:'COP':'symbol-narrow':'1.0-0') } }}
+      </div>
+
+      <div class="ca-aviso ca-aviso-alerta" *ngIf="vista.sinCuentas">
+        {{ 'cartera.acciones.sinCuentas' | translate }}
+      </div>
+
+      <div class="ca-acciones-fila">
+        <button type="button" class="ca-btn" (click)="descargarPdf()" [disabled]="guardando || !seleccion.size">
+          <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-download'" aria-hidden="true"></i> {{ 'cartera.acciones.descargarPdf' | translate }}
+        </button>
+        <button type="button" class="ca-btn ca-btn-sec" (click)="enviarWhatsApp()" [disabled]="!vista.whatsapp.disponible"
+                [attr.title]="vista.whatsapp.disponible ? null : ('cartera.acciones.sinTelefono' | translate)">
+          <i class="pi pi-whatsapp" aria-hidden="true"></i> {{ 'cartera.acciones.enviarWhatsapp' | translate }}
+        </button>
+        <button type="button" class="ca-btn ca-btn-sec" (click)="pedirConfirmarCorreo()"
+                [disabled]="!vista.correo.disponible || !!vista.correo.enviadoDentroDe24h || !vista.correo.servicioConfigurado || confirmandoCorreo"
+                [attr.title]="vista.correo.disponible ? null : ('cartera.acciones.sinCorreo' | translate)">
+          <i class="pi pi-envelope" aria-hidden="true"></i> {{ 'cartera.acciones.enviarCorreo' | translate }}
+        </button>
+      </div>
+      <div class="ca-nota" *ngIf="vista.whatsapp.disponible">{{ 'cartera.acciones.whatsappNota' | translate }}</div>
+      <div class="ca-nota" *ngIf="vista.whatsapp.enviadoDentroDe24h">{{ 'cartera.acciones.whatsappYaEnviado' | translate:{ fecha: (vista.whatsapp.enviadoDentroDe24h | date:'dd/MM/yyyy HH:mm') } }}</div>
+      <div class="ca-nota" *ngIf="vista.correo.enviadoDentroDe24h">{{ 'cartera.acciones.correoYaEnviado' | translate:{ fecha: (vista.correo.enviadoDentroDe24h | date:'dd/MM/yyyy HH:mm') } }}</div>
+
+      <!-- Confirmar el correo: vista previa de lo que se manda -->
+      <div class="ca-confirmar" *ngIf="confirmandoCorreo" role="group" [attr.aria-label]="'cartera.acciones.confirmarCorreoTitulo' | translate">
+        <div class="ca-confirmar-titulo">{{ 'cartera.acciones.confirmarCorreoTitulo' | translate }}</div>
+        <div>{{ 'cartera.acciones.confirmarCorreoPara' | translate:{ correo: vista.correo.destino } }}</div>
+        <div>{{ 'cartera.acciones.confirmarCorreoAsunto' | translate:{ asunto: vista.correo.asunto } }}</div>
+        <div>{{ 'cartera.acciones.confirmarCorreoAdjunto' | translate:{ archivo: vista.archivo } }}</div>
+        <div class="ca-acciones-fila ca-mt">
+          <button type="button" class="ca-btn" (click)="enviarCorreo()" [disabled]="guardando">
+            <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i> {{ 'cartera.acciones.confirmarEnviar' | translate }}
+          </button>
+          <button type="button" class="ca-btn ca-btn-sec" (click)="confirmandoCorreo = false" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Cuentas bancarias del estado de cuenta (solo Administrador) -->
+    <div class="ca-cuentas" *ngIf="esAdmin">
+      <button type="button" class="ca-enlace" *ngIf="!editandoCuentas" (click)="abrirCuentas()">
+        <i class="pi pi-building" aria-hidden="true"></i> {{ 'cartera.acciones.cuentasConfigurar' | translate }}
+      </button>
+      <div *ngIf="editandoCuentas">
+        <div class="ca-etiqueta">{{ 'cartera.acciones.cuentasTitulo' | translate }}</div>
+        <div class="ca-nota">{{ 'cartera.acciones.cuentasAviso' | translate }}</div>
+        <div class="ca-cuenta" *ngFor="let c of cuentas; let i = index">
+          <input class="ca-input" [(ngModel)]="c.banco" [name]="'banco' + i" maxlength="60" [placeholder]="'cartera.acciones.cuentaBanco' | translate" [attr.aria-label]="'cartera.acciones.cuentaBanco' | translate">
+          <input class="ca-input" [(ngModel)]="c.tipo" [name]="'tipo' + i" maxlength="30" [placeholder]="'cartera.acciones.cuentaTipo' | translate" [attr.aria-label]="'cartera.acciones.cuentaTipo' | translate">
+          <input class="ca-input" [(ngModel)]="c.numero" [name]="'numero' + i" maxlength="40" [placeholder]="'cartera.acciones.cuentaNumero' | translate" [attr.aria-label]="'cartera.acciones.cuentaNumero' | translate">
+          <input class="ca-input" [(ngModel)]="c.titular" [name]="'titular' + i" maxlength="80" [placeholder]="'cartera.acciones.cuentaTitular' | translate" [attr.aria-label]="'cartera.acciones.cuentaTitular' | translate">
+          <button type="button" class="ca-btn ca-btn-sec" (click)="quitarCuenta(i)" [attr.aria-label]="'cartera.acciones.cuentaQuitar' | translate"><i class="pi pi-trash" aria-hidden="true"></i></button>
+        </div>
+        <label class="ca-etiqueta ca-mt" for="ca-msg-ec">{{ 'cartera.acciones.cuentasMensaje' | translate }}</label>
+        <textarea id="ca-msg-ec" class="ca-input" rows="2" maxlength="600" [(ngModel)]="mensajeEstadoCuenta" name="mensajeEstadoCuenta"></textarea>
+        <div class="ca-acciones-fila ca-mt">
+          <button type="button" class="ca-btn ca-btn-sec" (click)="agregarCuenta()" [disabled]="cuentas.length >= 10"><i class="pi pi-plus" aria-hidden="true"></i> {{ 'cartera.acciones.cuentaAgregar' | translate }}</button>
+          <button type="button" class="ca-btn" (click)="guardarCuentas()" [disabled]="guardando">{{ 'comun.guardar' | translate }}</button>
+          <button type="button" class="ca-btn ca-btn-sec" (click)="editandoCuentas = false" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ═════════ Compromiso de pago ═════════ -->
+  <ng-container *ngIf="modo === 'compromiso'">
+    <div class="ca-nota">{{ 'cartera.acciones.compromisoAyuda' | translate }}</div>
+    <div class="ca-aviso ca-aviso-info" *ngIf="cliente?.cobro?.compromiso as c">
+      {{ 'cartera.acciones.compromisoActual' | translate:{ valor: (c.valor | currency:'COP':'symbol-narrow':'1.0-0'), fecha: (c.fecha | date:'dd/MM/yyyy') } }}
+    </div>
+    <label class="ca-etiqueta" for="ca-comp-fecha">{{ 'cartera.acciones.compromisoFecha' | translate }}</label>
+    <input id="ca-comp-fecha" type="date" class="ca-input" [min]="hoy" [(ngModel)]="compromiso.fecha" name="compFecha">
+    <label class="ca-etiqueta ca-mt" for="ca-comp-valor">{{ 'cartera.acciones.compromisoValor' | translate }}</label>
+    <input id="ca-comp-valor" type="number" class="ca-input" min="1" [max]="saldoCliente" [(ngModel)]="compromiso.valor" name="compValor">
+    <div class="ca-nota">{{ 'cartera.acciones.saldoDelCliente' | translate:{ saldo: (saldoCliente | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <label class="ca-etiqueta ca-mt" for="ca-comp-nota">{{ 'cartera.acciones.nota' | translate }}</label>
+    <textarea id="ca-comp-nota" class="ca-input" rows="2" maxlength="600" [(ngModel)]="compromiso.nota" name="compNota"></textarea>
+  </ng-container>
+
+  <!-- ═════════ Registrar gestión ═════════ -->
+  <ng-container *ngIf="modo === 'gestion'">
+    <div class="ca-aviso ca-aviso-info" *ngIf="cliente?.cobro?.ultimaGestion as g">
+      {{ 'cartera.acciones.ultimaGestion' | translate:{ canal: g.canal, fecha: (g.fecha | date:'dd/MM/yyyy HH:mm'), resultado: g.resultado } }}
+    </div>
+    <label class="ca-etiqueta" for="ca-ges-canal">{{ 'cartera.acciones.gestionTipo' | translate }}</label>
+    <select id="ca-ges-canal" class="ca-input" [(ngModel)]="gestion.canal" name="gesCanal">
+      <option *ngFor="let c of canales" [value]="c.value">{{ c.clave | translate }}</option>
+    </select>
+    <label class="ca-etiqueta ca-mt" for="ca-ges-res">{{ 'cartera.acciones.gestionResultado' | translate }}</label>
+    <input id="ca-ges-res" type="text" class="ca-input" maxlength="160" [(ngModel)]="gestion.resultado" name="gesRes" [placeholder]="'cartera.acciones.gestionResultadoEj' | translate">
+    <label class="ca-etiqueta ca-mt" for="ca-ges-nota">{{ 'cartera.acciones.nota' | translate }}</label>
+    <textarea id="ca-ges-nota" class="ca-input" rows="2" maxlength="600" [(ngModel)]="gestion.nota" name="gesNota"></textarea>
+
+    <div class="ca-etiqueta ca-mt2">{{ 'cartera.acciones.historial' | translate }}</div>
+    <div class="ca-cargando" *ngIf="cargandoHistorial"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i></div>
+    <div class="ca-nota" *ngIf="!cargandoHistorial && !historial.length">{{ 'cartera.acciones.historialVacio' | translate }}</div>
+    <ul class="ca-historial" *ngIf="historial.length">
+      <li *ngFor="let e of historial">
+        <div class="ca-hist-linea"><strong>{{ claveTipoEvento(e.tipo) | translate }}</strong> · {{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</div>
+        <div class="ca-hist-detalle">{{ resumenEvento(e) }}</div>
+        <div class="ca-hist-por">{{ e.por }}</div>
+      </li>
+    </ul>
+  </ng-container>
+
+  <!-- ═════════ Cupo y plazo ═════════ -->
+  <ng-container *ngIf="modo === 'credito'">
+    <div class="ca-nota">{{ 'cartera.acciones.creditoAyuda' | translate }}</div>
+    <label class="ca-etiqueta" for="ca-cre-cupo">{{ 'cartera.acciones.cupo' | translate }}</label>
+    <input id="ca-cre-cupo" type="number" class="ca-input" min="0" [(ngModel)]="credito.creditLimit" (ngModelChange)="alEscribirCredito()" name="creCupo">
+    <label class="ca-etiqueta ca-mt" for="ca-cre-plazo">{{ 'cartera.acciones.plazo' | translate }}</label>
+    <input id="ca-cre-plazo" type="number" class="ca-input" min="0" max="365" step="1" [(ngModel)]="credito.payTermDays" (ngModelChange)="alEscribirCredito()" name="crePlazo">
+    <div class="ca-nota">{{ 'cartera.acciones.plazoAyuda' | translate }}</div>
+
+    <div class="ca-aviso ca-aviso-info ca-mt" *ngIf="vistaCredito" aria-live="polite">
+      <div class="ca-etiqueta">{{ 'cartera.acciones.efecto' | translate }}</div>
+      <div class="ca-nota" *ngIf="vistaCredito.fichasDistintas">{{ 'cartera.acciones.fichasDistintas' | translate }}</div>
+      <div *ngIf="vistaCredito.sinCambios">{{ 'cartera.acciones.sinCambios' | translate }}</div>
+      <ng-container *ngIf="!vistaCredito.sinCambios">
+        <div *ngIf="vistaCredito.anterior.payTermDays !== vistaCredito.nuevo.payTermDays">
+          {{ 'cartera.acciones.efectoVencimiento' | translate:{ n: vistaCredito.pedidosCambianVencimiento } }}
+          <span *ngIf="vistaCredito.dejanDeVencer" class="ca-efecto-linea">{{ 'cartera.acciones.efectoDejanDeVencer' | translate:{ n: vistaCredito.dejanDeVencer } }}</span>
+          <span *ngIf="vistaCredito.empiezanAVencer" class="ca-efecto-linea">{{ 'cartera.acciones.efectoEmpiezanAVencer' | translate:{ n: vistaCredito.empiezanAVencer } }}</span>
+          <span *ngIf="vistaCredito.saldoQueCambiaDeRango" class="ca-efecto-linea">{{ 'cartera.acciones.efectoRango' | translate:{ saldo: (vistaCredito.saldoQueCambiaDeRango | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+        </div>
+        <div *ngIf="vistaCredito.anterior.creditLimit !== vistaCredito.nuevo.creditLimit">
+          {{ vistaCredito.cupoUsadoPctDespues === null ? ('cartera.acciones.efectoSinCupo' | translate) : ('cartera.acciones.efectoCupo' | translate:{ pct: vistaCredito.cupoUsadoPctDespues }) }}
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+
+  <!-- ═════════ Castigar deuda ═════════ -->
+  <ng-container *ngIf="modo === 'castigo'">
+    <div class="ca-aviso ca-aviso-alerta">{{ 'cartera.acciones.castigoAviso' | translate }}</div>
+    <div class="ca-etiqueta">{{ 'cartera.acciones.castigoPedidos' | translate }}</div>
+    <div class="ca-tabla-caja">
+      <table class="ca-tabla">
+        <thead>
+          <tr>
+            <th class="ca-col-check"><input type="checkbox" [checked]="todosElegidos" (change)="alternarTodos()" [attr.aria-label]="'cartera.acciones.todosLosPedidos' | translate"></th>
+            <th>{{ 'cartera.carteraClientes.pedido' | translate }}</th>
+            <th class="ca-der">{{ 'cartera.carteraClientes.saldo' | translate }}</th>
+            <th class="ca-der">{{ 'cartera.carteraClientes.vencimiento' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pedidos; trackBy: trackByOrder">
+            <td class="ca-col-check"><input type="checkbox" [checked]="seleccion.has(p.orderId)" (change)="alternarPedido(p.orderId)" [attr.aria-label]="p.nroPedido"></td>
+            <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
+            <td class="ca-der ca-fuerte">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ca-nota">{{ 'cartera.acciones.castigoTotal' | translate:{ saldo: (saldoElegido | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <label class="ca-etiqueta ca-mt" for="ca-cas-motivo">{{ 'cartera.acciones.castigoMotivo' | translate }} *</label>
+    <textarea id="ca-cas-motivo" class="ca-input" rows="3" maxlength="400" [(ngModel)]="motivoCastigo" name="casMotivo" [placeholder]="'cartera.acciones.castigoMotivoEj' | translate" required></textarea>
+  </ng-container>
+
+  <!-- ═════════ Registrar pago ═════════ -->
+  <ng-container *ngIf="modo === 'pago'">
+    <div class="ca-nota">{{ 'cartera.acciones.pagoAyuda' | translate }}</div>
+    <div class="ca-etiqueta">{{ 'cartera.acciones.pagoPedido' | translate }}</div>
+    <div class="ca-tabla-caja">
+      <table class="ca-tabla">
+        <tbody>
+          <tr *ngFor="let p of pedidos; trackBy: trackByOrder">
+            <td class="ca-col-check"><input type="radio" name="pedidoPago" [value]="p.orderId" [checked]="pedidoPago === p.orderId" (change)="elegirPedidoPago(p.orderId)" [attr.aria-label]="p.nroPedido"></td>
+            <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
+            <td class="ca-der">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-container *ngIf="pedidoPagoActual">
+      <div class="ca-aviso ca-aviso-alerta" role="status" *ngIf="pagoEnRevisionActual > 0">
+        {{ 'cartera.acciones.pagoYaEnRevision' | translate:{ valor: (pagoEnRevisionActual | currency:'COP':'symbol-narrow':'1.0-0') } }}
+      </div>
+      <div class="ca-dos">
+        <div>
+          <label class="ca-etiqueta" for="ca-pag-fecha">{{ 'tesoreria.historialPagos.fecha' | translate }} *</label>
+          <input id="ca-pag-fecha" type="date" class="ca-input" [(ngModel)]="pago.fecha" name="pagFecha">
+        </div>
+        <div>
+          <label class="ca-etiqueta" for="ca-pag-forma">{{ 'tesoreria.registrarPago.formaDePago' | translate }} *</label>
+          <select id="ca-pag-forma" class="ca-input" [(ngModel)]="pago.formaPago" name="pagForma">
+            <option value="">{{ 'tesoreria.registrarPago.seleccionar' | translate }}</option>
+            <option *ngFor="let fp of formasPago" [value]="fp?.id">{{ fp?.nombre }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="ca-dos">
+        <div>
+          <label class="ca-etiqueta" for="ca-pag-valor">{{ 'tesoreria.historialPagos.valor' | translate }} *</label>
+          <input id="ca-pag-valor" type="number" class="ca-input" min="1" [(ngModel)]="pago.valor" name="pagValor">
+          <div class="ca-nota ca-rojo" *ngIf="pagoExcedido">{{ 'tesoreria.registrarPago.elValorSuperaLoQue' | translate }}</div>
+        </div>
+        <div>
+          <label class="ca-etiqueta" for="ca-pag-ref">{{ 'tesoreria.registrarPago.numeroDeComprobante' | translate }} *</label>
+          <input id="ca-pag-ref" type="text" class="ca-input" [(ngModel)]="pago.numeroComprobante" name="pagRef">
+        </div>
+      </div>
+      <label class="ca-etiqueta ca-mt" for="ca-pag-notas">{{ 'tesoreria.historialPagos.notas' | translate }}</label>
+      <input id="ca-pag-notas" type="text" class="ca-input" [(ngModel)]="pago.notas" name="pagNotas">
+      <label class="ca-etiqueta ca-mt" for="ca-pag-archivo">{{ 'tesoreria.registrarPago.comprobanteOpcional' | translate }}</label>
+      <input id="ca-pag-archivo" type="file" class="ca-input" accept=".pdf,.jpg,.jpeg,.png" (change)="alElegirArchivo($event)">
+    </ng-container>
+  </ng-container>
+</div>
+
+<div class="modal-footer ca-pie">
+  <button type="button" class="ca-btn ca-btn-sec" (click)="cerrar()" [disabled]="guardando">{{ 'comun.cerrar' | translate }}</button>
+  <button type="button" class="ca-btn" *ngIf="modo === 'compromiso'" (click)="guardarCompromiso()" [disabled]="!compromisoValido || guardando">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'cartera.acciones.guardarCompromiso' | translate }}
+  </button>
+  <button type="button" class="ca-btn" *ngIf="modo === 'gestion'" (click)="guardarGestion()" [disabled]="!gestionValida || guardando">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'cartera.acciones.guardarGestion' | translate }}
+  </button>
+  <button type="button" class="ca-btn" *ngIf="modo === 'credito'" (click)="guardarCredito()" [disabled]="!creditoValido || guardando || !vistaCredito || vistaCredito.sinCambios">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'cartera.acciones.guardarCredito' | translate }}
+  </button>
+  <button type="button" class="ca-btn ca-btn-peligro" *ngIf="modo === 'castigo'" (click)="castigar()" [disabled]="!castigoValido || guardando">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-ban'" aria-hidden="true"></i> {{ 'cartera.acciones.confirmarCastigo' | translate }}
+  </button>
+  <button type="button" class="ca-btn" *ngIf="modo === 'pago'" (click)="registrarPago()" [disabled]="!pagoValido || guardando">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'cartera.acciones.registrarPagoBoton' | translate }}
+  </button>
+</div>

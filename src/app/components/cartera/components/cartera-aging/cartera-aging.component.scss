@@ -12,9 +12,31 @@
   gap: 18px;
 }
 
-// 5 KPIs en una fila (4 rangos + total)
+// Filtros activos compartidos con «Cartera por cliente» (ticket 1467)
+.cx-aging-filtros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  @include kc-card;
+
+  app-cartera-filtros-activos { flex: 1 1 320px; min-width: 0; }
+}
+
+.cx-aging-cambiar {
+  @include kc-btn-ghost;
+  padding: 7px 13px;
+  font-size: 12.5px;
+
+  i { color: var(--kc-accent); font-size: 12px; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+// 7 KPIs (6 rangos + total)
 .cx-grid-aging {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 
   @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
   @media (max-width: 900px)  { grid-template-columns: repeat(2, 1fr); }

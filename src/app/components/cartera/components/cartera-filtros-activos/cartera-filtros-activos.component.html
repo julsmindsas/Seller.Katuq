@@ -1,0 +1,15 @@
+<div class="cx-activos" *ngIf="etiquetas.length > 0" role="group" [attr.aria-label]="'cartera.filtros.filtrosActivos' | translate">
+  <div class="cx-etiqueta" *ngFor="let e of etiquetas; trackBy: trackPorId">
+    <span class="cx-etiqueta-grupo">{{ e.grupoKey | translate }}:</span>
+    <strong class="cx-etiqueta-valor">{{ e.valorKey ? (e.valorKey | translate: e.valorParams) : e.valorTexto }}</strong>
+    <button type="button" class="cx-etiqueta-quitar" (click)="quitar(e)"
+            [attr.aria-label]="'cartera.filtros.quitarFiltro' | translate: { filtro: (e.grupoKey | translate) }"
+            [attr.title]="'cartera.filtros.quitarFiltro' | translate: { filtro: (e.grupoKey | translate) }">
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
+  </div>
+  <button type="button" class="cx-activos-limpiar" (click)="limpiar()">
+    <i class="pi pi-filter-slash" aria-hidden="true"></i>
+    {{ 'cartera.filtros.limpiarFiltros' | translate }}
+  </button>
+</div>

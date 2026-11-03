@@ -126,6 +126,18 @@
                     <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
                   </div>
 
+                  <!-- Tipo de relación (cartera interna, ticket 1461): solo Tesorería, solo al editar y con la bandera encendida -->
+                  <div class="col-12 col-sm-6" *ngIf="puedeMarcarRelacion">
+                    <label class="form-label-modern" for="cc-relacion">
+                      <i class="pi pi-users me-1 label-icon"></i>{{ 'cartera.interna.tipoRelacion' | translate }}
+                    </label>
+                    <select id="cc-relacion" class="w-100 p-inputtext" [ngModel]="relationType" [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="cambiarRelacion($event)" [disabled]="guardandoRelacion">
+                      <option *ngFor="let o of relacionOpciones" [value]="o.value">{{ o.clave | translate }}</option>
+                    </select>
+                    <small class="text-muted">{{ 'cartera.interna.fichaAyuda' | translate }}</small>
+                  </div>
+
                   <!-- Etiquetas con catálogo -->
                   <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
                     <div class="d-flex align-items-center justify-content-between mb-1">

@@ -12,6 +12,44 @@
   gap: 18px;
 }
 
+// Cinco tarjetas arriba (ticket 1464: se suma «Por vencer en 7 días»).
+.cx-grid-cinco {
+  grid-template-columns: repeat(5, 1fr);
+
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 900px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; }
+}
+
+// Valor en texto («Sin cupos») en la tarjeta de cupo, más pequeño que una cifra.
+.cx-value-texto { font-size: 19px; }
+
+// Botón de la tarjeta de cupo que lleva a configurarlo.
+.cx-cupo-accion {
+  @include kc-btn-ghost;
+  align-self: flex-start;
+  margin-top: 10px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  color: var(--kc-accent);
+  border-color: #e2d9fb;
+  letter-spacing: normal;
+
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+// Resumen por vendedor y evolución de 12 meses (ticket 1464): lado a lado en pantalla ancha.
+.cx-insights {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  &.cx-insights-dos {
+    grid-template-columns: 1fr 1fr;
+    @media (max-width: 1100px) { grid-template-columns: 1fr; }
+  }
+}
+
 // ── Lista de clientes ──────────────────────────────────────────────────────
 .cx-list {
   display: flex;
@@ -299,14 +337,99 @@
   tbody tr:first-child td { border-top: none; }
 }
 .cx-dias-venc { color: #{$cx-aging-60}; font-weight: 800; }
+// Vencido de 1 a 15 días: tono más suave que el de más de 15 (ticket 1460).
+.cx-dias-venc.cx-dias-leve { color: #8a5a10; }
 .cx-dias-al-dia { color: var(--kc-muted); white-space: nowrap; }
 
 // ── Filtros, resultado y descargas (ticket 1130) ──────────────────────────
 .cx-toolbar.cx-toolbar-clientes {
-  grid-template-columns: minmax(200px, 1fr) repeat(4, minmax(150px, 190px));
+  // Ticket 1467: Antigüedad y Vendedor son listas con casillas y ocupan algo más.
+  grid-template-columns: minmax(200px, 1fr) repeat(4, minmax(150px, 200px));
 
   @media (max-width: 1200px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 640px)  { grid-template-columns: 1fr; }
+}
+
+// ── Más filtros (ticket 1467) ─────────────────────────────────────────────
+.cx-filtros-barra {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cx-mas-boton {
+  @include kc-btn-ghost;
+  padding: 8px 14px;
+  font-size: 13px;
+
+  i { color: var(--kc-accent); font-size: 13px; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+// Cuántos filtros del panel hay activos. Es un strong propio: color y tamaño explícitos.
+.cx-mas-cuenta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--kc-accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.cx-filtros-mas {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  align-items: end;
+  padding-top: 16px;
+  border-top: 1px solid var(--kc-line2);
+}
+
+// Dos casillas lado a lado (desde / hasta, mínimo / máximo)
+.cx-rango {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+
+  input { min-width: 0; padding-left: 10px; padding-right: 8px; }
+}
+
+.cx-field .cx-interruptor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: #5F3FE0;
+  }
+}
+
+.cx-interruptor-texto {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .cx-resultbar {
@@ -339,3 +462,332 @@
 
   i { color: var(--kc-accent); }
 }
+
+// Ticket 1466: menú de «Descargar PDF» (Resumen o Completo), plano y con sombra violeta difusa.
+.cx-pdf-caja { position: relative; }
+.cx-pdf-flecha { font-size: 10px; margin-left: 2px; }
+.cx-pdf-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 270px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #e4dff7;
+  border-radius: 11px;
+  box-shadow: 0 10px 30px rgba(95, 63, 224, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cx-pdf-opcion {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover { background: #f3f0ff; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
+}
+.cx-pdf-titulo { display: block; font-size: 13px; font-weight: 700; color: #211f3a; letter-spacing: normal; }
+.cx-pdf-ayuda { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: #6b6890; letter-spacing: normal; }
+
+// En pantallas angostas los botones se acomodan en varias filas: el menú se ancla a toda la franja de acciones
+// (no al botón) para que nunca se salga de la pantalla por la izquierda.
+@media (max-width: 600px) {
+  .cx-result-actions { position: relative; }
+  .cx-pdf-caja { position: static; }
+  .cx-pdf-menu { left: 0; right: 0; min-width: 0; }
+}
+
+// Aviso de rango al revés (mínimo mayor que el máximo): par color fuerte / fondo suave, con color y tamaño propios.
+.cx-rango-aviso {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #fdf6dc;
+  color: #{$cx-aging-16-ink};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+// Aclara que la barra de cupo es del cliente completo cuando los filtros recortan sus pedidos.
+.cx-bar-nota {
+  margin-top: 4px;
+  color: var(--kc-muted, #6b6885);
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+
+// ── Cartera interna (ticket 1461): plano, lila y morado; sin gradientes ───────────────────────
+// Resumen «Cartera interna $X (N)» con el interruptor a la vista.
+.cx-interna-resumen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--kc-accent-wash);
+  border: 1px solid #e4dff7;
+  border-radius: 16px;
+}
+.cx-interna-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.cx-interna-resumen-texto { flex: 1 1 260px; min-width: 0; }
+.cx-interna-resumen-titulo {
+  display: block;
+  font-family: var(--kc-font-head);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--kc-ink);
+  letter-spacing: normal;
+}
+.cx-interna-resumen-sub { margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--kc-ink2); }
+.cx-interna-interruptor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  letter-spacing: normal;
+  text-transform: none;
+
+  input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #5F3FE0; }
+}
+
+// Encabezado de la vista interna: qué es y cuánto hay por tipo.
+.cx-interna-cabeza {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e4dff7;
+  border-radius: 16px;
+}
+.cx-interna-texto { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--kc-ink2); letter-spacing: normal; }
+.cx-interna-tipos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cx-interna-tipo { padding: 10px 12px; background: var(--kc-accent-wash); border-radius: 11px; min-width: 0; }
+.cx-interna-tipo-nombre {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--kc-muted2);
+}
+.cx-interna-tipo-monto { margin-top: 2px; font-family: var(--kc-font-head); font-size: 18px; font-weight: 800; color: var(--kc-ink); overflow-wrap: anywhere; }
+.cx-interna-tipo-sub { font-size: 12px; color: var(--kc-ink2); }
+@media (max-width: 600px) {
+  .cx-interna-tipos { grid-template-columns: 1fr; }
+  .cx-interna-resumen .cx-export { width: 100%; justify-content: center; }
+}
+
+// Tipo de relación en la tarjeta del cliente, «¿Es interno? Marcar» y el botón de cambiar el tipo.
+.cx-tipo-relacion {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent) !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cx-sugerencia,
+.cx-relacion-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #e4dff7;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+.cx-sugerencia { background: #fdf6dc; border-color: #f1e3b0; color: #{$cx-aging-16-ink}; &:hover { background: #fbefc4; } }
+
+// Ticket 1463: promesa de pago y última gestión en la tarjeta, aviso de promesas vencidas y acceso a cupo y plazo.
+// Etiquetas en div (no en span de ngIf) y con color y tamaño propios; ninguna clase lleva «p-».
+.cx-cobro { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cx-cobro-etq {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.3;
+  i { font-size: 11px; }
+}
+.cx-cobro-vigente { background: var(--kc-accent-wash); color: var(--kc-accent); }
+.cx-cobro-ok { background: #e7f6ec; color: #17994f; }
+.cx-cobro-vencida { background: #fdeceb; color: #b42318; }
+.cx-cobro-gestion { background: #f5f2ff; color: #6b6890; font-weight: 600; }
+
+.cx-nocupo-accion {
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid #e4dff7;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover { background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+.cx-promesas-aviso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #fdeceb;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+  i { font-size: 15px; }
+  @media (max-width: 600px) { flex-wrap: wrap; }
+}
+.cx-promesas-texto { flex: 1 1 auto; color: #b42318; font-size: 13px; letter-spacing: normal; }
+.cx-promesas-ver {
+  padding: 6px 12px;
+  border: 1px solid #b42318;
+  border-radius: 11px;
+  background: #fff;
+  color: #b42318;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+// Tickets 1385 y 1457: seleccionar clientes para recordar el pago, agrupar por vendedor y botón por fila.
+// Plano, acento lila, sin gradientes. Ningún nombre de clase lleva «p-» (el CSS global les fuerza el tamaño de letra).
+.cx-sel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+  input { width: 18px; height: 18px; accent-color: #5f3fe0; cursor: pointer; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-col-sel { width: 34px; text-align: center; }
+
+.cx-seleccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 14px;
+  border: 1px solid #e4dff7;
+  border-radius: 11px;
+  background: #f5f2ff;
+  font-size: 13px;
+  color: #211f3a;
+  letter-spacing: normal;
+}
+.cx-seleccion-todos { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 700; cursor: pointer; input { width: 18px; height: 18px; accent-color: #5f3fe0; } }
+.cx-seleccion-cuenta { font-weight: 700; color: #5f3fe0; letter-spacing: normal; }
+.cx-seleccion-aviso { color: #b42318; font-weight: 700; font-size: 12.5px; letter-spacing: normal; }
+.cx-seleccion-boton,
+.cx-grupo-boton,
+.cx-fila-recordar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #5f3fe0;
+  border-radius: 11px;
+  background: #5f3fe0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #4f31c8; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-fila-recordar,
+.cx-grupo-boton { background: #fff; color: #5f3fe0; border-color: #d9d3f0; &:hover:not(:disabled) { background: #f3f0ff; } }
+.cx-fila-recordar { padding: 4px 10px; font-size: 12px; white-space: nowrap; }
+.cx-seleccion-limpiar {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #6b6890;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-detail-recordar { margin-bottom: 10px; }
+
+.cx-agrupar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cx-agrupar-etq { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.cx-agrupar-op {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #d9d3f0;
+  border-radius: 11px;
+  background: #fff;
+  color: #211f3a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover { background: #f3f0ff; }
+  &.is-activo { background: #5f3fe0; border-color: #5f3fe0; color: #fff; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-avatar-vendedor { background: #f3f0ff; color: #5f3fe0; i { font-size: 18px; } }
+.cx-grupo-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.cx-grupo-vencido { color: #b42318; font-weight: 700; }
+.cx-grupo-doc { color: #6b6890; font-size: 12px; font-weight: 400; letter-spacing: normal; }

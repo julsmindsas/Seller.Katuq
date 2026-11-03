@@ -1,0 +1,67 @@
+// Ticket 1463: menú «Acciones» de la tarjeta del cliente. Plano, acento #5F3FE0, sin gradientes.
+// Ninguna clase lleva «p-» (el CSS global fuerza el tamaño de letra): prefijo ca-.
+.ca-caja { position: relative; flex: 0 0 auto; }
+
+.ca-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid #e4dff7;
+  border-radius: 11px;
+  background: #fff;
+  color: #5f3fe0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { background: #f3f0ff; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
+  i { font-size: 12px; }
+}
+.ca-boton-texto { color: #5f3fe0; font-size: 13px; }
+.ca-flecha { font-size: 10px !important; }
+
+.ca-menu {
+  position: fixed; // la posición la calcula el componente (la tarjeta recorta lo que se sale de ella)
+  z-index: 1040;
+  min-width: 230px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #e4dff7;
+  border-radius: 11px;
+  box-shadow: 0 10px 30px rgba(95, 63, 224, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ca-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #211f3a;
+
+  i { width: 16px; font-size: 13px; color: #5f3fe0; }
+  &:hover { background: #f3f0ff; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
+}
+.ca-item-texto { color: inherit; font-size: 13px; }
+.ca-item-peligro { color: #b42318; i { color: #b42318; } &:hover { background: #fdeceb; } }
+
+@media (max-width: 600px) {
+  .ca-menu { min-width: 0; }
+}

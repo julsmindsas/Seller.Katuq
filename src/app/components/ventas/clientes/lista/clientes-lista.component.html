@@ -40,7 +40,7 @@
                                 label="{{ 'Exportar Excel' | translate }}"
                                 class="p-button-outlined p-button-sm cli-btn-excel d-none d-md-flex"
                                 (click)="exportarExcel()"
-                                [disabled]="clientes.length === 0"
+                                [disabled]="clientes.length === 0 || exportando"
                                 pTooltip="{{ 'Exportar todos los clientes a Excel' | translate }}"></button>
                     </div>
             </header>
@@ -289,13 +289,16 @@
                     <p-table #dt
                              [value]="clientes"
                              [loading]="cargando"
+                             [lazy]="true"
+                             [lazyLoadOnInit]="false"
+                             (onLazyLoad)="onLazyLoad($event)"
                              [paginator]="true"
                              [rows]="rows"
+                             [first]="first"
                              [totalRecords]="totalRecords"
                              [rowsPerPageOptions]="[10,25,50]"
                              [showCurrentPageReport]="true"
                              currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} registros' | translate }}"
-                             (onPage)="onPageChange($event)"
                              styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
                              [scrollable]="true"
                              scrollHeight="600px">
@@ -562,6 +565,10 @@
                             </tr>
                         </ng-template>
                     </p-table>
+                    <p class="cfg-aviso cfg-aviso--warn mt-2" *ngIf="busquedaParcial">
+                        <i class="pi pi-info-circle"></i>
+                        {{ 'ventas.clientesLista.busquedaParcial' | translate }}
+                    </p>
                 </div>
             </section>
 </div>
