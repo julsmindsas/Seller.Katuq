@@ -462,6 +462,11 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.availableTagsForFilter = [...this.clientConfig.getClientTags()];
                 // Limpiar del filtro activo si estaba seleccionada
                 this.selectedTagNames = this.selectedTagNames.filter(n => n !== tag.name);
+                // También de los filtros ya aplicados: si no, la siguiente página pediría una etiqueta borrada.
+                this.filtrosAplicados = {
+                    ...this.filtrosAplicados,
+                    etiquetas: this.filtrosAplicados.etiquetas.filter(n => n !== tag.name)
+                };
                 // Limpiar de los clientes cargados en memoria
                 this.clientes = this.clientes.map(c => ({
                     ...c,
