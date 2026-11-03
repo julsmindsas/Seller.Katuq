@@ -5,6 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { ProveedoresComponent } from './proveedores/proveedores.component';
 import { ReposicionComponent } from './reposicion/reposicion.component';
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 
 /**
  * Compras — dominio propio, separado de Inventarios.
@@ -20,6 +21,6 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [ProveedoresComponent, ReposicionComponent],
-  imports: [CommonModule, FormsModule, RouterModule.forChild(routes)],
+  imports: [CommonModule, FormsModule, RouterModule.forChild(routes), ImagenProductoPipe],
 })
 export class ComprasModule {}

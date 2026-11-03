@@ -65,6 +65,126 @@ export interface FilaReposicion {
   sinCosto: boolean;
   proveedorId: string | null;
   proveedor: string | null;
+  // --- Compras V2 (D-626, bandera `comprasV2`): solo vienen con la bandera encendida ---
+  /** Foto principal del producto. */
+  imagen?: string | null;
+  categorias?: string[];
+  /** Lo que se necesita antes de redondear a la unidad de compra y al pedido mínimo. */
+  cantidadNecesaria?: number;
+  calculo?: CalculoCompraServidor;
+  proveedorOrigen?: 'principal' | 'ultima_compra' | null;
+  unidadCompra?: string | null;
+  factorCompra?: number;
+  pedidoMinimo?: number;
+  referenciaProveedor?: string | null;
+  opcionesProveedor?: OpcionProveedor[];
+}
+
+/** El cálculo de una fila tal como lo hizo el servidor. */
+export interface CalculoCompraServidor {
+  consumoDiario: number;
+  coberturaObjetivoDias: number;
+  diasEntrega: number;
+  horizonteDias: number;
+  proyeccion: number;
+  existencia: number;
+  yaPedido: number;
+  necesidad: number;
+  cantidad: number;
+  factorCompra: number;
+  pedidoMinimo: number;
+  porFactor: boolean;
+  porMinimo: boolean;
+}
+
+/** Un proveedor del producto, con SU costo y SU tiempo de entrega. */
+export interface OpcionProveedor {
+  proveedorId: string;
+  nombre: string;
+  esPrincipal: boolean;
+  /** Por unidad base, no por caja. */
+  costoCompra: number;
+  diasEntrega: number;
+  origenDeLosDias: 'observado' | 'acordado' | 'supuesto';
+  unidadCompra: string | null;
+  factorCompra: number;
+  pedidoMinimo: number;
+  referenciaProveedor: string | null;
+}
+
+/** Un aviso de la sugerencia con los productos a corregir y dónde hacerlo. */
+export interface AvisoReposicion {
+  codigo: 'sin_costo' | 'sin_proveedor' | 'saldo_negativo' | 'salidas_sin_motivo' | 'sin_venta';
+  texto: string;
+  total: number;
+  productos: { productoId: string; referencia: string | null; nombre: string | null; idBodega: string | null; detalle: string | null }[];
+  enlace: { texto: string; ruta?: string; filtro?: 'sin_costo' | 'sin_proveedor' };
+}
+
+export interface FilaProduccion {
+  productoId: string;
+  referencia: string | null;
+  nombre: string | null;
+  idBodega: string;
+  saldo: number;
+  consumoDiario: number;
+  coberturaDias: number | null;
+  sugerido: number;
+  horizonteDias: number;
+  diasEntrega: number;
+  urgente: boolean;
+  imagen?: string | null;
+  categorias?: string[];
+  calculo?: CalculoCompraServidor;
+}
+
+export interface SugerenciaProduccion {
+  company: string;
+  idBodega: string | null;
+  ventanaDias: number;
+  coberturaObjetivoDias: number;
+  diasProduccion: number;
+  diasProduccionSupuesto: boolean;
+  filas: FilaProduccion[];
+  resumen: { sugeridos: number; urgentes: number; cubiertos: number; sinDemandaRegistrada: number };
+  advertencias: string[];
+}
+
+export interface ResultadoGenerarBorradores {
+  creadas: { id: string; proveedorId: string; proveedor: string; idBodega: string; productos: number; total: number }[];
+  yaExistian: { id: string; proveedorId: string; proveedor: string | null; idBodega: string }[];
+  sinProveedor: { productoId: string; referencia: string | null; nombre: string | null; idBodega: string }[];
+  omitidos: { productoId: string | null; motivo: string }[];
+  fallidas: { proveedorId: string; idBodega: string; code: string | null; message: string }[];
+}
+
+export interface ResultadoCostoEnLinea {
+  success: boolean;
+  aplicado: boolean;
+  motivo?: string;
+  destino: 'general' | 'principal' | 'alternativo';
+  costoAnterior: number;
+  costoNuevo: number;
+  requiereAviso?: boolean;
+  deltaPct?: number | null;
+  afectaVigente?: boolean;
+  creoRelacion?: boolean;
+  costoVigente?: number;
+}
+
+export interface RelacionProductoProveedor {
+  id: string;
+  productoId: string;
+  proveedorId: string;
+  proveedorNombre?: string | null;
+  costoCompra: number;
+  factorCompra: number;
+  unidadCompra?: string | null;
+  pedidoMinimo: number;
+  diasEntrega: number | null;
+  referenciaProveedor?: string | null;
+  esPrincipal: boolean;
+  esPrimero?: boolean;
 }
 
 export interface ResumenReposicion {
@@ -90,6 +210,11 @@ export interface SugerenciaReposicion {
   filas: FilaReposicion[];
   resumen: ResumenReposicion;
   advertencias: string[];
+  /** Compras V2: avisos con la lista de productos y el enlace para corregirlos. */
+  avisos?: AvisoReposicion[];
+  comprasV2?: boolean;
+  /** Compras V2: ¿esta sesión puede escribir costos? */
+  puedeEditarCostos?: boolean;
 }
 
 export interface FacturaOrden {
@@ -128,7 +253,7 @@ export interface CuentaOrden {
   pagos?: number;
 }
 
-export type EstadoOrdenCompra = 'abierta' | 'parcial' | 'recibida' | 'anulada';
+export type EstadoOrdenCompra = 'borrador' | 'abierta' | 'parcial' | 'recibida' | 'anulada';
 
 export interface LineaOrdenCompra {
   productoId: string;
@@ -908,6 +1033,47 @@ export class InventarioService {
     if (opciones.dias) params = params.set('dias', String(opciones.dias));
     if (opciones.cobertura) params = params.set('cobertura', String(opciones.cobertura));
     return this.http.get<SugerenciaReposicion>(`${this.apiUrl}/ordenes-compra/sugerencia`, { params });
+  }
+
+  // --- Compras V2 (D-626, bandera `comprasV2`) ---
+
+  /** Qué producir: lo marcado para producción con la misma lógica de Qué comprar. Solo lee. */
+  sugerenciaProduccion(opciones: { bodega?: string; dias?: number; cobertura?: number; diasProduccion?: number } = {}): Observable<SugerenciaProduccion> {
+    let params = new HttpParams();
+    if (opciones.bodega) params = params.set('bodega', opciones.bodega);
+    if (opciones.dias) params = params.set('dias', String(opciones.dias));
+    if (opciones.cobertura) params = params.set('cobertura', String(opciones.cobertura));
+    if (opciones.diasProduccion !== undefined) params = params.set('diasProduccion', String(opciones.diasProduccion));
+    return this.http.get<SugerenciaProduccion>(`${this.apiUrl}/ordenes-compra/produccion`, { params });
+  }
+
+  /** «Generar órdenes de compra»: un borrador por proveedor y bodega. No mueve inventario. */
+  generarBorradoresCompra(cuerpo: {
+    items: { productoId: string; referencia?: string; descripcion?: string; idBodega: string; cantidad: number; costoUnitario?: number; proveedorId?: string }[];
+    cobertura?: number;
+    /** Una clave por pulsación: repetirla no duplica las órdenes. */
+    generacionId: string;
+  }): Observable<ResultadoGenerarBorradores> {
+    return this.http.post<ResultadoGenerarBorradores>(`${this.apiUrl}/ordenes-compra/generar-borradores`, cuerpo);
+  }
+
+  /** Escribe el costo desde Qué comprar con la regla única de costos. Historial con origen «Qué comprar». */
+  registrarCostoEnLinea(cuerpo: { productoId: string; costoUnitario: number; proveedorId?: string | null }): Observable<ResultadoCostoEnLinea> {
+    return this.http.post<ResultadoCostoEnLinea>(`${this.apiUrl}/ordenes-compra/costo-en-linea`, cuerpo);
+  }
+
+  /** Asigna un proveedor a un producto (el primero queda como principal). */
+  asignarProveedorAProducto(cuerpo: {
+    productoId: string;
+    proveedorId: string;
+    datos?: { costoCompra?: number; factorCompra?: number; unidadCompra?: string; pedidoMinimo?: number; diasEntrega?: number; referenciaProveedor?: string };
+  }): Observable<RelacionProductoProveedor> {
+    return this.http.put<RelacionProductoProveedor>(`${this.apiUrl}/ordenes-compra/producto-proveedor`, cuerpo);
+  }
+
+  /** Un borrador pasa a orden abierta. No mueve inventario. */
+  confirmarBorradorOrden(id: string): Observable<{ id: string; estado: EstadoOrdenCompra }> {
+    return this.http.post<{ id: string; estado: EstadoOrdenCompra }>(`${this.apiUrl}/ordenes-compra/${id}/confirmar`, {});
   }
 
   /** Anota lo que se le devuelve al proveedor. La salida de stock va aparte. */

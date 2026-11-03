@@ -8,25 +8,33 @@
 
   <header class="kc-head">
     <div>
-      <h1>Qué comprar</h1>
-      <p>Calculado con lo que se vendió, descontando lo que ya está pedido. Propone; usted decide.</p>
+      <h1>{{ vista === 'producir' ? 'Qué producir' : 'Qué comprar' }}</h1>
+      <p *ngIf="vista === 'comprar'">Calculado con lo que se vendió, descontando lo que ya está pedido. Propone; usted decide.</p>
+      <p *ngIf="vista === 'producir'">Lo que se fabrica, con la misma cuenta: lo que se vende, lo que hay y cuánto falta producir.</p>
     </div>
-    <button class="kc-btn kc-btn--ghost" (click)="consultar()" [disabled]="cargando">
+    <button class="kc-btn kc-btn--ghost" (click)="vista === 'producir' ? cargarProduccion() : consultar()"
+            [disabled]="cargando || cargandoProduccion">
       <i class="pi pi-refresh"></i> Recalcular
     </button>
   </header>
 
+  <!-- Compras V2: Qué comprar y Qué producir comparten filtros y cuenta. -->
+  <div class="kc-toggle cv2-pestanas" *ngIf="v2">
+    <button [class.is-active]="vista === 'comprar'" (click)="cambiarVista('comprar')">Qué comprar</button>
+    <button [class.is-active]="vista === 'producir'" (click)="cambiarVista('producir')">Qué producir</button>
+  </div>
+
   <div class="kc-filtros">
     <label class="kc-campo">
       <span>Bodega</span>
-      <select [(ngModel)]="bodegaSeleccionada" (change)="consultar()">
+      <select [(ngModel)]="bodegaSeleccionada" (change)="alCambiarFiltros()">
         <option value="">Todas</option>
         <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
       </select>
     </label>
     <label class="kc-campo">
       <span>Cubrir</span>
-      <select [(ngModel)]="coberturaObjetivo" (change)="consultar()">
+      <select [(ngModel)]="coberturaObjetivo" (change)="alCambiarFiltros()">
         <option [ngValue]="15">15 días</option>
         <option [ngValue]="30">30 días</option>
         <option [ngValue]="45">45 días</option>
@@ -35,146 +43,365 @@
     </label>
     <label class="kc-campo">
       <span>Con la venta de</span>
-      <select [(ngModel)]="ventanaDias" (change)="consultar()">
+      <select [(ngModel)]="ventanaDias" (change)="alCambiarFiltros()">
         <option [ngValue]="30">últimos 30 días</option>
         <option [ngValue]="90">últimos 90 días</option>
         <option [ngValue]="180">últimos 180 días</option>
       </select>
     </label>
+
+    <ng-container *ngIf="v2 && vista === 'comprar'">
+      <label class="kc-campo">
+        <span>Proveedor</span>
+        <select [(ngModel)]="filtroProveedor" (change)="recalcularLista()">
+          <option value="">Todos</option>
+          <option value="__sin__">Sin proveedor</option>
+          <option *ngFor="let p of proveedoresDeLaLista" [value]="p.id">{{ p.nombre }}</option>
+        </select>
+      </label>
+      <label class="kc-campo" *ngIf="categorias.length > 0">
+        <span>Categoría</span>
+        <select [(ngModel)]="filtroCategoria" (change)="recalcularLista()">
+          <option value="">Todas</option>
+          <option *ngFor="let c of categorias" [value]="c">{{ c }}</option>
+        </select>
+      </label>
+    </ng-container>
+
+    <label class="kc-campo" *ngIf="v2 && vista === 'producir'">
+      <span>Días que tarda producir</span>
+      <input class="kc-input" type="number" min="0" max="60" [(ngModel)]="diasProduccion" (change)="cargarProduccion()" />
+    </label>
   </div>
 
-  <p class="kc-cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Calculando…</p>
-  <p class="kc-error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</p>
+  <!-- ===================== QUÉ COMPRAR ===================== -->
+  <ng-container *ngIf="vista === 'comprar'">
+    <p class="kc-cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Calculando…</p>
+    <p class="kc-error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</p>
 
-  <ng-container *ngIf="sugerencia as s">
-    <section class="kc-stats" *ngIf="!cargando">
-      <article class="kc-stat kc-stat--alerta">
-        <span class="kc-label">Se agotan antes de que llegue</span>
-        <strong>{{ s.resumen.urgentes | number }}</strong>
-        <small>La venta se pierde salvo que se pida hoy</small>
-      </article>
-      <article class="kc-stat">
-        <!-- Ticket 1470: qué se pide y qué ya no hace falta pedir, sin mezclar las dos cifras. -->
-        <span class="kc-label">Productos por pedir</span>
-        <strong>{{ s.resumen.sugeridos | number }}</strong>
-        <small *ngIf="s.resumen.cubiertos">Otros {{ s.resumen.cubiertos | number }} no hace falta pedirlos: alcanza con lo que hay o ya viene en camino</small>
-      </article>
-      <article class="kc-stat">
-        <!-- Ticket 1470: con productos sin costo el valor es parcial; si ninguno tiene costo no se muestra $0. -->
-        <span class="kc-label">{{ s.resumen.sinCosto ? 'Valor parcial' : 'Valor estimado' }}</span>
-        <strong>{{ (s.resumen.sinCosto && !s.resumen.valorEstimado) ? 'Sin costos' : (s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
-        <small *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
-      </article>
-      <article class="kc-stat" *ngIf="s.resumen.seProducen">
-        <span class="kc-label">Se producen</span>
-        <strong>{{ s.resumen.seProducen | number }}</strong>
-        <small>Se fabrican, no se compran</small>
-      </article>
-      <article class="kc-stat" *ngIf="s.resumen.sinDemandaRegistrada">
-        <span class="kc-label">Sin venta registrada</span>
-        <strong>{{ s.resumen.sinDemandaRegistrada | number }}</strong>
-        <small>No se pueden proyectar</small>
-      </article>
-    </section>
-
-    <!-- Lo que el cálculo no puede garantizar se dice antes de firmar la orden. -->
-    <ul class="kc-avisos" *ngIf="s.advertencias?.length && !cargando">
-      <li *ngFor="let a of s.advertencias"><i class="pi pi-info-circle"></i> {{ a }}</li>
-    </ul>
-
-    <section class="kc-panel" *ngIf="!cargando">
-      <header class="rp-cabeza">
-        <h2 class="rp-titulo">{{ soloUrgentes ? 'Urgentes' : 'Sugerencia' }}
-          <span class="rp-conteo">{{ filas.length | number }} productos</span>
-        </h2>
-        <div class="rp-cabeza__acciones">
-          <div class="kc-toggle">
-            <button [class.is-active]="!soloUrgentes" (click)="soloUrgentes = false">Todo</button>
-            <button [class.is-active]="soloUrgentes" (click)="soloUrgentes = true">Solo urgentes</button>
-          </div>
-          <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="marcarTodas(true)">Marcar todo</button>
-          <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="marcarTodas(false)">Desmarcar</button>
-        </div>
-      </header>
-
-      <div class="kc-vacio" *ngIf="filas.length === 0">
-        <div class="kc-vacio__icono"><i class="pi pi-check-circle"></i></div>
-        <h3>No hay nada que reponer</h3>
-        <p *ngIf="s.resumen.sinDemandaRegistrada">
-          Ojo: {{ s.resumen.sinDemandaRegistrada | number }} productos no registran salidas, así que no se
-          pudieron proyectar. Puede que sí haya que comprar y el sistema todavía no lo sepa.
-        </p>
-      </div>
-
-      <div class="kc-lista" *ngIf="filas.length > 0">
-        <article class="kc-row" *ngFor="let f of filas"
-                 [class.is-urgente]="f.urgente"
-                 [class.is-active]="seleccion[clave(f)]">
-          <label class="rp-check">
-            <input type="checkbox" [(ngModel)]="seleccion[clave(f)]" />
-          </label>
-
-          <span class="kc-row__avatar" [style.background]="colorAvatar(f.nombre || f.referencia)">
-            {{ inicial(f.nombre || f.referencia) }}
-          </span>
-
-          <div class="kc-row__main">
-            <div class="kc-row__top">
-              <span class="kc-row__nombre">{{ f.nombre || f.referencia || f.productoId }}</span>
-              <span class="kc-row__cod">{{ f.referencia || f.productoId }}</span>
-              <!-- Ticket 1470: «Agotado» si ya no hay; «Se agota en X días» si todavía hay. -->
-              <span class="kc-pill kc-pill--danger" *ngIf="f.urgente">{{ estaAgotado(f) ? 'Agotado' : 'Se agota en ' + textoCobertura(f) }}</span>
-              <span class="kc-pill kc-pill--warn" *ngIf="!f.urgente">Alcanza {{ textoCobertura(f) }}</span>
-              <span class="kc-pill kc-pill--info" *ngIf="f.yaPedido" title="Ya está pedido y se descontó">
-                {{ f.yaPedido | number }} en camino
-              </span>
-            </div>
-
-            <div class="kc-row__meta">
-              <span><i class="pi pi-home"></i> {{ nombreBodega(f.idBodega) }}</span>
-              <span>hay {{ f.saldo | number }}</span>
-              <span>se vende {{ porDia(f.consumoDiario) }}/día</span>
-              <span [title]="'De dónde salió el plazo de entrega'">
-                entrega en {{ f.diasEntrega }} d
-                <ng-container [ngSwitch]="f.origenDeLosDias">
-                  <ng-container *ngSwitchCase="'observado'">(medido)</ng-container>
-                  <ng-container *ngSwitchCase="'acordado'">(acordado)</ng-container>
-                  <ng-container *ngSwitchDefault>(supuesto)</ng-container>
-                </ng-container>
-              </span>
-              <span class="rp-sincosto" *ngIf="f.sinCosto">sin costo conocido</span>
-            </div>
-          </div>
-
-          <div class="kc-row__fin rp-fin">
-            <label class="rp-campo">
-              <span class="kc-label">Pedir</span>
-              <input class="kc-input" type="number" min="0" [(ngModel)]="cantidades[clave(f)]" />
-            </label>
-            <label class="rp-campo rp-campo--ancho">
-              <span class="kc-label">Proveedor</span>
-              <select class="kc-select" [(ngModel)]="proveedorPorFila[clave(f)]">
-                <option value="">— Escoger —</option>
-                <option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</option>
-              </select>
-            </label>
-          </div>
+    <ng-container *ngIf="sugerencia as s">
+      <section class="kc-stats" *ngIf="!cargando">
+        <article class="kc-stat kc-stat--alerta">
+          <span class="kc-label">Se agotan antes de que llegue</span>
+          <strong>{{ s.resumen.urgentes | number }}</strong>
+          <small>La venta se pierde salvo que se pida hoy</small>
         </article>
-      </div>
+        <article class="kc-stat">
+          <!-- Ticket 1470: qué se pide y qué ya no hace falta pedir, sin mezclar las dos cifras. -->
+          <span class="kc-label">Productos por pedir</span>
+          <strong>{{ s.resumen.sugeridos | number }}</strong>
+          <small *ngIf="s.resumen.cubiertos">Otros {{ s.resumen.cubiertos | number }} no hace falta pedirlos: alcanza con lo que hay o ya viene en camino</small>
+        </article>
+        <article class="kc-stat" *ngIf="!v2">
+          <!-- Ticket 1470: con productos sin costo el valor es parcial; si ninguno tiene costo no se muestra $0. -->
+          <span class="kc-label">{{ s.resumen.sinCosto ? 'Valor parcial' : 'Valor estimado' }}</span>
+          <strong>{{ (s.resumen.sinCosto && !s.resumen.valorEstimado) ? 'Sin costos' : (s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+          <small *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
+        </article>
+        <article class="kc-stat" *ngIf="v2">
+          <!-- V2: sigue el costo que se escribe en la fila y el proveedor elegido. -->
+          <span class="kc-label">{{ sinCostoActual ? 'Valor parcial' : 'Valor estimado' }}</span>
+          <strong>{{ (sinCostoActual && !valorActual) ? 'Sin costos' : (valorActual | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+          <small *ngIf="sinCostoActual">{{ sinCostoActual | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
+        </article>
+        <article class="kc-stat" *ngIf="s.resumen.seProducen">
+          <span class="kc-label">Se producen</span>
+          <strong>{{ s.resumen.seProducen | number }}</strong>
+          <small>Se fabrican, no se compran</small>
+        </article>
+        <article class="kc-stat" *ngIf="s.resumen.sinDemandaRegistrada">
+          <span class="kc-label">Sin venta registrada</span>
+          <strong>{{ s.resumen.sinDemandaRegistrada | number }}</strong>
+          <small>No se pueden proyectar</small>
+        </article>
+      </section>
 
-      <footer class="rp-pie" *ngIf="filas.length > 0">
-        <strong class="rp-total">
-          {{ seleccionadas.length | number }} seleccionados ·
-          {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
-        </strong>
-        <button class="kc-btn" (click)="crearOrdenes()" [disabled]="creando || seleccionadas.length === 0">
-          <i class="pi pi-file-edit"></i> Crear órdenes de compra
-        </button>
-      </footer>
+      <!-- Lo que el cálculo no puede garantizar se dice antes de firmar la orden. -->
+      <ul class="kc-avisos" *ngIf="!v2 && s.advertencias?.length && !cargando">
+        <li *ngFor="let a of s.advertencias"><i class="pi pi-info-circle"></i> {{ a }}</li>
+      </ul>
 
-      <p class="rp-nota" *ngIf="filas.length > 0">
-        Se crea una orden por proveedor y bodega. Nada entra al inventario hasta que se reciba.
-      </p>
-    </section>
+      <!-- Compras V2: cada aviso dice cuántos productos son, los muestra y lleva a corregirlos. -->
+      <section class="cv2-avisos" *ngIf="v2 && !cargando && (s.avisos?.length || advertenciasRestantes.length)">
+        <article class="cv2-aviso" *ngFor="let a of s.avisos">
+          <div class="cv2-aviso__cabeza">
+            <i class="pi pi-info-circle"></i>
+            <span class="cv2-aviso__texto">{{ a.texto }}</span>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="alternarAviso(a)">
+              {{ avisoAbierto === a.codigo ? 'Ocultar' : 'Ver los ' + (a.total | number) }}
+            </button>
+            <button class="kc-btn kc-btn--mini" *ngIf="a.enlace.filtro"
+                    (click)="filtrarPorAviso(a.enlace.filtro)">
+              {{ filtroAviso === a.enlace.filtro ? 'Quitar filtro' : a.enlace.texto }}
+            </button>
+            <a class="kc-btn kc-btn--mini" *ngIf="a.enlace.ruta" [routerLink]="a.enlace.ruta">{{ a.enlace.texto }}</a>
+          </div>
+          <ul class="cv2-aviso__lista" *ngIf="avisoAbierto === a.codigo">
+            <li *ngFor="let p of a.productos | slice:0:productosPorAviso">
+              <strong>{{ p.nombre || p.referencia || p.productoId }}</strong>
+              <span class="cv2-aviso__ref" *ngIf="p.referencia">{{ p.referencia }}</span>
+              <span class="cv2-aviso__ref" *ngIf="p.detalle">{{ p.detalle }}</span>
+            </li>
+            <li class="cv2-aviso__mas" *ngIf="a.total > productosPorAviso">y {{ a.total - productosPorAviso | number }} más</li>
+          </ul>
+        </article>
+        <article class="cv2-aviso" *ngFor="let t of advertenciasRestantes">
+          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span></div>
+        </article>
+      </section>
+
+      <section class="kc-panel" *ngIf="!cargando">
+        <header class="rp-cabeza">
+          <h2 class="rp-titulo">{{ soloUrgentes ? 'Urgentes' : 'Sugerencia' }}
+            <span class="rp-conteo">{{ filas.length | number }} productos</span>
+          </h2>
+          <div class="rp-cabeza__acciones">
+            <div class="kc-toggle">
+              <button [class.is-active]="!soloUrgentes" (click)="fijarUrgentes(false)">Todo</button>
+              <button [class.is-active]="soloUrgentes" (click)="fijarUrgentes(true)">Solo urgentes</button>
+            </div>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" *ngIf="v2 && hayFiltros" (click)="limpiarFiltros()">Quitar filtros</button>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="marcarTodas(true)">Marcar todo</button>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="marcarTodas(false)">Desmarcar</button>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" *ngIf="v2" (click)="exportarExcel()">
+              <i class="pi pi-file-excel"></i> Exportar a Excel
+            </button>
+          </div>
+        </header>
+
+        <div class="kc-vacio" *ngIf="filas.length === 0">
+          <div class="kc-vacio__icono"><i class="pi pi-check-circle"></i></div>
+          <h3>{{ v2 && hayFiltros ? 'Ningún producto cumple los filtros' : 'No hay nada que reponer' }}</h3>
+          <p *ngIf="v2 && hayFiltros">Quite algún filtro para volver a ver la lista.</p>
+          <p *ngIf="s.resumen.sinDemandaRegistrada">
+            Ojo: {{ s.resumen.sinDemandaRegistrada | number }} productos no registran salidas, así que no se
+            pudieron proyectar. Puede que sí haya que comprar y el sistema todavía no lo sepa.
+          </p>
+        </div>
+
+        <div class="kc-lista" *ngIf="filas.length > 0">
+          <article class="kc-row" *ngFor="let f of filas"
+                   [class.is-urgente]="f.urgente"
+                   [class.is-active]="seleccion[clave(f)]">
+            <label class="rp-check">
+              <input type="checkbox" [(ngModel)]="seleccion[clave(f)]" [disabled]="!!enBorrador[clave(f)]" />
+            </label>
+
+            <!-- Ticket 1470, error 6: la foto del producto en lugar de la letra de color. -->
+            <img *ngIf="v2" class="cv2-foto" [src]="f.imagen | imagenProducto" alt="" loading="lazy" />
+            <span *ngIf="!v2" class="kc-row__avatar" [style.background]="colorAvatar(f.nombre || f.referencia)">
+              {{ inicial(f.nombre || f.referencia) }}
+            </span>
+
+            <div class="kc-row__main">
+              <div class="kc-row__top">
+                <span class="kc-row__nombre">{{ f.nombre || f.referencia || f.productoId }}</span>
+                <span class="kc-row__cod">{{ f.referencia || f.productoId }}</span>
+                <!-- Ticket 1470: «Agotado» si ya no hay; «Se agota en X días» si todavía hay. -->
+                <span class="kc-pill kc-pill--danger" *ngIf="f.urgente">{{ estaAgotado(f) ? 'Agotado' : 'Se agota en ' + textoCobertura(f) }}</span>
+                <span class="kc-pill kc-pill--warn" *ngIf="!f.urgente">Alcanza {{ textoCobertura(f) }}</span>
+                <span class="kc-pill kc-pill--info" *ngIf="f.yaPedido" title="Ya está pedido y se descontó">
+                  {{ f.yaPedido | number }} en camino
+                </span>
+                <span class="kc-pill kc-pill--slate" *ngIf="enBorrador[clave(f)]" title="Ya salió en una orden en borrador">En borrador</span>
+              </div>
+
+              <div class="kc-row__meta">
+                <span><i class="pi pi-home"></i> {{ nombreBodega(f.idBodega) }}</span>
+                <span>hay {{ f.saldo | number }}</span>
+                <span>se vende {{ porDia(f.consumoDiario) }}/día</span>
+                <!-- V2: el tiempo del proveedor elegido; «supuesto» solo si de verdad no hay dato. -->
+                <span *ngIf="!v2" [title]="'De dónde salió el plazo de entrega'">
+                  entrega en {{ f.diasEntrega }} d
+                  <ng-container [ngSwitch]="f.origenDeLosDias">
+                    <ng-container *ngSwitchCase="'observado'">(medido)</ng-container>
+                    <ng-container *ngSwitchCase="'acordado'">(acordado)</ng-container>
+                    <ng-container *ngSwitchDefault>(supuesto)</ng-container>
+                  </ng-container>
+                </span>
+                <ng-container *ngIf="v2">
+                  <span *ngIf="vistas[clave(f)] as vf" title="De dónde salió el plazo de entrega">
+                    entrega en {{ vf.diasEntrega }} d
+                    <ng-container [ngSwitch]="vf.origenDias">
+                      <ng-container *ngSwitchCase="'observado'">(medido)</ng-container>
+                      <ng-container *ngSwitchCase="'acordado'">(acordado)</ng-container>
+                      <ng-container *ngSwitchDefault>(supuesto)</ng-container>
+                    </ng-container>
+                  </span>
+                </ng-container>
+                <span class="rp-sincosto" *ngIf="!v2 && f.sinCosto">sin costo conocido</span>
+                <span class="cv2-costo" *ngIf="v2 && vistas[clave(f)] && !vistas[clave(f)].sinCosto">
+                  costo {{ vistas[clave(f)].costo | currency:'COP':'symbol-narrow':'1.0-0' }}
+                </span>
+              </div>
+
+              <!-- V2: costo en línea. Solo quien puede cambiar costos lo ve como campo. -->
+              <div class="cv2-costo-fila" *ngIf="v2 && vistas[clave(f)]?.sinCosto">
+                <span class="rp-sincosto">sin costo conocido</span>
+                <ng-container *ngIf="sugerencia?.puedeEditarCostos; else sinPermisoCosto">
+                  <input class="kc-input cv2-costo-input" type="number" min="0" step="any" placeholder="Costo por unidad"
+                         [(ngModel)]="costoEscrito[clave(f)]" (keyup.enter)="guardarCosto(f)"
+                         [attr.aria-label]="'Costo de ' + (f.nombre || f.referencia)" />
+                  <button class="kc-btn kc-btn--mini" (click)="guardarCosto(f)" [disabled]="guardandoCosto[clave(f)] || !costoEscrito[clave(f)]">
+                    {{ guardandoCosto[clave(f)] ? 'Guardando…' : 'Guardar costo' }}
+                  </button>
+                  <span class="cv2-nota">{{ proveedorPorFila[clave(f)] ? 'Queda como costo de ' + nombreProveedor(proveedorPorFila[clave(f)]) : 'Queda como costo general del producto' }}</span>
+                </ng-container>
+                <ng-template #sinPermisoCosto>
+                  <span class="cv2-nota">Pídale a un administrador que lo escriba.</span>
+                </ng-template>
+              </div>
+
+              <div class="cv2-costo-fila" *ngIf="v2 && vistas[clave(f)] && !vistas[clave(f)].esDelProducto">
+                <span class="cv2-nota">{{ vistas[clave(f)].proveedorNombre }} todavía no surte este producto.</span>
+                <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="guardarProveedor(f)" [disabled]="guardandoProveedor[clave(f)]">
+                  Guardar como proveedor de este producto
+                </button>
+              </div>
+            </div>
+
+            <div class="kc-row__fin rp-fin">
+              <label class="rp-campo">
+                <span class="kc-label">Pedir</span>
+                <input class="kc-input" type="number" min="0" [(ngModel)]="cantidades[clave(f)]"
+                       [title]="v2 ? textoDelCalculoDe(f) : ''" />
+                <span class="cv2-nota" *ngIf="v2 && (vistas[clave(f)]?.factor || 0) > 1" [title]="textoDelCalculoDe(f)">
+                  {{ vistas[clave(f)]?.unidadCompra || 'caja' }} x{{ vistas[clave(f)]?.factor }}
+                </span>
+                <span class="cv2-nota" *ngIf="v2 && vistas[clave(f)]?.calculo?.porMinimo" [title]="textoDelCalculoDe(f)">
+                  pedido mínimo {{ vistas[clave(f)]?.minimo | number }}
+                </span>
+              </label>
+              <label class="rp-campo rp-campo--ancho">
+                <span class="kc-label">Proveedor</span>
+                <select *ngIf="!v2" class="kc-select" [(ngModel)]="proveedorPorFila[clave(f)]">
+                  <option value="">— Escoger —</option>
+                  <option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</option>
+                </select>
+                <select *ngIf="v2" class="kc-select" [(ngModel)]="proveedorPorFila[clave(f)]" (ngModelChange)="cambiarProveedor(f)">
+                  <option value="">— Escoger —</option>
+                  <optgroup label="Proveedores de este producto" *ngIf="opcionesDe(f).length">
+                    <option *ngFor="let o of opcionesDe(f)" [value]="o.proveedorId">
+                      {{ o.nombre }}{{ o.esPrincipal ? ' (principal)' : '' }}{{ o.costoCompra ? ' · ' + (o.costoCompra | currency:'COP':'symbol-narrow':'1.0-0') : '' }}
+                    </option>
+                  </optgroup>
+                  <optgroup label="Otros proveedores">
+                    <option *ngFor="let p of otrosProveedores(f)" [value]="p.id">{{ p.nombre }}</option>
+                  </optgroup>
+                </select>
+              </label>
+            </div>
+          </article>
+        </div>
+
+        <!-- Sin V2: el pie de siempre. -->
+        <footer class="rp-pie" *ngIf="!v2 && filas.length > 0">
+          <strong class="rp-total">
+            {{ seleccionadas.length | number }} seleccionados ·
+            {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </strong>
+          <button class="kc-btn" (click)="crearOrdenes()" [disabled]="creando || seleccionadas.length === 0">
+            <i class="pi pi-file-edit"></i> Crear órdenes de compra
+          </button>
+        </footer>
+
+        <p class="rp-nota" *ngIf="!v2 && filas.length > 0">
+          Se crea una orden por proveedor y bodega. Nada entra al inventario hasta que se reciba.
+        </p>
+
+        <!-- V2: barra fija con el total, el valor y el botón. -->
+        <footer class="cv2-barra" *ngIf="v2 && filas.length > 0">
+          <div class="cv2-barra__cifras">
+            <strong>{{ seleccionadas.length | number }} productos seleccionados</strong>
+            <span class="cv2-barra__valor">
+              {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
+              <ng-container *ngIf="sinCostoSeleccionados">· {{ sinCostoSeleccionados | number }} sin costo no suman</ng-container>
+            </span>
+          </div>
+          <button class="kc-btn" (click)="generarOrdenes()" [disabled]="creando || seleccionadas.length === 0">
+            <i class="pi pi-file-edit"></i> {{ creando ? 'Generando…' : 'Generar órdenes de compra' }}
+          </button>
+        </footer>
+        <p class="rp-nota" *ngIf="v2 && filas.length > 0">
+          Se genera un borrador por proveedor y bodega. Los productos sin proveedor quedan aparte. Nada entra al inventario hasta que se confirme y se reciba la orden.
+        </p>
+      </section>
+    </ng-container>
+  </ng-container>
+
+  <!-- ===================== QUÉ PRODUCIR (V2) ===================== -->
+  <ng-container *ngIf="v2 && vista === 'producir'">
+    <p class="kc-cargando" *ngIf="cargandoProduccion"><i class="pi pi-spin pi-spinner"></i> Calculando…</p>
+    <p class="kc-error" *ngIf="errorProduccion"><i class="pi pi-exclamation-triangle"></i> {{ errorProduccion }}</p>
+
+    <ng-container *ngIf="produccion as pr">
+      <section class="kc-stats" *ngIf="!cargandoProduccion">
+        <article class="kc-stat kc-stat--alerta">
+          <span class="kc-label">Se agotan antes de producirse</span>
+          <strong>{{ pr.resumen.urgentes | number }}</strong>
+          <small>Hay que producirlos primero</small>
+        </article>
+        <article class="kc-stat">
+          <span class="kc-label">Productos por producir</span>
+          <strong>{{ pr.resumen.sugeridos | number }}</strong>
+          <small *ngIf="pr.resumen.cubiertos">Otros {{ pr.resumen.cubiertos | number }} alcanzan con lo que hay</small>
+        </article>
+        <article class="kc-stat" *ngIf="pr.resumen.sinDemandaRegistrada">
+          <span class="kc-label">Sin venta registrada</span>
+          <strong>{{ pr.resumen.sinDemandaRegistrada | number }}</strong>
+          <small>No se pueden proyectar</small>
+        </article>
+      </section>
+
+      <section class="cv2-avisos" *ngIf="!cargandoProduccion && pr.advertencias?.length">
+        <article class="cv2-aviso" *ngFor="let t of pr.advertencias">
+          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span></div>
+        </article>
+      </section>
+
+      <section class="kc-panel" *ngIf="!cargandoProduccion">
+        <header class="rp-cabeza">
+          <h2 class="rp-titulo">Por producir
+            <span class="rp-conteo">{{ pr.filas.length | number }} productos</span>
+          </h2>
+          <div class="rp-cabeza__acciones">
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="exportarProduccion()">
+              <i class="pi pi-file-excel"></i> Exportar a Excel
+            </button>
+          </div>
+        </header>
+
+        <div class="kc-vacio" *ngIf="pr.filas.length === 0">
+          <div class="kc-vacio__icono"><i class="pi pi-check-circle"></i></div>
+          <h3>No hay nada que producir</h3>
+          <p>Ningún producto marcado para producción necesita reponerse con la venta de este periodo.</p>
+        </div>
+
+        <div class="kc-lista" *ngIf="pr.filas.length > 0">
+          <article class="kc-row" *ngFor="let f of pr.filas" [class.is-urgente]="f.urgente">
+            <img class="cv2-foto" [src]="f.imagen | imagenProducto" alt="" loading="lazy" />
+            <div class="kc-row__main">
+              <div class="kc-row__top">
+                <span class="kc-row__nombre">{{ f.nombre || f.referencia || f.productoId }}</span>
+                <span class="kc-row__cod">{{ f.referencia || f.productoId }}</span>
+                <span class="kc-pill kc-pill--danger" *ngIf="f.urgente">{{ f.saldo <= 0 ? 'Agotado' : 'Se agota en ' + textoCobertura(f) }}</span>
+                <span class="kc-pill kc-pill--warn" *ngIf="!f.urgente">Alcanza {{ textoCobertura(f) }}</span>
+              </div>
+              <div class="kc-row__meta">
+                <span><i class="pi pi-home"></i> {{ nombreBodega(f.idBodega) }}</span>
+                <span>hay {{ f.saldo | number }}</span>
+                <span>se vende {{ porDia(f.consumoDiario) }}/día</span>
+              </div>
+            </div>
+            <div class="kc-row__fin rp-fin">
+              <div class="rp-campo">
+                <span class="kc-label">Producir</span>
+                <strong class="cv2-producir" [title]="textoDelCalculoProduccion(f)">{{ f.sugerido | number }}</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </ng-container>
   </ng-container>
 </div>

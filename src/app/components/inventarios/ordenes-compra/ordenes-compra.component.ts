@@ -78,6 +78,8 @@ export class OrdenesCompraComponent implements OnInit {
       case 'recibida': return 'kc-pill--ok';
       case 'parcial': return 'kc-pill--warn';
       case 'anulada': return 'kc-pill--slate';
+      // Borrador (Qué comprar → Generar órdenes de compra): trabajo por revisar, todavía no se le pidió al proveedor.
+      case 'borrador': return 'kc-pill--accent';
       default: return 'kc-pill--info';
     }
   }
@@ -617,6 +619,35 @@ export class OrdenesCompraComponent implements OnInit {
             ' Revise la orden antes de volver a recibir, para no ingresar dos veces.',
         });
       },
+    });
+  }
+
+  /** Un borrador pasa a orden abierta: ya se le pide al proveedor. No mueve inventario. */
+  confirmarBorrador(): void {
+    if (!this.orden) return;
+    const id = this.orden.id;
+    Swal.fire({
+      title: '¿Confirmar esta orden?',
+      text: 'Deja de ser borrador y pasa a pedida. Todavía no entra nada al inventario: eso pasa cuando se reciba.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'Volver',
+      confirmButtonColor: '#5F3FE0',
+    }).then((resultado) => {
+      if (!resultado.isConfirmed) return;
+      this.guardando = true;
+      this.inventarioService.confirmarBorradorOrden(id).subscribe({
+        next: () => {
+          this.guardando = false;
+          Swal.fire({ icon: 'success', title: 'Orden confirmada', timer: 1500, showConfirmButton: false });
+          this.abrirOrden(id);
+        },
+        error: (err) => {
+          this.guardando = false;
+          Swal.fire('Error', err?.error?.message || 'No se pudo confirmar.', 'error');
+        },
+      });
     });
   }
 
