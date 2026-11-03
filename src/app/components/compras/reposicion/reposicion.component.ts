@@ -9,6 +9,7 @@ import {
   InventarioService,
   OpcionProveedor,
   Proveedor,
+  ResultadoGenerarBorradores,
   SugerenciaProduccion,
   SugerenciaReposicion,
 } from '../../../shared/services/inventarios/inventario.service';
@@ -36,6 +37,24 @@ export interface VistaFila {
 
 /** Cuántos productos se muestran dentro de un aviso desplegado. */
 const PRODUCTOS_POR_AVISO = 50;
+
+/** Productos que caben en una orden: más de esto el servidor parte el grupo en varias órdenes. */
+const PRODUCTOS_POR_ORDEN = 300;
+
+/** Lo que el servidor devuelve al generar, con lo que sumó el 3-nov: partes de una orden y productos que ya estaban en un borrador. */
+type RespuestaBorradores = Omit<ResultadoGenerarBorradores, 'creadas' | 'yaExistian' | 'fallidas'> & {
+  creadas: (ResultadoGenerarBorradores['creadas'][number] & { parte?: number; partes?: number })[];
+  yaExistian: (ResultadoGenerarBorradores['yaExistian'][number] & { parte?: number; partes?: number })[];
+  fallidas: (ResultadoGenerarBorradores['fallidas'][number] & { parte?: number })[];
+  yaEnBorrador?: {
+    productoId: string;
+    referencia: string | null;
+    idBodega: string;
+    proveedorId: string;
+    ordenId: string;
+    proveedor: string | null;
+  }[];
+};
 
 const escapar = (valor: unknown): string =>
   String(valor ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
@@ -163,13 +182,18 @@ export class ReposicionComponent implements OnInit {
           this.proveedorPorFila = {};
           this.vistas = {};
           this.costoEscrito = {};
+          // Un borrador no cuenta como «en camino», así que la sugerencia sigue pidiendo lo mismo. La marca
+          // «En borrador» se conserva al recalcular o cambiar bodega o cobertura: si no, las mismas filas
+          // reaparecen marcadas y se generarían otra vez.
+          const marcasPrevias = this.enBorrador;
           this.enBorrador = {};
           this.filtroAviso = '';
           for (const fila of sugerencia.filas || []) {
             const k = this.clave(fila);
             this.cantidades[k] = fila.sugerido;
-            // Lo urgente viene marcado: es lo que alguien atendería primero.
-            this.seleccion[k] = fila.urgente;
+            if (marcasPrevias[k]) this.enBorrador[k] = marcasPrevias[k];
+            // Lo urgente viene marcado: es lo que alguien atendería primero. Lo que ya está en un borrador, no.
+            this.seleccion[k] = fila.urgente && !this.enBorrador[k];
             if (fila.proveedorId) this.proveedorPorFila[k] = fila.proveedorId;
           }
           // V2 solo si la bandera está en las dos puntas: la de la pantalla y la que confirma el servidor.
@@ -593,7 +617,13 @@ export class ReposicionComponent implements OnInit {
     });
     const conProveedor = items.filter((i) => i.proveedorId && i.cantidad > 0);
     const sinProveedor = items.filter((i) => !i.proveedorId);
-    const grupos = new Set(conProveedor.map((i) => `${i.proveedorId}||${i.idBodega}`)).size;
+    // Un grupo de más de 300 productos sale en varias órdenes.
+    const porGrupo = new Map<string, number>();
+    for (const i of conProveedor) {
+      const g = `${i.proveedorId}||${i.idBodega}`;
+      porGrupo.set(g, (porGrupo.get(g) || 0) + 1);
+    }
+    const grupos = [...porGrupo.values()].reduce((s, n) => s + Math.ceil(n / PRODUCTOS_POR_ORDEN), 0);
 
     if (conProveedor.length === 0) {
       Swal.fire(
@@ -623,30 +653,49 @@ export class ReposicionComponent implements OnInit {
     if (!this.generacionId) this.generacionId = this.nuevaClave();
 
     try {
-      const r = await this.inventarioService
+      const r = (await this.inventarioService
         .generarBorradoresCompra({ items: conProveedor, cobertura: this.coberturaObjetivo, generacionId: this.generacionId })
-        .toPromise();
+        .toPromise()) as RespuestaBorradores | undefined;
       this.creando = false;
       this.generacionId = null;
       if (!r) return;
 
-      // Lo que ya salió en un borrador se marca para no generarlo dos veces sin querer.
-      const idDeGrupo = new Map<string, string>([...r.creadas, ...r.yaExistian].map((o) => [`${o.proveedorId}||${o.idBodega}`, o.id]));
-      for (const f of filas) {
-        const k = this.clave(f);
-        const g = `${this.proveedorPorFila[k]}||${f.idBodega}`;
-        if (idDeGrupo.has(g)) {
-          this.enBorrador[k] = idDeGrupo.get(g) || '';
-          this.seleccion[k] = false;
-        }
+      // Lo que ya salió en un borrador se marca para no generarlo dos veces sin querer. Con grupos partidos
+      // en varias órdenes, la fila se marca por la parte que le toca (el servidor parte en el mismo orden).
+      const idDeParte = new Map<string, string>(
+        [...r.creadas, ...r.yaExistian].map((o) => [`${o.proveedorId}||${o.idBodega}||${o.parte || 1}`, o.id]),
+      );
+      const posicionEnGrupo = new Map<string, number>();
+      for (const i of conProveedor) {
+        const g = `${i.proveedorId}||${i.idBodega}`;
+        const n = posicionEnGrupo.get(g) || 0;
+        posicionEnGrupo.set(g, n + 1);
+        const id = idDeParte.get(`${g}||${Math.floor(n / PRODUCTOS_POR_ORDEN) + 1}`);
+        if (!id) continue;
+        const fila = filas.find((f) => f.productoId === i.productoId && f.idBodega === i.idBodega);
+        if (!fila) continue;
+        this.enBorrador[this.clave(fila)] = id;
+        this.seleccion[this.clave(fila)] = false;
+      }
+      // Lo que el servidor encontró ya en otro borrador abierto no se pidió otra vez: también se marca.
+      const yaEnBorrador = r.yaEnBorrador || [];
+      for (const x of yaEnBorrador) {
+        this.enBorrador[`${x.productoId}_${x.idBodega}`] = x.ordenId;
+        this.seleccion[`${x.productoId}_${x.idBodega}`] = false;
       }
 
       const hechas = r.creadas.length + r.yaExistian.length;
+      const de = (o: { parte?: number; partes?: number }) => (o.partes && o.partes > 1 ? ` (parte ${o.parte} de ${o.partes})` : '');
       const lineas = [
-        ...r.creadas.map((o) => `<div>${escapar(o.proveedor)} · ${escapar(this.nombreBodega(o.idBodega))} · ${o.productos} productos · ${this.moneda(o.total)}</div>`),
-        ...r.yaExistian.map((o) => `<div>${escapar(o.proveedor || this.nombreProveedor(o.proveedorId))} · ya estaba generada</div>`),
+        ...r.creadas.map((o) => `<div>${escapar(o.proveedor)} · ${escapar(this.nombreBodega(o.idBodega))} · ${o.productos} productos · ${this.moneda(o.total)}${de(o)}</div>`),
+        ...r.yaExistian.map((o) => `<div>${escapar(o.proveedor || this.nombreProveedor(o.proveedorId))} · ya estaba generada${de(o)}</div>`),
       ].join('');
       const faltan =
+        (yaEnBorrador.length
+          ? `<p class="mt-3 mb-1"><strong>Ya estaban en un borrador (${yaEnBorrador.length}):</strong> no se pidieron otra vez. Confirme o anule ese borrador si quiere cambiarlos.</p>` +
+            yaEnBorrador.slice(0, 8).map((p) => `<div class="text-muted">${escapar(this.nombreDeFila(p.productoId, p.idBodega) || p.referencia || p.productoId)} · ${escapar(this.nombreBodega(p.idBodega))}</div>`).join('') +
+            (yaEnBorrador.length > 8 ? `<div class="text-muted">y ${yaEnBorrador.length - 8} más</div>` : '')
+          : '') +
         (r.sinProveedor.length
           ? `<p class="mt-3 mb-1"><strong>Sin proveedor (${r.sinProveedor.length}):</strong> asígneles uno y vuelva a generar.</p>` +
             r.sinProveedor.slice(0, 8).map((p) => `<div class="text-muted">${escapar(p.nombre || p.referencia || p.productoId)}</div>`).join('') +
@@ -658,7 +707,7 @@ export class ReposicionComponent implements OnInit {
           : '');
 
       const dialogo = await Swal.fire({
-        icon: r.fallidas.length ? 'warning' : hechas > 0 ? 'success' : 'info',
+        icon: r.fallidas.length || yaEnBorrador.length ? 'warning' : hechas > 0 ? 'success' : 'info',
         title: hechas > 0 ? `${hechas} orden(es) en borrador` : 'No se generó ninguna orden',
         html: lineas + faltan,
         showCancelButton: hechas > 0,
@@ -677,6 +726,12 @@ export class ReposicionComponent implements OnInit {
         confirmButtonColor: '#5F3FE0',
       });
     }
+  }
+
+  /** Nombre del producto en la sugerencia que se ve, para los avisos. */
+  private nombreDeFila(productoId: string, idBodega: string): string | null {
+    const fila = (this.sugerencia?.filas || []).find((f) => f.productoId === productoId && f.idBodega === idBodega);
+    return fila?.nombre || null;
   }
 
   private nuevaClave(): string {
