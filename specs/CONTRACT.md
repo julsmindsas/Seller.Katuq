@@ -13058,3 +13058,14 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - la campana muestra el punto y las pestañas;
   - «Novedades» lista 8 notas: las generales y las de «En vivo», que se usó en ese navegador. Las de facturación no salen porque ahí no se ha abierto esa pantalla;
   - a 390 px (iframe del mismo origen) no hay scroll horizontal ni texto cortado.
+
+### 2026-11-03 — D-582: WooCommerce, el aviso de estado a la tienda queda apagado si nadie lo enciende, y el seed siembra en Postgres
+- **Qué se encontró:** D-576, D-577 y D-578 ya están en producción. El back salió el 1-nov con `4481ac39` (D-579) y el front con la versión 2026.10.30.1. Pero el interruptor general `config/feature_flags.wooOrderStatusPublish` nunca se creó. En el código de D-578, «sin crear» valía **publicar**, así que lo único que frenaba el aviso eran las banderas de cada empresa.
+- **Arreglo (`services/woocommerce/estadoAWoo.js`):**
+  - Solo `"sombra"` o `"publicar"` encienden el aviso.
+  - `false`, el campo sin crear o cualquier otro valor lo dejan apagado para todos.
+  - Un script de prueba que fuerza el modo sigue pudiendo correr sin el interruptor, pero no si el interruptor está en `false`.
+- **Seed (`scripts/seed-woocommerce-templates.js`):** antes escribía en Firestore, que quedó congelado el 1-nov. Ahora carga el `.env`, instala el adaptador de Postgres (`instalarSiCorresponde`) y se detiene con salida 3 si no quedó instalado. Solo se puede correr en el servidor de producción.
+- **Pruebas:** `woocommerceEstadoAWoo` pasa 15/15. Hay un caso nuevo: sin interruptor no hace nada. Los casos que publicaban ahora piden `"publicar"` de forma explícita. El seed en local, sin Postgres, se niega a correr (salida 3) y no escribe.
+- **Encendido (Daniel):** en `katuq-db`, `config/feature_flags.wooOrderStatusPublish = "sombra"` y la bandera de la empresa (CAFÉ ESCOBAR). Revisar `integration_audit` a 1 día y, si está bien, pasar a `"publicar"`.
+- **Estado:** commiteado y pusheado; FALTA DESPLEGAR (solo back) y correr el seed en el servidor.
