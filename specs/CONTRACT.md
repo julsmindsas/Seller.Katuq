@@ -13271,3 +13271,11 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - «Usuario» del reporte muestra quién cierra: antes salía siempre «Sistema», porque se leía de la empresa.
 - **Pendiente aparte, no tocado:** el recibo de venta POS dice «Forma de entrega: Efectivo»; muestra la forma de pago.
 - **Estado:** commiteado y pusheado. FALTA DESPLEGAR (el back primero).
+
+### 2026-11-03 — D-590: el recibo de venta POS ya no dice «Forma de entrega: Efectivo»
+- **Causa:** desde mayo de 2025, `pos-checkout.service.ts` hacía `pedido.formaEntrega = paymentMethod` en el cobro normal y en el de Wompi. Eso pisaba el «Recoge en tienda» que pone `createPedidoObject`, y el pedido POS quedaba con la forma de pago como forma de entrega. En `katuq_dev` (FLORECER), las ventas POS-000007 a POS-000009 tienen `formaEntrega: "Efectivo"` y en el carrito, «Recoge en tienda».
+- **Arreglo:**
+  - Se quitaron las dos asignaciones; `formaDePago` se sigue poniendo igual.
+  - La tirilla (`factura-tirilla`) lee la forma de entrega de `carrito[0].configuracion.datosEntrega.formaEntrega` (regla del proyecto). Si no la hay, usa `pedido.formaEntrega`, salvo que sea igual a la forma de pago. Así las ventas viejas se reimprimen bien.
+- **Revisado:** ninguna lógica compara `formaEntrega` con una forma de pago. Las comparaciones existentes buscan «Envío a Domicilio», que una venta POS no es ni antes ni después. No se corrigen datos viejos.
+- **Estado:** commiteado y pusheado (solo front). FALTA DESPLEGAR. Compila con `ng serve`.

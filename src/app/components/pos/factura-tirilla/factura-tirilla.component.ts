@@ -12,6 +12,22 @@ import { lineaDesdePedido, resolverLineaPos, sanearDescuento, tieneCambios } fro
 })
 export class FacturaTirillaComponent implements OnInit, AfterViewInit {
   @Input() pedido: POSPedido;
+
+  /**
+   * D-590: la forma de entrega sale del carrito (regla del proyecto: siempre de
+   * carrito[0].configuracion.datosEntrega.formaEntrega). Las ventas POS viejas guardaban la
+   * forma de pago en `pedido.formaEntrega` ("Efectivo"); con esto también se reimprimen bien.
+   */
+  get formaEntregaRecibo(): string {
+    const p: any = this.pedido || {};
+    const datos = p.carrito?.[0]?.configuracion?.datosEntrega;
+    const delCarrito = (Array.isArray(datos) ? datos[0] : datos)?.formaEntrega;
+    if (delCarrito) return delCarrito;
+    const formaPago = String(p.formaDePago || '').trim().toLowerCase();
+    const delPedido = String(p.formaEntrega || '').trim();
+    // Si el pedido trae la forma de pago en ese campo, no se muestra como entrega.
+    return delPedido && delPedido.toLowerCase() !== formaPago ? delPedido : '';
+  }
   
   // Datos de la empresa
   empresaActual: any = {};
