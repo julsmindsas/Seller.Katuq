@@ -210,3 +210,4 @@ graphify-out/
 **/scripts/test-*.ts
 test_*.py
 *_test.py
+*.env
