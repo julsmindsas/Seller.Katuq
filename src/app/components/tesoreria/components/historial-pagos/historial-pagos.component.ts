@@ -201,6 +201,19 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
   }
 
   /** Ticket 1455: historial del pago (quién lo subió, lo decidió y qué cambió después). */
+  /** Ticket 1449: los campos que se cambiaron respecto a la lectura del comprobante, con su nombre en el idioma de la persona. */
+  camposEditados(item: TreasuryPayment): string {
+    const campos = item?.camposEditados;
+    if (!Array.isArray(campos) || !campos.length) return '';
+    return campos
+      .map((k) => {
+        const clave = `tesoreria.comprobante.campo.${k}`;
+        const t = this.translate.instant(clave);
+        return t === clave ? k : t;
+      })
+      .join(', ');
+  }
+
   verHistorial(item: any): void {
     if (item?.id) abrirHistorialPago(this.modal, { paymentId: item.id });
   }

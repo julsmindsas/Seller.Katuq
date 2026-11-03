@@ -20,6 +20,67 @@ export interface TreasuryConfig {
   estadoCredito?: boolean;
   /** Ticket 1455: lista de motivos frecuentes; sale del servidor, no se copia en el front. */
   motivosRechazo?: MotivoRechazoPago[];
+  /** Ticket 1449: «Registrar pago» pide primero el comprobante y lo lee con IA (bandera `comprobantePrimero`). */
+  comprobantePrimero?: boolean;
+}
+
+/** Ticket 1449: campos que la lectura del comprobante sugiere (cualquiera puede venir en null). */
+export interface LecturaComprobanteCampos {
+  banco: string | null;
+  medio: string | null;
+  valor: number | null;
+  moneda: string | null;
+  fecha: string | null;
+  hora: string | null;
+  referencia: string | null;
+  cuentaDestinoUltimos4: string | null;
+}
+
+/** Ticket 1449: respuesta de POST /payments/read-receipt. `modo: 'manual'` = se llena a mano; nunca impide registrar. */
+export interface LecturaComprobanteResponse {
+  success: boolean;
+  modo: 'ia' | 'manual';
+  campos?: LecturaComprobanteCampos;
+  /** 0 a 1 por campo. */
+  confianza?: Record<string, number>;
+  huella?: string;
+  /** Firma de la lectura: se devuelve tal cual al registrar el pago para que el servidor marque lo «editado a mano». */
+  lecturaToken?: string;
+  venceEnMinutos?: number;
+  motivoCodigo?: string;
+  message?: string;
+}
+
+/** Ticket 1449: cuenta donde el comercio recibe pagos (nunca el número completo). */
+export interface CuentaReceptora {
+  id?: string;
+  medio: string;
+  banco: string;
+  alias: string;
+  ultimos4: string;
+  activa?: boolean;
+}
+
+/** Ticket 1449: GET /comprobante/config (lo que el formulario necesita; `todasLasCuentas` solo para un Administrador con `?completo=1`). */
+export interface ComprobanteConfigVista {
+  success: boolean;
+  obligatorio: boolean;
+  antiguedadMaximaDias: number;
+  formasSinReferencia: string[];
+  cuentasReceptoras: CuentaReceptora[];
+  todasLasCuentas?: CuentaReceptora[];
+}
+
+/** Ticket 1449: cuerpo de PUT /comprobante/config. */
+export interface ComprobanteConfigPayload {
+  comprobante?: { obligatorio?: boolean; antiguedadMaximaDias?: number; formasSinReferencia?: string[] };
+  cuentasReceptoras?: CuentaReceptora[];
+}
+
+/** Ticket 1449: aviso de la revisión del comprobante al registrar (el pago se registra igual). */
+export interface ComprobanteAviso {
+  regla: string;
+  motivo: string;
 }
 
 /** Ticket 1455: un motivo frecuente al rechazar un pago. `codigo` es estable; `texto` es el nombre en español. */
@@ -126,6 +187,10 @@ export interface TreasuryPagoInput {
   notas: string;
   fecha: string;
   usuarioRegistro: string;
+  /** Ticket 1449 (solo con la bandera `comprobantePrimero`): datos del comprobante que la persona confirmó. */
+  banco?: string;
+  hora?: string;
+  cuentaDestino?: { ultimos4: string };
 }
 
 /** Body de POST /payments/submit y /payments/direct. */
@@ -137,6 +202,8 @@ export interface SubmitPaymentPayload {
    * asigna el server). Opcional: si se omite, el backend registra "vendedor".
    */
   origen?: PaymentOrigin;
+  /** Ticket 1449 (bandera `comprobantePrimero`): la lectura firmada y la casilla «Verificado en banco». El servidor decide qué vale. */
+  comprobante?: { lecturaToken?: string; verificadoEnBanco?: boolean };
 }
 
 /** Alerta devuelta inline en la respuesta de submit/direct. */
@@ -157,6 +224,9 @@ export interface SubmitPaymentResponse {
   valorRestante: number;
   alerts: InlineAlert[];
   alreadyDecided?: boolean;
+  /** Ticket 1449: avisos de la revisión del comprobante (no bloquean) y campos que la persona cambió respecto a la lectura. */
+  comprobanteAvisos?: ComprobanteAviso[];
+  camposEditados?: string[];
 }
 
 /** Respuesta de POST /payments/:id/review. */
@@ -203,6 +273,10 @@ export interface TreasuryPayment {
   origen?: PaymentOrigin;
   manual?: boolean;
   createdAt?: string;
+  /** Ticket 1449: campos del comprobante que la persona cambió respecto a lo que leyó la IA (lo decide el servidor). */
+  camposEditados?: string[];
+  /** Ticket 1449: quién marcó «Verificado en banco» (pago sin comprobante) y cuándo. */
+  verificadoEnBanco?: { por: string; fecha: string };
 }
 
 export interface PaymentsPagination {

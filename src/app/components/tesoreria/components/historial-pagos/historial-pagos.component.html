@@ -97,6 +97,11 @@
           <ng-template #refPlano>
             <span class="tk-ref">{{ item?.referencia || '—' }}</span>
           </ng-template>
+          <!-- Ticket 1449: marcas que pone el servidor al registrar con la lectura del comprobante -->
+          <small class="tk-hist-marca tk-hist-marca--editado" *ngIf="item?.camposEditados?.length"
+                 [title]="camposEditados(item)">{{ 'tesoreria.comprobante.editadoAManoCorto' | translate }}</small>
+          <small class="tk-hist-marca tk-hist-marca--banco" *ngIf="item?.verificadoEnBanco"
+                 [title]="item?.verificadoEnBanco?.por || ''">{{ 'tesoreria.comprobante.verificadoEnBanco' | translate }}</small>
         </td>
         <td class="text-end tk-money">{{ item?.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
         <td class="tk-cell-date">{{ (item?.fechaTransaccion || item?.createdAt) | date:'dd/MM/yyyy' }}</td>

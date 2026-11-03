@@ -110,6 +110,28 @@ export class RevisarPagoComponent implements OnInit {
     return t === clave ? m.texto : t;
   }
 
+  /**
+   * Ticket 1449: campos del comprobante que quien registró cambió respecto a lo que leyó la IA. Los marca el servidor
+   * al registrar (esta pantalla solo los muestra); sin lectura firmada no hay nada que mostrar.
+   */
+  get camposEditadosTexto(): string {
+    const campos = this.pago?.camposEditados;
+    if (!Array.isArray(campos) || !campos.length) return '';
+    return campos
+      .map((k: string) => {
+        const clave = `tesoreria.comprobante.campo.${k}`;
+        const t = this.translate.instant(clave);
+        return t === clave ? k : t;
+      })
+      .join(', ');
+  }
+
+  /** Ticket 1449: pago sin comprobante que alguien marcó «Verificado en banco» (el servidor guarda quién y cuándo). */
+  get verificadoEnBanco(): { por: string; fecha: string } | null {
+    const v = this.pago?.verificadoEnBanco;
+    return v && typeof v === 'object' && v.por ? v : null;
+  }
+
   get esOtro(): boolean {
     return this.motivoCodigo === 'otro';
   }

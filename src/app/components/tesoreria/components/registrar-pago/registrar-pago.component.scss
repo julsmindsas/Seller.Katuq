@@ -71,3 +71,63 @@
 
 .mb-3 { margin-bottom: 1rem; }
 .mt-1 { margin-top: 0.25rem; }
+
+// ── Ticket 1449: comprobante primero ──────────────────────────────────────
+// Nombres de clase sin la secuencia "p-" ni "step-" (trampa de CSS global de [class*="p-"]).
+.tk-reg-titulo {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $cfg-ink;
+  font-weight: 800;
+  margin-bottom: 0.15rem;
+}
+.tk-reg-ayuda {
+  font-size: 13px;
+  color: $cfg-muted;
+  margin: 0 0 0.6rem;
+}
+.tk-reg-estado {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 11px;
+  background: $cfg-info-soft;
+  color: $cfg-info;
+  font-size: 13px;
+  font-weight: 600;
+  &.tk-reg-estado--ok { background: $cfg-ok-soft; color: $cfg-ok; }
+  &.tk-reg-estado--aviso { background: $cfg-warn-soft; color: $cfg-warn; }
+}
+.tk-reg-verif {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: #fff;
+  cursor: pointer;
+  input { margin-top: 0.2rem; width: 1.05rem; height: 1.05rem; accent-color: #5F3FE0; flex: 0 0 auto; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.tk-reg-verif-texto { font-size: 13px; color: $cfg-body; line-height: 1.35; letter-spacing: normal; }
+
+// small (no span): evita la regla global de `span.ng-star-inserted`, que pinta de azul lo creado con *ngIf.
+small.tk-reg-origen {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.66rem !important;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  &.tk-reg-origen--ia { background: $cfg-accent-soft; color: #5F3FE0; }
+  &.tk-reg-origen--editado { background: $cfg-warn-soft; color: $cfg-warn; }
+  &.tk-reg-origen--revisar { background: $cfg-err-soft; color: $cfg-err; }
+}

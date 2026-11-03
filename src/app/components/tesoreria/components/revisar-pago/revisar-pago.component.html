@@ -44,6 +44,19 @@
     </div>
   </div>
 
+  <!-- Ticket 1449: lo que la lectura del comprobante dejó y lo que la persona cambió; verificado en banco -->
+  <div class="tk-alert-warning mb-3" *ngIf="camposEditadosTexto">
+    <i class="pi pi-pencil me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.comprobante.editadoAMano' | translate:{campos: camposEditadosTexto} }}
+  </div>
+  <div class="tk-note mb-3" *ngIf="pago?.leidoConIA && !camposEditadosTexto">
+    <i class="pi pi-eye me-1" aria-hidden="true"></i> {{ 'tesoreria.comprobante.leidoSinCambios' | translate }}
+  </div>
+  <div class="tk-note mb-3" *ngIf="verificadoEnBanco as verif">
+    <i class="pi pi-check-circle me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.comprobante.verificadoPor' | translate:{quien: verif.por, fecha: (verif.fecha | date:'dd/MM/yyyy HH:mm')} }}
+  </div>
+
   <!-- Notas del vendedor (ticket 1140): la nota que escribió quien asentó el pago en Pedidos
        llegaba a Firestore pero Tesorería nunca la mostraba, y es clave para aprobar o rechazar. -->
   <div class="tk-notas-vendedor mb-3" *ngIf="pago?.notas?.trim()">

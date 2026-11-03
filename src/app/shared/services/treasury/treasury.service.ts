@@ -23,6 +23,9 @@ import {
   PagoGrupoPayload,
   RegistroPagoGrupoResponse,
   RevisionPagoGrupoResponse,
+  LecturaComprobanteResponse,
+  ComprobanteConfigVista,
+  ComprobanteConfigPayload,
 } from './treasury.models';
 
 /**
@@ -74,6 +77,21 @@ export class TreasuryService extends BaseService {
   /** POST /payments/submit — registro de pago del vendedor (queda en revisión con flag ON). */
   submitPayment(payload: SubmitPaymentPayload): Observable<SubmitPaymentResponse> {
     return this.post<SubmitPaymentResponse>(`${this.base}/payments/submit`, payload);
+  }
+
+  /** POST /payments/read-receipt — ticket 1449: el servidor lee el comprobante ya subido a Storage y SUGIERE los datos (no registra nada). */
+  readReceipt(orderId: string, archivoUrl: string): Observable<LecturaComprobanteResponse> {
+    return this.post<LecturaComprobanteResponse>(`${this.base}/payments/read-receipt`, { orderId, archivoUrl });
+  }
+
+  /** GET /comprobante/config — ticket 1449: cuentas activas, comprobante obligatorio y formas sin referencia. `completo`: solo Administrador. */
+  getComprobanteConfig(completo = false): Observable<ComprobanteConfigVista> {
+    return this.get<ComprobanteConfigVista>(`${this.base}/comprobante/config${completo ? '?completo=1' : ''}`);
+  }
+
+  /** PUT /comprobante/config — ticket 1449: solo Administrador. */
+  saveComprobanteConfig(payload: ComprobanteConfigPayload): Observable<ComprobanteConfigVista> {
+    return this.put<ComprobanteConfigVista>(`${this.base}/comprobante/config`, payload);
   }
 
   /** POST /payments/:id/review — decisión del tesorero (idempotente en el server). */

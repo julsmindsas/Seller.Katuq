@@ -8,6 +8,10 @@
       <p class="cfg-sub">{{ 'tesoreria.gestionPagos.verificaComprobantesApruebaORechaza' | translate }}</p>
     </div>
     <div class="cfg-acciones">
+      <!-- Ticket 1449: cuentas receptoras y ajustes del comprobante (solo Administrador, bandera `comprobantePrimero`) -->
+      <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="puedeAjustarComprobante" (click)="abrirAjustesComprobante()">
+        <i class="pi pi-cog" aria-hidden="true"></i> {{ 'tesoreria.ajustesComprobante.boton' | translate }}
+      </button>
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="loadMetrics()" [disabled]="loadingMetrics"
               [attr.aria-label]="'tesoreria.gestionPagos.actualizarIndicadores' | translate">
         <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>

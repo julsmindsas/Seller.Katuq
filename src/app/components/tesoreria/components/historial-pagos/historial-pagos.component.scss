@@ -99,3 +99,18 @@
   color: var(--kc-muted2);
 }
 .tk-btn-historial { margin-bottom: 4px; white-space: nowrap; }
+
+// Ticket 1449: marcas del comprobante bajo la referencia (small, no span: la regla global pinta de azul los span de *ngIf)
+small.tk-hist-marca {
+  display: block;
+  margin-top: 4px;
+  width: fit-content;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  &.tk-hist-marca--editado { background: var(--kc-orange-wash); color: var(--kc-orange); }
+  &.tk-hist-marca--banco { background: var(--kc-accent-wash); color: var(--kc-accent); }
+}

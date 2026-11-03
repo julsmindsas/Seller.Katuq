@@ -1,0 +1,60 @@
+@import '../../tesoreria-shared';
+
+// Ticket 1449: modal de ajustes del comprobante. Mismo canon de modal y botones que «Registrar pago».
+// Nombres de clase sin la secuencia "p-" (trampa de CSS global de [class*="p-"]).
+@include config-pagina;
+@include tk-modal-canon;
+
+.tk-ajc-ayuda { font-size: 13px; color: $cfg-muted; margin: 0 0 0.75rem; letter-spacing: normal; }
+.tk-ajc-seccion {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $cfg-ink;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  &.tk-ajc-seccion--sep { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid $cfg-line-soft; }
+}
+.tk-ajc-estado {
+  padding: 0.6rem 0.8rem;
+  border-radius: 11px;
+  background: $cfg-info-soft;
+  color: $cfg-info;
+  font-size: 13px;
+  font-weight: 600;
+  &.tk-ajc-estado--err { background: $cfg-err-soft; color: $cfg-err; }
+}
+.tk-ajc-casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  background: #fff;
+  cursor: pointer;
+  input { margin-top: 0.2rem; width: 1.05rem; height: 1.05rem; accent-color: #5F3FE0; flex: 0 0 auto; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &.tk-ajc-casilla--chica { margin-top: 0.4rem; padding: 0.3rem 0.6rem; border-style: dashed; width: fit-content; }
+}
+.tk-ajc-casilla-texto { font-size: 13px; color: $cfg-body; line-height: 1.35; letter-spacing: normal; }
+.tk-ajc-vacio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 11px;
+  background: $cfg-tint;
+  color: $cfg-muted;
+  font-size: 13px;
+  i { color: $cfg-accent; font-size: 1.2rem; }
+}
+.tk-ajc-cuenta {
+  padding: 0.75rem;
+  margin-bottom: 0.6rem;
+  border: 1px solid $cfg-line-soft;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
