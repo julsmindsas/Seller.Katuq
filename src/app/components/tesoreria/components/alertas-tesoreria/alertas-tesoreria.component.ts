@@ -7,17 +7,19 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
-import { TreasuryAlert } from '../../../../shared/services/treasury/treasury.models';
+import { AlertGroup } from '../../../../shared/services/treasury/treasury.models';
 
 import { TranslateService } from '@ngx-translate/core';
 /** Chips de pedidos afectados que se muestran antes de colapsar en "+N más". */
 const MAX_PEDIDOS_VISIBLES = 12;
+/** El servidor resuelve hasta 500 alertas por llamada. */
+const LOTE_RESOLVER = 500;
 
 /**
  * Spec 013 — Tesorería MVP. Tab "Alertas" (T-19, CA-11/12).
@@ -37,9 +39,16 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
   /** Saltar a la pestaña "Por revisar". */
   @Output() goToReview = new EventEmitter<void>();
 
-  items: TreasuryAlert[] = [];
+  /** Alertas agrupadas por referencia (ticket 1451). */
+  grupos: AlertGroup[] = [];
+  /** Conteo REAL de alertas del filtro: el mismo número de la tarjeta (ticket 1450). */
+  totalAlertas = 0;
+  totalGrupos = 0;
+  page = 1;
+  readonly pageSize = 15;
   loading = false;
   soloActivas = true;
+  resolviendo: string | null = null;
 
   private loadedOnce = false;
   private destroy$ = new Subject<void>();
@@ -62,18 +71,26 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
     this.destroy$.complete();
   }
 
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.totalGrupos / this.pageSize));
+  }
+
   load(): void {
     this.loading = true;
     this.treasury
-      .getAlerts(this.soloActivas ? false : undefined)
+      .getAlertGroups(this.soloActivas ? false : undefined, this.page, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.items = res?.items || [];
+          this.grupos = res?.grupos || [];
+          this.totalAlertas = res?.total || 0;
+          this.totalGrupos = res?.pagination?.totalItems || 0;
           this.loading = false;
         },
         error: () => {
-          this.items = [];
+          this.grupos = [];
+          this.totalAlertas = 0;
+          this.totalGrupos = 0;
           this.loading = false;
         },
       });
@@ -81,33 +98,55 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
 
   toggleFiltro(): void {
     this.soloActivas = !this.soloActivas;
+    this.page = 1;
     this.load();
   }
 
-  tipoLabel(alert: TreasuryAlert): string {
-    return alert?.alertType === 'duplicate_file' ? 'Comprobante repetido' : 'Referencia repetida';
+  irAPagina(delta: number): void {
+    const nueva = this.page + delta;
+    if (nueva < 1 || nueva > this.totalPaginas) return;
+    this.page = nueva;
+    this.load();
   }
 
-  /** Primeros pedidos afectados que se muestran como chips. */
-  pedidosVisibles(alert: TreasuryAlert): string[] {
-    return (alert?.orderIds || []).slice(0, MAX_PEDIDOS_VISIBLES);
+  tipoLabel(grupo: AlertGroup): string {
+    return grupo?.alertType === 'duplicate_file'
+      ? this.translate.instant('tesoreria.alertasTesoreria.tipoArchivoRepetido')
+      : this.translate.instant('tesoreria.alertasTesoreria.tipoComprobanteRepetido');
+  }
+
+  /** Explicación en palabras sencillas de por qué salió el aviso. */
+  explicacion(grupo: AlertGroup): string {
+    const clave = grupo?.alertType === 'duplicate_file'
+      ? 'tesoreria.alertasTesoreria.textoArchivoRepetido'
+      : grupo?.generica
+        ? 'tesoreria.alertasTesoreria.textoReferenciaRelleno'
+        : 'tesoreria.alertasTesoreria.textoComprobanteRepetido';
+    return this.translate.instant(clave, { referencia: grupo?.referencia || '', pedidos: grupo?.totalPedidos || 0 });
+  }
+
+  /** Primeros pedidos afectados (número DAD-xxxxx) que se muestran como chips. */
+  pedidosVisibles(grupo: AlertGroup): string[] {
+    return (grupo?.pedidos || [])
+      .slice(0, MAX_PEDIDOS_VISIBLES)
+      .map((p) => p.nroPedido || this.translate.instant('tesoreria.alertasTesoreria.pedidoSinNumero'));
   }
 
   /** Cuántos pedidos afectados quedan fuera de los chips visibles. */
-  pedidosRestantes(alert: TreasuryAlert): number {
-    return Math.max(0, (alert?.orderIds?.length || 0) - MAX_PEDIDOS_VISIBLES);
+  pedidosRestantes(grupo: AlertGroup): number {
+    return Math.max(0, (grupo?.totalPedidos || 0) - MAX_PEDIDOS_VISIBLES);
   }
 
   irARevisar(): void {
     this.goToReview.emit();
   }
 
-  resolver(alert: TreasuryAlert): void {
-    if (!alert?.id) return;
+  resolver(grupo: AlertGroup): void {
+    if (!grupo?.alertIds?.length) return;
     Swal.fire({
       icon: 'question',
       title: this.translate.instant('tesoreria.alertasTesoreria.marcarComoResuelta'),
-      text: this.translate.instant('tesoreria.alertasTesoreria.confirmaQueYaVerificasteEsta'),
+      text: this.translate.instant('tesoreria.alertasTesoreria.confirmaResolverGrupo', { alertas: grupo.cantidadAlertas }),
       showCancelButton: true,
       confirmButtonText: this.translate.instant('tesoreria.alertasTesoreria.resolver'),
       cancelButtonText: this.translate.instant('comun.cancelar'),
@@ -115,23 +154,29 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
       cancelButtonColor: '#8f8bab',
     }).then((result) => {
       if (!result.isConfirmed) return;
-      this.treasury
-        .resolveAlert(alert.id as string)
+      const lotes: string[][] = [];
+      for (let i = 0; i < grupo.alertIds.length; i += LOTE_RESOLVER) {
+        lotes.push(grupo.alertIds.slice(i, i + LOTE_RESOLVER));
+      }
+      this.resolviendo = grupo.key;
+      forkJoin(lotes.map((ids) => this.treasury.resolveAlerts(ids)))
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
+            this.resolviendo = null;
             this.toastr.success(this.translate.instant('tesoreria.alertasTesoreria.alertaResuelta'));
             this.load();
             this.changed.emit();
           },
           error: () => {
+            this.resolviendo = null;
             Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.alertasTesoreria.noSePudoResolver'), text: this.translate.instant('tesoreria.alertasTesoreria.intentaloDeNuevo') });
           },
         });
     });
   }
 
-  trackByAlert(_index: number, alert: TreasuryAlert): string {
-    return alert?.id || `alert-${_index}`;
+  trackByGrupo(_index: number, grupo: AlertGroup): string {
+    return grupo?.key || `grupo-${_index}`;
   }
 }

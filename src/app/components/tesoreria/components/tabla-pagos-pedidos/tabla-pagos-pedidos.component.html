@@ -142,7 +142,7 @@
 
   <!-- Totales de la página -->
   <div class="tk-summary" *ngIf="orders.length > 0">
-    <span><strong>{{ 'tesoreria.tablaPagosPedidos.pedidosEnPantalla' | translate }}</strong> {{ orders.length | number }}</span>
+    <span><strong>{{ (totalesDelFiltro ? 'tesoreria.tablaPagosPedidos.pedidosDelFiltro' : 'tesoreria.tablaPagosPedidos.pedidosEnPantalla') | translate }}</strong> {{ totalPedidos() | number }}</span>
     <span><strong>{{ 'tesoreria.tablaPagosPedidos.anticipos' | translate }}</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
     <span><strong>{{ 'tesoreria.tablaPagosPedidos.faltaPorPagar' | translate }}</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
   </div>

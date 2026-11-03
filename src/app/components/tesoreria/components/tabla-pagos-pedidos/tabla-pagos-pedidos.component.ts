@@ -18,11 +18,13 @@ import Swal from 'sweetalert2';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
+import { OrdersTotals } from '../../../../shared/services/treasury/treasury.models';
 import {
   filtroPedidosTesoreria,
   metaEstado,
   PaymentStateMeta,
   rangoPorDefecto,
+  sumarDias,
 } from '../../tesoreria.constants';
 import { RevisarPagoComponent } from '../revisar-pago/revisar-pago.component';
 import { RegistrarPagoComponent } from '../registrar-pago/registrar-pago.component';
@@ -72,6 +74,13 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   fechaDesde = '';
   fechaHasta = '';
   formasPago: any[] = [];
+
+  /**
+   * Ticket 1454: totales de TODO el resultado filtrado (no solo de la página en
+   * pantalla). null = cargando o no disponible; el pie cae a la suma de la página.
+   */
+  totales: OrdersTotals | null = null;
+  private totalesClave = '';
 
   private lastLazyEvent: LazyLoadEvent | null = null;
   private loadedOnce = false;
@@ -131,6 +140,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
             pageSize: this.pageSize,
           })
         : this.ventas.getOrdersByFilterOptimized(this.buildFilter(), this.page, this.pageSize);
+    this.cargarTotales();
     datos$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -143,6 +153,43 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
           this.orders = [];
           this.totalRecords = 0;
           this.loading = false;
+        },
+      });
+  }
+
+  /**
+   * Pide al servidor los totales del filtro actual. Cambiar de página no los
+   * cambia, así que solo se vuelve a pedir cuando cambian los filtros o tras una
+   * acción (reload). "Por revisar" lista comprobantes, no pedidos: queda con la
+   * suma de lo que se ve.
+   */
+  private cargarTotales(forzar = false): void {
+    if (this.mode === 'porRevisar') {
+      this.totales = null;
+      return;
+    }
+    const term = (this.searchTerm || '').trim();
+    const filtros = {
+      estadosPago: this.estadosPago,
+      fechaInicial: this.fechaDesde,
+      // Misma fecha final que la lista: el día siguiente, para incluir el día de "hasta".
+      fechaFinal: sumarDias(this.fechaHasta, 1),
+      nroPedido: term && /^\d+$/.test(term) ? term : undefined,
+      cliente: term && !/^\d+$/.test(term) ? term : undefined,
+    };
+    const clave = JSON.stringify(filtros);
+    if (!forzar && clave === this.totalesClave) return;
+    this.totalesClave = clave;
+    this.totales = null;
+    this.treasury
+      .getOrdersTotals(filtros)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (t) => {
+          if (clave === this.totalesClave) this.totales = t;
+        },
+        error: () => {
+          if (clave === this.totalesClave) this.totales = null;
         },
       });
   }
@@ -199,6 +246,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   }
 
   reload(): void {
+    this.cargarTotales(true);
     this.loadData(this.lastLazyEvent || undefined);
   }
 
@@ -288,11 +336,21 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     return !!(pago && pago.paymentId);
   }
 
-  // ── Totales de la página (footer) ─────────────────────────────────────────
+  // ── Totales del pie ───────────────────────────────────────────────────────
+  // Con totales del servidor son los de todo el resultado filtrado; mientras
+  // llegan (o si fallan, o en "Por revisar") son los de las filas en pantalla.
+  get totalesDelFiltro(): boolean {
+    return this.totales !== null;
+  }
+  totalPedidos(): number {
+    return this.totales ? this.totales.totalItems : this.orders.length;
+  }
   totalAnticipo(): number {
+    if (this.totales) return this.totales.anticipo;
     return this.orders.reduce((acc, p) => acc + (Number(p?.anticipo) || 0), 0);
   }
   totalFalta(): number {
+    if (this.totales) return this.totales.faltaPorPagar;
     return this.orders.reduce((acc, p) => acc + (Number(p?.faltaPorPagar) || 0), 0);
   }
 

@@ -140,12 +140,34 @@ export interface PaymentsPagination {
 export interface PaymentsHistoryResponse {
   items: TreasuryPayment[];
   pagination: PaymentsPagination;
+  /** Recaudado (pagos aprobados) del filtro actual, por forma de pago (ticket 1454). */
+  resumen?: HistorialResumen;
+  /** Formas de pago y usuarios que hay en el periodo, para los filtros. */
+  opciones?: { formasPago: string[]; usuarios: string[] };
+  /** true si el periodo es tan grande que se alcanzó el tope de lectura del servidor. */
+  truncado?: boolean;
+}
+
+export interface HistorialResumen {
+  porMetodo: { formaPago: string; cantidad: number; monto: number }[];
+  montoAprobado: number;
+  cantidadAprobada: number;
+}
+
+/** GET /orders/totals: totales de todo el resultado filtrado (ticket 1454). */
+export interface OrdersTotals {
+  totalItems: number;
+  anticipo: number;
+  faltaPorPagar: number;
+  truncado?: boolean;
 }
 
 /** Filtros de GET /payments. */
 export interface PaymentsHistoryFilters {
   status?: string;
   formaPago?: string;
+  /** Correo de quien subió el pago (ticket 1454). */
+  registradoPor?: string;
   desde?: string;
   hasta?: string;
   search?: string;
@@ -188,7 +210,32 @@ export interface TreasuryAlert {
   createdAt?: string;
 }
 
-/** Respuesta de GET /alerts. */
+/** Respuesta de GET /alerts. `total` es el conteo real de alertas del filtro. */
 export interface AlertsResponse {
   items: TreasuryAlert[];
+  total?: number;
+}
+
+/** Alertas de una misma referencia (GET /alerts?agrupar=true, ticket 1451). */
+export interface AlertGroup {
+  key: string;
+  alertType: AlertType;
+  referencia: string;
+  /** Referencia de relleno («1», el número del pedido…), no un comprobante real. */
+  generica: boolean;
+  severity: AlertSeverity;
+  resolved: boolean;
+  cantidadAlertas: number;
+  alertIds: string[];
+  totalPedidos: number;
+  /** Hasta 30 pedidos con su número visible (DAD-xxxxx). */
+  pedidos: { orderId: string; nroPedido: string }[];
+  ultimaFecha: string;
+}
+
+export interface AlertGroupsResponse {
+  total: number;
+  grupos: AlertGroup[];
+  pagination: { totalItems: number; currentPage: number; pageSize: number };
+  truncado?: boolean;
 }

@@ -12,7 +12,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
-import { TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
+import { HistorialResumen, TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
 import { metaEstado, PaymentStateMeta, HISTORIAL_STATUS_OPTIONS } from '../../tesoreria.constants';
 import Swal from 'sweetalert2';
 import { TranslateService } from '@ngx-translate/core';
@@ -39,11 +39,19 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
 
   // Filtros
   status = '';
+  formaPago = '';
+  registradoPor = '';
   search = '';
   fechaDesde = '';
   fechaHasta = '';
 
   readonly statusOptions = HISTORIAL_STATUS_OPTIONS;
+
+  /** Ticket 1454: recaudado por forma de pago del filtro, y opciones de los filtros. */
+  resumen: HistorialResumen | null = null;
+  formasPagoOpciones: string[] = [];
+  usuariosOpciones: string[] = [];
+  truncado = false;
 
   private loadedOnce = false;
   private search$ = new Subject<void>();
@@ -77,6 +85,8 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
     this.treasury
       .getPayments({
         status: this.status || undefined,
+        formaPago: this.formaPago || undefined,
+        registradoPor: this.registradoPor || undefined,
         desde: this.fechaDesde || undefined,
         hasta: this.fechaHasta || undefined,
         search: this.search?.trim() || undefined,
@@ -88,10 +98,17 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.items = res?.items || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
+          this.resumen = res?.resumen || null;
+          this.truncado = res?.truncado === true;
+          if (res?.opciones) {
+            this.formasPagoOpciones = res.opciones.formasPago || [];
+            this.usuariosOpciones = res.opciones.usuarios || [];
+          }
           this.loading = false;
         },
         error: () => {
           this.items = [];
+          this.resumen = null;
           this.totalRecords = 0;
           this.loading = false;
         },
