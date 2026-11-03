@@ -23,6 +23,15 @@
                                 class="p-button-outlined p-button-danger p-button-sm"
                                 (click)="deleteAllClients()"
                                 pTooltip="Eliminar TODOS los clientes de la empresa"></button> -->
+                        <!-- Ticket 1462 (D-667): solo con la bandera calidadDatosClientes y para Administrador/Tesorería. -->
+                        <button pButton type="button"
+                                *ngIf="puedeVerDuplicados"
+                                [icon]="mostrarDuplicados ? 'pi pi-chevron-up' : 'pi pi-clone'"
+                                label="{{ 'ventas.clientesLista.posiblesDuplicados' | translate }}"
+                                class="p-button-outlined p-button-sm cli-btn-duplicados"
+                                [class.p-button-secondary]="mostrarDuplicados"
+                                (click)="toggleDuplicados()"
+                                pTooltip="{{ 'ventas.clientesLista.posiblesDuplicadosTooltip' | translate }}"></button>
                         <button pButton type="button"
                                 icon="pi pi-tags"
                                 label="{{ 'ventas.clientes.etiquetas' | translate }}"
@@ -44,6 +53,9 @@
                                 pTooltip="{{ 'ventas.clientesLista.exportarExcelTooltip' | translate }}"></button>
                     </div>
             </header>
+
+            <app-clientes-duplicados *ngIf="puedeVerDuplicados && mostrarDuplicados"
+                                     (abrir)="editarCliente($event)"></app-clientes-duplicados>
 
             <section class="cfg-card cli-lista__card">
                 <!-- Loader -->

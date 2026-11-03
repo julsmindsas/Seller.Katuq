@@ -20,6 +20,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
 import { TipoRelacion } from '../../../../shared/services/cartera/cartera.models';
 import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { digitoNit } from '../../../../shared/utils/clave-documento';
+import { ClientesListaService } from '../services/clientes-lista.service';
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
 export interface ResultadoFormularioCliente {
@@ -187,6 +189,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     private translate: TranslateService,
     private carteraService: CarteraService,
     public features: CompanyFeaturesService,
+    private listaService: ClientesListaService,
   ) {
     this.initForm();
   }
@@ -330,6 +333,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     // En edición el tipo de documento no es editable (igual que el número).
     // El guardado usa getRawValue(), así que el valor se conserva.
     this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
+    this.partirNitGuardado();
 
     // Normalizar indicativos a string (pueden venir como número desde Firestore)
     this.formulario.controls['indicativo_celular_comprador'].setValue(
@@ -358,6 +362,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
   /** Valores por defecto para crear (más la precarga D-111 si la hay). */
   private reiniciarParaCrear(): void {
+    this.documentoGuardadoCompleto = null;
     this.tipoDocSeleccionado = 'CC';
     this.formulario.reset();
     this.formulario.controls['tipo_documento_comprador'].enable({ emitEvent: false });
@@ -440,6 +445,80 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     return tipo === 'NIT' || tipo === 'NIT_EXT';
   }
 
+  // ── NIT y dígito de verificación separados (ticket 1462, D-667) ───────────────────────────────
+  /** Calidad de datos de clientes: solo con la bandera y para clientes (no corporativos). Apagada, la ficha es la de siempre. */
+  get calidadActiva(): boolean {
+    return this.target !== 'corporate' && this.features.isEnabled('calidadDatosClientes');
+  }
+
+  /** El campo DV se ve solo con la bandera y tipo NIT. */
+  get mostrarDv(): boolean {
+    return this.calidadActiva && this.formulario?.getRawValue?.()?.tipo_documento_comprador === 'NIT';
+  }
+
+  /** NIT «base-dv» tal como está guardado, si se partió para mostrarlo (ver `partirNitGuardado`); si no, `null`. */
+  private documentoGuardadoCompleto: string | null = null;
+
+  /**
+   * Al EDITAR una ficha NIT guardada como «890905047-1» (así guarda el servidor, junto con el campo `dv`),
+   * el formulario la muestra partida: número en NIT y dígito en DV. Solo con la bandera y si el dígito del
+   * guion es el que corresponde a ese número; si no, se muestra tal cual. No marca el campo como tocado:
+   * sin cambios, al guardar no viaja el documento (ver `guardarCliente`).
+   */
+  private partirNitGuardado(): void {
+    this.documentoGuardadoCompleto = null;
+    if (!this.isEdit || !this.mostrarDv) return;
+    const control = this.formulario.controls['documento'];
+    const raw = String(control.value ?? '').trim();
+    const guion = raw.match(/^([\d.\s]+)-\s*(\d)$/);
+    if (!guion) return;
+    const base = guion[1].replace(/\D/g, '');
+    if (!base || digitoNit(base) !== guion[2]) return;
+    this.documentoGuardadoCompleto = raw;
+    control.setValue(base, { emitEvent: false });
+    this.formulario.controls['dv'].setValue(guion[2], { emitEvent: false });
+  }
+
+  /** Base del NIT escrito: sin puntos ni espacios y sin el «-dígito» si viene separado por guion. */
+  private baseNitEscrito(valor: unknown): string {
+    const raw = String(valor ?? '').trim();
+    const guion = raw.match(/^([\d.\s]+)-\s*(\d)$/);
+    return (guion ? guion[1] : raw).replace(/\D/g, '');
+  }
+
+  /** El dígito se calcula solo (módulo 11 de la DIAN); no se escribe a mano. */
+  private recalcularDv(): void {
+    const dv = this.formulario?.controls?.['dv'];
+    if (!dv) return;
+    if (!this.mostrarDv) {
+      if (dv.value) dv.setValue('', { emitEvent: false });
+      return;
+    }
+    const base = this.baseNitEscrito(this.formulario.controls['documento'].value);
+    const calculado = base.length >= 6 ? digitoNit(base) : '';
+    if (dv.value !== calculado) dv.setValue(calculado, { emitEvent: false });
+  }
+
+  /**
+   * Al salir del campo (y al guardar un documento que la persona tocó): el número queda en dígitos, sin
+   * puntos ni el «-dígito», y el DV se calcula. Un número pegado de 10 dígitos cuyo último dígito es el
+   * correcto se separa igual que en el servidor. Solo con la bandera y tipo NIT.
+   */
+  normalizarNit(): void {
+    if (!this.mostrarDv) return;
+    const control = this.formulario.controls['documento'];
+    const raw = String(control.value ?? '').trim();
+    if (!raw || /[^\d.\s-]/.test(raw)) return;
+    // «890905046-1» con un dígito que no es el de ese número: NO se corrige en silencio. Se deja lo escrito
+    // y el servidor responde `NIT_DV_INCORRECTO` con el dígito correcto, que la persona ve y confirma.
+    const conGuion = raw.match(/^([\d.\s]+)-\s*(\d)$/);
+    if (conGuion && digitoNit(conGuion[1].replace(/\D/g, '')) !== conGuion[2]) return;
+    let base = this.baseNitEscrito(raw);
+    if (!/-/.test(raw) && base.length === 10 && digitoNit(base.slice(0, 9)) === base[9]) base = base.slice(0, 9);
+    if (base && control.value !== base) control.setValue(base);
+    this.recalcularDv();
+  }
+
   /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */
   private ajustarApellidosSegunTipoDoc(): void {
     const apellidos = this.formulario?.controls?.['apellidos_completos'];
@@ -498,6 +577,9 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     this.formulario = this.fb.group({
       tipo_documento_comprador: ["CC", Validators.required],
       documento: ["", Validators.required],
+      // Ticket 1462 (D-667): dígito de verificación del NIT. Se calcula solo y solo viaja con la bandera
+      // `calidadDatosClientes` y tipo NIT (ver `guardarCliente`); en cualquier otro caso se quita del envío.
+      dv: [""],
       nombres_completos: ["", Validators.required],
       apellidos_completos: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required],
@@ -525,6 +607,9 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
     // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
     this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
+    // Ticket 1462: el dígito de verificación sigue al número y al tipo (solo con la bandera y tipo NIT).
+    this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.recalcularDv());
+    this.formulario.controls['documento'].valueChanges.subscribe(() => this.recalcularDv());
     // Ticket 1359: el largo válido del celular depende del indicativo.
     this.formulario.controls['indicativo_celular_comprador'].valueChanges.subscribe(() =>
       this.formulario.controls['numero_celular_comprador'].updateValueAndValidity());
@@ -1057,6 +1142,20 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
       whatsappUsername: this.limpiarUsername(formValue.whatsappUsername),
     };
 
+    // Ticket 1462: con la bandera y tipo NIT el documento viaja en número + dígito aparte y el servidor lo guarda
+    // «base-dv» (solo si lo tocó la persona o al crear; una ficha vieja con «890905047-1» no se reescribe por editar otro campo). En cualquier otro
+    // caso `dv` no viaja y el envío es el de siempre.
+    if (this.mostrarDv && (!this.isEdit || this.formulario.get('documento')?.dirty)) {
+      this.normalizarNit();
+      const normal = this.formulario.getRawValue();
+      clienteData.documento = String(normal.documento ?? '').trim();
+      clienteData.dv = String(normal.dv ?? '').trim();
+    } else {
+      delete clienteData.dv;
+      // Ficha NIT mostrada partida y sin tocar el documento: el documento sigue siendo el guardado («base-dv»).
+      if (this.isEdit && this.documentoGuardadoCompleto !== null) clienteData.documento = this.documentoGuardadoCompleto;
+    }
+
     if (this.permiteExtras) {
       // Al crear van los tres arreglos (vacíos si no hay nada). Al editar solo
       // los que el usuario tocó: `clients/edit` es un merge superficial y así
@@ -1152,8 +1251,11 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
    */
   private ejecutarEdicion(clienteData: any) {
     const anterior = String(this.clienteData?.documento ?? '').trim();
-    const nuevo = String(clienteData.documento ?? '').trim();
-    const cambiado = this.documentoEditable && !!this.formulario.get('documento')?.dirty && nuevo !== anterior;
+    const escrito = String(clienteData.documento ?? '').trim();
+    // Con la bandera el documento viaja partido (número + `dv`); el servidor lo guarda «base-dv». Se compara y se
+    // muestra completo, para no avisar de un cambio de documento cuando solo se tocó el campo sin cambiarlo.
+    const nuevo = clienteData.dv && !/-/.test(escrito) ? `${escrito}-${String(clienteData.dv).trim()}` : escrito;
+    const cambiado = this.documentoEditable && !!this.formulario.get('documento')?.dirty && nuevo !== anterior && escrito !== anterior;
     if (!cambiado) {
       this.guardarEdicion(clienteData, false);
       return;
@@ -1181,10 +1283,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     return texto.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c]);
   }
 
-  private guardarEdicion(clienteData: any, enviarDocumento: boolean) {
+  private guardarEdicion(clienteData: any, enviarDocumento: boolean, confirmar = false) {
     const payload = { ...clienteData, cd: this.clienteData.cd || this.clienteData.id };
     const enviado = { ...payload };
-    if (!enviarDocumento && this.target !== 'corporate') delete enviado.documento;
+    if (!enviarDocumento && this.target !== 'corporate') { delete enviado.documento; delete enviado.dv; }
+    // `confirmar` como booleano le dice al servidor que esta pantalla sabe mostrar sus avisos (400/409).
+    if (this.calidadActiva) enviado.confirmar = confirmar;
     this.persistEdit(enviado).subscribe({
       next: () => {
         this.lookupByDocument(payload.documento).subscribe({
@@ -1211,6 +1315,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         });
       },
       error: (err: any) => {
+        if (this.manejarErrorCalidad(err, () => this.guardarEdicion(clienteData, enviarDocumento, true))) return;
         if (err?.error?.code === 'DOCUMENT_IN_USE') {
           Swal.fire({
             icon: 'warning',
@@ -1257,10 +1362,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     });
   }
 
-  private crearCliente(clienteData: any) {
-    this.persistCreate(clienteData).subscribe({
+  private crearCliente(clienteData: any, confirmar = false) {
+    this.persistCreate(this.calidadActiva ? { ...clienteData, confirmar } : clienteData).subscribe({
       next: (response: any) => {
-        const clienteCreado = response.cliente || response || clienteData;
+        // Con la bandera `calidadDatosClientes` el servidor responde también el `cd` de la ficha nueva.
+        const soloCd = response && !response.cliente && response.msg === 'added' && response.cd ? { cd: response.cd } : null;
+        const clienteCreado = response.cliente || soloCd || response || clienteData;
         Swal.fire({
           title: this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.corporativoCreado' : 'ventas.crearClienteModal.clienteCreado'),
           text: this.translate.instant('ventas.crearClienteModal.guardadoTexto', { nombre: clienteCreado.nombres_completos || clienteData.nombres_completos }),
@@ -1272,7 +1379,9 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           position: 'top-end'
         });
         const base = { ...clienteData, ...clienteCreado };
-        if (base.cd || this.target === 'corporate') {
+        // Con la bandera el servidor responde solo el `cd`: la ficha completa (categoría y lista de precios del
+        // tipo de cliente, empresa, fecha) se relee por documento, igual que sin la bandera.
+        if ((base.cd && !soloCd) || this.target === 'corporate') {
           this.emitirResultado({ cliente: base, action: 'created' });
           return;
         }
@@ -1288,6 +1397,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         });
       },
       error: (err: any) => {
+        if (this.manejarErrorCalidad(err, () => this.crearCliente(clienteData, true))) return;
         if (err?.code === 'EXISTE_OTRO_COMERCIAL') {
           Swal.fire({
             icon: 'warning',
@@ -1298,6 +1408,96 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
           return;
         }
         Swal.fire(this.translate.instant('comun.error'), this.translate.instant(this.target === 'corporate' ? 'ventas.crearClienteModal.errorCrearCorporativo' : 'ventas.crearClienteModal.errorCrearCliente'), "error");
+      },
+    });
+  }
+
+  // ── Avisos del servidor de calidad de datos (ticket 1462, D-667) ───────────────────────────────
+  /** Texto de un error o aviso del servidor, en el idioma de la persona; si falta la traducción, el del servidor. */
+  private mensajeCalidad(item: { code?: string; mensaje?: string; dvCorrecto?: string; dvCalculado?: string }): string {
+    const claves: Record<string, string> = {
+      DOCUMENTO_LETRAS: 'calidadDocLetras',
+      DOCUMENTO_LONGITUD: 'calidadDocLongitud',
+      NIT_DV_INCORRECTO: 'calidadNitDvIncorrecto',
+      PARECE_CELULAR: 'calidadPareceCelular',
+      NIT_SIN_DV: 'calidadNitSinDv',
+      NOMBRE_REPETIDO: 'calidadNombreRepetido',
+    };
+    const clave = item?.code ? claves[item.code] : '';
+    if (!clave) return item?.mensaje || '';
+    const completa = `ventas.crearClienteModal.${clave}`;
+    const texto = this.translate.instant(completa, { dv: item.dvCorrecto || item.dvCalculado || '' });
+    return texto && texto !== completa ? texto : (item.mensaje || '');
+  }
+
+  private listaCalidad(items: any[]): string {
+    return `<ul class="text-start mb-0">${(items || []).map((i) => `<li>${this.escaparHtml(this.mensajeCalidad(i))}</li>`).join('')}</ul>`;
+  }
+
+  /**
+   * Respuestas de calidad de datos del servidor (solo con la bandera): documento inválido (400), avisos que se
+   * confirman (409 CONFIRMAR, se repite con `confirmar`) y «Este cliente ya existe» (409 CLIENT_EXISTS, con
+   * «Usar el existente»). Devuelve true si la respuesta era una de esas y ya se explicó a la persona.
+   */
+  private manejarErrorCalidad(err: any, reintentarConfirmando: () => void): boolean {
+    if (!this.calidadActiva) return false;
+    const cuerpo = err?.error;
+    const codigo = cuerpo?.code;
+    if (codigo === 'DOCUMENTO_INVALIDO') {
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ventas.crearClienteModal.calidadDocumentoInvalidoTitulo'),
+        html: this.listaCalidad(cuerpo.errores),
+        confirmButtonText: this.translate.instant('comun.entendido'),
+        confirmButtonColor: '#5F3FE0',
+      });
+      return true;
+    }
+    if (codigo === 'CONFIRMAR') {
+      Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('ventas.crearClienteModal.calidadConfirmarTitulo'),
+        html: this.listaCalidad(cuerpo.avisos),
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('ventas.crearClienteModal.calidadGuardarDeTodosModos'),
+        cancelButtonText: this.translate.instant('comun.volver'),
+        confirmButtonColor: '#5F3FE0',
+        reverseButtons: true,
+      }).then((r) => { if (r.isConfirmed) reintentarConfirmando(); });
+      return true;
+    }
+    if (codigo === 'CLIENT_EXISTS' && cuerpo?.cd) {
+      Swal.fire({
+        icon: 'info',
+        title: this.translate.instant('ventas.crearClienteModal.calidadYaExisteTitulo'),
+        html: `<p>${this.translate.instant('ventas.crearClienteModal.calidadYaExisteTexto', { nombre: this.escaparHtml(String(cuerpo.nombre || '')) })}</p>`,
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('ventas.crearClienteModal.calidadUsarExistente'),
+        cancelButtonText: this.translate.instant('comun.volver'),
+        confirmButtonColor: '#5F3FE0',
+        reverseButtons: true,
+      }).then((r) => { if (r.isConfirmed) this.usarClienteExistente(String(cuerpo.cd)); });
+      return true;
+    }
+    return false;
+  }
+
+  /** «Usar el existente»: trae la ficha completa y la entrega como si la búsqueda por documento la hubiera encontrado. */
+  private usarClienteExistente(cd: string): void {
+    this.listaService.obtenerFicha(cd).subscribe({
+      next: (ficha: any) => {
+        if (!ficha) return;
+        if (this.modo === 'inline') {
+          // En la pantalla el formulario sigue abierto: pasa a editar el existente.
+          this.isEdit = true;
+          this.clienteData = ficha;
+          this.cargarArreglos(ficha);
+          this.cargarEnFormulario(ficha);
+        }
+        this.emitirResultado({ cliente: ficha, action: 'existing_found' });
+      },
+      error: () => {
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('ventas.crearClienteModal.calidadNoSePudoAbrir'), 'error');
       },
     });
   }

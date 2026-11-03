@@ -602,3 +602,43 @@ $border-soft:#ece8f7;
 }
 
 .section-header .ms-auto { margin-left: auto; }
+
+// ── NIT y dígito de verificación separados (ticket 1462, D-667) ──────────────────────────────
+// Plano, con los tokens del design-system. Sin clases con «p-» (trampa de reset global) y con color propio
+// en todo texto (el reset pinta de azul los span creados por *ngIf).
+.nit-dv {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.nit-dv__etiqueta {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+
+.nit-dv__valor {
+  width: 52px;
+  min-height: 36px;
+  padding: 0 8px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ds-accent-ink);
+  background: var(--ds-accent-soft);
+  border: 1px solid var(--ds-line);
+  border-radius: 10px;
+  cursor: default;
+}
+
+.nit-dv__ayuda {
+  font-size: 12px;
+  letter-spacing: normal;
+  color: var(--ds-muted);
+}

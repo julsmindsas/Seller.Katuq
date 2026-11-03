@@ -7,7 +7,7 @@
  */
 
 /** Dígito de verificación del NIT (módulo 11 de la DIAN). */
-function digitoNit(digitos: string): string {
+export function digitoNit(digitos: string): string {
   const pesos = [71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3];
   const base = digitos.padStart(pesos.length, '0').slice(-pesos.length);
   const suma = base.split('').reduce((acc, d, i) => acc + Number(d) * pesos[i], 0);

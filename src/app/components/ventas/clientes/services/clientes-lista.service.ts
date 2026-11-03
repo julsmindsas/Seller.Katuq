@@ -29,6 +29,38 @@ export interface ClientesPagina {
   parcial: boolean;
 }
 
+/** Una ficha dentro de un grupo de posibles duplicados (GET /v1/clients/duplicates, ticket 1462). */
+export interface DuplicadoFicha {
+  cd: string;
+  documento: string;
+  tipoDocumento: string;
+  nombre: string;
+  celular: string;
+  pedidos: number;
+  saldo: number;
+  /** Otra ficha del grupo tiene exactamente el mismo documento: sus pedidos no se pueden separar por ficha. */
+  documentoCompartido?: boolean;
+}
+
+export interface DuplicadoGrupo {
+  clave: string;
+  motivo: 'DOCUMENTO' | 'NOMBRE_Y_CONTACTO';
+  fichas: DuplicadoFicha[];
+  totalFichas: number;
+  totalPedidos: number;
+  totalSaldo: number;
+  /** Los pedidos o las fichas del grupo pasaron el tope y los totales son parciales. */
+  parcial?: boolean;
+}
+
+export interface DuplicadosPagina {
+  criterio: 'documento' | 'nombre';
+  grupos: DuplicadoGrupo[];
+  /** Cursor para pedir la ventana que sigue; null si ya no hay más. */
+  siguiente: string | null;
+  escaneadas: number;
+}
+
 /**
  * Lista de clientes de la pantalla «Clientes»: el servidor pagina, ordena, filtra y cuenta.
  * La pantalla propia muestra su carga, así que no se enciende el loader global.
@@ -48,6 +80,16 @@ export class ClientesListaService extends BaseService {
     texto.forEach(([k, v]) => { if (v && String(v).trim()) { params = params.set(k, String(v).trim()); } });
     (p.etiquetas || []).forEach(t => { params = params.append('etiquetas', t); });
     return this.http.get<ClientesPagina>(`${environment.urlApi}/v1/clients/list`, {
+      params,
+      context: new HttpContext().set(SKIP_LOADER, true),
+    });
+  }
+
+  /** Reporte «Posibles duplicados» (solo lectura; Administrador y Tesorería, con la bandera calidadDatosClientes). */
+  listarDuplicados(criterio: 'documento' | 'nombre', desde?: string | null): Observable<DuplicadosPagina> {
+    let params = new HttpParams().set('criterio', criterio);
+    if (desde) { params = params.set('desde', desde); }
+    return this.http.get<DuplicadosPagina>(`${environment.urlApi}/v1/clients/duplicates`, {
       params,
       context: new HttpContext().set(SKIP_LOADER, true),
     });

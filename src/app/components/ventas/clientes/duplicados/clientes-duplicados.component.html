@@ -1,0 +1,84 @@
+<!-- Ticket 1462 (D-667): vista de solo lectura, regla de diseño Katuq (cfg-card, cfg-pill, cfg-aviso, cfg-vacio). -->
+<section class="cfg-card dupl-panel" aria-live="polite">
+  <div class="dupl-cabeza">
+    <div class="dupl-textos">
+      <h2 class="cfg-card__titulo">{{ 'ventas.clientesDuplicados.titulo' | translate }}</h2>
+      <p class="dupl-sub">{{ 'ventas.clientesDuplicados.subtitulo' | translate }}</p>
+    </div>
+    <div class="dupl-criterios" role="group" [attr.aria-label]="'ventas.clientesDuplicados.criterio' | translate">
+      <button type="button" class="cfg-btn cfg-btn--sec dupl-criterio" [class.dupl-criterio--activo]="criterio === 'documento'"
+              [attr.aria-pressed]="criterio === 'documento'" (click)="cambiarCriterio('documento')">
+        {{ 'ventas.clientesDuplicados.porDocumento' | translate }}
+      </button>
+      <button type="button" class="cfg-btn cfg-btn--sec dupl-criterio" [class.dupl-criterio--activo]="criterio === 'nombre'"
+              [attr.aria-pressed]="criterio === 'nombre'" (click)="cambiarCriterio('nombre')">
+        {{ 'ventas.clientesDuplicados.porNombre' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <p class="cfg-aviso dupl-aviso">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.soloLectura' | translate }}</span>
+  </p>
+
+  <p class="cfg-aviso cfg-aviso--error dupl-aviso" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+    <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.error' | translate }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec dupl-reintentar" (click)="cargar()">{{ 'ventas.clientesDuplicados.reintentar' | translate }}</button>
+  </p>
+
+  <article class="dupl-grupo" *ngFor="let g of grupos; trackBy: trackGrupo">
+    <header class="dupl-grupo__cabeza">
+      <span class="cfg-pill" [class.cfg-pill--warn]="g.motivo === 'DOCUMENTO'" [class.cfg-pill--info]="g.motivo !== 'DOCUMENTO'">
+        {{ (g.motivo === 'DOCUMENTO' ? 'ventas.clientesDuplicados.motivoDocumento' : 'ventas.clientesDuplicados.motivoNombre') | translate }}
+      </span>
+      <span class="dupl-grupo__clave" *ngIf="g.motivo === 'DOCUMENTO'">{{ g.clave }}</span>
+      <span class="dupl-grupo__resumen">
+        {{ 'ventas.clientesDuplicados.resumenGrupo' | translate: { fichas: g.totalFichas, pedidos: g.totalPedidos } }}
+        · {{ g.totalSaldo | currency:'COP':'symbol-narrow':'1.0-0' }}
+      </span>
+    </header>
+
+    <ul class="dupl-fichas">
+      <li class="dupl-ficha" *ngFor="let f of g.fichas; trackBy: trackFicha">
+        <div class="dupl-ficha__quien">
+          <span class="dupl-ficha__nombre">{{ f.nombre || ('ventas.clientesDuplicados.sinNombre' | translate) }}</span>
+          <span class="dupl-ficha__doc">{{ f.tipoDocumento }} {{ f.documento }}</span>
+        </div>
+        <div class="dupl-ficha__dato">
+          <span class="dupl-ficha__etiqueta">{{ 'ventas.clientesDuplicados.colPedidos' | translate }}</span>
+          <span class="dupl-ficha__valor">{{ f.pedidos }}</span>
+        </div>
+        <div class="dupl-ficha__dato">
+          <span class="dupl-ficha__etiqueta">{{ 'ventas.clientesDuplicados.colSaldo' | translate }}</span>
+          <span class="dupl-ficha__valor">{{ f.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+        <button type="button" class="cfg-btn cfg-btn--sec dupl-ficha__abrir" (click)="verFicha(f.cd)">
+          <i class="pi pi-external-link" aria-hidden="true"></i>
+          {{ 'ventas.clientesDuplicados.abrirFicha' | translate }}
+        </button>
+        <span class="dupl-ficha__nota" *ngIf="f.documentoCompartido">{{ 'ventas.clientesDuplicados.compartido' | translate }}</span>
+      </li>
+    </ul>
+    <p class="dupl-grupo__nota" *ngIf="g.parcial">{{ 'ventas.clientesDuplicados.parcial' | translate }}</p>
+  </article>
+
+  <div class="dupl-cargando" *ngIf="cargando" role="status">
+    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+    <span class="dupl-cargando__texto">{{ 'ventas.clientesDuplicados.cargando' | translate }}</span>
+  </div>
+
+  <div class="cfg-vacio" *ngIf="terminado && !grupos.length">
+    <div class="cfg-vacio__icono"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
+    <p class="cfg-vacio__titulo">{{ 'ventas.clientesDuplicados.vacioTitulo' | translate }}</p>
+    <p class="cfg-vacio__texto">{{ 'ventas.clientesDuplicados.vacioTexto' | translate }}</p>
+  </div>
+
+  <div class="dupl-pie" *ngIf="!cargando && !error && (grupos.length || siguiente)">
+    <span class="dupl-pie__texto">{{ (terminado ? 'ventas.clientesDuplicados.terminado' : 'ventas.clientesDuplicados.revisadas') | translate: { n: revisadas } }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="hayMas" (click)="cargar()">
+      {{ 'ventas.clientesDuplicados.revisarMas' | translate }}
+    </button>
+  </div>
+</section>

@@ -1,0 +1,133 @@
+// Vista «Posibles duplicados» (ticket 1462, D-667). Regla de diseño Katuq: plana, fondo lila, tarjetas blancas,
+// acento #5F3FE0 por tokens --ds-*. Sin gradientes, sin primarios paralelos, sin clases con «p-» y con color
+// propio en todo texto (el reset global pinta de azul los span creados por *ngIf).
+@import '../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host { display: block; }
+
+.dupl-panel { display: flex; flex-direction: column; gap: 14px; }
+
+.dupl-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dupl-textos { min-width: 0; max-width: 640px; }
+.dupl-textos .cfg-card__titulo { margin-bottom: 4px; }
+
+.dupl-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  color: var(--ds-body);
+}
+
+.dupl-criterios { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.dupl-criterio--activo {
+  background: var(--ds-accent-soft) !important;
+  border-color: #ddd3fb !important;
+  color: var(--ds-accent-ink) !important;
+}
+
+.dupl-aviso { align-items: center; flex-wrap: wrap; }
+.dupl-aviso__texto { flex: 1 1 200px; min-width: 0; font-size: 13px; color: inherit; }
+.dupl-reintentar { min-height: 34px; }
+
+// ── Grupos ──
+.dupl-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
+  border-radius: 16px;
+}
+
+.dupl-grupo__cabeza { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+.dupl-grupo__clave {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ds-ink);
+}
+
+.dupl-grupo__resumen {
+  font-size: 12.5px;
+  color: var(--ds-muted);
+}
+
+.dupl-grupo__nota {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: normal;
+  color: var(--ds-warn);
+}
+
+// ── Fichas del grupo ──
+.dupl-fichas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.dupl-ficha {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(70px, .6fr) minmax(110px, 1fr) auto;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 14px;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-radius: 11px;
+}
+
+.dupl-ficha__quien { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.dupl-ficha__nombre {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ds-ink);
+  overflow-wrap: anywhere;
+}
+
+.dupl-ficha__doc { font-size: 12.5px; color: var(--ds-muted); overflow-wrap: anywhere; }
+
+.dupl-ficha__dato { display: flex; flex-direction: column; gap: 2px; }
+
+.dupl-ficha__etiqueta {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+
+.dupl-ficha__valor { font-size: 14px; font-weight: 800; color: var(--ds-ink); }
+
+.dupl-ficha__abrir { min-height: 36px; padding: 0 12px; }
+
+.dupl-ficha__nota {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--ds-muted);
+}
+
+// ── Carga y pie ──
+.dupl-cargando { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+.dupl-cargando .pi { color: var(--ds-accent-ink); }
+.dupl-cargando__texto { font-size: 13px; color: var(--ds-body); }
+
+.dupl-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.dupl-pie__texto { font-size: 12.5px; color: var(--ds-muted); }
+
+// ── Teléfono (390 px): cada ficha en columna, sin scroll horizontal ──
+@media (max-width: 640px) {
+  .dupl-ficha { grid-template-columns: 1fr 1fr; }
+  .dupl-ficha__quien { grid-column: 1 / -1; }
+  .dupl-ficha__abrir { grid-column: 1 / -1; width: 100%; }
+  .dupl-criterios { width: 100%; }
+  .dupl-criterios .cfg-btn { flex: 1 1 auto; white-space: normal; }
+}

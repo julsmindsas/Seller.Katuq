@@ -20,6 +20,8 @@ import Swal from 'sweetalert2';
 import { SitiosService } from '../../../sitios/sitios.service';
 import { clientBillingProfiles, matchesClientSearch } from '../../../../shared/utils/client-search';
 import { TranslateService } from '@ngx-translate/core';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { esFamiliaAdministrador, normalizarRol } from '../../../../shared/utils/roles';
 
 interface FiltrosAplicados {
     q: string;
@@ -109,7 +111,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private clientConfig: ClientConfigService,
         private sitiosService: SitiosService,
         private listaService: ClientesListaService,
-        private translate: TranslateService
+        private translate: TranslateService,
+        private features: CompanyFeaturesService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -362,6 +365,29 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             detail: this.translate.instant('ventas.clientesLista.filtrosLimpiosTexto'),
             life: 2000
         });
+    }
+
+    // ── Posibles duplicados (ticket 1462, D-667) ─────────────────────────────────
+    /** La vista de duplicados está abierta debajo de la cabecera. */
+    mostrarDuplicados = false;
+
+    /**
+     * El botón «Posibles duplicados» solo existe con la bandera `calidadDatosClientes` y para los roles que el
+     * servidor deja entrar (Administrador y Tesorería; el servidor lo vuelve a exigir). Sin la bandera la lista es la de siempre.
+     */
+    get puedeVerDuplicados(): boolean {
+        if (!this.features.isEnabled('calidadDatosClientes')) { return false; }
+        try {
+            const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
+            // Igual que el servidor (requireRole): Tesorero y toda la familia Administrador.
+            return normalizarRol(rol) === 'tesorero' || esFamiliaAdministrador(rol);
+        } catch {
+            return false;
+        }
+    }
+
+    toggleDuplicados(): void {
+        this.mostrarDuplicados = !this.mostrarDuplicados;
     }
 
     openCrearModal(): void {

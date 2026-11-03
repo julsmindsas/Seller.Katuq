@@ -53,11 +53,19 @@
                     </div>
                   </div>
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ 'ventas.crearClienteModal.numeroDocumento' | translate }} <span class="required">*</span></label>
-                    <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.numeroDocumento' | translate }}"
-                      formControlName="documento" [attr.disabled]="isEdit && !documentoEditable ? true : null" class="w-100">
+                    <label class="form-label-modern">{{ (mostrarDv ? 'ventas.crearClienteModal.nit' : 'ventas.crearClienteModal.numeroDocumento') | translate }} <span class="required">*</span></label>
+                    <input pInputText type="text" placeholder="{{ (mostrarDv ? 'ventas.crearClienteModal.nit' : 'ventas.crearClienteModal.numeroDocumento') | translate }}"
+                      formControlName="documento" [attr.disabled]="isEdit && !documentoEditable ? true : null" class="w-100"
+                      (blur)="normalizarNit()">
                     <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                    </div>
+                    <!-- Ticket 1462 (D-667): NIT y dígito de verificación separados; el DV se calcula solo. -->
+                    <div class="nit-dv" *ngIf="mostrarDv">
+                      <label class="nit-dv__etiqueta" for="cliente-dv">{{ 'ventas.crearClienteModal.dvLabel' | translate }}</label>
+                      <input id="cliente-dv" type="text" class="nit-dv__valor" formControlName="dv" readonly
+                        [attr.aria-label]="'ventas.crearClienteModal.dvAyuda' | translate">
+                      <small class="nit-dv__ayuda">{{ 'ventas.crearClienteModal.dvAyuda' | translate }}</small>
                     </div>
                   </div>
 

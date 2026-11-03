@@ -8,6 +8,7 @@ import { TabViewModule } from "primeng/tabview";
 import { InputTextareaModule } from "primeng/inputtextarea";
 import { SharedModule } from "../../../shared/shared.module";
 import { CrearClienteModalComponent } from "./crear-cliente-modal/crear-cliente-modal.component";
+import { ClientesDuplicadosComponent } from "./duplicados/clientes-duplicados.component";
 
 /**
  * Módulo compartido de clientes (spec 008 — D-CLIENTE-COTIZACION).
@@ -35,7 +36,8 @@ import { CrearClienteModalComponent } from "./crear-cliente-modal/crear-cliente-
     TabViewModule,
     InputTextareaModule,
   ],
-  declarations: [CrearClienteModalComponent],
-  exports: [CrearClienteModalComponent],
+  // Ticket 1462 (D-667): «Posibles duplicados» vive aquí para que la lista de Clientes lo use sin acoplarse a más.
+  declarations: [CrearClienteModalComponent, ClientesDuplicadosComponent],
+  exports: [CrearClienteModalComponent, ClientesDuplicadosComponent],
 })
 export class ClientesSharedModule {}
