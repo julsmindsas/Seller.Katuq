@@ -523,3 +523,6 @@ $head: var(--kc-font-head);
 
 // D-500 (FE-01): proveedor de facturación en la franja de estado (solo con invoicingHub).
 .fe-strip__proveedor { font-size: 12.5px; font-weight: 600; color: #5b5878; letter-spacing: normal; }
+
+// Ticket 1480: consejo para la regla 90 (documento procesado anteriormente).
+.fe-reject__consejo { display: block; margin-top: 4px; font-weight: 700; letter-spacing: normal; }

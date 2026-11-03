@@ -64,6 +64,8 @@ export interface InvoiceRequest {
   message?: string;
   selection?: InvoiceSelection;
   version?: number;
+  /** Ticket 1480: facturas aceptadas recientes del mismo cliente y valor (solo aviso). */
+  posiblesDuplicados?: { number: string; issueDate: string | null; amount: number }[];
 }
 
 export interface InvoiceDraftSummary {

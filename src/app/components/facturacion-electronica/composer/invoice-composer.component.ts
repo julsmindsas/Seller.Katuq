@@ -146,6 +146,11 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.draftId = ''; this.draftVersion = 0; this.draftMessage = '';
     this.observations = ''; this.observationsDirty = false;
   }
+  /** Ticket 1480: 'AAAA-MM-DD' → 'DD/MM/AAAA' sin pasar por zona horaria. */
+  fechaCorta(fecha: string | null | undefined): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : (fecha || '');
+  }
   get canCorrect(): boolean {
     return !this.loading && !this.pending && !this.companyChanged &&
       ['rejected', 'failed'].includes(this.record?.status || '') && !!this.record?.selection;

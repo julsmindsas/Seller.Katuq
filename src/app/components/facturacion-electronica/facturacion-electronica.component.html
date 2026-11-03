@@ -363,6 +363,8 @@
                   <div class="fe-reject__copy">
                     <span class="fe-reject__title">{{ 'facturacionElectronica.facturacionElectronica.respuestaDeLaDian' | translate }}<ng-container *ngIf="rejectionCode(document)"> · {{ rejectionCode(document) }}</ng-container></span>
                     <span class="fe-reject__msg">{{ rejectionMessage(document) }}</span>
+                    <!-- Ticket 1480: regla 90, no reenviar a ciegas -->
+                    <span class="fe-reject__msg fe-reject__consejo" *ngIf="esDocumentoYaProcesado(document)">{{ 'facturacionElectronica.facturacionElectronica.yaProcesadoConsejo' | translate }}</span>
                   </div>
                   <!-- Ticket 1269: KAI explica el rechazo -->
                   <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="explicarRechazo(document)">
@@ -448,7 +450,7 @@
             <span class="fe-linea__punto"></span>
             <div>
               <strong>{{ e.texto }}</strong>
-              <small *ngIf="e.fecha">{{ e.fecha | date:'dd/MM/yyyy HH:mm' }}</small>
+              <small *ngIf="e.fecha">{{ e.fecha | date:(e.soloFecha ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm') }}</small>
               <small class="fe-linea__detalle" *ngIf="e.detalle">{{ e.detalle }}</small>
             </div>
           </li>

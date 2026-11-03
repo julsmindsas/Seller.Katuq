@@ -166,6 +166,11 @@
       <div class="summary-emit" *ngIf="preview && record?.status === 'ready'">
         <strong>{{ 'facturacionElectronica.invoiceComposer.revisaYConfirmaUnaFactura' | translate }}</strong>
         <p>{{ 'facturacionElectronica.invoiceComposer.emitirConsumeUnConsecutivoDe' | translate }}</p>
+        <!-- Ticket 1480: posible factura repetida (solo avisa) -->
+        <div class="emit-duplicado" role="alert" *ngFor="let d of record?.posiblesDuplicados">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span><b>{{ 'facturacionElectronica.invoiceComposer.posibleDuplicadoTitulo' | translate }}</b>{{ 'facturacionElectronica.invoiceComposer.posibleDuplicado' | translate:{numero: d.number, fecha: fechaCorta(d.issueDate)} }}</span>
+        </div>
         <label class="invoice-confirmation"><input type="checkbox" [(ngModel)]="confirmed" [disabled]="loading || companyChanged"> {{ 'facturacionElectronica.invoiceComposer.confirmoQueElClienteLos' | translate }}</label>
         <button type="button" class="btn btn-primary btn-cta" [disabled]="!canEmit" (click)="emitInvoice()"><i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-send'"></i> {{ 'facturacionElectronica.invoiceComposer.emitirFacturaReal' | translate }}</button>
         <p class="field-error" *ngIf="integration?.config?.environment !== 'produccion' || !integration?.enabled">{{ 'facturacionElectronica.invoiceComposer.antesDeEmitirCompletaY' | translate }}</p>

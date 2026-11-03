@@ -24,6 +24,8 @@ interface DianDocument {
   cufe?: string;
   cude?: string;
   issueDate?: string;
+  /** Ticket 1485: HH:MM:SS-05:00, la misma del XML. */
+  issueTime?: string;
   amount?: number;
   orderId?: string;
   environment?: string;
@@ -491,10 +493,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   }
 
   /** Ticket 1262: línea de tiempo del documento con lo que guarda la auditoría. */
-  lineaDocumento(document: DianDocument): { texto: string; fecha: Date | null; tono: string; detalle?: string }[] {
-    const lista: { texto: string; fecha: Date | null; tono: string; detalle?: string }[] = [];
+  lineaDocumento(document: DianDocument): { texto: string; fecha: Date | null; tono: string; detalle?: string; soloFecha?: boolean }[] {
+    const lista: { texto: string; fecha: Date | null; tono: string; detalle?: string; soloFecha?: boolean }[] = [];
+    // Ticket 1485: la emisión va primero y con su hora real; sin hora conocida, solo la fecha.
+    if (document.issueDate) lista.push({ texto: 'Fecha de emisión', fecha: this.documentDate(document), tono: 'neutro', soloFecha: !this.horaDeEmisionConocida(document) });
     lista.push({ texto: 'Registrado en Katuq', fecha: this.asDate(document.createdAt), tono: 'neutro' });
-    if (document.issueDate) lista.push({ texto: 'Fecha de emisión', fecha: this.documentDate(document), tono: 'neutro' });
     const g = this.statusGroup(document);
     lista.push({
       texto: g === 'accepted' ? 'Aceptado por la DIAN' : g === 'rejected' ? 'Rechazado por la DIAN' : 'En proceso en la DIAN',
@@ -516,7 +519,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         fecha: this.asDate(n.createdAt), tono: gn === 'accepted' ? 'ok' : gn === 'rejected' ? 'error' : 'neutro',
       });
     }
-    return lista;
+    // Ticket 1485: en orden de fecha y hora real (orden estable; sin fecha, al final).
+    const t = (f: Date | null) => (f ? f.getTime() : Number.POSITIVE_INFINITY);
+    return lista.map((e, i) => ({ e, i })).sort((a, b) => (t(a.e.fecha) - t(b.e.fecha)) || (a.i - b.i)).map(x => x.e);
   }
 
   /** Ticket 1481: factura aceptada que sus notas crédito dejaron en $0. */
@@ -1106,6 +1111,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return document.error?.code || document.dianResponse?.statusCode || '';
   }
 
+  /** Ticket 1480: la DIAN ya tenía ese documento (regla 90); reenviar puede duplicarlo. */
+  esDocumentoYaProcesado(document: DianDocument): boolean {
+    return /Regla:\s*90\b|procesado anteriormente/i.test(this.rejectionMessage(document));
+  }
+
   rejectionMessage(document: DianDocument): string {
     const response = document.dianResponse || {};
     const messages = Array.isArray(response.errorMessages) ? response.errorMessages : [];
@@ -1145,9 +1155,32 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return 'info';
   }
 
+  /**
+   * Ticket 1485: la hora real de emisión. El XML siempre la lleva; la auditoría la
+   * guarda desde este ticket (issueTime). En documentos anteriores se usa la hora
+   * de registro si es del mismo día en Colombia; si no, queda solo la fecha.
+   */
   documentDate(document: DianDocument): Date | null {
-    if (document.issueDate) return new Date(`${document.issueDate}T12:00:00`);
-    return this.asDate(document.createdAt);
+    if (!document.issueDate) return this.asDate(document.createdAt);
+    if (document.issueTime) {
+      const exacta = new Date(`${document.issueDate}T${document.issueTime}`);
+      if (!Number.isNaN(exacta.getTime())) return exacta;
+    }
+    const registro = this.asDate(document.createdAt);
+    if (registro && this.fechaColombia(registro) === document.issueDate) return registro;
+    return new Date(`${document.issueDate}T12:00:00`);
+  }
+
+  /** Ticket 1485: true si se conoce la hora de emisión; si no, se muestra solo la fecha. */
+  horaDeEmisionConocida(document: DianDocument): boolean {
+    if (!document.issueDate) return !!this.asDate(document.createdAt);
+    if (document.issueTime) return true;
+    const registro = this.asDate(document.createdAt);
+    return !!registro && this.fechaColombia(registro) === document.issueDate;
+  }
+
+  private fechaColombia(fecha: Date): string {
+    return new Date(fecha.getTime() - 5 * 3600 * 1000).toISOString().slice(0, 10);
   }
 
   entryDate(entry: any): Date | null {
