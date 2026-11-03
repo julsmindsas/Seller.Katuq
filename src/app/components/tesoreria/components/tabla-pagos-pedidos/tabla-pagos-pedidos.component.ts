@@ -471,9 +471,14 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     return this.mode === 'sinPago' && this.carteraInternaActiva && !this.incluirInternos;
   }
 
-  /** El interruptor solo tiene sentido si la empresa tiene clientes internos marcados. */
+  /**
+   * El interruptor solo tiene sentido si la empresa tiene clientes internos marcados. Se muestra también si el
+   * servidor dejó pedidos fuera (aunque las tarjetas de arriba no hayan cargado y falte la lista de claves) y
+   * mientras «Incluir internos» esté activo, para que el usuario siempre pueda volver a ocultarlos.
+   */
   get verInterruptorInternos(): boolean {
-    return this.mode === 'sinPago' && this.carteraInternaActiva && (this.clavesInternas?.length || 0) > 0;
+    if (this.mode !== 'sinPago' || !this.carteraInternaActiva) return false;
+    return (this.clavesInternas?.length || 0) > 0 || this.internosOcultos > 0 || this.incluirInternos;
   }
 
   cambiarIncluirInternos(valor: boolean): void {
