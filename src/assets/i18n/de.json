@@ -9153,6 +9153,8 @@
     "cartera.filtros.pagoPendiente": "Ausstehend",
     "cartera.filtros.pagoRevision": "Zahlung in Prüfung",
     "cartera.filtros.pagoPreaprobado": "Vorgenehmigt",
+    "cartera.filtros.pagoParcial": "Teilzahlung",
+    "cartera.filtros.pagoProcesando": "In Bearbeitung",
     "cartera.filtros.pagoCredito": "Kredit",
     "cartera.filtros.facturaTodas": "Alle",
     "cartera.filtros.facturaCon": "Mit Rechnung",
@@ -9202,5 +9204,7 @@
     "cartera.filtros.desde": "{{campo}}: ab",
     "cartera.filtros.hasta": "{{campo}}: bis",
     "cartera.filtros.deSaldoFiltrado": "Saldo mit diesen Filtern",
-    "cartera.filtros.saldoFiltrado": "Saldo mit Filtern"
+    "cartera.filtros.saldoFiltrado": "Saldo mit Filtern",
+    "cartera.filtros.cupoSaldoTotal": "Kreditbalken: Gesamtsaldo des Kunden, ohne die Bestellfilter",
+    "cartera.filtros.avisoRangoAlReves": "{{campo}}: Der erste Wert ist größer als der zweite, daher passt kein Kunde. Bitte prüfen."
 }

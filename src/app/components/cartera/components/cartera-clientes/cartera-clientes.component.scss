@@ -464,3 +464,23 @@
 
   i { color: var(--kc-accent); }
 }
+
+// Aviso de rango al revés (mínimo mayor que el máximo): par color fuerte / fondo suave, con color y tamaño propios.
+.cx-rango-aviso {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #fdf6dc;
+  color: #{$cx-aging-16-ink};
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+// Aclara que la barra de cupo es del cliente completo cuando los filtros recortan sus pedidos.
+.cx-bar-nota {
+  margin-top: 4px;
+  color: var(--kc-muted, #6b6885);
+  font-size: 11.5px;
+  line-height: 1.3;
+}

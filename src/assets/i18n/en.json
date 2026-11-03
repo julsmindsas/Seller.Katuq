@@ -12335,6 +12335,8 @@
   "cartera.filtros.pagoPendiente": "Pending",
   "cartera.filtros.pagoRevision": "Payment under review",
   "cartera.filtros.pagoPreaprobado": "Pre-approved",
+  "cartera.filtros.pagoParcial": "Partial payment",
+  "cartera.filtros.pagoProcesando": "Processing",
   "cartera.filtros.pagoCredito": "Credit",
   "cartera.filtros.facturaTodas": "All",
   "cartera.filtros.facturaCon": "With invoice",
@@ -12384,5 +12386,7 @@
   "cartera.filtros.desde": "{{campo}}: from",
   "cartera.filtros.hasta": "{{campo}}: up to",
   "cartera.filtros.deSaldoFiltrado": "balance with these filters",
-  "cartera.filtros.saldoFiltrado": "Balance with filters"
+  "cartera.filtros.saldoFiltrado": "Balance with filters",
+  "cartera.filtros.cupoSaldoTotal": "Credit bar: customer total balance, without the order filters",
+  "cartera.filtros.avisoRangoAlReves": "{{campo}}: the first value is greater than the second, so no customer matches. Please check them."
 }

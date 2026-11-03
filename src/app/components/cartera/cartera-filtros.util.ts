@@ -41,7 +41,7 @@ export interface CarteraFiltros {
   vendedores: string[];
   /** Selección múltiple de rangos de antigüedad (por pedido). Vacío = todos. */
   antiguedad: RangoAntiguedad[];
-  /** Estados de pago (por pedido): Pendiente, Pospendiente, PreAprobado, Credito. Vacío = todos. */
+  /** Estados de pago (por pedido): Pendiente, Pospendiente, PreAprobado, PagoParcial, Procesando, Credito. Vacío = todos. */
   estadosPago: string[];
   factura: FacturaFiltro;
   vence: VenceFiltro;
@@ -107,6 +107,17 @@ export function hayFiltrosActivos(f: CarteraFiltros): boolean {
     cuantosFiltrosAvanzados(f) > 0;
 }
 
+/** Rangos con el primer valor mayor que el segundo (mínimo > máximo, desde > hasta): no dejan pasar nada. */
+export type RangoInvertido = 'saldo' | 'compra' | 'entrega' | 'limite';
+export function rangosInvertidos(f: CarteraFiltros): RangoInvertido[] {
+  const lista: RangoInvertido[] = [];
+  if (f.saldoMin != null && f.saldoMax != null && f.saldoMin > f.saldoMax) lista.push('saldo');
+  if (f.compraDesde && f.compraHasta && f.compraDesde > f.compraHasta) lista.push('compra');
+  if (f.entregaDesde && f.entregaHasta && f.entregaDesde > f.entregaHasta) lista.push('entrega');
+  if (f.limiteDesde && f.limiteHasta && f.limiteDesde > f.limiteHasta) lista.push('limite');
+  return lista;
+}
+
 /** ¿Algún filtro recorta los pedidos de cada cliente (y no solo la lista de clientes)? */
 export function filtraPedidos(f: CarteraFiltros): boolean {
   return f.antiguedad.length > 0 || f.estadosPago.length > 0 || f.factura !== 'todas' || f.vence !== 'todos' ||
@@ -136,7 +147,7 @@ function enRangoDeFechas(iso: string | null | undefined, desde: string, hasta: s
 }
 
 /** ¿El pedido cumple los filtros que se miran pedido por pedido? */
-export function pedidoCumple(p: CarteraPedido, f: CarteraFiltros): boolean {
+export function pedidoCumple(p: CarteraPedido, f: CarteraFiltros, ahora: Date = new Date()): boolean {
   const dias = Number(p.diasVencido) || 0;
   if (f.antiguedad.length && !f.antiguedad.includes(rangoAntiguedad(dias))) return false;
   if (f.estadosPago.length && !f.estadosPago.includes(grupoEstadoPago(p.estadoPago))) return false;
@@ -145,7 +156,8 @@ export function pedidoCumple(p: CarteraPedido, f: CarteraFiltros): boolean {
   if (f.vence !== 'todos') {
     if (!p.payDueDate) return false; // sin fecha límite no se sabe cuándo vence
     if (f.vence === 'hoy') {
-      if (dias !== 0) return false;
+      // «Hoy» = el límite cae en el día de hoy (hora local), no «lleva menos de 24 h vencido».
+      if (diaLocal(p.payDueDate) !== diaLocal(ahora.toISOString())) return false;
     } else {
       const ventana = f.vence === '7' ? 7 : 30;
       if (dias > 0 || dias < -ventana) return false;
@@ -270,13 +282,13 @@ function ordenarFilas(filas: FilaVista[], orden: OrdenCartera): FilaVista[] {
  * de cada cliente (entra solo quien se queda con al menos un pedido); al final, el saldo mínimo y máximo
  * miran el saldo que queda visible.
  */
-export function aplicarFiltros(clientes: CarteraCliente[] | null | undefined, f: CarteraFiltros): VistaCartera {
+export function aplicarFiltros(clientes: CarteraCliente[] | null | undefined, f: CarteraFiltros, ahora: Date = new Date()): VistaCartera {
   const recorta = filtraPedidos(f);
   const filas: FilaVista[] = [];
   (clientes || []).forEach((c) => {
     if (!clienteCumple(c, f)) return;
     const todos = c.pedidos || [];
-    const pedidos = recorta ? todos.filter((p) => pedidoCumple(p, f)) : todos;
+    const pedidos = recorta ? todos.filter((p) => pedidoCumple(p, f, ahora)) : todos;
     if (recorta && pedidos.length === 0) return;
     const saldo = recorta ? sumaSaldo(pedidos) : Number(c.saldoPendiente) || 0;
     if (f.saldoMin != null && saldo < f.saldoMin) return;
@@ -347,7 +359,8 @@ const ES_RIESGO: { [k in RiskFilter]: string } = {
 };
 const ES_TIPO: { [k in TipoPersonaFiltro]: string } = { todos: 'Todos', empresa: 'Empresa (NIT)', persona: 'Persona (CC)' };
 const ES_PAGO: { [k: string]: string } = {
-  Pendiente: 'Pendiente', Pospendiente: 'Pago en revisión', PreAprobado: 'Preaprobado', Credito: 'Crédito',
+  Pendiente: 'Pendiente', Pospendiente: 'Pago en revisión', PreAprobado: 'Preaprobado', PagoParcial: 'Pago parcial',
+  Procesando: 'Procesando', Credito: 'Crédito',
 };
 const ES_FACTURA: { [k in FacturaFiltro]: string } = { todas: 'Todas', con: 'Con factura', sin: 'Sin factura' };
 const ES_VENCE: { [k in VenceFiltro]: string } = { todos: 'Todos', hoy: 'Hoy', '7': 'Próximos 7 días', '30': 'Próximos 30 días' };
@@ -534,6 +547,9 @@ function unicoLista(valores: string[], validos: string[]): string[] {
 /**
  * Los parámetros de la URL para unos filtros: solo los que no están en su valor por defecto; los demás
  * van en null para que Angular los quite de la dirección.
+ * Ojo: la búsqueda (nombre o documento del cliente) y los nombres de vendedor viajan en la dirección: quien
+ * comparte el enlace los comparte, y quedan en el historial del navegador. Siguen necesitando sesión de la
+ * empresa para ver los datos. Decisión pendiente: si se prefiere, excluir «q» de la dirección.
  */
 export function filtrosAUrl(f: CarteraFiltros): ParamsUrl {
   const v = filtrosVacios();

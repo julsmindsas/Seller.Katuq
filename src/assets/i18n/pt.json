@@ -9321,6 +9321,8 @@
   "cartera.filtros.pagoPendiente": "Pendente",
   "cartera.filtros.pagoRevision": "Pagamento em revisão",
   "cartera.filtros.pagoPreaprobado": "Pré-aprovado",
+  "cartera.filtros.pagoParcial": "Pagamento parcial",
+  "cartera.filtros.pagoProcesando": "Processando",
   "cartera.filtros.pagoCredito": "Crédito",
   "cartera.filtros.facturaTodas": "Todas",
   "cartera.filtros.facturaCon": "Com fatura",
@@ -9370,5 +9372,7 @@
   "cartera.filtros.desde": "{{campo}}: a partir de",
   "cartera.filtros.hasta": "{{campo}}: até",
   "cartera.filtros.deSaldoFiltrado": "de saldo com estes filtros",
-  "cartera.filtros.saldoFiltrado": "Saldo com os filtros"
+  "cartera.filtros.saldoFiltrado": "Saldo com os filtros",
+  "cartera.filtros.cupoSaldoTotal": "Barra de limite: saldo total do cliente, sem os filtros de pedido",
+  "cartera.filtros.avisoRangoAlReves": "{{campo}}: o primeiro valor é maior que o segundo, por isso nenhum cliente aparece. Revise-os."
 }

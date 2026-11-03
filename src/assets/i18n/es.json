@@ -12181,6 +12181,8 @@
   "cartera.filtros.pagoPendiente": "Pendiente",
   "cartera.filtros.pagoRevision": "Pago en revisión",
   "cartera.filtros.pagoPreaprobado": "Preaprobado",
+  "cartera.filtros.pagoParcial": "Pago parcial",
+  "cartera.filtros.pagoProcesando": "Procesando",
   "cartera.filtros.pagoCredito": "Crédito",
   "cartera.filtros.facturaTodas": "Todas",
   "cartera.filtros.facturaCon": "Con factura",
@@ -12230,5 +12232,7 @@
   "cartera.filtros.desde": "{{campo}}: desde",
   "cartera.filtros.hasta": "{{campo}}: hasta",
   "cartera.filtros.deSaldoFiltrado": "de saldo con estos filtros",
-  "cartera.filtros.saldoFiltrado": "Saldo con los filtros"
+  "cartera.filtros.saldoFiltrado": "Saldo con los filtros",
+  "cartera.filtros.cupoSaldoTotal": "Barra de cupo: saldo total del cliente, sin los filtros de pedido",
+  "cartera.filtros.avisoRangoAlReves": "{{campo}}: el primer valor es mayor que el segundo, por eso no sale ningún cliente. Revísalos."
 }

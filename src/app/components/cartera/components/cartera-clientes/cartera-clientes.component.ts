@@ -23,6 +23,7 @@ import {
   COMPROMISO_OPTIONS,
   ESTADO_PAGO_OPTIONS,
   FACTURA_OPTIONS,
+  grupoEstadoPago,
   metaPago,
   ORDEN_OPTIONS,
   PagoBadgeMeta,
@@ -33,6 +34,7 @@ import {
   VENCE_OPTIONS,
 } from '../../cartera.constants';
 import {
+  agingDeFila,
   aplicarFiltros,
   CarteraFiltros,
   cuantosFiltrosAvanzados,
@@ -42,6 +44,8 @@ import {
   filtrosVacios,
   hayFiltrosActivos,
   numeroDeCampo,
+  RangoInvertido,
+  rangosInvertidos,
   SIN_VENDEDOR,
   sufijoArchivo,
   VistaCartera,
@@ -162,8 +166,6 @@ export class CarteraClientesComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       this.clientes = this.data?.clientes || [];
-      this.vendedorOpciones = this.armarOpcionesVendedor(this.clientes);
-      this.estadoPagoOpciones = this.armarOpcionesEstadoPago(this.clientes);
       this.hayInternos = !!this.data?.internos;
       this.hayCompromisos = this.clientes.some((c) => (c.pedidos || []).some((p) => !!p.compromiso));
       this.expandedDoc = null;
@@ -173,6 +175,9 @@ export class CarteraClientesComponent implements OnChanges {
       this.masAbierto = true;
     }
     if (changes['data'] || changes['filtros']) {
+      // Las opciones también miran los filtros: lo elegido por la dirección compartida siempre tiene su opción.
+      this.vendedorOpciones = this.armarOpcionesVendedor(this.clientes);
+      this.estadoPagoOpciones = this.armarOpcionesEstadoPago(this.clientes);
       this.applyFilters();
     }
   }
@@ -198,11 +203,13 @@ export class CarteraClientesComponent implements OnChanges {
     return opciones;
   }
 
-  /** Estados de pago del filtro; «Crédito» solo aparece cuando algún pedido ya lo trae (ticket 1448). */
+  /** Estados de pago del filtro; «Crédito», «Pago parcial» y «Procesando» solo aparecen si algún pedido está en ese estado (o ya están elegidos). */
   private armarOpcionesEstadoPago(clientes: CarteraCliente[]): OpcionMulti[] {
-    const hayCredito = clientes.some((c) => (c.pedidos || []).some((p) => p.estadoPago === 'Credito'));
+    const presentes = new Set<string>();
+    clientes.forEach((c) => (c.pedidos || []).forEach((p) => presentes.add(grupoEstadoPago(p.estadoPago))));
+    const opcionales = ['Credito', 'PagoParcial', 'Procesando'];
     return ESTADO_PAGO_OPTIONS
-      .filter((o) => o.value !== 'Credito' || hayCredito || this.filtros.estadosPago.includes('Credito'))
+      .filter((o) => !opcionales.includes(o.value) || presentes.has(o.value) || this.filtros.estadosPago.includes(o.value))
       .map((o) => ({ value: o.value, labelKey: o.labelKey }));
   }
 
@@ -211,9 +218,23 @@ export class CarteraClientesComponent implements OnChanges {
     this.filtrosChange.emit({ ...this.filtros, ...parcial });
   }
 
-  /** Saldo mínimo o máximo escrito por la persona (vacío = sin tope). */
-  cambiarSaldo(campo: 'saldoMin' | 'saldoMax', valor: unknown): void {
-    this.cambiar({ [campo]: numeroDeCampo(valor) } as Partial<CarteraFiltros>);
+  /**
+   * Saldo mínimo o máximo escrito por la persona (vacío = sin tope). Mientras la casilla tiene algo a medio
+   * escribir que todavía no es un número («-», «e»), no se toca el filtro: así la casilla no se borra sola.
+   */
+  alEscribirSaldo(campo: 'saldoMin' | 'saldoMax', input: HTMLInputElement): void {
+    if (input.validity && input.validity.badInput) return;
+    this.cambiar({ [campo]: numeroDeCampo(input.value) } as Partial<CarteraFiltros>);
+  }
+
+  /** Rangos al revés (mínimo mayor que el máximo, desde posterior a hasta): se avisa porque no sale ningún cliente. */
+  get rangosAlReves(): RangoInvertido[] {
+    return rangosInvertidos(this.filtros);
+  }
+
+  claveGrupoRango(r: RangoInvertido): string {
+    return { saldo: 'cartera.filtros.grupoSaldo', compra: 'cartera.filtros.grupoCompra',
+      entrega: 'cartera.filtros.grupoEntrega', limite: 'cartera.filtros.grupoLimite' }[r];
   }
 
   alternarMas(): void {
@@ -608,21 +629,33 @@ export class CarteraClientesComponent implements OnChanges {
   }
 
   // ── Mini-barra de aging ───────────────────────────────────────────────────
+  /**
+   * Aging que se ve en la tarjeta: el del cliente completo, o el de los pedidos que quedan con los filtros
+   * (así la barra y la leyenda cuadran con el «Saldo filtrado» de la cabecera).
+   */
+  private agingVisible(cliente: CarteraCliente): { [rango: string]: number } {
+    const fila = this.filaDe(cliente);
+    if (fila && this.vista.recortaPedidos) return agingDeFila(fila, true);
+    return { ...(cliente.aging || {}) } as { [rango: string]: number };
+  }
+
   /** Los 6 rangos con su monto, para la leyenda bajo la barra. */
   agingLegend(cliente: CarteraCliente): AgingLegendItem[] {
+    const aging = this.agingVisible(cliente);
     return this.agingBuckets.map((b) => ({
       cssClass: b.cssClass,
       shortKey: b.shortKey,
-      monto: cliente.aging?.[b.key] || 0,
+      monto: aging[b.key] || 0,
     }));
   }
 
   agingSegments(cliente: CarteraCliente): AgingSegment[] {
-    const total = cliente.saldoPendiente || 0;
+    const total = this.vista.recortaPedidos ? this.saldoVisible(cliente) : cliente.saldoPendiente || 0;
     if (total <= 0) return [];
+    const aging = this.agingVisible(cliente);
     return this.agingBuckets
       .map((b) => {
-        const monto = cliente.aging?.[b.key] || 0;
+        const monto = aging[b.key] || 0;
         return { cssClass: b.cssClass, pct: (monto / total) * 100, labelKey: b.labelKey, monto };
       })
       .filter((s) => s.monto > 0);

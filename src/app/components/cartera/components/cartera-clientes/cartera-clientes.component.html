@@ -216,11 +216,11 @@
       <div class="cx-field cx-field-rango">
         <label for="cx-smin">{{ 'cartera.filtros.grupoSaldo' | translate }}</label>
         <div class="cx-rango">
-          <input id="cx-smin" type="number" min="0" step="1" inputmode="numeric" [ngModel]="filtros.saldoMin"
-                 (ngModelChange)="cambiarSaldo('saldoMin', $event)" [placeholder]="'cartera.filtros.minimo' | translate"
+          <input id="cx-smin" type="number" min="0" step="1" inputmode="numeric" [value]="filtros.saldoMin ?? ''"
+                 (input)="alEscribirSaldo('saldoMin', $any($event.target))" [placeholder]="'cartera.filtros.minimo' | translate"
                  [attr.aria-label]="'cartera.filtros.saldoMinimo' | translate">
-          <input id="cx-smax" type="number" min="0" step="1" inputmode="numeric" [ngModel]="filtros.saldoMax"
-                 (ngModelChange)="cambiarSaldo('saldoMax', $event)" [placeholder]="'cartera.filtros.maximo' | translate"
+          <input id="cx-smax" type="number" min="0" step="1" inputmode="numeric" [value]="filtros.saldoMax ?? ''"
+                 (input)="alEscribirSaldo('saldoMax', $any($event.target))" [placeholder]="'cartera.filtros.maximo' | translate"
                  [attr.aria-label]="'cartera.filtros.saldoMaximo' | translate">
         </div>
       </div>
@@ -250,6 +250,9 @@
           <input id="cx-lh" type="date" [ngModel]="filtros.limiteHasta" (ngModelChange)="cambiar({ limiteHasta: $event || '' })"
                  [attr.aria-label]="'cartera.filtros.hasta' | translate: { campo: ('cartera.filtros.grupoLimite' | translate) }">
         </div>
+      </div>
+      <div class="cx-rango-aviso" role="alert" *ngFor="let r of rangosAlReves">
+        {{ 'cartera.filtros.avisoRangoAlReves' | translate: { campo: (claveGrupoRango(r) | translate) } }}
       </div>
       <!-- Preparado para el ticket 1463: solo se ve cuando los pedidos traen compromiso de pago -->
       <div class="cx-field" *ngIf="hayCompromisos">
@@ -360,6 +363,7 @@
               {{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}
               {{ 'cartera.carteraClientes.de' | translate:{creditLimit: (c.creditLimit | currency:'COP':'symbol-narrow':'1.0-0')} }}
             </div>
+            <div class="cx-bar-nota" *ngIf="vista.recortaPedidos">{{ 'cartera.filtros.cupoSaldoTotal' | translate }}</div>
           </ng-container>
 
           <ng-template #sinCupo>

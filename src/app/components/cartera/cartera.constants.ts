@@ -61,20 +61,26 @@ export const TIPO_PERSONA_OPTIONS: { labelKey: string; value: TipoPersonaFiltro 
 
 /**
  * Ticket 1467: estados de pago del filtro. «Pospendiente» se llama «Pago en revisión» (ticket 1448) y
- * «Crédito» solo aparece cuando algún pedido ya lo trae (el estado se crea con ese ticket).
+ * «Crédito», «Pago parcial» y «Procesando» solo aparecen cuando algún pedido ya está en ese estado.
  */
-export type EstadoPagoGrupo = 'Pendiente' | 'Pospendiente' | 'PreAprobado' | 'Credito';
+export type EstadoPagoGrupo = 'Pendiente' | 'Pospendiente' | 'PreAprobado' | 'PagoParcial' | 'Procesando' | 'Credito';
 export const ESTADO_PAGO_OPTIONS: { labelKey: string; value: EstadoPagoGrupo }[] = [
   { labelKey: 'cartera.filtros.pagoPendiente',   value: 'Pendiente' },
   { labelKey: 'cartera.filtros.pagoRevision',    value: 'Pospendiente' },
   { labelKey: 'cartera.filtros.pagoPreaprobado', value: 'PreAprobado' },
+  { labelKey: 'cartera.filtros.pagoParcial',      value: 'PagoParcial' },
+  { labelKey: 'cartera.filtros.pagoProcesando',   value: 'Procesando' },
   { labelKey: 'cartera.filtros.pagoCredito',     value: 'Credito' },
 ];
 
-/** Estado de pago de un pedido llevado a uno de los 4 del filtro (los legados caen con su equivalente del servidor). */
+/**
+ * Estado de pago de un pedido llevado a su opción del filtro. «Pago parcial» y «Procesando» (estados que el
+ * servidor sigue contando como cartera) tienen su propia opción, igual que en la tabla de detalle, para que
+ * «Preaprobado» solo traiga los preaprobados.
+ */
 export function grupoEstadoPago(estado: string | null | undefined): string {
   const e = (estado || '').trim();
-  if (e === 'Pago Parcial' || e === 'Procesando') return 'PreAprobado';
+  if (e === 'Pago Parcial') return 'PagoParcial';
   return e;
 }
 
