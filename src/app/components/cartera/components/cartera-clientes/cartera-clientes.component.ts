@@ -15,6 +15,9 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { abrirAccionCartera } from '../cartera-acciones/cartera-accion-abrir';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 import {
   CarteraCliente,
   CarteraEvolucionResponse,
@@ -120,6 +123,8 @@ export class CarteraClientesComponent implements OnChanges {
   @Output() verInterna = new EventEmitter<void>();
   /** Ticket 1461: Tesorería marcó el tipo de relación de un cliente; la pantalla vuelve a pedir la cartera. */
   @Output() relacionCambiada = new EventEmitter<void>();
+  /** Ticket 1463: una acción de cobro (pago, compromiso, gestión, cupo y plazo o castigo) cambió datos: la pantalla vuelve a pedir la cartera. */
+  @Output() cobroCambiado = new EventEmitter<void>();
   readonly relacionOpciones = RELACION_OPTIONS;
 
   readonly riskOptions = RISK_OPTIONS;
@@ -141,6 +146,11 @@ export class CarteraClientesComponent implements OnChanges {
   hayInternos = false;
   /** «Compromiso de pago» solo aparece cuando los pedidos lo traen (ticket 1463). */
   hayCompromisos = false;
+  /** Ticket 1463: bandera `accionesCartera` (menú «Acciones» en cada tarjeta) y `carteraCastigo` (castigar deuda). */
+  accionesActivas = false;
+  castigoActivo = false;
+  /** El rol actual es de la familia Administrador (castigar, reactivar y cuentas bancarias). */
+  esAdmin = false;
 
   /**
    * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
@@ -171,7 +181,65 @@ export class CarteraClientesComponent implements OnChanges {
     private translate: TranslateService,
     private router: Router,
     private carteraService: CarteraService,
-  ) {}
+    private features: CompanyFeaturesService,
+    private modal: NgbModal,
+  ) {
+    this.accionesActivas = this.features.isEnabled('accionesCartera');
+    this.castigoActivo = this.features.isEnabled('carteraCastigo');
+    this.esAdmin = this.leerEsAdmin();
+  }
+
+  private leerEsAdmin(): boolean {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(rol);
+    } catch {
+      return false;
+    }
+  }
+
+  // ── Ticket 1463: lo que dejan las acciones de cobro en la tarjeta ──────────
+  /** «Promete pagar $X el dd/mm»; con la fecha pasada y sin pago, «Promesa vencida». */
+  textoCompromiso(c: CarteraCliente): { clave: string; params: { [k: string]: string }; clase: string } | null {
+    const comp = c.cobro?.compromiso;
+    if (!comp || !comp.fecha) return null;
+    const [anio, mes, dia] = String(comp.fecha).split('-');
+    const fecha = `${dia}/${mes}`;
+    const valor = '$' + Math.round(Number(comp.valor) || 0).toLocaleString('es-CO');
+    if (comp.estado === 'cumplido') return { clave: 'cartera.acciones.promesaCumplida', params: { valor, fecha, anio }, clase: 'cx-cobro-ok' };
+    if (comp.estado === 'incumplido') return { clave: 'cartera.acciones.promesaVencida', params: { valor, fecha, anio }, clase: 'cx-cobro-vencida' };
+    return { clave: 'cartera.acciones.promesaVigente', params: { valor, fecha, anio }, clase: 'cx-cobro-vigente' };
+  }
+
+  /** Días desde la última gestión (0 = hoy). */
+  diasDesde(iso: string): number {
+    const t = new Date(iso).getTime();
+    return isNaN(t) ? 0 : Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  }
+
+  /** Cuántos clientes tienen la promesa de pago vencida (lo calcula el servidor). */
+  get promesasVencidas(): { clientes: number; monto: number } | null {
+    const p = this.data?.kpis?.promesasVencidas;
+    return p && p.clientes > 0 ? p : null;
+  }
+
+  verPromesasVencidas(): void {
+    this.cambiar({ compromiso: 'incumplido' });
+    this.masAbierto = true;
+  }
+
+  alCambiarCobro(): void {
+    this.cobroCambiado.emit();
+  }
+
+  /** «Asignar cupo y plazo» desde la tarjeta sin cupo. */
+  asignarCupo(c: CarteraCliente, evento: Event): void {
+    evento.stopPropagation();
+    abrirAccionCartera(this.modal, 'credito', c, this.esAdmin).then((cambio) => {
+      if (cambio) this.alCambiarCobro();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {

@@ -342,6 +342,13 @@
     </div>
   </div>
 
+  <!-- Ticket 1463: clientes con una promesa de pago vencida -->
+  <div class="cx-promesas-aviso" *ngIf="accionesActivas && promesasVencidas as pv" role="status">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <div class="cx-promesas-texto">{{ 'cartera.acciones.promesasVencidasAviso' | translate:{ n: pv.clientes, monto: (pv.monto | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <button type="button" class="cx-promesas-ver" (click)="verPromesasVencidas()">{{ 'cartera.acciones.promesasVencidasVer' | translate }}</button>
+  </div>
+
   <!-- Empty: la vista interna no tiene a nadie -->
   <div *ngIf="clientes.length === 0 && modoInterno" class="cx-empty">
     <i class="pi pi-users"></i>
@@ -397,12 +404,27 @@
               <i class="pi pi-tag" aria-hidden="true"></i> {{ 'cartera.interna.tipoRelacion' | translate }}
             </button>
           </div>
+          <!-- Ticket 1463: promesa de pago y última gestión de cobro -->
+          <div class="cx-cobro" *ngIf="accionesActivas && (c.cobro?.compromiso || c.cobro?.ultimaGestion)">
+            <div class="cx-cobro-etq" *ngIf="textoCompromiso(c) as t" [ngClass]="t.clase">
+              <i class="pi" [ngClass]="t.clase === 'cx-cobro-vencida' ? 'pi-exclamation-circle' : 'pi-calendar'" aria-hidden="true"></i>
+              {{ t.clave | translate:t.params }}
+            </div>
+            <div class="cx-cobro-etq cx-cobro-gestion" *ngIf="c.cobro?.ultimaGestion as g">
+              <i class="pi pi-comments" aria-hidden="true"></i>
+              {{ 'cartera.acciones.tarjetaUltimaGestion' | translate:{ canal: g.canal, dias: diasDesde(g.fecha), resultado: g.resultado } }}
+            </div>
+          </div>
         </div>
 
         <div class="cx-client-saldo">
           <div class="cx-saldo-value">{{ saldoVisible(c) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
           <div class="cx-saldo-label">{{ vista.recortaPedidos ? ('cartera.filtros.saldoFiltrado' | translate) : ('cartera.carteraClientes.saldoPendiente' | translate) }}</div>
         </div>
+
+        <!-- Ticket 1463: menú «Acciones» (solo con la bandera accionesCartera) -->
+        <app-cartera-acciones *ngIf="accionesActivas" [cliente]="c" [castigoActivo]="castigoActivo" [esAdmin]="esAdmin"
+                              (cambio)="alCambiarCobro()"></app-cartera-acciones>
 
         <span class="cx-chevron">
           <i class="pi" [ngClass]="isExpanded(c) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
@@ -435,6 +457,10 @@
             <div class="cx-nocupo">
               <i class="pi pi-ban"></i>
               {{ 'cartera.carteraClientes.sinCupoConfigurado' | translate }}
+              <!-- Ticket 1463: acceso directo a asignar cupo y plazo sin salir de Cartera -->
+              <button type="button" class="cx-nocupo-accion" *ngIf="accionesActivas" (click)="asignarCupo(c, $event)">
+                {{ 'cartera.acciones.asignarCupo' | translate }}
+              </button>
             </div>
           </ng-template>
         </div>

@@ -19,6 +19,10 @@ import { CarteraVendedoresComponent } from './components/cartera-vendedores/cart
 import { CarteraEvolucionComponent } from './components/cartera-evolucion/cartera-evolucion.component';
 import { CarteraMultiComponent } from './components/cartera-multi/cartera-multi.component';
 import { CarteraFiltrosActivosComponent } from './components/cartera-filtros-activos/cartera-filtros-activos.component';
+// Ticket 1463: acciones de cobro de la tarjeta del cliente y reporte «Cartera castigada»
+import { CarteraAccionesComponent } from './components/cartera-acciones/cartera-acciones.component';
+import { CarteraAccionModalComponent } from './components/cartera-acciones/cartera-accion-modal.component';
+import { CarteraCastigadaComponent } from './components/cartera-castigada/cartera-castigada.component';
 
 /**
  * Spec 014 — Finanzas MVP (CxC / Cartera). Módulo lazy del área de cartera.
@@ -33,6 +37,9 @@ import { CarteraFiltrosActivosComponent } from './components/cartera-filtros-act
     CarteraEvolucionComponent,
     CarteraMultiComponent,
     CarteraFiltrosActivosComponent,
+    CarteraAccionesComponent,
+    CarteraAccionModalComponent,
+    CarteraCastigadaComponent,
   ],
   imports: [
     ModuloIaComponent,

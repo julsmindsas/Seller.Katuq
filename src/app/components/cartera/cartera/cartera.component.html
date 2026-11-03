@@ -58,11 +58,18 @@
         <i class="pi pi-users"></i>
         <span>{{ 'cartera.interna.tab' | translate }}</span>
       </button>
+      <!-- Ticket 1463: solo con la bandera carteraCastigo -->
+      <button *ngIf="castigoActivo" type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 3"
+              [attr.aria-selected]="activeIndex === 3" (click)="onTabChange({ index: 3 })">
+        <i class="pi pi-ban"></i>
+        <span>{{ 'cartera.castigada.tab' | translate }}</span>
+      </button>
     </div>
 
     <app-cartera-clientes *ngIf="activeIndex === 0" [data]="data" [evolucion]="evolucion"
                           [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"
-                          (verInterna)="onTabChange({ index: 2 })" (relacionCambiada)="alCambiarRelacion()"></app-cartera-clientes>
+                          (verInterna)="onTabChange({ index: 2 })" (relacionCambiada)="alCambiarRelacion()"
+                          (cobroCambiado)="alCambiarRelacion()"></app-cartera-clientes>
     <app-cartera-aging    *ngIf="activeIndex === 1" [data]="data"
                           [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"
                           (editarFiltros)="onTabChange({ index: 0 })"></app-cartera-aging>
@@ -79,8 +86,11 @@
       </div>
       <app-cartera-clientes *ngIf="dataInterna && !loadingInterna && !errorInterna" [data]="dataInterna" [modoInterno]="true"
                             [filtros]="filtrosInterna" (filtrosChange)="cambiarFiltrosInterna($event)"
-                            (relacionCambiada)="alCambiarRelacion()"></app-cartera-clientes>
+                            (relacionCambiada)="alCambiarRelacion()" (cobroCambiado)="alCambiarRelacion()"></app-cartera-clientes>
     </ng-container>
+
+    <!-- Ticket 1463: reporte «Cartera castigada» (bandera carteraCastigo) -->
+    <app-cartera-castigada *ngIf="activeIndex === 3 && castigoActivo" [esAdmin]="esAdmin" (cambio)="alCambiarRelacion()"></app-cartera-castigada>
 
   </ng-container>
 </div>

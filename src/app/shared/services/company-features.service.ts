@@ -76,6 +76,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'carteraEvolucion',
   // Cartera interna separada (ticket 1461, D-586): tipo de relación del cliente, Cartera sin internos y vista «Cartera interna». Dueño: Daniel. Se retira el 2027-05-31.
   'carteraInterna',
+  // Acciones de cobro en la tarjeta del cliente de Cartera (ticket 1463): estado de cuenta en PDF, compromiso de pago, gestiones y cupo y plazo. Dueño: Daniel. Se retira el 2027-05-31.
+  'accionesCartera',
+  // Castigar deuda (ticket 1463): solo Administrador, sale de Cartera y queda en «Cartera castigada». Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraCastigo',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

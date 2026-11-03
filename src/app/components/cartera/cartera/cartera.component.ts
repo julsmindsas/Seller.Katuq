@@ -11,6 +11,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil, timeout } from 'rxjs/operators';
 import { CarteraService } from '../../../shared/services/cartera/cartera.service';
 import { CarteraEvolucionResponse, CarteraResponse } from '../../../shared/services/cartera/cartera.models';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import {
   CarteraFiltros,
   filtrosAUrl,
@@ -43,8 +44,11 @@ export class CarteraComponent implements OnInit, OnDestroy {
   /** Fotos mensuales (ticket 1464). Es un extra: si no carga, la pantalla sigue sin la gráfica. */
   evolucion: CarteraEvolucionResponse | null = null;
 
-  /** 0 = Cartera por cliente, 1 = Aging, 2 = Cartera interna (ticket 1461, solo con la bandera encendida). */
+  /** 0 = Cartera por cliente, 1 = Aging, 2 = Cartera interna (ticket 1461), 3 = Cartera castigada (ticket 1463); las dos últimas solo con su bandera. */
   activeIndex = 0;
+  /** Ticket 1463: bandera `carteraCastigo` (reporte «Cartera castigada») y rol de la familia Administrador. */
+  castigoActivo = false;
+  esAdmin = false;
 
   /** Ticket 1461: la vista «Cartera interna» (solo empleados, socios y empresa propia); se pide cuando se abre. */
   dataInterna: CarteraResponse | null = null;
@@ -67,7 +71,17 @@ export class CarteraComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+    private features: CompanyFeaturesService,
+  ) {
+    this.castigoActivo = this.features.isEnabled('carteraCastigo');
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      this.esAdmin = /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(rol);
+    } catch {
+      this.esAdmin = false;
+    }
+  }
 
   ngOnInit(): void {
     const dir = this.route.snapshot.queryParamMap;
@@ -142,11 +156,12 @@ export class CarteraComponent implements OnInit, OnDestroy {
   }
 
   private indiceDeVista(vista: string | null): number {
+    if (vista === 'castigada') return this.castigoActivo ? 3 : 0;
     return vista === 'aging' ? 1 : vista === 'interna' ? 2 : 0;
   }
 
   private vistaDeIndice(indice: number): string | null {
-    return indice === 1 ? 'aging' : indice === 2 ? 'interna' : null;
+    return indice === 1 ? 'aging' : indice === 2 ? 'interna' : indice === 3 ? 'castigada' : null;
   }
 
   /** Ticket 1461: la cartera de empleados, socios y empresa propia (el servidor la manda aparte). */

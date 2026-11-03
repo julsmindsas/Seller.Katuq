@@ -632,3 +632,68 @@
   &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
 }
 .cx-sugerencia { background: #fdf6dc; border-color: #f1e3b0; color: #{$cx-aging-16-ink}; &:hover { background: #fbefc4; } }
+
+// Ticket 1463: promesa de pago y última gestión en la tarjeta, aviso de promesas vencidas y acceso a cupo y plazo.
+// Etiquetas en div (no en span de ngIf) y con color y tamaño propios; ninguna clase lleva «p-».
+.cx-cobro { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cx-cobro-etq {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  line-height: 1.3;
+  i { font-size: 11px; }
+}
+.cx-cobro-vigente { background: var(--kc-accent-wash); color: var(--kc-accent); }
+.cx-cobro-ok { background: #e7f6ec; color: #17994f; }
+.cx-cobro-vencida { background: #fdeceb; color: #b42318; }
+.cx-cobro-gestion { background: #f5f2ff; color: #6b6890; font-weight: 600; }
+
+.cx-nocupo-accion {
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid #e4dff7;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover { background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+.cx-promesas-aviso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #fdeceb;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+  i { font-size: 15px; }
+  @media (max-width: 600px) { flex-wrap: wrap; }
+}
+.cx-promesas-texto { flex: 1 1 auto; color: #b42318; font-size: 13px; letter-spacing: normal; }
+.cx-promesas-ver {
+  padding: 6px 12px;
+  border: 1px solid #b42318;
+  border-radius: 11px;
+  background: #fff;
+  color: #b42318;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}

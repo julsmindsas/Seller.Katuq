@@ -55,11 +55,32 @@ export interface CarteraPedido {
   compromiso?: CompromisoPago | null;
 }
 
-/** Compromiso de pago de un pedido (forma provisional, a confirmar con el ticket 1463). */
+/** Compromiso de pago (ticket 1463). `incumplido` es «Promesa vencida»; `vigente`, la fecha de hoy o futura. */
 export interface CompromisoPago {
   estado: 'vigente' | 'incumplido' | 'cumplido';
-  /** Fecha prometida (ISO). */
+  /** Fecha prometida («AAAA-MM-DD»). */
   fecha?: string | null;
+  /** Valor prometido. */
+  valor?: number;
+  nota?: string;
+  por?: string;
+}
+
+/** Ticket 1463: última gestión de cobro de un cliente. */
+export interface UltimaGestion {
+  fecha: string;
+  canal: string;
+  resultado: string;
+  nota?: string;
+  por?: string;
+}
+
+/** Ticket 1463: lo que dejan las acciones de cobro en la tarjeta (solo con la bandera `accionesCartera`). */
+export interface CobroCliente {
+  ultimaGestion?: UltimaGestion;
+  compromiso?: CompromisoPago;
+  /** Último estado de cuenta enviado, por canal. */
+  ultimoEstadoCuenta?: { correo?: { fecha: string; por?: string }; whatsapp?: { fecha: string; por?: string } };
 }
 
 /** Ticket 1467: empresa (NIT) o persona (cédula y demás); '' si no se pudo saber. */
@@ -100,6 +121,8 @@ export interface CarteraCliente {
   relationType?: TipoRelacion;
   /** Ticket 1461: «posible interno», nunca se marca solo. */
   sugeridoInterno?: SugerenciaInterno;
+  /** Ticket 1463: compromiso de pago y última gestión (solo con la bandera `accionesCartera`). */
+  cobro?: CobroCliente;
   aging: AgingBuckets;
   /** % de cupo usado; null si el cliente no tiene cupo configurado. */
   cupoUsadoPct: number | null;
@@ -155,6 +178,8 @@ export interface CarteraKpis {
   excedenCupo: CarteraExcedenCupoKpi;
   clientesConCupo?: CarteraClientesConCupoKpi;
   porVencer7?: CarteraPorVencerKpi;
+  /** Ticket 1463: clientes con una promesa de pago vencida (solo con la bandera `accionesCartera`). */
+  promesasVencidas?: { clientes: number; monto: number };
   aging: AgingBuckets;
 }
 
@@ -208,4 +233,112 @@ export interface CarteraEvolucionResponse {
   puntos: CarteraEvolucionPunto[];
   /** La bandera de la empresa está encendida (la tarea guarda la foto cada día). */
   habilitado: boolean;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ticket 1463: acciones de cobro de la tarjeta del cliente             */
+/* ------------------------------------------------------------------ */
+
+export type CanalGestion = 'llamada' | 'mensaje' | 'whatsapp' | 'correo' | 'visita' | 'otro';
+
+/** Un pedido del estado de cuenta (los números los calcula el servidor). */
+export interface EstadoCuentaPedido {
+  orderId: string;
+  nroPedido: string;
+  factura: string;
+  fecha: string | null;
+  limitePago: string | null;
+  diasVencido: number;
+  total: number;
+  abonos: number;
+  saldo: number;
+  /** Pago que Tesorería tiene por revisar: se muestra aparte, no se descuenta. */
+  enRevision: number;
+}
+
+export interface EstadoCuentaDatos {
+  corte: string;
+  cliente: { nombre: string; documento: string; telefono: string; correo: string };
+  pedidos: EstadoCuentaPedido[];
+  totalAdeudado: number;
+  totalVencido: number;
+  proximoVencimiento: { fecha: string; saldo: number; nroPedido: string } | null;
+  totalEnRevision: number;
+  interno: boolean;
+}
+
+/** Respuesta de POST /cartera/estado-cuenta/vista-previa. */
+export interface EstadoCuentaVistaPrevia {
+  success: boolean;
+  estado: EstadoCuentaDatos;
+  /** El comercio todavía no configuró cuentas bancarias: el PDF saldría sin ellas. */
+  sinCuentas: boolean;
+  whatsapp: { disponible: boolean; enlace: string; mensaje: string; enviadoDentroDe24h: string | null };
+  correo: { disponible: boolean; destino: string; asunto: string; enviadoDentroDe24h: string | null; servicioConfigurado: boolean };
+  archivo: string;
+}
+
+export interface CuentaBancaria {
+  banco: string;
+  tipo?: string;
+  numero: string;
+  titular?: string;
+  documentoTitular?: string;
+}
+
+export interface ConfigEstadoCuenta {
+  cuentas: CuentaBancaria[];
+  mensaje: string;
+}
+
+/** Respuesta de POST /cartera/credito (sin `confirmar` es la vista previa del efecto). */
+export interface CreditoVistaPrevia {
+  success: boolean;
+  vistaPrevia?: boolean;
+  guardado?: boolean;
+  anterior: { creditLimit: number; payTermDays: number };
+  nuevo: { creditLimit: number; payTermDays: number };
+  pedidosAbiertos: number;
+  pedidosCambianVencimiento: number;
+  dejanDeVencer: number;
+  empiezanAVencer: number;
+  saldoQueCambiaDeRango: number;
+  saldo: number;
+  cupoUsadoPctAntes: number | null;
+  cupoUsadoPctDespues: number | null;
+  sinCambios: boolean;
+}
+
+export interface EventoCobro {
+  tipo: string;
+  fecha: string;
+  por: string;
+  motivo: string;
+  detalle: any;
+  orderIds: string[];
+}
+
+export interface CastigoPedido {
+  orderId: string;
+  nroPedido: string;
+  saldo: number;
+  motivo: string;
+  fecha: string;
+  por: string;
+}
+
+export interface CarteraCastigadaCliente {
+  clave: string;
+  documento: string;
+  nombre: string;
+  total: number;
+  pedidos: CastigoPedido[];
+}
+
+/** Respuesta de GET /cartera/castigada. */
+export interface CarteraCastigadaResponse {
+  success: boolean;
+  total: number;
+  pedidos: number;
+  clientes: CarteraCastigadaCliente[];
 }
