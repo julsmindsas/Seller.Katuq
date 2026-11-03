@@ -40,7 +40,7 @@
                                 label="{{ 'ventas.clientesLista.exportarExcel' | translate }}"
                                 class="p-button-outlined p-button-sm cli-btn-excel d-none d-md-flex"
                                 (click)="exportarExcel()"
-                                [disabled]="clientes.length === 0"
+                                [disabled]="clientes.length === 0 || exportando"
                                 pTooltip="{{ 'ventas.clientesLista.exportarExcelTooltip' | translate }}"></button>
                     </div>
             </header>

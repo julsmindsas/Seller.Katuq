@@ -21,6 +21,16 @@ import { SitiosService } from '../../../sitios/sitios.service';
 import { clientBillingProfiles, matchesClientSearch } from '../../../../shared/utils/client-search';
 import { TranslateService } from '@ngx-translate/core';
 
+interface FiltrosAplicados {
+    q: string;
+    cliente: string;
+    documento: string;
+    email: string;
+    estado: string | null;
+    tipoCliente: string | null;
+    etiquetas: string[];
+}
+
 @Component({
     selector: 'app-clientes-lista',
     templateUrl: './clientes-lista.component.html',
@@ -41,6 +51,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     sortOrder: 'asc' | 'desc' | undefined;
     /** El buscador tiene más coincidencias de las que devolvió (el servidor topa la búsqueda). */
     busquedaParcial: boolean = false;
+    /** Exportando a Excel (indicador propio: no comparte `cargando` con la tabla). */
+    exportando: boolean = false;
+    /**
+     * Filtros que ya se aplicaron (los de la última búsqueda, no lo que hay escrito en los campos).
+     * Paginar, ordenar o refrescar usan ESTA copia, para que lo escrito sin pulsar Buscar no se aplique en silencio.
+     */
+    private filtrosAplicados: FiltrosAplicados = {
+        q: '', cliente: '', documento: '', email: '', estado: null, tipoCliente: null, etiquetas: []
+    };
     private cargaSub?: Subscription;
     private primeraCarga = true;
     mostrarFiltros: boolean = true;
@@ -118,10 +137,11 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 }
                 this.globalFilterValue = buscar;
                 this.primeraCarga = false;
-                this.cargarClientes({ reiniciar: true });
+                this.cargarClientes({ reiniciar: true, aplicar: true });
             } else if (this.primeraCarga) {
                 this.primeraCarga = false;
-                this.cargarClientes();
+                // Primera carga: valen los filtros guardados que la pantalla muestra.
+                this.cargarClientes({ aplicar: true });
             }
         });
 
@@ -172,21 +192,35 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.saveFilters();
     }
 
-    /** Parámetros del servidor según los filtros de la pantalla. */
-    private paramsPagina(): ClientesPaginaParams {
+    /** Fija como aplicados los filtros que hay en pantalla en este momento. */
+    private capturarFiltros(): void {
         const f = this.formFiltros.value;
-        return {
-            first: this.first,
-            rows: this.rows,
-            sortField: this.sortField,
-            sortOrder: this.sortOrder,
+        this.filtrosAplicados = {
             q: this.globalFilterValue,
             cliente: f.cliente,
             documento: f.documento,
             email: f.email,
             estado: f.estado,
             tipoCliente: f.tipoCliente,
-            etiquetas: this.selectedTagNames
+            etiquetas: [...this.selectedTagNames]
+        };
+    }
+
+    /** Parámetros del servidor según los filtros YA aplicados (no lo escrito sin pulsar Buscar). */
+    private paramsPagina(): ClientesPaginaParams {
+        const f = this.filtrosAplicados;
+        return {
+            first: this.first,
+            rows: this.rows,
+            sortField: this.sortField,
+            sortOrder: this.sortOrder,
+            q: f.q,
+            cliente: f.cliente,
+            documento: f.documento,
+            email: f.email,
+            estado: f.estado,
+            tipoCliente: f.tipoCliente,
+            etiquetas: f.etiquetas
         };
     }
 
@@ -194,10 +228,21 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
      * Pide al servidor la página actual. Una petición nueva cancela la anterior
      * (si el usuario sigue escribiendo, solo vale la última respuesta).
      */
-    cargarClientes(opciones: { reiniciar?: boolean; notificar?: boolean } = {}): void {
+    cargarClientes(opciones: { reiniciar?: boolean; notificar?: boolean; aplicar?: boolean; ordenPorDefecto?: boolean; reintento?: boolean } = {}): void {
+        if (opciones.aplicar) { this.capturarFiltros(); }
         if (opciones.reiniciar) {
             this.first = 0;
             if (this.dt) { this.dt.first = 0; }
+        }
+        if (opciones.ordenPorDefecto) {
+            // Vuelve al orden de la lista (más recientes primero) y apaga la flecha de la columna ordenada.
+            this.sortField = undefined;
+            this.sortOrder = undefined;
+            if (this.dt) {
+                (this.dt as any).sortField = null;
+                (this.dt as any).sortOrder = 1;
+                this.dt.tableService.onSort(null);
+            }
         }
         this.cargando = true;
         this.cargaSub?.unsubscribe();
@@ -206,6 +251,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.clientes = pagina?.data || [];
                 this.totalRecords = pagina?.total || 0;
                 this.busquedaParcial = !!pagina?.parcial;
+                // Página que quedó vacía (se borraron o bloquearon fichas, o se importó): volver a la última válida.
+                if (this.clientes.length === 0 && this.first > 0 && !opciones.reintento) {
+                    this.first = this.totalRecords > 0 ? Math.floor((this.totalRecords - 1) / this.rows) * this.rows : 0;
+                    if (this.dt) { this.dt.first = this.first; }
+                    if (this.totalRecords > 0) {
+                        this.cargarClientes({ ...opciones, reintento: true, reiniciar: false, aplicar: false, ordenPorDefecto: false });
+                        return;
+                    }
+                }
                 this.cargando = false;
                 if (opciones.notificar) { this.avisarResultado(); }
             },
@@ -241,7 +295,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     // Aplicar filtros: vuelve a la primera página y pregunta al servidor
     private aplicarFiltros(notify = true): void {
-        this.cargarClientes({ reiniciar: true, notificar: notify });
+        this.cargarClientes({ reiniciar: true, notificar: notify, aplicar: true });
     }
 
     private avisarResultado(): void {
@@ -267,7 +321,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
      * la lista completa una vez y se aplican los mismos filtros de pantalla.
      */
     private filtrarParaExportar(lista: any[]): any[] {
-        const filtros = this.formFiltros.value;
+        const filtros = this.filtrosAplicados;
         let out = [...lista];
         if (filtros.cliente && filtros.cliente.trim()) out = out.filter(c => matchesClientSearch(c, filtros.cliente, 'name'));
         if (filtros.documento && filtros.documento.trim()) out = out.filter(c => matchesClientSearch(c, filtros.documento, 'document'));
@@ -277,10 +331,10 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             const nombre = filtros.tipoCliente.toLowerCase();
             out = out.filter(c => (c.categoria?.nombre || c.tipoCliente || '').toLowerCase() === nombre);
         }
-        if (this.selectedTagNames.length > 0) {
-            out = out.filter(c => this.selectedTagNames.some(t => (c.etiquetas || []).includes(t)));
+        if (filtros.etiquetas.length > 0) {
+            out = out.filter(c => filtros.etiquetas.some(t => (c.etiquetas || []).includes(t)));
         }
-        if (this.globalFilterValue.trim()) out = out.filter(c => matchesClientSearch(c, this.globalFilterValue));
+        if (filtros.q.trim()) out = out.filter(c => matchesClientSearch(c, filtros.q));
         return out;
     }
 
@@ -300,7 +354,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         localStorage.removeItem('clientesLista_filtros');
 
         // Restaurar todos los clientes (primera página, sin filtros)
-        this.cargarClientes({ reiniciar: true });
+        this.cargarClientes({ reiniciar: true, aplicar: true });
 
         this.messageService.add({
             severity: 'info',
@@ -319,8 +373,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         modalRef.result.then((result) => {
             if (result?.action === 'created' && result?.cliente) {
-                // El servidor cuenta y ordena: se vuelve a pedir la primera página (el nuevo queda de primero).
-                this.cargarClientes({ reiniciar: true });
+                // El servidor cuenta y ordena: primera página y orden por defecto (más recientes primero), así el nuevo queda de primero.
+                // Los filtros aplicados se conservan; lo escrito sin pulsar Buscar no se aplica.
+                this.cargarClientes({ reiniciar: true, ordenPorDefecto: true });
             } else if (result?.action === 'existing_found') {
                 // Cliente ya existía — no era nuevo, no agregar duplicado
             }
@@ -537,15 +592,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     exportarExcel(): void {
+        if (this.exportando) { return; }
         // La tabla solo tiene una página: se baja la lista completa (una vez, al exportar) y se filtra igual que la pantalla.
-        this.cargando = true;
+        this.exportando = true;
         this.clienteService.obtenerClientes().subscribe({
             next: (todos: any) => {
-                this.cargando = false;
+                this.exportando = false;
                 this.exportarLista(this.filtrarParaExportar(this.ordenarPorReciente(todos || [])));
             },
             error: () => {
-                this.cargando = false;
+                this.exportando = false;
                 this.messageService.add({
                     severity: 'error',
                     summary: this.translate.instant('ventas.clientesLista.errorExportar'),
