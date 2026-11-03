@@ -12977,3 +12977,29 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Las 15 pruebas de `tests/enVivo` en verde.
   - Front: `tsc` y `ng build` sin errores.
 - **Estado: EN PROD el 28-oct.** Backend a9d66319 (pull limpio desde d4c85ed6, `pm2 reload katuq-api`, conserva `--max-old-space-size=2560`). Front 2026.10.28.4 (016a4f40, release ec2608bd), comprobado en el bundle servido. No se probó con la sesión de un comercio.
+
+### 2026-11-01 — D-579: los datos de Katuq pasan de Firestore a PostgreSQL (`katuq-db`)
+- **Qué:** el domingo 1-nov-2026, entre las 12:00 m. y la 1:03 p. m. (hora de Colombia), producción dejó de usar Firestore. Desde entonces lee y escribe en PostgreSQL 17 (`katuq-db`), un servidor propio en AWS en la misma red del backend. La hora del cambio fue 2026-11-01T17:21:40Z. Quedaron en producción el backend `4481ac39` (`backend-aws-security`) y Opttia `ef21d09` (`codex/opttia-support-tickets`).
+- **Por qué:** era caro (Daniel: "nos están cobrando mucho Google") y se quería una base estándar. Postgres se eligió el 17-oct; DynamoDB se descartó porque Katuq tiene 286 índices compuestos en 92 colecciones.
+- **Cómo:**
+  - El backend usa un adaptador con la misma API de firebase-admin Firestore, que guarda en Postgres: `functions/datos/firestorePg/`, esquema `fsdb`, una tabla por colección con el documento en JSONB.
+  - Con `DATOS_MOTOR=postgres` en el `.env`, `index.js` cambia `admin.firestore` por el adaptador al arrancar. Es infraestructura, así que D-505 lo permite. Los controladores no cambiaron.
+  - El diseño está en `docs/arquitectura/firestore-sobre-postgres/` del backend.
+- **Qué siguió en Firebase:** Realtime Database, Storage, FCM y el Hosting del Seller. Opttia guarda en Firestore solo sus datos propios; los de Katuq se los pide al backend, con `config/opttia_adk.katuq_datos_en_postgres = true`.
+- **Reglas desde ahora:**
+  - El Firestore de `julsmind-katuq` queda congelado con los datos del 1-nov. No se lee para diagnosticar ni se le corren scripts.
+  - Todo script de datos arranca con el adaptador (`instalarSiCorresponde(admin)`) y se detiene si no quedó instalado.
+  - Los índices se crean en Postgres; `firestore.indexes.json` ya no aplica en producción.
+  - No se borran registros de `katuq-db` sin el sí de Daniel, tampoco los de prueba.
+  - Genkit (`index`), `shopify-watcher` y la extensión de BigQuery quedan apagados: escribían en Firestore y nadie los usa (Daniel).
+- **Verificación:**
+  - Antes de abrir se hizo una copia final con la plataforma congelada y se compararon las colecciones críticas: PASA.
+  - 3-nov: el backend no se ha reiniciado.
+  - Los errores del servidor bajaron de 72-298 por día a 1 el lunes y 0 el martes. Las copias diarias de la base están bien.
+  - Desde el cambio se crearon 16 pedidos en 3 comercios, incluido POS, y se actualizaron 704 de OH MY STORE.
+- **Pendientes:**
+  - Aligerar la lista «Todos los pedidos»: hoy trae cada pedido completo (316 KB comprimidos).
+  - Que la pantalla pida las zonas de cobro una sola vez.
+  - Republicar o apagar app.katuq.com.
+  - Revisar el pedido DAD-014498 de ALMARA.
+  - Los pendientes de operación y seguridad están en el `CLAUDE.md` del backend (repositorio privado).

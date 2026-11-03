@@ -2,6 +2,19 @@
 
 Guía compartida para los agentes que trabajan en este repositorio. `CLAUDE.md` y `agent.md` remiten a este archivo para evitar reglas duplicadas. Comunicación y especificaciones en español; código e identificadores canónicos en inglés.
 
+## Base de datos: PostgreSQL desde el 1-nov-2026 (D-579)
+
+Desde el domingo 1-nov-2026 a la 1:03 p. m. (hora de Colombia), producción guarda y lee los datos de Katuq en **PostgreSQL** (servidor `katuq-db`), no en Firestore.
+
+El backend no cambió su forma de escribir. Sigue usando la API de Firestore (`admin.firestore()`, colecciones, documentos, transacciones, lotes) y un adaptador la traduce a Postgres. Por eso, cuando esta guía, las specs o el contrato dicen «Firestore», «colección» o «documento», se refieren a esa API. Los datos viven en Postgres.
+
+- **El Firestore de `julsmind-katuq` quedó congelado** con los datos de Katuq del 1-nov. Lo que se lea allí está viejo y lo que se escriba allí no lo ve nadie. No se usa para diagnosticar ni para corregir datos: **nunca correr scripts, backfills ni consultas de datos de Katuq contra Firestore**.
+- **Siguen en Firebase:** Realtime Database (ubicación de mensajeros, World Office), Storage (fotos y archivos), las notificaciones push (FCM) y el Hosting del Seller. Opttia guarda en Firestore solo sus datos propios (sesiones y usuarios). Los de Katuq se los pide al backend, porque la bandera `katuq_datos_en_postgres` está encendida y no se apaga.
+- **Frontend:** el Seller no lee ni escribe datos de Katuq directo en Firestore; todo pasa por el backend (`BaseService` + interceptor). La única excepción es `geocoding_cache` (`geocoding.service.ts`), una caché propia del front. No se agregan usos nuevos de `AngularFirestore`.
+- **Consultas e índices:** Postgres no rechaza una consulta por falta de índice, como hacía Firestore; la responde, pero lenta. Toda consulta nueva sobre colecciones grandes (`orders`, `products`, `inventory`, `clients`) necesita su índice en Postgres. `firebase deploy --only firestore:indexes` ya no sirve para producción. Lo que más pesa son los documentos grandes, como los pedidos de 20-30 KB: traer solo los campos que la pantalla usa (`select()`) y paginar.
+- **No se borran registros de `katuq-db`** sin el sí de Daniel, tampoco las cuentas y los datos de prueba.
+- **El detalle técnico** está en el `CLAUDE.md` del backend (repositorio privado): cómo funciona el adaptador, cómo se crean los índices, cómo deben arrancar los scripts y cómo se entra a la base. Este repositorio es público: aquí no van direcciones, llaves ni fallas de seguridad.
+
 ## Inicio de sesión y fuentes de verdad
 
 Leer en este orden:
@@ -39,7 +52,7 @@ SDD está adoptado desde 2026-05-13; OpenSpec lo instrumenta desde 2026-07-22 (D
 
 ## Reglas operativas y seguridad
 
-Katuq está en producción con comercios reales. Leer el código y trazar el flujo frontend → interceptor → backend → Firestore antes de editar. Diagnosticar con evidencia; no atribuir un bug a una causa sin verificarla.
+Katuq está en producción con comercios reales. Leer el código y trazar el flujo frontend → interceptor → backend → base de datos (Postgres desde el 1-nov-2026, ver «Base de datos») antes de editar. Diagnosticar con evidencia; no atribuir un bug a una causa sin verificarla.
 
 - Mantener auth middleware e interceptor; nunca retirarlos para probar.
 - Webhooks: validar HMAC, idempotencia y persistencia del evento crudo según la constitución. No confiar en el payload para autorizar.
@@ -132,7 +145,7 @@ Para que funcione, `update-version.js` guarda en `assets/version.json` el commit
 - **Frontend**: Angular 14, TypeScript, SCSS
 - **Backend principal**: Express/Node.js (repositorio separado, corre en `localhost:3300`)
 - **ADK Backend**: Python/Flask para AI streaming (`localhost:8080`)
-- **Base de datos**: Firebase Firestore + Realtime Database (via `@angular/fire`)
+- **Base de datos**: PostgreSQL (`katuq-db`) desde el 1-nov-2026, siempre a través del backend; Firestore quedó congelado (ver «Base de datos»). Realtime Database de Firebase sigue para lo que es en tiempo real (vía `@angular/fire`).
 - **Deploy**: Firebase Hosting → `dist/cuba`
 
 ### Multi-tenant
@@ -238,14 +251,15 @@ Toda pantalla nueva, o vieja que se toque, debe verse como "Regístrese" y "Todo
 - `src/environments/environment.ts` → configuración de desarrollo; actualmente `urlApi` apunta a `https://back.katuq.com`.
 - `src/environments/environment.prod.ts` → producción (`https://back.katuq.com`).
 - Para usar el backend local, configurar `urlApi` en `environment.ts` a `http://localhost:3300`. Verificar el destino antes de probar operaciones de escritura.
+- Un backend local sin el adaptador de Postgres trabaja sobre el Firestore congelado de producción. No sirve para probar y sus escrituras se pierden. Las pruebas se hacen en el servidor de pruebas, no en el PC de Daniel; los pasos están en el `CLAUDE.md` del backend.
 
 ## Servicios locales y puertos
 
 | Servicio | Puerto | Ubicación | Cómo iniciar |
 |----------|--------|-----------|--------------|
 | Angular Frontend | 4200 | `Seller.Katuq/` | `npm start` |
-| Backend Express | 3300 | `katuq_admin_back_firebase/functions/` | `node index.js` |
-| ~~KAI Genkit~~ (**OBSOLETO desde D-257, 2026-09-03**; sigue en prod como `index` de pm2 root solo por los flows viejos) | 3890 | `kai/functions/` | no levantar para trabajo nuevo |
+| Backend Express | 3300 | `katuq_admin_back_firebase/functions/` | `node index.js` (solo con `DATOS_MOTOR=postgres` y una base de pruebas; ver «Base de datos») |
+| ~~KAI Genkit~~ (**OBSOLETO desde D-257, 2026-09-03**; detenido en prod desde el 1-nov-2026, D-579) | 3890 | `kai/functions/` | no levantar |
 | ADK Python/Flask | 8080 | `kai/adk_agent/` | `python main.py` |
 
 ## Convenciones de IDs críticas
@@ -314,7 +328,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
   - Una pasada (prompt → JSON): `services/ai/opttiaJson.js` (`pedirJsonAOpttia`) en el backend → `POST /api/ai/json` del ADK/Bedrock. Autenticación interna: `X-Bot-Token` con `WHATSAPP_BOT_TOKEN`; nunca exponer su valor.
   - Conversación: orquestadores del ADK para Telegram, WhatsApp, video/voz y multi-departamento. Un canal nuevo es un adaptador de transporte en `channels/<canal>/`; usar `channels/telegram/` como referencia.
   - Genkit es legacy. Verificar qué consumidores quedan en el código y migrarlos a ADK cuando se intervengan; no mezclar motores en un mismo caso de uso.
-- **Dónde corre cada uno en producción**: **ADK corre por systemd, NO por PM2** (`sudo systemctl restart kai-adk`), puerto 8080, expuesto como `back.katuq.com/adk`; se despliega con `cd ~/kai && git pull` + restart. Genkit (obsoleto) sigue como proceso `index` de **PM2 del daemon root** (`sudo pm2 restart index`), puerto 3890, solo por los flows viejos. Revisar solo `pm2 list` da la falsa impresión de que ADK no está desplegado.
+- **Dónde corre cada uno en producción**: **ADK corre por systemd, NO por PM2** (`sudo systemctl restart kai-adk`), puerto 8080, expuesto como `back.katuq.com/adk`; se despliega con `cd ~/kai && git pull` + restart. Genkit (obsoleto) era el proceso `index` de **PM2 del daemon root**, puerto 3890. Quedó detenido desde el 1-nov-2026 (D-579), igual que `shopify-watcher`, porque escribían directo en Firestore: no se vuelven a prender. Revisar solo `pm2 list` da la falsa impresión de que ADK no está desplegado.
 - **Firestore transactions** para operaciones de inventario — evitar race conditions.
 - **Configuración en Firestore, nunca en el `.env` (D-505)**: toda configuración de una empresa vive en Firestore. Sus banderas van en `featureFlags.<nombre>` del documento en `companies` (`requireFeature` / `CompanyFeaturesService`) y sus ajustes en `companyConfig/{empresa}`. Los interruptores globales de la plataforma también van en Firestore, en `config/{doc}` (como `config/feature_flags`). El `.env` es solo para secretos e infraestructura: llaves, contraseñas, URLs y puertos. No se agregan interruptores nuevos al `.env`.
 - **Multi-tenancy**: toda query debe quedar limitada a la empresa autenticada. Usar el campo real de cada colección (`company` o `companyId`) y el contexto validado de la sesión; no asumir que ambos nombres son intercambiables.
