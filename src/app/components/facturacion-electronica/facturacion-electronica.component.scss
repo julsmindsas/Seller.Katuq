@@ -536,3 +536,7 @@ $head: var(--kc-font-head);
 
 // Ticket 1488: «Falta correo» es un botón que lleva a la ficha del cliente.
 .fe-pill--accion { border: 0; cursor: pointer; font-family: inherit; font-weight: 700; &:hover { filter: brightness(.96); } &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; } }
+
+// Ticket 1486: columna Origen (span con texto: color y tamaño propios por la trampa de span.ng-star-inserted).
+.fe-origen { color: var(--kc-ink2); font-size: 12.5px; font-weight: 700; letter-spacing: normal; }
+.fe-dim .fe-origen { color: var(--kc-muted2); font-weight: 600; }

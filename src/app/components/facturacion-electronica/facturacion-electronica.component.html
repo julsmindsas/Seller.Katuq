@@ -261,7 +261,8 @@
           <tr>
             <th class="fe-table__doc">{{ 'facturacionElectronica.facturacionElectronica.documento2' | translate }}</th>
             <th>{{ 'facturacionElectronica.invoiceOrderPicker.cliente' | translate }}</th>
-            <th>{{ 'facturacionElectronica.invoiceComposer.pedido' | translate }}</th>
+            <!-- Ticket 1486: el pedido de una factura o la factura que cita una nota. -->
+            <th>{{ 'facturacionElectronica.facturacionElectronica.origen' | translate }}</th>
             <th class="text-end">{{ 'facturacionElectronica.facturacionElectronica.valor' | translate }}</th>
             <th class="text-center">{{ 'facturacionElectronica.facturacionElectronica.estadoDian' | translate }}</th>
             <th class="text-center fe-table__actions">{{ 'facturacionElectronica.manualInvoiceForm.acciones' | translate }}</th>
@@ -298,9 +299,9 @@
                   <button type="button" class="fe-link" *ngIf="document.pedido?.numero; else sinPedido" (click)="verPedido(document)" [title]="'facturacionElectronica.facturacionElectronica.abrirElPedido' | translate">
                     {{ document.pedido?.numero }} <i class="pi pi-external-link"></i>
                   </button>
-                  <ng-template #sinPedido><span [title]="'facturacionElectronica.facturacionElectronica.facturaLibreSinPedido' | translate">—</span></ng-template>
+                  <ng-template #sinPedido><span class="fe-origen" [title]="'facturacionElectronica.facturacionElectronica.facturaLibreSinPedido' | translate">{{ 'facturacionElectronica.facturacionElectronica.facturaLibre' | translate }}</span></ng-template>
                 </ng-container>
-                <ng-template #notaRef>{{ document.reference?.number || '—' }}</ng-template>
+                <ng-template #notaRef><span class="fe-origen">{{ document.reference?.number ? ('facturacionElectronica.facturacionElectronica.facturaNumero' | translate:{numero: document.reference?.number}) : '—' }}</span></ng-template>
                 <small class="fe-cellnote" *ngIf="document.correction?.description">{{ document.correction?.description }}</small>
               </td>
               <td class="text-end fe-amount">
