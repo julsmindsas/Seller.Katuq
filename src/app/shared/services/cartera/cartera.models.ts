@@ -53,6 +53,8 @@ export interface CarteraPedido {
    * lo mande, ningún pedido lo trae y el filtro «Compromiso de pago» no se muestra.
    */
   compromiso?: CompromisoPago | null;
+  /** Ticket 1457 (bandera `carteraVendedorMora`): vendedor de ESTE pedido; sin la bandera no viene. */
+  vendedor?: string;
 }
 
 /** Compromiso de pago (ticket 1463). `incumplido` es «Promesa vencida»; `vigente`, la fecha de hoy o futura. */
@@ -192,6 +194,17 @@ export interface CarteraResponse {
    * Solo viene cuando la empresa tiene la bandera `carteraInterna` encendida; sin ella no aparece nada de esto.
    */
   internos?: CarteraInternos | null;
+  /** Ticket 1457: resumen por vendedor sumado por pedido; solo con la bandera `carteraVendedorMora`. */
+  porVendedor?: CarteraPorVendedor[];
+}
+
+/** Ticket 1457: una fila de «Cartera por vendedor» (sumada por el vendedor de cada pedido; '' = sin vendedor). */
+export interface CarteraPorVendedor {
+  vendedor: string;
+  saldo: number;
+  vencido: number;
+  clientes: number;
+  pedidos: number;
 }
 
 /** Ticket 1461: lo que se apartó (o se incluyó) de cartera interna. */
@@ -343,4 +356,104 @@ export interface CarteraCastigadaResponse {
   total: number;
   pedidos: number;
   clientes: CarteraCastigadaCliente[];
+}
+
+// ── Ticket 1385 y 1457: recordatorios de pago ───────────────────────────────
+
+export type CanalRecordatorio = 'correo' | 'whatsapp';
+
+/** A quién se le recuerda: un cliente (todos sus pedidos con saldo, o solo los de `orderIds`) o solo pedidos (la fila). */
+export interface DestinatarioRecordatorio {
+  documento?: string;
+  orderIds?: string[];
+  /** Solo para la pantalla (nombre mientras carga la vista previa); el servidor lo ignora. */
+  nombre?: string;
+}
+
+export interface PedidoRecordatorio {
+  orderId: string;
+  nroPedido: string;
+  saldo: number;
+  diasVencido: number;
+}
+
+export interface OmisionRecordatorio {
+  cliente?: { documento?: string; nombre?: string };
+  motivo: string;
+  motivoTexto: string;
+  orderId?: string;
+  nroPedido?: string;
+  pedidosOmitidos?: OmisionRecordatorio[];
+}
+
+export interface EnvioRecordatorioPrevio {
+  cliente: { documento: string; clave?: string; nombre: string; telefono?: string; correo?: string };
+  destino: string;
+  orderIds: string[];
+  pedidos: PedidoRecordatorio[];
+  pedidosOmitidos: OmisionRecordatorio[];
+  saldo: number;
+  asunto: string;
+  texto: string;
+  linkPago: string;
+}
+
+export interface RecordatorioVistaPrevia {
+  success: boolean;
+  canal: CanalRecordatorio;
+  canalDisponible: boolean;
+  canalMotivo: string;
+  faltaPlantilla: boolean;
+  enviables: EnvioRecordatorioPrevio[];
+  omitidos: OmisionRecordatorio[];
+  total: number;
+  costo: { unidadCOP: number; totalCOP: number; saldoSuficiente: boolean };
+  linkDePago: { permitido: boolean; nota: string };
+  maxPorLote: number;
+}
+
+export interface ResultadoRecordatorio {
+  cliente?: { documento?: string; nombre?: string };
+  estado: 'enviado' | 'fallido' | 'omitido';
+  motivo?: string;
+  motivoTexto?: string;
+  saldo?: number;
+}
+
+export interface RecordatorioEnviado {
+  success: boolean;
+  canal: CanalRecordatorio;
+  enviados: number;
+  fallidos: number;
+  omitidos: number;
+  resultados: ResultadoRecordatorio[];
+}
+
+export interface ConfigRecordatorio {
+  success?: boolean;
+  correo: { asunto: string; texto: string };
+  maxPorLote: number;
+  incluirLinkPago: boolean;
+  whatsapp: { plantillaNombre: string; plantillaAprobada: boolean };
+  variables: string[];
+  defecto: { asunto: string; texto: string };
+}
+
+export interface EventoRecordatorio {
+  fecha: string;
+  por: string;
+  canal: CanalRecordatorio;
+  resultado: string;
+  pedidos: string[];
+  saldo: number;
+  destino: string;
+}
+
+/** Ticket 1457 (parte A): mora de un pedido de «Sin pago». */
+export interface MoraPedido {
+  diasVencido: number;
+  rango: string;
+  payDueDate: string | null;
+  plazo: number;
+  saldo: number;
 }

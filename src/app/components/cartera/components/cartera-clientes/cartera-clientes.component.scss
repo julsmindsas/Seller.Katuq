@@ -697,3 +697,97 @@
   cursor: pointer;
   &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
 }
+
+// Tickets 1385 y 1457: seleccionar clientes para recordar el pago, agrupar por vendedor y botón por fila.
+// Plano, acento lila, sin gradientes. Ningún nombre de clase lleva «p-» (el CSS global les fuerza el tamaño de letra).
+.cx-sel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+  input { width: 18px; height: 18px; accent-color: #5f3fe0; cursor: pointer; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-col-sel { width: 34px; text-align: center; }
+
+.cx-seleccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 14px;
+  border: 1px solid #e4dff7;
+  border-radius: 11px;
+  background: #f5f2ff;
+  font-size: 13px;
+  color: #211f3a;
+  letter-spacing: normal;
+}
+.cx-seleccion-todos { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 700; cursor: pointer; input { width: 18px; height: 18px; accent-color: #5f3fe0; } }
+.cx-seleccion-cuenta { font-weight: 700; color: #5f3fe0; letter-spacing: normal; }
+.cx-seleccion-aviso { color: #b42318; font-weight: 700; font-size: 12.5px; letter-spacing: normal; }
+.cx-seleccion-boton,
+.cx-grupo-boton,
+.cx-fila-recordar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #5f3fe0;
+  border-radius: 11px;
+  background: #5f3fe0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #4f31c8; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-fila-recordar,
+.cx-grupo-boton { background: #fff; color: #5f3fe0; border-color: #d9d3f0; &:hover:not(:disabled) { background: #f3f0ff; } }
+.cx-fila-recordar { padding: 4px 10px; font-size: 12px; white-space: nowrap; }
+.cx-seleccion-limpiar {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #6b6890;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-detail-recordar { margin-bottom: 10px; }
+
+.cx-agrupar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cx-agrupar-etq { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.cx-agrupar-op {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #d9d3f0;
+  border-radius: 11px;
+  background: #fff;
+  color: #211f3a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover { background: #f3f0ff; }
+  &.is-activo { background: #5f3fe0; border-color: #5f3fe0; color: #fff; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.cx-avatar-vendedor { background: #f3f0ff; color: #5f3fe0; i { font-size: 18px; } }
+.cx-grupo-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.cx-grupo-vencido { color: #b42318; font-weight: 700; }
+.cx-grupo-doc { color: #6b6890; font-size: 12px; font-weight: 400; letter-spacing: normal; }

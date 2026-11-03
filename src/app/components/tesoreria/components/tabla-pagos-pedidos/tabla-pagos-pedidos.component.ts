@@ -18,6 +18,10 @@ import Swal from 'sweetalert2';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
+import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
+import { MoraPedido } from '../../../../shared/services/cartera/cartera.models';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
 import { OrdersTotals } from '../../../../shared/services/treasury/treasury.models';
 import { claveDocumento } from '../../../../shared/utils/clave-documento';
 import {
@@ -90,13 +94,32 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   private search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
+  /** Tickets 1385 y 1457: bandera `recordatoriosCobro` («Recordar pago» en cada fila de «Sin pago»). */
+  recordatoriosActivo = false;
+  /** Ticket 1457 (parte A): bandera `carteraVendedorMora` (días de mora y rango en cada fila de «Sin pago»). */
+  moraActiva = false;
+  /** Mora de los pedidos de la página visible (orderId -> días y rango, con la regla de Cartera). */
+  mora: { [orderId: string]: MoraPedido } = {};
+  private esAdmin = false;
+
   constructor(
     private ventas: VentasService,
     private maestro: MaestroService,
     private modal: NgbModal,
     private treasury: TreasuryService,
     private translate: TranslateService,
+    private carteraService: CarteraService,
+    private features: CompanyFeaturesService,
   ) {
+    this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
+    this.moraActiva = this.features.isEnabled('carteraVendedorMora');
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      this.esAdmin = /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(rol);
+    } catch {
+      this.esAdmin = false;
+    }
     // Rango por defecto: último año → hoy. El usuario puede ajustarlo.
     const rango = rangoPorDefecto();
     this.fechaDesde = rango.desde;
@@ -151,6 +174,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
           this.orders = res?.orders || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
           this.loading = false;
+          this.cargarMora();
         },
         error: () => {
           this.orders = [];
@@ -158,6 +182,60 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
           this.loading = false;
         },
       });
+  }
+
+  /** Columnas de la tabla (para el mensaje de «sin resultados»). */
+  get columnas(): number {
+    return 6 + (this.verMora ? 1 : 0);
+  }
+
+  get verMora(): boolean {
+    return this.mode === 'sinPago' && this.moraActiva;
+  }
+
+  get verRecordar(): boolean {
+    return this.mode === 'sinPago' && this.recordatoriosActivo;
+  }
+
+  /**
+   * Ticket 1457 (parte A): días de mora y rango de los pedidos de la página visible. Es un extra: si no carga, la
+   * lista sigue igual. Solo se piden los pedidos de esta página.
+   */
+  private cargarMora(): void {
+    this.mora = {};
+    if (!this.verMora || !this.orders.length) return;
+    const ids = this.orders.map((o) => String(o?._id || '')).filter(Boolean);
+    if (!ids.length) return;
+    this.carteraService
+      .moraDePedidos(ids)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => (this.mora = r?.pedidos || {}),
+        error: () => (this.mora = {}),
+      });
+  }
+
+  moraDe(pedido: any): MoraPedido | null {
+    return this.mora[String(pedido?._id || '')] || null;
+  }
+
+  /** «8 d» si está vencido; «Al día» si no; vacío si no se pudo calcular. */
+  textoMora(pedido: any): string {
+    const m = this.moraDe(pedido);
+    if (!m) return '';
+    return m.diasVencido > 0 ? `${m.diasVencido} d` : this.translate.instant('cartera.acciones.alDia');
+  }
+
+  claveRango(pedido: any): string {
+    const m = this.moraDe(pedido);
+    return m ? `cartera.rangos.${m.rango}Etiqueta` : '';
+  }
+
+  /** Ticket 1385/1457: «Recordar pago» desde la fila. El servidor resuelve el cliente y el saldo desde Cartera. */
+  recordarPago(pedido: any): void {
+    const id = String(pedido?._id || '');
+    if (!id) return;
+    abrirRecordatorioCobro(this.modal, [{ orderIds: [id], nombre: this.clienteNombre(pedido) }], this.esAdmin);
   }
 
   /**

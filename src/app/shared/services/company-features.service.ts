@@ -80,6 +80,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'accionesCartera',
   // Castigar deuda (ticket 1463): solo Administrador, sale de Cartera y queda en «Cartera castigada». Dueño: Daniel. Se retira el 2027-05-31.
   'carteraCastigo',
+  // Recordatorios de pago desde CxC (tickets 1385 y 1457): «Recordar pago» por correo y WhatsApp, por cliente, por pedido y masivo. Dueño: Daniel. Se retira el 2027-05-31.
+  'recordatoriosCobro',
+  // Cartera por vendedor y mora por fila de «Sin pago» (ticket 1457). Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraVendedorMora',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

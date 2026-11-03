@@ -17,12 +17,14 @@ import Swal from 'sweetalert2';
 import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { abrirAccionCartera } from '../cartera-acciones/cartera-accion-abrir';
+import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
 import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 import {
   CarteraCliente,
   CarteraEvolucionResponse,
   CarteraPedido,
   CarteraResponse,
+  DestinatarioRecordatorio,
   TipoRelacion,
 } from '../../../../shared/services/cartera/cartera.models';
 import {
@@ -54,6 +56,7 @@ import {
   filtrosVacios,
   hayFiltrosActivos,
   numeroDeCampo,
+  pedidosTraenVendedor,
   RangoInvertido,
   rangosInvertidos,
   SIN_VENDEDOR,
@@ -79,6 +82,15 @@ interface AgingLegendItem {
   cssClass: string;
   shortKey: string;
   monto: number;
+}
+
+/** Ticket 1457: un vendedor con los clientes y los pedidos que le tocan (sumado por el vendedor de cada pedido). */
+interface GrupoVendedor {
+  vendedor: string;
+  saldo: number;
+  vencido: number;
+  pedidos: number;
+  filas: { cliente: CarteraCliente; saldo: number; vencido: number; pedidos: CarteraPedido[] }[];
 }
 
 /** Etiqueta de riesgo derivada de los datos que ya trae el cliente. */
@@ -151,6 +163,21 @@ export class CarteraClientesComponent implements OnChanges {
   castigoActivo = false;
   /** El rol actual es de la familia Administrador (castigar, reactivar y cuentas bancarias). */
   esAdmin = false;
+  /** Tickets 1385 y 1457: bandera `recordatoriosCobro` («Recordar pago», selección y envío masivo). */
+  recordatoriosActivo = false;
+  /** Ticket 1457: bandera `carteraVendedorMora` y los pedidos ya traen su vendedor («Agrupar por: Cliente / Vendedor»). */
+  vendedorMoraActivo = false;
+  /** Cómo se agrupa la lista: por cliente (siempre fue así) o por vendedor (ticket 1457). */
+  agrupar: 'cliente' | 'vendedor' = 'cliente';
+  gruposVendedor: GrupoVendedor[] = [];
+  /** Vendedor del grupo abierto ('' es «Sin vendedor»; null = ninguno). */
+  grupoAbierto: string | null = null;
+  /** Clientes escogidos para recordar el pago (documento -> cliente). */
+  seleccionClientes = new Map<string, CarteraCliente>();
+  /** Pedidos escogidos dentro de un cliente (documento -> orderIds), para «varias facturas de un cliente». */
+  seleccionPedidos = new Map<string, Set<string>>();
+  /** Tope de clientes por envío que se avisa antes de abrir la ventana (el servidor lo vuelve a exigir). */
+  readonly maxSeleccion = 200;
 
   /**
    * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
@@ -186,6 +213,7 @@ export class CarteraClientesComponent implements OnChanges {
   ) {
     this.accionesActivas = this.features.isEnabled('accionesCartera');
     this.castigoActivo = this.features.isEnabled('carteraCastigo');
+    this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
     this.esAdmin = this.leerEsAdmin();
   }
 
@@ -246,7 +274,11 @@ export class CarteraClientesComponent implements OnChanges {
       this.clientes = this.data?.clientes || [];
       this.hayInternos = !!this.data?.internos;
       this.hayCompromisos = this.clientes.some((c) => (c.pedidos || []).some((p) => !!p.compromiso));
+      this.vendedorMoraActivo = this.features.isEnabled('carteraVendedorMora') && pedidosTraenVendedor(this.clientes);
+      if (!this.vendedorMoraActivo) this.agrupar = 'cliente';
       this.expandedDoc = null;
+      // La cartera se volvió a pedir: lo escogido se limpia (un cliente pudo pagar o salir de la lista).
+      this.limpiarSeleccion();
     }
     // Una dirección compartida con filtros avanzados abre el panel para que se vean.
     if (changes['filtros'] && changes['filtros'].firstChange && cuantosFiltrosAvanzados(this.filtros) > 0) {
@@ -330,6 +362,164 @@ export class CarteraClientesComponent implements OnChanges {
     this.filtered = this.vista.clientes;
     this.totalVisible = this.vista.total;
     this.kpisVista = this.calcularKpisVista();
+    this.gruposVendedor = this.vendedorMoraActivo ? this.armarGruposVendedor() : [];
+  }
+
+  // ── Ticket 1457: «Agrupar por: Cliente / Vendedor» ─────────────────────────
+  /** Agrupa lo que se ve con los filtros por el vendedor de cada pedido; el total es el mismo de la vista por cliente. */
+  private armarGruposVendedor(): GrupoVendedor[] {
+    const mapa = new Map<string, GrupoVendedor>();
+    this.vista.filas.forEach((fila) => {
+      const porVendedor = new Map<string, CarteraPedido[]>();
+      fila.pedidos.forEach((p) => {
+        const v = (p.vendedor || '').trim();
+        if (!porVendedor.has(v)) porVendedor.set(v, []);
+        (porVendedor.get(v) as CarteraPedido[]).push(p);
+      });
+      porVendedor.forEach((pedidos, v) => {
+        if (!mapa.has(v)) mapa.set(v, { vendedor: v, saldo: 0, vencido: 0, pedidos: 0, filas: [] });
+        const g = mapa.get(v) as GrupoVendedor;
+        const saldo = pedidos.reduce((a, p) => a + (Number(p.saldo) || 0), 0);
+        const vencido = pedidos.filter((p) => (Number(p.diasVencido) || 0) > 0).reduce((a, p) => a + (Number(p.saldo) || 0), 0);
+        g.saldo += saldo;
+        g.vencido += vencido;
+        g.pedidos += pedidos.length;
+        g.filas.push({ cliente: fila.cliente, saldo, vencido, pedidos });
+      });
+    });
+    return Array.from(mapa.values())
+      .map((g) => ({ ...g, filas: g.filas.sort((a, b) => b.saldo - a.saldo) }))
+      .sort((a, b) => {
+        if (!a.vendedor !== !b.vendedor) return a.vendedor ? -1 : 1;
+        return b.saldo - a.saldo;
+      });
+  }
+
+  cambiarAgrupar(modo: 'cliente' | 'vendedor'): void {
+    this.agrupar = modo;
+    this.grupoAbierto = null;
+  }
+
+  alternarGrupo(g: GrupoVendedor): void {
+    this.grupoAbierto = this.grupoAbierto === g.vendedor ? null : g.vendedor;
+  }
+
+  trackPorGrupo(_i: number, g: GrupoVendedor): string {
+    return g.vendedor || '__sin__';
+  }
+
+  /** Vuelve a la lista por cliente mostrando solo a ese vendedor. */
+  verClientesDe(g: GrupoVendedor): void {
+    this.agrupar = 'cliente';
+    this.cambiar({ vendedores: [g.vendedor || SIN_VENDEDOR] });
+  }
+
+  /** «Recordar pago» a los clientes de un vendedor con saldo vencido, solo con los pedidos vencidos que son suyos. */
+  recordarVencidosDe(g: GrupoVendedor): void {
+    const destinatarios: DestinatarioRecordatorio[] = g.filas
+      .map((f) => ({ documento: f.cliente.documento, nombre: f.cliente.nombre, orderIds: f.pedidos.filter((p) => (Number(p.diasVencido) || 0) > 0).map((p) => p.orderId) }))
+      .filter((d) => d.orderIds.length > 0);
+    this.abrirRecordatorio(destinatarios);
+  }
+
+  // ── Tickets 1385 y 1457: recordar el pago ──────────────────────────────────
+  estaSeleccionado(c: CarteraCliente): boolean {
+    return this.seleccionClientes.has(c.documento);
+  }
+
+  alternarCliente(c: CarteraCliente, evento: Event): void {
+    evento.stopPropagation();
+    if (this.seleccionClientes.has(c.documento)) this.seleccionClientes.delete(c.documento);
+    else this.seleccionClientes.set(c.documento, c);
+  }
+
+  get hayClientesEscogidos(): boolean {
+    return this.seleccionClientes.size > 0;
+  }
+
+  get todosEscogidos(): boolean {
+    return this.filtered.length > 0 && this.filtered.every((c) => this.seleccionClientes.has(c.documento));
+  }
+
+  /** Escoge (o suelta) a todos los clientes que se ven con los filtros. */
+  alternarTodosLosVisibles(): void {
+    if (this.todosEscogidos) {
+      this.seleccionClientes.clear();
+      return;
+    }
+    this.filtered.forEach((c) => this.seleccionClientes.set(c.documento, c));
+  }
+
+  limpiarSeleccion(): void {
+    this.seleccionClientes.clear();
+    this.seleccionPedidos.clear();
+  }
+
+  get saldoEscogido(): number {
+    let total = 0;
+    this.seleccionClientes.forEach((c) => (total += this.saldoVisible(c)));
+    return total;
+  }
+
+  get seleccionPasaDelTope(): boolean {
+    return this.seleccionClientes.size > this.maxSeleccion;
+  }
+
+  /** Recordar el pago a los clientes escogidos (solo los pedidos que se ven con los filtros). */
+  recordarSeleccion(): void {
+    if (!this.hayClientesEscogidos || this.seleccionPasaDelTope) return;
+    const destinatarios: DestinatarioRecordatorio[] = Array.from(this.seleccionClientes.values()).map((c) => ({
+      documento: c.documento,
+      nombre: c.nombre,
+      // Con un filtro que recorta pedidos, se recuerdan solo los pedidos que se ven.
+      orderIds: this.vista.recortaPedidos ? this.pedidosVisibles(c).map((p) => p.orderId) : undefined,
+    }));
+    this.abrirRecordatorio(destinatarios, true);
+  }
+
+  /** «Recordar pago» desde la fila de un pedido. */
+  recordarPedido(c: CarteraCliente, p: CarteraPedido, evento: Event): void {
+    evento.stopPropagation();
+    this.abrirRecordatorio([{ documento: c.documento, nombre: c.nombre, orderIds: [p.orderId] }]);
+  }
+
+  // Varias facturas de un mismo cliente
+  pedidoEscogido(c: CarteraCliente, p: CarteraPedido): boolean {
+    const s = this.seleccionPedidos.get(c.documento);
+    return !!s && s.has(p.orderId);
+  }
+
+  alternarPedidoEscogido(c: CarteraCliente, p: CarteraPedido, evento: Event): void {
+    evento.stopPropagation();
+    const s = this.seleccionPedidos.get(c.documento) || new Set<string>();
+    if (s.has(p.orderId)) s.delete(p.orderId);
+    else s.add(p.orderId);
+    this.seleccionPedidos.set(c.documento, s);
+  }
+
+  cuantosPedidosEscogidos(c: CarteraCliente): number {
+    const s = this.seleccionPedidos.get(c.documento);
+    // Solo cuentan los que siguen a la vista.
+    return s ? this.pedidosVisibles(c).filter((p) => s.has(p.orderId)).length : 0;
+  }
+
+  recordarPedidosEscogidos(c: CarteraCliente, evento: Event): void {
+    evento.stopPropagation();
+    const s = this.seleccionPedidos.get(c.documento);
+    const ids = s ? this.pedidosVisibles(c).filter((p) => s.has(p.orderId)).map((p) => p.orderId) : [];
+    if (!ids.length) return;
+    this.abrirRecordatorio([{ documento: c.documento, nombre: c.nombre, orderIds: ids }]);
+  }
+
+  /** Abre la ventana de «Recordar pago»; si se envió algo, la pantalla vuelve a pedir la cartera (muestra la última gestión). */
+  private abrirRecordatorio(destinatarios: DestinatarioRecordatorio[], limpiar = false): void {
+    if (!destinatarios.length) return;
+    abrirRecordatorioCobro(this.modal, destinatarios, this.esAdmin).then((cambio) => {
+      if (cambio) {
+        if (limpiar) this.limpiarSeleccion();
+        this.alCambiarCobro();
+      }
+    });
   }
 
   // ── Banner que sigue a los filtros (ticket 1388) ──────────────────────────
@@ -853,6 +1043,10 @@ export class CarteraClientesComponent implements OnChanges {
   // ── Detalle de pedidos ────────────────────────────────────────────────────
   metaPago(estado: string): PagoBadgeMeta {
     return metaPago(estado);
+  }
+
+  trackPorFilaGrupo(_i: number, f: { cliente: CarteraCliente }): string {
+    return f.cliente.documento || f.cliente.nombre || '';
   }
 
   trackByDoc(_index: number, cliente: CarteraCliente): string {

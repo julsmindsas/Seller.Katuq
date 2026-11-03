@@ -1,0 +1,175 @@
+<div class="modal-header rc-cabeza">
+  <div>
+    <h5 class="modal-title rc-titulo"><i class="pi pi-send" aria-hidden="true"></i> {{ titulo }}</h5>
+    <div class="rc-sub">{{ 'cartera.recordatorio.subtitulo' | translate }}</div>
+  </div>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body rc-cuerpo">
+  <div class="rc-aviso rc-aviso-error" role="alert" *ngIf="error">{{ error }}</div>
+
+  <!-- Resultado del envío -->
+  <ng-container *ngIf="resultado as r">
+    <div class="rc-aviso" role="status" [ngClass]="r.enviados > 0 ? 'rc-aviso-ok' : 'rc-aviso-alerta'">
+      <strong>{{ 'cartera.recordatorio.resultadoEnviados' | translate:{ n: r.enviados } }}</strong>
+      <span *ngIf="r.fallidos > 0"> · {{ 'cartera.recordatorio.resultadoFallidos' | translate:{ n: r.fallidos } }}</span>
+      <span *ngIf="r.omitidos > 0"> · {{ 'cartera.recordatorio.resultadoOmitidos' | translate:{ n: r.omitidos } }}</span>
+    </div>
+    <ul class="rc-lista">
+      <li *ngFor="let x of r.resultados" class="rc-fila-resultado">
+        <span class="rc-estado" [ngClass]="'rc-estado-' + x.estado">{{ ('cartera.recordatorio.estado_' + x.estado) | translate }}</span>
+        <span class="rc-nombre">{{ x.cliente?.nombre || x.cliente?.documento || '—' }}</span>
+        <span class="rc-motivo" *ngIf="x.motivoTexto">{{ x.motivoTexto }}</span>
+        <span class="rc-monto" *ngIf="x.saldo">{{ x.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+      </li>
+    </ul>
+  </ng-container>
+
+  <ng-container *ngIf="!resultado">
+    <!-- Canal -->
+    <div class="rc-etiqueta">{{ 'cartera.recordatorio.canal' | translate }}</div>
+    <div class="rc-canales" role="group" [attr.aria-label]="'cartera.recordatorio.canal' | translate">
+      <button type="button" class="rc-canal" [class.is-activo]="canal === 'correo'" [attr.aria-pressed]="canal === 'correo'"
+              [disabled]="enviando" (click)="cambiarCanal('correo')">
+        <i class="pi pi-envelope" aria-hidden="true"></i> {{ 'cartera.recordatorio.canalCorreo' | translate }}
+      </button>
+      <button type="button" class="rc-canal" [class.is-activo]="canal === 'whatsapp'" [attr.aria-pressed]="canal === 'whatsapp'"
+              [disabled]="enviando" (click)="cambiarCanal('whatsapp')">
+        <i class="pi pi-whatsapp" aria-hidden="true"></i> {{ 'cartera.recordatorio.canalWhatsapp' | translate }}
+      </button>
+      <span class="rc-canal rc-canal-apagado" aria-disabled="true" [attr.title]="'cartera.recordatorio.smsNoDisponible' | translate">
+        <i class="pi pi-comment" aria-hidden="true"></i> {{ 'cartera.recordatorio.canalSms' | translate }}
+      </span>
+    </div>
+
+    <div class="rc-cargando" *ngIf="cargando" aria-live="polite"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'cartera.recordatorio.armando' | translate }}</div>
+
+    <ng-container *ngIf="vista && !cargando">
+      <!-- Canal no disponible -->
+      <div class="rc-aviso rc-aviso-alerta" role="alert" *ngIf="!vista.canalDisponible">
+        {{ vista.canalMotivo }}
+        <div class="rc-nota" *ngIf="vista.faltaPlantilla">{{ 'cartera.recordatorio.faltaPlantillaAyuda' | translate }}</div>
+      </div>
+
+      <!-- Resumen: conteo, saldo y costo -->
+      <div class="rc-resumen" *ngIf="vista.canalDisponible">
+        <div class="rc-dato"><div class="rc-dato-etq">{{ 'cartera.recordatorio.mensajes' | translate }}</div><div class="rc-dato-val rc-acento">{{ vista.total | number }}</div></div>
+        <div class="rc-dato"><div class="rc-dato-etq">{{ 'cartera.recordatorio.saldoARecordar' | translate }}</div><div class="rc-dato-val">{{ saldoTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</div></div>
+        <div class="rc-dato" *ngIf="canal === 'whatsapp'">
+          <div class="rc-dato-etq">{{ 'cartera.recordatorio.costoEstimado' | translate }}</div>
+          <div class="rc-dato-val" [class.rc-rojo]="!vista.costo.saldoSuficiente">{{ vista.costo.totalCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        </div>
+        <div class="rc-dato" *ngIf="canal === 'correo'">
+          <div class="rc-dato-etq">{{ 'cartera.recordatorio.costoEstimado' | translate }}</div>
+          <div class="rc-dato-val">{{ 'cartera.recordatorio.sinCosto' | translate }}</div>
+        </div>
+      </div>
+      <div class="rc-aviso rc-aviso-error" role="alert" *ngIf="vista.canalDisponible && canal === 'whatsapp' && !vista.costo.saldoSuficiente">
+        {{ 'cartera.recordatorio.sinSaldoWhatsapp' | translate }}
+      </div>
+      <div class="rc-nota" *ngIf="vista.canalDisponible && vista.linkDePago.nota">{{ vista.linkDePago.nota }}</div>
+
+      <!-- A quién y qué -->
+      <ul class="rc-lista" *ngIf="vista.enviables.length">
+        <li *ngFor="let e of vista.enviables; trackBy: trackPorClave" class="rc-item">
+          <button type="button" class="rc-item-cabeza" [attr.aria-expanded]="abiertos.has(claveDe(e.cliente))" (click)="alternar(claveDe(e.cliente))">
+            <i class="pi" [ngClass]="abiertos.has(claveDe(e.cliente)) ? 'pi-chevron-down' : 'pi-chevron-right'" aria-hidden="true"></i>
+            <span class="rc-nombre">{{ e.cliente.nombre || e.cliente.documento }}</span>
+            <span class="rc-destino">{{ e.destino }}</span>
+            <span class="rc-monto">{{ e.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          </button>
+          <div class="rc-item-cuerpo" *ngIf="abiertos.has(claveDe(e.cliente))">
+            <div class="rc-pedidos">
+              <span class="rc-pedido" *ngFor="let p of e.pedidos">{{ p.nroPedido }} · {{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+            <div class="rc-aviso rc-aviso-alerta" *ngFor="let o of e.pedidosOmitidos">
+              {{ o.nroPedido }}: {{ o.motivoTexto }}
+            </div>
+            <div class="rc-asunto" *ngIf="e.asunto"><strong>{{ 'cartera.recordatorio.asunto' | translate }}:</strong> {{ e.asunto }}</div>
+            <pre class="rc-texto">{{ e.texto }}</pre>
+          </div>
+        </li>
+      </ul>
+
+      <!-- A quién NO se le envía y por qué -->
+      <div class="rc-omitidos" *ngIf="vista.omitidos.length" role="status">
+        <div class="rc-etiqueta">{{ 'cartera.recordatorio.noSeEnviaA' | translate:{ n: vista.omitidos.length } }}</div>
+        <ul class="rc-lista">
+          <li *ngFor="let o of vista.omitidos" class="rc-fila-resultado">
+            <span class="rc-nombre">{{ nombreDeOmitido(o) }}</span>
+            <span class="rc-motivo">{{ o.motivoTexto }}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="rc-aviso rc-aviso-info" *ngIf="vista.canalDisponible && vista.total === 0 && !vista.omitidos.length">{{ 'cartera.recordatorio.nadaQueEnviar' | translate }}</div>
+      <div class="rc-nota" *ngIf="vista.canalDisponible && vista.total > 0">{{ 'cartera.recordatorio.limite24h' | translate }}</div>
+    </ng-container>
+
+    <!-- Historial (un solo cliente) -->
+    <div class="rc-seccion" *ngIf="documentoUnico">
+      <button type="button" class="rc-enlace" [attr.aria-expanded]="historialAbierto" (click)="alternarHistorial()">
+        <i class="pi" [ngClass]="historialAbierto ? 'pi-chevron-down' : 'pi-chevron-right'" aria-hidden="true"></i> {{ 'cartera.recordatorio.historial' | translate }}
+      </button>
+      <ng-container *ngIf="historialAbierto">
+        <div class="rc-cargando" *ngIf="cargandoHistorial"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i></div>
+        <div class="rc-nota" *ngIf="!cargandoHistorial && !historial.length">{{ 'cartera.recordatorio.historialVacio' | translate }}</div>
+        <ul class="rc-lista" *ngIf="historial.length">
+          <li *ngFor="let h of historial" class="rc-fila-resultado">
+            <span class="rc-estado" [ngClass]="h.resultado === 'enviado' ? 'rc-estado-enviado' : 'rc-estado-fallido'">{{ h.resultado === 'enviado' ? ('cartera.recordatorio.estado_enviado' | translate) : ('cartera.recordatorio.estado_fallido' | translate) }}</span>
+            <span class="rc-nombre">{{ h.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ h.canal === 'whatsapp' ? 'WhatsApp' : ('cartera.recordatorio.canalCorreo' | translate) }}</span>
+            <span class="rc-motivo">{{ h.pedidos.join(', ') }} · {{ h.por }}</span>
+            <span class="rc-monto">{{ h.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+
+    <!-- Plantilla del correo (Administrador) -->
+    <div class="rc-seccion" *ngIf="config && canal === 'correo'">
+      <button type="button" class="rc-enlace" *ngIf="esAdmin && !editando" (click)="abrirEditor()">
+        <i class="pi pi-pencil" aria-hidden="true"></i> {{ 'cartera.recordatorio.editarPlantilla' | translate }}
+      </button>
+      <div class="rc-nota" *ngIf="!esAdmin && !editando">{{ 'cartera.recordatorio.plantillaSoloAdmin' | translate }}</div>
+      <div class="rc-editor" *ngIf="editando">
+        <div class="rc-aviso rc-aviso-error" role="alert" *ngIf="errorConfig">{{ errorConfig }}</div>
+        <label class="rc-etiqueta" for="rc-asunto">{{ 'cartera.recordatorio.asunto' | translate }}</label>
+        <input id="rc-asunto" class="rc-input" type="text" maxlength="150" [(ngModel)]="borrador.asunto">
+        <label class="rc-etiqueta rc-mt" for="rc-texto">{{ 'cartera.recordatorio.texto' | translate }}</label>
+        <textarea id="rc-texto" #campoTexto class="rc-input rc-area" rows="8" maxlength="1500" [(ngModel)]="borrador.texto"></textarea>
+        <div class="rc-nota">{{ 'cartera.recordatorio.variablesAyuda' | translate }}</div>
+        <div class="rc-variables">
+          <button type="button" class="rc-variable" *ngFor="let v of config.variables" (click)="insertarVariable(v, campoTexto)">{{ '{' + v + '}' }}</button>
+        </div>
+        <div class="rc-dos">
+          <div>
+            <label class="rc-etiqueta" for="rc-lote">{{ 'cartera.recordatorio.maxPorEnvio' | translate }}</label>
+            <input id="rc-lote" class="rc-input" type="number" min="1" max="200" step="1" inputmode="numeric" [(ngModel)]="borrador.maxPorLote">
+          </div>
+          <div>
+            <label class="rc-check">
+              <input type="checkbox" [(ngModel)]="borrador.incluirLinkPago">
+              <span>{{ 'cartera.recordatorio.incluirLink' | translate }}</span>
+            </label>
+            <div class="rc-nota">{{ 'cartera.recordatorio.incluirLinkAyuda' | translate }}</div>
+          </div>
+        </div>
+        <div class="rc-fila-botones">
+          <button type="button" class="rc-btn" [disabled]="guardandoConfig" (click)="guardarPlantilla()">
+            <i class="pi" [ngClass]="guardandoConfig ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'cartera.recordatorio.guardarPlantilla' | translate }}
+          </button>
+          <button type="button" class="rc-btn rc-btn-sec" [disabled]="guardandoConfig" (click)="usarPlantillaBase()">{{ 'cartera.recordatorio.plantillaBase' | translate }}</button>
+          <button type="button" class="rc-btn rc-btn-sec" [disabled]="guardandoConfig" (click)="editando = false">{{ 'comun.cancelar' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-footer rc-pie">
+  <button type="button" class="rc-btn rc-btn-sec" (click)="cerrar()">{{ (resultado ? 'comun.cerrar' : 'comun.cancelar') | translate }}</button>
+  <button type="button" class="rc-btn" *ngIf="!resultado" [disabled]="!puedeEnviar" (click)="enviar()">
+    <i class="pi" [ngClass]="enviando ? 'pi-spin pi-spinner' : 'pi-send'" aria-hidden="true"></i>
+    {{ (vista && vista.total > 1 ? 'cartera.recordatorio.enviarN' : 'cartera.recordatorio.enviar') | translate:{ n: vista?.total || 0 } }}
+  </button>
+</div>

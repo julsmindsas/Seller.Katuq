@@ -42,6 +42,7 @@
         <th style="min-width: 180px">{{ 'tesoreria.tablaPagosPedidos.pago' | translate }}</th>
         <th class="text-center" style="min-width: 140px">{{ 'tesoreria.historialPagos.estado' | translate }}</th>
         <th style="min-width: 140px">{{ 'tesoreria.tablaPagosPedidos.vendedor' | translate }}</th>
+        <th class="text-center" style="min-width: 120px" *ngIf="verMora">{{ 'tesoreria.tablaPagosPedidos.mora' | translate }}</th>
         <th class="text-center" style="min-width: 160px">{{ 'tesoreria.tablaPagosPedidos.acciones' | translate }}</th>
       </tr>
     </ng-template>
@@ -106,6 +107,15 @@
           <span class="tk-cell-seller">{{ pedido?.asesorAsignado?.name || '—' }}</span>
         </td>
 
+        <!-- Ticket 1457 (parte A): días de mora con la regla de Cartera -->
+        <td class="text-center" *ngIf="verMora">
+          <ng-container *ngIf="moraDe(pedido) as m; else sinMora">
+            <span class="tk-mora" [class.tk-mora-vencida]="m.diasVencido > 0">{{ textoMora(pedido) }}</span>
+            <div class="tk-cell-muted" *ngIf="m.diasVencido > 0">{{ claveRango(pedido) | translate }}</div>
+          </ng-container>
+          <ng-template #sinMora><span class="tk-cell-muted">—</span></ng-template>
+        </td>
+
         <!-- Acciones según estado -->
         <td class="text-center">
           <button *ngIf="mode === 'porRevisar'" type="button"
@@ -121,6 +131,14 @@
             <i class="pi pi-plus"></i> {{ 'tesoreria.tablaPagosPedidos.registrarPago' | translate }}
           </button>
 
+          <!-- Tickets 1385 y 1457: recordar el pago de este pedido (bandera recordatoriosCobro) -->
+          <button *ngIf="verRecordar" type="button"
+                  class="btn tk-btn-sm tk-btn-recordar"
+                  [attr.aria-label]="('cartera.recordatorio.recordarPedido' | translate) + ' ' + pedido?.nroPedido"
+                  (click)="recordarPago(pedido)">
+            <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordar' | translate }}
+          </button>
+
           <button *ngIf="mode === 'rechazados'" type="button"
                   class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
@@ -132,7 +150,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6">
+        <td [attr.colspan]="columnas">
           <div class="tk-empty">
             <i class="pi pi-inbox"></i>
             {{ 'tesoreria.tablaPagosPedidos.noHayPedidosQueCoincidan' | translate }}

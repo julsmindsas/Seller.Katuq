@@ -370,14 +370,97 @@
     <div>{{ 'cartera.carteraClientes.ajustaLaBusquedaElRiesgo' | translate }}</div>
   </div>
 
+  <!-- Ticket 1457: agrupar por cliente o por vendedor (bandera carteraVendedorMora) -->
+  <div class="cx-agrupar" *ngIf="vendedorMoraActivo && filtered.length > 0" role="group" [attr.aria-label]="'cartera.agrupar.etiqueta' | translate">
+    <span class="cx-agrupar-etq">{{ 'cartera.agrupar.etiqueta' | translate }}</span>
+    <button type="button" class="cx-agrupar-op" [class.is-activo]="agrupar === 'cliente'" [attr.aria-pressed]="agrupar === 'cliente'" (click)="cambiarAgrupar('cliente')">
+      <i class="pi pi-users" aria-hidden="true"></i> {{ 'cartera.agrupar.cliente' | translate }}
+    </button>
+    <button type="button" class="cx-agrupar-op" [class.is-activo]="agrupar === 'vendedor'" [attr.aria-pressed]="agrupar === 'vendedor'" (click)="cambiarAgrupar('vendedor')">
+      <i class="pi pi-id-card" aria-hidden="true"></i> {{ 'cartera.agrupar.vendedor' | translate }}
+    </button>
+  </div>
+
+  <!-- Tickets 1385 y 1457: seleccionar clientes para recordarles el pago (bandera recordatoriosCobro) -->
+  <div class="cx-seleccion" *ngIf="recordatoriosActivo && agrupar === 'cliente' && filtered.length > 0" role="region" [attr.aria-label]="'cartera.recordatorio.seleccionEtiqueta' | translate">
+    <label class="cx-seleccion-todos">
+      <input type="checkbox" [checked]="todosEscogidos" (change)="alternarTodosLosVisibles()">
+      <span>{{ 'cartera.recordatorio.seleccionarVisibles' | translate:{ n: filtered.length } }}</span>
+    </label>
+    <ng-container *ngIf="hayClientesEscogidos">
+      <span class="cx-seleccion-cuenta" aria-live="polite">{{ 'cartera.recordatorio.seleccionados' | translate:{ n: seleccionClientes.size, saldo: (saldoEscogido | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+      <button type="button" class="cx-seleccion-boton" [disabled]="seleccionPasaDelTope" (click)="recordarSeleccion()">
+        <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordarSeleccion' | translate }}
+      </button>
+      <button type="button" class="cx-seleccion-limpiar" (click)="limpiarSeleccion()">{{ 'cartera.recordatorio.limpiar' | translate }}</button>
+      <span class="cx-seleccion-aviso" *ngIf="seleccionPasaDelTope" role="alert">{{ 'cartera.recordatorio.pasaDelTope' | translate:{ max: maxSeleccion } }}</span>
+    </ng-container>
+  </div>
+
+  <!-- Ticket 1457: lista por vendedor, sumada por el vendedor de cada pedido -->
+  <div class="cx-list" *ngIf="agrupar === 'vendedor' && vendedorMoraActivo && gruposVendedor.length > 0">
+    <div class="cx-client" *ngFor="let g of gruposVendedor; trackBy: trackPorGrupo" [class.is-expanded]="grupoAbierto === g.vendedor">
+      <div class="cx-client-head" (click)="alternarGrupo(g)" role="button" tabindex="0"
+           (keydown.enter)="alternarGrupo(g)" (keydown.space)="$event.preventDefault(); alternarGrupo(g)"
+           [attr.aria-expanded]="grupoAbierto === g.vendedor">
+        <span class="cx-avatar cx-avatar-vendedor" aria-hidden="true"><i class="pi pi-id-card"></i></span>
+        <div class="cx-client-id">
+          <div class="cx-client-name"><span class="cx-client-nombre">{{ g.vendedor || ('cartera.carteraVendedores.sinVendedor' | translate) }}</span></div>
+          <div class="cx-client-meta">
+            <span><i class="pi pi-users"></i>{{ g.filas.length | number }} {{ 'cartera.carteraClientes.clienteS' | translate }}</span>
+            <span><i class="pi pi-shopping-cart"></i>{{ g.pedidos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
+            <span class="cx-grupo-vencido" *ngIf="g.vencido > 0"><i class="pi pi-exclamation-circle"></i>{{ 'cartera.agrupar.vencido' | translate:{ valor: (g.vencido | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+          </div>
+        </div>
+        <div class="cx-client-saldo">
+          <div class="cx-saldo-value">{{ g.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cx-saldo-label">{{ 'cartera.carteraClientes.saldoPendiente' | translate }}</div>
+        </div>
+        <span class="cx-chevron"><i class="pi" [ngClass]="grupoAbierto === g.vendedor ? 'pi-chevron-up' : 'pi-chevron-down'"></i></span>
+      </div>
+      <div class="cx-client-detail" *ngIf="grupoAbierto === g.vendedor">
+        <div class="cx-grupo-acciones">
+          <button type="button" class="cx-grupo-boton" (click)="verClientesDe(g)"><i class="pi pi-filter" aria-hidden="true"></i> {{ 'cartera.agrupar.verClientes' | translate }}</button>
+          <button type="button" class="cx-grupo-boton" *ngIf="recordatoriosActivo && g.vencido > 0" (click)="recordarVencidosDe(g)"><i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.agrupar.recordarVencidos' | translate }}</button>
+        </div>
+        <div class="cx-detail-scroll">
+          <table class="cx-detail-table">
+            <thead>
+              <tr>
+                <th>{{ 'cartera.agrupar.cliente' | translate }}</th>
+                <th class="text-end">{{ 'cartera.carteraClientes.pedidoS' | translate }}</th>
+                <th class="text-end">{{ 'cartera.carteraClientes.saldo' | translate }}</th>
+                <th class="text-end">{{ 'cartera.carteraVendedores.vencida' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let f of g.filas; trackBy: trackPorFilaGrupo">
+                <td class="cx-cell-strong">{{ f.cliente.nombre || '—' }} <span class="cx-grupo-doc">{{ f.cliente.documento }}</span></td>
+                <td class="text-end">{{ f.pedidos.length | number }}</td>
+                <td class="text-end cx-cell-strong">{{ f.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-end">{{ f.vencido | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Lista de clientes -->
-  <div class="cx-list" *ngIf="filtered.length > 0">
+  <div class="cx-list" *ngIf="filtered.length > 0 && agrupar === 'cliente'">
     <div class="cx-client" *ngFor="let c of filtered; trackBy: trackByDoc" [class.is-expanded]="isExpanded(c)">
 
       <!-- Cabecera clickable -->
       <div class="cx-client-head" (click)="toggleExpand(c)" role="button" tabindex="0"
            (keydown.enter)="toggleExpand(c)" (keydown.space)="toggleExpand(c)"
            [attr.aria-expanded]="isExpanded(c)">
+
+        <!-- Tickets 1385 y 1457: escoger al cliente para recordarle el pago -->
+        <label class="cx-sel" *ngIf="recordatoriosActivo" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <input type="checkbox" [checked]="estaSeleccionado(c)" (change)="alternarCliente(c, $event)"
+                 [attr.aria-label]="('cartera.recordatorio.escoger' | translate) + ' ' + (c.nombre || c.documento)">
+        </label>
 
         <span class="cx-avatar" [style.background]="avatarColor(c)">{{ initial(c) }}</span>
 
@@ -423,7 +506,8 @@
         </div>
 
         <!-- Ticket 1463: menú «Acciones» (solo con la bandera accionesCartera) -->
-        <app-cartera-acciones *ngIf="accionesActivas" [cliente]="c" [castigoActivo]="castigoActivo" [esAdmin]="esAdmin"
+        <app-cartera-acciones *ngIf="accionesActivas || recordatoriosActivo" [cliente]="c" [accionesActivas]="accionesActivas"
+                              [castigoActivo]="castigoActivo" [esAdmin]="esAdmin"
                               (cambio)="alCambiarCobro()"></app-cartera-acciones>
 
         <span class="cx-chevron">
@@ -489,10 +573,16 @@
           <i class="pi pi-list"></i>
           {{ 'cartera.carteraClientes.pedidosConSaldo' | translate }}
         </div>
+        <div class="cx-detail-recordar" *ngIf="recordatoriosActivo && cuantosPedidosEscogidos(c) > 0">
+          <button type="button" class="cx-grupo-boton" (click)="recordarPedidosEscogidos(c, $event)">
+            <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordarPedidos' | translate:{ n: cuantosPedidosEscogidos(c) } }}
+          </button>
+        </div>
         <div class="cx-detail-scroll">
           <table class="cx-detail-table">
             <thead>
               <tr>
+                <th class="cx-col-sel" *ngIf="recordatoriosActivo"><span class="cx-sr-only">{{ 'cartera.recordatorio.escoger' | translate }}</span></th>
                 <th>{{ 'cartera.carteraClientes.pedido' | translate }}</th>
                 <th>{{ 'cartera.carteraClientes.factura' | translate }}</th>
                 <th class="text-center">{{ 'cartera.carteraClientes.estado' | translate }}</th>
@@ -503,10 +593,16 @@
                 <th class="text-end">{{ 'cartera.carteraClientes.pagado' | translate }}</th>
                 <th class="text-end">{{ 'cartera.carteraClientes.saldo' | translate }}</th>
                 <th class="text-center">{{ 'cartera.carteraClientes.vencimiento' | translate }}</th>
+                <th class="text-center" *ngIf="vendedorMoraActivo">{{ 'cartera.carteraClientes.vendedor' | translate }}</th>
+                <th class="text-center" *ngIf="recordatoriosActivo"><span class="cx-sr-only">{{ 'cartera.recordatorio.menu' | translate }}</span></th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let p of pedidosVisibles(c); trackBy: trackByPedido">
+                <td class="cx-col-sel" *ngIf="recordatoriosActivo">
+                  <input type="checkbox" [checked]="pedidoEscogido(c, p)" (change)="alternarPedidoEscogido(c, p, $event)"
+                         [attr.aria-label]="('cartera.recordatorio.escoger' | translate) + ' ' + p.nroPedido">
+                </td>
                 <!-- Ticket 1386: el número abre el pedido en otra pestaña -->
                 <td class="cx-cell-strong">
                   <a *ngIf="p.nroPedido; else sinNroPedido"
@@ -540,6 +636,13 @@
                 <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 0" [class.cx-dias-leve]="p.diasVencido > 0 && p.diasVencido <= 15"
                     [class.cx-dias-al-dia]="p.diasVencido <= 0">
                   {{ textoVencimiento(p) }}
+                </td>
+                <td class="text-center" *ngIf="vendedorMoraActivo">{{ p.vendedor || '—' }}</td>
+                <td class="text-center" *ngIf="recordatoriosActivo">
+                  <button type="button" class="cx-fila-recordar" (click)="recordarPedido(c, p, $event)"
+                          [attr.aria-label]="('cartera.recordatorio.recordarPedido' | translate) + ' ' + p.nroPedido">
+                    <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordar' | translate }}
+                  </button>
                 </td>
               </tr>
             </tbody>

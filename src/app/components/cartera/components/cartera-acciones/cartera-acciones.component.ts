@@ -14,10 +14,13 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CarteraCliente } from '../../../../shared/services/cartera/cartera.models';
 import { ModoAccionCartera } from './cartera-accion-modal.component';
 import { abrirAccionCartera } from './cartera-accion-abrir';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
 
 /** Una entrada del menú «Acciones». */
 interface EntradaMenu {
-  modo: ModoAccionCartera;
+  /** `recordatorio` (tickets 1385 y 1457) abre «Recordar pago»; los demás, la ventana de acciones de la tarjeta. */
+  modo: ModoAccionCartera | 'recordatorio';
   icono: string;
   claveTexto: string;
   peligro?: boolean;
@@ -38,6 +41,8 @@ interface EntradaMenu {
 })
 export class CarteraAccionesComponent implements OnInit, OnDestroy {
   @Input() cliente!: CarteraCliente;
+  /** Bandera `accionesCartera` (ticket 1463). Sin ella el menú solo trae «Recordar pago», si su bandera está encendida. */
+  @Input() accionesActivas = true;
   /** Bandera `carteraCastigo` de la empresa. */
   @Input() castigoActivo = false;
   /** El rol actual es de la familia Administrador (el servidor lo vuelve a exigir). */
@@ -60,6 +65,7 @@ export class CarteraAccionesComponent implements OnInit, OnDestroy {
     private modal: NgbModal,
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
+    private features: CompanyFeaturesService,
   ) {}
 
   private alMoverse = () => {
@@ -95,15 +101,22 @@ export class CarteraAccionesComponent implements OnInit, OnDestroy {
   }
 
   get entradas(): EntradaMenu[] {
-    const lista: EntradaMenu[] = [
-      { modo: 'pago', icono: 'pi-wallet', claveTexto: 'cartera.acciones.registrarPago' },
-      { modo: 'estadoCuenta', icono: 'pi-file-pdf', claveTexto: 'cartera.acciones.estadoCuenta' },
-      { modo: 'compromiso', icono: 'pi-calendar', claveTexto: 'cartera.acciones.compromiso' },
-      { modo: 'gestion', icono: 'pi-comments', claveTexto: 'cartera.acciones.gestion' },
-      { modo: 'credito', icono: 'pi-credit-card', claveTexto: 'cartera.acciones.cupoPlazo' },
-    ];
-    if (this.castigoActivo && this.esAdmin) {
-      lista.push({ modo: 'castigo', icono: 'pi-ban', claveTexto: 'cartera.acciones.castigar', peligro: true });
+    const lista: EntradaMenu[] = [];
+    if (this.accionesActivas) lista.push({ modo: 'pago', icono: 'pi-wallet', claveTexto: 'cartera.acciones.registrarPago' });
+    // Tickets 1385 y 1457: bandera `recordatoriosCobro`.
+    if (this.features.isEnabled('recordatoriosCobro')) {
+      lista.push({ modo: 'recordatorio', icono: 'pi-send', claveTexto: 'cartera.recordatorio.menu' });
+    }
+    if (this.accionesActivas) {
+      lista.push(
+        { modo: 'estadoCuenta', icono: 'pi-file-pdf', claveTexto: 'cartera.acciones.estadoCuenta' },
+        { modo: 'compromiso', icono: 'pi-calendar', claveTexto: 'cartera.acciones.compromiso' },
+        { modo: 'gestion', icono: 'pi-comments', claveTexto: 'cartera.acciones.gestion' },
+        { modo: 'credito', icono: 'pi-credit-card', claveTexto: 'cartera.acciones.cupoPlazo' },
+      );
+      if (this.castigoActivo && this.esAdmin) {
+        lista.push({ modo: 'castigo', icono: 'pi-ban', claveTexto: 'cartera.acciones.castigar', peligro: true });
+      }
     }
     return lista;
   }
@@ -147,6 +160,12 @@ export class CarteraAccionesComponent implements OnInit, OnDestroy {
 
   elegir(entrada: EntradaMenu): void {
     this.cerrar(false);
+    if (entrada.modo === 'recordatorio') {
+      abrirRecordatorioCobro(this.modal, [{ documento: this.cliente.documento, nombre: this.cliente.nombre }], this.esAdmin).then((cambio) => {
+        if (cambio) this.cambio.emit();
+      });
+      return;
+    }
     abrirAccionCartera(this.modal, entrada.modo, this.cliente, this.esAdmin).then((cambio) => {
       if (cambio) this.cambio.emit();
     });

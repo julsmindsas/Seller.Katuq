@@ -175,7 +175,15 @@ export function pedidoCumple(p: CarteraPedido, f: CarteraFiltros, ahora: Date = 
   if (!enRangoDeFechas(p.payDueDate, f.limiteDesde, f.limiteHasta)) return false;
   if (f.compromiso === 'con' && !p.compromiso) return false;
   if (f.compromiso === 'incumplido' && !(p.compromiso && p.compromiso.estado === 'incumplido')) return false;
+  // Ticket 1457: con la bandera `carteraVendedorMora` cada pedido trae su vendedor y el filtro «Vendedor» mira el
+  // pedido (no la tarjeta). Sin ella `p.vendedor` no viene y esto no hace nada.
+  if (f.vendedores.length && p.vendedor !== undefined && !f.vendedores.includes((p.vendedor || '').trim() || SIN_VENDEDOR)) return false;
   return true;
+}
+
+/** ¿Los pedidos de esta cartera traen su propio vendedor? (ticket 1457; solo con la bandera `carteraVendedorMora`) */
+export function pedidosTraenVendedor(clientes: CarteraCliente[] | null | undefined): boolean {
+  return (clientes || []).some((c) => (c.pedidos || []).some((p) => p.vendedor !== undefined));
 }
 
 function claveCliente(c: CarteraCliente): string {
@@ -210,7 +218,8 @@ export function clienteCumple(c: CarteraCliente, f: CarteraFiltros): boolean {
   }
   if (f.tipoPersona !== 'todos' && (c.tipoPersona || '') !== f.tipoPersona) return false;
   if (f.relacion !== 'todos' && (c.relationType || 'customer') !== f.relacion) return false;
-  if (f.vendedores.length) {
+  // Con vendedor por pedido (ticket 1457) el filtro lo decide `pedidoCumple`; si no, el de la tarjeta de siempre.
+  if (f.vendedores.length && !(c.pedidos || []).some((p) => p.vendedor !== undefined)) {
     const vendedor = (c.vendedor || '').trim();
     const clave = vendedor || SIN_VENDEDOR;
     if (!f.vendedores.includes(clave)) return false;
@@ -291,7 +300,8 @@ function ordenarFilas(filas: FilaVista[], orden: OrdenCartera): FilaVista[] {
  * miran el saldo que queda visible.
  */
 export function aplicarFiltros(clientes: CarteraCliente[] | null | undefined, f: CarteraFiltros, ahora: Date = new Date()): VistaCartera {
-  const recorta = filtraPedidos(f);
+  // Ticket 1457: elegir un vendedor recorta los pedidos cuando cada pedido trae el suyo.
+  const recorta = filtraPedidos(f) || (f.vendedores.length > 0 && pedidosTraenVendedor(clientes));
   const filas: FilaVista[] = [];
   (clientes || []).forEach((c) => {
     if (!clienteCumple(c, f)) return;

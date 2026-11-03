@@ -8,7 +8,14 @@ import {
   CarteraCastigadaResponse,
   CarteraEvolucionResponse,
   CarteraResponse,
+  CanalRecordatorio,
   ConfigEstadoCuenta,
+  ConfigRecordatorio,
+  DestinatarioRecordatorio,
+  EventoRecordatorio,
+  MoraPedido,
+  RecordatorioEnviado,
+  RecordatorioVistaPrevia,
   CreditoVistaPrevia,
   EstadoCuentaVistaPrevia,
   EventoCobro,
@@ -117,5 +124,41 @@ export class CarteraService extends BaseService {
 
   getCarteraCastigada(): Observable<CarteraCastigadaResponse> {
     return this.get<CarteraCastigadaResponse>(`${this.base}/cartera/castigada`);
+  }
+
+  // ── Tickets 1385 y 1457: recordatorios de pago (bandera `recordatoriosCobro`) ─
+  // Mandan documentos y pedidos, nunca montos: el servidor recalcula el saldo al enviar.
+
+  getConfigRecordatorio(): Observable<ConfigRecordatorio> {
+    return this.getSinLoader<ConfigRecordatorio>(`${this.base}/cobro/recordatorio/config`);
+  }
+
+  /** PUT — solo Administrador. */
+  guardarConfigRecordatorio(config: { correo: { asunto: string; texto: string }; maxPorLote: number; incluirLinkPago: boolean }): Observable<ConfigRecordatorio> {
+    return this.put<ConfigRecordatorio>(`${this.base}/cobro/recordatorio/config`, config);
+  }
+
+  /** POST /cobro/recordatorio/vista-previa — mensajes, conteo y costo; no envía ni descuenta. */
+  recordatorioVistaPrevia(canal: CanalRecordatorio, destinatarios: DestinatarioRecordatorio[]): Observable<RecordatorioVistaPrevia> {
+    return this.postSinLoader<RecordatorioVistaPrevia>(`${this.base}/cobro/recordatorio/vista-previa`, { canal, destinatarios: this.soloDatos(destinatarios) });
+  }
+
+  /** POST /cobro/recordatorio/enviar — el servidor repite las validaciones y recalcula el saldo. */
+  recordatorioEnviar(canal: CanalRecordatorio, destinatarios: DestinatarioRecordatorio[]): Observable<RecordatorioEnviado> {
+    return this.post<RecordatorioEnviado>(`${this.base}/cobro/recordatorio/enviar`, { canal, destinatarios: this.soloDatos(destinatarios) });
+  }
+
+  recordatorioHistorial(documento: string, orderId?: string): Observable<{ success: boolean; eventos: EventoRecordatorio[] }> {
+    const q = `documento=${encodeURIComponent(documento)}${orderId ? `&orderId=${encodeURIComponent(orderId)}` : ''}`;
+    return this.getSinLoader(`${this.base}/cobro/recordatorio/historial?${q}`);
+  }
+
+  /** POST /cartera/mora — días de mora y rango de los pedidos de la página visible de «Sin pago» (bandera `carteraVendedorMora`). */
+  moraDePedidos(orderIds: string[]): Observable<{ success: boolean; pedidos: { [orderId: string]: MoraPedido } }> {
+    return this.postSinLoader(`${this.base}/cartera/mora`, { orderIds });
+  }
+
+  private soloDatos(destinatarios: DestinatarioRecordatorio[]): { documento?: string; orderIds?: string[] }[] {
+    return (destinatarios || []).map((d) => ({ documento: d.documento, orderIds: d.orderIds }));
   }
 }
