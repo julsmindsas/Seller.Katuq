@@ -299,6 +299,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 - [ ] 9.6 **Con diff aprobado (catálogo público).** `consultarCatalogo` con `conFacetas` y la bandera; parámetros y topes (E3); respuesta (E6); `/marca` sin corte (E4, H5).
   - Dep: 9.3, 9.4, 9.5.
   - Éxito: `catalogoFacetas.contract.test.js` en verde; 9.1 en verde.
+  - Avance parcial (2026-11-03, bloque F242-B08, H5, pregunta 1; para todas las tiendas, fuera de `categoryAttributes`): `/marca/<nombre>` y `?marca=` se resuelven contra todas las marcas (antes, solo las 40 primeras: 404), el bloque de marcas recibe todas con tope de seguridad de 500 (aviso estructurado sin nombres) y muestra 24 más «Ver todas (N)», el panel muestra la marca elegida aunque pase de la 30 y el autocompletado ya no corta en 40. Con 24 marcas o menos el HTML es idéntico; con 25 a 40 el bloque gana «Ver todas». Pruebas locales (D-566). Sigue sin marcar: faltan `conFacetas`, los topes de E3 y la respuesta E6.
 - [ ] 9.7 **Con diff aprobado (tienda).** Panel en formulario, `pintarFacetas`, chips, «Limpiar todo», dirección con `pushState`/`popstate`, `aria-live` y `noindex` con canónica (E7, E8).
   - Dep: 9.6.
   - Éxito: instantánea sin la bandera igual; navegador a 1440 y 390 px sin desplazamiento horizontal, con una plantilla común y con `tecnologia-catalogo` (TX-36).
