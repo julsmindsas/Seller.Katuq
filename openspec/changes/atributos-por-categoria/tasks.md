@@ -279,11 +279,13 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 - [x] 9.1 Caracterización (verde hoy): `consultarCatalogo` y `catalogoPublico` sin la bandera (JSON y HTML con categoría, marca, `/c`, `/marca`, búsqueda, ocasión, oferta y sesión mayorista), Kuvo `catalogFor` y el conteo de lecturas por consulta.
   - Dep: 8.0.
   - Hecho (3-nov, bloque F242-B01): prueba local `tests/sitios/caracterizacionTiendaPublica.test.js` (fuera de git, D-566) en verde con el código de antes de Q-S1 y de después; cubre además `feedProductos` (12.1) y Q-S1.
-- [ ] 9.2 [P] Pruebas en rojo: `tests/catalogo/facetas.test.js` (design E1, E4, prueba 2).
+- [x] 9.2 [P] Pruebas en rojo: `tests/catalogo/facetas.test.js` (design E1, E4, prueba 2).
   - Dep: 8.0.
-- [ ] 9.3 `services/catalogo/facetas.js` (E1, E4). No depende de la fuente de la tienda.
+  - Hecho (3-nov, bloque F242-B05): prueba local `tests/catalogo/facetas.test.js` (fuera de git, D-566), 57 de 57 en verde: O/Y, conteos sin el propio grupo, subcategorías, precio, números y texto con sus topes, ruta común, tope de 500, propiedad con semilla fija, lector con topes y estático sin firebase. Desvío del método: el código se escribió antes que las pruebas; se compensó con 10 mutaciones, cada una hizo fallar al menos una prueba.
+- [x] 9.3 `services/catalogo/facetas.js` (E1, E4). No depende de la fuente de la tienda.
   - Dep: 9.2.
   - Éxito: 9.2 en verde.
+  - Hecho (3-nov, bloque F242-B05): `services/catalogo/facetas.js` (motor puro) y `services/catalogo/filtrosFacetas.js` (lector con topes). Nada cableado: el catálogo no cambia. Pendiente para 9.5/9.6: leer los `a.<clave>` en dos fases cuando no hay categoría (`leerAtributos`) y pasar `rutaConocida` y `indice` al cablear.
 - [ ] 9.4 **Con diff aprobado (fuente de la tienda).** Según la pregunta 11:
   - con la proyección de TX-34: `derivadosDeFacetas` sobre ella, después de que TX-34 D1 esté unida;
   - sin ella: `getSearchIndex` suma `attributes` a la máscara y `attributesObj` a la entrada, y `derivadosDeFacetas` atado al índice (E2).
