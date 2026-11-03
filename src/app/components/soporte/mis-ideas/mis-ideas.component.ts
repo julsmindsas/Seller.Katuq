@@ -2,6 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { finalize } from 'rxjs/operators';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
+import type { CompanyFeatureFlag } from '../../../shared/services/company-features.service';
+
+// Mis Ideas con estados propios, maestro-detalle y «A mí también me sirve» (D-627, tickets 1442 y 1443).
+// Nace APAGADA: con la bandera apagada esta pantalla es la de siempre. El nombre se castea mientras
+// la bandera no esté en el catálogo del front (COMPANY_FEATURE_FLAGS); el servidor ya la tiene.
+const BANDERA_MIS_IDEAS: CompanyFeatureFlag = 'misIdeasV2' as CompanyFeatureFlag;
 
 @Component({
   selector: 'app-mis-ideas',
@@ -24,9 +31,22 @@ export class MisIdeasComponent implements OnInit {
   isLoading: boolean = true;
   showCommentSuccess: boolean = false;
 
-  constructor(private ticketService: ServiciosService, private storage: AngularFireStorage) {}
+  constructor(
+    private ticketService: ServiciosService,
+    private storage: AngularFireStorage,
+    private features: CompanyFeaturesService
+  ) {}
+
+  /** Con la bandera prendida se muestra el rediseño (`app-mis-ideas-maestro`) y esta vista no carga nada. */
+  get v2(): boolean {
+    return this.features.isEnabled(BANDERA_MIS_IDEAS);
+  }
 
   ngOnInit(): void {
+    if (this.v2) {
+      this.isLoading = false;
+      return;
+    }
     const currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
     this.isLoading = true;
 

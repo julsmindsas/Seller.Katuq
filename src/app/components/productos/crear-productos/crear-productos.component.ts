@@ -65,7 +65,16 @@ import type { CompanyFeatureFlag } from "../../../shared/services/company-featur
 import { editorDeProducto, fechaHoraColombia } from "../historial-producto/historial-producto.util";
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
 import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
-import { textoDeAvisos } from "../../../shared/services/productos/photo-quality";
+import {
+  ESTANDAR_FOTO,
+  MENSAJE_ESTANDAR_FOTO,
+  UMBRALES_CALIDAD_ESTANDAR,
+  avisosDeCalidad,
+  evaluarFotoEstandar,
+  mensajeDeAviso,
+  mensajeDeRechazo,
+  textoDeAvisos,
+} from "../../../shared/services/productos/photo-quality";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { duracionDeVideo, MAX_VIDEOS_PRODUCTO, NOMBRE_PROVEEDOR, reconocerVideo, TIPOS_VIDEO_ARCHIVO, VideoProducto } from "../../../shared/utils/videos-producto";
 // D-495: pestaña «Especificaciones» (bandera categoryAttributes).
@@ -83,6 +92,13 @@ import {
 
 /** D-501: bandera por comercio de «Uniformar fotos» y del aviso de calidad al subir (nace apagada). */
 const BANDERA_FOTOS_UNIFORMES: CompanyFeatureFlag = "productPhotoUniform";
+
+/**
+ * D-629 (tickets 1426 y 1427, fase 1): rechazo claro y avisos suaves al subir una foto de producto
+ * (más de 15 MB, ilegible, lado menor de 800 px, lejos de 1:1). Nace apagada. El nombre se castea
+ * mientras la bandera no esté en el catálogo del front (COMPANY_FEATURE_FLAGS); el servidor ya la tiene.
+ */
+const BANDERA_FOTOS_ESTANDAR: CompanyFeatureFlag = "fotosEstandar" as CompanyFeatureFlag;
 
 @Component({
   selector: "app-crear-productos",
@@ -189,6 +205,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   // D-501: «Uniformar fotos» del producto guardado y aviso de calidad al subir (bandera productPhotoUniform).
   fotosUniformesIds: string[] | null = null;
   avisoCalidadFoto = "";
+  // D-629: avisos suaves del estándar de foto (pequeña, no cuadrada). Una línea por foto y aviso.
+  avisosEstandarFoto: { nombre: string; texto: string }[] = [];
   flag: any = [];
   filesPaths: { name: string; pathName: string; tipo: string; url?: string; }[] = [];
   fileUrls: { urls: string; nombreImagen: string; path: string; tipo: string; }[] = [];
@@ -3100,6 +3118,37 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     event.target.value = "";
   }
 
+  // ---- D-629: estándar de foto de producto (solo con la bandera fotosEstandar) ----
+
+  /** Con la bandera apagada la carga de fotos es la de siempre. */
+  get fotosEstandarActiva(): boolean {
+    return this.features.isEnabled(BANDERA_FOTOS_ESTANDAR);
+  }
+
+  /** El mensaje único del estándar (no anuncia ninguna conversión). */
+  readonly mensajeEstandarFoto = MENSAJE_ESTANDAR_FOTO;
+
+  /** Medidas que lee el navegador; `null` si no puede decodificar el archivo como imagen. */
+  private leerMedidasDeFoto(archivo: File): Promise<{ ancho: number; alto: number } | null> {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(archivo);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ ancho: img.naturalWidth || img.width, alto: img.naturalHeight || img.height });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    });
+  }
+
+  private escaparHtml(texto: string): string {
+    return String(texto).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+  }
+
   // ---- D-501: Uniformar fotos (solo con la bandera productPhotoUniform) ----
 
   /** El botón aparece con la bandera y un producto ya guardado (con id). */
@@ -3141,15 +3190,39 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   /** Aviso informativo de calidad al subir: nunca bloquea ni cambia lo que se sube. */
   private async avisarCalidadDeFoto(archivo: File): Promise<void> {
     const medida = await medirCalidadDeArchivo(archivo);
-    const texto = medida ? textoDeAvisos(medida.warnings) : "";
+    // Con fotosEstandar el mínimo es 800 px y «pequeña» lo avisa el estándar; aquí solo queda «borrosa».
+    const avisos = medida && this.fotosEstandarActiva
+      ? avisosDeCalidad(medida, UMBRALES_CALIDAD_ESTANDAR).filter((a) => a === "blurry")
+      : medida?.warnings;
+    const texto = medida ? textoDeAvisos(avisos || []) : "";
     if (!texto) return;
     this.avisoCalidadFoto = `${archivo.name}: ${texto}`;
     this.cdr.detectChanges();
   }
 
   private async processSelectedFiles(selectedFiles: FileList, tipoImagen: string) {
+    const estandar = this.fotosEstandarActiva;
+    const rechazadas: string[] = [];
+    if (estandar) this.avisosEstandarFoto = [];
     for (let i = 0; i < selectedFiles.length; i++) {
       const originalFile = selectedFiles[i];
+      // D-629: rechazo claro (pesa más de 15 MB o no se puede leer) y avisos suaves. Una foto
+      // rechazada no frena a las demás.
+      if (estandar) {
+        // Una foto de más de 15 MB se rechaza sin gastar tiempo en decodificarla.
+        const medidas = originalFile.size > ESTANDAR_FOTO.maxBytes ? null : await this.leerMedidasDeFoto(originalFile);
+        const evaluacion = evaluarFotoEstandar({
+          bytes: originalFile.size,
+          ancho: medidas?.ancho,
+          alto: medidas?.alto,
+          legible: !!medidas,
+        });
+        if (evaluacion.rechazo) {
+          rechazadas.push(`<div><strong>${this.escaparHtml(originalFile.name)}</strong>: ${this.escaparHtml(mensajeDeRechazo(evaluacion.rechazo, originalFile.size))}</div>`);
+          continue;
+        }
+        evaluacion.avisos.forEach((aviso) => this.avisosEstandarFoto.push({ nombre: originalFile.name, texto: mensajeDeAviso(aviso) }));
+      }
       // D-501: aviso de calidad (solo con la bandera), en paralelo y sin esperar.
       if (this.features.isEnabled(BANDERA_FOTOS_UNIFORMES)) void this.avisarCalidadDeFoto(originalFile);
       const processedFile = await this.convertToWebP(originalFile);
@@ -3164,6 +3237,14 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       this.filesNames.push(this.buildUniqueFileName(processedFile.name));
 
       await this.generatePreviewImage(processedFile, entry);
+    }
+    if (rechazadas.length) {
+      await Swal.fire({
+        icon: "warning",
+        title: rechazadas.length === 1 ? "Una foto no se agregó" : "Algunas fotos no se agregaron",
+        html: rechazadas.join(""),
+        confirmButtonText: "Entendido",
+      });
     }
   }
 

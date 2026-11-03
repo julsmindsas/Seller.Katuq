@@ -1,4 +1,7 @@
-<div class="cfg-pagina tickets-dashboard" [class.loading]="isLoading">
+<!-- D-627: con la bandera misIdeasV2 se muestra el rediseño maestro-detalle; apagada, queda esta vista. -->
+<app-mis-ideas-maestro *ngIf="v2"></app-mis-ideas-maestro>
+
+<div *ngIf="!v2" class="cfg-pagina tickets-dashboard" [class.loading]="isLoading">
   <!-- Loading overlay when fetching data -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
