@@ -248,6 +248,10 @@ export class NavService implements OnDestroy {
       if (item.isOnlySuperAdministrador || item.isOnlyAdmin) {
         return null;
       }
+      // Centro de ayuda (D-628): con la bandera `centroDeAyuda` apagada, el selector de Roles no ofrece «Ayuda».
+      if (item.id === "ayuda" && !this.features.isEnabled("centroDeAyuda")) {
+        return null;
+      }
 
       return item;
     }).filter((item) => item !== null) as Menu[];

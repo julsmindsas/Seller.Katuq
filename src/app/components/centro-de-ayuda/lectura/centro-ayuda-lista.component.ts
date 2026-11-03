@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { CentroAyudaService } from '../centro-ayuda.service';
 import { ArticuloAyuda, MODULOS_AYUDA, ModuloAyuda } from '../centro-ayuda.models';
@@ -35,6 +35,7 @@ export class CentroAyudaListaComponent implements OnInit, OnDestroy {
   /** Hay una búsqueda activa (3 letras o más). */
   buscando = false;
 
+  private pedido: Subscription | null = null;
   private readonly escribe$ = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
 
@@ -70,7 +71,9 @@ export class CentroAyudaListaComponent implements OnInit, OnDestroy {
     this.buscando = q.length >= 3;
     this.cargando = true;
     this.error = null;
-    this.ayuda.articulos({ q: this.buscando ? q : '', module: this.modulo }).pipe(takeUntil(this.destroy$)).subscribe({
+    // Cada carga cancela la anterior: si una respuesta lenta llega después, no pisa la lista del filtro actual.
+    this.pedido?.unsubscribe();
+    this.pedido = this.ayuda.articulos({ q: this.buscando ? q : '', module: this.modulo }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (r) => { this.articulos = r.data || []; this.cargando = false; },
       error: (e) => {
         this.cargando = false;

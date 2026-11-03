@@ -154,7 +154,12 @@ export class ArticuloEditorComponent implements OnInit, OnDestroy {
         next: (r) => {
           this.guardando = false;
           this.toastr.success(t('centroAyuda.editor.creado'));
-          this.router.navigate(['/centro-de-ayuda/administrar', r.data.id]);
+          // La ruta «nuevo» y la de un id real son la misma: Angular reutiliza el componente y no vuelve a leer
+          // la ruta. Se pasa a modo «editar» aquí, para que otro Guardar actualice y no cree un duplicado.
+          this.id = r.data.id;
+          this.llenar(r.data);
+          this.cargarVersiones(r.data.id);
+          this.router.navigate(['/centro-de-ayuda/administrar', r.data.id], { replaceUrl: true });
         },
         error: (e) => this.fallo(e),
       });
