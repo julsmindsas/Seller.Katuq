@@ -43,5 +43,6 @@
   { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, las alertas se agrupan por número de comprobante, muestran el número de pedido y explican en palabras sencillas qué revisar." },
   { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, los totales de «Sin pago» suman todos los pedidos del filtro, no solo los de la pantalla, y el filtro por forma de pago ya funciona." },
   { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, el Historial muestra el total real de pagos, se filtra por forma de pago y por quién subió el pago, y muestra lo recaudado por forma de pago." },
-  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período." }
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "La lista de clientes carga mucho más rápido: trae los clientes por páginas en vez de todos de una vez, y puedes buscar un celular o un documento por sus últimos dígitos." }
 ]
