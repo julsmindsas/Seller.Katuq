@@ -570,10 +570,12 @@
       <p>{{ 'facturacionElectronica.facturacionElectronica.libreODesdeUnPedido' | translate }}</p>
       <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="selectTab('compose')">{{ 'facturacionElectronica.invoiceComposer.nuevaFactura' | translate }}</button>
     </article>
-    <article class="fe-card fe-guide__card" [class.is-done]="hasAcceptedInvoice">
-      <span class="fe-guide__n"><i class="pi pi-check" *ngIf="hasAcceptedInvoice; else n4"></i><ng-template #n4>4</ng-template></span>
+    <!-- Ticket 1493: el paso 4 queda en amarillo mientras haya documentos por revisar. -->
+    <article class="fe-card fe-guide__card" [class.is-done]="hasAcceptedInvoice && !rejectedCount" [class.is-warn]="rejectedCount > 0">
+      <span class="fe-guide__n"><i class="pi pi-exclamation-triangle" *ngIf="rejectedCount > 0; else n4ok"></i><ng-template #n4ok><i class="pi pi-check" *ngIf="hasAcceptedInvoice; else n4"></i></ng-template><ng-template #n4>4</ng-template></span>
       <h3>{{ 'facturacionElectronica.facturacionElectronica.revisaYEmite' | translate }}</h3>
-      <p>{{ 'facturacionElectronica.facturacionElectronica.revisarNoConsumeConsecutivoAl' | translate }} <b>{{ 'facturacionElectronica.facturacionElectronica.rechazada2' | translate }}</b>{{ 'facturacionElectronica.facturacionElectronica.leeElMensajeCorrigeY' | translate }} <b>{{ 'facturacionElectronica.facturacionElectronica.crearNota' | translate }}</b>.</p>
+      <p>{{ 'facturacionElectronica.facturacionElectronica.revisarNoConsumeConsecutivoAl' | translate }} <b>{{ 'facturacionElectronica.facturacionElectronica.rechazada2' | translate }}</b>{{ 'facturacionElectronica.facturacionElectronica.leeElMensajeCorrigeY' | translate }} <b>{{ 'facturacionElectronica.facturacionElectronica.notaCredito' | translate }}</b> {{ 'facturacionElectronica.facturacionElectronica.oLaNota' | translate }} <b>{{ 'facturacionElectronica.facturacionElectronica.notaDebito' | translate }}</b> {{ 'facturacionElectronica.facturacionElectronica.delMenuDelDocumento' | translate }}</p>
+      <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" *ngIf="rejectedCount > 0" (click)="showDocuments('rejected')">{{ 'facturacionElectronica.facturacionElectronica.porRevisar' | translate:{cantidad: rejectedCount} }}</button>
     </article>
   </section>
 </div>

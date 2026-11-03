@@ -3653,6 +3653,8 @@
   "facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste": "No fue posible identificar este pedido.",
   "facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo": "KAI está revisando el rechazo…",
   "facturacionElectronica.facturacionElectronica.ahoraNo": "Ahora no",
+  "facturacionElectronica.facturacionElectronica.oLaNota": "o",
+  "facturacionElectronica.facturacionElectronica.delMenuDelDocumento": "en el menú ⋯ del documento.",
   "facturacionElectronica.facturacionElectronica.origen": "Origen",
   "facturacionElectronica.facturacionElectronica.facturaLibre": "Factura libre",
   "facturacionElectronica.facturacionElectronica.facturaNumero": "Factura {{numero}}",

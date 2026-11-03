@@ -254,7 +254,9 @@ $head: var(--kc-font-head);
     h3 { margin: 12px 0 0; font-family: $head; font-weight: 800; font-size: 17px; line-height: 1.15; color: var(--kc-ink); }
     p { margin: 6px 0 0; font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--kc-muted); text-wrap: pretty; b { color: var(--kc-ink2); } }
     .fe-btn { margin-top: 14px; }
-    &.is-done .fe-guide__n { background: var(--kc-green-wash); color: var(--kc-green); } }
+    &.is-done .fe-guide__n { background: var(--kc-green-wash); color: var(--kc-green); }
+    &.is-warn .fe-guide__n { background: var(--kc-orange-wash); color: var(--kc-orange); } // Ticket 1493
+  }
   &__n { @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash)); width: 34px; height: 34px; font-family: $head; font-weight: 800; font-size: 15px; i { font-size: 14px; } }
 }
 

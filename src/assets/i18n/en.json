@@ -3833,6 +3833,8 @@
   "facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste": "This order couldn't be identified.",
   "facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo": "KAI is reviewing the rejection…",
   "facturacionElectronica.facturacionElectronica.ahoraNo": "Not now",
+  "facturacionElectronica.facturacionElectronica.oLaNota": "or",
+  "facturacionElectronica.facturacionElectronica.delMenuDelDocumento": "in the document ⋯ menu.",
   "facturacionElectronica.facturacionElectronica.origen": "Source",
   "facturacionElectronica.facturacionElectronica.facturaLibre": "Free invoice",
   "facturacionElectronica.facturacionElectronica.facturaNumero": "Invoice {{numero}}",
