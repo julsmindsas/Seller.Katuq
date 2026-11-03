@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
   HostListener,
   Input,
   OnChanges,
   Output,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -404,13 +406,27 @@ export class CarteraClientesComponent implements OnChanges {
     this.menuPdfAbierto = !this.menuPdfAbierto;
   }
 
-  /** Un clic fuera del menú, o Escape, lo cierra. */
+  @ViewChild('botonPdf') botonPdf?: ElementRef<HTMLButtonElement>;
+
+  /** Al abrirse el menú, el foco pasa a su primera opción (teclado y lectores de pantalla). */
+  @ViewChild('primeraOpcionPdf') set primeraOpcionPdf(el: ElementRef<HTMLButtonElement> | undefined) {
+    if (el && el.nativeElement) el.nativeElement.focus();
+  }
+
+  /** Un clic fuera del menú lo cierra. */
   @HostListener('document:click')
-  @HostListener('document:keydown.escape')
   cerrarMenuPdf(): void {
     if (!this.menuPdfAbierto) return;
     this.menuPdfAbierto = false;
     this.cdr.markForCheck();
+  }
+
+  /** Escape cierra el menú y devuelve el foco al botón «Descargar PDF». */
+  @HostListener('document:keydown.escape')
+  cerrarMenuPdfConEscape(): void {
+    if (!this.menuPdfAbierto) return;
+    this.cerrarMenuPdf();
+    if (this.botonPdf && this.botonPdf.nativeElement) this.botonPdf.nativeElement.focus();
   }
 
   /**

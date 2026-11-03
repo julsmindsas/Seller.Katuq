@@ -149,7 +149,9 @@ export interface FilaVendedorPdf {
 }
 
 /** Los vendedores que caben en la página 1: los mayores y, si hay más, una fila «Otros (n vendedores)». */
-export function vendedoresParaPortada(vendedores: ResumenCartera['vendedores'], maximo = 7): FilaVendedorPdf[] {
+export const VENDEDORES_EN_PORTADA = 7;
+
+export function vendedoresParaPortada(vendedores: ResumenCartera['vendedores'], maximo = VENDEDORES_EN_PORTADA): FilaVendedorPdf[] {
   const base = vendedores.map((v) => ({ vendedor: v.vendedor, total: v.total, vencida: v.vencida }));
   if (base.length <= maximo + 1) return base;
   const resto = base.slice(maximo);
@@ -270,6 +272,13 @@ interface OpcTexto {
   align?: 'left' | 'right' | 'center';
 }
 
+/** Como `texto`, pero recorta con «...» midiendo con la misma fuente con la que se va a pintar. */
+function textoAjustado(pdf: any, t: string, ancho: number, x: number, y: number, o: OpcTexto = {}): void {
+  pdf.setFont('helvetica', o.bold ? 'bold' : 'normal');
+  pdf.setFontSize(o.size || 9);
+  texto(pdf, ajustar(pdf, t, ancho), x, y, o);
+}
+
 function texto(pdf: any, t: string, x: number, y: number, o: OpcTexto = {}): void {
   pdf.setFont('helvetica', o.bold ? 'bold' : 'normal');
   pdf.setFontSize(o.size || 9);
@@ -293,6 +302,32 @@ function rellenar(pdf: any, c: Color): void {
 function trazo(pdf: any, c: Color, grosor = 0.6): void {
   pdf.setDrawColor(c[0], c[1], c[2]);
   pdf.setLineWidth(grosor);
+}
+
+/** Versión Completa: si la página 1 agrupó vendedores en «Otros», una hoja lista a todos (el ticket pide la tabla completa). */
+function paginaVendedores(pdf: any, autoTable: any, res: ResumenCartera): void {
+  if (res.vendedores.length <= VENDEDORES_EN_PORTADA + 1) return;
+  const W = pdf.internal.pageSize.getWidth();
+  pdf.addPage();
+  texto(pdf, 'TODOS LOS VENDEDORES', MARGEN, TOPE + 12, { size: 11, bold: true, color: ACENTO });
+  texto(pdf, plural(res.vendedores.length, 'vendedor', 'vendedores'), W - MARGEN, TOPE + 12,
+    { size: 8.5, color: MUTED, align: 'right' });
+  autoTable(pdf, {
+    startY: TOPE + 22,
+    margin: { left: MARGEN, right: MARGEN, top: TOPE, bottom: FONDO },
+    theme: 'plain',
+    rowPageBreak: 'avoid',
+    showHead: 'everyPage',
+    styles: { font: 'helvetica', fontSize: 8, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 }, textColor: TINTA,
+      lineColor: BORDE, lineWidth: 0.25, overflow: 'ellipsize' },
+    headStyles: { fillColor: ACENTO, textColor: BLANCO, fontStyle: 'bold', fontSize: 7 },
+    head: [['Vendedor', 'Cartera total', 'Vencida', '% vencido', '% cartera']],
+    body: res.vendedores.map((v) => [
+      v.vendedor, dineroPdf(v.total), dineroPdf(v.vencida),
+      porcentajePdf(v.total > 0 ? v.vencida / v.total : 0), porcentajePdf(res.total > 0 ? v.total / res.total : 0),
+    ]),
+    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+  });
 }
 
 /** Cabecera de la página 1. Devuelve la «y» donde sigue el contenido. */
@@ -455,7 +490,10 @@ function portada(pdf: any, autoTable: any, d: DatosPdfCartera, res: ResumenCarte
   texto(pdf, '«Por vencer en 7 días» ya está incluido en «Sin vencer»; no se suma aparte.', xDer, finDer + 12,
     { size: 7, color: MUTED });
   if (d.modo === 'resumen') {
-    texto(pdf, 'Esta es la versión resumida. Para ver el detalle de pedidos por cliente, descargue el informe completo.',
+    const hayOtros = res.vendedores.length > VENDEDORES_EN_PORTADA + 1;
+    texto(pdf, hayOtros
+      ? 'Esta es la versión resumida. Para ver el detalle de pedidos por cliente y todos los vendedores, descargue el informe completo.'
+      : 'Esta es la versión resumida. Para ver el detalle de pedidos por cliente, descargue el informe completo.',
       MARGEN, pdf.internal.pageSize.getHeight() - FONDO - 6, { size: 7.5, color: MUTED });
   }
 }
@@ -548,31 +586,52 @@ function detalle(pdf: any, autoTable: any, d: DatosPdfCartera): void {
       { content: dineroPdf(g.pagado), styles: { halign: 'right', fontStyle: 'bold', fillColor: LILA_FUERTE } },
       { content: dineroPdf(g.saldo), styles: { halign: 'right', fontStyle: 'bold', fillColor: LILA_FUERTE } },
     ];
-    autoTable(pdf, {
+    const cabeza = [
+      [
+        { content: nombreVisible, colSpan: 3, styles: { fillColor: LILA_FUERTE, textColor: TINTA, fontSize: TAM_NOMBRE,
+          cellPadding: PAD_NOMBRE, halign: 'left' } },
+        { content: infoVisible, colSpan: 6, styles: { fillColor: LILA_FUERTE, textColor: MUTED, fontSize: 7.5,
+          fontStyle: 'normal', cellPadding: PAD_NOMBRE, halign: 'right' } },
+      ],
+      ['Pedido', 'Factura', 'Compra', 'Límite de pago', { content: 'Días vencido', styles: { halign: 'center' } },
+        { content: 'Antigüedad', styles: { halign: 'center' } },
+        { content: 'Total', styles: { halign: 'right' } }, { content: 'Pagado', styles: { halign: 'right' } },
+        { content: 'Saldo', styles: { halign: 'right' } }],
+    ];
+    const dibujar = (filas: any[], conSubtotal: boolean) => autoTable(pdf, {
       startY: y,
       margin: { left: MARGEN, right: MARGEN, top: TOPE, bottom: FONDO },
       theme: 'plain',
-      // Los grupos que caben se pasan enteros a página nueva (arriba); aquí solo se evita partir filas.
+      // Cada trozo ya se midió para que quepa en su página; esto solo evita partir una fila por un redondeo.
       pageBreak: 'auto',
       rowPageBreak: 'avoid',
       showHead: 'everyPage',
       styles: { font: 'helvetica', ...base, textColor: TINTA, lineColor: BORDE, lineWidth: 0.25, overflow: 'ellipsize' },
       headStyles: { fillColor: ACENTO, textColor: BLANCO, fontStyle: 'bold', fontSize: TAM_COLS, cellPadding: PAD_COLS },
       columnStyles: anchos.reduce((o: any, w, i) => { o[i] = { cellWidth: w }; return o; }, {}),
-      head: [
-        [
-          { content: nombreVisible, colSpan: 3, styles: { fillColor: LILA_FUERTE, textColor: TINTA, fontSize: TAM_NOMBRE,
-            cellPadding: PAD_NOMBRE, halign: 'left' } },
-          { content: infoVisible, colSpan: 6, styles: { fillColor: LILA_FUERTE, textColor: MUTED, fontSize: 7.5,
-            fontStyle: 'normal', cellPadding: PAD_NOMBRE, halign: 'right' } },
-        ],
-        ['Pedido', 'Factura', 'Compra', 'Límite de pago', { content: 'Días vencido', styles: { halign: 'center' } },
-          { content: 'Antigüedad', styles: { halign: 'center' } },
-          { content: 'Total', styles: { halign: 'right' } }, { content: 'Pagado', styles: { halign: 'right' } },
-          { content: 'Saldo', styles: { halign: 'right' } }],
-      ],
-      body: [...fila, subtotal],
+      head: cabeza,
+      body: conSubtotal ? [...filas, subtotal] : filas,
     });
+
+    // Un cliente más largo que una página se parte entre pedidos, repitiendo su encabezado, y el último trozo
+    // conserva al menos 2 pedidos junto con el subtotal (nunca queda el subtotal solo en la hoja siguiente).
+    const cab = hCabCliente + hCabCols + 2;
+    let desde = 0;
+    let libreAhora = H - FONDO - y;
+    for (;;) {
+      const resto = fila.length - desde;
+      if (cab + resto * hFila + hSub <= libreAhora) {
+        dibujar(fila.slice(desde), true);
+        break;
+      }
+      const caben = Math.max(1, Math.floor((libreAhora - cab) / hFila));
+      const n = Math.max(1, Math.min(caben, resto - 2));
+      dibujar(fila.slice(desde, desde + n), false);
+      desde += n;
+      pdf.addPage();
+      y = TOPE;
+      libreAhora = usable;
+    }
     y = pdf.lastAutoTable.finalY + 12;
   });
 
@@ -603,14 +662,14 @@ function numerar(pdf: any, d: DatosPdfCartera): void {
   for (let i = 1; i <= n; i++) {
     pdf.setPage(i);
     if (i > 1) {
-      texto(pdf, ajustar(pdf, `Cartera · ${d.empresa}`, 400), MARGEN, 24, { size: 8.5, bold: true, color: ACENTO });
+      textoAjustado(pdf, `Cartera · ${d.empresa}`, 400, MARGEN, 24, { size: 8.5, bold: true, color: ACENTO });
       texto(pdf, `Generado el ${fechaHoraPdf(d.ahora)}`, W - MARGEN, 24, { size: 8, color: MUTED, align: 'right' });
       trazo(pdf, BORDE, 0.6);
       pdf.line(MARGEN, 30, W - MARGEN, 30);
     }
     trazo(pdf, BORDE, 0.6);
     pdf.line(MARGEN, H - 24, W - MARGEN, H - 24);
-    texto(pdf, ajustar(pdf, `${d.empresa} · Informe de cartera`, 500), MARGEN, H - 13, { size: 7.5, color: MUTED });
+    textoAjustado(pdf, `${d.empresa} · Informe de cartera`, 500, MARGEN, H - 13, { size: 7.5, color: MUTED });
     texto(pdf, `Página ${i} de ${n}`, W - MARGEN, H - 13, { size: 8, bold: true, color: TINTA, align: 'right' });
   }
 }
@@ -621,7 +680,10 @@ export function construirPdfCartera(JsPDF: any, autoTable: any, d: DatosPdfCarte
   pdf.setProperties({ title: `Informe de cartera - ${d.empresa}`, subject: 'Cartera por cliente', creator: 'Katuq' });
   const res = resumenDeVista(d.vista);
   portada(pdf, autoTable, d, res);
-  if (d.modo === 'completo') detalle(pdf, autoTable, d);
+  if (d.modo === 'completo') {
+    paginaVendedores(pdf, autoTable, res);
+    detalle(pdf, autoTable, d);
+  }
   numerar(pdf, d);
   return pdf;
 }

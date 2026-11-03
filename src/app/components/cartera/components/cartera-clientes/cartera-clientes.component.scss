@@ -497,8 +497,16 @@
   &:hover { background: #f3f0ff; }
   &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
 }
-.cx-pdf-titulo { font-size: 13px; font-weight: 700; color: #211f3a; letter-spacing: normal; }
-.cx-pdf-ayuda { margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: #6b6890; letter-spacing: normal; }
+.cx-pdf-titulo { display: block; font-size: 13px; font-weight: 700; color: #211f3a; letter-spacing: normal; }
+.cx-pdf-ayuda { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.35; color: #6b6890; letter-spacing: normal; }
+
+// En pantallas angostas los botones se acomodan en varias filas: el menú se ancla a toda la franja de acciones
+// (no al botón) para que nunca se salga de la pantalla por la izquierda.
+@media (max-width: 600px) {
+  .cx-result-actions { position: relative; }
+  .cx-pdf-caja { position: static; }
+  .cx-pdf-menu { left: 0; right: 0; min-width: 0; }
+}
 
 // Aviso de rango al revés (mínimo mayor que el máximo): par color fuerte / fondo suave, con color y tamaño propios.
 .cx-rango-aviso {
