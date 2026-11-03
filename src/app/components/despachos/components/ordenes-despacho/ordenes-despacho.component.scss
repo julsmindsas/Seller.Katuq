@@ -324,3 +324,20 @@ $light-color: $katuq-gray-50;
     }
   }
 }
+/* Ticket 1448: instrucción de cobro en la entrega (la calcula el servidor). Plano, colores semánticos con fondo suave. */
+.cobro-entrega {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 11px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.4;
+  color: #211F3A;
+  background: #F1EEFC;
+
+  &.cobro-entrega--cobrar { color: #8A5A00; background: #FFF4E0; }
+  &.cobro-entrega--no_cobrar { color: #1E7A46; background: #E7F6EC; }
+  &.cobro-entrega--confirmar { color: #5F3FE0; background: #F1EEFC; }
+}

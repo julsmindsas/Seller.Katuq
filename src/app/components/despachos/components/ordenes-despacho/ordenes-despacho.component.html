@@ -182,7 +182,10 @@
                             <td>{{ pedido.envio?.ciudad || 'N/A' }}</td>
                             <td>{{ pedido.envio?.direccionEntrega || 'N/A' }}</td>
                             <td>{{ formatDate(pedido.fechaEntrega) }}</td>
-                            <td class="text-end">{{ getValorACobrarPorPedido(pedido) | currency }}</td>
+                            <td class="text-end">
+                              {{ getValorACobrarPorPedido(pedido) | currency }}
+                              <div class="cobro-entrega" *ngIf="pedido.cobroEnEntrega?.texto" [ngClass]="'cobro-entrega--' + pedido.cobroEnEntrega.accion">{{ pedido.cobroEnEntrega.texto }}</div>
+                            </td>
                             <td>
                               <span class="badge" 
                                 [ngClass]="{
