@@ -118,17 +118,33 @@
   lista; con `--estricto` no tolera ninguna (TX34-B06 las corrige y la lista se vacía).
   Script `npm run test:tienda-celular` (incluye `rendimientoMovil.test.js`); sin el Chromium del
   laboratorio el e2e se salta con un mensaje y sale con código 0.
-- [ ] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
+- [x] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
   anulado, vencido, a cuotas, con y sin regreso válido) y `/pagar` en cada estado, incluido el
   pedido del bot (F4-40 D11). Se apoya en `pedidoTiendaCaracterizacion`, `recordatorioPagoBase` y
   `pagoTiendaConciliacionBase`.
   - **Éxito:** verde con el código de hoy y con F2-41 unido.
-- [ ] 1.7 [S] Caracterización del reintento del checkout: el mismo POST de crear pedido enviado
+  — Hecha el 3-nov (bloque TX34-B20), sin cambiar código: `tests/sitios/caracterizacionGraciasPagar.test.js`
+  (10 pruebas, 9 grupos con instantánea propia), en la copia local del backend (D-566, no va a git).
+  Cubre `/gracias` en cada estado del pedido (aprobado, pendiente, rechazado, anulado, vencido, a cuotas), con y
+  sin regreso válido, y `/pagar` en cada estado. Hallazgos para 4.1 y 4.2: un pedido vencido o anulado con pago
+  «Pendiente» sigue diciendo «Tu pago está en proceso»; `/pagar` de un pedido con pago «Rechazado» pero proceso
+  vivo no lo frena. El pedido del bot (F4-40 D11) NO está en esta rama: se agrega a la 1.6 cuando llegue. La
+  prueba versionada `tests/pagoCuotas/regresoGracias.test.js` se puso al día con los módulos nuevos de la página.
+- [x] 1.7 [S] Caracterización del reintento del checkout: el mismo POST de crear pedido enviado
   dos veces, la segunda como si la primera respuesta se hubiera perdido (con celular y sin él).
   Fija qué devuelve hoy (`_duplicadoEvitado`, mismo `nroPedido`), que no descuenta inventario dos
   veces, no aparta otra reserva, y qué efectos repite (enlace de pago, contadores; D-496).
   - **Éxito:** verde con el código de hoy y con F2-41 unido; si deja un hueco, se anota para el
     diff de la 4.4.
+  — Hecha el 3-nov (bloque TX34-B20), sin cambiar código: `tests/sitios/caracterizacionReintentoCheckout.test.js`
+  (19 pruebas), en la copia local del backend (D-566). Con celular el segundo envío devuelve el mismo pedido
+  sin otro consecutivo, descuento ni reserva, pero repite el enlace de pago, el correo al comprador, los avisos,
+  el evento del sitio, el contador de pedidos del sitio y el uso del cupón. **Huecos para la 4.4:** (1) hay
+  casos en que el reintento no se reconoce y crea un segundo pedido (compradores sin dato de contacto
+  suficiente en la ficha, y dos envíos casi simultáneos); (2) el reintento falla con error aunque su pedido ya
+  existe cuando la compra consumió la última unidad, un cupón de uso limitado o el tope del plan gratis;
+  (3) el borde de reconocimiento es de 2 minutos contados desde que se armó el pedido. La 4.4 necesita la
+  clave de idempotencia (diff aparte, con aprobación).
 
 ## 2. Contract tests primero (rojos hasta implementar; Artículo VIII)
 
