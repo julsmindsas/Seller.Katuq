@@ -9341,6 +9341,7 @@
   "facturacionElectronica.facturacionElectronica.detalleVencioHaceN": "venceu há {{dias}} dias",
   "facturacionElectronica.facturacionElectronica.detalleVencioHace1": "venceu há 1 dia",
   "facturacionElectronica.facturacionElectronica.detalleNoDisponible": "Não disponível para esta fatura",
+  "facturacionElectronica.facturacionElectronica.detalleAvisoNoReconstruible": "Não conseguimos montar os itens desta fatura; mostramos os totais que foram emitidos. Tentar novamente não muda o resultado.",
   "Ayuda": "Ajuda",
   "Artículos": "Artigos",
   "Administrar": "Gerenciar",

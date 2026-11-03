@@ -61,7 +61,7 @@
     button { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid var(--kc-line); border-radius: 12px; background: var(--kc-canvas); text-align: left; font-family: inherit; color: var(--kc-muted); cursor: pointer; transition: all .12s ease;
       &:disabled { opacity: .55; cursor: not-allowed; } &:hover:not(:disabled) { border-color: #e2d9fb; } }
     &__dot { flex: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #e4e5ee; color: var(--kc-ink2); font-family: $head; font-weight: 800; font-size: 12px; i { font-size: 11px; } }
-    &__copy { display: flex; flex-direction: column; min-width: 0; strong { font-size: 12.5px; font-weight: 800; color: var(--kc-ink2); line-height: 1.25; overflow-wrap: anywhere; } small { margin-top: 1px; font-size: 10.5px; font-weight: 600; color: var(--kc-muted2); line-height: 1.25; overflow-wrap: anywhere; } }
+    &__copy { display: flex; flex-direction: column; min-width: 0; strong { font-size: 12.5px; font-weight: 800; color: var(--kc-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } small { margin-top: 1px; font-size: 10.5px; font-weight: 600; color: var(--kc-muted2); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
     &__bar { flex: none; width: 14px; height: 2px; border-radius: 2px; background: var(--kc-line); }
     li.is-active button { background: var(--kc-accent-wash); border-color: #e2d9fb; box-shadow: 0 1px 3px rgba(108, 76, 224, .14); }
     li.is-active .dk-rail__dot { background: var(--kc-accent); color: var(--ds-on-accent); }
@@ -69,6 +69,8 @@
     li.is-done .dk-rail__dot { background: var(--kc-green); color: var(--ds-on-accent); }
     li.is-done .dk-rail__bar { background: var(--kc-green); }
   }
+  // D-622 (ticket 1491): solo con la bandera `dianTableroEstado` (clase en el riel) los títulos de los pasos se leen completos.
+  .dk-rail--completo .dk-rail__copy { strong, small { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; } }
   .dk-safety { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 0 4px; font-size: 12px; font-weight: 600; color: #9aa0b2; i { flex-shrink: 0; margin-top: 2px; color: #b7bccb; } }
 
   // alertas

@@ -9173,6 +9173,7 @@
     "facturacionElectronica.facturacionElectronica.detalleVencioHaceN": "seit {{dias}} Tagen fällig",
     "facturacionElectronica.facturacionElectronica.detalleVencioHace1": "seit 1 Tag fällig",
     "facturacionElectronica.facturacionElectronica.detalleNoDisponible": "Für diese Rechnung nicht verfügbar",
+    "facturacionElectronica.facturacionElectronica.detalleAvisoNoReconstruible": "Wir konnten die Positionen dieser Rechnung nicht rekonstruieren; angezeigt werden die ausgestellten Summen. Ein erneuter Versuch ändert das Ergebnis nicht.",
     "Ayuda": "Hilfe",
     "Artículos": "Artikel",
     "Administrar": "Verwalten",

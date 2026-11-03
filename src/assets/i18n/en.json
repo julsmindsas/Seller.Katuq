@@ -12354,6 +12354,7 @@
   "facturacionElectronica.facturacionElectronica.detalleVencioHaceN": "overdue by {{dias}} days",
   "facturacionElectronica.facturacionElectronica.detalleVencioHace1": "overdue by 1 day",
   "facturacionElectronica.facturacionElectronica.detalleNoDisponible": "Not available for this invoice",
+  "facturacionElectronica.facturacionElectronica.detalleAvisoNoReconstruible": "We could not rebuild the line items of this invoice; we show the totals that were issued. Trying again will not change the result.",
   "Ayuda": "Help",
   "Artículos": "Articles",
   "Administrar": "Manage",

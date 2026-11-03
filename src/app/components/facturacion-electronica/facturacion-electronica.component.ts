@@ -61,8 +61,10 @@ interface DetalleAmpliado {
   numero: string;
   estado: 'cargando' | 'ok' | 'error';
   lineas: LineaFactura[];
-  /** false: el pedido cambió después de facturar y los conceptos no son los emitidos. */
+  /** false: no se muestran conceptos (el pedido cambió o la factura no se puede reconstruir). */
   cuadra: boolean;
+  /** Por qué no hay conceptos: el pedido cambió después de facturar, o no se puede reconstruir (no se arregla reintentando). */
+  motivo: 'pedido-cambio' | 'no-reconstruible' | null;
   impuestos: { tarifa: number; base: number; iva: number }[];
   pago: { disponible: boolean; forma: 'contado' | 'credito' | null; medioCodigo: string | null; vencimiento: string | null } | null;
 }
@@ -489,8 +491,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   cargarDetalleAmpliado(document: DianDocument): void {
     if (!this.detalleAmpliadoActivo || !this.tieneConceptos(document)) return;
     const numero = document.number as string;
-    this.detalleExtra = { numero, estado: 'cargando', lineas: [], cuadra: true, impuestos: [], pago: null };
-    this.integrationsService.getDianInvoiceLines(numero).pipe(takeUntil(this.destroy$)).subscribe({
+    this.detalleExtra = { numero, estado: 'cargando', lineas: [], cuadra: true, motivo: null, impuestos: [], pago: null };
+    this.integrationsService.getDianInvoiceLines(numero, true).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response: any) => {
         // Si ya se abrió otro documento, esta respuesta no le corresponde.
         if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
@@ -500,14 +502,20 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
           lineas: Array.isArray(d.lineas) ? d.lineas : [],
           // Un servidor sin los campos nuevos (aún no desplegado) se trata como «no cuadra»: solo totales.
           cuadra: d.cuadra === true,
+          motivo: d.cuadra === true ? null : (d.motivo === 'no-reconstruible' ? 'no-reconstruible' : 'pedido-cambio'),
           impuestos: Array.isArray(d.impuestos) ? d.impuestos : [],
           pago: d.pago || null,
         };
         this.changeDetector.markForCheck();
       },
-      error: () => {
+      error: (err: any) => {
         if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
-        this.detalleExtra = { numero, estado: 'error', lineas: [], cuadra: true, impuestos: [], pago: null };
+        // 400/404/409: la factura no se puede reconstruir y reintentar no lo cambia. Se muestran los totales con el
+        // aviso; «Reintentar» queda solo para fallas pasajeras (red, servidor).
+        const permanente = [400, 404, 409].includes(Number(err?.status));
+        this.detalleExtra = permanente
+          ? { numero, estado: 'ok', lineas: [], cuadra: false, motivo: 'no-reconstruible', impuestos: [], pago: null }
+          : { numero, estado: 'error', lineas: [], cuadra: true, motivo: null, impuestos: [], pago: null };
         this.changeDetector.markForCheck();
       },
     });

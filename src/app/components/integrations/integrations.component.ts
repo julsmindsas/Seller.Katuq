@@ -1607,9 +1607,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     if (a.tipo === 'rango') {
       return this.translate.instant(a.nivel === 'bloqueante' ? `${base}RangoAgotado` : `${base}Rango`, { pct: a.pct, restantes: a.restantes });
     }
+    // Las claves existentes concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
     const quien = a.tipo === 'resolucion' ? 'Resolucion' : 'Certificado';
+    const vencido = a.tipo === 'resolucion' ? 'Vencida' : 'Vencido';
     const dias = a.dias as number;
-    return this.translate.instant(dias < 0 ? `${base}${quien}Vencida` : `${base}${quien}`, { dias: Math.abs(dias) });
+    return this.translate.instant(dias < 0 ? `${base}${quien}${vencido}` : `${base}${quien}`, { dias: Math.abs(dias) });
   }
 
   loadDianTestOrders(): void {
@@ -2744,6 +2746,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   // Método para manejar errores de imágenes
+  /** D-622 (ticket 1491): con la bandera `dianTableroEstado` se corrigen el ícono de DIAN y los pasos cortados; apagada, todo igual que antes. */
+  get dianArreglosVisuales(): boolean {
+    return this.features.isEnabled('dianTableroEstado');
+  }
+
+  /** Logo del catálogo. Con la bandera, DIAN no pide el archivo que nunca existió y va directo al ícono. */
+  logoDeCatalogo(integration: any): string {
+    return integration?.id === 'dian' && this.dianArreglosVisuales ? '' : (integration?.logo || '');
+  }
+
+  /** Ícono de respaldo del catálogo: el de DIAN solo con la bandera; los demás, como siempre. */
+  iconoDeRespaldo(integration: any): string {
+    return integration?.id === 'dian' && this.dianArreglosVisuales
+      ? 'pi pi-verified'
+      : 'fa ' + this.getIntegrationIcon(integration?.id);
+  }
+
   onImageError(event: any, integration: any): void {
     event.target.style.display = 'none';
     // Mostrar icono como fallback

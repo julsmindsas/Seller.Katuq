@@ -12174,6 +12174,7 @@
   "facturacionElectronica.facturacionElectronica.detalleVencioHaceN": "venció hace {{dias}} días",
   "facturacionElectronica.facturacionElectronica.detalleVencioHace1": "venció hace 1 día",
   "facturacionElectronica.facturacionElectronica.detalleNoDisponible": "No disponible para esta factura",
+  "facturacionElectronica.facturacionElectronica.detalleAvisoNoReconstruible": "No pudimos armar los conceptos de esta factura; mostramos los totales que se emitieron. Volver a intentar no cambia el resultado.",
   "Ayuda": "Ayuda",
   "Artículos": "Artículos",
   "Administrar": "Administrar",

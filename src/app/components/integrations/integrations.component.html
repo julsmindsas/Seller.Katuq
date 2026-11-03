@@ -93,9 +93,9 @@
 
             <div class="kx-plat__top">
               <span class="kx-plat__logo">
-                <img *ngIf="integration.logo" [src]="integration.logo" [alt]="integration.name"
+                <img *ngIf="logoDeCatalogo(integration)" [src]="logoDeCatalogo(integration)" [alt]="integration.name"
                      (error)="onImageError($event, integration)" style="display: block;">
-                <i class="fallback-icon" [ngClass]="integration.id === 'dian' ? 'pi pi-verified' : ('fa ' + getIntegrationIcon(integration.id))" [style.display]="integration.logo ? 'none' : 'flex'"></i>
+                <i class="fallback-icon" [ngClass]="iconoDeRespaldo(integration)" [style.display]="logoDeCatalogo(integration) ? 'none' : 'flex'"></i>
               </span>
               <div class="kx-plat__id">
                 <h4>{{ integration.name }}</h4>
@@ -146,8 +146,8 @@
     <ng-container *ngIf="showOnlyForm">
       <div class="kx-elegida" *ngIf="plataformaElegida as plat">
         <span class="kx-elegida__logo">
-          <img *ngIf="plat.logo" [src]="plat.logo" [alt]="plat.name" (error)="onImageError($event, plat)" style="display: block;">
-          <i class="fallback-icon" [ngClass]="plat.id === 'dian' ? 'pi pi-verified' : ('fa ' + getIntegrationIcon(plat.id))" [style.display]="plat.logo ? 'none' : 'flex'"></i>
+          <img *ngIf="logoDeCatalogo(plat)" [src]="logoDeCatalogo(plat)" [alt]="plat.name" (error)="onImageError($event, plat)" style="display: block;">
+          <i class="fallback-icon" [ngClass]="iconoDeRespaldo(plat)" [style.display]="logoDeCatalogo(plat) ? 'none' : 'flex'"></i>
         </span>
         <div class="kx-elegida__txt">
           <span class="kx-elegida__nom">
@@ -1978,7 +1978,7 @@
               </div>
               <button type="button" class="dk-btn dk-btn--ghost dkt-volver" *ngIf="dianPuedeVolverAlTablero" (click)="volverAlTableroDian()"><i class="pi pi-arrow-left"></i> {{ 'integrations.integrations.tableroVolver' | translate }}</button>
             </div>
-            <ol class="dk-rail">
+            <ol class="dk-rail" [class.dk-rail--completo]="dianArreglosVisuales">
               <li *ngFor="let step of dianSteps; let last = last" [class.is-active]="dianStep === step.number" [class.is-done]="dianStep > step.number">
                 <button type="button" (click)="goToDianStep(step.number)" [disabled]="step.number > dianStep + 1" [attr.aria-current]="dianStep === step.number ? 'step' : null">
                   <span class="dk-rail__dot"><i class="pi pi-check" *ngIf="dianStep > step.number; else stepNumber"></i><ng-template #stepNumber>{{ step.number }}</ng-template></span>

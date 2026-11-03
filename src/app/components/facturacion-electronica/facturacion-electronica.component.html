@@ -418,7 +418,7 @@
               <button type="button" class="fe-link" (click)="cargarDetalleAmpliado(d)">{{ 'facturacionElectronica.facturacionElectronica.detalleReintentar' | translate }}</button>
             </div>
             <div class="fe-resumen__estado fe-resumen__estado--aviso" role="status" *ngIf="ex.estado === 'ok' && !ex.cuadra">
-              <i class="pi pi-info-circle"></i><span class="fe-resumen__txt">{{ 'facturacionElectronica.facturacionElectronica.detalleAvisoPedidoCambio' | translate }}</span>
+              <i class="pi pi-info-circle"></i><span class="fe-resumen__txt">{{ (ex.motivo === 'no-reconstruible' ? 'facturacionElectronica.facturacionElectronica.detalleAvisoNoReconstruible' : 'facturacionElectronica.facturacionElectronica.detalleAvisoPedidoCambio') | translate }}</span>
             </div>
             <ul class="fe-conceptos" *ngIf="ex.estado === 'ok' && ex.cuadra && ex.lineas.length">
               <li class="fe-concepto" *ngFor="let l of ex.lineas; trackBy: porIndice">
