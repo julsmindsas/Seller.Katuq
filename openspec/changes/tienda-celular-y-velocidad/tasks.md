@@ -43,6 +43,10 @@
   - **Éxito:** cifras en `design.md`.
 - [ ] 0.6 Confirmar en Storage qué anchos crea TX-37 para la portada (`-cover.jpg`) y las demás
   fotos, y el formato de las variantes del constructor. **Éxito:** D14 con los anchos reales.
+  — **Avance (bloque TX34-B17):** anchos deducidos del código y escritos en D14 de `design.md` (constructor y
+  TX-37 usan `procesarImagenSitio`: 320/640/1280/1920 sin pasar del original, más el ancho del original; TX-37 guarda
+  la variante hasta 1280 en `urls` y su portada es un JPEG sin `srcset`). **Pendiente:** confirmarlo contra el Storage
+  real (bloqueado).
 
 ## 1. Medición base y caracterización (sin cambiar comportamiento)
 
@@ -131,6 +135,12 @@
   que falla con una escritura en `products`, `orders`, `inventory` o `inventoryMovement`, revisión estática del
   módulo y corrida con la Firestore falsa que solo escribe `storeProductStats/{docId de la empresa}`). Falta el
   buscador (TX34-B10).
+  **Parte `storeImageVariants` hecha (bloque TX34-B17):** `variantesFotosTienda.writeSet.test.js` (56 pruebas, con
+  Storage y Firestore falsos): el dry-run no escribe ni abre el Storage; `compute` solo crea archivos nuevos con la
+  precondición de que no existan y escribe solo `storeImageVariants/{docId}` (un `set` sin merge); `products`,
+  `inventory`, `orders` y consecutivos quedan intactos; destino ocupado (otro token o empresa) omite la foto sin
+  escribir nada de ella; revisión estática con canarios (un `update`, un `set`, un `batch`, un borrado o un segundo
+  `save` agregados al módulo la hacen fallar); `indiceTienda.js` sigue leyendo solo `products`.
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
@@ -313,10 +323,23 @@
   (`utils/siteCajonLateral.js`); `/estilos.css` no cambia.
   **Medido (una vez, sobre la plantilla afectada):** barrido de 150 capturas (15 plantillas × 360/390/767/768, con y sin
   `data-kq-ajustes`, y 30 sin JavaScript): 0 cruces, 0 desplazamientos laterales, botón y renglones de 44 px o más.
-- [ ] 3.14 [si P6 = a] Variantes de las fotos originales (D16): primero `--dry-run` que cuenta
+- [x] 3.14 [si P6 = a] Variantes de las fotos originales (D16): primero `--dry-run` que cuenta
   fotos y bytes por empresa; luego la tarea con tope. Contract test del write-set: no escribe
   `products` ni pisa archivos. **Éxito:** la proyección pinta `srcset` en esas fotos; el
   laboratorio y PageSpeed con originales mejoran el LCP.
+  — **Código hecho (bloque TX34-B17), apagado:** interruptor global `storeMobile.imageVariants` (`off | compute |
+  on`, por defecto `off`) con topes por empresa (50) y por corrida (300); `services/sites/variantesFotosTienda.js`,
+  `scripts/variantes-fotos-tienda.js` (`--dry-run` por defecto, `--compute --confirmo-storage-real`), tarea
+  `storeImageVariants` a las 3:45 a. m. con latido; con `on`, `consultarCatalogo`, los bloques de producto y la
+  ficha pintan `srcset` en las fotos con variantes (el documento lo lee la tienda, una vez cada 5 minutos por
+  empresa, no al cargar la proyección: desvío anotado en D16). Las fotos que fallan se recuerdan con plazo de
+  reintento, el documento se limita por bytes y el JSON-LD conserva la foto original. Con todo apagado,
+  la respuesta y el HTML son idénticos (golden del catálogo en verde; prueba que lo compara con los modos `off`,
+  `compute`, documento ausente y token cambiado). Detalle en D16 de `design.md`.
+  **Bloqueado (no se hizo en esta sesión):** (1) la regla de Firebase que cierra `storeImageVariants` debe
+  desplegarla Daniel antes de la primera corrida en `compute`, como con `storeProductStats`; (2) correr el dry-run contra
+  `katuq_dev` y la primera corrida real en el Storage (necesita el OK de Daniel); (3) medir el LCP con el
+  laboratorio y PageSpeed con originales ya convertidos; (4) confirmar los anchos contra el Storage real (0.6).
 
 ## 4. Pedidos, pagos y reserva [S] — después de F2-41, D-496 y suscripciones (T·2)
 

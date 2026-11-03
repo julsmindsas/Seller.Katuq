@@ -100,7 +100,9 @@ WHERE una foto de producto tiene variantes de tamaño (las del constructor o las
 TX-37, o las creadas para las fotos originales), THE system SHALL ofrecerlas al navegador para
 que el celular descargue la más pequeña que le sirve, en la tarjeta, la ficha y las miniaturas,
 y la foto que la página precarga SHALL pedirse con las mismas variantes, para no bajarla dos
-veces. IF una foto no tiene variantes, THEN SHALL mostrarse como hoy **(provisional, P6)**.
+veces. IF una foto no tiene variantes, o el comercio la volvió a subir con otro token, o la lectura
+de las variantes falla, THEN SHALL mostrarse como hoy. Las variantes de las fotos originales se crean
+a su lado sin tocar el producto, sus precios ni su inventario (P6, opción a).
 
 Fuente: D-518 TX-37·8 («TX-34, que es dueño del rendimiento»); comentario 1 del 16-oct
 («variantes de tamaño para las fotos de producto»); F1-14 (prometía tamaños responsivos);
@@ -114,6 +116,16 @@ TX-37 (deja fuera las fotos no uniformadas y su portada JPEG sin variantes en la
 #### Scenario: Ficha con foto precargada
 - **WHEN** el comprador abre en celular la ficha de un producto con variantes
 - **THEN** la foto principal se descarga una sola vez
+
+#### Scenario: Foto original con variantes creadas
+- **WHEN** un producto tiene una foto original en el Storage de Katuq y ya se le crearon sus variantes
+- **THEN** la tarjeta y la ficha las ofrecen al navegador, el producto no se modifica y el JSON-LD de
+  Product y el `og:image` siguen con la foto de siempre
+
+#### Scenario: Foto sin variantes o resubida
+- **WHEN** una foto no tiene variantes, o el comercio la subió de nuevo y las variantes quedaron de la
+  anterior
+- **THEN** se muestra como hoy, sin una URL que dé error
 
 ### Requirement: Las visitas cuentan personas
 IF quien abre la página se identifica como robot, herramienta de medición o navegador

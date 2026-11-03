@@ -410,6 +410,21 @@ Dos niveles, como manda D-505 y la regla de diseño de `openspec/config.yaml`:
   **su diseño la deja sin `srcset`** (`fotos-uniformes-producto/design.md`, línea 20, su pregunta
   7): TX-34 respeta eso y solo le pone `srcset` si TX-37 cambia esa respuesta. La tarea 0.6
   confirma en Storage qué anchos existen.
+- **Anchos reales (tarea 0.6, deducidos del código el 2026-11-03; la confirmación contra el Storage real
+  queda pendiente).** Todas las variantes WebP salen de la misma función, `procesarImagenSitio`
+  (`utils/siteImagenes.js`): los anchos fijos 320, 640, 1280 y 1920 que no superen el del original (tope 1920),
+  más el ancho del original si no es uno de los fijos. Nunca agranda.
+  - **Constructor** (`controllers/media.js`, carpeta `Sitios/`): `Sitios/<nombre>-w<ancho>.webp`, un token por
+    foto compartido por todas las variantes. La URL guardada es la de la variante más grande (hasta 1920).
+  - **TX-37** (`utils/productPhotoUniform.js`, `services/productPhotos/photoStorage.js`):
+    `Productos/uniformes/<empresa>/<producto>/<lote>-<n>-w<ancho>.webp` con los mismos anchos sobre el lienzo
+    (hasta 1920) y un token por foto. La URL guardada (`urls`) es la variante WebP más grande hasta 1280
+    (`-w1280.webp`, o `-w900.webp` si el lienzo mide 900). La portada suma `…-<n>-cover.jpg` (JPEG de hasta 1280)
+    que va en `urls` y **sin `srcset`**.
+  - **`srcsetDe`** (`utils/siteHtml.js`) pide los anchos fijos menores que el del nombre más ese ancho; por eso
+    la URL de una foto debe ser siempre la de su variante más grande, y el `srcset` nunca pide un archivo que no
+    se creó (probado en `variantesFotosTienda.writeSet.test.js`). Los 1920 existen en el Storage pero ninguna
+    URL guardada de producto los pide; no se usan en la tienda.
 - **La precarga de la ficha va con el mismo `srcset`.** Hoy la ficha precarga su foto solo con
   `href` (`siteHtml.js:6478`); si la `<img>` lleva `srcset` y la precarga no, el celular baja dos
   veces la foto del LCP. Cuando la foto tenga variantes, la precarga lleva `imagesrcset` e
@@ -437,9 +452,60 @@ Dos niveles, como manda D-505 y la regla de diseño de `openspec/config.yaml`:
   `procesarImagenSitio` (`utils/siteImagenes.js`) y el mismo token, como el constructor.
 - **No escribe `products`** (escribir el producto puede reenviarlo a Shopify, ticket 1088): la
   lista de fotos con variantes queda en una colección nueva, `storeImageVariants/{empresaDocId}`
-  (mapa ruta → anchos), que la proyección lee al cargarse. Necesita aprobación explícita de la
+  (mapa ruta → anchos), que la tienda lee (ver «Cómo se pinta»: una lectura cada 5 minutos por empresa, no al
+  cargar la proyección). Necesita aprobación explícita de la
   colección y revisión contra D-134 y TX-37 (que no se pisen las variantes de las uniformadas).
 - Las fotos externas (CDN de Shopify u otros) quedan como hoy.
+- **Implementación (bloque TX34-B17; P6 = a, aprobada en bloque el 2026-10-21).**
+  - **Interruptor:** `config/feature_flags.storeMobile.imageVariants` = `off | compute | on`, **solo global** (no
+    tiene bandera de empresa). `off` (por defecto): la tarea no hace nada y la tienda sale como hoy. `compute`:
+    crea las variantes y no las muestra. `on`: las crea y las muestra. Topes: `topeFotosVariantesEmpresa` (50
+    fotos nuevas por empresa y por corrida) y `topeFotosVariantesCorrida` (300 en toda la corrida).
+  - **Quién y cuándo:** `services/sites/variantesFotosTienda.js`; tarea `storeImageVariants` a las 3:45 a. m. de
+    Colombia, con latido; script `scripts/variantes-fotos-tienda.js` con `--dry-run` por defecto (solo lee
+    Firestore y no abre el Storage: cuenta por empresa las fotos propias sin variantes, las que ya las tienen,
+    por qué se saltan las demás y una estimación gruesa de bytes). `--compute` exige además
+    `--confirmo-storage-real`.
+  - **Qué foto entra:** original en el bucket propio, con token en la URL, de un producto activo y publicado en
+    la web; extensión JPG, PNG o WebP; hasta 8 fotos por producto (las que pinta la ficha). **Se saltan:** fotos
+    externas u otro bucket, las uniformadas de TX-37 (`processed`/`original`, `Productos/uniformes/…`), su portada
+    `-cover.jpg` y las que ya son `-wN.webp` (constructor).
+  - **Qué crea:** `<ruta sin extensión>-w320.webp`, `-w640.webp` y `-w1280.webp` (y el ancho del original si es
+    menor de 1280; nunca más de 1280) con el **mismo token** de la foto original, `metadata.company` de la
+    empresa y la precondición de que el archivo no exista. Antes de descargar comprueba que el archivo es de la
+    empresa (`metadata.company`, la regla de TX-37) y que el token de la URL es el suyo. Un destino que ya existe
+    solo se acepta si es de la misma empresa y lleva el mismo token; en cualquier otro caso se omite la foto
+    entera. Nunca borra ni cambia metadatos.
+  - **Qué anota:** `storeImageVariants/{docId de la empresa}` = `{ version, total, calculado, fotos: { <sha1 de la
+    ruta>: { ruta, anchos, t } } }`, con `t` la huella (no el token) con que se crearon. Un `set` completo por
+    empresa; las fotos que ya no usa ningún producto salen del documento (sus archivos se quedan). Si el comercio
+    vuelve a subir la foto con otro token, la huella ya no coincide y la tienda sigue con el original.
+  - **Cómo se pinta:** con `on`, la tarjeta (`imagen`, `imagen2`) y la galería de la ficha (`imagenes`, y la foto
+    de cada variante de color) pasan a su `-w<N>.webp` más grande, y `srcsetDe`, el `sizes` y la precarga de la
+    ficha de B07 hacen el resto. `imagen` de la ficha (og:image) no cambia, y cada foto de la galería que cambia
+    conserva su URL de siempre en `original`: el JSON-LD de Product la sigue usando. Sin documento, con otro
+    token o ante cualquier falla de lectura: como hoy. **Desvío frente al texto inicial de D16** («la proyección lo
+    lee al cargarse»): el documento lo lee `variantesFotosTienda.variantesDeFotos` (una lectura cada 5 minutos por
+    empresa, invalidada junto con la proyección) y `indiceTienda.js` solo delega, porque la prueba de la proyección
+    exige que `indiceTienda.js` lea únicamente `products`. Con el modo `lightIndex` en `off` la lectura ocurre igual.
+    **Fuera de alcance, con razón:** los afines de la ficha ya pasan por `resolverProductos` (llevan variantes); las
+    mini-tarjetas de «relacionados» del carrito son miniaturas sin `srcset` y siguen con la foto original; el
+    carrito abandonado guarda la miniatura de 320 px (`-w320.webp`) cuando el modo es `on`, para no mandar una
+    foto de 1280 px a un recuadro de 48 px en el correo.
+  - **Fotos que fallan:** las que no se pueden procesar (sin dueño en el Storage, de otra empresa, sin original,
+    con otro token, demasiado grandes o ilegibles) se recuerdan en el mismo documento (`omitidas`, con motivo, huella
+    del token y fecha de reintento: 30 días los permanentes, 3 días `sin_variantes`, 1 día `ilegible`). Mientras
+    no venza el plazo ni cambie el token de la foto, no se vuelven a intentar ni gastan tope: así unas fotos
+    malas no impiden que avancen las buenas ni las demás empresas. El `--dry-run` las cuenta aparte
+    («fallaron antes y no se reintentan todavía»). Sus bytes son una estimación de 150 KB por foto sin leer el
+    Storage; el peso real de los originales se mide en la primera corrida autorizada.
+  - **Tamaño del documento:** además del tope de 4.000 fotos, el documento se limita por bytes estimados (600 KB,
+    por el largo de las rutas), muy por debajo del 1 MiB de Firestore. Lo que no cabe se cuenta como
+    `documento_lleno` y no se procesa (no se crea ningún archivo que luego no se pueda anotar).
+  - **Write-set:** archivos nuevos `-wN.webp` y `storeImageVariants/{empresaDocId}`. No escribe `products`,
+    precios, listas, inventario ni movimientos (una prueba estática y una de ejecución lo vigilan).
+  - **Regla de Firebase:** la colección debe cerrarse (`allow read, write: if false`) y desplegarse **antes** de
+    la primera corrida en `compute`, igual que con `storeProductStats`.
 
 ## Límites con otros cambios
 
