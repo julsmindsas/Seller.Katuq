@@ -259,6 +259,16 @@
   vacío, como hoy, para no cambiar el HTML apagado); sí se conserva al paginar, filtrar y abrir el panel.
 - [ ] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
   **Éxito:** escenarios de EE con zonas, fijo, gratis desde, retiro y ciudad sin zona.
+  — **Parte 1 hecha (TX34-B14), queda `[ ]` hasta la parte 2:** «Calcula tu envío» en la ficha (bajo el precio y el
+  plazo) y en el carrito (en lugar de «Según tu ciudad», solo con zonas), con la ciudad recordada y preseleccionada
+  en el checkout. Nace apagado: `storeMobile.shippingEstimate` en `off` deja el HTML, el script y los estilos como
+  hoy (los estilos van en la página, no en la hoja compartida). Zonas (una ciudad con varias muestra todas con
+  nombre y tarifa; en el carrito es un solo selector compacto con «Mi ciudad no está» como última opción),
+  envío fijo, gratis desde (cuánto falta), puntos de retiro y «Mi ciudad no está»
+  (WhatsApp de la tienda o, sin él, el contacto del pie; nunca costo ni plazo). Solo se guarda en el navegador la
+  zona elegida (id y ciudad), vence a las 24 h y al pagar; el cuerpo del POST del pedido y el cálculo del
+  servidor no cambian. **Pendiente (parte 2, TX34-B15):** tiempo de entrega e «IVA incluido» en el carrito y el
+  checkout, y la 3.12.
 - [ ] 3.12 [si P14] Aviso de la promesa de plazo en la revisión de publicación.
 - [ ] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
   sin JavaScript. **Éxito:** escenarios de TC; revisión visual de las 15 plantillas a 360, 390,
