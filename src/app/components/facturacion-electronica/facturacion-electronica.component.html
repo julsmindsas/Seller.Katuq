@@ -56,7 +56,7 @@
 
   <section class="fe-card fe-history" *ngIf="historyOpen && technicalHistory.length">
     <div class="fe-history__head">{{ 'facturacionElectronica.facturacionElectronica.historialTecnicoUltimosEnviosY' | translate }}</div>
-    <p class="fe-history__note">{{ 'facturacionElectronica.facturacionElectronica.estosRegistrosNoSonFacturas' | translate }}</p>
+    <p class="fe-history__note">{{ 'facturacionElectronica.facturacionElectronica.historialTecnicoNota' | translate }}</p>
     <div class="fe-history__row" *ngFor="let entry of technicalHistory">
       <span class="fe-history__dot fe-history__dot--{{ historyTone(entry) }}"></span>
       <span class="fe-history__time">{{ entryDate(entry) ? (entryDate(entry) | date:'dd/MM HH:mm') : ('facturacionElectronica.facturacionElectronica.sinFecha' | translate) }}</span>

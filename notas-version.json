@@ -39,5 +39,6 @@
   { "fecha": "2026-11-03T17:00:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, los botones de cada documento y el total de cada concepto de «Nueva factura» se quedan a la vista aunque la pantalla sea angosta." },
   { "fecha": "2026-11-03T17:30:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica → Desde pedidos, ya puedes facturar a consumidor final aunque no tenga correo. Y si a un cliente le falta el correo, el aviso te lleva a su ficha para completarlo." },
   { "fecha": "2026-11-03T18:00:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, las notas crédito y débito muestran el nombre y el NIT del cliente, y la columna «Origen» te dice de qué pedido o de qué factura viene cada documento." },
-  { "fecha": "2026-11-03T18:30:00Z", "tipo": "CORRIGE", "texto": "En la guía de Facturación electrónica, el paso «Revisa y emite» se marca en amarillo mientras tengas documentos por revisar, y te lleva a ellos con un clic." }
+  { "fecha": "2026-11-03T18:30:00Z", "tipo": "CORRIGE", "texto": "En la guía de Facturación electrónica, el paso «Revisa y emite» se marca en amarillo mientras tengas documentos por revisar, y te lleva a ellos con un clic." },
+  { "fecha": "2026-11-03T19:00:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, el historial técnico muestra cada envío a la DIAN y cada correo de tus facturas y notas, del más reciente al más antiguo, y no solo las pruebas de habilitación." }
 ]

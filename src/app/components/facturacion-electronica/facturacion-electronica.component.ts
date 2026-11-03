@@ -579,7 +579,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         const documentData = documents?.data || documents;
         const list = splitDianDocumentList(documentData?.invoices);
         this.documents = list.documents;
-        this.technicalHistory = list.history;
+        this.technicalHistory = this.armarHistorial(list.history, list.documents);
         const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
         this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
         const ids = new Set(this.pendingOrders.map((order) => this.orderId(order)));
@@ -1162,7 +1162,34 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return [c.tipoDocumento || '', c.documento].filter(Boolean).join(' ');
   }
 
+  /**
+   * Ticket 1490: el historial técnico también muestra cada envío a la DIAN y cada
+   * correo (enviado, fallido o reenviado) de facturas y notas, no solo el set de
+   * pruebas. Del más reciente al más antiguo; los 60 últimos.
+   */
+  private armarHistorial(registros: any[], documentos: DianDocument[]): any[] {
+    const eventos: any[] = [...(registros || [])];
+    for (const d of documentos || []) {
+      const nombre = `${this.documentTypeLabel(d.type)} ${d.number || '(sin número)'}`;
+      const rechazo = this.statusGroup(d) === 'rejected' ? ` · ${this.rejectionMessage(d)}` : '';
+      eventos.push({ type: 'envioDocumento', status: d.status, createdAt: d.createdAt, message: `${nombre} · ${this.etiquetaEstado(d)}${rechazo}` });
+      const e = d.emailDelivery;
+      if (e && e.requested) {
+        eventos.push({ type: 'correo', status: e.sent ? 'success' : 'failed', createdAt: d.createdAt,
+          message: e.sent ? `${nombre}: correo enviado a ${e.recipient || 'el comprador'}` : `${nombre}: el correo no salió. ${this.mensajeCorreo((e as any).error)}` });
+      }
+      for (const r of d.emailResends || []) {
+        eventos.push({ type: 'correo', status: r.sent ? 'success' : 'failed', createdAt: r.fecha,
+          message: r.sent ? `${nombre}: reenviado a ${r.recipient}` : `${nombre}: no se pudo reenviar a ${r.recipient}` });
+      }
+    }
+    const t = (x: any) => this.entryDate(x)?.getTime() || 0;
+    return eventos.sort((a, b) => t(b) - t(a)).slice(0, 60);
+  }
+
   historyLabel(entry: any): string {
+    if (entry?.type === 'envioDocumento') return 'Envío DIAN';
+    if (entry?.type === 'correo') return 'Correo';
     if (entry?.type === 'habilitationSet') return 'Set de pruebas';
     if (entry?.type === 'habilitationStatus') return 'Consulta';
     return 'Registro';
