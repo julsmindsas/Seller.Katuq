@@ -174,7 +174,7 @@ export interface ChangePaymentStateResponse {
   /** D-493: el pago cancelado devolvió el inventario a la bodega. */
   devolucionInventario?: boolean;
   /** Ticket 1448: al marcar Crédito, qué pasó con el cupo del cliente (solo con la bandera `estadoCredito`). */
-  cupo?: { estado: 'tiene' | 'guardado' | 'sin_cupo' | 'sin_ficha' | 'sin_documento' | 'invalido' | 'error'; cupo?: number };
+  cupo?: { estado: 'tiene' | 'guardado' | 'sin_cupo' | 'sin_ficha' | 'sin_permiso' | 'sin_documento' | 'invalido' | 'error'; cupo?: number };
   /** Ticket 1448: true si el pedido quedó en Crédito pero el cliente sigue sin cupo guardado. */
   cupoPendiente?: boolean;
 }

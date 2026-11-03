@@ -70,6 +70,13 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     ParaDespachar: "ventas.listProduccion.estado.paraDespachar",
   };
 
+  /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
+  etiquetaEstadoPago(estado: string): string {
+    if (estado === EstadoPago.Pospendiente) return this.translate.instant("ventas.list.pagoCorto.pospendiente");
+    if (estado === EstadoPago.Credito) return this.translate.instant("ventas.list.pagoCorto.credito");
+    return estado;
+  }
+
   constructor(
     private ventasService: VentasService,
     private toastrService: ToastrService,

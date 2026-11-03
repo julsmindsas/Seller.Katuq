@@ -549,7 +549,7 @@
  'pi-calendar': row?.estadoPago === 'Credito',
                       'pi-times-circle': row?.estadoPago === 'Rechazado' || row?.estadoPago === 'Cancelado' || row?.estadoPago === 'Precancelado'
                     }"></i>
-                    {{ row?.estadoPago }}
+                    {{ etiquetaEstadoPago(row?.estadoPago) }}
                   </span>
                 </td>
 

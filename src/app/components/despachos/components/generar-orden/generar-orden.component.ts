@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, OnInit, OnDestroy, Output, ViewEncapsulation } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, OnDestroy, Output, ViewEncapsulation, inject } from "@angular/core";
+import { TranslateService } from "@ngx-translate/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Observable, Subject } from 'rxjs';
@@ -25,6 +26,7 @@ interface ColumnDefinition {
   encapsulation: ViewEncapsulation.None
 })
 export class GenerarOrdenComponent implements OnInit, OnDestroy {
+  private readonly traductor = inject(TranslateService);
   // Control de modo de operación
   @Input() usarPedidosPadre: boolean = false; // DEFAULT: modo independiente
 
@@ -1110,15 +1112,24 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   /** Seleccionados cuyo pago aún no está aprobado. */
   get pedidosPendientesPago(): number {
-    return this.pedidosSeleccionados.filter(
-      (p: any) => String(p.estadoPago || '').toLowerCase() !== 'aprobado',
-    ).length;
+    // Ticket 1448: un pedido en Crédito se entrega sin cobrar, no está «pendiente de pago».
+    return this.pedidosSeleccionados.filter((p: any) => {
+      const estado = String(p.estadoPago || '').toLowerCase();
+      return estado !== 'aprobado' && estado !== 'credito';
+    }).length;
+  }
+
+  /** Valor que se cobra en la entrega: 0 si el pedido es de Crédito o el servidor dice «No cobrar». No toca `faltaPorPagar`. */
+  valorACobrarEnEntrega(p: any): number {
+    if (String(p?.estadoPago || '').toLowerCase() === 'credito' || p?.cobroEnEntrega?.accion === 'no_cobrar') return 0;
+    return Math.max(0, Number(p?.faltaPorPagar) || 0);
   }
 
   /** Total a cobrar de la orden (mismo criterio que el pipe de la tabla). */
   get totalACobrar(): number {
+    // Ticket 1448: lo que el mensajero cobra; un pedido en Crédito (o con «No cobrar» del servidor) suma 0.
     return this.pedidosSeleccionados.reduce(
-      (suma: number, p: any) => suma + (Number(p.faltaPorPagar) || 0), 0,
+      (suma: number, p: any) => suma + this.valorACobrarEnEntrega(p), 0,
     );
   }
 
@@ -2430,8 +2441,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
   etiquetaEstadoPago(estado: string): string {
-    if (estado === "Pospendiente") return "Pago en revisión";
-    if (estado === "Credito") return "Crédito";
+    if (estado === "Pospendiente") return this.traductor.instant("ventas.list.pagoCorto.pospendiente");
+    if (estado === "Credito") return this.traductor.instant("ventas.list.pagoCorto.credito");
     return estado;
   }
 

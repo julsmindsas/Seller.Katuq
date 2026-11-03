@@ -2004,7 +2004,7 @@
                             'badge-info': pedidoSeleccionado?.estadoPago === 'PreAprobado' || pedidoSeleccionado?.estadoPago === 'Credito',
                             'badge-danger': pedidoSeleccionado?.estadoPago === 'Rechazado' || pedidoSeleccionado?.estadoPago === 'Cancelado'
                         }">
-                            {{ pedidoSeleccionado?.estadoPago }}
+                            {{ etiquetaEstadoPago(pedidoSeleccionado?.estadoPago) }}
                         </span>
                     </div>
                     <div class="status-arrow">
