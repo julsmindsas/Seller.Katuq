@@ -1,0 +1,98 @@
+// Tickets 1385 y 1457: ventana «Recordar pago». Plano, acento #5F3FE0, sin gradientes, radios 16/11.
+// Nombres de clase con prefijo rc- y sin «p-» (el CSS global fuerza el tamaño de letra a esas clases).
+.rc-cabeza { border-bottom: 1px solid #e4dff7; align-items: flex-start; }
+.rc-titulo { display: flex; align-items: center; gap: 8px; margin: 0; color: #211f3a; font-size: 17px; font-weight: 800; i { color: #5f3fe0; font-size: 16px; } }
+.rc-sub { margin-top: 4px; font-size: 12.5px; color: #6b6890; letter-spacing: normal; }
+.rc-cuerpo { color: #211f3a; font-size: 14px; }
+.rc-pie { border-top: 1px solid #e4dff7; gap: 8px; }
+
+.rc-etiqueta { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.rc-mt { margin-top: 12px; }
+.rc-nota { margin: 6px 0; font-size: 12.5px; line-height: 1.4; color: #6b6890; letter-spacing: normal; }
+.rc-acento { color: #5f3fe0; }
+.rc-rojo { color: #b42318; }
+.rc-cargando { padding: 10px 0; color: #6b6890; font-size: 13px; }
+
+.rc-aviso { padding: 10px 14px; margin: 10px 0; border-radius: 11px; font-size: 13px; line-height: 1.45; letter-spacing: normal; }
+.rc-aviso-error { background: #fdeceb; color: #b42318; }
+.rc-aviso-ok { background: #e7f6ec; color: #17994f; }
+.rc-aviso-alerta { background: #fdf6dc; color: #8a5a10; }
+.rc-cuenta { color: inherit; font-size: inherit; letter-spacing: normal; }
+.rc-aviso-info { background: #f3f0ff; color: #211f3a; }
+
+.rc-canales { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.rc-canal {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
+  border: 1px solid #d9d3f0; border-radius: 11px; background: #fff; color: #211f3a;
+  font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:hover:not(:disabled):not(.rc-canal-apagado) { background: #f3f0ff; }
+  &.is-activo { background: #5f3fe0; border-color: #5f3fe0; color: #fff; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+.rc-canal-apagado { opacity: 0.5; cursor: not-allowed; background: #f5f2ff; color: #6b6890; }
+
+.rc-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; @media (max-width: 600px) { grid-template-columns: 1fr; } }
+.rc-dato { padding: 10px 14px; border-radius: 11px; background: #f5f2ff; }
+.rc-dato-etq { font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.rc-dato-val { margin-top: 4px; font-size: 18px; font-weight: 800; color: #211f3a; font-variant-numeric: tabular-nums; }
+
+.rc-lista { list-style: none; margin: 8px 0; padding: 0; border: 1px solid #e4dff7; border-radius: 11px; overflow: hidden; }
+.rc-item + .rc-item { border-top: 1px solid #efeaff; }
+.rc-item-cabeza {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: 0; background: #fff;
+  color: #211f3a; font-family: inherit; font-size: 13px; text-align: left; letter-spacing: normal; cursor: pointer;
+  &:hover { background: #f5f2ff; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: -3px; }
+  i { color: #6b6890; font-size: 11px; }
+}
+.rc-nombre { flex: 1 1 auto; min-width: 0; font-weight: 700; color: #211f3a; overflow-wrap: anywhere; }
+.rc-destino { flex: 0 1 auto; color: #6b6890; font-size: 12px; overflow-wrap: anywhere; }
+.rc-monto { flex: 0 0 auto; font-weight: 800; color: #211f3a; font-variant-numeric: tabular-nums; }
+.rc-item-cuerpo { padding: 4px 14px 14px; background: #fff; }
+.rc-pedidos { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.rc-pedido { padding: 3px 10px; border-radius: 999px; background: #f3f0ff; color: #5f3fe0; font-size: 12px; font-weight: 700; letter-spacing: normal; }
+.rc-asunto { margin: 6px 0; font-size: 13px; color: #211f3a; letter-spacing: normal; }
+.rc-texto { margin: 6px 0 0; padding: 12px 14px; border-radius: 11px; background: #f5f2ff; color: #211f3a; font-family: inherit; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.rc-fila-resultado { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 9px 14px; font-size: 13px; color: #211f3a; }
+.rc-fila-resultado + .rc-fila-resultado { border-top: 1px solid #efeaff; }
+.rc-motivo { color: #6b6890; font-size: 12.5px; letter-spacing: normal; }
+.rc-estado { padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; letter-spacing: normal; }
+.rc-estado-enviado { background: #e7f6ec; color: #17994f; }
+.rc-estado-fallido { background: #fdeceb; color: #b42318; }
+.rc-estado-omitido { background: #fdf6dc; color: #8a5a10; }
+.rc-omitidos { margin-top: 14px; }
+
+.rc-seccion { margin-top: 18px; padding-top: 12px; border-top: 1px solid #efeaff; }
+.rc-enlace {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; border: 0; background: transparent; color: #5f3fe0;
+  font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+.rc-editor { margin-top: 8px; }
+.rc-input {
+  width: 100%; padding: 9px 12px; border: 1px solid #d9d3f0; border-radius: 11px; background: #fff; color: #211f3a;
+  font-family: inherit; font-size: 14px;
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
+}
+.rc-area { resize: vertical; line-height: 1.5; }
+.rc-variables { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.rc-variable {
+  padding: 4px 10px; border: 1px solid #d9d3f0; border-radius: 999px; background: #fff; color: #5f3fe0;
+  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:hover { background: #f3f0ff; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+.rc-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; @media (max-width: 600px) { grid-template-columns: 1fr; } }
+.rc-check { display: flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 13px; font-weight: 700; color: #211f3a; cursor: pointer; letter-spacing: normal; }
+.rc-fila-botones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.rc-btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid #5f3fe0; border-radius: 11px;
+  background: #5f3fe0; color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:hover:not(:disabled) { background: #4f31c8; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+.rc-btn-sec { background: #fff; color: #5f3fe0; border-color: #d9d3f0; &:hover:not(:disabled) { background: #f3f0ff; } }

@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Tooltip } from 'primeng/tooltip';
 import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { TreasuryService } from '../../../shared/services/treasury/treasury.service';
@@ -43,6 +44,20 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadMetrics();
+  }
+
+  /**
+   * Los textos de ayuda de las tarjetas. PrimeNG 14 no tiene `tooltipEvent="both"`: con "hover" el
+   * tooltip solo sale con el ratón, así que el foco del teclado lo abre y lo cierra a mano
+   * (el texto también va en un `aria-describedby` para lectores de pantalla).
+   */
+  @ViewChildren(Tooltip) private ayudas!: QueryList<Tooltip>;
+
+  ayudaFoco(evento: Event, abrir: boolean): void {
+    const ayuda = this.ayudas?.find((t) => t.el.nativeElement === evento.target);
+    if (!ayuda) return;
+    if (abrir) ayuda.activate();
+    else ayuda.deactivate();
   }
 
   ngOnDestroy(): void {

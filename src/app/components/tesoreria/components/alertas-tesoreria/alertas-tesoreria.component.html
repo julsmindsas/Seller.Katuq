@@ -7,8 +7,8 @@
       <div>
         <div class="tk-alertas-title">{{ 'tesoreria.alertasTesoreria.alertasAntiFraude' | translate }}</div>
         <div class="tk-alertas-sub">
-          {{ items.length | number }} {{ soloActivas ? ('tesoreria.alertasTesoreria.alertaSActivaS' | translate) : ('tesoreria.alertasTesoreria.alertaSRegistradaS' | translate) }}
-          {{ 'tesoreria.alertasTesoreria.posiblesComprobantesReciclados' | translate }}
+          {{ totalAlertas | number }} {{ soloActivas ? ('tesoreria.alertasTesoreria.alertaSActivaS' | translate) : ('tesoreria.alertasTesoreria.alertaSRegistradaS' | translate) }}
+          · {{ totalGrupos | number }} {{ 'tesoreria.alertasTesoreria.referenciaSDistintas' | translate }}
         </div>
       </div>
     </div>
@@ -23,57 +23,69 @@
     </div>
   </div>
 
+  <div class="tk-error" *ngIf="truncado" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.alertasTesoreria.listaIncompleta' | translate }}
+  </div>
+
   <!-- Cargando -->
   <div *ngIf="loading" class="tk-empty"><i class="pi pi-spin pi-spinner"></i> {{ 'tesoreria.alertasTesoreria.cargandoAlertas' | translate }}</div>
 
   <!-- Vacío -->
-  <div *ngIf="!loading && items.length === 0" class="tk-empty">
+  <div *ngIf="!loading && grupos.length === 0" class="tk-empty">
     <i class="pi pi-check-circle"></i>
     {{ soloActivas ? ('tesoreria.alertasTesoreria.noHayAlertasActivasTodo' | translate) : ('tesoreria.alertasTesoreria.noHayAlertasRegistradas' | translate) }}
   </div>
 
-  <!-- Lista -->
-  <div class="tk-alert-list" *ngIf="!loading && items.length > 0">
-    <div class="tk-alert-item" *ngFor="let alert of items; trackBy: trackByAlert"
-         [ngClass]="alert?.severity === 'high' ? 'sev-high' : 'sev-medium'"
-         [class.is-resolved]="alert?.resolved">
+  <!-- Lista agrupada por referencia -->
+  <div class="tk-alert-list" *ngIf="!loading && grupos.length > 0">
+    <div class="tk-alert-item" *ngFor="let grupo of grupos; trackBy: trackByGrupo"
+         [ngClass]="grupo?.severity === 'high' ? 'sev-high' : 'sev-medium'"
+         [class.is-resolved]="grupo?.resolved">
 
       <div class="tk-alert-body">
         <div class="tk-alert-top">
           <span class="tk-alert-icon" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
-          <span class="tk-alert-type">{{ tipoLabel(alert) }}</span>
-          <span class="tk-sev-badge" [ngClass]="alert?.severity === 'high' ? 'sev-high' : 'sev-medium'">
-            {{ alert?.severity === 'high' ? ('tesoreria.alertasTesoreria.alta' | translate) : ('tesoreria.alertasTesoreria.media' | translate) }}
+          <span class="tk-alert-type">{{ tipoLabel(grupo) }}</span>
+          <span *ngIf="grupo?.referencia" class="tk-order-chip">{{ grupo.referencia }}</span>
+          <span class="tk-sev-badge" [ngClass]="grupo?.severity === 'high' ? 'sev-high' : 'sev-medium'">
+            {{ grupo?.severity === 'high' ? ('tesoreria.alertasTesoreria.alta' | translate) : ('tesoreria.alertasTesoreria.media' | translate) }}
           </span>
-          <span *ngIf="alert?.resolved" class="tk-resolved-badge"><i class="pi pi-check"></i> {{ 'tesoreria.alertasTesoreria.resuelta' | translate }}</span>
-          <span *ngIf="alert?.createdAt" class="tk-alert-time">
-            <i class="pi pi-clock"></i> {{ alert?.createdAt | date:'dd/MM/yyyy HH:mm' }}
+          <span *ngIf="grupo?.resolved" class="tk-resolved-badge"><i class="pi pi-check"></i> {{ 'tesoreria.alertasTesoreria.resuelta' | translate }}</span>
+          <span *ngIf="grupo?.ultimaFecha" class="tk-alert-time">
+            <i class="pi pi-clock"></i> {{ grupo?.ultimaFecha | date:'dd/MM/yyyy HH:mm' }}
           </span>
         </div>
 
-        <div class="tk-alert-msg">{{ alert?.message }}</div>
+        <div class="tk-alert-msg">{{ explicacion(grupo) }}</div>
+        <div class="tk-alert-count">{{ 'tesoreria.alertasTesoreria.alertasEnEsteGrupo' | translate:{alertas: grupo?.cantidadAlertas} }}</div>
 
-        <div class="tk-alert-orders" *ngIf="alert?.orderIds?.length">
+        <div class="tk-alert-orders" *ngIf="grupo?.pedidos?.length">
           <div class="tk-alert-orders-title">
             <i class="pi pi-shopping-cart"></i> {{ 'tesoreria.alertasTesoreria.pedidosAfectados' | translate }}
           </div>
           <div class="tk-alert-chips">
-            <span class="tk-order-chip" *ngFor="let pedido of pedidosVisibles(alert)">{{ pedido }}</span>
-            <span class="tk-order-chip is-more" *ngIf="pedidosRestantes(alert) > 0">
-              {{ 'tesoreria.alertasTesoreria.mas' | translate:{alert: (pedidosRestantes(alert))} }}
+            <span class="tk-order-chip" *ngFor="let pedido of pedidosVisibles(grupo)">{{ pedido }}</span>
+            <span class="tk-order-chip is-more" *ngIf="pedidosRestantes(grupo) > 0">
+              {{ 'tesoreria.alertasTesoreria.mas' | translate:{alert: (pedidosRestantes(grupo))} }}
             </span>
           </div>
         </div>
       </div>
 
-      <div class="tk-alert-buttons" *ngIf="!alert?.resolved">
+      <div class="tk-alert-buttons" *ngIf="!grupo?.resolved">
         <button type="button" class="btn btn-primary tk-btn-sm" (click)="irARevisar()">
           <i class="pi pi-search"></i> {{ 'tesoreria.alertasTesoreria.irARevisar' | translate }}
         </button>
-        <button type="button" class="btn btn-outline-secondary tk-btn-sm" (click)="resolver(alert)">
-          <i class="pi pi-check"></i> {{ 'tesoreria.alertasTesoreria.resolver' | translate }}
+        <button type="button" class="btn btn-outline-secondary tk-btn-sm" [disabled]="resolviendo === grupo.key" (click)="resolver(grupo)">
+          <i class="pi" [ngClass]="resolviendo === grupo.key ? 'pi-spin pi-spinner' : 'pi-check'"></i> {{ 'tesoreria.alertasTesoreria.resolver' | translate }}
         </button>
       </div>
+    </div>
+
+    <div class="tk-alert-pager" *ngIf="totalPaginas > 1">
+      <button type="button" class="tk-icon-btn" (click)="irAPagina(-1)" [disabled]="page <= 1" [attr.aria-label]="'tesoreria.alertasTesoreria.paginaAnterior' | translate"><i class="pi pi-chevron-left"></i></button>
+      <span>{{ 'tesoreria.alertasTesoreria.paginaDe' | translate:{pagina: page, total: totalPaginas} }}</span>
+      <button type="button" class="tk-icon-btn" (click)="irAPagina(1)" [disabled]="page >= totalPaginas" [attr.aria-label]="'tesoreria.alertasTesoreria.paginaSiguiente' | translate"><i class="pi pi-chevron-right"></i></button>
     </div>
   </div>
 </div>

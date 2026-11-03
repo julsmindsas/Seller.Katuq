@@ -12,7 +12,6 @@ import { EstadoPago } from '../modelo/pedido';
  */
 function crearListado(tesoreriaActiva: boolean | null): any {
   const listado: any = Object.create(ListOrdersComponent.prototype);
-  listado.translate = { instant: (k: string, p: any = {}) => String(({} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
   listado.treasuryService = { treasuryEnabledCached: tesoreriaActiva };
   listado.pedidoUtilService = { pedido: null, getDiscount: () => 0, getSubtotal: () => 54000 };
   listado.sincronizarFormaEntrega = () => {};

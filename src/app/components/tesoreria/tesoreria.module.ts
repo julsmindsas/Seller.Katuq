@@ -6,6 +6,7 @@ import { AngularFireStorageModule } from '@angular/fire/compat/storage';
 // PrimeNG
 import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { SharedModule } from '../../shared/shared.module';
 import { TesoreriaRoutingModule } from './tesoreria-routing.module';
@@ -45,6 +46,7 @@ import { CambiarEstadoPagoComponent } from './components/cambiar-estado-pago/cam
     TesoreriaRoutingModule,
     TableModule,
     TabViewModule,
+    TooltipModule,
     AngularFireStorageModule,
   ],
 })

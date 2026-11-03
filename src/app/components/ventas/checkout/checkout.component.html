@@ -1,7 +1,7 @@
 <!-- Mensaje de error/alerta -->
 <div *ngIf="paymentError" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
   <i class="fa fa-exclamation-triangle me-2"></i> {{ paymentError }}
-  <button type="button" class="btn-close" (click)="paymentError = null" [attr.aria-label]="'comun.cerrar' | translate"></button>
+  <button type="button" class="btn-close" (click)="paymentError = null" aria-label="Close"></button>
 </div>
 
 <div class="container-fluid">
@@ -10,12 +10,12 @@
     <div class="checkout-header mb-4">
       <div class="row align-items-center">
         <div class="col-lg-8">
-          <h4 class="mb-0"><i class="fa fa-receipt me-2 text-primary"></i>{{ 'ventas.checkout.titulo' | translate }}</h4>
-          <p class="text-muted mt-2 mb-0">{{ 'ventas.checkout.subtitulo' | translate }}</p>
+          <h4 class="mb-0"><i class="fa fa-receipt me-2 text-primary"></i>Resumen y Confirmación</h4>
+          <p class="text-muted mt-2 mb-0">Revisa los detalles de tu pedido antes de realizar el pago</p>
         </div>
         <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
           <div class="order-number">
-            <span class="badge bg-light text-primary">{{ 'ventas.checkout.preventaNro' | translate: { n: pedido?.nroPedido || ('ventas.checkout.nuevoPedido' | translate) } }}</span>
+            <span class="badge bg-light text-primary">Preventa #{{pedido?.nroPedido || 'Nuevo pedido'}}</span>
           </div>
         </div>
       </div>
@@ -32,7 +32,7 @@
                   <i class="fa fa-shipping-fast text-primary fs-3"></i>
                 </div>
                 <div>
-                  <p class="text-muted mb-0">{{ 'ventas.checkout.fechaEstimada' | translate }}</p>
+                  <p class="text-muted mb-0">Fecha estimada de entrega</p>
                   <h5 class="mb-0 mt-1">{{ fechaEntregaEstimada }}</h5>
                 </div>
               </div>
@@ -41,16 +41,16 @@
             <div class="col-md-7" *ngIf="mostrarSelectorFormaEntrega">
               <div class="forma-entrega-selector">
                 <label class="selector-label mb-2">
-                  <i class="fa fa-truck-loading me-1"></i> {{ 'ventas.checkout.formaEntrega' | translate }}
+                  <i class="fa fa-truck-loading me-1"></i> Forma de Entrega
                 </label>
-                <div class="btn-group w-100" role="group" [attr.aria-label]="'ventas.checkout.formaEntrega' | translate">
+                <div class="btn-group w-100" role="group" aria-label="Forma de entrega">
                   <button *ngFor="let opcion of formasEntregaOptions"
                     type="button"
                     class="btn forma-entrega-btn"
                     [ngClass]="{'active': selectedFormaEntrega === opcion.value}"
                     (click)="onFormaEntregaChange(opcion.value)">
                     <i class="fa {{opcion.icon}} me-2"></i>
-                    {{opcion.label | translate}}
+                    {{opcion.label}}
                   </button>
                 </div>
               </div>
@@ -59,12 +59,12 @@
             <div class="col-md-7" *ngIf="!mostrarSelectorFormaEntrega">
               <div class="forma-entrega-info">
                 <label class="selector-label mb-2">
-                  <i class="fa fa-truck-loading me-1"></i> {{ 'ventas.checkout.formaEntrega' | translate }}
+                  <i class="fa fa-truck-loading me-1"></i> Forma de Entrega
                 </label>
                 <div class="d-flex align-items-center">
                   <span class="badge bg-primary fs-6 py-2 px-3">
                     <i class="fa" [ngClass]="{'fa-truck': selectedFormaEntrega === 'Domicilio', 'fa-store': selectedFormaEntrega === 'Recoge'}" class="me-2"></i>
-                    {{ (selectedFormaEntrega === 'Recoge' ? 'ventas.checkout.recogeEnTienda' : 'ventas.checkout.envioDomicilio') | translate }}
+                    {{ selectedFormaEntrega === 'Recoge' ? 'Recoge en Tienda' : 'Envío a Domicilio' }}
                   </span>
                 </div>
               </div>
@@ -88,7 +88,7 @@
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.cliente">
                   <span><i class="fa fa-id-card-alt me-1"></i>{{ pedido?.cliente?.tipo_documento_comprador }}</span>
                   <span><i class="fa fa-envelope me-1"></i>{{ pedido?.cliente?.correo_electronico_comprador }}</span>
-                  <span class="complete" *ngIf="pedido?.cliente"><i class="fa fa-check-circle me-1"></i>{{ 'ventas.checkout.completo' | translate }}</span>
+                  <span class="complete" *ngIf="pedido?.cliente"><i class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
@@ -110,7 +110,7 @@
                   <div class="row">
                     <div class="mb-3 col-sm-6">
                       <label for="nombres_completos">
-                        <strong>{{ (pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'ventas.checkout.empresa' : 'ventas.checkout.nombres') | translate }}</strong>
+                        <strong>{{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'Empresa:' : 'Nombres:' }}</strong>
                       </label>
                       <p id="nombres_completos" class="form-control-static">
                         <i class="fa {{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'fa-building' : 'fa-user' }} me-1 text-muted"></i>
@@ -119,12 +119,12 @@
                     </div>
                     <div class="mb-3 col-sm-6">
                       <label for="apellidos_completos">
-                        <strong>{{ (pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'ventas.checkout.contacto' : 'ventas.checkout.apellidos') | translate }}</strong>
+                        <strong>{{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'Contacto:' : 'Apellidos:' }}</strong>
                       </label>
                       <p id="apellidos_completos" class="form-control-static">
                         <ng-container *ngIf="pedido?.cliente?.tipo_documento_comprador === 'CC-NIT'; else apellidoPersona">
                           <i class="fa fa-id-badge me-1 text-muted"></i>
-                          {{pedido?.cliente?.apellidos_completos || ('ventas.checkout.sinContacto' | translate)}}
+                          {{pedido?.cliente?.apellidos_completos || 'Sin contacto registrado'}}
                         </ng-container>
                         <ng-template #apellidoPersona>{{pedido?.cliente?.apellidos_completos || '-'}}</ng-template>
                       </p>
@@ -188,7 +188,7 @@
                   <span><i class="fa fa-map-marker-alt me-1"></i>{{ pedido?.envio?.ciudad }}</span>
                   <span><i class="fa fa-phone me-1"></i>{{ pedido?.envio?.celular }}</span>
                   <span class="complete" *ngIf="pedido?.envio?.direccionEntrega"><i
-                      class="fa fa-check-circle me-1"></i>{{ 'ventas.checkout.completo' | translate }}</span>
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
@@ -272,7 +272,7 @@
                 <div class="accordion-summary ms-auto" *ngIf="pedido?.facturacion">
                   <span><i class="fa fa-id-card me-1"></i>{{ pedido?.facturacion?.documento }}</span>
                   <span class="complete" *ngIf="pedido?.facturacion?.documento"><i
-                      class="fa fa-check-circle me-1"></i>{{ 'ventas.checkout.completo' | translate }}</span>
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
@@ -351,7 +351,7 @@
                   <span><i class="fa fa-clock me-1"></i>{{
                     pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</span>
                   <span class="complete" *ngIf="pedido?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega"><i
-                      class="fa fa-check-circle me-1"></i>{{ 'ventas.checkout.completo' | translate }}</span>
+                      class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
@@ -362,16 +362,16 @@
                   <div class="info-summary">
                     <div class="info-summary-item">
                       <i class="fa fa-calendar"></i>
-                      <span><strong>{{ 'ventas.checkout.fecha' | translate }}</strong>
+                      <span><strong>Fecha:</strong>
                         {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}</span>
                     </div>
                     <div class="info-summary-item">
                       <i class="fa" [ngClass]="{'fa-truck': selectedFormaEntrega === 'Domicilio', 'fa-store': selectedFormaEntrega === 'Recoge'}"></i>
-                      <span><strong>{{ 'ventas.checkout.forma' | translate }}</strong> {{ (selectedFormaEntrega === 'Recoge' ? 'ventas.checkout.recogeEnTienda' : 'ventas.checkout.domicilio') | translate }}</span>
+                      <span><strong>Forma:</strong> {{ selectedFormaEntrega === 'Recoge' ? 'Recoge en Tienda' : 'Domicilio' }}</span>
                     </div>
                     <div class="info-summary-item">
                       <i class="fa fa-clock"></i>
-                      <span><strong>{{ 'ventas.checkout.horario' | translate }}</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega
+                      <span><strong>Horario:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega
                         || '-'}}</span>
                     </div>
                   </div>
@@ -386,11 +386,11 @@
               <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotas"
                 [attr.aria-expanded]="activeStep === 'notas'" aria-controls="collapseNotas"
                 (click)="toggleStep('notas')">
-                <i class="fa fa-sticky-note me-2"></i>{{ 'ventas.checkout.notasPedido' | translate }}
+                <i class="fa fa-sticky-note me-2"></i>Notas del Pedido
                 <div class="accordion-summary ms-auto">
-                  <span><i class="fa fa-file-text me-1"></i>{{ 'ventas.checkout.notasN' | translate: { n: getTotalNotas() } }}</span>
-                  <span><i class="fa fa-paperclip me-1"></i>{{ 'ventas.checkout.archivosN' | translate: { n: getTotalArchivos() } }}</span>
-                  <span class="complete" *ngIf="getTotalNotas() > 0"><i class="fa fa-check-circle me-1"></i>{{ 'ventas.checkout.completo' | translate }}</span>
+                  <span><i class="fa fa-file-text me-1"></i>{{ getTotalNotas() }} nota(s)</span>
+                  <span><i class="fa fa-paperclip me-1"></i>{{ getTotalArchivos() }} archivo(s)</span>
+                  <span class="complete" *ngIf="getTotalNotas() > 0"><i class="fa fa-check-circle me-1"></i>Completo</span>
                 </div>
               </button>
             </h2>
@@ -402,7 +402,7 @@
                   <!-- Notas de Producción -->
                   <div *ngIf="pedido?.notasPedido?.notasProduccion?.length > 0" class="notes-section mb-4">
                     <h6 class="notes-section-title">
-                      <i class="fa fa-cogs me-2 text-primary"></i>{{ 'ventas.checkout.notasProduccion' | translate }}
+                      <i class="fa fa-cogs me-2 text-primary"></i>Notas de Producción
                     </h6>
                     <div class="notes-list">
                       <div *ngFor="let nota of pedido.notasPedido.notasProduccion; let i = index" class="note-item">
@@ -415,7 +415,7 @@
                         <!-- Archivos adjuntos -->
                         <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
                           <div class="attachments-title">
-                            <i class="fa fa-paperclip me-1"></i>{{ 'ventas.checkout.archivosAdjuntos' | translate: { n: nota.archivos.length } }}
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
                           </div>
                           <div class="attachments-grid">
                             <div *ngFor="let archivo of nota.archivos" class="attachment-item">
@@ -456,7 +456,7 @@
                   <!-- Notas de Despacho -->
                   <div *ngIf="pedido?.notasPedido?.notasDespachos?.length > 0" class="notes-section mb-4">
                     <h6 class="notes-section-title">
-                      <i class="fa fa-truck me-2 text-info"></i>{{ 'ventas.checkout.notasDespacho' | translate }}
+                      <i class="fa fa-truck me-2 text-info"></i>Notas de Despacho
                     </h6>
                     <div class="notes-list">
                       <div *ngFor="let nota of pedido.notasPedido.notasDespachos; let i = index" class="note-item">
@@ -468,7 +468,7 @@
                         <!-- Archivos adjuntos -->
                         <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
                           <div class="attachments-title">
-                            <i class="fa fa-paperclip me-1"></i>{{ 'ventas.checkout.archivosAdjuntos' | translate: { n: nota.archivos.length } }}
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
                           </div>
                           <div class="attachments-grid">
                             <div *ngFor="let archivo of nota.archivos" class="attachment-item">
@@ -509,7 +509,7 @@
                   <!-- Notas de Entrega -->
                   <div *ngIf="pedido?.notasPedido?.notasEntregas?.length > 0" class="notes-section mb-4">
                     <h6 class="notes-section-title">
-                      <i class="fa fa-box me-2 text-warning"></i>{{ 'ventas.checkout.notasEntrega' | translate }}
+                      <i class="fa fa-box me-2 text-warning"></i>Notas de Entrega
                     </h6>
                     <div class="notes-list">
                       <div *ngFor="let nota of pedido.notasPedido.notasEntregas; let i = index" class="note-item">
@@ -521,7 +521,7 @@
                         <!-- Archivos adjuntos -->
                         <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
                           <div class="attachments-title">
-                            <i class="fa fa-paperclip me-1"></i>{{ 'ventas.checkout.archivosAdjuntos' | translate: { n: nota.archivos.length } }}
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
                           </div>
                           <div class="attachments-grid">
                             <div *ngFor="let archivo of nota.archivos" class="attachment-item">
@@ -562,7 +562,7 @@
                   <!-- Notas de Facturación -->
                   <div *ngIf="pedido?.notasPedido?.notasFacturacionPagos?.length > 0" class="notes-section mb-4">
                     <h6 class="notes-section-title">
-                      <i class="fa fa-file-invoice me-2 text-danger"></i>{{ 'ventas.checkout.notasFacturacion' | translate }}
+                      <i class="fa fa-file-invoice me-2 text-danger"></i>Notas de Facturación
                     </h6>
                     <div class="notes-list">
                       <div *ngFor="let nota of pedido.notasPedido.notasFacturacionPagos; let i = index" class="note-item">
@@ -574,7 +574,7 @@
                         <!-- Archivos adjuntos -->
                         <div *ngIf="nota.archivos && nota.archivos.length > 0" class="note-attachments">
                           <div class="attachments-title">
-                            <i class="fa fa-paperclip me-1"></i>{{ 'ventas.checkout.archivosAdjuntos' | translate: { n: nota.archivos.length } }}
+                            <i class="fa fa-paperclip me-1"></i>Archivos adjuntos ({{ nota.archivos.length }})
                           </div>
                           <div class="attachments-grid">
                             <div *ngFor="let archivo of nota.archivos" class="attachment-item">
@@ -645,20 +645,20 @@
             <!-- Resumen de costos -->
             <ul class="sub-total">
               <li>
-                <span>{{ 'ventas.checkout.costoProductos' | translate }}</span>
+                <span>Costo de productos:</span>
                 <span class="count">{{checkPriceScale()| currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
               <li>
-                <span>{{ 'ventas.checkout.domicilioCosto' | translate }}</span>
+                <span>Domicilio:</span>
                 <span class="count">{{pedidoUtilService.getShippingCost(allBillingZone) |
                   currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
               <li>
-                <span>{{ 'ventas.checkout.descuentos' | translate }}</span>
+                <span>Descuentos:</span>
                 <span class="count">{{pedidoUtilService.getDiscount() | currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
               <li>
-                <span>{{ 'ventas.checkout.totalSinIva' | translate }}</span>
+                <span>Total sin IVA:</span>
                 <span
                   class="count">{{pedidoUtilService.getShippingCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
                   | currency:'USD':'symbol':'1.0-0'}}</span>
@@ -668,33 +668,33 @@
               <li>
                 <ul class="two-column-list">
                   <li>
-                    <span class="title">{{ 'ventas.checkout.excluidos' | translate }}</span>
+                    <span class="title">Excluidos 0%:</span>
                     <span class="value">{{ checkIVAPrice().totalExcluidos | currency:'USD':'symbol':'1.0-0' }}</span>
                   </li>
                   <li>
-                    <span class="title">{{ 'ventas.checkout.iva5' | translate }}</span>
+                    <span class="title">Iva 5%:</span>
                     <span class="value">{{ checkIVAPrice().totalIva5 | currency:'USD':'symbol':'1.0-0' }}</span>
                   </li>
                   <li>
-                    <span class="title">{{ 'ventas.checkout.impoconsumo' | translate }}</span>
+                    <span class="title">Impoconsumo 8%:</span>
                     <span class="value">{{ checkIVAPrice().totalImpo | currency:'USD':'symbol':'1.0-0' }}</span>
                   </li>
                   <li>
-                    <span class="title">{{ 'ventas.checkout.iva19' | translate }}</span>
+                    <span class="title">Iva 19%:</span>
                     <span class="value">{{ checkIVAPrice().totalIva19 | currency:'USD':'symbol':'1.0-0' }}</span>
                   </li>
                 </ul>
               </li>
 
               <li>
-                <span>{{ 'ventas.checkout.totalIva' | translate }}</span>
+                <span>Total IVA:</span>
                 <span class="count">{{checkIVAPrice().totalPrecioIVADef +
                   pedidoUtilService.getShippingTaxCost(allBillingZone) | currency:'USD':'symbol':'1.0-0'}}</span>
               </li>
 
               <!-- Total con IVA -->
               <li>
-                <span>{{ 'ventas.checkout.totalPagar' | translate }}</span>
+                <span>TOTAL A PAGAR:</span>
                 <span
                   class="count">{{pedidoUtilService.getShippingCost(allBillingZone)+pedidoUtilService.getShippingTaxCost(allBillingZone)-pedidoUtilService.getDiscount()+checkPriceScale()
                   + checkIVAPrice().totalPrecioIVADef | currency:'USD':'symbol':'1.0-0'}}</span>
@@ -703,7 +703,7 @@
 
             <!-- Formas de pago con tabs -->
             <form [formGroup]="form" class="needs-validation mt-4" novalidate>
-              <h5 class="mb-3"><i class="fa fa-credit-card me-2"></i>{{ 'ventas.checkout.formasPago' | translate }}</h5>
+              <h5 class="mb-3"><i class="fa fa-credit-card me-2"></i>Formas de Pago</h5>
 
               <!-- Navegación por tabs para categorías de pago -->
               <ul class="nav nav-tabs payment-tabs" id="paymentTabs" role="tablist">
@@ -741,7 +741,7 @@
               <!-- Mensaje de validación -->
               <div *ngIf="form.get('opcionSeleccionada')?.invalid && form.get('opcionSeleccionada')?.touched"
                 class="text-danger small mt-2">
-                {{ 'ventas.checkout.seleccionaFormaPago' | translate }}
+                Por favor, selecciona una forma de pago
               </div>
             </form>
 
@@ -750,15 +750,15 @@
               <div class="security-badges">
                 <div class="security-badge">
                   <i class="fa fa-lock"></i>
-                  <span>{{ 'ventas.checkout.pagoSeguro' | translate }}</span>
+                  <span>Pago Seguro</span>
                 </div>
                 <div class="security-badge">
                   <i class="fa fa-shield-alt"></i>
-                  <span>{{ 'ventas.checkout.datosProtegidos' | translate }}</span>
+                  <span>Datos Protegidos</span>
                 </div>
                 <div class="security-badge">
                   <i class="fa fa-credit-card"></i>
-                  <span>{{ 'ventas.checkout.multiplesMetodos' | translate }}</span>
+                  <span>Múltiples Métodos</span>
                 </div>
               </div>
             </div>
@@ -768,14 +768,14 @@
               <button class="btn btn-primary" [disabled]="isProcessingPayment || !pedidoValido"
                 [ngClass]="{'processing': isProcessingPayment}" (click)="gotToPaymentOrder()">
                 <span *ngIf="!isProcessingPayment">
-                  <i class="fa fa-lock me-2"></i>{{ 'ventas.checkout.comprarPagar' | translate }}
+                  <i class="fa fa-lock me-2"></i>Comprar y pagar
                 </span>
                 <span *ngIf="isProcessingPayment">
-                  <i class="fa fa-spinner fa-spin me-2"></i>{{ 'ventas.checkout.procesandoPago' | translate }}
+                  <i class="fa fa-spinner fa-spin me-2"></i>Procesando pago...
                 </span>
               </button>
               <p class="text-muted mt-2 small">
-                <i class="fa fa-shield-alt me-1"></i> {{ 'ventas.checkout.pagoInstante' | translate }}
+                <i class="fa fa-shield-alt me-1"></i> Pago seguro y procesado al instante
               </p>
             </div>
           </div>

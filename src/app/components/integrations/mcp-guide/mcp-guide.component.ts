@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { TranslateModule } from '@ngx-translate/core';
 import { MCP_SERVER_URL } from '../mcp-guides';
 import type { McpGuide } from '../mcp-guides';
 
 @Component({
   selector: 'app-mcp-guide',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './mcp-guide.component.html',
   styleUrls: ['./mcp-guide.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

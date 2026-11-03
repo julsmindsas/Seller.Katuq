@@ -29,45 +29,45 @@
   <!-- ENCABEZADO DE LA EMPRESA -->
   <div class="header-empresa" style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
     <h1 style="margin: 0; font-size: 22px; font-weight: bold; text-transform: uppercase;">
-      {{ empresaActual?.nomComercial || empresaActual?.razonSocial || datosCierre?.empresa || ('ventas.reporteCierre.empresa' | translate) }}
+      {{ empresaActual?.nomComercial || empresaActual?.razonSocial || datosCierre?.empresa || 'EMPRESA' }}
     </h1>
     <div style="font-size: 12px; margin-top: 8px;">
       <div><strong>NIT:</strong> {{ nitEmpresaFormateado }}</div>
       <div>{{ direccionCompleta }}</div>
-      <div><strong>{{ 'ventas.reporteCierre.tel' | translate }}</strong> {{ telefonoEmpresa }}</div>
-      <div><strong>{{ 'ventas.reporteCierre.email' | translate }}</strong> {{ emailEmpresa }}</div>
+      <div><strong>Tel:</strong> {{ telefonoEmpresa }}</div>
+      <div><strong>Email:</strong> {{ emailEmpresa }}</div>
     </div>
   </div>
 
   <!-- TÍTULO DEL REPORTE -->
   <div class="titulo-reporte" style="text-align: center; margin-bottom: 25px;">
-    <h2 style="margin: 8px 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">{{ 'ventas.reporteCierre.titulo' | translate }}</h2>
+    <h2 style="margin: 8px 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">REPORTE DE CIERRE DE CAJA</h2>
     <div style="font-size: 12px;">
-      <div><strong>{{ 'ventas.reporteCierre.periodo' | translate }}</strong> {{ resumenPeriodo }}</div>
-      <div><strong>{{ 'ventas.reporteCierre.fechaDeEmision' | translate }}</strong> {{ fechaHoraReporte }}</div>
-      <div><strong>{{ 'ventas.reporteCierre.usuario' | translate }}</strong> {{ empresaActual?.usuarioActual || ('ventas.reporteCierre.sistema' | translate) }}</div>
+      <div><strong>Período:</strong> {{ resumenPeriodo }}</div>
+      <div><strong>Fecha de emisión:</strong> {{ fechaHoraReporte }}</div>
+      <div><strong>Usuario:</strong> {{ empresaActual?.usuarioActual || 'Sistema' }}</div>
     </div>
   </div>
 
   <!-- INFORMACIÓN DEL CIERRE -->
   <div class="seccion-efectivo" style="margin-bottom: 25px;">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fa fa-money" style="margin-right: 8px;"></i>{{ 'ventas.reporteCierre.controlDeEfectivo' | translate }}
+      <i class="fa fa-money" style="margin-right: 8px;"></i>CONTROL DE EFECTIVO
     </h3>
     
     <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
       <div style="width: 48%;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px; font-weight: bold;">{{ 'ventas.reporteCierre.efectivoInicial' | translate }}</td>
+            <td style="padding: 8px; font-weight: bold;">Efectivo inicial:</td>
             <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoInicial | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px; font-weight: bold;">{{ 'ventas.reporteCierre.ventasEnEfectivo' | translate }}</td>
+            <td style="padding: 8px; font-weight: bold;">Ventas en efectivo:</td>
             <td style="padding: 8px; text-align: right;">{{ totalEfectivo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px; font-weight: bold;">{{ 'ventas.reporteCierre.efectivoEsperado' | translate }}</td>
+            <td style="padding: 8px; font-weight: bold;">Efectivo esperado:</td>
             <td style="padding: 8px; text-align: right;">{{ (datosCierre?.efectivoInicial + totalEfectivo) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </table>
@@ -76,11 +76,11 @@
       <div style="width: 48%;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px; font-weight: bold;">{{ 'ventas.reporteCierre.efectivoFinal' | translate }}</td>
+            <td style="padding: 8px; font-weight: bold;">Efectivo final:</td>
             <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoFinal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
           <tr style="border-bottom: 2px solid #333; background-color: #f8f9fa;">
-            <td style="padding: 8px; font-weight: bold;">{{ 'ventas.reporteCierre.diferencia' | translate }}</td>
+            <td style="padding: 8px; font-weight: bold;">Diferencia:</td>
             <td style="padding: 8px; text-align: right; font-weight: bold;" 
                 [style.color]="esDiferenciaPositiva ? '#28a745' : '#dc3545'">
               {{ diferenciaCaja | currency:'COP':'symbol-narrow':'1.0-0' }}
@@ -92,7 +92,7 @@
 
     <!-- Observaciones -->
     <div *ngIf="datosCierre?.observaciones" style="margin-top: 15px; padding: 10px 12px; background-color: #faf9fe; border: 1px solid #ececf4; border-radius: 11px;">
-      <strong>{{ 'ventas.reporteCierre.observaciones' | translate }}</strong>
+      <strong>Observaciones:</strong>
       <p style="margin: 5px 0 0 0;">{{ datosCierre.observaciones }}</p>
     </div>
   </div>
@@ -100,14 +100,14 @@
   <!-- RESUMEN POR FORMAS DE PAGO -->
   <div class="seccion-formas-pago" style="margin-bottom: 25px;">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fa fa-credit-card" style="margin-right: 8px;"></i>{{ 'ventas.reporteCierre.resumenPorFormasDePago' | translate }}
+      <i class="fa fa-credit-card" style="margin-right: 8px;"></i>RESUMEN POR FORMAS DE PAGO
     </h3>
     
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #333;">
       <thead>
         <tr style="background-color: #f8f9fa;">
-          <th style="border: 1px solid #333; padding: 10px; text-align: left; font-weight: bold;">{{ 'ventas.reporteCierre.colFormaDePago' | translate }}</th>
-          <th style="border: 1px solid #333; padding: 10px; text-align: right; font-weight: bold;">{{ 'ventas.reporteCierre.colTotal' | translate }}</th>
+          <th style="border: 1px solid #333; padding: 10px; text-align: left; font-weight: bold;">FORMA DE PAGO</th>
+          <th style="border: 1px solid #333; padding: 10px; text-align: right; font-weight: bold;">TOTAL</th>
           <th style="border: 1px solid #333; padding: 10px; text-align: right; font-weight: bold;">%</th>
         </tr>
       </thead>
@@ -124,7 +124,7 @@
       </tbody>
       <tfoot>
         <tr style="background-color: #e9ecef; font-weight: bold;">
-          <td style="border: 1px solid #333; padding: 10px;">{{ 'ventas.reporteCierre.totalVentas' | translate }}</td>
+          <td style="border: 1px solid #333; padding: 10px;">TOTAL VENTAS</td>
           <td style="border: 1px solid #333; padding: 10px; text-align: right;">
             {{ datosCierre?.informe?.totalVentas | currency:'COP':'symbol-narrow':'1.0-0' }}
           </td>
@@ -137,17 +137,17 @@
   <!-- PRODUCTOS VENDIDOS -->
   <div class="seccion-productos" style="margin-bottom: 25px;" *ngIf="datosCierre?.productosVendidos && datosCierre.productosVendidos.length > 0">
     <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-      <i class="fa fa-cube" style="margin-right: 8px;"></i>{{ 'ventas.reporteCierre.productosVendidos' | translate }}
+      <i class="fa fa-cube" style="margin-right: 8px;"></i>PRODUCTOS VENDIDOS
     </h3>
     
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #333; font-size: 11px;">
       <thead>
         <tr style="background-color: #f8f9fa;">
-          <th style="border: 1px solid #333; padding: 8px; text-align: left; font-weight: bold;">{{ 'ventas.reporteCierre.colProducto' | translate }}</th>
-          <th style="border: 1px solid #333; padding: 8px; text-align: center; font-weight: bold;">{{ 'ventas.reporteCierre.colCant' | translate }}</th>
-          <th style="border: 1px solid #333; padding: 8px; text-align: right; font-weight: bold;">{{ 'ventas.reporteCierre.colPUnit' | translate }}</th>
-          <th style="border: 1px solid #333; padding: 8px; text-align: right; font-weight: bold;">{{ 'ventas.reporteCierre.colTotal' | translate }}</th>
-          <th style="border: 1px solid #333; padding: 8px; text-align: center; font-weight: bold;">{{ 'ventas.reporteCierre.colPedido' | translate }}</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: left; font-weight: bold;">PRODUCTO</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: center; font-weight: bold;">CANT.</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: right; font-weight: bold;">P. UNIT.</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: right; font-weight: bold;">TOTAL</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: center; font-weight: bold;">PEDIDO</th>
         </tr>
       </thead>
       <tbody>
@@ -167,7 +167,7 @@
       </tbody>
       <tfoot>
         <tr style="background-color: #e9ecef; font-weight: bold;">
-          <td style="border: 1px solid #333; padding: 8px;">{{ 'ventas.reporteCierre.totales' | translate }}</td>
+          <td style="border: 1px solid #333; padding: 8px;">TOTALES</td>
           <td style="border: 1px solid #333; padding: 8px; text-align: center;">
             {{ datosCierre?.informe?.totalProductos }}
           </td>
@@ -186,20 +186,20 @@
     <div style="display: flex; justify-content: space-between; margin-bottom: 60px;">
       <div style="width: 45%; text-align: center;">
         <div style="border-bottom: 1px solid #333; margin-bottom: 5px; height: 50px;"></div>
-        <strong>{{ 'ventas.reporteCierre.cajero' | translate }}</strong>
-        <div style="font-size: 11px;">{{ 'ventas.reporteCierre.firmaYSello' | translate }}</div>
+        <strong>Cajero</strong>
+        <div style="font-size: 11px;">Firma y sello</div>
       </div>
       
       <div style="width: 45%; text-align: center;">
         <div style="border-bottom: 1px solid #333; margin-bottom: 5px; height: 50px;"></div>
-        <strong>{{ 'ventas.reporteCierre.supervisor' | translate }}</strong>
-        <div style="font-size: 11px;">{{ 'ventas.reporteCierre.firmaYSello' | translate }}</div>
+        <strong>Supervisor</strong>
+        <div style="font-size: 11px;">Firma y sello</div>
       </div>
     </div>
     
     <div style="text-align: center; font-size: 10px; color: #666;">
-      <p style="margin: 0;">{{ 'ventas.reporteCierre.documentoGenerado' | translate }}</p>
-      <p style="margin: 5px 0 0 0;">{{ 'ventas.reporteCierre.fechaDeGeneracion' | translate: { fecha: fechaHoraReporte } }}</p>
+      <p style="margin: 0;">Documento generado automáticamente por el sistema KATUQ</p>
+      <p style="margin: 5px 0 0 0;">Fecha de generación: {{ fechaHoraReporte }}</p>
     </div>
   </div>
 </div>
@@ -210,20 +210,20 @@
     type="button"
     class="rc-btn"
     (click)="print()">
-    <i class="fa fa-print"></i> {{ 'ventas.reporteCierre.imprimirPc' | translate }}
+    <i class="fa fa-print"></i> Imprimir (PC)
   </button>
 
   <button
     type="button"
     class="rc-btn rc-btn--sec"
     (click)="printPOS()">
-    <i class="fa fa-file-text-o"></i> {{ 'ventas.reporteCierre.imprimirPos' | translate }}
+    <i class="fa fa-file-text-o"></i> Imprimir (POS)
   </button>
 
   <button
     type="button"
     class="rc-btn rc-btn--sec"
     (click)="goBack()">
-    <i class="fa fa-arrow-left"></i> {{ 'comun.volver' | translate }}
+    <i class="fa fa-arrow-left"></i> Volver
   </button>
 </div> 

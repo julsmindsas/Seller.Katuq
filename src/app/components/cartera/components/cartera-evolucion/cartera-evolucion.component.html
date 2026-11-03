@@ -1,0 +1,72 @@
+<section class="cx-evo" *ngIf="puntos.length > 0" [attr.aria-label]="'cartera.carteraEvolucion.titulo' | translate">
+  <div class="cx-evo-cabeza">
+    <div>
+      <h2 class="cx-evo-titulo">{{ 'cartera.carteraEvolucion.titulo' | translate }}</h2>
+      <p class="cx-evo-sub">{{ 'cartera.carteraEvolucion.subtitulo' | translate }}</p>
+    </div>
+    <button type="button" class="cx-info" [attr.title]="'cartera.carteraEvolucion.ayuda' | translate"
+            [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta"
+            (click)="alternarAyuda()">
+      <i class="pi pi-info-circle"></i>
+    </button>
+  </div>
+  <div class="cx-ayuda-texto" *ngIf="ayudaAbierta">{{ 'cartera.carteraEvolucion.ayuda' | translate }}</div>
+
+  <!-- Lectura rápida: cómo va el último mes frente al anterior -->
+  <p class="cx-evo-lectura" *ngIf="ultimo as u">
+    <strong>{{ nombreMes(u.periodo) }}:</strong>
+    {{ 'cartera.carteraEvolucion.lecturaVencido' | translate:{ pct: (u.pctVencido | number:'1.0-1') } }}
+    <ng-container *ngIf="cambioPct !== null">
+      <span class="cx-evo-cambio" [class.es-mejor]="cambioPct < 0" [class.es-peor]="cambioPct > 0">
+        <ng-container *ngIf="cambioPct < 0">{{ 'cartera.carteraEvolucion.mejora' | translate:{ pts: (-cambioPct | number:'1.0-1') } }}</ng-container>
+        <ng-container *ngIf="cambioPct > 0">{{ 'cartera.carteraEvolucion.empeora' | translate:{ pts: (cambioPct | number:'1.0-1') } }}</ng-container>
+        <ng-container *ngIf="cambioPct === 0">{{ 'cartera.carteraEvolucion.igual' | translate }}</ng-container>
+      </span>
+    </ng-container>
+  </p>
+
+  <div class="cx-evo-leyenda" aria-hidden="true">
+    <span class="cx-evo-ley"><span class="cx-evo-cuadro cx-evo-total"></span>{{ 'cartera.carteraEvolucion.total' | translate }}</span>
+    <span class="cx-evo-ley"><span class="cx-evo-cuadro cx-evo-vencida"></span>{{ 'cartera.carteraEvolucion.vencida' | translate }}</span>
+    <span class="cx-evo-ley cx-evo-ley-nota" *ngIf="hayEstimados">{{ 'cartera.carteraEvolucion.notaEstimado' | translate }}</span>
+  </div>
+
+  <svg class="cx-evo-svg" [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" role="img"
+       [attr.aria-label]="'cartera.carteraEvolucion.titulo' | translate" preserveAspectRatio="xMidYMid meet">
+    <g class="cx-evo-rejilla">
+      <g *ngFor="let m of marcas">
+        <line [attr.x1]="margen.izquierda" [attr.x2]="ancho - margen.derecha" [attr.y1]="m.y" [attr.y2]="m.y"></line>
+        <text [attr.x]="margen.izquierda - 8" [attr.y]="m.y + 4" text-anchor="end">{{ m.texto }}</text>
+      </g>
+    </g>
+    <g *ngFor="let m of meses; trackBy: trackPorPeriodo" [class.es-estimado]="m.punto.aproximada">
+      <title>{{ m.titulo }}</title>
+      <rect class="cx-evo-barra-total" [attr.x]="m.x - m.anchoBarra - 1" [attr.y]="m.total.y" [attr.width]="m.anchoBarra"
+            [attr.height]="m.total.alto" rx="3"></rect>
+      <rect class="cx-evo-barra-vencida" [attr.x]="m.x + 1" [attr.y]="m.vencida.y" [attr.width]="m.anchoBarra"
+            [attr.height]="m.vencida.alto" rx="3"></rect>
+      <text class="cx-evo-mes" [attr.x]="m.x" [attr.y]="baseY + 17" text-anchor="middle">{{ m.etiqueta }}</text>
+    </g>
+  </svg>
+
+  <!-- Los mismos datos como tabla, para lector de pantalla -->
+  <table class="cx-sr-only">
+    <caption>{{ 'cartera.carteraEvolucion.titulo' | translate }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ 'cartera.carteraEvolucion.mes' | translate }}</th>
+        <th scope="col">{{ 'cartera.carteraEvolucion.total' | translate }}</th>
+        <th scope="col">{{ 'cartera.carteraEvolucion.vencida' | translate }}</th>
+        <th scope="col">{{ 'cartera.carteraVendedores.pctVencido' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of puntos">
+        <th scope="row">{{ nombreMes(p.periodo) }}</th>
+        <td>{{ p.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        <td>{{ p.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        <td>{{ p.pctVencido | number:'1.0-1' }}%</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

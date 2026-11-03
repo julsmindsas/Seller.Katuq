@@ -1,0 +1,102 @@
+// D-581: novedades de versión dentro del panel de la campana (D-131: plano, acento #5F3FE0).
+@import '../../styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+  font-family: var(--kc-font-body);
+}
+
+.nov-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px 24px;
+}
+
+.nov-ayuda {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--kc-muted2);
+}
+
+.nov-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--kc-line);
+  border-radius: 11px;
+  background: #fff;
+}
+
+.nov-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nov-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  min-width: 60px;
+  text-align: center;
+
+  &--nuevo   { background: var(--kc-accent-wash); color: var(--kc-accent); }
+  &--mejora  { background: var(--kc-blue-wash);   color: var(--kc-blue); }
+  &--corrige { background: var(--kc-green-wash);  color: var(--kc-green); }
+}
+
+.nov-fecha {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--kc-muted2);
+  white-space: nowrap;
+}
+
+.nov-texto {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--kc-ink2);
+}
+
+.nov-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 48px 32px;
+
+  .fa {
+    font-size: 26px;
+    color: var(--kc-accent);
+    margin-bottom: 6px;
+  }
+}
+
+.nov-vacio-titulo {
+  margin: 0;
+  font-size: 15px !important;
+  font-weight: 800;
+  color: var(--kc-ink);
+}
+
+.nov-vacio-texto {
+  margin: 0;
+  font-size: 12.5px;
+  letter-spacing: normal;
+  color: var(--kc-muted2);
+}

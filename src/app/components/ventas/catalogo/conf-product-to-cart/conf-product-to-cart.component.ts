@@ -47,7 +47,6 @@ import { CustomFieldsService, CustomFieldGroup, CustomFieldConfig } from "../../
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import { firstValueFrom } from "rxjs";
 import { aplicarPrecioDeLista } from '../../../../shared/utils/precio-por-tipo-cliente';
-import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: "app-conf-product-to-cart",
   templateUrl: "./conf-product-to-cart.component.html",
@@ -245,7 +244,6 @@ export class ConfProductToCartComponent
     private cdr: ChangeDetectorRef,
     private customFieldsService: CustomFieldsService,
     private ventasService: VentasService,
-    private translate: TranslateService,
   ) {
     this.libConfigCarouselFixed = {
       carouselPreviewsConfig: {
@@ -400,8 +398,8 @@ export class ConfProductToCartComponent
                 // Solo mostrar toast si no estamos en modo edición
                 if (!this.isEdit) {
                   this.toastrService.success(
-                    this.translate.instant('ventas.confProductToCart.configuracionCargada'),
-                    this.translate.instant('comun.exito'),
+                    "Configuración del producto cargada correctamente",
+                    "Éxito",
                     {
                       timeOut: 3000,
                       progressBar: true,
@@ -502,8 +500,8 @@ export class ConfProductToCartComponent
     if (this.reintentosCarga < this.maxReintentos) {
       // 🔄 Reintentar automáticamente
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.reintentandoTexto', { n: this.reintentosCarga, max: this.maxReintentos }),
-        this.translate.instant('ventas.confProductToCart.reintentando'),
+        `Error al cargar configuración. Reintentando... (${this.reintentosCarga}/${this.maxReintentos})`,
+        "Reintentando",
         {
           timeOut: 3000,
           progressBar: true,
@@ -518,8 +516,8 @@ export class ConfProductToCartComponent
     } else {
       // 💥 Máximo de reintentos alcanzado
       this.toastrService.error(
-        this.translate.instant('ventas.confProductToCart.noSePudoCargarTrasIntentos'),
-        this.translate.instant('ventas.confProductToCart.errorCritico'),
+        "No se pudo cargar la configuración del producto después de varios intentos. Por favor, recargue la página.",
+        "Error Crítico",
         {
           timeOut: 8000,
           progressBar: true,
@@ -550,8 +548,8 @@ export class ConfProductToCartComponent
 
       if (stockDisponible === 0) {
         this.toastrService.error(
-          this.translate.instant('ventas.confProductToCart.noHayUnidades'),
-          this.translate.instant('ventas.confProductToCart.sinStockTitulo'),
+          "No hay unidades disponibles para este producto",
+          "Sin Stock",
           {
             timeOut: 4000,
             progressBar: true,
@@ -563,8 +561,8 @@ export class ConfProductToCartComponent
 
       if (this.cantidad >= stockDisponible) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.soloHayUnidades', { n: stockDisponible }),
-          this.translate.instant('ventas.confProductToCart.stockLimitado'),
+          `Solo hay ${stockDisponible} unidades disponibles`,
+          "Stock Limitado",
           {
             timeOut: 4000,
             progressBar: true,
@@ -605,7 +603,7 @@ export class ConfProductToCartComponent
       }
       if (rangoActual && this.rangoPreciosActual !== rangoActual) {
         this.toastrService.show(
-          '<p class="mb-0 mt-1">' + this.translate.instant('ventas.confProductToCart.nuevoPrecio') + ' ' +
+          '<p class="mb-0 mt-1">El nuevo precio por unidad de su producto es: ' +
           precioFormateado +
           "</p>",
           "",
@@ -666,7 +664,7 @@ export class ConfProductToCartComponent
 
         if (rangoActual && this.rangoPreciosActual !== rangoActual) {
           this.toastrService.show(
-            '<p class="mb-0 mt-1">' + this.translate.instant('ventas.confProductToCart.nuevoPrecio') + ' ' +
+            '<p class="mb-0 mt-1">El nuevo precio por unidad de su producto es: ' +
             precioFormateado +
             "</p>",
             "",
@@ -896,8 +894,8 @@ export class ConfProductToCartComponent
     if (isNaN(valor) || valor < cantidadMinima) {
       this.cantidad = cantidadMinima;
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.cantidadMinimaTexto', { n: cantidadMinima }),
-        this.translate.instant('ventas.confProductToCart.cantidadMinimaTitulo')
+        `La cantidad mínima para este producto es ${cantidadMinima}`,
+        'Cantidad mínima'
       );
     } else {
       this.cantidad = Math.floor(valor);
@@ -1227,8 +1225,8 @@ export class ConfProductToCartComponent
     } else {
       console.error('❌ Timeout esperando datos maestros');
       this.toastrService.error(
-        this.translate.instant('ventas.confProductToCart.errorCargandoConfiguracion'),
-        this.translate.instant('comun.error'),
+        'Error cargando configuración del producto. Intente nuevamente.',
+        'Error',
         { timeOut: 4000 }
       );
     }
@@ -1304,8 +1302,8 @@ export class ConfProductToCartComponent
     } catch (error) {
       console.error('❌ Error llenando datos:', error);
       this.toastrService.error(
-        this.translate.instant('ventas.confProductToCart.errorAlCargarConfiguracion'),
-        this.translate.instant('comun.error'),
+        'Error al cargar la configuración del producto',
+        'Error',
         { timeOut: 3000 }
       );
     }
@@ -1627,8 +1625,8 @@ export class ConfProductToCartComponent
 
         if (stockDisponible === 0) {
           this.toastrService.error(
-            this.translate.instant('ventas.confProductToCart.noHayUnidades'),
-            this.translate.instant('ventas.confProductToCart.sinStockTitulo'),
+            "No hay unidades disponibles para este producto",
+            "Sin Stock",
             {
               timeOut: 4000,
               progressBar: true,
@@ -1640,8 +1638,8 @@ export class ConfProductToCartComponent
 
         if (this.cantidad > stockDisponible) {
           this.toastrService.warning(
-            this.translate.instant('ventas.confProductToCart.soloHayUnidades', { n: stockDisponible }),
-            this.translate.instant('ventas.confProductToCart.stockLimitado'),
+            `Solo hay ${stockDisponible} unidades disponibles`,
+            "Stock Limitado",
             {
               timeOut: 4000,
               progressBar: true,
@@ -1746,7 +1744,7 @@ export class ConfProductToCartComponent
         this.dismissCurrentModal(ProductoCompra);
       }
 
-      this.toastrService.success(this.translate.instant('ventas.confProductToCart.productoAgregado'), this.translate.instant('comun.exito'), {
+      this.toastrService.success("Producto agregado al carrito", "Éxito", {
         timeOut: 5000,
         progressBar: true,
         positionClass: "toast-top-right",
@@ -1760,8 +1758,8 @@ export class ConfProductToCartComponent
     } catch (error) {
       console.error("Error al agregar al carrito:", error);
       this.toastrService.error(
-        this.translate.instant('ventas.confProductToCart.problemaAlAgregar'),
-        this.translate.instant('comun.error'),
+        "Hubo un problema al agregar el producto al carrito",
+        "Error",
       );
     }
   }
@@ -1863,8 +1861,8 @@ export class ConfProductToCartComponent
       // Si debe llevar calendario, estos campos son obligatorios
       if (!this.datosEntrega.get("fechaEntrega")?.value) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.seleccioneFecha'),
-          this.translate.instant('ventas.confProductToCart.campoRequerido'),
+          "Por favor seleccione una fecha de entrega",
+          "Campo requerido",
         );
         this.activeAccordionPanel = "datosEntregaPanel";
         hasValidationErrors = true;
@@ -1872,8 +1870,8 @@ export class ConfProductToCartComponent
 
       if (!this.datosEntrega.get("formaEntrega")?.value) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.seleccioneForma'),
-          this.translate.instant('ventas.confProductToCart.campoRequerido'),
+          "Por favor seleccione una forma de entrega",
+          "Campo requerido",
         );
         this.activeAccordionPanel = "datosEntregaPanel";
         hasValidationErrors = true;
@@ -1881,8 +1879,8 @@ export class ConfProductToCartComponent
 
       if (!this.datosEntrega.get("horarioEntrega")?.value) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.seleccioneHorario'),
-          this.translate.instant('ventas.confProductToCart.campoRequerido'),
+          "Por favor seleccione un horario de entrega",
+          "Campo requerido",
         );
         this.activeAccordionPanel = "datosEntregaPanel";
         hasValidationErrors = true;
@@ -1894,8 +1892,8 @@ export class ConfProductToCartComponent
       const colores = this.datosEntrega.get("colores")?.value;
       if (!colores || colores.length === 0) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.seleccioneColor'),
-          this.translate.instant('ventas.confProductToCart.campoRequerido'),
+          "Por favor seleccione al menos un color",
+          "Campo requerido",
         );
         this.activeAccordionPanel = "datosEntregaPanel";
         hasValidationErrors = true;
@@ -1905,8 +1903,8 @@ export class ConfProductToCartComponent
     // Validar género si es requerido (usando la propiedad computada hasAceptaGenero)
     if (this.hasAceptaGenero && !this.datosEntrega.get("genero")?.value) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.seleccioneGenero'),
-        this.translate.instant('ventas.confProductToCart.campoRequerido'),
+        "Por favor seleccione un género",
+        "Campo requerido",
       );
       this.activeAccordionPanel = "datosEntregaPanel";
       hasValidationErrors = true;
@@ -1915,8 +1913,8 @@ export class ConfProductToCartComponent
     // Validar ocasión si es requerida (usando la propiedad computada hasAceptaOcasion)
     if (this.hasAceptaOcasion && !this.datosEntrega.get("ocasion")?.value) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.seleccioneOcasion'),
-        this.translate.instant('ventas.confProductToCart.campoRequerido'),
+        "Por favor seleccione una ocasión",
+        "Campo requerido",
       );
       this.activeAccordionPanel = "datosEntregaPanel";
       hasValidationErrors = true;
@@ -1928,8 +1926,8 @@ export class ConfProductToCartComponent
       !this.datosEntrega.get("observaciones")?.value
     ) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.ingreseObservaciones'),
-        this.translate.instant('ventas.confProductToCart.campoRequerido'),
+        "Por favor ingrese las observaciones",
+        "Campo requerido",
       );
       this.activeAccordionPanel = "datosEntregaPanel";
       hasValidationErrors = true;
@@ -1940,8 +1938,8 @@ export class ConfProductToCartComponent
       // Validar que al menos haya una tarjeta
       if (this.tarjetas.length === 0) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.agregueTarjeta'),
-          this.translate.instant('ventas.confProductToCart.campoRequerido'),
+          'Debe agregar al menos una tarjeta o seleccionar "Sin Tarjeta"',
+          "Campo requerido",
         );
         this.activeAccordionPanel = "tarjetasPanel";
         return false;
@@ -1957,8 +1955,8 @@ export class ConfProductToCartComponent
 
       if (tarjetasInvalidas) {
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.completeTarjetas'),
-          this.translate.instant('ventas.confProductToCart.camposRequeridos'),
+          "Por favor complete todos los campos de las tarjetas",
+          "Campos requeridos",
         );
         this.activeAccordionPanel = "tarjetasPanel";
         hasValidationErrors = true;
@@ -1971,8 +1969,8 @@ export class ConfProductToCartComponent
       !this.hasPreferencia()
     ) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.seleccionePreferencia'),
-        this.translate.instant('ventas.confProductToCart.campoRequerido'),
+        "Debe seleccionar al menos una preferencia",
+        "Campo requerido",
       );
       this.activeAccordionPanel = "preferenciasPanel";
       hasValidationErrors = true;
@@ -2040,8 +2038,8 @@ export class ConfProductToCartComponent
       if (!this.tipoEntrega || this.tipoEntrega.length === 0) {
         console.error("No hay tipos de entrega disponibles");
         this.toastrService.error(
-          this.translate.instant('ventas.confProductToCart.noSeEncontraronTipos'),
-          this.translate.instant('ventas.confProductToCart.errorDeConfiguracionTitulo'),
+          "No se encontraron tipos de entrega configurados",
+          "Error de Configuración",
         );
         return;
       }
@@ -2049,8 +2047,8 @@ export class ConfProductToCartComponent
       if (!this.formasEntrega || this.formasEntrega.length === 0) {
         console.error("No hay formas de entrega disponibles");
         this.toastrService.error(
-          this.translate.instant('ventas.confProductToCart.noSeEncontraronFormas'),
-          this.translate.instant('ventas.confProductToCart.errorDeConfiguracionTitulo'),
+          "No se encontraron formas de entrega configuradas",
+          "Error de Configuración",
         );
         return;
       }
@@ -2067,8 +2065,8 @@ export class ConfProductToCartComponent
           this.producto?.disponibilidad?.tipoEntrega,
         );
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.tipoNoConfigurado', { tipo: this.producto?.disponibilidad?.tipoEntrega }),
-          this.translate.instant('ventas.confProductToCart.configuracionIncompleta'),
+          `El tipo de entrega "${this.producto?.disponibilidad?.tipoEntrega}" no está configurado`,
+          "Configuración Incompleta",
         );
         this.formasEntregaProducto = [];
         return;
@@ -2089,15 +2087,15 @@ export class ConfProductToCartComponent
           tipoEntrega.nombreInterno,
         );
         this.toastrService.warning(
-          this.translate.instant('ventas.confProductToCart.noHayFormasDeEntrega'),
-          this.translate.instant('ventas.confProductToCart.sinOpcionesDeEntrega'),
+          "No hay formas de entrega disponibles para este producto",
+          "Sin Opciones de Entrega",
         );
       }
     } catch (error) {
       console.error("Error al cargar formas de entrega:", error);
       this.toastrService.error(
-        this.translate.instant('ventas.confProductToCart.errorConfigurarEntrega'),
-        this.translate.instant('ventas.confProductToCart.errorDeConfiguracionTitulo'),
+        "Error al configurar las opciones de entrega",
+        "Error de Configuración",
       );
     }
   }
@@ -2177,10 +2175,10 @@ export class ConfProductToCartComponent
         this.addTarjeta();
       } else {
         Swal.fire({
-          title: this.translate.instant('ventas.confProductToCart.errorTitulo'),
-          text: this.translate.instant('ventas.confProductToCart.masTarjetasQueProductos'),
+          title: "Error!",
+          text: "No puede agregar más tarjetas que productos",
           icon: "error",
-          confirmButtonText: this.translate.instant('ventas.pos.ok'),
+          confirmButtonText: "Ok",
         });
       }
     }
@@ -2232,8 +2230,8 @@ export class ConfProductToCartComponent
     if (!this.isValidFile(file)) {
       Swal.fire({
         icon: "error",
-        title: this.translate.instant('comun.error'),
-        text: this.translate.instant('ventas.confProductToCart.extensionesPermitidas'),
+        title: "Error",
+        text: "Solo se aceptan archivos con extensiones .png, .jpg, .webp y .jpeg",
       });
       event.target.value = "";
       return;
@@ -2255,8 +2253,8 @@ export class ConfProductToCartComponent
     const task = this.storage.upload(filePath, file);
 
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.subiendoArchivo'),
-      text: this.translate.instant('ventas.confProductToCart.porFavorEspere'),
+      title: "Subiendo archivo...",
+      text: "Por favor espere...",
       allowOutsideClick: false,
       showConfirmButton: false,
       willOpen: () => {
@@ -2298,8 +2296,8 @@ export class ConfProductToCartComponent
             console.error('Error al obtener URL de descarga:', error);
             Swal.fire({
               icon: "error",
-              title: this.translate.instant('comun.error'),
-              text: this.translate.instant('ventas.confProductToCart.errorSubirArchivo'),
+              title: "Error",
+              text: "Error al subir el archivo. Por favor intente nuevamente.",
             });
           }
         });
@@ -2309,8 +2307,8 @@ export class ConfProductToCartComponent
         console.error('Error en la subida del archivo:', error);
         Swal.fire({
           icon: "error",
-          title: this.translate.instant('comun.error'),
-          text: this.translate.instant('ventas.confProductToCart.errorSubirArchivo'),
+          title: "Error",
+          text: "Error al subir el archivo. Por favor intente nuevamente.",
         });
       }
     });
@@ -2575,14 +2573,14 @@ export class ConfProductToCartComponent
     
     // Confirmar eliminación
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.eliminarImagenPregunta'),
-      text: this.translate.instant('ventas.confProductToCart.confirmarEliminarImagen', { titulo: tituloPreferencia }),
+      title: '¿Eliminar imagen?',
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#D64545',
       cancelButtonColor: '#8f8bab',
-      confirmButtonText: this.translate.instant('ventas.confProductToCart.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar')
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         try {
@@ -2652,8 +2650,8 @@ export class ConfProductToCartComponent
 
           // Mostrar confirmación
           Swal.fire({
-            title: this.translate.instant('ventas.confProductToCart.imagenEliminada'),
-            text: this.translate.instant('ventas.confProductToCart.imagenEliminadaTexto'),
+            title: 'Imagen eliminada',
+            text: 'La imagen ha sido eliminada correctamente.',
             icon: 'success',
             timer: 2000,
             showConfirmButton: false
@@ -2663,8 +2661,8 @@ export class ConfProductToCartComponent
         } catch (error) {
           console.error('Error al eliminar imagen:', error);
           Swal.fire({
-            title: this.translate.instant('comun.error'),
-            text: this.translate.instant('ventas.confProductToCart.noSePudoEliminarImagen'),
+            title: 'Error',
+            text: 'No se pudo eliminar la imagen. Por favor, intenta nuevamente.',
             icon: 'error',
             timer: 3000,
             showConfirmButton: false
@@ -2682,14 +2680,14 @@ export class ConfProductToCartComponent
     
     // Confirmar eliminación
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.eliminarImagenPregunta'),
-      text: this.translate.instant('ventas.confProductToCart.confirmarEliminarImagen', { titulo: tituloPreferencia }),
+      title: '¿Eliminar imagen?',
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#D64545',
       cancelButtonColor: '#8f8bab',
-      confirmButtonText: this.translate.instant('ventas.confProductToCart.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar')
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         try {
@@ -2728,8 +2726,8 @@ export class ConfProductToCartComponent
 
               // Mostrar confirmación
               Swal.fire({
-                title: this.translate.instant('ventas.confProductToCart.imagenEliminada'),
-                text: this.translate.instant('ventas.confProductToCart.imagenEliminadaTexto'),
+                title: 'Imagen eliminada',
+                text: 'La imagen ha sido eliminada correctamente.',
                 icon: 'success',
                 timer: 2000,
                 showConfirmButton: false
@@ -2743,8 +2741,8 @@ export class ConfProductToCartComponent
         } catch (error) {
           console.error('Error al eliminar imagen desde tabla:', error);
           Swal.fire({
-            title: this.translate.instant('comun.error'),
-            text: this.translate.instant('ventas.confProductToCart.noSePudoEliminarImagen'),
+            title: 'Error',
+            text: 'No se pudo eliminar la imagen. Por favor, intenta nuevamente.',
             icon: 'error',
             timer: 3000,
             showConfirmButton: false
@@ -3474,10 +3472,10 @@ export class ConfProductToCartComponent
 
     // Mostrar mensaje usando Swal
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.informacionDepuracion'),
+      title: "Información de depuración",
       html: debugMessage,
       icon: this.errorCargaDatosMaestros ? "error" : "info",
-      confirmButtonText: this.translate.instant('comun.cerrar'),
+      confirmButtonText: "Cerrar",
       didOpen: () => {
         // Agregar event listener al botón de arreglo automático
         const fixButton = document.getElementById("swal-try-fix");
@@ -3515,8 +3513,8 @@ export class ConfProductToCartComponent
       this.SinTarjeta = true;
       console.log('Se activó "Sin Tarjeta" automáticamente');
       this.toastrService.info(
-        this.translate.instant('ventas.confProductToCart.sinTarjetaActivado'),
-        this.translate.instant('ventas.confProductToCart.correccionAplicada'),
+        'Se activó "Sin Tarjeta" automáticamente',
+        "Corrección aplicada",
       );
     }
 
@@ -3545,8 +3543,8 @@ export class ConfProductToCartComponent
           "Se actualizaron tarjetas automáticamente con valores predeterminados",
         );
         this.toastrService.info(
-          this.translate.instant('ventas.confProductToCart.tarjetasActualizadas'),
-          this.translate.instant('ventas.confProductToCart.correccionAplicada'),
+          "Se actualizaron tarjetas con valores predeterminados",
+          "Corrección aplicada",
         );
       }
     }
@@ -3558,13 +3556,13 @@ export class ConfProductToCartComponent
     const isStillDisabled = this.isCartButtonDisabled();
     if (isStillDisabled) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.correccionesParciales'),
-        this.translate.instant('ventas.confProductToCart.correccionParcial'),
+        "Se realizaron algunas correcciones, pero aún faltan campos por completar",
+        "Corrección parcial",
       );
     } else {
       this.toastrService.success(
-        this.translate.instant('ventas.confProductToCart.formularioValido'),
-        this.translate.instant('ventas.confProductToCart.correccionCompletada'),
+        "El formulario ahora es válido, puede agregar al carrito",
+        "Corrección completada",
       );
     }
   }
@@ -3838,20 +3836,20 @@ export class ConfProductToCartComponent
     });
 
     let mensaje =
-      this.translate.instant('ventas.confProductToCart.noSePudieronCargarDatosNecesarios') + " ";
+      "No se pudieron cargar los datos de configuración necesarios. ";
 
     if (camposFaltantes.includes("formaEntrega")) {
-      mensaje += this.translate.instant('ventas.confProductToCart.formasNoDisponibles') + " ";
+      mensaje += "Las formas de entrega no están disponibles. ";
     }
 
     if (camposFaltantes.includes("tipoEntrega")) {
-      mensaje += this.translate.instant('ventas.confProductToCart.tiposNoDisponibles') + " ";
+      mensaje += "Los tipos de entrega no están disponibles. ";
     }
 
     mensaje +=
-      this.translate.instant('ventas.confProductToCart.contacteAdministrador');
+      "Por favor, contacte al administrador o intente recargar la página.";
 
-    this.toastrService.error(mensaje, this.translate.instant('ventas.confProductToCart.errorDeConfiguracionTitulo'), {
+    this.toastrService.error(mensaje, "Error de Configuración", {
       timeOut: 8000,
       progressBar: true,
       positionClass: "toast-top-right",
@@ -3860,14 +3858,25 @@ export class ConfProductToCartComponent
 
     // También mostrar un Swal para mayor visibilidad
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.errorDeConfiguracionTitulo'),
-      html: this.translate.instant('ventas.confProductToCart.errorConfigHtml', {
-        campos: camposFaltantes.map((campo) => `<li>${this.getNombreCampo(campo)}</li>`).join(""),
-      }),
+      title: "Error de Configuración",
+      html: `
+        <div class="text-start">
+          <p>No se pudieron cargar los datos de configuración del producto:</p>
+          <ul class="text-start">
+            ${camposFaltantes.map((campo) => `<li>${this.getNombreCampo(campo)}</li>`).join("")}
+          </ul>
+          <p class="mt-3"><strong>¿Qué puedes hacer?</strong></p>
+          <ul class="text-start">
+            <li>Recargar la página</li>
+            <li>Contactar al administrador</li>
+            <li>Intentar con otro producto</li>
+          </ul>
+        </div>
+      `,
       icon: "error",
-      confirmButtonText: this.translate.instant('ventas.confProductToCart.recargarPagina'),
+      confirmButtonText: "Recargar Página",
       showCancelButton: true,
-      cancelButtonText: this.translate.instant('comun.cerrar'),
+      cancelButtonText: "Cerrar",
       confirmButtonColor: "#5F3FE0",
       cancelButtonColor: "#8f8bab",
     }).then((result) => {
@@ -3909,8 +3918,8 @@ export class ConfProductToCartComponent
     this.pedidoUtilService.clearMaestrosCache();
 
     this.toastrService.info(
-      this.translate.instant('ventas.confProductToCart.reintentandoCargar'),
-      this.translate.instant('ventas.confProductToCart.reintentando'),
+      "🔄 Reintentando cargar configuración...",
+      "Reintentando",
     );
 
     // Reinicializar variables
@@ -3932,8 +3941,8 @@ export class ConfProductToCartComponent
           this.maestrosCargando = false;
 
           this.toastrService.success(
-            this.translate.instant('ventas.confProductToCart.configuracionRecargada'),
-            this.translate.instant('comun.exito'),
+            "✅ Configuración recargada exitosamente",
+            "Éxito",
           );
         },
         error: (error) => {
@@ -4019,10 +4028,10 @@ export class ConfProductToCartComponent
     debugMessage += "</div>";
 
     Swal.fire({
-      title: this.translate.instant('ventas.confProductToCart.debugMaestros'),
+      title: "🔍 Debug: Maestros",
       html: debugMessage,
       icon: "info",
-      confirmButtonText: this.translate.instant('comun.cerrar'),
+      confirmButtonText: "Cerrar",
       width: "600px",
       didOpen: () => {
         // Event listeners para botones
@@ -4037,7 +4046,7 @@ export class ConfProductToCartComponent
           .getElementById("swal-clear-cache")
           ?.addEventListener("click", () => {
             this.pedidoUtilService.clearMaestrosCache();
-            this.toastrService.info(this.translate.instant('ventas.confProductToCart.cacheLimpiado'), this.translate.instant('ventas.confProductToCart.cache'));
+            this.toastrService.info("🧹 Caché limpiado", "Cache");
             Swal.close();
           });
 
@@ -4055,7 +4064,7 @@ export class ConfProductToCartComponent
    * 🧪 Prueba el servicio de maestros
    */
   private testMaestrosService(): void {
-    this.toastrService.info(this.translate.instant('ventas.confProductToCart.probandoServicio'), this.translate.instant('ventas.confProductToCart.pruebas'));
+    this.toastrService.info("🧪 Probando servicio de maestros...", "Testing");
 
     this.pedidoUtilService
       .getAllMaestro$()
@@ -4063,13 +4072,13 @@ export class ConfProductToCartComponent
       .subscribe({
         next: (data) => {
           this.toastrService.success(
-            this.translate.instant('ventas.confProductToCart.servicioOk'),
-            this.translate.instant('ventas.confProductToCart.pruebaOk'),
+            "✅ Servicio funcionando correctamente",
+            "Test OK",
           );
           console.log("🧪 Test del servicio exitoso:", data);
         },
         error: (error) => {
-          this.toastrService.error(this.translate.instant('ventas.confProductToCart.errorServicio'), this.translate.instant('ventas.confProductToCart.pruebaFallida'));
+          this.toastrService.error("❌ Error en el servicio", "Test Failed");
           console.error("🧪 Test del servicio falló:", error);
         },
       });
@@ -4188,16 +4197,16 @@ export class ConfProductToCartComponent
     
     if (this.maestrosCargando) {
       this.toastrService.info(
-        this.translate.instant('ventas.confProductToCart.cargandoConfiguracion'),
-        this.translate.instant('ventas.confProductToCart.cargandoTitulo'),
+        'Cargando configuración del producto...',
+        'Cargando',
         { timeOut: 2000 }
       );
     }
     
     if (this.errorCargaDatosMaestros) {
       this.toastrService.warning(
-        this.translate.instant('ventas.confProductToCart.problemaCargandoDatos'),
-        this.translate.instant('ventas.confProductToCart.advertencia'),
+        'Hubo un problema cargando algunos datos. Algunas opciones pueden no estar disponibles.',
+        'Advertencia',
         { timeOut: 4000 }
       );
     }

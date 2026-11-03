@@ -29,32 +29,78 @@
 
   <div class="tk-grid" *ngIf="metrics && !loadingMetrics && !metricsError">
     <div class="tk-card tk-accent-green">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.recaudadoHoy' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.recaudadoHoy' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaRecaudadoHoy' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaRecaudadoHoy"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaRecaudadoHoy">{{ 'tesoreria.gestionPagos.ayudaRecaudadoHoy' | translate }}</span>
+      </div>
       <div class="tk-value">{{ metrics.recaudadoHoy.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} {{ 'tesoreria.gestionPagos.pagoSAprobadoS' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-orange">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.carteraPendiente' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.carteraPendiente' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaCarteraPendiente' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaCarteraPendiente"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaCarteraPendiente">{{ 'tesoreria.gestionPagos.ayudaCarteraPendiente' | translate }}</span>
+      </div>
       <div class="tk-value">{{ metrics.carteraPendiente.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} {{ 'tesoreria.gestionPagos.pedidoSPorCobrar' | translate }}</div>
+      <!-- Ticket 1461: lo interno no suma aquí (igual que en Cartera) y se ve aparte -->
+      <div class="tk-sub tk-sub-interna" *ngIf="metrics.carteraPendiente.internos?.cantidad">
+        {{ 'tesoreria.gestionPagos.carteraInternaAparte' | translate:{ monto: (metrics.carteraPendiente.internos?.monto | currency:'COP':'symbol-narrow':'1.0-0'), cantidad: (metrics.carteraPendiente.internos?.cantidad | number) } }}
+      </div>
     </div>
     <div class="tk-card tk-accent-purple">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.porRevisar' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.porRevisar' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaPorRevisar' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaPorRevisar"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaPorRevisar">{{ 'tesoreria.gestionPagos.ayudaPorRevisar' | translate }}</span>
+      </div>
       <div class="tk-value">{{ metrics.porRevisar.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} {{ 'tesoreria.gestionPagos.comprobanteSEnCola' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-blue">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.sinPago' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.sinPago' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaSinPago' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaSinPago"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaSinPago">{{ 'tesoreria.gestionPagos.ayudaSinPago' | translate }}</span>
+      </div>
       <div class="tk-value">{{ sinPagoCantidad !== null ? (sinPagoCantidad | number) : (sinPagoError ? '—' : '…') }}</div>
       <div class="tk-sub">{{ 'tesoreria.gestionPagos.pedidosSinPagoCompletoUltimo' | translate }}</div>
     </div>
     <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.alertasActivas' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.alertasActivas' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaAlertasActivas' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaAlertasActivas"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaAlertasActivas">{{ 'tesoreria.gestionPagos.ayudaAlertasActivas' | translate }}</span>
+      </div>
       <div class="tk-value">{{ metrics.alertasActivas.cantidad | number }}</div>
       <div class="tk-sub">{{ 'tesoreria.gestionPagos.posiblesDuplicados' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-gray">
-      <div class="tk-label">{{ 'tesoreria.gestionPagos.rechazados' | translate }}</div>
+      <div class="tk-label">{{ 'tesoreria.gestionPagos.rechazados' | translate }}
+        <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaRechazados' | translate"
+                tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
+                (focus)="ayudaFoco($event, true)" (blur)="ayudaFoco($event, false)"
+                aria-describedby="tk-ayudaRechazados"
+                [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
+                <span class="visually-hidden" id="tk-ayudaRechazados">{{ 'tesoreria.gestionPagos.ayudaRechazados' | translate }}</span>
+      </div>
       <div class="tk-value">{{ metrics.rechazados.cantidad | number }}</div>
       <div class="tk-sub">{{ 'tesoreria.gestionPagos.pagosRechazados' | translate }}</div>
     </div>
@@ -86,6 +132,7 @@
       <app-tabla-pagos-pedidos
         *ngIf="activeIndex === 1"
         [estadosPago]="presetSinPago"
+        [clavesInternas]="metrics?.clavesInternas || []"
         mode="sinPago"
         [active]="activeIndex === 1"
         (changed)="onDataChanged()">

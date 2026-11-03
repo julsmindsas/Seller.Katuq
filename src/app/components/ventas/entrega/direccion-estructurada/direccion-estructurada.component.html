@@ -1,39 +1,39 @@
 <div class="modal-header">
-  <h5 class="modal-title">{{ (direccionActual ? 'ventas.direccionEstructurada.tituloEditar' : 'ventas.direccionEstructurada.tituloCrear') | translate }}</h5>
-  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cancelar()"></button>
+  <h5 class="modal-title">{{ direccionActual ? 'Editar' : 'Crear' }} dirección estructurada (Colombia)</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cancelar()"></button>
 </div>
 
 <div class="modal-body">
   <!-- Aviso cuando se está editando una dirección existente -->
   <div *ngIf="direccionActual" class="alert alert-info mb-3">
-    <strong>{{ 'ventas.direccionEstructurada.editando' | translate }}</strong> {{ direccionActual }}
+    <strong>Editando:</strong> {{ direccionActual }}
   </div>
 
   <!-- Selector tipo de nomenclatura -->
   <div class="row mb-3">
     <div class="col-12">
-      <label class="form-label small text-muted mb-1">{{ 'ventas.direccionEstructurada.tipoDireccion' | translate }}</label>
-      <div class="btn-group w-100" role="group" [attr.aria-label]="'ventas.direccionEstructurada.tipoNomenclatura' | translate">
+      <label class="form-label small text-muted mb-1">Tipo de dirección</label>
+      <div class="btn-group w-100" role="group" aria-label="Tipo de nomenclatura">
         <input type="radio" class="btn-check" id="nomUrbana" name="tipoNomenclatura" autocomplete="off"
                [checked]="tipoNomenclatura === 'urbana'" (change)="cambiarTipoDireccion('urbana')">
-        <label class="btn btn-outline-primary btn-sm" for="nomUrbana">{{ 'ventas.direccionEstructurada.calleCarrera' | translate }}</label>
+        <label class="btn btn-outline-primary btn-sm" for="nomUrbana">Calle / Carrera</label>
 
         <input type="radio" class="btn-check" id="nomManzana" name="tipoNomenclatura" autocomplete="off"
                [checked]="tipoNomenclatura === 'manzana'" (change)="cambiarTipoDireccion('manzana')">
-        <label class="btn btn-outline-primary btn-sm" for="nomManzana">{{ 'ventas.direccionEstructurada.manzanaCasa' | translate }}</label>
+        <label class="btn btn-outline-primary btn-sm" for="nomManzana">Manzana / Casa</label>
 
         <input type="radio" class="btn-check" id="nomRural" name="tipoNomenclatura" autocomplete="off"
                [checked]="tipoNomenclatura === 'rural'" (change)="cambiarTipoDireccion('rural')">
-        <label class="btn btn-outline-primary btn-sm" for="nomRural">{{ 'ventas.direccionEstructurada.rural' | translate }}</label>
+        <label class="btn btn-outline-primary btn-sm" for="nomRural">Rural</label>
 
         <input type="radio" class="btn-check" id="nomUbicacion" name="tipoNomenclatura" autocomplete="off"
                [checked]="tipoNomenclatura === 'ubicacion'" (change)="cambiarTipoDireccion('ubicacion')">
-        <label class="btn btn-outline-primary btn-sm" for="nomUbicacion">{{ 'ventas.direccionEstructurada.soloUbicacion' | translate }}</label>
+        <label class="btn btn-outline-primary btn-sm" for="nomUbicacion">Solo ubicación</label>
       </div>
       <small class="form-text text-muted">
-        <ng-container *ngIf="tipoNomenclatura === 'manzana'">{{ 'ventas.direccionEstructurada.ayudaManzana' | translate }}</ng-container>
-        <ng-container *ngIf="tipoNomenclatura === 'rural'">{{ 'ventas.direccionEstructurada.ayudaRural' | translate }}</ng-container>
-        <ng-container *ngIf="tipoNomenclatura === 'ubicacion'">{{ 'ventas.direccionEstructurada.ayudaUbicacion' | translate }}</ng-container>
+        <ng-container *ngIf="tipoNomenclatura === 'manzana'">Para urbanizaciones y conjuntos: "Manzana 36 Casa 26".</ng-container>
+        <ng-container *ngIf="tipoNomenclatura === 'rural'">Vereda, Corregimiento, Finca, etc.</ng-container>
+        <ng-container *ngIf="tipoNomenclatura === 'ubicacion'">Para fincas y lugares sin dirección: marca el punto en el mapa, pega un enlace de Google Maps o usa tu ubicación.</ng-container>
       </small>
     </div>
   </div>
@@ -47,7 +47,7 @@
         <div *ngIf="tipoNomenclatura === 'rural'" class="rural-form">
           <!-- Tipo de nomenclatura rural -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.tipoUbicacionRural' | translate }}</label>
+            <label class="form-label">Tipo de ubicación rural</label>
             <select class="form-select" formControlName="tipoNomenclaturaRural">
               <option *ngFor="let tipo of tiposNomenclaturaRural" [value]="tipo">{{ tipo }}</option>
             </select>
@@ -55,25 +55,25 @@
 
           <!-- Nombre rural -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.nombre' | translate }}</label>
-            <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phNombreRural' | translate" formControlName="nombreRural">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" placeholder="Ej: La Esperanza" formControlName="nombreRural">
           </div>
 
           <!-- Referencias rurales -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.referenciasDescripcion' | translate }}</label>
-            <textarea class="form-control" rows="3" [placeholder]="'ventas.direccionEstructurada.phReferenciasRural' | translate" formControlName="referencias"></textarea>
+            <label class="form-label">Referencias / Descripción</label>
+            <textarea class="form-control" rows="3" placeholder="Ej: A 500 metros de la escuela, casa de dos pisos color blanco" formControlName="referencias"></textarea>
           </div>
         </div>
 
         <!-- SOLO UBICACIÓN (D-417, ticket 1203) -->
         <div *ngIf="tipoNomenclatura === 'ubicacion'" class="ubicacion-form">
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.referenciaOpcional' | translate }}</label>
-            <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phReferenciaUbicacion' | translate"
+            <label class="form-label">Referencia (opcional)</label>
+            <input type="text" class="form-control" placeholder="Ej: Finca El Lago, vía Yumbo, portón verde"
                    formControlName="referencias" maxlength="200">
             <small class="form-text text-muted">
-              {{ 'ventas.direccionEstructurada.ayudaReferencia' | translate }}
+              Es el texto que verán el mensajero, la guía y la transportadora. Si lo dejas vacío se usan las coordenadas.
             </small>
           </div>
         </div>
@@ -81,22 +81,22 @@
         <!-- FORMULARIO POR MANZANA -->
         <div *ngIf="tipoNomenclatura === 'manzana'" class="manzana-form">
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.manzanaYCasa' | translate }}</label>
+            <label class="form-label">Manzana y casa</label>
             <div class="row g-2">
               <div class="col-4">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.manzana' | translate }}</label>
-                <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phManzana' | translate" formControlName="manzana"
+                <label class="form-label small">Manzana</label>
+                <input type="text" class="form-control" placeholder="Ej: 36" formControlName="manzana"
                        maxlength="6" style="text-transform: uppercase;">
               </div>
               <div class="col-4">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.tipo' | translate }}</label>
+                <label class="form-label small">Tipo</label>
                 <select class="form-select" formControlName="tipoInmueble">
                   <option *ngFor="let tipo of tiposInmuebleManzana" [value]="tipo">{{ tipo }}</option>
                 </select>
               </div>
               <div class="col-4">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.numero' | translate }}</label>
-                <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phNumeroInmueble' | translate" formControlName="numeroInmueble"
+                <label class="form-label small">Número</label>
+                <input type="text" class="form-control" placeholder="Ej: 26" formControlName="numeroInmueble"
                        maxlength="8" style="text-transform: uppercase;">
               </div>
             </div>
@@ -105,13 +105,13 @@
           <div class="mb-3">
             <div class="row g-2">
               <div class="col-4">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.etapaOpcional' | translate }}</label>
-                <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phEtapa' | translate" formControlName="etapa"
+                <label class="form-label small">Etapa (opcional)</label>
+                <input type="text" class="form-control" placeholder="Ej: 2" formControlName="etapa"
                        maxlength="6" style="text-transform: uppercase;">
               </div>
               <div class="col-8">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.urbanizacionOpcional' | translate }}</label>
-                <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phUrbanizacion' | translate" formControlName="urbanizacion">
+                <label class="form-label small">Urbanización / conjunto (opcional)</label>
+                <input type="text" class="form-control" placeholder="Ej: Corales" formControlName="urbanizacion">
               </div>
             </div>
           </div>
@@ -121,25 +121,25 @@
         <div *ngIf="tipoNomenclatura === 'urbana'" class="urban-form">
           <!-- Vía principal -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.viaPrincipal' | translate }}</label>
+            <label class="form-label">Vía principal</label>
             <div class="row g-2">
               <div class="col-5">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.tipo' | translate }}</label>
+                <label class="form-label small">Tipo</label>
                 <select class="form-select" formControlName="tipoVia">
                   <option *ngFor="let tipo of tiposVia" [value]="tipo">{{ tipo }}</option>
                 </select>
               </div>
               <div class="col-4">
-                <label class="form-label small">{{ (viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'ventas.direccionEstructurada.numeroONombre' : 'ventas.direccionEstructurada.numero') | translate }}</label>
+                <label class="form-label small">{{ viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'Número o nombre' : 'Número' }}</label>
                 <input type="text" class="form-control"
-                       [placeholder]="(viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'ventas.direccionEstructurada.phNumeroViaNombre' : 'ventas.direccionEstructurada.phNumeroVia') | translate"
+                       [placeholder]="viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'Ej: 80 o El Dorado' : 'Ej: 80'"
                        formControlName="numeroVia">
               </div>
               <div class="col-3">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.letra' | translate }}</label>
+                <label class="form-label small">Letra</label>
                 <input type="text" 
                        class="form-control" 
-                       [placeholder]="'ventas.direccionEstructurada.phLetraVia' | translate"
+                       placeholder="A, B, AA..."
                        formControlName="letraVia"
                        maxlength="2"
                        style="text-transform: uppercase;">
@@ -148,7 +148,7 @@
             <!-- Complemento vía -->
             <div class="row g-2 mt-1">
               <div class="col-12">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.complemento' | translate }}</label>
+                <label class="form-label small">Complemento</label>
                 <select class="form-select" formControlName="complementoVia">
                   <option value="">-</option>
                   <option *ngFor="let comp of complementos" [value]="comp">{{ comp }}</option>
@@ -159,20 +159,20 @@
 
           <!-- Número de cruce -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.cruce' | translate }}</label>
+            <label class="form-label">Cruce</label>
             <div class="row g-2">
               <div class="col-6">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.numero' | translate }}</label>
+                <label class="form-label small">Número</label>
                 <div class="input-group">
                   <span class="input-group-text">#</span>
-                  <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phNumeroCruce' | translate" formControlName="numero">
+                  <input type="text" class="form-control" placeholder="Ej: 30" formControlName="numero">
                 </div>
               </div>
               <div class="col-6">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.letra' | translate }}</label>
+                <label class="form-label small">Letra</label>
                 <input type="text" 
                        class="form-control" 
-                       [placeholder]="'ventas.direccionEstructurada.phLetraCruce' | translate"
+                       placeholder="A, B, BA..."
                        formControlName="letraCruce"
                        maxlength="2"
                        style="text-transform: uppercase;">
@@ -181,7 +181,7 @@
             <!-- Complemento cruce -->
             <div class="row g-2 mt-1">
               <div class="col-12">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.complemento' | translate }}</label>
+                <label class="form-label small">Complemento</label>
                 <select class="form-select" formControlName="complementoCruce">
                   <option value="">-</option>
                   <option *ngFor="let comp of complementos" [value]="comp">{{ comp }}</option>
@@ -192,13 +192,13 @@
 
           <!-- Número de casa -->
           <div class="mb-3">
-            <label class="form-label">{{ 'ventas.direccionEstructurada.numeroCasaEdificio' | translate }}</label>
+            <label class="form-label">Número de casa/edificio</label>
             <div class="row g-2">
               <div class="col-12">
-                <label class="form-label small">{{ 'ventas.direccionEstructurada.numero' | translate }}</label>
+                <label class="form-label small">Número</label>
                 <div class="input-group">
                   <span class="input-group-text">-</span>
-                  <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phNumeroCasa' | translate" formControlName="numeroCasa">
+                  <input type="text" class="form-control" placeholder="Ej: 15" formControlName="numeroCasa">
                 </div>
               </div>
             </div>
@@ -208,24 +208,24 @@
         <!-- Ubicación geográfica (común para ambos tipos) -->
         <!-- Departamento -->
         <div class="mb-3">
-          <label class="form-label">{{ 'ventas.direccionEstructurada.departamentoObligatorio' | translate }}</label>
+          <label class="form-label">Departamento *</label>
           <select class="form-select" 
                   [(ngModel)]="departamentoSeleccionado" 
                   (change)="onDepartamentoChange($event.target.value)"
                   [ngModelOptions]="{standalone: true}">
-            <option value="">{{ 'ventas.direccionEstructurada.seleccionaDepartamento' | translate }}</option>
+            <option value="">Selecciona un departamento</option>
             <option *ngFor="let departamento of departamentos" [value]="departamento">
               {{ departamento }}
             </option>
           </select>
           <small class="form-text text-muted">
-            {{ 'ventas.direccionEstructurada.ayudaDepartamento' | translate }}
+            Selecciona primero el departamento para filtrar los municipios
           </small>
         </div>
 
         <!-- Municipio -->
         <div class="mb-3">
-          <label class="form-label">{{ 'ventas.direccionEstructurada.municipioObligatorio' | translate }}</label>
+          <label class="form-label">Municipio *</label>
           <div class="row g-2">
             <div class="col-8">
               <select class="form-select" 
@@ -233,7 +233,7 @@
                       (change)="onMunicipioChange($event.target.value)"
                       [ngModelOptions]="{standalone: true}"
                       [disabled]="!departamentoSeleccionado">
-                <option value="">{{ (departamentoSeleccionado ? 'ventas.direccionEstructurada.seleccionaMunicipio' : 'ventas.direccionEstructurada.primeroSeleccionaDepartamento') | translate }}</option>
+                <option value="">{{ departamentoSeleccionado ? 'Selecciona un municipio' : 'Primero selecciona un departamento' }}</option>
                 <option *ngFor="let municipio of getMunicipiosDepartamento()" [value]="municipio">
                   {{ municipio }}
                 </option>
@@ -241,7 +241,7 @@
             </div>
             <div class="col-4">
               <div class="text-center">
-                <small class="text-muted">{{ 'ventas.direccionEstructurada.oBuscaDirectamente' | translate }}</small>
+                <small class="text-muted">O busca directamente:</small>
               </div>
             </div>
           </div>
@@ -249,13 +249,13 @@
 
         <!-- Búsqueda directa de ciudad -->
         <div class="mb-3">
-          <label class="form-label">{{ 'ventas.direccionEstructurada.busquedaDirectaCiudad' | translate }}</label>
+          <label class="form-label">Búsqueda directa de ciudad</label>
           <div class="position-relative">
             <input type="text" 
                    class="form-control" 
                    [class.is-valid]="ciudadValida"
                    [class.is-invalid]="ciudadInvalida"
-                   [placeholder]="'ventas.direccionEstructurada.phBuscarCiudad' | translate" 
+                   placeholder="Escribe para buscar: Bogotá, Medellín, Cali..." 
                    formControlName="ciudad"
                    (input)="validarCiudadEnTiempoReal($event)"
                    autocomplete="off">
@@ -271,14 +271,14 @@
             
             <!-- Indicadores de validación -->
             <div class="valid-feedback" *ngIf="ciudadValida">
-              <i class="pi pi-check"></i> {{ 'ventas.direccionEstructurada.ciudadValida' | translate }}
+              <i class="pi pi-check"></i> Ciudad válida
             </div>
             <div class="invalid-feedback" *ngIf="ciudadInvalida">
-              <i class="pi pi-times"></i> {{ 'ventas.direccionEstructurada.ciudadNoEncontrada' | translate }}
+              <i class="pi pi-times"></i> Ciudad no encontrada. Verifica el nombre.
             </div>
           </div>
           <small class="form-text text-muted">
-            {{ 'ventas.direccionEstructurada.ayudaBusquedaCiudad' | translate }}
+            Esta búsqueda auto-seleccionará el departamento correspondiente
           </small>
         </div>
 
@@ -287,7 +287,7 @@
           <div class="alert alert-success d-flex align-items-center" role="alert">
             <i class="pi pi-map-marker me-2"></i>
             <div>
-              <strong>{{ 'ventas.direccionEstructurada.ubicacionSeleccionada' | translate }}</strong><br>
+              <strong>Ubicación seleccionada:</strong><br>
               {{ municipioSeleccionado }}, {{ departamentoSeleccionado }}
             </div>
           </div>
@@ -295,35 +295,35 @@
 
         <!-- D-417: indicar el punto sin depender de la dirección escrita -->
         <div class="mb-3 ubicacion-herramientas">
-          <label class="form-label">{{ (tipoNomenclatura === 'ubicacion' ? 'ventas.direccionEstructurada.ubicacionEntregaObligatoria' : 'ventas.direccionEstructurada.ajustarUbicacionOpcional') | translate }}</label>
+          <label class="form-label">{{ tipoNomenclatura === 'ubicacion' ? 'Ubicación de entrega *' : 'Ajustar la ubicación (opcional)' }}</label>
           <div class="input-group input-group-sm">
-            <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.phEnlace' | translate"
+            <input type="text" class="form-control" placeholder="Pega un enlace de Google Maps o coordenadas (3.5841, -76.4925)"
                    [(ngModel)]="textoEnlace" [ngModelOptions]="{standalone: true}" (keyup.enter)="aplicarEnlace()">
             <button class="btn btn-outline-primary" type="button" (click)="aplicarEnlace()" [disabled]="!textoEnlace?.trim()">
-              {{ 'ventas.direccionEstructurada.usarEnlace' | translate }}
+              Usar enlace
             </button>
           </div>
           <button type="button" class="btn btn-link btn-sm px-0 mt-1" (click)="usarMiUbicacion()" [disabled]="obteniendoGps">
-            <i class="pi pi-compass me-1"></i>{{ (obteniendoGps ? 'ventas.direccionEstructurada.obteniendoUbicacion' : 'ventas.direccionEstructurada.usarMiUbicacion') | translate }}
+            <i class="pi pi-compass me-1"></i>{{ obteniendoGps ? 'Obteniendo tu ubicación...' : 'Usar mi ubicación' }}
           </button>
           <small *ngIf="mensajeUbicacion" class="d-block text-danger">{{ mensajeUbicacion }}</small>
           <small *ngIf="puntoProtegido()" class="d-block text-muted">
-            <i class="pi pi-lock me-1"></i>{{ (fuenteUbicacion === 'manual' ? 'ventas.direccionEstructurada.puntoMapa' : fuenteUbicacion === 'enlace' ? 'ventas.direccionEstructurada.puntoEnlace' : 'ventas.direccionEstructurada.puntoDispositivo') | translate }}
+            <i class="pi pi-lock me-1"></i>Punto {{ fuenteUbicacion === 'manual' ? 'marcado en el mapa' : fuenteUbicacion === 'enlace' ? 'tomado del enlace' : 'tomado del dispositivo' }}: se conserva al editar.
           </small>
         </div>
 
         <!-- Coordenadas (solo lectura) -->
         <div class="mb-3">
-          <label class="form-label">{{ 'ventas.direccionEstructurada.ubicacionGeografica' | translate }}</label>
+          <label class="form-label">Ubicación geográfica</label>
           <div class="input-group">
             <span class="input-group-text"><i class="pi pi-map-marker"></i></span>
-            <input type="text" class="form-control" [placeholder]="'ventas.direccionEstructurada.coordenadas' | translate" formControlName="coordenadas" readonly>
+            <input type="text" class="form-control" placeholder="Coordenadas" formControlName="coordenadas" readonly>
             <button *ngIf="tipoNomenclatura !== 'ubicacion'" class="btn btn-outline-primary" type="button" (click)="buscarCoordenadas()" [disabled]="geocodificando"
-                    [title]="'ventas.direccionEstructurada.buscarCoordenadasTitulo' | translate">
+                    title="Buscar las coordenadas de la dirección escrita">
               <i class="pi pi-search"></i>
             </button>
           </div>
-          <small *ngIf="geocodificando" class="text-info">{{ 'ventas.direccionEstructurada.buscandoCoordenadas' | translate }}</small>
+          <small *ngIf="geocodificando" class="text-info">Buscando coordenadas...</small>
           <div *ngIf="errorGeocodificacion" class="d-flex align-items-start gap-2 mt-1 flex-wrap">
             <small class="text-danger">{{ mensajeError }}</small>
             <a *ngIf="urlGoogleMaps"
@@ -332,7 +332,7 @@
                rel="noopener"
                class="btn btn-outline-danger btn-sm py-0 px-2"
                style="font-size:0.72rem; white-space:nowrap;">
-              <i class="pi pi-map-marker me-1"></i>{{ 'ventas.direccionEstructurada.verEnGoogleMaps' | translate }}
+              <i class="pi pi-map-marker me-1"></i>Ver en Google Maps
             </a>
           </div>
         </div>
@@ -340,21 +340,21 @@
         <!-- Botones de acción del formulario -->
         <div class="mb-3">
           <button type="button" class="btn btn-outline-warning btn-sm me-2" (click)="limpiarFormulario()">
-            <i class="pi pi-refresh"></i> {{ 'ventas.direccionEstructurada.limpiar' | translate }}
+            <i class="pi pi-refresh"></i> Limpiar
           </button>
           <button *ngIf="tipoNomenclatura !== 'ubicacion'" type="button" class="btn btn-outline-info btn-sm" (click)="buscarCoordenadas()" [disabled]="geocodificando">
-            <i class="pi pi-search"></i> {{ 'ventas.direccionEstructurada.buscarCoordenadas' | translate }}
+            <i class="pi pi-search"></i> Buscar coordenadas
           </button>
         </div>
 
         <!-- Vista previa de dirección -->
         <div class="direccion-preview">
-          <strong>{{ 'ventas.direccionEstructurada.vistaPrevia' | translate }}</strong>
+          <strong>Vista previa de la dirección:</strong>
           <p [ngClass]="{'text-muted': !vistaPrevia, 'text-success': vistaPrevia && validarDireccionColombiana(), 'text-warning': vistaPrevia && !validarDireccionColombiana()}">
-            {{ vistaPrevia || ('ventas.direccionEstructurada.completaFormulario' | translate) }}
+            {{ vistaPrevia || 'Completa el formulario para ver la dirección' }}
           </p>
           <small *ngIf="vistaPrevia && !validarDireccionColombiana()" class="text-warning">
-            <i class="pi pi-exclamation-triangle"></i> {{ mensajeError || ('ventas.direccionEstructurada.revisaDatos' | translate) }}
+            <i class="pi pi-exclamation-triangle"></i> {{ mensajeError || 'Revisa los datos ingresados' }}
           </small>
         </div>
       </form>
@@ -368,8 +368,8 @@
       <div class="map-instructions">
         <div class="alert alert-warning mb-0">
           <i class="pi pi-exclamation-triangle me-2"></i>
-          <strong>{{ 'ventas.direccionEstructurada.importante' | translate }}</strong> {{ 'ventas.direccionEstructurada.coordenadasNoExactas' | translate }} 
-          <span class="d-block fw-bold mt-1">{{ 'ventas.direccionEstructurada.clicMapa' | translate }}</span>
+          <strong>¡Importante!</strong> Las coordenadas automáticas pueden no ser exactas. 
+          <span class="d-block fw-bold mt-1">Haz clic en el mapa para ajustar manualmente la ubicación precisa.</span>
         </div>
       </div>
     </div>
@@ -377,8 +377,8 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
   <button type="button" class="btn btn-primary" [disabled]="!validarDireccionColombiana() || geocodificando" (click)="generarDireccion()">
-    {{ (geocodificando ? 'ventas.direccionEstructurada.buscandoCoordenadas' : (direccionActual ? 'ventas.direccionEstructurada.actualizar' : 'ventas.direccionEstructurada.aplicar')) | translate }}
+    {{ geocodificando ? 'Buscando coordenadas...' : (direccionActual ? 'Actualizar' : 'Aplicar') }}
   </button>
 </div>

@@ -9,22 +9,22 @@
     <span class="cp-chip">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line></svg>
     </span>
-    {{ 'ventas.cashPayment.titulo' | translate }}
+    Pago en efectivo
   </h4>
-  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
 
   <!-- Total a cobrar: el número que manda -->
   <div class="cp-total">
-    <span class="km-amount-label">{{ 'ventas.cashPayment.totalACobrar' | translate }}</span>
+    <span class="km-amount-label">Total a cobrar</span>
     <span class="km-amount-value">${{ totalAmount | number: '1.0-0' }}</span>
   </div>
 
   <!-- Monto entregado -->
   <div class="cp-field">
-    <label for="amountPaid">{{ 'ventas.cashPayment.montoEntregado' | translate }}</label>
+    <label for="amountPaid">Monto entregado</label>
     <div class="cp-input-money">
       <span class="cp-input-prefix">$</span>
       <input type="number" id="amountPaid" [(ngModel)]="amountPaid"
@@ -35,7 +35,7 @@
   <!-- Atajos: evitan el cálculo mental y los errores de digitación -->
   <div class="cp-quick">
     <button type="button" class="cp-quick-btn cp-quick-btn--exact" (click)="establecerRecibido(totalAmount)">
-      {{ 'ventas.cashPayment.exacto' | translate }}
+      Exacto
     </button>
     <button type="button" class="cp-quick-btn" *ngFor="let b of billetes" (click)="establecerRecibido(b)">
       ${{ b | number: '1.0-0' }}
@@ -44,7 +44,7 @@
 
   <!-- Cambio -->
   <div class="cp-change" [class.is-short]="amountPaid < totalAmount">
-    <span class="cp-change-label">{{ (amountPaid < totalAmount ? 'ventas.cashPayment.falta' : 'ventas.cashPayment.cambio') | translate }}</span>
+    <span class="cp-change-label">{{ amountPaid < totalAmount ? 'Falta' : 'Cambio' }}</span>
     <span class="cp-change-value">
       ${{ (amountPaid < totalAmount ? (totalAmount - amountPaid) : change) | number: '1.0-0' }}
     </span>
@@ -52,9 +52,9 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
   <button type="button" class="btn btn-primary" [disabled]="amountPaid < totalAmount"
           (click)="confirmPayment()">
-    {{ 'ventas.cashPayment.confirmarPago' | translate }}
+    Confirmar pago
   </button>
 </div>

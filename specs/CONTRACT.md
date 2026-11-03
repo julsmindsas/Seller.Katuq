@@ -12825,7 +12825,7 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Regla:**
   - Quien sube un cambio que el comercio ve agrega una nota a `notas-version.json` (raíz del front) con `fecha`, `tipo` (NUEVO, MEJORA o CORRIGE) y `texto` en una línea, sin jerga ni números de ticket.
   - `update-version.js` publica en `version.json` solo las notas con fecha posterior a la última publicación (`publicada` del `version.json` que trae git). No vacía el archivo: el script corre en cada build, también en los locales.
-  - Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).
+  - ~~Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).~~ **SUPERSEDED por D-581 (2026-11-03):** sin ventana; las novedades van en la campana y solo las que le aplican a cada usuario.
 - **Dónde quedó:** sección «Notas de versión (D-567)» de `AGENTS.md`.
 - **Arranque:** 9 notas de los arreglos subidos y aún no publicados (tickets 1378-1381, 1386, 1410, 1411, 1384, 1360, 1419 y este).
 - **Sin publicar.**
@@ -13091,3 +13091,70 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
      - **D-621:** al aceptar una factura, el documento de `dian_documents` guarda `payment` (forma, medio y vencimiento, igual al XML). El detalle usa ese pago primero, aunque el pedido haya cambiado o no se pueda reconstruir. Las facturas anteriores siguen en «No disponible».
      - El campo nuevo de la auditoría y el `payment` que devuelve `buildInvoiceXML` son aditivos: el XML no cambia.
      - Este es el único cambio en el camino de emisión, así que Daniel revisa su diff antes de publicar.
+
+
+### 2026-11-03 — D-580: «En vivo» cuenta en la calle solo lo que salió hoy
+- **Pedido de Daniel (3-nov):** "validar las métricas de En vivo... hay unas métricas exageradas, disque 92 horas".
+- **Qué pasaba (ALMARA FELICIDAD, 3-nov, 10 a. m.):**
+  - «Tu flota» mostraba «En ruta · 3 · 94 h», 114 h, 118 h y 145 h. Por ejemplo, Carlos salió ese día a las 8:31 a. m. y ya había entregado 2 pedidos. Las 94 h salían de DAD-014810, despachado el 30-oct, y DAD-014808 seguía igual desde el 31-oct. Nadie los marcó entregados.
+  - La ventana de En vivo trae 7 días de pedidos sin cerrar, así que un pedido «Despachado» seguía «en ruta» hasta 7 días. La pastilla contaba desde la salida más vieja y el aviso del servidor desde la más reciente: tampoco coincidían.
+  - «#DAD-014856 lleva 86 h listo para salir»: se entregaba ese día, pero no tenía hora de empacado y el radar contaba desde la creación.
+- **Decisión (Daniel, 3-nov: «si» a la propuesta de tres puntos):**
+  1. A un mensajero propio solo se le cuenta como en ruta o en la calle lo que salió hoy (por la hora de salida o, si no se vio, la de llegada). El tiempo corre desde su salida más reciente, igual en la pantalla y en el servidor. Las transportadoras siguen contando lo de días anteriores: un envío a otra ciudad tarda días.
+  2. Los pedidos de días anteriores que siguen «despachados» con un mensajero propio van en un solo punto de «Atención ahora» (tipo `sin_cerrar`, revisar): «N pedidos de días anteriores siguen como despachados», con quién los lleva, y lleva a la ficha del que tiene más. La ficha del mensajero los lista aparte.
+  3. Un listo sin hora de listo (ni de empacado) no cuenta horas desde la creación: dice «está listo y se entrega hoy», «está listo y debía entregarse el …» (urgente) o «está listo para salir». No aparece si llegó hace 45 min o menos. Además, un listo que se entrega otro día ya no aparece.
+- **Backend:**
+  - `services/enVivo/proyeccion.js`: la proyección lleva `entrega`, el día pactado (`fechaEntrega`) en hora de Colombia.
+  - `services/enVivo/radar.js`: `salioHoy`, en ruta y sin cerrar en `atencionComercio`, y la regla nueva de listos.
+  - `services/enVivo/distribuidor.js`: la `flota` de la foto marca `enRuta` solo con salidas de hoy. Eso también corrige «N mensajeros en la calle» y los mensajeros libres del plan de despachos.
+- **Front:**
+  - `utilidades/flota.ts`: `salioElMismoDia`, y la salida más reciente.
+  - `ficha/utilidades/mensajero.ts` y su plantilla: la sección «De días anteriores, sin marcar como entregados».
+  - El tipo `sin_cerrar` en los modelos y en los íconos.
+- **Spec:** delta en `openspec/changes/tablero-en-vivo/specs/centro-comercio-en-vivo/spec.md`.
+- **Pruebas:**
+  - Backend: las 15 de `tests/enVivo` en verde. Se actualizaron tres versionadas: la forma exacta de la proyección y del detalle (`entrega`) y el título del listo sin hora de listo.
+  - Caso ALMARA corrido aparte, fuera de git (D-566). Carlos, Rodolfo y Jairo quedan en bodega y sale «6 pedidos de días anteriores siguen como despachados». DAD-014856 dice «está listo y se entrega hoy». El listo que se entrega mañana no aparece.
+  - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
+- **Estado:** commiteado y en origin (backend `838c3620` en `backend-aws-security`). Falta desplegar y comprobar con la pantalla de ALMARA.
+
+### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
+- **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
+- **Decisión:**
+  - Se quita la ventana automática de D-567. Las novedades van en una pestaña «Novedades» de la campana, con un punto sin número cuando hay algo nuevo para el usuario.
+  - Cada nota puede declarar `modulos` (rutas del menú). Una nota con módulo solo le sale a quien tiene esa ruta en su menú y la abrió en los últimos 90 días. Sin módulo, la ven todos.
+  - El uso se guarda solo en el navegador, por usuario y empresa; no se envía a ningún lado.
+  - `version.json` agrega `recientes` (notas de los últimos 45 días) para que la pestaña no dependa de una sola versión.
+- **Spec:** `openspec/changes/novedades-sin-modal-por-uso/`.
+- **Front:**
+  - `shared/services/novedades-version.service.ts` (`NovedadesVersionService`; el `NovedadesService` que ya existía es el de los anuncios de D-108 y no cambia);
+  - `shared/components/novedades-lista/`;
+  - pestañas y punto en `notification-center`;
+  - `aviso-actualizacion` sin la capa de novedades y con «Ver notas» filtrado.
+- **Build:** `update-version.js` publica `modulos` y `recientes`, deja fuera las notas `retirada` y avisa los módulos que no existen en el menú.
+- **Notas:** las 41 de `notas-version.json` quedaron etiquetadas con su pantalla. Dos notas sobre la ventana vieja quedaron `retirada`. Las cinco de facturación del 3-nov se fecharon a las 14:50Z: tenían una fecha posterior a su propia publicación (14:56:43Z) y habrían salido otra vez.
+- **Pruebas:** arnés fuera de git (D-566), con datos de mentira. Pasaron los 14 casos de la spec:
+  - nota general;
+  - nota de un módulo usado o no usado;
+  - nota de un módulo fuera del menú;
+  - navegador sin historial o sin almacenamiento;
+  - dos empresas en el mismo navegador;
+  - uso de hace 100 días;
+  - punto con una nota posterior y al marcar vistas.
+- **Compilación:** `ng build --configuration production` sin errores. Gradientes y primarios prohibidos en los archivos tocados: 0 antes y 0 después.
+- **Estado:** EN PROD en la versión 2026.11.03.2 (solo front). Esa versión también subió el front de D-580, que ya estaba en la rama. Se verificó en `sellercenter.katuq.com` con la sesión de Daniel:
+  - no sale la ventana;
+  - la campana muestra el punto y las pestañas;
+  - «Novedades» lista 8 notas: las generales y las de «En vivo», que se usó en ese navegador. Las de facturación no salen porque ahí no se ha abierto esa pantalla;
+  - a 390 px (iframe del mismo origen) no hay scroll horizontal ni texto cortado.
+
+### 2026-11-03 — D-582: WooCommerce, el aviso de estado a la tienda queda apagado si nadie lo enciende, y el seed siembra en Postgres
+- **Qué se encontró:** D-576, D-577 y D-578 ya están en producción. El back salió el 1-nov con `4481ac39` (D-579) y el front con la versión 2026.10.30.1. Pero el interruptor general `config/feature_flags.wooOrderStatusPublish` nunca se creó. En el código de D-578, «sin crear» valía **publicar**, así que lo único que frenaba el aviso eran las banderas de cada empresa.
+- **Arreglo (`services/woocommerce/estadoAWoo.js`):**
+  - Solo `"sombra"` o `"publicar"` encienden el aviso.
+  - `false`, el campo sin crear o cualquier otro valor lo dejan apagado para todos.
+  - Un script de prueba que fuerza el modo sigue pudiendo correr sin el interruptor, pero no si el interruptor está en `false`.
+- **Seed (`scripts/seed-woocommerce-templates.js`):** antes escribía en Firestore, que quedó congelado el 1-nov. Ahora carga el `.env`, instala el adaptador de Postgres (`instalarSiCorresponde`) y se detiene con salida 3 si no quedó instalado. Solo se puede correr en el servidor de producción.
+- **Pruebas:** `woocommerceEstadoAWoo` pasa 15/15. Hay un caso nuevo: sin interruptor no hace nada. Los casos que publicaban ahora piden `"publicar"` de forma explícita. El seed en local, sin Postgres, se niega a correr (salida 3) y no escribe.
+- **Encendido (Daniel):** en `katuq-db`, `config/feature_flags.wooOrderStatusPublish = "sombra"` y la bandera de la empresa (CAFÉ ESCOBAR). Revisar `integration_audit` a 1 día y, si está bien, pasar a `"publicar"`.
+- **Estado:** commiteado y pusheado; FALTA DESPLEGAR (solo back) y correr el seed en el servidor.

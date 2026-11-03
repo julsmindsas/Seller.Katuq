@@ -153,7 +153,8 @@ function origenDelBuild() {
 /**
  * Ticket 1377 (ALMARA): cada versión explica en palabras sencillas qué mejoró.
  * Quien sube un cambio que ve el comercio agrega su nota a `notas-version.json`
- * (raíz del repo): `{ "fecha": "2026-10-26T20:00", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "texto": "..." }`.
+ * (raíz del repo): `{ "fecha": "2026-10-26T20:00", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "modulos": ["ruta-del-menú"], "texto": "..." }`
+ * (`modulos` es opcional, D-581).
  * La versión lleva las notas agregadas DESPUÉS de la última publicación (la
  * `publicada` del version.json que trae git). No se vacía el archivo: este
  * script corre en cada build, también en los locales, y no debe comerse las notas.
@@ -172,29 +173,78 @@ function ultimaPublicacionEnGit() {
   }
 }
 
-function notasDeEstaVersion() {
+/**
+ * D-581: una nota puede decir de qué pantallas es (`modulos`, rutas del menú) y el
+ * Seller solo se la muestra a quien las usa; sin módulo la ven todos. `retirada`
+ * marca una nota cuyo tema ya no existe: se conserva en el archivo pero no se publica.
+ */
+const DIAS_RECIENTES = 45;
+const MAX_RECIENTES = 60;
+
+function leerNotas() {
   try {
     const lista = JSON.parse(fs.readFileSync(NOTAS_VERSION, 'utf8'));
     if (!Array.isArray(lista)) return [];
-    const desde = Date.parse(ultimaPublicacionEnGit()) || 0;
     return lista
-      .filter((n) => n && typeof n.texto === 'string' && n.texto.trim())
-      .filter((n) => (Date.parse(n.fecha) || 0) > desde)
-      .map((n) => ({ tipo: String(n.tipo || 'MEJORA').toUpperCase(), texto: n.texto.trim() }));
+      .filter((n) => n && typeof n.texto === 'string' && n.texto.trim() && n.retirada !== true)
+      .map((n) => {
+        const nota = { fecha: n.fecha, tipo: String(n.tipo || 'MEJORA').toUpperCase(), texto: n.texto.trim() };
+        const modulos = (Array.isArray(n.modulos) ? n.modulos : [])
+          .map((m) => String(m || '').trim().replace(/^\/+|\/+$/g, ''))
+          .filter(Boolean);
+        if (modulos.length) nota.modulos = modulos;
+        return nota;
+      });
   } catch (e) {
     return [];
+  }
+}
+
+function notasDeEstaVersion(lista) {
+  const desde = Date.parse(ultimaPublicacionEnGit()) || 0;
+  return lista.filter((n) => (Date.parse(n.fecha) || 0) > desde);
+}
+
+/** Las de los últimos días, de la más nueva a la más vieja: alimentan la pestaña «Novedades». */
+function notasRecientes(lista) {
+  const desde = Date.now() - DIAS_RECIENTES * 24 * 60 * 60 * 1000;
+  return lista
+    .filter((n) => (Date.parse(n.fecha) || 0) >= desde)
+    .sort((a, b) => (Date.parse(b.fecha) || 0) - (Date.parse(a.fecha) || 0))
+    .slice(0, MAX_RECIENTES);
+}
+
+/** Avisa (sin frenar el build) las notas cuyo módulo no es ninguna ruta del menú. */
+function avisarModulosDesconocidos(notas) {
+  let rutas;
+  try {
+    const nav = fs.readFileSync(path.join(__dirname, 'src', 'app', 'shared', 'services', 'nav.service.ts'), 'utf8');
+    rutas = [...nav.matchAll(/path:\s*["'`]([^"'`]+)["'`]/g)].map((m) => m[1].replace(/^\/+|\/+$/g, ''));
+  } catch (e) {
+    return;
+  }
+  for (const nota of notas) {
+    for (const modulo of nota.modulos || []) {
+      if (!rutas.some((r) => r === modulo || r.startsWith(modulo + '/'))) {
+        console.warn(`⚠️  Nota con módulo desconocido «${modulo}» (nadie la verá): ${nota.texto}`);
+      }
+    }
   }
 }
 
 function writeVersionJson(version) {
   const outPath = path.join(__dirname, 'src', 'assets', 'version.json');
 
-  const notas = notasDeEstaVersion();
+  const todas = leerNotas();
+  const notas = notasDeEstaVersion(todas);
+  const recientes = notasRecientes(todas);
+  avisarModulosDesconocidos(recientes);
 
   const payload = {
     version,
     publicada: new Date().toISOString(),
     notas,
+    recientes,
     // Desde qué código se compiló. Lo usa scripts/guard-publicacion.js (predeploy
     // de Firebase) para que una publicación no pise otra más nueva o con código
     // que este build no tiene (incidente 2026-10-16: la .16.2 pisó la .16.3).

@@ -3,15 +3,15 @@
   <!-- Barra superior: título + stale + actualizar -->
   <div class="gm-bar">
     <div class="gm-bar-left">
-      <span class="gm-title"><i class="pi pi-chart-bar me-1"></i>{{ 'ventas.globalMetrics.titulo' | translate }}</span>
+      <span class="gm-title"><i class="pi pi-chart-bar me-1"></i>Resumen de clientes</span>
       <span *ngIf="metrics?._stale && !loading" class="gm-stale" [attr.title]="staleLabel">
         <i class="pi pi-clock"></i> {{ staleLabel }}
       </span>
     </div>
     <button type="button" class="gm-refresh" (click)="load()" [disabled]="loading"
-            [attr.aria-label]="'ventas.globalMetrics.actualizarMetricas' | translate">
+            aria-label="Actualizar métricas">
       <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
-      {{ 'ventas.globalMetrics.actualizar' | translate }}
+      Actualizar
     </button>
   </div>
 
@@ -23,8 +23,8 @@
   <!-- Error aislado: no rompe el listado de abajo -->
   <div *ngIf="error && !loading" class="gm-error" role="alert">
     <i class="pi pi-exclamation-triangle me-1"></i>
-    {{ 'ventas.globalMetrics.errorCargar' | translate }}
-    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="load()">{{ 'ventas.customerMetrics.reintentar' | translate }}</button>
+    No se pudieron cargar las métricas globales.
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="load()">Reintentar</button>
   </div>
 
   <!-- Datos -->
@@ -33,35 +33,35 @@
     <!-- Fila 1: KPI principales -->
     <div class="gm-grid">
       <div class="gm-card gm-accent-blue">
-        <div class="gm-label">{{ 'ventas.globalMetrics.totalClientes' | translate }}</div>
+        <div class="gm-label">Total clientes</div>
         <div class="gm-value">{{ metrics.totalClientes | number }}</div>
-        <div class="gm-sub">{{ 'ventas.globalMetrics.totalClientesSub' | translate }}</div>
+        <div class="gm-sub">compradores y no compradores</div>
       </div>
       <div class="gm-card gm-accent-indigo">
-        <div class="gm-label">{{ 'ventas.globalMetrics.clientesConCompra' | translate }}</div>
+        <div class="gm-label">Clientes que han comprado</div>
         <div class="gm-value">{{ metrics.clientesConPedidos | number }}</div>
-        <div class="gm-sub">{{ 'ventas.globalMetrics.clientesConCompraSub' | translate }}</div>
+        <div class="gm-sub">con al menos 1 compra (último año)</div>
       </div>
       <div class="gm-card gm-accent-green">
-        <div class="gm-label">{{ 'ventas.globalMetrics.clientesNuevos' | translate }}</div>
+        <div class="gm-label">Clientes nuevos (30d)</div>
         <div class="gm-value">{{ metrics.clientesNuevos30dias | number }}</div>
-        <div class="gm-sub">{{ 'ventas.globalMetrics.clientesNuevosSub' | translate }}</div>
+        <div class="gm-sub">su primera compra fue en los últimos 30 días</div>
       </div>
       <div class="gm-card gm-accent-purple">
-        <div class="gm-label">{{ 'ventas.globalMetrics.totalFacturado' | translate }}</div>
+        <div class="gm-label">Total facturado</div>
         <div class="gm-value">{{ metrics.totalFacturado | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="gm-card gm-accent-orange">
-        <div class="gm-label">{{ 'ventas.customerMetrics.ticketPromedio' | translate }}</div>
+        <div class="gm-label">Ticket promedio</div>
         <div class="gm-value">{{ metrics.ticketPromedioGlobal | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="gm-card gm-accent-cyan">
-        <div class="gm-label">{{ 'ventas.globalMetrics.pedidos7dias' | translate }}</div>
+        <div class="gm-label">Pedidos últimos 7 días</div>
         <div class="gm-value">{{ metrics.pedidosUltimos7dias | number }}</div>
-        <div class="gm-sub">{{ 'ventas.globalMetrics.pedidos30dias' | translate: { n: (metrics.pedidosUltimos30dias | number) } }}</div>
+        <div class="gm-sub">{{ metrics.pedidosUltimos30dias | number }} en los últimos 30 días</div>
       </div>
       <div class="gm-card" [ngClass]="metrics.clientesEnAlerta > 0 ? 'gm-accent-red' : 'gm-accent-gray'">
-        <div class="gm-label">{{ 'ventas.globalMetrics.enAlerta' | translate }}</div>
+        <div class="gm-label">En alerta de cadencia</div>
         <div class="gm-value" [style.color]="metrics.clientesEnAlerta > 0 ? '#dc2626' : '#6b7280'">
           {{ metrics.clientesEnAlerta | number }}
         </div>
@@ -72,7 +72,7 @@
     <div class="gm-toggle">
       <button type="button" class="gm-btn-details" (click)="toggleDetalles()">
         <i class="pi" [ngClass]="mostrarDetalles ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-        {{ (mostrarDetalles ? 'ventas.globalMetrics.ocultarDistribucion' : 'ventas.globalMetrics.verDistribucion') | translate }}
+        {{ mostrarDetalles ? 'Ocultar distribución' : 'Ver distribución' }}
       </button>
     </div>
 
@@ -81,11 +81,11 @@
 
       <!-- Distribución RFM -->
       <div class="gm-section">
-        <div class="gm-section-title">{{ 'ventas.globalMetrics.distribucionRfm' | translate }}</div>
+        <div class="gm-section-title">Distribución RFM</div>
         <div class="gm-rfm-row">
           <span class="gm-rfm-badge" *ngFor="let seg of rfmSegmentos"
                 [style.background]="rfmBg(seg)" [style.color]="rfmColor(seg)">
-            {{ rfmEtiqueta(seg) | translate }} <strong>{{ rfmCount(seg) | number }}</strong>
+            {{ seg }} <strong>{{ rfmCount(seg) | number }}</strong>
           </span>
         </div>
       </div>
@@ -93,18 +93,18 @@
       <div class="gm-section-grid">
         <!-- Canal preferido -->
         <div class="gm-section">
-          <div class="gm-section-title">{{ 'ventas.customerMetrics.canalPreferido' | translate }}</div>
+          <div class="gm-section-title">Canal preferido</div>
           <div class="gm-chips" *ngIf="topCanales.length; else sinCanal">
             <span class="gm-chip" *ngFor="let c of topCanales">
               {{ c.canal }} <span class="gm-chip-qty">{{ c.cantidad | number }}</span>
             </span>
           </div>
-          <ng-template #sinCanal><span class="gm-muted">{{ 'ventas.clientesCorporativos.sinDatos' | translate }}</span></ng-template>
+          <ng-template #sinCanal><span class="gm-muted">Sin datos</span></ng-template>
         </div>
 
         <!-- Top categorías -->
         <div class="gm-section">
-          <div class="gm-section-title">{{ 'ventas.globalMetrics.topCategorias' | translate }}</div>
+          <div class="gm-section-title">Top categorías</div>
           <div class="gm-top-list" *ngIf="topCategorias3.length; else sinCat">
             <div class="gm-top-item" *ngFor="let cat of topCategorias3; let i = index">
               <span class="gm-top-rank">{{ i + 1 }}</span>
@@ -112,12 +112,12 @@
               <span class="gm-top-qty">{{ cat.cantidad | number }}</span>
             </div>
           </div>
-          <ng-template #sinCat><span class="gm-muted">{{ 'ventas.clientesCorporativos.sinDatos' | translate }}</span></ng-template>
+          <ng-template #sinCat><span class="gm-muted">Sin datos</span></ng-template>
         </div>
 
         <!-- Tasa de cancelaciones -->
         <div class="gm-section">
-          <div class="gm-section-title">{{ 'ventas.customerMetrics.tasaCancelaciones' | translate }}</div>
+          <div class="gm-section-title">Tasa de cancelaciones</div>
           <span class="gm-cancel-badge"
                 [style.background]="metrics.tasaCancelaciones > 10 ? '#fef2f2' : '#f0fdf4'"
                 [style.color]="metrics.tasaCancelaciones > 10 ? '#dc2626' : '#16a34a'">

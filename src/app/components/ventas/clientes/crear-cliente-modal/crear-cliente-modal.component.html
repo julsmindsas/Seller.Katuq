@@ -5,11 +5,11 @@
       <div class="header-title">
         <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'"></i>
         <div>
-          <h5>{{ (title || (isEdit ? (target === 'corporate' ? 'ventas.crearClienteModal.tituloEditarCorporativo' : 'ventas.crearClienteModal.tituloEditarCliente') : (target === 'corporate' ? 'ventas.crearClienteModal.tituloCrearCorporativo' : 'ventas.crearClienteModal.tituloCrearCliente'))) | translate }}</h5>
-          <p>{{ (isEdit ? (target === 'corporate' ? 'ventas.crearClienteModal.subEditarCorporativo' : 'ventas.crearClienteModal.subEditarCliente') : (target === 'corporate' ? 'ventas.crearClienteModal.subCrearCorporativo' : 'ventas.crearClienteModal.subCrearCliente')) | translate }}</p>
+          <h5>{{ title || (isEdit ? 'Editar ' + entityLabel : 'Crear Nuevo ' + entityLabel) }}</h5>
+          <p>{{ (isEdit ? 'Actualiza los datos del ' : 'Completa los datos para registrar un nuevo ') + entityLabel.toLowerCase() }}</p>
         </div>
       </div>
-      <button *ngIf="modo === 'modal'" type="button" class="btn-close-modern" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar()">
+      <button *ngIf="modo === 'modal'" type="button" class="btn-close-modern" aria-label="Close" (click)="cerrar()">
         <i class="pi pi-times"></i>
       </button>
     </div>
@@ -26,8 +26,8 @@
         <p-tabPanel>
           <ng-template pTemplate="header">
             <i class="pi pi-user"></i>
-            <span>{{ 'ventas.clientesLista.contacto' | translate }}</span>
-            <span class="tab-alert" *ngIf="formulario.invalid && formulario.touched" [title]="'ventas.crearClienteModal.faltanDatos' | translate">!</span>
+            <span>{{ "Contacto" | translate }}</span>
+            <span class="tab-alert" *ngIf="formulario.invalid && formulario.touched" title="Faltan datos">!</span>
           </ng-template>
 
           <div class="row g-4 mx-0">
@@ -37,69 +37,69 @@
               <div class="form-section-modern">
                 <div class="section-header">
                   <i class="pi pi-user"></i>
-                  <h6>{{ 'ventas.crearClienteModal.infoBasica' | translate }}</h6>
+                  <h6>{{ "Información Básica" | translate }}</h6>
                 </div>
                 <div class="row g-3">
 
                   <!-- Tipo Doc + Documento -->
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ 'ventas.clientes.colTipoDocumento' | translate }} <span class="required">*</span></label>
+                    <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
                     <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
                       [class.tipo-doc-locked]="isEdit">
-                      <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label | translate }}</option>
+                      <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label }}</option>
                     </select>
                     <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                     </div>
                   </div>
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ 'ventas.crearClienteModal.numeroDocumento' | translate }} <span class="required">*</span></label>
-                    <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.numeroDocumento' | translate }}"
+                    <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
                       formControlName="documento" [attr.disabled]="isEdit && !documentoEditable ? true : null" class="w-100">
                     <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                     </div>
                   </div>
 
                   <!-- Nombres + Apellidos -->
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ (esPersonaJuridica ? 'ventas.crearClienteModal.razonSocial' : 'ventas.crearClienteModal.nombresCompletos') | translate }} <span class="required">*</span></label>
-                    <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.nombresCompletos' | translate }}"
+                    <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
                       formControlName="nombres_completos" class="w-100">
                     <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                     </div>
                   </div>
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ 'ventas.crearClienteModal.apellidosCompletos' | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ 'ventas.crearClienteModal.opcional' | translate }})</span></label>
-                    <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.apellidosCompletos' | translate }}"
+                    <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
+                    <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
                       formControlName="apellidos_completos" class="w-100">
                     <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                      <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                     </div>
                   </div>
 
                   <!-- Tipo de Cliente + Fecha Cumpleaños -->
                   <!-- Ticket 1202: sin tipos activos el campo se escondía y parecía que no se podía configurar. -->
                   <div class="col-12 col-sm-6">
-                    <label class="form-label-modern">{{ 'ventas.clientesLista.tipoCliente' | translate }}</label>
+                    <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
                     <p-dropdown *ngIf="clientTypes.length > 0" formControlName="tipoCliente" [options]="clientTypes"
                       optionLabel="label" optionValue="value"
-                      placeholder="{{ 'ventas.crearClienteModal.seleccionarTipo' | translate }}"
+                      placeholder="{{ 'Seleccionar tipo...' | translate }}"
                       [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
                       appendTo="body" scrollHeight="180px"
                       [filter]="true" filterBy="label" filterMatchMode="contains"
-                      filterPlaceholder="{{ 'ventas.clientesLista.buscarTipo' | translate }}">
+                      filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
                     </p-dropdown>
                     <ng-container *ngIf="clientTypes.length === 0">
                       <input pInputText type="text" class="w-100" disabled
-                        placeholder="{{ 'ventas.crearClienteModal.sinTiposActivos' | translate }}">
-                      <small class="text-muted d-block mt-1">{{ 'ventas.crearClienteModal.sinTiposActivosAyuda' | translate }}</small>
+                        placeholder="{{ 'Sin tipos de cliente activos' | translate }}">
+                      <small class="text-muted d-block mt-1">{{ "Créalos o actívalos en Configuración → Producto → Tipos de Cliente." | translate }}</small>
                     </ng-container>
                   </div>
                   <div class="col-12 col-sm-6">
                     <label class="form-label-modern">
-                      <i class="pi pi-gift me-1 label-icon"></i>{{ 'ventas.crearClienteModal.fechaCumpleanos' | translate }}
+                      <i class="pi pi-gift me-1 label-icon"></i>{{ "Fecha de Cumpleaños" | translate }}
                     </label>
                     <input type="date" formControlName="fechaCumpleanos"
                       autocomplete="bday"
@@ -111,26 +111,38 @@
                        para poder conectarlo con Finanzas. -->
                   <div class="col-12 col-sm-6">
                     <label class="form-label-modern">
-                      <i class="pi pi-credit-card me-1 label-icon"></i>{{ 'ventas.crearClienteModal.cupoCredito' | translate }}
+                      <i class="pi pi-credit-card me-1 label-icon"></i>{{ "Cupo de crédito" | translate }}
                     </label>
                     <input pInputText type="number" min="0" formControlName="creditLimit"
                       placeholder="0" class="w-100">
-                    <small class="text-muted">{{ 'ventas.crearClienteModal.cupoCreditoAyuda' | translate }}</small>
+                    <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
                   </div>
                   <div class="col-12 col-sm-6">
                     <label class="form-label-modern">
-                      <i class="pi pi-clock me-1 label-icon"></i>{{ 'ventas.crearClienteModal.plazoPago' | translate }}
+                      <i class="pi pi-clock me-1 label-icon"></i>{{ "Plazo de pago (días)" | translate }}
                     </label>
                     <input pInputText type="number" min="0" formControlName="payTermDays"
                       placeholder="0" class="w-100">
-                    <small class="text-muted">{{ 'ventas.crearClienteModal.plazoPagoAyuda' | translate }}</small>
+                    <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
+                  </div>
+
+                  <!-- Tipo de relación (cartera interna, ticket 1461): solo Tesorería, solo al editar y con la bandera encendida -->
+                  <div class="col-12 col-sm-6" *ngIf="puedeMarcarRelacion">
+                    <label class="form-label-modern" for="cc-relacion">
+                      <i class="pi pi-users me-1 label-icon"></i>{{ 'cartera.interna.tipoRelacion' | translate }}
+                    </label>
+                    <select id="cc-relacion" class="w-100 p-inputtext" [ngModel]="relationType" [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="cambiarRelacion($event)" [disabled]="guardandoRelacion">
+                      <option *ngFor="let o of relacionOpciones" [value]="o.value">{{ o.clave | translate }}</option>
+                    </select>
+                    <small class="text-muted">{{ 'cartera.interna.fichaAyuda' | translate }}</small>
                   </div>
 
                   <!-- Etiquetas con catálogo -->
                   <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
                     <div class="d-flex align-items-center justify-content-between mb-1">
                       <label class="form-label-modern mb-0">
-                        <i class="pi pi-tags me-1 label-icon"></i>{{ 'ventas.clientes.etiquetas' | translate }}
+                        <i class="pi pi-tags me-1 label-icon"></i>{{ "Etiquetas" | translate }}
                       </label>
                     </div>
                     <div class="tags-picker">
@@ -146,10 +158,10 @@
                   <!-- Sin catálogo -->
                   <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
                     <label class="form-label-modern mb-0">
-                      <i class="pi pi-tags me-1 label-icon"></i>{{ 'ventas.clientes.etiquetas' | translate }}
+                      <i class="pi pi-tags me-1 label-icon"></i>{{ "Etiquetas" | translate }}
                     </label>
                     <div class="tags-empty-hint mt-1">
-                      <i class="pi pi-info-circle me-1"></i>{{ 'ventas.crearClienteModal.sinEtiquetas' | translate }}
+                      <i class="pi pi-info-circle me-1"></i>{{ "No hay etiquetas configuradas." | translate }}
                     </div>
                   </div>
 
@@ -162,100 +174,98 @@
               <div class="form-section-modern">
                 <div class="section-header">
                   <i class="pi pi-phone"></i>
-                  <h6>{{ 'ventas.crearClienteModal.infoContacto' | translate }}</h6>
+                  <h6>{{ "Información de Contacto" | translate }}</h6>
                 </div>
                 <div class="row g-3">
 
                   <!-- Teléfono -->
                   <div class="col-12">
-                    <label class="form-label-modern">{{ 'ventas.crearClienteModal.telefonoCelular' | translate }}</label>
+                    <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
                     <div class="phone-input-group">
                       <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
-                        placeholder="{{ 'ventas.crearClienteModal.codigo' | translate }}"
+                        placeholder="{{ 'Código' | translate }}"
                         formControlName="indicativo_celular_comprador"
                         styleClass="country-code" panelStyleClass="buscar-por-panel">
                       </p-dropdown>
-                      <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.numeroCelular' | translate }}"
+                      <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
                         formControlName="numero_celular_comprador" autocomplete="tel" [attr.maxlength]="esCelularColombia ? 10 : largoCelularOtroPais.max"
                         (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
                     </div>
                     <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>
-                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}</span>
-                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia">{{ 'ventas.crearClienteModal.celular10Digitos' | translate }}</span>
-                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia === false">{{ 'ventas.crearClienteModal.celular6a14Digitos' | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                      <span *ngIf="formulario.get('numero_celular_comprador')?.getError('celular')?.colombia === false">{{ "Debe tener entre 6 y 14 dígitos" | translate }}</span>
                     </div>
                   </div>
 
                   <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
                   <div class="col-12">
-                    <label class="form-label-modern" for="crear-cliente-fijo">{{ 'ventas.crearClienteModal.telefonoFijo' | translate }}</label>
-                    <input id="crear-cliente-fijo" pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.telefonoFijoPlaceholder' | translate }}"
+                    <label class="form-label-modern" for="crear-cliente-fijo">{{ "Teléfono fijo" | translate }}</label>
+                    <input id="crear-cliente-fijo" pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
                       formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
                       (keypress)="validarSoloNumeros($event)" class="w-100">
                     <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i><span>{{ 'ventas.crearClienteModal.fijo7a10Digitos' | translate }}</span>
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
                     </div>
                     <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i><span>{{ 'ventas.crearClienteModal.alMenosUnTelefono' | translate }}</span>
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
                     </div>
                   </div>
 
                   <!-- Correo + Cómo nos conoció en misma fila -->
                   <div class="col-12 col-sm-7">
                     <label class="form-label-modern" for="crear-cliente-email">{{ emailLabel | translate }} <span class="required">*</span></label>
-                    <input id="crear-cliente-email" pInputText type="email" placeholder="{{ 'ventas.crearClienteModal.correoPlaceholder' | translate }}"
+                    <input id="crear-cliente-email" pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
                       formControlName="correo_electronico_comprador" class="w-100" [attr.aria-describedby]="emailHint ? 'crear-cliente-email-help' : null">
                     <small id="crear-cliente-email-help" class="text-muted d-block mt-1" *ngIf="emailHint">{{ emailHint | translate }}</small>
                     <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>
-                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}</span>
-                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ 'ventas.crearClienteModal.correoInvalido' | translate }}</span>
+                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                      <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
                     </div>
                   </div>
                   <div class="col-12 col-sm-5">
                     <label class="form-label-modern">
-                      <i class="pi pi-compass me-1 label-icon"></i>{{ 'ventas.crearClienteModal.comoNosConocio' | translate }}
+                      <i class="pi pi-compass me-1 label-icon"></i>{{ "¿Cómo nos conoció?" | translate }}
                     </label>
                     <p-dropdown formControlName="comoNosConocio"
                       [options]="[
-                        {label: 'ventas.crearClienteModal.origenRedes', value: 'Redes Sociales'},
-                        {label: 'ventas.crearClienteModal.origenReferido', value: 'Referido / Amigo'},
-                        {label: 'ventas.crearClienteModal.origenGoogle', value: 'Google / Búsqueda web'},
-                        {label: 'ventas.crearClienteModal.origenPublicidad', value: 'Publicidad online'},
-                        {label: 'ventas.crearClienteModal.origenEvento', value: 'Evento / Feria'},
-                        {label: 'ventas.crearClienteModal.origenTienda', value: 'Visita en tienda'},
-                        {label: 'ventas.crearClienteModal.origenWhatsapp', value: 'WhatsApp / Email'},
-                        {label: 'ventas.crearClienteModal.origenOtro', value: 'Otro'}
+                        {label: 'Redes Sociales', value: 'Redes Sociales'},
+                        {label: 'Referido / Amigo', value: 'Referido / Amigo'},
+                        {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
+                        {label: 'Publicidad online', value: 'Publicidad online'},
+                        {label: 'Evento / Feria', value: 'Evento / Feria'},
+                        {label: 'Visita en tienda', value: 'Visita en tienda'},
+                        {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
+                        {label: 'Otro', value: 'Otro'}
                       ]"
                       optionLabel="label" optionValue="value"
-                      placeholder="{{ 'ventas.crearClienteModal.seleccionar' | translate }}"
+                      placeholder="{{ 'Seleccionar...' | translate }}"
                       [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
-                      <ng-template pTemplate="selectedItem" let-opcion>{{ opcion.label | translate }}</ng-template>
-                      <ng-template pTemplate="item" let-opcion>{{ opcion.label | translate }}</ng-template>
                     </p-dropdown>
                   </div>
 
                   <!-- WhatsApp compacto -->
                   <div class="col-12">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                      <label class="form-label-modern mb-0">{{ 'ventas.crearClienteModal.whatsapp' | translate }}</label>
+                      <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
                       <div class="d-flex align-items-center gap-2">
                         <input type="checkbox" id="whatsappCheckboxModal"
                           formControlName="whatsappSameAsPhone"
                           (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
                         <label for="whatsappCheckboxModal" class="form-label-modern mb-0 label-hint">
-                          {{ 'ventas.crearClienteModal.mismoNumero' | translate }}
+                          {{ "Mismo número" | translate }}
                         </label>
                       </div>
                     </div>
                     <div class="phone-input-group">
                       <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
-                        placeholder="{{ 'ventas.crearClienteModal.codigo' | translate }}"
+                        placeholder="{{ 'Código' | translate }}"
                         formControlName="indicativo_celular_whatsapp"
                         styleClass="country-code" panelStyleClass="buscar-por-panel">
                       </p-dropdown>
-                      <input pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.numeroWhatsapp' | translate }}"
+                      <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
                         formControlName="numero_celular_whatsapp" autocomplete="tel-national"
                         (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
                     </div>
@@ -263,15 +273,15 @@
 
                   <!-- Ticket 1166: usuario de WhatsApp -->
                   <div class="col-12">
-                    <label class="form-label-modern" for="crear-cliente-wa-user">{{ 'ventas.crearClienteModal.usuarioWhatsapp' | translate }} <span class="text-muted">({{ 'ventas.crearClienteModal.opcional' | translate }})</span></label>
+                    <label class="form-label-modern" for="crear-cliente-wa-user">{{ "Usuario de WhatsApp" | translate }} <span class="text-muted">({{ "opcional" | translate }})</span></label>
                     <div class="username-input">
                       <span class="username-prefix">@</span>
-                      <input id="crear-cliente-wa-user" pInputText type="text" placeholder="{{ 'ventas.crearClienteModal.usuarioWhatsappPlaceholder' | translate }}"
+                      <input id="crear-cliente-wa-user" pInputText type="text" placeholder="{{ 'ej: maria.flores o María Flores' | translate }}"
                         formControlName="whatsappUsername" maxlength="61" autocomplete="off"
                         (blur)="onUsernameBlur()" class="flex-grow-1">
                     </div>
                     <div *ngIf="formulario.get('whatsappUsername')?.invalid && formulario.get('whatsappUsername')?.touched" class="error-message mt-1">
-                      <i class="pi pi-exclamation-circle"></i><span>{{ 'ventas.crearClienteModal.usuarioWhatsappError' | translate }}</span>
+                      <i class="pi pi-exclamation-circle"></i><span>{{ "De 2 a 60 caracteres: letras, números, espacios, punto o guion" | translate }}</span>
                     </div>
                   </div>
 
@@ -286,17 +296,17 @@
         <p-tabPanel *ngIf="permiteExtras">
           <ng-template pTemplate="header">
             <i class="pi pi-users"></i>
-            <span>{{ 'ventas.crearClienteModal.contactos' | translate }}</span>
+            <span>{{ "Contactos" | translate }}</span>
             <span class="tab-count" *ngIf="totalContactos">{{ totalContactos }}</span>
-            <span class="tab-alert" *ngIf="contactoPendiente" [title]="'ventas.crearClienteModal.contactoSinTerminar' | translate">!</span>
+            <span class="tab-alert" *ngIf="contactoPendiente" title="Contacto sin terminar">!</span>
           </ng-template>
 
           <div class="form-section-modern">
             <div class="section-header">
               <i class="pi pi-users"></i>
-              <h6>{{ 'ventas.crearClienteModal.personasContacto' | translate }}</h6>
-              <small class="text-muted ms-2">{{ 'ventas.crearClienteModal.personasContactoAyuda' | translate }}</small>
-              <button pButton type="button" icon="pi pi-plus" label="{{ 'ventas.crearClienteModal.agregarContacto' | translate }}"
+              <h6>{{ "Personas de contacto" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · a quién se le dirige una cotización" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar contacto' | translate }}"
                 class="p-button-outlined p-button-sm ms-auto" (click)="nuevoContacto()" *ngIf="!contactoEditando"></button>
             </div>
 
@@ -306,46 +316,46 @@
                 <div class="item-main">
                   <div class="item-title">
                     {{ c.nombre }}
-                    <span class="pill-default" *ngIf="c.principal">{{ 'ventas.crearClienteModal.principal' | translate }}</span>
+                    <span class="pill-default" *ngIf="c.principal">{{ "Principal" | translate }}</span>
                   </div>
                   <div class="item-sub"><span *ngIf="c.cargo">{{ c.cargo }}</span><span *ngIf="c.cargo && (c.correo || c.celular)"> · </span>{{ c.correo }}<span *ngIf="c.correo && c.celular"> · </span>{{ c.celular }}</div>
                 </div>
                 <div class="item-actions">
-                  <button type="button" class="btn-icon" *ngIf="!c.principal" title="{{ 'ventas.crearClienteModal.hacerPrincipal' | translate }}" (click)="marcarPrincipal(i)"><i class="pi pi-star"></i></button>
-                  <button type="button" class="btn-icon" title="{{ 'comun.editar' | translate }}" (click)="editarContacto(i)"><i class="pi pi-pencil"></i></button>
-                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'comun.eliminar' | translate }}" (click)="eliminarContacto(i)"><i class="pi pi-trash"></i></button>
+                  <button type="button" class="btn-icon" *ngIf="!c.principal" title="{{ 'Hacer principal' | translate }}" (click)="marcarPrincipal(i)"><i class="pi pi-star"></i></button>
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarContacto(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarContacto(i)"><i class="pi pi-trash"></i></button>
                 </div>
               </div>
             </div>
             <ng-template #sinContactos>
               <div class="tags-empty-hint" *ngIf="!contactoEditando">
-                <i class="pi pi-info-circle me-1"></i>{{ 'ventas.crearClienteModal.sinContactos' | translate }}
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin contactos: la cotización va a los datos de contacto del cliente." | translate }}
               </div>
             </ng-template>
 
             <div class="item-editor" *ngIf="contactoEditando">
               <div class="item-editor__title">
                 <i class="pi" [ngClass]="contactoIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
-                {{ (contactoIndex >= 0 ? 'ventas.crearClienteModal.editarContacto' : 'ventas.crearClienteModal.nuevoContacto') | translate }}
+                {{ (contactoIndex >= 0 ? "Editar contacto" : "Nuevo contacto") | translate }}
               </div>
               <div class="row g-3">
                 <div class="col-12 col-md-6">
-                  <label class="form-label-modern" for="contacto-nombre">{{ 'ventas.clientes.colNombre' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="contacto-nombre">{{ "Nombre" | translate }} <span class="required">*</span></label>
                   <input id="contacto-nombre" pInputText type="text" class="w-100"
                     [(ngModel)]="contactoEditando.nombre" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-6">
-                  <label class="form-label-modern" for="contacto-cargo">{{ 'ventas.crearClienteModal.cargo' | translate }}</label>
-                  <input id="contacto-cargo" pInputText type="text" class="w-100" placeholder="{{ 'ventas.crearClienteModal.cargoPlaceholder' | translate }}"
+                  <label class="form-label-modern" for="contacto-cargo">{{ "Cargo" | translate }}</label>
+                  <input id="contacto-cargo" pInputText type="text" class="w-100" placeholder="{{ 'Jefe de compras, Ingeniero…' | translate }}"
                     [(ngModel)]="contactoEditando.cargo" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-6">
-                  <label class="form-label-modern" for="contacto-correo">{{ 'ventas.crearClienteModal.correo' | translate }}</label>
+                  <label class="form-label-modern" for="contacto-correo">{{ "Correo" | translate }}</label>
                   <input id="contacto-correo" pInputText type="email" class="w-100"
                     [(ngModel)]="contactoEditando.correo" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-6">
-                  <label class="form-label-modern" for="contacto-celular">{{ 'ventas.clientesLista.celular' | translate }}</label>
+                  <label class="form-label-modern" for="contacto-celular">{{ "Celular" | translate }}</label>
                   <input id="contacto-celular" pInputText type="tel" class="w-100"
                     [(ngModel)]="contactoEditando.celular" [ngModelOptions]="{ standalone: true }">
                 </div>
@@ -353,14 +363,14 @@
                   <label class="check-inline">
                     <input type="checkbox" class="form-check-input mt-0"
                       [(ngModel)]="contactoEditando.principal" [ngModelOptions]="{ standalone: true }">
-                    <span>{{ 'ventas.crearClienteModal.contactoPrincipalAyuda' | translate }}</span>
+                    <span>{{ "Contacto principal: el que se propone al cotizar" | translate }}</span>
                   </label>
                 </div>
               </div>
               <div class="item-editor__actions">
-                <button pButton type="button" icon="pi pi-times" label="{{ 'ventas.crearClienteModal.descartar' | translate }}"
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
                   class="p-button-text p-button-secondary p-button-sm" (click)="descartarContacto()"></button>
-                <button pButton type="button" icon="pi pi-check" label="{{ (contactoIndex >= 0 ? 'ventas.crearClienteModal.guardarCambios' : 'ventas.crearClienteModal.agregarALista') | translate }}"
+                <button pButton type="button" icon="pi pi-check" label="{{ (contactoIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
                   class="p-button-outlined p-button-sm" (click)="confirmarContacto()"></button>
               </div>
             </div>
@@ -371,17 +381,17 @@
         <p-tabPanel *ngIf="permiteExtras">
           <ng-template pTemplate="header">
             <i class="pi pi-map-marker"></i>
-            <span>{{ 'ventas.clientes.tabEntrega' | translate }}</span>
+            <span>{{ "Entrega" | translate }}</span>
             <span class="tab-count" *ngIf="totalEntregas">{{ totalEntregas }}</span>
-            <span class="tab-alert" *ngIf="entregaPendiente" [title]="'ventas.crearClienteModal.direccionSinTerminar' | translate">!</span>
+            <span class="tab-alert" *ngIf="entregaPendiente" title="Dirección sin terminar">!</span>
           </ng-template>
 
           <div class="form-section-modern">
             <div class="section-header">
               <i class="pi pi-map-marker"></i>
-              <h6>{{ 'ventas.clientesLista.direccionesEntrega' | translate }}</h6>
-              <small class="text-muted ms-2">{{ 'ventas.crearClienteModal.direccionesAyuda' | translate }}</small>
-              <button pButton type="button" icon="pi pi-plus" label="{{ 'ventas.crearClienteModal.agregarDireccion' | translate }}"
+              <h6>{{ "Direcciones de entrega" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · puedes tener varias" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar dirección' | translate }}"
                 class="p-button-outlined p-button-sm ms-auto" (click)="nuevaEntrega(); abrirModalDireccion()"
                 *ngIf="!entregaEditando"></button>
             </div>
@@ -394,19 +404,19 @@
                   <div class="item-title">{{ e.alias || e.direccionEntrega }}</div>
                   <div class="item-sub">
                     <span *ngIf="e.alias">{{ e.direccionEntrega }} · </span>{{ e.barrio ? e.barrio + ' · ' : '' }}{{ e.ciudad }}<span *ngIf="e.departamento">, {{ e.departamento }}</span>
-                    <span *ngIf="e.zonaCobro"> · {{ 'ventas.crearClienteModal.zonaN' | translate: { zona: e.zonaCobro } }}</span>
+                    <span *ngIf="e.zonaCobro"> · {{ "Zona" | translate }} {{ e.zonaCobro }}</span>
                   </div>
                   <div class="item-sub" *ngIf="e.nombres || e.celular">{{ e.nombres }} {{ e.apellidos }}<span *ngIf="e.celular"> · {{ e.celular }}</span></div>
                 </div>
                 <div class="item-actions">
-                  <button type="button" class="btn-icon" title="{{ 'comun.editar' | translate }}" (click)="editarEntrega(i)"><i class="pi pi-pencil"></i></button>
-                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'comun.eliminar' | translate }}" (click)="eliminarEntrega(i)"><i class="pi pi-trash"></i></button>
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarEntrega(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarEntrega(i)"><i class="pi pi-trash"></i></button>
                 </div>
               </div>
             </div>
             <ng-template #sinEntregas>
               <div class="tags-empty-hint" *ngIf="!entregaEditando">
-                <i class="pi pi-info-circle me-1"></i>{{ 'ventas.crearClienteModal.sinDirecciones' | translate }}
+                <i class="pi pi-info-circle me-1"></i>{{ "Este cliente aún no tiene direcciones de entrega." | translate }}
               </div>
             </ng-template>
 
@@ -414,7 +424,7 @@
             <div class="item-editor" *ngIf="entregaEditando">
               <div class="item-editor__title">
                 <i class="pi" [ngClass]="entregaIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
-                {{ (entregaIndex >= 0 ? 'ventas.crearClienteModal.editarDireccion' : 'ventas.crearClienteModal.nuevaDireccion') | translate }}
+                {{ (entregaIndex >= 0 ? "Editar dirección" : "Nueva dirección") | translate }}
               </div>
               <!-- Ticket 1209: el editor muestra los mismos datos que el modal de entrega de
                    pedidos (unidad, torre/apto, apellidos, otro número, ciudad DANE). -->
@@ -423,66 +433,66 @@
                   <label class="check-inline">
                     <input type="checkbox" class="form-check-input mt-0"
                       [checked]="entregaIgualCliente" (change)="usarDatosClienteEnEntrega($any($event.target).checked)">
-                    <span>{{ 'ventas.crearClienteModal.recibeElCliente' | translate }}</span>
+                    <span>{{ "Los datos de quien recibe son los del cliente" | translate }}</span>
                   </label>
                 </div>
                 <div class="col-12 col-md-8">
-                  <label class="form-label-modern" for="entrega-direccion">{{ 'ventas.clientes.colDireccion' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="entrega-direccion">{{ "Dirección" | translate }} <span class="required">*</span></label>
                   <div class="d-flex gap-2">
                     <input id="entrega-direccion" pInputText type="text" readonly class="flex-grow-1 input-clickable"
                       [value]="entregaEditando.direccionEntrega || ''"
-                      placeholder="{{ 'ventas.crearClienteModal.clicDireccion' | translate }}"
+                      placeholder="{{ 'Clic para escribir la dirección' | translate }}"
                       (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
                     <button pButton type="button" icon="pi pi-map-marker" class="p-button-outlined"
-                      [attr.aria-label]="'ventas.crearClienteModal.escribirDireccion' | translate" (click)="abrirModalDireccion()"></button>
+                      [attr.aria-label]="'Escribir dirección' | translate" (click)="abrirModalDireccion()"></button>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-alias">{{ 'ventas.crearClienteModal.alias' | translate }}</label>
-                  <input id="entrega-alias" pInputText type="text" class="w-100" placeholder="{{ 'ventas.crearClienteModal.aliasDireccionPlaceholder' | translate }}"
+                  <label class="form-label-modern" for="entrega-alias">{{ "Alias" | translate }}</label>
+                  <input id="entrega-alias" pInputText type="text" class="w-100" placeholder="{{ 'Casa, Oficina…' | translate }}"
                     [(ngModel)]="entregaEditando.alias" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
                   <!-- La ciudad sale del modal de dirección (municipios DANE); se abre desde acá también. -->
-                  <label class="form-label-modern" for="entrega-ciudad">{{ 'ventas.crearClienteModal.ciudadDane' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="entrega-ciudad">{{ "Ciudad (DANE)" | translate }} <span class="required">*</span></label>
                   <input id="entrega-ciudad" pInputText type="text" readonly class="w-100 input-clickable"
                     [value]="entregaEditando.ciudad ? entregaEditando.ciudad + (entregaEditando.departamento ? ', ' + entregaEditando.departamento : '') : ''"
-                    placeholder="{{ 'ventas.crearClienteModal.ciudadPlaceholder' | translate }}"
+                    placeholder="{{ 'Se elige al escribir la dirección' | translate }}"
                     (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-barrio">{{ 'ventas.crearClienteModal.barrio' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-barrio">{{ "Barrio" | translate }}</label>
                   <input id="entrega-barrio" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.barrio" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-unidad">{{ 'ventas.crearClienteModal.unidad' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-unidad">{{ "Unidad o edificio" | translate }}</label>
                   <input id="entrega-unidad" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.nombreUnidad" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-especificaciones">{{ 'ventas.crearClienteModal.torreApto' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-especificaciones">{{ "Torre, apto, oficina" | translate }}</label>
                   <input id="entrega-especificaciones" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.especificacionesInternas" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-8">
-                  <label class="form-label-modern" for="entrega-indicaciones">{{ 'ventas.crearClienteModal.indicaciones' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-indicaciones">{{ "Indicaciones para la entrega" | translate }}</label>
                   <input id="entrega-indicaciones" pInputText type="text" class="w-100"
-                    placeholder="{{ 'ventas.crearClienteModal.indicacionesPlaceholder' | translate }}"
+                    placeholder="{{ 'Ej: portería, segundo piso, horario' | translate }}"
                     [(ngModel)]="entregaEditando.observaciones" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-nombres">{{ 'ventas.crearClienteModal.nombresRecibe' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-nombres">{{ "Nombres de quien recibe" | translate }}</label>
                   <input id="entrega-nombres" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.nombres" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-apellidos">{{ 'ventas.crearClienteModal.apellidosRecibe' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-apellidos">{{ "Apellidos de quien recibe" | translate }}</label>
                   <input id="entrega-apellidos" pInputText type="text" class="w-100"
                     [(ngModel)]="entregaEditando.apellidos" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-celular">{{ 'ventas.crearClienteModal.celularRecibe' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-celular">{{ "Celular de quien recibe" | translate }}</label>
                   <div class="phone-input-group">
                     <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
                       [(ngModel)]="entregaEditando.indicativoCel" [ngModelOptions]="{ standalone: true }"
@@ -493,7 +503,7 @@
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="entrega-otro-numero">{{ 'ventas.crearClienteModal.otroNumero' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-otro-numero">{{ "Otro número" | translate }}</label>
                   <div class="phone-input-group">
                     <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
                       [(ngModel)]="entregaEditando.indicativoOtroNumero" [ngModelOptions]="{ standalone: true }"
@@ -504,11 +514,11 @@
                   </div>
                 </div>
                 <div class="col-12 col-md-4" *ngIf="zonasParaCiudad.length">
-                  <label class="form-label-modern" for="entrega-zona">{{ 'ventas.crearClienteModal.zonaCobro' | translate }}</label>
+                  <label class="form-label-modern" for="entrega-zona">{{ "Zona de cobro" | translate }}</label>
                   <select id="entrega-zona" class="form-select"
                     [(ngModel)]="entregaEditando.zonaCobro" [ngModelOptions]="{ standalone: true }"
                     (ngModelChange)="onZonaCobroChange()">
-                    <option value="">{{ 'ventas.crearClienteModal.sinZona' | translate }}</option>
+                    <option value="">{{ "Sin zona" | translate }}</option>
                     <option *ngFor="let z of zonasParaCiudad" [value]="z.nombreZonaCobro">
                       {{ z.nombreZonaCobro }}<ng-container *ngIf="z.valorZonaCobro"> · {{ z.valorZonaCobro | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container>
                     </option>
@@ -516,9 +526,9 @@
                 </div>
               </div>
               <div class="item-editor__actions">
-                <button pButton type="button" icon="pi pi-times" label="{{ 'ventas.crearClienteModal.descartar' | translate }}"
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
                   class="p-button-text p-button-secondary p-button-sm" (click)="descartarEntrega()"></button>
-                <button pButton type="button" icon="pi pi-check" label="{{ (entregaIndex >= 0 ? 'ventas.crearClienteModal.guardarCambios' : 'ventas.crearClienteModal.agregarALista') | translate }}"
+                <button pButton type="button" icon="pi pi-check" label="{{ (entregaIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
                   class="p-button-outlined p-button-sm" (click)="confirmarEntrega()"></button>
               </div>
             </div>
@@ -529,17 +539,17 @@
         <p-tabPanel *ngIf="permiteExtras">
           <ng-template pTemplate="header">
             <i class="pi pi-file"></i>
-            <span>{{ 'ventas.clientes.tabFacturacion' | translate }}</span>
+            <span>{{ "Facturación" | translate }}</span>
             <span class="tab-count" *ngIf="totalPerfiles">{{ totalPerfiles }}</span>
-            <span class="tab-alert" *ngIf="perfilPendiente" [title]="'ventas.crearClienteModal.perfilSinTerminar' | translate">!</span>
+            <span class="tab-alert" *ngIf="perfilPendiente" title="Perfil sin terminar">!</span>
           </ng-template>
 
           <div class="form-section-modern">
             <div class="section-header">
               <i class="pi pi-file"></i>
-              <h6>{{ 'ventas.crearClienteModal.datosFacturacionElectronica' | translate }}</h6>
-              <small class="text-muted ms-2">{{ 'ventas.crearClienteModal.perfilesAyuda' | translate }}</small>
-              <button pButton type="button" icon="pi pi-plus" label="{{ 'ventas.crearClienteModal.agregarPerfil' | translate }}"
+              <h6>{{ "Datos de facturación electrónica" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional · a quién se le factura" | translate }}</small>
+              <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar perfil' | translate }}"
                 class="p-button-outlined p-button-sm ms-auto" (click)="nuevoPerfil()" *ngIf="!perfilEditando"></button>
             </div>
 
@@ -549,65 +559,65 @@
                 <div class="item-main">
                   <div class="item-title">
                     {{ p.alias || p.nombres }}
-                    <span class="pill-default" *ngIf="p.predeterminado">{{ 'ventas.crearClienteModal.predeterminado' | translate }}</span>
+                    <span class="pill-default" *ngIf="p.predeterminado">{{ "Predeterminado" | translate }}</span>
                   </div>
                   <div class="item-sub"><span *ngIf="p.alias">{{ p.nombres }} · </span>{{ p.tipoDocumento }} {{ p.documento }}<span *ngIf="p.correo"> · {{ p.correo }}</span></div>
                 </div>
                 <div class="item-actions">
-                  <button type="button" class="btn-icon" *ngIf="!p.predeterminado" title="{{ 'ventas.crearClienteModal.hacerPredeterminado' | translate }}" (click)="marcarPredeterminado(i)"><i class="pi pi-star"></i></button>
-                  <button type="button" class="btn-icon" title="{{ 'comun.editar' | translate }}" (click)="editarPerfil(i)"><i class="pi pi-pencil"></i></button>
-                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'comun.eliminar' | translate }}" (click)="eliminarPerfil(i)"><i class="pi pi-trash"></i></button>
+                  <button type="button" class="btn-icon" *ngIf="!p.predeterminado" title="{{ 'Hacer predeterminado' | translate }}" (click)="marcarPredeterminado(i)"><i class="pi pi-star"></i></button>
+                  <button type="button" class="btn-icon" title="{{ 'Editar' | translate }}" (click)="editarPerfil(i)"><i class="pi pi-pencil"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarPerfil(i)"><i class="pi pi-trash"></i></button>
                 </div>
               </div>
             </div>
             <ng-template #sinPerfiles>
               <div class="tags-empty-hint" *ngIf="!perfilEditando">
-                <i class="pi pi-info-circle me-1"></i>{{ 'ventas.crearClienteModal.sinPerfiles' | translate }}
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin perfiles: se factura con los datos de contacto o a Consumidor Final." | translate }}
               </div>
             </ng-template>
 
             <div class="item-editor" *ngIf="perfilEditando">
               <div class="item-editor__title">
                 <i class="pi" [ngClass]="perfilIndex >= 0 ? 'pi-pencil' : 'pi-plus'"></i>
-                {{ (perfilIndex >= 0 ? 'ventas.crearClienteModal.editarPerfil' : 'ventas.crearClienteModal.nuevoPerfil') | translate }}
-                <button pButton type="button" icon="pi pi-user" label="{{ 'ventas.crearClienteModal.usarDatosCliente' | translate }}"
+                {{ (perfilIndex >= 0 ? "Editar perfil" : "Nuevo perfil de facturación") | translate }}
+                <button pButton type="button" icon="pi pi-user" label="{{ 'Usar los datos del cliente' | translate }}"
                   class="p-button-text p-button-sm ms-auto" (click)="usarDatosDelCliente()"></button>
               </div>
               <div class="row g-3">
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="perfil-alias">{{ 'ventas.crearClienteModal.alias' | translate }}</label>
-                  <input id="perfil-alias" pInputText type="text" class="w-100" placeholder="{{ 'ventas.crearClienteModal.aliasPerfilPlaceholder' | translate }}"
+                  <label class="form-label-modern" for="perfil-alias">{{ "Alias" | translate }}</label>
+                  <input id="perfil-alias" pInputText type="text" class="w-100" placeholder="{{ 'Empresa, Personal…' | translate }}"
                     [(ngModel)]="perfilEditando.alias" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-8">
-                  <label class="form-label-modern" for="perfil-nombres">{{ 'ventas.crearClienteModal.razonSocialNombre' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="perfil-nombres">{{ "Razón social / Nombre" | translate }} <span class="required">*</span></label>
                   <input id="perfil-nombres" pInputText type="text" class="w-100"
                     [(ngModel)]="perfilEditando.nombres" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="perfil-tipodoc">{{ 'ventas.clientes.colTipoDocumento' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="perfil-tipodoc">{{ "Tipo de documento" | translate }} <span class="required">*</span></label>
                   <select id="perfil-tipodoc" class="form-select"
                     [(ngModel)]="perfilEditando.tipoDocumento" [ngModelOptions]="{ standalone: true }">
-                    <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label | translate }}</option>
+                    <option *ngFor="let t of tipoDocOptions" [value]="t.value">{{ t.label }}</option>
                   </select>
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="perfil-doc">{{ 'ventas.crearClienteModal.numeroDocumento' | translate }} <span class="required">*</span></label>
+                  <label class="form-label-modern" for="perfil-doc">{{ "Número de documento" | translate }} <span class="required">*</span></label>
                   <input id="perfil-doc" pInputText type="text" class="w-100"
                     [(ngModel)]="perfilEditando.documento" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="perfil-correo">{{ 'ventas.crearClienteModal.correoFactura' | translate }}</label>
+                  <label class="form-label-modern" for="perfil-correo">{{ "Correo para la factura" | translate }}</label>
                   <input id="perfil-correo" pInputText type="email" class="w-100"
                     [(ngModel)]="perfilEditando.correo" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-8">
-                  <label class="form-label-modern" for="perfil-direccion">{{ 'ventas.crearClienteModal.direccionFiscal' | translate }}</label>
+                  <label class="form-label-modern" for="perfil-direccion">{{ "Dirección fiscal" | translate }}</label>
                   <input id="perfil-direccion" pInputText type="text" class="w-100"
                     [(ngModel)]="perfilEditando.direccion" [ngModelOptions]="{ standalone: true }">
                 </div>
                 <div class="col-12 col-md-4">
-                  <label class="form-label-modern" for="perfil-ciudad">{{ 'ventas.crearClienteModal.ciudad' | translate }}</label>
+                  <label class="form-label-modern" for="perfil-ciudad">{{ "Ciudad" | translate }}</label>
                   <input id="perfil-ciudad" pInputText type="text" class="w-100"
                     [(ngModel)]="perfilEditando.ciudad" [ngModelOptions]="{ standalone: true }">
                 </div>
@@ -615,14 +625,14 @@
                   <label class="check-inline">
                     <input type="checkbox" class="form-check-input mt-0"
                       [(ngModel)]="perfilEditando.predeterminado" [ngModelOptions]="{ standalone: true }">
-                    <span>{{ 'ventas.crearClienteModal.perfilPorDefecto' | translate }}</span>
+                    <span>{{ "Usar este perfil por defecto al facturar" | translate }}</span>
                   </label>
                 </div>
               </div>
               <div class="item-editor__actions">
-                <button pButton type="button" icon="pi pi-times" label="{{ 'ventas.crearClienteModal.descartar' | translate }}"
+                <button pButton type="button" icon="pi pi-times" label="{{ 'Descartar' | translate }}"
                   class="p-button-text p-button-secondary p-button-sm" (click)="descartarPerfil()"></button>
-                <button pButton type="button" icon="pi pi-check" label="{{ (perfilIndex >= 0 ? 'ventas.crearClienteModal.guardarCambios' : 'ventas.crearClienteModal.agregarALista') | translate }}"
+                <button pButton type="button" icon="pi pi-check" label="{{ (perfilIndex >= 0 ? 'Guardar cambios' : 'Agregar a la lista') | translate }}"
                   class="p-button-outlined p-button-sm" (click)="confirmarPerfil()"></button>
               </div>
             </div>
@@ -633,22 +643,22 @@
         <p-tabPanel *ngIf="permiteExtras">
           <ng-template pTemplate="header">
             <i class="pi pi-comment"></i>
-            <span>{{ 'ventas.clientes.tabNotas' | translate }}</span>
+            <span>{{ "Notas" | translate }}</span>
             <span class="tab-count" *ngIf="totalNotas">{{ totalNotas }}</span>
           </ng-template>
 
           <div class="form-section-modern">
             <div class="section-header">
               <i class="pi pi-comment"></i>
-              <h6>{{ 'ventas.clientes.notasCliente' | translate }}</h6>
-              <small class="text-muted ms-2">{{ 'ventas.crearClienteModal.notasAyuda' | translate }}</small>
+              <h6>{{ "Notas del cliente" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Solo las ve tu equipo" | translate }}</small>
             </div>
 
             <div class="nota-nueva">
-              <textarea pInputTextarea rows="2" class="w-100" placeholder="{{ 'ventas.crearClienteModal.notaPlaceholder' | translate }}"
+              <textarea pInputTextarea rows="2" class="w-100" placeholder="{{ 'Escribe una nota: preferencias, acuerdos, advertencias…' | translate }}"
                 [(ngModel)]="notaNueva" [ngModelOptions]="{ standalone: true }"></textarea>
               <div class="d-flex justify-content-end mt-2">
-                <button pButton type="button" icon="pi pi-plus" label="{{ 'ventas.crearClienteModal.agregarNota' | translate }}"
+                <button pButton type="button" icon="pi pi-plus" label="{{ 'Agregar nota' | translate }}"
                   class="p-button-outlined p-button-sm" [disabled]="!notaNueva.trim()" (click)="agregarNota()"></button>
               </div>
             </div>
@@ -661,13 +671,13 @@
                   <div class="item-sub">{{ n.fecha }}<span *ngIf="n.usuario"> · {{ n.usuario }}</span></div>
                 </div>
                 <div class="item-actions">
-                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'comun.eliminar' | translate }}" (click)="eliminarNota(i)"><i class="pi pi-trash"></i></button>
+                  <button type="button" class="btn-icon btn-icon--danger" title="{{ 'Eliminar' | translate }}" (click)="eliminarNota(i)"><i class="pi pi-trash"></i></button>
                 </div>
               </div>
             </div>
             <ng-template #sinNotas>
               <div class="tags-empty-hint mt-3">
-                <i class="pi pi-info-circle me-1"></i>{{ 'ventas.crearClienteModal.sinNotas' | translate }}
+                <i class="pi pi-info-circle me-1"></i>{{ "Sin notas todavía." | translate }}
               </div>
             </ng-template>
           </div>
@@ -680,18 +690,18 @@
   <!-- Footer -->
   <div class="modal-footer-modern">
     <button *ngIf="modo === 'modal'" pButton type="button" icon="pi pi-times"
-      label="{{ 'comun.cancelar' | translate }}"
+      label="{{ 'Cancelar' | translate }}"
       class="p-button-outlined p-button-secondary"
       (click)="cerrar()">
     </button>
     <button *ngIf="modo === 'inline'" pButton type="button" icon="pi pi-eraser"
-      label="{{ (isEdit ? 'ventas.clientesLista.nuevoCliente' : 'ventas.clientesLista.limpiar') | translate }}"
+      label="{{ (isEdit ? 'Nuevo cliente' : 'Limpiar') | translate }}"
       class="p-button-outlined p-button-secondary"
       (click)="limpiar()">
     </button>
     <button pButton type="button"
       [icon]="isEdit ? 'pi pi-check' : 'pi pi-save'"
-      [label]="(isEdit ? (target === 'corporate' ? 'ventas.crearClienteModal.actualizarCorporativo' : 'ventas.crearClienteModal.actualizarCliente') : (target === 'corporate' ? 'ventas.crearClienteModal.crearCorporativo' : 'ventas.crearClienteModal.crearCliente')) | translate"
+      [label]="((isEdit ? 'Actualizar ' : 'Crear ') | translate) + entityLabel"
       class="p-button-primary"
       (click)="guardarCliente()">
     </button>

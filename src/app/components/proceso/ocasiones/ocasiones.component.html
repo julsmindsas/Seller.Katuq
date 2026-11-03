@@ -1,19 +1,19 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">{{ 'proceso.comun.configuracion' | translate }}</span>
-            <h1 class="cfg-titulo">{{ 'proceso.ocasiones.titulo' | translate }}</h1>
-            <p class="cfg-sub">{{ 'proceso.ocasiones.subtitulo' | translate }}</p>
+            <span class="cfg-eyebrow">{{ "Configuración" | translate }}</span>
+            <h1 class="cfg-titulo">{{ "Ocasiones" | translate }}</h1>
+            <p class="cfg-sub">{{ "Usadas para definir los momentos especiales que desees celebrar." | translate }}</p>
         </div>
 
         <div class="cfg-acciones">
             <button class="cfg-btn" type="button" (click)="openCrearModal()">
-                <i placement="top" [ngbTooltip]="'proceso.comun.nuevo' | translate" class="icofont icofont-plus"></i>
-                <span>{{ 'proceso.ocasiones.crear' | translate }}</span>
+                <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+                <span>{{ "Crear Ocasión" | translate }}</span>
             </button>
             <button class="cfg-btn cfg-btn--sec" type="button">
                 <i class="icofont icofont-file-excel"></i>
-                <span>{{ 'proceso.comun.excel' | translate }}</span>
+                <span>{{ "Excel" | translate }}</span>
             </button>
         </div>
     </header>
@@ -32,28 +32,28 @@
                     'position',
                     'activo'
                 ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
-                [currentPageReportTemplate]="'proceso.tabla.paginacion' | translate">
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
                 <ng-template pTemplate="header" let-columns>
                     <tr>
                         <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">
-                            {{ 'proceso.tabla.id' | translate }}
+                            {{ "Id" | translate }}
                             <p-sortIcon field="id"></p-sortIcon>
                         </th>
                         <th class="text-center" pSortableColumn="name">
-                            {{ 'proceso.tabla.nombre' | translate }}
+                            {{ "Nombre" | translate }}
                             <p-sortIcon field="name"></p-sortIcon>
                         </th>
                         <th class="text-center" pSortableColumn="position">
-                            {{ 'proceso.tabla.posicion' | translate }}
+                            {{ "Posición" | translate }}
                             <p-sortIcon field="position"></p-sortIcon>
                         </th>
                         <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
-                            {{ 'proceso.tabla.activo' | translate }}
+                            {{ "Activo" | translate }}
                             <p-sortIcon field="activo"></p-sortIcon>
                         </th>
                         <th class="text-center">
-                            {{ 'proceso.tabla.acciones' | translate }}
+                            {{ "Acciones" | translate }}
                         </th>
                     </tr>
                 </ng-template>
@@ -70,11 +70,11 @@
                             </label>
                         </td>
                         <td class="text-center">
-                            <i placement="top" [ngbTooltip]="'comun.editar' | translate"
+                            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
                             </i>
-                            <i placement="top" [ngbTooltip]="'comun.eliminar' | translate"
+                            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-trash fc-danger" (click)="deleteOcasiones(row)">
                             </i>
@@ -84,13 +84,13 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td [attr.colspan]="isMobile ? 3 : 5">{{ 'proceso.tabla.sinDatos' | translate }}</td>
+                        <td [attr.colspan]="isMobile ? 3 : 5">{{ "No hay datos disponibles" | translate }}</td>
                     </tr>
                 </ng-template>
 
                 <ng-template pTemplate="summary">
                     <div class="flex align-items-center justify-content-between">
-                        {{ 'proceso.tabla.totalConsulta' | translate: { n: rows ? rows.length : 0 } }}
+                        {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "registros" | translate }}.
                     </div>
                 </ng-template>
             </p-table>

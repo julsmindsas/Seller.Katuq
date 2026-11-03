@@ -12,10 +12,9 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
-import { TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
+import { HistorialResumen, TreasuryPayment } from '../../../../shared/services/treasury/treasury.models';
 import { metaEstado, PaymentStateMeta, HISTORIAL_STATUS_OPTIONS } from '../../tesoreria.constants';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 
 /**
  * Spec 013 — Tesorería MVP. Tab "Historial" (T-19, CA-15).
@@ -39,17 +38,25 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
 
   // Filtros
   status = '';
+  formaPago = '';
+  registradoPor = '';
   search = '';
   fechaDesde = '';
   fechaHasta = '';
 
   readonly statusOptions = HISTORIAL_STATUS_OPTIONS;
 
+  /** Ticket 1454: recaudado por forma de pago del filtro, y opciones de los filtros. */
+  resumen: HistorialResumen | null = null;
+  formasPagoOpciones: string[] = [];
+  usuariosOpciones: string[] = [];
+  truncado = false;
+
   private loadedOnce = false;
   private search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-  constructor(private treasury: TreasuryService, private translate: TranslateService) {
+  constructor(private treasury: TreasuryService) {
     this.search$
       .pipe(debounceTime(350), takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
@@ -77,6 +84,8 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
     this.treasury
       .getPayments({
         status: this.status || undefined,
+        formaPago: this.formaPago || undefined,
+        registradoPor: this.registradoPor || undefined,
         desde: this.fechaDesde || undefined,
         hasta: this.fechaHasta || undefined,
         search: this.search?.trim() || undefined,
@@ -88,14 +97,38 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.items = res?.items || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
+          this.resumen = res?.resumen || null;
+          this.truncado = res?.truncado === true;
+          if (res?.opciones) {
+            // Si lo elegido ya no está en las opciones del nuevo periodo, se conserva para que el
+            // select no quede en blanco con el filtro aplicado.
+            const formas = this.conservarOpcion(res.opciones.formasPago || [], this.formaPago);
+            const usuarios = this.conservarOpcion(res.opciones.usuarios || [], this.registradoPor);
+            this.formasPagoOpciones = formas.opciones;
+            this.formaPago = formas.elegida;
+            this.usuariosOpciones = usuarios.opciones;
+            this.registradoPor = usuarios.elegida;
+          }
           this.loading = false;
         },
         error: () => {
           this.items = [];
+          this.resumen = null;
           this.totalRecords = 0;
           this.loading = false;
         },
       });
+  }
+
+  /**
+   * Opciones del filtro con lo elegido incluido. El servidor compara sin mayúsculas, así que si la
+   * opción del periodo solo difiere en mayúsculas («CXC MARKETPLACE» / «CXC Marketplace») se usa esa.
+   */
+  private conservarOpcion(opciones: string[], elegida: string): { opciones: string[]; elegida: string } {
+    if (!elegida) return { opciones, elegida };
+    const igual = opciones.find((o) => o.toLowerCase() === elegida.toLowerCase());
+    if (igual) return { opciones, elegida: igual };
+    return { opciones: [...opciones, elegida].sort((x, y) => x.localeCompare(y, 'es')), elegida };
   }
 
   onSearchInput(): void {
@@ -134,18 +167,19 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
   /** Pide el motivo, muestra el efecto y anula. El servidor vuelve a validar todo. */
   async anular(item: any): Promise<void> {
     const valor = Number(item?.valor || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-    const t = (clave: string, params?: object) => this.translate.instant('tesoreria.historialPagos.' + clave, params);
     const r = await Swal.fire({
-      title: t('anularPagoDe', { pedido: item?.nroPedido || t('estePedido') }),
-      html: t('anularEfectoHtml', { valor, referencia: item?.referencia || t('sinReferencia') }),
+      title: `Anular el pago de ${item?.nroPedido || 'este pedido'}`,
+      html: `El pago de <b>${valor}</b> (${item?.referencia || 'sin referencia'}) queda <b>anulado</b>: no se borra, pero deja de contar.<br>`
+        + `El pedido vuelve a deber ${valor} más y su estado se recalcula con los pagos que le quedan.<br>`
+        + `<small>No se puede deshacer. Si el pedido ya tiene factura electrónica, el pago se deshace con una nota crédito.</small>`,
       input: 'textarea',
-      inputLabel: t('motivoObligatorio'),
-      inputPlaceholder: t('motivoPlaceholder'),
-      inputValidator: (v) => (!String(v || '').trim() ? t('escribeElMotivo') : null),
+      inputLabel: 'Motivo (obligatorio)',
+      inputPlaceholder: 'Ej.: se aplicó al pedido equivocado',
+      inputValidator: (v) => (!String(v || '').trim() ? 'Escribe el motivo' : null),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: t('anularPago'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Anular pago',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#D64545',
     });
     if (!r.isConfirmed) return;
@@ -154,12 +188,12 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
       next: (res) => {
         this.anulando = null;
         const saldo = Number(res?.valorRestante || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-        Swal.fire({ icon: 'success', title: t('pagoAnulado'), text: t('pedidoQuedoEn', { estado: res?.estadoPago, saldo }) });
+        Swal.fire({ icon: 'success', title: 'Pago anulado', text: `El pedido quedó en ${res?.estadoPago} y debe ${saldo}.` });
         this.loadData();
       },
       error: (err) => {
         this.anulando = null;
-        Swal.fire({ icon: 'error', title: t('noSeAnulo'), text: err?.error?.error || err?.error?.message || t('intentaDeNuevo') });
+        Swal.fire({ icon: 'error', title: 'No se anuló', text: err?.error?.error || err?.error?.message || 'Intenta de nuevo.' });
       },
     });
   }

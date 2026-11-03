@@ -24,15 +24,24 @@ La pantalla SHALL listar lo que necesita la operación, del más urgente al meno
 |---|---|
 | Listo sin despachar (urgente) | un pedido lleva más de 45 minutos listo para salir; la sugerencia nombra un mensajero libre, o la transportadora si va a otra ciudad |
 | Demorado | un pedido lleva más del doble de lo normal de hoy en su etapa, y al menos 60 minutos |
-| Mensajero en la calle | un mensajero lleva más de 80 minutos fuera con pedidos |
+| Mensajero en la calle | un mensajero lleva más de 80 minutos fuera con pedidos que salieron hoy |
+| Sin cerrar (D-580) | pedidos de días anteriores siguen «despachados» con un mensajero propio; un solo punto con el total y quién los lleva |
 | Sin pago | un pedido lleva más de 90 minutos sin pago confirmado |
 | Racha | en la última hora llegaron al menos 5 pedidos y el doble de lo normal |
 
-MUST mostrarse a lo sumo 3 listos, 2 demorados y 2 sin pago. Los tres puntos más urgentes con acción SHALL verse también en el panel flotante "Lo próximo", sobre la escena.
+MUST mostrarse a lo sumo 3 listos, 2 demorados y 2 sin pago. Un pedido listo que se entrega otro día MUST NOT aparecer. Si no se sabe a qué hora quedó listo (ni empacado), MUST NOT contarse el tiempo desde la creación: el punto dice «está listo y se entrega hoy», «está listo y debía entregarse el …» o «está listo para salir», y solo aparece si llegó hace más de 45 minutos (D-580). Los tres puntos más urgentes con acción SHALL verse también en el panel flotante "Lo próximo", sobre la escena.
 
 #### Scenario: Pedido listo hace una hora
 - **WHEN** el pedido #1018 lleva 1 hora y 10 minutos listo para salir a Bogotá y Yeison está en bodega
 - **THEN** aparece "#1018 lleva 1 h 10 min listo para salir", con la sugerencia "Yeison está en bodega: asígnaselo", y tocarlo abre la ficha del pedido
+
+#### Scenario: Pedido listo sin hora de listo (D-580)
+- **WHEN** el pedido #1020 se creó hace 4 días, está para despachar, se entrega hoy y no tiene hora de empacado
+- **THEN** aparece "#1020 está listo y se entrega hoy", sin horas
+
+#### Scenario: Pedidos de días anteriores sin cerrar (D-580)
+- **WHEN** Carlos salió hoy a las 8:30 a. m. y ya entregó lo de hoy, pero dos pedidos suyos del 30 y 31 de octubre siguen «despachados»
+- **THEN** Carlos sale "En bodega", no "lleva 94 h en la calle", y aparece "2 pedidos de días anteriores siguen como despachados" con la sugerencia de marcarlos entregados
 
 #### Scenario: Todo al día
 - **WHEN** no hay nada listo, demorado ni sin pago
@@ -65,7 +74,7 @@ La pantalla SHALL mostrar los 6 productos más vendidos hoy por el comercio, con
 - **THEN** ese producto baja 2 unidades en la lista
 
 ### Requirement: Paneles sobre la escena
-En pantallas anchas, "Lo próximo" y "Tu flota" SHALL flotar a la izquierda de la escena, y la lista de eventos a la derecha. "Tu flota" muestra cada mensajero, si está en bodega o en ruta, con cuántos pedidos y desde hace cuánto. La escena MUST encuadrarse para que nada quede tapado, y "Ampliar" MUST quitar los paneles.
+En pantallas anchas, "Lo próximo" y "Tu flota" SHALL flotar a la izquierda de la escena, y la lista de eventos a la derecha. "Tu flota" muestra cada mensajero, si está en bodega o en ruta, con cuántos pedidos y desde hace cuánto. A un mensajero propio solo se le cuenta lo que salió hoy, y el tiempo corre desde su salida más reciente; las transportadoras cuentan también lo de días anteriores, porque un envío a otra ciudad tarda días. La ficha del mensajero muestra aparte sus pedidos de días anteriores que siguen «despachados» (D-580). La escena MUST encuadrarse para que nada quede tapado, y "Ampliar" MUST quitar los paneles.
 
 #### Scenario: Mensajero en ruta
 - **WHEN** Carlos sale con 2 pedidos

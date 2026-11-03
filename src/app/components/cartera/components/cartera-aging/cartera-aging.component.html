@@ -1,22 +1,41 @@
 <div class="cx-aging">
 
+  <!-- Ticket 1467: Aging usa los mismos filtros de «Cartera por cliente» -->
+  <div class="cx-aging-filtros" *ngIf="hayFiltros">
+    <app-cartera-filtros-activos [filtros]="filtros" (filtrosChange)="filtrosChange.emit($event)"></app-cartera-filtros-activos>
+    <button type="button" class="cx-aging-cambiar" (click)="editarFiltros.emit()">
+      <i class="pi pi-sliders-h" aria-hidden="true"></i> {{ 'cartera.filtros.cambiarFiltros' | translate }}
+    </button>
+  </div>
+
   <!-- KPI cards por rango + total -->
   <div class="cx-grid cx-grid-aging">
     <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis">
       <div class="cx-kpi-head">
         <span class="cx-dot" *ngIf="!k.isTotal" [ngClass]="k.cssClass"></span>
         <span class="cx-kpi-icon" *ngIf="k.isTotal"><i class="pi pi-wallet"></i></span>
-        <span class="cx-label">{{ k.label }}</span>
+        <span class="cx-label">{{ k.labelKey | translate }}</span>
+        <!-- Ayuda del rango: botón que abre el texto a la vista (teclado y celular) -->
+        <button type="button" class="cx-info" [attr.title]="(k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)}))"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === (k.isTotal ? 'total' : k.cssClass)"
+                (click)="alternarAyuda(k.isTotal ? 'total' : k.cssClass)">
+          <i class="pi pi-info-circle"></i>
+        </button>
       </div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === (k.isTotal ? 'total' : k.cssClass)">{{ (k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})) }}</div>
       <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.pct | number:'1.0-0' }}{{ 'cartera.carteraAging.delTotal' | translate }}</div>
     </div>
   </div>
 
   <!-- Empty -->
-  <div *ngIf="rows.length === 0" class="cx-empty">
+  <div *ngIf="rows.length === 0 && !hayFiltros" class="cx-empty">
     <i class="pi pi-check-circle"></i>
     <div class="cx-empty-title">{{ 'cartera.carteraAging.noHayCarteraPendiente' | translate }}</div>
+  </div>
+  <div *ngIf="rows.length === 0 && hayFiltros" class="cx-empty">
+    <i class="pi pi-filter-slash"></i>
+    <div class="cx-empty-title">{{ 'cartera.carteraClientes.ningunClienteCoincideConEl' | translate }}</div>
   </div>
 
   <ng-container *ngIf="rows.length > 0">
@@ -25,13 +44,13 @@
       <div class="cx-agingbar">
         <div class="cx-agingbar-seg" *ngFor="let s of segments" [ngClass]="s.cssClass"
              [style.width.%]="s.pct"
-             [attr.title]="s.label + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
+             [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
           <span class="cx-agingbar-label" *ngIf="s.showText">{{ s.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </div>
       </div>
       <div class="cx-legend">
         <span class="cx-legend-item" *ngFor="let b of agingBuckets">
-          <span class="cx-dot" [ngClass]="b.cssClass"></span> {{ b.label }}
+          <span class="cx-dot" [ngClass]="b.cssClass"></span> {{ b.labelKey | translate }}
         </span>
       </div>
     </div>
@@ -46,10 +65,7 @@
           <tr>
             <th pSortableColumn="nombre" style="min-width: 200px">{{ 'cartera.carteraAging.cliente' | translate }} <p-sortIcon field="nombre"></p-sortIcon></th>
             <th pSortableColumn="documento" style="min-width: 130px">{{ 'cartera.carteraAging.documento' | translate }} <p-sortIcon field="documento"></p-sortIcon></th>
-            <th pSortableColumn="aging.corriente" class="text-end cx-c-corriente" style="min-width: 130px">{{ 'cartera.carteraAging.corriente' | translate }} <p-sortIcon field="aging.corriente"></p-sortIcon></th>
-            <th pSortableColumn="aging.d16_30" class="text-end cx-c-d16" style="min-width: 120px">{{ 'cartera.carteraAging.1630D' | translate }} <p-sortIcon field="aging.d16_30"></p-sortIcon></th>
-            <th pSortableColumn="aging.d31_60" class="text-end cx-c-d31" style="min-width: 120px">{{ 'cartera.carteraAging.3160D' | translate }} <p-sortIcon field="aging.d31_60"></p-sortIcon></th>
-            <th pSortableColumn="aging.d60" class="text-end cx-c-d60" style="min-width: 120px">{{ 'cartera.carteraAging.60D' | translate }} <p-sortIcon field="aging.d60"></p-sortIcon></th>
+            <th *ngFor="let b of agingBuckets" [pSortableColumn]="'aging.' + b.key" class="text-end" [ngClass]="colClass(b.cssClass)" style="min-width: 120px">{{ b.labelKey | translate }} <p-sortIcon [field]="'aging.' + b.key"></p-sortIcon></th>
             <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 140px">{{ 'cartera.carteraAging.total' | translate }} <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
           </tr>
         </ng-template>
@@ -58,10 +74,7 @@
           <tr>
             <td class="cx-cell-strong">{{ c.nombre || '—' }}</td>
             <td class="cx-cell-doc">{{ c.documento || '—' }}</td>
-            <td class="text-end cx-c-corriente cx-num">{{ c.aging.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d16 cx-num">{{ c.aging.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d31 cx-num">{{ c.aging.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d60 cx-num">{{ c.aging.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ c.aging[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-num cx-num-total">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </ng-template>
@@ -70,10 +83,7 @@
           <tr class="cx-foot">
             <td class="cx-cell-strong">{{ 'cartera.carteraAging.totales' | translate }}</td>
             <td>{{ rows.length | number }} {{ 'cartera.carteraAging.clienteS' | translate }}</td>
-            <td class="text-end cx-c-corriente cx-num">{{ totals.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d16 cx-num">{{ totals.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d31 cx-num">{{ totals.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d60 cx-num">{{ totals.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ totals[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-num cx-foot-total">{{ totals.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </ng-template>

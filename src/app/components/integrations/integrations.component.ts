@@ -1590,7 +1590,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   tableroNivelTexto(nivel: NivelTablero): string {
-    return this.translate.instant('integrations.integrations.tableroNivel_' + nivel.replace('-', '_'));
+    // Claves completas (sin armarlas en ejecución) para que el chequeo de traducciones las encuentre.
+    const claves: Record<string, string> = {
+      ok: 'integrations.integrations.tableroNivel_ok',
+      aviso: 'integrations.integrations.tableroNivel_aviso',
+      alerta: 'integrations.integrations.tableroNivel_alerta',
+      critico: 'integrations.integrations.tableroNivel_critico',
+      bloqueante: 'integrations.integrations.tableroNivel_bloqueante',
+      'sin-dato': 'integrations.integrations.tableroNivel_sin_dato',
+    };
+    return this.translate.instant(claves[nivel] || claves['sin-dato']);
   }
 
   /** Cuánto falta (o cuánto hace que venció) en palabras: «Vence en 14 días», «Venció hace 3 días». */
@@ -1603,15 +1612,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   /** El mensaje de una alerta, con lo que el comercio debe hacer. */
   tableroAlertaTexto(a: AlertaTablero): string {
-    const base = 'integrations.integrations.tableroAlerta';
     if (a.tipo === 'rango') {
-      return this.translate.instant(a.nivel === 'bloqueante' ? `${base}RangoAgotado` : `${base}Rango`, { pct: a.pct, restantes: a.restantes });
+      return this.translate.instant(a.nivel === 'bloqueante' ? 'integrations.integrations.tableroAlertaRangoAgotado' : 'integrations.integrations.tableroAlertaRango', { pct: a.pct, restantes: a.restantes });
     }
-    // Las claves existentes concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
-    const quien = a.tipo === 'resolucion' ? 'Resolucion' : 'Certificado';
-    const vencido = a.tipo === 'resolucion' ? 'Vencida' : 'Vencido';
+    // Claves completas; concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
     const dias = a.dias as number;
-    return this.translate.instant(dias < 0 ? `${base}${quien}${vencido}` : `${base}${quien}`, { dias: Math.abs(dias) });
+    const clave = a.tipo === 'resolucion'
+      ? (dias < 0 ? 'integrations.integrations.tableroAlertaResolucionVencida' : 'integrations.integrations.tableroAlertaResolucion')
+      : (dias < 0 ? 'integrations.integrations.tableroAlertaCertificadoVencido' : 'integrations.integrations.tableroAlertaCertificado');
+    return this.translate.instant(clave, { dias: Math.abs(dias) });
   }
 
   loadDianTestOrders(): void {

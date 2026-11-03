@@ -1,19 +1,20 @@
 <div class="cfg-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">{{ 'proceso.comun.configuracion' | translate }}</span>
-      <h1 class="cfg-titulo">{{ 'proceso.variables.titulo' | translate }}</h1>
+      <span class="cfg-eyebrow">Configuración</span>
+      <h1 class="cfg-titulo">Variables</h1>
     </div>
 
     <!-- Como antes del rediseño, las acciones solo se muestran con los datos cargados. -->
     <div class="cfg-acciones" *ngIf="!cargando">
       <button class="cfg-btn" type="button" (click)="crearVariables()">
-        <i placement="top" [ngbTooltip]="'proceso.comun.nuevo' | translate" class="icofont icofont-plus"></i>
-        <span>{{ 'proceso.variables.crear' | translate }}</span>
+        <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+        <span>{{'Crear Variables' | translate}}</span>
       </button>
       <button class="cfg-btn cfg-btn--sec" *ngIf="userNit === '1'" type="button"
-        (click)="crear()">{{ 'proceso.comun.nuevo' | translate }}
-        <i placement="top" [ngbTooltip]="'proceso.comun.nuevo' | translate" class="icofont icofont-plus"></i>
+        (click)="crear()">{{'New' |
+        translate}}
+        <i placement="top" ngbTooltip="{{'New' | translate}}" class="icofont icofont-plus"></i>
       </button>
     </div>
   </header>
@@ -26,28 +27,28 @@
     <div class="custom-datatable" *ngIf="!cargando">
       <div class="var-filtro">
         <input type='text' class="filter-ngx form-control"
-          [placeholder]="'proceso.variables.filtrar' | translate" (keyup)='updateFilter($event)' />
+          placeholder="{{'Escribe el texto que desees filtrar' | translate}}" (keyup)='updateFilter($event)' />
       </div>
       <div class="datatable-scroll">
         <ngx-datatable #table class='material' [columns]="columns" [columnMode]="ColumnMode.force"
           [headerHeight]="30" [footerHeight]="50" rowHeight="auto" [limit]="10" [rows]="rows"
           [sorts]="[{ prop: 'nit', dir: 'asc' }]">
-          <ngx-datatable-column [name]="'proceso.tabla.id' | translate" *ngIf="!isMobile" class="datatable-header">
+          <ngx-datatable-column name="{{'Id' | translate}}" *ngIf="!isMobile" class="datatable-header">
             <ng-template let-row="row" ngx-datatable-cell-template>
               {{ row.id }}
             </ng-template>
           </ngx-datatable-column>
-          <ngx-datatable-column [name]="'proceso.variables.tituloCol' | translate">
+          <ngx-datatable-column name="{{'Título' | translate}}">
             <ng-template let-row="row" ngx-datatable-cell-template>
               {{ row.titulo }}
             </ng-template>
           </ngx-datatable-column>
-          <ngx-datatable-column [name]="'proceso.variables.variable' | translate">
+          <ngx-datatable-column name="{{'Variable' | translate}}">
             <ng-template let-row="row" ngx-datatable-cell-template>
               {{ row.variable }}
             </ng-template>
           </ngx-datatable-column>
-          <ngx-datatable-column [name]="'proceso.variables.valor' | translate">
+          <ngx-datatable-column name="{{'Valor' | translate}}">
             <ng-template let-row="row" ngx-datatable-cell-template>
               {{ row.valor }}
             </ng-template>
@@ -55,7 +56,7 @@
         </ngx-datatable>
       </div>
       <div class="var-pie">
-        <button class="cfg-btn cfg-btn--sec"><i class="icofont icofont-file-excel"></i>{{ 'proceso.comun.excel' | translate }}</button>
+        <button class="cfg-btn cfg-btn--sec"><i class="icofont icofont-file-excel"></i>Excel</button>
       </div>
     </div>
   </section>

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 import { CrearComboComponent } from './crear-combo/crear-combo.component';
 import { ImportarCombosComponent } from './importar-combos/importar-combos.component';
 
@@ -43,8 +42,7 @@ export class CombosComponent implements OnInit {
 
   constructor(
     private service: MaestroService,
-    private modalService: NgbModal,
-    private translate: TranslateService
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -173,23 +171,23 @@ export class CombosComponent implements OnInit {
     // guardan sus productos (con la marca del combo, D-339), así que
     // desactivarlo no cambia nada de lo que ya se vendió.
     Swal.fire({
-      title: this.translate.instant('proceso.combos.desactivarTitulo'),
-      text: this.translate.instant('proceso.combos.desactivarTexto', { nombre: row.nombre }),
+      title: '¿Desactivar el combo?',
+      text: `"${row.nombre}" dejará de aparecer al cotizar y al vender. Las cotizaciones y los pedidos que ya lo tienen no cambian.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('proceso.descuentosPromociones.siDesactivar'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#5F3FE0'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.removeCombo(row.id).subscribe({
           next: () => {
-            Swal.fire(this.translate.instant('proceso.descuentosPromociones.desactivado'), this.translate.instant('proceso.combos.desactivadoTexto'), 'success');
+            Swal.fire('Desactivado', 'El combo quedó inactivo. Lo puedes reactivar desde Editar.', 'success');
             this.cargarDatos();
           },
           error: (error) => {
             console.error('Error desactivando combo:', error);
-            Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.combos.errorDesactivar'), 'error');
+            Swal.fire('Error', 'No se pudo desactivar el combo', 'error');
           }
         });
       }
@@ -202,23 +200,23 @@ export class CombosComponent implements OnInit {
    */
   eliminarPermanente(row: any) {
     Swal.fire({
-      title: this.translate.instant('proceso.descuentosPromociones.eliminarPermanenteTitulo'),
-      text: this.translate.instant('proceso.combos.eliminarTexto', { nombre: row.nombre }),
+      title: '¿Eliminar permanentemente?',
+      text: `"${row.nombre}" se eliminará de forma definitiva y no se podrá recuperar.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('proceso.comun.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#D64545'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deletePermanentCombo(row.id).subscribe({
           next: () => {
-            Swal.fire(this.translate.instant('proceso.descuentosPromociones.eliminado'), this.translate.instant('proceso.combos.eliminadoTexto'), 'success');
+            Swal.fire('Eliminado', 'El combo se eliminó permanentemente', 'success');
             this.cargarDatos();
           },
           error: (error) => {
-            const msg = error?.error?.message || this.translate.instant('proceso.combos.errorEliminar');
-            Swal.fire(this.translate.instant('comun.error'), msg, 'error');
+            const msg = error?.error?.message || 'No se pudo eliminar el combo';
+            Swal.fire('Error', msg, 'error');
           }
         });
       }

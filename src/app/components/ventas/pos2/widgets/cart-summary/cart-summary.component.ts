@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/co
 import { CartService } from '../../../../../shared/services/cart.service';
 import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
 import { lineaDesdeItemPos, precioUnitarioPos, resolverLineaPos, tieneCambios } from '../../../../../shared/utils/pos-linea-precio';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cart-summary',
@@ -23,7 +22,7 @@ export class CartSummaryComponent {
   cuponAbierto = false;
   @ViewChild('cuponInput') private cuponInput?: ElementRef<HTMLInputElement>;
 
-  constructor(public cartService: CartService, private cdr: ChangeDetectorRef, private translate: TranslateService) { }
+  constructor(public cartService: CartService, private cdr: ChangeDetectorRef) { }
 
   /**
    * Total del ticket como NÚMERO, solo para mostrarlo con separadores de miles.
@@ -39,7 +38,7 @@ export class CartSummaryComponent {
   /** D-540: unidades del ticket (suma de cantidades), leídas de getPOSCantidad(). */
   get textoUnidades(): string {
     const unidades = Number(this.cartService.getPOSCantidad()) || 0;
-    return unidades === 1 ? this.translate.instant('ventas.cartSummary.unidad') : this.translate.instant('ventas.cartSummary.unidades', { n: unidades });
+    return unidades === 1 ? '1 unidad' : `${unidades} unidades`;
   }
 
   /**

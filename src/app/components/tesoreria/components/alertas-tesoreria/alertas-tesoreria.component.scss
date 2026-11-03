@@ -220,3 +220,21 @@
     flex-direction: row;
   }
 }
+
+// Ticket 1451: cuántas alertas junta el grupo y paginación de grupos.
+.tk-alert-count {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+}
+.tk-alert-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+}

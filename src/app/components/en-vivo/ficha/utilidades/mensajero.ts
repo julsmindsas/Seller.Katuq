@@ -1,6 +1,6 @@
 import { EtapaId, EtapaInfo, EventoEnVivo, MensajeroEnVivo, PedidoEnVivo } from '../../servicios/en-vivo.modelos';
 import { tipoDeTransportador } from '../../servicios/en-vivo-reglas';
-import { armarFlota } from '../../utilidades/flota';
+import { armarFlota, salioElMismoDia } from '../../utilidades/flota';
 import { claveDeNombre, diaDeColombia, entero } from '../../utilidades/formato';
 import { CeldaFicha, ContenidoMensajero } from '../ficha.modelos';
 import { filasDePedidos, filasParaPintar, ordenarFilas } from './filas';
@@ -95,12 +95,20 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
         tituloLleva: '',
         filas: [],
         restantes: 0,
+        tituloSinCerrar: '',
+        filasSinCerrar: [],
+        restantesSinCerrar: 0,
         nota: 'Ya no tenemos datos de este mensajero en la pantalla.',
       },
     };
   }
 
-  const lleva = suyos.filter((p) => p.etapa === 'camino');
+  // Un mensajero propio lleva lo que salió hoy; lo de días anteriores que sigue "despachado" va
+  // aparte, para que el comercio lo cierre. Una transportadora lleva todo: sus envíos tardan días.
+  const enCamino = suyos.filter((p) => p.etapa === 'camino');
+  const referencia = esTransportadora ? null : entrada.ahoraMs;
+  const lleva = enCamino.filter((p) => salioElMismoDia(p, referencia));
+  const sinCerrar = enCamino.filter((p) => !salioElMismoDia(p, referencia));
   const ultima = ultimaSalida(clave, suyos, entrada.eventos);
   const entregados = entregadosDeHoyPor(suyos, entrada.dia);
 
@@ -109,12 +117,14 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
     { etiqueta: 'Entregó hoy', valor: `${entero(entregados)} ${entregados === 1 ? 'pedido' : 'pedidos'}`, clase: '' },
   ];
 
-  const pintadas = filasParaPintar(ordenarFilas(filasDePedidos(lleva)), {
+  const opcionesFilas = {
     ocultar: entrada.ocultar,
     katuq: false,
     ahoraMs: entrada.ahoraMs,
     etapas: entrada.etapas,
-  });
+  };
+  const pintadas = filasParaPintar(ordenarFilas(filasDePedidos(lleva)), opcionesFilas);
+  const pintadasSinCerrar = filasParaPintar(ordenarFilas(filasDePedidos(sinCerrar)), opcionesFilas);
 
   return {
     eyebrow: esTransportadora ? 'Transportadora' : 'Mensajero',
@@ -129,7 +139,14 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
       tituloLleva: lleva.length > 0 ? 'Lo que lleva ahora' : 'No lleva pedidos ahora',
       filas: pintadas.filas,
       restantes: pintadas.restantes,
-      nota: 'Aquí se ve su estado; la ubicación en vivo no se muestra en esta pantalla.',
+      tituloSinCerrar:
+        sinCerrar.length > 0 ? 'De días anteriores, sin marcar como entregados' : '',
+      filasSinCerrar: pintadasSinCerrar.filas,
+      restantesSinCerrar: pintadasSinCerrar.restantes,
+      nota:
+        sinCerrar.length > 0
+          ? 'Si esos pedidos ya se entregaron, márcalos como entregados para que su estado se vea al día.'
+          : 'Aquí se ve su estado; la ubicación en vivo no se muestra en esta pantalla.',
     },
   };
 }

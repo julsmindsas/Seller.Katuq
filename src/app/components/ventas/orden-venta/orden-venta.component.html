@@ -122,16 +122,16 @@
 <!-- Botones de acción (solo visible en modal, no en PDF) -->
 <div class="modal-actions" *ngIf="activeModal">
   <button type="button" class="btn btn-secondary" (click)="cerrar()">
-    <i class="fa fa-times"></i> {{ 'comun.cerrar' | translate }}
+    <i class="fa fa-times"></i> Cerrar
   </button>
   <!-- Ticket 1195: imprimir directo -->
   <button type="button" class="btn btn-outline" (click)="imprimir()" [disabled]="generandoPDF">
-    <i class="fa fa-print"></i> {{ 'ventas.ordenVenta.imprimir' | translate }}
+    <i class="fa fa-print"></i> Imprimir
   </button>
   <button type="button" class="btn btn-primary" (click)="descargarPDF()" [disabled]="generandoPDF">
     <i class="fa fa-download" *ngIf="!generandoPDF"></i>
     <i class="fa fa-spinner fa-spin" *ngIf="generandoPDF"></i>
-    {{ (generandoPDF ? 'ventas.ordenVenta.generandoPdfPuntos' : 'ventas.ordenVenta.descargarPdf') | translate }}
+    {{ generandoPDF ? 'Generando PDF...' : 'Descargar PDF' }}
   </button>
 </div>
 
@@ -142,7 +142,7 @@
       <i class="fa fa-file-pdf-o fa-3x pdf-icon"></i>
       <div class="spinner-circle"></div>
     </div>
-    <h3>{{ 'ventas.ordenVenta.generandoPdf' | translate }}</h3>
+    <h3>Generando PDF</h3>
     <div class="progress-bar">
       <div class="progress-fill" [style.width.%]="pdfProgress"></div>
     </div>

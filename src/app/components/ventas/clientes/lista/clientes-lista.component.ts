@@ -11,14 +11,24 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ImportResult } from '../../../../shared/models/column-mapping.model';
 import { ClientConfigService, ClientTag } from '../services/client-config.service';
+import { ClientesListaService, ClientesPagina, ClientesPaginaParams } from '../services/clientes-lista.service';
 import Swal from 'sweetalert2';
 import { SitiosService } from '../../../sitios/sitios.service';
 import { clientBillingProfiles, matchesClientSearch } from '../../../../shared/utils/client-search';
-import { TranslateService } from '@ngx-translate/core';
+
+interface FiltrosAplicados {
+    q: string;
+    cliente: string;
+    documento: string;
+    email: string;
+    estado: string | null;
+    tipoCliente: string | null;
+    etiquetas: string[];
+}
 
 @Component({
     selector: 'app-clientes-lista',
@@ -29,13 +39,28 @@ import { TranslateService } from '@ngx-translate/core';
 export class ClientesListaComponent implements OnInit, OnDestroy {
     @ViewChild('dt') dt: Table;
 
-    clientes: any[] = [];
-    clientesOriginales: any[] = []; // Guardamos los datos originales sin filtrar
+    clientes: any[] = []; // Solo la página que se está viendo: el servidor pagina, ordena y filtra
     billingProfiles = clientBillingProfiles;
     cargando: boolean = true;
     formFiltros: FormGroup;
     totalRecords: number = 0;
     rows: number = 10;
+    first: number = 0;
+    sortField: string | undefined;
+    sortOrder: 'asc' | 'desc' | undefined;
+    /** El buscador tiene más coincidencias de las que devolvió (el servidor topa la búsqueda). */
+    busquedaParcial: boolean = false;
+    /** Exportando a Excel (indicador propio: no comparte `cargando` con la tabla). */
+    exportando: boolean = false;
+    /**
+     * Filtros que ya se aplicaron (los de la última búsqueda, no lo que hay escrito en los campos).
+     * Paginar, ordenar o refrescar usan ESTA copia, para que lo escrito sin pulsar Buscar no se aplique en silencio.
+     */
+    private filtrosAplicados: FiltrosAplicados = {
+        q: '', cliente: '', documento: '', email: '', estado: null, tipoCliente: null, etiquetas: []
+    };
+    private cargaSub?: Subscription;
+    private primeraCarga = true;
     mostrarFiltros: boolean = true;
     viewMode: 'compact' | 'detailed' = 'compact';
     selectedCliente: any | null = null;
@@ -49,8 +74,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     // Opciones para dropdown de estado
     estadoOptions = [
-        { label: 'ventas.clientes.activo', value: 'activo' },
-        { label: 'ventas.clientes.bloqueado', value: 'bloqueado' }
+        { label: 'Activo', value: 'activo' },
+        { label: 'Bloqueado', value: 'bloqueado' }
     ];
 
     // Opciones para dropdown de tipo de cliente
@@ -70,9 +95,6 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     availableTagsForFilter: ClientTag[] = [];
     selectedTagNames: string[] = [];
 
-    // Término entrante del buscador global del header (?buscar=)
-    private pendingGlobalSearch: string = '';
-
     constructor(
         private modalService: NgbModal,
         private router: Router,
@@ -85,7 +107,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private http: HttpClient,
         private clientConfig: ClientConfigService,
         private sitiosService: SitiosService,
-        private translate: TranslateService
+        private listaService: ClientesListaService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -102,10 +124,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.cargarClientes();
-
         // Entrada desde el buscador global del header (?buscar=documento|nombre):
         // prefiltra la tabla. Reacciona aunque ya estemos en esta ruta.
+        // La primera emisión decide la carga inicial (con o sin término), así no se piden dos páginas.
         this.route.queryParams.subscribe(params => {
             const buscar = (params['invoiceCustomer'] || params['buscar'] || '').toString().trim();
             if (buscar) {
@@ -113,8 +134,12 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                     this.formFiltros.reset(); this.selectedTagNames = []; this.selectedEstadoFilter = 'todos';
                 }
                 this.globalFilterValue = buscar;
-                this.pendingGlobalSearch = buscar;
-                this.applyPendingGlobalSearch();
+                this.primeraCarga = false;
+                this.cargarClientes({ reiniciar: true, aplicar: true });
+            } else if (this.primeraCarga) {
+                this.primeraCarga = false;
+                // Primera carga: valen los filtros guardados que la pantalla muestra.
+                this.cargarClientes({ aplicar: true });
             }
         });
 
@@ -139,6 +164,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        this.cargaSub?.unsubscribe();
         this.searchSubject.complete();
     }
 
@@ -164,31 +190,98 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.saveFilters();
     }
 
-    cargarClientes(): void {
+    /** Fija como aplicados los filtros que hay en pantalla en este momento. */
+    private capturarFiltros(): void {
+        const f = this.formFiltros.value;
+        this.filtrosAplicados = {
+            q: this.globalFilterValue,
+            cliente: f.cliente,
+            documento: f.documento,
+            email: f.email,
+            estado: f.estado,
+            tipoCliente: f.tipoCliente,
+            etiquetas: [...this.selectedTagNames]
+        };
+    }
+
+    /** Parámetros del servidor según los filtros YA aplicados (no lo escrito sin pulsar Buscar). */
+    private paramsPagina(): ClientesPaginaParams {
+        const f = this.filtrosAplicados;
+        return {
+            first: this.first,
+            rows: this.rows,
+            sortField: this.sortField,
+            sortOrder: this.sortOrder,
+            q: f.q,
+            cliente: f.cliente,
+            documento: f.documento,
+            email: f.email,
+            estado: f.estado,
+            tipoCliente: f.tipoCliente,
+            etiquetas: f.etiquetas
+        };
+    }
+
+    /**
+     * Pide al servidor la página actual. Una petición nueva cancela la anterior
+     * (si el usuario sigue escribiendo, solo vale la última respuesta).
+     */
+    cargarClientes(opciones: { reiniciar?: boolean; notificar?: boolean; aplicar?: boolean; ordenPorDefecto?: boolean; reintento?: boolean } = {}): void {
+        if (opciones.aplicar) { this.capturarFiltros(); }
+        if (opciones.reiniciar) {
+            this.first = 0;
+            if (this.dt) { this.dt.first = 0; }
+        }
+        if (opciones.ordenPorDefecto) {
+            // Vuelve al orden de la lista (más recientes primero) y apaga la flecha de la columna ordenada.
+            this.sortField = undefined;
+            this.sortOrder = undefined;
+            if (this.dt) {
+                (this.dt as any).sortField = null;
+                (this.dt as any).sortOrder = 1;
+                this.dt.tableService.onSort(null);
+            }
+        }
         this.cargando = true;
-        this.clienteService.obtenerClientes().subscribe({
-            next: (clientes: any) => {
-                // Ordenar por fecha de creación desc: los clientes recién creados/importados
-                // aparecen de primeros (el backend /clients/all no ordena).
-                const ordenados = this.ordenarPorReciente(clientes || []);
-                this.clientesOriginales = ordenados; // Guardar datos originales
-                this.clientes = ordenados;
-                this.totalRecords = ordenados.length;
+        this.cargaSub?.unsubscribe();
+        this.cargaSub = this.listaService.listarPagina(this.paramsPagina()).subscribe({
+            next: (pagina: ClientesPagina) => {
+                this.clientes = pagina?.data || [];
+                this.totalRecords = pagina?.total || 0;
+                this.busquedaParcial = !!pagina?.parcial;
+                // Página que quedó vacía (se borraron o bloquearon fichas, o se importó): volver a la última válida.
+                if (this.clientes.length === 0 && this.first > 0 && !opciones.reintento) {
+                    this.first = this.totalRecords > 0 ? Math.floor((this.totalRecords - 1) / this.rows) * this.rows : 0;
+                    if (this.dt) { this.dt.first = this.first; }
+                    if (this.totalRecords > 0) {
+                        this.cargarClientes({ ...opciones, reintento: true, reiniciar: false, aplicar: false, ordenPorDefecto: false });
+                        return;
+                    }
+                }
                 this.cargando = false;
-                // Si veníamos del buscador global, aplicar el filtro ya con datos.
-                this.applyPendingGlobalSearch();
-                this.aplicarFiltros(false);
+                if (opciones.notificar) { this.avisarResultado(); }
             },
             error: (error) => {
                 console.error(error);
                 this.messageService.add({
                     severity: 'error',
-                    summary: this.translate.instant('comun.error'),
-                    detail: this.translate.instant('ventas.clientesLista.errorCargar')
+                    summary: 'Error',
+                    detail: 'Error al cargar los clientes'
                 });
                 this.cargando = false;
             }
         });
+    }
+
+    /** La tabla (modo lazy) pide página u orden nuevo. */
+    onLazyLoad(event: any): void {
+        this.first = event.first || 0;
+        this.rows = event.rows || this.rows;
+        if (event.sortField) {
+            this.sortField = event.sortField;
+            this.sortOrder = event.sortOrder === -1 ? 'desc' : 'asc';
+        }
+        this.cargarClientes();
     }
 
     buscarClientes(): void {
@@ -198,74 +291,49 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Aplicar filtros locales a los datos
+    // Aplicar filtros: vuelve a la primera página y pregunta al servidor
     private aplicarFiltros(notify = true): void {
-        const filtros = this.formFiltros.value;
+        this.cargarClientes({ reiniciar: true, notificar: notify, aplicar: true });
+    }
 
-        let clientesFiltrados = [...this.clientesOriginales];
-
-        // Filtro por nombre/cliente
-        if (filtros.cliente && filtros.cliente.trim()) {
-            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.cliente, 'name'));
-        }
-
-        // Filtro por documento
-        if (filtros.documento && filtros.documento.trim()) {
-            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.documento, 'document'));
-        }
-
-        // Filtro por email
-        if (filtros.email && filtros.email.trim()) {
-            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.email, 'email'));
-        }
-
-        // Filtro por estado
-        if (filtros.estado) {
-            clientesFiltrados = clientesFiltrados.filter(c =>
-                c.estado === filtros.estado
-            );
-        }
-
-        // Filtro por tipo de cliente (puede estar en c.categoria.nombre o c.tipoCliente)
-        if (filtros.tipoCliente) {
-            const filtroNombre = filtros.tipoCliente.toLowerCase();
-            clientesFiltrados = clientesFiltrados.filter(c => {
-                const tipo = (c.categoria?.nombre || c.tipoCliente || '').toLowerCase();
-                return tipo === filtroNombre;
-            });
-        }
-
-        // Filtro por etiquetas (OR: el cliente debe tener al menos una de las etiquetas seleccionadas)
-        if (this.selectedTagNames.length > 0) {
-            clientesFiltrados = clientesFiltrados.filter(c => {
-                const etiquetas: string[] = c.etiquetas || [];
-                return this.selectedTagNames.some(t => etiquetas.includes(t));
-            });
-        }
-
-        if (this.globalFilterValue.trim()) clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, this.globalFilterValue));
-        // Aplicar resultados filtrados
-        this.clientes = clientesFiltrados;
-        this.totalRecords = clientesFiltrados.length;
-        if (this.dt) this.dt.first = 0;
-        if (!notify) return;
-
-        // Mostrar mensaje si no hay resultados
+    private avisarResultado(): void {
         if (this.clientes.length === 0) {
             this.messageService.add({
                 severity: 'info',
-                summary: this.translate.instant('comun.sinResultados'),
-                detail: this.translate.instant('ventas.clientesLista.sinCoincidencias'),
+                summary: 'Sin resultados',
+                detail: 'No se encontraron clientes que coincidan con los filtros',
                 life: 3000
             });
         } else {
             this.messageService.add({
                 severity: 'success',
-                summary: this.translate.instant('ventas.clientesLista.busquedaCompletada'),
-                detail: this.translate.instant('ventas.clientesLista.seEncontraron', { n: this.clientes.length }),
+                summary: 'Búsqueda completada',
+                detail: `Se encontraron ${this.totalRecords} cliente(s)`,
                 life: 2000
             });
         }
+    }
+
+    /**
+     * Filtro local, solo para la exportación a Excel: el servidor pagina, así que al exportar se baja
+     * la lista completa una vez y se aplican los mismos filtros de pantalla.
+     */
+    private filtrarParaExportar(lista: any[]): any[] {
+        const filtros = this.filtrosAplicados;
+        let out = [...lista];
+        if (filtros.cliente && filtros.cliente.trim()) out = out.filter(c => matchesClientSearch(c, filtros.cliente, 'name'));
+        if (filtros.documento && filtros.documento.trim()) out = out.filter(c => matchesClientSearch(c, filtros.documento, 'document'));
+        if (filtros.email && filtros.email.trim()) out = out.filter(c => matchesClientSearch(c, filtros.email, 'email'));
+        if (filtros.estado) out = out.filter(c => c.estado === filtros.estado);
+        if (filtros.tipoCliente) {
+            const nombre = filtros.tipoCliente.toLowerCase();
+            out = out.filter(c => (c.categoria?.nombre || c.tipoCliente || '').toLowerCase() === nombre);
+        }
+        if (filtros.etiquetas.length > 0) {
+            out = out.filter(c => filtros.etiquetas.some(t => (c.etiquetas || []).includes(t)));
+        }
+        if (filtros.q.trim()) out = out.filter(c => matchesClientSearch(c, filtros.q));
+        return out;
     }
 
     limpiarFiltros(): void {
@@ -283,14 +351,13 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.globalFilterValue = '';
         localStorage.removeItem('clientesLista_filtros');
 
-        // Restaurar todos los clientes
-        this.clientes = [...this.clientesOriginales];
-        this.totalRecords = this.clientesOriginales.length;
+        // Restaurar todos los clientes (primera página, sin filtros)
+        this.cargarClientes({ reiniciar: true, aplicar: true });
 
         this.messageService.add({
             severity: 'info',
-            summary: this.translate.instant('ventas.clientesLista.filtrosLimpios'),
-            detail: this.translate.instant('ventas.clientesLista.filtrosLimpiosTexto'),
+            summary: 'Filtros limpios',
+            detail: 'Se muestran todos los clientes nuevamente',
             life: 2000
         });
     }
@@ -304,11 +371,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         modalRef.result.then((result) => {
             if (result?.action === 'created' && result?.cliente) {
-                const nuevo = result.cliente;
-                this.clientesOriginales = [nuevo, ...this.clientesOriginales];
-                this.clientes = [nuevo, ...this.clientes];
-                this.totalRecords = this.clientes.length;
-                this.aplicarFiltros(false);
+                // El servidor cuenta y ordena: primera página y orden por defecto (más recientes primero), así el nuevo queda de primero.
+                // Los filtros aplicados se conservan; lo escrito sin pulsar Buscar no se aplica.
+                this.cargarClientes({ reiniciar: true, ordenPorDefecto: true });
             } else if (result?.action === 'existing_found') {
                 // Cliente ya existía — no era nuevo, no agregar duplicado
             }
@@ -317,18 +382,36 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     editarCliente(cliente: any): void {
         this.selectedCliente = null;
-        const modalRef = this.modalService.open(CrearClienteModalComponent, {
-            size: 'lg',
-            centered: true
-        });
-        modalRef.componentInstance.isEdit = true;
-        modalRef.componentInstance.clienteData = cliente;
+        // La fila de la tabla trae solo sus columnas: la ventana de edición recibe la ficha completa.
+        this.obtenerFicha(cliente, (ficha) => {
+            const modalRef = this.modalService.open(CrearClienteModalComponent, {
+                size: 'lg',
+                centered: true
+            });
+            modalRef.componentInstance.isEdit = true;
+            modalRef.componentInstance.clienteData = ficha;
 
-        modalRef.result.then((result) => {
-            if (result?.action === 'updated' || result?.action === 'created') {
-                this.cargarClientes();
+            modalRef.result.then((result) => {
+                if (result?.action === 'updated' || result?.action === 'created') {
+                    this.cargarClientes();
+                }
+            }).catch(() => {});
+        });
+    }
+
+    /** Trae la ficha completa del cliente (cd) y se la entrega a quien la necesita. */
+    private obtenerFicha(fila: any, alTener: (ficha: any) => void): void {
+        if (!fila?.cd) { alTener(fila); return; }
+        this.listaService.obtenerFicha(fila.cd).subscribe({
+            next: (ficha) => alTener(ficha || fila),
+            error: () => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Error al cargar los clientes'
+                });
             }
-        }).catch(() => {});
+        });
     }
 
     // ── Config modal ─────────────────────────────────────────────────
@@ -357,14 +440,14 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     removeTag(index: number): void {
         const tag = this.editableTags[index];
         Swal.fire({
-            title: this.translate.instant('ventas.clientes.eliminarEtiquetaTitulo', { nombre: tag.name }),
-            text: this.translate.instant('ventas.clientes.eliminarEtiquetaTexto'),
+            title: `¿Eliminar etiqueta "${tag.name}"?`,
+            text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#D64545',
             cancelButtonColor: '#8f8bab',
-            confirmButtonText: this.translate.instant('ventas.clientes.siEliminar'),
-            cancelButtonText: this.translate.instant('comun.cancelar'),
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
             didOpen: () => {
                 const container = document.querySelector('.swal2-container') as HTMLElement;
                 if (container) container.style.zIndex = '99999';
@@ -377,18 +460,19 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.availableTagsForFilter = [...this.clientConfig.getClientTags()];
                 // Limpiar del filtro activo si estaba seleccionada
                 this.selectedTagNames = this.selectedTagNames.filter(n => n !== tag.name);
+                // También de los filtros ya aplicados: si no, la siguiente página pediría una etiqueta borrada.
+                this.filtrosAplicados = {
+                    ...this.filtrosAplicados,
+                    etiquetas: this.filtrosAplicados.etiquetas.filter(n => n !== tag.name)
+                };
                 // Limpiar de los clientes cargados en memoria
                 this.clientes = this.clientes.map(c => ({
                     ...c,
                     etiquetas: Array.isArray(c.etiquetas) ? c.etiquetas.filter((e: string) => e !== tag.name) : []
                 }));
-                this.clientesOriginales = this.clientesOriginales.map(c => ({
-                    ...c,
-                    etiquetas: Array.isArray(c.etiquetas) ? c.etiquetas.filter((e: string) => e !== tag.name) : []
-                }));
                 Swal.fire({
-                    title: this.translate.instant('ventas.clientes.etiquetaEliminada'),
-                    text: this.translate.instant('ventas.clientes.etiquetaEliminadaTexto', { nombre: tag.name }),
+                    title: 'Etiqueta eliminada',
+                    text: `La etiqueta "${tag.name}" fue eliminada del catálogo y de los clientes asignados.`,
                     icon: 'success',
                     timer: 2500,
                     timerProgressBar: true,
@@ -411,8 +495,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             this.showConfigModal = false;
             this.messageService.add({
                 severity: 'success',
-                summary: this.translate.instant('ventas.clientesLista.configuracionGuardada'),
-                detail: this.translate.instant('ventas.clientesLista.etiquetasActualizadas'),
+                summary: 'Configuración guardada',
+                detail: 'Etiquetas actualizadas correctamente.',
                 life: 3000
             });
         });
@@ -454,8 +538,12 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     verDetalles(cliente: any): void {
         this.selectedCliente = null;
+        // Se abre ya con lo de la fila y se completa con la ficha entera apenas llega.
         this.clienteDetalle = cliente;
         this.showDetallePanel = true;
+        this.obtenerFicha(cliente, (ficha) => {
+            if (this.showDetallePanel && this.clienteDetalle?.cd === cliente?.cd) { this.clienteDetalle = ficha; }
+        });
     }
 
     cerrarDetallePanel(): void {
@@ -500,13 +588,34 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.messageService.add({
             severity: 'success',
-            summary: this.translate.instant('ventas.clientesLista.exportado'),
-            detail: this.translate.instant('ventas.clientesLista.clienteExportado'),
+            summary: 'Exportado',
+            detail: 'Cliente exportado correctamente',
             life: 3000
         });
     }
 
     exportarExcel(): void {
+        if (this.exportando) { return; }
+        // La tabla solo tiene una página: se baja la lista completa (una vez, al exportar) y se filtra igual que la pantalla.
+        this.exportando = true;
+        this.clienteService.obtenerClientes().subscribe({
+            next: (todos: any) => {
+                this.exportando = false;
+                this.exportarLista(this.filtrarParaExportar(this.ordenarPorReciente(todos || [])));
+            },
+            error: () => {
+                this.exportando = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error al exportar',
+                    detail: 'No se pudo generar el Excel. Intenta de nuevo en un momento.',
+                    life: 5000
+                });
+            }
+        });
+    }
+
+    private exportarLista(lista: any[]): void {
       try {
         const workbook = XLSX.utils.book_new();
 
@@ -517,7 +626,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             'Etiquetas', '¿Cómo nos conoció?', 'Fecha de Cumpleaños',
             'Empresa', 'Fecha de Adición'
         ];
-        const dataClientes = this.clientes.map(c => [
+        const dataClientes = lista.map(c => [
             c.nombres_completos || '',
             c.apellidos_completos || '',
             c.tipo_documento_comprador || '',
@@ -539,7 +648,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // ── Hoja 2: Notas ─────────────────────────────────────────────
         const headersNotas = ['Documento', 'Nombre', 'Fecha', 'Nota'];
         const dataNotas: any[][] = [headersNotas];
-        this.clientes.forEach(c => {
+        lista.forEach(c => {
             const notas: any[] = Array.isArray(c.notas) ? c.notas : [];
             if (notas.length === 0) return;
             notas.forEach(n => dataNotas.push([
@@ -554,7 +663,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // ── Hoja 3: Facturación ───────────────────────────────────────
         const headersFact = ['Documento Cliente', 'Nombre Cliente', 'Referencia', 'Razón Social', 'Tipo Doc.', 'Nro. Documento', 'Correo'];
         const dataFact: any[][] = [headersFact];
-        this.clientes.forEach(c => {
+        lista.forEach(c => {
             const facts: any[] = Array.isArray(c.datosFacturacionElectronica) ? c.datosFacturacionElectronica : [];
             if (facts.length === 0) return;
             facts.forEach(f => dataFact.push([
@@ -572,7 +681,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // ── Hoja 4: Entrega ───────────────────────────────────────────
         const headersEntrega = ['Documento Cliente', 'Nombre Cliente', 'Referencia', 'Destinatario', 'Celular', 'Dirección', 'Ciudad', 'Departamento', 'País'];
         const dataEntrega: any[][] = [headersEntrega];
-        this.clientes.forEach(c => {
+        lista.forEach(c => {
             const entregas: any[] = Array.isArray(c.datosEntrega) ? c.datosEntrega : [];
             if (entregas.length === 0) return;
             entregas.forEach(e => dataEntrega.push([
@@ -593,16 +702,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.messageService.add({
             severity: 'success',
-            summary: this.translate.instant('comun.exito'),
-            detail: this.translate.instant('ventas.clientesLista.clientesExportados', { n: this.clientes.length }),
+            summary: 'Éxito',
+            detail: `${lista.length} clientes exportados en 4 hojas`,
             life: 3000
         });
       } catch (err) {
         console.error('[exportarExcel] error:', err);
         this.messageService.add({
             severity: 'error',
-            summary: this.translate.instant('ventas.clientesLista.errorExportar'),
-            detail: this.translate.instant('ventas.clientesLista.errorExportarTexto'),
+            summary: 'Error al exportar',
+            detail: 'No se pudo generar el Excel. Revisa la consola para más detalle.',
             life: 5000
         });
       }
@@ -651,24 +760,10 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         }
     }
 
-    onPageChange(event: any): void {
-        this.rows = event.rows;
-    }
-
     onGlobalFilter(event: Event): void {
         const value = (event.target as HTMLInputElement).value;
         this.globalFilterValue = value;
         this.searchSubject.next(value);
-    }
-
-    // Aplica el término entrante del buscador global del header cuando ya hay
-    // datos y la tabla existe (la tabla se crea en ngAfterViewInit; los clientes
-    // llegan por red — el que llegue de último dispara el filtro).
-    private applyPendingGlobalSearch(): void {
-        if (!this.pendingGlobalSearch || this.cargando) return;
-        this.globalFilterValue = this.pendingGlobalSearch;
-        this.pendingGlobalSearch = '';
-        this.aplicarFiltros(false);
     }
 
     toggleActionMenu(event: Event, cliente: any): void {
@@ -738,7 +833,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     async deleteAllClients(): Promise<void> {
-        if (!confirm(this.translate.instant('ventas.clientesLista.confirmarEliminarTodos'))) return;
+        if (!confirm('⚠️ ESTO ELIMINARÁ TODOS LOS CLIENTES DE LA EMPRESA. ¿Estás seguro?')) return;
         try {
             // El interceptor agrega Authorization, company y demás headers automáticamente
             const response = await this.http.delete<{ success: boolean; deleted: number }>(
@@ -746,15 +841,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             ).toPromise();
             this.messageService.add({
                 severity: 'warn',
-                summary: this.translate.instant('ventas.clientesLista.clientesEliminados'),
-                detail: this.translate.instant('ventas.clientesLista.clientesEliminadosTexto', { n: response?.deleted || 0 })
+                summary: 'Clientes eliminados',
+                detail: `Se eliminaron ${response?.deleted || 0} clientes`
             });
             this.cargarClientes();
         } catch (error: any) {
             this.messageService.add({
                 severity: 'error',
-                summary: this.translate.instant('comun.error'),
-                detail: error?.error?.error || this.translate.instant('ventas.clientesLista.errorEliminar')
+                summary: 'Error',
+                detail: error?.error?.error || 'No se pudieron eliminar los clientes'
             });
         }
     }
@@ -767,20 +862,20 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     generarAccesoTienda(cliente: any): void {
         const cd = cliente?.cd;
         if (!cd) {
-            Swal.fire(this.translate.instant('ventas.clientesLista.sinIdentificador'), this.translate.instant('ventas.clientesLista.sinIdentificadorTexto'), 'warning');
+            Swal.fire('Sin identificador', 'Este cliente no tiene identificador interno; ábrelo y guárdalo una vez.', 'warning');
             return;
         }
         this.sitiosService.generarAccesoCliente(cd).subscribe({
             next: (res) => {
                 const data = res && res.data;
                 if (!data) {
-                    Swal.fire(this.translate.instant('comun.error'), this.translate.instant('ventas.clientesLista.errorAcceso'), 'error');
+                    Swal.fire('Error', 'No pudimos generar el acceso.', 'error');
                     return;
                 }
                 if (!data.links.length) {
                     Swal.fire(
-                        this.translate.instant('ventas.clientesLista.accesoSinTienda'),
-                        data.aviso || this.translate.instant('ventas.clientesLista.accesoSinTiendaTexto'),
+                        'Acceso creado, pero sin tienda',
+                        data.aviso || 'Ningún sitio publicado tiene la tienda encendida todavía. Enciéndela en Sitio web › Mis sitios y vuelve a generar el link.',
                         'info'
                     );
                     return;
@@ -788,16 +883,18 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 const link = data.links[0].url;
                 navigator.clipboard?.writeText(link).catch(() => undefined);
                 Swal.fire({
-                    title: this.translate.instant('ventas.clientesLista.linkCopiado'),
+                    title: 'Link copiado',
                     html:
-                        `<p style="margin-bottom:.5rem">${this.translate.instant('ventas.clientesLista.linkCopiadoTexto', { nombre: cliente.nombres_completos || this.translate.instant('ventas.clientesLista.tuCliente'), categoria: data.categoria ? ` (${data.categoria})` : '' })}</p>` +
+                        `<p style="margin-bottom:.5rem">Compárteselo a <strong>${cliente.nombres_completos || 'tu cliente'}</strong>` +
+                        (data.categoria ? ` (${data.categoria})` : '') +
+                        ` por WhatsApp. Al abrirlo verá los precios de su lista en toda la tienda.</p>` +
                         `<code style="font-size:.75rem;word-break:break-all">${link}</code>` +
-                        `<p style="margin-top:.75rem;font-size:.8rem;opacity:.75">${this.translate.instant('ventas.clientesLista.linkRevoca')}</p>`,
+                        `<p style="margin-top:.75rem;font-size:.8rem;opacity:.75">Generarlo de nuevo revoca el link anterior.</p>`,
                     icon: 'success',
-                    confirmButtonText: this.translate.instant('ventas.clientesLista.listo'),
+                    confirmButtonText: 'Listo',
                 });
             },
-            error: () => Swal.fire(this.translate.instant('comun.error'), this.translate.instant('ventas.clientesLista.errorAcceso'), 'error'),
+            error: () => Swal.fire('Error', 'No pudimos generar el acceso.', 'error'),
         });
     }
 }

@@ -42,6 +42,7 @@
         <th style="min-width: 180px">{{ 'tesoreria.tablaPagosPedidos.pago' | translate }}</th>
         <th class="text-center" style="min-width: 140px">{{ 'tesoreria.historialPagos.estado' | translate }}</th>
         <th style="min-width: 140px">{{ 'tesoreria.tablaPagosPedidos.vendedor' | translate }}</th>
+        <th class="text-center" style="min-width: 120px" *ngIf="verMora">{{ 'tesoreria.tablaPagosPedidos.mora' | translate }}</th>
         <th class="text-center" style="min-width: 160px">{{ 'tesoreria.tablaPagosPedidos.acciones' | translate }}</th>
       </tr>
     </ng-template>
@@ -61,6 +62,8 @@
             <div class="tk-client-info">
               <div class="tk-cell-strong">{{ clienteNombre(pedido) }}</div>
               <div class="tk-cell-muted" *ngIf="pedido?.cliente?.documento">{{ pedido?.cliente?.documento }}</div>
+              <!-- Ticket 1461: el cliente es interno (empleado, socio o empresa propia): no suma en Cartera -->
+              <div class="tk-interno" *ngIf="esInterno(pedido)">{{ 'tesoreria.tablaPagosPedidos.interno' | translate }}</div>
             </div>
           </div>
         </td>
@@ -104,6 +107,15 @@
           <span class="tk-cell-seller">{{ pedido?.asesorAsignado?.name || '—' }}</span>
         </td>
 
+        <!-- Ticket 1457 (parte A): días de mora con la regla de Cartera -->
+        <td class="text-center" *ngIf="verMora">
+          <ng-container *ngIf="moraDe(pedido) as m; else sinMora">
+            <span class="tk-mora" [class.tk-mora-vencida]="m.diasVencido > 0">{{ textoMora(pedido) }}</span>
+            <div class="tk-cell-muted" *ngIf="m.diasVencido > 0">{{ claveRango(pedido) | translate }}</div>
+          </ng-container>
+          <ng-template #sinMora><span class="tk-cell-muted">—</span></ng-template>
+        </td>
+
         <!-- Acciones según estado -->
         <td class="text-center">
           <button *ngIf="mode === 'porRevisar'" type="button"
@@ -119,6 +131,14 @@
             <i class="pi pi-plus"></i> {{ 'tesoreria.tablaPagosPedidos.registrarPago' | translate }}
           </button>
 
+          <!-- Tickets 1385 y 1457: recordar el pago de este pedido (bandera recordatoriosCobro) -->
+          <button *ngIf="verRecordar" type="button"
+                  class="btn tk-btn-sm tk-btn-recordar"
+                  [attr.aria-label]="('cartera.recordatorio.recordarPedido' | translate) + ' ' + pedido?.nroPedido"
+                  (click)="recordarPago(pedido)">
+            <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordar' | translate }}
+          </button>
+
           <button *ngIf="mode === 'rechazados'" type="button"
                   class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
@@ -130,7 +150,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6">
+        <td [attr.colspan]="columnas">
           <div class="tk-empty">
             <i class="pi pi-inbox"></i>
             {{ 'tesoreria.tablaPagosPedidos.noHayPedidosQueCoincidan' | translate }}
@@ -140,9 +160,19 @@
     </ng-template>
   </p-table>
 
+  <div class="tk-error" *ngIf="totalesIncompletos" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.tablaPagosPedidos.totalesIncompletos' | translate }}
+  </div>
+
+  <!-- Ticket 1461: la lista todavía incluye a los internos; el aviso dice cuántos hay en esta página -->
+  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && pedidosInternos() > 0" role="note">
+    <i class="pi pi-users me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.tablaPagosPedidos.avisoInternos' | translate:{ cantidad: pedidosInternos() } }}
+  </div>
+
   <!-- Totales de la página -->
   <div class="tk-summary" *ngIf="orders.length > 0">
-    <span><strong>{{ 'tesoreria.tablaPagosPedidos.pedidosEnPantalla' | translate }}</strong> {{ orders.length | number }}</span>
+    <span><strong>{{ (totalesDelFiltro ? 'tesoreria.tablaPagosPedidos.pedidosDelFiltro' : 'tesoreria.tablaPagosPedidos.pedidosEnPantalla') | translate }}</strong> {{ totalPedidos() | number }}</span>
     <span><strong>{{ 'tesoreria.tablaPagosPedidos.anticipos' | translate }}</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
     <span><strong>{{ 'tesoreria.tablaPagosPedidos.faltaPorPagar' | translate }}</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
   </div>

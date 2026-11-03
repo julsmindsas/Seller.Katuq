@@ -72,6 +72,18 @@ export const COMPANY_FEATURE_FLAGS = [
   // Estado del pedido de Katuq a WooCommerce: Entregado → Completado, Cancelado → Cancelado (D-578).
   // Se enciende a mano, primero en sombra. Dueño: Daniel. Se revisa el 2027-04-30.
   'wooOrderStatusPublish',
+  // Evolución mensual de la cartera (ticket 1464): foto diaria y gráfica de 12 meses. Dueño: Daniel. Se retira el 2027-04-30.
+  'carteraEvolucion',
+  // Cartera interna separada (ticket 1461, D-666): tipo de relación del cliente, Cartera sin internos y vista «Cartera interna». Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraInterna',
+  // Acciones de cobro en la tarjeta del cliente de Cartera (ticket 1463): estado de cuenta en PDF, compromiso de pago, gestiones y cupo y plazo. Dueño: Daniel. Se retira el 2027-05-31.
+  'accionesCartera',
+  // Castigar deuda (ticket 1463): solo Administrador, sale de Cartera y queda en «Cartera castigada». Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraCastigo',
+  // Recordatorios de pago desde CxC (tickets 1385 y 1457): «Recordar pago» por correo y WhatsApp, por cliente, por pedido y masivo. Dueño: Daniel. Se retira el 2027-05-31.
+  'recordatoriosCobro',
+  // Cartera por vendedor y mora por fila de «Sin pago» (ticket 1457). Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraVendedorMora',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

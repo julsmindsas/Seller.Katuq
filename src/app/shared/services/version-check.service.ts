@@ -7,12 +7,17 @@ export interface VersionPublicada {
   version: string;
   publicada?: string;
   notas?: NotaVersion[];
+  /** D-581: notas de los últimos 45 días, de la más nueva a la más vieja (pestaña «Novedades»). */
+  recientes?: NotaVersion[];
 }
 
 export interface NotaVersion {
   /** NUEVO | MEJORA | CORRIGE */
   tipo?: string;
   texto: string;
+  fecha?: string;
+  /** D-581: rutas del menú de las que es la nota. Sin módulos, le aplica a todos. */
+  modulos?: string[];
 }
 
 /**

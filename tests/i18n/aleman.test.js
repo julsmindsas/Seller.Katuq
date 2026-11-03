@@ -58,12 +58,8 @@ test('de.json existe, es JSON válido, UTF-8 sin BOM, sin CRLF, sangría de 4 (D
 // ---------------------------------------------------------------- claves
 
 test('tiene exactamente las claves de es.json, en el mismo orden, incluidos primeng, comun y notificaciones', () => {
-  // Solo inglés (2026-11-02): mientras de esté en idiomasPendientes puede faltarle lo nuevo,
-  // pero lo que tiene sigue el orden de es y no sobra nada.
-  const pendiente = (JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/i18n-check.config.json'), 'utf8')).idiomasPendientes || []).includes('de');
-  const soloComunes = (claves, otro) => (pendiente ? claves.filter(k => otro.includes(k)) : claves);
-  assert.deepEqual([...planoDe.keys()], soloComunes([...planoEs.keys()], [...planoDe.keys()]));
-  assert.deepEqual(Object.keys(de), soloComunes(Object.keys(es), Object.keys(de)), 'mismo orden de primer nivel');
+  assert.deepEqual([...planoDe.keys()], [...planoEs.keys()]);
+  assert.deepEqual(Object.keys(de), Object.keys(es), 'mismo orden de primer nivel');
   for (const prefijo of ['primeng.', 'comun.', 'notificaciones.']) {
     const claves = [...planoEs.keys()].filter(k => k.startsWith(prefijo));
     assert.ok(claves.length > 0, prefijo);

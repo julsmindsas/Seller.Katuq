@@ -11,9 +11,9 @@
   <div class="reparto-card__head">
     <span class="reparto-card__ico"><i class="pi pi-sitemap"></i></span>
     <div class="reparto-card__titles">
-      <span class="reparto-card__label">{{ 'ventas.pedidoReparto.repartidoPorBodega' | translate }}</span>
+      <span class="reparto-card__label">{{ 'REPARTIDO POR BODEGA' | translate }}</span>
       <span class="reparto-card__sub">
-        <span [innerHTML]="'ventas.pedidoReparto.subtitulo' | translate: { origen: origen, n: reparto.totalParts }"></span>
+        {{ 'Pedido de' | translate }} <b>{{ origen }}</b> · {{ reparto.totalParts }} {{ 'pedidos, uno por bodega' | translate }}
       </span>
     </div>
   </div>
@@ -26,10 +26,10 @@
             [class.is-missing]="parte.pendiente"
             [disabled]="parte.pendiente || esEste(parte)"
             (click)="abrirParte(parte, $event)">
-      <span class="reparto-parte__nro">{{ parte.pendiente ? ('ventas.pedidoReparto.sinCrear' | translate) : parte.nroPedido }}</span>
+      <span class="reparto-parte__nro">{{ parte.pendiente ? ('Sin crear' | translate) : parte.nroPedido }}</span>
       <span class="reparto-parte__bodega">{{ parte.warehouseName || parte.idBodega || '' }}</span>
       <span *ngIf="parte.provider" class="reparto-parte__prov">{{ proveedor(parte.provider) }}</span>
-      <span *ngIf="esEste(parte)" class="reparto-parte__este">{{ 'ventas.pedidoReparto.este' | translate }}</span>
+      <span *ngIf="esEste(parte)" class="reparto-parte__este">{{ 'Este' | translate }}</span>
       <i *ngIf="!esEste(parte) && !parte.pendiente" class="pi pi-angle-right reparto-parte__go"></i>
     </button>
   </div>

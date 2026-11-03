@@ -11,18 +11,25 @@ import {
 import { Table } from 'primeng/table';
 import { LazyLoadEvent } from 'primeng/api';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
+import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
+import { MoraPedido } from '../../../../shared/services/cartera/cartera.models';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
+import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
+import { OrdersTotals } from '../../../../shared/services/treasury/treasury.models';
+import { claveDocumento } from '../../../../shared/utils/clave-documento';
 import {
   filtroPedidosTesoreria,
   metaEstado,
   PaymentStateMeta,
   rangoPorDefecto,
+  sumarDias,
 } from '../../tesoreria.constants';
 import { RevisarPagoComponent } from '../revisar-pago/revisar-pago.component';
 import { RegistrarPagoComponent } from '../registrar-pago/registrar-pago.component';
@@ -54,6 +61,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   @Input() estadosPago: string[] = [];
   @Input() mode: TablaModo = 'porRevisar';
   @Input() active = false;
+  /** Ticket 1461: claves de documento de los clientes internos (vacío si la cartera interna está apagada). */
+  @Input() clavesInternas: string[] = [];
 
   /** Notifica al padre que un pago cambió de estado (para refrescar KPIs). */
   @Output() changed = new EventEmitter<void>();
@@ -73,10 +82,25 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   fechaHasta = '';
   formasPago: any[] = [];
 
+  /**
+   * Ticket 1454: totales de TODO el resultado filtrado (no solo de la página en
+   * pantalla). null = cargando o no disponible; el pie cae a la suma de la página.
+   */
+  totales: OrdersTotals | null = null;
+  private totalesClave = '';
+
   private lastLazyEvent: LazyLoadEvent | null = null;
   private loadedOnce = false;
   private search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
+
+  /** Tickets 1385 y 1457: bandera `recordatoriosCobro` («Recordar pago» en cada fila de «Sin pago»). */
+  recordatoriosActivo = false;
+  /** Ticket 1457 (parte A): bandera `carteraVendedorMora` (días de mora y rango en cada fila de «Sin pago»). */
+  moraActiva = false;
+  /** Mora de los pedidos de la página visible (orderId -> días y rango, con la regla de Cartera). */
+  mora: { [orderId: string]: MoraPedido } = {};
+  private esAdmin = false;
 
   constructor(
     private ventas: VentasService,
@@ -84,7 +108,18 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     private modal: NgbModal,
     private treasury: TreasuryService,
     private translate: TranslateService,
+    private carteraService: CarteraService,
+    private features: CompanyFeaturesService,
   ) {
+    this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
+    this.moraActiva = this.features.isEnabled('carteraVendedorMora');
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      this.esAdmin = /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(rol);
+    } catch {
+      this.esAdmin = false;
+    }
     // Rango por defecto: último año → hoy. El usuario puede ajustarlo.
     const rango = rangoPorDefecto();
     this.fechaDesde = rango.desde;
@@ -131,6 +166,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
             pageSize: this.pageSize,
           })
         : this.ventas.getOrdersByFilterOptimized(this.buildFilter(), this.page, this.pageSize);
+    this.cargarTotales();
     datos$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -138,11 +174,110 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
           this.orders = res?.orders || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
           this.loading = false;
+          this.cargarMora();
         },
         error: () => {
           this.orders = [];
           this.totalRecords = 0;
           this.loading = false;
+        },
+      });
+  }
+
+  /** Columnas de la tabla (para el mensaje de «sin resultados»). */
+  get columnas(): number {
+    return 6 + (this.verMora ? 1 : 0);
+  }
+
+  get verMora(): boolean {
+    return this.mode === 'sinPago' && this.moraActiva;
+  }
+
+  get verRecordar(): boolean {
+    return this.mode === 'sinPago' && this.recordatoriosActivo;
+  }
+
+  /**
+   * Ticket 1457 (parte A): días de mora y rango de los pedidos de la página visible. Es un extra: si no carga, la
+   * lista sigue igual. Solo se piden los pedidos de esta página.
+   */
+  private moraSub?: Subscription;
+
+  private cargarMora(): void {
+    this.moraSub?.unsubscribe();
+    this.mora = {};
+    if (!this.verMora || !this.orders.length) return;
+    const ids = this.orders.map((o) => String(o?._id || '')).filter(Boolean);
+    if (!ids.length) return;
+    // Si el usuario cambia de página rápido, la respuesta de la página anterior se descarta.
+    this.moraSub?.unsubscribe();
+    this.moraSub = this.carteraService
+      .moraDePedidos(ids)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => (this.mora = r?.pedidos || {}),
+        error: () => (this.mora = {}),
+      });
+  }
+
+  moraDe(pedido: any): MoraPedido | null {
+    return this.mora[String(pedido?._id || '')] || null;
+  }
+
+  /** «8 d» si está vencido; «Al día» si no; vacío si no se pudo calcular. */
+  textoMora(pedido: any): string {
+    const m = this.moraDe(pedido);
+    if (!m) return '';
+    return m.diasVencido > 0 ? `${m.diasVencido} d` : this.translate.instant('cartera.acciones.alDia');
+  }
+
+  claveRango(pedido: any): string {
+    const m = this.moraDe(pedido);
+    return m ? `cartera.rangos.${m.rango}Etiqueta` : '';
+  }
+
+  /** Ticket 1385/1457: «Recordar pago» desde la fila. El servidor resuelve el cliente y el saldo desde Cartera. */
+  recordarPago(pedido: any): void {
+    const id = String(pedido?._id || '');
+    if (!id) return;
+    abrirRecordatorioCobro(this.modal, [{ orderIds: [id], nombre: this.clienteNombre(pedido) }], this.esAdmin);
+  }
+
+  /**
+   * Pide al servidor los totales del filtro actual. Cambiar de página no los
+   * cambia, así que solo se vuelve a pedir cuando cambian los filtros o tras una
+   * acción (reload). "Por revisar" lista comprobantes, no pedidos: queda con la
+   * suma de lo que se ve.
+   */
+  private cargarTotales(forzar = false): void {
+    if (this.mode === 'porRevisar') {
+      this.totales = null;
+      return;
+    }
+    const term = (this.searchTerm || '').trim();
+    const filtros = {
+      estadosPago: this.estadosPago,
+      fechaInicial: this.fechaDesde,
+      // Misma fecha final que la lista: el día siguiente, para incluir el día de "hasta".
+      fechaFinal: sumarDias(this.fechaHasta, 1),
+      nroPedido: term && /^\d+$/.test(term) ? term : undefined,
+      cliente: term && !/^\d+$/.test(term) ? term : undefined,
+      // Misma forma de pago que manda la lista (buildFilter): el pie suma exactamente lo que se lista.
+      formaPago: this.formaPagoFilter || undefined,
+    };
+    const clave = JSON.stringify(filtros);
+    if (!forzar && clave === this.totalesClave) return;
+    this.totalesClave = clave;
+    this.totales = null;
+    this.treasury
+      .getOrdersTotals(filtros)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (t) => {
+          if (clave === this.totalesClave) this.totales = t;
+        },
+        error: () => {
+          if (clave === this.totalesClave) this.totales = null;
         },
       });
   }
@@ -199,6 +334,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   }
 
   reload(): void {
+    this.cargarTotales(true);
     this.loadData(this.lastLazyEvent || undefined);
   }
 
@@ -288,11 +424,45 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     return !!(pago && pago.paymentId);
   }
 
-  // ── Totales de la página (footer) ─────────────────────────────────────────
+  // ── Totales del pie ───────────────────────────────────────────────────────
+  // Con totales del servidor son los de todo el resultado filtrado; mientras
+  // llegan (o si fallan, o en "Por revisar") son los de las filas en pantalla.
+  get totalesDelFiltro(): boolean {
+    return this.totales !== null;
+  }
+  /** El servidor leyó solo una parte del filtro (tope de seguridad): los totales no son exactos. */
+  get totalesIncompletos(): boolean {
+    return this.totales?.truncado === true;
+  }
+  // ── Clientes internos (ticket 1461) ───────────────────────────────────────
+  private internosDe: string[] | null = null;
+  private internosSet = new Set<string>();
+
+  /** ¿El cliente del pedido es interno? Misma clave de documento que el servidor (sin puntos, guiones ni dígito de verificación). */
+  esInterno(pedido: any): boolean {
+    if (!this.clavesInternas || this.clavesInternas.length === 0) return false;
+    if (this.internosDe !== this.clavesInternas) {
+      this.internosDe = this.clavesInternas;
+      this.internosSet = new Set(this.clavesInternas);
+    }
+    const clave = claveDocumento(pedido?.cliente?.documento);
+    return !!clave && this.internosSet.has(clave);
+  }
+
+  /** Cuántos pedidos de la página son de clientes internos. */
+  pedidosInternos(): number {
+    return this.orders.reduce((n, p) => n + (this.esInterno(p) ? 1 : 0), 0);
+  }
+
+  totalPedidos(): number {
+    return this.totales ? this.totales.totalItems : this.orders.length;
+  }
   totalAnticipo(): number {
+    if (this.totales) return this.totales.anticipo;
     return this.orders.reduce((acc, p) => acc + (Number(p?.anticipo) || 0), 0);
   }
   totalFalta(): number {
+    if (this.totales) return this.totales.faltaPorPagar;
     return this.orders.reduce((acc, p) => acc + (Number(p?.faltaPorPagar) || 0), 0);
   }
 

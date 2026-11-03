@@ -91,3 +91,42 @@
     &.tk-tab-badge-danger { background: var(--kc-red-wash); color: var(--kc-red); }
   }
 }
+
+// Ticket 1456: botón de ayuda de cada tarjeta. El tooltip de PrimeNG se pinta en el body.
+.tk-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 2px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--kc-muted2);
+  font-size: 13px;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+
+  &:hover { color: var(--kc-accent); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}
+
+// El tooltip se agrega al body: estilo global solo para esta clase.
+::ng-deep .tk-ayuda-tooltip {
+  max-width: 320px;
+
+  .p-tooltip-text {
+    white-space: pre-line;
+    // [class*="p-"] (primeng-overrides) fuerza font-size y line-height con !important sobre
+    // `.p-tooltip-text`: sin !important aquí el texto saldría a 0.7rem.
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+    font-weight: 600;
+    letter-spacing: normal;
+    padding: 10px 12px;
+    border-radius: 11px;
+    background: #211F3A;
+    color: #fff;
+  }
+}

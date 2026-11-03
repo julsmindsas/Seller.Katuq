@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Pedido } from '../modelo/pedido';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
-import { TranslateService } from '@ngx-translate/core';
 
 /**
  * Modal para editar el IVA manual de UNA línea de un pedido ya creado.
@@ -26,7 +25,7 @@ export class EditarIvaLineaPedidoComponent implements OnChanges {
   guardando = false;
   error: string | null = null;
 
-  constructor(private ventasService: VentasService, private translate: TranslateService) {}
+  constructor(private ventasService: VentasService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pedido']) {
@@ -85,7 +84,7 @@ export class EditarIvaLineaPedidoComponent implements OnChanges {
     const linea = this.lineas[this.lineaSeleccionadaIndex];
     const productoCd = linea?.producto?.cd;
     if (!productoCd) {
-      this.error = this.translate.instant('ventas.editarIvaLineaPedido.errorProducto');
+      this.error = 'No se pudo identificar el producto de esta línea.';
       return;
     }
 
@@ -110,7 +109,7 @@ export class EditarIvaLineaPedidoComponent implements OnChanges {
           // Prioridad: mensaje específico del backend (err.error.error) sobre el genérico de
           // Angular (err.message, ej. "Http failure response for ...") — para 403/404/500 el
           // backend siempre trae la razón puntual (ya facturado, pedido congelado, etc.).
-          this.error = err?.error?.error || err?.message || this.translate.instant('ventas.editarIvaLineaPedido.errorActualizar');
+          this.error = err?.error?.error || err?.message || 'No se pudo actualizar el IVA de la línea.';
         },
       });
   }

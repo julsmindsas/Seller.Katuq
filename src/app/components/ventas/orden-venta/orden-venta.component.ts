@@ -3,7 +3,6 @@ import { Pedido } from "../modelo/pedido";
 import { Empresa } from "../../../shared/models/empresa/empresa";
 import { CompanyInformation } from "../../../shared/models/User/CompanyInformation";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
-import { TranslateService } from "@ngx-translate/core";
 import { SecurityService } from "../../../shared/services/security/security.service";
 import { CotizacionesService } from "../../cotizaciones/cotizaciones.service";
 import { Subject } from "rxjs";
@@ -64,7 +63,6 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
     @Optional() public activeModal: NgbActiveModal,
     private securityService: SecurityService,
     private cotizacionesService: CotizacionesService,
-    private translate: TranslateService,
   ) {}
 
   private cargarLogo(url: string | undefined | null): void {
@@ -525,14 +523,14 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
     if (this.generandoPDF) return;
     this.generandoPDF = true;
     this.pdfProgress = 0;
-    this.currentProgressMessage = this.translate.instant('ventas.ordenVenta.iniciando');
+    this.currentProgressMessage = "Iniciando...";
     try {
-      this.updatePDFProgress(10, this.translate.instant('ventas.ordenVenta.preparando'));
+      this.updatePDFProgress(10, "Preparando documento...");
       const html2pdf = (await import("html2pdf.js")).default;
       const element = this.ordenVentaContentRef?.nativeElement;
       if (!element) throw new Error("Elemento no encontrado");
       const options = this.getOptimizedPDFOptions();
-      this.updatePDFProgress(50, this.translate.instant('ventas.ordenVenta.generandoPdfPuntos'));
+      this.updatePDFProgress(50, "Generando PDF...");
       const worker: any = html2pdf().from(element).set(options).toPdf();
       if (modo === 'descargar') {
         await worker.save();
@@ -547,9 +545,9 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
         }
         setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
       }
-      this.updatePDFProgress(100, modo === 'descargar' ? this.translate.instant('ventas.ordenVenta.pdfDescargado') : this.translate.instant('ventas.ordenVenta.listoImprimir'));
+      this.updatePDFProgress(100, modo === 'descargar' ? "PDF descargado" : "Listo para imprimir");
     } catch (error) {
-      alert(this.translate.instant('ventas.ordenVenta.errorPdf'));
+      alert("Error al generar el PDF. Por favor, intente nuevamente.");
     } finally {
       setTimeout(() => {
         this.generandoPDF = false;
