@@ -26,7 +26,9 @@
   <div class="kc-filtros" *ngIf="!orden">
     <label class="kc-campo">
       <span>Bodega</span>
-      <select [(ngModel)]="bodegaSeleccionada" (change)="cargar()">
+      <!-- Ticket 1469: arranca en «Todas» (o en la última elegida) para no esconder órdenes. -->
+      <select [(ngModel)]="bodegaSeleccionada" (change)="alCambiarBodega()">
+        <option value="">Todas las bodegas</option>
         <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
           {{ bodega.nombre || bodega.idBodega }}
         </option>
@@ -141,6 +143,10 @@
       <div class="kc-vacio__icono"><i class="pi pi-shopping-cart"></i></div>
       <h3>{{ soloPendientes ? 'No hay órdenes pendientes' : 'Todavía no hay órdenes de compra' }}</h3>
       <p>Una orden es contra lo que se recibe: sin ella, la mercancía entra sin nada que comparar.</p>
+      <!-- Ticket 1469: si el filtro de bodega esconde órdenes, se dice y se ofrece verlas. -->
+      <button class="kc-btn kc-btn--ghost" *ngIf="bodegaSeleccionada" (click)="verTodasLasBodegas()">
+        Ver todas las bodegas
+      </button>
     </div>
 
     <div class="kc-lista" *ngIf="ordenes.length > 0">
