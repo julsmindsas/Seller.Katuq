@@ -12725,6 +12725,7 @@
   "tesoreria.pagoGrupo.errorSinRespuesta": "We do not know whether the payment was recorded. Press the button again: nothing is duplicated.",
   "tesoreria.pagoGrupo.errorArchivo": "The proof of payment could not be uploaded. Check your connection and try again.",
   "tesoreria.pagoGrupo.incompleto": "{{ok}} of {{total}} orders were recorded. Press “Try again” to complete the rest: what is already recorded is not duplicated.",
+  "tesoreria.pagoGrupo.incompletoBloqueado": "One part can no longer be registered because the balance or status of that order changed, and retrying will not fix it. Ask Treasury to reject this payment in «To review» and register it again with the updated split.",
   "tesoreria.tablaPagosPedidos.registrarVarios": "Record payment for several orders",
   "tesoreria.tablaPagosPedidos.marcados": "{{n}} order(s) selected",
   "tesoreria.tablaPagosPedidos.variosClientes": "Select orders from a single customer to record one joint payment.",

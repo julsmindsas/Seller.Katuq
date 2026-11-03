@@ -12571,6 +12571,7 @@
   "tesoreria.pagoGrupo.errorSinRespuesta": "No sabemos si el pago se alcanzó a registrar. Vuelve a presionar el botón: no se duplica.",
   "tesoreria.pagoGrupo.errorArchivo": "No se pudo subir el comprobante. Revisa tu conexión e intenta de nuevo.",
   "tesoreria.pagoGrupo.incompleto": "Se registraron {{ok}} de {{total}} pedidos. Presiona «Reintentar» para completar el resto: lo ya registrado no se duplica.",
+  "tesoreria.pagoGrupo.incompletoBloqueado": "Alguna parte ya no se puede registrar porque cambió el saldo o el estado de ese pedido, y reintentar no lo arregla. Pide a Tesorería que rechace este pago en «Por revisar» y regístralo de nuevo con el reparto actualizado.",
   "tesoreria.tablaPagosPedidos.registrarVarios": "Registrar pago a varios pedidos",
   "tesoreria.tablaPagosPedidos.marcados": "{{n}} pedido(s) marcado(s)",
   "tesoreria.tablaPagosPedidos.variosClientes": "Marca pedidos de un solo cliente para registrar un pago conjunto.",

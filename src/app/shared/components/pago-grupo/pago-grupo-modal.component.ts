@@ -79,6 +79,8 @@ export class PagoGrupoModalComponent implements OnInit {
   detalleErrores: string[] = [];
   resultados: ResultadoParteGrupo[] = [];
   incompleto = false;
+  /** Alguna parte falló por una razón que reintentar no arregla (el saldo o el estado del pedido cambió). */
+  bloqueado = false;
   /** Una llave por apertura: un reintento con la misma llave no duplica el pago en el servidor. */
   private llave = this.nuevaLlave();
 
@@ -250,6 +252,7 @@ export class PagoGrupoModalComponent implements OnInit {
     this.detalleErrores = [];
     this.resultados = [];
     this.incompleto = false;
+    this.bloqueado = false;
     try {
       if (!this.archivoSubido || this.archivoSubido.file !== this.archivo) {
         const hash = await this.calcularHash(this.archivo);
@@ -303,6 +306,8 @@ export class PagoGrupoModalComponent implements OnInit {
     if (codigo === 'GRUPO_INCOMPLETO') {
       this.resultados = Array.isArray(cuerpo.resultados) ? cuerpo.resultados : [];
       this.incompleto = true;
+      // Un saldo que cambió o un pedido que ya no está abierto no se arreglan reintentando: se avisa la salida.
+      this.bloqueado = this.resultados.some((r) => r.estado === 'error' && typeof r.codigo === 'string' && (r.codigo === 'SALDO_CAMBIO' || r.codigo.startsWith('PEDIDO_') || r.codigo === 'OTRO_CLIENTE'));
       const ok = this.resultados.filter((r) => r.estado !== 'error' && r.estado !== 'en_curso').length;
       this.error = this.translate.instant('tesoreria.pagoGrupo.incompleto', { ok, total: this.resultados.length });
       return;

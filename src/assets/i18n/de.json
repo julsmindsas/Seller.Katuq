@@ -9545,6 +9545,7 @@
     "tesoreria.pagoGrupo.errorSinRespuesta": "Wir wissen nicht, ob die Zahlung erfasst wurde. Drücken Sie die Schaltfläche erneut: Es wird nichts doppelt erfasst.",
     "tesoreria.pagoGrupo.errorArchivo": "Der Beleg konnte nicht hochgeladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     "tesoreria.pagoGrupo.incompleto": "{{ok}} von {{total}} Bestellungen wurden erfasst. Drücken Sie „Erneut versuchen“, um den Rest abzuschließen: Bereits Erfasstes wird nicht doppelt erfasst.",
+    "tesoreria.pagoGrupo.incompletoBloqueado": "Ein Teil kann nicht mehr erfasst werden, weil sich der Saldo oder der Status dieser Bestellung geändert hat; ein erneuter Versuch hilft nicht. Bitten Sie die Finanzabteilung, diese Zahlung unter «Zu prüfen» abzulehnen, und erfassen Sie sie mit der aktualisierten Aufteilung neu.",
     "tesoreria.tablaPagosPedidos.registrarVarios": "Zahlung für mehrere Bestellungen erfassen",
     "tesoreria.tablaPagosPedidos.marcados": "{{n}} Bestellung(en) markiert",
     "tesoreria.tablaPagosPedidos.variosClientes": "Markieren Sie Bestellungen nur eines Kunden, um eine gemeinsame Zahlung zu erfassen.",

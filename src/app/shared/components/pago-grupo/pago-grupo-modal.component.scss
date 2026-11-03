@@ -16,6 +16,7 @@
 .pgv-aviso-alerta { background: #fdf6dc; color: #8a5a10; }
 .pgv-aviso-info { background: #f3f0ff; color: #211f3a; }
 .pgv-lista-errores { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; }
+.pgv-salida { margin: 8px 0 0; font-size: 12.5px; letter-spacing: normal; }
 
 .pgv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; @media (max-width: 600px) { grid-template-columns: minmax(0, 1fr); } }
 .pgv-campo { min-width: 0; }

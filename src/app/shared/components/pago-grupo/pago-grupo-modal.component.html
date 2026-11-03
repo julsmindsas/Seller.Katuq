@@ -152,6 +152,7 @@
           {{ (r.estado === 'error' || r.estado === 'en_curso') ? (r.motivo || ('tesoreria.pagoGrupo.pendiente' | translate)) : ('tesoreria.pagoGrupo.listo' | translate) }}
         </li>
       </ul>
+      <p class="pgv-salida" *ngIf="bloqueado">{{ 'tesoreria.pagoGrupo.incompletoBloqueado' | translate }}</p>
     </div>
   </ng-container>
 </div>

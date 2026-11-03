@@ -9713,6 +9713,7 @@
   "tesoreria.pagoGrupo.errorSinRespuesta": "Não sabemos se o pagamento chegou a ser registrado. Aperte o botão de novo: nada é duplicado.",
   "tesoreria.pagoGrupo.errorArchivo": "Não foi possível enviar o comprovante. Confira sua conexão e tente de novo.",
   "tesoreria.pagoGrupo.incompleto": "Foram registrados {{ok}} de {{total}} pedidos. Aperte «Tentar de novo» para completar o resto: o que já foi registrado não se duplica.",
+  "tesoreria.pagoGrupo.incompletoBloqueado": "Uma parte já não pode ser registrada porque o saldo ou o estado desse pedido mudou, e tentar de novo não resolve. Peça à Tesouraria que rejeite este pagamento em «Para revisar» e registre-o novamente com a divisão atualizada.",
   "tesoreria.tablaPagosPedidos.registrarVarios": "Registrar pagamento para vários pedidos",
   "tesoreria.tablaPagosPedidos.marcados": "{{n}} pedido(s) marcado(s)",
   "tesoreria.tablaPagosPedidos.variosClientes": "Marque pedidos de um só cliente para registrar um pagamento conjunto.",
