@@ -13,6 +13,7 @@ El backend no cambió su forma de escribir. Sigue usando la API de Firestore (`a
 - **Frontend:** el Seller no lee ni escribe datos de Katuq directo en Firestore; todo pasa por el backend (`BaseService` + interceptor). La única excepción es `geocoding_cache` (`geocoding.service.ts`), una caché propia del front. No se agregan usos nuevos de `AngularFirestore`.
 - **Consultas e índices:** Postgres no rechaza una consulta por falta de índice, como hacía Firestore; la responde, pero lenta. Toda consulta nueva sobre colecciones grandes (`orders`, `products`, `inventory`, `clients`) necesita su índice en Postgres. `firebase deploy --only firestore:indexes` ya no sirve para producción. Lo que más pesa son los documentos grandes, como los pedidos de 20-30 KB: traer solo los campos que la pantalla usa (`select()`) y paginar.
 - **No se borran registros de `katuq-db`** sin el sí de Daniel, tampoco las cuentas y los datos de prueba.
+- **Desplegar:** a producción solo llega el código. Lo que se haga en la copia de desarrollo (datos, configuraciones, índices) se repite en producción. El orden es índices nuevos, luego código, luego datos o configuraciones, y al final verificar. Está en «Desplegar un cambio a producción» del `CLAUDE.md` del backend.
 - **El detalle técnico** está en el `CLAUDE.md` del backend (repositorio privado): cómo funciona el adaptador, cómo se crean los índices, cómo deben arrancar los scripts y cómo se entra a la base. Este repositorio es público: aquí no van direcciones, llaves ni fallas de seguridad.
 
 ## Inicio de sesión y fuentes de verdad
