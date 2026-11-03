@@ -9803,6 +9803,7 @@
   "ventas.clientesLista.configuracionEtiquetas": "Configuración de etiquetas",
   "ventas.clientesLista.errorCargar": "Error al cargar los clientes",
   "ventas.clientesLista.sinCoincidencias": "No se encontraron clientes que coincidan con los filtros",
+  "ventas.clientesLista.busquedaParcial": "Hay más coincidencias de las que se muestran. Escribe más letras o usa los filtros para afinar la búsqueda.",
   "ventas.clientesLista.busquedaCompletada": "Búsqueda completada",
   "ventas.clientesLista.seEncontraron": "Se encontraron {{n}} cliente(s)",
   "ventas.clientesLista.filtrosLimpios": "Filtros limpios",

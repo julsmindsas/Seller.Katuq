@@ -9983,6 +9983,7 @@
   "ventas.clientesLista.configuracionEtiquetas": "Tag settings",
   "ventas.clientesLista.errorCargar": "Error loading customers",
   "ventas.clientesLista.sinCoincidencias": "No customers match the filters",
+  "ventas.clientesLista.busquedaParcial": "There are more matches than shown. Type more letters or use the filters to narrow the search.",
   "ventas.clientesLista.busquedaCompletada": "Search complete",
   "ventas.clientesLista.seEncontraron": "{{n}} customer(s) found",
   "ventas.clientesLista.filtrosLimpios": "Filters cleared",
