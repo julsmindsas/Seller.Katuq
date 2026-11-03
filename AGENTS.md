@@ -251,7 +251,7 @@ Toda pantalla nueva, o vieja que se toque, debe verse como "Regístrese" y "Todo
 - `src/environments/environment.ts` → configuración de desarrollo; actualmente `urlApi` apunta a `https://back.katuq.com`.
 - `src/environments/environment.prod.ts` → producción (`https://back.katuq.com`).
 - Para usar el backend local, configurar `urlApi` en `environment.ts` a `http://localhost:3300`. Verificar el destino antes de probar operaciones de escritura.
-- Un backend local sin el adaptador de Postgres trabaja sobre el Firestore congelado de producción. No sirve para probar y sus escrituras se pierden. Las pruebas se hacen en el servidor de pruebas, no en el PC de Daniel; los pasos están en el `CLAUDE.md` del backend.
+- El backend local de cada dev se conecta a `katuq_dev`, una copia de producción que se refresca cada madrugada, nunca a la base de producción. Los pasos para conectarse están en `local/aws/dev/README.md` del backend. Un backend local sin el adaptador de Postgres trabaja sobre el Firestore congelado: no sirve.
 
 ## Servicios locales y puertos
 
