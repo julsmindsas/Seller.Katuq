@@ -113,10 +113,13 @@
   tope de longitud, nunca categorías ocultas.
   — `tests/sitios/sugerencias.contract.test.js` (19 pruebas; incluye `Cache-Control`, solo con `search` en `on`,
   plan gratis y límites del router).
-- [ ] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
+- [x] 2.2 [P] `GET /catalogo`: los 5 órdenes, valor desconocido → orden de hoy, `sugerencias` con
   total 0, sin cantidades vendidas en la respuesta.
-  — **Avance (bloque TX34-B10): parte `sugerencias` con total 0 hecha** (`buscadorTienda.test.js`, sin
-  cantidades vendidas ni existencias). Faltan los 5 órdenes (TX34-B12).
+  — Hecha. Parte `sugerencias` con total 0 (bloque TX34-B10, `buscadorTienda.test.js`). Parte de los 5 órdenes
+  (bloque TX34-B13): `tests/sitios/catalogoOrdenes.contract.test.js` (38 pruebas: vocabulario cerrado, novedad
+  con producto sin fecha al final y empate estable, más vendidos con cálculo completo / incompleto / ausente /
+  viejo o sin ventas, ocultas y agotadas fuera, plan gratis, orden + búsqueda tolerante + paginación, una sola lectura,
+  sin cantidades ni escrituras).
 - [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
   — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
   bloque TX34-B03.**
@@ -227,7 +230,7 @@
   «Ver todo el catálogo» y WhatsApp) solo con `search` en `on`; el HTML y el script las pintan con enlaces y
   `textContent`. Evento `busqueda_sin_resultado` por `POST /vista` con su filtro de robots, solo con la búsqueda
   enviada (Enter, cabecera o `?q=`), una vez por término y sesión, saneado en el servidor y guardado solo con
-  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B12.
+  `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B13.
 - [x] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
   (pedidos leídos, líneas sin resolver, si llegó al tope); luego modo `compute`. Resuelve cada
   línea por id y, si no, por referencia → docId; documento por docId de empresa; `completo:
@@ -241,8 +244,19 @@
   calculan una sola vez. **Para la 3.10:** el lector debe ofrecer «Lo más vendido» solo si el documento está completo
   y se calculó hace menos de 48 horas (`esCalculoVigente`); la tarea no toca el documento de una empresa que dejó
   de cumplir las condiciones.
-- [ ] 3.10 Orden por novedad y más vendidos (D6). **Éxito:** BO «Orden por novedad y por más
+- [x] 3.10 Orden por novedad y más vendidos (D6). **Éxito:** BO «Orden por novedad y por más
   vendidos».
+  — Hecho (TX34-B13): `services/sites/ordenTienda.js` y su conexión en `consultarCatalogo`. Valores cerrados
+  `relevancia` (orden de hoy), `precio-asc`, `precio-desc`, `novedad` y `mas-vendidos`; cualquier otro cae al
+  orden de hoy. Con `storeMobile.salesRanking` en `off` o `compute` el catálogo y su HTML son los de hoy (la
+  respuesta no lleva la clave `ordenes`); en `show` Y con un cálculo de ventas completo, de menos de 48 horas
+  y con al menos una venta, la respuesta de `/catalogo` informa las claves ofrecidas (sin cifras) y el selector
+  suma «Lo más nuevo» y «Lo más vendido» juntos; sin ventas vigentes (tienda nueva, documento ausente,
+  incompleto, viejo o vacío) el HTML sale idéntico al de hoy. Las unidades se leen una vez por empresa (documento por docId de la empresa del sitio,
+  solo lectura) y solo comparan: nunca salen en la respuesta, el HTML ni los registros. Con la proyección en
+  `off`, la novedad usa las fechas de `products` (select de dos campos, memorizadas 5 min por empresa).
+  Pendiente para B19: `?orden=` de la URL de entrada no se aplica en la primera carga (el estado del script nace
+  vacío, como hoy, para no cambiar el HTML apagado); sí se conserva al paginar, filtrar y abrir el panel.
 - [ ] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
   **Éxito:** escenarios de EE con zonas, fijo, gratis desde, retiro y ciudad sin zona.
 - [ ] 3.12 [si P14] Aviso de la promesa de plazo en la revisión de publicación.
