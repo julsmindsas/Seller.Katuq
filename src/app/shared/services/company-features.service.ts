@@ -132,6 +132,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'misIdeasV2',
   // Estándar de foto de producto al subir: rechazo claro y avisos a 800 px (D-629, tickets 1426 y 1427).
   'fotosEstandar',
+  // Panel ACCIONES del pedido de nueve (D-635 fase 1, ticket 1472): 4 del rol y 5 personales, «Frecuente» sobre 30
+  // días, pin en el panel y estado en la tarjeta. Delta de orderPinnedActions (D-547). Mismo nombre que el
+  // backend. Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
+  'panelAccionesV2',
   // Landings por objetivo, fase 1 (D-633, tickets 1396 a 1399): bandeja «Leads landing», consentimiento de la
   // Ley 1581 en el formulario de leads y /l/{slug}. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
   'landingsV2',
