@@ -69,5 +69,6 @@
   { "fecha": "2026-11-03T20:00:00Z", "tipo": "CORRIGE", "texto": "Ya no aparece una franja blanca vacía al final de las pantallas." },
   { "fecha": "2026-11-03T20:30:00Z", "tipo": "CORRIGE", "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets." },
   { "fecha": "2026-11-03T21:00:00Z", "tipo": "CORRIGE", "modulos": ["compras/reposicion"], "texto": "En Compras → Qué comprar, los productos sin existencia dicen «Agotado», las cifras para pedir se entienden mejor, el valor avisa cuando faltan costos y los decimales van con coma." },
-  { "fecha": "2026-11-03T21:30:00Z", "tipo": "CORRIGE", "modulos": ["inventario/ordenes-compra"], "texto": "En Órdenes de compra, el filtro de bodega arranca en «Todas las bodegas» y recuerda la última que elegiste, así no se esconden órdenes." }
+  { "fecha": "2026-11-03T21:30:00Z", "tipo": "CORRIGE", "modulos": ["inventario/ordenes-compra"], "texto": "En Órdenes de compra, el filtro de bodega arranca en «Todas las bodegas» y recuerda la última que elegiste, así no se esconden órdenes." },
+  { "fecha":  "2026-11-03T20:37:32Z", "tipo":  "CORRIGE", "modulos":  ["facturacion-electronica"], "texto":  "Facturación electrónica ya no deja la pantalla bloqueada mientras carga: cada parte muestra su avance y puedes empezar a trabajar de una." }
 ]

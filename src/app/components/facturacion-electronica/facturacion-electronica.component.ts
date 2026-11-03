@@ -7,6 +7,7 @@ import { IntegrationsService } from '../integrations/integrations.service';
 import { CompanyFeaturesService } from '../../shared/services/company-features.service';
 import { FacturacionIntegracionService, ResumenFacturacion } from '../../shared/services/facturacion/facturacion-integracion.service';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
+import { LoaderService } from '../../shared/services/loader.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
 import { diasEntre, hoyColombia } from '../integrations/dian-tablero-estado';
@@ -133,6 +134,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     private features: CompanyFeaturesService,
     private facturacionIntegracion: FacturacionIntegracionService,
     private translate: TranslateService,
+    private loaderService: LoaderService,
   ) {}
 
   /** D-500 (FE-01, tarea 4.7): estado del proveedor de facturación, solo con `invoicingHub`. */
@@ -157,11 +159,16 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.loaderService.releaseGlobalLoader();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   ngOnInit(): void {
+    // Ticket 1507: la pantalla tiene sus propios indicadores de carga por sección
+    // (lista, indicadores, nueva factura); el velo global la dejaba bloqueada
+    // hasta que respondía la consulta más lenta, también las de otros módulos.
+    this.loaderService.suppressGlobalLoader();
     this.loadDashboard();
     this.cargarResumenFacturacion();
 
