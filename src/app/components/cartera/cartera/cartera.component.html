@@ -54,8 +54,11 @@
       </button>
     </div>
 
-    <app-cartera-clientes *ngIf="activeIndex === 0" [data]="data" [evolucion]="evolucion"></app-cartera-clientes>
-    <app-cartera-aging    *ngIf="activeIndex === 1" [data]="data"></app-cartera-aging>
+    <app-cartera-clientes *ngIf="activeIndex === 0" [data]="data" [evolucion]="evolucion"
+                          [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"></app-cartera-clientes>
+    <app-cartera-aging    *ngIf="activeIndex === 1" [data]="data"
+                          [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"
+                          (editarFiltros)="onTabChange({ index: 0 })"></app-cartera-aging>
 
   </ng-container>
 </div>

@@ -17,6 +17,8 @@ import { CarteraClientesComponent } from './components/cartera-clientes/cartera-
 import { CarteraAgingComponent } from './components/cartera-aging/cartera-aging.component';
 import { CarteraVendedoresComponent } from './components/cartera-vendedores/cartera-vendedores.component';
 import { CarteraEvolucionComponent } from './components/cartera-evolucion/cartera-evolucion.component';
+import { CarteraMultiComponent } from './components/cartera-multi/cartera-multi.component';
+import { CarteraFiltrosActivosComponent } from './components/cartera-filtros-activos/cartera-filtros-activos.component';
 
 /**
  * Spec 014 — Finanzas MVP (CxC / Cartera). Módulo lazy del área de cartera.
@@ -29,6 +31,8 @@ import { CarteraEvolucionComponent } from './components/cartera-evolucion/carter
     CarteraAgingComponent,
     CarteraVendedoresComponent,
     CarteraEvolucionComponent,
+    CarteraMultiComponent,
+    CarteraFiltrosActivosComponent,
   ],
   imports: [
     ModuloIaComponent,

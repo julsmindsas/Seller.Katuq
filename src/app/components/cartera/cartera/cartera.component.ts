@@ -6,16 +6,26 @@ import {
   OnInit,
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil, timeout } from 'rxjs/operators';
+import { debounceTime, takeUntil, timeout } from 'rxjs/operators';
 import { CarteraService } from '../../../shared/services/cartera/cartera.service';
 import { CarteraEvolucionResponse, CarteraResponse } from '../../../shared/services/cartera/cartera.models';
+import {
+  CarteraFiltros,
+  filtrosAUrl,
+  filtrosDesdeUrl,
+  filtrosVacios,
+  mismosFiltros,
+} from '../cartera-filtros.util';
 
 /**
  * Spec 014 — Finanzas MVP (CxC / Cartera). Pantalla principal.
  * Hace UNA sola llamada a GET /v1/treasury/cartera (todo viene agregado
  * server-side) y reparte la respuesta a los dos tabs por @Input; los filtros
- * de cada tab son client-side sobre esos datos.
+ * son client-side sobre esos datos.
+ * Ticket 1467: los filtros viven AQUÍ (no en cada tab): los dos tabs usan exactamente los mismos y se
+ * guardan en la dirección de la página, así sobreviven al recargar y se pueden compartir.
  */
 @Component({
   selector: 'app-cartera',
@@ -35,12 +45,30 @@ export class CarteraComponent implements OnInit, OnDestroy {
 
   activeIndex = 0;
 
-  private destroy$ = new Subject<void>();
+  /** Filtros de la cartera, compartidos por «Cartera por cliente» y «Aging» (ticket 1467). */
+  filtros: CarteraFiltros = filtrosVacios();
 
-  constructor(private cartera: CarteraService, private cdr: ChangeDetectorRef) {}
+  private destroy$ = new Subject<void>();
+  /** Pide escribir los filtros en la dirección (se junta lo que cambie en un cuarto de segundo). */
+  private escribirUrl$ = new Subject<void>();
+  /** Mientras la pantalla escribe la dirección, no reacciona a ese mismo cambio. */
+  private escribiendoUrl = false;
+
+  constructor(
+    private cartera: CarteraService,
+    private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
+    const dir = this.route.snapshot.queryParamMap;
+    this.filtros = filtrosDesdeUrl(dir);
+    this.activeIndex = dir.get('vista') === 'aging' ? 1 : 0;
     this.load();
+    // Una dirección con filtros abierta estando ya en Cartera (o el botón atrás) también los aplica.
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((m) => this.alCambiarLaDireccion(m));
+    this.escribirUrl$.pipe(debounceTime(250), takeUntil(this.destroy$)).subscribe(() => this.escribirDireccion());
   }
 
   ngOnDestroy(): void {
@@ -53,11 +81,16 @@ export class CarteraComponent implements OnInit, OnDestroy {
     this.error = false;
     this.forbidden = false;
     this.cartera
-      .getCartera()
+      .getCartera(this.filtros.incluirInternos)
       .pipe(timeout(15000), takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
           this.data = res;
+          // «Incluir internos» solo existe cuando el servidor trae la cartera interna (ticket 1461).
+          if (!res.internos && this.filtros.incluirInternos) {
+            this.filtros = { ...this.filtros, incluirInternos: false };
+            this.escribirUrl$.next();
+          }
           this.loading = false;
           this.cdr.markForCheck();
           this.cargarEvolucion();
@@ -90,5 +123,43 @@ export class CarteraComponent implements OnInit, OnDestroy {
 
   onTabChange(event: { index: number }): void {
     this.activeIndex = event.index;
+    this.escribirUrl$.next();
+  }
+
+  /** Un tab cambió un filtro: se guarda para los dos tabs y en la dirección. */
+  cambiarFiltros(nuevos: CarteraFiltros): void {
+    const recargar = nuevos.incluirInternos !== this.filtros.incluirInternos;
+    this.filtros = nuevos;
+    this.escribirUrl$.next();
+    this.cdr.markForCheck();
+    if (recargar) this.load();
+  }
+
+  private alCambiarLaDireccion(m: ParamMap): void {
+    if (this.escribiendoUrl) return;
+    const leidos = filtrosDesdeUrl(m);
+    const indice = m.get('vista') === 'aging' ? 1 : 0;
+    let cambio = false;
+    if (indice !== this.activeIndex) {
+      this.activeIndex = indice;
+      cambio = true;
+    }
+    if (!mismosFiltros(leidos, this.filtros)) {
+      const recargar = leidos.incluirInternos !== this.filtros.incluirInternos;
+      this.filtros = leidos;
+      cambio = true;
+      if (recargar) this.load();
+    }
+    if (cambio) this.cdr.markForCheck();
+  }
+
+  /** Escribe los filtros y el tab en la dirección, sin llenar el historial y sin tocar otros parámetros. */
+  private escribirDireccion(): void {
+    const params = { ...filtrosAUrl(this.filtros), vista: this.activeIndex === 1 ? 'aging' : null };
+    this.escribiendoUrl = true;
+    const terminar = () => { this.escribiendoUrl = false; };
+    this.router
+      .navigate([], { relativeTo: this.route, queryParams: params, queryParamsHandling: 'merge', replaceUrl: true })
+      .then(terminar, terminar);
   }
 }

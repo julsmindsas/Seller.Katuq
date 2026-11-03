@@ -42,7 +42,22 @@ export interface CarteraPedido {
   diasVencido: number;
   /** Ticket 1464: vence en los próximos 7 días (días vencido entre -7 y 0). */
   porVencer7?: boolean;
+  /**
+   * Ticket 1467 (preparado para el ticket 1463): compromiso de pago del pedido. Hasta que el servidor
+   * lo mande, ningún pedido lo trae y el filtro «Compromiso de pago» no se muestra.
+   */
+  compromiso?: CompromisoPago | null;
 }
+
+/** Compromiso de pago de un pedido (forma provisional, a confirmar con el ticket 1463). */
+export interface CompromisoPago {
+  estado: 'vigente' | 'incumplido' | 'cumplido';
+  /** Fecha prometida (ISO). */
+  fecha?: string | null;
+}
+
+/** Ticket 1467: empresa (NIT) o persona (cédula y demás); '' si no se pudo saber. */
+export type TipoPersona = 'empresa' | 'persona' | '';
 
 /** Cartera agregada de un cliente. */
 export interface CarteraCliente {
@@ -53,6 +68,10 @@ export interface CarteraCliente {
   creditLimit: number;
   /** Plazo de pago en días (0 = contado). */
   payTermDays: number;
+  /** Ticket 1467: tipo de documento tal como está en la ficha del cliente (NIT, CC, CE…). */
+  tipoDocumento?: string;
+  /** Ticket 1467: «Empresa (NIT)» o «Persona (CC)», decidido por el servidor. */
+  tipoPersona?: TipoPersona;
   saldoPendiente: number;
   /** Saldo de los pedidos con 1 o más días vencido (ticket 1460). */
   vencido: number;
@@ -124,6 +143,11 @@ export interface CarteraKpis {
 export interface CarteraResponse {
   kpis: CarteraKpis;
   clientes: CarteraCliente[];
+  /**
+   * Ticket 1467 (preparado para el ticket 1461): resumen de la cartera interna (empleados, socios,
+   * empresa propia). Solo cuando el servidor lo manda aparece el filtro «Incluir internos».
+   */
+  internos?: { monto: number; clientes: number } | null;
 }
 
 /** Un mes de la evolución: foto de la cartera total y vencida (ticket 1464). */

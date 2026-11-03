@@ -1,5 +1,13 @@
 <div class="cx-aging">
 
+  <!-- Ticket 1467: Aging usa los mismos filtros de «Cartera por cliente» -->
+  <div class="cx-aging-filtros" *ngIf="hayFiltros">
+    <app-cartera-filtros-activos [filtros]="filtros" (filtrosChange)="filtrosChange.emit($event)"></app-cartera-filtros-activos>
+    <button type="button" class="cx-aging-cambiar" (click)="editarFiltros.emit()">
+      <i class="pi pi-sliders-h" aria-hidden="true"></i> {{ 'cartera.filtros.cambiarFiltros' | translate }}
+    </button>
+  </div>
+
   <!-- KPI cards por rango + total -->
   <div class="cx-grid cx-grid-aging">
     <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis">
@@ -21,9 +29,13 @@
   </div>
 
   <!-- Empty -->
-  <div *ngIf="rows.length === 0" class="cx-empty">
+  <div *ngIf="rows.length === 0 && !hayFiltros" class="cx-empty">
     <i class="pi pi-check-circle"></i>
     <div class="cx-empty-title">{{ 'cartera.carteraAging.noHayCarteraPendiente' | translate }}</div>
+  </div>
+  <div *ngIf="rows.length === 0 && hayFiltros" class="cx-empty">
+    <i class="pi pi-filter-slash"></i>
+    <div class="cx-empty-title">{{ 'cartera.carteraClientes.ningunClienteCoincideConEl' | translate }}</div>
   </div>
 
   <ng-container *ngIf="rows.length > 0">

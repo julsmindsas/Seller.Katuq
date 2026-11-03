@@ -21,9 +21,10 @@ export class CarteraService extends BaseService {
   /**
    * GET /cartera — cartera agrupada por cliente + KPIs + aging, todo server-side.
    * Una sola llamada trae todo; los filtros de la pantalla son client-side.
+   * Ticket 1467: `incluirInternos` queda preparado para el ticket 1461; solo se manda cuando es true.
    */
-  getCartera(): Observable<CarteraResponse> {
-    return this.get<CarteraResponse>(`${this.base}/cartera`);
+  getCartera(incluirInternos = false): Observable<CarteraResponse> {
+    return this.get<CarteraResponse>(`${this.base}/cartera${incluirInternos ? '?incluirInternos=true' : ''}`);
   }
 
   /** GET /cartera/evolucion — fotos mensuales de cartera total y vencida (últimos 12 meses, ticket 1464). */

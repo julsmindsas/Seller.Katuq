@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
+  Output,
   SimpleChanges,
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -18,17 +20,33 @@ import {
 import {
   AGING_BUCKETS,
   ANTIGUEDAD_OPTIONS,
-  AntiguedadFiltro,
-  esClienteCredito,
+  COMPROMISO_OPTIONS,
+  ESTADO_PAGO_OPTIONS,
+  FACTURA_OPTIONS,
   metaPago,
   ORDEN_OPTIONS,
-  OrdenCartera,
   PagoBadgeMeta,
   RANGO_ANTIGUEDAD_LABEL,
   rangoAntiguedad,
   RISK_OPTIONS,
-  RiskFilter,
+  TIPO_PERSONA_OPTIONS,
+  VENCE_OPTIONS,
 } from '../../cartera.constants';
+import {
+  aplicarFiltros,
+  CarteraFiltros,
+  cuantosFiltrosAvanzados,
+  descripcionFiltrosEs,
+  ES_ORDEN,
+  FilaVista,
+  filtrosVacios,
+  hayFiltrosActivos,
+  numeroDeCampo,
+  SIN_VENDEDOR,
+  sufijoArchivo,
+  VistaCartera,
+} from '../../cartera-filtros.util';
+import { OpcionMulti } from '../cartera-multi/cartera-multi.component';
 
 import { TranslateService } from '@ngx-translate/core';
 /** Una fila de la descarga: un pedido con saldo (ticket 1130). */
@@ -72,8 +90,9 @@ interface RiesgoMeta {
 
 /**
  * Spec 014 — CxC. Tab "Cartera por Cliente" (CA-09 / CA-11).
- * Recibe la respuesta agregada por @Input y filtra client-side (búsqueda,
- * riesgo, vendedor y, desde el ticket 1130, antigüedad por pedido). Cada card
+ * Recibe la respuesta agregada por @Input y filtra client-side. Desde el ticket 1467 los filtros no
+ * viven aquí: los dueña la pantalla (en la URL) y los comparte con «Aging»; este tab los pinta, los
+ * cambia y los aplica con la misma función que Aging. Cada card
  * muestra saldo, semáforo de cupo, mini-barra de aging y DSO; al hacer click
  * expande el detalle de pedidos con saldo. Lo que se ve se puede ordenar y
  * descargar en Excel o PDF.
@@ -89,10 +108,31 @@ export class CarteraClientesComponent implements OnChanges {
   /** Fotos mensuales de la cartera (ticket 1464); null mientras carga o si no hay. */
   @Input() evolucion: CarteraEvolucionResponse | null = null;
 
+  /**
+   * Ticket 1467: los filtros viven en la pantalla (para que Aging use los mismos y la URL los guarde).
+   * Este tab los recibe y avisa con `filtrosChange` cada vez que la persona cambia uno.
+   */
+  @Input() filtros: CarteraFiltros = filtrosVacios();
+  @Output() filtrosChange = new EventEmitter<CarteraFiltros>();
+
   readonly riskOptions = RISK_OPTIONS;
   readonly agingBuckets = AGING_BUCKETS;
-  readonly antiguedadOptions = ANTIGUEDAD_OPTIONS;
   readonly ordenOptions = ORDEN_OPTIONS;
+  readonly tipoPersonaOptions = TIPO_PERSONA_OPTIONS;
+  readonly facturaOptions = FACTURA_OPTIONS;
+  readonly venceOptions = VENCE_OPTIONS;
+  readonly compromisoOptions = COMPROMISO_OPTIONS;
+  /** Antigüedad con selección múltiple: los 6 rangos (sin la opción «Todas»: vacío ya es todas). */
+  readonly antiguedadOpciones: OpcionMulti[] = ANTIGUEDAD_OPTIONS
+    .filter((o) => o.value !== 'todas')
+    .map((o) => ({ value: o.value, labelKey: o.labelKey }));
+  estadoPagoOpciones: OpcionMulti[] = [];
+  vendedorOpciones: OpcionMulti[] = [];
+  /** El panel «Más filtros» está abierto. */
+  masAbierto = false;
+  /** «Incluir internos» y «Compromiso de pago» solo aparecen cuando el servidor trae esos datos (tickets 1461 y 1463). */
+  hayInternos = false;
+  hayCompromisos = false;
 
   /**
    * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
@@ -105,23 +145,14 @@ export class CarteraClientesComponent implements OnChanges {
     this.ayudaAbierta = this.ayudaAbierta === ayuda ? null : ayuda;
   }
 
-  // Filtros (client-side)
-  searchTerm = '';
-  riskFilter: RiskFilter = 'todos';
-  vendorFilter = '';
-  vendorOptions: string[] = [];
-  antiguedadFilter: AntiguedadFiltro = 'todas';
-  orden: OrdenCartera = 'saldo';
-
   clientes: CarteraCliente[] = [];
   filtered: CarteraCliente[] = [];
+  /** Lo que se ve con los filtros: clientes en orden, con sus pedidos y su saldo visibles. */
+  vista: VistaCartera = aplicarFiltros([], filtrosVacios());
 
   /** Saldo de lo que se ve con los filtros (todos los clientes de la lista). */
   totalVisible = 0;
   generandoPdf = false;
-
-  /** Pedidos de cada cliente que entran en el rango de antigüedad elegido. */
-  private pedidosEnRango = new Map<string, CarteraPedido[]>();
 
   /** Documento del cliente cuyo detalle está expandido (null = ninguno). */
   expandedDoc: string | null = null;
@@ -131,70 +162,72 @@ export class CarteraClientesComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       this.clientes = this.data?.clientes || [];
-      this.vendorOptions = this.buildVendorOptions(this.clientes);
+      this.vendedorOpciones = this.armarOpcionesVendedor(this.clientes);
+      this.estadoPagoOpciones = this.armarOpcionesEstadoPago(this.clientes);
+      this.hayInternos = !!this.data?.internos;
+      this.hayCompromisos = this.clientes.some((c) => (c.pedidos || []).some((p) => !!p.compromiso));
       this.expandedDoc = null;
+    }
+    // Una dirección compartida con filtros avanzados abre el panel para que se vean.
+    if (changes['filtros'] && changes['filtros'].firstChange && cuantosFiltrosAvanzados(this.filtros) > 0) {
+      this.masAbierto = true;
+    }
+    if (changes['data'] || changes['filtros']) {
       this.applyFilters();
     }
   }
 
-  private buildVendorOptions(clientes: CarteraCliente[]): string[] {
+  /** Vendedores que hay en la cartera, más «Sin vendedor» si algún cliente no tiene. */
+  private armarOpcionesVendedor(clientes: CarteraCliente[]): OpcionMulti[] {
     const set = new Set<string>();
+    let sin = false;
     clientes.forEach((c) => {
       const v = (c.vendedor || '').trim();
-      if (v) set.add(v);
+      if (v) set.add(v); else sin = true;
     });
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
+    const opciones: OpcionMulti[] = Array.from(set)
+      .sort((a, b) => a.localeCompare(b))
+      .map((v) => ({ value: v, label: v }));
+    // Un vendedor elegido que ya no está en la lista (dirección compartida) se conserva para poder quitarlo.
+    this.filtros.vendedores.forEach((v) => {
+      if (v !== SIN_VENDEDOR && !set.has(v)) opciones.push({ value: v, label: v });
+    });
+    if (sin || this.filtros.vendedores.includes(SIN_VENDEDOR)) {
+      opciones.unshift({ value: SIN_VENDEDOR, labelKey: 'cartera.filtros.sinVendedor' });
+    }
+    return opciones;
   }
 
-  onFilterChange(): void {
-    this.applyFilters();
+  /** Estados de pago del filtro; «Crédito» solo aparece cuando algún pedido ya lo trae (ticket 1448). */
+  private armarOpcionesEstadoPago(clientes: CarteraCliente[]): OpcionMulti[] {
+    const hayCredito = clientes.some((c) => (c.pedidos || []).some((p) => p.estadoPago === 'Credito'));
+    return ESTADO_PAGO_OPTIONS
+      .filter((o) => o.value !== 'Credito' || hayCredito || this.filtros.estadosPago.includes('Credito'))
+      .map((o) => ({ value: o.value, labelKey: o.labelKey }));
+  }
+
+  /** Cambia uno o varios filtros y avisa a la pantalla (que los guarda en la URL y los comparte con Aging). */
+  cambiar(parcial: Partial<CarteraFiltros>): void {
+    this.filtrosChange.emit({ ...this.filtros, ...parcial });
+  }
+
+  /** Saldo mínimo o máximo escrito por la persona (vacío = sin tope). */
+  cambiarSaldo(campo: 'saldoMin' | 'saldoMax', valor: unknown): void {
+    this.cambiar({ [campo]: numeroDeCampo(valor) } as Partial<CarteraFiltros>);
+  }
+
+  alternarMas(): void {
+    this.masAbierto = !this.masAbierto;
+  }
+
+  get avanzadosActivos(): number {
+    return cuantosFiltrosAvanzados(this.filtros);
   }
 
   applyFilters(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.pedidosEnRango = new Map();
-    const filtrados = this.clientes.filter((c) => {
-      if (term) {
-        const nombre = (c.nombre || '').toLowerCase();
-        const doc = (c.documento || '').toLowerCase();
-        if (!nombre.includes(term) && !doc.includes(term)) return false;
-      }
-      switch (this.riskFilter) {
-        case 'vencida':
-          if (!(c.vencido > 0)) return false;
-          break;
-        case 'porVencer':
-          // Ticket 1464: clientes con pedidos que vencen en los próximos 7 días.
-          if (!(Number(c.porVencer7) > 0)) return false;
-          break;
-        case 'cupo80':
-          if (c.cupoUsadoPct == null || c.cupoUsadoPct <= 80) return false;
-          break;
-        case 'excede':
-          if (!c.excedeCupo) return false;
-          break;
-        case 'credito':
-          // Ticket 1502: crédito = cliente con cupo mayor a 0.
-          if (!esClienteCredito(c.creditLimit)) return false;
-          break;
-        case 'contado':
-          // Contado = cupo en 0 o sin cupo configurado.
-          if (esClienteCredito(c.creditLimit)) return false;
-          break;
-      }
-      if (this.vendorFilter && (c.vendedor || '').trim() !== this.vendorFilter) return false;
-      // Antigüedad (ticket 1130): el cliente entra si tiene pedidos con saldo en ese rango.
-      if (this.antiguedadFilter !== 'todas') {
-        const enRango = (c.pedidos || []).filter(
-          (p) => rangoAntiguedad(p.diasVencido) === this.antiguedadFilter,
-        );
-        if (enRango.length === 0) return false;
-        this.pedidosEnRango.set(this.claveCliente(c), enRango);
-      }
-      return true;
-    });
-    this.filtered = this.ordenar(filtrados);
-    this.totalVisible = this.filtered.reduce((suma, c) => suma + this.saldoVisible(c), 0);
+    this.vista = aplicarFiltros(this.clientes, this.filtros);
+    this.filtered = this.vista.clientes;
+    this.totalVisible = this.vista.total;
     this.kpisVista = this.calcularKpisVista();
   }
 
@@ -210,8 +243,7 @@ export class CarteraClientesComponent implements OnChanges {
   kpisVista: CarteraResponse['kpis'] | null = null;
 
   get hayFiltros(): boolean {
-    return !!this.searchTerm.trim() || this.riskFilter !== 'todos' || !!this.vendorFilter ||
-      this.antiguedadFilter !== 'todas';
+    return hayFiltrosActivos(this.filtros);
   }
 
   /** Saldo visible del cliente con más de `desde` días vencido (0 = todo lo vencido). */
@@ -254,31 +286,32 @@ export class CarteraClientesComponent implements OnChanges {
   }
 
   // ── Tarjetas clicables (ticket 1464) ──────────────────────────────────────
-  /** Tarjeta que aplica su filtro. `total` quita los filtros de riesgo, antigüedad y orden. */
+  /**
+   * Tarjeta que aplica su filtro. `total` quita los filtros de riesgo, antigüedad, vence y orden.
+   * Ticket 1467: «Por vencer» ahora usa el filtro «Vence: próximos 7 días», que filtra por pedido.
+   */
   aplicarTarjeta(tarjeta: 'total' | 'vencida' | 'porVencer' | 'dias' | 'excede'): void {
+    const f = this.filtros;
     switch (tarjeta) {
       case 'total':
-        this.riskFilter = 'todos';
-        this.antiguedadFilter = 'todas';
-        this.orden = 'saldo';
-        break;
+        this.cambiar({ riesgo: 'todos', antiguedad: [], vence: 'todos', orden: 'saldo' });
+        return;
       case 'vencida':
-        this.riskFilter = this.riskFilter === 'vencida' ? 'todos' : 'vencida';
-        break;
+        this.cambiar({ riesgo: f.riesgo === 'vencida' ? 'todos' : 'vencida' });
+        return;
       case 'porVencer':
-        // Cobro preventivo (ticket 1464): solo los clientes con pedidos por vencer en 7 días.
-        this.riskFilter = this.riskFilter === 'porVencer' ? 'todos' : 'porVencer';
-        break;
+        // Cobro preventivo (ticket 1464): solo los pedidos que vencen en los próximos 7 días.
+        this.cambiar({ vence: f.vence === '7' ? 'todos' : '7' });
+        if (f.vence !== '7') this.masAbierto = true;
+        return;
       case 'dias':
         // Lo más atrasado primero: es lo que muestra el promedio. Otro clic vuelve al orden por saldo.
-        this.orden = this.orden === 'vencido' ? 'saldo' : 'vencido';
-        break;
+        this.cambiar({ orden: f.orden === 'vencido' ? 'saldo' : 'vencido' });
+        return;
       case 'excede':
-        this.riskFilter = this.riskFilter === 'excede' ? 'todos' : 'excede';
-        break;
+        this.cambiar({ riesgo: f.riesgo === 'excede' ? 'todos' : 'excede' });
+        return;
     }
-    this.applyFilters();
-    this.cdr.markForCheck();
   }
 
   // ── Cupo de crédito y vendedores (ticket 1464) ────────────────────────────
@@ -294,53 +327,30 @@ export class CarteraClientesComponent implements OnChanges {
     this.router.navigate(['/ventas/clienteslista']);
   }
 
-  /** Un vendedor del resumen filtra la lista de abajo ('' la deja con todos). */
+  /** Un vendedor del resumen se suma al filtro (o se quita si ya estaba). */
   alElegirVendedor(vendedor: string): void {
-    this.vendorFilter = vendedor;
-    this.applyFilters();
-    this.cdr.markForCheck();
+    if (!vendedor) return;
+    const actuales = this.filtros.vendedores;
+    this.cambiar({
+      vendedores: actuales.includes(vendedor) ? actuales.filter((v) => v !== vendedor) : [...actuales, vendedor],
+    });
   }
 
-  // ── Antigüedad y orden (ticket 1130) ──────────────────────────────────────
-  /** Pedidos del cliente que se muestran: todos, o solo los del rango elegido. */
+  // ── Pedidos y saldo que se ven (tickets 1130 y 1467) ──────────────────────
+  private filaDe(cliente: CarteraCliente): FilaVista | undefined {
+    return this.vista.porCliente.get(cliente.documento || cliente.nombre || '');
+  }
+
+  /** Pedidos del cliente que se muestran: todos, o solo los que cumplen los filtros de pedido. */
   pedidosVisibles(cliente: CarteraCliente): CarteraPedido[] {
-    if (this.antiguedadFilter === 'todas') return cliente.pedidos || [];
-    return this.pedidosEnRango.get(this.claveCliente(cliente)) || [];
+    const fila = this.filaDe(cliente);
+    return fila ? fila.pedidos : cliente.pedidos || [];
   }
 
-  /** Saldo del cliente que se muestra: el total, o solo el del rango elegido. */
+  /** Saldo del cliente que se muestra: el total, o solo el de los pedidos que cumplen los filtros. */
   saldoVisible(cliente: CarteraCliente): number {
-    if (this.antiguedadFilter === 'todas') return Number(cliente.saldoPendiente) || 0;
-    return this.pedidosVisibles(cliente).reduce((suma, p) => suma + (Number(p.saldo) || 0), 0);
-  }
-
-  private claveCliente(cliente: CarteraCliente): string {
-    return cliente.documento || cliente.nombre || '';
-  }
-
-  private maxDiasVencido(cliente: CarteraCliente): number {
-    return this.pedidosVisibles(cliente).reduce(
-      (max, p) => Math.max(max, Number(p.diasVencido) || 0),
-      Number.MIN_SAFE_INTEGER,
-    );
-  }
-
-  private ordenar(lista: CarteraCliente[]): CarteraCliente[] {
-    const copia = [...lista];
-    switch (this.orden) {
-      case 'nombre':
-        return copia.sort((a, b) =>
-          (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }),
-        );
-      case 'vencido':
-        return copia.sort(
-          (a, b) =>
-            this.maxDiasVencido(b) - this.maxDiasVencido(a) ||
-            this.saldoVisible(b) - this.saldoVisible(a),
-        );
-      default:
-        return copia.sort((a, b) => this.saldoVisible(b) - this.saldoVisible(a));
-    }
+    const fila = this.filaDe(cliente);
+    return fila ? fila.saldo : Number(cliente.saldoPendiente) || 0;
   }
 
   // ── Descargas (ticket 1130) ───────────────────────────────────────────────
@@ -411,6 +421,10 @@ export class CarteraClientesComponent implements OnChanges {
     hoja['!cols'] = [34, 14, 22, 12, 14, 14, 15, 15, 15, 14, 14, 14, 12, 22].map((wch) => ({ wch }));
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, 'Cartera');
+    // Ticket 1467: una segunda hoja dice con qué filtros se sacó el archivo.
+    const hojaFiltros = XLSX.utils.aoa_to_sheet(this.filasDeFiltros());
+    hojaFiltros['!cols'] = [{ wch: 24 }, { wch: 60 }];
+    XLSX.utils.book_append_sheet(libro, hojaFiltros, 'Filtros');
     XLSX.writeFile(libro, `${this.nombreArchivo()}.xlsx`);
   }
 
@@ -434,7 +448,12 @@ export class CarteraClientesComponent implements OnChanges {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(9);
       pdf.setTextColor(82, 88, 107);
-      pdf.text(`${this.descripcionFiltros()} · Generado el ${this.fechaCorta(new Date().toISOString())}`, margen, 52);
+      // Ticket 1467: el encabezado dice todos los filtros aplicados; si son muchos, baja de renglón.
+      const anchoTexto = pdf.internal.pageSize.getWidth() - margen * 2;
+      const lineasFiltros: string[] = pdf.splitTextToSize(
+        `${this.descripcionFiltros()} · Generado el ${this.fechaCorta(new Date().toISOString())}`, anchoTexto);
+      pdf.text(lineasFiltros, margen, 52);
+      const inicioTabla = 52 + lineasFiltros.length * 11 + 4;
 
       autoTable(pdf, {
         head: [['Cliente', 'Documento', 'Vendedor', 'Plazo', 'Pedido', 'Factura', 'Compra', 'Entrega', 'Límite de pago',
@@ -444,7 +463,7 @@ export class CarteraClientesComponent implements OnChanges {
         foot: [['TOTAL', '', '', '', '', '', '', '', '', dinero(suma('total')), dinero(suma('pagado')),
           dinero(suma('saldo')), '', '']],
         showFoot: 'lastPage',
-        startY: 64,
+        startY: inicioTabla,
         margin: { left: margen, right: margen },
         styles: { fontSize: 7.5, cellPadding: 4, overflow: 'linebreak', textColor: [42, 46, 60] as any,
           lineColor: [236, 237, 243] as any, lineWidth: 0.3 },
@@ -464,19 +483,26 @@ export class CarteraClientesComponent implements OnChanges {
     }
   }
 
-  /** Filtros activos en palabras, para el encabezado del PDF. */
+  /** Filtros activos en palabras (en español, como el resto de la descarga), para el encabezado del PDF. */
   private descripcionFiltros(): string {
-    const partes: string[] = [];
-    if (this.antiguedadFilter !== 'todas') {
-      partes.push(`Antigüedad: ${RANGO_ANTIGUEDAD_LABEL[this.antiguedadFilter]}`);
+    return descripcionFiltrosEs(this.filtros);
+  }
+
+  /** Renglones de la hoja «Filtros» del Excel: cada filtro activo, el orden y la fecha en que se generó. */
+  private filasDeFiltros(): string[][] {
+    const filas: string[][] = [['Filtro', 'Valor']];
+    const texto = this.descripcionFiltros();
+    if (texto === 'Toda la cartera') {
+      filas.push(['Filtros', texto]);
+    } else {
+      texto.split(' · ').forEach((par) => {
+        const i = par.indexOf(': ');
+        filas.push(i > 0 ? [par.slice(0, i), par.slice(i + 2)] : ['Filtro', par]);
+      });
     }
-    if (this.riskFilter !== 'todos') {
-      const riesgo = this.riskOptions.find((o) => o.value === this.riskFilter);
-      if (riesgo) partes.push(`Riesgo: ${riesgo.label}`);
-    }
-    if (this.vendorFilter) partes.push(`Vendedor: ${this.vendorFilter}`);
-    if (this.searchTerm.trim()) partes.push(`Búsqueda: "${this.searchTerm.trim()}"`);
-    return partes.length ? partes.join(' · ') : 'Toda la cartera';
+    filas.push(['Orden', ES_ORDEN[this.filtros.orden]]);
+    filas.push(['Generado el', this.fechaCorta(new Date().toISOString())]);
+    return filas;
   }
 
   private nombreEmpresa(): string {
@@ -494,7 +520,9 @@ export class CarteraClientesComponent implements OnChanges {
       .replace(/[^A-Za-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
     const fecha = new Date().toISOString().split('T')[0];
-    return `Cartera_${empresa || 'empresa'}_${fecha}`;
+    // Ticket 1467: el nombre dice los filtros aplicados (ej. Cartera_Empresa_2026-11-03_Vendedor-Ana).
+    const filtros = sufijoArchivo(this.filtros);
+    return `Cartera_${empresa || 'empresa'}_${fecha}${filtros ? '_' + filtros : ''}`;
   }
 
   /** "dd/mm/aaaa" de una fecha ISO; vacío si no hay fecha. */

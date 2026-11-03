@@ -24,12 +24,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let f of filas; trackBy: trackPorVendedor" [class.is-activa]="f.vendedor && f.vendedor === seleccionado">
+        <tr *ngFor="let f of filas; trackBy: trackPorVendedor" [class.is-activa]="estaElegido(f)">
           <th scope="row" class="cx-vend-nombre">
-            <button type="button" class="cx-vend-boton" *ngIf="f.vendedor; else sinVendedor"
-                    [attr.aria-pressed]="f.vendedor === seleccionado" [attr.title]="'cartera.carteraVendedores.filtrar' | translate"
-                    (click)="alElegir(f)">{{ f.vendedor }}</button>
-            <ng-template #sinVendedor><span class="cx-vend-sin">{{ 'cartera.carteraVendedores.sinVendedor' | translate }}</span></ng-template>
+            <button type="button" class="cx-vend-boton"
+                    [attr.aria-pressed]="estaElegido(f)" [attr.title]="'cartera.carteraVendedores.filtrar' | translate"
+                    (click)="alElegir(f)">{{ f.vendedor || ('cartera.carteraVendedores.sinVendedor' | translate) }}</button>
             <span class="cx-vend-barra" aria-hidden="true"><span class="cx-vend-barra-lleno" [style.width.%]="f.pctDelTotal"></span></span>
           </th>
           <td class="text-end">

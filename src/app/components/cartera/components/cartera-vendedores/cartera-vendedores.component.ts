@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { CarteraCliente } from '../../../../shared/services/cartera/cartera.models';
 import { ResumenVendedor, resumenPorVendedor } from '../../cartera-vendedores.util';
+import { SIN_VENDEDOR } from '../../cartera-filtros.util';
 
 /**
  * Ticket 1464 (punto 4): resumen de cartera por vendedor (cartera total, vencida, % vencido y
@@ -15,8 +16,8 @@ import { ResumenVendedor, resumenPorVendedor } from '../../cartera-vendedores.ut
 })
 export class CarteraVendedoresComponent implements OnChanges {
   @Input() clientes: CarteraCliente[] | null = null;
-  /** Vendedor que filtra hoy la lista ('' = todos). */
-  @Input() seleccionado = '';
+  /** Vendedores que filtran hoy la lista (vacío = todos). Ticket 1467: ahora se pueden elegir varios. */
+  @Input() seleccionados: string[] = [];
   @Output() elegir = new EventEmitter<string>();
 
   filas: ResumenVendedor[] = [];
@@ -40,8 +41,16 @@ export class CarteraVendedoresComponent implements OnChanges {
   }
 
   alElegir(fila: ResumenVendedor): void {
-    if (!fila.vendedor) return; // «Sin vendedor» no es un filtro de la lista
-    this.elegir.emit(this.seleccionado === fila.vendedor ? '' : fila.vendedor);
+    // Ticket 1467: «Sin vendedor» también filtra (con el valor especial SIN_VENDEDOR); el otro clic lo suelta.
+    this.elegir.emit(this.valorDe(fila));
+  }
+
+  valorDe(fila: ResumenVendedor): string {
+    return fila.vendedor || SIN_VENDEDOR;
+  }
+
+  estaElegido(fila: ResumenVendedor): boolean {
+    return this.seleccionados.includes(this.valorDe(fila));
   }
 
   trackPorVendedor(_i: number, fila: ResumenVendedor): string {

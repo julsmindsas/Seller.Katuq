@@ -35,17 +35,71 @@ export const AGING_BUCKETS: AgingBucketMeta[] = [
   { key: 'd90',        labelKey: 'cartera.rangos.d90Etiqueta',       shortKey: 'cartera.rangos.d90Corto',       rango: '+90',   cssClass: 'cx-seg-d90' },
 ];
 
-/** Filtro de riesgo del tab "Cartera por Cliente". */
-export type RiskFilter = 'todos' | 'vencida' | 'porVencer' | 'cupo80' | 'excede' | 'contado' | 'credito';
+/**
+ * Filtro de riesgo del tab "Cartera por Cliente". Ticket 1467: «Por vencer» dejó de ser un riesgo y pasó
+ * a su propio filtro «Vence» (hoy, 7 o 30 días), que filtra por pedido.
+ */
+export type RiskFilter = 'todos' | 'vencida' | 'cupo80' | 'excede' | 'contado' | 'credito';
 
-export const RISK_OPTIONS: { label: string; value: RiskFilter }[] = [
-  { label: 'Todos', value: 'todos' },
-  { label: 'Con cartera vencida', value: 'vencida' },
-  { label: 'Por vencer en 7 días', value: 'porVencer' },
-  { label: 'Cupo > 80%', value: 'cupo80' },
-  { label: 'Exceden cupo', value: 'excede' },
-  { label: 'Contado', value: 'contado' },
-  { label: 'Crédito', value: 'credito' },
+/** Ticket 1467: las opciones se traducen en la plantilla (antes estaban en español fijo). */
+export const RISK_OPTIONS: { labelKey: string; value: RiskFilter }[] = [
+  { labelKey: 'cartera.filtros.riesgoTodos',     value: 'todos' },
+  { labelKey: 'cartera.filtros.riesgoVencida',   value: 'vencida' },
+  { labelKey: 'cartera.filtros.riesgoCupo80',    value: 'cupo80' },
+  { labelKey: 'cartera.filtros.riesgoExcede',    value: 'excede' },
+  { labelKey: 'cartera.filtros.riesgoContado',   value: 'contado' },
+  { labelKey: 'cartera.filtros.riesgoCredito',   value: 'credito' },
+];
+
+/** Ticket 1467: Empresa (NIT) o Persona (CC). El servidor decide el tipo de cada cliente. */
+export type TipoPersonaFiltro = 'todos' | 'empresa' | 'persona';
+export const TIPO_PERSONA_OPTIONS: { labelKey: string; value: TipoPersonaFiltro }[] = [
+  { labelKey: 'cartera.filtros.tipoTodos',    value: 'todos' },
+  { labelKey: 'cartera.filtros.tipoEmpresa',  value: 'empresa' },
+  { labelKey: 'cartera.filtros.tipoPersona',  value: 'persona' },
+];
+
+/**
+ * Ticket 1467: estados de pago del filtro. «Pospendiente» se llama «Pago en revisión» (ticket 1448) y
+ * «Crédito» solo aparece cuando algún pedido ya lo trae (el estado se crea con ese ticket).
+ */
+export type EstadoPagoGrupo = 'Pendiente' | 'Pospendiente' | 'PreAprobado' | 'Credito';
+export const ESTADO_PAGO_OPTIONS: { labelKey: string; value: EstadoPagoGrupo }[] = [
+  { labelKey: 'cartera.filtros.pagoPendiente',   value: 'Pendiente' },
+  { labelKey: 'cartera.filtros.pagoRevision',    value: 'Pospendiente' },
+  { labelKey: 'cartera.filtros.pagoPreaprobado', value: 'PreAprobado' },
+  { labelKey: 'cartera.filtros.pagoCredito',     value: 'Credito' },
+];
+
+/** Estado de pago de un pedido llevado a uno de los 4 del filtro (los legados caen con su equivalente del servidor). */
+export function grupoEstadoPago(estado: string | null | undefined): string {
+  const e = (estado || '').trim();
+  if (e === 'Pago Parcial' || e === 'Procesando') return 'PreAprobado';
+  return e;
+}
+
+export type FacturaFiltro = 'todas' | 'con' | 'sin';
+export const FACTURA_OPTIONS: { labelKey: string; value: FacturaFiltro }[] = [
+  { labelKey: 'cartera.filtros.facturaTodas', value: 'todas' },
+  { labelKey: 'cartera.filtros.facturaCon',   value: 'con' },
+  { labelKey: 'cartera.filtros.facturaSin',   value: 'sin' },
+];
+
+/** Cobro preventivo: pedidos que vencen hoy o dentro de 7 o 30 días. */
+export type VenceFiltro = 'todos' | 'hoy' | '7' | '30';
+export const VENCE_OPTIONS: { labelKey: string; value: VenceFiltro }[] = [
+  { labelKey: 'cartera.filtros.venceTodos', value: 'todos' },
+  { labelKey: 'cartera.filtros.venceHoy',   value: 'hoy' },
+  { labelKey: 'cartera.filtros.vence7',     value: '7' },
+  { labelKey: 'cartera.filtros.vence30',    value: '30' },
+];
+
+/** Ticket 1467 (preparado para el ticket 1463): se muestra solo cuando los pedidos traen compromiso de pago. */
+export type CompromisoFiltro = 'todos' | 'con' | 'incumplido';
+export const COMPROMISO_OPTIONS: { labelKey: string; value: CompromisoFiltro }[] = [
+  { labelKey: 'cartera.filtros.compromisoTodos',      value: 'todos' },
+  { labelKey: 'cartera.filtros.compromisoCon',        value: 'con' },
+  { labelKey: 'cartera.filtros.compromisoIncumplido', value: 'incumplido' },
 ];
 
 /**
@@ -94,13 +148,19 @@ export function rangoAntiguedad(diasVencido: number): RangoAntiguedad {
   return 'd90';
 }
 
-/** Orden de la lista de clientes (ticket 1130). */
-export type OrdenCartera = 'saldo' | 'vencido' | 'nombre';
+/**
+ * Orden de la lista de clientes (ticket 1130). Ticket 1467 suma «mayor saldo vencido», «límite de pago más
+ * próximo» y «más pedidos». `vencido` es por días vencido; `saldoVencido`, por monto vencido.
+ */
+export type OrdenCartera = 'saldo' | 'vencido' | 'nombre' | 'saldoVencido' | 'limite' | 'pedidos';
 
-export const ORDEN_OPTIONS: { label: string; value: OrdenCartera }[] = [
-  { label: 'Mayor saldo primero', value: 'saldo' },
-  { label: 'Más días vencido primero', value: 'vencido' },
-  { label: 'Nombre (A-Z)', value: 'nombre' },
+export const ORDEN_OPTIONS: { labelKey: string; value: OrdenCartera }[] = [
+  { labelKey: 'cartera.filtros.ordenSaldo',        value: 'saldo' },
+  { labelKey: 'cartera.filtros.ordenSaldoVencido', value: 'saldoVencido' },
+  { labelKey: 'cartera.filtros.ordenVencido',      value: 'vencido' },
+  { labelKey: 'cartera.filtros.ordenLimite',       value: 'limite' },
+  { labelKey: 'cartera.filtros.ordenPedidos',      value: 'pedidos' },
+  { labelKey: 'cartera.filtros.ordenNombre',       value: 'nombre' },
 ];
 
 /** Metadatos de un badge de estado de pago (para el detalle de pedidos). */

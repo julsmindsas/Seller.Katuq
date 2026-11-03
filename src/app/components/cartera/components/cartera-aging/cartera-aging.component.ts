@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
+  Output,
   SimpleChanges,
 } from '@angular/core';
 import {
@@ -11,6 +13,15 @@ import {
   CarteraResponse,
 } from '../../../../shared/services/cartera/cartera.models';
 import { AGING_BUCKETS } from '../../cartera.constants';
+import { agingDeFila, aplicarFiltros, CarteraFiltros, filtrosVacios, hayFiltrosActivos } from '../../cartera-filtros.util';
+
+/** Un renglón de la tabla: el cliente con el aging de lo que se ve con los filtros. */
+interface FilaAging {
+  documento: string;
+  nombre: string;
+  aging: AgingBuckets;
+  saldoPendiente: number;
+}
 
 /** KPI de un rango de aging (o el total). */
 interface AgingKpi {
@@ -53,11 +64,19 @@ interface AgingTotals extends AgingBuckets {
 })
 export class CarteraAgingComponent implements OnChanges {
   @Input() data: CarteraResponse | null = null;
+  /** Ticket 1467: los mismos filtros de «Cartera por cliente» (los guarda la pantalla). */
+  @Input() filtros: CarteraFiltros = filtrosVacios();
+  @Output() filtrosChange = new EventEmitter<CarteraFiltros>();
+  /** Pide volver a «Cartera por cliente», donde están los controles de los filtros. */
+  @Output() editarFiltros = new EventEmitter<void>();
+
+  /** Hay filtros activos (para el aviso de «sin resultados»). */
+  hayFiltros = false;
 
   /** Umbral de ancho (%) bajo el cual el monto no cabe dentro del segmento. */
   private static readonly LABEL_MIN_PCT = 9;
 
-  rows: CarteraCliente[] = [];
+  rows: FilaAging[] = [];
   kpis: AgingKpi[] = [];
   segments: AgingBarSegment[] = [];
   totals: AgingTotals = { ...CarteraAgingComponent.emptyBuckets(), total: 0 };
@@ -73,17 +92,38 @@ export class CarteraAgingComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] || changes['filtros']) {
       this.build();
     }
   }
 
   private build(): void {
-    const aging: AgingBuckets = this.data?.kpis?.aging || CarteraAgingComponent.emptyBuckets();
-    const total = this.data?.kpis?.carteraTotal?.monto || this.sumBuckets(aging);
-    this.totalCartera = total;
+    // Ticket 1467: los mismos filtros y la misma función que «Cartera por cliente»; así los números cuadran.
+    this.hayFiltros = hayFiltrosActivos(this.filtros);
+    const vista = aplicarFiltros(this.data?.clientes, this.filtros);
+    this.rows = vista.filas
+      .map((fila) => ({
+        documento: fila.cliente.documento,
+        nombre: fila.cliente.nombre,
+        aging: agingDeFila(fila, vista.recortaPedidos) as AgingBuckets,
+        saldoPendiente: fila.saldo,
+      }))
+      .filter((r) => r.saldoPendiente > 0);
 
-    this.rows = (this.data?.clientes || []).filter((c) => (c.saldoPendiente || 0) > 0);
+    // Sin filtros se usan los totales del servidor; con filtros, la suma de lo que se ve.
+    let aging: AgingBuckets;
+    let total: number;
+    if (this.hayFiltros) {
+      aging = this.rows.reduce<AgingBuckets>((acc, r) => {
+        AGING_BUCKETS.forEach((b) => { acc[b.key] += r.aging[b.key] || 0; });
+        return acc;
+      }, CarteraAgingComponent.emptyBuckets());
+      total = this.rows.reduce((suma, r) => suma + r.saldoPendiente, 0);
+    } else {
+      aging = this.data?.kpis?.aging || CarteraAgingComponent.emptyBuckets();
+      total = this.data?.kpis?.carteraTotal?.monto || this.sumBuckets(aging);
+    }
+    this.totalCartera = total;
 
     // KPIs por rango + total
     this.kpis = AGING_BUCKETS.map((b) => {
@@ -145,7 +185,7 @@ export class CarteraAgingComponent implements OnChanges {
     return segClass.replace('cx-seg-', 'cx-c-');
   }
 
-  trackByDoc(_index: number, cliente: CarteraCliente): string {
+  trackByDoc(_index: number, cliente: { documento?: string }): string {
     return cliente.documento || `row-${_index}`;
   }
 }
