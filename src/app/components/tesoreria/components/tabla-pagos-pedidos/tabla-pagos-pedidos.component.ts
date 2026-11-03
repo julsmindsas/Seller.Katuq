@@ -102,6 +102,13 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   mora: { [orderId: string]: MoraPedido } = {};
   private esAdmin = false;
 
+  /** Ticket 1461 (tarea 3.1): bandera `carteraInterna` (lista y totales de «Sin pago» sin los clientes internos). */
+  carteraInternaActiva = false;
+  /** Interruptor «Incluir internos» (apagado por defecto, igual que en Cartera). */
+  incluirInternos = false;
+  /** Pedidos de clientes internos que el servidor dejó fuera de la lista (solo viene con la exclusión activa). */
+  internosOcultos = 0;
+
   constructor(
     private ventas: VentasService,
     private maestro: MaestroService,
@@ -113,6 +120,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   ) {
     this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
     this.moraActiva = this.features.isEnabled('carteraVendedorMora');
+    this.carteraInternaActiva = this.features.isEnabled('carteraInterna');
     try {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
       const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -173,12 +181,14 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.orders = res?.orders || [];
           this.totalRecords = res?.pagination?.totalItems || 0;
+          this.internosOcultos = this.excluirInternos ? Number(res?.internosOcultos) || 0 : 0;
           this.loading = false;
           this.cargarMora();
         },
         error: () => {
           this.orders = [];
           this.totalRecords = 0;
+          this.internosOcultos = 0;
           this.loading = false;
         },
       });
@@ -264,6 +274,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       cliente: term && !/^\d+$/.test(term) ? term : undefined,
       // Misma forma de pago que manda la lista (buildFilter): el pie suma exactamente lo que se lista.
       formaPago: this.formaPagoFilter || undefined,
+      // Ticket 1461 (tarea 3.1): el pie suma lo mismo que la lista, sin los clientes internos.
+      excluirInternos: this.excluirInternos ? true : undefined,
     };
     const clave = JSON.stringify(filtros);
     if (!forzar && clave === this.totalesClave) return;
@@ -296,6 +308,11 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     }
     if (this.formaPagoFilter) {
       filter.formaPago = this.formaPagoFilter;
+    }
+    // Ticket 1461 (tarea 3.1): solo «Sin pago», con la bandera encendida y el interruptor apagado. El servidor
+    // vuelve a comprobar la bandera: sin ella ignora este campo.
+    if (this.excluirInternos) {
+      filter.excluirClientesInternos = true;
     }
     if (this.lastLazyEvent?.sortField) {
       filter.sortField = this.lastLazyEvent.sortField;
@@ -447,6 +464,21 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     }
     const clave = claveDocumento(pedido?.cliente?.documento);
     return !!clave && this.internosSet.has(clave);
+  }
+
+  /** ¿Esta lista deja fuera a los clientes internos? (solo «Sin pago», con la bandera y sin «Incluir internos»). */
+  get excluirInternos(): boolean {
+    return this.mode === 'sinPago' && this.carteraInternaActiva && !this.incluirInternos;
+  }
+
+  /** El interruptor solo tiene sentido si la empresa tiene clientes internos marcados. */
+  get verInterruptorInternos(): boolean {
+    return this.mode === 'sinPago' && this.carteraInternaActiva && (this.clavesInternas?.length || 0) > 0;
+  }
+
+  cambiarIncluirInternos(valor: boolean): void {
+    this.incluirInternos = !!valor;
+    this.applyFilters();
   }
 
   /** Cuántos pedidos de la página son de clientes internos. */

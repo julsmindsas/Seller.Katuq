@@ -73,6 +73,29 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
+// Ticket 1461 (tarea 3.1): interruptor «Incluir internos», en su propia fila de la barra de filtros.
+.tk-interruptor {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0;
+  cursor: pointer;
+  letter-spacing: normal;
+  text-transform: none;
+
+  input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #5F3FE0; cursor: pointer; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.tk-interruptor-texto {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #211F3A;
+  letter-spacing: normal;
+  text-transform: none;
+}
 .tk-aviso-interno {
   margin-top: 10px;
   padding: 10px 14px;

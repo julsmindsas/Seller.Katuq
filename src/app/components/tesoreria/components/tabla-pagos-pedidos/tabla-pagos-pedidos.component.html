@@ -25,6 +25,12 @@
       <label for="tk-hasta-{{ mode }}">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
       <input id="tk-hasta-{{ mode }}" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
     </div>
+
+    <!-- Ticket 1461 (tarea 3.1): igual que en Cartera, los internos quedan fuera salvo que se pidan -->
+    <label class="tk-interruptor" for="tk-internos" *ngIf="verInterruptorInternos">
+      <input id="tk-internos" type="checkbox" [ngModel]="incluirInternos" (ngModelChange)="cambiarIncluirInternos($event)">
+      <span class="tk-interruptor-texto">{{ 'tesoreria.tablaPagosPedidos.incluirInternos' | translate }}</span>
+    </label>
   </div>
 
   <!-- Tabla lazy server-side -->
@@ -164,8 +170,14 @@
     <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.tablaPagosPedidos.totalesIncompletos' | translate }}
   </div>
 
-  <!-- Ticket 1461: la lista todavía incluye a los internos; el aviso dice cuántos hay en esta página -->
-  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && pedidosInternos() > 0" role="note">
+  <!-- Ticket 1461 (tarea 3.1): sin «Incluir internos», el aviso dice cuántos pedidos quedaron fuera de la lista y del pie -->
+  <div class="tk-aviso-interno" *ngIf="excluirInternos && internosOcultos > 0" role="note">
+    <i class="pi pi-users me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.tablaPagosPedidos.avisoInternosFuera' | translate:{ cantidad: internosOcultos } }}
+  </div>
+
+  <!-- Con «Incluir internos» la lista los trae marcados; el aviso dice cuántos hay en esta página -->
+  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && !excluirInternos && pedidosInternos() > 0" role="note">
     <i class="pi pi-users me-1" aria-hidden="true"></i>
     {{ 'tesoreria.tablaPagosPedidos.avisoInternos' | translate:{ cantidad: pedidosInternos() } }}
   </div>

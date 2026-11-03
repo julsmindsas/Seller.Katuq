@@ -143,6 +143,8 @@ export class TreasuryService extends BaseService {
     nroPedido?: string;
     cliente?: string;
     formaPago?: string;
+    /** Ticket 1461 (tarea 3.1): sin los pedidos de clientes internos (el servidor exige la bandera `carteraInterna`). */
+    excluirInternos?: boolean;
   }): Observable<OrdersTotals> {
     const qs = this.buildQuery({ ...filtros, estadosPago: filtros.estadosPago.join(',') });
     return this.get<OrdersTotals>(`${this.base}/orders/totals?${qs}`);
