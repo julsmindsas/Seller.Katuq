@@ -70,6 +70,7 @@ const ESTADO_PAGO_ES: { [k: string]: string } = {
   Pospendiente: 'Pago en revisión',
   PreAprobado: 'Preaprobado',
   'Pago Parcial': 'Pago parcial',
+  PagoParcial: 'Pago parcial',
   Procesando: 'Procesando',
   Credito: 'Crédito',
 };
