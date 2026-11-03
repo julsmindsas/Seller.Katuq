@@ -54,14 +54,16 @@
         <small>La venta se pierde salvo que se pida hoy</small>
       </article>
       <article class="kc-stat">
-        <span class="kc-label">Para reponer</span>
+        <!-- Ticket 1470: qué se pide y qué ya no hace falta pedir, sin mezclar las dos cifras. -->
+        <span class="kc-label">Productos por pedir</span>
         <strong>{{ s.resumen.sugeridos | number }}</strong>
-        <small>{{ s.resumen.cubiertos | number }} ya están cubiertos</small>
+        <small *ngIf="s.resumen.cubiertos">Otros {{ s.resumen.cubiertos | number }} no hace falta pedirlos: alcanza con lo que hay o ya viene en camino</small>
       </article>
       <article class="kc-stat">
-        <span class="kc-label">Valor estimado</span>
-        <strong>{{ s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-        <small *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto }} sin costo conocido</small>
+        <!-- Ticket 1470: con productos sin costo el valor es parcial; si ninguno tiene costo no se muestra $0. -->
+        <span class="kc-label">{{ s.resumen.sinCosto ? 'Valor parcial' : 'Valor estimado' }}</span>
+        <strong>{{ (s.resumen.sinCosto && !s.resumen.valorEstimado) ? 'Sin costos' : (s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+        <small *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
       </article>
       <article class="kc-stat" *ngIf="s.resumen.seProducen">
         <span class="kc-label">Se producen</span>
@@ -120,7 +122,8 @@
             <div class="kc-row__top">
               <span class="kc-row__nombre">{{ f.nombre || f.referencia || f.productoId }}</span>
               <span class="kc-row__cod">{{ f.referencia || f.productoId }}</span>
-              <span class="kc-pill kc-pill--danger" *ngIf="f.urgente">Se agota en {{ textoCobertura(f) }}</span>
+              <!-- Ticket 1470: «Agotado» si ya no hay; «Se agota en X días» si todavía hay. -->
+              <span class="kc-pill kc-pill--danger" *ngIf="f.urgente">{{ estaAgotado(f) ? 'Agotado' : 'Se agota en ' + textoCobertura(f) }}</span>
               <span class="kc-pill kc-pill--warn" *ngIf="!f.urgente">Alcanza {{ textoCobertura(f) }}</span>
               <span class="kc-pill kc-pill--info" *ngIf="f.yaPedido" title="Ya está pedido y se descontó">
                 {{ f.yaPedido | number }} en camino
@@ -130,7 +133,7 @@
             <div class="kc-row__meta">
               <span><i class="pi pi-home"></i> {{ nombreBodega(f.idBodega) }}</span>
               <span>hay {{ f.saldo | number }}</span>
-              <span>se vende {{ f.consumoDiario | number:'1.0-2' }}/día</span>
+              <span>se vende {{ porDia(f.consumoDiario) }}/día</span>
               <span [title]="'De dónde salió el plazo de entrega'">
                 entrega en {{ f.diasEntrega }} d
                 <ng-container [ngSwitch]="f.origenDeLosDias">

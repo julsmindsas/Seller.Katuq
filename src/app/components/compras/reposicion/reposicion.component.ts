@@ -128,6 +128,16 @@ export class ReposicionComponent implements OnInit {
     return this.proveedores.find((p) => p.id === id)?.nombre || 'Sin proveedor';
   }
 
+  /** Ticket 1470: sin existencia (o cobertura en cero) se dice «Agotado». */
+  estaAgotado(fila: FilaReposicion): boolean {
+    return Number(fila.saldo) <= 0 || (fila.coberturaDias !== null && Math.round(fila.coberturaDias) === 0);
+  }
+
+  /** Ticket 1470: decimales con coma, como se escriben en Colombia (0,33). */
+  porDia(valor: number): string {
+    return Number(valor || 0).toLocaleString('es-CO', { maximumFractionDigits: 2 });
+  }
+
   textoCobertura(fila: FilaReposicion): string {
     if (fila.coberturaDias === null) return 'sin demanda';
     const dias = Math.round(fila.coberturaDias);

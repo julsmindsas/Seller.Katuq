@@ -45,5 +45,6 @@
   { "fecha": "2026-11-03T19:30:30Z", "tipo": "MEJORA", "texto": "En Facturación electrónica, lo facturado en el mes se compara con los mismos días del mes anterior, y además del porcentaje ves la diferencia en pesos." },
   { "fecha": "2026-11-03T19:31:00Z", "tipo": "MEJORA", "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es." },
   { "fecha": "2026-11-03T20:00:00Z", "tipo": "CORRIGE", "texto": "Ya no aparece una franja blanca vacía al final de las pantallas." },
-  { "fecha": "2026-11-03T20:30:00Z", "tipo": "CORRIGE", "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets." }
+  { "fecha": "2026-11-03T20:30:00Z", "tipo": "CORRIGE", "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets." },
+  { "fecha": "2026-11-03T21:00:00Z", "tipo": "CORRIGE", "texto": "En Compras → Qué comprar, los productos sin existencia dicen «Agotado», las cifras para pedir se entienden mejor, el valor avisa cuando faltan costos y los decimales van con coma." }
 ]
