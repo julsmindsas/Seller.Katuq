@@ -44,6 +44,8 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
   /** Conteo REAL de alertas del filtro: el mismo número de la tarjeta (ticket 1450). */
   totalAlertas = 0;
   totalGrupos = 0;
+  /** El servidor leyó solo una parte de las alertas (tope de seguridad): el agrupado puede estar incompleto. */
+  truncado = false;
   page = 1;
   readonly pageSize = 15;
   loading = false;
@@ -82,15 +84,26 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.grupos = res?.grupos || [];
+          const grupos = res?.grupos || [];
+          const totalGrupos = res?.pagination?.totalItems || 0;
+          // Al resolver el único grupo de la última página, esa página queda vacía: se vuelve a la
+          // última que sí tiene grupos (o a la 1 si ya no queda ninguno) en vez de dejar sin paginador.
+          if (grupos.length === 0 && this.page > 1) {
+            this.page = Math.max(1, Math.min(this.page - 1, Math.ceil(totalGrupos / this.pageSize)));
+            this.load();
+            return;
+          }
+          this.grupos = grupos;
           this.totalAlertas = res?.total || 0;
-          this.totalGrupos = res?.pagination?.totalItems || 0;
+          this.totalGrupos = totalGrupos;
+          this.truncado = res?.truncado === true;
           this.loading = false;
         },
         error: () => {
           this.grupos = [];
           this.totalAlertas = 0;
           this.totalGrupos = 0;
+          this.truncado = false;
           this.loading = false;
         },
       });

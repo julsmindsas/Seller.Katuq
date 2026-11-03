@@ -12110,5 +12110,7 @@
   "tesoreria.alertasTesoreria.alertasEnEsteGrupo": "{{alertas}} alerta(s) en este grupo",
   "tesoreria.alertasTesoreria.paginaAnterior": "Página anterior",
   "tesoreria.alertasTesoreria.paginaSiguiente": "Página siguiente",
-  "tesoreria.alertasTesoreria.paginaDe": "Página {{pagina}} de {{total}}"
+  "tesoreria.alertasTesoreria.paginaDe": "Página {{pagina}} de {{total}}",
+  "tesoreria.alertasTesoreria.listaIncompleta": "Hay tantas alertas que no se pudieron leer todas. Resuelve las más recientes y vuelve a abrir esta pestaña para ver el resto.",
+  "tesoreria.tablaPagosPedidos.totalesIncompletos": "El filtro tiene tantos pedidos que los totales no se pudieron calcular completos. Elige un rango de fechas más corto para ver totales exactos."
 }

@@ -299,6 +299,8 @@
   tbody tr:first-child td { border-top: none; }
 }
 .cx-dias-venc { color: #{$cx-aging-60}; font-weight: 800; }
+// Vencido de 1 a 15 días: tono más suave que el de más de 15 (ticket 1460).
+.cx-dias-venc.cx-dias-leve { color: #8a5a10; }
 .cx-dias-al-dia { color: var(--kc-muted); white-space: nowrap; }
 
 // ── Filtros, resultado y descargas (ticket 1130) ──────────────────────────

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 
 // PrimeNG
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { SharedModule } from '../../shared/shared.module';
 import { CarteraRoutingModule } from './cartera-routing.module';
@@ -33,6 +34,7 @@ import { CarteraAgingComponent } from './components/cartera-aging/cartera-aging.
     SharedModule,
     CarteraRoutingModule,
     TableModule,
+    TooltipModule,
   ],
 })
 export class CarteraModule {}

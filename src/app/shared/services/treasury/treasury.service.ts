@@ -142,6 +142,7 @@ export class TreasuryService extends BaseService {
     fechaFinal?: string;
     nroPedido?: string;
     cliente?: string;
+    formaPago?: string;
   }): Observable<OrdersTotals> {
     const qs = this.buildQuery({ ...filtros, estadosPago: filtros.estadosPago.join(',') });
     return this.get<OrdersTotals>(`${this.base}/orders/totals?${qs}`);

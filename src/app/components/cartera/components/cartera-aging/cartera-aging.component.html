@@ -2,11 +2,18 @@
 
   <!-- KPI cards por rango + total -->
   <div class="cx-grid cx-grid-aging">
-    <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis" [attr.title]="k.isTotal ? 'Todo lo que le deben hoy: pedidos con saldo pendiente.' : ayudaRango(k.label)">
+    <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis">
       <div class="cx-kpi-head">
         <span class="cx-dot" *ngIf="!k.isTotal" [ngClass]="k.cssClass"></span>
         <span class="cx-kpi-icon" *ngIf="k.isTotal"><i class="pi pi-wallet"></i></span>
-        <span class="cx-label">{{ k.label }}</span>
+        <span class="cx-label">{{ k.labelKey | translate }}</span>
+        <!-- Ayuda del rango: enfocable con teclado, se abre al tocar en celular y la lee el lector de pantalla -->
+        <span class="cx-info" tabindex="0" role="img"
+              [attr.aria-label]="k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})"
+              [pTooltip]="k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})"
+              tooltipEvent="both" tooltipPosition="bottom" tooltipStyleClass="cx-ayuda-tooltip">
+          <i class="pi pi-info-circle"></i>
+        </span>
       </div>
       <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.pct | number:'1.0-0' }}{{ 'cartera.carteraAging.delTotal' | translate }}</div>
@@ -25,13 +32,13 @@
       <div class="cx-agingbar">
         <div class="cx-agingbar-seg" *ngFor="let s of segments" [ngClass]="s.cssClass"
              [style.width.%]="s.pct"
-             [attr.title]="s.label + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
+             [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
           <span class="cx-agingbar-label" *ngIf="s.showText">{{ s.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </div>
       </div>
       <div class="cx-legend">
         <span class="cx-legend-item" *ngFor="let b of agingBuckets">
-          <span class="cx-dot" [ngClass]="b.cssClass"></span> {{ b.label }}
+          <span class="cx-dot" [ngClass]="b.cssClass"></span> {{ b.labelKey | translate }}
         </span>
       </div>
     </div>
@@ -46,7 +53,7 @@
           <tr>
             <th pSortableColumn="nombre" style="min-width: 200px">{{ 'cartera.carteraAging.cliente' | translate }} <p-sortIcon field="nombre"></p-sortIcon></th>
             <th pSortableColumn="documento" style="min-width: 130px">{{ 'cartera.carteraAging.documento' | translate }} <p-sortIcon field="documento"></p-sortIcon></th>
-            <th *ngFor="let b of agingBuckets" [pSortableColumn]="'aging.' + b.key" class="text-end" [ngClass]="colClass(b.cssClass)" style="min-width: 120px">{{ b.label }} <p-sortIcon [field]="'aging.' + b.key"></p-sortIcon></th>
+            <th *ngFor="let b of agingBuckets" [pSortableColumn]="'aging.' + b.key" class="text-end" [ngClass]="colClass(b.cssClass)" style="min-width: 120px">{{ b.labelKey | translate }} <p-sortIcon [field]="'aging.' + b.key"></p-sortIcon></th>
             <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 140px">{{ 'cartera.carteraAging.total' | translate }} <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
           </tr>
         </ng-template>

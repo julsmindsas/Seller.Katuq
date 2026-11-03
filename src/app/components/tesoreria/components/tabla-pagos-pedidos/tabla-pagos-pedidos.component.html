@@ -140,6 +140,10 @@
     </ng-template>
   </p-table>
 
+  <div class="tk-error" *ngIf="totalesIncompletos" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.tablaPagosPedidos.totalesIncompletos' | translate }}
+  </div>
+
   <!-- Totales de la página -->
   <div class="tk-summary" *ngIf="orders.length > 0">
     <span><strong>{{ (totalesDelFiltro ? 'tesoreria.tablaPagosPedidos.pedidosDelFiltro' : 'tesoreria.tablaPagosPedidos.pedidosEnPantalla') | translate }}</strong> {{ totalPedidos() | number }}</span>

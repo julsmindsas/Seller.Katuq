@@ -49,6 +49,13 @@ $cx-aging-90:        #8e1d1d; // más de 90 días
   }
 }
 
+// Acento por rango de antigüedad: el mismo color del punto, la barra y la columna (ticket 1460).
+.cx-accent-sin { --cx-bar: #{$cx-aging-corriente}; --cx-fg: #{$cx-aging-corriente}; --cx-wash: var(--kc-green-wash); }
+.cx-accent-d1  { --cx-bar: #{$cx-aging-16};        --cx-fg: #{$cx-aging-16-ink};    --cx-wash: #fdf6dc; }
+.cx-accent-d16 { --cx-bar: #{$cx-aging-31};        --cx-fg: #{$cx-aging-31};        --cx-wash: var(--kc-orange-wash); }
+.cx-accent-d31 { --cx-bar: #{$cx-aging-60};        --cx-fg: #{$cx-aging-60};        --cx-wash: #fce9e8; }
+.cx-accent-d61 { --cx-bar: #{$cx-aging-61};        --cx-fg: #{$cx-aging-61};        --cx-wash: #fbe3e1; }
+.cx-accent-d90 { --cx-bar: #{$cx-aging-90};        --cx-fg: #{$cx-aging-90};        --cx-wash: #f6dcdc; }
 .cx-accent-green  { --cx-bar: #{$cx-aging-corriente}; --cx-fg: #{$cx-aging-corriente}; --cx-wash: var(--kc-green-wash); }
 .cx-accent-amber  { --cx-bar: #{$cx-aging-16};        --cx-fg: #{$cx-aging-16-ink};    --cx-wash: #fdf6dc; }
 .cx-accent-orange { --cx-bar: #{$cx-aging-31};        --cx-fg: #{$cx-aging-31};        --cx-wash: var(--kc-orange-wash); }
@@ -68,6 +75,58 @@ $cx-aging-90:        #8e1d1d; // más de 90 días
   &:hover { box-shadow: 0 8px 22px rgba(95, 63, 224, 0.14); }
   &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   &.is-active { box-shadow: 0 0 0 2px #5F3FE0; }
+}
+
+// Ícono de ayuda de las tarjetas y filtros: enfocable con teclado, se abre al tocar (ticket 1464).
+.cx-info {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  cursor: help;
+  color: var(--kc-muted2);
+  font-size: 14px;
+
+  i { font-size: 14px; }
+  &:hover { color: var(--kc-accent); background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; color: var(--kc-accent); }
+}
+
+// Fila de etiqueta + ícono de ayuda de un campo del filtro
+.cx-label-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  .cx-info { margin-left: 0; }
+}
+
+// Texto solo para lector de pantalla (aria-describedby)
+.cx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// El tooltip de PrimeNG se agrega al body: estilo global solo para esta clase.
+// [class*="p-"] fuerza font-size y line-height con !important sobre `.p-tooltip-text`.
+::ng-deep .cx-ayuda-tooltip {
+  max-width: 320px;
+
+  .p-tooltip-text {
+    font-size: 12.5px !important;
+    line-height: 1.45 !important;
+  }
 }
 
 // Cabecera del KPI: chip de ícono + etiqueta

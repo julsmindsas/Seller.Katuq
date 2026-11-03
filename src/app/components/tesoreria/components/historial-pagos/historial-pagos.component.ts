@@ -101,8 +101,14 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
           this.resumen = res?.resumen || null;
           this.truncado = res?.truncado === true;
           if (res?.opciones) {
-            this.formasPagoOpciones = res.opciones.formasPago || [];
-            this.usuariosOpciones = res.opciones.usuarios || [];
+            // Si lo elegido ya no está en las opciones del nuevo periodo, se conserva para que el
+            // select no quede en blanco con el filtro aplicado.
+            const formas = this.conservarOpcion(res.opciones.formasPago || [], this.formaPago);
+            const usuarios = this.conservarOpcion(res.opciones.usuarios || [], this.registradoPor);
+            this.formasPagoOpciones = formas.opciones;
+            this.formaPago = formas.elegida;
+            this.usuariosOpciones = usuarios.opciones;
+            this.registradoPor = usuarios.elegida;
           }
           this.loading = false;
         },
@@ -113,6 +119,17 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
           this.loading = false;
         },
       });
+  }
+
+  /**
+   * Opciones del filtro con lo elegido incluido. El servidor compara sin mayúsculas, así que si la
+   * opción del periodo solo difiere en mayúsculas («CXC MARKETPLACE» / «CXC Marketplace») se usa esa.
+   */
+  private conservarOpcion(opciones: string[], elegida: string): { opciones: string[]; elegida: string } {
+    if (!elegida) return { opciones, elegida };
+    const igual = opciones.find((o) => o.toLowerCase() === elegida.toLowerCase());
+    if (igual) return { opciones, elegida: igual };
+    return { opciones: [...opciones, elegida].sort((x, y) => x.localeCompare(y, 'es')), elegida };
   }
 
   onSearchInput(): void {

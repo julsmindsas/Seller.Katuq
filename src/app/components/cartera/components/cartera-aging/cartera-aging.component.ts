@@ -14,7 +14,8 @@ import { AGING_BUCKETS } from '../../cartera.constants';
 
 /** KPI de un rango de aging (o el total). */
 interface AgingKpi {
-  label: string;
+  /** Clave i18n de la etiqueta. */
+  labelKey: string;
   cssClass: string;
   accentClass: string;
   monto: number;
@@ -25,7 +26,8 @@ interface AgingKpi {
 /** Segmento de la barra horizontal grande. */
 interface AgingBarSegment {
   cssClass: string;
-  label: string;
+  /** Clave i18n de la etiqueta. */
+  labelKey: string;
   monto: number;
   pct: number;
   /** Mostrar el monto dentro del segmento (se oculta si es muy angosto). */
@@ -55,9 +57,6 @@ export class CarteraAgingComponent implements OnChanges {
   /** Umbral de ancho (%) bajo el cual el monto no cabe dentro del segmento. */
   private static readonly LABEL_MIN_PCT = 9;
 
-  /** Acentos de KPI card por rango (border-left). */
-  private static readonly ACCENTS = ['cx-accent-green', 'cx-accent-amber', 'cx-accent-orange', 'cx-accent-orange', 'cx-accent-red', 'cx-accent-red'];
-
   rows: CarteraCliente[] = [];
   kpis: AgingKpi[] = [];
   segments: AgingBarSegment[] = [];
@@ -80,18 +79,19 @@ export class CarteraAgingComponent implements OnChanges {
     this.rows = (this.data?.clientes || []).filter((c) => (c.saldoPendiente || 0) > 0);
 
     // KPIs por rango + total
-    this.kpis = AGING_BUCKETS.map((b, i) => {
+    this.kpis = AGING_BUCKETS.map((b) => {
       const monto = aging[b.key] || 0;
       return {
-        label: b.label,
+        labelKey: b.labelKey,
         cssClass: b.cssClass,
-        accentClass: CarteraAgingComponent.ACCENTS[i],
+        // Mismo color que el punto, la barra y la columna del rango (cx-seg-xxx → cx-accent-xxx).
+        accentClass: b.cssClass.replace('cx-seg-', 'cx-accent-'),
         monto,
         pct: total > 0 ? (monto / total) * 100 : 0,
       };
     });
     this.kpis.push({
-      label: 'Total cartera',
+      labelKey: 'cartera.carteraClientes.carteraTotal',
       cssClass: '',
       accentClass: 'cx-accent-purple',
       monto: total,
@@ -105,7 +105,7 @@ export class CarteraAgingComponent implements OnChanges {
       const pct = total > 0 ? (monto / total) * 100 : 0;
       return {
         cssClass: b.cssClass,
-        label: b.label,
+        labelKey: b.labelKey,
         monto,
         pct,
         showText: pct >= CarteraAgingComponent.LABEL_MIN_PCT,
@@ -136,11 +136,6 @@ export class CarteraAgingComponent implements OnChanges {
   /** Clase de color de texto (cx-seg-xxx → cx-c-xxx). */
   colClass(segClass: string): string {
     return segClass.replace('cx-seg-', 'cx-c-');
-  }
-
-  /** Texto de ayuda de cada rango (tooltip de la tarjeta). */
-  ayudaRango(label: string): string {
-    return `Lo que le deben en pedidos del rango «${label}», contado desde la fecha límite de pago de cada pedido.`;
   }
 
   trackByDoc(_index: number, cliente: CarteraCliente): string {

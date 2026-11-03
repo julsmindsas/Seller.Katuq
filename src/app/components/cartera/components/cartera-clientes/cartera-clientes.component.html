@@ -1,49 +1,84 @@
 <div class="cx-clientes">
 
-  <!-- KPI cards: cada una explica qué cuenta y, al hacer clic, aplica su filtro (ticket 1464) -->
+  <!-- KPI cards: cada una explica qué cuenta y, al hacer clic, aplica su filtro (ticket 1464).
+       La ayuda se lee con teclado y celular (ícono enfocable) y con lector de pantalla (aria-describedby). -->
   <div class="cx-grid" *ngIf="kpisVista as k">
     <div class="cx-card cx-card-click cx-accent-purple" role="button" tabindex="0"
-         [title]="ayudaTarjeta.total" (click)="aplicarTarjeta('total')"
+         aria-describedby="cx-ayuda-total" (click)="aplicarTarjeta('total')"
          (keydown.enter)="aplicarTarjeta('total')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('total')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-wallet"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraTotal' | translate }}</span>
+        <span class="cx-info" tabindex="0" role="img"
+              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
+              [pTooltip]="'cartera.carteraClientes.ayudaTotal' | translate" tooltipEvent="both" tooltipPosition="bottom"
+              tooltipStyleClass="cx-ayuda-tooltip"
+              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </span>
       </div>
+      <span id="cx-ayuda-total" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaTotal' | translate }}</span>
       <div class="cx-value">{{ k.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
     </div>
 
-    <div class="cx-card cx-card-click cx-accent-red" role="button" tabindex="0" [class.is-active]="riskFilter === 'vencida'"
-         [title]="ayudaTarjeta.vencida" (click)="aplicarTarjeta('vencida')"
+    <div class="cx-card cx-card-click cx-accent-red" role="button" tabindex="0"
+         [class.is-active]="riskFilter === 'vencida'" [attr.aria-pressed]="riskFilter === 'vencida'"
+         aria-describedby="cx-ayuda-vencida" (click)="aplicarTarjeta('vencida')"
          (keydown.enter)="aplicarTarjeta('vencida')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('vencida')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-clock"></i></span>
-        <span class="cx-label">Cartera vencida</span>
+        <span class="cx-label">{{ 'cartera.carteraClientes.carteraVencida' | translate }}</span>
+        <span class="cx-info" tabindex="0" role="img"
+              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
+              [pTooltip]="'cartera.carteraClientes.ayudaVencida' | translate" tooltipEvent="both" tooltipPosition="bottom"
+              tooltipStyleClass="cx-ayuda-tooltip"
+              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </span>
       </div>
+      <span id="cx-ayuda-vencida" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</span>
       <div class="cx-value">{{ k.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}% del total, desde 1 día vencido</div>
-      <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">De ella, más de 15 días: {{ m.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotalDesde1Dia' | translate }}</div>
+      <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">{{ 'cartera.carteraClientes.masDe15Dias' | translate:{monto: (m.monto | currency:'COP':'symbol-narrow':'1.0-0')} }}</div>
     </div>
 
     <div class="cx-card cx-card-click cx-accent-blue" role="button" tabindex="0"
-         [title]="ayudaTarjeta.dias" (click)="aplicarTarjeta('dias')"
+         [class.is-active]="orden === 'vencido'" [attr.aria-pressed]="orden === 'vencido'"
+         aria-describedby="cx-ayuda-dias" (click)="aplicarTarjeta('dias')"
          (keydown.enter)="aplicarTarjeta('dias')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('dias')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-chart-bar"></i></span>
-        <span class="cx-label">Días promedio de cartera</span>
+        <span class="cx-label">{{ 'cartera.carteraClientes.diasPromedio' | translate }}</span>
+        <span class="cx-info" tabindex="0" role="img"
+              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
+              [pTooltip]="'cartera.carteraClientes.ayudaDias' | translate" tooltipEvent="both" tooltipPosition="bottom"
+              tooltipStyleClass="cx-ayuda-tooltip"
+              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </span>
       </div>
+      <span id="cx-ayuda-dias" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaDias' | translate }}</span>
       <div class="cx-value">{{ k.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">{{ 'cartera.carteraClientes.dias' | translate }}</span></div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.antiguedadPromedioDeLaCartera' | translate }}</div>
     </div>
 
     <div class="cx-card cx-card-click" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'"
-         role="button" tabindex="0" [class.is-active]="riskFilter === 'excede'"
-         [title]="ayudaTarjeta.excede" (click)="aplicarTarjeta('excede')"
+         role="button" tabindex="0" [class.is-active]="riskFilter === 'excede'" [attr.aria-pressed]="riskFilter === 'excede'"
+         aria-describedby="cx-ayuda-excede" (click)="aplicarTarjeta('excede')"
          (keydown.enter)="aplicarTarjeta('excede')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('excede')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-ban"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.excedenCupo' | translate }}</span>
+        <span class="cx-info" tabindex="0" role="img"
+              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
+              [pTooltip]="'cartera.carteraClientes.ayudaExcede' | translate" tooltipEvent="both" tooltipPosition="bottom"
+              tooltipStyleClass="cx-ayuda-tooltip"
+              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </span>
       </div>
+      <span id="cx-ayuda-excede" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaExcede' | translate }}</span>
       <div class="cx-value">{{ k.excedenCupo.cantidad | number }}</div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.clienteSSobreSuCupo' | translate }}</div>
     </div>
@@ -57,10 +92,20 @@
              [placeholder]="'cartera.carteraClientes.nombreODocumentoDelCliente' | translate" autocomplete="off">
     </div>
     <div class="cx-field">
-      <label for="cx-risk">{{ 'cartera.carteraClientes.riesgo' | translate }}</label>
-      <select id="cx-risk" [(ngModel)]="riskFilter" (change)="onFilterChange()">
+      <div class="cx-label-fila">
+        <label for="cx-risk">{{ 'cartera.carteraClientes.riesgo' | translate }}</label>
+        <span class="cx-info" tabindex="0" role="img"
+            [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
+            [pTooltip]="'cartera.carteraClientes.ayudaRiesgo' | translate" tooltipEvent="both" tooltipPosition="bottom"
+            tooltipStyleClass="cx-ayuda-tooltip"
+            (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+        <i class="pi pi-info-circle"></i>
+        </span>
+      </div>
+      <select id="cx-risk" [(ngModel)]="riskFilter" (change)="onFilterChange()" aria-describedby="cx-ayuda-riesgo">
         <option *ngFor="let opt of riskOptions" [value]="opt.value">{{ opt.label }}</option>
       </select>
+      <span id="cx-ayuda-riesgo" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaRiesgo' | translate }}</span>
     </div>
     <div class="cx-field">
       <label for="cx-vendor">{{ 'cartera.carteraClientes.vendedor' | translate }}</label>
@@ -72,7 +117,7 @@
     <div class="cx-field">
       <label for="cx-age">{{ 'cartera.carteraClientes.antiguedad' | translate }}</label>
       <select id="cx-age" [(ngModel)]="antiguedadFilter" (change)="onFilterChange()">
-        <option *ngFor="let opt of antiguedadOptions" [value]="opt.value">{{ opt.label }}</option>
+        <option *ngFor="let opt of antiguedadOptions" [value]="opt.value">{{ opt.labelKey | translate }}</option>
       </select>
     </div>
     <div class="cx-field">
@@ -137,7 +182,7 @@
             <span *ngIf="c.documento"><i class="pi pi-id-card"></i>{{ c.documento }}</span>
             <span *ngIf="c.vendedor" class="cx-meta-vendedor"><i class="pi pi-user"></i>{{ c.vendedor }}</span>
             <span><i class="pi pi-shopping-cart"></i>{{ c.pedidosActivos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
-            <span class="cx-dso" [title]="ayudaTarjeta.diasCliente"><i class="pi pi-clock"></i>Promedio en cartera {{ c.dso | number:'1.0-0' }} d</span>
+            <span class="cx-dso" [title]="'cartera.carteraClientes.ayudaDiasCliente' | translate"><i class="pi pi-clock"></i>{{ 'cartera.carteraClientes.promedioEnCartera' | translate:{dias: (c.dso | number:'1.0-0')} }}</span>
             <span class="cx-plazo" [title]="'cartera.carteraClientes.plazoDePagoAcordadoCon' | translate"><i class="pi pi-calendar"></i>{{ textoPlazo(c) }}</span>
           </div>
         </div>
@@ -187,12 +232,12 @@
           <div class="cx-aging-mini">
             <div class="cx-aging-seg" *ngFor="let s of agingSegments(c)" [ngClass]="s.cssClass"
                  [style.width.%]="s.pct"
-                 [attr.title]="s.label + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0')"></div>
+                 [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0')"></div>
           </div>
           <div class="cx-aging-legend">
             <span class="cx-aging-legend-item" *ngFor="let l of agingLegend(c)" [class.is-zero]="l.monto === 0">
               <span class="cx-dot" [ngClass]="l.cssClass"></span>
-              {{ l.short }}
+              {{ l.shortKey | translate }}
               <strong>{{ l.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
             </span>
           </div>
@@ -253,7 +298,7 @@
                 <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td class="text-end">{{ p.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td class="text-end cx-cell-strong">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 15"
+                <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 0" [class.cx-dias-leve]="p.diasVencido > 0 && p.diasVencido <= 15"
                     [class.cx-dias-al-dia]="p.diasVencido <= 0">
                   {{ textoVencimiento(p) }}
                 </td>

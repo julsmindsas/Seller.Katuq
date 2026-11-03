@@ -23,6 +23,10 @@
     </div>
   </div>
 
+  <div class="tk-error" *ngIf="truncado" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.alertasTesoreria.listaIncompleta' | translate }}
+  </div>
+
   <!-- Cargando -->
   <div *ngIf="loading" class="tk-empty"><i class="pi pi-spin pi-spinner"></i> {{ 'tesoreria.alertasTesoreria.cargandoAlertas' | translate }}</div>
 

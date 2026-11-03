@@ -176,6 +176,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       fechaFinal: sumarDias(this.fechaHasta, 1),
       nroPedido: term && /^\d+$/.test(term) ? term : undefined,
       cliente: term && !/^\d+$/.test(term) ? term : undefined,
+      // Misma forma de pago que manda la lista (buildFilter): el pie suma exactamente lo que se lista.
+      formaPago: this.formaPagoFilter || undefined,
     };
     const clave = JSON.stringify(filtros);
     if (!forzar && clave === this.totalesClave) return;
@@ -341,6 +343,10 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   // llegan (o si fallan, o en "Por revisar") son los de las filas en pantalla.
   get totalesDelFiltro(): boolean {
     return this.totales !== null;
+  }
+  /** El servidor leyó solo una parte del filtro (tope de seguridad): los totales no son exactos. */
+  get totalesIncompletos(): boolean {
+    return this.totales?.truncado === true;
   }
   totalPedidos(): number {
     return this.totales ? this.totales.totalItems : this.orders.length;

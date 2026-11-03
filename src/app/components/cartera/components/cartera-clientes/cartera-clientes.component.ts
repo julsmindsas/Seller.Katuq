@@ -47,18 +47,18 @@ interface FilaCartera {
   antiguedad: string;
 }
 
-/** Un segmento de la mini-barra de aging de un cliente. */
+/** Un segmento de la mini-barra de aging de un cliente (labelKey = clave i18n). */
 interface AgingSegment {
   cssClass: string;
   pct: number;
-  label: string;
+  labelKey: string;
   monto: number;
 }
 
-/** Entrada de la leyenda de antigüedad (los 4 rangos, con o sin monto). */
+/** Entrada de la leyenda de antigüedad (los 6 rangos, con o sin monto; shortKey = clave i18n). */
 interface AgingLegendItem {
   cssClass: string;
-  short: string;
+  shortKey: string;
   monto: number;
 }
 
@@ -89,15 +89,6 @@ export class CarteraClientesComponent implements OnChanges {
   readonly agingBuckets = AGING_BUCKETS;
   readonly antiguedadOptions = ANTIGUEDAD_OPTIONS;
   readonly ordenOptions = ORDEN_OPTIONS;
-
-  /** Qué cuenta cada tarjeta y desde cuándo (tooltips, ticket 1464). */
-  readonly ayudaTarjeta = {
-    total: 'Todo lo que le deben hoy: el saldo de los pedidos que aún no se pagan por completo, sin contar los anulados ni cancelados. Al hacer clic quita los filtros de riesgo y antigüedad.',
-    vencida: 'Saldo de los pedidos que ya pasaron su fecha límite de pago (fecha de entrega más el plazo del cliente), desde el primer día de atraso. Abajo se ve la parte con más de 15 días. Al hacer clic muestra solo los clientes con cartera vencida.',
-    dias: 'Días promedio de cartera: cuántos días llevan los pedidos con saldo, contados desde la fecha de entrega (o de creación si no tienen entrega) y ponderados por lo que se debe. Fórmula: suma de (saldo × días) ÷ suma de saldos. No es el DSO financiero. Al hacer clic ordena por el cliente más atrasado.',
-    excede: 'Clientes cuya deuda ya pasó el cupo de crédito que les asignaste. Solo cuenta clientes con cupo configurado. Al hacer clic muestra esos clientes.',
-    diasCliente: 'Días promedio de cartera de este cliente: cuántos días llevan sus pedidos con saldo desde la entrega, ponderado por lo que debe (suma de saldo × días ÷ suma de saldos). No son sus días vencido.',
-  };
 
   // Filtros (client-side)
   searchTerm = '';
@@ -533,7 +524,7 @@ export class CarteraClientesComponent implements OnChanges {
     const maxDias = (cliente.pedidos || []).reduce((max, p) => Math.max(max, Number(p.diasVencido) || 0), 0);
     if (maxDias <= 0) return '';
     const meta = this.agingBuckets.find((b) => b.key === rangoAntiguedad(maxDias));
-    return meta ? meta.short.replace(' d', '') : '';
+    return meta ? meta.rango : '';
   }
 
   // ── Mini-barra de aging ───────────────────────────────────────────────────
@@ -541,7 +532,7 @@ export class CarteraClientesComponent implements OnChanges {
   agingLegend(cliente: CarteraCliente): AgingLegendItem[] {
     return this.agingBuckets.map((b) => ({
       cssClass: b.cssClass,
-      short: b.short,
+      shortKey: b.shortKey,
       monto: cliente.aging?.[b.key] || 0,
     }));
   }
@@ -552,7 +543,7 @@ export class CarteraClientesComponent implements OnChanges {
     return this.agingBuckets
       .map((b) => {
         const monto = cliente.aging?.[b.key] || 0;
-        return { cssClass: b.cssClass, pct: (monto / total) * 100, label: b.label, monto };
+        return { cssClass: b.cssClass, pct: (monto / total) * 100, labelKey: b.labelKey, monto };
       })
       .filter((s) => s.monto > 0);
   }

@@ -10,10 +10,12 @@ import { AgingBuckets } from '../../shared/services/cartera/cartera.models';
 export interface AgingBucketMeta {
   /** Clave del rango dentro de AgingBuckets. */
   key: keyof AgingBuckets;
-  /** Etiqueta completa (KPIs, leyenda). */
-  label: string;
-  /** Etiqueta corta (columnas de tabla, segmentos). */
-  short: string;
+  /** Clave i18n de la etiqueta completa (KPIs, leyenda, columnas). */
+  labelKey: string;
+  /** Clave i18n de la etiqueta corta (leyenda del cliente). */
+  shortKey: string;
+  /** Texto numérico del rango, igual en todos los idiomas (ej. «1-15»); vacío en «sin vencer». */
+  rango: string;
   /** Clase CSS de color del rango (semáforo verde→rojo). */
   cssClass: string;
 }
@@ -21,15 +23,16 @@ export interface AgingBucketMeta {
 /**
  * Los 6 rangos de antigüedad en orden de severidad creciente (ticket 1460).
  * Son los mismos del servidor: tarjetas, barra del cliente, pestaña Aging,
- * filtro, Excel y PDF usan esta única lista.
+ * filtro, Excel y PDF usan esta única lista. Los textos viven en i18n
+ * (cartera.rangos.*) y se traducen en la plantilla.
  */
 export const AGING_BUCKETS: AgingBucketMeta[] = [
-  { key: 'sin_vencer', label: 'Sin vencer',   short: 'Sin vencer', cssClass: 'cx-seg-sin' },
-  { key: 'd1_15',      label: '1-15 días',    short: '1-15 d',     cssClass: 'cx-seg-d1' },
-  { key: 'd16_30',     label: '16-30 días',   short: '16-30 d',    cssClass: 'cx-seg-d16' },
-  { key: 'd31_60',     label: '31-60 días',   short: '31-60 d',    cssClass: 'cx-seg-d31' },
-  { key: 'd61_90',     label: '61-90 días',   short: '61-90 d',    cssClass: 'cx-seg-d61' },
-  { key: 'd90',        label: 'Más de 90 días', short: '+90 d',    cssClass: 'cx-seg-d90' },
+  { key: 'sin_vencer', labelKey: 'cartera.rangos.sinVencerEtiqueta', shortKey: 'cartera.rangos.sinVencerCorto', rango: '',      cssClass: 'cx-seg-sin' },
+  { key: 'd1_15',      labelKey: 'cartera.rangos.d1_15Etiqueta',     shortKey: 'cartera.rangos.d1_15Corto',     rango: '1-15',  cssClass: 'cx-seg-d1' },
+  { key: 'd16_30',     labelKey: 'cartera.rangos.d16_30Etiqueta',    shortKey: 'cartera.rangos.d16_30Corto',    rango: '16-30', cssClass: 'cx-seg-d16' },
+  { key: 'd31_60',     labelKey: 'cartera.rangos.d31_60Etiqueta',    shortKey: 'cartera.rangos.d31_60Corto',    rango: '31-60', cssClass: 'cx-seg-d31' },
+  { key: 'd61_90',     labelKey: 'cartera.rangos.d61_90Etiqueta',    shortKey: 'cartera.rangos.d61_90Corto',    rango: '61-90', cssClass: 'cx-seg-d61' },
+  { key: 'd90',        labelKey: 'cartera.rangos.d90Etiqueta',       shortKey: 'cartera.rangos.d90Corto',       rango: '+90',   cssClass: 'cx-seg-d90' },
 ];
 
 /** Filtro de riesgo del tab "Cartera por Cliente". */
@@ -59,17 +62,17 @@ export function esClienteCredito(creditLimit: number | null | undefined): boolea
 export type RangoAntiguedad = keyof AgingBuckets;
 export type AntiguedadFiltro = 'todas' | RangoAntiguedad;
 
-export const ANTIGUEDAD_OPTIONS: { label: string; value: AntiguedadFiltro }[] = [
-  { label: 'Todas', value: 'todas' },
-  { label: 'Sin vencer', value: 'sin_vencer' },
-  { label: '1 a 15 días vencido', value: 'd1_15' },
-  { label: '16 a 30 días vencido', value: 'd16_30' },
-  { label: '31 a 60 días vencido', value: 'd31_60' },
-  { label: '61 a 90 días vencido', value: 'd61_90' },
-  { label: 'Más de 90 días vencido', value: 'd90' },
+export const ANTIGUEDAD_OPTIONS: { labelKey: string; value: AntiguedadFiltro }[] = [
+  { labelKey: 'cartera.carteraClientes.todas',   value: 'todas' },
+  { labelKey: 'cartera.rangos.sinVencerFiltro',  value: 'sin_vencer' },
+  { labelKey: 'cartera.rangos.d1_15Filtro',      value: 'd1_15' },
+  { labelKey: 'cartera.rangos.d16_30Filtro',     value: 'd16_30' },
+  { labelKey: 'cartera.rangos.d31_60Filtro',     value: 'd31_60' },
+  { labelKey: 'cartera.rangos.d61_90Filtro',     value: 'd61_90' },
+  { labelKey: 'cartera.rangos.d90Filtro',        value: 'd90' },
 ];
 
-/** Nombre del rango para la descarga (Excel y PDF). */
+/** Nombre del rango para la descarga (Excel y PDF). Las descargas van en español, igual que el resto de sus columnas. */
 export const RANGO_ANTIGUEDAD_LABEL: { [rango in RangoAntiguedad]: string } = {
   sin_vencer: 'Sin vencer',
   d1_15: '1 a 15 días vencido',
