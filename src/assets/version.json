@@ -1,22 +1,481 @@
 {
-  "version": "2026.11.03.2 - 3 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-03T16:59:52.260Z",
+  "version": "2026.11.03.3 - 3 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-03T21:00:05.468Z",
   "notas": [
     {
-      "fecha": "2026-11-03T15:32:57Z",
+      "fecha": "2026-11-03T19:55:00Z",
       "tipo": "CORRIGE",
-      "texto": "En «En vivo», un mensajero ya no sale «en ruta» por días: solo cuenta lo que salió hoy, y los pedidos de días anteriores que siguen como despachados aparecen aparte para que los marques entregados.",
+      "texto": "En Integraciones, el botón «Ver instructivo» de ChatGPT, Claude y Codex vuelve a abrir los pasos para conectar Katuq.",
       "modulos": [
-        "en-vivo"
+        "integrations"
       ]
     },
     {
-      "fecha": "2026-11-03T16:26:38Z",
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Cartera, un cliente con pedidos vencidos desde el primer día ya no aparece «Al día», y «Cartera vencida» cuenta todo lo que pasó su fecha de pago.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
       "tipo": "MEJORA",
-      "texto": "Las novedades de cada versión ya no salen en una ventana: las encuentras en la campana, en «Novedades», y solo te mostramos las de las pantallas que usas."
+      "texto": "En Cartera, los rangos de antigüedad ahora son Sin vencer, 1-15, 16-30, 31-60, 61-90 y Más de 90 días, iguales en la pantalla, el Excel y el PDF.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "Ahora puedes filtrar la Cartera por clientes de Contado o de Crédito.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera, las tarjetas de arriba explican qué cuentan y filtran la lista al hacer clic; «DSO promedio» ahora se llama «Días promedio de cartera».",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Tesorería, la pestaña Alertas ya no se corta en 200: muestra el mismo número que la tarjeta.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, las alertas se agrupan por número de comprobante, muestran el número de pedido y explican en palabras sencillas qué revisar.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, los totales de «Sin pago» suman todos los pedidos del filtro, no solo los de la pantalla, y el filtro por forma de pago ya funciona.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, el Historial muestra el total real de pagos, se filtra por forma de pago y por quién subió el pago, y muestra lo recaudado por forma de pago.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "La lista de clientes carga mucho más rápido: trae los clientes por páginas en vez de todos de una vez, y puedes buscar un celular o un documento por sus últimos dígitos.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera ves lo que se vence en los próximos 7 días, cuántos clientes tienen cupo configurado y un resumen por vendedor.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "Ahora puedes filtrar la Cartera con varios filtros a la vez, ver y quitar los activos con una X, compartir el enlace de la vista y usar los mismos filtros en Aging.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "El Excel de Cartera trae 3 hojas (Resumen, Por cliente y Detalle) con fechas reales, filtros en las tablas y los datos que necesitas para cobrar.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "El PDF de Cartera es ahora un informe horizontal con resumen en la primera hoja y detalle agrupado por cliente, en versión Resumen o Completa.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:10Z",
+      "tipo": "MEJORA",
+      "texto": "Antes de emitir una factura te avisamos si ya le facturaste a ese cliente el mismo valor esta semana, para que no la emitas dos veces. Y si la DIAN dice que un documento ya lo tenía, te explicamos qué hacer en vez de reenviarlo.",
+      "modulos": [
+        "facturacion-electronica",
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:20Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, la fecha de emisión de tus facturas y notas muestra la hora real en que se emitieron, y ya no 12:00 en todas.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, los botones de cada documento y el total de cada concepto de «Nueva factura» se quedan a la vista aunque la pantalla sea angosta.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica → Desde pedidos, ya puedes facturar a consumidor final aunque no tenga correo. Y si a un cliente le falta el correo, el aviso te lleva a su ficha para completarlo.",
+      "modulos": [
+        "facturacion-electronica",
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T18:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, las notas crédito y débito muestran el nombre y el NIT del cliente, y la columna «Origen» te dice de qué pedido o de qué factura viene cada documento.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T18:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En la guía de Facturación electrónica, el paso «Revisa y emite» se marca en amarillo mientras tengas documentos por revisar, y te lleva a ellos con un clic.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, el historial técnico muestra cada envío a la DIAN y cada correo de tus facturas y notas, del más reciente al más antiguo, y no solo las pruebas de habilitación.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:30:00Z",
+      "tipo": "MEJORA",
+      "texto": "Facturación electrónica se ve más limpia: todas las fechas van en el mismo formato (día/mes/año), quitamos las tarjetas y botones que se repetían y las fechas grises se leen mejor.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:30:30Z",
+      "tipo": "MEJORA",
+      "texto": "En Facturación electrónica, lo facturado en el mes se compara con los mismos días del mes anterior, y además del porcentaje ves la diferencia en pesos.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:31:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya no aparece una franja blanca vacía al final de las pantallas."
+    },
+    {
+      "fecha": "2026-11-03T20:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets."
+    },
+    {
+      "fecha": "2026-11-03T20:38:01Z",
+      "tipo": "CORRIGE",
+      "texto": "En Compras → Qué comprar, los productos sin existencia dicen «Agotado», las cifras para pedir se entienden mejor, el valor avisa cuando faltan costos y los decimales van con coma.",
+      "modulos": [
+        "compras/reposicion"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:38:01Z",
+      "tipo": "CORRIGE",
+      "texto": "En Órdenes de compra, el filtro de bodega arranca en «Todas las bodegas» y recuerda la última que elegiste, así no se esconden órdenes.",
+      "modulos": [
+        "inventario/ordenes-compra"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:37:32Z",
+      "tipo": "CORRIGE",
+      "texto": "Facturación electrónica ya no deja la pantalla bloqueada mientras carga: cada parte muestra su avance y puedes empezar a trabajar de una.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-03T20:38:01Z",
+      "tipo": "CORRIGE",
+      "texto": "En Compras → Qué comprar, los productos sin existencia dicen «Agotado», las cifras para pedir se entienden mejor, el valor avisa cuando faltan costos y los decimales van con coma.",
+      "modulos": [
+        "compras/reposicion"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:38:01Z",
+      "tipo": "CORRIGE",
+      "texto": "En Órdenes de compra, el filtro de bodega arranca en «Todas las bodegas» y recuerda la última que elegiste, así no se esconden órdenes.",
+      "modulos": [
+        "inventario/ordenes-compra"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:37:32Z",
+      "tipo": "CORRIGE",
+      "texto": "Facturación electrónica ya no deja la pantalla bloqueada mientras carga: cada parte muestra su avance y puedes empezar a trabajar de una.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T20:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets."
+    },
+    {
+      "fecha": "2026-11-03T20:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya no aparece una franja blanca vacía al final de las pantallas."
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Integraciones, el botón «Ver instructivo» de ChatGPT, Claude y Codex vuelve a abrir los pasos para conectar Katuq.",
+      "modulos": [
+        "integrations"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Cartera, un cliente con pedidos vencidos desde el primer día ya no aparece «Al día», y «Cartera vencida» cuenta todo lo que pasó su fecha de pago.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera, los rangos de antigüedad ahora son Sin vencer, 1-15, 16-30, 31-60, 61-90 y Más de 90 días, iguales en la pantalla, el Excel y el PDF.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "Ahora puedes filtrar la Cartera por clientes de Contado o de Crédito.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera, las tarjetas de arriba explican qué cuentan y filtran la lista al hacer clic; «DSO promedio» ahora se llama «Días promedio de cartera».",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Tesorería, la pestaña Alertas ya no se corta en 200: muestra el mismo número que la tarjeta.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, las alertas se agrupan por número de comprobante, muestran el número de pedido y explican en palabras sencillas qué revisar.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, los totales de «Sin pago» suman todos los pedidos del filtro, no solo los de la pantalla, y el filtro por forma de pago ya funciona.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, el Historial muestra el total real de pagos, se filtra por forma de pago y por quién subió el pago, y muestra lo recaudado por forma de pago.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período.",
+      "modulos": [
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "La lista de clientes carga mucho más rápido: trae los clientes por páginas en vez de todos de una vez, y puedes buscar un celular o un documento por sus últimos dígitos.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera ves lo que se vence en los próximos 7 días, cuántos clientes tienen cupo configurado y un resumen por vendedor.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "Ahora puedes filtrar la Cartera con varios filtros a la vez, ver y quitar los activos con una X, compartir el enlace de la vista y usar los mismos filtros en Aging.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "El Excel de Cartera trae 3 hojas (Resumen, Por cliente y Detalle) con fechas reales, filtros en las tablas y los datos que necesitas para cobrar.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "El PDF de Cartera es ahora un informe horizontal con resumen en la primera hoja y detalle agrupado por cliente, en versión Resumen o Completa.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:31:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:30:30Z",
+      "tipo": "MEJORA",
+      "texto": "En Facturación electrónica, lo facturado en el mes se compara con los mismos días del mes anterior, y además del porcentaje ves la diferencia en pesos.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:30:00Z",
+      "tipo": "MEJORA",
+      "texto": "Facturación electrónica se ve más limpia: todas las fechas van en el mismo formato (día/mes/año), quitamos las tarjetas y botones que se repetían y las fechas grises se leen mejor.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T19:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, el historial técnico muestra cada envío a la DIAN y cada correo de tus facturas y notas, del más reciente al más antiguo, y no solo las pruebas de habilitación.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T18:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En la guía de Facturación electrónica, el paso «Revisa y emite» se marca en amarillo mientras tengas documentos por revisar, y te lleva a ellos con un clic.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T18:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, las notas crédito y débito muestran el nombre y el NIT del cliente, y la columna «Origen» te dice de qué pedido o de qué factura viene cada documento.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica → Desde pedidos, ya puedes facturar a consumidor final aunque no tenga correo. Y si a un cliente le falta el correo, el aviso te lleva a su ficha para completarlo.",
+      "modulos": [
+        "facturacion-electronica",
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:20Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, la fecha de emisión de tus facturas y notas muestra la hora real en que se emitieron, y ya no 12:00 en todas.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:10Z",
+      "tipo": "MEJORA",
+      "texto": "Antes de emitir una factura te avisamos si ya le facturaste a ese cliente el mismo valor esta semana, para que no la emitas dos veces. Y si la DIAN dice que un documento ya lo tenía, te explicamos qué hacer en vez de reenviarlo.",
+      "modulos": [
+        "facturacion-electronica",
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-03T17:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Facturación electrónica, los botones de cada documento y el total de cada concepto de «Nueva factura» se quedan a la vista aunque la pantalla sea angosta.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
     {
       "fecha": "2026-11-03T16:26:38Z",
       "tipo": "MEJORA",
@@ -258,80 +717,8 @@
       "modulos": [
         "cotizaciones"
       ]
-    },
-    {
-      "fecha": "2026-10-27T16:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "La pantalla de Tipos de cliente ya no muestra el código interno de cada tipo; queda más limpia.",
-      "modulos": [
-        "proceso/tipos-cliente"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T16:05:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al facturar, si el sistema de facturación no responde te lo decimos claro y puedes intentar de nuevo en unos minutos; además, un problema momentáneo de una empresa ya no frena la facturación de las demás.",
-      "modulos": [
-        "ventas/pedidos",
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "MEJORA",
-      "texto": "El logo de tu comercio en la parte de arriba se ve más grande y completo, también si es horizontal."
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Con el menú compacto, las opciones ya no desaparecen antes de alcanzar a hacer clic."
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "MEJORA",
-      "texto": "El menú compacto muestra tu foto arriba y el logo de Katuq al final."
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "MEJORA",
-      "texto": "Al pegar texto en la descripción de un producto se respetan los párrafos y las listas.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "Al guardar un producto te avisamos si ya existe otro con el mismo nombre.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "En Cartera, el número de pedido abre el pedido en otra pestaña, y ves la factura electrónica y la fecha de compra de cada pedido (también en Excel y PDF).",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "En el punto de venta ves el IVA por separado en el resumen de la compra.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T01:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "La plantilla de precios por tipo de cliente usa el nombre de cada tipo de cliente como título de columna.",
-      "modulos": [
-        "lista-precios"
-      ]
     }
   ],
-  "commit": "af639c53d7b69a8e19ac86b0d310869eca00f0da",
+  "commit": "49bb4ea4c3db3bf790f98923541e0db614a34b86",
   "cambiosSinCommit": 0
 }
