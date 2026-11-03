@@ -72,11 +72,14 @@ Muchas pruebas llevan contraseñas, tokens o datos reales. Por eso, desde el 202
 - **La evidencia va en el mensaje de commit o en el contrato:** qué pruebas se corrieron y su resultado.
 - **Los subagentes siguen la misma regla:** `git commit -- <archivos>` nunca incluye pruebas nuevas.
 
-## Notas de versión (D-567)
+## Notas de versión (D-567, D-581)
 
-Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Por eso:
+Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Desde D-581 no sale ninguna ventana: las notas se ven en la pestaña «Novedades» de la campana, y a cada usuario solo le salen las de las pantallas que usa. Por eso:
 
-- **Quien sube un cambio que el comercio ve** agrega una nota a `notas-version.json` (raíz del front): `{ "fecha": "<ISO de hoy>", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "texto": "..." }`. Una línea, sin jerga, sin números de ticket ni D-XXX, hablándole al comercio («Ahora puedes…», «Ya no…»).
+- **Quien sube un cambio que el comercio ve** agrega una nota a `notas-version.json` (raíz del front): `{ "fecha": "<ISO de hoy>", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "modulos": ["<ruta del menú>"], "texto": "..." }`. Una línea, sin jerga, sin números de ticket ni D-XXX, hablándole al comercio («Ahora puedes…», «Ya no…»).
+- **`modulos` dice de qué pantallas es la nota.** Se usan las rutas del menú de `nav.service.ts`, por ejemplo `facturacion-electronica`, `ventas/ventas-pos` o `ventas` para todo el módulo. La nota solo le sale a quien tiene esa ruta en su menú y la abrió en los últimos 90 días. Sin `modulos` la ven todos, así que se deja sin módulo solo lo que le sirve a cualquiera (el menú, el encabezado). El build avisa si un módulo no existe.
+- **La fecha es la de antes de compilar,** no una posterior: una nota con fecha después de la publicación sale otra vez en la versión siguiente.
+- **`"retirada": true`** marca una nota cuyo tema ya no existe: se queda en el archivo pero no se publica.
 - **No se borran notas.** `update-version.js` publica solo las de fecha posterior a la última publicación (`publicada` del `src/assets/version.json` en git).
 - **Cambios internos** (refactors, pruebas, documentación) no llevan nota.
 

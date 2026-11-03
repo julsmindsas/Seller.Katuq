@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import {
   NotaVersion,
@@ -6,6 +6,7 @@ import {
   VersionPublicada,
 } from '../../services/version-check.service';
 import { AuthService } from '../../services/firebase/auth.service';
+import { NovedadesVersionService } from '../../services/novedades-version.service';
 
 /**
  * Aviso de versión nueva — píldora en la barra superior
@@ -20,9 +21,7 @@ import { AuthService } from '../../services/firebase/auth.service';
   templateUrl: './aviso-actualizacion.component.html',
   styleUrls: ['./aviso-actualizacion.component.scss'],
 })
-export class AvisoActualizacionComponent implements OnInit, AfterViewInit, OnDestroy {
-
-  @ViewChild('capaNovedades') private capaNovedades?: ElementRef<HTMLElement>;
+export class AvisoActualizacionComponent implements OnInit, OnDestroy {
 
   /** Clave para "recordar mañana": guarda hasta cuándo no molestar. */
   private readonly CLAVE_POSPUESTO = 'actualizacionPospuestaHasta';
@@ -44,6 +43,7 @@ export class AvisoActualizacionComponent implements OnInit, AfterViewInit, OnDes
   constructor(
     private versionCheck: VersionCheckService,
     public authService: AuthService,
+    private novedadesService: NovedadesVersionService,
   ) {}
 
   ngOnInit(): void {
@@ -54,59 +54,23 @@ export class AvisoActualizacionComponent implements OnInit, AfterViewInit, OnDes
 
     // El aviso solo tiene sentido con sesión abierta: en el login la recarga
     // no aporta nada y estorba.
+    // D-581: las novedades ya no salen en una ventana al entrar; viven en la
+    // pestaña «Novedades» de la campana.
     if (this.authService.isLoggedIn) {
       this.versionCheck.iniciar();
-      this.mostrarNovedadesSiCorresponde();
+      this.novedadesService.iniciar();
     }
-  }
-
-  // ── Ticket 1377: «¿Qué hay de nuevo?» una sola vez por versión ─────────────
-  private readonly CLAVE_NOTAS_VISTAS = 'notasVersionVistas';
-  novedadesVisibles = false;
-  novedadesVersion = '';
-  novedades: NotaVersion[] = [];
-
-  /** Si la versión que se acaba de cargar trae notas y no se han visto, se muestran. */
-  private async mostrarNovedadesSiCorresponde(): Promise<void> {
-    const actual = this.soloNumero(this.versionCheck.versionActual);
-    if (!actual) return;
-    try {
-      if (localStorage.getItem(this.CLAVE_NOTAS_VISTAS) === actual) return;
-    } catch (e) {
-      return;
-    }
-    const data = await this.versionCheck.leerPublicada();
-    if (!data || this.soloNumero(data.version) !== actual) return;
-    const notas = Array.isArray(data.notas) ? data.notas.filter((n) => n && n.texto) : [];
-    if (!notas.length) return;
-    this.novedadesVersion = actual;
-    this.novedades = notas;
-    this.novedadesVisibles = true;
-  }
-
-  cerrarNovedades(): void {
-    this.novedadesVisibles = false;
-    try {
-      localStorage.setItem(this.CLAVE_NOTAS_VISTAS, this.novedadesVersion);
-    } catch (e) {
-      // Sin localStorage se vuelve a mostrar en la próxima carga; no es grave.
-    }
-  }
-
-  ngAfterViewInit(): void {
-    const capa = this.capaNovedades?.nativeElement;
-    if (capa) document.body.appendChild(capa);
   }
 
   ngOnDestroy(): void {
-    this.capaNovedades?.nativeElement.remove();
     this.sub?.unsubscribe();
   }
 
   private recibirVersion(data: VersionPublicada): void {
     this.versionNueva = this.soloNumero(data.version) || data.version;
     this.publicada = data.publicada || '';
-    this.notas = Array.isArray(data.notas) ? data.notas : [];
+    // D-581: «Ver notas» solo ofrece lo que le aplica a este usuario.
+    this.notas = (Array.isArray(data.notas) ? data.notas : []).filter((n) => this.novedadesService.aplica(n));
 
     if (this.estaPospuesto()) return;
 

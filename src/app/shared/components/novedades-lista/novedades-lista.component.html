@@ -1,0 +1,18 @@
+<div class="nov-lista" *ngIf="notas.length; else vacio">
+  <p class="nov-ayuda">{{ 'shell.novedades.ayuda' | translate }}</p>
+  <div class="nov-item" *ngFor="let n of notas; trackBy: porNota">
+    <div class="nov-cabeza">
+      <span [ngClass]="claseEtiqueta(n.tipo)">{{ textoEtiqueta(n.tipo) | translate }}</span>
+      <span class="nov-fecha" *ngIf="fecha(n)">{{ fecha(n) }}</span>
+    </div>
+    <span class="nov-texto">{{ n.texto }}</span>
+  </div>
+</div>
+
+<ng-template #vacio>
+  <div class="nov-vacio">
+    <i class="fa fa-star-o" aria-hidden="true"></i>
+    <h4 class="nov-vacio-titulo">{{ 'shell.novedades.vacioTitulo' | translate }}</h4>
+    <p class="nov-vacio-texto">{{ 'shell.novedades.vacioTexto' | translate }}</p>
+  </div>
+</ng-template>

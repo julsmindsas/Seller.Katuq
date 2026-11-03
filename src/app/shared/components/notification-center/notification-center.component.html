@@ -4,6 +4,9 @@
   <span class="notification-badge" *ngIf="unreadCount > 0" [@fadeIn]>
     {{ unreadCount > 99 ? '99+' : unreadCount }}
   </span>
+  <!-- D-581: novedades sin ver, sin número para no competir con los avisos -->
+  <span class="novedades-punto" *ngIf="hayNovedades" role="status"
+        [attr.aria-label]="'shell.novedades.hayNuevas' | translate"></span>
 </div>
 
 <!-- Notification Panel Overlay -->
@@ -28,6 +31,7 @@
     </div>
     
     <div class="header-actions">
+      <ng-container *ngIf="vista === 'avisos'">
       <!-- Ticket 1178: el sonido se controla acá (antes estaba en el menú lateral) -->
       <button class="btn-icon btn-sound"
               type="button"
@@ -51,12 +55,31 @@
       <button class="btn-icon" (click)="showClearAllConfirm()" [title]="'shell.notificationCenter.clearAll' | translate">
         <i class="fa fa-trash"></i>
       </button>
+      </ng-container>
       <button class="btn-icon btn-close" (click)="closePanel()" [title]="'comun.cerrar' | translate">
         <i class="fa fa-times"></i>
       </button>
     </div>
   </div>
 
+  <!-- D-581: avisos de la operación y novedades de versión, cada uno en su pestaña -->
+  <div class="nc-pestanas" role="tablist">
+    <button type="button" class="nc-pestana" role="tab"
+            [class.activa]="vista === 'avisos'" [attr.aria-selected]="vista === 'avisos'"
+            (click)="cambiarVista('avisos')">
+      {{ 'shell.novedades.tabAvisos' | translate }}
+    </button>
+    <button type="button" class="nc-pestana" role="tab"
+            [class.activa]="vista === 'novedades'" [attr.aria-selected]="vista === 'novedades'"
+            (click)="cambiarVista('novedades')">
+      {{ 'shell.novedades.tabNovedades' | translate }}
+      <span class="nc-pestana-punto" *ngIf="hayNovedades" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <app-novedades-lista *ngIf="vista === 'novedades'" [notas]="novedades"></app-novedades-lista>
+
+  <ng-container *ngIf="vista === 'avisos'">
   <!-- Preferences Panel -->
   <div class="preferences-panel" *ngIf="showPreferences" [@slideIn]>
     <div class="preferences-header">
@@ -275,5 +298,6 @@
       </small>
     </div>
   </div>
+  </ng-container>
 </div>
 

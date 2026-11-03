@@ -14,12 +14,13 @@
 - Filtrar por módulo con lo que el front ya sabe, sin backend ni datos nuevos en el servidor.
 
 **Non-Goals:**
+- La ventana «¿Qué hay de nuevo?» de D-108 (`app-novedad-modal`, anuncios grandes con video, como «Tu menú quedó más ordenado»). Es otro sistema y no cambia aquí.
 - Señales del servidor (integraciones conectadas, facturas emitidas, uso por empresa).
 - Cambiar la píldora de versión nueva o la recarga.
 
 ## Decisions
 
-1. **`NovedadesService` en `shared/services/` (SRP).**
+1. **`NovedadesVersionService` en `shared/services/novedades-version.service.ts` (SRP; `NovedadesService` ya existe y es el de los anuncios de D-108).**
    - Responsable de:
      - leer `version.json` mediante `VersionCheckService.leerPublicada()`;
      - registrar el uso;

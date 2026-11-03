@@ -13037,4 +13037,20 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - El uso se guarda solo en el navegador, por usuario y empresa; no se envía a ningún lado.
   - `version.json` agrega `recientes` (notas de los últimos 45 días) para que la pestaña no dependa de una sola versión.
 - **Spec:** `openspec/changes/novedades-sin-modal-por-uso/`.
-- **Estado:** en implementación.
+- **Front:**
+  - `shared/services/novedades-version.service.ts` (`NovedadesVersionService`; el `NovedadesService` que ya existía es el de los anuncios de D-108 y no cambia);
+  - `shared/components/novedades-lista/`;
+  - pestañas y punto en `notification-center`;
+  - `aviso-actualizacion` sin la capa de novedades y con «Ver notas» filtrado.
+- **Build:** `update-version.js` publica `modulos` y `recientes`, deja fuera las notas `retirada` y avisa los módulos que no existen en el menú.
+- **Notas:** las 41 de `notas-version.json` quedaron etiquetadas con su pantalla. Dos notas sobre la ventana vieja quedaron `retirada`. Las cinco de facturación del 3-nov se fecharon a las 14:50Z: tenían una fecha posterior a su propia publicación (14:56:43Z) y habrían salido otra vez.
+- **Pruebas:** arnés fuera de git (D-566), con datos de mentira. Pasaron los 14 casos de la spec:
+  - nota general;
+  - nota de un módulo usado o no usado;
+  - nota de un módulo fuera del menú;
+  - navegador sin historial o sin almacenamiento;
+  - dos empresas en el mismo navegador;
+  - uso de hace 100 días;
+  - punto con una nota posterior y al marcar vistas.
+- **Compilación:** `ng build --configuration production` sin errores. Gradientes y primarios prohibidos en los archivos tocados: 0 antes y 0 después.
+- **Estado:** listo para publicar solo el front.
