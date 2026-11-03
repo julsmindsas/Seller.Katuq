@@ -13052,3 +13052,24 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **D-635** `openspec/changes/panel-acciones-pedido/` (ticket 1472): delta sobre D-547.
   - Casi todo está cubierto, y el error al fijar tiene arreglo (3b4f1627 y 38c89c71, por confirmar en producción).
   - Lo nuevo: 9 acciones, «Frecuente» a 30 días y el orden fijo. Se trabaja un cambio a la vez, coordinado con aws-claude-1.
+
+### 2026-11-03 — Fases 1 implementadas detrás de banderas apagadas (aws-claude-2)
+- **Autorización:** Daniel escogió «Solo lo seguro»: dar por aprobadas las propuestas que no tocan módulos sensibles e implementar su fase 1 hoy, con bandera por empresa apagada (D-505).
+- **Implementado** en la rama `feature/tickets-aws-claude-2`, front y backend, sin desplegar:
+  - D-623 `facturaFormularioMejorado`: plazo a crédito en días, IVA sugerido, orden de compra en observaciones y último medio de pago del cliente. Ticket 1492.
+  - D-622 `dianTableroEstado`: tablero de estado DIAN con alertas en los umbrales de D-448. Ticket 1491.
+  - D-621 `dianDetalleAmpliado`: totales, IVA por tarifa, pago y vencimiento en el detalle; `/lineas` crece de forma aditiva. Ticket 1489.
+  - D-626 `comprasV2`, fases A y B: colección `productoProveedores`, regla única de costos, borradores por proveedor y «Qué producir». Tickets 1468, 1469 y 1470.
+  - D-627 `misIdeasV2`: `ideaEstado` proyectado a `status`, apoyo «A mí también me sirve» y migración con dry-run sin correr. Tickets 1442 y 1443.
+  - D-629 `fotosEstandar`: avisos y rechazo al subir fotos de producto. Tickets 1426 y 1427.
+  - D-628 `centroDeAyuda`: colecciones `helpArticles` y `helpArticleVersions`, administración de Julsmind y MCP `search_help_center`. Tickets 1437 a 1441.
+  - D-635 `panelAccionesV2`: 9 acciones, «Frecuente» a 30 días y pin desde el panel. Ticket 1472.
+  - D-633 `landingsV2`: bandeja de leads, consentimiento de la Ley 1581 y alias `/l/{slug}`. Tickets 1396-1399.
+- **Sin implementar,** esperando que Daniel revise el diseño:
+  - D-620 (XML de la DIAN);
+  - fase C de D-626 (recepción de inventario);
+  - D-634 (auth);
+  - D-625 y D-624 (estado y despacho del pedido);
+  - CONV, KCOM y KCAT.
+- **Notas de versión (D-567):** no se agregaron, porque se publicarían con la bandera apagada. Van cuando se encienda cada una.
+- **Ticket 1320:** reglas de Firestore cerradas en `seguridad/firebase/` del backend, sin publicar; 17/17 en el emulador.
