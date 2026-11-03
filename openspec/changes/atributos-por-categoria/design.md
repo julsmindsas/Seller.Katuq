@@ -434,6 +434,75 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   sin sesión simulada) y da p50 y p95, costo en frío y bytes. Prueba de que no escribe, como 0.3.
 - Registro `catalogo.facetas` `{company, productos, facetas, duracionMs}` solo si pasa de 500 ms.
 
+### Resultado de la medición de E12 (bloque F242-B10, 2026-11-03; solo lectura)
+
+> **Los datos son de la copia `katuq_dev` del día (D-579), NO de producción.** Antes de encender hay que repetir la
+> corrida en una copia fresca. Script: `functions/scripts/medir-facetas.js` (backend `wt-back-tickets-web`). Exige
+> `--dry-run`, no escribe (toda la base pasa por una envoltura que bloquea y anota cualquier escritura), se niega si
+> `PGDATABASE` no es `katuq_dev` y solo enciende `categoryAttributes` **en memoria** para poder medir una empresa que la
+> tiene apagada. En la copia, OH MY STORE tiene 8.608 productos (en octubre eran 8.568) y 3 tipos de cliente con
+> precios de lista; FLORECER, 2.171 productos y ninguno. Ninguna de las dos tiene atributos cargados: por eso el
+> script repite el motor con **atributos simulados en memoria** (30 % de los productos y 4 atributos por categoría
+> raíz), que es el peor caso que debe aguantar.
+
+**Resultado: CUMPLE. Ninguna regla de parada se activa.** 8 escenarios (catálogo completo, categoría raíz, categoría
+profunda con marca, dos atributos marcados, rango de precio con orden, búsqueda con orden, el cruce más pesado de tres
+grupos a la vez —categoría, marca, atributos y precio— y la búsqueda con el buscador encendido por memoria, que incluye los
+valores de atributos) x 30 corridas, en caliente, con y sin una sesión simulada (el tipo de cliente con más precios de lista).
+Una corrida cuenta solo si devuelve el catálogo con facetas y con resultados: una respuesta rápida que sea un 404, un 500,
+una salida sin facetas o un escenario vacío deja el resultado en INCOMPLETO, no en CUMPLE.
+
+**Qué es medido y qué es estimado.** Solo `catalogoPublico` (script con `--slug`, o la prueba de CI) es de punta a punta.
+En OH MY STORE no hay un sitio publicado en la copia, así que allí «sin sesión» es la respuesta armada
+(`consultarCatalogo`), que no busca el sitio ni las categorías ocultas, y «con sesión» es **una suma de p95 sueltos**
+(respuesta armada + segunda lectura de 12 documentos + acceso del cliente): **estimado**. Los números de punta a punta de
+verdad son los de la fuente sintética. El script marca cada uno en `reglas.p95PuntaAPunta.origen`.
+
+| Regla de E12 | Tope | OH MY STORE (copia katuq_dev) | Fuente sintética de 8.568 (peor caso) |
+|---|---|---|---|
+| p95 sin sesión | 1.000 ms | 18 ms (la respuesta armada completa: motor, 12 documentos y calificaciones; **no es de punta a punta**) | 19 a 37 ms (`catalogoPublico` real sobre una base falsa, medido de punta a punta) |
+| p95 con sesión | 1.000 ms | 27 ms (**estimado**: respuesta armada + segunda lectura de 12 documentos + acceso del cliente) | 34 a 69 ms (medido de punta a punta) |
+| p95 con atributos simulados | 1.000 ms | 18 ms (**estimado**: motor + 12 documentos + acceso) | ya incluido arriba: la fuente trae atributos en el 30 % |
+| Derivados + `porTipoCliente` en cada recarga en frío | 500 ms | 26 ms (derivados 22, listas 4); con atributos simulados 65 ms | 30 a 35 ms (derivados 19 a 23, listas 11) |
+| Memoria que F2-42 suma por empresa | 20 MB | 6,8 MB (atributos y categorías retenidos 3,5; `porTipoCliente` 1,3; derivados 1,9) | 13,5 MB (6,0 + 5,3 + 2,2) |
+| CPU p95 de una consulta | 200 ms (Q-S2) | 20 a 40 ms como máximo (cuatro corridas) | 108 ms como máximo (incluye el costo de la base falsa) |
+
+- **Fuente sintética:** 8.568 productos, 180 rutas en forma 5 (arreglos de texto sin ruta), **12 tipos de cliente con
+  precio de lista en cada producto** (el peor caso de `porTipoCliente`), atributos en el 30 % y 10 % en oferta. La
+  Firestore falsa recorre todas las claves en cada consulta: el número es conservador. Se corrió dos veces.
+- **El motor es barato; lo caro de la página sigue siendo la lectura:** el motor responde en 3 a 5 ms p95 con los
+  8.608 productos de OH MY STORE (hasta 20 ms con los atributos simulados); la respuesta armada, en 13 a 18 ms,
+  de los cuales 7 a 9 ms son la lectura de los 12 documentos.
+- **Costo en frío de F2-42 por recarga de la proyección:** 26 ms de CPU (65 ms con atributos simulados) más la
+  lectura ampliada de `products` (atributos, categorías y listas): entre 0,2 y 0,4 s más en cinco corridas,
+  sobre unos 3,1 s que ya tardaba la lectura de TX-34 en OH MY STORE (FLORECER: 0,04 a 0,08 s sobre 0,9 s). La petición
+  que dispara la recarga paga ese costo completo; es el de TX-34 y no entra en la meta, que es «en caliente».
+- **Ojo con el margen de los 500 ms:** la regla de E12 cuenta solo derivados y `porTipoCliente` (26 a 65 ms). Si a eso
+  se le suma la lectura ampliada de `products`, la recarga en frío de OH MY STORE queda entre 0,3 y 0,47 s: pegada al tope.
+  El script lo avisa como advertencia cuando la suma pasa del 80 % del tope (en la última corrida: 473 ms), sin cambiar el
+  veredicto. Esa lectura se midió con pocas cargas (3 por tipo): repetirla antes de encender.
+- **Memoria, el margen más corto:** la fuente sintética gasta 1,6 KB por producto con 12 tipos de cliente (20 MB
+  alcanzan para unos 12.700 productos así); OH MY STORE, 0,8 KB por producto con 3 tipos (unos 25.000 productos). Un comercio con más de unos
+  12.000 productos y muchos tipos de cliente con lista en cada uno se acerca al tope: volver a medirlo antes de
+  encenderle la bandera. Las categorías crudas que ahora retiene toda entrada con atributos son la parte más grande
+  (3,5 MB en OH MY STORE): si algún comercio pasa el tope, se guarda la ruta ya resuelta en vez del crudo
+  (nota de 9.4).
+- **Frecuencia de recarga (recurso alternativo de E12, `date_edit` en las últimas 24 h):** OH MY STORE tuvo 530
+  productos editados en 12 de las 24 horas, hasta 131 a 158 en una sola. `date_edit` es un **piso**: Osmosis, Shopify y
+  WooCommerce invalidan la proyección en cada sincronización sin tocar `date_edit`. El **techo** es 12 recargas por hora
+  (el TTL de 5 minutos), unos 0,3 a 0,44 s extra de F2-42 cada una, es decir 4 a 5 s de trabajo por hora, entre 0,1 y
+  0,15 % de un núcleo. **Estas cifras son por instancia de la función**: cada instancia activa guarda su propia
+  proyección, paga su lectura en frío y su memoria. FLORECER: 0 productos editados.
+- **Q-S2:** la CPU por consulta queda lejos de los 200 ms. La decisión y su texto para Daniel están en la revisión
+  privada de seguridad.
+- **Qué no se midió:** el comercio con Shopify o WooCommerce (los registros de sincronización de producción quedan
+  bloqueados) y `catalogoPublico` de punta a punta sobre un sitio real publicado (OH MY STORE no tiene sitio en la
+  copia; el script lo mide con `--slug`, y con sesión con un token en la variable de entorno `MEDIR_FACETAS_ACCESO`; la
+  prueba de CI lo mide sobre la fuente sintética). Tampoco se mide el orden «más vendido», que lee ventas de los pedidos.
+- **Búsqueda con el buscador encendido:** en OH MY STORE el motor responde en 5 ms p95 (8 ms con los atributos
+  simulados, que sí entran en la búsqueda) y el cruce de tres grupos, en 3 ms (6 ms con simulados). Ninguna de las dos
+  empresas tiene hoy el buscador encendido ni atributos reales visibles.
+
 ### E13. Accesibilidad (TX-35, #1250)
 - Panel, chips, pestañas de F1 (teclado con flechas) y comparador: axe-core con reglas
   WCAG 2.1 A/AA en 0 fallas a 1280 y 390 px, como D-460; foco visible y nombres accesibles
