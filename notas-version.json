@@ -34,5 +34,14 @@
   { "fecha": "2026-11-01T14:50:30Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, «Pendiente por facturar» aclara que cuenta los pedidos del período y cuántos más hay de otras fechas, y «Por facturar» te muestra también el valor." },
   { "fecha": "2026-11-01T14:51:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, «Revisar inconvenientes», el botón de ayuda y las tarjetas de arriba te llevan directo a la lista que abren." },
   { "fecha": "2026-11-01T14:51:30Z", "tipo": "CORRIGE", "texto": "En Configuración DIAN, el ícono de búsqueda ya no tapa el nombre de la ciudad." },
-  { "fecha": "2026-11-03T15:00:00Z", "tipo": "CORRIGE", "texto": "En Integraciones, el botón «Ver instructivo» de ChatGPT, Claude y Codex vuelve a abrir los pasos para conectar Katuq." }
+  { "fecha": "2026-11-03T15:00:00Z", "tipo": "CORRIGE", "texto": "En Integraciones, el botón «Ver instructivo» de ChatGPT, Claude y Codex vuelve a abrir los pasos para conectar Katuq." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "CORRIGE", "texto": "En Cartera, un cliente con pedidos vencidos desde el primer día ya no aparece «Al día», y «Cartera vencida» cuenta todo lo que pasó su fecha de pago." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Cartera, los rangos de antigüedad ahora son Sin vencer, 1-15, 16-30, 31-60, 61-90 y Más de 90 días, iguales en la pantalla, el Excel y el PDF." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "NUEVO", "texto": "Ahora puedes filtrar la Cartera por clientes de Contado o de Crédito." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Cartera, las tarjetas de arriba explican qué cuentan y filtran la lista al hacer clic; «DSO promedio» ahora se llama «Días promedio de cartera»." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "CORRIGE", "texto": "En Tesorería, la pestaña Alertas ya no se corta en 200: muestra el mismo número que la tarjeta." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, las alertas se agrupan por número de comprobante, muestran el número de pedido y explican en palabras sencillas qué revisar." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, los totales de «Sin pago» suman todos los pedidos del filtro, no solo los de la pantalla, y el filtro por forma de pago ya funciona." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, el Historial muestra el total real de pagos, se filtra por forma de pago y por quién subió el pago, y muestra lo recaudado por forma de pago." },
+  { "fecha": "2026-11-03T18:00:00Z", "tipo": "MEJORA", "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período." }
 ]
