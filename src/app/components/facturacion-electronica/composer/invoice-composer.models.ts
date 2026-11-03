@@ -25,7 +25,11 @@ export interface ManualInvoice {
 }
 
 export const MAX_INVOICE_OBSERVATIONS_LENGTH = 1000;
-/** D-623 fase 1: la orden de compra del cliente viaja como la primera línea de las observaciones. */
+/**
+ * D-623 fase 1: la orden de compra del cliente viaja como la primera línea de las observaciones. Como las
+ * observaciones, queda en el documento DIAN (el XML las escribe en `cbc:Note` y el PDF las imprime), así que el
+ * comprador la ve. Lo que NO hay es un elemento propio (`OrderReference`): no cambia la estructura del XML.
+ */
 export const MAX_PURCHASE_ORDER_LENGTH = 50;
 export const PURCHASE_ORDER_PREFIX = 'Orden de compra: ';
 export const CREDIT_TERM_OPTIONS = [30, 60, 90];
@@ -133,7 +137,7 @@ export function purchaseOrderProblem(value: string | null | undefined): '' | 'le
   return /[\u0000-\u001F\u007F]|[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(text) ? 'chars' : '';
 }
 
-/** Observaciones que viajan al servidor: «Orden de compra: X» arriba y el texto del comercio debajo. */
+/** Observaciones que viajan al servidor y al documento DIAN (nota del XML y PDF): «Orden de compra: X» arriba y el texto del comercio debajo. */
 export function composeObservations(purchaseOrder: string | null | undefined, observations: string): string {
   const order = String(purchaseOrder ?? '').trim();
   const text = observations.trim();

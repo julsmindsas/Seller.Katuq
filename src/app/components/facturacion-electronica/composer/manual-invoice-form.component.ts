@@ -98,6 +98,14 @@ export class ManualInvoiceFormComponent implements OnDestroy {
   chooseCustomer(customer: { customerId: string; billingProfile: number; addressIndex?: number } | null): void {
     this.form.patchValue({ customerId: customer?.customerId || '', billingProfile: customer?.billingProfile ?? -1, addressIndex: customer?.addressIndex ?? null });
     if (customer?.customerId) this.recallPaymentMethod(customer.customerId);
+    else this.dropRecalledMethod();
+  }
+  /** Quita el medio de pago solo si venía de la precarga (nunca el que la persona eligió) y cancela la consulta en vuelo. */
+  private dropRecalledMethod(): void {
+    this.recall?.unsubscribe();
+    const control = this.form.get('payment.meansCode');
+    if (this.recalledMethod && control?.value === this.recalledMethod) control.setValue('');
+    this.recalledMethod = ''; this.recalledFor = '';
   }
   /** D-623: precarga el medio de pago de la última factura aceptada de este cliente, solo si la persona aún no eligió uno. */
   private recallPaymentMethod(customerId: string): void {
@@ -106,7 +114,9 @@ export class ManualInvoiceFormComponent implements OnDestroy {
     const autoFilled = !!this.recalledMethod && control?.value === this.recalledMethod;
     this.recalledFor = customerId;
     if (control?.value && !autoFilled) return;
-    this.recall?.unsubscribe();
+    // El medio precargado era del cliente anterior: se quita antes de preguntar, para que ni la espera ni un error
+    // (403, 429, tiempo agotado) dejen el medio de otro cliente con el aviso «recordado».
+    this.dropRecalledMethod(); this.recalledFor = customerId;
     this.recall = this.invoices.lastPaymentMethod(customerId).subscribe({
       next: ({ meansCode }) => {
         if (this.form.get('customerId')?.value !== customerId) return;
@@ -116,7 +126,7 @@ export class ManualInvoiceFormComponent implements OnDestroy {
         control?.setValue(known ? meansCode : '');
         this.recalledMethod = known ? String(meansCode) : '';
       },
-      error: () => { /* Solo es una ayuda: sin historial el medio sigue vacío y obligatorio. */ },
+      error: () => { /* Solo es una ayuda: el medio ya quedó vacío y obligatorio, y la persona lo elige. */ },
     });
   }
   addItem(): void {

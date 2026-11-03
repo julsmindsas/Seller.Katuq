@@ -121,9 +121,12 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.observationsDirty = true;
     this.invalidate();
   }
+  /** Largo que cuenta contra el límite: con la bandera incluye «Orden de compra: X» y el salto de línea, que también viajan. */
+  get observationsLength(): number {
+    return this.usesPurchaseOrder ? composeObservations(this.purchaseOrder, this.observations).length : this.observations.length;
+  }
   get observationsError(): string {
-    const length = this.usesPurchaseOrder ? composeObservations(this.purchaseOrder, this.observations).length : this.observations.length;
-    if (length > this.maxObservationsLength) return this.translate.instant('facturacionElectronica.composer.lasObservacionesAdmitenHasta1000');
+    if (this.observationsLength > this.maxObservationsLength) return this.translate.instant('facturacionElectronica.composer.lasObservacionesAdmitenHasta1000');
     if (/[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(this.observations)) {
       return this.translate.instant('facturacionElectronica.composer.lasObservacionesContienenCaracteresNo');
     }

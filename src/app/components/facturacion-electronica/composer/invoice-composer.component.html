@@ -66,7 +66,7 @@
           <textarea id="invoice-observations" class="form-control obs-textarea" rows="4" [class.is-filled]="observations.trim()" [ngModel]="observations" (ngModelChange)="changeObservations($event)" [ngModelOptions]="{standalone: true}" [disabled]="editorDisabled" [maxlength]="maxObservationsLength" [class.is-invalid]="!!observationsError" [attr.aria-invalid]="!!observationsError" aria-describedby="invoice-observations-help invoice-observations-error" [placeholder]="'facturacionElectronica.invoiceComposer.ejMensualidadCorrespondienteAAgosto' | translate"></textarea>
           <div id="invoice-observations-help" class="invoice-observations__help">
             <span><i class="pi pi-info-circle"></i> {{ 'facturacionElectronica.invoiceComposer.seGuardanConLaFactura' | translate }}</span>
-            <span class="obs-counter" [class.is-near]="observations.length > 900">{{ observations.length }} / {{ maxObservationsLength }}</span>
+            <span class="obs-counter" [class.is-near]="observationsLength > 900">{{ observationsLength }} / {{ maxObservationsLength }}</span>
           </div>
           <p id="invoice-observations-error" class="field-error" role="alert" *ngIf="observationsError">{{ observationsError }}</p>
         </section>
