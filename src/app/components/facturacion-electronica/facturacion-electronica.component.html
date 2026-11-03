@@ -33,12 +33,12 @@
       <strong>{{ nextTask.title }}</strong>
       <span>{{ nextTask.description }}</span>
     </div>
-    <button type="button" class="fe-btn fe-strip__cta" (click)="doNextTask()" [disabled]="loading && configurationError">
-      {{ nextTask.button }} <i class="pi pi-arrow-right"></i>
+    <button type="button" class="fe-btn fe-strip__cta" (click)="doNextTask()" [disabled]="nextTask.cargando">
+      {{ nextTask.button }} <i class="pi pi-arrow-right" *ngIf="!nextTask.cargando"></i>
     </button>
     <span class="fe-strip__divider"></span>
     <div class="fe-strip__meta">
-      <span class="fe-strip__state" [class.is-ok]="isConfigured" [class.is-warn]="!isConfigured">
+      <span class="fe-strip__state" *ngIf="!cargandoConfig" [class.is-ok]="isConfigured" [class.is-warn]="!isConfigured">
         <i class="pi" [ngClass]="isConfigured ? 'pi-check' : 'pi-exclamation-circle'"></i>
         {{ configurationError ? ('facturacionElectronica.facturacionElectronica.configuracionSinConsultar' | translate) : (isConfigured ? ('facturacionElectronica.facturacionElectronica.configuracionGuardada' | translate) : ('facturacionElectronica.facturacionElectronica.sinConfigurar' | translate)) }}
       </span>
@@ -137,10 +137,10 @@
   <!-- ===== Pestañas ===== -->
   <nav #tabsNav class="fe-tabs" [attr.aria-label]="'facturacionElectronica.facturacionElectronica.opcionesDeFacturacion' | translate">
     <button type="button" [class.is-active]="activeTab === 'documents'" (click)="selectTab('documents')">
-      <i class="pi pi-file"></i> {{ 'facturacionElectronica.facturacionElectronica.facturasYNotas' | translate }} <span class="fe-tabs__count">{{ documents.length }}</span>
+      <i class="pi pi-file"></i> {{ 'facturacionElectronica.facturacionElectronica.facturasYNotas' | translate }} <span class="fe-tabs__count">{{ cargandoDocumentos ? '…' : documents.length }}</span>
     </button>
     <button type="button" [class.is-active]="activeTab === 'invoice'" (click)="selectTab('invoice')">
-      <i class="pi pi-send"></i> {{ 'facturacionElectronica.facturacionElectronica.desdePedidos' | translate }} <span class="fe-tabs__count">{{ pendingOrders.length }}</span>
+      <i class="pi pi-send"></i> {{ 'facturacionElectronica.facturacionElectronica.desdePedidos' | translate }} <span class="fe-tabs__count">{{ cargandoPedidos ? '…' : pendingOrders.length }}</span>
     </button>
     <button type="button" [class.is-active]="activeTab === 'guide'" (click)="selectTab('guide')">
       <i class="pi pi-question-circle"></i> {{ 'facturacionElectronica.facturacionElectronica.guiaPasoAPaso' | translate }}
@@ -227,14 +227,14 @@
     <div class="fe-alert fe-alert--error" *ngIf="documentsError">
       <i class="pi pi-exclamation-triangle"></i>
       <div><strong>{{ 'facturacionElectronica.facturacionElectronica.noPudimosCargarLaBandeja' | translate }}</strong><span>{{ documentsError }}</span></div>
-      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="loadDashboard()">{{ 'facturacionElectronica.facturacionElectronica.reintentar' | translate }}</button>
+      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="cargarDocumentos()">{{ 'facturacionElectronica.facturacionElectronica.reintentar' | translate }}</button>
     </div>
 
-    <div class="fe-state" *ngIf="loading">
+    <div class="fe-state" *ngIf="cargandoDocumentos">
       <i class="pi pi-spin pi-spinner"></i><span>{{ 'facturacionElectronica.facturacionElectronica.cargandoLaInformacionDelComercio' | translate }}</span>
     </div>
 
-    <div class="fe-table-wrap" *ngIf="!loading && filteredDocuments.length">
+    <div class="fe-table-wrap" *ngIf="!cargandoDocumentos && filteredDocuments.length">
       <table class="fe-table">
         <thead>
           <tr>
@@ -362,14 +362,14 @@
       </table>
     </div>
 
-    <div class="fe-empty" *ngIf="!loading && !documentsError && filteredDocuments.length === 0">
+    <div class="fe-empty" *ngIf="!cargandoDocumentos && !documentsError && filteredDocuments.length === 0">
       <span class="fe-empty__icon"><i class="pi" [ngClass]="documents.length ? 'pi-search' : 'pi-file'"></i></span>
       <strong>{{ documents.length ? ('facturacionElectronica.facturacionElectronica.ningunDocumentoCoincide' | translate) : ('facturacionElectronica.facturacionElectronica.todaviaNoHayDocumentosDian' | translate) }}</strong>
       <span>{{ documents.length ? ('facturacionElectronica.facturacionElectronica.ajustaLaBusquedaOEl' | translate) : ('facturacionElectronica.facturacionElectronica.cuandoEmitasLaPrimeraFactura' | translate) }}</span>
       <button *ngIf="!documents.length" type="button" class="fe-btn fe-btn--primary" (click)="selectTab('compose')"><i class="pi pi-plus"></i> {{ 'facturacionElectronica.invoiceComposer.nuevaFactura' | translate }}</button>
     </div>
 
-    <div class="fe-list__foot" *ngIf="!loading">
+    <div class="fe-list__foot" *ngIf="!cargandoDocumentos">
       <span>{{ 'facturacionElectronica.facturacionElectronica.mostrando' | translate }} <b>{{ filteredDocuments.length }}</b> {{ 'facturacionElectronica.facturacionElectronica.de' | translate }} <b>{{ documents.length }}</b> {{ 'facturacionElectronica.facturacionElectronica.documentos2' | translate }}</span>
       <span class="fe-list__sync" *ngIf="lastSync"><i class="pi pi-clock"></i> {{ 'facturacionElectronica.facturacionElectronica.ultimaConsultaALaDian' | translate:{lastSync: (lastSync | date:'HH:mm')} }}</span>
     </div>
@@ -502,7 +502,7 @@
       </button>
     </div>
 
-    <div class="fe-alert fe-alert--info" *ngIf="!isConfigured && !loading">
+    <div class="fe-alert fe-alert--info" *ngIf="!isConfigured && !cargandoConfig">
       <i class="pi pi-info-circle"></i>
       <div><strong>{{ 'facturacionElectronica.facturacionElectronica.antesDeFacturar' | translate }}</strong><span>{{ 'facturacionElectronica.facturacionElectronica.completaLaConfiguracionDianDe' | translate }}</span></div>
       <button type="button" class="fe-btn fe-btn--sm fe-btn--primary" (click)="goToConfiguration()">{{ 'facturacionElectronica.facturacionElectronica.configurar' | translate }}</button>
@@ -511,20 +511,20 @@
     <div class="fe-alert fe-alert--error" *ngIf="ordersError">
       <i class="pi pi-exclamation-triangle"></i>
       <div><strong>{{ 'facturacionElectronica.facturacionElectronica.noPudimosCargarLosPedidos' | translate }}</strong><span>{{ ordersError }}</span></div>
-      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="loadDashboard()">{{ 'facturacionElectronica.facturacionElectronica.reintentar' | translate }}</button>
+      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="cargarPedidos()">{{ 'facturacionElectronica.facturacionElectronica.reintentar' | translate }}</button>
     </div>
 
-    <div class="fe-state" *ngIf="loading">
+    <div class="fe-state" *ngIf="cargandoPedidos">
       <i class="pi pi-spin pi-spinner"></i><span>{{ 'facturacionElectronica.facturacionElectronica.buscandoPedidosSinFactura' | translate }}</span>
     </div>
 
-    <div class="fe-empty" *ngIf="!loading && !ordersError && pendingOrders.length === 0">
+    <div class="fe-empty" *ngIf="!cargandoPedidos && !ordersError && pendingOrders.length === 0">
       <span class="fe-empty__icon fe-empty__icon--ok"><i class="pi pi-check"></i></span>
       <strong>{{ 'facturacionElectronica.facturacionElectronica.noHayPedidosPendientes' | translate }}</strong>
       <span>{{ 'facturacionElectronica.facturacionElectronica.losPedidosRecientesYaTienen' | translate }}</span>
     </div>
 
-    <div class="fe-table-wrap" *ngIf="!loading && pendingOrders.length">
+    <div class="fe-table-wrap" *ngIf="!cargandoPedidos && pendingOrders.length">
       <table class="fe-table fe-table--orders">
         <thead>
           <tr>
@@ -574,7 +574,7 @@
       </table>
     </div>
 
-    <div class="fe-list__foot" *ngIf="!loading && pendingOrders.length">
+    <div class="fe-list__foot" *ngIf="!cargandoPedidos && pendingOrders.length">
       <span><b>{{ selectedOrders.size }}</b> {{ (selectedOrders.size === 1 ? 'facturacionElectronica.facturacionElectronica.seleccionadoDe' : 'facturacionElectronica.facturacionElectronica.seleccionadosDe') | translate }} <b>{{ pendingOrders.length }}</b> {{ 'facturacionElectronica.facturacionElectronica.pedidos' | translate }}</span>
       <span class="fe-list__sync" *ngIf="pendingOrders.length >= 100"><i class="pi pi-info-circle"></i> {{ 'facturacionElectronica.facturacionElectronica.mostramosLos100PedidosMas' | translate }}</span>
     </div>

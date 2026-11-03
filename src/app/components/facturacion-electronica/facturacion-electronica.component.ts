@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { defer, forkJoin, of, Subject } from 'rxjs';
+import { defer, of, Subject, Subscription } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
@@ -96,7 +96,17 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   queuedOrders = new Set<string>();
   selectedOrders = new Set<string>();
   integration: any = null;
-  loading = false;
+  /**
+   * Ticket 1507: cada sección de la pantalla tiene su propio indicador de carga y
+   * se muestra en cuanto responde su consulta, sin esperar a la más lenta.
+   * `loading` queda como "alguna sección sigue cargando" (botón de actualizar y emisión).
+   */
+  cargandoConfig = false;
+  cargandoDocumentos = false;
+  cargandoPedidos = false;
+  private subConfig?: Subscription;
+  private subDocumentos?: Subscription;
+  private subPedidos?: Subscription;
   lastSync: Date | null = null;
   documentsError = '';
   ordersError = '';
@@ -198,6 +208,10 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     this.openMenu = '';
   }
 
+  get loading(): boolean {
+    return this.cargandoConfig || this.cargandoDocumentos || this.cargandoPedidos;
+  }
+
   get isConfigured(): boolean {
     return this.integration?.enabled === true;
   }
@@ -237,7 +251,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return numbering?.prefix && numbering?.current ? numbering.prefix + numbering.current : '';
   }
 
-  get nextTask(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string } {
+  get nextTask(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string; cargando?: boolean } {
+    if (this.cargandoConfig || this.cargandoDocumentos) return this.tareaCargando;
     if (this.configurationError) {
       return { tone: 'warning', icon: 'pi-refresh', title: 'No pudimos cargar tu configuración',
         description: 'No significa que tus datos se hayan borrado. Vuelve a consultar antes de facturar o configurar.',
@@ -276,6 +291,8 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         button: n === 1 ? 'Ver cuál' : 'Ver cuáles',
       };
     }
+    // Ticket 1507: los pedidos llegan aparte; hasta entonces no se dice que todo está al día.
+    if (this.cargandoPedidos) return this.tareaCargando;
     if (this.pendingOrders.length > 0) {
       const n = this.pendingOrders.length;
       return {
@@ -288,6 +305,17 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       tone: 'success', icon: 'pi-check-circle', title: 'Todo está al día',
       description: 'No hay pedidos recientes pendientes ni documentos con inconvenientes. Puedes consultar o descargar lo emitido.',
       button: 'Ver documentos',
+    };
+  }
+
+  /** Ticket 1507: la franja de estado mientras llegan la configuración, los documentos o los pedidos. */
+  private get tareaCargando(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string; cargando: boolean } {
+    return {
+      tone: 'info', icon: 'pi-spinner pi-spin',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.franjaCargandoTitulo'),
+      description: this.translate.instant('facturacionElectronica.facturacionElectronica.franjaCargandoDescripcion'),
+      button: this.translate.instant('facturacionElectronica.facturacionElectronica.franjaCargandoBoton'),
+      cargando: true,
     };
   }
 
@@ -668,29 +696,64 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return !(document.emailResends || []).some((r) => r.sent);
   }
 
+  /**
+   * Recarga las tres secciones. Si alguna ya está cargando, se cancela esa consulta
+   * y se vuelve a pedir: así un refresco tras emitir una factura o una nota nunca
+   * se descarta en silencio ni deja datos anteriores a la emisión.
+   */
   loadDashboard(): void {
-    if (this.loading) return;
-    this.loading = true;
-    this.configurationError = '';
-    this.documentsError = '';
-    this.ordersError = '';
+    this.cargarConfiguracion();
+    this.cargarDocumentos();
+    this.cargarPedidos();
+    // Ticket 1266: los indicadores del período se cargan aparte (no frenan la bandeja).
+    this.cargarIndicadores();
+  }
 
-    // `defer` también convierte en error observable los fallos sincrónicos de
-    // contexto (por ejemplo, mientras cambia el comercio activo). Así la vista
-    // conserva su estado amigable en lugar de dejar el router-outlet en blanco.
-    const integration$ = defer(() => this.integrationsService.getIntegration('dian')).pipe(
+  // Ticket 1507: tres consultas independientes. Cada sección se pinta cuando
+  // responde la suya (antes un forkJoin esperaba a la más lenta) y cada una se
+  // puede reintentar sola. `defer` también convierte en error observable los
+  // fallos sincrónicos de contexto (por ejemplo, mientras cambia el comercio
+  // activo), así la vista conserva su estado amigable en lugar de dejar el
+  // router-outlet en blanco.
+  cargarConfiguracion(): void {
+    this.subConfig?.unsubscribe();
+    this.cargandoConfig = true;
+    this.configurationError = '';
+    this.subConfig = defer(() => this.integrationsService.getIntegration('dian')).pipe(
       catchError((error) => {
         if (error?.status !== 404) this.configurationError = 'No pudimos consultar la configuración guardada.';
         return of(null);
       }),
-    );
-    const documents$ = defer(() => this.integrationsService.listDianDocuments(undefined, 200)).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.cargandoConfig = false; this.changeDetector.markForCheck(); }),
+    ).subscribe((integration) => { this.integration = integration; });
+  }
+
+  cargarDocumentos(): void {
+    this.subDocumentos?.unsubscribe();
+    this.cargandoDocumentos = true;
+    this.documentsError = '';
+    this.subDocumentos = defer(() => this.integrationsService.listDianDocuments(undefined, 200)).pipe(
       catchError((error) => {
         this.documentsError = this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.noFuePosibleCargarLosDocumentos'));
         return of(null);
       }),
-    );
-    const orders$ = defer(() => this.ventasService.getOrdersByFilterOptimized(
+      takeUntil(this.destroy$),
+      finalize(() => { this.cargandoDocumentos = false; this.changeDetector.markForCheck(); }),
+    ).subscribe((documents: any) => {
+      const documentData = documents?.data || documents;
+      const list = splitDianDocumentList(documentData?.invoices);
+      this.documents = list.documents;
+      this.technicalHistory = this.armarHistorial(list.history, list.documents);
+      this.lastSync = new Date();
+    });
+  }
+
+  cargarPedidos(): void {
+    this.subPedidos?.unsubscribe();
+    this.cargandoPedidos = true;
+    this.ordersError = '';
+    this.subPedidos = defer(() => this.ventasService.getOrdersByFilterOptimized(
       { sortField: 'fechaCreacion', sortOrder: -1 },
       1,
       100,
@@ -700,24 +763,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         this.ordersError = this.errorMessage(error, this.translate.instant('facturacionElectronica.facturacionElectronica.noFuePosibleCargarLosPedidos'));
         return of({ orders: [], pagination: null } as any);
       }),
-    );
-
-    forkJoin({ integration: integration$, documents: documents$, orders: orders$ })
-      .pipe(finalize(() => this.loading = false))
-      .subscribe(({ integration, documents, orders }) => {
-        this.integration = integration;
-        const documentData = documents?.data || documents;
-        const list = splitDianDocumentList(documentData?.invoices);
-        this.documents = list.documents;
-        this.technicalHistory = this.armarHistorial(list.history, list.documents);
-        const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
-        this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
-        const ids = new Set(this.pendingOrders.map((order) => this.orderId(order)));
-        this.selectedOrders.forEach((id) => { if (!ids.has(id)) this.selectedOrders.delete(id); });
-        this.lastSync = new Date();
-      });
-    // Ticket 1266: los indicadores del período se cargan aparte (no frenan la bandeja).
-    this.cargarIndicadores();
+      takeUntil(this.destroy$),
+      finalize(() => { this.cargandoPedidos = false; this.changeDetector.markForCheck(); }),
+    ).subscribe((orders: any) => {
+      const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
+      this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
+      const ids = new Set(this.pendingOrders.map((order) => this.orderId(order)));
+      this.selectedOrders.forEach((id) => { if (!ids.has(id)) this.selectedOrders.delete(id); });
+    });
   }
 
   /** `desplazar`: llamado desde arriba de la página (aviso, ayuda, tarjetas), lleva la vista a las pestañas (ticket 1484). */
@@ -747,7 +800,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   }
 
   doNextTask(): void {
-    if (this.configurationError) { this.loadDashboard(); return; }
+    if (this.configurationError) { this.cargarConfiguracion(); return; }
     if (!this.isConfigured || !this.isProduction) {
       this.goToConfiguration();
       return;
