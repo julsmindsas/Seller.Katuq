@@ -96,6 +96,9 @@ export const COMPANY_FEATURE_FLAGS = [
   // Registrar pago subiendo primero el comprobante, con lectura de IA que solo sugiere (ticket 1449, D-662 propuesta): el servidor
   // lee el comprobante, marca lo «editado a mano» y avisa de referencias o archivos repetidos sin bloquear. Dueño: Daniel. Se retira el 2027-05-31.
   'comprobantePrimero',
+  // Ajuste al peso configurable por comercio (ticket 1452, D-663 propuesta): al aprobar un pago, el saldo o el sobrante pequeño que
+  // el comercio configuró se cierra solo con una línea «Ajuste al peso». Dueño: Daniel. Se retira el 2027-05-31.
+  'ajusteAlPeso',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

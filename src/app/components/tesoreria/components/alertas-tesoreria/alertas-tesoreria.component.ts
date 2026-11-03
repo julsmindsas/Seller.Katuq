@@ -123,6 +123,8 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
   }
 
   tipoLabel(grupo: AlertGroup): string {
+    // Ticket 1452: pago de más que el ajuste al peso no tocó.
+    if (grupo?.alertType === 'sobrepago') return this.translate.instant('tesoreria.alertasTesoreria.tipoSobrepago');
     return grupo?.alertType === 'duplicate_file'
       ? this.translate.instant('tesoreria.alertasTesoreria.tipoArchivoRepetido')
       : this.translate.instant('tesoreria.alertasTesoreria.tipoComprobanteRepetido');
@@ -130,6 +132,7 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
 
   /** Explicación en palabras sencillas de por qué salió el aviso. */
   explicacion(grupo: AlertGroup): string {
+    if (grupo?.alertType === 'sobrepago') return grupo.mensaje || this.translate.instant('tesoreria.alertasTesoreria.textoSobrepago');
     const clave = grupo?.alertType === 'duplicate_file'
       ? 'tesoreria.alertasTesoreria.textoArchivoRepetido'
       : grupo?.generica

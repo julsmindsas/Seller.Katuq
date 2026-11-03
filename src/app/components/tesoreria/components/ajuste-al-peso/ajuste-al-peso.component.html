@@ -1,0 +1,54 @@
+<div class="modal-header">
+  <h5 class="modal-title"><i class="pi pi-sliders-h me-2" aria-hidden="true"></i>{{ 'tesoreria.ajusteAlPeso.titulo' | translate }}</h5>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="tk-apz-estado" *ngIf="cargando" role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'comun.cargando' | translate }}</div>
+  <div class="tk-apz-estado tk-apz-estado--err" *ngIf="errorCarga" role="alert">{{ 'tesoreria.ajusteAlPeso.noSePudoCargar' | translate }}</div>
+
+  <ng-container *ngIf="!cargando && !errorCarga">
+    <p class="tk-apz-ayuda">{{ 'tesoreria.ajusteAlPeso.ayuda' | translate }}</p>
+
+    <label class="tk-apz-casilla" for="tk-apz-activo">
+      <input id="tk-apz-activo" type="checkbox" [(ngModel)]="activo">
+      <span class="tk-apz-casilla-texto"><strong>{{ 'tesoreria.ajusteAlPeso.activar' | translate }}</strong><br>{{ 'tesoreria.ajusteAlPeso.activarAyuda' | translate }}</span>
+    </label>
+
+    <div class="tk-apz-seccion tk-apz-seccion--sep">{{ 'tesoreria.ajusteAlPeso.faltanteTitulo' | translate }}</div>
+    <p class="tk-apz-ayuda">{{ 'tesoreria.ajusteAlPeso.faltanteAyuda' | translate }}</p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="tk-apz-f-pesos">{{ 'tesoreria.ajusteAlPeso.maxPesos' | translate }}</label>
+        <input id="tk-apz-f-pesos" type="number" class="form-control" min="0" [max]="techoPesos" step="1" [(ngModel)]="faltantePesos" autocomplete="off">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="tk-apz-f-porc">{{ 'tesoreria.ajusteAlPeso.maxPorcentaje' | translate }}</label>
+        <input id="tk-apz-f-porc" type="number" class="form-control" min="0" [max]="techoPorcentaje" step="0.1" [(ngModel)]="faltantePorcentaje" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="tk-apz-seccion tk-apz-seccion--sep">{{ 'tesoreria.ajusteAlPeso.sobranteTitulo' | translate }}</div>
+    <p class="tk-apz-ayuda">{{ 'tesoreria.ajusteAlPeso.sobranteAyuda' | translate }}</p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="tk-apz-s-pesos">{{ 'tesoreria.ajusteAlPeso.maxPesos' | translate }}</label>
+        <input id="tk-apz-s-pesos" type="number" class="form-control" min="0" [max]="techoPesos" step="1" [(ngModel)]="sobrantePesos" autocomplete="off">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="tk-apz-s-porc">{{ 'tesoreria.ajusteAlPeso.maxPorcentaje' | translate }}</label>
+        <input id="tk-apz-s-porc" type="number" class="form-control" min="0" [max]="techoPorcentaje" step="0.1" [(ngModel)]="sobrantePorcentaje" autocomplete="off">
+      </div>
+    </div>
+
+    <p class="tk-apz-ayuda tk-apz-ayuda--pie">{{ 'tesoreria.ajusteAlPeso.reglaMenor' | translate }} {{ 'tesoreria.ajusteAlPeso.techo' | translate:{ pesos: (techoPesos | number:'1.0-0'), porcentaje: techoPorcentaje } }}</p>
+    <div class="tk-apz-estado tk-apz-estado--err" *ngIf="!valido" role="alert">{{ 'tesoreria.ajusteAlPeso.revisaValores' | translate:{ pesos: (techoPesos | number:'1.0-0'), porcentaje: techoPorcentaje } }}</div>
+  </ng-container>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="cargando || errorCarga || guardando || !valido">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'comun.guardar' | translate }}
+  </button>
+</div>

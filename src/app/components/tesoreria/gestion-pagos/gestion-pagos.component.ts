@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/
 import { Tooltip } from 'primeng/tooltip';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AjustesComprobanteComponent } from '../components/ajustes-comprobante/ajustes-comprobante.component';
+import { AjusteAlPesoComponent } from '../components/ajuste-al-peso/ajuste-al-peso.component';
 import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { TreasuryService } from '../../../shared/services/treasury/treasury.service';
@@ -66,6 +67,24 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
 
   abrirAjustesComprobante(): void {
     this.modal.open(AjustesComprobanteComponent, { size: 'lg', backdrop: 'static', scrollable: true });
+  }
+
+  /**
+   * Ticket 1452 (bandera `ajusteAlPeso`): la tolerancia del ajuste al peso la cambia un Administrador. Esto solo decide
+   * si se muestra el botón; el servidor vuelve a exigir el rol.
+   */
+  get puedeConfigurarAjusteAlPeso(): boolean {
+    if (!this.features.isEnabled('ajusteAlPeso')) return false;
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}')?.rol;
+      return rol === 'Administrador' || rol === 'Super Administrador';
+    } catch {
+      return false;
+    }
+  }
+
+  abrirAjusteAlPeso(): void {
+    this.modal.open(AjusteAlPesoComponent, { size: 'lg', backdrop: 'static', scrollable: true });
   }
 
   ngOnInit(): void {

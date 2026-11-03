@@ -9,7 +9,7 @@ export type AiFlag = 'clear' | 'duplicate';
 export type ReviewAction = 'approve' | 'reject';
 export type PaymentOrigin = 'vendedor' | 'tesorero' | 'pos' | 'webhook';
 export type AlertSeverity = 'high' | 'medium';
-export type AlertType = 'duplicate_file' | 'duplicate_ref';
+export type AlertType = 'duplicate_file' | 'duplicate_ref' | 'sobrepago';
 
 /** GET /config */
 export interface TreasuryConfig {
@@ -75,6 +75,30 @@ export interface ComprobanteConfigVista {
 export interface ComprobanteConfigPayload {
   comprobante?: { obligatorio?: boolean; antiguedadMaximaDias?: number; formasSinReferencia?: string[] };
   cuentasReceptoras?: CuentaReceptora[];
+}
+
+/** Ticket 1452: tolerancia de un lado (faltante o sobrante) del ajuste al peso; null = ese límite no cuenta. */
+export interface AjusteAlPesoLado {
+  maxPesos: number | null;
+  maxPorcentaje: number | null;
+}
+
+/** Ticket 1452: GET/PUT /ajuste-al-peso/config. Con la bandera apagada responde solo `habilitada: false`. */
+export interface AjusteAlPesoConfigVista {
+  success: boolean;
+  habilitada: boolean;
+  activo?: boolean;
+  faltante?: AjusteAlPesoLado;
+  sobrante?: AjusteAlPesoLado;
+  techoPesos?: number;
+  techoPorcentaje?: number;
+}
+
+/** Ticket 1452: cuerpo de PUT /ajuste-al-peso/config. */
+export interface AjusteAlPesoConfigPayload {
+  activo?: boolean;
+  faltante?: AjusteAlPesoLado;
+  sobrante?: AjusteAlPesoLado;
 }
 
 /** Ticket 1449: aviso de la revisión del comprobante al registrar (el pago se registra igual). */
@@ -380,6 +404,8 @@ export interface AlertGroup {
   /** Hasta 30 pedidos con su número visible (DAD-xxxxx). */
   pedidos: { orderId: string; nroPedido: string }[];
   ultimaFecha: string;
+  /** Ticket 1452: solo en las alertas `sobrepago`; el texto del caso (cuánto sobró y cuál era la tolerancia). */
+  mensaje?: string;
 }
 
 export interface AlertGroupsResponse {

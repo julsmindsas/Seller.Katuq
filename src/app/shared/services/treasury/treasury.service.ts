@@ -26,6 +26,8 @@ import {
   LecturaComprobanteResponse,
   ComprobanteConfigVista,
   ComprobanteConfigPayload,
+  AjusteAlPesoConfigVista,
+  AjusteAlPesoConfigPayload,
 } from './treasury.models';
 
 /**
@@ -92,6 +94,16 @@ export class TreasuryService extends BaseService {
   /** PUT /comprobante/config — ticket 1449: solo Administrador. */
   saveComprobanteConfig(payload: ComprobanteConfigPayload): Observable<ComprobanteConfigVista> {
     return this.put<ComprobanteConfigVista>(`${this.base}/comprobante/config`, payload);
+  }
+
+  /** GET /ajuste-al-peso/config — ticket 1452: tolerancias del ajuste al peso; con la bandera apagada, `habilitada: false`. */
+  getAjusteAlPesoConfig(): Observable<AjusteAlPesoConfigVista> {
+    return this.get<AjusteAlPesoConfigVista>(`${this.base}/ajuste-al-peso/config`);
+  }
+
+  /** PUT /ajuste-al-peso/config — ticket 1452: solo Administrador. */
+  saveAjusteAlPesoConfig(payload: AjusteAlPesoConfigPayload): Observable<AjusteAlPesoConfigVista> {
+    return this.put<AjusteAlPesoConfigVista>(`${this.base}/ajuste-al-peso/config`, payload);
   }
 
   /** POST /payments/:id/review — decisión del tesorero (idempotente en el server). */
