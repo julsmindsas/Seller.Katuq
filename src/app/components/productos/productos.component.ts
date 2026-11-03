@@ -251,9 +251,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // Los 3 niveles del árbol de categorías. `ruta` la arma `normalizeProducts`;
     // si el producto no la tiene (dato viejo), cae al `label` en el nivel 1 —
     // que es exactamente lo que exportaba esta columna antes.
-    { label: 'Categoría',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.ruta?.[0] || r.categorias?.label || '' },
-    { label: 'Subcategoría (Nivel 2)',          key: 'subcategoria',       selected: true, getValue: (r: any) => r.categorias?.ruta?.[1] || '' },
-    { label: 'Sub-subcategoría (Nivel 3)',      key: 'subsubcategoria',    selected: true, getValue: (r: any) => r.categorias?.ruta?.[2] || '' },
+    { label: 'Categoría',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.ruta?.[0] || r.categorias?.label || r._categoriaVista?.label || '' },
+    { label: 'Subcategoría (Nivel 2)',          key: 'subcategoria',       selected: true, getValue: (r: any) => r.categorias?.ruta?.[1] || r._categoriaVista?.ruta?.[1] || '' },
+    { label: 'Sub-subcategoría (Nivel 3)',      key: 'subsubcategoria',    selected: true, getValue: (r: any) => r.categorias?.ruta?.[2] || r._categoriaVista?.ruta?.[2] || '' },
     { label: 'Precio sin IVA',                  key: 'precioSinIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
     { label: 'IVA (%)',                         key: 'porcentajeIva',      selected: true, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
     { label: 'Precio con IVA',                  key: 'precioConIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
@@ -379,6 +379,12 @@ export class ProductosComponent implements OnInit, OnDestroy {
             ruta,
           };
         } catch { }
+      } else if (Array.isArray(p.categorias)) {
+        // Formato legacy (lista de nombres, p. ej. ['EYACULADORES']) que vuelve a escribir la sincronización de
+        // Cereza. Solo para MOSTRAR: `categorias` queda intacto porque la fila viaja tal cual al formulario de
+        // edición y no debe guardarse un objeto armado aquí.
+        const nombres = p.categorias.filter((n: unknown) => typeof n === 'string' && n.trim()).map((n: string) => n.trim());
+        if (nombres.length) p._categoriaVista = { label: nombres[0], ruta: nombres };
       }
       return p;
     });
@@ -795,7 +801,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       { label: 'Imagen', ok: (row.crearProducto?.imagenesPrincipales?.length || 0) > 0, weight: 2 },
       { label: 'Precio', ok: (row.precio?.precioUnitarioConIva || 0) > 0, weight: 2 },
       { label: 'Referencia', ok: !!(row.identificacion?.referencia?.trim()), weight: 2 },
-      { label: 'Categoría', ok: !!(row.categorias?.label), weight: 1 },
+      { label: 'Categoría', ok: !!(row.categorias?.label || row._categoriaVista?.label), weight: 1 },
       { label: 'Peso', ok: (row.dimensiones?.pesoUnitarioProductoKg || 0) > 0, weight: 1 },
       { label: 'Garantías', ok: !!(row.crearProducto?.garantiasProducto?.trim()), weight: 1 },
       { label: 'T. Entrega', ok: !!(row.disponibilidad?.tiempoEntrega), weight: 1 },

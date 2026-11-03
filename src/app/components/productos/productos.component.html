@@ -668,10 +668,10 @@
 
                                 <!-- Categoría (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('categoria')" class="text-center">
-                                    <span *ngIf="row.categorias?.label" class="pk-chip-neutral">
-                                        {{ row.categorias?.label }}
+                                    <span *ngIf="row.categorias?.label || row._categoriaVista?.label" class="pk-chip-neutral">
+                                        {{ row.categorias?.label || row._categoriaVista?.label }}
                                     </span>
-                                    <span *ngIf="!row.categorias?.label" class="text-muted small">—</span>
+                                    <span *ngIf="!row.categorias?.label && !row._categoriaVista?.label" class="text-muted small">—</span>
                                 </td>
 
                                 <!-- Canales de venta (solo en desktop) -->
