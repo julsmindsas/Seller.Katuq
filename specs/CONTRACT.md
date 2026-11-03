@@ -13073,3 +13073,20 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - CONV, KCOM y KCAT.
 - **Notas de versión (D-567):** no se agregaron, porque se publicarían con la bandera apagada. Van cuando se encienda cada una.
 - **Ticket 1320:** reglas de Firestore cerradas en `seguridad/firebase/` del backend, sin publicar; 17/17 en el emulador.
+
+### 2026-11-03 — Decisiones de Daniel sobre la revisión de las fases 1 (aws-claude-2)
+- **Daniel aprobó** («si aprobado») las cuatro decisiones de la revisión adversaria de las fases 1:
+  1. **D-623:** con `facturaFormularioMejorado` encendida, la orden de compra del cliente queda escrita como `cbc:Note` en el XML firmado y en el PDF. Es lo esperado.
+  2. **D-633:** con `landingsV2` encendida, si llega un lead sin la casilla de autorización desde una página vieja en caché, se responde 409 `PAGINA_DESACTUALIZADA` y se pide recargar. Nunca se guarda un lead sin autorización (Ley 1581).
+  3. **Índices:** los cuatro sugeridos quedan en `firestore.indexes.json` del backend:
+     - `dian_invoice_requests` (companyId, status, selection.invoice.customerId, selection.source, updatedAt desc);
+     - `ordenes_compra` (company, estado, idBodega);
+     - `ordenes_compra` (company, estado, createdAt desc);
+     - `prospects` (company, fuente, date_add desc).
+     
+     `scripts/migracion-postgres/indices-fsdb.js` los traduce a SQL. Se crean en `katuq-db` con `CREATE INDEX CONCURRENTLY` cuando Daniel lo diga, antes de encender las banderas. Ninguna sesión los aplica.
+  4. **Pendientes corregidos en el backend:**
+     - **Compras V2:** la sugerencia de reposición ya no trae `opcionesProveedor[].costoCompra` a quien no tiene el permiso de costos, igual que las relaciones producto–proveedor.
+     - **D-621:** al aceptar una factura, el documento de `dian_documents` guarda `payment` (forma, medio y vencimiento, igual al XML). El detalle usa ese pago primero, aunque el pedido haya cambiado o no se pueda reconstruir. Las facturas anteriores siguen en «No disponible».
+     - El campo nuevo de la auditoría y el `payment` que devuelve `buildInvoiceXML` son aditivos: el XML no cambia.
+     - Este es el único cambio en el camino de emisión, así que Daniel revisa su diff antes de publicar.
