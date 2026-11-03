@@ -39,6 +39,6 @@
   - nota de un módulo fuera del menú;
   - navegador sin historial;
   - dos empresas en el mismo navegador.
-- [ ] 4.6 Revisar la campana en el navegador a 1440 y 390 px, sin texto invisible ni scroll horizontal.
+- [x] 4.6 Revisar la campana en el navegador a 1440 y 390 px, sin texto invisible ni scroll horizontal.
 - [x] 4.7 Agregar a `notas-version.json` una nota MEJORA, en palabras sencillas, que diga que las novedades ahora están en la campana y solo muestran lo que usa cada uno.
-- [ ] 4.8 Commit de los archivos propios, push, publicar el front (sin backend) y verificar en `sellercenter.katuq.com`.
+- [x] 4.8 Commit de los archivos propios, push, publicar el front (sin backend) y verificar en `sellercenter.katuq.com`.

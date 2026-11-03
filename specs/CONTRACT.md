@@ -13053,4 +13053,8 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - uso de hace 100 días;
   - punto con una nota posterior y al marcar vistas.
 - **Compilación:** `ng build --configuration production` sin errores. Gradientes y primarios prohibidos en los archivos tocados: 0 antes y 0 después.
-- **Estado:** listo para publicar solo el front.
+- **Estado:** EN PROD en la versión 2026.11.03.2 (solo front). Esa versión también subió el front de D-580, que ya estaba en la rama. Se verificó en `sellercenter.katuq.com` con la sesión de Daniel:
+  - no sale la ventana;
+  - la campana muestra el punto y las pestañas;
+  - «Novedades» lista 8 notas: las generales y las de «En vivo», que se usó en ese navegador. Las de facturación no salen porque ahí no se ha abierto esa pantalla;
+  - a 390 px (iframe del mismo origen) no hay scroll horizontal ni texto cortado.
