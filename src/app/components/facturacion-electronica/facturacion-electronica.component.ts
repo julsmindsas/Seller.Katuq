@@ -9,6 +9,7 @@ import { FacturacionIntegracionService, ResumenFacturacion } from '../../shared/
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
+import { diasEntre, hoyColombia } from '../integrations/dian-tablero-estado';
 
 import { TranslateService } from '@ngx-translate/core';
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
@@ -51,6 +52,19 @@ interface DianDocument {
   reemplazadaEn?: string;
   /** Ticket 1279: saldo de la factura después de sus notas aceptadas (calculado en el servidor). */
   saldo?: { total: number; notasCredito: number; notasDebito: number; notas: number; saldo: number };
+  /** Totales guardados al emitir (D-621, ticket 1489): base, IVA, descuento, envío y total. */
+  totals?: { lineExtension?: number; taxExclusive?: number; taxTotal?: number; allowanceTotal?: number; chargeTotal?: number; payable?: number } | null;
+}
+
+/** D-621 (ticket 1489): lo que `GET /dian/documents/:n/lineas` suma para el panel de detalle. */
+interface DetalleAmpliado {
+  numero: string;
+  estado: 'cargando' | 'ok' | 'error';
+  lineas: LineaFactura[];
+  /** false: el pedido cambió después de facturar y los conceptos no son los emitidos. */
+  cuadra: boolean;
+  impuestos: { tarifa: number; base: number; iva: number }[];
+  pago: { disponible: boolean; forma: 'contado' | 'credito' | null; medioCodigo: string | null; vencimiento: string | null } | null;
 }
 
 /** Ticket 1279: línea de la factura para la nota por línea. */
@@ -443,15 +457,102 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   abrirDetalle(document: DianDocument): void {
     this.openMenu = '';
     this.detalle = document;
+    this.detalleExtra = null;
+    this.cargarDetalleAmpliado(document);
   }
 
   cerrarDetalle(): void {
     this.detalle = null;
+    this.detalleExtra = null;
   }
 
   @HostListener('document:keydown.escape')
   cerrarDetalleConEscape(): void {
-    if (this.detalle) this.detalle = null;
+    if (this.detalle) this.cerrarDetalle();
+  }
+
+  // ---- D-621 (ticket 1489): detalle ampliado, solo con la bandera `dianDetalleAmpliado` ----
+
+  /** Estado de la lectura de conceptos, pago y vencimiento del documento abierto. */
+  detalleExtra: DetalleAmpliado | null = null;
+
+  /** ¿Está encendida la bandera? Apagada, el panel queda exactamente como antes. */
+  get detalleAmpliadoActivo(): boolean {
+    return this.features.isEnabled('dianDetalleAmpliado');
+  }
+
+  /** Solo las facturas aceptadas tienen conceptos; las demás muestran únicamente sus totales. */
+  private tieneConceptos(document: DianDocument): boolean {
+    return document.type === 'invoice' && document.status === 'accepted' && !!document.number;
+  }
+
+  cargarDetalleAmpliado(document: DianDocument): void {
+    if (!this.detalleAmpliadoActivo || !this.tieneConceptos(document)) return;
+    const numero = document.number as string;
+    this.detalleExtra = { numero, estado: 'cargando', lineas: [], cuadra: true, impuestos: [], pago: null };
+    this.integrationsService.getDianInvoiceLines(numero).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        // Si ya se abrió otro documento, esta respuesta no le corresponde.
+        if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
+        const d = response?.data || {};
+        this.detalleExtra = {
+          numero, estado: 'ok',
+          lineas: Array.isArray(d.lineas) ? d.lineas : [],
+          // Un servidor sin los campos nuevos (aún no desplegado) se trata como «no cuadra»: solo totales.
+          cuadra: d.cuadra === true,
+          impuestos: Array.isArray(d.impuestos) ? d.impuestos : [],
+          pago: d.pago || null,
+        };
+        this.changeDetector.markForCheck();
+      },
+      error: () => {
+        if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
+        this.detalleExtra = { numero, estado: 'error', lineas: [], cuadra: true, impuestos: [], pago: null };
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  /** Total del IVA y filas por tarifa para la tabla de totales. */
+  filasIva(d: DianDocument): { etiqueta: string; valor: number }[] {
+    const t = d.totals;
+    const porTarifa = (this.detalleExtra?.estado === 'ok' && this.detalleExtra.cuadra) ? this.detalleExtra.impuestos : [];
+    const filas = porTarifa.map((i) => ({
+      etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIvaTarifa', { tarifa: i.tarifa }),
+      valor: i.iva,
+    }));
+    if (filas.length > 1 && t && t.taxTotal != null) {
+      filas.push({ etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIvaTotal'), valor: t.taxTotal });
+    }
+    if (!filas.length && t && t.taxTotal != null) {
+      filas.push({ etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIva'), valor: t.taxTotal });
+    }
+    return filas;
+  }
+
+  porIndice(i: number): number { return i; }
+
+  /** Medio de pago en palabras (códigos DIAN 10, 42, 47, 48 y 49). */
+  medioPagoTexto(codigo: string | null | undefined): string {
+    const claves: Record<string, string> = { '10': 'detalleMedio10', '42': 'detalleMedio42', '47': 'detalleMedio47', '48': 'detalleMedio48', '49': 'detalleMedio49' };
+    const k = codigo ? claves[codigo] : '';
+    return k ? this.translate.instant('facturacionElectronica.facturacionElectronica.' + k)
+             : this.translate.instant('facturacionElectronica.facturacionElectronica.detalleNoDisponible');
+  }
+
+  /** ¿Hay algún total emitido para mostrar? Sin él no se pinta el bloque (no se inventa). */
+  tieneTotales(d: DianDocument): boolean {
+    return !!d.totals && d.totals.payable != null;
+  }
+
+  /** «vence en 12 días» / «venció hace 3 días» / «vence hoy», solo con la fecha de vencimiento. */
+  textoVencimiento(fecha: string | null | undefined): string {
+    const dias = fecha ? diasEntre(hoyColombia(), fecha) : null;
+    const k = 'facturacionElectronica.facturacionElectronica.';
+    if (dias === null) return '';
+    if (dias < 0) return this.translate.instant(dias === -1 ? k + 'detalleVencioHace1' : k + 'detalleVencioHaceN', { dias: -dias });
+    if (dias === 0) return this.translate.instant(k + 'detalleVenceHoy');
+    return this.translate.instant(dias === 1 ? k + 'detalleVenceEn1' : k + 'detalleVenceEnN', { dias });
   }
 
   copiarCufe(document: DianDocument): void {

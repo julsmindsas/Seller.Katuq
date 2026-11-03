@@ -408,6 +408,56 @@
           <div *ngIf="enlaceDian(d)"><dt>{{ 'facturacionElectronica.facturacionElectronica.consultaDian' | translate }}</dt><dd><a class="fe-link" [href]="enlaceDian(d)" target="_blank" rel="noopener">{{ 'facturacionElectronica.facturacionElectronica.abrirEnLaDian' | translate }} <i class="pi pi-external-link"></i></a><small> {{ 'facturacionElectronica.facturacionElectronica.esElMismoEnlaceDel' | translate }}</small></dd></div>
         </dl>
 
+        <!-- ===== D-621 (ticket 1489): conceptos, totales y pago; solo con la bandera `dianDetalleAmpliado` ===== -->
+        <section class="fe-resumen" *ngIf="detalleAmpliadoActivo">
+          <ng-container *ngIf="detalleExtra as ex">
+            <h3 class="fe-detalle__titulo">{{ 'facturacionElectronica.facturacionElectronica.detalleConceptos' | translate }}</h3>
+            <div class="fe-resumen__estado" role="status" *ngIf="ex.estado === 'cargando'"><i class="pi pi-spin pi-spinner"></i><span class="fe-resumen__txt">{{ 'facturacionElectronica.facturacionElectronica.detalleCargandoConceptos' | translate }}</span></div>
+            <div class="fe-resumen__estado fe-resumen__estado--error" role="alert" *ngIf="ex.estado === 'error'">
+              <i class="pi pi-exclamation-triangle"></i><span class="fe-resumen__txt">{{ 'facturacionElectronica.facturacionElectronica.detalleErrorConceptos' | translate }}</span>
+              <button type="button" class="fe-link" (click)="cargarDetalleAmpliado(d)">{{ 'facturacionElectronica.facturacionElectronica.detalleReintentar' | translate }}</button>
+            </div>
+            <div class="fe-resumen__estado fe-resumen__estado--aviso" role="status" *ngIf="ex.estado === 'ok' && !ex.cuadra">
+              <i class="pi pi-info-circle"></i><span class="fe-resumen__txt">{{ 'facturacionElectronica.facturacionElectronica.detalleAvisoPedidoCambio' | translate }}</span>
+            </div>
+            <ul class="fe-conceptos" *ngIf="ex.estado === 'ok' && ex.cuadra && ex.lineas.length">
+              <li class="fe-concepto" *ngFor="let l of ex.lineas; trackBy: porIndice">
+                <div class="fe-concepto__texto">
+                  <strong>{{ l.descripcion }}</strong>
+                  <small>{{ 'facturacionElectronica.facturacionElectronica.detalleCantidadPorValor' | translate:{cantidad: l.cantidad, valor: money(l.valorUnitario), tarifa: l.tarifaIva} }}</small>
+                </div>
+                <span class="fe-concepto__valor">{{ money(l.valorLinea) }}</span>
+              </li>
+            </ul>
+          </ng-container>
+
+          <ng-container *ngIf="tieneTotales(d)">
+            <h3 class="fe-detalle__titulo">{{ 'facturacionElectronica.facturacionElectronica.detalleTotales' | translate }}</h3>
+            <dl class="fe-totales">
+              <div *ngIf="d.totals?.lineExtension != null"><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleBase' | translate }}</dt><dd>{{ money(d.totals?.lineExtension) }}</dd></div>
+              <div *ngIf="(d.totals?.allowanceTotal || 0) > 0"><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleDescuento' | translate }}</dt><dd>− {{ money(d.totals?.allowanceTotal) }}</dd></div>
+              <div *ngFor="let f of filasIva(d); trackBy: porIndice"><dt>{{ f.etiqueta }}</dt><dd>{{ money(f.valor) }}</dd></div>
+              <div *ngIf="(d.totals?.chargeTotal || 0) > 0"><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleEnvio' | translate }}</dt><dd>{{ money(d.totals?.chargeTotal) }}</dd></div>
+              <div class="fe-totales__total"><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleTotal' | translate }}</dt><dd>{{ money(d.totals?.payable) }}</dd></div>
+            </dl>
+          </ng-container>
+
+          <ng-container *ngIf="detalleExtra as ex">
+            <ng-container *ngIf="ex.estado === 'ok'">
+              <h3 class="fe-detalle__titulo">{{ 'facturacionElectronica.facturacionElectronica.detallePago' | translate }}</h3>
+              <dl class="fe-totales" *ngIf="ex.pago?.disponible; else pagoNoDisponible">
+                <div><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleFormaDePago' | translate }}</dt><dd>{{ (ex.pago?.forma === 'credito' ? 'facturacionElectronica.facturacionElectronica.detalleCredito' : 'facturacionElectronica.facturacionElectronica.detalleContado') | translate }}</dd></div>
+                <div><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleMedioDePago' | translate }}</dt><dd>{{ medioPagoTexto(ex.pago?.medioCodigo) }}</dd></div>
+                <div *ngIf="ex.pago?.forma === 'credito'"><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleVencimiento' | translate }}</dt><dd>
+                  <ng-container *ngIf="ex.pago?.vencimiento; else sinVencimiento">{{ ex.pago?.vencimiento | date:'dd/MM/yyyy' }}<small> · {{ textoVencimiento(ex.pago?.vencimiento) }}</small></ng-container>
+                  <ng-template #sinVencimiento>{{ 'facturacionElectronica.facturacionElectronica.detalleNoDisponible' | translate }}</ng-template>
+                </dd></div>
+              </dl>
+              <ng-template #pagoNoDisponible><p class="fe-resumen__nota">{{ 'facturacionElectronica.facturacionElectronica.detalleNoDisponible' | translate }}</p></ng-template>
+            </ng-container>
+          </ng-container>
+        </section>
+
         <div class="fe-alert fe-alert--error" *ngIf="correoFallido(d)">
           <i class="pi pi-exclamation-triangle"></i>
           <div><strong>{{ 'facturacionElectronica.facturacionElectronica.elCorreoAlCompradorNo' | translate }}</strong><span [title]="$any(d.emailDelivery)?.error || ''">{{ $any(d.emailDelivery)?.error ? mensajeCorreo($any(d.emailDelivery)?.error) : ('facturacionElectronica.facturacionElectronica.reenvialoDesdeAqui' | translate) }}</span></div>

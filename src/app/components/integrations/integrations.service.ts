@@ -1807,7 +1807,9 @@ export class IntegrationsService {
           id: "dian",
           name: "DIAN directo",
           description: "Facturación electrónica con software propio, sin intermediarios contables.",
-          logo: "assets/images/logos/dian.svg",
+          // El archivo assets/images/logos/dian.svg nunca existió y dejaba un ícono vacío (ticket 1491):
+          // sin logo, el catálogo muestra el ícono de respaldo de DIAN.
+          logo: "",
           active: true,
         },
         {

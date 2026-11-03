@@ -110,10 +110,20 @@ export const COMPANY_FEATURE_FLAGS = [
   'whatsappBotDirectOrder',
   'whatsappBotAttention',
   'whatsappBotFollowUp',
+  // Tablero de estado de «Configuración DIAN» para el comercio activo en producción (D-622, ticket
+  // 1491, fase 1): el asistente queda detrás de «Editar». Dueño: Daniel. Se retira el 2027-04-30.
+  'dianTableroEstado',
+  // Detalle ampliado del documento DIAN: totales, líneas, forma de pago y vencimiento (D-621,
+  // ticket 1489, fase 1). Dueño: Daniel. Se retira el 2027-04-30.
+  'dianDetalleAmpliado',
   // Formulario de nueva factura mejorado (D-623 fase 1, ticket 1492): plazo a crédito en días, IVA
   // sugerido, orden de compra del cliente y medio de pago recordado. Solo la factura libre.
   // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada (Artículo XII).
   'facturaFormularioMejorado',
+  // Compras, ciclo completo (D-626, tickets 1468, 1469 y 1470; fases A y B): Qué comprar con costo en la fila,
+  // proveedor principal, cantidad por unidad de compra, órdenes en borrador por proveedor, filtros, avisos,
+  // Excel y Qué producir. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
+  'comprasV2',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
