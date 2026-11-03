@@ -1,0 +1,100 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'centroAyuda.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'centroAyuda.admin.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'centroAyuda.admin.sub' | translate }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <a class="cfg-btn cfg-btn--sec" routerLink="/centro-de-ayuda">
+        <i class="pi pi-book" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.admin.verCentro' | translate }}</span>
+      </a>
+      <a class="cfg-btn" routerLink="nuevo">
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.admin.nuevo' | translate }}</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="cfg-card">
+    <div class="ay-barra">
+      <label class="ay-buscador">
+        <span class="ay-oculto">{{ 'centroAyuda.buscar' | translate }}</span>
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input type="search" [(ngModel)]="texto" (keyup.enter)="cargar()" maxlength="200" autocomplete="off"
+          [placeholder]="'centroAyuda.admin.buscarPlaceholder' | translate" />
+      </label>
+      <select class="ay-select" [(ngModel)]="alcance" (ngModelChange)="cargar()" [attr.aria-label]="'centroAyuda.admin.alcance' | translate">
+        <option value="">{{ 'centroAyuda.admin.todosAlcances' | translate }}</option>
+        <option value="global">{{ 'centroAyuda.alcance.global' | translate }}</option>
+        <option value="company">{{ 'centroAyuda.alcance.company' | translate }}</option>
+      </select>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargar()" [disabled]="cargando" [attr.aria-label]="'centroAyuda.admin.actualizar' | translate">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="ay-chips" role="group" [attr.aria-label]="'centroAyuda.admin.filtrarPorEstado' | translate">
+      <button type="button" class="ay-chip" [class.is-activo]="!estado" [attr.aria-pressed]="!estado" (click)="elegirEstado('')">{{ 'centroAyuda.todos' | translate }}</button>
+      <button type="button" class="ay-chip" *ngFor="let e of ESTADOS" [class.is-activo]="estado === e" [attr.aria-pressed]="estado === e" (click)="elegirEstado(e)">{{ NOMBRE_ESTADO[e] | translate }}</button>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ error }}</span>
+  </p>
+
+  <section class="cfg-card" *ngIf="cargando && !articulos.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.cargando' | translate }}</p>
+    </div>
+  </section>
+
+  <section class="cfg-card" *ngIf="!cargando && !error && !articulos.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-file-edit"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.admin.sinArticulos' | translate }}</p>
+      <p class="cfg-vacio__texto">{{ 'centroAyuda.admin.sinArticulosTexto' | translate }}</p>
+      <a class="cfg-btn" routerLink="nuevo">
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.admin.crearPrimero' | translate }}</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cfg-card" *ngIf="articulos.length">
+    <div class="ay-fila" *ngFor="let a of articulos; trackBy: porId">
+      <div class="ay-fila__textos">
+        <h2 class="ay-fila__titulo">{{ a.title }}</h2>
+        <div class="ay-etiquetas">
+          <span class="cfg-pill" [ngClass]="CLASE_ESTADO[a.status]">{{ NOMBRE_ESTADO[a.status] | translate }}</span>
+          <span class="cfg-pill cfg-pill--info">{{ NOMBRE_MODULO[a.module] | translate }}</span>
+          <span class="cfg-pill cfg-pill--neutro">{{ NOMBRE_TIPO[a.type] | translate }}</span>
+          <span class="cfg-pill" *ngIf="a.scope === 'company'">{{ a.company }}</span>
+          <span class="cfg-pill cfg-pill--neutro" *ngIf="a.visibility === 'publica'">{{ 'centroAyuda.visibilidad.publica' | translate }}</span>
+        </div>
+        <span class="ay-meta" *ngIf="a.updatedAt">{{ 'centroAyuda.admin.actualizado' | translate:{ fecha: fecha(a.updatedAt), version: a.version } }}</span>
+      </div>
+      <div class="ay-fila__acciones">
+        <a class="cfg-btn cfg-btn--sec" [routerLink]="[a.id]">
+          <i class="pi pi-pencil" aria-hidden="true"></i>
+          <span>{{ 'centroAyuda.admin.editar' | translate }}</span>
+        </a>
+        <button type="button" class="cfg-btn" *ngIf="a.status === 'borrador'" (click)="cambiar(a, 'publish')" [disabled]="ocupado === a.id">
+          <i class="pi pi-check" aria-hidden="true"></i><span>{{ 'centroAyuda.accion.publish' | translate }}</span>
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="a.status === 'publicado'" (click)="cambiar(a, 'unpublish')" [disabled]="ocupado === a.id">
+          <i class="pi pi-eye-slash" aria-hidden="true"></i><span>{{ 'centroAyuda.accion.unpublish' | translate }}</span>
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="a.status === 'archivado'" (click)="cambiar(a, 'restore')" [disabled]="ocupado === a.id">
+          <i class="pi pi-replay" aria-hidden="true"></i><span>{{ 'centroAyuda.accion.restore' | translate }}</span>
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--peligro" *ngIf="a.status !== 'archivado'" (click)="cambiar(a, 'archive')" [disabled]="ocupado === a.id">
+          <i class="pi pi-inbox" aria-hidden="true"></i><span>{{ 'centroAyuda.accion.archive' | translate }}</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

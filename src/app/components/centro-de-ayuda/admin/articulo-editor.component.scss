@@ -1,0 +1,6 @@
+// Editor de un artículo del Centro de ayuda (D-628). Base config-pagina (D-400); plano, sin gradientes.
+@import '../../../shared/styles/config-pagina';
+@import '../centro-ayuda';
+
+@include config-pagina;
+@include ayuda-piezas;

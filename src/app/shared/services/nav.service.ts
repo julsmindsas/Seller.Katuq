@@ -124,6 +124,8 @@ export class NavService implements OnDestroy {
   private dropshippingPrendido: boolean = false;
   // Agenda de servicios (D-491): bandera `serviceAgenda`. Último valor con el que se filtró el menú.
   private agendaPrendida: boolean = false;
+  // Centro de ayuda (D-628): bandera `centroDeAyuda`. Último valor con el que se filtró el menú.
+  private ayudaPrendida = false;
   // NPS por comercio (D-490): bandera `npsModulo`. Último valor con el que se filtró el menú.
   private npsPrendido: boolean = false;
 
@@ -180,6 +182,14 @@ export class NavService implements OnDestroy {
       .pipe(takeUntil(this.unsubscriber))
       .subscribe((prendida) => {
         if (prendida !== this.agendaPrendida) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
+    this.features
+      .isEnabled$("centroDeAyuda")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.ayudaPrendida) {
           this.filterMenuItemsByAuthorization();
         }
       });
@@ -324,6 +334,8 @@ export class NavService implements OnDestroy {
     this.agendaPrendida = this.features.isEnabled("serviceAgenda");
     // NPS por comercio (D-490): igual, con su bandera.
     this.npsPrendido = this.features.isEnabled("npsModulo");
+    // Centro de ayuda (D-628): igual, con su bandera.
+    this.ayudaPrendida = this.features.isEnabled("centroDeAyuda");
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -373,6 +385,14 @@ export class NavService implements OnDestroy {
             !this.alistamientoPrendido
           ) {
             return false;
+          }
+
+          // Centro de ayuda (D-628): con la bandera `centroDeAyuda`, lo ve cualquier rol; su administración,
+          // solo el Super Administrador de Julsmind (el servidor responde 403 a los demás).
+          if (child.path && (child.path === "centro-de-ayuda" || child.path.startsWith("centro-de-ayuda/"))) {
+            if (!this.ayudaPrendida) return false;
+            return child.path === "centro-de-ayuda" ||
+              (isSuperAdmin && String(user.company || "").trim().toLowerCase() === "julsmind");
           }
 
           // Filtros normales de autorización y roles
@@ -1216,6 +1236,20 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "notificaciones", title: "Notificaciones", type: "link", icon: "settings" },
+      ],
+    },
+    // Centro de ayuda (D-628): solo con la bandera `centroDeAyuda`. Quien no administra ve un solo hijo y el
+    // grupo se dibuja como el enlace directo «Ayuda».
+    {
+      id: "ayuda",
+      title: "Ayuda",
+      menuIcon: "notes",
+      icon: "help-circle",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "centro-de-ayuda", title: "Artículos", type: "link", icon: "book" },
+        { path: "centro-de-ayuda/administrar", title: "Administrar", type: "link", icon: "edit", isOnlySuperAdministrador: true },
       ],
     },
 

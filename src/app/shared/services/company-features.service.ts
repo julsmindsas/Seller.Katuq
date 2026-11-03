@@ -124,6 +124,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // proveedor principal, cantidad por unidad de compra, órdenes en borrador por proveedor, filtros, avisos,
   // Excel y Qué producir. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
   'comprasV2',
+  // Centro de ayuda, fase 1 (D-628, tickets 1441 a 1437): base de conocimiento, pantalla «Centro de ayuda» y
+  // su administración para Julsmind. Además existe el corte general `config/feature_flags.centroDeAyuda`.
+  // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
+  'centroDeAyuda',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
