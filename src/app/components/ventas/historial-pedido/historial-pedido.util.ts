@@ -208,6 +208,8 @@ const ASPECTOS: Record<string, AspectoEvento> = {
   delivery_contact_changed: { icono: 'pi pi-phone', tono: 'info' },
   advisor_changed: { icono: 'pi pi-user', tono: 'info' },
   billing_data_changed: { icono: 'pi pi-file', tono: 'info' },
+  // D-670 (ticket 1505): la deuda y los correos futuros cambian de dueño; se lee con el par de alerta.
+  customer_changed: { icono: 'pi pi-users', tono: 'alerta' },
 };
 
 /**

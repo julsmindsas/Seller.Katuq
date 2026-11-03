@@ -1898,6 +1898,12 @@
         </button>
     </div>
     <div class="modal-body">
+        <!-- D-670 (ticket 1505): solo con la bandera cambiarClientePedido. «Editar cliente» modifica la ficha en todos sus
+             pedidos; para poner OTRO cliente en este pedido está «Cambiar cliente». Sin la bandera no se ve nada nuevo. -->
+        <div class="ccl-editar-aviso" *ngIf="puedeOfrecerCambiarCliente(pedidoSeleccionado)">
+            <span class="ccl-editar-texto">Esto modifica la ficha del cliente en todos sus pedidos. Para poner otro cliente en este pedido, usa Cambiar cliente.</span>
+            <button type="button" class="ccl-editar-boton" (click)="cambiarClienteDesdeEditar(modal)">Cambiar cliente</button>
+        </div>
         <!-- D-406: el formulario unificado de cliente. Al guardar entrega el
              cliente actualizado y editDatosClientes lo aplica al pedido. -->
         <app-crear-cliente-modal modo="inline"

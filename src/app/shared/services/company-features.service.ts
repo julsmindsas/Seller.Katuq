@@ -90,6 +90,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // guardar («Este cliente ya existe», documento que parece un celular…), «Usar el existente» y la vista «Posibles
   // duplicados» en Clientes (Administrador y Tesorería). Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-05-31.
   'calidadDatosClientes',
+  // Cambiar el cliente de un pedido creado (ticket 1505, D-670, fase 1): «Cambiar cliente» en «Para este pedido» del modal de
+  // opciones y dentro de «Editar cliente», con vista previa y motivo. Además exige la acción `cambiar_cliente` en el rol
+  // (la revisa el servidor). Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-05-31.
+  'cambiarClientePedido',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

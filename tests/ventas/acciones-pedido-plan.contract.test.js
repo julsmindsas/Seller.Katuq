@@ -17,11 +17,14 @@ const root = path.resolve(__dirname, '../..');
 const { PLAN_ACCIONES } = require('../../src/app/components/ventas/list/acciones-pedido/acciones-pedido.plan.ts');
 const antes = require('./acciones-pedido-antes.json');
 
+/** Acciones que se sumaron DESPUÉS de la plantilla de hoy (no están en `acciones-pedido-antes.json`): D-670, ticket 1505. */
+const ACCIONES_NUEVAS = ['changeCustomer'];
+
 /** Diferencias entre un plan y la tabla de hoy. Vacío = el plan copia lo de hoy. */
 function diferencias(plan, hoy) {
   const fallas = [];
   const idsHoy = hoy.acciones.map(a => a.id).sort();
-  const idsPlan = Object.keys(plan).sort();
+  const idsPlan = Object.keys(plan).filter(id => !ACCIONES_NUEVAS.includes(id)).sort();
   if (JSON.stringify(idsHoy) !== JSON.stringify(idsPlan)) {
     fallas.push(`ids distintos: hoy=${idsHoy.length}, plan=${idsPlan.length}`);
   }
@@ -58,6 +61,10 @@ function miembrosDeListOrders() {
 test('el plan copia lo que hacía la plantilla de hoy (28 acciones)', () => {
   assert.equal(antes.acciones.length, 28);
   assert.deepEqual(diferencias(PLAN_ACCIONES, antes), []);
+});
+
+test('Cambiar cliente (D-670) abre su ventana, sin plantilla y cerrando el modal después', () => {
+  assert.deepEqual(PLAN_ACCIONES.changeCustomer, { metodo: 'abrirCambiarCliente', plantilla: null, cerrar: true });
 });
 
 test('el contrato SÍ detecta una diferencia (se cambia un método, una plantilla y un cierre a propósito)', () => {

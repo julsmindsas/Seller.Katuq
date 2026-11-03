@@ -1,0 +1,149 @@
+<!-- Cambiar el cliente de un pedido (ticket 1505, D-670). Clases con prefijo ccl- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
+<div class="ccl-modal" role="dialog" aria-labelledby="ccl-titulo">
+  <header class="ccl-cabeza">
+    <div class="ccl-titulos">
+      <span class="ccl-eyebrow">Pedido {{ numeroPedido ? '#' + numeroPedido : '' }}</span>
+      <h2 id="ccl-titulo" class="ccl-titulo">Cambiar cliente</h2>
+    </div>
+    <button type="button" class="ccl-cerrar-x" aria-label="Cerrar" [disabled]="guardando" (click)="cerrar()">
+      <span class="ccl-x" aria-hidden="true">&times;</span>
+    </button>
+  </header>
+
+  <div class="ccl-cuerpo">
+    <!-- Cliente actual -->
+    <div class="ccl-actual">
+      <span class="ccl-avatar ccl-avatar--gris" aria-hidden="true">{{ inicial(pedido?.cliente) }}</span>
+      <span class="ccl-actual-texto">
+        <span class="ccl-etiqueta">Cliente actual</span>
+        <span class="ccl-nombre">{{ nombreActual }}</span>
+        <span class="ccl-doc" *ngIf="documentoActual">{{ documentoActual }}</span>
+      </span>
+    </div>
+
+    <!-- Paso 1: buscar -->
+    <ng-container *ngIf="paso === 'buscar'">
+      <label class="ccl-etiqueta ccl-etiqueta--campo" for="ccl-buscar">Buscar un cliente ya creado</label>
+      <div class="ccl-buscar">
+        <input id="ccl-buscar" class="ccl-campo" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Nombre, documento, teléfono o correo" [value]="texto"
+               (input)="alEscribir($any($event.target).value)">
+        <button type="button" class="ccl-btn ccl-btn--sec" (click)="nuevoCliente()">Nuevo cliente</button>
+      </div>
+      <span class="ccl-ayuda" *ngIf="pocosCaracteres">Escribe al menos dos caracteres.</span>
+
+      <div class="ccl-aviso ccl-aviso--error" role="alert" *ngIf="errorBusqueda || errorVista">
+        <span class="ccl-aviso-texto">{{ errorVista || errorBusqueda }}</span>
+      </div>
+
+      <div class="ccl-estado" *ngIf="buscando || cargandoVista" role="status">
+        <span class="ccl-estado-texto">{{ cargandoVista ? 'Revisando el cambio…' : 'Buscando…' }}</span>
+      </div>
+
+      <ul class="ccl-lista" *ngIf="resultados.length && !cargandoVista">
+        <li *ngFor="let c of resultados; trackBy: trackId">
+          <button type="button" class="ccl-fila" [disabled]="esElActual(c) || !idDe(c)" (click)="elegir(c)">
+            <span class="ccl-avatar" aria-hidden="true">{{ inicial(c) }}</span>
+            <span class="ccl-fila-texto">
+              <span class="ccl-nombre">{{ nombreDe(c) || 'Sin nombre' }}</span>
+              <span class="ccl-doc">{{ c.documento }}<ng-container *ngIf="c.telefono || c.numero_celular_comprador"> · {{ c.telefono || c.numero_celular_comprador }}</ng-container></span>
+            </span>
+            <span class="ccl-fila-nota" *ngIf="esElActual(c)">Es el cliente actual</span>
+            <span class="ccl-fila-nota" *ngIf="!esElActual(c) && !idDe(c)">No se puede elegir</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="ccl-vacio" *ngIf="buscado && !resultados.length && !buscando && !errorBusqueda" role="status">
+        <i class="pi pi-search ccl-vacio-icono" aria-hidden="true"></i>
+        <span class="ccl-vacio-titulo">No encontramos ese cliente</span>
+        <span class="ccl-vacio-texto">Revisa lo que escribiste o crea uno con «Nuevo cliente».</span>
+      </div>
+    </ng-container>
+
+    <!-- Paso 2: revisar -->
+    <ng-container *ngIf="paso === 'revisar' && vista">
+      <div class="ccl-aviso ccl-aviso--info" *ngIf="vista.sinCambios" role="status">
+        <span class="ccl-aviso-texto">Este pedido ya es de ese cliente. No hay nada que cambiar.</span>
+      </div>
+
+      <ng-container *ngIf="!vista.sinCambios">
+        <div class="ccl-cambio" aria-label="De quién a quién">
+          <div class="ccl-cambio-lado">
+            <span class="ccl-etiqueta">De</span>
+            <span class="ccl-nombre">{{ vista.de.nombre }}</span>
+            <span class="ccl-doc" *ngIf="vista.de.documento">{{ vista.de.documento }}</span>
+          </div>
+          <span class="ccl-flecha" aria-hidden="true">→</span>
+          <div class="ccl-cambio-lado ccl-cambio-lado--nuevo">
+            <span class="ccl-etiqueta">A</span>
+            <span class="ccl-nombre">{{ vista.a.nombre }}</span>
+            <span class="ccl-doc" *ngIf="vista.a.documento">{{ vista.a.documento }}</span>
+          </div>
+        </div>
+
+        <div class="ccl-aviso ccl-aviso--error" role="alert" *ngFor="let b of vista.bloqueos; trackBy: trackMensaje">
+          <span class="ccl-aviso-titulo">No se puede cambiar</span>
+          <span class="ccl-aviso-texto">{{ b.mensaje }}</span>
+        </div>
+
+        <div class="ccl-aviso" [class.ccl-aviso--fuerte]="a.severidad === 'fuerte'" role="status" *ngFor="let a of vista.avisos; trackBy: trackMensaje">
+          <span class="ccl-aviso-texto">{{ a.mensaje }}</span>
+        </div>
+
+        <div class="ccl-dos" *ngIf="vista.puedeAplicar">
+          <div class="ccl-panel">
+            <span class="ccl-etiqueta">El pedido conserva</span>
+            <ul class="ccl-puntos">
+              <li *ngFor="let t of vista.conserva"><span class="ccl-punto-texto">{{ t }}</span></li>
+            </ul>
+          </div>
+          <div class="ccl-panel">
+            <span class="ccl-etiqueta">Cambia</span>
+            <ul class="ccl-puntos">
+              <li *ngFor="let t of vista.cambia"><span class="ccl-punto-texto">{{ t }}</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <ng-container *ngIf="vista.puedeAplicar">
+          <label class="ccl-etiqueta ccl-etiqueta--campo" for="ccl-motivo">Motivo del cambio (obligatorio)</label>
+          <textarea id="ccl-motivo" class="ccl-campo ccl-campo--area" rows="3" [attr.maxlength]="maxMotivo"
+                    placeholder="Por ejemplo: agendé al cliente equivocado"
+                    [(ngModel)]="motivo"></textarea>
+          <span class="ccl-ayuda">Queda en el historial del pedido junto con quién lo hizo.</span>
+
+          <label class="ccl-confirma" *ngIf="vista.requiere.despacho">
+            <input type="checkbox" [(ngModel)]="confirmaDespacho">
+            <span class="ccl-confirma-texto">Confirmo que el pedido ya salió o se envió a un proveedor (mensajero, transportador, Cereza o laboratorio) y quiero cambiar el cliente igual.</span>
+          </label>
+          <label class="ccl-confirma" *ngIf="vista.requiere.enlacePago">
+            <input type="checkbox" [(ngModel)]="confirmaEnlace">
+            <span class="ccl-confirma-texto">Ya revisé que el enlace de pago no se usó o que se envió al cliente correcto.</span>
+          </label>
+          <label class="ccl-confirma" *ngIf="vista.requiere.recalculo">
+            <input type="checkbox" [(ngModel)]="confirmaRecalculo">
+            <span class="ccl-confirma-texto">Entiendo que si el pedido se recalcula con la lista de precios del cliente nuevo, el total y el saldo pueden cambiar.</span>
+          </label>
+        </ng-container>
+      </ng-container>
+
+      <div class="ccl-aviso ccl-aviso--error" role="alert" *ngIf="errorGuardar">
+        <span class="ccl-aviso-texto">{{ errorGuardar }}</span>
+      </div>
+      <div class="ccl-estado" *ngIf="cargandoVista" role="status">
+        <span class="ccl-estado-texto">Revisando el cambio…</span>
+      </div>
+    </ng-container>
+  </div>
+
+  <footer class="ccl-pie">
+    <button type="button" class="ccl-btn ccl-btn--sec" *ngIf="paso === 'revisar'" [disabled]="guardando" (click)="volver()">Elegir otro cliente</button>
+    <span class="ccl-pie-espacio"></span>
+    <button type="button" class="ccl-btn ccl-btn--sec" [disabled]="guardando" (click)="cerrar()">Cancelar</button>
+    <button type="button" class="ccl-btn ccl-btn--prim" *ngIf="paso === 'revisar' && vista && !vista.sinCambios"
+            [disabled]="!puedeConfirmar" (click)="confirmar()">
+      {{ guardando ? 'Cambiando…' : 'Cambiar cliente' }}
+    </button>
+  </footer>
+</div>

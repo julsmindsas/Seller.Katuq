@@ -35,7 +35,9 @@ export type TipoEventoPedido =
   | 'delivery_schedule_changed'
   | 'delivery_contact_changed'
   | 'advisor_changed'
-  | 'billing_data_changed';
+  | 'billing_data_changed'
+  // D-670 (ticket 1505): «Cliente cambiado», con «De A (••1234) a B (••5678)» y el motivo.
+  | 'customer_changed';
 
 export interface ActorHistorialPedido {
   /** Nombre de la persona, o su correo si no tiene nombre, o «Sistema», «Mensajero» o «Cliente». */

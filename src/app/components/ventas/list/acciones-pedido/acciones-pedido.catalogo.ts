@@ -23,7 +23,7 @@ export type AccionPedidoId =
   // Seguimiento
   | 'changeStatus' | 'history' | 'notes' | 'cleanNotes'
   // Contexto
-  | 'electronicInvoice' | 'delivery' | 'correctPrice' | 'changePriceList' | 'production' | 'reviewMark'
+  | 'electronicInvoice' | 'delivery' | 'correctPrice' | 'changePriceList' | 'changeCustomer' | 'production' | 'reviewMark'
   // Subacciones
   | 'invoice' | 'reinvoice' | 'releaseInvoice' | 'dianStatus' | 'dianPdf' | 'creditNote' | 'dianAdjustment'
   | 'editDiscount'
@@ -135,6 +135,11 @@ export const ACCIONES_PEDIDO: AccionPedido[] = [
   { id: 'changePriceList', titulo: 'Cambiar tipo de precio', resena: 'Pasa el pedido a otra lista de precios',
     nombresAnteriores: [],
     icono: 'tags', tipo: 'contexto' },
+  // D-670 (ticket 1505): «Cambiar cliente» vive en la fila «Para este pedido» (la grilla de 16 no cambia) y solo se ve con la
+  // bandera `cambiarClientePedido`. Mismo lugar que D-543 y D-544: el modal solo la pinta; el servidor decide.
+  { id: 'changeCustomer', titulo: 'Cambiar cliente', resena: 'Pasa el pedido a otro cliente',
+    nombresAnteriores: [],
+    icono: 'users', tipo: 'contexto' },
   { id: 'production', titulo: 'Producción', resena: 'Gestiona el proceso productivo',
     nombresAnteriores: [],
     icono: 'building-factory-2', tipo: 'contexto' },

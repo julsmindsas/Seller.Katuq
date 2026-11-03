@@ -32,6 +32,7 @@ import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
 import { OrderOptionsModalComponent } from "./list/acciones-pedido/order-options-modal.component";
+import { CambiarClientePedidoComponent } from "./list/cambiar-cliente/cambiar-cliente-pedido.component";
 import { OrderPinnedActionsComponent } from "./list/acciones-pedido/order-pinned-actions.component";
 import { OrderActionSuggestionComponent } from "./list/acciones-pedido/order-action-suggestion.component";
 import { IconoTablerComponent } from "../../shared/icons/icono-tabler.component";
@@ -162,6 +163,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     PedidoEntregaComponent,
     ListOrdersComponent,
     OrderOptionsModalComponent, // D-547 (F1): modal «Opciones del pedido» en grilla
+    CambiarClientePedidoComponent, // D-670 (ticket 1505): ventana «Cambiar cliente» del pedido, detrás de cambiarClientePedido
     OrderPinnedActionsComponent, // D-547 (F2): bloque ACCIONES de 8 (4 del rol y 4 del usuario), tras la bandera
     OrderActionSuggestionComponent, // D-547 (F2): aviso «Usas Pagos a diario, ¿lo fijamos?», tras la bandera
     CrearVentasComponent,

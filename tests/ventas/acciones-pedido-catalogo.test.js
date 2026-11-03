@@ -81,7 +81,7 @@ test('todos los íconos del catálogo existen en el registro Tabler generado', (
 
 test('contexto, subacciones y pie son un catálogo cerrado', () => {
   const por = tipo => cat.ACCIONES_PEDIDO.filter(a => a.tipo === tipo).map(a => a.id);
-  assert.deepEqual(por('contexto'), ['electronicInvoice', 'delivery', 'correctPrice', 'changePriceList', 'production', 'reviewMark']);
+  assert.deepEqual(por('contexto'), ['electronicInvoice', 'delivery', 'correctPrice', 'changePriceList', 'changeCustomer', 'production', 'reviewMark']);
   assert.deepEqual(cat.subaccionesDe('electronicInvoice').map(a => a.id),
     ['invoice', 'reinvoice', 'releaseInvoice', 'dianStatus', 'dianPdf', 'creditNote', 'dianAdjustment']);
   assert.deepEqual(cat.subaccionesDe('discount').map(a => a.id), ['editDiscount']);

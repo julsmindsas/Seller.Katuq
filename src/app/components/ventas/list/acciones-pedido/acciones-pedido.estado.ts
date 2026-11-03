@@ -53,6 +53,14 @@ export interface EntradaEstadoAcciones {
   revisado: boolean;
   /** D-543/D-544: vacío por defecto, así sus dos acciones no se ven hasta que exista su consulta. */
   accionesPrecio?: AccionPrecioEntrada[];
+  /**
+   * D-670 (ticket 1505): `true` solo con la bandera `cambiarClientePedido` encendida. Ausente o `false`, la acción no se ve y
+   * el modal es idéntico al de antes. Son dos primitivos (no un objeto) para que la comparación por campo de
+   * `estadosAccionesDe` siga devolviendo el mismo resultado mientras nada cambie.
+   */
+  cambiarCliente?: boolean;
+  /** Si el pedido ya no admite el cambio (entregado, cerrado…), por qué: la acción se ve deshabilitada con este motivo. */
+  cambiarClienteMotivo?: string;
 }
 
 export interface EstadoAccion {
@@ -119,6 +127,11 @@ export function estadoAcciones(e: EntradaEstadoAcciones): EstadoAcciones {
   for (const p of e.accionesPrecio || []) {
     if (p.id !== 'correctPrice' && p.id !== 'changePriceList') continue;
     r[p.id] = p.habilitada ? ok() : bloqueada(p.motivo || 'No disponible');
+  }
+
+  // D-670: Cambiar cliente. Solo con la bandera, fuera de Producción y de los pedidos POS (el servidor tampoco los admite).
+  if (e.cambiarCliente === true && !e.produccion && !e.esPOS) {
+    r.changeCustomer = e.cambiarClienteMotivo ? bloqueada(e.cambiarClienteMotivo) : ok();
   }
 
   // ── Pie ───────────────────────────────────────────────────────────────────

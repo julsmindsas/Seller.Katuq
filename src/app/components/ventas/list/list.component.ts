@@ -91,6 +91,8 @@ import { AccionResaltada, resaltada, resaltadaSoloEnModal } from "./acciones-ped
 import { diaColombia } from "./acciones-pedido/acciones-pedido.dia";
 import { sugerencia } from "./acciones-pedido/acciones-pedido.sugerencia";
 import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
+import { CambiarClientePedidoComponent } from "./cambiar-cliente/cambiar-cliente-pedido.component";
+import { CambiarClientePedidoService } from "./cambiar-cliente/cambiar-cliente-pedido.service";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
 const ESTADOS_DE_SALIDA = ['Despachado', 'Entregado', 'Cerrado'];
@@ -183,6 +185,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
   // D-547 (F2): acciones fijadas por rol y por usuario. Solo se usa con la bandera orderPinnedActions encendida.
   private orderActions = inject(OrderActionsService);
+  // D-670 (ticket 1505): solo se consulta con la bandera `cambiarClientePedido` encendida.
+  private cambiarClienteServicio = inject(CambiarClientePedidoService);
 
   // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
   @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
@@ -838,6 +842,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Los datos que `estadoAcciones` necesita, calculados con los mismos métodos que usaba la plantilla de hoy. */
   entradaEstadoAcciones(pedido: Pedido): EntradaEstadoAcciones {
     const p: any = pedido;
+    const ofreceCambiarCliente = this.puedeOfrecerCambiarCliente(pedido);
     return {
       produccion: !!this.isFromProduction,
       puedeDireccion: this.canEditDeliveryAddressByDeliveryType(pedido),
@@ -857,7 +862,112 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       despachadoOEntregado: p?.estadoProceso === "Despachado" || p?.estadoProceso === "Entregado",
       revisado: !!p?.revisadoParaProduccion,
       accionesPrecio: this.accionesPrecioPedido,
+      // D-670 (ticket 1505): sin la bandera `cambiarClientePedido` estos dos valen `false` y `""`, y el modal no cambia.
+      cambiarCliente: ofreceCambiarCliente,
+      cambiarClienteMotivo: ofreceCambiarCliente && !this.canModifyBasicData(pedido)
+        ? `Congelado · ${String(p?.estadoProceso ?? "")}`.trim()
+        : "",
     };
+  }
+
+  // ── D-670 (ticket 1505): Cambiar cliente de un pedido creado ───────────────────────────────────
+  // Solo se AGREGA: «Editar cliente» y sus métodos siguen igual. La bandera por empresa es `cambiarClientePedido`; el permiso
+  // por rol (`ventas.cambiar_cliente`) y todas las reglas (factura, pagos, estados) las decide y revalida el servidor.
+
+  /** El rol de la persona tiene la acción `cambiar_cliente`: `null` mientras no se sabe (no se ofrece), solo se pide con la bandera. */
+  private rolPuedeCambiarCliente: boolean | null = null;
+
+  /**
+   * Se ofrece solo si: la bandera por empresa está encendida, el rol tiene `cambiar_cliente` y (si se pasa el pedido) es de un tipo
+   * que el servidor admite. El servidor decide de verdad y lo vuelve a exigir; esto solo evita ofrecer lo que de seguro se rechaza.
+   */
+  puedeOfrecerCambiarCliente(pedido?: Pedido): boolean {
+    if (this.isFromProduction || !this.companyFeatures.isEnabled("cambiarClientePedido")) return false;
+    if (this.rolPuedeCambiarCliente !== true) return false;
+    return pedido ? this.pedidoAdmiteCambiarCliente(pedido) : true;
+  }
+
+  /**
+   * Espejo de `noElegible` del servidor, por marcas de la fila: POS, domicilios, bot de WhatsApp, tienda en línea y pedidos que
+   * nacen en Shopify o WooCommerce no cambian de cliente (el cliente es quien compró). Cereza y MultiOP NO cuentan: son destinos.
+   */
+  pedidoAdmiteCambiarCliente(pedido: Pedido): boolean {
+    const p: any = pedido || {};
+    if (p.typeOrder === "POS") return false;
+    const origen = p.origen;
+    if (origen === "domicilio" || origen === "whatsapp-bot" || p.whatsappBot || p.whatsappPhoneHash) return false;
+    if (p.siteId || p.siteSlug || p.pagoTienda || (origen && typeof origen === "object" && origen.canal === "sitio-web")) return false;
+    for (const campo of ["integrations", "integraciones"]) {
+      const integ = p[campo];
+      if (integ && typeof integ === "object" && ["shopify", "woocommerce"].some((k) => integ[k] && typeof integ[k] === "object")) return false;
+    }
+    return true;
+  }
+
+  /** Una vez por carga de la lista, y solo con la bandera: ¿el rol tiene la acción? Si falla, no se ofrece. */
+  private cargarAccesoCambiarCliente(): void {
+    if (this.isFromProduction || !this.companyFeatures.isEnabled("cambiarClientePedido")) return;
+    this.cambiarClienteServicio.acceso().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r) => {
+        this.rolPuedeCambiarCliente = r?.data?.puede === true;
+        this.changeDetectorRef.markForCheck();
+      },
+      error: () => {
+        this.rolPuedeCambiarCliente = false;
+      },
+    });
+  }
+
+  /**
+   * Abre la ventana «Cambiar cliente». Al terminar, actualiza la fila EN SITIO (cliente, versión y facturación): si no, un
+   * guardado posterior de este mismo pedido reenviaría el cliente viejo y deshacería el cambio.
+   */
+  abrirCambiarCliente(order: Pedido): void {
+    if (!order || !this.puedeOfrecerCambiarCliente(order)) return;
+    if (!this.canModifyBasicData(order)) {
+      this.toastrService.warning(
+        "No se puede cambiar el cliente de un pedido entregado o cerrado",
+        "Pedido No Modificable",
+      );
+      return;
+    }
+    const ref = this.modalService.open(CambiarClientePedidoComponent, {
+      size: "lg",
+      centered: true,
+      scrollable: false,
+      backdrop: "static",
+      keyboard: false,
+    });
+    ref.componentInstance.pedido = order;
+    ref.result.then(
+      (resultado: any) => {
+        if (!resultado?.cambio || !resultado.datos) return;
+        const datos = resultado.datos;
+        const fila: any = order;
+        if (datos.cliente) fila.cliente = datos.cliente;
+        // La marca completa: sin ella, un guardado posterior de esta fila reenviaría el arreglo viejo y pisaría la entrada nueva.
+        if (Array.isArray(datos.cambiosDeCliente)) fila.cambiosDeCliente = datos.cambiosDeCliente;
+        if (datos.date_upd) {
+          fila.date_upd = datos.date_upd;
+          fila.date_edit = datos.date_upd;
+        }
+        if (Object.prototype.hasOwnProperty.call(datos, "facturacion")) {
+          if (datos.facturacion === null) delete fila.facturacion;
+          else fila.facturacion = datos.facturacion;
+        }
+        const nombre = datos.cliente?.nombres_completos || datos.cliente?.nombre || "el cliente nuevo";
+        this.toastrService.success(`El pedido ${fila.nroPedido || ""} ahora es de ${nombre}`.replace("  ", " "), "Cliente cambiado");
+        this.changeDetectorRef.markForCheck();
+      },
+      () => { /* se cerró sin cambiar nada */ },
+    );
+  }
+
+  /** Desde «Editar cliente»: cierra esa ventana sin guardar y abre «Cambiar cliente» del mismo pedido. */
+  cambiarClienteDesdeEditar(modal: any): void {
+    const pedido = this.pedidoSeleccionado;
+    modal.dismiss("Cross click");
+    if (pedido) this.abrirCambiarCliente(pedido);
   }
 
   /**
@@ -4034,6 +4144,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.cargarAccesoCambiarCliente();
     // D-547 (F2): con la bandera encendida se piden las acciones del rol y del usuario UNA vez por sesión
     // (abrir un pedido no consulta nada). Apagada, no se hace ninguna petición.
     if (!this.isFromProduction && this.companyFeatures.isEnabled("orderPinnedActions")) {

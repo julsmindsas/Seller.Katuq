@@ -6635,3 +6635,39 @@ $pd-chip-border: #e9e7f3;
   text-transform: none;
   opacity: 0.8;
 }
+
+// ── D-670 (ticket 1505): aviso de «Editar cliente» con el botón «Cambiar cliente» (solo con la bandera cambiarClientePedido).
+// Plano, sin gradientes; ninguna clase lleva «p-»; todo span lleva color y tamaño propios (trampas de CSS global).
+.ccl-editar-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: #FFF1DF;
+  border-radius: 11px;
+}
+.ccl-editar-texto {
+  flex: 1 1 260px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #D9820A;
+}
+.ccl-editar-boton {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: #fff;
+  background: #5F3FE0;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+  &:hover { background: #4A2FC0; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
