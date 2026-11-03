@@ -69,7 +69,8 @@
       "Bot",
       "Ref",
       "WhatsApp Business",
-      "Top {{top}}"
+      "Top {{top}}",
+      "NUIP"
     ],
     "en": [
       "NIT/Doc",
@@ -253,7 +254,9 @@
       "Packing",
       "📝 Logs:",
       "⚡ FPS:",
-      "K.A.I."
+      "K.A.I.",
+      "N/A",
+      "Alias"
     ],
     "pt": [
       "NIT/Doc",
@@ -982,7 +985,34 @@
       "Enviado",
       "Agrupar por",
       "{{valor}} vencido",
-      "Enviando… {{hechos}} de {{total}}"
+      "Enviando… {{hechos}} de {{total}}",
+      "Anular",
+      "este pedido",
+      "Buscar existente",
+      "Pedidos relacionados",
+      "Configurar etiquetas",
+      "Buscar tipo...",
+      "Bloqueados",
+      "Mostrando {first} a {last} de {totalRecords} registros",
+      "Perfil fiscal",
+      "Métricas",
+      "Editar corporativo",
+      "{first}–{last} de {totalRecords}",
+      "{{n}} corporativos exportados",
+      "Cliente corporativo bloqueado",
+      "Editar cliente",
+      "Principal",
+      "Zona {{zona}}",
+      "Editar perfil",
+      "RC - Registro civil",
+      "Campos incompletos",
+      "Corporativo:",
+      "Valor total comprado",
+      "Segmento RFM",
+      "Fiel",
+      "Hibernando",
+      "Canal preferido",
+      "Página {{page}} de {{total}}"
     ],
     "de": [
       "Original",
@@ -1130,7 +1160,8 @@
     "primeng.",
     "prospectManager.prioridades.",
     "soporte.misTickets.plural.",
-    "asistentes.voiceSalesDemo.paso."
+    "asistentes.voiceSalesDemo.paso.",
+    "tesoreria.historialPagos."
   ],
   "modulosCerrados": [
     "shared/components/header/header.component.html",

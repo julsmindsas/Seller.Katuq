@@ -8,23 +8,23 @@
   <!-- Error (aislado: no tumba el resto de la ficha) -->
   <div *ngIf="error && !loading" class="cm-error" role="alert">
     <i class="pi pi-exclamation-triangle me-1"></i>
-    No se pudieron cargar las métricas del cliente.
-    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="load()">Reintentar</button>
+    {{ 'ventas.customerMetrics.errorCargar' | translate }}
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="load()">{{ 'ventas.customerMetrics.reintentar' | translate }}</button>
   </div>
 
   <!-- Datos -->
   <ng-container *ngIf="summary && !loading && !error">
     <div class="cm-grid">
       <div class="cm-card cm-accent-1">
-        <div class="cm-label">Ticket promedio</div>
+        <div class="cm-label">{{ 'ventas.customerMetrics.ticketPromedio' | translate }}</div>
         <div class="cm-value">{{ summary.metricas.ticketPromedio | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="cm-card cm-accent-2">
-        <div class="cm-label">Valor total comprado</div>
+        <div class="cm-label">{{ 'ventas.customerMetrics.valorTotal' | translate }}</div>
         <div class="cm-value">{{ summary.metricas.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       </div>
       <div class="cm-card cm-accent-3">
-        <div class="cm-label">Última compra</div>
+        <div class="cm-label">{{ 'ventas.customerMetrics.ultimaCompra' | translate }}</div>
         <ng-container *ngIf="summary.metricas.ultimaCompra; else sinUltima">
           <div class="cm-value">{{ summary.metricas.ultimaCompra.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
           <div class="cm-sub" *ngIf="summary.metricas.ultimaCompra.fecha">
@@ -34,7 +34,7 @@
         <ng-template #sinUltima><div class="cm-value">—</div></ng-template>
       </div>
       <div class="cm-card cm-accent-4">
-        <div class="cm-label">Pedidos relacionados</div>
+        <div class="cm-label">{{ 'ventas.clientes.pedidosRelacionados' | translate }}</div>
         <div class="cm-value">{{ summary.metricas.totalPedidos }}</div>
       </div>
     </div>
@@ -43,7 +43,7 @@
     <div class="cm-details-toggle">
       <button type="button" class="cm-btn-details" (click)="toggleDetalles()">
         <i class="pi" [ngClass]="mostrarDetalles ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-        {{ mostrarDetalles ? 'Ocultar detalles' : 'Ver detalles del cliente' }}
+        {{ (mostrarDetalles ? 'ventas.customerMetrics.ocultarDetalles' : 'ventas.customerMetrics.verDetalles') | translate }}
       </button>
     </div>
 
@@ -52,37 +52,37 @@
 
       <!-- Fila 1: Fechas y recencia -->
       <div class="cm-details-section">
-        <div class="cm-details-title">Historial de compras</div>
+        <div class="cm-details-title">{{ 'ventas.customerMetrics.historialCompras' | translate }}</div>
         <div class="cm-details-grid">
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Primera compra</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.primeraCompra' | translate }}</span>
             <span class="cm-detail-value">
               {{ summary.metricas.fechaPrimeraCompra ? (summary.metricas.fechaPrimeraCompra | date:'mediumDate') : '—' }}
             </span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Última compra</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.ultimaCompra' | translate }}</span>
             <span class="cm-detail-value">
               {{ summary.metricas.ultimaCompra?.fecha ? (summary.metricas.ultimaCompra.fecha | date:'mediumDate') : '—' }}
             </span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Días sin comprar</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.diasSinComprar' | translate }}</span>
             <span class="cm-detail-value" [style.color]="summary.metricas.alertaCadencia ? '#dc2626' : '#1f2937'">
               <ng-container *ngIf="summary.metricas.diasDesdeUltimaCompra != null; else sinDatos">
-                {{ summary.metricas.diasDesdeUltimaCompra }} días
+                {{ 'ventas.customerMetrics.nDias' | translate: { n: summary.metricas.diasDesdeUltimaCompra } }}
                 <span *ngIf="summary.metricas.alertaCadencia" class="cm-alert-badge"
-                  pTooltip="Lleva más tiempo del habitual sin comprar" tooltipPosition="top">
-                  ⚠ Alerta
+                  [pTooltip]="'ventas.customerMetrics.alertaTooltip' | translate" tooltipPosition="top">
+                  ⚠ {{ 'ventas.customerMetrics.alerta' | translate }}
                 </span>
               </ng-container>
               <ng-template #sinDatos>—</ng-template>
             </span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Cadencia promedio</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.cadenciaPromedio' | translate }}</span>
             <span class="cm-detail-value">
-              {{ summary.metricas.cadenciaPromedioDias != null ? ('Cada ' + summary.metricas.cadenciaPromedioDias + ' días') : '—' }}
+              {{ summary.metricas.cadenciaPromedioDias != null ? ('ventas.customerMetrics.cadaNDias' | translate: { n: summary.metricas.cadenciaPromedioDias }) : '—' }}
             </span>
           </div>
         </div>
@@ -90,30 +90,30 @@
 
       <!-- Fila 2: Valor y segmentación -->
       <div class="cm-details-section">
-        <div class="cm-details-title">Valor y segmentación</div>
+        <div class="cm-details-title">{{ 'ventas.customerMetrics.valorSegmentacion' | translate }}</div>
         <div class="cm-details-grid">
           <div class="cm-detail-item">
-            <span class="cm-detail-label">CLV estimado (2 años)</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.clv' | translate }}</span>
             <span class="cm-detail-value">
               {{ summary.metricas.clv != null ? (summary.metricas.clv | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
             </span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Tasa de cancelaciones</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.tasaCancelaciones' | translate }}</span>
             <span class="cm-detail-value">{{ summary.metricas.tasaDevoluciones != null ? (summary.metricas.tasaDevoluciones + '%') : '—' }}</span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Segmento RFM</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.segmentoRfm' | translate }}</span>
             <span class="cm-rfm-badge"
               *ngIf="summary.metricas.rfmSegmento"
               [style.background]="rfmBg(summary.metricas.rfmSegmento)"
               [style.color]="rfmColor(summary.metricas.rfmSegmento)">
-              {{ summary.metricas.rfmSegmento }}
+              {{ rfmEtiqueta(summary.metricas.rfmSegmento) | translate }}
             </span>
             <span *ngIf="!summary.metricas.rfmSegmento" class="cm-detail-value">—</span>
           </div>
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Canal preferido</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.canalPreferido' | translate }}</span>
             <span class="cm-detail-value">{{ summary.metricas.canalPreferido || '—' }}</span>
           </div>
         </div>
@@ -121,10 +121,10 @@
 
       <!-- Fila 3: Pago y comportamiento -->
       <div class="cm-details-section">
-        <div class="cm-details-title">Comportamiento</div>
+        <div class="cm-details-title">{{ 'ventas.customerMetrics.comportamiento' | translate }}</div>
         <div class="cm-details-grid">
           <div class="cm-detail-item">
-            <span class="cm-detail-label">Método de pago preferido</span>
+            <span class="cm-detail-label">{{ 'ventas.customerMetrics.metodoPagoPreferido' | translate }}</span>
             <span class="cm-detail-value">{{ summary.metricas.metodoPagoPreferido || '—' }}</span>
           </div>
         </div>
@@ -132,24 +132,24 @@
 
       <!-- Top categorías -->
       <div class="cm-details-section" *ngIf="summary.metricas.categoriasMasCompradas?.length">
-        <div class="cm-details-title">Categorías más compradas</div>
+        <div class="cm-details-title">{{ 'ventas.customerMetrics.categoriasMasCompradas' | translate }}</div>
         <div class="cm-top-list">
           <div class="cm-top-item" *ngFor="let c of summary.metricas.categoriasMasCompradas; let i = index">
             <span class="cm-top-rank">{{ i + 1 }}</span>
             <span class="cm-top-name">{{ c.nombre }}</span>
-            <span class="cm-top-qty">{{ c.cantidad }} uds.</span>
+            <span class="cm-top-qty">{{ 'ventas.customerMetrics.nUnidades' | translate: { n: c.cantidad } }}</span>
           </div>
         </div>
       </div>
 
       <!-- Top productos -->
       <div class="cm-details-section" *ngIf="summary.metricas.productosMasComprados?.length">
-        <div class="cm-details-title">Productos más comprados</div>
+        <div class="cm-details-title">{{ 'ventas.customerMetrics.productosMasComprados' | translate }}</div>
         <div class="cm-top-list">
           <div class="cm-top-item" *ngFor="let p of summary.metricas.productosMasComprados; let i = index">
             <span class="cm-top-rank">{{ i + 1 }}</span>
             <span class="cm-top-name">{{ p.nombre }}</span>
-            <span class="cm-top-qty">{{ p.cantidad }} uds.</span>
+            <span class="cm-top-qty">{{ 'ventas.customerMetrics.nUnidades' | translate: { n: p.cantidad } }}</span>
           </div>
         </div>
       </div>
@@ -158,20 +158,20 @@
 
     <!-- Listado toggleable con el botón "Pedidos relacionados" de la ficha -->
     <div class="cm-empty" *ngIf="mostrarPedidos && summary.pedidos.total === 0">
-      Este cliente no tiene pedidos relacionados.
+      {{ 'ventas.customerMetrics.sinPedidos' | translate }}
     </div>
 
     <div class="cm-orders" *ngIf="mostrarPedidos && summary.pedidos.total > 0">
-      <div class="cm-orders-title">Pedidos del cliente</div>
+      <div class="cm-orders-title">{{ 'ventas.customerMetrics.pedidosCliente' | translate }}</div>
       <div class="table-responsive">
         <table class="table table-sm cm-table">
           <thead>
             <tr>
-              <th scope="col">#Pedido</th>
-              <th scope="col">Fecha</th>
-              <th scope="col">Estado proceso</th>
-              <th scope="col">Estado pago</th>
-              <th scope="col" class="text-end">Valor</th>
+              <th scope="col">{{ 'ventas.customerMetrics.colPedido' | translate }}</th>
+              <th scope="col">{{ 'ventas.clientes.colFecha' | translate }}</th>
+              <th scope="col">{{ 'ventas.customerMetrics.colEstadoProceso' | translate }}</th>
+              <th scope="col">{{ 'ventas.customerMetrics.colEstadoPago' | translate }}</th>
+              <th scope="col" class="text-end">{{ 'ventas.customerMetrics.colValor' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -181,7 +181,7 @@
                    [routerLink]="['/ventas/pedidos']"
                    [queryParams]="{buscar: p.nroPedido, fecha: p.fechaCreacion}"
                    style="color:#5F3FE0; font-weight:600; text-decoration:none; white-space:nowrap; letter-spacing:normal;"
-                   pTooltip="Ver pedido en módulo de pedidos" tooltipPosition="top">
+                   [pTooltip]="'ventas.customerMetrics.verPedido' | translate" tooltipPosition="top">
                   {{ p.nroPedido }}&nbsp;<i class="pi pi-external-link" style="font-size:0.65rem;"></i>
                 </a>
                 <ng-template #sinNro>—</ng-template>
@@ -197,10 +197,10 @@
 
       <div class="cm-pager" *ngIf="totalPages > 1">
         <button type="button" class="btn btn-sm btn-outline-secondary"
-                [disabled]="page <= 1" (click)="goToPage(page - 1)">Anterior</button>
-        <span class="cm-page-info">Página {{ page }} de {{ totalPages }}</span>
+                [disabled]="page <= 1" (click)="goToPage(page - 1)">{{ 'ventas.customerMetrics.anterior' | translate }}</button>
+        <span class="cm-page-info">{{ 'ventas.customerMetrics.paginaDe' | translate: { page: page, total: totalPages } }}</span>
         <button type="button" class="btn btn-sm btn-outline-secondary"
-                [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Siguiente</button>
+                [disabled]="page >= totalPages" (click)="goToPage(page + 1)">{{ 'ventas.customerMetrics.siguiente' | translate }}</button>
       </div>
     </div>
   </ng-container>

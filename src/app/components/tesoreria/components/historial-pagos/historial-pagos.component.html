@@ -114,7 +114,7 @@
         <td>
           <button *ngIf="sePuedeAnular(item)" type="button" class="btn btn-outline-danger btn-sm"
                   [disabled]="anulando === item?.id" (click)="anular(item)">
-            <i class="pi" [ngClass]="anulando === item?.id ? 'pi-spin pi-spinner' : 'pi-undo'"></i> Anular
+            <i class="pi" [ngClass]="anulando === item?.id ? 'pi-spin pi-spinner' : 'pi-undo'"></i> {{ 'tesoreria.historialPagos.anular' | translate }}
           </button>
           <small *ngIf="item?.estadoVerificacion === 'Anulado'" class="text-muted d-block" [title]="item?.motivoAnulacion || ''">
             {{ item?.motivoAnulacion }}

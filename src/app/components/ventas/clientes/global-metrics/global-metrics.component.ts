@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core'; // v1
 import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
+import { TranslateService } from '@ngx-translate/core';
 
 /**
  * Panel de métricas globales de clientes — va ARRIBA del listado de clientes.
@@ -43,7 +44,7 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
   /** Orden fijo de segmentos RFM para iterar en el template. */
   readonly rfmSegmentos: string[] = ['Campeón', 'Fiel', 'En riesgo', 'Hibernando', 'Perdido'];
 
-  constructor(private ventas: VentasService) {}
+  constructor(private ventas: VentasService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.load();
@@ -92,8 +93,20 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
   get staleLabel(): string {
     if (!this.metrics?._cachedAt) return '';
     const mins = Math.max(0, Math.round((Date.now() - this.metrics._cachedAt) / 60000));
-    if (mins < 1) return 'Actualizado hace menos de 1 min';
-    return `Actualizado hace ${mins} min`;
+    if (mins < 1) return this.translate.instant('ventas.globalMetrics.actualizadoHaceMenos');
+    return this.translate.instant('ventas.globalMetrics.actualizadoHace', { n: mins });
+  }
+
+  /** Clave de traducción del segmento RFM (solo para pintarlo; el valor no cambia). */
+  rfmEtiqueta(segmento: string): string {
+    const map: Record<string, string> = {
+      'Campeón': 'ventas.customerMetrics.rfmCampeon',
+      'Fiel': 'ventas.customerMetrics.rfmFiel',
+      'En riesgo': 'ventas.customerMetrics.rfmEnRiesgo',
+      'Hibernando': 'ventas.customerMetrics.rfmHibernando',
+      'Perdido': 'ventas.customerMetrics.rfmPerdido',
+    };
+    return map[segmento] ?? segmento;
   }
 
   rfmCount(segmento: string): number {

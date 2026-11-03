@@ -12755,7 +12755,6 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
 - **Pruebas:** `test:i18n` 222/222 (prueba nueva `asistentes-cierre.test.js`, 7 casos), `opttia-chat-ui` y `opttia-markdown` en verde, `i18n:check` 0 errores, tsc con candado sin errores.
 - **Sin marcar:** 13.6 y 13.7 (falta `build:prod` y la revisión en navegador a 1440 y 390 px). 13.2 a 13.5 quedan marcadas con los seis sub-bloques B12a a B12f hechos.
-||||||| bc135796
 
 
 ### 2026-10-26 — D-499 2.4 aprobada por Daniel y subida

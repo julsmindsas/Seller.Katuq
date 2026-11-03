@@ -2,30 +2,30 @@
 <div class="cfg-pagina cli-pagina">
         <header class="cfg-cabeza">
             <div class="cfg-cabeza__textos">
-                <span class="cfg-eyebrow">Clientes</span>
-                <h1 class="cfg-titulo">{{ "Crear cliente" | translate }}</h1>
+                <span class="cfg-eyebrow">{{ 'ventas.clientes.eyebrow' | translate }}</span>
+                <h1 class="cfg-titulo">{{ 'ventas.clientes.titulo' | translate }}</h1>
                 <p class="cfg-sub">
-                    {{ "Ingresa todos los datos para crear un cliente nuevo" | translate }}
+                    {{ 'ventas.clientes.subtitulo' | translate }}
                 </p>
             </div>
             <div class="cfg-acciones">
                 <button pButton
                         type="button"
                         icon="pi pi-tags"
-                        label="{{ 'Etiquetas' | translate }}"
+                        label="{{ 'ventas.clientes.etiquetas' | translate }}"
                         class="p-button-outlined p-button-sm btn-tags-cfg"
                         (click)="abrirConfigEtiquetas()"
-                        pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
+                        pTooltip="{{ 'ventas.clientes.gestionarEtiquetas' | translate }}"></button>
                 <!-- Ticket 1163: el formulario ya carga abierto; el buscador de clientes
                      existentes queda plegado y se abre desde acá. -->
                 <button pButton
                         type="button"
                         [icon]="buscadorAbierto ? 'pi pi-chevron-up' : 'pi pi-search'"
-                        label="{{ 'Buscar existente' | translate }}"
+                        label="{{ 'ventas.clientes.buscarExistente' | translate }}"
                         class="p-button-outlined p-button-sm cli-btn-buscar"
                         [class.p-button-secondary]="buscadorAbierto"
                         (click)="toggleBuscador()"
-                        pTooltip="{{ 'Buscar un cliente ya creado para editarlo' | translate }}"></button>
+                        pTooltip="{{ 'ventas.clientes.buscarExistenteTooltip' | translate }}"></button>
             </div>
         </header>
 
@@ -35,11 +35,11 @@
                  apellido, celular o correo (el mismo buscador de venta asistida y POS). -->
             <div class="row align-items-end g-2">
                 <div class="col-12 col-md-9">
-                    <label class="form-label fw-semibold small">{{ "Buscar cliente" | translate }}</label>
+                    <label class="form-label fw-semibold small">{{ 'ventas.clientes.buscarCliente' | translate }}</label>
                     <input #documentoBusqueda
                            pInputText
                            type="text"
-                           placeholder="{{ 'Documento, nombre y apellido, celular o correo' | translate }}"
+                           placeholder="{{ 'ventas.clientes.buscarPlaceholder' | translate }}"
                            class="w-100 search-input-tall"
                            (keyup.enter)="buscar()" />
                 </div>
@@ -47,7 +47,7 @@
                     <button pButton
                             type="button"
                             icon="pi pi-search"
-                            label="{{ 'Buscar' | translate }}"
+                            label="{{ 'comun.buscar' | translate }}"
                             class="p-button-primary w-100 search-input-tall"
                             (click)="buscar()"></button>
                 </div>
@@ -57,29 +57,29 @@
         <!-- Resultados de búsqueda (varios clientes coinciden) -->
         <div *ngIf="resultadosBusqueda && resultadosBusqueda.length > 0" class="cfg-card cli-resultados">
             <p class="fw-semibold small mb-2 text-muted">
-                <i class="pi pi-list me-1"></i>{{ resultadosBusqueda.length }} resultados encontrados — selecciona el cliente:
+                <i class="pi pi-list me-1"></i>{{ 'ventas.clientes.resultadosEncontrados' | translate: { n: resultadosBusqueda.length } }}
             </p>
             <div class="table-responsive">
                 <table class="table table-hover table-sm table-bordered mb-0 resultados-busqueda-table">
                     <thead class="table-light">
                         <tr>
-                            <th>Nombre</th>
-                            <th>Documento</th>
-                            <th>Email</th>
-                            <th>Teléfono</th>
+                            <th>{{ 'ventas.clientes.colNombre' | translate }}</th>
+                            <th>{{ 'ventas.clientes.colDocumento' | translate }}</th>
+                            <th>{{ 'ventas.clientes.colEmail' | translate }}</th>
+                            <th>{{ 'ventas.clientes.colTelefono' | translate }}</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let c of resultadosBusqueda" style="cursor: pointer;" (click)="seleccionarClienteResultado(c)">
                             <td>{{ c.nombres_completos }} {{ c.apellidos_completos }}
-                                <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">Datos de facturación: <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
+                                <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">{{ 'ventas.clientes.datosFacturacionPerfil' | translate }} <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
                             </td>
                             <td>{{ c.documento }}</td>
                             <td>{{ c.correo_electronico_comprador }}</td>
                             <td>{{ c.numero_celular_comprador }}</td>
                             <td class="text-center">
-                                <button pButton type="button" icon="pi pi-check" label="Seleccionar"
+                                <button pButton type="button" icon="pi pi-check" [label]="'ventas.clientes.seleccionar' | translate"
                                         class="p-button-sm p-button-primary"
                                         (click)="seleccionarClienteResultado(c); $event.stopPropagation()"></button>
                             </td>
@@ -108,23 +108,23 @@
                 </div>
                 <div class="c360-chips-actions">
                     <span class="c360-chip chip-ok" *ngIf="!bloqueado">
-                        <i class="pi pi-check-circle"></i> Activo
+                        <i class="pi pi-check-circle"></i> {{ 'ventas.clientes.activo' | translate }}
                     </span>
                     <span class="c360-chip chip-danger" *ngIf="bloqueado">
-                        <i class="pi pi-lock"></i> Bloqueado
+                        <i class="pi pi-lock"></i> {{ 'ventas.clientes.bloqueado' | translate }}
                     </span>
                     <div class="c360-actions-sep"></div>
-                    <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados"
+                    <button class="btn-tbl-action btn-tbl-neutral" [ngbTooltip]="'ventas.clientes.pedidosRelacionados' | translate"
                         [class.active]="cm.mostrarPedidos" (click)="cm.togglePedidos()">
                         <i class="fa fa-list-alt"></i>
                     </button>
-                    <button class="btn-tbl-action btn-tbl-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
+                    <button class="btn-tbl-action btn-tbl-primary" [ngbTooltip]="'ventas.clientes.nuevoPedido' | translate" (click)="nuevoPedido()">
                         <i class="fa fa-plus"></i>
                     </button>
-                    <button *ngIf="!bloqueado" class="btn-tbl-action btn-tbl-danger" ngbTooltip="Bloquear" (click)="bloquear()">
+                    <button *ngIf="!bloqueado" class="btn-tbl-action btn-tbl-danger" [ngbTooltip]="'ventas.clientes.bloquear' | translate" (click)="bloquear()">
                         <i class="fa fa-lock"></i>
                     </button>
-                    <button *ngIf="bloqueado" class="btn-tbl-action btn-tbl-success" ngbTooltip="Desbloquear" (click)="desbloquear()">
+                    <button *ngIf="bloqueado" class="btn-tbl-action btn-tbl-success" [ngbTooltip]="'ventas.clientes.desbloquear' | translate" (click)="desbloquear()">
                         <i class="fa fa-unlock"></i>
                     </button>
                 </div>
@@ -153,21 +153,21 @@
                         <button class="nav-link nav-link-dark" [class.active]="activarNotas"
                             [attr.aria-selected]="activarNotas"
                             (click)="verNotas()">
-                            <i class="pi pi-file-edit me-1"></i>Notas
+                            <i class="pi pi-file-edit me-1"></i>{{ 'ventas.clientes.tabNotas' | translate }}
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link nav-link-dark" [class.active]="activarDatosFact"
                             [attr.aria-selected]="activarDatosFact"
                             (click)="verDatosFacturacion()">
-                            <i class="pi pi-file me-1"></i>Facturación
+                            <i class="pi pi-file me-1"></i>{{ 'ventas.clientes.tabFacturacion' | translate }}
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link nav-link-dark" [class.active]="activarDatosEntrega"
                             [attr.aria-selected]="activarDatosEntrega"
                             (click)="verDatosEntrega()">
-                            <i class="pi pi-map-marker me-1"></i>Entrega
+                            <i class="pi pi-map-marker me-1"></i>{{ 'ventas.clientes.tabEntrega' | translate }}
                         </button>
                     </li>
                 </ul>
@@ -176,18 +176,18 @@
                     <!-- Notas -->
                     <div *ngIf="activarNotas">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="tab-section-title">Notas del Cliente</h6>
+                            <h6 class="tab-section-title">{{ 'ventas.clientes.notasCliente' | translate }}</h6>
                             <div class="d-flex gap-2">
                                 <div ngbDropdown autoClose="outside">
                                     <button ngbDropdownToggle class="btn-col-toggle" type="button">
-                                        <i class="pi pi-eye me-1"></i>Columnas
+                                        <i class="pi pi-eye me-1"></i>{{ 'ventas.clientes.columnas' | translate }}
                                     </button>
                                     <div ngbDropdownMenu class="col-toggle-menu">
                                         <div *ngFor="let col of colsNotas"
                                              class="col-toggle-item"
                                              (click)="toggleCol(colsNotas, col.key); $event.stopPropagation()">
                                             <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
-                                            <span>{{ col.label }}</span>
+                                            <span>{{ col.label | translate }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -197,8 +197,8 @@
                             <table class="table table-hover table-data">
                                 <thead>
                                     <tr>
-                                        <th *ngIf="colVisible(colsNotas, 'fecha')" class="col-fecha">Fecha</th>
-                                        <th *ngIf="colVisible(colsNotas, 'nota')">Nota</th>
+                                        <th *ngIf="colVisible(colsNotas, 'fecha')" class="col-fecha">{{ 'ventas.clientes.colFecha' | translate }}</th>
+                                        <th *ngIf="colVisible(colsNotas, 'nota')">{{ 'ventas.clientes.colNota' | translate }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -208,7 +208,7 @@
                                     </tr>
                                     <tr *ngIf="!notas || notas.length === 0">
                                         <td [attr.colspan]="visibleCount(colsNotas)" class="empty-state">
-                                            <i class="fa fa-sticky-note me-2"></i>No hay notas registradas
+                                            <i class="fa fa-sticky-note me-2"></i>{{ 'ventas.clientes.sinNotas' | translate }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -219,18 +219,18 @@
                     <!-- Facturación -->
                     <div *ngIf="activarDatosFact">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="tab-section-title">Datos de Facturación</h6>
+                            <h6 class="tab-section-title">{{ 'ventas.clientes.datosFacturacion' | translate }}</h6>
                             <div class="d-flex gap-2">
                                 <div ngbDropdown autoClose="outside">
                                     <button ngbDropdownToggle class="btn-col-toggle" type="button">
-                                        <i class="pi pi-eye me-1"></i>Columnas
+                                        <i class="pi pi-eye me-1"></i>{{ 'ventas.clientes.columnas' | translate }}
                                     </button>
                                     <div ngbDropdownMenu class="col-toggle-menu">
                                         <div *ngFor="let col of colsFact"
                                              class="col-toggle-item"
                                              (click)="toggleCol(colsFact, col.key); $event.stopPropagation()">
                                             <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
-                                            <span>{{ col.label }}</span>
+                                            <span>{{ col.label | translate }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -240,10 +240,10 @@
                             <table class="table table-hover table-data">
                                 <thead>
                                     <tr>
-                                        <th *ngIf="colVisible(colsFact, 'referencia')">Referencia</th>
-                                        <th *ngIf="colVisible(colsFact, 'nombre')">Nombre / Razón Social</th>
-                                        <th *ngIf="colVisible(colsFact, 'tipoDocumento')">Tipo Documento</th>
-                                        <th *ngIf="colVisible(colsFact, 'documento')">Documento</th>
+                                        <th *ngIf="colVisible(colsFact, 'referencia')">{{ 'ventas.clientes.colReferencia' | translate }}</th>
+                                        <th *ngIf="colVisible(colsFact, 'nombre')">{{ 'ventas.clientes.colNombreRazonSocial' | translate }}</th>
+                                        <th *ngIf="colVisible(colsFact, 'tipoDocumento')">{{ 'ventas.clientes.colTipoDocumento' | translate }}</th>
+                                        <th *ngIf="colVisible(colsFact, 'documento')">{{ 'ventas.clientes.colDocumento' | translate }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -255,7 +255,7 @@
                                     </tr>
                                     <tr *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0">
                                         <td [attr.colspan]="visibleCount(colsFact)" class="empty-state">
-                                            <i class="fa fa-file-text me-2"></i>No hay datos de facturación registrados
+                                            <i class="fa fa-file-text me-2"></i>{{ 'ventas.clientes.sinDatosFacturacion' | translate }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -266,18 +266,18 @@
                     <!-- Entrega -->
                     <div *ngIf="activarDatosEntrega">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="tab-section-title">Datos de Entrega</h6>
+                            <h6 class="tab-section-title">{{ 'ventas.clientes.datosEntrega' | translate }}</h6>
                             <div class="d-flex gap-2">
                                 <div ngbDropdown autoClose="outside">
                                     <button ngbDropdownToggle class="btn-col-toggle" type="button">
-                                        <i class="pi pi-eye me-1"></i>Columnas
+                                        <i class="pi pi-eye me-1"></i>{{ 'ventas.clientes.columnas' | translate }}
                                     </button>
                                     <div ngbDropdownMenu class="col-toggle-menu">
                                         <div *ngFor="let col of colsEntrega"
                                              class="col-toggle-item"
                                              (click)="toggleCol(colsEntrega, col.key); $event.stopPropagation()">
                                             <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
-                                            <span>{{ col.label }}</span>
+                                            <span>{{ col.label | translate }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -287,9 +287,9 @@
                             <table class="table table-hover table-data">
                                 <thead>
                                     <tr>
-                                        <th *ngIf="colVisible(colsEntrega, 'referencia')">Referencia</th>
-                                        <th *ngIf="colVisible(colsEntrega, 'nombre')">Nombre</th>
-                                        <th *ngIf="colVisible(colsEntrega, 'direccion')">Dirección</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'referencia')">{{ 'ventas.clientes.colReferencia' | translate }}</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'nombre')">{{ 'ventas.clientes.colNombre' | translate }}</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'direccion')">{{ 'ventas.clientes.colDireccion' | translate }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -300,7 +300,7 @@
                                     </tr>
                                     <tr *ngIf="!datosEntregas || datosEntregas.length === 0">
                                         <td [attr.colspan]="visibleCount(colsEntrega)" class="empty-state">
-                                            <i class="fa fa-map-marker me-2"></i>No hay datos de entrega registrados
+                                            <i class="fa fa-map-marker me-2"></i>{{ 'ventas.clientes.sinDatosEntrega' | translate }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -326,29 +326,29 @@
 </div>
 <ng-template #resultadosModal let-modal>
     <div class="modal-header">
-        <h4 class="modal-title"><strong>Resultados de búsqueda</strong></h4>
+        <h4 class="modal-title"><strong>{{ 'ventas.clientes.resultadosBusqueda' | translate }}</strong></h4>
     </div>
     <div class="modal-body p-0">
         <table class="table table-hover table-sm mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3">Nombre</th>
-                    <th>Documento</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
+                    <th class="ps-3">{{ 'ventas.clientes.colNombre' | translate }}</th>
+                    <th>{{ 'ventas.clientes.colDocumento' | translate }}</th>
+                    <th>{{ 'ventas.clientes.colEmail' | translate }}</th>
+                    <th>{{ 'ventas.clientes.colTelefono' | translate }}</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let c of resultadosBusqueda">
                     <td class="ps-3">{{ c.nombres_completos }} {{ c.apellidos_completos }}
-                        <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">Datos de facturación: <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
+                        <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">{{ 'ventas.clientes.datosFacturacionPerfil' | translate }} <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
                     </td>
                     <td>{{ c.documento }}</td>
                     <td>{{ c.correo_electronico_comprador }}</td>
                     <td>{{ c.numero_celular_comprador }}</td>
                     <td>
-                        <button pButton type="button" label="Seleccionar" icon="pi pi-check"
+                        <button pButton type="button" [label]="'ventas.clientes.seleccionar' | translate" icon="pi pi-check"
                                 class="p-button-sm p-button-primary"
                                 (click)="seleccionarClienteResultado(c); modal.close()"></button>
                     </td>
@@ -357,13 +357,13 @@
         </table>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Cerrar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">{{ 'comun.cerrar' | translate }}</button>
     </div>
 </ng-template>
 
 <!-- Modal configuración de etiquetas -->
 <p-dialog
-    header="{{ 'Configurar Etiquetas' | translate }}"
+    header="{{ 'ventas.clientes.configurarEtiquetas' | translate }}"
     [(visible)]="showEtiquetasConfig"
     [modal]="true"
     [closable]="true"
@@ -372,7 +372,7 @@
     [style]="{ width: '460px' }"
     [baseZIndex]="11000">
 
-    <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
+    <p class="text-muted small mb-3">{{ 'ventas.clientes.configurarEtiquetasAyuda' | translate }}</p>
 
     <div class="config-list mb-3">
         <div *ngFor="let tag of editableTagsCfg; let i = index" class="config-list-item">
@@ -383,11 +383,11 @@
                 <i class="pi pi-times-circle"></i>
             </button>
         </div>
-        <div *ngIf="editableTagsCfg.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
+        <div *ngIf="editableTagsCfg.length === 0" class="text-muted small text-center py-2">{{ 'ventas.clientes.sinEtiquetas' | translate }}</div>
     </div>
 
     <div class="d-flex gap-2 align-items-center flex-wrap">
-        <input pInputText type="text" [(ngModel)]="newTagNameCfg" placeholder="Nombre etiqueta..."
+        <input pInputText type="text" [(ngModel)]="newTagNameCfg" [placeholder]="'ventas.clientes.nombreEtiquetaPlaceholder' | translate"
                class="flex-grow-1" style="min-width:140px;" (keyup.enter)="addTagCfg()" />
         <div class="d-flex gap-1 flex-wrap">
             <span *ngFor="let c of availableColorsCfg"
@@ -402,9 +402,9 @@
     </div>
 
     <ng-template pTemplate="footer">
-        <button pButton type="button" label="{{ 'Cancelar' | translate }}" icon="pi pi-times"
+        <button pButton type="button" label="{{ 'comun.cancelar' | translate }}" icon="pi pi-times"
                 class="p-button-text" (click)="showEtiquetasConfig = false"></button>
-        <button pButton type="button" label="{{ 'Guardar' | translate }}" icon="pi pi-check"
+        <button pButton type="button" label="{{ 'comun.guardar' | translate }}" icon="pi pi-check"
                 class="p-button-primary" (click)="guardarConfigEtiquetas()"></button>
     </ng-template>
 </p-dialog>
