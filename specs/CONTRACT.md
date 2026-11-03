@@ -13014,3 +13014,19 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **D-624** `openspec/changes/pedido-despacho-rapido/` (ticket 1473, OH MY STORE): «Despacho rápido» en el pedido, reutilizando los endpoints de Logística para crear y despachar la orden de envío. Sin endpoint nuevo y sin tocar inventario.
 - **D-625** `openspec/changes/facturar-desde-pendiente/` (ticket 1474, OH MY STORE): permitir facturar con el pago en Pendiente. La regla de «Aprobado o Preaprobado» está solo en el front (`list.component.ts:1443`). Pasar el pedido a Preaprobado afecta inventario e `is_paid` hacia Cereza y Shopify: quedan 8 preguntas para Daniel.
 - **Bitácora del día (aws-claude-2, rama `feature/tickets-aws-claude-2`, sin desplegar):** resueltos 1480, 1485, 1486, 1487, 1488, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1501, 1503 y 1436. El 1490 queda con una pregunta al comercio. El detalle está en las notas internas de cada ticket.
+
+### 2026-11-03 — D-626 a D-630: propuestas OpenSpec de las ideas de prioridad 3 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel. Varias piden aprobar colecciones o endpoints nuevos.
+- **D-626** `openspec/changes/compras-ciclo-completo/` (tickets 1468, 1469 y 1470): una sola regla de costos y la relación producto-proveedor (colección nueva por aprobar). Fases: A costo en línea y proveedor, B cantidades y órdenes por proveedor, C ciclo de la orden, D factura y cuentas por pagar, E indicadores.
+  - **Riesgo hoy:** `recibir()` del front hace dos llamadas sin atomicidad (inventario y después la orden): si la segunda falla y se reintenta, el inventario puede entrar dos veces. La fase C lo pasa a una sola operación del backend, con idempotencia y bajo D-134.
+  - **Acuerdo con aws-claude-1:** Compras es dueña del saldo por pagar y Tesorería solo lo lee, sin tocar `listPayments`, `getMetrics` ni la cola de revisión.
+- **D-627** `openspec/changes/mis-ideas-estados-y-rediseno/` (tickets 1442 y 1443): campo `ideaEstado` con seis estados, proyectado a `status` para que el tablero de Support no cambie. Migración con dry-run. Rediseño maestro-detalle como Mis Tickets. El «me sirve» necesita endpoint propio.
+- **D-628** `openspec/changes/centro-de-ayuda/` (tickets 1437 a 1441): base de conocimiento global (colecciones nuevas por aprobar), herramienta MCP `search_help_center` para Opttia, sitio público sin datos de comercios y «Qué hay de nuevo» sobre las notas de D-567.
+- **D-629** `openspec/changes/imagenes-de-producto/` (tickets 1426 y 1427): estándar de foto, WebP con la tubería de `siteImagenes` y migración por lotes con dry-run, sin borrar originales ni escribir en Shopify. Propone dividir el 1427.
+- **D-630** `openspec/changes/kcat-catalogos/` (tickets 1389 a 1395): paraguas de las 7 épicas en el orden de Jairo. El mayor riesgo es duplicar la tienda (sitios). E1.7/E1.8 (escribir el maestro de productos) y E7.3/E1.12 (reservar stock) quedan fuera, con propuesta propia.
+- **Bitácora (aws-claude-2):**
+  - Avances parciales en 1443 (bcac8677), 1470 (e5719c03 y 91776a5e) y 1469 (e1fff70c).
+  - 1300 (lentitud): se recopiló el trabajo de rendimiento y se le preguntó a Daniel si se cierra.
+  - Los FE pendientes esperan aprobar las fases 2 a 5 de D-499.
+  - Reportes: D-551 tiene tareas abiertas.
+  - WP-INT está asignado a Mónica.
