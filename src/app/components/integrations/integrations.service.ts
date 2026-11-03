@@ -1181,9 +1181,11 @@ export class IntegrationsService {
   }
 
   /** Ticket 1279: líneas de una factura aceptada para hacer la nota por línea (solo lectura). */
-  getDianInvoiceLines(documentNumber: string): Observable<any> {
+  getDianInvoiceLines(documentNumber: string, soloLectura = false): Observable<any> {
+    // D-621: `?detalle=1` es la lectura del panel de detalle. Si la factura no se puede reconstruir como lo exige una
+    // nota, responde 200 con solo los totales y el motivo, en vez de los errores 400/404/409 que sí protegen la nota.
     return this.http.get<any>(
-      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/lineas`,
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/lineas${soloLectura ? '?detalle=1' : ''}`,
       { headers: this.getApiHeaders() }
     );
   }
@@ -1807,6 +1809,8 @@ export class IntegrationsService {
           id: "dian",
           name: "DIAN directo",
           description: "Facturación electrónica con software propio, sin intermediarios contables.",
+          // Como antes de D-622: el archivo no existe y la pantalla cae al ícono de respaldo. Con la bandera
+          // `dianTableroEstado` el componente muestra el ícono de DIAN sin pedir este archivo (ticket 1491).
           logo: "assets/images/logos/dian.svg",
           active: true,
         },

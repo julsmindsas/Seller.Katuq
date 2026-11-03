@@ -1,0 +1,69 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'centroAyuda.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'centroAyuda.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'centroAyuda.sub' | translate }}</p>
+    </div>
+    <div class="cfg-acciones" *ngIf="puedeAdministrar">
+      <a class="cfg-btn cfg-btn--sec" routerLink="administrar">
+        <i class="pi pi-cog" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.administrar' | translate }}</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="cfg-card">
+    <div class="ay-barra">
+      <label class="ay-buscador">
+        <span class="ay-oculto">{{ 'centroAyuda.buscar' | translate }}</span>
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input type="search" [ngModel]="texto" (ngModelChange)="alEscribir($event)" maxlength="200" autocomplete="off"
+          [placeholder]="'centroAyuda.buscarPlaceholder' | translate" />
+      </label>
+      <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="texto" (click)="limpiar()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.limpiar' | translate }}</span>
+      </button>
+    </div>
+    <p class="ay-ayuda" *ngIf="texto.trim().length > 0 && texto.trim().length < 3" style="margin-top: 8px">{{ 'centroAyuda.minimoLetras' | translate }}</p>
+
+    <div class="ay-chips" role="group" [attr.aria-label]="'centroAyuda.filtrarPorModulo' | translate">
+      <button type="button" class="ay-chip" [class.is-activo]="!modulo" [attr.aria-pressed]="!modulo" (click)="elegirModulo('')">{{ 'centroAyuda.todos' | translate }}</button>
+      <button type="button" class="ay-chip" *ngFor="let m of MODULOS" [class.is-activo]="modulo === m" [attr.aria-pressed]="modulo === m" (click)="elegirModulo(m)">{{ NOMBRE_MODULO[m] | translate }}</button>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ error }}</span>
+  </p>
+
+  <section class="cfg-card" *ngIf="cargando && !articulos.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.cargando' | translate }}</p>
+    </div>
+  </section>
+
+  <section class="cfg-card" *ngIf="!cargando && !error && !articulos.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-book"></i></span>
+      <p class="cfg-vacio__titulo">{{ (buscando ? 'centroAyuda.sinResultados' : 'centroAyuda.sinArticulos') | translate }}</p>
+      <p class="cfg-vacio__texto">{{ (buscando ? 'centroAyuda.sinResultadosTexto' : 'centroAyuda.sinArticulosTexto') | translate }}</p>
+    </div>
+  </section>
+
+  <div class="ay-lista" *ngIf="articulos.length">
+    <a class="cfg-card ay-tarjeta" *ngFor="let a of articulos; trackBy: porId" [routerLink]="['articulo', a.id]">
+      <div class="ay-etiquetas">
+        <span class="cfg-pill cfg-pill--info">{{ NOMBRE_MODULO[a.module] | translate }}</span>
+        <span class="cfg-pill cfg-pill--neutro">{{ NOMBRE_TIPO[a.type] | translate }}</span>
+        <span class="cfg-pill" *ngIf="a.scope === 'company'">{{ 'centroAyuda.deTuEmpresa' | translate }}</span>
+      </div>
+      <h2 class="ay-tarjeta__titulo">{{ a.title }}</h2>
+      <p class="ay-tarjeta__texto" *ngIf="a.fragmento || a.summary">{{ a.fragmento || a.summary }}</p>
+      <span class="ay-meta" *ngIf="a.updatedAt">{{ 'centroAyuda.actualizadoEl' | translate:{ fecha: fecha(a.updatedAt) } }}</span>
+    </a>
+  </div>
+</div>

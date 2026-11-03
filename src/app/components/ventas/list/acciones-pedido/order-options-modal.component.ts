@@ -38,6 +38,8 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
   @Input() delRol: AccionPedidoId[] = [];
   /** F2: las acciones que el usuario fijó (máximo 4). */
   @Input() pines: AccionPedidoId[] = [];
+  /** D-635: con el panel de nueve (`panelAccionesV2`) las del rol dicen «Fijada por tu administrador». */
+  @Input() panelV2 = false;
   /** F2 (resaltar sin mover, D17): la tarjeta de esta acción se pinta con el par de alerta y su etiqueta. */
   @Input() resaltada: { id: AccionPedidoId; etiqueta: string } | null = null;
 
@@ -142,7 +144,7 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
   /** Nombre accesible y `title` del pin de una acción. */
   etiquetaPin(id: string): string {
     const estado = this.estadoPines[id];
-    return estado ? etiquetaPin(estado) : '';
+    return estado ? etiquetaPin(estado, this.panelV2) : '';
   }
 
   /** Una opción de un menú desplegado (hijos de Factura electrónica; Aplicar otro / Editar o quitar). */

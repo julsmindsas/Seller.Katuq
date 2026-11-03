@@ -2,6 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { finalize } from 'rxjs/operators';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
+import type { CompanyFeatureFlag } from '../../../shared/services/company-features.service';
+
+// Mis Ideas con estados propios, maestro-detalle y «A mí también me sirve» (D-627, tickets 1442 y 1443).
+// Nace APAGADA: con la bandera apagada esta pantalla es la de siempre. El nombre se castea mientras
+// la bandera no esté en el catálogo del front (COMPANY_FEATURE_FLAGS); el servidor ya la tiene.
+const BANDERA_MIS_IDEAS: CompanyFeatureFlag = 'misIdeasV2';
 
 @Component({
   selector: 'app-mis-ideas',
@@ -24,9 +31,22 @@ export class MisIdeasComponent implements OnInit {
   isLoading: boolean = true;
   showCommentSuccess: boolean = false;
 
-  constructor(private ticketService: ServiciosService, private storage: AngularFireStorage) {}
+  constructor(
+    private ticketService: ServiciosService,
+    private storage: AngularFireStorage,
+    private features: CompanyFeaturesService
+  ) {}
+
+  /** Con la bandera prendida se muestra el rediseño (`app-mis-ideas-maestro`) y esta vista no carga nada. */
+  get v2(): boolean {
+    return this.features.isEnabled(BANDERA_MIS_IDEAS);
+  }
 
   ngOnInit(): void {
+    if (this.v2) {
+      this.isLoading = false;
+      return;
+    }
     const currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
     this.isLoading = true;
 
@@ -65,9 +85,7 @@ export class MisIdeasComponent implements OnInit {
 
     // Filter by status if selected
     if (this.selectedStatus) {
-      filteredResults = filteredResults.filter(idea => 
-        idea.status && idea.status.toLowerCase() === this.selectedStatus.toLowerCase()
-      );
+      filteredResults = filteredResults.filter(idea => this.estadoIdea(idea) === this.selectedStatus);
     }
 
     // Filter by date range
@@ -267,9 +285,30 @@ export class MisIdeasComponent implements OnInit {
     if (!this.filteredTasks) {
       return [];
     }
-    return this.filteredTasks.filter(idea => 
-      idea.status && idea.status.toLowerCase() === status.toLowerCase()
-    );
+    return this.filteredTasks.filter(idea => this.estadoIdea(idea) === status);
+  }
+
+  /**
+   * Ticket 1443: las ideas son tickets y llevan sus estados (Pendiente, Haciendo,
+   * Resuelto, Archivado). El filtro y los contadores usaban estados de idea que
+   * nadie guarda, y por eso siempre daban 0. Aquí se traduce; no se cambian datos.
+   */
+  estadoIdea(idea: any): 'evaluando' | 'desarrollo' | 'implementado' | 'rechazado' {
+    const s = String(idea?.status || '').toLowerCase();
+    if (['evaluando', 'desarrollo', 'implementado', 'rechazado'].includes(s)) return s as any;
+    if (s === 'haciendo' || s === 'en proceso') return 'desarrollo';
+    if (s === 'resuelto') return 'implementado';
+    if (s === 'archivado') return 'rechazado';
+    return 'evaluando';
+  }
+
+  etiquetaEstadoIdea(idea: any): string {
+    return {
+      evaluando: 'soporte.misIdeas.enEvaluacion',
+      desarrollo: 'soporte.misIdeas.enDesarrollo',
+      implementado: 'soporte.misIdeas.implementado',
+      rechazado: 'soporte.misIdeas.noViable',
+    }[this.estadoIdea(idea)];
   }
 
   // Method to count ideas by status

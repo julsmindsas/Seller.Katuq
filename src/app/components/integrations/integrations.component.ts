@@ -15,6 +15,7 @@ import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
+import { AlertaTablero, NivelTablero, TableroDian, calcularTablero, hoyColombia, mostrarTablero } from './dian-tablero-estado';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 
 import { TranslateService } from '@ngx-translate/core';
@@ -158,6 +159,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   dianMunicipalitySearch = '';
   dianMunicipalityResults: MunicipioDane[] = [];
   dianDirectMode = false;
+  /** D-622 (ticket 1491): tablero de estado en vez del asistente, solo con la bandera `dianTableroEstado`. */
+  dianTableroActivo = false;
+  dianTablero: TableroDian | null = null;
   readonly dianSteps = [
     { number: 1, title: 'Comercio', subtitle: 'Confirmar datos del RUT' },
     { number: 2, title: 'Firma digital', subtitle: 'Copiar códigos y subir certificado' },
@@ -282,6 +286,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.setupRealTimeValidation();
 
     this.dianLoadError = '';
+    this.dianTableroActivo = false;
+    this.dianTablero = null;
     this.isLoadingEdit = true;
     try {
       this.dianConfigCompanyId = this.integrationsService.getActiveCompanyId();
@@ -293,6 +299,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           }
           this.showOnlyForm = true;
           this.dianStep = 1;
+          // D-622: comercio activo y en producción, con la bandera encendida y sin error de carga:
+          // se muestra el tablero y el asistente queda detrás de «Editar».
+          if (!this.dianLoadError && mostrarTablero(this.features.isEnabled('dianTableroEstado'), integration)) {
+            this.dianTablero = calcularTablero(integration.config, hoyColombia());
+            this.dianTableroActivo = true;
+          }
         },
         error: (error) => {
           this.isLoadingEdit = false;
@@ -1549,6 +1561,68 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/facturacion-electronica']);
   }
 
+  /** D-622: mientras se lee la configuración no se pinta el asistente si el tablero puede reemplazarlo. */
+  get dianOcultaAsistente(): boolean {
+    return this.dianTableroActivo
+      || (this.dianDirectMode && this.isLoadingEdit && this.features.isEnabled('dianTableroEstado'));
+  }
+
+  /** D-622: «Editar» abre el asistente con lo guardado, igual que hoy. */
+  editarDianDesdeTablero(): void {
+    this.dianTableroActivo = false;
+    this.dianStep = 1;
+    this.dianStepError = '';
+  }
+
+  /** D-622: de vuelta al tablero se lee de nuevo lo guardado (descarta lo que no se guardó). */
+  volverAlTableroDian(): void {
+    this.openDianFromDirectRoute();
+  }
+
+  /** ¿Está el asistente abierto desde el tablero (para ofrecer «Volver al tablero»)? */
+  get dianPuedeVolverAlTablero(): boolean {
+    return !this.dianTableroActivo && !!this.dianTablero && this.features.isEnabled('dianTableroEstado');
+  }
+
+  tableroIcono(nivel: NivelTablero): string {
+    return ({ ok: 'pi-check-circle', aviso: 'pi-info-circle', alerta: 'pi-exclamation-triangle',
+      critico: 'pi-exclamation-circle', bloqueante: 'pi-ban', 'sin-dato': 'pi-question-circle' } as Record<string, string>)[nivel];
+  }
+
+  tableroNivelTexto(nivel: NivelTablero): string {
+    // Claves completas (sin armarlas en ejecución) para que el chequeo de traducciones las encuentre.
+    const claves: Record<string, string> = {
+      ok: 'integrations.integrations.tableroNivel_ok',
+      aviso: 'integrations.integrations.tableroNivel_aviso',
+      alerta: 'integrations.integrations.tableroNivel_alerta',
+      critico: 'integrations.integrations.tableroNivel_critico',
+      bloqueante: 'integrations.integrations.tableroNivel_bloqueante',
+      'sin-dato': 'integrations.integrations.tableroNivel_sin_dato',
+    };
+    return this.translate.instant(claves[nivel] || claves['sin-dato']);
+  }
+
+  /** Cuánto falta (o cuánto hace que venció) en palabras: «Vence en 14 días», «Venció hace 3 días». */
+  tableroDiasTexto(dias: number | null): string {
+    if (dias === null) return this.translate.instant('integrations.integrations.tableroSinDato');
+    if (dias < 0) return this.translate.instant(dias === -1 ? 'integrations.integrations.tableroVencioHace1' : 'integrations.integrations.tableroVencioHaceN', { dias: -dias });
+    if (dias === 0) return this.translate.instant('integrations.integrations.tableroVenceHoy');
+    return this.translate.instant(dias === 1 ? 'integrations.integrations.tableroVenceEn1' : 'integrations.integrations.tableroVenceEnN', { dias });
+  }
+
+  /** El mensaje de una alerta, con lo que el comercio debe hacer. */
+  tableroAlertaTexto(a: AlertaTablero): string {
+    if (a.tipo === 'rango') {
+      return this.translate.instant(a.nivel === 'bloqueante' ? 'integrations.integrations.tableroAlertaRangoAgotado' : 'integrations.integrations.tableroAlertaRango', { pct: a.pct, restantes: a.restantes });
+    }
+    // Claves completas; concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
+    const dias = a.dias as number;
+    const clave = a.tipo === 'resolucion'
+      ? (dias < 0 ? 'integrations.integrations.tableroAlertaResolucionVencida' : 'integrations.integrations.tableroAlertaResolucion')
+      : (dias < 0 ? 'integrations.integrations.tableroAlertaCertificadoVencido' : 'integrations.integrations.tableroAlertaCertificado');
+    return this.translate.instant(clave, { dias: Math.abs(dias) });
+  }
+
   loadDianTestOrders(): void {
     this.dianOrdersLoading = true;
     this.ventasService.getOrdersByFilterOptimized({ sortField: 'fechaCreacion', sortOrder: -1 }, 1, 30, false)
@@ -2681,6 +2755,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   // Método para manejar errores de imágenes
+  /** D-622 (ticket 1491): con la bandera `dianTableroEstado` se corrigen el ícono de DIAN y los pasos cortados; apagada, todo igual que antes. */
+  get dianArreglosVisuales(): boolean {
+    return this.features.isEnabled('dianTableroEstado');
+  }
+
+  /** Logo del catálogo. Con la bandera, DIAN no pide el archivo que nunca existió y va directo al ícono. */
+  logoDeCatalogo(integration: any): string {
+    return integration?.id === 'dian' && this.dianArreglosVisuales ? '' : (integration?.logo || '');
+  }
+
+  /** Ícono de respaldo del catálogo: el de DIAN solo con la bandera; los demás, como siempre. */
+  iconoDeRespaldo(integration: any): string {
+    return integration?.id === 'dian' && this.dianArreglosVisuales
+      ? 'pi pi-verified'
+      : 'fa ' + this.getIntegrationIcon(integration?.id);
+  }
+
   onImageError(event: any, integration: any): void {
     event.target.style.display = 'none';
     // Mostrar icono como fallback

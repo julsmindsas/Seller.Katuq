@@ -2,10 +2,11 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } 
 import { defer, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { DianInvoiceService } from './dian-invoice.service';
 import { ManualInvoiceFormComponent } from './manual-invoice-form.component';
-import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH, invoiceTotals } from './invoice-composer.models';
+import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH, MAX_PURCHASE_ORDER_LENGTH, composeObservations, invoiceTotals, purchaseOrderProblem, splitObservations } from './invoice-composer.models';
 
 import { TranslateService } from '@ngx-translate/core';
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -38,14 +39,17 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   draftVersion = 0;
   draftMessage = '';
   observations = '';
+  /** D-623: orden de compra o referencia del cliente; viaja como primera línea de las observaciones. */
+  purchaseOrder = '';
   readonly maxObservationsLength = MAX_INVOICE_OBSERVATIONS_LENGTH;
+  readonly maxPurchaseOrderLength = MAX_PURCHASE_ORDER_LENGTH;
   private observationsDirty = false;
   private checkingStoredRequest = false;
   private startNewAfterRecovery = false;
   private notified = '';
   private request?: Subscription;
 
-  constructor(private invoices: DianInvoiceService, private integrations: IntegrationsService, private translate: TranslateService) {
+  constructor(private invoices: DianInvoiceService, private integrations: IntegrationsService, private translate: TranslateService, private features: CompanyFeaturesService) {
     this.companyId = this.activeCompanyId();
   }
   ngOnInit(): void {
@@ -66,7 +70,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   get editorDisabled(): boolean { return this.loading || this.companyChanged || this.pending || this.record?.status === 'accepted' || this.restored; }
   get canEmit(): boolean {
     return !this.loading && !this.companyChanged && !this.storageError && !this.observationsError && !this.pending &&
-      this.record?.status === 'ready' && this.record?.delivery?.ready !== false && this.confirmed &&
+      !this.purchaseOrderError && this.record?.status === 'ready' && this.record?.delivery?.ready !== false && this.confirmed &&
       this.integration?.enabled === true && this.integration?.config?.environment === 'produccion';
   }
   get nextNumber(): string {
@@ -92,8 +96,37 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     if (this.editorDisabled || this.mode === mode) return;
     this.mode = mode; this.invalidate();
   }
+  /** Bandera `facturaFormularioMejorado` (D-623 fase 1). */
+  get improved(): boolean { return this.features.isEnabled('facturaFormularioMejorado'); }
+  get usesPurchaseOrder(): boolean { return this.improved && this.mode === 'manual'; }
+  get purchaseOrderError(): string {
+    if (!this.usesPurchaseOrder) return '';
+    const problem = purchaseOrderProblem(this.purchaseOrder);
+    if (problem === 'length') return this.translate.instant('facturacionElectronica.composer.laOrdenDeCompraAdmite', { max: this.maxPurchaseOrderLength });
+    return problem === 'chars' ? this.translate.instant('facturacionElectronica.composer.laOrdenDeCompraTieneCaracteres') : '';
+  }
+  /** Observaciones tal como viajan al servidor: la orden de compra (si hay) arriba y el texto del comercio debajo. */
+  private observationsFor(source: 'manual' | 'order'): string {
+    return this.improved && source === 'manual' ? composeObservations(this.purchaseOrder, this.observations) : this.observations.trim();
+  }
+  private loadObservations(text: string, source: 'manual' | 'order'): void {
+    if (this.improved && source === 'manual') {
+      const parts = splitObservations(text);
+      this.purchaseOrder = parts.purchaseOrder; this.observations = parts.observations;
+    } else { this.purchaseOrder = ''; this.observations = text; }
+  }
+  changePurchaseOrder(value: string): void {
+    if (this.editorDisabled) return;
+    this.purchaseOrder = value;
+    this.observationsDirty = true;
+    this.invalidate();
+  }
+  /** Largo que cuenta contra el límite: con la bandera incluye «Orden de compra: X» y el salto de línea, que también viajan. */
+  get observationsLength(): number {
+    return this.usesPurchaseOrder ? composeObservations(this.purchaseOrder, this.observations).length : this.observations.length;
+  }
   get observationsError(): string {
-    if (this.observations.length > this.maxObservationsLength) return this.translate.instant('facturacionElectronica.composer.lasObservacionesAdmitenHasta1000');
+    if (this.observationsLength > this.maxObservationsLength) return this.translate.instant('facturacionElectronica.composer.lasObservacionesAdmitenHasta1000');
     if (/[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(this.observations)) {
       return this.translate.instant('facturacionElectronica.composer.lasObservacionesContienenCaracteresNo');
     }
@@ -144,7 +177,12 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.record = null; this.restored = false; this.invalidate(); this.manualForm?.resetDraft();
     this.mode = 'manual'; this.phase = 'review'; this.unknown = false; this.showDrafts = false;
     this.draftId = ''; this.draftVersion = 0; this.draftMessage = '';
-    this.observations = ''; this.observationsDirty = false;
+    this.observations = ''; this.purchaseOrder = ''; this.observationsDirty = false;
+  }
+  /** Ticket 1480: 'AAAA-MM-DD' → 'DD/MM/AAAA' sin pasar por zona horaria. */
+  fechaCorta(fecha: string | null | undefined): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : (fecha || '');
   }
   get canCorrect(): boolean {
     return !this.loading && !this.pending && !this.companyChanged &&
@@ -165,7 +203,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.restored = false; this.record = null; this.unknown = false;
     this.invalidate(); this.draftId = ''; this.draftVersion = 0;
     this.mode = original.source;
-    this.observations = original.observations || ''; this.observationsDirty = false;
+    this.loadObservations(original.observations || '', original.source); this.observationsDirty = false;
     if (original.source === 'manual') {
       this.manualForm?.restoreDraft(original.invoice);
       this.draftMessage = this.translate.instant('facturacionElectronica.composer.datosRecuperadosDelIntentoAnterior');
@@ -174,15 +212,16 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   saveDraft(invoice: ManualInvoice): void {
     if (this.editorDisabled) return;
     if (this.observationsError) { this.error = this.observationsError; return; }
+    if (this.purchaseOrderError) { this.error = this.purchaseOrderError; return; }
     this.invalidate(); this.showDrafts = false; this.draftMessage = '';
     try { this.draftId ||= crypto.randomUUID(); } catch (_) { this.error = this.translate.instant('facturacionElectronica.composer.noPudimosIdentificarElBorrador'); return; }
     this.loading = true;
-    this.request = defer(() => this.invoices.saveDraft(this.draftId, invoice, this.draftVersion, this.observations.trim()))
+    this.request = defer(() => this.invoices.saveDraft(this.draftId, invoice, this.draftVersion, this.observationsFor('manual')))
       .pipe(finalize(() => this.loading = false)).subscribe({
         next: record => {
           if (this.companyChanged) return;
           this.draftVersion = record.version || 0;
-          if (this.observations.trim() !== (record.selection?.observations || '')) {
+          if (this.observationsFor('manual') !== (record.selection?.observations || '')) {
             this.error = this.translate.instant('facturacionElectronica.composer.elServidorNoConfirmoLas');
             return;
           }
@@ -213,7 +252,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
           this.requestId = ''; this.confirmed = false; this.unknown = false;
           try { localStorage.removeItem(this.storageKey); } catch (_) {}
           this.manualForm?.restoreDraft(record.selection.invoice);
-          this.observations = record.selection.observations || ''; this.observationsDirty = false;
+          this.loadObservations(record.selection.observations || '', 'manual'); this.observationsDirty = false;
           this.draftId = id; this.draftVersion = record.version || 0;
           this.draftMessage = this.translate.instant('facturacionElectronica.composer.borradorRecuperadoComprobamosNuevamenteLos');
         } else {
@@ -231,7 +270,8 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   review(selection: InvoiceSelection): void {
     if (this.editorDisabled) return;
     if (this.observationsError) { this.error = this.observationsError; return; }
-    const observations = this.observations.trim();
+    if (this.purchaseOrderError) { this.error = this.purchaseOrderError; return; }
+    const observations = this.observationsFor(selection.source);
     selection = { ...selection, ...(observations ? { observations } : {}) };
     this.preview = null; this.record = null; this.confirmed = false; this.error = '';
     this.selection = selection;
@@ -307,7 +347,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       return;
     }
     this.record = record; this.preview = record.preview; this.mode = record.source;
-    this.observations = record.preview?.observations || record.selection?.observations || '';
+    this.loadObservations(record.preview?.observations || record.selection?.observations || '', record.source);
     this.observationsDirty = false;
     if (record.status !== 'draft') { this.draftId = ''; this.draftVersion = 0; this.draftMessage = ''; }
     this.unknown = false; this.confirmed = false;
@@ -335,7 +375,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   get paymentDone(): boolean { return !!this.manualForm?.form.get('payment')?.valid; }
   get readyToReview(): boolean {
-    return this.mode === 'manual' ? this.customerDone && this.itemsDone && this.paymentDone && !this.observationsError : false;
+    return this.mode === 'manual' ? this.customerDone && this.itemsDone && this.paymentDone && !this.observationsError && !this.purchaseOrderError : false;
   }
   get checks(): { ok: boolean; label: string }[] {
     return [

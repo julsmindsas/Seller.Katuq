@@ -63,6 +63,10 @@
       "title": "Landings"
     },
     {
+      "path": "sitios/leads",
+      "title": "Leads landing"
+    },
+    {
       "path": "sitios/catalogos",
       "title": "Catálogo web",
       "badgeValue": "NUEVO"
@@ -504,6 +508,17 @@
     {
       "path": "notificaciones",
       "title": "Notificaciones"
+    },
+    {
+      "title": "Ayuda"
+    },
+    {
+      "path": "centro-de-ayuda",
+      "title": "Artículos"
+    },
+    {
+      "path": "centro-de-ayuda/administrar",
+      "title": "Administrar"
     },
     {
       "headTitle1": "Katuq"

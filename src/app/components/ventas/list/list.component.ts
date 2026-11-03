@@ -84,13 +84,12 @@ import {
   EstadoAcciones,
   estadoAcciones,
 } from "./acciones-pedido/acciones-pedido.estado";
-import { accionesDelRol, ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
+import { accionesDelRol } from "./acciones-pedido/acciones-pedido.ocho";
 import { decidirPin, reemplazarPin } from "./acciones-pedido/acciones-pedido.pines";
 import { cuentaComoUso, idFijaPorTitulo } from "./acciones-pedido/acciones-pedido.uso";
 import { AccionResaltada, resaltada, resaltadaSoloEnModal } from "./acciones-pedido/acciones-pedido.resaltada";
 import { diaColombia } from "./acciones-pedido/acciones-pedido.dia";
 import { sugerencia } from "./acciones-pedido/acciones-pedido.sugerencia";
-import { AccionesUsuario } from "./acciones-pedido/acciones-pedido.me";
 import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
@@ -967,7 +966,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sugerenciaEvaluada = true;
     const me = this.orderActions.estado;
     if (!me) return;
-    const id = sugerencia(me.usageDays, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
+    const id = sugerencia(this.orderActions.usoSemanal, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
     if (!id) return;
     this.sugerenciaPedido = id;
     this.orderActions.registrarSugerencia(id, "shown").pipe(takeUntil(this.destroy$)).subscribe({ error: () => { /* en silencio */ } });
@@ -999,13 +998,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       && !!this.orderActions.estado;
   }
 
-  private ochoMemo: { de: AccionesUsuario | null; valor: AccionPedidoId[] } = { de: null, valor: [] };
-
-  /** Las 8 acciones: las 4 del rol (o General) y las 4 personales. Mismo arreglo mientras el estado no cambie. */
+  /**
+   * Las acciones del bloque: las 4 del rol (o General) y las personales (4; con `panelAccionesV2`, 5). Mismo arreglo
+   * mientras el estado no cambie. Lo calcula `OrderActionsService.panel` con el uso que llegó al iniciar la sesión.
+   */
   get accionesDelBloque(): AccionPedidoId[] {
-    const me = this.orderActions.estado;
-    if (me !== this.ochoMemo.de) this.ochoMemo = { de: me, valor: ochoAcciones(me?.role, me?.pinned) };
-    return this.ochoMemo.valor;
+    return this.orderActions.panel.acciones;
+  }
+
+  /** D-635: panel de nueve con la bandera `panelAccionesV2`. */
+  get panelV2(): boolean {
+    return this.orderActions.panelV2;
+  }
+
+  /** D-635: las personales que entraron por uso («Frecuente»). */
+  get accionesFrecuentes(): AccionPedidoId[] {
+    return this.orderActions.panel.frecuentes;
   }
 
   private resaltadaMemo: AccionResaltada | null = null;
@@ -1060,7 +1068,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   restablecerAccionesBloque(): void {
     Swal.fire({
       title: "Restablecer acciones",
-      text: "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
+      text: this.panelV2
+        ? "Tus 5 acciones personales vuelven al orden de siempre. Las de tu administrador no cambian."
+        : "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#5F3FE0",
@@ -1105,7 +1115,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   fijarAccionDelModal(ev: { id: AccionPedidoId; fijar: boolean }): void {
     if (!this.bloquePersonalizado || this.guardandoPines) return;
-    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario);
+    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario, this.orderActions.panel.maxPines);
     if (decision.tipo === "guardar") {
       this.guardarPinesDelModal(decision.lista);
     } else if (decision.tipo === "elegir") {
@@ -1129,7 +1139,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const id of actuales) opciones[id] = accionPorId(id).titulo;
     this.guardandoPines = true;
     Swal.fire({
-      title: "Ya fijaste 4 acciones",
+      title: this.panelV2 ? "Puedes fijar hasta 5 acciones" : "Ya fijaste 4 acciones",
       text: `¿Cuál reemplazamos por «${accionPorId(entra).titulo}»?`,
       input: "radio",
       inputOptions: opciones,

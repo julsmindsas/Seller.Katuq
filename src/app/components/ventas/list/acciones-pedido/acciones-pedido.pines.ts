@@ -24,9 +24,12 @@ export function estadoPin(id: string, delRol: readonly string[], pines: readonly
   return pines.includes(id) ? 'usuario' : 'libre';
 }
 
-/** Los textos del pin: el nombre accesible y el `title`. */
-export function etiquetaPin(estado: EstadoPin): string {
-  if (estado === 'rol') return 'Fijada por tu rol';
+/**
+ * Los textos del pin: el nombre accesible y el `title`. Con el panel de nueve (`panelAccionesV2`, D-635) las del rol
+ * dicen «Fijada por tu administrador».
+ */
+export function etiquetaPin(estado: EstadoPin, deAdministrador = false): string {
+  if (estado === 'rol') return deAdministrador ? 'Fijada por tu administrador' : 'Fijada por tu rol';
   return estado === 'usuario' ? 'Quitar de acciones principales' : 'Fijar en acciones principales';
 }
 
@@ -44,23 +47,27 @@ export type DecisionPin =
   | { tipo: 'elegir'; entra: AccionPedidoId; actuales: AccionPedidoId[] }
   | { tipo: 'nada' };
 
-/** Pines válidos del usuario: solo las 16 fijas, sin repetir, máximo 4, en su orden. */
-export function pinesValidos(pines: readonly string[] | null | undefined): AccionPedidoId[] {
+/** Pines válidos del usuario: solo las 16 fijas, sin repetir, máximo `max` (4; 5 con `panelAccionesV2`), en su orden. */
+export function pinesValidos(pines: readonly string[] | null | undefined, max: number = ESPACIOS_USUARIO): AccionPedidoId[] {
   const out: AccionPedidoId[] = [];
   for (const id of pines || []) if (esFijable(id) && !out.includes(id)) out.push(id);
-  return out.slice(0, ESPACIOS_USUARIO);
+  return out.slice(0, max);
 }
 
-/** Qué hacer al tocar el pin de `id`. `fijar` es lo que pidió el usuario (`true`: fijar; `false`: soltar). */
+/**
+ * Qué hacer al tocar el pin de `id`. `fijar` es lo que pidió el usuario (`true`: fijar; `false`: soltar). `max` son los
+ * pines que caben: 4 por omisión y 5 con el panel de nueve.
+ */
 export function decidirPin(
   id: string, fijar: boolean, delRol: readonly string[], pines: readonly string[] | null | undefined,
+  max: number = ESPACIOS_USUARIO,
 ): DecisionPin {
   if (!esFijable(id) || delRol.includes(id)) return { tipo: 'nada' };
-  const actuales = pinesValidos(pines);
+  const actuales = pinesValidos(pines, max);
   const esta = actuales.includes(id);
   if (!fijar) return esta ? { tipo: 'guardar', lista: actuales.filter(x => x !== id) } : { tipo: 'nada' };
   if (esta) return { tipo: 'nada' };
-  if (actuales.length < ESPACIOS_USUARIO) return { tipo: 'guardar', lista: [...actuales, id] };
+  if (actuales.length < max) return { tipo: 'guardar', lista: [...actuales, id] };
   return { tipo: 'elegir', entra: id, actuales };
 }
 

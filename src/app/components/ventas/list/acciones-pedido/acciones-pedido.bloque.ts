@@ -8,12 +8,30 @@
  */
 import { AccionPedidoId, accionPorId } from './acciones-pedido.catalogo';
 import { EstadoAcciones, hijosVisibles } from './acciones-pedido.estado';
+import { EstadoPin, estadoPin } from './acciones-pedido.pines';
 import { AccionResaltada } from './acciones-pedido.resaltada';
+import { estadoDeTarjeta } from './acciones-pedido.estado-tarjeta';
 import { TarjetaVista, tarjeta } from './order-options-modal.vista';
 
 export interface TarjetaBloque extends TarjetaVista {
   /** «Pago pendiente» o «Sin factura» si la acción está resaltada; si no, `null`. */
   etiqueta: string | null;
+  /** Panel de nueve (D-635): `true` si la etiqueta va en el par de alerta; `false`, en tono neutro. */
+  etiquetaAlerta?: boolean;
+  /** Panel de nueve (D-635): la acción entró por uso, no por pin: lleva «Frecuente». */
+  frecuente?: boolean;
+  /** Panel de nueve (D-635): estado del pin de la tarjeta (`null`: no se puede fijar). Sin el panel, no existe. */
+  pin?: EstadoPin | null;
+}
+
+/** Lo que suma el panel de nueve (`panelAccionesV2`, D-635) al construir el bloque. */
+export interface OpcionesPanelV2 {
+  /** El pedido abierto: de él salen «Sin factura» y el saldo pendiente. */
+  pedido: any;
+  /** Personales que entraron por uso (llevan «Frecuente» mientras no estén fijadas). */
+  frecuentes: readonly string[];
+  delRol: readonly string[];
+  pines: readonly string[];
 }
 
 export interface BloqueVista {
@@ -31,11 +49,22 @@ export function construirBloque(
   estados: EstadoAcciones,
   revisado: boolean,
   resaltada: AccionResaltada | null,
+  v2?: OpcionesPanelV2,
 ): BloqueVista {
-  const tarjetas: TarjetaBloque[] = acciones.map(id => ({
-    ...tarjeta(accionPorId(id), estados[id], revisado),
-    etiqueta: resaltada && resaltada.id === id ? resaltada.etiqueta : null,
-  }));
+  const tarjetas: TarjetaBloque[] = acciones.map(id => {
+    const base = { ...tarjeta(accionPorId(id), estados[id], revisado), etiqueta: resaltada && resaltada.id === id ? resaltada.etiqueta : null };
+    if (!v2) return base;
+    const pin = estadoPin(id, v2.delRol, v2.pines);
+    const estado = estadoDeTarjeta(id, v2.pedido, resaltada);
+    return {
+      ...base,
+      etiqueta: estado ? estado.texto : null,
+      etiquetaAlerta: !!estado && estado.alerta,
+      // Fijar manda sobre lo «Frecuente»: una fijada o del rol nunca lleva la etiqueta.
+      frecuente: pin === 'libre' && v2.frecuentes.includes(id),
+      pin,
+    };
+  });
 
   // Como hoy: el bloque de F1 ofrece Facturar, Liberar factura y las 4 de la DIAN. Refacturar vive solo en el modal.
   const hijosFactura = hijosVisibles(estados, 'electronicInvoice')

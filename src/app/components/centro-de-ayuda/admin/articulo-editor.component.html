@@ -1,0 +1,131 @@
+<div class="cfg-pagina">
+  <a class="ay-enlace-volver" routerLink="/centro-de-ayuda/administrar">
+    <i class="pi pi-arrow-left" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ 'centroAyuda.editor.volver' | translate }}</span>
+  </a>
+
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'centroAyuda.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ (esNuevo ? 'centroAyuda.editor.tituloNuevo' : 'centroAyuda.editor.tituloEditar') | translate }}</h1>
+      <div class="ay-etiquetas" *ngIf="articulo">
+        <span class="cfg-pill" [ngClass]="CLASE_ESTADO[articulo.status]">{{ NOMBRE_ESTADO[articulo.status] | translate }}</span>
+        <span class="cfg-pill cfg-pill--neutro">{{ 'centroAyuda.editor.version' | translate:{ version: articulo.version } }}</span>
+        <span class="cfg-pill cfg-pill--info" *ngIf="articulo.approver">{{ 'centroAyuda.editor.aprobadoPor' | translate:{ quien: articulo.approver } }}</span>
+      </div>
+    </div>
+    <div class="cfg-acciones">
+      <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="articulo?.status === 'borrador'" (click)="publicar()" [disabled]="guardando">
+        <i class="pi pi-check" aria-hidden="true"></i><span>{{ 'centroAyuda.accion.publish' | translate }}</span>
+      </button>
+      <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="!puedeGuardar">
+        <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-save'" aria-hidden="true"></i>
+        <span>{{ 'centroAyuda.editor.guardar' | translate }}</span>
+      </button>
+    </div>
+  </header>
+
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="articulo?.status === 'publicado'" role="status">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ 'centroAyuda.editor.avisoPublicado' | translate }}</span>
+  </p>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <div>
+      <span class="ay-heredar">{{ error }}</span>
+      <ul class="ay-hallazgos" *ngIf="hallazgos.length">
+        <li *ngFor="let h of hallazgos">{{ h.tipo }}: {{ h.dato }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="cfg-card" *ngIf="cargando">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.cargando' | translate }}</p>
+    </div>
+  </section>
+
+  <section class="cfg-card cfg-form" *ngIf="!cargando">
+    <form (ngSubmit)="guardar()" class="ay-form-grilla">
+      <div class="ay-campo ay-campo--ancho">
+        <label for="ay-titulo">{{ 'centroAyuda.editor.titulo' | translate }}</label>
+        <input id="ay-titulo" class="form-control" name="titulo" [(ngModel)]="titulo" maxlength="160" required />
+      </div>
+
+      <div class="ay-campo ay-campo--ancho">
+        <label for="ay-resumen">{{ 'centroAyuda.editor.resumen' | translate }}</label>
+        <input id="ay-resumen" class="form-control" name="resumen" [(ngModel)]="resumen" maxlength="300" />
+        <p class="ay-ayuda">{{ 'centroAyuda.editor.resumenAyuda' | translate }}</p>
+      </div>
+
+      <div class="ay-campo">
+        <label for="ay-tipo">{{ 'centroAyuda.editor.tipo' | translate }}</label>
+        <select id="ay-tipo" class="form-select" name="tipo" [(ngModel)]="tipo">
+          <option *ngFor="let t of TIPOS" [value]="t">{{ NOMBRE_TIPO[t] | translate }}</option>
+        </select>
+      </div>
+
+      <div class="ay-campo">
+        <label for="ay-modulo">{{ 'centroAyuda.editor.modulo' | translate }}</label>
+        <select id="ay-modulo" class="form-select" name="modulo" [(ngModel)]="modulo">
+          <option *ngFor="let m of MODULOS" [value]="m">{{ NOMBRE_MODULO[m] | translate }}</option>
+        </select>
+      </div>
+
+      <div class="ay-campo">
+        <label for="ay-alcance">{{ 'centroAyuda.editor.alcance' | translate }}</label>
+        <select id="ay-alcance" class="form-select" name="alcance" [(ngModel)]="alcance" [disabled]="!esNuevo">
+          <option value="global">{{ 'centroAyuda.alcance.global' | translate }}</option>
+          <option value="company">{{ 'centroAyuda.alcance.company' | translate }}</option>
+        </select>
+        <p class="ay-ayuda">{{ (alcance === 'global' ? 'centroAyuda.editor.alcanceGlobalAyuda' : 'centroAyuda.editor.alcanceEmpresaAyuda') | translate }}</p>
+      </div>
+
+      <div class="ay-campo" *ngIf="alcance === 'company'">
+        <label for="ay-empresa">{{ 'centroAyuda.editor.empresa' | translate }}</label>
+        <input id="ay-empresa" class="form-control" name="empresa" [(ngModel)]="empresa" [disabled]="!esNuevo" maxlength="120" />
+        <p class="ay-ayuda">{{ 'centroAyuda.editor.empresaAyuda' | translate }}</p>
+      </div>
+
+      <div class="ay-campo" *ngIf="alcance === 'global'">
+        <label for="ay-visibilidad">{{ 'centroAyuda.editor.visibilidad' | translate }}</label>
+        <select id="ay-visibilidad" class="form-select" name="visibilidad" [(ngModel)]="visibilidad">
+          <option value="interna">{{ 'centroAyuda.visibilidad.interna' | translate }}</option>
+          <option value="publica">{{ 'centroAyuda.visibilidad.publica' | translate }}</option>
+        </select>
+        <p class="ay-ayuda">{{ 'centroAyuda.editor.visibilidadAyuda' | translate }}</p>
+      </div>
+
+      <div class="ay-campo">
+        <label for="ay-version">{{ 'centroAyuda.editor.aplicaVersion' | translate }}</label>
+        <input id="ay-version" class="form-control" name="version" [(ngModel)]="version" maxlength="40" placeholder="2026.11.03.1" />
+      </div>
+
+      <div class="ay-campo ay-campo--ancho">
+        <label for="ay-rutas">{{ 'centroAyuda.editor.rutas' | translate }}</label>
+        <input id="ay-rutas" class="form-control" name="rutas" [(ngModel)]="rutas" placeholder="ventas/pedidos, inventario" />
+        <p class="ay-ayuda">{{ 'centroAyuda.editor.rutasAyuda' | translate }}</p>
+      </div>
+
+      <div class="ay-campo ay-campo--ancho">
+        <label for="ay-contenido">{{ 'centroAyuda.editor.contenido' | translate }}</label>
+        <textarea id="ay-contenido" class="form-control" name="contenido" [(ngModel)]="contenido" rows="18" required></textarea>
+        <span class="ay-contador" [class.is-excede]="excede">{{ contenido.length }} / {{ MAX_CONTENIDO }}</span>
+        <p class="ay-ayuda">{{ 'centroAyuda.editor.contenidoAyuda' | translate }}</p>
+      </div>
+    </form>
+  </section>
+
+  <section class="cfg-card" *ngIf="!esNuevo && versiones.length">
+    <h2 class="cfg-card__titulo">{{ 'centroAyuda.editor.historial' | translate }}</h2>
+    <ul class="ay-historial">
+      <li *ngFor="let v of versiones; trackBy: porId">
+        <strong class="ay-heredar">{{ NOMBRE_MOTIVO[v.reason] | translate }}</strong>
+        <span class="ay-heredar">{{ 'centroAyuda.editor.version' | translate:{ version: v.version } }}</span>
+        <span class="ay-historial__quien">{{ fecha(v.savedAt) }} · {{ v.savedBy }}</span>
+      </li>
+    </ul>
+  </section>
+</div>

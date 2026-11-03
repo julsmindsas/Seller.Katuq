@@ -17,18 +17,19 @@
       </div>
       <div class="table-responsive">
         <table class="table composer-table" formArrayName="items">
-          <thead><tr><th class="concept-head">{{ 'facturacionElectronica.manualInvoiceForm.productoOServicio' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.cant' | translate }}</th><th class="text-end">{{ 'facturacionElectronica.manualInvoiceForm.valorSinIva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.desc' | translate }}</th><th class="text-end total-head">{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</th><th><span class="visually-hidden">{{ 'facturacionElectronica.manualInvoiceForm.acciones' | translate }}</span></th></tr></thead>
+          <thead><tr><th class="concept-head">{{ 'facturacionElectronica.manualInvoiceForm.productoOServicio' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.cant' | translate }}</th><th class="text-end">{{ 'facturacionElectronica.manualInvoiceForm.valorSinIva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.desc' | translate }}</th><th class="text-end total-head">{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</th><th class="acciones-cell"><span class="visually-hidden">{{ 'facturacionElectronica.manualInvoiceForm.acciones' | translate }}</span></th></tr></thead>
           <tbody><tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-            <td class="concept-cell" data-label="Producto o servicio"><app-invoice-concept-picker [item]="item" [companyId]="companyId" [disabled]="disabled" [index]="i"></app-invoice-concept-picker>
+            <td class="concept-cell" data-label="Producto o servicio"><app-invoice-concept-picker [item]="item" [companyId]="companyId" [disabled]="disabled" [index]="i" (chosen)="clearSuggestion(item)"></app-invoice-concept-picker>
               <small class="field-error" *ngIf="invalid('items.' + i + '.description')">{{ 'facturacionElectronica.manualInvoiceForm.escribeElProductoOServicio' | translate }}</small></td>
             <td data-label="Cantidad"><input class="form-control number-input" type="number" min="0.001" max="1000000" step="0.001" formControlName="quantity" [class.is-invalid]="invalid('items.' + i + '.quantity')" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.cantidadDelConcepto' | translate:{numero: i + 1}"></td>
             <td data-label="Valor sin IVA"><div class="price-field" [class.is-filled]="item.get('unitPrice')?.value > 0" [class.is-invalid]="invalid('items.' + i + '.unitPrice')"><span>$</span><input class="form-control price-input" type="number" min="0.01" max="1000000000" step="0.01" formControlName="unitPrice" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.valorSinIvaDelConcepto' | translate:{numero: i + 1}" placeholder="0"></div></td>
-            <td data-label="IVA"><select class="form-select tax-input" formControlName="taxRate" [class.is-invalid]="invalid('items.' + i + '.taxRate')" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.ivaDelConcepto' | translate:{numero: i + 1}"><option [ngValue]="null">{{ 'facturacionElectronica.manualInvoiceForm.elige' | translate }}</option><option [ngValue]="0">0 %</option><option [ngValue]="5">5 %</option><option [ngValue]="19">19 %</option></select></td>
+            <td data-label="IVA"><select class="form-select tax-input" formControlName="taxRate" (change)="clearSuggestion(item)" [class.is-suggested]="taxSuggested(item)" [class.is-invalid]="invalid('items.' + i + '.taxRate')" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.ivaDelConcepto' | translate:{numero: i + 1}"><option [ngValue]="null">{{ 'facturacionElectronica.manualInvoiceForm.elige' | translate }}</option><option [ngValue]="0">0 %</option><option [ngValue]="5">5 %</option><option [ngValue]="19">19 %</option></select>
+              <small class="tax-suggested" *ngIf="taxSuggested(item)">{{ 'facturacionElectronica.manualInvoiceForm.ivaSugerido' | translate }}</small></td>
             <td data-label="Desc. %"><input class="form-control discount-input" type="number" min="0" max="99.99" step="0.01" formControlName="discountPercent" [class.is-invalid]="invalid('items.' + i + '.discountPercent')" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.descuentoPorcentualDelConcepto' | translate:{numero: i + 1}">
               <small class="field-error" *ngIf="invalid('items.' + i + '.discountPercent')">{{ 'facturacionElectronica.manualInvoiceForm.de0A9999' | translate }}</small></td>
             <td class="text-end total-cell" data-label="Total"><span class="line-amount" [class.is-empty]="!lineTotal(i)">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
               <small class="discount-amount" *ngIf="lineDiscount(i)">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</small></td>
-            <td><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.quitarConcepto' | translate:{numero: i + 1}" [title]="'facturacionElectronica.manualInvoiceForm.quitar' | translate"><i class="pi pi-trash"></i></button></td>
+            <td class="acciones-cell"><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.quitarConcepto' | translate:{numero: i + 1}" [title]="'facturacionElectronica.manualInvoiceForm.quitar' | translate"><i class="pi pi-trash"></i></button></td>
           </tr></tbody>
         </table>
       </div>
@@ -57,10 +58,21 @@
             </button>
           </div>
         </div>
+        <div class="pay-term" *ngIf="isCredit && improved">
+          <span class="field-label" id="invoice-term-label">{{ 'facturacionElectronica.manualInvoiceForm.plazoDias' | translate }}</span>
+          <div class="pay-term__row">
+            <div class="pay-term__chips" role="radiogroup" aria-labelledby="invoice-term-label">
+              <button type="button" class="pay-method" role="radio" *ngFor="let days of termOptions" [attr.aria-checked]="creditDays === days" [class.is-active]="creditDays === days" (click)="setCreditDays(days)">{{ days }}</button>
+            </div>
+            <input class="form-control pay-term__input" type="number" inputmode="numeric" min="1" [max]="maxCreditDays" step="1" [value]="creditDays ?? ''" (input)="setCreditDays($any($event.target).value)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.otroPlazoEnDias' | translate" [placeholder]="'facturacionElectronica.manualInvoiceForm.otroPlazo' | translate">
+          </div>
+          <small class="field-hint" *ngIf="form.get('payment.dueDate')?.value && !dueDateExpired">{{ 'facturacionElectronica.manualInvoiceForm.venceElFecha' | translate:{fecha: dueDateLabel} }}</small>
+        </div>
         <div class="pay-due" *ngIf="isCredit">
           <label for="invoice-due-date" class="field-label">{{ 'facturacionElectronica.manualInvoiceForm.vence' | translate }}</label>
-          <input id="invoice-due-date" class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate')">
-          <small class="field-error" *ngIf="invalid('payment.dueDate')">{{ 'facturacionElectronica.manualInvoiceForm.indicaLaFechaLimiteDe' | translate }}</small>
+          <input id="invoice-due-date" class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate') || dueDateExpired">
+          <small class="field-error" *ngIf="invalid('payment.dueDate') && !dueDateExpired">{{ 'facturacionElectronica.manualInvoiceForm.indicaLaFechaLimiteDe' | translate }}</small>
+          <small class="field-error" role="alert" *ngIf="dueDateExpired">{{ 'facturacionElectronica.manualInvoiceForm.elVencimientoYaPaso' | translate }}</small>
         </div>
         <div>
           <span class="field-label">{{ 'facturacionElectronica.manualInvoiceForm.medioDePago' | translate }}</span>
@@ -69,6 +81,7 @@
               <i class="pi" [ngClass]="paymentIcons[method.code] || 'pi-wallet'"></i> {{ method.label }}
             </button>
           </div>
+          <small class="field-hint" *ngIf="recalledMethod && meansCode === recalledMethod"><i class="pi pi-history" aria-hidden="true"></i> {{ 'facturacionElectronica.manualInvoiceForm.medioDePagoRecordado' | translate }}</small>
           <small class="field-error" *ngIf="invalid('payment.meansCode')">{{ 'facturacionElectronica.manualInvoiceForm.eligeElMedioDePago' | translate }}</small>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { of, Subject, Subscription } from 'rxjs';
 import { catchError, debounceTime, switchMap } from 'rxjs/operators';
@@ -19,6 +19,8 @@ export class InvoiceConceptPickerComponent implements OnChanges, OnDestroy {
   @Input() companyId = '';
   @Input() disabled = false;
   @Input() index = 0;
+  /** D-623: avisa que la línea tomó el IVA de un concepto guardado (deja de ser «sugerido»). */
+  @Output() chosen = new EventEmitter<void>();
   results: InvoiceConcept[] = [];
   message = '';
   loading = false;
@@ -56,6 +58,7 @@ export class InvoiceConceptPickerComponent implements OnChanges, OnDestroy {
     if (!this.current() || this.saving || !this.results.includes(concept)) return;
     this.dismiss();
     this.item.patchValue({ description: concept.description, reference: concept.reference, unitPrice: concept.unitPrice, taxRate: concept.taxRate });
+    this.chosen.emit();
     this.message = 'Concepto cargado. Puedes cambiar el mes, valor e IVA para esta factura.';
   }
   dismiss(): void { this.version++; this.results = []; this.loading = false; }

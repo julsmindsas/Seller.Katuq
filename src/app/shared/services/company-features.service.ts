@@ -122,6 +122,35 @@ export const COMPANY_FEATURE_FLAGS = [
   'whatsappBotDirectOrder',
   'whatsappBotAttention',
   'whatsappBotFollowUp',
+  // Tablero de estado de «Configuración DIAN» para el comercio activo en producción (D-622, ticket
+  // 1491, fase 1): el asistente queda detrás de «Editar». Dueño: Daniel. Se retira el 2027-04-30.
+  'dianTableroEstado',
+  // Detalle ampliado del documento DIAN: totales, líneas, forma de pago y vencimiento (D-621,
+  // ticket 1489, fase 1). Dueño: Daniel. Se retira el 2027-04-30.
+  'dianDetalleAmpliado',
+  // Formulario de nueva factura mejorado (D-623 fase 1, ticket 1492): plazo a crédito en días, IVA
+  // sugerido, orden de compra del cliente y medio de pago recordado. Solo la factura libre.
+  // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada (Artículo XII).
+  'facturaFormularioMejorado',
+  // Compras, ciclo completo (D-626, tickets 1468, 1469 y 1470; fases A y B): Qué comprar con costo en la fila,
+  // proveedor principal, cantidad por unidad de compra, órdenes en borrador por proveedor, filtros, avisos,
+  // Excel y Qué producir. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
+  'comprasV2',
+  // Centro de ayuda, fase 1 (D-628, tickets 1441 a 1437): base de conocimiento, pantalla «Centro de ayuda» y
+  // su administración para Julsmind. Además existe el corte general `config/feature_flags.centroDeAyuda`.
+  // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
+  'centroDeAyuda',
+  // Mis Ideas maestro-detalle con estado propio de idea y «A mí también me sirve» (D-627, tickets 1442 y 1443).
+  'misIdeasV2',
+  // Estándar de foto de producto al subir: rechazo claro y avisos a 800 px (D-629, tickets 1426 y 1427).
+  'fotosEstandar',
+  // Panel ACCIONES del pedido de nueve (D-635 fase 1, ticket 1472): 4 del rol y 5 personales, «Frecuente» sobre 30
+  // días, pin en el panel y estado en la tarjeta. Delta de orderPinnedActions (D-547). Mismo nombre que el
+  // backend. Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
+  'panelAccionesV2',
+  // Landings por objetivo, fase 1 (D-633, tickets 1396 a 1399): bandeja «Leads landing», consentimiento de la
+  // Ley 1581 en el formulario de leads y /l/{slug}. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
+  'landingsV2',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

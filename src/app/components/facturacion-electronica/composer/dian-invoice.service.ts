@@ -28,6 +28,12 @@ export class DianInvoiceService extends BaseService {
       '/v1/accounting/dian/invoice-customers/' + encodeURIComponent(id) + query,
     ).pipe(timeout(45000), this.unwrap<InvoiceCustomer>());
   }
+  /** D-623 fase 1: medio de pago de la última factura libre aceptada del cliente (solo lectura). */
+  lastPaymentMethod(customerId: string) {
+    return this.get<{ success: boolean; data: { meansCode: string | null } }>(
+      '/v1/accounting/dian/invoice-customers/' + encodeURIComponent(customerId) + '/last-payment-method',
+    ).pipe(timeout(15000), this.unwrap<{ meansCode: string | null }>());
+  }
   drafts() {
     return this.get<{success: boolean; data: {items: InvoiceDraftSummary[]; limit: number}}>('/v1/accounting/dian/invoice-drafts')
       .pipe(timeout(45000), this.unwrap<{items: InvoiceDraftSummary[]; limit: number}>());

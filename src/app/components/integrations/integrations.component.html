@@ -93,9 +93,9 @@
 
             <div class="kx-plat__top">
               <span class="kx-plat__logo">
-                <img [src]="integration.logo" [alt]="integration.name"
+                <img *ngIf="logoDeCatalogo(integration)" [src]="logoDeCatalogo(integration)" [alt]="integration.name"
                      (error)="onImageError($event, integration)" style="display: block;">
-                <i class="fa fallback-icon" [ngClass]="getIntegrationIcon(integration.id)" style="display: none;"></i>
+                <i class="fallback-icon" [ngClass]="iconoDeRespaldo(integration)" [style.display]="logoDeCatalogo(integration) ? 'none' : 'flex'"></i>
               </span>
               <div class="kx-plat__id">
                 <h4>{{ integration.name }}</h4>
@@ -146,8 +146,8 @@
     <ng-container *ngIf="showOnlyForm">
       <div class="kx-elegida" *ngIf="plataformaElegida as plat">
         <span class="kx-elegida__logo">
-          <img [src]="plat.logo" [alt]="plat.name" (error)="onImageError($event, plat)" style="display: block;">
-          <i class="fa fallback-icon" [ngClass]="getIntegrationIcon(plat.id)" style="display: none;"></i>
+          <img *ngIf="logoDeCatalogo(plat)" [src]="logoDeCatalogo(plat)" [alt]="plat.name" (error)="onImageError($event, plat)" style="display: block;">
+          <i class="fallback-icon" [ngClass]="iconoDeRespaldo(plat)" [style.display]="logoDeCatalogo(plat) ? 'none' : 'flex'"></i>
         </span>
         <div class="kx-elegida__txt">
           <span class="kx-elegida__nom">
@@ -1885,7 +1885,87 @@
             <div><strong>{{ 'integrations.integrations.noPudimosCargarLaConfiguracion' | translate }}</strong><span>{{ dianLoadError }}</span></div>
             <button type="button" class="dk-btn dk-btn--danger-ghost" (click)="reloadDianConfiguration()">{{ 'integrations.integrations.volverACargar' | translate }}</button>
           </div>
-          <fieldset class="border-0 p-0 w-100" [disabled]="isSaving || isLoadingEdit || !!dianLoadError">
+          <!-- ===== D-622 (ticket 1491): tablero de estado; el asistente queda detrás de «Editar» ===== -->
+          <section class="dkt" *ngIf="dianTableroActivo && dianTablero as t" [attr.aria-label]="'integrations.integrations.tableroTitulo' | translate">
+            <header class="dkt-cabeza">
+              <span class="dk-wizard__icon"><i class="pi pi-verified"></i></span>
+              <div class="dkt-cabeza__texto">
+                <span class="dk-eyebrow">{{ 'integrations.integrations.katuqDianSoftwarePropio' | translate }}</span>
+                <h4>{{ 'integrations.integrations.tableroTitulo' | translate }}</h4>
+                <p>{{ 'integrations.integrations.tableroSub' | translate }}</p>
+              </div>
+              <div class="dkt-cabeza__acciones">
+                <button type="button" class="dk-btn dk-btn--ghost" *ngIf="dianDirectMode" (click)="exitDianSetup()"><i class="pi pi-arrow-left"></i> {{ 'integrations.integrations.volverAFacturacion' | translate }}</button>
+                <button type="button" class="dk-btn dk-btn--primary" (click)="editarDianDesdeTablero()"><i class="pi pi-pencil"></i> {{ 'integrations.integrations.tableroEditar' | translate }}</button>
+              </div>
+            </header>
+
+            <div class="dkt-aviso dkt-aviso--ok" role="status" *ngIf="!t.mayor && t.rango.nivel !== 'sin-dato' && t.resolucion.nivel !== 'sin-dato' && t.certificado.nivel !== 'sin-dato'">
+              <i class="pi pi-check-circle"></i><strong>{{ 'integrations.integrations.tableroTodoEnOrden' | translate }}</strong>
+            </div>
+            <div class="dkt-aviso dkt-aviso--{{ a.nivel }}" role="alert" *ngFor="let a of t.alertas">
+              <i class="pi" [ngClass]="tableroIcono(a.nivel)"></i>
+              <div><strong>{{ tableroNivelTexto(a.nivel) }}</strong><span>{{ tableroAlertaTexto(a) }}</span></div>
+            </div>
+
+            <div class="dkt-rejilla">
+              <article class="dkt-tarjeta">
+                <span class="dk-label">{{ 'integrations.integrations.tableroAmbiente' | translate }}</span>
+                <strong class="dkt-valor">{{ (t.ambiente === 'produccion' ? 'integrations.integrations.tableroProduccion' : 'integrations.integrations.tableroPruebas') | translate }}</strong>
+                <small class="dkt-nota">{{ 'integrations.integrations.tableroFacturasConEfectosFiscales' | translate }}</small>
+              </article>
+
+              <article class="dkt-tarjeta">
+                <span class="dk-label">{{ 'integrations.integrations.tableroResolucion' | translate }}</span>
+                <strong class="dkt-valor">{{ t.resolucion.numero || ('integrations.integrations.tableroSinDato' | translate) }}</strong>
+                <small class="dkt-nota">{{ 'integrations.integrations.tableroPrefijo' | translate }}: {{ t.resolucion.prefijo || ('integrations.integrations.tableroSinDato' | translate) }}</small>
+                <small class="dkt-nota" *ngIf="t.rango.total !== null">{{ 'integrations.integrations.tableroRangoAutorizado' | translate }}: {{ t.resolucion.desde }} – {{ t.resolucion.hasta }}</small>
+                <small class="dkt-nota" *ngIf="t.rango.total === null">{{ 'integrations.integrations.tableroRangoAutorizado' | translate }}: {{ 'integrations.integrations.tableroSinDato' | translate }}</small>
+              </article>
+
+              <article class="dkt-tarjeta">
+                <span class="dk-label">{{ 'integrations.integrations.tableroVigencia' | translate }}</span>
+                <strong class="dkt-valor">{{ t.resolucion.vigenteHasta ? (t.resolucion.vigenteHasta | date:'dd/MM/yyyy') : ('integrations.integrations.tableroSinDato' | translate) }}</strong>
+                <small class="dkt-nota" *ngIf="t.resolucion.vigenteDesde">{{ 'integrations.integrations.tableroDesde' | translate }} {{ t.resolucion.vigenteDesde | date:'dd/MM/yyyy' }}</small>
+                <span class="dkt-estado dkt-estado--{{ t.resolucion.nivel }}"><i class="pi" [ngClass]="tableroIcono(t.resolucion.nivel)"></i>{{ t.resolucion.nivel === 'sin-dato' ? tableroNivelTexto('sin-dato') : tableroDiasTexto(t.resolucion.dias) }}</span>
+              </article>
+
+              <article class="dkt-tarjeta">
+                <span class="dk-label">{{ 'integrations.integrations.tableroCertificado' | translate }}</span>
+                <strong class="dkt-valor">{{ t.certificado.venceEl ? (t.certificado.venceEl | date:'dd/MM/yyyy') : ('integrations.integrations.tableroSinDato' | translate) }}</strong>
+                <small class="dkt-nota" *ngIf="t.certificado.venceEl">{{ 'integrations.integrations.tableroVencimientoDelCertificado' | translate }}</small>
+                <small class="dkt-nota" *ngIf="!t.certificado.venceEl">{{ 'integrations.integrations.tableroCertificadoSinFecha' | translate }}</small>
+                <span class="dkt-estado dkt-estado--{{ t.certificado.nivel }}"><i class="pi" [ngClass]="tableroIcono(t.certificado.nivel)"></i>{{ t.certificado.nivel === 'sin-dato' ? tableroNivelTexto('sin-dato') : tableroDiasTexto(t.certificado.dias) }}</span>
+              </article>
+            </div>
+
+            <article class="dkt-tarjeta dkt-tarjeta--ancha">
+              <div class="dkt-fila">
+                <span class="dk-label">{{ 'integrations.integrations.tableroConsecutivos' | translate }}</span>
+                <span class="dkt-estado dkt-estado--{{ t.rango.nivel }}"><i class="pi" [ngClass]="tableroIcono(t.rango.nivel)"></i>{{ tableroNivelTexto(t.rango.nivel) }}</span>
+              </div>
+              <ng-container *ngIf="t.rango.total !== null; else rangoSinDato">
+                <div class="dkt-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="t.rango.pctMostrado"
+                     [attr.aria-label]="'integrations.integrations.tableroConsecutivos' | translate">
+                  <span class="dkt-barra__relleno dkt-barra__relleno--{{ t.rango.nivel }}" [style.width.%]="t.rango.pctMostrado"></span>
+                </div>
+                <dl class="dkt-cifras">
+                  <div><dt>{{ 'integrations.integrations.tableroUsados' | translate }}</dt><dd>{{ t.rango.usados | number:'1.0-0' }}</dd></div>
+                  <div><dt>{{ 'integrations.integrations.tableroRestantes' | translate }}</dt><dd>{{ t.rango.restantes | number:'1.0-0' }}</dd></div>
+                  <div><dt>{{ 'integrations.integrations.tableroPorcentajeUsado' | translate }}</dt><dd>{{ t.rango.pctMostrado }} %</dd></div>
+                  <div><dt>{{ 'integrations.integrations.tableroProximo' | translate }}</dt><dd>{{ t.rango.siguiente }}</dd></div>
+                </dl>
+              </ng-container>
+              <ng-template #rangoSinDato>
+                <strong class="dkt-valor">{{ 'integrations.integrations.tableroSinDato' | translate }}</strong>
+                <small class="dkt-nota">{{ 'integrations.integrations.tableroRangoSinDato' | translate }}</small>
+              </ng-template>
+            </article>
+
+            <p class="dk-safety"><i class="pi pi-lock"></i> {{ 'integrations.integrations.tableroSoloLectura' | translate }}</p>
+          </section>
+
+          <fieldset class="border-0 p-0 w-100" *ngIf="!dianOcultaAsistente" [disabled]="isSaving || isLoadingEdit || !!dianLoadError">
 
           <!-- Cabecera del asistente + riel de pasos -->
           <section class="dk-wizard" [attr.aria-label]="'integrations.integrations.asistenteDeConfiguracionDian' | translate">
@@ -1896,8 +1976,9 @@
                 <h4>{{ 'integrations.integrations.preparemosTuFacturacionElectronica' | translate }}</h4>
                 <p>{{ 'integrations.integrations.teAcompanamosPasoAPaso' | translate }}</p>
               </div>
+              <button type="button" class="dk-btn dk-btn--ghost dkt-volver" *ngIf="dianPuedeVolverAlTablero" (click)="volverAlTableroDian()"><i class="pi pi-arrow-left"></i> {{ 'integrations.integrations.tableroVolver' | translate }}</button>
             </div>
-            <ol class="dk-rail">
+            <ol class="dk-rail" [class.dk-rail--completo]="dianArreglosVisuales">
               <li *ngFor="let step of dianSteps; let last = last" [class.is-active]="dianStep === step.number" [class.is-done]="dianStep > step.number">
                 <button type="button" (click)="goToDianStep(step.number)" [disabled]="step.number > dianStep + 1" [attr.aria-current]="dianStep === step.number ? 'step' : null">
                   <span class="dk-rail__dot"><i class="pi pi-check" *ngIf="dianStep > step.number; else stepNumber"></i><ng-template #stepNumber>{{ step.number }}</ng-template></span>
@@ -3174,7 +3255,7 @@
         </div>
 
         <!-- Form Actions -->
-        <div class="kx-pie kx-pie--form">
+        <div class="kx-pie kx-pie--form" *ngIf="!dianTableroActivo">
           <span class="kx-pie__hint">
             <ng-container *ngIf="selectedIntegrationType === 'dian'">{{ 'integrations.integrations.tusDatosSeGuardanCifrados2' | translate }}</ng-container>
             <ng-container *ngIf="selectedIntegrationType !== 'dian' && !cuotasSinProbar">{{ pruebaConexion === 'ok' ? ('integrations.integrations.probadaListaParaGuardar' | translate) : ('integrations.integrations.tusDatosSeGuardanCifrados' | translate) }}</ng-container>

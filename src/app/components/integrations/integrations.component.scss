@@ -69,6 +69,8 @@
     li.is-done .dk-rail__dot { background: var(--kc-green); color: var(--ds-on-accent); }
     li.is-done .dk-rail__bar { background: var(--kc-green); }
   }
+  // D-622 (ticket 1491): solo con la bandera `dianTableroEstado` (clase en el riel) los títulos de los pasos se leen completos.
+  .dk-rail--completo .dk-rail__copy { strong, small { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; } }
   .dk-safety { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 0 4px; font-size: 12px; font-weight: 600; color: #9aa0b2; i { flex-shrink: 0; margin-top: 2px; color: #b7bccb; } }
 
   // alertas
@@ -1720,4 +1722,80 @@ form[formGroup] {
   // Estado de prueba/producción (badge Bootstrap) en par semántico.
   .badge.bg-success { background: $cfg-ok-soft !important; color: $cfg-ok !important; }
   .badge.bg-warning { background: $cfg-warn-soft !important; color: $cfg-warn !important; }
+}
+
+// ============================================================
+// D-622 (ticket 1491): tablero de estado de Configuración DIAN.
+// Plano, tarjetas blancas, acento #5F3FE0, semánticos par fuerte / fondo suave. Sin degradados.
+// Ningún nombre de clase lleva "p-" (el CSS global fuerza su tamaño de letra) y todo span lleva
+// color y tamaño propios (span.ng-star-inserted pinta de azul).
+// ============================================================
+.dk .dkt { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.dk .dkt-cabeza {
+  @include kc-card; border-radius: 18px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  h4 { margin: 0; font-family: var(--kc-font-head); font-weight: 800; font-size: 19px !important; line-height: 1.1; color: var(--kc-ink); }
+  p { margin: 3px 0 0; font-size: 12.5px; font-weight: 600; color: var(--kc-muted); letter-spacing: normal; }
+}
+.dk .dkt-cabeza__texto { flex: 1 1 220px; min-width: 0; }
+.dk .dkt-cabeza__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.dk .dkt-volver { margin-left: auto; }
+
+.dk .dkt-aviso {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid; border-radius: 12px;
+  > i { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  > div { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  strong { font-size: 13.5px; font-weight: 800; color: inherit; }
+  span { font-size: 12.5px; font-weight: 600; line-height: 1.4; color: var(--kc-ink2); }
+  &--ok { color: var(--kc-green); border-color: #d8f0e3; background: var(--kc-green-wash); align-items: center; }
+  &--aviso { color: #a15c00; border-color: #f8ebd4; background: var(--kc-orange-wash); }
+  &--alerta { color: #a15c00; border-color: #f2d7a8; background: var(--kc-orange-wash); }
+  &--critico { color: #c0392f; border-color: #f6d4d2; background: var(--kc-red-wash); }
+  &--bloqueante { color: #c0392f; border-color: #eab5b1; background: var(--kc-red-wash); }
+}
+
+.dk .dkt-rejilla { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dk .dkt-tarjeta {
+  @include kc-card; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  .dk-label { margin: 0; }
+  &--ancha { gap: 10px; }
+}
+.dk .dkt-valor { font-family: var(--kc-font-head); font-weight: 800; font-size: 18px; line-height: 1.2; color: var(--kc-ink); overflow-wrap: anywhere; }
+.dk .dkt-nota { font-size: 12px; font-weight: 600; color: var(--kc-muted); line-height: 1.4; letter-spacing: normal; overflow-wrap: anywhere; }
+.dk .dkt-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; .dk-label { margin: 0; } }
+
+// Estado en texto, ícono y color (nunca solo color).
+.dk .dkt-estado {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 800; line-height: 1.3; color: var(--kc-ink2); background: #f1f2f5;
+  i { font-size: 12px; }
+  &--ok { color: var(--kc-green); background: var(--kc-green-wash); }
+  &--aviso, &--alerta { color: #a15c00; background: var(--kc-orange-wash); }
+  &--critico, &--bloqueante { color: #c0392f; background: var(--kc-red-wash); }
+  &--sin-dato { color: var(--kc-ink2); background: #f1f2f5; }
+}
+
+.dk .dkt-barra { height: 10px; border-radius: 999px; background: var(--kc-line); overflow: hidden; }
+.dk .dkt-barra__relleno {
+  display: block; height: 100%; min-width: 2px; border-radius: 999px; background: var(--kc-accent);
+  &--ok { background: var(--kc-accent); }
+  &--aviso, &--alerta { background: var(--kc-orange); }
+  &--critico, &--bloqueante { background: var(--kc-red); }
+}
+.dk .dkt-cifras {
+  margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+  div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  dt { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--kc-muted); }
+  dd { margin: 0; font-family: var(--kc-font-head); font-weight: 800; font-size: 17px; color: var(--kc-ink); overflow-wrap: anywhere; }
+}
+.dk .dkt button:focus-visible, .dk .dkt-volver:focus-visible { outline: 3px solid #7C5CFF !important; }
+
+@media (max-width: 991px) {
+  .dk .dkt-rejilla { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575px) {
+  .dk .dkt-rejilla { grid-template-columns: minmax(0, 1fr); }
+  .dk .dkt-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dk .dkt-cabeza__acciones { width: 100%; > button { flex: 1 1 auto; } }
+  .dk .dkt-volver { margin-left: 0; }
 }

@@ -596,6 +596,8 @@
                                                         <app-order-pinned-actions *ngIf="bloquePersonalizado"
                                                                 [acciones]="accionesDelBloque" [estados]="estadosDelBloque(pedidoDetalle)"
                                                                 [pedido]="pedidoDetalle" [resaltada]="resaltadaDe(pedidoDetalle)"
+                                                                [panelV2]="panelV2" [frecuentes]="accionesFrecuentes" [delRol]="accionesDelRolPedido" [pines]="pinesDelUsuario"
+                                                                (fijar)="fijarAccionDelModal($event)"
                                                                 (accion)="ejecutarAccionPedido($event, pedidoDetalle)"
                                                                 (restablecer)="restablecerAccionesBloque()"></app-order-pinned-actions>
                                                         <div class="pedido-actions" *ngIf="!bloquePersonalizado">
@@ -2213,7 +2215,7 @@
     [pedido]="selectedOrder"
     [estados]="estadosAccionesDe(selectedOrder)"
     [desdeProduccion]="isFromProduction"
-    [pinesActivos]="bloquePersonalizado" [delRol]="accionesDelRolPedido" [pines]="pinesDelUsuario"
+    [pinesActivos]="bloquePersonalizado" [panelV2]="panelV2" [delRol]="accionesDelRolPedido" [pines]="pinesDelUsuario"
     [resaltada]="resaltadaDelModal"
     (accion)="ejecutarAccionPedido($event, selectedOrder)"
     (fijar)="fijarAccionDelModal($event)"

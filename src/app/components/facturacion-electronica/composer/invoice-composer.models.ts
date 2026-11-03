@@ -25,6 +25,15 @@ export interface ManualInvoice {
 }
 
 export const MAX_INVOICE_OBSERVATIONS_LENGTH = 1000;
+/**
+ * D-623 fase 1: la orden de compra del cliente viaja como la primera línea de las observaciones. Como las
+ * observaciones, queda en el documento DIAN (el XML las escribe en `cbc:Note` y el PDF las imprime), así que el
+ * comprador la ve. Lo que NO hay es un elemento propio (`OrderReference`): no cambia la estructura del XML.
+ */
+export const MAX_PURCHASE_ORDER_LENGTH = 50;
+export const PURCHASE_ORDER_PREFIX = 'Orden de compra: ';
+export const CREDIT_TERM_OPTIONS = [30, 60, 90];
+export const MAX_CREDIT_DAYS = 365;
 export type InvoiceSelection = ({ source: 'manual'; invoice: ManualInvoice } | { source: 'order'; orderId: string }) & {
   observations?: string;
 };
@@ -64,6 +73,8 @@ export interface InvoiceRequest {
   message?: string;
   selection?: InvoiceSelection;
   version?: number;
+  /** Ticket 1480: facturas aceptadas recientes del mismo cliente y valor (solo aviso). */
+  posiblesDuplicados?: { number: string; issueDate: string | null; amount: number }[];
 }
 
 export interface InvoiceDraftSummary {
@@ -94,4 +105,50 @@ export function invoiceTotals(items: ManualInvoiceItem[]): { subtotal: number; t
     tax += round(base * (Number(item.taxRate) || 0) / 100);
   }
   return { subtotal: round(subtotal), tax: round(tax), total: round(subtotal + tax), discount: round(discount) };
+}
+
+/** Fecha de hoy en Colombia (UTC-5) como 'AAAA-MM-DD'; mismo criterio del servidor para «de hoy en adelante». */
+export function todayInColombia(now: number = Date.now()): string {
+  return new Date(now - 5 * 3600000).toISOString().slice(0, 10);
+}
+
+const DAY_MS = 86400000;
+const isoDay = (date: string): number => Date.parse(date + 'T00:00:00Z');
+
+/** Vencimiento = hoy en Colombia + `days` días. Devuelve '' si los días no son un entero de 1 a 365. */
+export function dueDateFromDays(days: unknown, now: number = Date.now()): string {
+  const value = typeof days === 'string' && days.trim() !== '' ? Number(days) : days;
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > MAX_CREDIT_DAYS) return '';
+  return new Date(isoDay(todayInColombia(now)) + value * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** Días entre hoy (Colombia) y el vencimiento; null si la fecha no es válida o ya pasó. */
+export function daysUntilDue(dueDate: string | null | undefined, now: number = Date.now()): number | null {
+  if (!dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return null;
+  const diff = Math.round((isoDay(dueDate) - isoDay(todayInColombia(now))) / DAY_MS);
+  return Number.isFinite(diff) && diff >= 0 ? diff : null;
+}
+
+/** '' si la orden de compra es válida (vacía, hasta 50 caracteres, una sola línea y sin controles). */
+export function purchaseOrderProblem(value: string | null | undefined): '' | 'length' | 'chars' {
+  const text = String(value ?? '').trim();
+  if (text.length > MAX_PURCHASE_ORDER_LENGTH) return 'length';
+  // Una sola línea y texto admitido por XML 1.0, igual que las observaciones.
+  return /[\u0000-\u001F\u007F]|[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(text) ? 'chars' : '';
+}
+
+/** Observaciones que viajan al servidor y al documento DIAN (nota del XML y PDF): «Orden de compra: X» arriba y el texto del comercio debajo. */
+export function composeObservations(purchaseOrder: string | null | undefined, observations: string): string {
+  const order = String(purchaseOrder ?? '').trim();
+  const text = observations.trim();
+  if (!order) return text;
+  return PURCHASE_ORDER_PREFIX + order + (text ? '\n' + text : '');
+}
+
+/** Inverso de `composeObservations`: separa la primera línea «Orden de compra: X» del resto. */
+export function splitObservations(composed: string | null | undefined): { purchaseOrder: string; observations: string } {
+  const text = String(composed ?? '');
+  const match = /^Orden de compra: ([^\n]{1,50})(?:\n([\s\S]*))?$/.exec(text);
+  if (!match || purchaseOrderProblem(match[1])) return { purchaseOrder: '', observations: text };
+  return { purchaseOrder: match[1].trim(), observations: match[2] ?? '' };
 }

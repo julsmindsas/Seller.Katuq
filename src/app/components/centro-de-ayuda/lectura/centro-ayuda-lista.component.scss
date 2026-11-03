@@ -1,0 +1,7 @@
+// Lista del Centro de ayuda (D-628). Base config-pagina (D-400) + piezas del módulo; plano, sin
+// gradientes; ningún nombre de clase contiene "p-".
+@import '../../../shared/styles/config-pagina';
+@import '../centro-ayuda';
+
+@include config-pagina;
+@include ayuda-piezas;

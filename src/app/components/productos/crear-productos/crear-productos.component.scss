@@ -1041,6 +1041,15 @@ td {
   .fu-aviso-subida-texto { flex: 1 1 auto; color: var(--ds-info); font-size: 12.5px; line-height: 1.45; letter-spacing: normal; }
 }
 
+// D-629: una línea por foto y aviso, con color y tamaño propios (span creado por *ngFor).
+.fu-aviso-subida-linea {
+  display: block;
+  color: var(--ds-info);
+  font-size: 12.5px;
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+
 .fu-aviso-subida-cerrar {
   border: 0;
   background: transparent;

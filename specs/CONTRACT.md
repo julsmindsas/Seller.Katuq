@@ -13003,6 +13003,95 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Revisar el pedido DAD-014498 de ALMARA.
   - Los pendientes de operación y seguridad están en el `CLAUDE.md` del backend (repositorio privado).
 
+### 2026-11-03 — D-620 a D-625: propuestas OpenSpec de las épicas de Facturación ALMARA y OH MY STORE (aws-claude-2)
+- **Estado:** las seis en borrador, pendientes de aprobación de Daniel. No se implementa nada hasta aprobar proposal, spec, plan y tasks, y en módulos sensibles hasta que Daniel apruebe el diff.
+- **D-620** `openspec/changes/fe-retenciones-e-iva/` (ticket 1483): IVA por tarifa y retenciones por factura con neto a pagar. Hoy el UBL no tiene `WithholdingTaxTotal`. El IVA $0 de octubre sale de las líneas al 0 %: lo confirma el contador. Es parte de FE-08.
+- **D-621** `openspec/changes/fe-detalle-del-documento/` (ticket 1489): el detalle muestra totales (ya llegan en `totals`), líneas (endpoint `/lineas` del ticket 1279), pago y vencimiento. Abonos y mora solo se leen de Cartera, coordinado con aws-claude-1.
+- **D-622** `openspec/changes/fe-tablero-de-estado-dian/` (ticket 1491): con el comercio activo en producción, Configuración DIAN abre un tablero (resolución, rango, consecutivos, vigencia y certificado) en vez del paso 1. La causa: `openDianFromDirectRoute` fija `dianStep = 1` sin mirar el estado. Las alertas reutilizan los umbrales de D-448.
+- **D-623** `openspec/changes/fe-formulario-nueva-factura/` (ticket 1492): plazo en días a crédito, IVA sugerido, orden de compra y medio de pago recordado.
+  - **Riesgo:** `invoicePayment.js` emite facturas de pedido a crédito sin `dueDate` y, por lo tanto, sin `PaymentDueDate`. La guardia va primero, como un cambio aparte.
+- **D-624** `openspec/changes/pedido-despacho-rapido/` (ticket 1473, OH MY STORE): «Despacho rápido» en el pedido, reutilizando los endpoints de Logística para crear y despachar la orden de envío. Sin endpoint nuevo y sin tocar inventario.
+- **D-625** `openspec/changes/facturar-desde-pendiente/` (ticket 1474, OH MY STORE): permitir facturar con el pago en Pendiente. La regla de «Aprobado o Preaprobado» está solo en el front (`list.component.ts:1443`). Pasar el pedido a Preaprobado afecta inventario e `is_paid` hacia Cereza y Shopify: quedan 8 preguntas para Daniel.
+- **Bitácora del día (aws-claude-2, rama `feature/tickets-aws-claude-2`, sin desplegar):** resueltos 1480, 1485, 1486, 1487, 1488, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1501, 1503 y 1436. El 1490 queda con una pregunta al comercio. El detalle está en las notas internas de cada ticket.
+
+### 2026-11-03 — D-626 a D-630: propuestas OpenSpec de las ideas de prioridad 3 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel. Varias piden aprobar colecciones o endpoints nuevos.
+- **D-626** `openspec/changes/compras-ciclo-completo/` (tickets 1468, 1469 y 1470): una sola regla de costos y la relación producto-proveedor (colección nueva por aprobar). Fases: A costo en línea y proveedor, B cantidades y órdenes por proveedor, C ciclo de la orden, D factura y cuentas por pagar, E indicadores.
+  - **Riesgo hoy:** `recibir()` del front hace dos llamadas sin atomicidad (inventario y después la orden): si la segunda falla y se reintenta, el inventario puede entrar dos veces. La fase C lo pasa a una sola operación del backend, con idempotencia y bajo D-134.
+  - **Acuerdo con aws-claude-1:** Compras es dueña del saldo por pagar y Tesorería solo lo lee, sin tocar `listPayments`, `getMetrics` ni la cola de revisión.
+- **D-627** `openspec/changes/mis-ideas-estados-y-rediseno/` (tickets 1442 y 1443): campo `ideaEstado` con seis estados, proyectado a `status` para que el tablero de Support no cambie. Migración con dry-run. Rediseño maestro-detalle como Mis Tickets. El «me sirve» necesita endpoint propio.
+- **D-628** `openspec/changes/centro-de-ayuda/` (tickets 1437 a 1441): base de conocimiento global (colecciones nuevas por aprobar), herramienta MCP `search_help_center` para Opttia, sitio público sin datos de comercios y «Qué hay de nuevo» sobre las notas de D-567.
+- **D-629** `openspec/changes/imagenes-de-producto/` (tickets 1426 y 1427): estándar de foto, WebP con la tubería de `siteImagenes` y migración por lotes con dry-run, sin borrar originales ni escribir en Shopify. Propone dividir el 1427.
+- **D-630** `openspec/changes/kcat-catalogos/` (tickets 1389 a 1395): paraguas de las 7 épicas en el orden de Jairo. El mayor riesgo es duplicar la tienda (sitios). E1.7/E1.8 (escribir el maestro de productos) y E7.3/E1.12 (reservar stock) quedan fuera, con propuesta propia.
+- **Bitácora (aws-claude-2):**
+  - Avances parciales en 1443 (bcac8677), 1470 (e5719c03 y 91776a5e) y 1469 (e1fff70c).
+  - 1300 (lentitud): se recopiló el trabajo de rendimiento y se le preguntó a Daniel si se cierra.
+  - Los FE pendientes esperan aprobar las fases 2 a 5 de D-499.
+  - Reportes: D-551 tiene tareas abiertas.
+  - WP-INT está asignado a Mónica.
+
+### 2026-11-03 — D-631 a D-635: propuestas del lote que pasó aws-claude-1 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel.
+- **D-631** `openspec/changes/conv-omnicanal/` (CONV, tickets 1298 y 1301-1313): paraguas de conversaciones omnicanal.
+  - Mucho ya existe: el dominio de mensajería D-437 y los buzones.
+  - Fases: A+B, C→D, E, G (piloto de Vidagas), F+H, y J cierra. I ya estaba resuelto (D-509).
+  - Quedan 10 preguntas.
+  - Riesgo de código: `whatsappWebhook.js` acepta sin firma si falta `KAPSO_WEBHOOK_SECRET`. En producción está definido, y la corrección va aparte.
+- **D-632** `openspec/changes/kcom-comunicaciones/` (KCOM-E1 a E5, tickets 1400-1404): se cruza con CONV.
+  - Propone un solo plan: KCOM aporta E3 (vender desde el chat), E4 (TikTok) y E5 (seguridad).
+  - No crear `channelAccounts`, porque duplicaría `messaging_lines`.
+  - El borrador de respuestas a TikTok declara Firestore y GCP: hay que corregirlo por D-579.
+- **D-633** `openspec/changes/klan-landings/` (KLAN-E1 a E4, tickets 1396-1399): buena parte ya existe (sitios landing, atribución, CAPI, Consent Mode, JSON-LD, sitemap, `llms.txt`).
+  - Faltan: L1/L3/L6 como secuencias, `/l/{slug}`, bandeja de leads, consentimiento y A/B.
+  - **Riesgo:** los tokens de CAPI se guardan en texto plano en el documento del sitio (`siteBlocks.js:1620-1632`). Cifrarlos va primero en la E2. Por la decisión de Daniel del 3-nov («no rotar nada»), queda solo como nota.
+- **D-634** `openspec/changes/sesiones-y-tiempo-conectado/` (#1506): hoy el servidor no guarda sesiones (JWT de 24 h sin `sid`, solo `ultimoIngreso`).
+  - Fase 1: `sid` en el JWT, la colección `userSessions` (por aprobar) y un latido cada 5 minutos.
+  - `isAuth` y el interceptor no cambian.
+  - «Cerrar otras sesiones» va en una fase con spec propia.
+- **D-635** `openspec/changes/panel-acciones-pedido/` (ticket 1472): delta sobre D-547.
+  - Casi todo está cubierto, y el error al fijar tiene arreglo (3b4f1627 y 38c89c71, por confirmar en producción).
+  - Lo nuevo: 9 acciones, «Frecuente» a 30 días y el orden fijo. Se trabaja un cambio a la vez, coordinado con aws-claude-1.
+
+### 2026-11-03 — Fases 1 implementadas detrás de banderas apagadas (aws-claude-2)
+- **Autorización:** Daniel escogió «Solo lo seguro»: dar por aprobadas las propuestas que no tocan módulos sensibles e implementar su fase 1 hoy, con bandera por empresa apagada (D-505).
+- **Implementado** en la rama `feature/tickets-aws-claude-2`, front y backend, sin desplegar:
+  - D-623 `facturaFormularioMejorado`: plazo a crédito en días, IVA sugerido, orden de compra en observaciones y último medio de pago del cliente. Ticket 1492.
+  - D-622 `dianTableroEstado`: tablero de estado DIAN con alertas en los umbrales de D-448. Ticket 1491.
+  - D-621 `dianDetalleAmpliado`: totales, IVA por tarifa, pago y vencimiento en el detalle; `/lineas` crece de forma aditiva. Ticket 1489.
+  - D-626 `comprasV2`, fases A y B: colección `productoProveedores`, regla única de costos, borradores por proveedor y «Qué producir». Tickets 1468, 1469 y 1470.
+  - D-627 `misIdeasV2`: `ideaEstado` proyectado a `status`, apoyo «A mí también me sirve» y migración con dry-run sin correr. Tickets 1442 y 1443.
+  - D-629 `fotosEstandar`: avisos y rechazo al subir fotos de producto. Tickets 1426 y 1427.
+  - D-628 `centroDeAyuda`: colecciones `helpArticles` y `helpArticleVersions`, administración de Julsmind y MCP `search_help_center`. Tickets 1437 a 1441.
+  - D-635 `panelAccionesV2`: 9 acciones, «Frecuente» a 30 días y pin desde el panel. Ticket 1472.
+  - D-633 `landingsV2`: bandeja de leads, consentimiento de la Ley 1581 y alias `/l/{slug}`. Tickets 1396-1399.
+- **Sin implementar,** esperando que Daniel revise el diseño:
+  - D-620 (XML de la DIAN);
+  - fase C de D-626 (recepción de inventario);
+  - D-634 (auth);
+  - D-625 y D-624 (estado y despacho del pedido);
+  - CONV, KCOM y KCAT.
+- **Notas de versión (D-567):** no se agregaron, porque se publicarían con la bandera apagada. Van cuando se encienda cada una.
+- **Ticket 1320:** reglas de Firestore cerradas en `seguridad/firebase/` del backend, sin publicar; 17/17 en el emulador.
+
+### 2026-11-03 — Decisiones de Daniel sobre la revisión de las fases 1 (aws-claude-2)
+- **Daniel aprobó** («si aprobado») las cuatro decisiones de la revisión adversaria de las fases 1:
+  1. **D-623:** con `facturaFormularioMejorado` encendida, la orden de compra del cliente queda escrita como `cbc:Note` en el XML firmado y en el PDF. Es lo esperado.
+  2. **D-633:** con `landingsV2` encendida, si llega un lead sin la casilla de autorización desde una página vieja en caché, se responde 409 `PAGINA_DESACTUALIZADA` y se pide recargar. Nunca se guarda un lead sin autorización (Ley 1581).
+  3. **Índices:** los cuatro sugeridos, más uno de la revisión, quedan en `firestore.indexes.json` del backend:
+     - `dian_invoice_requests` (companyId, status, selection.invoice.customerId, selection.source, updatedAt desc);
+     - `ordenes_compra` (company, estado, idBodega);
+     - `ordenes_compra` (company, estado, createdAt desc);
+     - `prospects` (company, fuente, date_add desc);
+     - `prospects` (company, fuente, status, date_add desc): la bandeja filtrada por estado y sus conteos.
+     
+     `scripts/migracion-postgres/indices-fsdb.js` los traduce a SQL. Se crean en `katuq-db` con `CREATE INDEX CONCURRENTLY` cuando Daniel lo diga, antes de encender las banderas. Ninguna sesión los aplica.
+  4. **Pendientes corregidos en el backend:**
+     - **Compras V2, sin cambio:** quitar solo `opcionesProveedor[].costoCompra` no protege nada. La fila sigue trayendo `costoUnitario` y `resumen.valorEstimado`, y V1 siempre los mostró. Además, el borrador saldría con el costo del proveedor principal. Ocultarle los costos a quien no tiene permiso, en toda la pantalla, queda como decisión de producto de Daniel.
+     - **D-621:** al aceptar una factura, el documento de `dian_documents` guarda `payment` (forma, medio y vencimiento, igual al XML). El detalle usa ese pago primero, aunque el pedido haya cambiado o no se pueda reconstruir. Las facturas anteriores siguen en «No disponible».
+     - El campo nuevo de la auditoría y el `payment` que devuelve `buildInvoiceXML` son aditivos: el XML no cambia.
+     - Este es el único cambio en el camino de emisión, así que Daniel revisa su diff antes de publicar.
+
+
 ### 2026-11-03 — D-580: «En vivo» cuenta en la calle solo lo que salió hoy
 - **Pedido de Daniel (3-nov):** "validar las métricas de En vivo... hay unas métricas exageradas, disque 92 horas".
 - **Qué pasaba (ALMARA FELICIDAD, 3-nov, 10 a. m.):**

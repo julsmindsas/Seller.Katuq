@@ -9,6 +9,7 @@ import { FacturacionIntegracionService, ResumenFacturacion } from '../../shared/
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
+import { diasEntre, hoyColombia } from '../integrations/dian-tablero-estado';
 
 import { TranslateService } from '@ngx-translate/core';
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
@@ -24,6 +25,8 @@ interface DianDocument {
   cufe?: string;
   cude?: string;
   issueDate?: string;
+  /** Ticket 1485: HH:MM:SS-05:00, la misma del XML. */
+  issueTime?: string;
   amount?: number;
   orderId?: string;
   environment?: string;
@@ -49,12 +52,27 @@ interface DianDocument {
   reemplazadaEn?: string;
   /** Ticket 1279: saldo de la factura después de sus notas aceptadas (calculado en el servidor). */
   saldo?: { total: number; notasCredito: number; notasDebito: number; notas: number; saldo: number };
+  /** Totales guardados al emitir (D-621, ticket 1489): base, IVA, descuento, envío y total. */
+  totals?: { lineExtension?: number; taxExclusive?: number; taxTotal?: number; allowanceTotal?: number; chargeTotal?: number; payable?: number } | null;
+}
+
+/** D-621 (ticket 1489): lo que `GET /dian/documents/:n/lineas` suma para el panel de detalle. */
+interface DetalleAmpliado {
+  numero: string;
+  estado: 'cargando' | 'ok' | 'error';
+  lineas: LineaFactura[];
+  /** false: no se muestran conceptos (el pedido cambió o la factura no se puede reconstruir). */
+  cuadra: boolean;
+  /** Por qué no hay conceptos: el pedido cambió después de facturar, o no se puede reconstruir (no se arregla reintentando). */
+  motivo: 'pedido-cambio' | 'no-reconstruible' | null;
+  impuestos: { tarifa: number; base: number; iva: number }[];
+  pago: { disponible: boolean; forma: 'contado' | 'credito' | null; medioCodigo: string | null; vencimiento: string | null } | null;
 }
 
 /** Ticket 1279: línea de la factura para la nota por línea. */
 interface LineaFactura { linea: number; descripcion: string; cantidad: number; valorUnitario: number; valorLinea: number; tarifaIva: number }
 
-interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
+interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error'; completarCorreo?: boolean }
 
 const AVATAR_PALETTE = ['#6C4CE0', '#14B8A6', '#E0891B', '#2F6FE0', '#C43E74', '#17994F', '#7A6BC0', '#D6455B'];
 
@@ -416,6 +434,20 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return (v > 0 ? '▲ ' : v < 0 ? '▼ ' : '') + Math.abs(v).toLocaleString('es-CO', { maximumFractionDigits: 1 }) + '%';
   }
 
+  /** Ticket 1501: la diferencia en pesos frente al período anterior, con signo. */
+  diferenciaFe(campo: string): string {
+    const i: any = this.indicadoresFe;
+    const actual = Number(i?.[campo]); const previo = Number(i?.anterior?.[campo]);
+    if (!i?.anterior || !Number.isFinite(actual) || !Number.isFinite(previo) || actual === previo) return '';
+    return (actual > previo ? '+' : '−') + this.money(Math.abs(actual - previo));
+  }
+
+  /** Ticket 1494: 'AAAA-MM-DD' → 'DD/MM/AAAA' sin pasar por zona horaria. */
+  fechaCorta(fecha: string | null | undefined): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : (fecha || '');
+  }
+
   claseVariacionFe(campo: string, bajarEsBueno = false): string {
     const v = this.indicadoresFe && this.indicadoresFe.variacion && this.indicadoresFe.variacion[campo];
     if (!v) return '';
@@ -427,15 +459,108 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   abrirDetalle(document: DianDocument): void {
     this.openMenu = '';
     this.detalle = document;
+    this.detalleExtra = null;
+    this.cargarDetalleAmpliado(document);
   }
 
   cerrarDetalle(): void {
     this.detalle = null;
+    this.detalleExtra = null;
   }
 
   @HostListener('document:keydown.escape')
   cerrarDetalleConEscape(): void {
-    if (this.detalle) this.detalle = null;
+    if (this.detalle) this.cerrarDetalle();
+  }
+
+  // ---- D-621 (ticket 1489): detalle ampliado, solo con la bandera `dianDetalleAmpliado` ----
+
+  /** Estado de la lectura de conceptos, pago y vencimiento del documento abierto. */
+  detalleExtra: DetalleAmpliado | null = null;
+
+  /** ¿Está encendida la bandera? Apagada, el panel queda exactamente como antes. */
+  get detalleAmpliadoActivo(): boolean {
+    return this.features.isEnabled('dianDetalleAmpliado');
+  }
+
+  /** Solo las facturas aceptadas tienen conceptos; las demás muestran únicamente sus totales. */
+  private tieneConceptos(document: DianDocument): boolean {
+    return document.type === 'invoice' && document.status === 'accepted' && !!document.number;
+  }
+
+  cargarDetalleAmpliado(document: DianDocument): void {
+    if (!this.detalleAmpliadoActivo || !this.tieneConceptos(document)) return;
+    const numero = document.number as string;
+    this.detalleExtra = { numero, estado: 'cargando', lineas: [], cuadra: true, motivo: null, impuestos: [], pago: null };
+    this.integrationsService.getDianInvoiceLines(numero, true).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        // Si ya se abrió otro documento, esta respuesta no le corresponde.
+        if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
+        const d = response?.data || {};
+        this.detalleExtra = {
+          numero, estado: 'ok',
+          lineas: Array.isArray(d.lineas) ? d.lineas : [],
+          // Un servidor sin los campos nuevos (aún no desplegado) se trata como «no cuadra»: solo totales.
+          cuadra: d.cuadra === true,
+          motivo: d.cuadra === true ? null : (d.motivo === 'no-reconstruible' ? 'no-reconstruible' : 'pedido-cambio'),
+          impuestos: Array.isArray(d.impuestos) ? d.impuestos : [],
+          pago: d.pago || null,
+        };
+        this.changeDetector.markForCheck();
+      },
+      error: (err: any) => {
+        if (this.detalle?.number !== numero || this.detalleExtra?.numero !== numero) return;
+        // 400/404/409: la factura no se puede reconstruir y reintentar no lo cambia. Se muestran los totales con el
+        // aviso; «Reintentar» queda solo para fallas pasajeras (red, servidor).
+        const permanente = [400, 404, 409].includes(Number(err?.status));
+        this.detalleExtra = permanente
+          ? { numero, estado: 'ok', lineas: [], cuadra: false, motivo: 'no-reconstruible', impuestos: [], pago: null }
+          : { numero, estado: 'error', lineas: [], cuadra: true, motivo: null, impuestos: [], pago: null };
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  /** Total del IVA y filas por tarifa para la tabla de totales. */
+  filasIva(d: DianDocument): { etiqueta: string; valor: number }[] {
+    const t = d.totals;
+    const porTarifa = (this.detalleExtra?.estado === 'ok' && this.detalleExtra.cuadra) ? this.detalleExtra.impuestos : [];
+    const filas = porTarifa.map((i) => ({
+      etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIvaTarifa', { tarifa: i.tarifa }),
+      valor: i.iva,
+    }));
+    if (filas.length > 1 && t && t.taxTotal != null) {
+      filas.push({ etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIvaTotal'), valor: t.taxTotal });
+    }
+    if (!filas.length && t && t.taxTotal != null) {
+      filas.push({ etiqueta: this.translate.instant('facturacionElectronica.facturacionElectronica.detalleIva'), valor: t.taxTotal });
+    }
+    return filas;
+  }
+
+  porIndice(i: number): number { return i; }
+
+  /** Medio de pago en palabras (códigos DIAN 10, 42, 47, 48 y 49). */
+  medioPagoTexto(codigo: string | null | undefined): string {
+    const claves: Record<string, string> = { '10': 'detalleMedio10', '42': 'detalleMedio42', '47': 'detalleMedio47', '48': 'detalleMedio48', '49': 'detalleMedio49' };
+    const k = codigo ? claves[codigo] : '';
+    return k ? this.translate.instant('facturacionElectronica.facturacionElectronica.' + k)
+             : this.translate.instant('facturacionElectronica.facturacionElectronica.detalleNoDisponible');
+  }
+
+  /** ¿Hay algún total emitido para mostrar? Sin él no se pinta el bloque (no se inventa). */
+  tieneTotales(d: DianDocument): boolean {
+    return !!d.totals && d.totals.payable != null;
+  }
+
+  /** «vence en 12 días» / «venció hace 3 días» / «vence hoy», solo con la fecha de vencimiento. */
+  textoVencimiento(fecha: string | null | undefined): string {
+    const dias = fecha ? diasEntre(hoyColombia(), fecha) : null;
+    const k = 'facturacionElectronica.facturacionElectronica.';
+    if (dias === null) return '';
+    if (dias < 0) return this.translate.instant(dias === -1 ? k + 'detalleVencioHace1' : k + 'detalleVencioHaceN', { dias: -dias });
+    if (dias === 0) return this.translate.instant(k + 'detalleVenceHoy');
+    return this.translate.instant(dias === 1 ? k + 'detalleVenceEn1' : k + 'detalleVenceEnN', { dias });
   }
 
   copiarCufe(document: DianDocument): void {
@@ -491,10 +616,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   }
 
   /** Ticket 1262: línea de tiempo del documento con lo que guarda la auditoría. */
-  lineaDocumento(document: DianDocument): { texto: string; fecha: Date | null; tono: string; detalle?: string }[] {
-    const lista: { texto: string; fecha: Date | null; tono: string; detalle?: string }[] = [];
+  lineaDocumento(document: DianDocument): { texto: string; fecha: Date | null; tono: string; detalle?: string; soloFecha?: boolean }[] {
+    const lista: { texto: string; fecha: Date | null; tono: string; detalle?: string; soloFecha?: boolean }[] = [];
+    // Ticket 1485: la emisión va primero y con su hora real; sin hora conocida, solo la fecha.
+    if (document.issueDate) lista.push({ texto: 'Fecha de emisión', fecha: this.documentDate(document), tono: 'neutro', soloFecha: !this.horaDeEmisionConocida(document) });
     lista.push({ texto: 'Registrado en Katuq', fecha: this.asDate(document.createdAt), tono: 'neutro' });
-    if (document.issueDate) lista.push({ texto: 'Fecha de emisión', fecha: this.documentDate(document), tono: 'neutro' });
     const g = this.statusGroup(document);
     lista.push({
       texto: g === 'accepted' ? 'Aceptado por la DIAN' : g === 'rejected' ? 'Rechazado por la DIAN' : 'En proceso en la DIAN',
@@ -516,7 +642,9 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         fecha: this.asDate(n.createdAt), tono: gn === 'accepted' ? 'ok' : gn === 'rejected' ? 'error' : 'neutro',
       });
     }
-    return lista;
+    // Ticket 1485: en orden de fecha y hora real (orden estable; sin fecha, al final).
+    const t = (f: Date | null) => (f ? f.getTime() : Number.POSITIVE_INFINITY);
+    return lista.map((e, i) => ({ e, i })).sort((a, b) => (t(a.e.fecha) - t(b.e.fecha)) || (a.i - b.i)).map(x => x.e);
   }
 
   /** Ticket 1481: factura aceptada que sus notas crédito dejaron en $0. */
@@ -574,7 +702,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
         const documentData = documents?.data || documents;
         const list = splitDianDocumentList(documentData?.invoices);
         this.documents = list.documents;
-        this.technicalHistory = list.history;
+        this.technicalHistory = this.armarHistorial(list.history, list.documents);
         const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
         this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
         const ids = new Set(this.pendingOrders.map((order) => this.orderId(order)));
@@ -670,9 +798,34 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   orderReadiness(order: any): OrderReadiness {
     if (['Cancelado', 'Precancelado'].includes(order?.estadoPago)) return { ok: false, blocked: true, label: 'Cancelado', tone: 'error' };
-    if (!this.orderEmail(order)) return { ok: false, blocked: true, label: 'Falta correo', tone: 'warning' };
+    // Ticket 1488: consumidor final se factura sin correo (la DIAN lo acepta; se entrega impresa o por WhatsApp).
+    if (!this.orderEmail(order) && this.ordenConsumidorFinal(order)) {
+      return { ok: true, blocked: false, label: this.translate.instant('facturacionElectronica.facturacionElectronica.consumidorFinalSinCorreo'), tone: 'warning' };
+    }
+    if (!this.orderEmail(order)) return { ok: false, blocked: true, label: 'Falta correo', tone: 'warning', completarCorreo: true };
     if (order?.estadoPago && order.estadoPago !== 'Aprobado') return { ok: true, blocked: false, label: 'Pago pendiente', tone: 'warning' };
     return { ok: true, blocked: false, label: 'Sí', tone: 'success' };
+  }
+
+  /** Ticket 1488: sin documento o con 222222222222 el backend factura a consumidor final. */
+  ordenConsumidorFinal(order: any): boolean {
+    const digitos = String(order?.facturacion?.documento || order?.cliente?.documento || '').replace(/\D/g, '');
+    return !digitos || /^2{10,}$/.test(digitos);
+  }
+
+  /** Ticket 1488: «Falta correo» explica qué hacer y lleva a la ficha del cliente. */
+  completarCorreo(order: any): void {
+    const documento = String(order?.facturacion?.documento || order?.cliente?.documento || '').split('-')[0].replace(/\D/g, '');
+    const buscar = documento || this.orderCustomer(order);
+    Swal.fire({
+      icon: 'info',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.faltaCorreoTitulo'),
+      text: this.translate.instant('facturacionElectronica.facturacionElectronica.faltaCorreoTexto', { pedido: order?.nroPedido || this.orderId(order), cliente: this.orderCustomer(order) || '' }),
+      showCancelButton: !!buscar,
+      confirmButtonText: buscar ? this.translate.instant('facturacionElectronica.facturacionElectronica.abrirElCliente') : this.translate.instant('comun.entendido'),
+      cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.ahoraNo'),
+      confirmButtonColor: '#6c4ce0',
+    }).then((r) => { if (r.isConfirmed && buscar) this.router.navigate(['/ventas/clienteslista'], { queryParams: { buscar } }); });
   }
 
   emitSelected(): void {
@@ -1106,6 +1259,11 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return document.error?.code || document.dianResponse?.statusCode || '';
   }
 
+  /** Ticket 1480: la DIAN ya tenía ese documento (regla 90); reenviar puede duplicarlo. */
+  esDocumentoYaProcesado(document: DianDocument): boolean {
+    return /Regla:\s*90\b|procesado anteriormente/i.test(this.rejectionMessage(document));
+  }
+
   rejectionMessage(document: DianDocument): string {
     const response = document.dianResponse || {};
     const messages = Array.isArray(response.errorMessages) ? response.errorMessages : [];
@@ -1127,7 +1285,34 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return [c.tipoDocumento || '', c.documento].filter(Boolean).join(' ');
   }
 
+  /**
+   * Ticket 1490: el historial técnico también muestra cada envío a la DIAN y cada
+   * correo (enviado, fallido o reenviado) de facturas y notas, no solo el set de
+   * pruebas. Del más reciente al más antiguo; los 60 últimos.
+   */
+  private armarHistorial(registros: any[], documentos: DianDocument[]): any[] {
+    const eventos: any[] = [...(registros || [])];
+    for (const d of documentos || []) {
+      const nombre = `${this.documentTypeLabel(d.type)} ${d.number || '(sin número)'}`;
+      const rechazo = this.statusGroup(d) === 'rejected' ? ` · ${this.rejectionMessage(d)}` : '';
+      eventos.push({ type: 'envioDocumento', status: d.status, createdAt: d.createdAt, message: `${nombre} · ${this.etiquetaEstado(d)}${rechazo}` });
+      const e = d.emailDelivery;
+      if (e && e.requested) {
+        eventos.push({ type: 'correo', status: e.sent ? 'success' : 'failed', createdAt: d.createdAt,
+          message: e.sent ? `${nombre}: correo enviado a ${e.recipient || 'el comprador'}` : `${nombre}: el correo no salió. ${this.mensajeCorreo((e as any).error)}` });
+      }
+      for (const r of d.emailResends || []) {
+        eventos.push({ type: 'correo', status: r.sent ? 'success' : 'failed', createdAt: r.fecha,
+          message: r.sent ? `${nombre}: reenviado a ${r.recipient}` : `${nombre}: no se pudo reenviar a ${r.recipient}` });
+      }
+    }
+    const t = (x: any) => this.entryDate(x)?.getTime() || 0;
+    return eventos.sort((a, b) => t(b) - t(a)).slice(0, 60);
+  }
+
   historyLabel(entry: any): string {
+    if (entry?.type === 'envioDocumento') return 'Envío DIAN';
+    if (entry?.type === 'correo') return 'Correo';
     if (entry?.type === 'habilitationSet') return 'Set de pruebas';
     if (entry?.type === 'habilitationStatus') return 'Consulta';
     return 'Registro';
@@ -1145,9 +1330,32 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return 'info';
   }
 
+  /**
+   * Ticket 1485: la hora real de emisión. El XML siempre la lleva; la auditoría la
+   * guarda desde este ticket (issueTime). En documentos anteriores se usa la hora
+   * de registro si es del mismo día en Colombia; si no, queda solo la fecha.
+   */
   documentDate(document: DianDocument): Date | null {
-    if (document.issueDate) return new Date(`${document.issueDate}T12:00:00`);
-    return this.asDate(document.createdAt);
+    if (!document.issueDate) return this.asDate(document.createdAt);
+    if (document.issueTime) {
+      const exacta = new Date(`${document.issueDate}T${document.issueTime}`);
+      if (!Number.isNaN(exacta.getTime())) return exacta;
+    }
+    const registro = this.asDate(document.createdAt);
+    if (registro && this.fechaColombia(registro) === document.issueDate) return registro;
+    return new Date(`${document.issueDate}T12:00:00`);
+  }
+
+  /** Ticket 1485: true si se conoce la hora de emisión; si no, se muestra solo la fecha. */
+  horaDeEmisionConocida(document: DianDocument): boolean {
+    if (!document.issueDate) return !!this.asDate(document.createdAt);
+    if (document.issueTime) return true;
+    const registro = this.asDate(document.createdAt);
+    return !!registro && this.fechaColombia(registro) === document.issueDate;
+  }
+
+  private fechaColombia(fecha: Date): string {
+    return new Date(fecha.getTime() - 5 * 3600 * 1000).toISOString().slice(0, 10);
   }
 
   entryDate(entry: any): Date | null {

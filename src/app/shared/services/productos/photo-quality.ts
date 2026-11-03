@@ -81,11 +81,11 @@ export function medidasParaCalidad(ancho: number, alto: number): { width: number
   return { width: Math.max(1, Math.round(ancho * escala)), height: Math.max(1, Math.round(alto * escala)) };
 }
 
-/** Texto corto del aviso para la persona (sin jerga). */
-export function textoDeAvisos(avisos: AvisoCalidad[]): string {
+/** Texto corto del aviso para la persona (sin jerga). El umbral del texto sigue al que se midió. */
+export function textoDeAvisos(avisos: AvisoCalidad[], umbrales = UMBRALES_CALIDAD): string {
   const partes: string[] = [];
   if (avisos.includes('low_resolution')) {
-    partes.push('se ve pequeña (menos de 600 px de lado)');
+    partes.push(`se ve pequeña (menos de ${umbrales.lowResolutionMinSide} px de lado)`);
   }
   if (avisos.includes('blurry')) {
     partes.push('parece borrosa');
@@ -94,4 +94,97 @@ export function textoDeAvisos(avisos: AvisoCalidad[]): string {
     return '';
   }
   return `Esta foto ${partes.join(' y ')}. Puedes guardarla igual; con una foto más nítida y grande el producto se ve mejor.`;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Estándar de foto de producto (D-629, tickets 1426 y 1427, fase 1: solo los mensajes al subir)
+// ---------------------------------------------------------------------------------------------
+// Con la bandera `fotosEstandar` apagada nada de esto se usa y el umbral de «foto pequeña» sigue
+// siendo el de D-501 (600 px, `UMBRALES_CALIDAD`, con paridad en el servidor). Encendida, el
+// mínimo es 800 px. Todo es puro (sin DOM): leer el tamaño de la foto lo hace quien llama.
+
+/** Peso máximo, mínimo y relación de la foto de producto. */
+export const ESTANDAR_FOTO = Object.freeze({
+  maxBytes: 15 * 1024 * 1024,
+  minLado: 800,
+  recomendado: 1200,
+  /** Una foto se considera alejada de 1:1 si su lado mayor supera 4/3 del menor. */
+  relacionMaxima: Object.freeze({ mayor: 4, menor: 3 }),
+});
+
+/** Umbrales de calidad con el mínimo del estándar (800 px), para cuando `fotosEstandar` está encendida. */
+export const UMBRALES_CALIDAD_ESTANDAR = Object.freeze({
+  lowResolutionMinSide: ESTANDAR_FOTO.minLado,
+  blurryLaplacian: UMBRALES_CALIDAD.blurryLaplacian,
+});
+
+/** Mensaje único del estándar. No dice que el sistema convierta nada. */
+export const MENSAJE_ESTANDAR_FOTO =
+  'Formato sugerido: WebP. Tamaño recomendado: foto cuadrada de 1200 × 1200 px (mínimo 800 × 800). ' +
+  'Peso máximo: 15 MB. Producto centrado, buena luz y fondo limpio.';
+
+export type RechazoFoto = 'pesada' | 'ilegible';
+export type AvisoEstandar = 'pequena' | 'no_cuadrada';
+
+export interface EvaluacionFoto {
+  /** Si no es null, la foto no se agrega; las demás siguen. */
+  rechazo: RechazoFoto | null;
+  /** Avisos suaves: la foto se agrega igual. */
+  avisos: AvisoEstandar[];
+}
+
+/**
+ * Evalúa una foto contra el estándar. `ancho` y `alto` son los que leyó el navegador; si no pudo
+ * leerla (`legible` falso, o sin medidas) la foto se rechaza como ilegible. El peso se revisa
+ * primero: una foto de 18 MB se rechaza por pesada aunque se pueda leer.
+ */
+export function evaluarFotoEstandar(foto: {
+  bytes: number;
+  ancho?: number | null;
+  alto?: number | null;
+  legible: boolean;
+}): EvaluacionFoto {
+  if (Number(foto.bytes) > ESTANDAR_FOTO.maxBytes) {
+    return { rechazo: 'pesada', avisos: [] };
+  }
+  const ancho = Number(foto.ancho) || 0;
+  const alto = Number(foto.alto) || 0;
+  if (!foto.legible || ancho <= 0 || alto <= 0) {
+    return { rechazo: 'ilegible', avisos: [] };
+  }
+  const avisos: AvisoEstandar[] = [];
+  const menor = Math.min(ancho, alto);
+  const mayor = Math.max(ancho, alto);
+  if (menor < ESTANDAR_FOTO.minLado) {
+    avisos.push('pequena');
+  }
+  // Enteros, sin dividir: 4000 × 3000 es justo 4:3 y no avisa.
+  if (mayor * ESTANDAR_FOTO.relacionMaxima.menor > menor * ESTANDAR_FOTO.relacionMaxima.mayor) {
+    avisos.push('no_cuadrada');
+  }
+  return { rechazo: null, avisos };
+}
+
+/**
+ * Peso en MB para el mensaje: sin decimales si es entero, con una coma decimal si no («18 MB»,
+ * «15,3 MB»). Se redondea hacia arriba, así una foto que pasa del máximo nunca dice «15 MB».
+ */
+export function pesoEnMb(bytes: number): string {
+  const mb = Math.ceil((Number(bytes) / (1024 * 1024)) * 10) / 10;
+  return Number.isInteger(mb) ? String(mb) : String(mb).replace('.', ',');
+}
+
+/** Mensaje del rechazo: dice el motivo y qué hacer. */
+export function mensajeDeRechazo(rechazo: RechazoFoto, bytes = 0): string {
+  if (rechazo === 'pesada') {
+    return `Esta foto pesa ${pesoEnMb(bytes)} MB y el máximo es 15 MB. Reduce su tamaño o sube otra.`;
+  }
+  return 'No pudimos leer este archivo como foto. Sube una imagen JPG, PNG, WebP u otra foto común.';
+}
+
+/** Mensaje del aviso suave. */
+export function mensajeDeAviso(aviso: AvisoEstandar): string {
+  return aviso === 'pequena'
+    ? 'Esta foto es pequeña y puede verse borrosa.'
+    : 'Para mejores resultados usa una foto cuadrada.';
 }

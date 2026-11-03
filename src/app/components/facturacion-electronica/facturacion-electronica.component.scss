@@ -22,7 +22,7 @@ $head: var(--kc-font-head);
 
 .fe-accent { color: var(--kc-accent) !important; }
 .fe-red { color: #e0483f !important; }
-.fe-dim { color: #c4c8d4; }
+.fe-dim { color: var(--kc-muted2); } // Ticket 1499: antes #c4c8d4, poco contraste.
 .fe-mono { font-family: $head; font-size: 13px; font-weight: 700; color: var(--kc-ink2); white-space: nowrap; &--strong { font-weight: 800; font-size: 14px; color: var(--kc-accent); } }
 .fe-amount { font-family: $head; font-weight: 800; font-size: 15px; color: var(--kc-ink); white-space: nowrap; }
 .fe-cellnote { display: block; margin-top: 2px; font-family: var(--kc-font-body); font-size: 11.5px; font-weight: 600; color: var(--kc-muted2); white-space: normal; max-width: 220px; }
@@ -168,10 +168,13 @@ $head: var(--kc-font-head);
 
 .fe-table-wrap { overflow-x: auto; }
 .fe-table {
-  width: 100%; border-collapse: collapse; min-width: 940px;
+  width: 100%; border-collapse: collapse; min-width: 860px;
   th { @include kc-th; padding: 13px 12px; background: var(--kc-canvas); font-size: 10.5px; &:first-child { padding-left: 20px; } &:last-child { padding-right: 20px; }
     &.text-end { text-align: right; } &.text-center { text-align: center; } }
-  &__doc { min-width: 220px; } &__actions { width: 150px; } &__check { width: 44px; } &__client { min-width: 200px; }
+  &__doc { min-width: 190px; } &__actions { width: 150px; }
+  // Ticket 1487: la columna de acciones queda fija a la derecha cuando la tabla no cabe.
+  th.fe-table__actions, td.fe-table__actions { position: sticky; right: 0; z-index: 2; box-shadow: -10px 0 12px -12px rgba(30, 35, 60, .28); }
+  td.fe-table__actions { background: inherit; &.is-menu-open { z-index: 6; } } &__check { width: 44px; } &__client { min-width: 200px; }
   td { padding: 13px 12px; border-top: 1px solid var(--kc-line2); vertical-align: middle; font-size: 13px; &:first-child { padding-left: 20px; } &:last-child { padding-right: 20px; } }
   tbody tr { background: #fff; transition: background .12s ease; &:hover { background: #fbfbfe; } &.is-rejected { background: #fffcfc; } &.is-selected { background: #f7f5fe; } &.is-blocked td:not(:first-child) { opacity: .7; } }
   &--orders { min-width: 780px; }
@@ -251,7 +254,9 @@ $head: var(--kc-font-head);
     h3 { margin: 12px 0 0; font-family: $head; font-weight: 800; font-size: 17px; line-height: 1.15; color: var(--kc-ink); }
     p { margin: 6px 0 0; font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--kc-muted); text-wrap: pretty; b { color: var(--kc-ink2); } }
     .fe-btn { margin-top: 14px; }
-    &.is-done .fe-guide__n { background: var(--kc-green-wash); color: var(--kc-green); } }
+    &.is-done .fe-guide__n { background: var(--kc-green-wash); color: var(--kc-green); }
+    &.is-warn .fe-guide__n { background: var(--kc-orange-wash); color: var(--kc-orange); } // Ticket 1493
+  }
   &__n { @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash)); width: 34px; height: 34px; font-family: $head; font-weight: 800; font-size: 15px; i { font-size: 14px; } }
 }
 
@@ -523,3 +528,52 @@ $head: var(--kc-font-head);
 
 // D-500 (FE-01): proveedor de facturación en la franja de estado (solo con invoicingHub).
 .fe-strip__proveedor { font-size: 12.5px; font-weight: 600; color: #5b5878; letter-spacing: normal; }
+
+// Ticket 1480: consejo para la regla 90 (documento procesado anteriormente).
+.fe-reject__consejo { display: block; margin-top: 4px; font-weight: 700; letter-spacing: normal; }
+
+// Ticket 1487: el texto y los botones de un rechazo se quedan en la parte visible de la tabla.
+.fe-table-wrap { container-type: inline-size; }
+.fe-reject__body { position: sticky; left: 71px; max-width: calc(100cqw - 91px); }
+
+// Ticket 1488: «Falta correo» es un botón que lleva a la ficha del cliente.
+.fe-pill--accion { border: 0; cursor: pointer; font-family: inherit; font-weight: 700; &:hover { filter: brightness(.96); } &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; } }
+
+// Ticket 1486: columna Origen (span con texto: color y tamaño propios por la trampa de span.ng-star-inserted).
+.fe-origen { color: var(--kc-ink2); font-size: 12.5px; font-weight: 700; letter-spacing: normal; }
+.fe-dim .fe-origen { color: var(--kc-muted2); font-weight: 600; }
+
+// Ticket 1501: diferencia en pesos junto al porcentaje.
+.fe-dif { font-style: normal; font-weight: 600; letter-spacing: normal; }
+
+// ----- D-621 (ticket 1489): conceptos, totales y pago en el detalle del documento -----
+// Plano, tokens de Katuq, sin degradados. Ningún nombre lleva "p-" y todo span lleva color y tamaño propios.
+.fe-resumen { margin: 0 0 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fe-resumen .fe-detalle__titulo { margin: 6px 0 0; }
+.fe-resumen__estado {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border-radius: 11px;
+  background: #f6f4ff; border: 1px solid #ece8fb; color: #5f3fe0; font-size: 13px;
+  &--error { background: #fef6f5; border-color: #f6d4d2; color: #b42318; }
+  &--aviso { background: #fdf1dd; border-color: #f8ebd4; color: #a15c00; }
+}
+.fe-resumen__txt { flex: 1 1 160px; min-width: 0; font-size: 13px; font-weight: 600; color: #211F3A; letter-spacing: normal; }
+.fe-resumen__nota { margin: 0; font-size: 13px; font-weight: 600; color: #6b6880; letter-spacing: normal; }
+.fe-conceptos { list-style: none; margin: 0; padding: 0; border: 1px solid #ecebf3; border-radius: 14px; background: #fff; overflow: hidden; }
+.fe-concepto {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 14px; min-width: 0;
+  &:not(:last-child) { border-bottom: 1px solid #ecebf3; }
+}
+.fe-concepto__texto { flex: 1; min-width: 0; strong { display: block; font-size: 13px; color: #211F3A; overflow-wrap: anywhere; } small { display: block; margin-top: 2px; font-size: 11.5px; color: #6b6880; letter-spacing: normal; } }
+.fe-concepto__valor { flex: none; font-size: 13px; font-weight: 800; color: #211F3A; white-space: nowrap; }
+.fe-totales {
+  margin: 0; display: flex; flex-direction: column; border: 1px solid #ecebf3; border-radius: 14px; background: #fff; padding: 4px 14px;
+  div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 7px 0; min-width: 0; }
+  div:not(:last-child) { border-bottom: 1px solid #f3f2f8; }
+  dt { font-size: 12px; font-weight: 700; color: #6b6880; text-transform: uppercase; letter-spacing: 0.3px; }
+  dd { margin: 0; font-size: 13px; font-weight: 700; color: #211F3A; text-align: right; min-width: 0; small { font-size: 12px; font-weight: 600; color: #6b6880; } }
+}
+.fe-totales__total { dt { color: #211F3A; } dd { font-size: 15px; font-weight: 800; } }
+@media (max-width: 620px) {
+  .fe-totales dd { max-width: 60%; }
+}
+

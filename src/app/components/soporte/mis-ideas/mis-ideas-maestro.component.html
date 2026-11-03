@@ -1,0 +1,366 @@
+<div class="mt-page cfg-pagina">
+
+  <!-- ===== Encabezado ===== -->
+  <header class="mt-head cfg-cabeza">
+    <div class="mt-head__copy cfg-cabeza__textos">
+      <nav class="mt-crumbs">
+        <i class="pi pi-home"></i>
+        <a routerLink="/soporte">{{ 'soporte.misIdeas.soporte' | translate }}</a>
+        <span class="mt-crumbs__sep">/</span>
+        <span class="mt-crumbs__here">{{ 'soporte.misIdeas.maestro.misIdeas' | translate }}</span>
+      </nav>
+      <h1 class="cfg-titulo">{{ 'soporte.misIdeas.maestro.misIdeas' | translate }}</h1>
+      <p class="cfg-sub">{{ 'soporte.misIdeas.maestro.sigueTusIdeasYComoAvanzan' | translate }}</p>
+    </div>
+
+    <div class="mt-head__actions cfg-acciones">
+      <button type="button" class="mt-iconbtn" (click)="recargar()" [disabled]="isLoading"
+              [title]="'soporte.misTickets.actualizar' | translate" [attr.aria-label]="'soporte.misIdeas.maestro.actualizarIdeas' | translate">
+        <i class="pi" [ngClass]="isLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      </button>
+      <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte" [queryParams]="{ tipo: 'idea' }">
+        <i class="pi pi-plus"></i> {{ 'soporte.misIdeas.nuevaIdea' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Barra de filtros: los conteos por estado son las pestañas ===== -->
+  <div class="mt-toolbar">
+    <div class="mt-tabs" role="tablist" [attr.aria-label]="'soporte.misTickets.filtrarPorEstado' | translate">
+      <button type="button" class="mt-tab" *ngFor="let tab of tabs"
+              role="tab"
+              [class.is-on]="selectedStatus === tab.key"
+              [attr.aria-selected]="selectedStatus === tab.key"
+              (click)="setTab(tab.key)">
+        <span class="mt-tab__dot" [style.background]="selectedStatus === tab.key ? '#fff' : tab.dot"></span>
+        {{ tab.plural | translate }}
+        <span class="mt-tab__count">{{ conteos[tab.key] || 0 }}</span>
+      </button>
+    </div>
+
+    <div class="mt-search" [class.is-on]="searchText.trim()">
+      <i class="pi pi-search"></i>
+      <input type="text" [(ngModel)]="searchText" (ngModelChange)="filterIdeas()"
+             [placeholder]="'soporte.misIdeas.maestro.buscarPorTituloONumero' | translate" [attr.aria-label]="'soporte.misIdeas.maestro.buscarIdeas' | translate" />
+      <button type="button" class="mt-search__clear" *ngIf="searchText.trim()"
+              (click)="clearSearch()" [attr.aria-label]="'soporte.misTickets.limpiarBusqueda' | translate">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="mt-select" [class.is-on]="dateFilter !== 'all'">
+      <select [(ngModel)]="dateFilter" (ngModelChange)="filterIdeas()" [attr.aria-label]="'soporte.misTickets.filtrarPorFecha' | translate">
+        <option value="all">{{ 'soporte.misIdeas.todosLosTiempos' | translate }}</option>
+        <option value="today">{{ 'soporte.misIdeas.hoy' | translate }}</option>
+        <option value="week">{{ 'soporte.misIdeas.estaSemana' | translate }}</option>
+        <option value="month">{{ 'soporte.misIdeas.esteMes' | translate }}</option>
+      </select>
+      <i class="pi pi-chevron-down"></i>
+    </div>
+  </div>
+
+  <!-- ===== Maestro + detalle ===== -->
+  <div class="mt-grid">
+
+    <!-- Lista -->
+    <aside class="mt-list">
+      <div class="mt-list__head">
+        <span class="mt-list__title">{{ listTitle }}</span>
+        <span class="mt-list__count">{{ filteredTasks.length }}</span>
+      </div>
+
+      <!-- Esqueleto mientras carga -->
+      <div class="mt-list__body" *ngIf="isLoading">
+        <div class="mt-skeleton" *ngFor="let s of [1,2,3,4]">
+          <span class="mt-skeleton__icon"></span>
+          <span class="mt-skeleton__lines">
+            <span class="mt-skeleton__bar mt-skeleton__bar--sm"></span>
+            <span class="mt-skeleton__bar"></span>
+            <span class="mt-skeleton__bar mt-skeleton__bar--xs"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="mt-list__body" *ngIf="!isLoading && filteredTasks.length">
+        <button type="button" class="mt-row"
+                *ngFor="let idea of filteredTasks; trackBy: trackIdea"
+                [class.is-on]="idea === selected"
+                (click)="seleccionar(idea)">
+          <span class="mt-row__icon"
+                [style.background]="idea === selected ? estadoDe(idea).bg : '#f7f8fc'"
+                [style.color]="idea === selected ? estadoDe(idea).fg : '#8a90a2'">
+            <i class="pi" [ngClass]="estadoDe(idea).icon"></i>
+          </span>
+
+          <span class="mt-row__body">
+            <span class="mt-row__top">
+              <span class="mt-row__id">#{{ idea.nroTicket || idea.cd }}</span>
+              <span class="mt-row__estado"
+                    [style.background]="estadoDe(idea).bg"
+                    [style.color]="estadoDe(idea).fg">{{ estadoDe(idea).label | translate }}</span>
+            </span>
+
+            <span class="mt-row__asunto">{{ idea.asunto }}</span>
+
+            <span class="mt-row__meta">
+              <span class="mt-row__edad">
+                <i class="pi pi-clock"></i>{{ edad(idea.fechaRegistro) }}
+              </span>
+              <span class="mt-row__com" *ngIf="apoyos(idea) > 0" [title]="'soporte.misIdeas.maestro.apoyo.boton' | translate">
+                <i class="pi pi-thumbs-up"></i>{{ apoyos(idea) }}
+              </span>
+              <span class="mt-row__com" *ngIf="tieneRespuestas(idea)">
+                <i class="pi pi-comments"></i>{{ idea.comentariosVista.length }}
+              </span>
+              <span class="mt-row__adj" *ngIf="idea.adjuntos?.length">
+                <i class="pi pi-paperclip"></i>
+              </span>
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Vacío -->
+      <div class="mt-empty" *ngIf="!isLoading && !filteredTasks.length">
+        <span class="mt-empty__icon">
+          <i class="pi pi-search" *ngIf="hayFiltros; else iconoIdea"></i>
+          <ng-template #iconoIdea>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"></path>
+            </svg>
+          </ng-template>
+        </span>
+        <ng-container *ngIf="hayFiltros; else sinIdeas">
+          <span class="mt-empty__title">{{ 'soporte.misIdeas.maestro.ningunaIdeaCoincide' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misTickets.pruebaConOtroFiltroO' | translate }}</span>
+          <button type="button" class="mt-btn mt-btn--ghost" (click)="limpiarFiltros()">{{ 'soporte.misTickets.limpiarFiltros' | translate }}</button>
+        </ng-container>
+        <ng-template #sinIdeas>
+          <span class="mt-empty__title">{{ 'soporte.misIdeas.maestro.aunNoTienesIdeas' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misIdeas.maestro.cuandoTengasUnaMejora' | translate }}</span>
+          <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte" [queryParams]="{ tipo: 'idea' }">
+            <i class="pi pi-plus"></i> {{ 'soporte.misIdeas.nuevaIdea' | translate }}
+          </button>
+        </ng-template>
+      </div>
+    </aside>
+
+    <!-- Detalle -->
+    <section class="mt-detail" id="mt-detalle" *ngIf="selected">
+
+      <!-- Cabecera + descripción en la misma tarjeta -->
+      <article class="mt-card">
+        <div class="mt-detail__head">
+          <div class="mt-detail__id">
+            <div class="mt-detail__chips">
+              <span class="mt-detail__num">#{{ selected.nroTicket || selected.cd }}</span>
+              <span class="mt-pill"
+                    [style.background]="estadoDe(selected).bg"
+                    [style.color]="estadoDe(selected).fg">
+                <i class="pi" [ngClass]="estadoDe(selected).icon"></i>{{ estadoDe(selected).label | translate }}
+              </span>
+            </div>
+            <h2 class="mt-detail__asunto">{{ selected.asunto }}</h2>
+          </div>
+
+          <!-- Meta alineada en una sola fila -->
+          <div class="mt-meta">
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">{{ 'soporte.misIdeas.maestro.abierta' | translate }}</span>
+              <span class="mt-meta__value">
+                <i class="pi pi-calendar"></i>
+                {{ edad(selected.fechaRegistro) }} · {{ selected.fechaRegistro | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">{{ 'soporte.misIdeas.maestro.propuestaPor' | translate }}</span>
+              <span class="mt-meta__value">
+                <i class="pi pi-user"></i>{{ selected.nombreUsuarioReporta || ('soporte.misTickets.sinRegistrar' | translate) }}
+              </span>
+            </div>
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">{{ 'soporte.misTickets.ultimaRespuesta' | translate }}</span>
+              <span class="mt-meta__value" [class.is-muted]="!tieneRespuestas(selected)">
+                <i class="pi pi-comment"></i>{{ ultimaRespuesta(selected) }}
+              </span>
+            </div>
+            <div class="mt-meta__item" *ngIf="selected.categoria">
+              <span class="mt-meta__label">{{ 'soporte.misIdeas.maestro.moduloCategoria' | translate }}</span>
+              <span class="mt-meta__value"><i class="pi pi-tag"></i>{{ selected.categoria }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-detail__body">
+          <span class="mt-label">{{ 'soporte.misIdeas.descripcion' | translate }}</span>
+          <p class="mt-desc">{{ descripcionDe(selected) }}</p>
+
+          <div class="mt-adj" *ngIf="selected.adjuntos?.length">
+            <div class="mt-thumbs" *ngIf="selected.adjuntosImagenes.length">
+              <button type="button" class="mt-thumb" *ngFor="let adjunto of selected.adjuntosImagenes"
+                      (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                <img [src]="adjunto" [alt]="'soporte.misIdeas.adjunto' | translate" (error)="handleImageError($event)" />
+              </button>
+            </div>
+
+            <div *ngFor="let adjunto of selected.adjuntosAudios" class="mi-media">
+              <span class="mi-media__nombre">{{ nombreAdjunto(adjunto) }}</span>
+              <audio controls preload="metadata" [src]="adjunto" class="mi-media__audio"></audio>
+            </div>
+            <div *ngFor="let adjunto of selected.adjuntosVideos" class="mi-media">
+              <span class="mi-media__nombre">{{ nombreAdjunto(adjunto) }}</span>
+              <video controls preload="metadata" [src]="adjunto" class="mi-media__video"></video>
+            </div>
+
+            <div class="mt-files" *ngIf="selected.adjuntosArchivos.length">
+              <button type="button" class="mt-file" *ngFor="let adjunto of selected.adjuntosArchivos"
+                      (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                <i class="pi" [ngClass]="iconoAdjunto(adjunto)"></i>
+                <span class="mt-file__name">{{ nombreAdjunto(adjunto) }}</span>
+                <i class="pi pi-external-link mt-file__go"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- A mí también me sirve (D-627): un apoyo por usuario, se puede quitar -->
+          <div class="mi-apoyo">
+            <button type="button" class="mi-apoyo__boton" [class.is-on]="yaApoye(selected)"
+                    [disabled]="apoyando"
+                    [attr.aria-pressed]="yaApoye(selected)"
+                    [title]="(yaApoye(selected) ? 'soporte.misIdeas.maestro.apoyo.quitar' : 'soporte.misIdeas.maestro.apoyo.boton') | translate"
+                    (click)="alternarApoyo(selected)">
+              <i class="pi" [ngClass]="apoyando ? 'pi-spin pi-spinner' : (yaApoye(selected) ? 'pi-thumbs-up-fill' : 'pi-thumbs-up')"></i>
+              {{ 'soporte.misIdeas.maestro.apoyo.boton' | translate }}
+              <span class="mi-apoyo__contador">{{ apoyos(selected) }}</span>
+            </button>
+            <span class="mi-apoyo__resumen" *ngIf="apoyos(selected) > 0">
+              {{ (apoyos(selected) === 1 ? 'soporte.misIdeas.maestro.apoyo.resumenUno' : 'soporte.misIdeas.maestro.apoyo.resumenVarias') | translate:{n: apoyos(selected)} }}
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Respuesta oficial del equipo Katuq, destacada arriba de la conversación -->
+      <article class="mt-card mt-res mi-oficial" *ngIf="respuestaEquipo(selected) as oficial">
+        <div class="mt-conv__head">
+          <span class="mt-res__icon"><i class="pi pi-megaphone"></i></span>
+          <span class="mt-conv__title">{{ 'soporte.misIdeas.maestro.respuestaDelEquipo' | translate }}</span>
+          <span class="mt-res__version" *ngIf="oficial.version">
+            {{ 'soporte.misTickets.disponibleDesdeLaVersion' | translate:{version: oficial.version} }}
+          </span>
+        </div>
+        <div class="mt-res__body">
+          <p class="mt-desc">{{ oficial.texto }}</p>
+        </div>
+      </article>
+
+      <!-- Conversación -->
+      <article class="mt-card">
+        <div class="mt-conv__head">
+          <span class="mt-conv__icon"><i class="pi pi-comments"></i></span>
+          <span class="mt-conv__title">{{ 'soporte.misTickets.conversacion' | translate }}</span>
+          <span class="mt-conv__count">{{ selected.comentariosVista.length }}</span>
+        </div>
+
+        <div class="mt-conv__empty" *ngIf="!selected.comentariosVista.length">
+          <span class="mt-empty__icon"><i class="pi pi-comment"></i></span>
+          <span class="mt-empty__title">{{ 'soporte.misTickets.aunNadieHaRespondido' | translate }}</span>
+          <span class="mt-empty__hint">{{ 'soporte.misTickets.siTienesAlgoMasQue' | translate }}</span>
+        </div>
+
+        <div class="mt-conv__list" *ngIf="selected.comentariosVista.length">
+          <div class="mt-msg" *ngFor="let comment of selected.comentariosVista">
+            <span class="mt-msg__avatar" [style.background]="colorAutor(comment)">
+              {{ comment.autor?.iniciales || iniciales(comment.autor?.nombreCompleto) }}
+            </span>
+            <div class="mt-msg__body">
+              <div class="mt-msg__top">
+                <span class="mt-msg__autor">{{ comment.autor?.nombreCompleto || ('soporte.misTickets.soporteKatuq' | translate) }}</span>
+                <span class="mt-msg__tag" *ngIf="!comment.esDelComercio">{{ 'soporte.misTickets.soporte' | translate }}</span>
+                <span class="mt-msg__fecha">{{ comment.fechaCreacion | date:'dd MMM yyyy, HH:mm' }}</span>
+              </div>
+              <div class="mt-bubble" [class.is-agente]="!comment.esDelComercio">
+                <p *ngIf="comment.contenido">{{ comment.contenido }}</p>
+
+                <div class="mt-thumbs" *ngIf="comment.imagenes?.length">
+                  <button type="button" class="mt-thumb mt-thumb--sm" *ngFor="let adjunto of comment.imagenes"
+                          (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                    <img [src]="adjunto" [alt]="'soporte.misTickets.adjuntoDelComentario' | translate" (error)="handleImageError($event)" />
+                  </button>
+                </div>
+
+                <div *ngFor="let adjunto of comment.audios" class="mi-media">
+                  <audio controls preload="metadata" [src]="adjunto" [title]="nombreAdjunto(adjunto)" class="mi-media__audio"></audio>
+                </div>
+                <div *ngFor="let adjunto of comment.videos" class="mi-media">
+                  <video controls preload="metadata" [src]="adjunto" [title]="nombreAdjunto(adjunto)" class="mi-media__video"></video>
+                </div>
+
+                <div class="mt-files" *ngIf="comment.archivos?.length">
+                  <button type="button" class="mt-file" *ngFor="let adjunto of comment.archivos"
+                          (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                    <i class="pi" [ngClass]="iconoAdjunto(adjunto)"></i>
+                    <span class="mt-file__name">{{ nombreAdjunto(adjunto) }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Responder -->
+        <div class="mt-composer">
+          <span class="mt-msg__avatar mt-msg__avatar--mio">{{ misIniciales }}</span>
+          <div class="mt-composer__body">
+            <textarea [(ngModel)]="newComment" rows="3"
+                      [class.is-on]="newComment.trim()"
+                      [disabled]="enviandoComentario"
+                      [placeholder]="'soporte.misTickets.escribeTuRespuesta' | translate"
+                      [attr.aria-label]="'soporte.misTickets.escribeTuRespuesta2' | translate"></textarea>
+
+            <div class="mt-files" *ngIf="archivos.length">
+              <span class="mt-file mt-file--nuevo" *ngFor="let archivo of archivos; let i = index">
+                <i class="pi" [ngClass]="iconoArchivo(archivo)"></i>
+                <span class="mt-file__name">{{ archivo.file.name }}</span>
+                <button type="button" class="mt-file__del" (click)="quitarArchivo(i)"
+                        [title]="'soporte.misTickets.quitar' | translate" [attr.aria-label]="'soporte.misTickets.quitarAdjunto' | translate">
+                  <i class="pi pi-times"></i>
+                </button>
+              </span>
+            </div>
+
+            <div class="mt-composer__actions">
+              <button type="button" class="mt-btn mt-btn--ghost" (click)="fileInput.click()"
+                      [disabled]="enviandoComentario">
+                <i class="pi pi-paperclip"></i> {{ 'soporte.misTickets.adjuntar' | translate }}
+              </button>
+              <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="mt-hidden-input"
+                     accept="image/*,video/*,audio/*,.ogg,.opus,.oga,.mp3,.m4a,.wav,.aac,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
+
+              <div class="mt-composer__send">
+                <span class="mt-composer__hint">
+                  {{ puedeResponder ? ('soporte.misIdeas.maestro.seAvisaAlEquipo' | translate) : ('soporte.misTickets.escribeAlgoParaResponder' | translate) }}
+                </span>
+                <button type="button" class="mt-btn mt-btn--primary"
+                        [disabled]="!puedeResponder"
+                        (click)="addNewComment(selected)">
+                  <i class="pi" [ngClass]="enviandoComentario ? 'pi-spin pi-spinner' : 'pi-send'"></i>
+                  {{ enviandoComentario ? ('soporte.misTickets.enviando' | translate) : ('soporte.misTickets.responder' | translate) }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <!-- Aviso de respuesta enviada -->
+  <div class="mt-toast" [class.show]="showCommentSuccess">
+    <i class="pi pi-check-circle"></i>
+    <span>{{ 'soporte.misTickets.tuRespuestaSeEnvioCorrectamente' | translate }}</span>
+  </div>
+</div>
