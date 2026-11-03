@@ -307,6 +307,8 @@ export interface CreditoVistaPrevia {
   cupoUsadoPctAntes: number | null;
   cupoUsadoPctDespues: number | null;
   sinCambios: boolean;
+  /** Las fichas del cliente tienen hoy cupo o plazo distintos: guardar las deja iguales. */
+  fichasDistintas?: boolean;
 }
 
 export interface EventoCobro {

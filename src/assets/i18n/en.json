@@ -12542,5 +12542,7 @@
   "cartera.castigada.saldoCastigado": "Written-off balance",
   "cartera.castigada.motivo": "Reason",
   "cartera.castigada.fecha": "Date",
-  "cartera.castigada.por": "By"
+  "cartera.castigada.por": "By",
+  "cartera.acciones.pagoYaEnRevision": "This order already has a payment of {{valor}} under review in Treasury. Make sure it is not the same payment before you record it.",
+  "cartera.acciones.fichasDistintas": "This customer has several records with different credit limits or terms. When you save, all of them will take the values above."
 }

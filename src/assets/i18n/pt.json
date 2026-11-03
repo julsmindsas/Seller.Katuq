@@ -9528,5 +9528,7 @@
   "cartera.castigada.saldoCastigado": "Saldo baixado",
   "cartera.castigada.motivo": "Motivo",
   "cartera.castigada.fecha": "Data",
-  "cartera.castigada.por": "Quem"
+  "cartera.castigada.por": "Quem",
+  "cartera.acciones.pagoYaEnRevision": "Este pedido já tem um pagamento de {{valor}} em revisão na Tesouraria. Confirme que não é o mesmo pagamento antes de registrar.",
+  "cartera.acciones.fichasDistintas": "Este cliente tem várias fichas com limite ou prazo diferentes. Ao salvar, todas ficarão com os valores acima."
 }

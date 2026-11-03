@@ -9360,5 +9360,7 @@
     "cartera.castigada.saldoCastigado": "Abgeschriebener Saldo",
     "cartera.castigada.motivo": "Grund",
     "cartera.castigada.fecha": "Datum",
-    "cartera.castigada.por": "Von"
+    "cartera.castigada.por": "Von",
+    "cartera.acciones.pagoYaEnRevision": "Für diese Bestellung wird bereits eine Zahlung von {{valor}} in der Finanzabteilung geprüft. Prüfe, dass es nicht dieselbe Zahlung ist, bevor du sie erfasst.",
+    "cartera.acciones.fichasDistintas": "Dieser Kunde hat mehrere Datensätze mit unterschiedlichem Limit oder Zahlungsziel. Beim Speichern übernehmen alle die obigen Werte."
 }

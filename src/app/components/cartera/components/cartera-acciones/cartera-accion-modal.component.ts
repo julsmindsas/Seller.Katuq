@@ -93,6 +93,8 @@ export class CarteraAccionModalComponent implements OnInit {
   pago = { fecha: this.fechaLocal(new Date()), formaPago: '', valor: 0, numeroComprobante: '', notas: '' };
   archivo: File | null = null;
   pedidoPago = '';
+  /** orderId -> valor de pagos que Tesorería tiene por revisar (de la vista previa del estado de cuenta). */
+  private enRevisionPorPedido = new Map<string, number>();
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -123,6 +125,7 @@ export class CarteraAccionModalComponent implements OnInit {
         break;
       case 'pago':
         if (this.pedidos.length === 1) this.elegirPedidoPago(this.pedidos[0].orderId);
+        this.cargarPagosEnRevision();
         this.maestro.consultarFormaPago().subscribe({
           next: (fp: any) => (this.formasPago = Array.isArray(fp) ? fp : []),
           error: () => (this.formasPago = []),
@@ -500,6 +503,20 @@ export class CarteraAccionModalComponent implements OnInit {
     this.pedidoPago = orderId;
     const p = this.pedidos.find((x) => x.orderId === orderId);
     this.pago.valor = p ? Math.round(Number(p.saldo) || 0) : 0;
+  }
+
+  /** Solo informa (nunca bloquea): si no se puede consultar, simplemente no hay aviso. */
+  private cargarPagosEnRevision(): void {
+    this.carteraService.estadoCuentaVistaPrevia(this.cliente.documento, undefined, true).subscribe({
+      next: (v) => {
+        this.enRevisionPorPedido = new Map((v?.estado?.pedidos || []).filter((p) => Number(p.enRevision) > 0).map((p) => [p.orderId, Number(p.enRevision)] as [string, number]));
+      },
+      error: () => (this.enRevisionPorPedido = new Map()),
+    });
+  }
+
+  get pagoEnRevisionActual(): number {
+    return this.enRevisionPorPedido.get(this.pedidoPago) || 0;
   }
 
   get pedidoPagoActual() {
