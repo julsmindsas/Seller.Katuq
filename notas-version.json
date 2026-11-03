@@ -35,5 +35,6 @@
   { "fecha": "2026-11-01T14:51:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, «Revisar inconvenientes», el botón de ayuda y las tarjetas de arriba te llevan directo a la lista que abren." },
   { "fecha": "2026-11-01T14:51:30Z", "tipo": "CORRIGE", "texto": "En Configuración DIAN, el ícono de búsqueda ya no tapa el nombre de la ciudad." },
   { "fecha": "2026-11-03T16:00:00Z", "tipo": "MEJORA", "texto": "Antes de emitir una factura te avisamos si ya le facturaste a ese cliente el mismo valor esta semana, para que no la emitas dos veces. Y si la DIAN dice que un documento ya lo tenía, te explicamos qué hacer en vez de reenviarlo." },
-  { "fecha": "2026-11-03T16:30:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, la fecha de emisión de tus facturas y notas muestra la hora real en que se emitieron, y ya no 12:00 en todas." }
+  { "fecha": "2026-11-03T16:30:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, la fecha de emisión de tus facturas y notas muestra la hora real en que se emitieron, y ya no 12:00 en todas." },
+  { "fecha": "2026-11-03T17:00:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, los botones de cada documento y el total de cada concepto de «Nueva factura» se quedan a la vista aunque la pantalla sea angosta." }
 ]

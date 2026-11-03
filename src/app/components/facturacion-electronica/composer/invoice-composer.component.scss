@@ -123,6 +123,10 @@ button:focus-visible { outline: 2px solid var(--kc-accent); outline-offset: 3px;
   td { padding: 12px 10px; border: 0; border-top: 1px solid var(--kc-line2); vertical-align: top; &:first-child { padding-left: 20px; } }
   .concept-cell { min-width: 260px; }
   .total-cell { background: #fbfafe; text-align: right; }
+  // Ticket 1487: el total y el botón de quitar quedan fijos a la derecha cuando la tabla no cabe.
+  .acciones-cell { position: sticky; right: 0; z-index: 1; width: 52px; min-width: 52px; background: #fff; }
+  thead th.acciones-cell { background: var(--kc-canvas); }
+  .total-head, .total-cell { position: sticky; right: 52px; z-index: 1; box-shadow: -10px 0 12px -12px rgba(30, 35, 60, .28); }
 }
 .number-input, .discount-input { width: 100%; min-width: 72px; text-align: center; font-family: $head; font-size: 14px; }
 .tax-input { width: 100%; min-width: 84px; text-align: center; }
@@ -233,6 +237,7 @@ button:focus-visible { outline: 2px solid var(--kc-accent); outline-offset: 3px;
     .line-amount { padding-top: 0; text-align: left; }
     .total-cell { text-align: left; }
     td:last-child { text-align: right; align-self: end; }
+    .acciones-cell, .total-cell { position: static; width: auto; min-width: 0; box-shadow: none; } // Ticket 1487: en tarjetas no hace falta fijarlas.
   }
   .orders-picker { display: table; min-width: 640px; thead { display: table-header-group; } tbody { display: table-row-group; } tbody tr { display: table-row; } td { display: table-cell; padding: 12px 10px !important; border-top: 1px solid var(--kc-line2); } }
 }

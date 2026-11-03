@@ -311,7 +311,8 @@
               <td class="text-center">
                 <span class="fe-pill fe-pill--{{ statusGroup(document) }}" [class.fe-pill--reemplazada]="statusGroup(document) === 'rejected' && !necesitaRevision(document)"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ etiquetaEstado(document) }}</span>
               </td>
-              <td>
+              <!-- Ticket 1487: las acciones quedan fijas a la derecha aunque la tabla tenga scroll. -->
+              <td class="fe-table__actions" [class.is-menu-open]="isMenuOpen(document)">
                 <div class="fe-rowactions" data-menu-cell="1">
                   <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(document, 'pdf')" [disabled]="document.status !== 'accepted'" [title]="'facturacionElectronica.facturacionElectronica.descargarRepresentacionGrafica' | translate">
                     <i class="pi pi-file-pdf fe-red"></i> PDF

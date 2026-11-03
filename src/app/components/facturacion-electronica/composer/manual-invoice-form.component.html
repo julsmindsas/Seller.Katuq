@@ -17,7 +17,7 @@
       </div>
       <div class="table-responsive">
         <table class="table composer-table" formArrayName="items">
-          <thead><tr><th class="concept-head">{{ 'facturacionElectronica.manualInvoiceForm.productoOServicio' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.cant' | translate }}</th><th class="text-end">{{ 'facturacionElectronica.manualInvoiceForm.valorSinIva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.desc' | translate }}</th><th class="text-end total-head">{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</th><th><span class="visually-hidden">{{ 'facturacionElectronica.manualInvoiceForm.acciones' | translate }}</span></th></tr></thead>
+          <thead><tr><th class="concept-head">{{ 'facturacionElectronica.manualInvoiceForm.productoOServicio' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.cant' | translate }}</th><th class="text-end">{{ 'facturacionElectronica.manualInvoiceForm.valorSinIva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</th><th class="text-center">{{ 'facturacionElectronica.manualInvoiceForm.desc' | translate }}</th><th class="text-end total-head">{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</th><th class="acciones-cell"><span class="visually-hidden">{{ 'facturacionElectronica.manualInvoiceForm.acciones' | translate }}</span></th></tr></thead>
           <tbody><tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
             <td class="concept-cell" data-label="Producto o servicio"><app-invoice-concept-picker [item]="item" [companyId]="companyId" [disabled]="disabled" [index]="i"></app-invoice-concept-picker>
               <small class="field-error" *ngIf="invalid('items.' + i + '.description')">{{ 'facturacionElectronica.manualInvoiceForm.escribeElProductoOServicio' | translate }}</small></td>
@@ -28,7 +28,7 @@
               <small class="field-error" *ngIf="invalid('items.' + i + '.discountPercent')">{{ 'facturacionElectronica.manualInvoiceForm.de0A9999' | translate }}</small></td>
             <td class="text-end total-cell" data-label="Total"><span class="line-amount" [class.is-empty]="!lineTotal(i)">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
               <small class="discount-amount" *ngIf="lineDiscount(i)">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</small></td>
-            <td><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.quitarConcepto' | translate:{numero: i + 1}" [title]="'facturacionElectronica.manualInvoiceForm.quitar' | translate"><i class="pi pi-trash"></i></button></td>
+            <td class="acciones-cell"><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.quitarConcepto' | translate:{numero: i + 1}" [title]="'facturacionElectronica.manualInvoiceForm.quitar' | translate"><i class="pi pi-trash"></i></button></td>
           </tr></tbody>
         </table>
       </div>

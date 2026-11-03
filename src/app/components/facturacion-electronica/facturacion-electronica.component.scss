@@ -168,10 +168,13 @@ $head: var(--kc-font-head);
 
 .fe-table-wrap { overflow-x: auto; }
 .fe-table {
-  width: 100%; border-collapse: collapse; min-width: 940px;
+  width: 100%; border-collapse: collapse; min-width: 860px;
   th { @include kc-th; padding: 13px 12px; background: var(--kc-canvas); font-size: 10.5px; &:first-child { padding-left: 20px; } &:last-child { padding-right: 20px; }
     &.text-end { text-align: right; } &.text-center { text-align: center; } }
-  &__doc { min-width: 220px; } &__actions { width: 150px; } &__check { width: 44px; } &__client { min-width: 200px; }
+  &__doc { min-width: 190px; } &__actions { width: 150px; }
+  // Ticket 1487: la columna de acciones queda fija a la derecha cuando la tabla no cabe.
+  th.fe-table__actions, td.fe-table__actions { position: sticky; right: 0; z-index: 2; box-shadow: -10px 0 12px -12px rgba(30, 35, 60, .28); }
+  td.fe-table__actions { background: inherit; &.is-menu-open { z-index: 6; } } &__check { width: 44px; } &__client { min-width: 200px; }
   td { padding: 13px 12px; border-top: 1px solid var(--kc-line2); vertical-align: middle; font-size: 13px; &:first-child { padding-left: 20px; } &:last-child { padding-right: 20px; } }
   tbody tr { background: #fff; transition: background .12s ease; &:hover { background: #fbfbfe; } &.is-rejected { background: #fffcfc; } &.is-selected { background: #f7f5fe; } &.is-blocked td:not(:first-child) { opacity: .7; } }
   &--orders { min-width: 780px; }
@@ -526,3 +529,7 @@ $head: var(--kc-font-head);
 
 // Ticket 1480: consejo para la regla 90 (documento procesado anteriormente).
 .fe-reject__consejo { display: block; margin-top: 4px; font-weight: 700; letter-spacing: normal; }
+
+// Ticket 1487: el texto y los botones de un rechazo se quedan en la parte visible de la tabla.
+.fe-table-wrap { container-type: inline-size; }
+.fe-reject__body { position: sticky; left: 71px; max-width: calc(100cqw - 91px); }
