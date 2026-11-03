@@ -228,10 +228,12 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
         if (this.clienteData) this.clienteData = { ...this.clienteData, relationType: valor === 'customer' ? undefined : valor };
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.translate.instant('cartera.interna.guardado'), showConfirmButton: false, timer: 1800 });
       },
-      error: () => {
+      error: (err: any) => {
         this.guardandoRelacion = false;
         this.relationType = anterior;
-        Swal.fire({ icon: 'error', title: this.translate.instant('cartera.interna.noSePudoGuardar'), text: this.translate.instant('cartera.interna.sinFicha') });
+        // Solo un 404 es «no se encontró la ficha»; un 403 (función apagada) o un 500 piden intentar de nuevo.
+        const sinFicha = err?.status === 404;
+        Swal.fire({ icon: 'error', title: this.translate.instant('cartera.interna.noSePudoGuardar'), text: this.translate.instant(sinFicha ? 'cartera.interna.sinFicha' : 'cartera.carteraClientes.intentaDeNuevoEnUn') });
       },
     });
   }

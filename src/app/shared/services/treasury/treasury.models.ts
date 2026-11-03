@@ -33,6 +33,8 @@ export interface TreasuryMetrics {
   carteraPendiente: MetricAmount & { internos?: MetricAmount };
   /** Ticket 1461: claves de documento de los clientes internos (solo con la cartera interna encendida). */
   clavesInternas?: string[];
+  /** `true` si el comercio tiene más de 2000 clientes internos y la lista se cortó (algunos no llevan el chip «Interno»). */
+  clavesInternasRecortado?: boolean;
   porRevisar: MetricAmount;
   sinPago: MetricCount;
   alertasActivas: MetricCount;
