@@ -51,6 +51,8 @@ export class RegistrarPagoComponent implements OnInit {
   lectura: LecturaComprobanteResponse | null = null;
   mensajeLectura = '';
   verificadoEnBanco = false;
+  /** Campos que dejó la lectura y que la persona no ha tocado: si cambia o quita el archivo, se limpian. */
+  private autollenados = new Set<string>();
   /** Confianza por debajo de la cual el campo se marca «Revisar». */
   readonly confianzaMinima = 0.6;
 
@@ -211,6 +213,7 @@ export class RegistrarPagoComponent implements OnInit {
   }
 
   private reiniciarLectura(): void {
+    this.limpiarAutollenados();
     this.archivoUrlSubido = '';
     this.lectura = null;
     this.mensajeLectura = '';
@@ -270,7 +273,10 @@ export class RegistrarPagoComponent implements OnInit {
     });
   }
 
-  /** Pone lo leído como SUGERENCIA en el formulario; la persona lo revisa y puede cambiarlo todo. */
+  /**
+   * Pone lo leído como SUGERENCIA en el formulario; la persona lo revisa y puede cambiarlo todo. No pisa un campo que
+   * la persona ya escribió mientras la lectura tardaba.
+   */
   private aplicarLectura(r: LecturaComprobanteResponse): void {
     const c = r.campos!;
     const patch: Record<string, any> = {};
@@ -280,7 +286,23 @@ export class RegistrarPagoComponent implements OnInit {
     if (c.banco) patch['banco'] = c.banco;
     if (c.referencia) patch['numeroComprobante'] = c.referencia;
     if (c.cuentaDestinoUltimos4) patch['cuentaUltimos4'] = c.cuentaDestinoUltimos4;
-    this.form.patchValue(patch);
+    for (const nombre of Object.keys(patch)) {
+      const ctrl = this.form.get(nombre);
+      if (!ctrl || ctrl.dirty) continue;
+      ctrl.setValue(patch[nombre]);
+      this.autollenados.add(nombre);
+    }
+  }
+
+  /** Al quitar o cambiar el archivo, lo que dejó su lectura y nadie tocó se borra: no queda un dato de otro comprobante. */
+  private limpiarAutollenados(): void {
+    if (!this.form) return;
+    for (const nombre of this.autollenados) {
+      const ctrl = this.form.get(nombre);
+      if (!ctrl || ctrl.dirty) continue;
+      ctrl.setValue(nombre === 'fecha' ? new Date().toISOString().split('T')[0] : '');
+    }
+    this.autollenados.clear();
   }
 
   // ── Registro ───────────────────────────────────────────────────────────────
@@ -321,7 +343,7 @@ export class RegistrarPagoComponent implements OnInit {
         pago: {
           valor: Number(this.form.get('valor')?.value) || 0,
           formaPago: formaPagoNombre,
-          numeroComprobante: this.form.get('numeroComprobante')?.value || '',
+          numeroComprobante: this.referenciaFinal(),
           fechaTransaccion: this.fechaTransaccion(),
           archivo: archivoUrl,
           archivoEvidencia: '',
@@ -359,14 +381,18 @@ export class RegistrarPagoComponent implements OnInit {
     }
   }
 
-  /** Fecha y hora del pago: con la bandera, las del comprobante (hora de Colombia); si no, el momento del registro como siempre. */
+  /** Con la bandera, la referencia se guarda sin espacios al inicio ni al final (así el aviso de «referencia repetida» no se escapa). */
+  private referenciaFinal(): string {
+    const v = (this.form.get('numeroComprobante')?.value || '').toString();
+    return this.comprobantePrimero ? v.trim() : v;
+  }
+
+  /**
+   * Momento del registro, como siempre (Cartera y la antigüedad de los pagos ordenan por este campo). La fecha y la
+   * hora del comprobante viajan aparte en `fecha` y `hora`.
+   */
   private fechaTransaccion(): string {
-    if (!this.comprobantePrimero) return new Date().toISOString();
-    const fecha = this.form.get('fecha')?.value;
-    const hora = this.form.get('hora')?.value;
-    if (!fecha) return new Date().toISOString();
-    const d = new Date(`${fecha}T${hora || '12:00'}:00-05:00`);
-    return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    return new Date().toISOString();
   }
 
   /** Datos del comprobante que la persona confirmó (el servidor compara con la lectura firmada). */
