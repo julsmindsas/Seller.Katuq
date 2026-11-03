@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
+import { from, Subscription } from 'rxjs';
+import { concatMap, tap } from 'rxjs/operators';
 import { CarteraService } from '../../services/cartera/cartera.service';
 import {
   CanalRecordatorio,
@@ -60,6 +61,11 @@ export class RecordatorioCobroModalComponent implements OnInit, OnDestroy {
   historial: EventoRecordatorio[] = [];
   historialAbierto = false;
   cargandoHistorial = false;
+
+  /** Cuántos destinatarios van en cada llamada de envío. */
+  private static readonly TANDA = 10;
+  /** Avance del envío por tandas. */
+  progreso = { hechos: 0, total: 0 };
 
   private sub?: Subscription;
   private pedido = 0;
@@ -150,23 +156,56 @@ export class RecordatorioCobroModalComponent implements OnInit, OnDestroy {
     return (this.vista?.enviables || []).reduce((s, e) => s + (Number(e.saldo) || 0), 0);
   }
 
+  /**
+   * Envía por tandas de pocos destinatarios, una tras otra: cada llamada es corta (un lote grande en una sola
+   * petición podía tardar minutos y cortarse sin dejar ver el resultado) y la persona ve cuánto va. Si una
+   * tanda falla, se muestra lo que ya salió; reintentar no repite: a quien ya se le recordó hoy se le omite.
+   */
   enviar(): void {
     if (!this.puedeEnviar) return;
     this.enviando = true;
     this.error = '';
-    this.carteraService.recordatorioEnviar(this.canal, this.destinatarios).subscribe({
-      next: (r) => {
-        this.resultado = r;
-        this.enviando = false;
-        if (r.enviados > 0) this.huboCambio = true;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.enviando = false;
-        this.error = this.mensajeDe(err);
-        this.cdr.markForCheck();
-      },
-    });
+    const tamano = Math.max(1, Math.min(RecordatorioCobroModalComponent.TANDA, this.config?.maxPorLote || RecordatorioCobroModalComponent.TANDA));
+    const tandas: DestinatarioRecordatorio[][] = [];
+    for (let i = 0; i < this.destinatarios.length; i += tamano) tandas.push(this.destinatarios.slice(i, i + tamano));
+    this.progreso = { hechos: 0, total: this.destinatarios.length };
+    const acumulado: RecordatorioEnviado = { success: true, canal: this.canal, enviados: 0, fallidos: 0, omitidos: 0, resultados: [] };
+
+    this.sub?.unsubscribe();
+    this.sub = from(tandas)
+      .pipe(
+        concatMap((tanda) =>
+          this.carteraService.recordatorioEnviar(this.canal, tanda).pipe(
+            tap((r) => {
+              acumulado.enviados += r.enviados || 0;
+              acumulado.fallidos += r.fallidos || 0;
+              acumulado.omitidos += r.omitidos || 0;
+              acumulado.resultados.push(...(r.resultados || []));
+              this.progreso = { hechos: this.progreso.hechos + tanda.length, total: this.progreso.total };
+              this.cdr.markForCheck();
+            }),
+          ),
+        ),
+      )
+      .subscribe({
+        complete: () => this.terminarEnvio(acumulado),
+        error: (err) => {
+          const huboAlgo = this.progreso.hechos > 0;
+          this.error = huboAlgo ? this.translate.instant('cartera.recordatorio.envioInterrumpido', { hechos: this.progreso.hechos, total: this.progreso.total }) + ' ' + this.mensajeDe(err) : this.mensajeDe(err);
+          if (huboAlgo) this.terminarEnvio(acumulado);
+          else {
+            this.enviando = false;
+            this.cdr.markForCheck();
+          }
+        },
+      });
+  }
+
+  private terminarEnvio(r: RecordatorioEnviado): void {
+    this.resultado = r;
+    this.enviando = false;
+    if (r.enviados > 0) this.huboCambio = true;
+    this.cdr.markForCheck();
   }
 
   /** Motivos de omisión agrupados para el resumen («3 sin correo, 1 ya recordado hoy»). */

@@ -408,6 +408,7 @@ export class CarteraAccionModalComponent implements OnInit {
       cobroCastigo: 'cartera.acciones.eventoCastigo',
       cobroReactivacion: 'cartera.acciones.eventoReactivacion',
       cobroCredito: 'cartera.acciones.eventoCredito',
+      cobroRecordatorio: 'cartera.acciones.eventoRecordatorio',
     };
     return claves[tipo] || 'cartera.acciones.eventoOtro';
   }
@@ -422,6 +423,12 @@ export class CarteraAccionModalComponent implements OnInit {
         return `${Number(d.valor || 0).toLocaleString('es-CO')} · ${d.fecha || ''}${d.nota ? ' · ' + d.nota : ''}`;
       case 'cobroEstadoCuenta':
         return `${d.canal || ''} · ${d.resultado || ''}`;
+      case 'cobroRecordatorio': {
+        const canal = d.canal === 'whatsapp' ? 'WhatsApp' : this.translate.instant('cartera.recordatorio.canalCorreo');
+        const estado = this.translate.instant(d.resultado === 'enviado' ? 'cartera.recordatorio.estado_enviado' : 'cartera.recordatorio.estado_fallido');
+        const pedidos = Array.isArray(d.pedidos) && d.pedidos.length ? d.pedidos.join(', ') : '';
+        return [canal, estado, pedidos].filter(Boolean).join(' · ');
+      }
       case 'cobroCredito':
         return `${Number(d.creditLimit || 0).toLocaleString('es-CO')} · ${d.payTermDays} d`;
       default:

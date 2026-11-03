@@ -176,8 +176,11 @@ export class CarteraClientesComponent implements OnChanges {
   seleccionClientes = new Map<string, CarteraCliente>();
   /** Pedidos escogidos dentro de un cliente (documento -> orderIds), para «varias facturas de un cliente». */
   seleccionPedidos = new Map<string, Set<string>>();
-  /** Tope de clientes por envío que se avisa antes de abrir la ventana (el servidor lo vuelve a exigir). */
-  readonly maxSeleccion = 200;
+  /**
+   * Tope de clientes por envío que se avisa antes de abrir la ventana. Es el «máximo de clientes por envío» que
+   * el comercio dejó en su configuración (50 si no se ha cambiado); el servidor lo vuelve a exigir.
+   */
+  maxSeleccion = 50;
 
   /**
    * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
@@ -215,6 +218,21 @@ export class CarteraClientesComponent implements OnChanges {
     this.castigoActivo = this.features.isEnabled('carteraCastigo');
     this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
     this.esAdmin = this.leerEsAdmin();
+    if (this.recordatoriosActivo) this.leerTopeDeEnvio();
+  }
+
+  /** Lee el máximo de clientes por envío de la empresa; si no se puede leer, queda el valor base. */
+  private leerTopeDeEnvio(): void {
+    this.carteraService.getConfigRecordatorio().subscribe({
+      next: (c) => {
+        const max = Number(c?.maxPorLote);
+        if (Number.isInteger(max) && max >= 1) {
+          this.maxSeleccion = max;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {},
+    });
   }
 
   private leerEsAdmin(): boolean {
@@ -363,6 +381,13 @@ export class CarteraClientesComponent implements OnChanges {
     this.totalVisible = this.vista.total;
     this.kpisVista = this.calcularKpisVista();
     this.gruposVendedor = this.vendedorMoraActivo ? this.armarGruposVendedor() : [];
+    // Un cliente escogido que los filtros ya no muestran sale de la selección: no se le envía sin verlo.
+    if (this.seleccionClientes.size) {
+      const visibles = new Set(this.filtered.map((c) => c.documento));
+      Array.from(this.seleccionClientes.keys()).forEach((doc) => {
+        if (!visibles.has(doc)) this.seleccionClientes.delete(doc);
+      });
+    }
   }
 
   // ── Ticket 1457: «Agrupar por: Cliente / Vendedor» ─────────────────────────

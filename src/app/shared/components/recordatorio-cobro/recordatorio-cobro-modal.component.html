@@ -13,8 +13,8 @@
   <ng-container *ngIf="resultado as r">
     <div class="rc-aviso" role="status" [ngClass]="r.enviados > 0 ? 'rc-aviso-ok' : 'rc-aviso-alerta'">
       <strong>{{ 'cartera.recordatorio.resultadoEnviados' | translate:{ n: r.enviados } }}</strong>
-      <span *ngIf="r.fallidos > 0"> · {{ 'cartera.recordatorio.resultadoFallidos' | translate:{ n: r.fallidos } }}</span>
-      <span *ngIf="r.omitidos > 0"> · {{ 'cartera.recordatorio.resultadoOmitidos' | translate:{ n: r.omitidos } }}</span>
+      <span class="rc-cuenta" *ngIf="r.fallidos > 0"> · {{ 'cartera.recordatorio.resultadoFallidos' | translate:{ n: r.fallidos } }}</span>
+      <span class="rc-cuenta" *ngIf="r.omitidos > 0"> · {{ 'cartera.recordatorio.resultadoOmitidos' | translate:{ n: r.omitidos } }}</span>
     </div>
     <ul class="rc-lista">
       <li *ngFor="let x of r.resultados" class="rc-fila-resultado">
@@ -25,6 +25,10 @@
       </li>
     </ul>
   </ng-container>
+
+  <div class="rc-aviso rc-aviso-info" role="status" aria-live="polite" *ngIf="enviando && progreso.total > 1">
+    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'cartera.recordatorio.enviandoAvance' | translate:{ hechos: progreso.hechos, total: progreso.total } }}
+  </div>
 
   <ng-container *ngIf="!resultado">
     <!-- Canal -->

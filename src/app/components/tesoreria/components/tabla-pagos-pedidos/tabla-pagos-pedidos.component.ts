@@ -11,7 +11,7 @@ import {
 import { Table } from 'primeng/table';
 import { LazyLoadEvent } from 'primeng/api';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
@@ -201,12 +201,17 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
    * Ticket 1457 (parte A): días de mora y rango de los pedidos de la página visible. Es un extra: si no carga, la
    * lista sigue igual. Solo se piden los pedidos de esta página.
    */
+  private moraSub?: Subscription;
+
   private cargarMora(): void {
+    this.moraSub?.unsubscribe();
     this.mora = {};
     if (!this.verMora || !this.orders.length) return;
     const ids = this.orders.map((o) => String(o?._id || '')).filter(Boolean);
     if (!ids.length) return;
-    this.carteraService
+    // Si el usuario cambia de página rápido, la respuesta de la página anterior se descarta.
+    this.moraSub?.unsubscribe();
+    this.moraSub = this.carteraService
       .moraDePedidos(ids)
       .pipe(takeUntil(this.destroy$))
       .subscribe({

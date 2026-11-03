@@ -9420,5 +9420,8 @@
     "cartera.agrupar.vencido": "{{valor}} überfällig",
     "cartera.agrupar.verClientes": "Seine Kunden ansehen",
     "cartera.agrupar.recordarVencidos": "An Überfälliges erinnern",
-    "tesoreria.tablaPagosPedidos.mora": "Verzug"
+    "tesoreria.tablaPagosPedidos.mora": "Verzug",
+    "cartera.recordatorio.enviandoAvance": "Wird gesendet… {{hechos}} von {{total}}",
+    "cartera.recordatorio.envioInterrumpido": "Der Versand wurde nach {{hechos}} von {{total}} unterbrochen. Was schon gesendet wurde, ist festgehalten. Öffnen Sie für die übrigen «Zahlung erinnern» erneut: Wer heute schon erinnert wurde, bekommt nichts doppelt.",
+    "cartera.acciones.eventoRecordatorio": "Zahlungserinnerung"
 }

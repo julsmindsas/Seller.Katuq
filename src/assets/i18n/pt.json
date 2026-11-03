@@ -9588,5 +9588,8 @@
   "cartera.agrupar.vencido": "{{valor}} vencido",
   "cartera.agrupar.verClientes": "Ver seus clientes",
   "cartera.agrupar.recordarVencidos": "Lembrar o pagamento do vencido",
-  "tesoreria.tablaPagosPedidos.mora": "Atraso"
+  "tesoreria.tablaPagosPedidos.mora": "Atraso",
+  "cartera.recordatorio.enviandoAvance": "Enviando… {{hechos}} de {{total}}",
+  "cartera.recordatorio.envioInterrumpido": "O envio foi interrompido após {{hechos}} de {{total}}. O que já saiu ficou registrado. Para os que faltam, abra «Lembrar pagamento» de novo: quem já foi lembrado hoje não recebe outra vez.",
+  "cartera.acciones.eventoRecordatorio": "Lembrete de pagamento"
 }

@@ -12602,5 +12602,8 @@
   "cartera.agrupar.vencido": "{{valor}} overdue",
   "cartera.agrupar.verClientes": "See their customers",
   "cartera.agrupar.recordarVencidos": "Remind overdue payments",
-  "tesoreria.tablaPagosPedidos.mora": "Days overdue"
+  "tesoreria.tablaPagosPedidos.mora": "Days overdue",
+  "cartera.recordatorio.enviandoAvance": "Sending… {{hechos}} of {{total}}",
+  "cartera.recordatorio.envioInterrumpido": "Sending stopped after {{hechos}} of {{total}}. What already went out is on record. For the rest, open «Send payment reminder» again: anyone reminded today is not sent a second time.",
+  "cartera.acciones.eventoRecordatorio": "Payment reminder"
 }

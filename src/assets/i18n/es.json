@@ -12448,5 +12448,8 @@
   "cartera.agrupar.vencido": "{{valor}} vencido",
   "cartera.agrupar.verClientes": "Ver sus clientes",
   "cartera.agrupar.recordarVencidos": "Recordar pago de lo vencido",
-  "tesoreria.tablaPagosPedidos.mora": "Mora"
+  "tesoreria.tablaPagosPedidos.mora": "Mora",
+  "cartera.recordatorio.enviandoAvance": "Enviando… {{hechos}} de {{total}}",
+  "cartera.recordatorio.envioInterrumpido": "El envío se interrumpió después de {{hechos}} de {{total}}. Lo que ya salió quedó registrado. Para los que faltan, vuelve a abrir «Recordar pago»: a quien ya se le recordó hoy no se le repite.",
+  "cartera.acciones.eventoRecordatorio": "Recordatorio de pago"
 }
