@@ -366,10 +366,38 @@
 
 ## 5. Vista previa del editor (front)
 
-- [ ] 5.1 Espejo en `sitio-render` (`.sitio--movil`): cajón, 16 px y 44 px, con las clases del
+- [x] 5.1 Espejo en `sitio-render` (`.sitio--movil`): cajón, 16 px y 44 px, con las clases del
   render publicado. **Éxito:** TC «La vista previa del editor muestra lo mismo»; `npm run build`
   sin errores; sin gradientes ni primarios prohibidos nuevos en el módulo.
-- [ ] 5.2 [si P13] Revisar `/s/:slug` con el mismo componente.
+  — **Hecho (TX34-B18):** `sitio-render` recibe `cajonLateral` (por defecto `false`) y el editor se lo pasa desde la
+  bandera de empresa `storeDrawer` (`cajonLateralPrevia`). Solo en la previa «Celular» y con la bandera, la cabecera lleva
+  `cabecera--cajon` y el botón «Menú» (`kq-menu` / `kq-menu__boton`, 44 px) en lugar de la fila de categorías y los enlaces
+  sueltos; el panel (`kq-menu__capa` > `kq-menu__panel`, mismas clases, mismos grupos y textos: categorías visibles hasta 8,
+  enlaces, «Mi cuenta»/«Favoritos» si vende, WhatsApp del bloque de WhatsApp) sale en la capa pegada arriba del lienzo y mide
+  lo que el marco. Abre con el botón y cierra con ✕, Escape, toque fuera o al elegir un renglón; atrapa el foco y lo devuelve
+  al botón. Estado del componente: no toca servicios, eventos del editor ni modales. Sin la bandera, la previa muestra la fila
+  de hoy, igual que el sitio publicado sin ella. El contenido del panel vive en `cajon-previa.ts` (espejo de
+  `siteCajonLateral.js`). Además, dentro de `.sitio--movil`: campos de 16 px (D-461) y áreas de 44 px en el buscador, el
+  carrito, «boton--chico», enlaces y categorías de la cabecera, «Agregar» y enlaces del pie (la misma lista de `siteTienda.js`
+  que existe en la previa; los controles del propio editor no cambian). Sin textos nuevos en otros idiomas (el módulo no usa
+  i18n). Sin degradados ni primarios prohibidos nuevos (SCSS 2 → 2, TS 1 → 1, HTML 0 → 0).
+  **Límites conocidos (la previa no sigue al servidor en estos casos):** la bandera de empresa es lo único que el front
+  conoce. El interruptor general `storeMobile.drawer` (incluido el kill switch: apagado o en sombra) y `paraTodas` viven en
+  el servidor. Por eso, con el interruptor general apagado y `storeDrawer` encendido, la previa muestra el cajón y la tienda
+  publicada la fila; con `paraTodas` y sin `storeDrawer`, al revés. Cerrarlo exige que una respuesta que el editor ya recibe
+  traiga el modo efectivo (cambio de backend aparte, con su aprobación). Hasta entonces, antes de encender `paraTodas` o de
+  usar el kill switch hay que tener presente que las previas no lo reflejan. La previa tampoco pinta «Mi cuenta» y
+  «Favoritos» en la barra (nunca lo hizo), ni el modo conversión, ni el celular del pie como WhatsApp del panel (el front no
+  recibe el contacto de la empresa), ni sabe si el catálogo está en otra página (`catalogoAparte`): como la fila de hoy, muestra
+  las categorías cuando la cabecera las pide. Sin categorías reales usa las de ejemplo, igual que la fila.
+  **Pendiente de cierre:** revisión visual en el editor real a 1440 y 390 px (se probó el CSS compilado con una réplica del
+  marcado en Chrome, no el editor) y el build completo, que aquí no se corre; se comprobó con `tsc` y `ngc --noEmit`.
+- [x] 5.2 [si P13] Revisar `/s/:slug` con el mismo componente.
+  — **Revisada (TX34-B18), sin cambios de código — RESULTADO: `/s/:slug` NO recibe estos cambios.** `sitio-publico` usa
+  `app-sitio-render` sin `dispositivo` ni `cajonLateral`; todo lo nuevo (cajón, 16 px y 44 px) cuelga de `.sitio--movil` o
+  de `cajonLateral`, así que esa ruta, en un celular real, sigue como estaba (no cumple D-461 ni D9). La ruta sigue declarada
+  en `app-routing.module.ts`, pero ningún enlace interno apunta a `/s/` (la tienda real sale del HTML del backend). Decide
+  Daniel: retirar la ruta, o abrir un cambio aparte para que use las reglas móviles por ancho de pantalla.
 
 ## 6. Medición final y encendido (cada paso con OK de Daniel)
 
