@@ -19,4 +19,10 @@
   <p class="fx-vacio" *ngIf="contenido.restantes > 0">{{ 'enVivo.fichaLista.yMas' | translate:{restantes: contenido.restantes} }}</p>
 </section>
 
+<section class="fx-sec" *ngIf="contenido.tituloSinCerrar" [attr.aria-label]="contenido.tituloSinCerrar">
+  <h3 class="fx-eyebrow">{{ contenido.tituloSinCerrar }}</h3>
+  <app-en-vivo-ficha-filas [filas]="contenido.filasSinCerrar" (abrirPedido)="abrirPedido.emit($event)"></app-en-vivo-ficha-filas>
+  <p class="fx-vacio" *ngIf="contenido.restantesSinCerrar > 0">{{ 'enVivo.fichaLista.yMas' | translate:{restantes: contenido.restantesSinCerrar} }}</p>
+</section>
+
 <p class="fx-nota">{{ contenido.nota }}</p>

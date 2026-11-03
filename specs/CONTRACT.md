@@ -13003,3 +13003,28 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Republicar o apagar app.katuq.com.
   - Revisar el pedido DAD-014498 de ALMARA.
   - Los pendientes de operación y seguridad están en el `CLAUDE.md` del backend (repositorio privado).
+
+### 2026-11-03 — D-580: «En vivo» cuenta en la calle solo lo que salió hoy
+- **Pedido de Daniel (3-nov):** "validar las métricas de En vivo... hay unas métricas exageradas, disque 92 horas".
+- **Qué pasaba (ALMARA FELICIDAD, 3-nov, 10 a. m.):**
+  - «Tu flota» mostraba «En ruta · 3 · 94 h», 114 h, 118 h y 145 h. Por ejemplo, Carlos salió ese día a las 8:31 a. m. y ya había entregado 2 pedidos. Las 94 h salían de DAD-014810, despachado el 30-oct, y DAD-014808 seguía igual desde el 31-oct. Nadie los marcó entregados.
+  - La ventana de En vivo trae 7 días de pedidos sin cerrar, así que un pedido «Despachado» seguía «en ruta» hasta 7 días. La pastilla contaba desde la salida más vieja y el aviso del servidor desde la más reciente: tampoco coincidían.
+  - «#DAD-014856 lleva 86 h listo para salir»: se entregaba ese día, pero no tenía hora de empacado y el radar contaba desde la creación.
+- **Decisión (Daniel, 3-nov: «si» a la propuesta de tres puntos):**
+  1. A un mensajero propio solo se le cuenta como en ruta o en la calle lo que salió hoy (por la hora de salida o, si no se vio, la de llegada). El tiempo corre desde su salida más reciente, igual en la pantalla y en el servidor. Las transportadoras siguen contando lo de días anteriores: un envío a otra ciudad tarda días.
+  2. Los pedidos de días anteriores que siguen «despachados» con un mensajero propio van en un solo punto de «Atención ahora» (tipo `sin_cerrar`, revisar): «N pedidos de días anteriores siguen como despachados», con quién los lleva, y lleva a la ficha del que tiene más. La ficha del mensajero los lista aparte.
+  3. Un listo sin hora de listo (ni de empacado) no cuenta horas desde la creación: dice «está listo y se entrega hoy», «está listo y debía entregarse el …» (urgente) o «está listo para salir». No aparece si llegó hace 45 min o menos. Además, un listo que se entrega otro día ya no aparece.
+- **Backend:**
+  - `services/enVivo/proyeccion.js`: la proyección lleva `entrega`, el día pactado (`fechaEntrega`) en hora de Colombia.
+  - `services/enVivo/radar.js`: `salioHoy`, en ruta y sin cerrar en `atencionComercio`, y la regla nueva de listos.
+  - `services/enVivo/distribuidor.js`: la `flota` de la foto marca `enRuta` solo con salidas de hoy. Eso también corrige «N mensajeros en la calle» y los mensajeros libres del plan de despachos.
+- **Front:**
+  - `utilidades/flota.ts`: `salioElMismoDia`, y la salida más reciente.
+  - `ficha/utilidades/mensajero.ts` y su plantilla: la sección «De días anteriores, sin marcar como entregados».
+  - El tipo `sin_cerrar` en los modelos y en los íconos.
+- **Spec:** delta en `openspec/changes/tablero-en-vivo/specs/centro-comercio-en-vivo/spec.md`.
+- **Pruebas:**
+  - Backend: las 15 de `tests/enVivo` en verde. Se actualizaron tres versionadas: la forma exacta de la proyección y del detalle (`entrega`) y el título del listo sin hora de listo.
+  - Caso ALMARA corrido aparte, fuera de git (D-566). Carlos, Rodolfo y Jairo quedan en bodega y sale «6 pedidos de días anteriores siguen como despachados». DAD-014856 dice «está listo y se entrega hoy». El listo que se entrega mañana no aparece.
+  - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
+- **Estado:** commiteado y en origin (backend `838c3620` en `backend-aws-security`). Falta desplegar y comprobar con la pantalla de ALMARA.

@@ -38,5 +38,6 @@
   { "fecha": "2026-11-03T14:57:10Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, una nota que la DIAN rechazó ahora dice «Rechazada por DIAN» y no «No enviada»." },
   { "fecha": "2026-11-03T14:57:20Z", "tipo": "CORRIGE", "texto": "Una factura que sus notas crédito dejaron en $0 aparece como «Anulada con nota crédito», ya no te ofrece hacerle otra nota y en su historial ves las notas que la anularon." },
   { "fecha": "2026-11-03T14:57:30Z", "tipo": "MEJORA", "texto": "En Facturación electrónica, la franja de arriba te avisa cuando una factura no le llegó por correo al comprador y te explica en palabras claras por qué." },
-  { "fecha": "2026-11-03T14:57:40Z", "tipo": "MEJORA", "texto": "En Configuración DIAN te avisamos si la dirección del emisor tiene un tramo repetido o le falta el guion, y te sugerimos usar un correo de equipo para enviar las facturas." }
+  { "fecha": "2026-11-03T14:57:40Z", "tipo": "MEJORA", "texto": "En Configuración DIAN te avisamos si la dirección del emisor tiene un tramo repetido o le falta el guion, y te sugerimos usar un correo de equipo para enviar las facturas." },
+  { "fecha": "2026-11-03T15:32:57Z", "tipo": "CORRIGE", "texto": "En «En vivo», un mensajero ya no sale «en ruta» por días: solo cuenta lo que salió hoy, y los pedidos de días anteriores que siguen como despachados aparecen aparte para que los marques entregados." }
 ]

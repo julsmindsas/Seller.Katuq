@@ -399,6 +399,7 @@ export type TipoAlertaRadar =
   | 'listo'
   | 'demorado'
   | 'mensajero'
+  | 'sin_cerrar'
   | 'sin_pago';
 
 /**
