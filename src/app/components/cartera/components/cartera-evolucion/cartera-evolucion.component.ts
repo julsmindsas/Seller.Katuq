@@ -42,7 +42,7 @@ export class CarteraEvolucionComponent implements OnChanges {
   marcas: MarcaEje[] = [];
   puntos: CarteraEvolucionPunto[] = [];
   hayEstimados = false;
-  /** Cambio del % vencido contra el mes anterior (negativo = mejoró). null si hay un solo mes. */
+  /** Cambio del % vencido contra el mes anterior (negativo = mejoró). null si hay un solo mes o si alguno de los dos meses es estimado. */
   cambioPct: number | null = null;
   ultimo: CarteraEvolucionPunto | null = null;
   ayudaAbierta = false;
@@ -53,8 +53,11 @@ export class CarteraEvolucionComponent implements OnChanges {
     this.puntos = (this.evolucion && this.evolucion.puntos) || [];
     this.ultimo = this.puntos.length ? this.puntos[this.puntos.length - 1] : null;
     this.hayEstimados = this.puntos.some((p) => p.aproximada);
-    this.cambioPct = this.puntos.length > 1
-      ? Math.round((this.puntos[this.puntos.length - 1].pctVencido - this.puntos[this.puntos.length - 2].pctVencido) * 10) / 10
+    // Solo se compara contra el mes anterior si los dos son fotos reales: un mes estimado hacia atrás
+    // no sirve de referencia para decir «mejoró» o «empeoró».
+    const anterior = this.puntos.length > 1 ? this.puntos[this.puntos.length - 2] : null;
+    this.cambioPct = anterior && this.ultimo && !anterior.aproximada && !this.ultimo.aproximada
+      ? Math.round((this.ultimo.pctVencido - anterior.pctVencido) * 10) / 10
       : null;
     this.dibujar();
   }

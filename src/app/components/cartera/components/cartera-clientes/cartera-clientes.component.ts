@@ -182,7 +182,7 @@ export class CarteraClientesComponent implements OnChanges {
           if (esClienteCredito(c.creditLimit)) return false;
           break;
       }
-      if (this.vendorFilter && (c.vendedor || '') !== this.vendorFilter) return false;
+      if (this.vendorFilter && (c.vendedor || '').trim() !== this.vendorFilter) return false;
       // Antigüedad (ticket 1130): el cliente entra si tiene pedidos con saldo en ese rango.
       if (this.antiguedadFilter !== 'todas') {
         const enRango = (c.pedidos || []).filter(
