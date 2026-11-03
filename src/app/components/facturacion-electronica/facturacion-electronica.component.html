@@ -52,6 +52,19 @@
         <i class="pi pi-chevron-down" [class.is-open]="historyOpen"></i>
       </a>
     </div>
+
+    <!-- D-622 (ticket 1491): la alerta DIAN más grave, con la bandera `dianTableroEstado`; lleva a Configuración DIAN. -->
+    <div class="fe-dianalerta fe-dianalerta--{{ alertasDian[0].nivel }}" *ngIf="alertasDian.length">
+      <i class="pi fe-dianalerta__icono" [ngClass]="iconoAlertaDian(alertasDian[0])"></i>
+      <div class="fe-dianalerta__copy">
+        <strong class="fe-dianalerta__nivel">{{ nivelAlertaDian(alertasDian[0]) }}</strong>
+        <span class="fe-dianalerta__txt">{{ textoAlertaDian(alertasDian[0]) }}</span>
+        <span class="fe-dianalerta__mas" *ngIf="alertasDian.length > 1">{{ 'facturacionElectronica.facturacionElectronica.franjaDianMas' | translate:{n: alertasDian.length - 1} }}</span>
+      </div>
+      <button type="button" class="fe-dianalerta__ver" (click)="goToConfiguration()">
+        {{ 'facturacionElectronica.facturacionElectronica.franjaDianVer' | translate }} <i class="pi pi-arrow-right"></i>
+      </button>
+    </div>
   </section>
 
   <section class="fe-card fe-history" *ngIf="historyOpen && technicalHistory.length">

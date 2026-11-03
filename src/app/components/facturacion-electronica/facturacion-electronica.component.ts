@@ -10,7 +10,10 @@ import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { LoaderService } from '../../shared/services/loader.service';
 import { splitDianDocumentList } from './dian-document-list';
 import { InvoiceComposerComponent } from './composer/invoice-composer.component';
-import { diasEntre, hoyColombia } from '../integrations/dian-tablero-estado';
+import {
+  AlertaTablero, TableroDian, calcularTablero, claveDiasTablero, claveNivelTablero, diasEntre,
+  hoyColombia, iconoNivelTablero, mostrarTablero,
+} from '../integrations/dian-tablero-estado';
 
 import { TranslateService } from '@ngx-translate/core';
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
@@ -726,7 +729,63 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
       }),
       takeUntil(this.destroy$),
       finalize(() => { this.cargandoConfig = false; this.changeDetector.markForCheck(); }),
-    ).subscribe((integration) => { this.integration = integration; });
+    ).subscribe((integration) => {
+      this.integration = integration;
+      this.recalcularTableroDian();
+    });
+  }
+
+  // ---- D-622 (ticket 1491): línea de alerta DIAN en la franja, solo con la bandera `dianTableroEstado` ----
+
+  /**
+   * Estado de la resolución, el rango y el certificado, calculado con el MISMO cálculo del tablero de
+   * «Configuración DIAN» (`calcularTablero`). Solo se llena con la configuración ya leída, activa y en
+   * producción; sin ella es null y la franja no cambia.
+   */
+  private tableroDian: TableroDian | null = null;
+  /** El día (Colombia) con el que se calculó `tableroDian`: si cambia, los días que faltan se recalculan. */
+  private tableroDianHoy = '';
+
+  private recalcularTableroDian(): void {
+    this.tableroDianHoy = hoyColombia();
+    this.tableroDian = mostrarTablero(true, this.integration) ? calcularTablero(this.integration.config, this.tableroDianHoy) : null;
+  }
+
+  private readonly sinAlertas: AlertaTablero[] = [];
+
+  /**
+   * Alertas vigentes de la más grave a la menos grave. Vacío con la bandera apagada, mientras carga la
+   * configuración, si falló la lectura o si todo está en orden: así la franja queda como antes.
+   */
+  get alertasDian(): AlertaTablero[] {
+    if (this.cargandoConfig || this.configurationError || !this.tableroDian) return this.sinAlertas;
+    if (!this.features.isEnabled('dianTableroEstado')) return this.sinAlertas;
+    // Pantalla abierta pasada la medianoche de Colombia: se recalcula con la fecha nueva (sin releer la configuración).
+    if (this.tableroDianHoy !== hoyColombia()) this.recalcularTableroDian();
+    return this.tableroDian ? this.tableroDian.alertas : this.sinAlertas;
+  }
+
+  iconoAlertaDian(a: AlertaTablero): string {
+    return iconoNivelTablero(a.nivel);
+  }
+
+  nivelAlertaDian(a: AlertaTablero): string {
+    return this.translate.instant(claveNivelTablero(a.nivel));
+  }
+
+  /** Una línea: «Resolución: Vence en 14 días», «Consecutivos: 91 % usado, quedan 90». */
+  textoAlertaDian(a: AlertaTablero): string {
+    // Las claves van como literales para que `npm run i18n:check` las verifique contra es.json.
+    if (a.tipo === 'rango') {
+      return a.nivel === 'bloqueante'
+        ? this.translate.instant('facturacionElectronica.facturacionElectronica.franjaDianRangoAgotado')
+        : this.translate.instant('facturacionElectronica.facturacionElectronica.franjaDianRango', { pct: a.pct, restantes: a.restantes });
+    }
+    const d = claveDiasTablero(a.dias ?? null);
+    const cuando = this.translate.instant(d.clave, d.params);
+    return a.tipo === 'resolucion'
+      ? this.translate.instant('facturacionElectronica.facturacionElectronica.franjaDianResolucion', { cuando })
+      : this.translate.instant('facturacionElectronica.facturacionElectronica.franjaDianCertificado', { cuando });
   }
 
   cargarDocumentos(): void {

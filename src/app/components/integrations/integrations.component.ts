@@ -15,7 +15,10 @@ import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
-import { AlertaTablero, NivelTablero, TableroDian, calcularTablero, hoyColombia, mostrarTablero } from './dian-tablero-estado';
+import {
+  AlertaTablero, NivelTablero, TableroDian, calcularTablero, claveAlertaTablero, claveDiasTablero, claveNivelTablero,
+  hoyColombia, iconoNivelTablero, mostrarTablero,
+} from './dian-tablero-estado';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 
 import { TranslateService } from '@ngx-translate/core';
@@ -1584,43 +1587,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return !this.dianTableroActivo && !!this.dianTablero && this.features.isEnabled('dianTableroEstado');
   }
 
+  // Los textos del tablero viven en `dian-tablero-estado.ts` (claves y parámetros) para que la franja
+  // de Facturación electrónica diga lo mismo sin duplicar la lógica.
   tableroIcono(nivel: NivelTablero): string {
-    return ({ ok: 'pi-check-circle', aviso: 'pi-info-circle', alerta: 'pi-exclamation-triangle',
-      critico: 'pi-exclamation-circle', bloqueante: 'pi-ban', 'sin-dato': 'pi-question-circle' } as Record<string, string>)[nivel];
+    return iconoNivelTablero(nivel);
   }
 
   tableroNivelTexto(nivel: NivelTablero): string {
-    // Claves completas (sin armarlas en ejecución) para que el chequeo de traducciones las encuentre.
-    const claves: Record<string, string> = {
-      ok: 'integrations.integrations.tableroNivel_ok',
-      aviso: 'integrations.integrations.tableroNivel_aviso',
-      alerta: 'integrations.integrations.tableroNivel_alerta',
-      critico: 'integrations.integrations.tableroNivel_critico',
-      bloqueante: 'integrations.integrations.tableroNivel_bloqueante',
-      'sin-dato': 'integrations.integrations.tableroNivel_sin_dato',
-    };
-    return this.translate.instant(claves[nivel] || claves['sin-dato']);
+    return this.translate.instant(claveNivelTablero(nivel));
   }
 
   /** Cuánto falta (o cuánto hace que venció) en palabras: «Vence en 14 días», «Venció hace 3 días». */
   tableroDiasTexto(dias: number | null): string {
-    if (dias === null) return this.translate.instant('integrations.integrations.tableroSinDato');
-    if (dias < 0) return this.translate.instant(dias === -1 ? 'integrations.integrations.tableroVencioHace1' : 'integrations.integrations.tableroVencioHaceN', { dias: -dias });
-    if (dias === 0) return this.translate.instant('integrations.integrations.tableroVenceHoy');
-    return this.translate.instant(dias === 1 ? 'integrations.integrations.tableroVenceEn1' : 'integrations.integrations.tableroVenceEnN', { dias });
+    const t = claveDiasTablero(dias);
+    return this.translate.instant(t.clave, t.params);
   }
 
   /** El mensaje de una alerta, con lo que el comercio debe hacer. */
   tableroAlertaTexto(a: AlertaTablero): string {
-    if (a.tipo === 'rango') {
-      return this.translate.instant(a.nivel === 'bloqueante' ? 'integrations.integrations.tableroAlertaRangoAgotado' : 'integrations.integrations.tableroAlertaRango', { pct: a.pct, restantes: a.restantes });
-    }
-    // Claves completas; concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
-    const dias = a.dias as number;
-    const clave = a.tipo === 'resolucion'
-      ? (dias < 0 ? 'integrations.integrations.tableroAlertaResolucionVencida' : 'integrations.integrations.tableroAlertaResolucion')
-      : (dias < 0 ? 'integrations.integrations.tableroAlertaCertificadoVencido' : 'integrations.integrations.tableroAlertaCertificado');
-    return this.translate.instant(clave, { dias: Math.abs(dias) });
+    const t = claveAlertaTablero(a);
+    return this.translate.instant(t.clave, t.params);
   }
 
   loadDianTestOrders(): void {

@@ -308,7 +308,7 @@ $head: var(--kc-font-head);
 
 .fe-client__copy { display: flex; flex-direction: column; min-width: 0; }
 .fe-client__copy .fe-client__name { font-weight: 700; }
-.fe-client__doc { font-size: 11.5px; color: #6b6880; letter-spacing: normal; white-space: nowrap; }
+.fe-client__doc { font-size: 11.5px; color: var(--kc-muted); letter-spacing: normal; white-space: nowrap; }
 
 .fe-link {
   border: 0;
@@ -386,7 +386,7 @@ $head: var(--kc-font-head);
   text-align: left;
   font: inherit;
   strong { font-size: 17px; color: #211F3A; }
-  small { font-size: 11.5px; color: #6b6880; letter-spacing: normal; }
+  small { font-size: 11.5px; color: var(--kc-muted); letter-spacing: normal; }
   em { font-style: normal; font-weight: 700; margin-left: 4px; }
   &--boton { cursor: pointer; &:hover { border-color: #5F3FE0; } &:focus-visible { outline: 3px solid #7C5CFF !important; } }
 }
@@ -463,7 +463,7 @@ $head: var(--kc-font-head);
   gap: 10px;
   padding: 0 0 12px;
   strong { display: block; font-size: 13px; color: #211F3A; }
-  small { display: block; font-size: 11.5px; color: #6b6880; letter-spacing: normal; }
+  small { display: block; font-size: 11.5px; color: var(--kc-muted); letter-spacing: normal; }
   &:not(:last-child)::before { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: #ecebf3; }
 }
 .fe-linea__punto { flex: none; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; background: #9a97ad; }
@@ -557,13 +557,13 @@ $head: var(--kc-font-head);
   &--aviso { background: #fdf1dd; border-color: #f8ebd4; color: #a15c00; }
 }
 .fe-resumen__txt { flex: 1 1 160px; min-width: 0; font-size: 13px; font-weight: 600; color: #211F3A; letter-spacing: normal; }
-.fe-resumen__nota { margin: 0; font-size: 13px; font-weight: 600; color: #6b6880; letter-spacing: normal; }
+.fe-resumen__nota { margin: 0; font-size: 13px; font-weight: 600; color: var(--kc-muted); letter-spacing: normal; }
 .fe-conceptos { list-style: none; margin: 0; padding: 0; border: 1px solid #ecebf3; border-radius: 14px; background: #fff; overflow: hidden; }
 .fe-concepto {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 14px; min-width: 0;
   &:not(:last-child) { border-bottom: 1px solid #ecebf3; }
 }
-.fe-concepto__texto { flex: 1; min-width: 0; strong { display: block; font-size: 13px; color: #211F3A; overflow-wrap: anywhere; } small { display: block; margin-top: 2px; font-size: 11.5px; color: #6b6880; letter-spacing: normal; } }
+.fe-concepto__texto { flex: 1; min-width: 0; strong { display: block; font-size: 13px; color: #211F3A; overflow-wrap: anywhere; } small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--kc-muted); letter-spacing: normal; } }
 .fe-concepto__valor { flex: none; font-size: 13px; font-weight: 800; color: #211F3A; white-space: nowrap; }
 .fe-totales {
   margin: 0; display: flex; flex-direction: column; border: 1px solid #ecebf3; border-radius: 14px; background: #fff; padding: 4px 14px;
@@ -577,3 +577,25 @@ $head: var(--kc-font-head);
   .fe-totales dd { max-width: 60%; }
 }
 
+// ----- D-622 (ticket 1491): línea de alerta DIAN dentro de la franja de estado -----
+// Plano, sin degradados. El estado se lee por ícono y texto, no solo por color. Ningún nombre lleva "p-" y todo span lleva color y tamaño propios.
+.fe-dianalerta {
+  flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border-radius: 11px; border: 1px solid #f8ebd4; background: var(--kc-orange-wash); color: #a15c00;
+  // Mismos tonos de texto y borde que los avisos del tablero de Configuración DIAN (el texto oscuro da contraste sobre el fondo suave).
+  &--alerta { border-color: #f2d7a8; }
+  &--critico { background: var(--kc-red-wash); border-color: #f6d4d2; color: #c0392f; }
+  &--bloqueante { background: var(--kc-red-wash); border-color: #eab5b1; color: #c0392f; }
+}
+.fe-dianalerta__icono { flex: none; font-size: 16px; color: inherit; }
+.fe-dianalerta__copy { flex: 1 1 220px; min-width: 0; display: flex; align-items: baseline; gap: 4px 8px; flex-wrap: wrap; }
+.fe-dianalerta__nivel { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; color: inherit; }
+.fe-dianalerta__txt { font-size: 13px; font-weight: 600; color: var(--kc-ink); letter-spacing: normal; overflow-wrap: anywhere; }
+.fe-dianalerta__mas { font-size: 12px; font-weight: 700; color: var(--kc-ink2); letter-spacing: normal; }
+.fe-dianalerta__ver {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: 9px; background: transparent;
+  font-family: inherit; font-size: 12.5px; font-weight: 800; color: var(--kc-accent); letter-spacing: normal; cursor: pointer;
+  i { font-size: 11px; }
+  &:hover { background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}

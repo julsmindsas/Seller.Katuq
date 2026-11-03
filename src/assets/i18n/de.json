@@ -9161,6 +9161,12 @@
     "facturacionElectronica.facturacionElectronica.franjaCargandoTitulo": "Ihre Rechnungsstellung wird geprüft",
     "facturacionElectronica.facturacionElectronica.franjaCargandoDescripcion": "Gleich sehen Sie hier, was als Nächstes zu tun ist.",
     "facturacionElectronica.facturacionElectronica.franjaCargandoBoton": "Wird geladen",
+    "facturacionElectronica.facturacionElectronica.franjaDianRango": "Rechnungsnummern: {{pct}} % verbraucht, noch {{restantes}} übrig.",
+    "facturacionElectronica.facturacionElectronica.franjaDianRangoAgotado": "Rechnungsnummern: Der Nummernkreis für Rechnungen ist aufgebraucht.",
+    "facturacionElectronica.facturacionElectronica.franjaDianResolucion": "Rechnungsresolution: {{cuando}}",
+    "facturacionElectronica.facturacionElectronica.franjaDianCertificado": "Signaturzertifikat: {{cuando}}",
+    "facturacionElectronica.facturacionElectronica.franjaDianMas": "und {{n}} weitere",
+    "facturacionElectronica.facturacionElectronica.franjaDianVer": "DIAN-Status ansehen",
     "Ayuda": "Hilfe",
     "Artículos": "Artikel",
     "Administrar": "Verwalten",
@@ -10211,5 +10217,14 @@
     "ventas.clientesDuplicados.vacioTexto": "Wir haben Ihre Kunden geprüft, und kein Datensatz sieht wie ein anderer aus.",
     "ventas.clientesDuplicados.revisadas": "Bisher haben wir {{n}} Kunden geprüft.",
     "ventas.clientesDuplicados.terminado": "Wir haben Ihre Kunden fertig geprüft ({{n}} Datensätze).",
-    "ventas.clientesDuplicados.revisarMas": "Weitere Kunden prüfen"
+    "ventas.clientesDuplicados.revisarMas": "Weitere Kunden prüfen",
+    "productos.importarFotos.estandar.revisandoFotos": "Fotos werden geprüft… {{revisadas}} von {{total}}",
+    "productos.importarFotos.estandar.conAviso": "{{n}} mit Hinweis",
+    "productos.importarFotos.estandar.rechazadas": "{{n}} abgelehnt",
+    "productos.importarFotos.estandar.chipConAviso": "Mit Hinweis",
+    "productos.importarFotos.estandar.chipRechazada": "Abgelehnt",
+    "productos.importarFotos.estandar.estadoIlegible": "Nicht lesbar",
+    "productos.importarFotos.estandar.columnaDetalle": "Details",
+    "productos.importarFotos.estandar.notaNombres": "Ob der Name gross- oder kleingeschrieben ist, spielt keine Rolle.",
+    "productos.importarFotos.estandar.bloqueRechazadas": "Nicht hinzugefügt"
 }

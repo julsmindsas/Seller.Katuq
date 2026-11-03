@@ -9341,6 +9341,12 @@
   "facturacionElectronica.facturacionElectronica.franjaCargandoTitulo": "Checking your invoicing",
   "facturacionElectronica.facturacionElectronica.franjaCargandoDescripcion": "In a moment you will see here what is next to do.",
   "facturacionElectronica.facturacionElectronica.franjaCargandoBoton": "Loading",
+  "facturacionElectronica.facturacionElectronica.franjaDianRango": "Invoice numbers: {{pct}} % used, {{restantes}} left.",
+  "facturacionElectronica.facturacionElectronica.franjaDianRangoAgotado": "Invoice numbers: the invoice numbering has run out.",
+  "facturacionElectronica.facturacionElectronica.franjaDianResolucion": "Invoicing resolution: {{cuando}}",
+  "facturacionElectronica.facturacionElectronica.franjaDianCertificado": "Signing certificate: {{cuando}}",
+  "facturacionElectronica.facturacionElectronica.franjaDianMas": "and {{n}} more",
+  "facturacionElectronica.facturacionElectronica.franjaDianVer": "View DIAN status",
   "Ayuda": "Help",
   "Artículos": "Articles",
   "Administrar": "Manage",
@@ -10391,5 +10397,14 @@
   "ventas.clientesDuplicados.vacioTexto": "We checked your customers and no records look like the same one.",
   "ventas.clientesDuplicados.revisadas": "We have checked {{n}} customers so far.",
   "ventas.clientesDuplicados.terminado": "We finished checking your customers ({{n}} records).",
-  "ventas.clientesDuplicados.revisarMas": "Check more customers"
+  "ventas.clientesDuplicados.revisarMas": "Check more customers",
+  "productos.importarFotos.estandar.revisandoFotos": "Checking photos… {{revisadas}} of {{total}}",
+  "productos.importarFotos.estandar.conAviso": "{{n}} with a warning",
+  "productos.importarFotos.estandar.rechazadas": "{{n}} rejected",
+  "productos.importarFotos.estandar.chipConAviso": "With warning",
+  "productos.importarFotos.estandar.chipRechazada": "Rejected",
+  "productos.importarFotos.estandar.estadoIlegible": "Can't be read",
+  "productos.importarFotos.estandar.columnaDetalle": "Details",
+  "productos.importarFotos.estandar.notaNombres": "It doesn't matter whether the name is in upper or lower case.",
+  "productos.importarFotos.estandar.bloqueRechazadas": "Not added"
 }

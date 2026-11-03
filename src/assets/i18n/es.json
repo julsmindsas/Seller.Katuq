@@ -9161,6 +9161,12 @@
   "facturacionElectronica.facturacionElectronica.franjaCargandoTitulo": "Revisando tu facturación",
   "facturacionElectronica.facturacionElectronica.franjaCargandoDescripcion": "En un momento verás aquí lo que sigue por hacer.",
   "facturacionElectronica.facturacionElectronica.franjaCargandoBoton": "Cargando",
+  "facturacionElectronica.facturacionElectronica.franjaDianRango": "Consecutivos: {{pct}} % usado, quedan {{restantes}}.",
+  "facturacionElectronica.facturacionElectronica.franjaDianRangoAgotado": "Consecutivos: se agotó la numeración de facturas.",
+  "facturacionElectronica.facturacionElectronica.franjaDianResolucion": "Resolución de facturación: {{cuando}}",
+  "facturacionElectronica.facturacionElectronica.franjaDianCertificado": "Certificado de firma: {{cuando}}",
+  "facturacionElectronica.facturacionElectronica.franjaDianMas": "y {{n}} más",
+  "facturacionElectronica.facturacionElectronica.franjaDianVer": "Ver estado DIAN",
   "Ayuda": "Ayuda",
   "Artículos": "Artículos",
   "Administrar": "Administrar",
@@ -10211,5 +10217,14 @@
   "ventas.clientesDuplicados.vacioTexto": "Revisamos tus clientes y no hay fichas que parezcan la misma.",
   "ventas.clientesDuplicados.revisadas": "Revisamos {{n}} clientes hasta ahora.",
   "ventas.clientesDuplicados.terminado": "Terminamos de revisar tus clientes ({{n}} fichas).",
-  "ventas.clientesDuplicados.revisarMas": "Revisar más clientes"
+  "ventas.clientesDuplicados.revisarMas": "Revisar más clientes",
+  "productos.importarFotos.estandar.revisandoFotos": "Revisando fotos… {{revisadas}} de {{total}}",
+  "productos.importarFotos.estandar.conAviso": "{{n}} con aviso",
+  "productos.importarFotos.estandar.rechazadas": "{{n}} rechazadas",
+  "productos.importarFotos.estandar.chipConAviso": "Con aviso",
+  "productos.importarFotos.estandar.chipRechazada": "Rechazada",
+  "productos.importarFotos.estandar.estadoIlegible": "No se puede leer",
+  "productos.importarFotos.estandar.columnaDetalle": "Detalle",
+  "productos.importarFotos.estandar.notaNombres": "No importa si el nombre va en mayúsculas o minúsculas.",
+  "productos.importarFotos.estandar.bloqueRechazadas": "No se agregan"
 }

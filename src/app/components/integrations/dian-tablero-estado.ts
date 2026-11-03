@@ -179,3 +179,63 @@ export function calcularTablero(config: any, hoy: string): TableroDian {
     mayor: alertas.length ? alertas[0] : null,
   };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Textos del tablero y de la franja de Facturación (D-622). Funciones puras: devuelven CLAVES de
+// traducción (completas, sin armarlas en ejecución, para que el chequeo de traducciones las
+// encuentre) y sus parámetros. Las usan «Configuración DIAN» y la franja de Facturación
+// electrónica, para que las dos digan lo mismo sin duplicar la lógica.
+// ---------------------------------------------------------------------------------------------
+
+export interface ClaveTexto { clave: string; params?: Record<string, any> }
+
+/** Ícono PrimeIcons del nivel: el estado nunca se distingue solo por color. */
+export function iconoNivelTablero(nivel: NivelTablero): string {
+  return ({
+    ok: 'pi-check-circle', aviso: 'pi-info-circle', alerta: 'pi-exclamation-triangle',
+    critico: 'pi-exclamation-circle', bloqueante: 'pi-ban', 'sin-dato': 'pi-question-circle',
+  } as Record<string, string>)[nivel] || 'pi-question-circle';
+}
+
+/** Clave de la etiqueta del nivel («Alerta», «Crítico», «Bloquea la facturación»…). */
+export function claveNivelTablero(nivel: NivelTablero): string {
+  const claves: Record<string, string> = {
+    ok: 'integrations.integrations.tableroNivel_ok',
+    aviso: 'integrations.integrations.tableroNivel_aviso',
+    alerta: 'integrations.integrations.tableroNivel_alerta',
+    critico: 'integrations.integrations.tableroNivel_critico',
+    bloqueante: 'integrations.integrations.tableroNivel_bloqueante',
+    'sin-dato': 'integrations.integrations.tableroNivel_sin_dato',
+  };
+  return claves[nivel] || claves['sin-dato'];
+}
+
+/** Cuánto falta (o cuánto hace que venció): «Vence en 14 días», «Venció hace 3 días». */
+export function claveDiasTablero(dias: number | null): ClaveTexto {
+  if (dias === null || dias === undefined) return { clave: 'integrations.integrations.tableroSinDato' };
+  if (dias < 0) {
+    return dias === -1
+      ? { clave: 'integrations.integrations.tableroVencioHace1' }
+      : { clave: 'integrations.integrations.tableroVencioHaceN', params: { dias: -dias } };
+  }
+  if (dias === 0) return { clave: 'integrations.integrations.tableroVenceHoy' };
+  return dias === 1
+    ? { clave: 'integrations.integrations.tableroVenceEn1' }
+    : { clave: 'integrations.integrations.tableroVenceEnN', params: { dias } };
+}
+
+/** El mensaje completo de una alerta del tablero, con lo que el comercio debe hacer. */
+export function claveAlertaTablero(a: AlertaTablero): ClaveTexto {
+  if (a.tipo === 'rango') {
+    return {
+      clave: a.nivel === 'bloqueante' ? 'integrations.integrations.tableroAlertaRangoAgotado' : 'integrations.integrations.tableroAlertaRango',
+      params: { pct: a.pct, restantes: a.restantes },
+    };
+  }
+  // Concuerdan en género: «ResolucionVencida» (femenino) y «CertificadoVencido» (masculino).
+  const dias = a.dias as number;
+  const clave = a.tipo === 'resolucion'
+    ? (dias < 0 ? 'integrations.integrations.tableroAlertaResolucionVencida' : 'integrations.integrations.tableroAlertaResolucion')
+    : (dias < 0 ? 'integrations.integrations.tableroAlertaCertificadoVencido' : 'integrations.integrations.tableroAlertaCertificado');
+  return { clave, params: { dias: Math.abs(dias) } };
+}
