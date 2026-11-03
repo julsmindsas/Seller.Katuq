@@ -22,7 +22,7 @@ $head: var(--kc-font-head);
 
 .fe-accent { color: var(--kc-accent) !important; }
 .fe-red { color: #e0483f !important; }
-.fe-dim { color: #c4c8d4; }
+.fe-dim { color: var(--kc-muted2); } // Ticket 1499: antes #c4c8d4, poco contraste.
 .fe-mono { font-family: $head; font-size: 13px; font-weight: 700; color: var(--kc-ink2); white-space: nowrap; &--strong { font-weight: 800; font-size: 14px; color: var(--kc-accent); } }
 .fe-amount { font-family: $head; font-weight: 800; font-size: 15px; color: var(--kc-ink); white-space: nowrap; }
 .fe-cellnote { display: block; margin-top: 2px; font-family: var(--kc-font-body); font-size: 11.5px; font-weight: 600; color: var(--kc-muted2); white-space: normal; max-width: 220px; }
@@ -542,3 +542,6 @@ $head: var(--kc-font-head);
 // Ticket 1486: columna Origen (span con texto: color y tamaño propios por la trampa de span.ng-star-inserted).
 .fe-origen { color: var(--kc-ink2); font-size: 12.5px; font-weight: 700; letter-spacing: normal; }
 .fe-dim .fe-origen { color: var(--kc-muted2); font-weight: 600; }
+
+// Ticket 1501: diferencia en pesos junto al porcentaje.
+.fe-dif { font-style: normal; font-weight: 600; letter-spacing: normal; }

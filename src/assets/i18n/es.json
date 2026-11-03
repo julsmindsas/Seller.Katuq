@@ -3653,6 +3653,8 @@
   "facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste": "No fue posible identificar este pedido.",
   "facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo": "KAI está revisando el rechazo…",
   "facturacionElectronica.facturacionElectronica.ahoraNo": "Ahora no",
+  "facturacionElectronica.facturacionElectronica.contenedorDian": "Contenedor DIAN (XML para el cliente)",
+  "facturacionElectronica.facturacionElectronica.contenedorDianAyuda": "El archivo oficial que se le entrega al comprador: la factura firmada y la respuesta de la DIAN en un solo archivo XML (AttachedDocument).",
   "facturacionElectronica.facturacionElectronica.historialTecnicoNota": "Envíos a la DIAN, correos al comprador y consultas, del más reciente al más antiguo (los 60 últimos). Cada documento tiene además su propia línea de tiempo en el detalle.",
   "facturacionElectronica.facturacionElectronica.oLaNota": "o",
   "facturacionElectronica.facturacionElectronica.delMenuDelDocumento": "en el menú ⋯ del documento.",

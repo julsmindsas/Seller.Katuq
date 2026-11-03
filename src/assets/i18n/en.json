@@ -3833,6 +3833,8 @@
   "facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste": "This order couldn't be identified.",
   "facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo": "KAI is reviewing the rejection…",
   "facturacionElectronica.facturacionElectronica.ahoraNo": "Not now",
+  "facturacionElectronica.facturacionElectronica.contenedorDian": "DIAN container (XML for the customer)",
+  "facturacionElectronica.facturacionElectronica.contenedorDianAyuda": "The official file delivered to the buyer: the signed invoice and the DIAN response in a single XML file (AttachedDocument).",
   "facturacionElectronica.facturacionElectronica.historialTecnicoNota": "DIAN submissions, buyer emails and checks, newest first (last 60). Each document also has its own timeline in its detail.",
   "facturacionElectronica.facturacionElectronica.oLaNota": "or",
   "facturacionElectronica.facturacionElectronica.delMenuDelDocumento": "in the document ⋯ menu.",

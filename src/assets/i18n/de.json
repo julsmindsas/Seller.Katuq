@@ -3653,6 +3653,8 @@
     "facturacionElectronica.facturacionElectronica.noFuePosibleIdentificarEste": "Diese Bestellung konnte nicht identifiziert werden.",
     "facturacionElectronica.facturacionElectronica.kaiEstaRevisandoElRechazo": "KAI prüft die Ablehnung…",
     "facturacionElectronica.facturacionElectronica.ahoraNo": "Jetzt nicht",
+    "facturacionElectronica.facturacionElectronica.contenedorDian": "DIAN-Container (XML für den Kunden)",
+    "facturacionElectronica.facturacionElectronica.contenedorDianAyuda": "Die offizielle Datei für den Käufer: die signierte Rechnung und die Antwort der DIAN in einer XML-Datei (AttachedDocument).",
     "facturacionElectronica.facturacionElectronica.historialTecnicoNota": "DIAN-Übermittlungen, Käufer-E-Mails und Abfragen, neueste zuerst (die letzten 60). Jedes Dokument hat außerdem eine eigene Zeitleiste im Detail.",
     "facturacionElectronica.facturacionElectronica.oLaNota": "oder",
     "facturacionElectronica.facturacionElectronica.delMenuDelDocumento": "im ⋯-Menü des Dokuments.",

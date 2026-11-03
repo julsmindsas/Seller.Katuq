@@ -418,6 +418,20 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     return (v > 0 ? '▲ ' : v < 0 ? '▼ ' : '') + Math.abs(v).toLocaleString('es-CO', { maximumFractionDigits: 1 }) + '%';
   }
 
+  /** Ticket 1501: la diferencia en pesos frente al período anterior, con signo. */
+  diferenciaFe(campo: string): string {
+    const i: any = this.indicadoresFe;
+    const actual = Number(i?.[campo]); const previo = Number(i?.anterior?.[campo]);
+    if (!i?.anterior || !Number.isFinite(actual) || !Number.isFinite(previo) || actual === previo) return '';
+    return (actual > previo ? '+' : '−') + this.money(Math.abs(actual - previo));
+  }
+
+  /** Ticket 1494: 'AAAA-MM-DD' → 'DD/MM/AAAA' sin pasar por zona horaria. */
+  fechaCorta(fecha: string | null | undefined): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : (fecha || '');
+  }
+
   claseVariacionFe(campo: string, bajarEsBueno = false): string {
     const v = this.indicadoresFe && this.indicadoresFe.variacion && this.indicadoresFe.variacion[campo];
     if (!v) return '';
