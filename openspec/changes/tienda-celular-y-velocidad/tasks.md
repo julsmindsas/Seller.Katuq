@@ -123,8 +123,11 @@
 - [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
   — **Avance (bloque TX34-B08): parte proyección hecha** (revisión estática de `indiceTienda.js` con
-  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`). Faltan la
-  tarea nocturna (TX34-B12) y el buscador (TX34-B10).
+  canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`).
+  **Parte tarea nocturna hecha (bloque TX34-B12):** `ventasRecientes.writeSet.test.js` (29 pruebas: canario
+  que falla con una escritura en `products`, `orders`, `inventory` o `inventoryMovement`, revisión estática del
+  módulo y corrida con la Firestore falsa que solo escribe `storeProductStats/{docId de la empresa}`). Falta el
+  buscador (TX34-B10).
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
@@ -225,11 +228,19 @@
   `textContent`. Evento `busqueda_sin_resultado` por `POST /vista` con su filtro de robots, solo con la búsqueda
   enviada (Enter, cabecera o `?q=`), una vez por término y sesión, saneado en el servidor y guardado solo con
   `on`. De la 2.2 queda en verde la parte de `sugerencias`; los 5 órdenes son del bloque TX34-B12.
-- [ ] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
+- [x] 3.9 Tarea nocturna de ventas (D6): primero `--dry-run` que solo imprime totales por empresa
   (pedidos leídos, líneas sin resolver, si llegó al tope); luego modo `compute`. Resuelve cada
   línea por id y, si no, por referencia → docId; documento por docId de empresa; `completo:
   false` al llegar al tope. **Éxito:** dos corridas dan el mismo documento; un ranking truncado
   no se ofrece; registro estructurado.
+  — Hecho (TX34-B12): `services/sites/ventasRecientes.js`, `scripts/ventas-recientes-tienda.js` (`--dry-run` por
+  defecto, solo la copia `katuq_dev`) y `initStoreSalesRankingJob` en `cronService.js` (2:30 a. m. Colombia, con
+  latido; con `storeMobile.salesRanking` en `off` no lee ni escribe nada). Nace apagada. La regla que cierra la
+  colección nueva se despliega antes de la primera escritura (ver el diseño). «Alcanzar el tope» se lee como
+  «quedaron pedidos sin leer»: con exactamente el tope el cálculo sale completo. Dos tiendas de la misma empresa se
+  calculan una sola vez. **Para la 3.10:** el lector debe ofrecer «Lo más vendido» solo si el documento está completo
+  y se calculó hace menos de 48 horas (`esCalculoVigente`); la tarea no toca el documento de una empresa que dejó
+  de cumplir las condiciones.
 - [ ] 3.10 Orden por novedad y más vendidos (D6). **Éxito:** BO «Orden por novedad y por más
   vendidos».
 - [ ] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
