@@ -13003,3 +13003,14 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Republicar o apagar app.katuq.com.
   - Revisar el pedido DAD-014498 de ALMARA.
   - Los pendientes de operación y seguridad están en el `CLAUDE.md` del backend (repositorio privado).
+
+### 2026-11-03 — D-620 a D-625: propuestas OpenSpec de las épicas de Facturación ALMARA y OH MY STORE (aws-claude-2)
+- **Estado:** las seis en borrador, pendientes de aprobación de Daniel. No se implementa nada hasta aprobar proposal, spec, plan y tasks, y en módulos sensibles hasta que Daniel apruebe el diff.
+- **D-620** `openspec/changes/fe-retenciones-e-iva/` (ticket 1483): IVA por tarifa y retenciones por factura con neto a pagar. Hoy el UBL no tiene `WithholdingTaxTotal`. El IVA $0 de octubre sale de las líneas al 0 %: lo confirma el contador. Es parte de FE-08.
+- **D-621** `openspec/changes/fe-detalle-del-documento/` (ticket 1489): el detalle muestra totales (ya llegan en `totals`), líneas (endpoint `/lineas` del ticket 1279), pago y vencimiento. Abonos y mora solo se leen de Cartera, coordinado con aws-claude-1.
+- **D-622** `openspec/changes/fe-tablero-de-estado-dian/` (ticket 1491): con el comercio activo en producción, Configuración DIAN abre un tablero (resolución, rango, consecutivos, vigencia y certificado) en vez del paso 1. La causa: `openDianFromDirectRoute` fija `dianStep = 1` sin mirar el estado. Las alertas reutilizan los umbrales de D-448.
+- **D-623** `openspec/changes/fe-formulario-nueva-factura/` (ticket 1492): plazo en días a crédito, IVA sugerido, orden de compra y medio de pago recordado.
+  - **Riesgo:** `invoicePayment.js` emite facturas de pedido a crédito sin `dueDate` y, por lo tanto, sin `PaymentDueDate`. La guardia va primero, como un cambio aparte.
+- **D-624** `openspec/changes/pedido-despacho-rapido/` (ticket 1473, OH MY STORE): «Despacho rápido» en el pedido, reutilizando los endpoints de Logística para crear y despachar la orden de envío. Sin endpoint nuevo y sin tocar inventario.
+- **D-625** `openspec/changes/facturar-desde-pendiente/` (ticket 1474, OH MY STORE): permitir facturar con el pago en Pendiente. La regla de «Aprobado o Preaprobado» está solo en el front (`list.component.ts:1443`). Pasar el pedido a Preaprobado afecta inventario e `is_paid` hacia Cereza y Shopify: quedan 8 preguntas para Daniel.
+- **Bitácora del día (aws-claude-2, rama `feature/tickets-aws-claude-2`, sin desplegar):** resueltos 1480, 1485, 1486, 1487, 1488, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1501, 1503 y 1436. El 1490 queda con una pregunta al comercio. El detalle está en las notas internas de cada ticket.
