@@ -273,8 +273,9 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 
 ## 9. F2 · Facetas
 
-- [ ] 9.1 Caracterización (verde hoy): `consultarCatalogo` y `catalogoPublico` sin la bandera (JSON y HTML con categoría, marca, `/c`, `/marca`, búsqueda, ocasión, oferta y sesión mayorista), Kuvo `catalogFor` y el conteo de lecturas por consulta.
+- [x] 9.1 Caracterización (verde hoy): `consultarCatalogo` y `catalogoPublico` sin la bandera (JSON y HTML con categoría, marca, `/c`, `/marca`, búsqueda, ocasión, oferta y sesión mayorista), Kuvo `catalogFor` y el conteo de lecturas por consulta.
   - Dep: 8.0.
+  - Hecho (3-nov, bloque F242-B01): prueba local `tests/sitios/caracterizacionTiendaPublica.test.js` (fuera de git, D-566) en verde con el código de antes de Q-S1 y de después; cubre además `feedProductos` (12.1) y Q-S1.
 - [ ] 9.2 [P] Pruebas en rojo: `tests/catalogo/facetas.test.js` (design E1, E4, prueba 2).
   - Dep: 8.0.
 - [ ] 9.3 `services/catalogo/facetas.js` (E1, E4). No depende de la fuente de la tienda.
@@ -355,8 +356,9 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 
 ## 12. F5 · Feed y JSON-LD
 
-- [ ] 12.1 Caracterización: instantánea de `feedProductos` sin la bandera.
+- [x] 12.1 Caracterización: instantánea de `feedProductos` sin la bandera.
   - Dep: 8.0.
+  - Hecho (3-nov, bloque F242-B01): en la misma prueba local de 9.1.
 - [ ] 12.2 [P] Pruebas en rojo: `tests/sitios/feedAtributos.test.js` (prueba 6).
   - Dep: 8.0.
 - [ ] 12.3 **Con diff aprobado (feed).** `g:product_type` con la ruta y `g:product_detail` (E11). La caché del feed no cambia (pregunta 14).
