@@ -213,6 +213,27 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 - **Si no:** la fuente es `getSearchIndex` (+ `attributes` en la máscara) y el mapa de
   `cargarVitrinaDeEmpresa`, como se describe en E2 y E5.
 - 9.2 y 9.3 (motor puro) no dependen de la decisión; 9.4 a 9.6 sí.
+- **Hecho en 9.4 (3-nov, bloque F242-B06), pregunta 11 con la proyección:** `fuenteDeFacetas(company, marca)`
+  (`controllers/sites.js`) decide por la bandera y no por el modo de `storeMobile.lightIndex`.
+  - Bandera `categoryAttributes` ON, con el modo en `off`, `shadow` u `on`: la fuente de las facetas es
+    `fuenteProy(company, false, {atributos: true})`. Es solo lectura de `products`. Con el modo en `off` es
+    una lectura MÁS que las tres de hoy mientras el catálogo siga por el índice compartido; solo las reemplaza
+    si el cableado (9.6) sirve, con la bandera ON, el catálogo, las facetas y los derivados desde esta misma
+    fuente. El modo sigue decidiendo qué fuente sirve el resto de la tienda.
+  - Bandera OFF, con cualquier modo: no hay fuente de facetas (`null`), no se piden atributos y no se calcula
+    nada; el camino de hoy sigue por `conFuente` sin cambios.
+  - `getSearchIndex` no cambia (prueba estática). La proyección suma `categoriasProducto` y
+    `exposicionCategorias` a TODA entrada cuando se piden atributos, no solo a las que tienen `attributes`,
+    porque la faceta de categoría cuenta a todos los productos por su ruta. Ese campo es memoria nueva de la
+    proyección y entra en la medición de 9.9.
+  - **Contrato para el cableado (9.6):** `indiceDeTienda` guarda un solo registro por empresa y pedir
+    `atributos` sobre uno cargado sin ellos lo amplía (segunda lectura y otra `lista`). Con la bandera ON se
+    piden `atributos` desde la primera vez (no una fuente sin ellos y otra con ellos en paralelo) y los
+    derivados se arman sobre la misma `lista` que cuenta las facetas. Si la proyección falla, el catálogo
+    se sirve sin facetas, como hoy.
+  - **Orden de unión (9.11):** 9.2 y 9.3 (motor puro) → TX-34 D1 (proyección en modo sombra) → 9.4 → 9.5 y 9.6.
+    El panel de filtros deslizable en celular es de `tienda-celular` de TX-34; F2-42 le entrega el mismo
+    panel de facetas y no lo duplica.
 
 ### E1. Motor de facetas puro (`services/catalogo/facetas.js`)
 - `filtrarYContar({productos, filtros, precioDe, derivados, esquemaFacetas})` →
@@ -245,6 +266,14 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   (pregunta 3). Sin esto, cada consulta volvería a parsear 8.568 categorías.
 - Cada recarga de la fuente recalcula los derivados de todos los productos: ese costo se mide en
   frío (E12), porque Osmosis, Shopify y WooCommerce invalidan en cada sincronización.
+- **Hecho en 9.4:** `services/catalogo/derivadosFacetas.js` (puro). `derivadosDeFacetas(lista, registro)`
+  devuelve un `Map` por `cd` con `ruta`, `ancestros`, `etiquetas`, `marca`, `marcaNombre`, `ocasiones`,
+  `oferta` y `valores`. `valores` trae solo lo válido para el esquema efectivo de la ruta y solo de los
+  atributos filtrables o comparables (el comparador de E9 lee de ahí; guardar también los comparables suma
+  memoria por producto y se mide en 9.9). Los arreglos de multiselección también son inmutables. El `WeakMap` guarda el `Map` con la
+  firma de los esquemas: otro contenido de esquemas recalcula; un registro renovado con el mismo contenido
+  reutiliza. Los derivados son inmutables. `esquemaDeFacetas(registro)` entrega al motor solo los atributos
+  `filterable`, con herencia.
 
 ### E3. Filtros en la dirección
 - `cat=<routeKey>`; `marca=<nombre>` repetible; `precioMin`, `precioMax`, `oferta=1`,

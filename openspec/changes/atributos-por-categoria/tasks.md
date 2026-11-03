@@ -286,11 +286,12 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - Dep: 9.2.
   - Éxito: 9.2 en verde.
   - Hecho (3-nov, bloque F242-B05): `services/catalogo/facetas.js` (motor puro) y `services/catalogo/filtrosFacetas.js` (lector con topes). Nada cableado: el catálogo no cambia. Pendiente para 9.5/9.6: leer los `a.<clave>` en dos fases cuando no hay categoría (`leerAtributos`) y pasar `rutaConocida` y `indice` al cablear.
-- [ ] 9.4 **Con diff aprobado (fuente de la tienda).** Según la pregunta 11:
+- [x] 9.4 **Con diff aprobado (fuente de la tienda).** Según la pregunta 11:
   - con la proyección de TX-34: `derivadosDeFacetas` sobre ella, después de que TX-34 D1 esté unida;
   - sin ella: `getSearchIndex` suma `attributes` a la máscara y `attributesObj` a la entrada, y `derivadosDeFacetas` atado al índice (E2).
   - Dep: 9.1, 9.3, preguntas 3 y 11.
   - Éxito: 9.1 sigue en verde; consumidores del índice sin cambios.
+  - Hecho (3-nov, bloque F242-B06): `services/catalogo/derivadosFacetas.js` (puro, `WeakMap` por `lista`), `fuenteDeFacetas` en `controllers/sites.js` (bandera ON con el modo en off, shadow u on lee la proyección con atributos; bandera OFF no pide nada) y las categorías del producto en toda entrada de la proyección con atributos. Pruebas locales `tests/catalogo/derivadosFacetas.test.js` y `tests/sitios/fuenteFacetas.test.js` (fuera de git, D-566). `getSearchIndex` sin cambios (prueba estática). Nada cableado al catálogo todavía (9.6). La memoria y el costo en frío de los derivados se miden en 9.9, junto con las categorías que ahora retiene toda entrada de la proyección con atributos (si pasa el tope de 20 MB por empresa, se guarda la ruta ya resuelta en lugar del crudo). Para 9.6: con la bandera ON, pedir `atributos` desde el primer momento (el registro de `indiceDeTienda` se amplía y relee si se pide después) y armar los derivados sobre la misma `lista` que cuenta; si la proyección falla, el catálogo sale sin facetas.
 - [ ] 9.5 **Con diff aprobado (precios con sesión, solo lectura).** `porTipoCliente` en la fuente de la tienda y `precioDe` (E5).
   - Dep: 9.1, preguntas 3 y 11.
   - Éxito: prueba de precio mayorista en rojo antes y verde después; sin sesión, idéntico.
@@ -318,6 +319,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - en los dos casos, el panel de filtros en celular es de `tienda-celular` de TX-34 y F2-42 no lo duplica.
   - Dep: pregunta 11.
   - Éxito: nota con el orden en las dos propuestas (la de TX-34 la edita quien la atiende).
+  - Nota de F2-42 (3-nov, bloque F242-B06), solo texto: el camino con la proyección quedó así. F2-42 no amplía `getSearchIndex` ni el índice compartido del Seller, el feed y KAI. Orden de unión: 9.2 y 9.3 (motor puro, ya unidos) → TX-34 D1 (proyección en modo sombra, ya unida) → 9.4 (fuente y derivados, hecho) → 9.5 y 9.6. La búsqueda dentro de los atributos (F2-42·8) la hace TX-34 con `indiceDeTienda(company, {atributos: true})`, que ya suma `attributes` y sus valores a las palabras. El panel de filtros deslizable en celular es de `tienda-celular` de TX-34: F2-42 le entrega el mismo panel de facetas y no lo duplica. Falta que quien atiende la propuesta de TX-34 deje su nota con el mismo orden.
 - [ ] 9.12 Piloto del criterio 1 en FLORECER (con OK de Daniel), luego aceptación en Baudio con sus datos (pregunta 8), `mostrarMarcas` encendido y, si su sitio la usa, la plantilla `tecnologia-catalogo`.
   - Dep: 5.3, 9.6 a 9.10, 8.1.
   - Éxito: en «Networking» de Baudio, cada conteo de marca, precio, tecnología WiFi y velocidad es igual a lo que aparece al marcarlo.
