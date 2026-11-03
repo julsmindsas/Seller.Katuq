@@ -13030,3 +13030,25 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Los FE pendientes esperan aprobar las fases 2 a 5 de D-499.
   - Reportes: D-551 tiene tareas abiertas.
   - WP-INT está asignado a Mónica.
+
+### 2026-11-03 — D-631 a D-635: propuestas del lote que pasó aws-claude-1 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel.
+- **D-631** `openspec/changes/conv-omnicanal/` (CONV, tickets 1298 y 1301-1313): paraguas de conversaciones omnicanal.
+  - Mucho ya existe: el dominio de mensajería D-437 y los buzones.
+  - Fases: A+B, C→D, E, G (piloto de Vidagas), F+H, y J cierra. I ya estaba resuelto (D-509).
+  - Quedan 10 preguntas.
+  - Riesgo de código: `whatsappWebhook.js` acepta sin firma si falta `KAPSO_WEBHOOK_SECRET`. En producción está definido, y la corrección va aparte.
+- **D-632** `openspec/changes/kcom-comunicaciones/` (KCOM-E1 a E5, tickets 1400-1404): se cruza con CONV.
+  - Propone un solo plan: KCOM aporta E3 (vender desde el chat), E4 (TikTok) y E5 (seguridad).
+  - No crear `channelAccounts`, porque duplicaría `messaging_lines`.
+  - El borrador de respuestas a TikTok declara Firestore y GCP: hay que corregirlo por D-579.
+- **D-633** `openspec/changes/klan-landings/` (KLAN-E1 a E4, tickets 1396-1399): buena parte ya existe (sitios landing, atribución, CAPI, Consent Mode, JSON-LD, sitemap, `llms.txt`).
+  - Faltan: L1/L3/L6 como secuencias, `/l/{slug}`, bandeja de leads, consentimiento y A/B.
+  - **Riesgo:** los tokens de CAPI se guardan en texto plano en el documento del sitio (`siteBlocks.js:1620-1632`). Cifrarlos va primero en la E2. Por la decisión de Daniel del 3-nov («no rotar nada»), queda solo como nota.
+- **D-634** `openspec/changes/sesiones-y-tiempo-conectado/` (#1506): hoy el servidor no guarda sesiones (JWT de 24 h sin `sid`, solo `ultimoIngreso`).
+  - Fase 1: `sid` en el JWT, la colección `userSessions` (por aprobar) y un latido cada 5 minutos.
+  - `isAuth` y el interceptor no cambian.
+  - «Cerrar otras sesiones» va en una fase con spec propia.
+- **D-635** `openspec/changes/panel-acciones-pedido/` (ticket 1472): delta sobre D-547.
+  - Casi todo está cubierto, y el error al fijar tiene arreglo (3b4f1627 y 38c89c71, por confirmar en producción).
+  - Lo nuevo: 9 acciones, «Frecuente» a 30 días y el orden fijo. Se trabaja un cambio a la vez, coordinado con aws-claude-1.
