@@ -4578,3 +4578,71 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
     margin: 0;
   }
 }
+
+// Ticket 1459 (D-669): aviso suave de posible pedido duplicado en la confirmación. Plano, par fuerte/suave de
+// advertencia del design-system; ningún nombre de clase lleva «p-» y cada span trae su color y tamaño.
+.aviso-igual {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 11px;
+  background: var(--ds-warn-soft);
+  border: 1px solid var(--ds-line);
+}
+.aviso-igual__icono {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  font-size: 18px;
+  color: var(--ds-warn);
+}
+.aviso-igual__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.aviso-igual__texto {
+  font-size: 14.5px;
+  line-height: 1.45;
+  font-weight: 700;
+  color: var(--ds-ink);
+  letter-spacing: normal;
+}
+.aviso-igual__nota {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ds-muted);
+}
+.aviso-igual__error {
+  font-size: 12.5px;
+  line-height: 1.45;
+  font-weight: 700;
+  color: var(--ds-err);
+}
+.aviso-igual__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.aviso-igual__btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid var(--ds-line);
+  background: var(--ds-surface, #fff);
+  color: var(--ds-ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  &:hover:not(:disabled) { border-color: var(--ds-accent); color: var(--ds-accent-ink); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+.aviso-igual__btn--principal {
+  border-color: var(--ds-accent);
+  background: var(--ds-accent);
+  color: var(--ds-on-accent, #fff);
+  &:hover:not(:disabled) { background: var(--ds-accent-hover); border-color: var(--ds-accent-hover); color: var(--ds-on-accent, #fff); }
+}

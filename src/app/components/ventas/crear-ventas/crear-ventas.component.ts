@@ -3726,6 +3726,7 @@ export class CrearVentasComponent
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
+                this.registrarAlertaDuplicado(res, orderId);
                 // Spec 008.2: sellar la cotización origen SOLO si el pedido se creó de verdad
                 // (la respuesta trae order/orderId). Evita asociar un pedido inexistente
                 // ante un 2xx vacío o un success:false.
@@ -4853,6 +4854,7 @@ export class CrearVentasComponent
 
                   // Obtener el ID del pedido creado
                   const orderId = res.order?._id || res.orderId || res.id;
+                  context.registrarAlertaDuplicado(res, orderId);
                   // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
                   const nroPedido = res.order?.nroPedido || res.order?.referencia || context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
 
@@ -5640,6 +5642,47 @@ export class CrearVentasComponent
   /**
    * Reinicia el formulario para crear un nuevo pedido
    */
+  // ── Ticket 1459 (D-669): aviso suave de posible pedido duplicado ─────────────────────────────────
+  // Solo llega si el comercio tiene la bandera encendida y el servidor encontró otro pedido igual hoy
+  // (mismo cliente, valor y dirección de entrega). Nunca bloquea: el pedido ya está creado y el resto
+  // del flujo (correo, link de pago, facturación) sigue igual. Textos en español fijo: ventas no usa translate.
+  alertaDuplicado: { pedidos: { orderId: string; nroPedido: string | null }[] } | null = null;
+  alertaDuplicadoOrderId = '';
+  alertaDuplicadoEstado: 'pendiente' | 'guardando' | 'valido' | 'error' = 'pendiente';
+
+  /** Guarda el aviso de la respuesta de creación; sin aviso (lo normal) no hace nada. */
+  registrarAlertaDuplicado(res: any, orderId: string): void {
+    const a = res?.alertaDuplicado;
+    if (!a || a.estado !== 'pendiente' || !Array.isArray(a.pedidos) || !a.pedidos.length || !orderId) return;
+    this.alertaDuplicado = a;
+    this.alertaDuplicadoOrderId = String(orderId);
+    this.alertaDuplicadoEstado = 'pendiente';
+  }
+
+  /** «DAD-014300» o «DAD-014300 y DAD-014295». */
+  get alertaDuplicadoNumeros(): string {
+    const nros = (this.alertaDuplicado?.pedidos || []).map((p) => p?.nroPedido).filter((n): n is string => !!n);
+    return nros.length > 1 ? `${nros.slice(0, -1).join(', ')} y ${nros[nros.length - 1]}` : (nros[0] || 'otro pedido');
+  }
+
+  /** «Es correcto»: la alerta queda como válida con tu nombre y la hora. */
+  confirmarAlertaDuplicado(): void {
+    if (!this.alertaDuplicadoOrderId || this.alertaDuplicadoEstado === 'guardando') return;
+    this.alertaDuplicadoEstado = 'guardando';
+    this.ventasService.resolverAlertaPedidoDuplicado(this.alertaDuplicadoOrderId, 'valido').subscribe({
+      next: () => { this.alertaDuplicadoEstado = 'valido'; },
+      error: () => { this.alertaDuplicadoEstado = 'error'; },
+    });
+  }
+
+  /** «Ver el pedido»: abre el otro pedido en una pestaña nueva, para no perder esta pantalla. */
+  verPedidoDuplicado(): void {
+    const nro = this.alertaDuplicado?.pedidos?.find((p) => !!p?.nroPedido)?.nroPedido;
+    if (!nro) return;
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/ventas/pedidos'], { queryParams: { nroPedido: nro } }));
+    window.open(url, '_blank', 'noopener');
+  }
+
   nuevoPedido(): void {
     // Limpiar caché antes de recargar
     this.limpiarCacheCompleto();

@@ -313,6 +313,14 @@ export class VentasService extends BaseService {
     );
   }
 
+  /**
+   * Ticket 1459 (D-669): resuelve la alerta de posible pedido duplicado de un pedido recién creado.
+   * `valido` = «Es correcto»; `repetido` solo la deja anotada (cancelar sigue siendo la acción de siempre).
+   */
+  resolverAlertaPedidoDuplicado(orderId: string, decision: 'valido' | 'repetido'): Observable<any> {
+    return this.post<any>(`/v1/orders/${encodeURIComponent(orderId)}/alerta-duplicado/resolver`, { decision });
+  }
+
   restoreProductInventory(orderId: string, productoId: string, cantidad: number): Observable<any> {
     return this.post<any>('/v1/orders/restore-product-inventory', { orderId, productoId, cantidad });
   }

@@ -885,6 +885,25 @@
                 </div>
               </ng-template>
 
+              <!-- Ticket 1459 (D-669): aviso suave de posible pedido duplicado. No bloquea nada. -->
+              <div *ngIf="alertaDuplicado" class="aviso-igual mb-3" role="status" aria-live="polite">
+                <i class="fa fa-exclamation-circle aviso-igual__icono" aria-hidden="true"></i>
+                <div class="aviso-igual__cuerpo">
+                  <ng-container *ngIf="alertaDuplicadoEstado !== 'valido'; else avisoIgualListo">
+                    <div class="aviso-igual__texto">Ya hay un pedido igual hoy: <strong>{{ alertaDuplicadoNumeros }}</strong>. ¿Es correcto?</div>
+                    <div class="aviso-igual__nota">El pedido ya quedó creado. Esto es solo un aviso para que confirmes.</div>
+                    <div *ngIf="alertaDuplicadoEstado === 'error'" class="aviso-igual__error">No se pudo guardar. Intenta de nuevo.</div>
+                    <div class="aviso-igual__acciones">
+                      <button type="button" class="aviso-igual__btn aviso-igual__btn--principal" (click)="confirmarAlertaDuplicado()" [disabled]="alertaDuplicadoEstado === 'guardando'">Es correcto</button>
+                      <button type="button" class="aviso-igual__btn" (click)="verPedidoDuplicado()">Ver el pedido</button>
+                    </div>
+                  </ng-container>
+                  <ng-template #avisoIgualListo>
+                    <div class="aviso-igual__texto">Listo, quedó anotado que el pedido es correcto.</div>
+                  </ng-template>
+                </div>
+              </div>
+
               <!-- Confirmación del pedido -->
               <div *ngIf="showPedidoConfirm" class="step6-section step6-success mb-4">
                 <div class="section-header section-header-success">

@@ -84,6 +84,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'recordatoriosCobro',
   // Cartera por vendedor y mora por fila de «Sin pago» (ticket 1457). Dueño: Daniel. Se retira el 2027-05-31.
   'carteraVendedorMora',
+  // Alerta suave de posible pedido duplicado (ticket 1459, D-669): aviso tras crear en la venta asistida y marca en Tesorería. Dueño: Daniel. Se retira el 2027-05-31.
+  'alertaPedidoDuplicado',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',
