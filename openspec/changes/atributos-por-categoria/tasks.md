@@ -265,6 +265,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 - [ ] 8.4 [P] **H4.** Cerrar lo pendiente del cambio privado `atributos-endurecer-empresa-handlers` (bitácora y revisión del registro). H4 sigue en un cambio aparte. Ver revisión privada.
   - Dep: —.
   - Éxito: las casillas del cambio privado reflejan lo desplegado.
+  - Avance parcial (2026-11-03, bloque F242-B03): las casillas del cambio privado ya reflejan lo desplegado (la tarea 0.7 de este documento salió con F1 en 84e1081e). Siguen abiertos, y por eso 8.4 queda sin marcar: varias tareas del cambio privado (pruebas, bitácora del contrato, revisión del registro de un día) y H4 como cambio propio. Detalle en la revisión privada.
 - [ ] 8.5 [P] Revisión de seguridad de la ampliación (`wt-back-tickets-web/openspec/changes/atributos-por-categoria-seguridad/`): Daniel la lee antes de los diffs de 9, 10 y 11.
   - Dep: 8.0.
 - [ ] 8.6 [P] **Ticket 1234 (con autorización para escribir en el ticket).** Nota interna: disponibilidad y valoración quedan fuera (D-518 F2-42·1 y ·2; valoración, si se quiere, en un ticket propio), y corregir la resolución que remite a «F2-42b» (D-518 T·1).
