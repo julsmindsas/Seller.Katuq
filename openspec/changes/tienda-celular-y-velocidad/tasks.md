@@ -290,9 +290,29 @@
   **Pendiente (front, aparte; sin esto el escenario «Plantilla con la promesa» no se cumple de punta a punta):** que
   `sitio-editor.component.ts` llame a ese endpoint y sume el aviso a su lista de «lo que falta para vender»
   (`get pendientes`, que hoy se arma en el navegador y no sabe de los productos).
-- [ ] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
+- [x] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
   sin JavaScript. **Éxito:** escenarios de TC; revisión visual de las 15 plantillas a 360, 390,
   767 y 768 px con y sin `data-kq-ajustes`, y sin JavaScript.
+  — **Hecho (TX34-B16), nace apagado:** `storeMobile.drawer` (global) + bandera `storeDrawer` (empresa), `off` por defecto;
+  apagado, la página sale byte a byte como hoy (45 páginas del laboratorio idénticas) y no pide ni estilos ni script del
+  cajón. Encendido, el encabezado pinta el botón «Menú» (tres rayas, 44 px) antes de la marca, y en ≤767 px esconde la fila de
+  categorías, los enlaces sueltos y «Mi cuenta»/«Favoritos» de la barra (el buscador y el carrito se quedan); desde 768 px y en
+  modo conversión, igual que hoy. Si no hay nada que mostrar en el panel, no hay botón.
+  **Marcado final (lo espeja el editor, 5.1):** `<header class="… cabecera--cajon">` → `<details class="kq-menu" data-kq-menu>` →
+  `<summary class="kq-menu__boton" aria-label="Menú">` (svg de tres rayas) + `<div class="kq-menu__panel" id="kq-menu-N"
+  data-kq-menu-panel>` con `div.kq-menu__cabeza` (`span.kq-menu__titulo` «Menú» + `button.kq-menu__cerrar[data-kq-menu-cerrar]` ✕),
+  `nav.kq-menu__grupo.kq-menu__grupo--cats[aria-label="Categorías"]` (las mismas categorías visibles de la fila, nunca las
+  ocultas), `nav.kq-menu__grupo[aria-label="Enlaces de la tienda"]` (enlaces del menú), `div.kq-menu__grupo` con
+  `button.kq-menu__item[data-kq-mi-cuenta]` y `button.kq-menu__item[data-kq-favoritos]` (si la tienda vende) y `div.kq-menu__grupo`
+  con `a.kq-menu__item` de WhatsApp (bloque de WhatsApp de la página, con `data-clic="whatsapp"` y `data-bloque` del bloque de WhatsApp, o celular del pie, sin `data-clic`). «Mi cuenta» y «Favoritos» de la barra
+  llevan además `cabecera__solo-ancho`. Sin JavaScript, el panel es una lista absoluta bajo la cabecera (`<details>` nativo);
+  con JavaScript el script lo saca a `div.kq-menu__capa` en el `body` (z-index 90, por encima de la pila fija; así no lo atrapa el
+  contexto de apilamiento de una cabecera `sticky`), con `role="dialog"`, `aria-modal`, foco atrapado, Escape, ✕, toque fuera,
+  enlace seguido y ensanchar a ≥768 px; bloquea el scroll del fondo con `kq-sin-scroll` y devuelve el foco al botón. Ninguna clase
+  contiene «p-». Estilos y script salen en el `<style>`/`<script nonce>` de la página solo con el cajón encendido
+  (`utils/siteCajonLateral.js`); `/estilos.css` no cambia.
+  **Medido (una vez, sobre la plantilla afectada):** barrido de 150 capturas (15 plantillas × 360/390/767/768, con y sin
+  `data-kq-ajustes`, y 30 sin JavaScript): 0 cruces, 0 desplazamientos laterales, botón y renglones de 44 px o más.
 - [ ] 3.14 [si P6 = a] Variantes de las fotos originales (D16): primero `--dry-run` que cuenta
   fotos y bytes por empresa; luego la tarea con tope. Contract test del write-set: no escribe
   `products` ni pisa archivos. **Éxito:** la proyección pinta `srcset` en esas fotos; el
