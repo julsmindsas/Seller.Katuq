@@ -54,6 +54,23 @@ export class CashClosingComponent {
   cierreFinalizado: boolean = false;
   empresa: string = '';
 
+  /**
+   * D-583: ventas de días anteriores que quedaron sin cerrar (por ejemplo, una venta
+   * hecha después del cierre de ayer). Van APARTE: no suman a las ventas del período,
+   * pero su efectivo está en la caja y cuenta para la diferencia.
+   */
+  pedidosAnteriores: Pedido[] = [];
+  formasPagoAnteriores: FormaPago[] = [];
+  totalAnteriores: number = 0;
+
+  /**
+   * D-585: se puede cerrar varias veces el mismo día (turnos). `turno` es el número
+   * de este cierre en su fecha; el saldo inicial se sugiere con el saldo final del
+   * cierre anterior de ese día (lo que quedó en la caja), y la cajera lo puede cambiar.
+   */
+  turno: number = 1;
+  saldoInicialSugerido: boolean = false;
+
   constructor(
     private ventasService: VentasService,
     public modal: NgbModal
@@ -65,37 +82,42 @@ export class CashClosingComponent {
     }
   }
 
+  /** Ventas por forma de pago. Agrupa sin importar mayúsculas ("Efectivo" = "efectivo"). */
+  private agruparFormasPago(ventas: Pedido[]): FormaPago[] {
+    const grupos: { [clave: string]: FormaPago } = {};
+    for (const venta of ventas) {
+      const nombre = (venta.formaDePago || '').trim() || 'Sin especificar';
+      const clave = nombre.toLowerCase();
+      if (!grupos[clave]) grupos[clave] = { nombre, total: 0 };
+      grupos[clave].total += Number(venta.totalPedididoConDescuento) || 0;
+    }
+    return Object.values(grupos);
+  }
+
   calcularInforme() {
-    // Crear fechas sin conversión de zona horaria UTC
-    const fechaInicio = new Date(this.fechaCierre + 'T00:00:00');
-    const fechaFin = new Date(this.fechaFin + 'T23:59:59.999');
-    
-    const filter = {
-      fechaInicial: this.fechaCierre + 'T00:00:00.000Z',
-      fechaFinal: this.fechaFin + 'T23:59:59.999Z',
-      fechaFin: this.fechaFin + 'T23:59:59.999Z',
-      company: this.empresa,
-      estadoProceso: ['Todos'],
-      origenConsulta: 'POS'
-    };
+    // D-583: el backend decide qué entra (día de 12 a. m. a 11:59 p. m. hora Colombia
+    // y, aparte, las ventas de días anteriores sin cerrar). Es la misma selección del cierre.
+    this.ventasService.previsualizarCierreCaja({
+      fechaCierre: this.fechaCierre,
+      fechaFin: this.fechaFin,
+      company: this.empresa
+    }).subscribe(
+      (respuesta: any) => {
+        this.turno = Number(respuesta?.turno) || 1;
+        // D-585: segundo cierre del día → arranca con lo que quedó en la caja en el anterior.
+        const saldoAnterior = respuesta?.saldoFinalAnterior;
+        this.saldoInicialSugerido = saldoAnterior !== null && saldoAnterior !== undefined && !this.efectivoInicial;
+        if (this.saldoInicialSugerido) this.efectivoInicial = Number(saldoAnterior) || 0;
 
-    this.ventasService.getOrdersPOSByFilter(filter).subscribe(
-      (ventas: Pedido[]) => {
-        if (ventas.length > 0) {
+        const ventas: Pedido[] = respuesta?.delPeriodo || [];
+        const anteriores: Pedido[] = respuesta?.anteriores || [];
+        this.pedidosAnteriores = anteriores;
+        this.formasPagoAnteriores = this.agruparFormasPago(anteriores);
+        this.totalAnteriores = this.formasPagoAnteriores.reduce((sum, fp) => sum + fp.total, 0);
+
+        if (ventas.length > 0 || anteriores.length > 0) {
           this.pedidos = ventas;
-          
-          // Agrupar ventas por forma de pago
-          const ventasPorFormaPago = ventas.reduce((acc: { [key: string]: number }, venta) => {
-            const formaPago = venta.formaDePago || 'Sin especificar';
-            acc[formaPago] = (acc[formaPago] || 0) + (venta.totalPedididoConDescuento || 0);
-            return acc;
-          }, {});
-
-          // Convertir a array de FormaPago
-          this.formasPago = Object.entries(ventasPorFormaPago).map(([nombre, total]) => ({
-            nombre,
-            total: Number(total)
-          }));
+          this.formasPago = this.agruparFormasPago(ventas);
 
           // Procesar productos vendidos
           this.productosVendidos = ventas.reduce((acc: ProductoVenta[], pedido) => {
@@ -120,13 +142,17 @@ export class CashClosingComponent {
           this.informe.totalProductos = this.productosVendidos.reduce((sum, p) => sum + p.cantidad, 0);
           this.mostrarBotonCompletar = true;
         } else {
-          // No es un error: simplemente no hubo ventas POS en esas fechas.
+          // No es un error: no hubo ventas, o todas ya quedaron en cierres de ese día.
+          const yaCerradas = (Number(respuesta?.cierresDelDia) || 0) > 0;
           Swal.fire({
-            title: 'Sin ventas',
-            text: 'No se encontraron ventas en el período seleccionado',
+            title: yaCerradas ? 'No hay ventas pendientes' : 'Sin ventas',
+            text: yaCerradas
+              ? `Todas las ventas de esta fecha ya quedaron en ${respuesta.cierresDelDia === 1 ? 'el cierre que hiciste' : 'los ' + respuesta.cierresDelDia + ' cierres que hiciste'}. Si vendes algo más, vuelve aquí y haz otro cierre.`
+              : 'No se encontraron ventas en el período seleccionado',
             icon: 'info',
             confirmButtonColor: '#5F3FE0'
           });
+          this.saldoInicialSugerido = false;
         }
       },
       (error) => {
@@ -139,9 +165,41 @@ export class CashClosingComponent {
     );
   }
 
+  /** D-586: sobra o falta plata (diferencia distinta de $0). */
+  get hayDescuadre(): boolean {
+    return Math.abs(this.efectivoFinal - (this.efectivoInicial + this.totalEfectivo + this.efectivoAnteriores)) >= 0.01;
+  }
+
+  /** Correo de quien está cerrando (para el aviso de descuadre). */
+  get usuarioActual(): string {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}').email || '';
+    } catch {
+      return '';
+    }
+  }
+
+  private pesos(valor: number): string {
+    return (Number(valor) || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+  }
+
+  /** Hay algo que cerrar: ventas del período o de días anteriores. */
+  get hayVentas(): boolean {
+    return this.pedidos.length > 0 || this.pedidosAnteriores.length > 0;
+  }
+
+  /** Efectivo de las ventas de días anteriores que entran en este cierre. */
+  get efectivoAnteriores(): number {
+    return this.formasPagoAnteriores.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
+  }
+
+  /**
+   * Contado − (saldo inicial + efectivo del período + efectivo de días anteriores).
+   * D-583: el efectivo de días anteriores está en la caja, así que cuenta aquí
+   * (el backend guarda la misma cuenta en `diferenciaEfectivo`).
+   */
   calcularDiferencia(): number {
-    const ventasEfectivo = this.formasPago.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
-    this.informe.diferencia = this.efectivoFinal - (this.efectivoInicial + ventasEfectivo);
+    this.informe.diferencia = this.efectivoFinal - (this.efectivoInicial + this.totalEfectivo + this.efectivoAnteriores);
     return this.informe.diferencia;
   }
 
@@ -177,7 +235,16 @@ export class CashClosingComponent {
       formasPago: this.formasPago,
       productosVendidos: this.productosVendidos,
       informe: this.informe,
-      empresa: this.empresa
+      empresa: this.empresa,
+      formasPagoAnteriores: this.formasPagoAnteriores,
+      totalAnteriores: this.totalAnteriores,
+      turno: this.turno,
+      pedidosAnteriores: this.pedidosAnteriores.map(p => ({
+        nroPedido: p.nroPedido || 'Sin número',
+        fechaCreacion: (p as any).fechaCreacion || '',
+        formaDePago: p.formaDePago || 'Sin especificar',
+        total: Number(p.totalPedididoConDescuento) || 0
+      }))
     };
 
     const modalRef = this.modal.open(ReporteCierreComponent, {
@@ -236,8 +303,10 @@ export class CashClosingComponent {
 
   fechaFormateada(fecha: string): string {
     if (!fecha) return '';
-    
-    const fechaObj = new Date(fecha);
+
+    // "2026-11-02" con new Date() es medianoche UTC: en Colombia salía 01/11.
+    const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+    const fechaObj = partes ? new Date(+partes[1], +partes[2] - 1, +partes[3]) : new Date(fecha);
     return fechaObj.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -267,8 +336,59 @@ export class CashClosingComponent {
     }
 
     // Calcular diferencia
-    this.calcularDiferencia();
+    const diferencia = this.calcularDiferencia();
 
+    // D-586: con descuadre se puede cerrar, pero hay que explicar qué pasó.
+    if (this.hayDescuadre && !(this.observaciones || '').trim()) {
+      Swal.fire({
+        title: 'Explica la diferencia',
+        html: `En la caja <strong>${diferencia < 0 ? 'faltan' : 'sobran'} ${this.pesos(Math.abs(diferencia))}</strong>.<br><br>`
+          + 'Escribe en <strong>Observaciones</strong> qué pasó (por ejemplo: "di mal un vuelto") y vuelve a dar '
+          + '<strong>Completar Cierre</strong>.',
+        icon: 'warning',
+        confirmButtonColor: '#5F3FE0'
+      });
+      return;
+    }
+    const avisoDescuadre = this.hayDescuadre
+      ? '<div style="margin:0 0 12px 0; padding:10px 12px; border-radius:11px; background:#FDECEC; color:#B42318; text-align:left">'
+        + `⚠️ Este cierre tiene un <strong>${diferencia < 0 ? 'FALTANTE' : 'SOBRANTE'} de ${this.pesos(Math.abs(diferencia))}</strong>. `
+        + `Quedará registrado a nombre de <strong>${this.usuarioActual || 'quien cierra'}</strong>.</div>`
+      : '';
+
+    // D-583/D-585: que quede claro qué pasa con lo que se venda después de cerrar.
+    const dia = this.fechaFormateada(this.fechaFin);
+    const avisoAnteriores = this.pedidosAnteriores.length > 0
+      ? `<br><br>Este cierre también recoge <strong>${this.pedidosAnteriores.length} venta(s) de días anteriores</strong> `
+        + `que habían quedado sin cerrar, por <strong>${this.totalAnteriores.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}</strong>. `
+        + 'Se muestran aparte y no suman a las ventas de este período.'
+      : '';
+    Swal.fire({
+      title: this.turno > 1 ? `¿Hacer el cierre ${this.turno} del día?` : '¿Cerrar la caja?',
+      html: avisoDescuadre
+        + '<div style="text-align:left">'
+        + 'Este cierre incluye las ventas hechas <strong>hasta ahora</strong>.<br><br>'
+        + `<strong>Si después vendes algo más el ${dia}:</strong>`
+        + '<ol style="margin:8px 0 0 0; padding-left:20px">'
+        + '<li>Vuelve a <strong>Cierre de Caja</strong>.</li>'
+        + '<li>Dale <strong>Calcular Resumen</strong>: solo te mostrará las ventas nuevas.</li>'
+        + `<li>Completa ese cierre (será el <strong>cierre ${this.turno + 1} del día</strong>).</li>`
+        + '</ol>'
+        + '<br>Así la plata de cada venta cuadra el mismo día.'
+        + avisoAnteriores
+        + '</div>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cerrar la caja',
+      cancelButtonText: 'Volver',
+      confirmButtonColor: '#5F3FE0',
+      reverseButtons: true
+    }).then((confirmacion) => {
+      if (confirmacion.isConfirmed) this.guardarCierre();
+    });
+  }
+
+  private guardarCierre() {
     const cierreDataToSave = {
       fechaCierre: this.fechaCierre,
       fechaFin: this.fechaFin,
@@ -286,10 +406,13 @@ export class CashClosingComponent {
     this.ventasService.realizarCierreCaja(cierreDataToSave).subscribe(
       (response) => {
         this.cierreFinalizado = true;
-        
+        this.turno = Number(response?.turno) || this.turno;
+
         Swal.fire({
           title: 'Cierre de Caja Exitoso',
-          text: 'El cierre de caja se ha realizado exitosamente',
+          text: this.turno > 1
+            ? `Quedó registrado el cierre ${this.turno} del ${this.fechaFormateada(this.fechaFin)}.`
+            : 'El cierre de caja se ha realizado exitosamente',
           icon: 'success',
           showConfirmButton: true,
           confirmButtonText: 'Imprimir',
@@ -308,10 +431,21 @@ export class CashClosingComponent {
         });
       },
       (error) => {
+        // D-585: 409 = otro cierre (doble clic u otra caja) ya tomó esas ventas.
+        const status = error?.status;
         Swal.fire({
-          title: 'Error',
-          text: 'Error al realizar el cierre de caja',
-          icon: 'error'
+          title: status === 409 ? 'Otro cierre se adelantó'
+            : status === 404 ? 'No hay ventas pendientes'
+            : error?.error?.observacionObligatoria ? 'Explica la diferencia' : 'Error',
+          text: status === 409
+            ? 'Algunas de estas ventas ya quedaron en otro cierre. Vuelve a calcular el resumen.'
+            : status === 404
+              ? 'Todas las ventas ya quedaron cerradas.'
+              : error?.error?.observacionObligatoria
+                ? 'El cierre tiene diferencia: escribe en Observaciones qué pasó.'
+                : 'Error al realizar el cierre de caja',
+          icon: status === 409 || status === 404 ? 'info' : error?.error?.observacionObligatoria ? 'warning' : 'error',
+          confirmButtonColor: '#5F3FE0'
         });
       }
     );

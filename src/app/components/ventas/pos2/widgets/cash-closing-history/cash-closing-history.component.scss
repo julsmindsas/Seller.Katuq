@@ -822,3 +822,66 @@
   outline: 3px solid var(--ds-focus) !important;
   outline-offset: 2px;
 }
+
+// D-586: cierres con descuadre en rojo para que el administrador los revise.
+.cash-closing-history {
+  .cuadre-mal {
+    color: var(--ds-err) !important;
+    font-weight: 700;
+  }
+
+  .cuadre-bien {
+    color: var(--ds-ok) !important;
+    font-weight: 600;
+  }
+}
+
+// D-587: nota corta bajo las cifras del resumen.
+.cash-closing-history .stat-nota {
+  color: var(--ds-muted);
+  font-size: 0.75rem;
+  letter-spacing: normal;
+}
+
+// D-588: la tarjeta "Diferencia de caja" funciona como filtro.
+.cash-closing-history {
+  .stat-filtro {
+    cursor: pointer;
+    border-radius: 16px;
+    transition: background-color 0.15s ease;
+
+    &:hover { background: var(--ds-row-hover); }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; }
+  }
+
+  .stat-filtro--activo {
+    background: var(--ds-err-soft);
+    box-shadow: inset 0 0 0 1px var(--ds-err);
+  }
+
+  .stat-accion {
+    margin-top: 4px;
+    color: var(--ds-accent-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: normal;
+  }
+
+  .filtro-aviso {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 11px;
+    background: var(--ds-err-soft);
+    border: 1px solid var(--ds-err);
+  }
+
+  .filtro-aviso-texto {
+    color: var(--ds-ink);
+    letter-spacing: normal;
+  }
+}

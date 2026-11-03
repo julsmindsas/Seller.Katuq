@@ -1,8 +1,8 @@
 <div class="cash-closing-container">
   <div class="card main-card">
     <div class="cc-cabeza d-flex justify-content-between align-items-center">
-      <h4><i class="fa fa-money me-2"></i>Cierre de Caja</h4>
-      <div class="header-actions" *ngIf="informe.totalVentas > 0">
+      <h4><i class="fa fa-money me-2"></i>Cierre de Caja<span class="turno-chip" *ngIf="turno > 1 && mostrarBotonCompletar">Cierre {{turno}} del día</span></h4>
+      <div class="header-actions" *ngIf="hayVentas">
         <div class="btn-group">
           <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
             <i class="fa fa-print me-1"></i> Imprimir PC
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Resumen de ventas -->
-        <div class="panel-container mb-4" *ngIf="informe.totalVentas > 0" id="imprimible">
+        <div class="panel-container mb-4" *ngIf="hayVentas" id="imprimible">
           <!-- Encabezado para impresión -->
           <div class="print-header d-none">
             <h3>CIERRE DE CAJA</h3>
@@ -106,6 +106,25 @@
                     <span>Total Ventas:</span>
                     <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
                   </div>
+
+                  <!-- D-583: ventas de días anteriores sin cerrar, aparte -->
+                  <div class="anteriores-aviso" *ngIf="pedidosAnteriores.length > 0">
+                    <div class="anteriores-titulo">
+                      <i class="fa fa-clock-o me-2"></i>Ventas de días anteriores sin cerrar ({{pedidosAnteriores.length}})
+                    </div>
+                    <span class="anteriores-texto">
+                      Se hicieron después del último cierre. Quedan con su fecha y
+                      <strong>no suman al Total Ventas</strong>, pero su efectivo está en la caja.
+                    </span>
+                    <div class="informe-item" *ngFor="let formaPago of formasPagoAnteriores">
+                      <span>{{formaPago.nombre}}:</span>
+                      <strong>${{formaPago.total | number:'1.2-2'}}</strong>
+                    </div>
+                    <div class="informe-item total">
+                      <span>Total días anteriores:</span>
+                      <strong>${{totalAnteriores | number:'1.2-2'}}</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="col-md-7" *ngIf="mostrarBotonCompletar">
@@ -120,6 +139,9 @@
                           <span class="input-group-text">$</span>
                           <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="0.01">
                         </div>
+                        <small class="saldo-sugerido" *ngIf="saldoInicialSugerido">
+                          Es el saldo final del cierre anterior de hoy (lo que quedó en la caja). Cámbialo si sacaron plata.
+                        </small>
                       </div>
                     </div>
                     <div class="col-md-6">
@@ -133,8 +155,10 @@
                     </div>
                   </div>
                   <div class="form-group mb-3">
-                    <label class="form-label">Observaciones</label>
-                    <textarea class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3" placeholder="Ingrese observaciones relevantes del cierre..."></textarea>
+                    <label class="form-label">Observaciones<span class="obligatoria" *ngIf="efectivoFinal && hayDescuadre"> · obligatorio: explica la diferencia</span></label>
+                    <textarea class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3"
+                      [class.falta-explicar]="efectivoFinal && hayDescuadre && !observaciones?.trim()"
+                      [placeholder]="efectivoFinal && hayDescuadre ? '¿Por qué sobra o falta plata? Ej.: di mal un vuelto' : 'Ingrese observaciones relevantes del cierre...'"></textarea>
                   </div>
                   <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}" *ngIf="efectivoFinal">
                     <span>Diferencia en Efectivo:</span>
@@ -203,7 +227,7 @@
           <button type="button" class="btn btn-outline-secondary" (click)="modal.dismissAll()">
             <i class="fa fa-times-circle me-2"></i>Cancelar
           </button>
-          <button type="button" class="btn btn-confirmar" *ngIf="mostrarBotonCompletar" (click)="completarCierre()">
+          <button type="button" class="btn btn-confirmar" *ngIf="mostrarBotonCompletar && !cierreFinalizado" (click)="completarCierre()">
             <i class="fa fa-check-circle me-2"></i>Completar Cierre
           </button>
         </div>

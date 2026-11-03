@@ -43,7 +43,7 @@
   <div class="titulo-reporte" style="text-align: center; margin-bottom: 25px;">
     <h2 style="margin: 8px 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">REPORTE DE CIERRE DE CAJA</h2>
     <div style="font-size: 12px;">
-      <div><strong>Período:</strong> {{ resumenPeriodo }}</div>
+      <div><strong>Período:</strong> {{ resumenPeriodo }}<span *ngIf="datosCierre?.turno > 1" style="color: inherit;"> · Cierre {{ datosCierre.turno }} del día</span></div>
       <div><strong>Fecha de emisión:</strong> {{ fechaHoraReporte }}</div>
       <div><strong>Usuario:</strong> {{ empresaActual?.usuarioActual || 'Sistema' }}</div>
     </div>
@@ -66,9 +66,13 @@
             <td style="padding: 8px; font-weight: bold;">Ventas en efectivo:</td>
             <td style="padding: 8px; text-align: right;">{{ totalEfectivo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
+          <tr style="border-bottom: 1px solid #ddd;" *ngIf="efectivoAnteriores">
+            <td style="padding: 8px; font-weight: bold;">Efectivo de días anteriores:</td>
+            <td style="padding: 8px; text-align: right;">{{ efectivoAnteriores | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          </tr>
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 8px; font-weight: bold;">Efectivo esperado:</td>
-            <td style="padding: 8px; text-align: right;">{{ (datosCierre?.efectivoInicial + totalEfectivo) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ (datosCierre?.efectivoInicial + totalEfectivo + efectivoAnteriores) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </table>
       </div>
@@ -129,6 +133,41 @@
             {{ datosCierre?.informe?.totalVentas | currency:'COP':'symbol-narrow':'1.0-0' }}
           </td>
           <td style="border: 1px solid #333; padding: 10px; text-align: right;">100%</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- D-583: VENTAS DE DÍAS ANTERIORES SIN CERRAR (aparte: no suman al total del período) -->
+  <div class="seccion-anteriores" style="margin-bottom: 25px;" *ngIf="datosCierre?.pedidosAnteriores?.length">
+    <h3 style="font-size: 16px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px;">
+      <i class="fa fa-clock-o" style="margin-right: 8px;"></i>VENTAS DE DÍAS ANTERIORES SIN CERRAR
+    </h3>
+    <p style="margin: 0 0 10px 0; font-size: 12px;">
+      Se registraron en su fecha, después del cierre de ese día. No suman al total de ventas de este período;
+      su efectivo sí está en la caja.
+    </p>
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #333;">
+      <thead>
+        <tr style="background-color: #f8f9fa;">
+          <th style="border: 1px solid #333; padding: 8px; text-align: left;">PEDIDO</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: left;">FECHA Y HORA</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: left;">FORMA DE PAGO</th>
+          <th style="border: 1px solid #333; padding: 8px; text-align: right;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let venta of datosCierre?.pedidosAnteriores">
+          <td style="border: 1px solid #333; padding: 6px;">{{ venta.nroPedido }}</td>
+          <td style="border: 1px solid #333; padding: 6px;">{{ horaVenta(venta.fechaCreacion) }}</td>
+          <td style="border: 1px solid #333; padding: 6px;">{{ venta.formaDePago }}</td>
+          <td style="border: 1px solid #333; padding: 6px; text-align: right;">{{ venta.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="background-color: #e9ecef; font-weight: bold;">
+          <td colspan="3" style="border: 1px solid #333; padding: 8px;">TOTAL DÍAS ANTERIORES</td>
+          <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ datosCierre?.totalAnteriores | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
         </tr>
       </tfoot>
     </table>
