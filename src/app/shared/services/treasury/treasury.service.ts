@@ -18,6 +18,7 @@ import {
   ReviewAction,
   ReviewQueueFilters,
   ReviewQueueResponse,
+  PaymentAuditResponse,
 } from './treasury.models';
 
 /**
@@ -72,8 +73,19 @@ export class TreasuryService extends BaseService {
   }
 
   /** POST /payments/:id/review — decisión del tesorero (idempotente en el server). */
-  reviewPayment(paymentId: string, action: ReviewAction, motivo: string = ''): Observable<ReviewPaymentResponse> {
-    return this.post<ReviewPaymentResponse>(`${this.base}/payments/${paymentId}/review`, { action, motivo });
+  reviewPayment(paymentId: string, action: ReviewAction, motivo: string = '', motivoCodigo: string = ''): Observable<ReviewPaymentResponse> {
+    // Ticket 1455: `motivoCodigo` (motivo de la lista) solo viaja cuando la empresa tiene la bandera `motivoRechazoPago`.
+    return this.post<ReviewPaymentResponse>(`${this.base}/payments/${paymentId}/review`, motivoCodigo ? { action, motivo, motivoCodigo } : { action, motivo });
+  }
+
+  /** GET /payments/:id/audit — ticket 1455: línea de tiempo de un pago (quién lo subió, lo decidió y qué cambió después). */
+  getPaymentAudit(paymentId: string, page = 1): Observable<PaymentAuditResponse> {
+    return this.get<PaymentAuditResponse>(`${this.base}/payments/${encodeURIComponent(paymentId)}/audit?page=${page}`);
+  }
+
+  /** GET /orders/:orderId/payments-audit — ticket 1455: línea de tiempo de todos los pagos de un pedido. */
+  getOrderPaymentsAudit(orderId: string, page = 1): Observable<PaymentAuditResponse> {
+    return this.get<PaymentAuditResponse>(`${this.base}/orders/${encodeURIComponent(orderId)}/payments-audit?page=${page}`);
   }
 
   /** POST /payments/:id/annul — ticket 1361: deshace un pago Aprobado (motivo obligatorio). */

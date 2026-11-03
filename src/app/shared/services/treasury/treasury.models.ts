@@ -14,6 +14,70 @@ export type AlertType = 'duplicate_file' | 'duplicate_ref';
 /** GET /config */
 export interface TreasuryConfig {
   treasuryEnabled: boolean;
+  /** Ticket 1455: el rechazo pide un motivo de la lista (bandera `motivoRechazoPago` de la empresa). */
+  motivoRechazoPago?: boolean;
+  /** Ticket 1455: lista de motivos frecuentes; sale del servidor, no se copia en el front. */
+  motivosRechazo?: MotivoRechazoPago[];
+}
+
+/** Ticket 1455: un motivo frecuente al rechazar un pago. `codigo` es estable; `texto` es el nombre en español. */
+export interface MotivoRechazoPago {
+  codigo: string;
+  texto: string;
+}
+
+/** Ticket 1455: tipos de evento de la línea de tiempo de un pago. */
+export type PaymentAuditEventType =
+  | 'subido'
+  | 'aprobado'
+  | 'rechazado'
+  | 'anulado'
+  | 'editado'
+  | 'edicion_bloqueada'
+  | 'estado_pedido'
+  | 'estado_pedido_bloqueado'
+  | 'alerta'
+  | 'nota';
+
+export interface PaymentAuditEvent {
+  hora: string;
+  tipo: PaymentAuditEventType;
+  paymentId: string | null;
+  quien: string;
+  rol: string;
+  canal: string;
+  antes: any;
+  despues: any;
+  motivo: string;
+  motivoCodigo: string;
+  detalle: string;
+}
+
+export interface PaymentAuditSummary {
+  paymentId: string;
+  valor: number | null;
+  formaPago: string;
+  referencia: string;
+  estadoVerificacion: string;
+  motivoRechazo: string;
+  motivoRechazoCodigo: string;
+  registradoPor: string;
+  revisadoPor: string;
+  revisadoAt: string;
+}
+
+/** GET /payments/:id/audit y GET /orders/:orderId/payments-audit */
+export interface PaymentAuditResponse {
+  success: boolean;
+  /** Solo en la línea de tiempo de un pago. */
+  pago?: PaymentAuditSummary;
+  /** Solo en la línea de tiempo de un pedido. */
+  orderId?: string;
+  pagos?: PaymentAuditSummary[];
+  eventos: PaymentAuditEvent[];
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 /** Bloque de KPI con monto + cantidad. */

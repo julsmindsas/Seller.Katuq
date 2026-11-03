@@ -106,6 +106,10 @@
           <div *ngIf="mode === 'rechazados' && motivoRechazo(pedido)" class="tk-reject-reason mt-1">
             <i class="pi pi-info-circle"></i> {{ motivoRechazo(pedido) }}
           </div>
+          <!-- Ticket 1455: quién rechazó y cuándo -->
+          <div *ngIf="mode === 'rechazados' && quienRechazo(pedido) as rz" class="tk-reject-quien">
+            {{ 'tesoreria.tablaPagosPedidos.rechazadoPorEl' | translate:{quien: (rz.quien || '—'), fecha: (rz.cuando | date:'dd/MM/yyyy HH:mm')} }}
+          </div>
         </td>
 
         <!-- Vendedor -->
@@ -149,6 +153,13 @@
                   class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
             <i class="pi pi-refresh"></i> {{ 'tesoreria.tablaPagosPedidos.nuevoPago' | translate }}
+          </button>
+
+          <!-- Ticket 1455: historial de los pagos del pedido -->
+          <button *ngIf="mode === 'rechazados' || mode === 'porRevisar'" type="button"
+                  class="btn btn-outline-secondary tk-btn-sm tk-btn-historial-pedido"
+                  (click)="verHistorialPedido(pedido)">
+            <i class="pi pi-history"></i> {{ 'tesoreria.tablaPagosPedidos.verHistorial' | translate }}
           </button>
         </td>
       </tr>

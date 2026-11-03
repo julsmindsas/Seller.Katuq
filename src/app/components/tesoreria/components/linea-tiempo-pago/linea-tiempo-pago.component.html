@@ -1,0 +1,34 @@
+<div class="lt-contenedor">
+  <div class="lt-estado" *ngIf="cargando && !eventos.length" role="status">
+    <i class="pi pi-spin pi-spinner"></i><div class="lt-estado-texto">{{ 'tesoreria.lineaTiempo.cargando' | translate }}</div>
+  </div>
+
+  <div class="lt-estado lt-estado-error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <div class="lt-estado-texto">{{ 'tesoreria.lineaTiempo.error' | translate }}</div>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargarSiguiente()">{{ 'tesoreria.lineaTiempo.reintentar' | translate }}</button>
+  </div>
+
+  <div class="lt-estado" *ngIf="!cargando && !error && !eventos.length">
+    <i class="pi pi-inbox"></i><div class="lt-estado-texto">{{ 'tesoreria.lineaTiempo.sinEventos' | translate }}</div>
+  </div>
+
+  <ol class="lt-lista" *ngIf="eventos.length">
+    <li class="lt-evento" *ngFor="let ev of eventos" [ngClass]="'lt-tono-' + ev.tono">
+      <div class="lt-icono" aria-hidden="true"><i class="pi" [ngClass]="ev.icono"></i></div>
+      <div class="lt-cuerpo">
+        <div class="lt-titulo">{{ ev.titulo }}</div>
+        <div class="lt-pago" *ngIf="ev.pago">{{ ev.pago }}</div>
+        <div class="lt-motivo" *ngIf="ev.motivo"><strong>{{ 'tesoreria.lineaTiempo.motivo' | translate }}:</strong> {{ ev.motivo }}</div>
+        <div class="lt-linea" *ngFor="let l of ev.lineas">{{ l }}</div>
+        <time class="lt-hora">{{ ev.hora | date:'dd/MM/yyyy HH:mm' }}</time>
+      </div>
+    </li>
+  </ol>
+
+  <div class="lt-mas" *ngIf="hayMas && eventos.length">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargarSiguiente()" [disabled]="cargando">
+      <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-plus'"></i> {{ 'tesoreria.lineaTiempo.verMas' | translate }}
+    </button>
+  </div>
+</div>

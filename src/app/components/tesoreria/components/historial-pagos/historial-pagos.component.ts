@@ -16,6 +16,8 @@ import { HistorialResumen, TreasuryPayment } from '../../../../shared/services/t
 import { metaEstado, PaymentStateMeta, HISTORIAL_STATUS_OPTIONS } from '../../tesoreria.constants';
 import Swal from 'sweetalert2';
 import { TranslateService } from '@ngx-translate/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { abrirHistorialPago } from '../linea-tiempo-pago/linea-tiempo-pago.component';
 
 /**
  * Spec 013 — Tesorería MVP. Tab "Historial" (T-19, CA-15).
@@ -57,7 +59,7 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
   private search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
-  constructor(private treasury: TreasuryService, private translate: TranslateService) {
+  constructor(private treasury: TreasuryService, private translate: TranslateService, private modal: NgbModal) {
     this.search$
       .pipe(debounceTime(350), takeUntil(this.destroy$))
       .subscribe(() => this.applyFilters());
@@ -196,6 +198,11 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
         Swal.fire({ icon: 'error', title: t('noSeAnulo'), text: err?.error?.error || err?.error?.message || t('intentaDeNuevo') });
       },
     });
+  }
+
+  /** Ticket 1455: historial del pago (quién lo subió, lo decidió y qué cambió después). */
+  verHistorial(item: any): void {
+    if (item?.id) abrirHistorialPago(this.modal, { paymentId: item.id });
   }
 
   trackByPayment(_index: number, item: TreasuryPayment): string {

@@ -105,6 +105,11 @@
             <i class="pi" [ngClass]="meta(item?.estadoVerificacion).icon"></i>
             {{ meta(item?.estadoVerificacion).label }}
           </span>
+          <!-- Ticket 1455: por qué se rechazó, y quién y cuándo -->
+          <div class="tk-hist-motivo" *ngIf="item?.estadoVerificacion === 'Rechazado' && item?.motivoRechazo">
+            {{ item?.motivoRechazo }}
+            <div class="tk-hist-motivo-quien" *ngIf="item?.revisadoPor">{{ 'tesoreria.historialPagos.rechazadoPorEl' | translate:{quien: item?.revisadoPor, fecha: (item?.revisadoAt | date:'dd/MM/yyyy HH:mm')} }}</div>
+          </div>
         </td>
         <td class="tk-cell-user">{{ item?.registradoPor || '—' }}</td>
         <td class="tk-cell-user">{{ item?.revisadoPor || '—' }}</td>
@@ -112,6 +117,10 @@
         <td class="tk-cell-notas" [title]="item?.notas || ''">{{ item?.notas || '—' }}</td>
         <!-- Ticket 1361: deshacer un pago aprobado por error -->
         <td>
+          <button *ngIf="item?.id" type="button" class="btn btn-outline-secondary btn-sm tk-btn-historial"
+                  (click)="verHistorial(item)">
+            <i class="pi pi-history"></i> {{ 'tesoreria.historialPagos.verHistorial' | translate }}
+          </button>
           <button *ngIf="sePuedeAnular(item)" type="button" class="btn btn-outline-danger btn-sm"
                   [disabled]="anulando === item?.id" (click)="anular(item)">
             <i class="pi" [ngClass]="anulando === item?.id ? 'pi-spin pi-spinner' : 'pi-undo'"></i> {{ 'tesoreria.historialPagos.anular' | translate }}

@@ -32,6 +32,7 @@ import {
   sumarDias,
 } from '../../tesoreria.constants';
 import { RevisarPagoComponent } from '../revisar-pago/revisar-pago.component';
+import { abrirHistorialPago } from '../linea-tiempo-pago/linea-tiempo-pago.component';
 import { RegistrarPagoComponent } from '../registrar-pago/registrar-pago.component';
 import { CambiarEstadoPagoComponent } from '../cambiar-estado-pago/cambiar-estado-pago.component';
 
@@ -434,6 +435,25 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       }
     }
     return '';
+  }
+
+  /** Ticket 1455: quién rechazó el último pago rechazado y cuándo (solo está en los rechazos hechos con la lista de motivos). */
+  quienRechazo(pedido: any): { quien: string; cuando: string } | null {
+    const pagos = pedido?.PagosAsentados || [];
+    for (let i = pagos.length - 1; i >= 0; i--) {
+      if (pagos[i]?.estadoVerificacion === 'Rechazado') {
+        const quien = pagos[i]?.rechazadoPor || '';
+        const cuando = pagos[i]?.fechaHoraAprobacionRechazo || '';
+        return quien || cuando ? { quien, cuando } : null;
+      }
+    }
+    return null;
+  }
+
+  /** Ticket 1455: historial de los pagos del pedido (quién los subió y decidió, y los cambios posteriores). */
+  verHistorialPedido(pedido: any): void {
+    const id = String(pedido?._id || '');
+    if (id) abrirHistorialPago(this.modal, { orderId: id });
   }
 
   puedeRevisar(pedido: any): boolean {

@@ -84,6 +84,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'recordatoriosCobro',
   // Cartera por vendedor y mora por fila de «Sin pago» (ticket 1457). Dueño: Daniel. Se retira el 2027-05-31.
   'carteraVendedorMora',
+  // Motivo de rechazo con lista y registro de cambios de pagos (ticket 1455): el servidor decide; la pantalla lo lee de /treasury/config. Dueño: Daniel. Se retira el 2027-05-31.
+  'motivoRechazoPago',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',
