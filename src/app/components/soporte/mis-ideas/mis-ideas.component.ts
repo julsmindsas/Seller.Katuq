@@ -65,9 +65,7 @@ export class MisIdeasComponent implements OnInit {
 
     // Filter by status if selected
     if (this.selectedStatus) {
-      filteredResults = filteredResults.filter(idea => 
-        idea.status && idea.status.toLowerCase() === this.selectedStatus.toLowerCase()
-      );
+      filteredResults = filteredResults.filter(idea => this.estadoIdea(idea) === this.selectedStatus);
     }
 
     // Filter by date range
@@ -267,9 +265,30 @@ export class MisIdeasComponent implements OnInit {
     if (!this.filteredTasks) {
       return [];
     }
-    return this.filteredTasks.filter(idea => 
-      idea.status && idea.status.toLowerCase() === status.toLowerCase()
-    );
+    return this.filteredTasks.filter(idea => this.estadoIdea(idea) === status);
+  }
+
+  /**
+   * Ticket 1443: las ideas son tickets y llevan sus estados (Pendiente, Haciendo,
+   * Resuelto, Archivado). El filtro y los contadores usaban estados de idea que
+   * nadie guarda, y por eso siempre daban 0. Aquí se traduce; no se cambian datos.
+   */
+  estadoIdea(idea: any): 'evaluando' | 'desarrollo' | 'implementado' | 'rechazado' {
+    const s = String(idea?.status || '').toLowerCase();
+    if (['evaluando', 'desarrollo', 'implementado', 'rechazado'].includes(s)) return s as any;
+    if (s === 'haciendo' || s === 'en proceso') return 'desarrollo';
+    if (s === 'resuelto') return 'implementado';
+    if (s === 'archivado') return 'rechazado';
+    return 'evaluando';
+  }
+
+  etiquetaEstadoIdea(idea: any): string {
+    return {
+      evaluando: 'soporte.misIdeas.enEvaluacion',
+      desarrollo: 'soporte.misIdeas.enDesarrollo',
+      implementado: 'soporte.misIdeas.implementado',
+      rechazado: 'soporte.misIdeas.noViable',
+    }[this.estadoIdea(idea)];
   }
 
   // Method to count ideas by status
