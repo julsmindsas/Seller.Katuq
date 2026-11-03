@@ -325,11 +325,12 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - el libro que arma el export de `productos.component` con productos fijos.
   - Dep: 8.0.
   - Éxito: verdes con el código de hoy; son la base del «idéntico sin la bandera» de 10.4 y 10.5.
-- [ ] 10.1 [P] Pruebas en rojo: `tests/productos/atributosLote.contract.emulator.test.js` (prueba 5), con el write-set de 1.3 por fila y el caso del producto recién creado.
+- [x] 10.1 [P] Pruebas en rojo: `tests/productos/atributosLote.contract.emulator.test.js` (prueba 5), con el write-set de 1.3 por fila y el caso del producto recién creado.
   - Dep: 8.0.
-- [ ] 10.2 **Con diff aprobado (productos y auth).** `POST /v1/productos/attributes/lote` con la cadena de F1, resolviendo referencias en Firestore (E10). No hay ruta nueva de lectura.
+- [x] 10.2 **Con diff aprobado (productos y auth).** `POST /v1/productos/attributes/lote` con la cadena de F1, resolviendo referencias en Firestore (E10). No hay ruta nueva de lectura.
   - Dep: 10.1.
   - Éxito: 10.1 en verde; 1.3 y 1.4 siguen en verde; ningún escritor nuevo de `attributes` fuera de la lista.
+  - Hecho (2026-11-03, solo en la copia local, sin push ni despliegue; el diff queda por aprobar por Daniel): `services/catalogo/atributosLote.js`, ruta en `routers/productos.js`, lector de cuerpo de 2 MB en `middleware/atributosLoteCuerpo.js` (montado en `index.js` antes del lector global) y evento `catalogo.atributos.lote` en el registro. Prueba 10.1: 24 de 24 en el emulador; 1.3 (12) y esquemas (16) siguen verdes; la excepción de `indiceTienda.js` en 1.4 es solo para la asignación en memoria.
 - [ ] 10.3 [P] Front: espejo de la hoja «Especificaciones» (encabezados con clave, `;`, vacía y `(borrar)`) y del filtro del export por ruta, con `node --test`.
   - Dep: 8.0.
 - [ ] 10.4 **Con diff aprobado (importador del Seller).** Descargar con categoría, leer la hoja aparte, llamar el lote en el `next` de la importación o solo, y mostrar el resultado por fila (E10).
