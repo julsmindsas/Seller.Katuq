@@ -1,7 +1,7 @@
 <div class="card cart-summary-sticky" [class.cupon-abierto]="cuponAbierto">
   <div class="tarjeta-cabeza card-no-border p-3">
     <div class="header-top">
-      <h5 class="m-0">{{ 'ventas.cartSummary.resumenDeLaCompra' | translate }}</h5>
+      <h5 class="m-0">{{ 'Resumen de la compra' | translate }}</h5>
       <!-- D-540: unidades del ticket (solo escritorio) -->
       <span class="tkt-unidades">{{ textoUnidades }}</span>
     </div>
@@ -15,36 +15,36 @@
             <div class="order-details-wrapper">
               <div class="left-details">
                 <div class="order-img widget-hover">
-                  <img [src]="getCartItemImageUrl(item)" [alt]="item.crearProducto?.titulo || ('ventas.cartSummary.producto' | translate)">
+                  <img [src]="getCartItemImageUrl(item)" [alt]="item.crearProducto?.titulo || 'Producto'">
                 </div>
               </div>
               <div class="category-details">
                 <div class="order-details-right">
-                  <h6 class="f-14 f-w-500 mb-2" [title]="item.crearProducto?.titulo || ''">{{ item.crearProducto?.titulo || ('ventas.cartSummary.productoSinNombre' | translate) }}</h6>
+                  <h6 class="f-14 f-w-500 mb-2" [title]="item.crearProducto?.titulo || ''">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</h6>
                   <!-- D-540: el editor de D-536 queda plegado detrás de «Editar precio» (solo escritorio) -->
                   <div class="fila-meta">
                     <button type="button" class="fila-editar" (click)="alternarEditor(item, $event)"
-                            [attr.aria-expanded]="lineaAbierta === item">{{ 'ventas.cartSummary.editarPrecio' | translate }}</button>
-                    <span class="fila-marca" *ngIf="lineaEditada(item)">{{ 'ventas.cartSummary.editado' | translate }}</span>
+                            [attr.aria-expanded]="lineaAbierta === item">{{ 'Editar precio' | translate }}</button>
+                    <span class="fila-marca" *ngIf="lineaEditada(item)">Editado</span>
                   </div>
                   <div class="last-order-detail">
                     <span class="fila-subtotal">${{ subtotalLinea(item) | number:'1.2-2' }}</span>
-                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }} <span class="fila-cu">{{ 'ventas.cartSummary.cadaUno' | translate }}</span>
-                      <span *ngIf="lineaEditada(item)" class="marca-editado">{{ 'ventas.cartSummary.editado' | translate }}</span>
+                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }} <span class="fila-cu">c/u</span>
+                      <span *ngIf="lineaEditada(item)" class="marca-editado">Editado</span>
                     </h6>
-                    <a href="javascript:void(0)" (click)="cartService.posRemoveCartItem(item)" [title]="'ventas.cartSummary.quitar' | translate" [attr.aria-label]="'ventas.cartSummary.quitarProducto' | translate">
+                    <a href="javascript:void(0)" (click)="cartService.posRemoveCartItem(item)" title="Quitar" aria-label="Quitar producto">
                       <i class="fa fa-trash trash-remove"></i>
                     </a>
                   </div>
                 </div>
                 <div class="right-details mb-2">
                   <div class="touchspin-wrapper">
-                    <button type="button" class="decrement-touchspin btn-touchspin" [attr.aria-label]="'ventas.cartSummary.quitarUnaUnidad' | translate"
+                    <button type="button" class="decrement-touchspin btn-touchspin" aria-label="Quitar una unidad"
                             (click)="cartService.updatePOSQuantity(-1, item)">
                       <i class="fa fa-minus icono-pos"></i>
                     </button>
                     <span class="input-touchspin fs-14 fc-gray" type="text">{{item.cantidad}}</span>
-                    <button type="button" class="increment-touchspin btn-touchspin" [attr.aria-label]="'ventas.cartSummary.agregarUnaUnidad' | translate"
+                    <button type="button" class="increment-touchspin btn-touchspin" aria-label="Agregar una unidad"
                             (click)="cartService.updatePOSQuantity(1, item)">
                       <i class="fa fa-plus icono-pos"></i>
                     </button>
@@ -63,8 +63,8 @@
             <span class="empty-cart-ic">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             </span>
-            <h6 class="empty-cart-title">{{ 'ventas.cartSummary.tuCarritoEstaVacio' | translate }}</h6>
-            <span class="empty-cart-sub">{{ 'ventas.cartSummary.escaneaUnCodigo' | translate }}</span>
+            <h6 class="empty-cart-title">{{ 'Tu carrito está vacío' | translate }}</h6>
+            <span class="empty-cart-sub">Escanea un código o agrega un producto del catálogo.</span>
           </div>
         </div>
       </div>
@@ -76,10 +76,10 @@
             <i class="fa fa-ticket" aria-hidden="true"></i>
           </span>
           <input #cuponInput class="form-control" type="text" [(ngModel)]="couponCode"
-            [placeholder]="'ventas.cartSummary.codigoDelCupon' | translate"
-            [attr.aria-label]="'ventas.cartSummary.codigoDelCupon' | translate" aria-describedby="button-addon2">
+            placeholder="{{'Código del cupón...' | translate }}"
+            aria-label="Enter Code" aria-describedby="button-addon2">
           <button class="btn bc-primary fc-white" id="button-addon2" type="button"
-            (click)="applyCoupon()">{{ 'ventas.cartSummary.aplicar' | translate }}</button>
+            (click)="applyCoupon()">{{'Aplicar' | translate }}</button>
         </div>
       </div>
     </div>
@@ -89,38 +89,38 @@
          o iguales al TOTAL; en móvil se ven como siempre. -->
     <div class="total-item mt-3">
       <div class="item-number fila-cantidad">
-        <span class="text-gray">{{ 'ventas.cartSummary.cantidad' | translate }}</span>
-        <span>{{ 'ventas.cartSummary.nItems' | translate: { n: cartService.posCartItems.length } }}</span>
+        <span class="text-gray">{{ 'Cantidad' | translate}}</span>
+        <span>{{cartService.posCartItems.length}} (Items)</span>
       </div>
       <div class="item-number" [class.fila-cero]="descuentoTicket === 0">
-        <span class="text-gray">{{ 'ventas.cartSummary.descuento' | translate }}</span>
+        <span class="text-gray">{{ 'Descuento' | translate }}</span>
         <span>${{ descuentoTicket | number:'1.2-2' }}</span>
       </div>
       <div class="item-number" [class.fila-cero]="cuponTicket === 0">
-        <span class="text-gray">{{ 'ventas.cartSummary.cuponDeDescuento' | translate }}</span>
+        <span class="text-gray">{{ 'Cupón de descuento' | translate }}</span>
         <span>${{ cuponTicket | number:'1.2-2' }}</span>
       </div>
       <div class="item-number" [class.border-bottom]="ivaTicket === 0" [class.fila-cero]="subtotalTicket === 0 || subtotalTicket === totalNumerico">
-        <span class="text-gray">{{ 'ventas.cartSummary.subtotal' | translate }}</span>
+        <span class="text-gray">Subtotal</span>
         <span>${{ subtotalTicket | number:'1.2-2' }}</span>
       </div>
       <!-- Ticket 1360: los impuestos por separado (base sin IVA + IVA = Total) -->
       <ng-container *ngIf="ivaTicket > 0">
         <div class="item-number">
-          <span class="text-gray">{{ 'ventas.cartSummary.subtotalSinIva' | translate }}</span>
+          <span class="text-gray">{{ 'Subtotal sin IVA' | translate }}</span>
           <span>${{ baseSinIvaTicket | number:'1.2-2' }}</span>
         </div>
         <div class="item-number border-bottom">
-          <span class="text-gray">{{ 'ventas.cartSummary.iva' | translate }}</span>
+          <span class="text-gray">IVA</span>
           <span>${{ ivaTicket | number:'1.2-2' }}</span>
         </div>
       </ng-container>
       <div class="item-number pt-3 pb-0">
-        <span class="f-w-600">{{ 'ventas.cartSummary.total' | translate }}</span>
+        <span class="f-w-600">Total</span>
         <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.2-2' }}</h6>
         <!-- D-540: el cupón queda plegado (solo escritorio); el campo y applyCoupon() no cambian. -->
         <button type="button" class="cupon-agregar" (click)="alternarCupon()"
-                [attr.aria-expanded]="cuponAbierto">{{ 'ventas.cartSummary.agregarCupon' | translate }}</button>
+                [attr.aria-expanded]="cuponAbierto">{{ 'Agregar cupón' | translate }}</button>
       </div>
     </div>
   </div>

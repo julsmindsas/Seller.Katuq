@@ -5,14 +5,14 @@
   chips con scroll horizontal. La lista sigue siendo la misma (imagesRect).
 -->
 <div class="cat-strip">
-  <span class="cat-strip-label">{{ 'ventas.productCategory.categorias' | translate }}</span>
+  <span class="cat-strip-label">{{ 'Categorías' | translate }}</span>
 
   <div class="cat-strip-rail">
     <div class="cat-chip" *ngFor="let item of imagesRect" [title]="item.title">
-      <img [src]="item.image" class="cat-chip-img" [alt]="'ventas.productCategory.categoria' | translate">
+      <img [src]="item.image" class="cat-chip-img" alt="Categoría">
       <span class="cat-chip-title">{{ item.title }}</span>
     </div>
   </div>
 
-  <a class="cat-strip-all" [routerLink]="['/categorias']">{{ 'ventas.productCategory.verTodas' | translate }}</a>
+  <a class="cat-strip-all" [routerLink]="['/categorias']">{{ 'Ver todas' | translate }}</a>
 </div>

@@ -1,8 +1,8 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">{{ 'proceso.comun.configuracion' | translate }}</span>
-            <h1 class="cfg-titulo">{{ 'proceso.variables.crear' | translate }}</h1>
+            <span class="cfg-eyebrow">Configuración</span>
+            <h1 class="cfg-titulo">Crear Variables</h1>
         </div>
     </header>
 
@@ -10,25 +10,25 @@
         <form class="cfg-form" [formGroup]="variableForm">
             <div class="cfg-form__grupo">
                 <div>
-                    <label for="id">{{ 'proceso.tabla.id' | translate }}</label>
+                    <label for="id">ID</label>
                     <input class="form-control" type="text" id="id" formControlName="id">
                 </div>
                 <div>
-                    <label for="image">{{ 'proceso.variables.tituloCol' | translate }}</label>
+                    <label for="image">Título</label>
                     <input class="form-control" type="text" id="image" formControlName="titulo">
                 </div>
                 <div>
-                    <label for="name">{{ 'proceso.variables.variable' | translate }}</label>
+                    <label for="name">Variable</label>
                     <input class="form-control" type="text" id="name" formControlName="variable">
                 </div>
                 <div>
-                    <label for="position">{{ 'proceso.variables.valor' | translate }}</label>
+                    <label for="position">Valor</label>
                     <input class="form-control" type="text" id="position" formControlName="valor">
                 </div>
             </div>
 
             <div class="cfg-form__pie">
-                <button (click)="guardar()" class="cfg-btn" type="submit">{{ 'proceso.crearVariables.crear' | translate }}</button>
+                <button (click)="guardar()" class="cfg-btn" type="submit">Crear Género</button>
             </div>
         </form>
     </section>

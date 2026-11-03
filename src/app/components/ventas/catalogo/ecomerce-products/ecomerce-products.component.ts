@@ -38,7 +38,6 @@ import { CartSingletonService } from "../../../../shared/services/ventas/cart.si
 import { ToastrService } from "ngx-toastr";
 import { aplicarPrecioDeLista, filaDeTipoCliente, descuentoVigente, precioEfectivoDeFila } from '../../../../shared/utils/precio-por-tipo-cliente';
 import { nuevoGrupoCombo } from '../../../../shared/utils/combo-lineas';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: "app-ecomerce-products",
@@ -208,7 +207,6 @@ export class EcomerceProductsComponent
     private cartService: CartSingletonService,
     private toastrService: ToastrService,
     private inventarioService: InventarioService,
-    private translate: TranslateService,
   ) {
     this.initForm();
   }
@@ -511,7 +509,7 @@ export class EcomerceProductsComponent
             map(result => ({ response: result.response, requestedPage: result.page })),
             catchError(error => {
               console.error(`❌ Error cargando página ${page}:`, error);
-              this.errorCarga = this.translate.instant('ventas.ecomerceProducts.errorCargarProductosIntente');
+              this.errorCarga = "Error al cargar productos. Intente nuevamente.";
               // Fallback a modo legacy si falla
               if (this.usarPaginacionServidor) {
                 this.usarPaginacionServidor = false;
@@ -707,10 +705,10 @@ export class EcomerceProductsComponent
       },
       error: (error) => {
         Swal.fire({
-          title: this.translate.instant('ventas.ecomerceProducts.errorTitulo'),
-          text: this.translate.instant('ventas.ecomerceProducts.errorCargarDatos') + error,
+          title: "Error!",
+          text: "Error al cargar los datos" + error,
           icon: "error",
-          confirmButtonText: this.translate.instant('comun.aceptar'),
+          confirmButtonText: "Aceptar",
         });
       },
     });
@@ -746,10 +744,10 @@ export class EcomerceProductsComponent
       },
       error: (error) => {
         Swal.fire({
-          title: this.translate.instant('ventas.ecomerceProducts.errorTitulo'),
-          text: this.translate.instant('ventas.ecomerceProducts.errorCargarLosProductos') + error,
+          title: "Error!",
+          text: "Error al cargar los productos" + error,
           icon: "error",
-          confirmButtonText: this.translate.instant('comun.aceptar'),
+          confirmButtonText: "Aceptar",
         });
       },
     });
@@ -836,8 +834,8 @@ export class EcomerceProductsComponent
         console.warn("No hay ciudad seleccionada para filtrar productos");
         // Mostrar mensaje al usuario si es necesario
         this.toastrService.warning(
-          this.translate.instant('ventas.ecomerceProducts.seleccioneCiudadAntes'),
-          this.translate.instant('ventas.ecomerceProducts.ciudadRequeridaTitulo'),
+          "Por favor seleccione una ciudad antes de buscar productos",
+          "Ciudad requerida",
         );
         return;
       }
@@ -981,12 +979,12 @@ export class EcomerceProductsComponent
         error: (error) => {
           console.error("Error al filtrar productos:", error);
           this.cargandoProductos = false;
-          this.errorCarga = this.translate.instant('ventas.ecomerceProducts.errorCargarLosProductosPunto');
+          this.errorCarga = "Error al cargar los productos.";
           Swal.fire({
-            title: this.translate.instant('ventas.ecomerceProducts.errorTitulo'),
-            text: this.translate.instant('ventas.ecomerceProducts.errorCargarVerifique'),
+            title: "Error!",
+            text: "Error al cargar los productos. Verifique que haya seleccionado una bodega y ciudad válidas.",
             icon: "error",
-            confirmButtonText: this.translate.instant('comun.aceptar'),
+            confirmButtonText: "Aceptar",
           });
         },
       });
@@ -1033,7 +1031,7 @@ export class EcomerceProductsComponent
    */
   comprarProducto(producto: Producto) {
     if ((producto as any).exposicion?.activar === false) {
-      this.toastrService.warning(this.translate.instant('ventas.ecomerceProducts.productoInactivoTexto'), this.translate.instant('ventas.ecomerceProducts.productoInactivo'));
+      this.toastrService.warning('Este producto está inactivo y no puede agregarse al carrito.', 'Producto inactivo');
       return;
     }
     if (this.requiereConfiguracion(producto)) {
@@ -1414,19 +1412,19 @@ export class EcomerceProductsComponent
 
     if (productosOtraCiudad.length > 0) {
       // Mostrar mensaje y preguntar al usuario
-      const mensaje = this.translate.instant('ventas.ecomerceProducts.confirmLimpiarCarrito', { n: productosOtraCiudad.length, ciudad: nuevaCiudad });
+      const mensaje = `Hay ${productosOtraCiudad.length} producto(s) en el carrito que pertenecen a otra ciudad. ¿Desea limpiar el carrito para la nueva ciudad "${nuevaCiudad}"?`;
 
       // Usar confirm nativo para preguntar (se puede mejorar con un modal más elegante)
       if (confirm(mensaje)) {
         this.cartService.clearCart();
         this.toastrService.info(
-          this.translate.instant('ventas.ecomerceProducts.carritoLimpiadoTexto', { ciudad: nuevaCiudad }),
-          this.translate.instant('ventas.ecomerceProducts.carritoLimpiado')
+          `El carrito ha sido limpiado al cambiar a ${nuevaCiudad}`,
+          'Carrito limpiado'
         );
       } else {
         this.toastrService.warning(
-          this.translate.instant('ventas.ecomerceProducts.productosNuevaCiudad'),
-          this.translate.instant('ventas.ecomerceProducts.advertencia')
+          'Los productos del carrito podrían no estar disponibles en la nueva ciudad',
+          'Advertencia'
         );
       }
     }
@@ -1772,11 +1770,10 @@ export class EcomerceProductsComponent
     // un producto agotado en esta bodega entraba al carrito sin aviso.
     if (!this.tieneExistencias(producto)) {
       if (mostrarToast) {
+        const dondeSiHay = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : "";
         this.toastrService.error(
-          this.bodega?.nombre
-            ? this.translate.instant('ventas.ecomerceProducts.noHayUnidadesEn', { bodega: this.bodega.nombre })
-            : this.translate.instant('ventas.ecomerceProducts.noHayUnidades'),
-          this.translate.instant('ventas.ecomerceProducts.sinStockEnEstaBodega'),
+          `No hay unidades${dondeSiHay}. Pasa el cursor sobre el indicador de stock para ver en qué bodega sí hay.`,
+          "Sin stock en esta bodega",
           { timeOut: 5000, progressBar: true, positionClass: "toast-bottom-right" }
         );
       }
@@ -1850,8 +1847,8 @@ export class EcomerceProductsComponent
 
       if (mostrarToast) {
         this.toastrService.success(
-          this.translate.instant('ventas.ecomerceProducts.agregadoAlPedidoTexto', { nombre: nombreProducto, n: cantidadMinima, precio: `$${precioMostrar.toLocaleString('es-CO')}` }),
-          this.translate.instant('ventas.ecomerceProducts.agregadoAlPedido'),
+          `${nombreProducto} x${cantidadMinima} agregado al pedido ($${precioMostrar.toLocaleString('es-CO')})`,
+          'Agregado al pedido',
           {
             timeOut: 3000,
             progressBar: true,
@@ -1868,8 +1865,8 @@ export class EcomerceProductsComponent
 
       if (mostrarToast) {
         this.toastrService.success(
-          this.translate.instant('ventas.ecomerceProducts.agregadoTexto', { nombre: nombreProducto, n: cantidadMinima, precio: `$${precioMostrar.toLocaleString('es-CO')}` }),
-          this.translate.instant('ventas.ecomerceProducts.agregadoAlCarrito'),
+          `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
+          'Agregado al carrito',
           {
             timeOut: 3000,
             progressBar: true,
@@ -1924,7 +1921,7 @@ export class EcomerceProductsComponent
    */
   agregarCombo(combo: any): void {
     if (this.isRebuy) {
-      this.toastrService.info(this.translate.instant('ventas.ecomerceProducts.combosNoRecompra'), this.translate.instant('ventas.ecomerceProducts.combo'));
+      this.toastrService.info('Los combos no están disponibles en modo recompra.', 'Combo');
       return;
     }
 
@@ -1979,19 +1976,17 @@ export class EcomerceProductsComponent
         });
 
         const nombreCombo = combo?.nombre || 'Combo';
+        const enBodega = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : '';
         const faltantes: string[] = [];
-        if (sinStock > 0) faltantes.push(this.bodega?.nombre
-          ? this.translate.instant('ventas.ecomerceProducts.faltanSinExistenciasEn', { n: sinStock, bodega: this.bodega.nombre })
-          : this.translate.instant('ventas.ecomerceProducts.faltanSinExistencias', { n: sinStock }));
-        if (noDisponibles > 0) faltantes.push(this.translate.instant('ventas.ecomerceProducts.faltanNoDisponibles', { n: noDisponibles }));
-        const unirFaltantes = faltantes.join(` ${this.translate.instant('ventas.ecomerceProducts.y')} `);
+        if (sinStock > 0) faltantes.push(`${sinStock} sin existencias${enBodega}`);
+        if (noDisponibles > 0) faltantes.push(`${noDisponibles} que ya no está(n) disponible(s)`);
         const avisoOpts = { timeOut: 7000, progressBar: true, positionClass: 'toast-bottom-right' };
 
         // Nada que agregar: se dice claro, sin "Combo agregado".
         if (agregables.length === 0) {
           this.toastrService.warning(
-            this.translate.instant('ventas.ecomerceProducts.comboSinExistenciasTexto', { combo: nombreCombo, total: ids.length, faltantes: unirFaltantes }),
-            this.translate.instant('ventas.ecomerceProducts.comboSinExistencias'),
+            `No se agregó "${nombreCombo}": de sus ${ids.length} productos, ${faltantes.join(' y ')}. Cambia de bodega o revisa las existencias.`,
+            'Combo sin existencias',
             avisoOpts
           );
           return;
@@ -2013,25 +2008,25 @@ export class EcomerceProductsComponent
         });
 
         const config = pendientesConfig > 0
-          ? ' ' + this.translate.instant(pendientesConfig > 1 ? 'ventas.ecomerceProducts.requiereConfig.other' : 'ventas.ecomerceProducts.requiereConfig.one', { n: pendientesConfig })
+          ? ` ${pendientesConfig} requiere${pendientesConfig > 1 ? 'n' : ''} configuración: revisa el carrito.`
           : '';
         if (completo) {
           this.toastrService.success(
-            this.translate.instant('ventas.ecomerceProducts.comboAgregadoTexto', { combo: nombreCombo, n: agregables.length, config }),
-            this.translate.instant('ventas.ecomerceProducts.comboAgregado'),
+            `Combo "${nombreCombo}" agregado al carrito en una sola línea (${agregables.length} productos).${config}`,
+            'Combo agregado',
             { timeOut: 5000, progressBar: true, positionClass: 'toast-bottom-right' }
           );
         } else {
           this.toastrService.warning(
-            this.translate.instant('ventas.ecomerceProducts.comboIncompletoTexto', { combo: nombreCombo, n: agregables.length, total: ids.length, faltantes: unirFaltantes, config }),
-            this.translate.instant('ventas.ecomerceProducts.comboIncompleto'),
+            `"${nombreCombo}" quedó incompleto: se agregaron por separado ${agregables.length} de ${ids.length} productos; faltan ${faltantes.join(' y ')}.${config}`,
+            'Combo incompleto',
             avisoOpts
           );
         }
       },
       error: (err) => {
         console.error('Error al resolver productos del combo:', err);
-        this.toastrService.error(this.translate.instant('ventas.ecomerceProducts.noSePudoAgregarCombo'), this.translate.instant('comun.error'));
+        this.toastrService.error('No se pudo agregar el combo', 'Error');
       }
     });
   }

@@ -2,9 +2,9 @@
 <!-- Título de la pantalla (D-400): mismo nombre que en el menú -->
 <header class="cfg-cabeza titulo-pantalla">
     <div class="cfg-cabeza__textos">
-        <span class="cfg-eyebrow">{{ 'ventas.cargaVentas.eyebrow' | translate }}</span>
-        <h1 class="cfg-titulo">{{ 'ventas.cargaVentas.titulo' | translate }}</h1>
-        <p class="cfg-sub">{{ 'ventas.cargaVentas.subtitulo' | translate }}</p>
+        <span class="cfg-eyebrow">{{ 'Ventas' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'Ventas masivas' | translate }}</h1>
+        <p class="cfg-sub">{{ 'Carga varias ventas a la vez desde un archivo JSON o Excel.' | translate }}</p>
     </div>
 </header>
 <section class="cfg-card cfg-form cv-card">
@@ -12,10 +12,10 @@
     <div class="row mb-4">
       <div class="col-md-6">
         <div class="form-group">
-          <label class="form-label">{{ 'ventas.cargaVentas.tipoArchivo' | translate }}</label>
+          <label class="form-label">{{ 'Seleccione el tipo de archivo:' | translate }}</label>
           <div class="btn-group cv-tipo" role="group">
-            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'json', 'btn-outline-primary': selectedFileType !== 'json'}" (click)="selectedFileType = 'json'">{{ 'ventas.cargaVentas.json' | translate }}</button>
-            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'excel', 'btn-outline-primary': selectedFileType !== 'excel'}" (click)="selectedFileType = 'excel'">{{ 'ventas.cargaVentas.excel' | translate }}</button>
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'json', 'btn-outline-primary': selectedFileType !== 'json'}" (click)="selectedFileType = 'json'">{{ 'JSON' | translate }}</button>
+            <button type="button" class="btn" [ngClass]="{'btn-primary': selectedFileType === 'excel', 'btn-outline-primary': selectedFileType !== 'excel'}" (click)="selectedFileType = 'excel'">{{ 'Excel' | translate }}</button>
           </div>
         </div>
       </div>
@@ -24,14 +24,14 @@
     <div class="row mb-4">
       <div class="col-md-6">
         <div class="form-group">
-          <label class="form-label" for="file">{{ 'ventas.cargaVentas.seleccioneArchivo' | translate }}</label>
+          <label class="form-label" for="file">{{ 'Seleccione el archivo:' | translate }}</label>
           <input type="file" class="form-control" id="file" (change)="onFileSelected($event)" 
                  [accept]="selectedFileType === 'json' ? '.json' : '.xlsx,.xls'">
         </div>
       </div>
       <div class="col-md-6">
         <div *ngIf="selectedFile" class="cfg-aviso cv-archivo">
-          <strong>{{ 'ventas.cargaVentas.archivoSeleccionado' | translate }}</strong> {{selectedFile.name}}
+          <strong>{{ 'Archivo seleccionado:' | translate }}</strong> {{selectedFile.name}}
         </div>
       </div>
     </div>
@@ -39,14 +39,14 @@
     <div class="row mb-4" *ngIf="selectedFile">
       <div class="col-md-12">
         <button class="cfg-btn" (click)="processWithKAI()">
-          <i class="fa fa-robot"></i> {{ 'ventas.cargaVentas.procesarKai' | translate }}
+          <i class="fa fa-robot"></i> {{ 'Procesar con KAI' | translate }}
         </button>
       </div>
     </div>
 
     <div class="row mt-4" *ngIf="fileData && fileData.length > 0">
       <div class="col-md-12">
-        <h5 class="cfg-card__titulo">{{ 'ventas.cargaVentas.vistaPrevia' | translate }}</h5>
+        <h5 class="cfg-card__titulo">{{ 'Vista previa de datos' | translate }}</h5>
         <div class="table-responsive">
           <table class="table cv-tabla">
             <thead>
@@ -62,7 +62,7 @@
           </table>
         </div>
         <div *ngIf="fileData.length > 10" class="cv-nota">
-          {{ 'ventas.cargaVentas.mostrando' | translate: { n: fileData.length } }}
+          {{ 'Mostrando 10 de' | translate }} {{fileData.length}} {{ 'registros.' | translate }}
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
     <div class="row mt-4" *ngIf="processingResult">
       <div class="col-md-12">
         <div [ngClass]="{'alert alert-success': processingSuccess, 'alert alert-danger': !processingSuccess}">
-          <h5>{{ 'ventas.cargaVentas.resultado' | translate }}</h5>
+          <h5>{{ 'Resultado del procesamiento:' | translate }}</h5>
           <p>{{processingResult}}</p>
         </div>
       </div>
@@ -80,12 +80,12 @@
       <div class="col-md-12">
         <div class="cv-formatos">
           <div class="cv-formatos__cabeza">
-            <h5 class="cfg-card__titulo">{{ 'ventas.cargaVentas.infoFormatos' | translate }}</h5>
+            <h5 class="cfg-card__titulo">{{ 'Información sobre formatos' | translate }}</h5>
           </div>
           <div class="cv-formatos__cuerpo">
             <div class="row">
               <div class="col-md-6">
-                <h6>{{ 'ventas.cargaVentas.formatoJson' | translate }}</h6>
+                <h6>{{ 'Formato JSON' | translate }}</h6>
                 <pre>
 [ 
   {{'{{'}}
@@ -101,8 +101,8 @@
                 </pre>
               </div>
               <div class="col-md-6">
-                <h6>{{ 'ventas.cargaVentas.formatoExcel' | translate }}</h6>
-                <p>{{ 'ventas.cargaVentas.columnasExcel' | translate }}</p>
+                <h6>{{ 'Formato Excel' | translate }}</h6>
+                <p>{{ 'El archivo Excel debe contener las siguientes columnas:' | translate }}</p>
                 <ul>
                   <li>{{ 'ID' | translate }}</li>
                   <li>{{ 'Cliente' | translate }}</li>

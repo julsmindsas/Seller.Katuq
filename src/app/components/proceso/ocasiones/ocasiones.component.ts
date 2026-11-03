@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 import { CrearOcasionesComponent } from './crear-ocasiones/crear-ocasiones.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 @Component({
@@ -19,7 +18,7 @@ export class OcasionesComponent implements OnInit {
   temp = [];
   ColumnMode = ColumnMode;
   isMobile = false;
-  constructor(private service:MaestroService,private modalService: NgbModal, private translate: TranslateService) {this.cargarDatos() }
+  constructor(private service:MaestroService,private modalService: NgbModal) {this.cargarDatos() }
   cargarDatos(){
     this.cargando=true
     this.service.consultarOcasion().subscribe((x: any) => {
@@ -77,10 +76,10 @@ export class OcasionesComponent implements OnInit {
     this.service.deleteOcasion(row).subscribe(r=> {console.log(r)
       if(r){
       Swal.fire({
-        title: this.translate.instant('proceso.comun.eliminado'),
-        text: this.translate.instant('proceso.comun.eliminadoExito'),
+        title: 'Eliminado!',
+        text: 'Eliminado con exito',
         icon: 'success',
-        confirmButtonText: this.translate.instant('comun.aceptar')
+        confirmButtonText: 'Ok'
       })
       this.cargarDatos()
     }});

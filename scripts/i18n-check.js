@@ -30,8 +30,6 @@
  *                       prefijo dinámico permitido)
  *   claveDinamica       clave armada en tiempo de ejecución con un prefijo fuera de `prefijosDinamicos`
  *   diccionarioAusente  falta el diccionario de un idioma de `idiomasOpcionales` (de, hasta IDI-B00f)
- *   clavePendiente      una clave de `es` no está en un idioma de `idiomasPendientes` (pt y de mientras
- *                       solo se traduce al inglés); en pantalla sale en español, el idioma por defecto
  *
  * Un texto suelto no cuenta si no tiene letras, si es solo nombres propios (`nombresPropios`) o
  * si está en `textosIgnorados`. `igualesPermitidos` NO sirve para ignorar textos sueltos: un
@@ -89,7 +87,7 @@ const LLAMADAS = [
 ];
 
 const ERRORES = ['jsonInvalido', 'claveDuplicada', 'claveFaltante', 'variablesDistintas', 'eszett', 'claveInexistente', 'textoSuelto'];
-const AVISOS = ['claveInexistenteAbierta', 'igualAlEspanol', 'claveSobrante', 'claveSinUso', 'claveDinamica', 'diccionarioAusente', 'clavePendiente'];
+const AVISOS = ['claveInexistenteAbierta', 'igualAlEspanol', 'claveSobrante', 'claveSinUso', 'claveDinamica', 'diccionarioAusente'];
 
 class ErrorDeUso extends Error {}
 
@@ -303,8 +301,7 @@ function revisarDiccionarios(dics, config, permitidos, hallazgos) {
     const base = { idioma, archivo: dic.archivo };
     for (const [clave, valorEs] of ref.valores) {
       if (!dic.valores.has(clave)) {
-        const tipo = (config.idiomasPendientes || []).includes(idioma) ? 'clavePendiente' : 'claveFaltante';
-        hallazgos.push({ tipo, ...base, clave, mensaje: `«${clave}» no está en ${idioma}` });
+        hallazgos.push({ tipo: 'claveFaltante', ...base, clave, mensaje: `«${clave}» no está en ${idioma}` });
         continue;
       }
       const valor = dic.valores.get(clave);
@@ -856,7 +853,6 @@ function cargarConfig(archivo) {
     referencia: 'es',
     idiomas: ['es', 'en', 'pt', 'de'],
     idiomasOpcionales: [],
-    idiomasPendientes: [],
     nombresPropios: [],
     igualesPermitidos: [],
     textosIgnorados: [],

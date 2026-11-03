@@ -3,7 +3,6 @@ import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 import { CrearTipoClienteComponent } from './crear-tipo-cliente/crear-tipo-cliente.component';
 
 @Component({
@@ -24,8 +23,7 @@ export class TiposClienteComponent implements OnInit {
 
   constructor(
     private service: MaestroService,
-    private modalService: NgbModal,
-    private translate: TranslateService
+    private modalService: NgbModal
   ) {
     this.cargarDatos();
   }
@@ -103,10 +101,10 @@ export class TiposClienteComponent implements OnInit {
         this.guardandoActivo[row.id] = false;
         Swal.fire({
           icon: 'success',
-          title: nuevoEstado ? this.translate.instant('proceso.tiposCliente.activadoTitulo') : this.translate.instant('proceso.tiposCliente.desactivadoTitulo'),
+          title: nuevoEstado ? 'Tipo de cliente activado' : 'Tipo de cliente desactivado',
           text: nuevoEstado
-            ? this.translate.instant('proceso.tiposCliente.activadoTexto')
-            : this.translate.instant('proceso.tiposCliente.desactivadoTexto'),
+            ? 'Vuelve a estar disponible al crear clientes.'
+            : 'Ya no se ofrece al crear clientes. Sus precios quedan guardados.',
           toast: true,
           position: 'top-end',
           timer: 2600,
@@ -117,7 +115,7 @@ export class TiposClienteComponent implements OnInit {
         console.error('Error cambiando el estado:', error);
         row.active = !nuevoEstado;
         this.guardandoActivo[row.id] = false;
-        Swal.fire(this.translate.instant('comun.error'), error?.error?.error || this.translate.instant('proceso.tiposCliente.errorEstado'), 'error');
+        Swal.fire('Error', error?.error?.error || 'No se pudo cambiar el estado del tipo de cliente', 'error');
       }
     });
   }
@@ -127,28 +125,28 @@ export class TiposClienteComponent implements OnInit {
     // precios que los productos tienen cargados a su nombre está el interruptor
     // de la columna Activo, que es reversible — por eso se ofrece acá.
     const avisoPrecioBase = row?.esPrecioBase
-      ? '<br><br>' + this.translate.instant('proceso.tiposCliente.avisoPrecioBase')
+      ? '<br><br><b>Además define el precio base de la empresa</b>, así que los productos se quedan sin lista base hasta que marques otra.'
       : '';
 
     Swal.fire({
-      title: this.translate.instant('proceso.tiposCliente.eliminarTitulo', { nombre: row?.nombre || this.translate.instant('proceso.tiposCliente.esteTipo') }),
-      html: this.translate.instant('proceso.tiposCliente.eliminarTexto') +
+      title: `¿Eliminar "${row?.nombre || 'este tipo de cliente'}"?`,
+      html: 'Se pierden los precios que los productos tengan cargados para este tipo y no se puede deshacer.' +
             avisoPrecioBase +
-            '<br><br>' + this.translate.instant('proceso.tiposCliente.eliminarSugerencia'),
+            '<br><br>Si solo quieres dejar de usarlo y conservar sus precios, cancela y apaga el interruptor de la columna <b>Activo</b>.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('proceso.comun.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar')
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deleteTipoCliente({ id: row.id }).subscribe({
           next: () => {
-            Swal.fire(this.translate.instant('proceso.comun.eliminado'), this.translate.instant('proceso.tiposCliente.eliminadoTexto'), 'success');
+            Swal.fire('Eliminado!', 'El tipo de cliente ha sido eliminado', 'success');
             this.cargarDatos();
           },
           error: (error) => {
             console.error('Error eliminando:', error);
-            Swal.fire(this.translate.instant('comun.error'), error?.error?.error || this.translate.instant('proceso.tiposCliente.errorEliminar'), 'error');
+            Swal.fire('Error', error?.error?.error || 'No se pudo eliminar el tipo de cliente', 'error');
           }
         });
       }

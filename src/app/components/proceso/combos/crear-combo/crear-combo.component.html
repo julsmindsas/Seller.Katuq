@@ -4,12 +4,12 @@
   <div class="cbm-form">
     <div class="cbm-head">
       <div class="cbm-head-txt">
-        <span class="cbm-eyebrow">{{ (mostrarCrear ? 'proceso.combos.nuevo' : 'proceso.crearCombo.editar') | translate }}</span>
+        <span class="cbm-eyebrow">{{ mostrarCrear ? 'Nuevo combo' : 'Editar combo' }}</span>
         <h2 class="cbm-title" id="cbm-titulo">
-          {{ (mostrarCrear ? 'proceso.crearCombo.tituloCrear' : 'proceso.crearCombo.tituloEditar') | translate }}
+          {{ mostrarCrear ? 'Junta productos que se venden juntos' : 'Cambia lo que incluye el combo' }}
         </h2>
       </div>
-      <button type="button" class="cbm-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()">
+      <button type="button" class="cbm-close" aria-label="Cerrar" (click)="activeModal.dismiss()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
       </button>
     </div>
@@ -17,32 +17,32 @@
     <form class="cbm-fields" [formGroup]="form" novalidate>
       <div class="cbm-row2">
         <label class="cbm-field">
-          <span class="cbm-label">{{ 'proceso.crearCombo.nombreLabel' | translate }}</span>
+          <span class="cbm-label">Nombre del combo</span>
           <input type="text" class="cbm-input" formControlName="nombre"
-                 [placeholder]="'proceso.crearCombo.nombrePlaceholder' | translate" [class.cbm-invalid]="faltaNombre">
-          <span class="cbm-error" *ngIf="faltaNombre">{{ 'proceso.crearCombo.faltaNombre' | translate }}</span>
+                 placeholder="Ej.: Ensamble bomba + motor 10 HP" [class.cbm-invalid]="faltaNombre">
+          <span class="cbm-error" *ngIf="faltaNombre">Ponle un nombre al combo.</span>
         </label>
 
         <label class="cbm-switch">
           <input type="checkbox" formControlName="activo">
           <span class="cbm-switch-txt">
-            <span class="cbm-switch-title">{{ (form.get('activo')?.value ? 'proceso.comun.activo' : 'proceso.comun.inactivo') | translate }}</span>
-            <span class="cbm-switch-sub">{{ (form.get('activo')?.value ? 'proceso.crearCombo.activoSub' : 'proceso.crearCombo.inactivoSub') | translate }}</span>
+            <span class="cbm-switch-title">{{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}</span>
+            <span class="cbm-switch-sub">{{ form.get('activo')?.value ? 'Se puede elegir al vender' : 'No aparece al vender' }}</span>
           </span>
         </label>
       </div>
 
       <label class="cbm-field">
-        <span class="cbm-label">{{ 'proceso.crearCombo.codigo' | translate }} <span class="cbm-label-hint">{{ 'proceso.crearCombo.codigoHint' | translate }}</span></span>
+        <span class="cbm-label">Código <span class="cbm-label-hint">(opcional, para actualizarlo desde Excel)</span></span>
         <input type="text" class="cbm-input cbm-input-codigo" formControlName="codigo" maxlength="40"
-               [placeholder]="'proceso.crearCombo.codigoPlaceholder' | translate">
+               placeholder="Ej.: ENS-5BF-10HP">
       </label>
 
       <div class="cbm-field">
         <div class="cbm-label-row">
-          <span class="cbm-label" id="cbm-productos">{{ 'proceso.crearCombo.productosLabel' | translate }}</span>
+          <span class="cbm-label" id="cbm-productos">Productos del combo</span>
           <span class="cbm-count" *ngIf="productosSeleccionados.length > 0">
-            {{ 'proceso.combos.nProductos' | translate: { n: productosSeleccionados.length } }}
+            {{ productosSeleccionados.length }} producto(s)
             <span *ngIf="cargandoSeleccionados" class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>
           </span>
         </div>
@@ -52,8 +52,8 @@
         <ng-select #buscador class="cbm-buscador" [items]="opcionesBusqueda" bindLabel="titulo"
           (change)="agregarProducto($event)"
           [typeahead]="productoInput$" [loading]="productoLoading" [minTermLength]="2"
-          [typeToSearchText]="'proceso.crearCombo.minimoLetras' | translate" [notFoundText]="'comun.sinResultados' | translate" [loadingText]="'proceso.crearCombo.buscando' | translate"
-          [placeholder]="'proceso.crearCombo.buscarPlaceholder' | translate" [clearable]="true"
+          typeToSearchText="Escribe al menos 2 letras…" notFoundText="Sin resultados" loadingText="Buscando…"
+          placeholder="Busca por nombre o referencia para agregar…" [clearable]="true"
           labelForId="cbm-buscar" aria-labelledby="cbm-productos">
           <ng-template ng-option-tmp let-item="item">
             <div class="cbm-opt">
@@ -67,12 +67,12 @@
               </span>
               <span class="cbm-price" *ngIf="item.precio">
                 {{ item.precioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <small class="cbm-price-iva">{{ 'proceso.crearCombo.conIva' | translate: { precio: (item.precio | currency:'COP':'symbol-narrow':'1.0-0') } }}</small>
+                <small class="cbm-price-iva">con IVA {{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
               </span>
             </div>
           </ng-template>
         </ng-select>
-        <span class="cbm-error" *ngIf="faltanProductos">{{ 'proceso.crearCombo.faltanProductos' | translate }}</span>
+        <span class="cbm-error" *ngIf="faltanProductos">Agrega al menos un producto.</span>
 
         <div class="cbm-list" *ngIf="productosSeleccionados.length > 0">
           <div class="cbm-item" *ngFor="let item of productosSeleccionados; trackBy: trackProducto">
@@ -85,74 +85,74 @@
               <span class="cbm-ref">{{ item.referencia }}</span>
             </span>
             <!-- Ticket 1323: unidades que lleva el combo (vacío = la mínima de venta) -->
-            <label class="cbm-qty" [title]="'proceso.crearCombo.unidadesTitle' | translate: { producto: item.titulo }">
-              <span class="cbm-qty-label">{{ 'proceso.crearCombo.cant' | translate }}</span>
+            <label class="cbm-qty" [title]="'Unidades de ' + item.titulo + ' en el combo'">
+              <span class="cbm-qty-label">Cant.</span>
               <input type="number" min="1" max="9999" step="1" class="cbm-qty-input"
                      [value]="cantidadDe(item)" (change)="cambiarCantidad(item, $any($event.target).value)"
-                     [attr.aria-label]="'proceso.crearCombo.cantidadDe' | translate: { producto: item.titulo }">
+                     [attr.aria-label]="'Cantidad de ' + item.titulo">
             </label>
             <!-- Ticket 1131: sin IVA, que es la referencia del comercio; con IVA debajo -->
             <span class="cbm-price">
               <ng-container *ngIf="item.precio">
                 {{ item.precioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <small class="cbm-price-iva">{{ 'proceso.crearCombo.conIva' | translate: { precio: (item.precio | currency:'COP':'symbol-narrow':'1.0-0') } }}</small>
+                <small class="cbm-price-iva">con IVA {{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
               </ng-container>
             </span>
-            <button type="button" class="cbm-remove" (click)="quitarProducto(item)" [attr.aria-label]="'proceso.crearCombo.quitarAria' | translate: { producto: item.titulo }" [title]="'proceso.crearCombo.quitarTitle' | translate">
+            <button type="button" class="cbm-remove" (click)="quitarProducto(item)" [attr.aria-label]="'Quitar ' + item.titulo + ' del combo'" title="Quitar del combo">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
             </button>
           </div>
           <ng-container *ngIf="todosConPrecio">
             <div class="cbm-list-foot">
-              <span>{{ 'proceso.crearCombo.precioGeneral' | translate: { n: productosSeleccionados.length } }}</span>
+              <span>Precio general de hoy sin IVA, suma de los {{ productosSeleccionados.length }}</span>
               <strong>{{ totalSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
             </div>
             <div class="cbm-list-foot cbm-list-foot-iva">
-              <span>{{ 'proceso.crearCombo.conIvaLabel' | translate }}</span>
+              <span>Con IVA</span>
               <b>{{ totalGeneral | currency:'COP':'symbol-narrow':'1.0-0' }}</b>
             </div>
           </ng-container>
         </div>
 
         <div class="cbm-list-empty" *ngIf="productosSeleccionados.length === 0">
-          {{ 'proceso.crearCombo.listaVacia' | translate }}
+          Busca arriba los productos que van juntos. Cada uno conserva su precio y su inventario.
         </div>
       </div>
 
       <label class="cbm-field">
-        <span class="cbm-label">{{ 'proceso.tabla.descripcion' | translate }} <span class="cbm-label-hint">{{ 'proceso.crearCombo.descripcionHint' | translate }}</span></span>
+        <span class="cbm-label">Descripción <span class="cbm-label-hint">(opcional, la ve el cliente bajo el nombre del combo)</span></span>
         <textarea class="cbm-input cbm-textarea" formControlName="descripcion" rows="2"
-                  [placeholder]="'proceso.crearCombo.descripcionPlaceholder' | translate"></textarea>
+                  placeholder="Ej.: bomba centrífuga con motor de 10 HP, lista para instalar"></textarea>
       </label>
     </form>
 
     <div class="cbm-foot">
-      <button type="button" class="cbm-btn-ghost" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
+      <button type="button" class="cbm-btn-ghost" (click)="activeModal.dismiss()">Cancelar</button>
       <button type="button" class="cbm-btn-primary" (click)="guardarOEditar()" [disabled]="guardando">
         <span *ngIf="guardando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        {{ (mostrarCrear ? 'proceso.crearCombo.crear' : 'proceso.comun.guardarCambios') | translate }}
+        {{ mostrarCrear ? 'Crear combo' : 'Guardar cambios' }}
       </button>
     </div>
   </div>
 
   <!-- Ticket 1097: cómo sale el combo en los documentos del cliente -->
-  <aside class="cbm-preview" [attr.aria-label]="'proceso.crearCombo.vistaPreviaAria' | translate">
-    <h3 class="cbm-preview-title">{{ 'proceso.crearCombo.asiLoVe' | translate }} <span>{{ 'proceso.crearCombo.asiLoVeResalte' | translate }}</span></h3>
+  <aside class="cbm-preview" aria-label="Vista previa para el cliente">
+    <h3 class="cbm-preview-title">Así lo ve tu <span>cliente</span></h3>
 
     <div class="cbm-doc">
       <div class="cbm-doc-head">
-        <span class="cbm-label">{{ 'proceso.crearCombo.cotizacion' | translate }}</span>
-        <span class="cbm-doc-tag">{{ 'proceso.crearCombo.vistaPrevia' | translate }}</span>
+        <span class="cbm-label">Cotización</span>
+        <span class="cbm-doc-tag">Vista previa</span>
       </div>
       <div class="cbm-doc-cols" aria-hidden="true">
-        <span>{{ 'proceso.tabla.descripcion' | translate }}</span>
-        <span class="cbm-center">{{ 'proceso.crearCombo.cant' | translate }}</span>
-        <span class="cbm-right">{{ 'proceso.crearCombo.subtotal' | translate }}</span>
+        <span>Descripción</span>
+        <span class="cbm-center">Cant.</span>
+        <span class="cbm-right">Subtotal</span>
       </div>
       <div class="cbm-doc-row">
         <span class="cbm-doc-name">
-          <span class="cbm-doc-name-txt">{{ nombrePreview || ('proceso.crearCombo.nombreLabel' | translate) }}</span>
-          <span class="cbm-doc-combo">{{ 'proceso.combos.colCombo' | translate }}</span>
+          <span class="cbm-doc-name-txt">{{ nombrePreview }}</span>
+          <span class="cbm-doc-combo">Combo</span>
           <span class="cbm-doc-desc" *ngIf="descripcionPreview">{{ descripcionPreview }}</span>
         </span>
         <span class="cbm-center">1</span>
@@ -160,15 +160,15 @@
       </div>
       <!-- Ticket 1131: el mismo resumen de la cotización (base gravable, IVA, total) -->
       <div class="cbm-doc-sum">
-        <span>{{ 'proceso.crearCombo.baseGravable' | translate }}</span>
+        <span>Base gravable</span>
         <b>{{ todosConPrecio ? (totalSinIva | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</b>
       </div>
       <div class="cbm-doc-sum">
-        <span>{{ 'proceso.crearCombo.iva' | translate }}</span>
+        <span>IVA</span>
         <b>{{ todosConPrecio ? (totalIva | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</b>
       </div>
       <div class="cbm-doc-total">
-        <span>{{ 'proceso.crearCombo.total' | translate }}</span>
+        <span>Total</span>
         <strong>{{ todosConPrecio ? (totalGeneral | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</strong>
       </div>
     </div>
@@ -177,24 +177,24 @@
       <span class="cbm-icono-tip" aria-hidden="true">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
       </span>
-      <span>{{ 'proceso.crearCombo.tipAntes' | translate }} <strong>{{ 'proceso.crearCombo.tipBoton' | translate }}</strong> {{ 'proceso.crearCombo.tipDespues' | translate }}</span>
+      <span>¿El cliente debe ver cada producto? En la cotización o en el pedido, el comercial pulsa <strong>Abrir combo</strong> y se lista uno por uno.</span>
     </div>
 
     <div class="cbm-tiles">
       <div class="cbm-tile">
-        <span class="cbm-label">{{ 'proceso.crearCombo.tilePrecio' | translate }}</span>
-        <span>{{ 'proceso.crearCombo.tilePrecioTexto' | translate }}</span>
+        <span class="cbm-label">Precio</span>
+        <span>La suma de sus productos, con la lista de cada cliente</span>
       </div>
       <div class="cbm-tile">
-        <span class="cbm-label">{{ 'proceso.crearCombo.tileInventario' | translate }}</span>
-        <span>{{ 'proceso.crearCombo.tileInventarioTexto' | translate }}</span>
+        <span class="cbm-label">Inventario</span>
+        <span>Descuenta cada producto de su bodega</span>
       </div>
       <div class="cbm-tile">
-        <span class="cbm-label">{{ 'proceso.crearCombo.tileFactura' | translate }}</span>
-        <span>{{ 'proceso.crearCombo.tileFacturaTexto' | translate }}</span>
+        <span class="cbm-label">Factura</span>
+        <span>Un renglón por producto, como hoy</span>
       </div>
     </div>
 
-    <span class="cbm-caption">{{ 'proceso.crearCombo.caption' | translate }}</span>
+    <span class="cbm-caption">Con el precio general; al vender se aplica la lista de precios de cada cliente.</span>
   </aside>
 </div>

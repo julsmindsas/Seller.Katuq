@@ -10,7 +10,6 @@ import { ListOrdersComponent } from './list.component';
  */
 function crearListado(opciones: { aplicar?: any; legacy?: any; envio?: number } = {}): any {
   const listado: any = Object.create(ListOrdersComponent.prototype);
-  listado.translate = { instant: (k: string, p: any = {}) => String(({} as any)[k] ?? k).replace(/\{\{\s*(\w+)\s*\}\}/g, (_: string, n: string) => p[n] ?? '') };
   listado.treasuryService = { treasuryEnabledCached: false };
   listado.pedidoUtilService = {
     pedido: null,

@@ -4,26 +4,26 @@
   <!-- Header (D-516: marco canónico) -->
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">{{ 'ventas.clientes.eyebrow' | translate }}</span>
-      <h1 class="cfg-titulo">{{ 'ventas.clientesCorporativos.titulo' | translate }}</h1>
-      <p class="cfg-sub">{{ 'ventas.clientesCorporativos.subtitulo' | translate }}</p>
+      <span class="cfg-eyebrow">Clientes</span>
+      <h1 class="cfg-titulo">Clientes corporativos</h1>
+      <p class="cfg-sub">Prospectos B2B que alimentan el CRM. Lista independiente de los clientes habituales.</p>
     </div>
     <div class="cfg-acciones">
       <button class="cfg-btn cfg-btn--sec" (click)="exportarExcel()" [disabled]="!corporativos.length"
-              [pTooltip]="'ventas.clientesCorporativos.exportarTooltip' | translate" tooltipPosition="bottom">
-        <i class="pi pi-download"></i> {{ 'ventas.clientesLista.exportar' | translate }}
+              pTooltip="Exportar a Excel" tooltipPosition="bottom">
+        <i class="pi pi-download"></i> Exportar
       </button>
       <button class="cfg-btn cfg-btn--sec" (click)="descargarPlantilla()"
-              [pTooltip]="'ventas.clientesCorporativos.plantillaTooltip' | translate" tooltipPosition="bottom">
-        <i class="pi pi-file-excel"></i> {{ 'ventas.clientesCorporativos.plantilla' | translate }}
+              pTooltip="Descargar plantilla de importación" tooltipPosition="bottom">
+        <i class="pi pi-file-excel"></i> Plantilla
       </button>
       <button class="cfg-btn cfg-btn--sec" (click)="fileInput.click()"
-              [pTooltip]="'ventas.clientesCorporativos.importarTooltip' | translate" tooltipPosition="bottom">
-        <i class="pi pi-upload"></i> {{ 'ventas.clientesLista.importar' | translate }}
+              pTooltip="Importar desde Excel (.xlsx, .csv)" tooltipPosition="bottom">
+        <i class="pi pi-upload"></i> Importar
       </button>
       <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
       <button class="cfg-btn" (click)="openCrearModal()">
-        <i class="pi pi-plus"></i> {{ 'ventas.clientesCorporativos.nuevo' | translate }}
+        <i class="pi pi-plus"></i> Nuevo corporativo
       </button>
     </div>
   </header>
@@ -33,14 +33,14 @@
   <div class="corp-toolbar">
     <span class="p-input-icon-left search-box">
       <i class="pi pi-search"></i>
-      <input type="text" pInputText [placeholder]="'ventas.clientesCorporativos.buscarPlaceholder' | translate"
+      <input type="text" pInputText placeholder="Buscar por nombre, documento, correo…"
              [value]="globalFilterValue" (input)="onGlobalFilter($any($event.target).value)" />
     </span>
 
     <div class="estado-filters">
-      <button class="chip" [class.active]="selectedEstadoFilter === 'todos'" (click)="filtrarPorEstado('todos')">{{ 'ventas.clientesLista.todos' | translate }}</button>
-      <button class="chip" [class.active]="selectedEstadoFilter === 'activo'" (click)="filtrarPorEstado('activo')">{{ 'ventas.clientesLista.activos' | translate }}</button>
-      <button class="chip" [class.active]="selectedEstadoFilter === 'bloqueado'" (click)="filtrarPorEstado('bloqueado')">{{ 'ventas.clientesLista.bloqueados' | translate }}</button>
+      <button class="chip" [class.active]="selectedEstadoFilter === 'todos'" (click)="filtrarPorEstado('todos')">Todos</button>
+      <button class="chip" [class.active]="selectedEstadoFilter === 'activo'" (click)="filtrarPorEstado('activo')">Activos</button>
+      <button class="chip" [class.active]="selectedEstadoFilter === 'bloqueado'" (click)="filtrarPorEstado('bloqueado')">Bloqueados</button>
     </div>
   </div>
 
@@ -48,16 +48,16 @@
   <p-table #dt [value]="corporativos" [loading]="cargando" [paginator]="true" [rows]="10"
            [rowsPerPageOptions]="[10, 25, 50]" [globalFilterFields]="['nombres_completos','documento','correo_electronico_comprador','numero_celular_comprador']"
            styleClass="p-datatable-sm corp-table" responsiveLayout="scroll"
-           currentPageReportTemplate="{{ 'ventas.clientesCorporativos.paginacion' | translate }}" [showCurrentPageReport]="true">
+           currentPageReportTemplate="{first}–{last} de {totalRecords}" [showCurrentPageReport]="true">
 
     <ng-template pTemplate="header">
       <tr>
-        <th>{{ 'ventas.clientes.colDocumento' | translate }}</th>
-        <th>{{ 'ventas.clientes.colNombreRazonSocial' | translate }}</th>
-        <th>{{ 'ventas.clientesLista.contacto' | translate }}</th>
-        <th>{{ 'ventas.clientes.etiquetas' | translate }}</th>
-        <th>{{ 'ventas.clientesLista.estado' | translate }}</th>
-        <th class="text-center">{{ 'ventas.clientesLista.acciones' | translate }}</th>
+        <th>Documento</th>
+        <th>Nombre / Razón social</th>
+        <th>Contacto</th>
+        <th>Etiquetas</th>
+        <th>Estado</th>
+        <th class="text-center">Acciones</th>
       </tr>
     </ng-template>
 
@@ -79,17 +79,17 @@
         </td>
         <td>
           <span class="estado-badge" [class.bloqueado]="c.estado === 'bloqueado'">
-            {{ (c.estado === 'bloqueado' ? 'ventas.clientes.bloqueado' : 'ventas.clientes.activo') | translate }}
+            {{ c.estado === 'bloqueado' ? 'Bloqueado' : 'Activo' }}
           </span>
         </td>
         <td class="text-center action-buttons-table">
           <button type="button" class="btn btn-sm btn-action btn-action-info"
-                  [pTooltip]="'comun.editar' | translate" tooltipPosition="top" (click)="editarCorporativo(c)">
+                  pTooltip="Editar" tooltipPosition="top" (click)="editarCorporativo(c)">
             <i class="icofont icofont-pencil-alt-5"></i>
           </button>
           <button type="button"
                   [class]="'btn btn-sm btn-action ' + (c.estado === 'bloqueado' ? 'btn-action-success' : 'btn-action-warn')"
-                  [pTooltip]="(c.estado === 'bloqueado' ? 'ventas.clientes.desbloquear' : 'ventas.clientes.bloquear') | translate" tooltipPosition="top"
+                  [pTooltip]="c.estado === 'bloqueado' ? 'Desbloquear' : 'Bloquear'" tooltipPosition="top"
                   (click)="toggleBloqueo(c)">
             <i class="fa" [ngClass]="c.estado === 'bloqueado' ? 'fa-unlock' : 'fa-lock'"></i>
           </button>
@@ -102,8 +102,8 @@
         <td colspan="6" class="empty">
           <div class="cfg-vacio">
             <span class="cfg-vacio__icono"><i class="pi pi-briefcase"></i></span>
-            <p class="cfg-vacio__titulo">{{ 'ventas.clientesCorporativos.vacio' | translate }}</p>
-            <button class="cfg-btn cfg-btn--sec" (click)="openCrearModal()">{{ 'ventas.clientesCorporativos.crearPrimero' | translate }}</button>
+            <p class="cfg-vacio__titulo">No hay clientes corporativos todavía.</p>
+            <button class="cfg-btn cfg-btn--sec" (click)="openCrearModal()">Crear el primero</button>
           </div>
         </td>
       </tr>

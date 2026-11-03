@@ -1,6 +1,6 @@
 <!-- D-547 (F2): bloque ACCIONES de 8. Clases con prefijo opa- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
 <div class="opa-bloque" *ngIf="vista">
-  <div class="opa-grilla" role="group" [attr.aria-label]="'ventas.pinnedActions.accionesPrincipales' | translate">
+  <div class="opa-grilla" role="group" aria-label="Acciones principales">
     <div class="opa-celda" *ngFor="let t of vista.tarjetas; trackBy: trackTarjeta">
       <button type="button" class="opa-accion"
               [class.opa-bloqueada]="!t.habilitada" [class.opa-resaltada]="!!t.etiqueta"
@@ -30,7 +30,7 @@
   </div>
 
   <!-- Factura electrónica: las que aplican hoy, debajo de las 8 -->
-  <div class="opa-factura" *ngIf="vista.hijosFactura.length" role="group" [attr.aria-label]="'ventas.pinnedActions.facturaElectronica' | translate">
+  <div class="opa-factura" *ngIf="vista.hijosFactura.length" role="group" aria-label="Factura electrónica">
     <button type="button" class="opa-factura-boton" *ngFor="let h of vista.hijosFactura; trackBy: trackTarjeta"
             (click)="elegir(h)">
       <app-icono-tabler [nombre]="h.icono" [tamano]="16"></app-icono-tabler>
@@ -38,5 +38,5 @@
     </button>
   </div>
 
-  <button type="button" class="opa-restablecer" (click)="restablecer.emit()">{{ 'ventas.pinnedActions.restablecerAcciones' | translate }}</button>
+  <button type="button" class="opa-restablecer" (click)="restablecer.emit()">Restablecer acciones</button>
 </div>

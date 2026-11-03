@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 import { CrearDescuentoPromocionComponent } from './crear-descuento-promocion/crear-descuento-promocion.component';
 import { HistorialRedencionesComponent } from './historial-redenciones/historial-redenciones.component';
 
@@ -19,8 +18,7 @@ export class DescuentosPromocionesComponent implements OnInit {
 
   constructor(
     private service: MaestroService,
-    private modalService: NgbModal,
-    private translate: TranslateService
+    private modalService: NgbModal
   ) {
     this.cargarDatos();
   }
@@ -77,22 +75,22 @@ export class DescuentosPromocionesComponent implements OnInit {
     // IMPORTANTE: el backend NO borra físicamente — desactiva el documento
     // para preservar el historial de redenciones ligado al código
     Swal.fire({
-      title: this.translate.instant('proceso.descuentosPromociones.desactivarTitulo'),
-      text: this.translate.instant('proceso.descuentosPromociones.desactivarTexto', { nombre: row.nombre }),
+      title: '¿Desactivar descuento?',
+      text: `"${row.nombre}" será desactivado. El historial de usos se conservará para preservar la integridad de los pedidos que usaron el código.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('proceso.descuentosPromociones.siDesactivar'),
-      cancelButtonText: this.translate.instant('comun.cancelar')
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deleteDescuentoPromocion({ id: row.id }).subscribe({
           next: () => {
-            Swal.fire(this.translate.instant('proceso.descuentosPromociones.desactivado'), this.translate.instant('proceso.descuentosPromociones.desactivadoTexto'), 'success');
+            Swal.fire('Desactivado', 'El descuento ha sido desactivado', 'success');
             this.cargarDatos();
           },
           error: (error) => {
             console.error('Error desactivando:', error);
-            Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.descuentosPromociones.errorDesactivar'), 'error');
+            Swal.fire('Error', 'No se pudo desactivar el descuento', 'error');
           }
         });
       }
@@ -104,25 +102,25 @@ export class DescuentosPromocionesComponent implements OnInit {
    * inhabilitado (activo === false). El historial de redenciones se conserva.
    */
   eliminarPermanente(row: any) {
-    const esPromocion = row.naturaleza === 'promocion';
+    const entidad = row.naturaleza === 'promocion' ? 'la promoción' : 'el código';
     Swal.fire({
-      title: this.translate.instant('proceso.descuentosPromociones.eliminarPermanenteTitulo'),
-      text: this.translate.instant('proceso.descuentosPromociones.eliminarPermanenteTexto', { nombre: row.nombre }),
+      title: '¿Eliminar permanentemente?',
+      text: `"${row.nombre}" se eliminará de forma definitiva y no se podrá recuperar. El historial de redenciones se conservará.`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('proceso.comun.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#d33'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deletePermanentDescuentoPromocion({ id: row.id }).subscribe({
           next: () => {
-            Swal.fire(this.translate.instant('proceso.descuentosPromociones.eliminado'), this.translate.instant(esPromocion ? 'proceso.descuentosPromociones.eliminadaPromocion' : 'proceso.descuentosPromociones.eliminadoCodigo'), 'success');
+            Swal.fire('Eliminado', `Se eliminó ${entidad} permanentemente`, 'success');
             this.cargarDatos();
           },
           error: (error) => {
-            const msg = error?.error?.message || this.translate.instant(esPromocion ? 'proceso.descuentosPromociones.errorEliminarPromocion' : 'proceso.descuentosPromociones.errorEliminarCodigo');
-            Swal.fire(this.translate.instant('comun.error'), msg, 'error');
+            const msg = error?.error?.message || `No se pudo eliminar ${entidad}`;
+            Swal.fire('Error', msg, 'error');
           }
         });
       }
@@ -154,14 +152,6 @@ export class DescuentosPromocionesComponent implements OnInit {
 
     this.rows = temp;
   }
-
-  /** Clave de traducción del badge de cada estado (el estado no cambia). */
-  readonly estadoClaves: Record<string, string> = {
-    vigente: 'proceso.descuentosPromociones.estadoVigente',
-    agotado: 'proceso.descuentosPromociones.estadoAgotado',
-    vencido: 'proceso.descuentosPromociones.estadoVencido',
-    inactivo: 'proceso.descuentosPromociones.estadoInactivo',
-  };
 
   // 4 estados posibles para el badge
   getEstado(row: any): 'vigente' | 'agotado' | 'vencido' | 'inactivo' {

@@ -6,7 +6,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ClientConfigService, ClientTag } from './services/client-config.service';
 import { clientBillingProfiles } from '../../../shared/utils/client-search';
 import { mayusculaInicial } from '../../../shared/utils/mayuscula-inicial';
-import { TranslateService } from '@ngx-translate/core';
 
 /**
  * Pantalla Crear cliente (`ventas/clientes`).
@@ -46,21 +45,21 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   // Visibilidad de columnas por tabla de la ficha 360 (solo lectura: se edita en el formulario)
   colsNotas = [
-    { key: 'fecha',  label: 'ventas.clientes.colFecha', visible: true },
-    { key: 'nota',   label: 'ventas.clientes.colNota',  visible: true },
+    { key: 'fecha',  label: 'Fecha', visible: true },
+    { key: 'nota',   label: 'Nota',  visible: true },
   ];
 
   colsFact = [
-    { key: 'referencia',     label: 'ventas.clientes.colReferencia',           visible: true },
-    { key: 'nombre',         label: 'ventas.clientes.colNombreRazonSocial', visible: true },
-    { key: 'tipoDocumento',  label: 'ventas.clientes.colTipoDocumento',        visible: true },
-    { key: 'documento',      label: 'ventas.clientes.colDocumento',             visible: true },
+    { key: 'referencia',     label: 'Referencia',           visible: true },
+    { key: 'nombre',         label: 'Nombre / Razón Social', visible: true },
+    { key: 'tipoDocumento',  label: 'Tipo Documento',        visible: true },
+    { key: 'documento',      label: 'Documento',             visible: true },
   ];
 
   colsEntrega = [
-    { key: 'referencia', label: 'ventas.clientes.colReferencia', visible: true },
-    { key: 'nombre',     label: 'ventas.clientes.colNombre',     visible: true },
-    { key: 'direccion',  label: 'ventas.clientes.colDireccion',  visible: true },
+    { key: 'referencia', label: 'Referencia', visible: true },
+    { key: 'nombre',     label: 'Nombre',     visible: true },
+    { key: 'direccion',  label: 'Dirección',  visible: true },
   ];
 
   toggleCol(cols: { key: string; label: string; visible: boolean }[], key: string): void {
@@ -78,7 +77,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
 
-  constructor(private router: Router, private modalService: NgbModal, private service: MaestroService, private cdr: ChangeDetectorRef, private clientConfig: ClientConfigService, private route: ActivatedRoute, private translate: TranslateService) {
+  constructor(private router: Router, private modalService: NgbModal, private service: MaestroService, private cdr: ChangeDetectorRef, private clientConfig: ClientConfigService, private route: ActivatedRoute) {
   }
 
   ngAfterViewInit(): void {
@@ -121,10 +120,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     const term = String(this.documentoBusqueda.nativeElement.value || '').trim();
     if (term.length < 2) {
       Swal.fire({
-        title: this.translate.instant('ventas.clientes.campoVacio'),
-        text: this.translate.instant('ventas.clientes.campoVacioTexto'),
+        title: 'Campo vacío',
+        text: 'Escribe el documento, nombre y apellido, celular o correo del cliente',
         icon: 'warning',
-        confirmButtonText: this.translate.instant('ventas.clientes.ok')
+        confirmButtonText: 'Ok'
       });
       return;
     }
@@ -152,10 +151,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         // Si buscó un número y no existe, se precarga en el formulario para crearlo.
         this.documentoNoEncontrado = soloDigitos ? term : '';
         Swal.fire({
-          title: this.translate.instant('ventas.clientes.noEncontrado'),
-          text: this.translate.instant('ventas.clientes.noEncontradoTexto'),
+          title: 'No encontrado!',
+          text: 'No encontramos un cliente con ese dato. Si es nuevo, llena los datos a continuación',
           icon: 'warning',
-          confirmButtonText: this.translate.instant('ventas.clientes.ok')
+          confirmButtonText: 'Ok'
         });
       } else if (lista.length === 1 || exactos.length === 1) {
         this.mostrarCliente(lista.length === 1 ? lista[0] : exactos[0]);
@@ -167,9 +166,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }, error => {
       this.encontrado = false;
       this.datos = null;
-      Swal.fire({ title: this.translate.instant('ventas.clientes.noSePudoConsultar'),
-        text: this.translate.instant('ventas.clientes.noSePudoBuscar'),
-        icon: 'error', confirmButtonText: this.translate.instant('comun.entendido') });
+      Swal.fire({ title: 'No se pudo consultar',
+        text: 'No se pudo buscar el cliente. Intenta de nuevo antes de crear otra ficha.',
+        icon: 'error', confirmButtonText: 'Entendido' });
     });
   }
 
@@ -184,26 +183,26 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.bloqueado = false
         this.documentoNoEncontrado = String(data.documento || '').trim();
         Swal.fire({
-          title: this.translate.instant('ventas.clientes.noEncontrado'),
-          text: this.translate.instant('ventas.clientes.noEncontradoDocumento'),
+          title: 'No encontrado!',
+          text: 'No se encuentra el documento. Si desea crearlo llene los datos a continuacion',
           icon: 'warning',
-          confirmButtonText: this.translate.instant('ventas.clientes.ok')
+          confirmButtonText: 'Ok'
         });
       } else {
         this.mostrarCliente(res);
         Swal.fire({
-          title: this.translate.instant('ventas.clientes.consultado'),
-          text: this.translate.instant('ventas.clientes.consultadoTexto'),
+          title: 'Consultado!',
+          text: 'Consultado con éxito',
           icon: 'success',
-          confirmButtonText: this.translate.instant('ventas.clientes.ok')
+          confirmButtonText: 'Ok'
         });
       }
     }, error => {
       this.encontrado = false;
       this.datos = null;
-      Swal.fire({ title: this.translate.instant('ventas.clientes.noSePudoConsultar'),
-        text: error?.error?.error || this.translate.instant('ventas.clientes.noSePudoVerificar'),
-        icon: 'error', confirmButtonText: this.translate.instant('comun.entendido') });
+      Swal.fire({ title: 'No se pudo consultar',
+        text: error?.error?.error || 'No se pudo verificar el cliente. Intenta de nuevo antes de crear otra ficha.',
+        icon: 'error', confirmButtonText: 'Entendido' });
     });
   }
 
@@ -215,7 +214,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   nuevoPedido() {
     const documento = this.documentoActual();
     if (!documento) {
-      Swal.fire({ title: this.translate.instant('ventas.clientes.sinCliente'), text: this.translate.instant('ventas.clientes.sinClienteTexto'), icon: 'warning', confirmButtonText: this.translate.instant('ventas.clientes.ok') });
+      Swal.fire({ title: 'Sin cliente', text: 'Primero busca o crea un cliente para crear un pedido', icon: 'warning', confirmButtonText: 'Ok' });
       return;
     }
     this.router.navigate(['/ventas/crear-ventas'], { queryParams: { documento } });
@@ -243,8 +242,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.service.editClient(parche).subscribe({
       next: () => {
         Swal.fire(estado === 'bloqueado'
-          ? { title: this.translate.instant('ventas.clientes.usuarioBloqueado'), text: this.translate.instant('ventas.clientes.usuarioBloqueadoTexto'), icon: 'error', confirmButtonText: this.translate.instant('ventas.clientes.ok') }
-          : { title: this.translate.instant('ventas.clientes.usuarioDesbloqueado'), text: this.translate.instant('ventas.clientes.usuarioDesbloqueadoTexto'), icon: 'success', confirmButtonText: this.translate.instant('ventas.clientes.ok') });
+          ? { title: 'Usuario Bloqueado!', text: 'Usuario bloqueado con exito', icon: 'error', confirmButtonText: 'Ok' }
+          : { title: 'Usuario Desbloqueado!', text: 'Usuario desbloqueado con exito', icon: 'success', confirmButtonText: 'Ok' });
         this.service.getClientByDocument({ documento }).subscribe((res: any) => {
           if (!res || !res.company) return;
           sessionStorage.setItem('cliente', JSON.stringify(res));
@@ -254,7 +253,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         });
       },
       error: (error) => {
-        Swal.fire({ title: this.translate.instant('comun.error'), text: error?.error?.error || this.translate.instant('ventas.clientes.errorCambiarEstado'), icon: 'error', confirmButtonText: this.translate.instant('ventas.clientes.ok') });
+        Swal.fire({ title: 'Error', text: error?.error?.error || 'No se pudo cambiar el estado del cliente', icon: 'error', confirmButtonText: 'Ok' });
       }
     });
   }
@@ -393,14 +392,14 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   removeTagCfg(index: number): void {
     const tag = this.editableTagsCfg[index];
     Swal.fire({
-      title: this.translate.instant('ventas.clientes.eliminarEtiquetaTitulo', { nombre: tag.name }),
-      text: this.translate.instant('ventas.clientes.eliminarEtiquetaTexto'),
+      title: `¿Eliminar etiqueta "${tag.name}"?`,
+      text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#D64545',
       cancelButtonColor: '#8f8bab',
-      confirmButtonText: this.translate.instant('ventas.clientes.siEliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
       didOpen: () => {
         const container = document.querySelector('.swal2-container') as HTMLElement;
         if (container) container.style.zIndex = '99999';
@@ -421,8 +420,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         }
         this.cdr.detectChanges();
         Swal.fire({
-          title: this.translate.instant('ventas.clientes.etiquetaEliminada'),
-          text: this.translate.instant('ventas.clientes.etiquetaEliminadaTexto', { nombre: tag.name }),
+          title: 'Etiqueta eliminada',
+          text: `La etiqueta "${tag.name}" fue eliminada del catálogo y de los clientes asignados.`,
           icon: 'success',
           timer: 2500,
           timerProgressBar: true,

@@ -6,7 +6,6 @@ import { MaestroService } from 'src/app/shared/services/maestros/maestro.service
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map, catchError, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 
 interface ComboProductoUI {
   cd: string;
@@ -55,8 +54,7 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private service: MaestroService,
-    public activeModal: NgbActiveModal,
-    private translate: TranslateService
+    public activeModal: NgbActiveModal
   ) {
     this.form = this.fb.group({
       id: [''],
@@ -184,7 +182,7 @@ export class CrearComboComponent implements OnInit, OnDestroy {
 
   // ── Vista previa "Así lo ve tu cliente" ──────────────────────────────────
   get nombrePreview(): string {
-    return String(this.form.get('nombre')?.value || '').trim();
+    return String(this.form.get('nombre')?.value || '').trim() || 'Nombre del combo';
   }
 
   /** Ticket 1116: la descripción la ve el cliente bajo el nombre del combo. */
@@ -268,13 +266,13 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     this.service.createCombo(payload).subscribe({
       next: () => {
         this.guardando = false;
-        Swal.fire(this.translate.instant('proceso.crearDescuentoPromocion.creado'), this.translate.instant('proceso.crearCombo.creadoTexto'), 'success')
+        Swal.fire('¡Creado!', 'El combo quedó listo para cotizar y vender.', 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
         this.guardando = false;
-        const msg = err?.error?.message || this.translate.instant('proceso.crearCombo.errorCrear');
-        Swal.fire(this.translate.instant('comun.error'), msg, 'error');
+        const msg = err?.error?.message || 'No se pudo crear el combo.';
+        Swal.fire('Error', msg, 'error');
       }
     });
   }
@@ -286,13 +284,13 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     this.service.editCombo(payload).subscribe({
       next: () => {
         this.guardando = false;
-        Swal.fire(this.translate.instant('proceso.comun.actualizado'), this.translate.instant('proceso.crearCombo.actualizadoTexto'), 'success')
+        Swal.fire('¡Actualizado!', 'El combo fue actualizado.', 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
         this.guardando = false;
-        const msg = err?.error?.message || this.translate.instant('proceso.crearCombo.errorActualizar');
-        Swal.fire(this.translate.instant('comun.error'), msg, 'error');
+        const msg = err?.error?.message || 'No se pudo actualizar el combo.';
+        Swal.fire('Error', msg, 'error');
       }
     });
   }
@@ -311,9 +309,9 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     const faltanProductos = this.productosSeleccionados.length === 0;
     if (faltaNombre || faltanProductos) {
       const que = faltaNombre && faltanProductos
-        ? this.translate.instant('proceso.crearCombo.faltaTodo')
-        : faltaNombre ? this.translate.instant('proceso.crearCombo.faltaNombre') : this.translate.instant('proceso.crearCombo.faltanProductosCombo');
-      Swal.fire(this.translate.instant('proceso.crearCombo.faltaInformacion'), que, 'warning');
+        ? 'Ponle un nombre al combo y agrega al menos un producto.'
+        : faltaNombre ? 'Ponle un nombre al combo.' : 'Agrega al menos un producto al combo.';
+      Swal.fire('Falta información', que, 'warning');
       return false;
     }
     return true;

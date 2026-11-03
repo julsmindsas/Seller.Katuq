@@ -2,9 +2,10 @@
   <div class="cuotas-tarjeta__head">
     <span class="cuotas-tarjeta__ico" aria-hidden="true"><i class="pi pi-credit-card"></i></span>
     <div class="cuotas-tarjeta__titulos">
-      <span class="cuotas-tarjeta__label">{{ 'ventas.pedidoPagoCuotas.pagoACuotas' | translate }}</span>
+      <span class="cuotas-tarjeta__label">{{ 'PAGO A CUOTAS' | translate }}</span>
       <span class="cuotas-tarjeta__sub">
-        <span [innerHTML]="(intentos.length === 1 ? 'ventas.pedidoPagoCuotas.subtitulo.one' : 'ventas.pedidoPagoCuotas.subtitulo.other') | translate: { nombre: nombre, n: intentos.length }"></span>
+        {{ 'Con' | translate }} <b>{{ nombre }}</b> · {{ intentos.length }}
+        {{ (intentos.length === 1 ? 'intento' : 'intentos') | translate }}
       </span>
     </div>
   </div>
@@ -20,17 +21,17 @@
       <span class="cuotas-estado" [ngClass]="'cuotas-estado--' + tono(i.estado)" [attr.title]="detalleEstado(i)">{{ i.estado | translate }}</span>
       <span class="cuotas-intento__fecha" *ngIf="fecha(i) as f">{{ f | date:'dd/MM/yyyy HH:mm' }}</span>
       <span class="cuotas-intento__monto" *ngIf="i.montoAprobado">
-        {{ 'ventas.pedidoPagoCuotas.aprobadoPor' | translate }} {{ i.montoAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}
+        {{ 'Aprobado por' | translate }} {{ i.montoAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}
       </span>
     </li>
   </ul>
   <ng-template #sinIntentos>
-    <span class="cuotas-tarjeta__vacio">{{ 'ventas.pedidoPagoCuotas.aunNoHayIntentosDe' | translate }}</span>
+    <span class="cuotas-tarjeta__vacio">{{ 'Aún no hay intentos de pago registrados.' | translate }}</span>
   </ng-template>
 
   <p class="cuotas-tarjeta__nota" *ngIf="pasoAWompi">
     <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <span class="cuotas-tarjeta__notatxt">{{ 'ventas.pedidoPagoCuotas.elCompradorPasoAPagar' | translate }}</span>
+    <span class="cuotas-tarjeta__notatxt">{{ 'El comprador pasó a pagar este pedido con tarjeta, PSE o Nequi (Wompi).' | translate }}</span>
   </p>
 
   <p class="cuotas-tarjeta__nota" *ngIf="hayAprobado">

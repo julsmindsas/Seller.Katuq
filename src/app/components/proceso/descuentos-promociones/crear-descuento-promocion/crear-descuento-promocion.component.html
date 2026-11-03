@@ -1,7 +1,7 @@
 
 <div class="modal-header">
   <h5 class="modal-title">
-    {{ (mostrarCrear ? (esPromocion ? 'proceso.crearDescuentoPromocion.crearPromocion' : 'proceso.crearDescuentoPromocion.crearDescuento') : (esPromocion ? 'proceso.crearDescuentoPromocion.editarPromocion' : 'proceso.crearDescuentoPromocion.editarDescuento')) | translate }}
+    {{ mostrarCrear ? 'Crear ' : 'Editar ' }}{{ esPromocion ? 'Promoción' : 'Descuento' }}
   </h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
@@ -11,7 +11,8 @@
   <div class="alert alert-info d-flex align-items-center mb-3" *ngIf="esPromocion">
     <i class="icofont icofont-tag me-2" style="font-size: 20px;"></i>
     <span>
-      <span [innerHTML]="'proceso.crearDescuentoPromocion.bannerPromocion' | translate"></span>
+      <b>Promoción automática:</b> se aplica sola en el catálogo y el checkout,
+      sin que el cliente escriba ningún código. Apunta a una categoría o a un producto.
     </span>
   </div>
 
@@ -21,28 +22,28 @@
       <!-- Fila 1: Nombre / Código -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.tabla.nombre' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
           <input type="text" class="form-control" formControlName="nombre"
-            [placeholder]="'proceso.crearDescuentoPromocion.nombrePlaceholder' | translate">
+            placeholder="Ej: Descuento de verano">
           <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-danger">
-            {{ 'proceso.comun.campoRequerido' | translate }}
+            Este campo es requerido
           </div>
         </div>
       </div>
       <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.codigoPersonalizado' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Código personalizado <span class="text-danger">*</span></label>
           <input type="text" class="form-control text-uppercase"
             formControlName="codigoPersonalizado"
-            [placeholder]="'proceso.crearDescuentoPromocion.codigoPlaceholder' | translate"
+            placeholder="Ej: VERANO2026"
             (input)="codigoUpper($event)"
             [attr.disabled]="!mostrarCrear && descuentoData?.usosActuales > 0 ? true : null">
           <small class="text-muted d-block"
             *ngIf="!mostrarCrear && descuentoData?.usosActuales > 0">
-            {{ 'proceso.crearDescuentoPromocion.codigoNoEditable' | translate }}
+            El código no puede editarse porque ya tiene usos registrados.
           </small>
           <div *ngIf="form.get('codigoPersonalizado')?.invalid && form.get('codigoPersonalizado')?.touched" class="text-danger">
-            {{ 'proceso.comun.campoRequerido' | translate }}
+            Este campo es requerido
           </div>
         </div>
       </div>
@@ -50,15 +51,15 @@
       <!-- Fila 2: Tipo / Valor -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.tipoDescuento' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Tipo de descuento <span class="text-danger">*</span></label>
           <select class="form-control" formControlName="tipo">
-            <option *ngFor="let t of tiposDisponibles" [value]="t.value">{{ t.label | translate }}</option>
+            <option *ngFor="let t of tiposDisponibles" [value]="t.value">{{ t.label }}</option>
           </select>
         </div>
       </div>
       <div class="col-md-6" *ngIf="tipoSeleccionado !== 'envio_gratis'">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.valor' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Valor <span class="text-danger">*</span></label>
           <div class="input-group">
             <input type="number" class="form-control" formControlName="valor" min="0">
             <span class="input-group-text">
@@ -66,7 +67,7 @@
             </span>
           </div>
           <div *ngIf="form.get('valor')?.invalid && form.get('valor')?.touched" class="text-danger">
-            {{ 'proceso.crearDescuentoPromocion.valorInvalido' | translate }}
+            Valor inválido
           </div>
         </div>
       </div>
@@ -74,19 +75,19 @@
       <!-- Fila 3: Fechas -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.fechaInicio' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Fecha inicio <span class="text-danger">*</span></label>
           <input type="date" class="form-control" formControlName="fechaInicio">
           <div *ngIf="form.get('fechaInicio')?.invalid && form.get('fechaInicio')?.touched" class="text-danger">
-            {{ 'proceso.comun.campoRequerido' | translate }}
+            Este campo es requerido
           </div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.fechaFin' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Fecha fin <span class="text-danger">*</span></label>
           <input type="date" class="form-control" formControlName="fechaFin">
           <div *ngIf="form.get('fechaFin')?.invalid && form.get('fechaFin')?.touched" class="text-danger">
-            {{ 'proceso.comun.campoRequerido' | translate }}
+            Este campo es requerido
           </div>
         </div>
       </div>
@@ -94,19 +95,19 @@
       <!-- Fila 4: Aplica a / Límite global -->
       <div [class]="esPromocion ? 'col-md-12' : 'col-md-6'">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.aplicaA' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Aplica a <span class="text-danger">*</span></label>
           <select class="form-control" formControlName="aplicaA" (change)="onAplicaAChange()">
-            <option *ngFor="let op of aplicaADisponibles" [value]="op.value">{{ op.label | translate }}</option>
+            <option *ngFor="let op of aplicaADisponibles" [value]="op.value">{{ op.label }}</option>
           </select>
         </div>
       </div>
       <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.limiteGlobal' | translate }}</label>
+          <label class="form-label fw-bold">Límite de usos global</label>
           <input type="number" class="form-control" formControlName="limiteUsos"
-            [placeholder]="'proceso.crearDescuentoPromocion.vacioIlimitado' | translate" min="1">
+            placeholder="Vacío = ilimitado" min="1">
           <small class="text-muted">
-            {{ 'proceso.crearDescuentoPromocion.limiteGlobalAyuda' | translate }}
+            Número máximo de veces que este código puede usarse en total.
           </small>
         </div>
       </div>
@@ -114,26 +115,26 @@
       <!-- Fila 4b: Target de aplicación (aparece según "Aplica a") -->
       <div class="col-md-12" *ngIf="aplicaASeleccionado === 'categoria'">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.categoriaEspecifica' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Categoría específica <span class="text-danger">*</span></label>
           <ng-select [items]="categorias" bindLabel="path" bindValue="nombre"
-            formControlName="categoriaNombre" [placeholder]="'proceso.crearDescuentoPromocion.seleccionaCategoria' | translate"
-            [clearable]="true" [notFoundText]="'proceso.crearDescuentoPromocion.sinCategorias' | translate">
+            formControlName="categoriaNombre" placeholder="Selecciona una categoría"
+            [clearable]="true" notFoundText="Sin categorías">
           </ng-select>
           <small class="text-danger"
             *ngIf="form.get('categoriaNombre')?.invalid && form.get('categoriaNombre')?.touched">
-            {{ 'proceso.crearDescuentoPromocion.seleccionaCategoria' | translate }}
+            Selecciona una categoría
           </small>
-          <small class="text-muted d-block">{{ 'proceso.crearDescuentoPromocion.aplicaCategoria' | translate }}</small>
+          <small class="text-muted d-block">El descuento aplicará a productos de esta categoría.</small>
         </div>
       </div>
 
       <div class="col-md-12" *ngIf="aplicaASeleccionado === 'producto_especifico'">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.productoEspecifico' | translate }} <span class="text-danger">*</span></label>
+          <label class="form-label fw-bold">Producto específico <span class="text-danger">*</span></label>
           <ng-select [items]="productosBuscados" bindLabel="titulo" bindValue="cd"
-            formControlName="productoId" [placeholder]="'proceso.crearDescuentoPromocion.buscarProducto' | translate"
+            formControlName="productoId" placeholder="Escribe para buscar producto..."
             [typeahead]="productoInput$" [loading]="productoLoading" [minTermLength]="2"
-            [typeToSearchText]="'proceso.crearDescuentoPromocion.minimoCaracteres' | translate" [notFoundText]="'comun.sinResultados' | translate"
+            typeToSearchText="Escribe al menos 2 caracteres..." notFoundText="Sin resultados"
             [clearable]="true" (change)="onProductoChange($event)">
             <ng-template ng-option-tmp let-item="item">
               {{ item.titulo }} <small class="text-muted">({{ item.referencia }})</small>
@@ -141,33 +142,33 @@
           </ng-select>
           <small class="text-danger"
             *ngIf="form.get('productoId')?.invalid && form.get('productoId')?.touched">
-            {{ 'proceso.crearDescuentoPromocion.seleccionaProducto' | translate }}
+            Selecciona un producto
           </small>
-          <small class="text-muted d-block">{{ 'proceso.crearDescuentoPromocion.aplicaProducto' | translate }}</small>
+          <small class="text-muted d-block">El descuento aplicará a este producto.</small>
         </div>
       </div>
 
       <!-- Fila 5: Monto mínimo / Límite por cliente (solo códigos, no promociones) -->
       <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.montoMinimo' | translate }}</label>
+          <label class="form-label fw-bold">Monto mínimo de orden</label>
           <div class="input-group">
             <span class="input-group-text">$</span>
             <input type="number" class="form-control" formControlName="montoMinimo"
-              [placeholder]="'proceso.crearDescuentoPromocion.vacioSinMinimo' | translate" min="0">
+              placeholder="Vacío = sin mínimo" min="0">
           </div>
           <small class="text-muted">
-            {{ 'proceso.crearDescuentoPromocion.montoMinimoAyuda' | translate }}
+            El carrito debe superar este monto para que el código aplique.
           </small>
         </div>
       </div>
       <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.crearDescuentoPromocion.limiteCliente' | translate }}</label>
+          <label class="form-label fw-bold">Límite de usos por cliente</label>
           <input type="number" class="form-control" formControlName="limiteUsosPorCliente"
-            [placeholder]="'proceso.crearDescuentoPromocion.vacioSinLimite' | translate" min="1">
+            placeholder="Vacío = sin límite" min="1">
           <small class="text-muted">
-            {{ 'proceso.crearDescuentoPromocion.limiteClienteAyuda' | translate }}
+            Cuántas veces puede usar este código un mismo cliente.
           </small>
         </div>
       </div>
@@ -175,37 +176,37 @@
       <!-- Fila 6: Descripción -->
       <div class="col-12">
         <div class="mb-3">
-          <label class="form-label fw-bold">{{ 'proceso.tabla.descripcion' | translate }}</label>
+          <label class="form-label fw-bold">Descripción</label>
           <textarea class="form-control" formControlName="descripcion" rows="2"
-            [placeholder]="'proceso.crearDescuentoPromocion.descripcionPlaceholder' | translate"></textarea>
+            placeholder="Descripción interna del descuento..."></textarea>
         </div>
       </div>
 
       <!-- Fila 7: Toggles Activo / Combinable -->
       <div class="col-md-6">
         <div class="mb-3">
-          <label class="form-label d-block fw-bold mb-2">{{ 'proceso.comun.estado' | translate }}</label>
+          <label class="form-label d-block fw-bold mb-2">Estado</label>
           <div class="d-flex align-items-center">
             <label class="toggle-switch me-3">
               <input type="checkbox" formControlName="activo">
               <span class="slider round"></span>
             </label>
-            <span class="text-muted">{{ (form.get('activo')?.value ? 'proceso.comun.activo' : 'proceso.comun.inactivo') | translate }}</span>
+            <span class="text-muted">{{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}</span>
           </div>
         </div>
       </div>
       <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
-          <label class="form-label d-block fw-bold mb-2">{{ 'proceso.crearDescuentoPromocion.combinable' | translate }}</label>
+          <label class="form-label d-block fw-bold mb-2">¿Combinable con otros códigos?</label>
           <div class="d-flex align-items-center">
             <label class="toggle-switch me-3">
               <input type="checkbox" formControlName="combinable">
               <span class="slider round"></span>
             </label>
-            <span class="text-muted">{{ (form.get('combinable')?.value ? 'comun.si' : 'comun.no') | translate }}</span>
+            <span class="text-muted">{{ form.get('combinable')?.value ? 'Sí' : 'No' }}</span>
           </div>
           <small class="d-block text-muted">
-            {{ 'proceso.crearDescuentoPromocion.combinableAyuda' | translate }}
+            Si está desactivado, el checkout rechazará otros códigos activos simultáneos.
           </small>
         </div>
       </div>
@@ -215,8 +216,8 @@
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
   <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
-    {{ (mostrarCrear ? 'proceso.comun.crear' : 'proceso.comun.guardarCambios') | translate }}
+    {{ mostrarCrear ? 'Crear' : 'Guardar cambios' }}
   </button>
 </div>

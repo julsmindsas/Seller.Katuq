@@ -272,7 +272,7 @@ export class RolesComponent implements OnInit {
             Swal.fire({
               title: this.translate.instant('rol.roles.actualizado'),
               text: this.translate.instant('rol.roles.rolActualizadoConExito') + (movidos
-                ? ' ' + this.translate.instant('rol.roles.usuariosMovidos', { movidos })
+                ? ` ${movidos} usuario(s) quedaron con el nombre nuevo; lo verán al volver a iniciar sesión.`
                 : ''),
               icon: 'success',
               confirmButtonText: this.translate.instant('rol.crearRol.ok')

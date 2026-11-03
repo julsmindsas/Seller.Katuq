@@ -9,9 +9,9 @@
               <div class="d-flex align-items-center">
                 <i class="fa fa-shopping-cart fs-4 cv-acento me-2"></i>
                 <div>
-                  <h4 class="mb-0 cv-titulo">{{ 'ventas.crearVentas.titulo' | translate }}</h4>
+                  <h4 class="mb-0 cv-titulo">Venta asistida</h4>
                   <div class="d-flex align-items-center mt-1">
-                    <span class="badge bg-light text-primary me-2">{{ 'ventas.crearVentas.preventaNro' | translate: { nro: pedidoGral?.nroPedido || 'TEMP-000000' } }}</span>
+                    <span class="badge bg-light text-primary me-2">Preventa #{{pedidoGral?.nroPedido || 'TEMP-000000'}}</span>
                     <ng-container *ngIf="pedidoGral?.cliente">
                       <span class="badge bg-light text-dark me-1">
                         <i class="fa {{ clienteEsEmpresa ? 'fa-building' : 'fa-user' }} me-1"></i>{{ clienteNombreEmpresa }}
@@ -48,7 +48,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 0"
                        (click)="wizard?.currentStepIndex > 0 && wizard.goToStep(0)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 0">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoCliente' | translate }}</span>
+                    <span class="step-text">Cliente</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
@@ -61,7 +61,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 1"
                        (click)="wizard?.currentStepIndex > 1 && wizard.goToStep(1)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 1">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoProductos' | translate }}</span>
+                    <span class="step-text">Productos</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
@@ -74,7 +74,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 2"
                        (click)="wizard?.currentStepIndex > 2 && wizard.goToStep(2)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 2">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoCarrito' | translate }}</span>
+                    <span class="step-text">Carrito</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
@@ -87,7 +87,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 3"
                        (click)="wizard?.currentStepIndex > 3 && wizard.goToStep(3)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 3">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoEnvioDatos' | translate }}</span>
+                    <span class="step-text">Envío y Datos</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
@@ -100,7 +100,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 4"
                        (click)="wizard?.currentStepIndex > 4 && wizard.goToStep(4)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 4">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoPago' | translate }}</span>
+                    <span class="step-text">Pago</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
@@ -113,7 +113,7 @@
                        [class.clickeable]="wizard?.currentStepIndex > 5"
                        (click)="wizard?.currentStepIndex > 5 && wizard.goToStep(5)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 5">✓</span>
-                    <span class="step-text">{{ 'ventas.crearVentas.pasoConfirmacion' | translate }}</span>
+                    <span class="step-text">Confirmación</span>
                   </div>
                 </div>
               </div>
@@ -125,31 +125,31 @@
         <div class="client-context-bar" *ngIf="pedidoGral?.cliente">
           <div class="ccb-group">
             <span class="ccb-icon"><i class="fa fa-user-circle"></i></span>
-            <span class="ccb-label">{{ (esDocEmpresa(pedidoGral.cliente?.tipo_documento_comprador) ? 'ventas.crearVentas.empresa' : 'ventas.crearVentas.pasoCliente') | translate }}</span>
+            <span class="ccb-label">{{ esDocEmpresa(pedidoGral.cliente?.tipo_documento_comprador) ? 'Empresa' : 'Cliente' }}</span>
             <span class="ccb-value">{{ pedidoGral.cliente?.nombres_completos }}{{ pedidoGral.cliente?.apellidos_completos ? ' ' + pedidoGral.cliente?.apellidos_completos : '' }}</span>
           </div>
           <ng-container *ngIf="esDocEmpresa(pedidoGral.cliente?.tipo_documento_comprador) && pedidoGral.cliente?.apellidos_completos">
             <span class="ccb-sep"></span>
             <div class="ccb-group">
               <span class="ccb-icon"><i class="fa fa-id-badge"></i></span>
-              <span class="ccb-label">{{ 'ventas.crearVentas.contacto' | translate }}</span>
+              <span class="ccb-label">Contacto</span>
               <span class="ccb-value">{{ pedidoGral.cliente?.apellidos_completos }}</span>
             </div>
           </ng-container>
           <span class="ccb-sep"></span>
           <div class="ccb-group">
             <span class="ccb-icon"><i class="fa fa-tag"></i></span>
-            <span class="ccb-label">{{ 'ventas.crearVentas.tipo' | translate }}</span>
+            <span class="ccb-label">Tipo</span>
             <span class="ccb-value ccb-badge" [class.ccb-badge--muted]="!categoriaClienteSeleccionada">
-              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || ('ventas.crearVentas.sinCategoria' | translate) }}
+              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || 'Sin categoría' }}
             </span>
           </div>
           <span class="ccb-sep"></span>
           <div class="ccb-group">
             <span class="ccb-icon"><i class="fa fa-list-alt"></i></span>
-            <span class="ccb-label">{{ 'ventas.crearVentas.listaPrecios' | translate }}</span>
+            <span class="ccb-label">Lista de precios</span>
             <span class="ccb-value ccb-badge ccb-badge--price" [class.ccb-badge--muted]="!categoriaClienteSeleccionada">
-              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || ('ventas.crearVentas.listaGeneral' | translate) }}
+              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || 'General' }}
             </span>
           </div>
         </div>
@@ -163,13 +163,13 @@
             <div class="filter-item filter-item--modo" [class.filter-completed]="catalogoSinInventario">
               <label class="filter-label">
                 <i class="fa fa-cubes"></i>
-                {{ 'ventas.crearVentas.modo' | translate }}
+                Modo
               </label>
-              <label class="modo-toggle" [title]="'ventas.crearVentas.modoTitle' | translate">
+              <label class="modo-toggle" title="Muestra solo los productos que se venden bajo pedido, sin depender de una bodega">
                 <input type="checkbox"
                        [ngModel]="catalogoSinInventario"
                        (ngModelChange)="onCatalogoSinInventarioChange($event)">
-                <span>{{ 'ventas.crearVentas.sinInventario' | translate }}</span>
+                <span>Sin inventario</span>
               </label>
             </div>
 
@@ -177,13 +177,13 @@
             <div class="filter-item" [class.filter-completed]="selectedWarehouse" [class.filter-disabled]="catalogoSinInventario">
               <label class="filter-label">
                 <i class="fa fa-warehouse"></i>
-                {{ 'ventas.crearVentas.bodega' | translate }}
+                Bodega
               </label>
               <select class="filter-select"
                       (change)="onWarehouseChange($event)"
                       [class.has-value]="selectedWarehouse"
                       [disabled]="catalogoSinInventario">
-                <option value="">{{ 'ventas.crearVentas.seleccionar' | translate }}</option>
+                <option value="">Seleccionar...</option>
                 <!-- [selected] mantiene el selector sincronizado cuando la bodega
                      se cambia desde el catálogo (popover de existencias). -->
                 <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega"
@@ -198,11 +198,11 @@
               <div class="filter-label-row">
                 <label class="filter-label">
                   <i class="fa fa-map-marker-alt"></i>
-                  {{ 'ventas.crearVentas.ciudad' | translate }}
+                  Ciudad
                 </label>
                 <label class="dane-toggle" *ngIf="selectedWarehouse">
                   <input type="checkbox" [(ngModel)]="usarDaneCiudadEntrega">
-                  <span>{{ 'ventas.crearVentas.dane' | translate }}</span>
+                  <span>DANE</span>
                 </label>
               </div>
 
@@ -212,7 +212,7 @@
                         (change)="onSelectCity($event)"
                         [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
                         [disabled]="!selectedWarehouse">
-                  <option value="seleccione">{{ 'ventas.crearVentas.seleccionar' | translate }}</option>
+                  <option value="seleccione">Seleccionar...</option>
                   <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
                           [value]="ciudad.value"
                           [selected]="selectedCity === ciudad.value">
@@ -227,14 +227,14 @@
                   <div class="dane-inputs">
                     <input type="text" class="dane-input"
                            [(ngModel)]="searchQueryCiudadDane"
-                           [placeholder]="'ventas.crearVentas.buscarMunicipio' | translate"
+                           placeholder="Buscar municipio..."
                            (input)="buscarMunicipioDane(searchQueryCiudadDane)"
                            [disabled]="!selectedWarehouse">
                     <select class="dane-depto"
                             [(ngModel)]="departamentoDaneSeleccionado"
                             (ngModelChange)="onDepartamentoDaneChange($event)"
                             [disabled]="!selectedWarehouse">
-                      <option value="">{{ 'ventas.crearVentas.depto' | translate }}</option>
+                      <option value="">Depto</option>
                       <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
                     </select>
                   </div>
@@ -258,12 +258,12 @@
             <div class="filter-item filter-search" [class.filter-disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               <label class="filter-label">
                 <i class="fa fa-search"></i>
-                {{ 'ventas.crearVentas.buscarProductos' | translate }}
+                Buscar productos
               </label>
               <div class="search-wrapper">
                 <i class="fa fa-search"></i>
                 <input type="search" class="search-input"
-                       [placeholder]="'ventas.crearVentas.nombreOReferencia' | translate"
+                       placeholder="Nombre o referencia..."
                        (keyup)="onProductSearch($event)"
                        [disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               </div>
@@ -274,11 +274,11 @@
           <div class="filters-status" *ngIf="catalogoSinInventario || !selectedWarehouse || !selectedCity || selectedCity === 'seleccione'">
             <i class="fa fa-info-circle"></i>
             <span *ngIf="catalogoSinInventario">
-              {{ 'ventas.crearVentas.mostrandoBajoPedido' | translate }}
+              Mostrando productos que se venden bajo pedido — no dependen de una bodega
             </span>
-            <span *ngIf="!catalogoSinInventario && !selectedWarehouse">{{ 'ventas.crearVentas.seleccioneBodega' | translate }}</span>
+            <span *ngIf="!catalogoSinInventario && !selectedWarehouse">Seleccione una bodega para comenzar</span>
             <span *ngIf="!catalogoSinInventario && selectedWarehouse && (!selectedCity || selectedCity === 'seleccione')">
-              {{ 'ventas.crearVentas.seleccioneCiudad' | translate }}
+              Seleccione una ciudad para ver productos
             </span>
           </div>
         </div>
@@ -291,7 +291,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-user"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoCliente' | translate }}</p>
+                  <p class="text-steper">Cliente</p>
                 </div>
               </ng-template>
 
@@ -300,8 +300,8 @@
                 <span class="va-ic">
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </span>
-                <span class="va-card-title">{{ 'ventas.crearVentas.pasoCliente' | translate }}</span>
-                <span class="va-req" *ngIf="!encontrado">{{ 'ventas.crearVentas.requerido' | translate }}</span>
+                <span class="va-card-title">Cliente</span>
+                <span class="va-req" *ngIf="!encontrado">Requerido</span>
               </div>
 
               <!-- Buscador de clientes con Autocompletado PrimeNG -->
@@ -319,7 +319,7 @@
                       [minLength]="3"
                       [forceSelection]="false"
                       [showClear]="true"
-                      [placeholder]="'ventas.crearVentas.buscarCliente' | translate"
+                      placeholder="Buscar por documento, nombre, correo o celular..."
                       styleClass="cliente-autocomplete-full"
                       inputStyleClass="cliente-input"
                     >
@@ -347,7 +347,7 @@
                       <ng-template pTemplate="empty">
                         <div class="empty-results">
                           <i class="fa fa-user-slash"></i>
-                          <span>{{ 'ventas.crearVentas.noClientes' | translate }}</span>
+                          <span>No se encontraron clientes</span>
                         </div>
                       </ng-template>
                     </p-autoComplete>
@@ -359,7 +359,7 @@
                   <!-- Botón nuevo cliente -->
                   <button class="new-client-btn" (click)="mostrarFormularioNuevoCliente()">
                     <i class="fa fa-plus"></i>
-                    <span>{{ 'ventas.crearVentas.nuevoCliente' | translate }}</span>
+                    <span>Nuevo Cliente</span>
                   </button>
                 </div>
               </div>
@@ -401,7 +401,7 @@
                           (change)="onCategoriaClienteChange($event)"
                           [disabled]="cargandoTiposCliente"
                           #categoriaSelect>
-                    <option value="" [selected]="!categoriaClienteSeleccionada">{{ 'ventas.crearVentas.sinCategoria' | translate }}</option>
+                    <option value="" [selected]="!categoriaClienteSeleccionada">Sin categoría</option>
                     <option *ngFor="let tipo of tiposCliente"
                             [value]="tipo.id"
                             [selected]="categoriaClienteSeleccionada?.id === tipo.id">
@@ -437,7 +437,7 @@
               <div *ngIf="encontrado" class="step1-notes-section mb-3">
                 <button type="button" class="notes-toggle-btn" (click)="notasClienteExpanded = !notasClienteExpanded">
                   <i class="fa fa-comment-alt"></i>
-                  <span>{{ 'ventas.crearVentas.notasCliente' | translate }}</span>
+                  <span>Notas del cliente</span>
                   <span class="notes-count-badge" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length">
                     {{ pedidoGral.notasPedido.notasCliente.length }}
                   </span>
@@ -445,9 +445,9 @@
                 </button>
                 <div *ngIf="notasClienteExpanded" class="notes-body">
                   <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-input-area">
-                    <textarea formControlName="nota" [placeholder]="'ventas.crearVentas.agregarNotaCliente' | translate" rows="2"></textarea>
+                    <textarea formControlName="nota" placeholder="Agregar nota sobre el cliente..." rows="2"></textarea>
                     <button type="submit" [disabled]="notasClienteForm.invalid">
-                      <i class="fa fa-plus"></i> {{ 'ventas.crearVentas.agregar' | translate }}
+                      <i class="fa fa-plus"></i> Agregar
                     </button>
                   </form>
                   <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
@@ -462,7 +462,7 @@
                     </div>
                   </div>
                   <div class="notes-empty" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
-                    {{ 'ventas.crearVentas.sinNotas' | translate }}
+                    Sin notas registradas
                   </div>
                 </div>
               </div>
@@ -471,11 +471,11 @@
               <div class="step1-footer">
                 <div class="footer-message" *ngIf="!encontrado">
                   <i class="fa fa-info-circle"></i>
-                  {{ 'ventas.crearVentas.busqueOCreeCliente' | translate }}
+                  Busque o cree un cliente para continuar
                 </div>
                 <button class="next-step-btn" type="button" awNextStep [disabled]="!encontrado || !pedidoGral"
                   (click)="reviewStepAndExecute(1)">
-                  {{ 'ventas.crearVentas.continuarProductos' | translate }}
+                  Continuar a Productos
                   <i class="fa fa-arrow-right"></i>
                 </button>
               </div>
@@ -486,7 +486,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-shopping-basket"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoProductos' | translate }}</p>
+                  <p class="text-steper">Productos</p>
                 </div>
               </ng-template>
 
@@ -496,7 +496,7 @@
                 <div class="step2-products-area" [class.with-sidebar]="sidebarCarritoVisible && tieneProductosEnCarrito">
                   <div class="card shadow-sm mb-4">
                     <div class="cv-seccion-cabeza d-flex justify-content-between align-items-center">
-                      <h5 class="mb-0"><i class="fa fa-shopping-basket me-2 cv-acento"></i>{{ 'ventas.crearVentas.catalogoProductos' | translate }}</h5>
+                      <h5 class="mb-0"><i class="fa fa-shopping-basket me-2 cv-acento"></i>Catálogo de Productos</h5>
                       <!-- Botón toggle sidebar en móvil -->
                       <button *ngIf="tieneProductosEnCarrito"
                               class="btn btn-sm btn-outline-primary d-lg-none"
@@ -525,7 +525,7 @@
                   <!-- Mensaje si no hay bodega o ciudad seleccionada -->
                   <div *ngIf="!bodega || !selectedCity" class="alert alert-info">
                     <i class="fa fa-info-circle me-2"></i>
-                    {{ 'ventas.crearVentas.seleccioneBodegaCiudad' | translate }}
+                    Seleccione una bodega y ciudad en la barra de configuración para ver los productos disponibles.
                   </div>
                 </div>
 
@@ -539,7 +539,7 @@
                   <div class="sidebar-header">
                     <div class="sidebar-title">
                       <i class="fa fa-shopping-cart"></i>
-                      <span>{{ 'ventas.crearVentas.miCarrito' | translate }}</span>
+                      <span>Mi Carrito</span>
                       <span class="badge bg-primary ms-2">{{cantidadItemsCarrito}}</span>
                     </div>
                     <button class="sidebar-toggle-btn d-lg-none" (click)="toggleSidebarCarrito()">
@@ -560,17 +560,17 @@
                       <div class="cart-item-info">
                         <div class="cart-item-name">{{fila.combo.nombre | slice:0:30}}{{fila.combo.nombre?.length > 30 ? '...' : ''}}</div>
                         <div class="cart-item-details">
-                          <span class="cart-item-qty">{{ 'ventas.crearVentas.comboCantidad' | translate: { n: fila.cantidad } }}</span>
+                          <span class="cart-item-qty">Combo · x{{fila.cantidad}}</span>
                           <span class="cart-item-price">${{precioComboSidebar(fila) | number:'1.0-0'}}</span>
                         </div>
                         <button *ngIf="pendienteDelComboSidebar(fila) as pendiente" type="button"
                           class="cart-item-config-pill" (click)="completarConfiguracionPendienteSidebar(pendiente)"
-                          [title]="'ventas.crearVentas.comboRequiereConfigTitle' | translate">
-                          <i class="fa fa-exclamation-triangle"></i> {{ 'ventas.crearVentas.requiereConfiguracion' | translate }}
+                          title="Un producto del combo necesita configuración adicional. Click para completarla.">
+                          <i class="fa fa-exclamation-triangle"></i> Requiere configuración
                         </button>
                       </div>
                       <div class="cart-item-actions">
-                        <button class="cart-item-remove" (click)="eliminarComboSidebar(fila)" [title]="'ventas.crearVentas.quitarCombo' | translate">
+                        <button class="cart-item-remove" (click)="eliminarComboSidebar(fila)" title="Quitar el combo">
                           <i class="fa fa-trash"></i>
                         </button>
                       </div>
@@ -587,24 +587,24 @@
                       <div class="cart-item-info">
                         <div class="cart-item-name">{{item?.producto?.crearProducto?.titulo | slice:0:30}}{{item?.producto?.crearProducto?.titulo?.length > 30 ? '...' : ''}}</div>
                         <div class="cart-item-details">
-                          <span class="cart-item-qty">{{ 'ventas.crearVentas.cantidadX' | translate: { n: item?.cantidad || 1 } }}</span>
+                          <span class="cart-item-qty">x{{item?.cantidad || 1}}</span>
                           <span class="cart-item-price">${{(item?.producto?.precio?.precioUnitarioConIva || 0) | number:'1.0-0'}}</span>
                         </div>
                         <!-- Pill "Requiere configuración" (D-147): línea agregada desde un
                              combo que necesita completarse antes de cerrar la venta. -->
                         <button *ngIf="item?._requiereConfiguracionPendiente" type="button"
                           class="cart-item-config-pill" (click)="completarConfiguracionPendienteSidebar(item)"
-                          [title]="'ventas.crearVentas.productoRequiereConfigTitle' | translate">
-                          <i class="fa fa-exclamation-triangle"></i> {{ 'ventas.crearVentas.requiereConfiguracion' | translate }}
+                          title="Este producto necesita configuración adicional. Click para completarla.">
+                          <i class="fa fa-exclamation-triangle"></i> Requiere configuración
                         </button>
                       </div>
                       <div class="cart-item-actions">
                         <!-- Ticket 1015: reabre la configuración del producto sin
                              tener que borrar la línea y volverla a agregar. -->
-                        <button class="cart-item-edit" (click)="editarProductoSidebar(item)" [title]="'ventas.crearVentas.editarProducto' | translate">
+                        <button class="cart-item-edit" (click)="editarProductoSidebar(item)" title="Editar producto">
                           <i class="fa fa-cog"></i>
                         </button>
-                        <button class="cart-item-remove" (click)="eliminarDelCarritoSidebar(item)" [title]="'comun.eliminar' | translate">
+                        <button class="cart-item-remove" (click)="eliminarDelCarritoSidebar(item)" title="Eliminar">
                           <i class="fa fa-trash"></i>
                         </button>
                       </div>
@@ -615,7 +615,7 @@
                   <!-- Total del carrito -->
                   <div class="sidebar-cart-total">
                     <div class="total-row">
-                      <span class="total-label">{{ 'ventas.crearVentas.subtotal' | translate }}</span>
+                      <span class="total-label">Subtotal:</span>
                       <span class="total-value">${{totalCarritoSidebar | number:'1.0-0'}}</span>
                     </div>
                   </div>
@@ -627,7 +627,7 @@
                             awNextStep
                             (click)="reviewStepAndExecute(2)">
                       <i class="fa fa-arrow-right me-2"></i>
-                      {{ 'ventas.crearVentas.continuarCarrito' | translate }}
+                      Continuar al Carrito
                     </button>
                   </div>
                 </div>
@@ -637,16 +637,16 @@
               <div class="step2-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
-                  {{ 'ventas.crearVentas.volverCliente' | translate }}
+                  Volver a Cliente
                 </button>
                 <div class="footer-message" *ngIf="!tieneProductosEnCarrito">
                   <i class="fa fa-info-circle"></i>
-                  {{ 'ventas.crearVentas.agregueProductos' | translate }}
+                  Agregue productos al carrito para continuar
                 </div>
                 <button class="next-step-btn" type="button" awNextStep
                   [disabled]="!tieneProductosEnCarrito"
                   (click)="reviewStepAndExecute(2)">
-                  {{ 'ventas.crearVentas.verCarrito' | translate }}
+                  Ver Carrito
                   <i class="fa fa-arrow-right"></i>
                 </button>
               </div>
@@ -657,7 +657,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-shopping-cart"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoCarrito' | translate }}</p>
+                  <p class="text-steper">Carrito</p>
                 </div>
               </ng-template>
 
@@ -665,7 +665,7 @@
               <div class="step3-section mb-4">
                 <div class="section-header">
                   <i class="fa fa-shopping-cart"></i>
-                  <span>{{ 'ventas.crearVentas.productosSeleccionados' | translate }}</span>
+                  <span>Productos seleccionados</span>
                 </div>
                 <div class="section-content no-padding">
                   <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)" *ngIf="pedidoGral"></app-carrito>
@@ -676,7 +676,7 @@
               <div class="step3-notes-accordion mb-4">
                 <button type="button" class="accordion-toggle" (click)="notasPedidoExpanded = !notasPedidoExpanded">
                   <i class="fa fa-comment-alt"></i>
-                  <span>{{ 'ventas.crearVentas.notasPedido' | translate }}</span>
+                  <span>Notas del pedido</span>
                   <i class="fa accordion-chevron" [ngClass]="notasPedidoExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 </button>
                 <div *ngIf="notasPedidoExpanded" class="accordion-body">
@@ -689,16 +689,16 @@
               <div class="step3-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
-                  {{ 'ventas.crearVentas.volverProductos' | translate }}
+                  Volver a Productos
                 </button>
                 <div class="footer-message" *ngIf="tieneConfiguracionPendiente">
                   <i class="fa fa-info-circle"></i>
-                  {{ 'ventas.crearVentas.completaConfigPendiente' | translate }}
+                  Completa la configuración pendiente de los productos marcados para continuar
                 </div>
                 <button class="next-step-btn" type="button" awNextStep
                   [disabled]="tieneConfiguracionPendiente"
                   (click)="reviewStepAndExecute(3)">
-                  {{ 'ventas.crearVentas.datosEnvio' | translate }}
+                  Datos de Envío
                   <i class="fa fa-arrow-right"></i>
                 </button>
               </div>
@@ -709,7 +709,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-clipboard-list"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoEnvioDatos' | translate }}</p>
+                  <p class="text-steper">Envío y Datos</p>
                 </div>
               </ng-template>
 
@@ -724,21 +724,21 @@
                         <div class="col-12">
                           <label class="selector-label mb-2 d-block">
                             <i class="fa fa-truck-loading me-2 text-primary"></i>
-                            <strong>{{ 'ventas.crearVentas.formaEntrega' | translate }}</strong>
+                            <strong>Forma de Entrega</strong>
                           </label>
-                          <div class="btn-group w-100" role="group" [attr.aria-label]="'ventas.crearVentas.formaEntrega' | translate">
+                          <div class="btn-group w-100" role="group" aria-label="Forma de entrega">
                             <button *ngFor="let opcion of formasEntregaOptions"
                               type="button"
                               class="btn forma-entrega-btn"
                               [ngClass]="{'btn-primary': selectedFormaEntrega === opcion.value, 'btn-outline-primary': selectedFormaEntrega !== opcion.value}"
                               (click)="onFormaEntregaChange(opcion.value)">
                               <i class="fa {{opcion.icon}} me-2"></i>
-                              {{opcion.label | translate}}
+                              {{opcion.label}}
                             </button>
                           </div>
                           <small class="text-muted mt-2 d-block">
                             <i class="fa fa-info-circle me-1"></i>
-                            {{ 'ventas.crearVentas.seleccioneComoRecibir' | translate }}
+                            Seleccione cómo desea recibir el pedido
                           </small>
                         </div>
                       </div>
@@ -749,15 +749,15 @@
                 <!-- Mensaje informativo cuando la forma de entrega ya está configurada -->
                 <div class="alert alert-info mb-4" *ngIf="!mostrarSelectorFormaEntrega">
                   <i class="fa fa-info-circle me-2"></i>
-                  <strong>{{ 'ventas.crearVentas.formaEntregaConfigurada' | translate }}</strong> {{ 'ventas.crearVentas.pedidoYaTieneFormaEntrega' | translate }}
-                  <span *ngIf="selectedFormaEntrega === 'Recoge'">{{ 'ventas.crearVentas.clienteRecogera' | translate }}</span>
-                  <span *ngIf="selectedFormaEntrega === 'Domicilio'">{{ 'ventas.crearVentas.seEnviaraDomicilio' | translate }}</span>
+                  <strong>Forma de entrega ya configurada:</strong> Este pedido ya tiene su forma de entrega definida.
+                  <span *ngIf="selectedFormaEntrega === 'Recoge'">El cliente recogerá en tienda.</span>
+                  <span *ngIf="selectedFormaEntrega === 'Domicilio'">Se enviará a domicilio.</span>
                 </div>
 
                 <!-- Mensaje informativo cuando es Recoge en Tienda -->
                 <div class="alert alert-info mb-3" *ngIf="esRecogeEnTienda">
                   <i class="fa fa-info-circle me-2"></i>
-                  <strong>{{ 'ventas.crearVentas.recogeEnTiendaLabel' | translate }}</strong> {{ 'ventas.crearVentas.noRequiereEnvio' | translate }}
+                  <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
                 </div>
 
                 <!-- Tabs de navegación Envío / Facturación -->
@@ -765,7 +765,7 @@
                   <li class="nav-item" role="presentation" *ngIf="!esRecogeEnTienda">
                     <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
                             type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
-                      <i class="fa fa-truck me-2"></i>{{ 'ventas.crearVentas.envio' | translate }}
+                      <i class="fa fa-truck me-2"></i>Envío
                       <span class="tab-badge" *ngIf="pedidoGral?.envio">
                         <i class="fa fa-check-circle"></i>
                       </span>
@@ -774,7 +774,7 @@
                   <li class="nav-item" role="presentation">
                     <button class="nav-link" [class.active]="esRecogeEnTienda" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
                             type="button" role="tab" aria-controls="panel-facturacion" [attr.aria-selected]="esRecogeEnTienda">
-                      <i class="fa fa-file-invoice me-2"></i>{{ 'ventas.crearVentas.facturacion' | translate }}
+                      <i class="fa fa-file-invoice me-2"></i>Facturación
                       <span class="tab-badge" *ngIf="pedidoGral?.facturacion">
                         <i class="fa fa-check-circle"></i>
                       </span>
@@ -815,11 +815,11 @@
                 <div class="step4-status-bar">
                   <div class="status-item" [class.completed]="pedidoGral?.envio" *ngIf="!esRecogeEnTienda">
                     <i class="fa" [class.fa-check-circle]="pedidoGral?.envio" [class.fa-circle]="!pedidoGral?.envio"></i>
-                    <span>{{ 'ventas.crearVentas.envio' | translate }}</span>
+                    <span>Envío</span>
                   </div>
                   <div class="status-item" [class.completed]="pedidoGral?.facturacion">
                     <i class="fa" [class.fa-check-circle]="pedidoGral?.facturacion" [class.fa-circle]="!pedidoGral?.facturacion"></i>
-                    <span>{{ 'ventas.crearVentas.facturacion' | translate }}</span>
+                    <span>Facturación</span>
                   </div>
                 </div>
               </div>
@@ -828,17 +828,17 @@
               <div class="step4-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
-                  {{ 'ventas.crearVentas.volverCarrito' | translate }}
+                  Volver al Carrito
                 </button>
                 <div class="footer-message" *ngIf="!envioListo || !pedidoGral?.facturacion">
                   <i class="fa fa-info-circle"></i>
-                  <span *ngIf="!envioListo && !pedidoGral?.facturacion">{{ 'ventas.crearVentas.completeEnvioFacturacion' | translate }}</span>
-                  <span *ngIf="envioListo && !pedidoGral?.facturacion">{{ 'ventas.crearVentas.faltaFacturacion' | translate }}</span>
-                  <span *ngIf="!envioListo && pedidoGral?.facturacion">{{ 'ventas.crearVentas.faltaEnvio' | translate }}</span>
+                  <span *ngIf="!envioListo && !pedidoGral?.facturacion">Complete envío y facturación</span>
+                  <span *ngIf="envioListo && !pedidoGral?.facturacion">Falta completar facturación</span>
+                  <span *ngIf="!envioListo && pedidoGral?.facturacion">Falta completar envío</span>
                 </div>
                 <button class="next-step-btn" type="button" awNextStep (click)="reviewStepAndExecute(4)"
                   [disabled]="!envioListo || !pedidoGral?.facturacion || !pedidoGral">
-                  {{ 'ventas.crearVentas.pasoPago' | translate }}
+                  Pago
                   <i class="fa fa-arrow-right"></i>
                 </button>
               </div>
@@ -849,7 +849,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-credit-card"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoPago' | translate }}</p>
+                  <p class="text-steper">Pago</p>
                 </div>
               </ng-template>
 
@@ -857,7 +857,7 @@
               <div class="step5-section mb-4">
                 <div class="section-header">
                   <i class="fa fa-credit-card"></i>
-                  <span>{{ 'ventas.crearVentas.resumenPago' | translate }}</span>
+                  <span>Resumen y Pago</span>
                 </div>
                 <div class="section-content">
                   <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
@@ -870,7 +870,7 @@
               <div class="step5-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
-                  {{ 'ventas.crearVentas.volverEnvioDatos' | translate }}
+                  Volver a Envío y Datos
                 </button>
                 <span></span>
               </div>
@@ -881,7 +881,7 @@
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-check-circle"></i></div>
-                  <p class="text-steper">{{ 'ventas.crearVentas.pasoConfirmacion' | translate }}</p>
+                  <p class="text-steper">Confirmación</p>
                 </div>
               </ng-template>
 
@@ -889,8 +889,8 @@
               <div *ngIf="showPedidoConfirm" class="step6-section step6-success mb-4">
                 <div class="section-header section-header-success">
                   <i class="fa fa-check-circle"></i>
-                  <span>{{ 'ventas.crearVentas.pedidoProcesado' | translate }}</span>
-                  <span class="order-badge">{{ 'ventas.crearVentas.pedidoNro' | translate: { nro: pedidoGral?.nroPedido || 'N/A' } }}</span>
+                  <span>¡Pedido Procesado Exitosamente!</span>
+                  <span class="order-badge">Pedido #{{pedidoGral?.nroPedido || 'N/A'}}</span>
                 </div>
                 <div class="section-content">
                   <!-- Componente de confirmación que muestra el HTML del pedido -->
@@ -902,11 +902,11 @@
               <div *ngIf="showPedidoConfirm" class="step6-actions">
                 <button class="btn btn-outline-secondary btn-lg" type="button" (click)="imprimirPedido()">
                   <i class="fa fa-print me-2"></i>
-                  {{ 'ventas.crearVentas.imprimirPedido' | translate }}
+                  Imprimir Pedido
                 </button>
                 <button class="btn btn-primary btn-lg" type="button" (click)="nuevoPedido()">
                   <i class="fa fa-plus-circle me-2"></i>
-                  {{ 'ventas.crearVentas.crearNuevoPedido' | translate }}
+                  Crear Nuevo Pedido
                 </button>
               </div>
             </aw-wizard-step>
@@ -921,28 +921,28 @@
 <!-- Modal para crear datos de entrega -->
 <ng-template #entrega let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-truck me-2"></i>{{ 'ventas.crearVentas.crearDatosEntrega' | translate }}</h4>
-    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')"></button>
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-truck me-2"></i>Crear Datos de Entrega</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     <div class="row g-3">
       <div class="col-sm-12">
-        <label class="form-label" for="alias_entrega">{{ 'ventas.crearVentas.referenciaEntrega' | translate }}</label>
+        <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
         <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
       </div>
 
       <div class="col-sm-6">
-        <label class="form-label" for="nombres_entrega">{{ 'ventas.crearVentas.nombres' | translate }}</label>
+        <label class="form-label" for="nombres_entrega">Nombres:</label>
         <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
       </div>
 
       <div class="col-sm-6">
-        <label class="form-label" for="apellidos_entrega">{{ 'ventas.crearVentas.apellidos' | translate }}</label>
+        <label class="form-label" for="apellidos_entrega">Apellidos:</label>
         <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
       </div>
 
       <div class="col-sm-12">
-        <label class="form-label" for="numero_celular_entrega">{{ 'ventas.crearVentas.numeroCelular' | translate }}</label>
+        <label class="form-label" for="numero_celular_entrega">Número de Celular:</label>
         <div class="input-group">
           <span class="input-group-text bg-light select-container" style="min-width: 90px;">
             <select class="form-select form-select-sm border-0 bg-transparent custom-select-sm"
@@ -954,17 +954,17 @@
             </select>
           </span>
           <input class="form-control" type="text" id="numero_celular_entrega" [(ngModel)]="celular_entrega"
-            [placeholder]="'ventas.crearVentas.numeroCelularPh' | translate" />
+            placeholder="Número de celular" />
         </div>
       </div>
     </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
-      <i class="fa fa-times me-1"></i> {{ 'comun.cancelar' | translate }}
+      <i class="fa fa-times me-1"></i> Cancelar
     </button>
     <button type="button" class="cfg-btn" (click)="guardarDatosEntrega()">
-      <i class="fa fa-save me-1"></i> {{ 'comun.guardar' | translate }}
+      <i class="fa fa-save me-1"></i> Guardar
     </button>
   </div>
 </ng-template>
@@ -972,9 +972,9 @@
 <!-- Modal para crear datos de facturación -->
 <ng-template #facturacion let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-file-invoice me-2"></i>{{ 'ventas.crearVentas.crearDatosFacturacion' | translate }}
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-file-invoice me-2"></i>Crear Datos de Facturación
     </h4>
-    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="modal.dismiss('Cross click')"></button>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     <!-- Contenido del modal de facturación -->
@@ -982,10 +982,10 @@
   </div>
   <div class="modal-footer">
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="modal.dismiss('cancel')">
-      <i class="fa fa-times me-1"></i> {{ 'comun.cancelar' | translate }}
+      <i class="fa fa-times me-1"></i> Cancelar
     </button>
     <button type="button" class="cfg-btn" (click)="guardarDatosFacturacion()">
-      <i class="fa fa-save me-1"></i> {{ 'comun.guardar' | translate }}
+      <i class="fa fa-save me-1"></i> Guardar
     </button>
   </div>
 </ng-template>

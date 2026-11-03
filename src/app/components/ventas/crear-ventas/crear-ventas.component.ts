@@ -39,7 +39,6 @@ import { MaestroService } from "../../../shared/services/maestros/maestro.servic
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
-import { TranslateService } from "@ngx-translate/core";
 import { CarritoComponent } from "../carrito/carrito.component";
 import { SalesDraftsService, CLAVE_CONTEXTO_BORRADOR, EntradaBorrador, BorradorVenta } from "../../../shared/services/ventas/sales-drafts.service";
 import { VistaVenta, abrirVistaVenta } from "../selector-vista-venta/selector-vista-venta.component";
@@ -268,8 +267,8 @@ export class CrearVentasComponent
 
   // Propiedades para selector de forma de entrega (pedidos sin configuración)
   formasEntregaOptions: { value: string; label: string; icon: string }[] = [
-    { value: 'Domicilio', label: 'ventas.crearVentas.envioDomicilio', icon: 'fa-truck' },
-    { value: 'Recoge', label: 'ventas.crearVentas.recogeEnTienda', icon: 'fa-store' }
+    { value: 'Domicilio', label: 'Envío a Domicilio', icon: 'fa-truck' },
+    { value: 'Recoge', label: 'Recoge en Tienda', icon: 'fa-store' }
   ];
   selectedFormaEntrega: string = 'Domicilio';
   pedidoSinConfiguracion: boolean = false;
@@ -344,8 +343,6 @@ export class CrearVentasComponent
   // D-419 (ticket 1171): proveedor contable y encolado compartidos con el POS.
   // Con inject() para no cambiar el constructor (VentaAsistidaUnicaComponent lo extiende).
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
-  // i18n: con inject() y público, para no tocar el constructor (VentaAsistidaUnicaComponent lo extiende y lo usa).
-  public translate = inject(TranslateService);
   private proveedorContable: ProveedorContable | null = null;
   /** D-500: por qué no hay proveedor (solo con la bandera invoicingHub; sin ella queda null). */
   private motivoSinProveedor: string | null = null;
@@ -554,18 +551,18 @@ export class CrearVentasComponent
   async guardarBorrador(despues?: (guardado: BorradorVenta | null, estado: EntradaBorrador["estado"]) => void): Promise<void> {
     if (this.guardandoBorrador || !this.puedeGuardarBorrador) return;
     const respuesta = await Swal.fire({
-      title: this.borradorId ? this.translate.instant("ventas.crearVentas.actualizarBorrador") : this.translate.instant("ventas.crearVentas.guardarBorrador"),
+      title: this.borradorId ? "Actualizar borrador" : "Guardar borrador",
       text: despues
-        ? this.translate.instant("ventas.crearVentas.borradorSigueOtraVista")
-        : this.translate.instant("ventas.crearVentas.borradorPantallaLimpia"),
+        ? "La venta queda guardada y sigue en la otra vista."
+        : "La venta queda guardada y la pantalla se limpia para la siguiente.",
       input: "text",
-      inputLabel: this.translate.instant("ventas.crearVentas.nombreOpcional"),
+      inputLabel: "Nombre (opcional)",
       inputValue: this.borradorNombre,
-      inputPlaceholder: this.translate.instant("ventas.crearVentas.borradorEjemplo"),
+      inputPlaceholder: "Por ejemplo: Keikaku, falta la dirección",
       inputAttributes: { maxlength: "80" },
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("comun.guardar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
       confirmButtonColor: "#5F3FE0",
     });
     if (!respuesta.isConfirmed) return;
@@ -610,8 +607,8 @@ export class CrearVentasComponent
       }
       Swal.fire({
         icon: "success",
-        title: this.translate.instant("ventas.crearVentas.borradorGuardado"),
-        text: this.translate.instant("ventas.crearVentas.borradorEncuentra"),
+        title: "Borrador guardado",
+        text: "Lo encuentra en Borradores para retomarlo cuando quiera.",
         timer: 1800,
         showConfirmButton: false,
       }).then(() => this.nuevoPedido());
@@ -620,8 +617,8 @@ export class CrearVentasComponent
       this.guardandoBorrador = false;
       Swal.fire({
         icon: "error",
-        title: this.translate.instant("ventas.crearVentas.borradorNoGuardado"),
-        text: err?.error?.error || this.translate.instant("ventas.crearVentas.revisarConexion"),
+        title: "No se guardó el borrador",
+        text: err?.error?.error || "Revise su conexión e intente de nuevo. La venta sigue en pantalla.",
         confirmButtonColor: "#5F3FE0",
       });
     };
@@ -659,14 +656,14 @@ export class CrearVentasComponent
       return;
     }
     const decision = await Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.cambiarVista"),
-      text: this.translate.instant("ventas.crearVentas.cambiarVistaTexto"),
+      title: "¿Cambiar de vista?",
+      text: "Hay una venta en curso y la otra vista empieza de cero. Puede guardarla como borrador para seguirla allá.",
       icon: "warning",
       showDenyButton: true,
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("ventas.crearVentas.guardarYCambiar"),
-      denyButtonText: this.translate.instant("ventas.crearVentas.cambiarSinGuardar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Guardar y cambiar",
+      denyButtonText: "Cambiar sin guardar",
+      cancelButtonText: "Cancelar",
       confirmButtonColor: "#5F3FE0",
       denyButtonColor: "#D64545",
     });
@@ -703,8 +700,8 @@ export class CrearVentasComponent
       }
       this.toastrService.success(
         retomaLista
-          ? this.translate.instant("ventas.crearVentas.borradorGuardadoSigue")
-          : this.translate.instant("ventas.crearVentas.borradorGuardadoRetome"),
+          ? "Borrador guardado. La venta sigue en la otra vista."
+          : "Borrador guardado. Retómelo desde «Borradores» en la otra vista.",
       );
       abrirVistaVenta(this.router, vista, documento ? { documento } : {});
     });
@@ -789,8 +786,8 @@ export class CrearVentasComponent
 
     // Mostrar feedback al usuario
     this.toastrService.success(
-      this.translate.instant("ventas.crearVentas.cacheLimpiado"),
-      this.translate.instant("ventas.crearVentas.resetExitoso"),
+      "Caché limpiado completamente. Sistema reiniciado.",
+      "Reset Exitoso",
       {
         closeButton: true,
         timeOut: 3000,
@@ -1166,8 +1163,8 @@ export class CrearVentasComponent
       // D-500: con la bandera, la persona ve el motivo (nunca se factura con otro proveedor).
       if (this.motivoSinProveedor) {
         this.toastrService.warning(
-          this.translate.instant("ventas.crearVentas.facturarDesdeTodos", { motivo: this.motivoSinProveedor, nro: nroPedido }),
-          this.translate.instant("ventas.crearVentas.facturaNoGenerada"),
+          `${this.motivoSinProveedor} Puedes facturar el pedido ${nroPedido} desde Todos los pedidos.`,
+          'Factura no generada',
           { timeOut: 10000 }
         );
       }
@@ -1183,8 +1180,8 @@ export class CrearVentasComponent
       next: (response: any) => {
         console.log(`🔄 Facturación ${providerName} encolada - Job ID: ${response?.jobId || response?.id || 'N/A'}`);
         this.toastrService.info(
-          this.translate.instant("ventas.crearVentas.facturaSegundoPlano"),
-          this.translate.instant("ventas.crearVentas.facturacionEnProceso", { proveedor: providerName }),
+          'La factura se generará en segundo plano. Recibirás una notificación cuando esté lista.',
+          `Facturación ${providerName} en proceso`,
           { timeOut: 5000 }
         );
       },
@@ -1212,18 +1209,18 @@ export class CrearVentasComponent
       // Si selecciona "Sin categoría", mostrar confirmación para quitar categoría
       if (this.categoriaClienteSeleccionada) {
         const mensajeCarrito = hayProductosEnCarrito
-          ? '<br><br><strong class="text-danger">⚠️ ' + this.translate.instant("ventas.crearVentas.atencionCarritoCategoria") + '</strong>'
+          ? '<br><br><strong class="text-danger">⚠️ Atención: El carrito será vaciado al cambiar la categoría.</strong>'
           : '';
 
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.quitarCategoria"),
-          html: this.translate.instant("ventas.crearVentas.quitarCategoriaHtml", { categoria: this.categoriaClienteSeleccionada.descripcion || this.categoriaClienteSeleccionada.nombre }) + mensajeCarrito,
+          title: '¿Quitar categoría?',
+          html: `¿Desea quitar la categoría "${this.categoriaClienteSeleccionada.descripcion || this.categoriaClienteSeleccionada.nombre}" de este cliente?${mensajeCarrito}`,
           icon: 'question',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
           cancelButtonColor: '#6c757d',
-          confirmButtonText: this.translate.instant("ventas.crearVentas.siQuitar"),
-          cancelButtonText: this.translate.instant("comun.cancelar")
+          confirmButtonText: 'Sí, quitar',
+          cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
             this.categoriaClienteSeleccionada = null;
@@ -1256,22 +1253,22 @@ export class CrearVentasComponent
       }
 
       const mensajeCarrito = hayProductosEnCarrito
-        ? '<br><br><strong class="text-danger">⚠️ ' + this.translate.instant("ventas.crearVentas.atencionCarritoCategoria") + '</strong>'
+        ? '<br><br><strong class="text-danger">⚠️ Atención: El carrito será vaciado al cambiar la categoría.</strong>'
         : '';
 
       // Mostrar modal de confirmación
       Swal.fire({
-        title: this.translate.instant("ventas.crearVentas.guardarCategoria"),
-        html: this.translate.instant("ventas.crearVentas.guardarCategoriaHtml", { categoria: tipoSeleccionado.descripcion || tipoSeleccionado.nombre }) + mensajeCarrito,
+        title: '¿Guardar categoría?',
+        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Si guarda, esta categoría se aplicará para futuras compras.<br>Si no guarda, se usará solo para esta venta.</small>${mensajeCarrito}`,
         icon: 'question',
         showCancelButton: true,
         showDenyButton: true,
         confirmButtonColor: '#28a745',
         denyButtonColor: '#6c757d',
         cancelButtonColor: '#dc3545',
-        confirmButtonText: '<i class="fa fa-save"></i> ' + this.translate.instant("ventas.crearVentas.siGuardar"),
-        denyButtonText: this.translate.instant("ventas.crearVentas.soloEstaVenta"),
-        cancelButtonText: this.translate.instant("comun.cancelar")
+        confirmButtonText: '<i class="fa fa-save"></i> Sí, guardar',
+        denyButtonText: 'Solo esta venta',
+        cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
           // Guardar en la base de datos para futuras compras
@@ -1295,8 +1292,8 @@ export class CrearVentasComponent
           };
           sessionStorage.setItem('cliente', JSON.stringify(clienteTemporal));
           this.toastrService.info(
-            this.translate.instant("ventas.crearVentas.categoriaAplicadaVenta", { categoria: tipoSeleccionado.descripcion || tipoSeleccionado.nombre }),
-            this.translate.instant("ventas.crearVentas.categoriaTemporal"),
+            `Categoría "${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}" aplicada solo para esta venta`,
+            'Categoría Temporal',
             { closeButton: true, timeOut: 3000 }
           );
           console.log('📋 Categoría aplicada solo para esta venta:', tipoSeleccionado);
@@ -1326,12 +1323,12 @@ export class CrearVentasComponent
     }
 
     // Mostrar notificación
-    const nombreCategoriaAnterior = categoriaAnterior?.descripcion || categoriaAnterior?.nombre || this.translate.instant("ventas.crearVentas.sinCategoria");
-    const nombreCategoriaNueva = categoriaNueva?.descripcion || categoriaNueva?.nombre || this.translate.instant("ventas.crearVentas.sinCategoria");
+    const nombreCategoriaAnterior = categoriaAnterior?.descripcion || categoriaAnterior?.nombre || 'Sin categoría';
+    const nombreCategoriaNueva = categoriaNueva?.descripcion || categoriaNueva?.nombre || 'Sin categoría';
 
     this.toastrService.warning(
-      this.translate.instant("ventas.crearVentas.carritoVaciadoCategoria", { anterior: nombreCategoriaAnterior, nueva: nombreCategoriaNueva }),
-      this.translate.instant("ventas.crearVentas.carritoVaciado"),
+      `El carrito ha sido vaciado debido al cambio de categoría de "${nombreCategoriaAnterior}" a "${nombreCategoriaNueva}". Los precios pueden variar según la categoría del cliente.`,
+      'Carrito Vaciado',
       {
         closeButton: true,
         timeOut: 5000,
@@ -1354,7 +1351,7 @@ export class CrearVentasComponent
    */
   guardarCategoriaCliente(categoria: any): void {
     if (!this.pedidoGral?.cliente?.documento) {
-      this.toastrService.error(this.translate.instant("ventas.crearVentas.noHayCliente"), this.translate.instant("comun.error"));
+      this.toastrService.error('No hay cliente seleccionado', 'Error');
       return;
     }
 
@@ -1380,14 +1377,14 @@ export class CrearVentasComponent
 
         if (categoria) {
           this.toastrService.success(
-            this.translate.instant("ventas.crearVentas.categoriaAsignada", { categoria: categoria.descripcion || categoria.nombre }),
-            this.translate.instant("ventas.crearVentas.categoriaGuardada"),
+            `Categoría "${categoria.descripcion || categoria.nombre}" asignada correctamente`,
+            'Categoría Guardada',
             { closeButton: true, timeOut: 3000 }
           );
         } else {
           this.toastrService.info(
-            this.translate.instant("ventas.crearVentas.categoriaRemovida"),
-            this.translate.instant("ventas.crearVentas.categoriaRemovidaTitulo"),
+            'La categoría ha sido removida del cliente',
+            'Categoría Removida',
             { closeButton: true, timeOut: 3000 }
           );
         }
@@ -1397,8 +1394,8 @@ export class CrearVentasComponent
       error: (error) => {
         console.error('Error al guardar categoría del cliente:', error);
         this.toastrService.error(
-          this.translate.instant("ventas.crearVentas.noGuardarCategoria"),
-          this.translate.instant("comun.error"),
+          'No se pudo guardar la categoría. Intente nuevamente.',
+          'Error',
           { closeButton: true, timeOut: 4000 }
         );
         // Restaurar la selección anterior
@@ -1500,10 +1497,10 @@ export class CrearVentasComponent
     this.formulario.controls["estado"].setValue("activo");
     this.service.createClient(this.formulario.value).subscribe((r) => {
       Swal.fire({
-        title: this.translate.instant("ventas.crearVentas.guardadoTitulo"),
-        text: this.translate.instant("ventas.crearVentas.guardadoTexto"),
+        title: "Guardado!",
+        text: "Guardado con exito",
         icon: "success",
-        confirmButtonText: this.translate.instant("comun.ok"),
+        confirmButtonText: "Ok",
       });
       const data = {
         documento: this.formulario.value.documento,
@@ -1697,11 +1694,11 @@ export class CrearVentasComponent
   private avisarFormularioClienteIncompleto(problemas: string[]): void {
     const lista = problemas.map((p) => `<li>${p}</li>`).join("");
     Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.faltanDatosCliente"),
-      html: `<p class="mb-2">${this.translate.instant("ventas.crearVentas.corrijaParaGuardar")}</p>
+      title: "Faltan datos del cliente",
+      html: `<p class="mb-2">Corrija lo siguiente para poder guardar:</p>
              <ul class="text-start mb-0" style="padding-left:1.2rem">${lista}</ul>`,
       icon: "warning",
-      confirmButtonText: this.translate.instant("comun.ok"),
+      confirmButtonText: "Ok",
     });
   }
 
@@ -1717,14 +1714,14 @@ export class CrearVentasComponent
 
     // Confirmar la edición
     Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.editarCliente"),
-      text: this.translate.instant("ventas.crearVentas.guardarCambiosCliente"),
+      title: "Editar Cliente",
+      text: "¿Desea guardar los cambios realizados al cliente?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: this.translate.instant("ventas.crearVentas.siGuardarCambios"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, guardar cambios",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // Preparar datos del cliente con la información actual del formulario
@@ -1777,16 +1774,16 @@ export class CrearVentasComponent
 
             // Mostrar mensaje de éxito
             Swal.fire({
-              title: this.translate.instant("ventas.crearVentas.clienteActualizado"),
-              text: this.translate.instant("ventas.crearVentas.clienteActualizadoTexto"),
+              title: "¡Cliente actualizado!",
+              text: "Los datos del cliente se han guardado exitosamente.",
               icon: "success",
-              confirmButtonText: this.translate.instant("comun.ok"),
+              confirmButtonText: "Ok",
             });
 
             // Mostrar toast de confirmación
             this.toastrService.success(
-              this.translate.instant("ventas.crearVentas.clienteActualizadoToast", { nombre: `${clienteData.nombres_completos} ${clienteData.apellidos_completos || ""}` }),
-              this.translate.instant("ventas.crearVentas.clienteActualizadoTitulo"),
+              `Cliente ${clienteData.nombres_completos} ${clienteData.apellidos_completos || ""} actualizado correctamente`,
+              "Cliente Actualizado",
               {
                 closeButton: true,
                 timeOut: 3000,
@@ -1795,10 +1792,10 @@ export class CrearVentasComponent
           },
           error: (error) => {
             Swal.fire({
-              title: this.translate.instant("ventas.crearVentas.errorActualizar"),
-              text: this.translate.instant("ventas.crearVentas.errorActualizarCliente"),
+              title: "Error al actualizar",
+              text: "Ha ocurrido un error al actualizar el cliente. Por favor, intente nuevamente.",
               icon: "error",
-              confirmButtonText: this.translate.instant("comun.ok"),
+              confirmButtonText: "Ok",
             });
           },
         });
@@ -2051,10 +2048,10 @@ export class CrearVentasComponent
       error: (err) => {
         if (err?.status !== 409) return;
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.variasFichas"),
-          text: this.translate.instant("ventas.crearVentas.variasFichasTexto"),
+          title: "Varias fichas con ese documento",
+          text: "Este documento está en más de una ficha de cliente. Búsquelo por nombre y elija la ficha correcta.",
           icon: "warning",
-          confirmButtonText: this.translate.instant("comun.entendido"),
+          confirmButtonText: "Entendido",
           confirmButtonColor: "#5F3FE0",
         });
       },
@@ -2074,10 +2071,10 @@ export class CrearVentasComponent
           this.mostrarFormularioCliente = true; // activar formulario de creación
           this.categoriaClienteSeleccionada = null; // Resetear categoría para nuevo cliente
           Swal.fire({
-            title: this.translate.instant("ventas.crearVentas.noEncontrado"),
-            text: this.translate.instant("ventas.crearVentas.noEncontradoTexto"),
+            title: "No encontrado!",
+            text: "No se encuentra el documento. Llene los datos para crear el cliente.",
             icon: "warning",
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
           });
         } else {
           // Extraer cliente: puede venir como array o como objeto directo
@@ -2180,7 +2177,7 @@ export class CrearVentasComponent
             this.bloqueado = true;
           }
           this.toastrService.show(
-            '<p class="mb-0 mt-1">' + this.translate.instant("ventas.crearVentas.clienteEncontrado") + '</p>',
+            '<p class="mb-0 mt-1">Cliente encontrado!</p>',
             "",
             {
               closeButton: true,
@@ -2314,7 +2311,7 @@ export class CrearVentasComponent
       }
 
       this.toastrService.success(
-        '<p class="mb-0 mt-1">' + this.translate.instant("ventas.crearVentas.clienteEncontrado") + '</p>',
+        '<p class="mb-0 mt-1">Cliente encontrado!</p>',
         "",
         {
           closeButton: true,
@@ -2338,20 +2335,20 @@ export class CrearVentasComponent
     this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.direccionSeleccionada"),
+      title: "Direccion Seleccionada!",
       text: this.datosFacturacionElectronica[index].direccion,
       icon: "success",
-      confirmButtonText: this.translate.instant("comun.ok"),
+      confirmButtonText: "Ok",
     });
   }
   seleccionarDireccionEntrega(index) {
     this.pedidoGral.envio = this.datosEntregas[index];
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.direccionSeleccionada"),
+      title: "Direccion Seleccionada!",
       text: this.datosEntregas[index].direccionEntrega,
       icon: "success",
-      confirmButtonText: this.translate.instant("comun.ok"),
+      confirmButtonText: "Ok",
     });
   }
   editarDatosEntrega() {
@@ -2417,10 +2414,10 @@ export class CrearVentasComponent
           });
 
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.editadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.editadoTexto"),
+          title: "Editado!",
+          text: "Editado con éxito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
           timer: 2000,
         });
 
@@ -2447,10 +2444,10 @@ export class CrearVentasComponent
       error: (err) => {
         console.error("Error al editar dirección de entrega:", err);
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.crearVentas.noGuardarDireccion"),
+          title: "Error",
+          text: "No se pudo guardar la dirección de entrega. Por favor intente nuevamente.",
           icon: "error",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       }
     });
@@ -2508,10 +2505,10 @@ export class CrearVentasComponent
           });
 
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.editadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.editadoTexto"),
+          title: "Editado!",
+          text: "Editado con éxito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
           timer: 2000,
         });
 
@@ -2532,10 +2529,10 @@ export class CrearVentasComponent
       error: (err) => {
         console.error("Error al editar datos de facturación:", err);
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.crearVentas.noGuardarFacturacion"),
+          title: "Error",
+          text: "No se pudieron guardar los datos de facturación. Por favor intente nuevamente.",
           icon: "error",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       }
     });
@@ -2635,10 +2632,10 @@ export class CrearVentasComponent
         this.formulario.controls["estado"].setValue(res.estado);
         this.service.editClient(this.formulario.value).subscribe((r) => {
           Swal.fire({
-            title: this.translate.instant("ventas.crearVentas.guardadoTitulo"),
-            text: this.translate.instant("ventas.crearVentas.guardadoTexto"),
+            title: "Guardado!",
+            text: "Guardado con exito",
             icon: "success",
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
           });
         });
       });
@@ -2691,10 +2688,10 @@ export class CrearVentasComponent
         });
 
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.guardadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.guardadoTexto"),
+          title: "Guardado!",
+          text: "Guardado con exito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
         this.alias_entrega = "";
         this.nombres_entrega = "";
@@ -2747,10 +2744,10 @@ export class CrearVentasComponent
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.guardadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.guardadoTexto"),
+          title: "Guardado!",
+          text: "Guardado con exito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
         this.facturacionElectronica = false;
         this.alias_facturacion = "";
@@ -2860,10 +2857,10 @@ export class CrearVentasComponent
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.eliminadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.eliminadoTexto"),
+          title: "Eliminado!",
+          text: "Eliminado con exito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       });
     });
@@ -2885,10 +2882,10 @@ export class CrearVentasComponent
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.eliminadoTitulo"),
-          text: this.translate.instant("ventas.crearVentas.eliminadoTexto"),
+          title: "Eliminado!",
+          text: "Eliminado con exito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       });
     });
@@ -2910,14 +2907,19 @@ export class CrearVentasComponent
     if (this.tieneProductosEnCarrito && ciudadAnterior && ciudadAnterior !== "" && ciudadAnterior !== value) {
       // Mostrar confirmación antes de cambiar la ciudad
       Swal.fire({
-        title: this.translate.instant("ventas.crearVentas.cambioCiudad"),
-        html: this.translate.instant("ventas.crearVentas.cambioCiudadHtml", { anterior: this.getCityLabel(ciudadAnterior), nueva: this.getCityLabel(value) }),
+        title: "Cambio de Ciudad",
+        html: `
+          <div class="text-start">
+            <p>Está cambiando la ciudad de <strong>${this.getCityLabel(ciudadAnterior)}</strong> a <strong>${this.getCityLabel(value)}</strong>.</p>
+            <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque los precios y disponibilidad varían según la ciudad.</p>
+          </div>
+        `,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: this.translate.instant("ventas.crearVentas.siCambiarCiudad"),
-        cancelButtonText: this.translate.instant("comun.cancelar")
+        confirmButtonText: "Sí, cambiar ciudad",
+        cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
           // Limpiar el carrito
@@ -2997,8 +2999,8 @@ export class CrearVentasComponent
 
     // Mostrar notificación
     this.toastrService.warning(
-      this.translate.instant("ventas.crearVentas.carritoVaciadoCiudad", { anterior: nombreCiudadAnterior, nueva: nombreCiudadNueva }),
-      this.translate.instant("ventas.crearVentas.carritoVaciado"),
+      `El carrito ha sido vaciado debido al cambio de ciudad de "${nombreCiudadAnterior}" a "${nombreCiudadNueva}". Los productos y precios pueden variar según la ciudad.`,
+      'Carrito Vaciado',
       {
         closeButton: true,
         timeOut: 5000,
@@ -3291,8 +3293,8 @@ export class CrearVentasComponent
       // Paso del cliente - Validar que existe un cliente antes de ir a Productos
       if (!this.pedidoGral.cliente) {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.advertencia"),
-          text: this.translate.instant("ventas.crearVentas.debeSeleccionarCliente"),
+          title: "Advertencia",
+          text: "Debe seleccionar o crear un cliente para continuar",
           icon: "warning",
         });
         return;
@@ -3313,8 +3315,8 @@ export class CrearVentasComponent
           .map((item: any) => item?.producto?.crearProducto?.titulo || 'Producto')
           .join(', ');
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.configPendiente"),
-          text: this.translate.instant("ventas.crearVentas.configPendienteTexto", { nombres }),
+          title: "Configuración pendiente",
+          text: `Completa la configuración de: ${nombres} antes de continuar. Estos productos vinieron de un combo y necesitan datos adicionales.`,
           icon: "warning",
         });
         return;
@@ -3389,8 +3391,8 @@ export class CrearVentasComponent
         // Si no es recogida en tienda, verificar que existan datos de envío
         if (!esRecogeEnTienda && !this.pedidoGral.envio) {
           Swal.fire({
-            title: this.translate.instant("ventas.crearVentas.advertencia"),
-            text: this.translate.instant("ventas.crearVentas.debeSeleccionarEnvio"),
+            title: "Advertencia",
+            text: "Debe seleccionar o crear datos de envío antes de continuar",
             icon: "warning",
           });
           return;
@@ -3402,8 +3404,8 @@ export class CrearVentasComponent
       // Paso de resumen - Validar que existe información de facturación antes de ir a Pago
       if (!this.pedidoGral.facturacion) {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.advertencia"),
-          text: this.translate.instant("ventas.crearVentas.debeSeleccionarFacturacion"),
+          title: "Advertencia",
+          text: "Debe seleccionar o crear datos de facturación antes de continuar",
           icon: "warning",
         });
         return;
@@ -3434,8 +3436,8 @@ export class CrearVentasComponent
   prepararPago() {
     if (!this.resumen) {
       Swal.fire({
-        title: this.translate.instant("comun.error"),
-        text: this.translate.instant("ventas.crearVentas.noFormularioPago"),
+        title: "Error",
+        text: "No se pudo acceder al formulario de pago. Intente nuevamente.",
         icon: "error",
       });
       return;
@@ -3450,8 +3452,8 @@ export class CrearVentasComponent
       })
       .catch((error) => {
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.crearVentas.errorPrepararPago"),
+          title: "Error",
+          text: "Ocurrió un error al preparar el pago. Verifique los datos e intente nuevamente.",
           icon: "error",
         });
       });
@@ -3483,12 +3485,12 @@ export class CrearVentasComponent
         .join(', ');
 
       const result = await Swal.fire({
-        title: this.translate.instant("ventas.crearVentas.precioManual"),
-        html: this.translate.instant("ventas.crearVentas.precioManualHtml", { nombres }),
+        title: 'Precio manual no configurado',
+        html: `Los siguientes productos permiten precio manual pero no tienen precio asignado:<br><b>${nombres}</b><br>¿Desea continuar con el precio base?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.translate.instant("ventas.crearVentas.siContinuar"),
-        cancelButtonText: this.translate.instant("ventas.crearVentas.volverCarritoBtn"),
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Volver al carrito',
       });
 
       if (!result.isConfirmed) return;
@@ -3508,10 +3510,11 @@ export class CrearVentasComponent
       );
       if (!direccionExisteEnCliente && this.originalDataEntregas?.length > 0) {
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.direccionNoCorresponde"),
-          html: this.translate.instant("ventas.crearVentas.direccionNoCorrespondeHtml", { direccion: envioActual.direccionEntrega, cliente: `${this.pedidoGral.cliente?.nombres_completos || ''} ${this.pedidoGral.cliente?.apellidos_completos || ''}` }),
+          title: 'Dirección no corresponde al cliente',
+          html: `<p>La dirección de envío <b>"${envioActual.direccionEntrega}"</b> no está registrada para el cliente <b>${this.pedidoGral.cliente?.nombres_completos || ''} ${this.pedidoGral.cliente?.apellidos_completos || ''}</b>.</p>
+                 <p>Por favor regrese al paso de envío y seleccione una dirección válida.</p>`,
           icon: 'error',
-          confirmButtonText: this.translate.instant("comun.entendido"),
+          confirmButtonText: 'Entendido',
         });
         return;
       }
@@ -3555,10 +3558,10 @@ export class CrearVentasComponent
       this.pedidoGral.bodegaId = "-1";
     } else {
       Swal.fire({
-        title: this.translate.instant("comun.error"),
+        title: "Error",
         text: this.catalogoSinInventario
-          ? this.translate.instant("ventas.crearVentas.carritoConInventario")
-          : this.translate.instant("ventas.crearVentas.sinBodegaSeleccionada"),
+          ? "El carrito tiene productos con inventario: selecciona la bodega de la que salen, o déjalos solo con productos bajo pedido."
+          : "No se ha seleccionado una bodega",
         icon: "error",
       });
       return;
@@ -3568,7 +3571,7 @@ export class CrearVentasComponent
     this.cambiarEstadoSegunLosProductos();
 
     if (this.creandoPedido) {
-      this.toastrService.info(this.translate.instant("ventas.crearVentas.pedidoCreandose"));
+      this.toastrService.info('El pedido se está creando. Espera unos segundos, no hace falta volver a darle clic.');
       return;
     }
     this.creandoPedido = true;
@@ -3599,33 +3602,33 @@ export class CrearVentasComponent
                   EstadoPago.Rechazado,
                 );
                 Swal.fire({
-                  title: this.translate.instant("ventas.crearVentas.pagoNoCompletado"),
-                  text: this.translate.instant("ventas.crearVentas.pagoNoCompletadoTexto"),
+                  title: "Pago no completado",
+                  text: "No se pudo completar el pago con Wompi. El pedido ha sido guardado con estado pendiente.",
                   icon: "warning",
-                  confirmButtonText: this.translate.instant("comun.ok"),
+                  confirmButtonText: "Ok",
                 });
               }
             })
             .catch((error) => {
               Swal.fire({
-                title: this.translate.instant("ventas.crearVentas.errorPago"),
-                text: this.translate.instant("ventas.crearVentas.errorPagoTexto"),
+                title: "Error en el pago",
+                text: "Ocurrió un error durante el proceso de pago. El pedido ha sido guardado con estado pendiente.",
                 icon: "warning",
-                confirmButtonText: this.translate.instant("comun.ok"),
+                confirmButtonText: "Ok",
               });
             });
         } else {
           // Si hubo un error al guardar el pedido
           const aviso = this.mensajeErrorCrearPedido(
             this.errorGuardarPedidoWompi,
-            this.translate.instant("ventas.crearVentas.noGuardarPedido"),
+            "No se pudo guardar el pedido. Por favor intente nuevamente.",
           );
           this.errorGuardarPedidoWompi = null;
           Swal.fire({
             title: aviso.titulo,
             text: aviso.texto,
             icon: aviso.icono,
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
           });
         }
       }).finally(() => { this.creandoPedido = false; });
@@ -3644,9 +3647,9 @@ export class CrearVentasComponent
     porDefecto: string,
   ): { titulo: string; texto: string; icono: "error" | "warning" } {
     if (err?.error?.error === "SIN_EXISTENCIAS" && err.error.msg) {
-      return { titulo: this.translate.instant("ventas.crearVentas.sinExistencias"), texto: err.error.msg, icono: "warning" };
+      return { titulo: "Sin existencias en esta bodega", texto: err.error.msg, icono: "warning" };
     }
-    return { titulo: this.translate.instant("comun.error"), texto: porDefecto, icono: "error" };
+    return { titulo: "Error", texto: porDefecto, icono: "error" };
   }
 
   // Método para continuar con la creación del pedido normal (no Wompi)
@@ -3734,10 +3737,10 @@ export class CrearVentasComponent
 
                 // Mostrar mensaje de éxito
                 Swal.fire({
-                  title: this.translate.instant("ventas.crearVentas.pedidoCreado"),
-                  text: this.translate.instant("ventas.crearVentas.pedidoCreadoTexto"),
+                  title: "¡Pedido creado!",
+                  text: "El pedido se ha creado exitosamente",
                   icon: "success",
-                  confirmButtonText: this.translate.instant("comun.ok"),
+                  confirmButtonText: "Ok",
                 });
 
                 // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
@@ -3758,13 +3761,13 @@ export class CrearVentasComponent
                 }
                 const aviso = this.mensajeErrorCrearPedido(
                   err,
-                  this.translate.instant("ventas.crearVentas.noCrearPedido"),
+                  "No se pudo crear el pedido. Por favor intente nuevamente.",
                 );
                 Swal.fire({
                   title: aviso.titulo,
                   text: aviso.texto,
                   icon: aviso.icono,
-                  confirmButtonText: this.translate.instant("comun.ok"),
+                  confirmButtonText: "Ok",
                 });
               },
             });
@@ -3775,10 +3778,10 @@ export class CrearVentasComponent
         error: (err) => {
           this.creandoPedido = false;
           Swal.fire({
-            title: this.translate.instant("comun.error"),
-            text: this.translate.instant("ventas.crearVentas.noValidarNro"),
+            title: "Error",
+            text: "No se pudo validar el número de pedido. Por favor intente nuevamente.",
             icon: "error",
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
           });
         },
       });
@@ -4238,14 +4241,19 @@ export class CrearVentasComponent
     // Verificar si hay productos en el carrito y la ciudad está cambiando
     if (this.tieneProductosEnCarrito && ciudadAnterior && ciudadAnterior !== '' && ciudadAnterior !== ciudadNueva) {
       Swal.fire({
-        title: this.translate.instant("ventas.crearVentas.cambioCiudad"),
-        html: this.translate.instant("ventas.crearVentas.cambioCiudadHtml", { anterior: ciudadAnterior, nueva: ciudadNueva }),
+        title: "Cambio de Ciudad",
+        html: `
+          <div class="text-start">
+            <p>Está cambiando la ciudad de <strong>${ciudadAnterior}</strong> a <strong>${ciudadNueva}</strong>.</p>
+            <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque los precios y disponibilidad varían según la ciudad.</p>
+          </div>
+        `,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: this.translate.instant("ventas.crearVentas.siCambiarCiudad"),
-        cancelButtonText: this.translate.instant("comun.cancelar")
+        confirmButtonText: "Sí, cambiar ciudad",
+        cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
           this.limpiarCarritoPorCambioCiudad(ciudadAnterior, ciudadNueva);
@@ -4457,10 +4465,16 @@ export class CrearVentasComponent
 
           // Mostrar mensaje informativo
           Swal.fire({
-            title: this.translate.instant("ventas.crearVentas.clienteYaRegistrado"),
-            html: this.translate.instant("ventas.crearVentas.clienteYaRegistradoHtml", { documento: documentoCliente, cliente: `${cliente.nombres_completos} ${cliente.apellidos_completos || ""}` }),
+            title: "Cliente ya registrado",
+            html: `
+              <div class="text-start">
+                <p>El documento <strong>${documentoCliente}</strong> ya se encuentra registrado.</p>
+                <p><strong>Cliente:</strong> ${cliente.nombres_completos} ${cliente.apellidos_completos || ""}</p>
+                <p>Se han cargado los datos del cliente existente.</p>
+              </div>
+            `,
             icon: "info",
-            confirmButtonText: this.translate.instant("comun.entendido"),
+            confirmButtonText: "Entendido",
           });
 
           // Forzar detección de cambios
@@ -4558,18 +4572,24 @@ export class CrearVentasComponent
 
         // Mostrar mensaje de éxito con información específica del cliente
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.clienteCreado"),
-          html: this.translate.instant("ventas.crearVentas.clienteCreadoHtml", { cliente: `${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ""}`, documento: this.formulario.value.documento }),
+          title: "¡Cliente creado exitosamente!",
+          html: `
+            <div class="text-start">
+              <strong>Cliente:</strong> ${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ""}<br>
+              <strong>Documento:</strong> ${this.formulario.value.documento}<br>
+              <strong>El cliente ha sido guardado y está listo para continuar.</strong>
+            </div>
+          `,
           icon: "success",
-          confirmButtonText: this.translate.instant("ventas.crearVentas.continuar"),
+          confirmButtonText: "Continuar",
           timer: 3000,
           timerProgressBar: true,
         });
 
         // Mostrar notificación toast adicional
         this.toastrService.success(
-          this.translate.instant("ventas.crearVentas.clienteCreadoToast", { nombre: `${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ""}` }),
-          this.translate.instant("ventas.crearVentas.clienteCreadoTitulo"),
+          `Cliente ${this.formulario.value.nombres_completos} ${this.formulario.value.apellidos_completos || ""} creado correctamente`,
+          "Cliente Creado",
           {
             closeButton: true,
             enableHtml: true,
@@ -4590,10 +4610,10 @@ export class CrearVentasComponent
 
         console.error("Error al crear cliente:", error);
         Swal.fire({
-          title: this.translate.instant("ventas.crearVentas.errorCrearCliente"),
-          text: this.translate.instant("ventas.crearVentas.errorCrearClienteTexto"),
+          title: "Error al crear cliente",
+          text: "Ha ocurrido un error al crear el cliente. Por favor, intente nuevamente.",
           icon: "error",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       },
     });
@@ -4635,7 +4655,7 @@ export class CrearVentasComponent
         // }
       },
       error: (error) => {
-        this.toastrService.error(this.translate.instant("ventas.crearVentas.errorCargarBodegas"), this.translate.instant("comun.error"));
+        this.toastrService.error("Error al cargar las bodegas", "Error");
       },
     });
   }
@@ -4693,7 +4713,7 @@ export class CrearVentasComponent
     if (!idBodega) return;
     const selected = this.bodegas?.find((w: any) => w.idBodega === idBodega);
     if (!selected) {
-      this.toastrService.warning(this.translate.instant("ventas.crearVentas.bodegaNoEncontrada"), this.translate.instant("ventas.crearVentas.bodega"));
+      this.toastrService.warning("No se encontró esa bodega en la lista", "Bodega");
       return;
     }
     if (this.bodega?.idBodega === idBodega) return;
@@ -4732,8 +4752,8 @@ export class CrearVentasComponent
       }
 
       this.toastrService.success(
-        this.translate.instant("ventas.crearVentas.bodegaSeleccionada", { nombre: selected.nombre }),
-        this.translate.instant("comun.exito"),
+        "Bodega seleccionada: " + selected.nombre,
+        "Éxito",
       );
     }
   }
@@ -4752,13 +4772,13 @@ export class CrearVentasComponent
     }
 
     // Obtener nombres de las bodegas para el mensaje
-    const nombreBodegaAnterior = bodegaAnterior?.nombre || this.translate.instant("ventas.crearVentas.sinBodega");
-    const nombreBodegaNueva = bodegaNueva?.nombre || this.translate.instant("ventas.crearVentas.sinBodega");
+    const nombreBodegaAnterior = bodegaAnterior?.nombre || 'Sin bodega';
+    const nombreBodegaNueva = bodegaNueva?.nombre || 'Sin bodega';
 
     // Mostrar notificación
     this.toastrService.warning(
-      this.translate.instant("ventas.crearVentas.carritoVaciadoBodega", { anterior: nombreBodegaAnterior, nueva: nombreBodegaNueva }),
-      this.translate.instant("ventas.crearVentas.carritoVaciado"),
+      `El carrito ha sido vaciado debido al cambio de bodega de "${nombreBodegaAnterior}" a "${nombreBodegaNueva}". Los productos disponibles varían según la bodega.`,
+      'Carrito Vaciado',
       {
         closeButton: true,
         timeOut: 5000,
@@ -4964,8 +4984,8 @@ export class CrearVentasComponent
 
       // Mostrar confirmación visual
       this.toastrService.success(
-        this.translate.instant("ventas.crearVentas.notaProduccionAgregada"),
-        this.translate.instant("ventas.crearVentas.notaAgregada"),
+        "Nota de producción agregada correctamente",
+        "Nota Agregada",
         {
           closeButton: true,
           timeOut: 2000,
@@ -5071,8 +5091,8 @@ export class CrearVentasComponent
 
     // Mostrar mensaje de confirmación
     this.toastrService.success(
-      this.translate.instant("ventas.crearVentas.notaClienteAgregada"),
-      this.translate.instant("ventas.crearVentas.notaAgregada"),
+      "Nota del cliente agregada exitosamente",
+      "Nota Agregada",
       {
         closeButton: true,
         timeOut: 3000,
@@ -5114,8 +5134,8 @@ export class CrearVentasComponent
           error: (error) => {
             console.error('❌ Error al actualizar cliente con nota:', error);
             this.toastrService.error(
-              this.translate.instant("ventas.crearVentas.errorGuardarNota"),
-              this.translate.instant("comun.error"),
+              'Error al guardar la nota en el cliente',
+              'Error',
               {
                 closeButton: true,
                 timeOut: 5000,
@@ -5127,8 +5147,8 @@ export class CrearVentasComponent
       error: (error) => {
         console.error('❌ Error al obtener cliente para guardar nota:', error);
         this.toastrService.error(
-          this.translate.instant("ventas.crearVentas.errorObtenerCliente"),
-          this.translate.instant("comun.error"),
+          'Error al obtener datos del cliente',
+          'Error',
           {
             closeButton: true,
             timeOut: 5000,
@@ -5196,14 +5216,14 @@ export class CrearVentasComponent
 
     // Confirmar eliminación
     Swal.fire({
-      title: this.translate.instant("ventas.crearVentas.eliminarNota"),
-      text: this.translate.instant("ventas.crearVentas.eliminarNotaTexto"),
+      title: "¿Eliminar nota?",
+      text: "¿Está seguro de que desea eliminar esta nota del cliente?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.crearVentas.siEliminar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed && this.pedidoGral?.notasPedido?.notasCliente) {
         // Eliminar la nota del array del pedido
@@ -5217,8 +5237,8 @@ export class CrearVentasComponent
 
         // Mostrar mensaje de confirmación
         this.toastrService.success(
-          this.translate.instant("ventas.crearVentas.notaEliminada"),
-          this.translate.instant("ventas.crearVentas.notaEliminadaTitulo"),
+          "Nota eliminada exitosamente",
+          "Nota Eliminada",
           {
             closeButton: true,
             timeOut: 3000,
@@ -5258,8 +5278,8 @@ export class CrearVentasComponent
               error: (error) => {
                 console.error('❌ Error al eliminar nota del cliente:', error);
                 this.toastrService.error(
-                  this.translate.instant("ventas.crearVentas.errorEliminarNota"),
-                  this.translate.instant("comun.error"),
+                  'Error al eliminar la nota del cliente',
+                  'Error',
                   {
                     closeButton: true,
                     timeOut: 5000,
@@ -5367,8 +5387,8 @@ export class CrearVentasComponent
       // Mostrar mensaje informativo — deja claro que probablemente SÍ se
       // guardaron, solo que son de otra ciudad (no se perdieron datos)
       this.toastrService.info(
-        this.translate.instant("ventas.crearVentas.sinDireccionesCiudad", { ciudad: this.selectedCity }),
-        this.translate.instant("ventas.crearVentas.infoEntrega"),
+        `Este cliente no tiene direcciones registradas en ${this.selectedCity}. Se muestran todas sus direcciones (pueden ser de otras ciudades) — si buscas una que acabas de crear, probablemente sí se guardó pero para otra ciudad.`,
+        "Información de Entrega",
         {
           closeButton: true,
           timeOut: 7000,

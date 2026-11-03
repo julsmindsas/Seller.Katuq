@@ -2,7 +2,6 @@ import { Component, Input, OnInit, EventEmitter, Output } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
-import { TranslateService } from "@ngx-translate/core";
 import { Pedido, DescuentoAplicado } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
@@ -53,8 +52,7 @@ export class CarritoComponent implements OnInit {
     private service: VentasService,
     private toastrService: ToastrService,
     private formBuilder: FormBuilder,
-    private modalService: NgbModal,
-    private translate: TranslateService
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -267,16 +265,16 @@ export class CarritoComponent implements OnInit {
     
     // Mostrar Sweet Alert con campo de texto para la nota
     Swal.fire({
-      title: this.translate.instant('ventas.carrito.agregarNotaProduccion'),
+      title: 'Agregar Nota de Producción',
       html: `
         <div class="text-start mb-3">
-          <span class="fw-bold">${producto?.producto?.crearProducto?.titulo || this.translate.instant('ventas.carrito.producto')}</span>
+          <span class="fw-bold">${producto?.producto?.crearProducto?.titulo || 'Producto'}</span>
         </div>
-        <textarea id="nota-produccion" class="form-control" placeholder="${this.translate.instant('ventas.carrito.phNotaProduccion')}" rows="4"></textarea>
+        <textarea id="nota-produccion" class="form-control" placeholder="Escribe la nota de producción aquí..." rows="4"></textarea>
       `,
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('ventas.carrito.guardarNota'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: 'Guardar Nota',
+      cancelButtonText: 'Cancelar',
       showClass: {
         popup: 'animate__animated animate__fadeInDown'
       },
@@ -286,7 +284,7 @@ export class CarritoComponent implements OnInit {
       preConfirm: () => {
         const nota = (document.getElementById('nota-produccion') as HTMLTextAreaElement).value;
         if (!nota.trim()) {
-          Swal.showValidationMessage(this.translate.instant('ventas.carrito.ingresaNota'));
+          Swal.showValidationMessage('Por favor ingresa una nota');
           return false;
         }
         return nota;
@@ -330,7 +328,7 @@ export class CarritoComponent implements OnInit {
     });
     
     // Mostrar mensaje de éxito
-    this.toastrService.success(this.translate.instant('ventas.carrito.notaAgregada'), this.translate.instant('comun.exito'));
+    this.toastrService.success('Nota de producción agregada correctamente', 'Éxito');
   }
 
   private calculateAdicionesPrice(adiciones: any[]): number {
@@ -683,7 +681,7 @@ export class CarritoComponent implements OnInit {
       // Restaurar cantidad anterior o cantidad mínima
       const cantidadMinima = itemCarrito.producto?.disponibilidad?.cantidadMinVenta || 1;
       itemCarrito.cantidad = cantidadMinima;
-      this.toastrService.error(this.translate.instant('ventas.carrito.cantidadValida'), this.translate.instant('comun.error'));
+      this.toastrService.error('Por favor ingrese una cantidad válida', 'Error');
       return;
     }
 
@@ -692,8 +690,8 @@ export class CarritoComponent implements OnInit {
     if (nuevaCantidad < cantidadMinima) {
       itemCarrito.cantidad = cantidadMinima;
       this.toastrService.warning(
-        this.translate.instant('ventas.carrito.cantidadMinimaTexto', { n: cantidadMinima }), 
-        this.translate.instant('ventas.carrito.cantidadMinima')
+        `La cantidad mínima para este producto es ${cantidadMinima}`, 
+        'Cantidad mínima'
       );
       return;
     }
@@ -711,7 +709,7 @@ export class CarritoComponent implements OnInit {
     if (rangoActual?.numeroUnidadesInicial && 
         this.rangoPreciosActual1?.numeroUnidadesInicial !== rangoActual.numeroUnidadesInicial) {
       this.toastrService.show(
-        `<p class="mb-0 mt-1">${this.translate.instant('ventas.carrito.cambioRango')}</p>`,
+        '<p class="mb-0 mt-1">Cambio de rango de precio!</p>',
         '',
         { closeButton: true, enableHtml: true, positionClass: 'toast-bottom-right', timeOut: 1000 }
       );
@@ -747,7 +745,7 @@ export class CarritoComponent implements OnInit {
    */
   validarCuponYAplica(): void {
     if (!this.cupon) {
-      Swal.fire({ icon: 'error', title: this.translate.instant('comun.error'), text: this.translate.instant('ventas.carrito.ingreseCodigo') });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Por favor ingrese un código de descuento' });
       return;
     }
 
@@ -771,15 +769,15 @@ export class CarritoComponent implements OnInit {
       next: (res) => {
         this.aplicandoCupon = false;
         if (!res || !res.descuentoId) {
-          Swal.fire({ icon: 'error', title: this.translate.instant('ventas.carrito.codigoNoValido'), text: this.translate.instant('ventas.carrito.noSePudoAplicar') });
+          Swal.fire({ icon: 'error', title: 'Código no válido', text: 'No se pudo aplicar el código' });
           return;
         }
         this.aplicarResultadoDescuento(res);
       },
       error: (err) => {
         this.aplicandoCupon = false;
-        const msg = err?.error?.message || this.translate.instant('ventas.carrito.noSePudoAplicar');
-        Swal.fire({ icon: 'error', title: this.translate.instant('ventas.carrito.codigoNoValido'), text: msg });
+        const msg = err?.error?.message || 'No se pudo aplicar el código';
+        Swal.fire({ icon: 'error', title: 'Código no válido', text: msg });
       },
     });
   }
@@ -841,9 +839,9 @@ export class CarritoComponent implements OnInit {
 
     const detalle =
       res.tipo === 'envio_gratis'
-        ? this.translate.instant('ventas.carrito.envioGratisAplicado')
-        : this.translate.instant('ventas.carrito.descuentoAplicado', { monto: monto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }) });
-    this.toastrService.success(detalle, res.nombre || this.translate.instant('ventas.carrito.codigoAplicado'));
+        ? 'Envío gratis aplicado.'
+        : `Descuento aplicado: ${monto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}`;
+    this.toastrService.success(detalle, res.nombre || 'Código aplicado');
   }
 
   /**
@@ -906,7 +904,7 @@ export class CarritoComponent implements OnInit {
       this.pedido.porceDescuento = 0;
       this.pedido.totalDescuento = 0;
     }
-    this.toastrService.info(this.translate.instant('ventas.carrito.descuentoRemovido'), '');
+    this.toastrService.info('Descuento removido', '');
   }
   
   // Método para mostrar las notas existentes
@@ -915,7 +913,7 @@ export class CarritoComponent implements OnInit {
     const notasDelProducto = this.obtenerNotasDelProducto(producto);
     
     if (!notasDelProducto || notasDelProducto.length === 0) {
-      this.toastrService.info(this.translate.instant('ventas.carrito.sinNotasProduccion'), this.translate.instant('ventas.carrito.informacion'));
+      this.toastrService.info('Este producto no tiene notas de producción', 'Información');
       return;
     }
     
@@ -941,17 +939,17 @@ export class CarritoComponent implements OnInit {
     });
     
     Swal.fire({
-      title: this.translate.instant('ventas.carrito.notasProduccion'),
+      title: 'Notas de Producción',
       html: `
         <div class="product-title mb-3 fw-bold">
-          ${producto?.producto?.crearProducto?.titulo || this.translate.instant('ventas.carrito.producto')}
+          ${producto?.producto?.crearProducto?.titulo || 'Producto'}
         </div>
         <div class="notes-container" style="max-height: 300px; overflow-y: auto; text-align: left;">
           ${notasHtml}
         </div>
       `,
       showConfirmButton: true,
-      confirmButtonText: this.translate.instant('comun.cerrar'),
+      confirmButtonText: 'Cerrar',
       width: '600px',
       didOpen: () => {
         // Agregar event listeners para los botones de eliminar
@@ -1010,7 +1008,7 @@ export class CarritoComponent implements OnInit {
     });
     
     // Mostrar mensaje de éxito
-    this.toastrService.success(this.translate.instant('ventas.carrito.notaEliminada'), this.translate.instant('comun.exito'));
+    this.toastrService.success('Nota de producción eliminada correctamente', 'Éxito');
   }
 
   // Método para limpiar datos fantasma del localStorage

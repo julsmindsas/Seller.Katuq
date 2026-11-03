@@ -1,11 +1,11 @@
 <div class="cash-closing-history">
   <div class="modal-header d-print-none">
-    <h4 class="modal-title">{{ 'ventas.cashClosingHistory.titulo' | translate }}</h4>
+    <h4 class="modal-title">Historial de Cierres de Caja</h4>
     <div>
       <button type="button" class="btn btn-outline-primary me-2" (click)="imprimirHistorial()">
-        <i class="fa fa-print"></i> {{ 'ventas.cashClosingHistory.imprimir' | translate }}
+        <i class="fa fa-print"></i> Imprimir
       </button>
-      <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
+      <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
     </div>
   </div>
 
@@ -13,7 +13,7 @@
   <div class="fecha-selector d-print-none p-3 bg-light rounded mb-3">
     <form [formGroup]="filtroForm" class="row align-items-end">
       <div class="col-md-5 mb-2 mb-md-0">
-        <label for="fechaInicio" class="form-label">{{ 'ventas.cashClosingHistory.fechaInicio' | translate }}</label>
+        <label for="fechaInicio" class="form-label">Fecha Inicio</label>
         <div class="input-group">
           <input 
             id="fechaInicio" 
@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="col-md-5 mb-2 mb-md-0">
-        <label for="fechaFin" class="form-label">{{ 'ventas.cashClosingHistory.fechaFin' | translate }}</label>
+        <label for="fechaFin" class="form-label">Fecha Fin</label>
         <div class="input-group">
           <input 
             id="fechaFin" 
@@ -46,7 +46,7 @@
       </div>
       <div class="col-md-2 mb-2 mb-md-0 text-end">
         <button type="button" class="btn btn-primary w-100" (click)="buscarHistorial()">
-          <i class="fa fa-search"></i> {{ 'comun.buscar' | translate }}
+          <i class="fa fa-search"></i> Buscar
         </button>
       </div>
     </form>
@@ -58,27 +58,27 @@
       <div class="header-section mb-4 p-3 bg-light rounded">
         <h2 class="text-center company-title">{{ historyData.company }}</h2>
         <p class="text-center text-muted">
-          <strong>{{ 'ventas.cashClosingHistory.periodoDelInforme' | translate }}</strong> {{ formatShortDate(historyData.fechaInicio) }} - {{ formatShortDate(historyData.fechaFin) }}
+          <strong>Periodo del Informe:</strong> {{ formatShortDate(historyData.fechaInicio) }} - {{ formatShortDate(historyData.fechaFin) }}
         </p>
       </div>
 
       <!-- Resumen General -->
       <div class="card summary-card mb-4 shadow-sm">
         <div class="cch-cabeza">
-          <h3 class="mb-0">{{ 'ventas.cashClosingHistory.resumenGeneral' | translate }}</h3>
+          <h3 class="mb-0">Resumen General del Periodo</h3>
         </div>
         <div class="card-body">
           <div class="row text-center stats-container">
             <div class="col-md-4 mb-3 stat-item">
-              <span class="d-block text-muted stat-label">{{ 'ventas.cashClosingHistory.totalDias' | translate }}</span>
+              <span class="d-block text-muted stat-label">Total Días</span>
               <strong class="d-block fs-5 stat-value">{{ formatNumber(historyData.resumenGeneral.totalDias) }}</strong>
             </div>
             <div class="col-md-4 mb-3 stat-item">
-              <span class="d-block text-muted stat-label">{{ 'ventas.cashClosingHistory.totalVentas' | translate }}</span>
+              <span class="d-block text-muted stat-label">Total Ventas</span>
               <strong class="d-block fs-5 text-success stat-value">{{ formatCurrency(historyData.resumenGeneral.totalVentas) }}</strong>
             </div>
             <div class="col-md-4 mb-3 stat-item">
-              <span class="d-block text-muted stat-label">{{ 'ventas.cashClosingHistory.promedioDiario' | translate }}</span>
+              <span class="d-block text-muted stat-label">Promedio Diario</span>
               <strong class="d-block fs-5 stat-value">{{ formatCurrency(historyData.resumenGeneral.promedioDiario) }}</strong>
             </div>
           </div>
@@ -98,16 +98,16 @@
           </div>
           
           <div class="mt-3 users-section">
-            <span class="text-muted">{{ 'ventas.cashClosingHistory.usuariosQueRealizaron' | translate }}</span>
+            <span class="text-muted">Usuarios que realizaron cierre:</span>
             <!-- Si la respuesta no trae usuariosCierre, .join() lanzaba y tumbaba
                  el render completo del historial. Se protege el arreglo. -->
-            <strong class="ms-2">{{ (historyData.resumenGeneral.usuariosCierre || []).join(', ') || ('ventas.cashClosingHistory.ninguno' | translate) }}</strong>
+            <strong class="ms-2">{{ (historyData.resumenGeneral.usuariosCierre || []).join(', ') || 'Ninguno' }}</strong>
           </div>
         </div>
       </div>
 
       <!-- Historial Detallado por Día/Cierre -->
-      <h3 class="section-title mb-3">{{ 'ventas.cashClosingHistory.historialDeCierres' | translate }}</h3>
+      <h3 class="section-title mb-3">Historial de Cierres</h3>
       <div *ngIf="historyData.historial && historyData.historial.length > 0; else noHistory">
         <div class="closing-list">
           <div class="closing-item mb-4" *ngFor="let item of historyData.historial; let i = index">
@@ -129,7 +129,7 @@
                   </div>
                   <div class="col-md-4 text-end">
                     <div class="closing-total text-success">
-                      <span>{{ 'ventas.cashClosingHistory.totalMonto' | translate: { monto: formatCurrency(item.totalVentas) } }}</span>
+                      <span>Total: {{ formatCurrency(item.totalVentas) }}</span>
                       <i class="fa fa-line-chart ms-2"></i>
                     </div>
                   </div>
@@ -141,7 +141,7 @@
                 <!-- Información General -->
                 <div class="card mb-3 general-info-card">
                   <div class="cch-cabeza cch-cabeza--sub">
-                    <h5 class="mb-0 section-subtitle">{{ 'ventas.cashClosingHistory.informacionGeneral' | translate }}</h5>
+                    <h5 class="mb-0 section-subtitle">Información General</h5>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -149,15 +149,15 @@
                         <table class="table table-info-detail mb-0">
                           <tbody>
                             <tr>
-                              <th scope="row">{{ 'ventas.cashClosingHistory.efectivoInicial' | translate }}</th>
+                              <th scope="row">Efectivo Inicial</th>
                               <td>{{ formatCurrency(item.efectivoInicial) }}</td>
                             </tr>
                             <tr>
-                              <th scope="row">{{ 'ventas.cashClosingHistory.efectivoFinal' | translate }}</th>
+                              <th scope="row">Efectivo Final</th>
                               <td>{{ formatCurrency(item.efectivoFinal) }}</td>
                             </tr>
                             <tr>
-                              <th scope="row">{{ 'ventas.cashClosingHistory.diferencia' | translate }}</th>
+                              <th scope="row">Diferencia (contado − debía haber)</th>
                               <td>{{ estadoCuadre(item) }}</td>
                             </tr>
                           </tbody>
@@ -165,8 +165,8 @@
                       </div>
                       <div class="col-md-6">
                         <div class="observation-box p-2 h-100">
-                          <h6 class="mb-2"><i class="fa fa-comment-o me-2"></i>{{ 'ventas.cashClosingHistory.observaciones' | translate }}</h6>
-                          <p class="mb-0">{{ item.observaciones || ('ventas.cashClosingHistory.sinObservaciones' | translate) }}</p>
+                          <h6 class="mb-2"><i class="fa fa-comment-o me-2"></i>Observaciones:</h6>
+                          <p class="mb-0">{{ item.observaciones || 'Sin observaciones registradas' }}</p>
                         </div>
                       </div>
                     </div>
@@ -176,7 +176,7 @@
                 <!-- Resumen de Ventas -->
                 <div class="card mb-3 sales-summary-card">
                   <div class="cch-cabeza cch-cabeza--sub">
-                    <h5 class="mb-0 section-subtitle">{{ 'ventas.cashClosingHistory.resumenDeVentas' | translate }}</h5>
+                    <h5 class="mb-0 section-subtitle">Resumen de Ventas</h5>
                   </div>
                   <div class="card-body">
                     <!-- Formas de pago dinámicas -->
@@ -192,7 +192,7 @@
                       <div class="col-md-3 col-6 mb-3" *ngIf="item.totalDescuentos !== undefined && item.totalDescuentos !== null">
                         <div class="payment-total-item">
                           <i class="fa fa-tags me-2 text-danger"></i>
-                          <span class="d-block payment-method-label">{{ 'ventas.cashClosingHistory.descuentos' | translate }}</span>
+                          <span class="d-block payment-method-label">Descuentos</span>
                           <strong class="d-block payment-amount">{{ formatCurrency(item.totalDescuentos) }}</strong>
                         </div>
                       </div>
@@ -201,19 +201,19 @@
                     <div class="row mt-3 counts-row">
                       <div class="col-md-4">
                         <div class="count-box">
-                          <span class="count-label">{{ 'ventas.cashClosingHistory.totalPedidos' | translate }}</span>
+                          <span class="count-label">Total Pedidos</span>
                           <span class="count-value">{{ formatNumber(item.cantidadPedidos) }}</span>
                         </div>
                       </div>
                       <div class="col-md-4">
                         <div class="count-box">
-                          <span class="count-label">{{ 'ventas.cashClosingHistory.totalProductos' | translate }}</span>
+                          <span class="count-label">Total Productos</span>
                           <span class="count-value">{{ formatNumber(item.cantidadProductos) }}</span>
                         </div>
                       </div>
                       <div class="col-md-4" *ngIf="item.totalImpuestos !== undefined && item.totalImpuestos !== null">
                         <div class="count-box">
-                          <span class="count-label">{{ 'ventas.cashClosingHistory.totalImpuestos' | translate }}</span>
+                          <span class="count-label">Total Impuestos</span>
                           <span class="count-value">{{ formatCurrency(item.totalImpuestos) }}</span>
                         </div>
                       </div>
@@ -225,7 +225,7 @@
                      total, que ya sale en "Total Pedidos"); se muestra solo si llega. -->
                 <div class="card orders-card" *ngIf="item.pedidos">
                   <div class="cch-cabeza cch-cabeza--sub d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 section-subtitle">{{ 'ventas.cashClosingHistory.pedidosDelCierre' | translate }}</h5>
+                    <h5 class="mb-0 section-subtitle">Pedidos del Cierre</h5>
                     <span class="badge bg-primary rounded-pill">{{ item.pedidos?.length || 0 }}</span>
                   </div>
                   <div class="card-body">
@@ -233,11 +233,11 @@
                       <table class="table table-sm table-striped table-hover">
                         <thead class="table-light">
                           <tr>
-                            <th>{{ 'ventas.cashClosingHistory.colPedido' | translate }}</th>
-                            <th>{{ 'ventas.cashClosingHistory.colFormaPago' | translate }}</th>
-                            <th>{{ 'ventas.cashClosingHistory.colTotal' | translate }}</th>
-                            <th>{{ 'ventas.cashClosingHistory.colFecha' | translate }}</th>
-                            <th>{{ 'ventas.cashClosingHistory.colUsuario' | translate }}</th>
+                            <th># Pedido</th>
+                            <th>Forma Pago</th>
+                            <th>Total</th>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -259,7 +259,7 @@
                     <ng-template #noPedidos>
                       <div class="alert alert-info no-orders text-center">
                         <i class="fa fa-info-circle me-2"></i>
-                        {{ 'ventas.cashClosingHistory.noHayPedidos' | translate }}
+                        No hay pedidos registrados para este cierre.
                       </div>
                     </ng-template>
                   </div>
@@ -272,26 +272,26 @@
       <ng-template #noHistory>
         <div class="alert alert-info no-data" role="alert">
           <i class="fa fa-exclamation-circle me-2"></i>
-          {{ 'ventas.cashClosingHistory.noSeEncontraronRegistros' | translate }}
+          No se encontraron registros de cierres de caja para el periodo seleccionado.
         </div>
       </ng-template>
 
     </div>
     <div *ngIf="!historyData && !loading" class="alert alert-warning no-data" role="alert">
       <i class="fa fa-exclamation-triangle me-2"></i>
-      {{ 'ventas.cashClosingHistory.noHayDatos' | translate }}
+      No hay datos disponibles para mostrar.
     </div>
   </div>
 
   <div class="modal-footer d-print-none">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">{{ 'comun.cerrar' | translate }}</button>
+    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cerrar</button>
   </div>
 </div>
 
 <!-- Spinner de carga -->
 <div *ngIf="loading" class="loading-overlay">
   <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
+    <span class="visually-hidden">Cargando...</span>
   </div>
-  <p class="mt-2">{{ 'ventas.cashClosingHistory.cargandoHistorial' | translate }}</p>
+  <p class="mt-2">Cargando historial...</p>
 </div> 

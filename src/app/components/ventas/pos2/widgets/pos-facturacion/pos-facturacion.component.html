@@ -1,10 +1,10 @@
 <div class="modal-header">
-  <h5 class="modal-title"><i class="fa fa-file-text-o me-2"></i>{{ 'ventas.posFacturacion.titulo' | translate }}</h5>
-  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar()"></button>
+  <h5 class="modal-title"><i class="fa fa-file-text-o me-2"></i>{{ 'Facturación de la venta' | translate }}</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cerrar()"></button>
 </div>
 
 <div class="modal-body">
-  <p class="pf-ayuda">{{ 'ventas.posFacturacion.ayuda' | translate }}</p>
+  <p class="pf-ayuda">{{ '¿A quién se le factura esta venta? La factura electrónica se genera sola al terminar el cobro.' | translate }}</p>
 
   <div class="pf-opciones" role="radiogroup">
     <!-- Perfiles del cliente -->
@@ -14,25 +14,25 @@
       <div class="pf-texto">
         <div class="pf-titulo">
           {{ p.alias || p.nombres }}
-          <span *ngIf="p.predeterminado" class="pf-badge">{{ 'ventas.posFacturacion.predeterminado' | translate }}</span>
+          <span *ngIf="p.predeterminado" class="pf-badge">{{ 'Predeterminado' | translate }}</span>
         </div>
         <div class="pf-detalle">{{ p.nombres }} · {{ p.tipoDocumento }} {{ p.documento }}</div>
         <div *ngIf="faltantes(p).length" class="pf-falta">
-          <i class="fa fa-exclamation-triangle me-1"></i>{{ 'ventas.posFacturacion.leFalta' | translate }}: {{ faltantes(p).join(', ') }}
+          <i class="fa fa-exclamation-triangle me-1"></i>{{ 'Le falta' | translate }}: {{ faltantes(p).join(', ') }}
         </div>
       </div>
     </label>
 
     <div *ngIf="!perfiles.length" class="pf-vacio">
-      {{ 'ventas.posFacturacion.sinDatos' | translate }}
+      {{ 'Este cliente no tiene datos de facturación guardados.' | translate }}
     </div>
 
     <!-- Consumidor Final -->
     <label class="pf-opcion" [class.pf-activa]="seleccion === -1">
       <input type="radio" name="facturacionPos" [value]="-1" [(ngModel)]="seleccion">
       <div class="pf-texto">
-        <div class="pf-titulo">{{ 'ventas.posFacturacion.consumidorFinal' | translate }}</div>
-        <div class="pf-detalle">{{ 'ventas.posFacturacion.facturaSinDatos' | translate }}</div>
+        <div class="pf-titulo">{{ 'Consumidor Final' | translate }}</div>
+        <div class="pf-detalle">{{ 'Factura sin datos del comprador (CC 222222222222)' | translate }}</div>
       </div>
     </label>
 
@@ -40,20 +40,20 @@
     <label class="pf-opcion" [class.pf-activa]="seleccion === -2">
       <input type="radio" name="facturacionPos" [value]="-2" [(ngModel)]="seleccion">
       <div class="pf-texto">
-        <div class="pf-titulo">{{ 'ventas.posFacturacion.noRequiereFactura' | translate }}</div>
-        <div class="pf-detalle">{{ 'ventas.posFacturacion.facturarDespues' | translate }}</div>
+        <div class="pf-titulo">{{ 'No requiere factura' | translate }}</div>
+        <div class="pf-detalle">{{ 'Se puede facturar después desde Pedidos' | translate }}</div>
       </div>
     </label>
   </div>
 
   <button type="button" class="btn btn-link pf-editar" (click)="editarCliente()">
-    <i class="fa fa-pencil me-1"></i>{{ 'ventas.posFacturacion.agregarOCorregir' | translate }}
+    <i class="fa fa-pencil me-1"></i>{{ 'Agregar o corregir datos de facturación del cliente' | translate }}
   </button>
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="cerrar()">{{ 'Cancelar' | translate }}</button>
   <button type="button" class="btn pf-confirmar" [disabled]="!puedeConfirmar" (click)="confirmar()">
-    {{ 'ventas.posFacturacion.usarEstaOpcion' | translate }}
+    {{ 'Usar esta opción' | translate }}
   </button>
 </div>
