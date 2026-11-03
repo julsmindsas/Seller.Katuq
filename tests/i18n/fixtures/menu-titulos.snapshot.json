@@ -63,6 +63,10 @@
       "title": "Landings"
     },
     {
+      "path": "sitios/leads",
+      "title": "Leads landing"
+    },
+    {
       "path": "sitios/catalogos",
       "title": "Catálogo web",
       "badgeValue": "NUEVO"

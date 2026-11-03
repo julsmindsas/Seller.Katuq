@@ -132,6 +132,9 @@ export const COMPANY_FEATURE_FLAGS = [
   'misIdeasV2',
   // Estándar de foto de producto al subir: rechazo claro y avisos a 800 px (D-629, tickets 1426 y 1427).
   'fotosEstandar',
+  // Landings por objetivo, fase 1 (D-633, tickets 1396 a 1399): bandeja «Leads landing», consentimiento de la
+  // Ley 1581 en el formulario de leads y /l/{slug}. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
+  'landingsV2',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

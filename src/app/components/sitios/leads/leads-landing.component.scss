@@ -1,0 +1,179 @@
+// Bandeja «Leads de landing» (D-633). Base config-pagina (D-400); plano, sin gradientes. Ningún nombre de
+// clase contiene «p-» (el reset global le fuerza el tamaño de letra) y todo span lleva color propio.
+@import '../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+.ll-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ll-chip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 20px;
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { background: $cfg-tint; border-color: #d9cffb; }
+  &.is-activo { background: $cfg-accent-soft; border-color: $cfg-accent; color: $cfg-accent-ink; }
+}
+
+.ll-chip__n {
+  color: $cfg-muted;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ll-chip.is-activo .ll-chip__n { color: $cfg-accent-ink; }
+
+.ll-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ll-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 200px;
+  max-width: 320px;
+}
+
+.ll-etiqueta {
+  color: $cfg-muted;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.ll-sel {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 12px;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 11px;
+  color: $cfg-ink;
+  font-size: 13.5px;
+
+  &:disabled { opacity: .6; cursor: progress; }
+}
+
+.ll-valor {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.ll-heredar { color: inherit; font-size: 13.5px; }
+
+.ll-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (min-width: 992px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.ll-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ll-lead__cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ll-lead__quien {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ll-lead__nombre {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 16px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.ll-meta {
+  color: $cfg-muted;
+  font-size: 12px;
+}
+
+.ll-consentimiento {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  i { color: $cfg-ok; }
+}
+
+.ll-contacto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.ll-enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $cfg-accent-ink;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  min-height: 32px;
+  overflow-wrap: anywhere;
+
+  &:hover { text-decoration: underline; }
+}
+
+.ll-enlace__txt { color: inherit; font-size: inherit; }
+
+.ll-mensaje {
+  margin: 0;
+  padding: 10px 12px;
+  background: $cfg-tint;
+  border-radius: 11px;
+  color: $cfg-body;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ll-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 575px) {
+  .ll-filtro { max-width: none; flex-basis: 100%; }
+}
