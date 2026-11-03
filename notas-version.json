@@ -43,5 +43,6 @@
   { "fecha": "2026-11-03T19:00:00Z", "tipo": "CORRIGE", "texto": "En Facturación electrónica, el historial técnico muestra cada envío a la DIAN y cada correo de tus facturas y notas, del más reciente al más antiguo, y no solo las pruebas de habilitación." },
   { "fecha": "2026-11-03T19:30:00Z", "tipo": "MEJORA", "texto": "Facturación electrónica se ve más limpia: todas las fechas van en el mismo formato (día/mes/año), quitamos las tarjetas y botones que se repetían y las fechas grises se leen mejor." },
   { "fecha": "2026-11-03T19:30:30Z", "tipo": "MEJORA", "texto": "En Facturación electrónica, lo facturado en el mes se compara con los mismos días del mes anterior, y además del porcentaje ves la diferencia en pesos." },
-  { "fecha": "2026-11-03T19:31:00Z", "tipo": "MEJORA", "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es." }
+  { "fecha": "2026-11-03T19:31:00Z", "tipo": "MEJORA", "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es." },
+  { "fecha": "2026-11-03T20:00:00Z", "tipo": "CORRIGE", "texto": "Ya no aparece una franja blanca vacía al final de las pantallas." }
 ]
