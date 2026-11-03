@@ -89,6 +89,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // Estado de pago Crédito (ticket 1448, D-660): marcar Crédito, cupo en la ficha del cliente e instrucción de cobro
   // («cobrar saldo» / «no cobrar») en Logística. El servidor decide; la pantalla lo ofrece solo si está encendida. Dueño: Daniel. Se retira el 2027-05-31.
   'estadoCredito',
+  // Un solo pago para varios pedidos del mismo cliente (ticket 1453, D-661 propuesta): casillas en «Sin pago», diálogo de
+  // pago de grupo en Tesorería y en «Registrar pago» de Cartera, y decisión del grupo completo. El servidor decide.
+  // Dueño: Daniel. Se retira el 2027-05-31.
+  'pagoVariosPedidos',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

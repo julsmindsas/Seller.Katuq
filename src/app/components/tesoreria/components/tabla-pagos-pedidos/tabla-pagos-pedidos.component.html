@@ -33,6 +33,23 @@
     </label>
   </div>
 
+  <!-- Ticket 1453 (bandera pagoVariosPedidos): un solo pago para varios pedidos del mismo cliente -->
+  <div class="tk-barra-marcas" *ngIf="verMarcas">
+    <button type="button" class="btn btn-primary tk-btn-sm" [disabled]="!puedeRegistrarVarios" (click)="abrirPagoVarios()">
+      <i class="pi pi-wallet" aria-hidden="true"></i> {{ 'tesoreria.tablaPagosPedidos.registrarVarios' | translate }}
+    </button>
+    <div class="tk-marcas-texto" *ngIf="seleccion.size > 0 && !marcasDeVariosClientes" role="status">
+      {{ 'tesoreria.tablaPagosPedidos.marcados' | translate:{ n: seleccion.size } }}
+    </div>
+    <div class="tk-marcas-texto tk-marcas-aviso" *ngIf="marcasDeVariosClientes" role="status">
+      {{ 'tesoreria.tablaPagosPedidos.variosClientes' | translate }}
+    </div>
+    <div class="tk-marcas-texto" *ngIf="seleccion.size === 0">{{ 'tesoreria.tablaPagosPedidos.ayudaMarcas' | translate }}</div>
+    <button type="button" class="btn btn-outline-secondary tk-btn-sm" *ngIf="seleccion.size > 0" (click)="quitarMarcas()">
+      {{ 'tesoreria.tablaPagosPedidos.quitarMarcas' | translate }}
+    </button>
+  </div>
+
   <!-- Tabla lazy server-side -->
   <p-table #dt [value]="orders" dataKey="_id" [lazy]="true" (onLazyLoad)="loadData($event)"
            [loading]="loading" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords"
@@ -43,6 +60,10 @@
 
     <ng-template pTemplate="header">
       <tr>
+        <th class="tk-col-marca" *ngIf="verMarcas">
+          <input type="checkbox" [checked]="todosMarcadosEnPagina" (change)="alternarMarcaPagina()"
+                 [attr.aria-label]="'tesoreria.tablaPagosPedidos.marcarTodos' | translate">
+        </th>
         <th style="min-width: 150px">{{ 'tesoreria.historialPagos.pedido' | translate }}</th>
         <th style="min-width: 200px">{{ 'tesoreria.tablaPagosPedidos.cliente' | translate }}</th>
         <th style="min-width: 180px">{{ 'tesoreria.tablaPagosPedidos.pago' | translate }}</th>
@@ -55,6 +76,10 @@
 
     <ng-template pTemplate="body" let-pedido let-i="rowIndex">
       <tr>
+        <td class="tk-col-marca" *ngIf="verMarcas">
+          <input type="checkbox" [checked]="marcado(pedido)" [disabled]="!puedeMarcarse(pedido)" (change)="alternarMarca(pedido)"
+                 [attr.aria-label]="('tesoreria.tablaPagosPedidos.marcarPedido' | translate) + ' ' + pedido?.nroPedido">
+        </td>
         <!-- Pedido: nro + fecha -->
         <td>
           <div class="tk-cell-order">{{ pedido?.nroPedido }}</div>

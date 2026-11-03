@@ -16,6 +16,8 @@ import { ModoAccionCartera } from './cartera-accion-modal.component';
 import { abrirAccionCartera } from './cartera-accion-abrir';
 import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
+import { abrirPagoGrupo } from '../../../../shared/components/pago-grupo/pago-grupo-modal.component';
+import { claveDocumento } from '../../../../shared/utils/clave-documento';
 
 /** Una entrada del menú «Acciones». */
 interface EntradaMenu {
@@ -158,8 +160,34 @@ export class CarteraAccionesComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Ticket 1453 (bandera `pagoVariosPedidos`): si el cliente tiene dos o más pedidos con saldo y un documento real,
+   * «Registrar pago» abre la ventana de pago a varios pedidos (que también deja registrar uno solo). Sin la
+   * bandera, o con un solo pedido, abre la ventana de siempre.
+   */
+  private get usaPagoGrupo(): boolean {
+    if (!this.features.isEnabled('pagoVariosPedidos')) return false;
+    const documento = String(this.cliente?.documento || '').trim();
+    if (!claveDocumento(documento) || documento.includes('@')) return false;
+    return (this.cliente?.pedidos || []).filter((p) => Number(p.saldo) >= 1).length >= 2;
+  }
+
   elegir(entrada: EntradaMenu): void {
     this.cerrar(false);
+    if (entrada.modo === 'pago' && this.usaPagoGrupo) {
+      abrirPagoGrupo(this.modal, {
+        documento: String(this.cliente.documento).trim(),
+        cliente: this.cliente.nombre,
+        alUnSoloPedido: () => {
+          abrirAccionCartera(this.modal, 'pago', this.cliente, this.esAdmin).then((cambio) => {
+            if (cambio) this.cambio.emit();
+          });
+        },
+      }).then((cambio) => {
+        if (cambio) this.cambio.emit();
+      });
+      return;
+    }
     if (entrada.modo === 'recordatorio') {
       abrirRecordatorioCobro(this.modal, [{ documento: this.cliente.documento, nombre: this.cliente.nombre }], this.esAdmin).then((cambio) => {
         if (cambio) this.cambio.emit();

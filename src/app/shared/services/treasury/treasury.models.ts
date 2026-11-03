@@ -314,3 +314,85 @@ export interface AlertGroupsResponse {
   pagination: { totalItems: number; currentPage: number; pageSize: number };
   truncado?: boolean;
 }
+
+/**
+ * Ticket 1453 (D-661 propuesta): un solo pago para varios pedidos del mismo cliente (bandera `pagoVariosPedidos`).
+ * Lo que muestra de plata (saldo, tope, reparto sugerido) lo calcula el servidor; la pantalla solo lo presenta.
+ */
+export interface PedidoAbiertoGrupo {
+  orderId: string;
+  nroPedido: string;
+  fechaCreacion: string | null;
+  estadoPago: string;
+  total: number;
+  saldo: number;
+  /** Lo que ya tiene en revisión de Tesorería (no se vuelve a pagar). */
+  enRevision: number;
+  /** Lo máximo que puede recibir este pago: saldo menos lo que está en revisión. */
+  tope: number;
+}
+
+export interface ParteReparto {
+  orderId: string;
+  valor: number;
+}
+
+/** POST /payments/group/preview */
+export interface VistaPreviaPagoGrupo {
+  success: boolean;
+  documento: string;
+  cliente: string;
+  maxPedidos: number;
+  pedidos: PedidoAbiertoGrupo[];
+  reparto: ParteReparto[];
+  repartido: number;
+  sobrante: number;
+  truncado: boolean;
+  /** Otros formatos del mismo documento con pedidos abiertos (Cartera los cuenta como otro cliente). */
+  variantes: { documento: string; pedidos: number }[];
+}
+
+/** POST /payments/group */
+export interface PagoGrupoPayload {
+  documento: string;
+  valor: number;
+  formaPago: string;
+  referencia: string;
+  fechaTransaccion: string;
+  fecha: string;
+  archivo: string;
+  archivoHash: string;
+  notas: string;
+  reparto: ParteReparto[];
+  /** Llave de esta apertura del diálogo: un reintento con la misma llave nunca duplica el pago. */
+  idempotencyKey: string;
+}
+
+export type EstadoParteGrupo = 'registrado' | 'ya_registrado' | 'completado' | 'en_curso' | 'error' | 'decidido' | 'ya_decidido';
+
+export interface ResultadoParteGrupo {
+  orderId: string;
+  nroPedido: string;
+  valor?: number;
+  estado: EstadoParteGrupo;
+  paymentId?: string;
+  estadoPago?: string;
+  codigo?: string;
+  motivo?: string;
+}
+
+export interface RegistroPagoGrupoResponse {
+  success: boolean;
+  grupoPagoId: string;
+  valor: number;
+  resultados: ResultadoParteGrupo[];
+  message?: string;
+}
+
+/** POST /payments/group/:grupoPagoId/review */
+export interface RevisionPagoGrupoResponse {
+  success: boolean;
+  grupoPagoId: string;
+  accion: ReviewAction;
+  resultados: ResultadoParteGrupo[];
+}

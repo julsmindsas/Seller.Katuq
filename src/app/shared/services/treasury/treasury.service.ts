@@ -19,6 +19,10 @@ import {
   ReviewQueueFilters,
   ReviewQueueResponse,
   PaymentAuditResponse,
+  VistaPreviaPagoGrupo,
+  PagoGrupoPayload,
+  RegistroPagoGrupoResponse,
+  RevisionPagoGrupoResponse,
 } from './treasury.models';
 
 /**
@@ -163,6 +167,24 @@ export class TreasuryService extends BaseService {
   }): Observable<OrdersTotals> {
     const qs = this.buildQuery({ ...filtros, estadosPago: filtros.estadosPago.join(',') });
     return this.get<OrdersTotals>(`${this.base}/orders/totals?${qs}`);
+  }
+
+  /** POST /payments/group/preview — ticket 1453: pedidos abiertos del cliente con su saldo y el reparto sugerido (solo lee). */
+  previewGroupPayment(documento: string, valor = 0): Observable<VistaPreviaPagoGrupo> {
+    return this.post<VistaPreviaPagoGrupo>(`${this.base}/payments/group/preview`, { documento, valor });
+  }
+
+  /** POST /payments/group — ticket 1453: UN pago repartido entre varios pedidos del mismo cliente (queda en revisión). */
+  registerGroupPayment(payload: PagoGrupoPayload): Observable<RegistroPagoGrupoResponse> {
+    return this.post<RegistroPagoGrupoResponse>(`${this.base}/payments/group`, payload);
+  }
+
+  /** POST /payments/group/:grupoPagoId/review — ticket 1453: aprueba o rechaza todo el pago de grupo en un paso. */
+  reviewGroupPayment(grupoPagoId: string, action: ReviewAction, motivo = '', motivoCodigo = ''): Observable<RevisionPagoGrupoResponse> {
+    return this.post<RevisionPagoGrupoResponse>(
+      `${this.base}/payments/group/${encodeURIComponent(grupoPagoId)}/review`,
+      motivoCodigo ? { action, motivo, motivoCodigo } : { action, motivo },
+    );
   }
 
   /** POST /alerts/:id/resolve — marca la alerta como resuelta. */

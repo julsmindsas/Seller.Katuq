@@ -22,6 +22,7 @@ import { CarteraService } from '../../../../shared/services/cartera/cartera.serv
 import { MoraPedido } from '../../../../shared/services/cartera/cartera.models';
 import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 import { abrirRecordatorioCobro } from '../../../../shared/components/recordatorio-cobro/recordatorio-cobro-modal.component';
+import { abrirPagoGrupo } from '../../../../shared/components/pago-grupo/pago-grupo-modal.component';
 import { OrdersTotals } from '../../../../shared/services/treasury/treasury.models';
 import { claveDocumento } from '../../../../shared/utils/clave-documento';
 import {
@@ -103,6 +104,11 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   mora: { [orderId: string]: MoraPedido } = {};
   private esAdmin = false;
 
+  /** Ticket 1453: bandera `pagoVariosPedidos` (casillas en «Sin pago» y «Registrar pago a varios pedidos»). */
+  pagoVariosActivo = false;
+  /** Ticket 1453: pedidos marcados con casilla (orderId -> documento exacto del cliente, número y nombre). */
+  seleccion = new Map<string, { documento: string; nro: string; cliente: string }>();
+
   /** Ticket 1461 (tarea 3.1): bandera `carteraInterna` (lista y totales de «Sin pago» sin los clientes internos). */
   carteraInternaActiva = false;
   /** Interruptor «Incluir internos» (apagado por defecto, igual que en Cartera). */
@@ -122,6 +128,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     this.recordatoriosActivo = this.features.isEnabled('recordatoriosCobro');
     this.moraActiva = this.features.isEnabled('carteraVendedorMora');
     this.carteraInternaActiva = this.features.isEnabled('carteraInterna');
+    this.pagoVariosActivo = this.features.isEnabled('pagoVariosPedidos');
     try {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
       const rol = String(u.rol || u.role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -197,7 +204,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
 
   /** Columnas de la tabla (para el mensaje de «sin resultados»). */
   get columnas(): number {
-    return 6 + (this.verMora ? 1 : 0);
+    return 6 + (this.verMora ? 1 : 0) + (this.verMarcas ? 1 : 0);
   }
 
   get verMora(): boolean {
@@ -342,6 +349,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   }
 
   applyFilters(): void {
+    // Ticket 1453: las marcas eran de la lista anterior; con otro filtro se empieza de cero.
+    this.seleccion.clear();
     // dt.reset() vuelve a la primera página y dispara onLazyLoad → loadData.
     if (this.dt) {
       this.dt.reset();
@@ -521,6 +530,87 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   totalFalta(): number {
     if (this.totales) return this.totales.faltaPorPagar;
     return this.orders.reduce((acc, p) => acc + (Number(p?.faltaPorPagar) || 0), 0);
+  }
+
+  // ── Pago a varios pedidos (ticket 1453, bandera `pagoVariosPedidos`) ───────
+  /** Las casillas y el botón solo existen en «Sin pago» y con la bandera encendida. */
+  get verMarcas(): boolean {
+    return this.mode === 'sinPago' && this.pagoVariosActivo;
+  }
+
+  private documentoDe(pedido: any): string {
+    const d = pedido?.cliente?.documento;
+    return d === undefined || d === null ? '' : String(d).trim();
+  }
+
+  /** Los pedidos de «Sin pago» con documento de cliente (sin él no hay a quién repartirle el pago). */
+  puedeMarcarse(pedido: any): boolean {
+    return !!String(pedido?._id || '') && !!claveDocumento(this.documentoDe(pedido));
+  }
+
+  marcado(pedido: any): boolean {
+    return this.seleccion.has(String(pedido?._id || ''));
+  }
+
+  alternarMarca(pedido: any): void {
+    const id = String(pedido?._id || '');
+    if (!id || !this.puedeMarcarse(pedido)) return;
+    if (this.seleccion.has(id)) this.seleccion.delete(id);
+    else this.seleccion.set(id, { documento: this.documentoDe(pedido), nro: String(pedido?.nroPedido || ''), cliente: this.clienteNombre(pedido) });
+  }
+
+  get todosMarcadosEnPagina(): boolean {
+    const marcables = this.orders.filter((p) => this.puedeMarcarse(p));
+    return marcables.length > 0 && marcables.every((p) => this.marcado(p));
+  }
+
+  alternarMarcaPagina(): void {
+    const marcables = this.orders.filter((p) => this.puedeMarcarse(p));
+    if (this.todosMarcadosEnPagina) marcables.forEach((p) => this.seleccion.delete(String(p._id)));
+    else marcables.forEach((p) => { if (!this.marcado(p)) this.alternarMarca(p); });
+  }
+
+  quitarMarcas(): void {
+    this.seleccion.clear();
+  }
+
+  /** Documentos exactos distintos entre los pedidos marcados. */
+  private get documentosMarcados(): string[] {
+    return Array.from(new Set(Array.from(this.seleccion.values()).map((s) => s.documento)));
+  }
+
+  /** Hay pedidos marcados de más de un cliente (o del mismo con el documento escrito distinto). */
+  get marcasDeVariosClientes(): boolean {
+    return this.documentosMarcados.length > 1;
+  }
+
+  /** Al filtrar por un cliente (texto en la búsqueda) y mostrar solo pedidos suyos, se puede registrar sin marcar. */
+  private get clienteUnicoDelFiltro(): { documento: string; cliente: string } | null {
+    const term = (this.searchTerm || '').trim();
+    if (!term || /^\d+$/.test(term) || this.orders.length === 0) return null;
+    const docs = Array.from(new Set(this.orders.map((p) => this.documentoDe(p))));
+    if (docs.length !== 1 || !claveDocumento(docs[0])) return null;
+    return { documento: docs[0], cliente: this.clienteNombre(this.orders[0]) };
+  }
+
+  get puedeRegistrarVarios(): boolean {
+    if (this.seleccion.size > 0) return !this.marcasDeVariosClientes;
+    return this.clienteUnicoDelFiltro !== null;
+  }
+
+  abrirPagoVarios(): void {
+    if (!this.puedeRegistrarVarios) return;
+    const marcados = Array.from(this.seleccion.entries());
+    const base = marcados.length
+      ? { documento: marcados[0][1].documento, cliente: marcados[0][1].cliente, orderIds: marcados.map(([id]) => id) }
+      : { documento: this.clienteUnicoDelFiltro!.documento, cliente: this.clienteUnicoDelFiltro!.cliente, orderIds: [] as string[] };
+    abrirPagoGrupo(this.modal, base).then((cambio) => {
+      if (cambio) {
+        this.seleccion.clear();
+        this.reload();
+        this.changed.emit();
+      }
+    });
   }
 
   // ── Acciones (modales) ────────────────────────────────────────────────────

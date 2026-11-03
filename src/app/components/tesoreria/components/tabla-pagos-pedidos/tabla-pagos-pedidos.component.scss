@@ -118,3 +118,29 @@
   color: #5f3fe0;
   &:hover:not(:disabled) { background: #f3f0ff; }
 }
+
+// Ticket 1453: casillas de «Sin pago» y botón «Registrar pago a varios pedidos». Plano, acento #5F3FE0; ningún nombre lleva «p-».
+.tk-barra-marcas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 10px;
+}
+.tk-marcas-texto {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #6b6890;
+  letter-spacing: normal;
+}
+.tk-marcas-aviso { color: #8a5a10; }
+.tk-col-marca {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+
+  input { width: 18px; height: 18px; margin: 0; accent-color: #5F3FE0; cursor: pointer; }
+  input:disabled { cursor: not-allowed; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}

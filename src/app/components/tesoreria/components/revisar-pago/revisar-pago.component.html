@@ -17,6 +17,15 @@
     </div>
   </div>
 
+  <!-- Ticket 1453: el comprobante es parte de un pago repartido entre varios pedidos -->
+  <div class="tk-grupo-aviso mb-3" *ngIf="grupoActivo && grupoPagoId">
+    <div class="tk-grupo-titulo"><i class="pi pi-sitemap me-1" aria-hidden="true"></i>{{ 'tesoreria.revisarPago.grupoAviso' | translate }}</div>
+    <label class="tk-grupo-casilla" for="tk-decidir-grupo">
+      <input id="tk-decidir-grupo" type="checkbox" [(ngModel)]="decidirGrupo" [disabled]="submitting">
+      <span class="tk-grupo-texto">{{ 'tesoreria.revisarPago.grupoDecidir' | translate }}</span>
+    </label>
+  </div>
+
   <!-- Datos del pago -->
   <div class="tk-pago-grid mb-3">
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
@@ -114,10 +123,10 @@
 
   <ng-container *ngIf="!showRejectForm">
     <button type="button" class="cfg-btn cfg-btn--peligro" (click)="mostrarRechazo()" [disabled]="submitting">
-      <i class="pi pi-times-circle me-1"></i> {{ 'tesoreria.revisarPago.rechazar' | translate }}
+      <i class="pi pi-times-circle me-1"></i> {{ (decideGrupo ? 'tesoreria.revisarPago.rechazarGrupo' : 'tesoreria.revisarPago.rechazar') | translate }}
     </button>
     <button type="button" class="cfg-btn tk-btn-ok" (click)="aprobar()" [disabled]="submitting">
-      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ 'tesoreria.revisarPago.aprobar' | translate }}
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ (decideGrupo ? 'tesoreria.revisarPago.aprobarGrupo' : 'tesoreria.revisarPago.aprobar') | translate }}
     </button>
   </ng-container>
 

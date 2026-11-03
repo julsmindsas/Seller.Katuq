@@ -4,6 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { ReviewAction, MotivoRechazoPago } from '../../../../shared/services/treasury/treasury.models';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 
 import { TranslateService } from '@ngx-translate/core';
 /**
@@ -46,12 +47,33 @@ export class RevisarPagoComponent implements OnInit {
   aiFlag = '';
   aiDetails: any = null;
 
+  /**
+   * Ticket 1453 (bandera `pagoVariosPedidos`): el comprobante es parte de un pago repartido entre varios pedidos.
+   * Por defecto la decisión vale para todo el grupo (una transferencia, una decisión); la persona puede
+   * desmarcarlo para decidir solo este pedido, como siempre.
+   */
+  grupoActivo = false;
+  decidirGrupo = true;
+
   constructor(
     public activeModal: NgbActiveModal,
     private treasury: TreasuryService,
     private toastr: ToastrService,
     private translate: TranslateService,
-  ) {}
+    private features: CompanyFeaturesService,
+  ) {
+    this.grupoActivo = this.features.isEnabled('pagoVariosPedidos');
+  }
+
+  get grupoPagoId(): string {
+    const g = this.pago?.grupoPagoId;
+    return typeof g === 'string' ? g : '';
+  }
+
+  /** ¿Se decide el grupo completo? Solo con la bandera, con el pago marcado como de grupo y con la casilla puesta. */
+  get decideGrupo(): boolean {
+    return this.grupoActivo && !!this.grupoPagoId && this.decidirGrupo;
+  }
 
   ngOnInit(): void {
     this.total = Number(this.pedido?.totalPedididoConDescuento) || 0;
@@ -125,12 +147,40 @@ export class RevisarPagoComponent implements OnInit {
     this.decidir('reject', this.motivoRechazo.trim(), this.usaListaDeMotivos ? this.motivoCodigo : '');
   }
 
+  /** Ticket 1453: aprueba o rechaza todos los pagos del grupo en un paso (el servidor repite las validaciones). */
+  private decidirElGrupo(action: ReviewAction, motivo: string, motivoCodigo: string): void {
+    this.treasury.reviewGroupPayment(this.grupoPagoId, action, motivo, motivoCodigo).subscribe({
+      next: (res) => {
+        this.submitting = false;
+        const n = (res?.resultados || []).length;
+        this.toastr.success(this.translate.instant(action === 'approve' ? 'tesoreria.revisarPago.grupoAprobado' : 'tesoreria.revisarPago.grupoRechazado', { n }));
+        this.activeModal.close({ changed: true });
+      },
+      error: (err) => {
+        this.submitting = false;
+        const mensaje = err?.status >= 400 && err?.status < 500 && typeof err?.error?.message === 'string' ? err.error.message : '';
+        const incompleto = err?.error?.code === 'GRUPO_DECISION_INCOMPLETA';
+        Swal.fire({
+          icon: 'warning',
+          title: this.translate.instant(incompleto ? 'tesoreria.revisarPago.grupoIncompleto' : 'tesoreria.revisarPago.noSePudoProcesar'),
+          text: mensaje || this.translate.instant('tesoreria.revisarPago.ocurrioUnErrorAlRegistrar'),
+        });
+        // Una decisión a medias o ya tomada por otra persona: la lista debe volver a pedirse.
+        if (incompleto || err?.status === 409) this.activeModal.close({ changed: true });
+      },
+    });
+  }
+
   private decidir(action: ReviewAction, motivo = '', motivoCodigo = ''): void {
     if (!this.paymentId) {
       Swal.fire({ icon: 'error', title: this.translate.instant('tesoreria.revisarPago.sinIdentificador'), text: this.translate.instant('tesoreria.revisarPago.noSePudoIdentificarEl') });
       return;
     }
     this.submitting = true;
+    if (this.decideGrupo) {
+      this.decidirElGrupo(action, motivo, motivoCodigo);
+      return;
+    }
     this.treasury.reviewPayment(this.paymentId, action, motivo, motivoCodigo).subscribe({
       next: (res) => {
         this.submitting = false;
