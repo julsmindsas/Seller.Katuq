@@ -432,6 +432,68 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - **Arreglo propuesto (pregunta 12):** revisar en solo lectura si, en cada una de las 4
     empresas, el primer documento es el mismo que elige D2. Si lo es, ningún lector choca y basta
     14.14. Si no, unificar con un script `--dry-run` antes de encender la bandera en esa empresa.
+
+### Resultado de H1 y H2 (bloque F242-B04, 2026-11-03; solo lectura)
+
+> **Los datos son de la copia `katuq_dev` del día (D-579), NO de producción.** Los números de
+> producción pueden ser distintos; antes de encender hay que repetir la corrida en una copia
+> fresca el día de encender. Script: `functions/scripts/verificar-atributos-empresa.js`
+> (backend `wt-back-tickets-web`), que exige `--dry-run`, no escribe, se niega si `PGDATABASE` no es
+> `katuq_dev` y se detiene si el adaptador de Postgres no queda instalado. Imprime solo conteos, ids de
+> documentos, estados y el texto de `sitio.company`. Este documento es público: las empresas de H2 van con
+> alias (A a D); los nombres reales quedan en el informe privado.
+
+**H1 · empresa única** (una sola empresa por `nomComercial` y el mismo texto en `sitio.company`):
+
+| Empresa | Documentos con ese `nomComercial` | Sitios (estado) | `sitio.company` = `nomComercial` | Simulación de `set-company-feature.js` (sin `--execute`) | Resultado |
+|---|---|---|---|---|---|
+| FLORECER | 1 | 2 (borrador, borrador) | Sí, en los 2 | Encendería solo `categoryAttributes`, con `merge` | **Coincide** |
+| Baudio Corporation Colombia SAS | 1 | 0 (ningún sitio tiene un `company` parecido) | No hay con qué comparar | Encendería solo `categoryAttributes`, con `merge` | **PARAR y escalar a Daniel**: no se cumple el criterio (falta el sitio); no encender hasta comparar `sitio.company` con el `nomComercial` |
+
+- El script imprime el texto exacto de `sitio.company` (en FLORECER, idéntico al `nomComercial` en sus 2 sitios) y lista los
+  sitios cuyo `company` se parece pero no es igual (hoy ninguno). En toda la copia hay 134 empresas y 14 sitios. Ninguna de
+  las dos empresas tiene homónimos, ni siquiera a ojo (mayúsculas, tildes o espacios).
+- La bandera `categoryAttributes` está apagada (ausente) en las dos.
+- La tienda compara el texto exacto y `requireFeature` lo recorta y cae al id: el script revisa las dos
+  rutas y la prueba comprueba que la simulación da lo mismo que `applyChange` de `set-company-feature.js`.
+- **Regla de parada:** con dos documentos o un texto distinto en `sitio.company`, el veredicto es
+  «PARAR y escalar a Daniel». Sin sitio tampoco se cumple el criterio: **Baudio queda en PARAR** (la conclusión del script
+  lo trae como bloqueo para encender, no como aviso) hasta que tenga sitio y se compare su `sitio.company`.
+
+**H2 · primer documento de `categorias`** (empresas con más de un documento; solo conteos e ids):
+
+| Empresa | Documentos | Forma de cada documento | Primero por id = `limit(1)` = D2 con bandera = sin bandera = «crear» de onboarding | `set-company-feature.js` (simulación sin `--execute`) | Resultado |
+|---|---|---|---|---|---|
+| Empresa A | 2 | árbol legible, árbol legible | Sí | Se niega: no existe una empresa con ese nombre | **Coincide por desempate** (D2 elige el primero por id) |
+| Empresa B | 3 | árbol legible (los 3) | Sí | Encendería solo `categoryAttributes` (hoy apagada) | **Coincide por desempate** |
+| Empresa C | 2 | árbol legible, árbol legible | Sí | Encendería solo `categoryAttributes` (hoy apagada) | **Coincide por desempate** |
+| Empresa D | 2 | árbol legible, árbol legible | Sí | Se niega: no existe una empresa con ese nombre | **Coincide por desempate** |
+
+- Son 4 empresas con varios documentos, la misma cantidad de la medición del 18-oct en producción (los
+  nombres de aquella medición no quedaron escritos, así que no se pueden cotejar; en la copia hay 136 empresas con
+  `categorias` y 141 documentos). Como todos los documentos son árboles legibles, D2 desempata
+  por id y elige el primero: ningún lector choca con Maestros. Es una coincidencia por desempate, no por
+  diseño: si alguno de esos documentos pierde el árbol, deja de coincidir (el script lo detecta).
+- **Dos de las 4 (A y D) no tienen una empresa en `companies` con ese nombre** (el `company` de sus
+  documentos de categorías no es un `nomComercial` existente ni un id): el script corre la misma resolución que
+  `set-company-feature.js`, que se niega («no existe»), así que la bandera no se enciende. Queda como aviso para Daniel, no como bloqueo.
+- Ninguna de las 4 tiene la bandera encendida. Ninguna se enciende sin el OK de Daniel.
+- **Inventario de lectores y escritores vuelto a correr** (`collection("categorias")` y constantes, sobre
+  `functions/` sin pruebas ni `node_modules`, y también las listas de nombres de colección): 15 archivos y
+  29 aperturas, y la prueba falla si aparece uno nuevo. El inventario de arriba cambió de línea y suma tres
+  lectores que no estaban escritos (todos toman el primero por id, solo leen y coinciden hoy):
+  - `arbolDeCategorias` de `sites.js` (categorías permitidas de las cuotas, `limit(1)`);
+  - `nodoDeCategoria` de `services/mcp/productos/altaProducto.js` (`limit(1)`);
+  - `rutasDeCategorias` de `tools/updateProduct.js` (`limit(1)`).
+  Además, `createCategoriesOnboarding` (`onboarding.js:955`) elige por su propio puntaje (hoja con `categoria`
+  gana), no por `documentoQueEditaElMaestro`; hoy da el mismo documento. Las líneas movidas:
+  `importCategories` `limit(1)` en `onboarding.js:3757` y `update` en `:4288`; `checkCategoriesExist` en `:1955`.
+  Un escritor más, que no es de producción: `scripts/clone-company.js` copia el documento de `categorias` de una
+  empresa a otra desde una lista de colecciones (si se corre sobre una empresa que ya tiene árbol, crea un segundo
+  documento). El inventario ya lo vigila.
+  Límite del grep: no ve nombres armados en tiempo de ejecución ni colecciones leídas con un nombre que llega de afuera.
+- **Si algún día no coincide:** el script de unificación con `--dry-run` queda **pendiente y bloqueado**
+  (escribe en el dato de producción): espera revisión de diseño de Daniel (pregunta 12).
 - **H3. 500 al guardar el árbol, cuando falla.** Desde 3.2, si la transacción (o la lectura de la
   bandera) falla, `createCategoria` responde 500 (`controllers/categorias.js:204-209`). Antes
   borraba el documento y respondía 200 aunque `add` fallara

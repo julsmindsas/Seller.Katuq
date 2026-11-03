@@ -246,6 +246,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 - [ ] 8.1 [P] **H1 (solo lectura).** Para FLORECER y para Baudio Corporation Colombia SAS: simular `set-company-feature.js "<empresa>" categoryAttributes on` (sin `--execute`) y comparar `sitio.company` de su sitio con el `nomComercial`.
   - Dep: —.
   - Éxito: una sola empresa con ese nombre y el mismo texto en el sitio; si no, se para y se escala a Daniel.
+  - Avance (2026-11-03, bloque F242-B04, copia `katuq_dev`, NO producción): `functions/scripts/verificar-atributos-empresa.js --dry-run` (solo lectura). FLORECER: 1 documento y el mismo texto en sus 2 sitios, coincide. Baudio: 1 documento, sin sitio con qué comparar: **PARAR y escalar a Daniel**, no encender hasta comparar `sitio.company` cuando tenga sitio. Tabla en `design.md` (H1/H2). Sigue sin marcar: falta repetirlo en una copia fresca el día de encender.
 - [ ] 8.2 [P] **H2 (solo lectura, luego lo que decida Daniel).**
   - Inventario en `design.md` H2 (hecho en el diseño); se vuelve a correr `grep` de `collection("categorias")` antes de cerrar por si apareció otro.
   - Para cada una de las 4 empresas con varios documentos: ¿el primer documento por id es el que elige D2 (`documentoQueEditaElMaestro` con la bandera)? Solo conteos e ids, sin contenido.
@@ -254,6 +255,7 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
   - 14.14 y la transacción de `guardarArbol` (pregunta 13) hechas el 2026-10-21 en `feature/tickets-web`. Sigue abierta la revisión de solo lectura de las 4 empresas.
   - Dep: —.
   - Éxito: tabla de las 4 empresas (coincide / no coincide) en `design.md`; ninguna con la bandera encendida mientras no coincida.
+  - Avance (2026-11-03, bloque F242-B04, copia `katuq_dev`, NO producción): las 4 empresas coinciden por desempate (todos sus documentos son árboles legibles y D2 desempata por id, igual que el lector de onboarding); 2 de ellas no tienen empresa en `companies` con ese nombre. El grep se volvió a correr: 15 archivos, 29 aperturas, 3 lectores no escritos antes y un escritor manual (`clone-company.js`). Tabla en `design.md`. Sigue sin marcar hasta repetirlo en una copia fresca el día de encender. Script de unificación `--dry-run`: no hace falta hoy; si algún día no coincide queda bloqueado (escribe en el dato de producción): espera revisión de diseño de Daniel.
 - [ ] 8.3 **H3 (primero solo lectura, luego diff aprobado).**
   - Paso 1: consultar en el registro del servidor `catalogo.atributos.esquemas` con `operacion: "maestro"` y `resultado: "error"` desde el despliegue de `84e1081e`: empresas, cantidad y fechas.
   - Sin casos: prueba primero (el registro lleva el código del error, sin valores ni datos de la empresa; la respuesta de error es genérica, S7) y diff aprobado.
