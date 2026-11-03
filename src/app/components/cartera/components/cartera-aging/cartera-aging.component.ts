@@ -65,6 +65,13 @@ export class CarteraAgingComponent implements OnChanges {
 
   readonly agingBuckets = AGING_BUCKETS;
 
+  /** Tarjeta cuya ayuda está abierta ('total' o la clase del rango): se lee con teclado y al tocar (ticket 1464). */
+  ayudaAbierta: string | null = null;
+
+  alternarAyuda(tarjeta: string): void {
+    this.ayudaAbierta = this.ayudaAbierta === tarjeta ? null : tarjeta;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       this.build();

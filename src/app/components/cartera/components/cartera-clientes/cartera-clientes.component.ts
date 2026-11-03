@@ -90,6 +90,17 @@ export class CarteraClientesComponent implements OnChanges {
   readonly antiguedadOptions = ANTIGUEDAD_OPTIONS;
   readonly ordenOptions = ORDEN_OPTIONS;
 
+  /**
+   * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
+   * a la vista: así se lee con teclado y al tocar en el celular, donde un tooltip no abre (ticket 1464).
+   */
+  ayudaAbierta: 'total' | 'vencida' | 'dias' | 'excede' | 'riesgo' | null = null;
+
+  alternarAyuda(ayuda: 'total' | 'vencida' | 'dias' | 'excede' | 'riesgo', evento: Event): void {
+    evento.stopPropagation(); // no aplicar el filtro de la tarjeta
+    this.ayudaAbierta = this.ayudaAbierta === ayuda ? null : ayuda;
+  }
+
   // Filtros (client-side)
   searchTerm = '';
   riskFilter: RiskFilter = 'todos';

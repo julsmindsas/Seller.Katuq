@@ -7,14 +7,14 @@
         <span class="cx-dot" *ngIf="!k.isTotal" [ngClass]="k.cssClass"></span>
         <span class="cx-kpi-icon" *ngIf="k.isTotal"><i class="pi pi-wallet"></i></span>
         <span class="cx-label">{{ k.labelKey | translate }}</span>
-        <!-- Ayuda del rango: enfocable con teclado, se abre al tocar en celular y la lee el lector de pantalla -->
-        <span class="cx-info" tabindex="0" role="img"
-              [attr.aria-label]="k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})"
-              [pTooltip]="k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})"
-              tooltipEvent="both" tooltipPosition="bottom" tooltipStyleClass="cx-ayuda-tooltip">
+        <!-- Ayuda del rango: botón que abre el texto a la vista (teclado y celular) -->
+        <button type="button" class="cx-info" [attr.title]="(k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)}))"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === (k.isTotal ? 'total' : k.cssClass)"
+                (click)="alternarAyuda(k.isTotal ? 'total' : k.cssClass)">
           <i class="pi pi-info-circle"></i>
-        </span>
+        </button>
       </div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === (k.isTotal ? 'total' : k.cssClass)">{{ (k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})) }}</div>
       <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.pct | number:'1.0-0' }}{{ 'cartera.carteraAging.delTotal' | translate }}</div>
     </div>

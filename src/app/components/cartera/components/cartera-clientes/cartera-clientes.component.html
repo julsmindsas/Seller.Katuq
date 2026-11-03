@@ -1,7 +1,7 @@
 <div class="cx-clientes">
 
   <!-- KPI cards: cada una explica qué cuenta y, al hacer clic, aplica su filtro (ticket 1464).
-       La ayuda se lee con teclado y celular (ícono enfocable) y con lector de pantalla (aria-describedby). -->
+       La ayuda se lee con teclado y celular (botón de información) y con lector de pantalla (aria-describedby). -->
   <div class="cx-grid" *ngIf="kpisVista as k">
     <div class="cx-card cx-card-click cx-accent-purple" role="button" tabindex="0"
          aria-describedby="cx-ayuda-total" (click)="aplicarTarjeta('total')"
@@ -9,17 +9,16 @@
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-wallet"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraTotal' | translate }}</span>
-        <span class="cx-info" tabindex="0" role="img"
-              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
-              [pTooltip]="'cartera.carteraClientes.ayudaTotal' | translate" tooltipEvent="both" tooltipPosition="bottom"
-              tooltipStyleClass="cx-ayuda-tooltip"
-              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaTotal' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'total'"
+                (click)="alternarAyuda('total', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
           <i class="pi pi-info-circle"></i>
-        </span>
+        </button>
       </div>
       <span id="cx-ayuda-total" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaTotal' | translate }}</span>
       <div class="cx-value">{{ k.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'total'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaTotal' | translate }}</div>
     </div>
 
     <div class="cx-card cx-card-click cx-accent-red" role="button" tabindex="0"
@@ -29,18 +28,17 @@
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-clock"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraVencida' | translate }}</span>
-        <span class="cx-info" tabindex="0" role="img"
-              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
-              [pTooltip]="'cartera.carteraClientes.ayudaVencida' | translate" tooltipEvent="both" tooltipPosition="bottom"
-              tooltipStyleClass="cx-ayuda-tooltip"
-              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaVencida' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'vencida'"
+                (click)="alternarAyuda('vencida', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
           <i class="pi pi-info-circle"></i>
-        </span>
+        </button>
       </div>
       <span id="cx-ayuda-vencida" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</span>
       <div class="cx-value">{{ k.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotalDesde1Dia' | translate }}</div>
       <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">{{ 'cartera.carteraClientes.masDe15Dias' | translate:{monto: (m.monto | currency:'COP':'symbol-narrow':'1.0-0')} }}</div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'vencida'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</div>
     </div>
 
     <div class="cx-card cx-card-click cx-accent-blue" role="button" tabindex="0"
@@ -50,17 +48,16 @@
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-chart-bar"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.diasPromedio' | translate }}</span>
-        <span class="cx-info" tabindex="0" role="img"
-              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
-              [pTooltip]="'cartera.carteraClientes.ayudaDias' | translate" tooltipEvent="both" tooltipPosition="bottom"
-              tooltipStyleClass="cx-ayuda-tooltip"
-              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaDias' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'dias'"
+                (click)="alternarAyuda('dias', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
           <i class="pi pi-info-circle"></i>
-        </span>
+        </button>
       </div>
       <span id="cx-ayuda-dias" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaDias' | translate }}</span>
       <div class="cx-value">{{ k.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">{{ 'cartera.carteraClientes.dias' | translate }}</span></div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.antiguedadPromedioDeLaCartera' | translate }}</div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'dias'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaDias' | translate }}</div>
     </div>
 
     <div class="cx-card cx-card-click" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'"
@@ -70,17 +67,16 @@
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-ban"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.excedenCupo' | translate }}</span>
-        <span class="cx-info" tabindex="0" role="img"
-              [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
-              [pTooltip]="'cartera.carteraClientes.ayudaExcede' | translate" tooltipEvent="both" tooltipPosition="bottom"
-              tooltipStyleClass="cx-ayuda-tooltip"
-              (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaExcede' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'excede'"
+                (click)="alternarAyuda('excede', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
           <i class="pi pi-info-circle"></i>
-        </span>
+        </button>
       </div>
       <span id="cx-ayuda-excede" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaExcede' | translate }}</span>
       <div class="cx-value">{{ k.excedenCupo.cantidad | number }}</div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.clienteSSobreSuCupo' | translate }}</div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'excede'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaExcede' | translate }}</div>
     </div>
   </div>
 
@@ -94,18 +90,17 @@
     <div class="cx-field">
       <div class="cx-label-fila">
         <label for="cx-risk">{{ 'cartera.carteraClientes.riesgo' | translate }}</label>
-        <span class="cx-info" tabindex="0" role="img"
-            [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate"
-            [pTooltip]="'cartera.carteraClientes.ayudaRiesgo' | translate" tooltipEvent="both" tooltipPosition="bottom"
-            tooltipStyleClass="cx-ayuda-tooltip"
-            (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
-        <i class="pi pi-info-circle"></i>
-        </span>
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaRiesgo' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'riesgo'"
+                (click)="alternarAyuda('riesgo', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </button>
       </div>
       <select id="cx-risk" [(ngModel)]="riskFilter" (change)="onFilterChange()" aria-describedby="cx-ayuda-riesgo">
         <option *ngFor="let opt of riskOptions" [value]="opt.value">{{ opt.label }}</option>
       </select>
       <span id="cx-ayuda-riesgo" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaRiesgo' | translate }}</span>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'riesgo'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaRiesgo' | translate }}</div>
     </div>
     <div class="cx-field">
       <label for="cx-vendor">{{ 'cartera.carteraClientes.vendedor' | translate }}</label>

@@ -77,31 +77,52 @@ $cx-aging-90:        #8e1d1d; // más de 90 días
   &.is-active { box-shadow: 0 0 0 2px #5F3FE0; }
 }
 
-// Ícono de ayuda de las tarjetas y filtros: enfocable con teclado, se abre al tocar (ticket 1464).
+// Botón de ayuda de las tarjetas y filtros: se enfoca con el teclado y, al abrirlo (clic o toque),
+// el texto aparece a la vista (ticket 1464). Un tooltip no abre al tocar en el celular.
 .cx-info {
   margin-left: auto;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
-  cursor: help;
+  background: transparent;
+  cursor: pointer;
   color: var(--kc-muted2);
-  font-size: 14px;
+  font-size: 15px;
 
-  i { font-size: 14px; }
+  i { font-size: 15px; }
   &:hover { color: var(--kc-accent); background: var(--kc-accent-wash); }
+  &[aria-expanded='true'] { color: var(--kc-accent); background: var(--kc-accent-wash); }
   &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; color: var(--kc-accent); }
 }
 
-// Fila de etiqueta + ícono de ayuda de un campo del filtro
+// Texto de ayuda abierto dentro de la tarjeta o del campo
+.cx-ayuda-texto {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-ink2);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: default;
+}
+
+// Fila de etiqueta + botón de ayuda de un campo del filtro
 .cx-label-fila {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  min-height: 24px;
+  min-height: 28px;
   .cx-info { margin-left: 0; }
 }
 
@@ -116,17 +137,6 @@ $cx-aging-90:        #8e1d1d; // más de 90 días
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-// El tooltip de PrimeNG se agrega al body: estilo global solo para esta clase.
-// [class*="p-"] fuerza font-size y line-height con !important sobre `.p-tooltip-text`.
-::ng-deep .cx-ayuda-tooltip {
-  max-width: 320px;
-
-  .p-tooltip-text {
-    font-size: 12.5px !important;
-    line-height: 1.45 !important;
-  }
 }
 
 // Cabecera del KPI: chip de ícono + etiqueta
