@@ -8,7 +8,7 @@ import type { CompanyFeatureFlag } from '../../../shared/services/company-featur
 // Mis Ideas con estados propios, maestro-detalle y «A mí también me sirve» (D-627, tickets 1442 y 1443).
 // Nace APAGADA: con la bandera apagada esta pantalla es la de siempre. El nombre se castea mientras
 // la bandera no esté en el catálogo del front (COMPANY_FEATURE_FLAGS); el servidor ya la tiene.
-const BANDERA_MIS_IDEAS: CompanyFeatureFlag = 'misIdeasV2' as CompanyFeatureFlag;
+const BANDERA_MIS_IDEAS: CompanyFeatureFlag = 'misIdeasV2';
 
 @Component({
   selector: 'app-mis-ideas',

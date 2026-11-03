@@ -128,6 +128,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // su administración para Julsmind. Además existe el corte general `config/feature_flags.centroDeAyuda`.
   // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada.
   'centroDeAyuda',
+  // Mis Ideas maestro-detalle con estado propio de idea y «A mí también me sirve» (D-627, tickets 1442 y 1443).
+  'misIdeasV2',
+  // Estándar de foto de producto al subir: rechazo claro y avisos a 800 px (D-629, tickets 1426 y 1427).
+  'fotosEstandar',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

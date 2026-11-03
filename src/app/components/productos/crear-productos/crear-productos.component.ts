@@ -98,7 +98,7 @@ const BANDERA_FOTOS_UNIFORMES: CompanyFeatureFlag = "productPhotoUniform";
  * (más de 15 MB, ilegible, lado menor de 800 px, lejos de 1:1). Nace apagada. El nombre se castea
  * mientras la bandera no esté en el catálogo del front (COMPANY_FEATURE_FLAGS); el servidor ya la tiene.
  */
-const BANDERA_FOTOS_ESTANDAR: CompanyFeatureFlag = "fotosEstandar" as CompanyFeatureFlag;
+const BANDERA_FOTOS_ESTANDAR: CompanyFeatureFlag = "fotosEstandar";
 
 @Component({
   selector: "app-crear-productos",

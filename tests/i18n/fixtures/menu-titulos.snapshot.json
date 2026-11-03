@@ -506,6 +506,17 @@
       "title": "Notificaciones"
     },
     {
+      "title": "Ayuda"
+    },
+    {
+      "path": "centro-de-ayuda",
+      "title": "Artículos"
+    },
+    {
+      "path": "centro-de-ayuda/administrar",
+      "title": "Administrar"
+    },
+    {
       "headTitle1": "Katuq"
     }
   ],
