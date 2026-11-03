@@ -249,8 +249,8 @@ export class CarteraClientesComponent implements OnChanges {
         this.riskFilter = this.riskFilter === 'vencida' ? 'todos' : 'vencida';
         break;
       case 'dias':
-        // Lo más atrasado primero: es lo que muestra el promedio.
-        this.orden = 'vencido';
+        // Lo más atrasado primero: es lo que muestra el promedio. Otro clic vuelve al orden por saldo.
+        this.orden = this.orden === 'vencido' ? 'saldo' : 'vencido';
         break;
       case 'excede':
         this.riskFilter = this.riskFilter === 'excede' ? 'todos' : 'excede';
