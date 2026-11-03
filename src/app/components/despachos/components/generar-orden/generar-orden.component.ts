@@ -384,6 +384,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         EstadoPago.Aprobado,
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
+        EstadoPago.Credito, // Ticket 1448
       ],
       fields: 'full',
       limit: this.LIMITE_PEDIDOS,
@@ -2427,11 +2428,19 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
+  etiquetaEstadoPago(estado: string): string {
+    if (estado === "Pospendiente") return "Pago en revisión";
+    if (estado === "Credito") return "Crédito";
+    return estado;
+  }
+
   getEstadoPagoClass(estado: string): string {
     switch (estado) {
       case "Pendiente":
         return "bg-warning text-dark";
       case "PreAprobado":
+      case "Credito":
         return "bg-info";
       case "Aprobado":
         return "bg-success";

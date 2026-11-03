@@ -104,12 +104,15 @@ export class TreasuryService extends BaseService {
     nuevoEstado: string,
     motivo: string,
     mercanciaVolvioABodega = false,
+    cupoCredito?: number,
   ): Observable<ChangePaymentStateResponse> {
     // D-493: mercanciaVolvioABodega = "el producto volvió a la bodega" (pedido ya despachado).
+    // Ticket 1448: `cupoCredito` solo viaja al marcar Crédito; el servidor lo guarda en la ficha si el cliente no tiene cupo.
     return this.post<ChangePaymentStateResponse>(`${this.base}/orders/${orderId}/payment-state`, {
       nuevoEstado,
       motivo,
       mercanciaVolvioABodega,
+      ...(cupoCredito !== undefined ? { cupoCredito } : {}),
     });
   }
 

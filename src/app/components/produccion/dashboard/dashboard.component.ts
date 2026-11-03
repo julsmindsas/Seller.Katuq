@@ -408,7 +408,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const filter = {
       fechaInicial,
       fechaFinal,
-      estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+      estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Credito'], // Ticket 1448
       company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
     if (!silencioso) { this.loading = true; }
@@ -973,7 +973,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     fechaFinalFormatted.setHours(23, 59, 59, 999);
 
     // Configurar estados de pago basado en filtros modernos
-    let estadosPago = [EstadoPago.Pospendiente, EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente];
+    let estadosPago = [EstadoPago.Pospendiente, EstadoPago.PreAprobado, EstadoPago.Aprobado, EstadoPago.Pendiente, EstadoPago.Credito];
     if (this.quickFilters.estadoPago !== "all") {
       estadosPago = [this.quickFilters.estadoPago as unknown as EstadoPago];
     }
@@ -1465,7 +1465,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         // Fix typo latente: era 'Prependiente' (no matchea ningún estado) y
         // omitía Pendiente. Alineado con refrescarDatosEnsamble (spec 013:
         // Pospendiente visible en todos los módulos operativos).
-        estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
+        estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Credito'], // Ticket 1448
         company: currentCompany.nomComercial || ''
       }
 
@@ -2481,6 +2481,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       'Pendiente': 3,
       'Pospendiente': 2,
       'PreAprobado': 1,
+      'Credito': 1,
       'Aprobado': 0
     };
 
@@ -2502,6 +2503,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       case 'Aprobado':
         return 'payment-status-approved';
       case 'PreAprobado':
+      case 'Credito':
         return 'payment-status-preapproved';
       case 'Pendiente':
       case 'Pospendiente':
@@ -2525,6 +2527,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         return 'pi pi-check-circle';
       case 'PreAprobado':
         return 'pi pi-clock';
+      case 'Credito':
+        return 'pi pi-calendar';
       case 'Pendiente':
       case 'Pospendiente':
         return 'pi pi-exclamation-triangle';

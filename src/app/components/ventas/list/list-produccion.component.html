@@ -539,13 +539,14 @@
                   <span class="modern-badge" [ngClass]="{
                     'badge-warning': row?.estadoPago === 'Pendiente' || row?.estadoPago === 'Pospendiente',
                     'badge-success': row?.estadoPago === 'Aprobado',
-                    'badge-info': row?.estadoPago === 'PreAprobado',
+                    'badge-info': row?.estadoPago === 'PreAprobado' || row?.estadoPago === 'Credito',
                     'badge-danger': row?.estadoPago === 'Rechazado' || row?.estadoPago === 'Cancelado' || row?.estadoPago === 'Precancelado'
                   }">
                     <i class="status-icon pi" [ngClass]="{
                       'pi-clock': row?.estadoPago === 'Pendiente' || row?.estadoPago === 'Pospendiente',
                       'pi-check-circle': row?.estadoPago === 'Aprobado',
                       'pi-eye': row?.estadoPago === 'PreAprobado',
+ 'pi-calendar': row?.estadoPago === 'Credito',
                       'pi-times-circle': row?.estadoPago === 'Rechazado' || row?.estadoPago === 'Cancelado' || row?.estadoPago === 'Precancelado'
                     }"></i>
                     {{ row?.estadoPago }}

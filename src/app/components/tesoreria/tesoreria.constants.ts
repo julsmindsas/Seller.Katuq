@@ -9,7 +9,8 @@ export const TREASURY_ROLES: string[] = ['Tesorero', 'Administrador', 'Super Adm
 
 /** Presets de estadosPago por pestaña del listado de pedidos. */
 export const PRESET_POR_REVISAR: string[] = ['Pospendiente'];
-export const PRESET_SIN_PAGO: string[] = ['Pendiente', 'PreAprobado'];
+// Ticket 1448: el saldo de un pedido en Crédito también es «Sin pago» (sin pedidos en Crédito la lista es la de siempre).
+export const PRESET_SIN_PAGO: string[] = ['Pendiente', 'PreAprobado', 'Credito'];
 export const PRESET_RECHAZADOS: string[] = ['Rechazado'];
 
 /** "YYYY-MM-DD" de una fecha. */
@@ -67,6 +68,26 @@ export const PAYMENT_STATE_TRANSITIONS: { [estadoActual: string]: string[] } = {
   Rechazado: ['Pendiente', 'PreAprobado', 'Precancelado'],
 };
 
+/**
+ * Ticket 1448: transiciones que suma Crédito. Espejo de CREDITO_TRANSITIONS del backend; solo se ofrecen con la
+ * bandera `estadoCredito` encendida (el servidor las valida y responde 409 si no). Desde un pedido en Crédito
+ * la salida es de Tesorería; la entrada, de Pendiente, PreAprobado o Rechazado (no de Pospendiente: ahí se decide primero el pago).
+ */
+export const CREDITO_TRANSITIONS: { [estadoActual: string]: string[] } = {
+  Pendiente: ['Credito'],
+  PreAprobado: ['Credito'],
+  Rechazado: ['Credito'],
+  Credito: ['Aprobado', 'PreAprobado', 'Pendiente', 'Precancelado'],
+};
+
+/** Destinos manuales permitidos desde un estado; con `estadoCredito` apagada es exactamente la matriz de siempre. */
+export function transicionesDesde(estadoActual: string, estadoCredito: boolean): string[] {
+  const base = PAYMENT_STATE_TRANSITIONS[estadoActual] || [];
+  // Salir de Crédito se ofrece siempre: si la bandera se apaga después, Tesorería igual debe poder sacar los pedidos.
+  if (estadoCredito !== true && estadoActual !== 'Credito') return base;
+  return [...base, ...(CREDITO_TRANSITIONS[estadoActual] || []).filter((e) => !base.includes(e))];
+}
+
 export interface PaymentStateMeta {
   label: string;
   icon: string;
@@ -77,8 +98,11 @@ export interface PaymentStateMeta {
 /** Metadatos visuales por estado de pago (badge, icono, texto de ayuda). */
 export const PAYMENT_STATE_META: { [estado: string]: PaymentStateMeta } = {
   Pendiente:    { label: 'Pendiente',     icon: 'pi-clock',        badgeClass: 'tk-badge-pendiente',    descripcion: 'Sin pago verificado' },
-  Pospendiente: { label: 'Por revisar',   icon: 'pi-hourglass',    badgeClass: 'tk-badge-pospendiente', descripcion: 'Comprobante en revisión de tesorería' },
+  // Ticket 1448: el estado del pedido se llama «Pago en revisión» (solo el texto; el valor guardado sigue siendo Pospendiente).
+  // La cola de Tesorería conserva su nombre «Por revisar».
+  Pospendiente: { label: 'Pago en revisión', icon: 'pi-hourglass',  badgeClass: 'tk-badge-pospendiente', descripcion: 'Comprobante en revisión de tesorería' },
   PreAprobado:  { label: 'Pre-aprobado',  icon: 'pi-eye',          badgeClass: 'tk-badge-preaprobado',  descripcion: 'Pago parcial verificado, con saldo pendiente' },
+  Credito:      { label: 'Crédito',       icon: 'pi-calendar',     badgeClass: 'tk-badge-preaprobado',  descripcion: 'Se produce, despacha y entrega sin cobrar; el saldo queda en Cartera' },
   Aprobado:     { label: 'Aprobado',      icon: 'pi-check-circle', badgeClass: 'tk-badge-aprobado',     descripcion: 'Pago total verificado' },
   Rechazado:    { label: 'Rechazado',     icon: 'pi-times-circle', badgeClass: 'tk-badge-rechazado',    descripcion: 'Comprobante rechazado' },
   Anulado:      { label: 'Anulado',       icon: 'pi-undo',         badgeClass: 'tk-badge-cancelado',    descripcion: 'Pago aprobado que Tesorería deshizo (ticket 1361)' },

@@ -1,5 +1,5 @@
 export interface QuickFilters {
-  estadoPago: 'all' | 'Aprobado' | 'Pendiente' | 'Pospendiente' | 'PreAprobado' | 'Rechazado' | 'Cancelado' | 'Precancelado';
+  estadoPago: 'all' | 'Aprobado' | 'Pendiente' | 'Pospendiente' | 'PreAprobado' | 'Credito' | 'Rechazado' | 'Cancelado' | 'Precancelado';
   estadoProceso: 'all' | 'SinProducir' | 'Producido' | 'ProducidoTotalmente' | 'ProducidoParcialmente' | 'Empacado' | 'Despachado' | 'ParaDespachar' | 'Entregado' | 'Rechazado';
 }
 

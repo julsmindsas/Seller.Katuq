@@ -86,6 +86,9 @@ export const COMPANY_FEATURE_FLAGS = [
   'carteraVendedorMora',
   // Motivo de rechazo con lista y registro de cambios de pagos (ticket 1455): el servidor decide; la pantalla lo lee de /treasury/config. Dueño: Daniel. Se retira el 2027-05-31.
   'motivoRechazoPago',
+  // Estado de pago Crédito (ticket 1448, D-660): marcar Crédito, cupo en la ficha del cliente e instrucción de cobro
+  // («cobrar saldo» / «no cobrar») en Logística. El servidor decide; la pantalla lo ofrece solo si está encendida. Dueño: Daniel. Se retira el 2027-05-31.
+  'estadoCredito',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

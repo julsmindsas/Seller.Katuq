@@ -2664,6 +2664,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * - Vendedores: Pendiente, Pospendiente, PreAprobado, Aprobado
    */
   getAvailablePaymentStates(): EstadoPago[] {
+    // Ticket 1448: «Crédito» solo se ofrece con la bandera `estadoCredito` encendida (o si el pedido ya está en Crédito).
+    return this.estadosDePagoSegunBandera(this.estadosDePagoPorRol());
+  }
+
+  private estadosDePagoSegunBandera(estados: EstadoPago[]): EstadoPago[] {
+    const credito = this.companyFeatures.isEnabled("estadoCredito");
+    const sinCredito = estados.filter((e) => e !== EstadoPago.Credito);
+    if (!credito) return this.originalEstadoPago === EstadoPago.Credito ? estados : sinCredito;
+    return sinCredito.concat([EstadoPago.Credito]);
+  }
+
+  private estadosDePagoPorRol(): EstadoPago[] {
     // Super admins y administradores ven todos los estados.
     // Spec 013 — con tesorería activa, el camino recomendado para cambios manuales
     // de estado es el módulo de Tesorería (/tesoreria → Cambiar estado), que exige
@@ -3434,7 +3446,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     { label: "Aprobado", value: "Aprobado" },
     { label: "Pendiente", value: "Pendiente" },
     { label: "PreAprobado", value: "PreAprobado" },
-    { label: "Pospendiente", value: "Pospendiente" },
+    { label: "Pago en revisión", value: "Pospendiente" },
     { label: "Rechazado", value: "Rechazado" },
     { label: "Precancelado", value: "Precancelado" },
     { label: "Cancelado", value: "Cancelado" },
@@ -4022,6 +4034,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Ticket 1448: «Crédito» solo se ofrece como filtro con la bandera `estadoCredito` encendida.
+    if (this.companyFeatures.isEnabled("estadoCredito")) {
+      this.estadosPagoOptions.push({ label: "Crédito", value: "Credito" });
+    }
     // D-547 (F2): con la bandera encendida se piden las acciones del rol y del usuario UNA vez por sesión
     // (abrir un pedido no consulta nada). Apagada, no se hace ninguna petición.
     if (!this.isFromProduction && this.companyFeatures.isEnabled("orderPinnedActions")) {
@@ -4595,6 +4611,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           "Aprobado",
           "Pendiente",
           "Pospendiente",
+          "Credito", // Ticket 1448
         ];
       } else {
         // Para modo no producción, incluir todos los estados de pago posibles
@@ -4607,6 +4624,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           "Rechazado",
           "Precancelado",
           "Cancelado",
+          "Credito", // Ticket 1448
         ];
       }
     }
@@ -4872,7 +4890,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Spec 013: "Pospendiente" también es intocable para el recálculo —
           // lo administra SOLO el servidor (pago en revisión de tesorería),
           // incluso si el flag de tesorería aún no cargó (null) en esta sesión.
-          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente"];
+          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente", "Credito"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
           // Spec 013 — con tesorería activa el estadoPago lo decide el SERVIDOR
@@ -5462,11 +5480,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     Pospendiente: { short: "ventas.list.pagoCorto.pospendiente", full: "ventas.list.pagoLargo.pospendiente" },
     Pendiente: { short: "ventas.list.pagoCorto.pendiente", full: "ventas.list.pagoLargo.pendiente" },
     PreAprobado: { short: "ventas.list.pagoCorto.preAprobado", full: "ventas.list.pagoLargo.preAprobado" },
+    Credito: { short: "ventas.list.pagoCorto.credito", full: "ventas.list.pagoLargo.credito" },
     Aprobado: { short: "ventas.list.pagoCorto.aprobado", full: "ventas.list.pagoLargo.aprobado" },
     Rechazado: { short: "ventas.list.pagoCorto.rechazado", full: "ventas.list.pagoLargo.rechazado" },
     Cancelado: { short: "ventas.list.pagoCorto.cancelado", full: "ventas.list.pagoLargo.cancelado" },
     Precancelado: { short: "ventas.list.pagoCorto.precancelado", full: "ventas.list.pagoLargo.precancelado" },
   };
+
+  /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
+  etiquetaEstadoPago(estado: string): string {
+    if (estado === EstadoPago.Pospendiente) return this.translate.instant("ventas.list.pagoCorto.pospendiente");
+    if (estado === EstadoPago.Credito) return this.translate.instant("ventas.list.pagoCorto.credito");
+    return estado;
+  }
 
   /**
    * Helper para mostrar estados de pago abreviados con tooltips
@@ -6998,7 +7024,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }, 0);
       const faltaPorPagarRecalculado = Math.max(0, (order.totalPedididoConDescuento || 0) - anticipoRecalculado);
       if (faltaPorPagarRecalculado > 0) {
-        order.estadoPago = EstadoPago.PreAprobado;
+        // Ticket 1448: un pedido con la marca de crédito vuelve a Crédito, no a PreAprobado.
+        order.estadoPago = order.credito?.fecha ? EstadoPago.Credito : EstadoPago.PreAprobado;
         order.anticipo = anticipoRecalculado;
         order.faltaPorPagar = faltaPorPagarRecalculado;
         console.log(`🔄 APROBADO → PREAPROBADO en editOrder - Pedido ${order.nroPedido}: faltaPorPagar=${faltaPorPagarRecalculado}`);
@@ -7028,7 +7055,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     const valor = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
       .format(Number(bloqueo.porVerificar) || 0);
-    const motivo = bloqueo.motivo === "pagos-en-verificacion"
+    const motivosCredito: { [k: string]: string } = {
+      "credito-no-activo": this.translate.instant("ventas.list.creditoNoActivo"),
+      "credito-transicion-no-permitida": this.translate.instant("ventas.list.creditoDesdeOtroEstado"),
+      "credito-solo-tesoreria": this.translate.instant("ventas.list.creditoSoloTesoreria"),
+    };
+    const motivo = bloqueo.motivo && motivosCredito[bloqueo.motivo]
+      ? motivosCredito[bloqueo.motivo]
+      : bloqueo.motivo === "pagos-en-verificacion"
       ? `Este pedido tiene ${valor} en pagos por verificar en Tesorería. Mientras estén pendientes, el estado lo cambia Tesorería: aprueba o rechaza esos pagos en Finanzas → Tesorería y el pedido se actualiza solo.`
       : `Tu rol no puede pasar pedidos a ${bloqueo.intento || "ese estado"}. Pídeselo a Tesorería o a un administrador.`;
     Swal.fire({
@@ -7050,6 +7084,52 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return Array.isArray(bloqueados) && bloqueados.length
       ? this.translate.instant("ventas.list.pagoRevisadoNoCambiaTexto")
       : "";
+  }
+
+  /**
+   * Ticket 1448: al marcar Crédito, si el cliente no tiene cupo en su ficha se invita a escribirlo. Devuelve el cupo
+   * (número), `null` si se sigue sin cupo (o el cliente ya tiene) o "volver" si la persona se arrepiente.
+   */
+  private async pedirCupoCredito(order: Pedido): Promise<number | null | "volver"> {
+    const documento = order?.cliente?.documento;
+    if (documento) {
+      try {
+        const res: any = await firstValueFrom(this.maestroService.getClientByDocument({ documento }));
+        const ficha = Array.isArray(res) ? res[0] : res;
+        if (Number(ficha?.creditLimit) > 0) return null;
+      } catch {
+        /* sin poder leer la ficha, se pregunta igual: el servidor no pisa un cupo que ya exista */
+      }
+    }
+    const r = await Swal.fire({
+      icon: "question",
+      title: this.translate.instant("ventas.list.creditoCupoTitulo"),
+      text: this.translate.instant("ventas.list.creditoCupoTexto"),
+      input: "number",
+      inputAttributes: { min: "1", step: "1" },
+      inputPlaceholder: this.translate.instant("ventas.list.creditoCupoEjemplo"),
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: this.translate.instant("ventas.list.creditoGuardarCupo"),
+      denyButtonText: this.translate.instant("ventas.list.creditoSinCupo"),
+      cancelButtonText: this.translate.instant("comun.volver"),
+      confirmButtonColor: "#5F3FE0",
+      inputValidator: (v) => (!v || Number(v) <= 0 ? this.translate.instant("ventas.list.creditoCupoInvalido") : undefined),
+    });
+    if (r.isConfirmed) return Math.round(Number(r.value));
+    if (r.isDenied) return null;
+    return "volver";
+  }
+
+  private avisarCupoPendiente(estado?: string) {
+    const sinFicha = estado === "sin_ficha" || estado === "sin_documento";
+    Swal.fire({
+      icon: "info",
+      title: this.translate.instant("ventas.list.creditoMarcadoTitulo"),
+      text: this.translate.instant(sinFicha ? "ventas.list.creditoSinFichaTexto" : "ventas.list.creditoSinCupoTexto"),
+      confirmButtonText: this.translate.instant("comun.entendido"),
+      confirmButtonColor: "#5F3FE0",
+    });
   }
 
   private avisarPagosNoCambiados(texto: string) {
@@ -7637,11 +7717,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       motivoCancelacion = String(r.value).trim().slice(0, 500);
     }
 
+    // Ticket 1448 (bandera `estadoCredito`): al marcar Crédito, si el cliente no tiene cupo se invita a escribirlo y el
+    // servidor lo guarda en la ficha (campo de paso `_cupoCredito`). Sin cupo escrito, el pedido igual queda en Crédito.
+    let cupoCredito: number | null = null;
+    if (this.tempEstadoPago === EstadoPago.Credito && this.originalEstadoPago !== EstadoPago.Credito) {
+      this.modalService.dismissAll("confirmed");
+      const respuesta = await this.pedirCupoCredito(order);
+      if (respuesta === "volver") {
+        order.estadoPago = this.originalEstadoPago;
+        order.estadoProceso = this.originalEstadoProceso;
+        return;
+      }
+      cupoCredito = respuesta;
+    }
+
     const orderToUpdate = {
       ...order,
       estadoPago: this.tempEstadoPago,
       estadoProceso: this.tempEstadoProceso
     };
+    if (cupoCredito !== null) (orderToUpdate as any)._cupoCredito = cupoCredito;
     if (mercanciaVolvio) (orderToUpdate as any).mercanciaVolvioABodega = true;
     if (motivoCancelacion) {
       (orderToUpdate as any).motivoCancelacion = motivoCancelacion;
@@ -7683,6 +7778,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         if (pagosSinCambio) {
           this.avisarPagosNoCambiados(pagosSinCambio);
+          return;
+        }
+        if (res?.details?.cupoPendiente === true) {
+          this.avisarCupoPendiente(res.details.cupoCredito?.estado);
           return;
         }
         const devolvio = res?.details?.devolucionInventario === true && mercanciaVolvio;
@@ -9002,6 +9101,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Recalcular estadoPago completo según nuevo total vs lo pagado
       if (order.faltaPorPagar <= 0) {
         order.estadoPago = EstadoPago.Aprobado;
+      } else if (order.estadoPago === EstadoPago.Credito || order.credito?.fecha) {
+        // Ticket 1448: un pedido de crédito con saldo sigue en Crédito aunque tenga abonos.
+        order.estadoPago = EstadoPago.Credito;
       } else if (anticipoReal > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
         order.estadoPago = EstadoPago.PreAprobado;
       } else {
