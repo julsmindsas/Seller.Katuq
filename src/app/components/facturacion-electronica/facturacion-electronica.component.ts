@@ -56,7 +56,7 @@ interface DianDocument {
 /** Ticket 1279: línea de la factura para la nota por línea. */
 interface LineaFactura { linea: number; descripcion: string; cantidad: number; valorUnitario: number; valorLinea: number; tarifaIva: number }
 
-interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
+interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error'; completarCorreo?: boolean }
 
 const AVATAR_PALETTE = ['#6C4CE0', '#14B8A6', '#E0891B', '#2F6FE0', '#C43E74', '#17994F', '#7A6BC0', '#D6455B'];
 
@@ -675,9 +675,34 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
 
   orderReadiness(order: any): OrderReadiness {
     if (['Cancelado', 'Precancelado'].includes(order?.estadoPago)) return { ok: false, blocked: true, label: 'Cancelado', tone: 'error' };
-    if (!this.orderEmail(order)) return { ok: false, blocked: true, label: 'Falta correo', tone: 'warning' };
+    // Ticket 1488: consumidor final se factura sin correo (la DIAN lo acepta; se entrega impresa o por WhatsApp).
+    if (!this.orderEmail(order) && this.ordenConsumidorFinal(order)) {
+      return { ok: true, blocked: false, label: this.translate.instant('facturacionElectronica.facturacionElectronica.consumidorFinalSinCorreo'), tone: 'warning' };
+    }
+    if (!this.orderEmail(order)) return { ok: false, blocked: true, label: 'Falta correo', tone: 'warning', completarCorreo: true };
     if (order?.estadoPago && order.estadoPago !== 'Aprobado') return { ok: true, blocked: false, label: 'Pago pendiente', tone: 'warning' };
     return { ok: true, blocked: false, label: 'Sí', tone: 'success' };
+  }
+
+  /** Ticket 1488: sin documento o con 222222222222 el backend factura a consumidor final. */
+  ordenConsumidorFinal(order: any): boolean {
+    const digitos = String(order?.facturacion?.documento || order?.cliente?.documento || '').replace(/\D/g, '');
+    return !digitos || /^2{10,}$/.test(digitos);
+  }
+
+  /** Ticket 1488: «Falta correo» explica qué hacer y lleva a la ficha del cliente. */
+  completarCorreo(order: any): void {
+    const documento = String(order?.facturacion?.documento || order?.cliente?.documento || '').split('-')[0].replace(/\D/g, '');
+    const buscar = documento || this.orderCustomer(order);
+    Swal.fire({
+      icon: 'info',
+      title: this.translate.instant('facturacionElectronica.facturacionElectronica.faltaCorreoTitulo'),
+      text: this.translate.instant('facturacionElectronica.facturacionElectronica.faltaCorreoTexto', { pedido: order?.nroPedido || this.orderId(order), cliente: this.orderCustomer(order) || '' }),
+      showCancelButton: !!buscar,
+      confirmButtonText: buscar ? this.translate.instant('facturacionElectronica.facturacionElectronica.abrirElCliente') : this.translate.instant('comun.entendido'),
+      cancelButtonText: this.translate.instant('facturacionElectronica.facturacionElectronica.ahoraNo'),
+      confirmButtonColor: '#6c4ce0',
+    }).then((r) => { if (r.isConfirmed && buscar) this.router.navigate(['/ventas/clienteslista'], { queryParams: { buscar } }); });
   }
 
   emitSelected(): void {

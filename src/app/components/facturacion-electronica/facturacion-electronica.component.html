@@ -528,9 +528,15 @@
             <td class="fe-dim">{{ orderDate(order) ? (orderDate(order) | date:'dd/MM/yyyy') : '—' }}</td>
             <td class="text-end fe-amount">{{ money(orderTotal(order)) }}</td>
             <td class="text-center">
+              <!-- Ticket 1488: «Falta correo» se puede pulsar para completar la ficha del cliente. -->
+              <button type="button" class="fe-pill fe-pill--warning fe-pill--accion" *ngIf="!isQueued(order) && orderReadiness(order).completarCorreo; else pillNormal" (click)="completarCorreo(order)" [title]="'facturacionElectronica.facturacionElectronica.faltaCorreoTitulo' | translate">
+                <i class="pi pi-exclamation-triangle"></i>{{ orderReadiness(order).label }} <i class="pi pi-arrow-right"></i>
+              </button>
+              <ng-template #pillNormal>
               <span class="fe-pill fe-pill--{{ orderReadiness(order).tone }}" *ngIf="!isQueued(order); else queuedPill">
                 <i class="pi" [ngClass]="orderReadiness(order).ok ? (orderReadiness(order).tone === 'success' ? 'pi-check' : 'pi-clock') : 'pi-exclamation-triangle'"></i>{{ orderReadiness(order).label }}
               </span>
+              </ng-template>
               <ng-template #queuedPill><span class="fe-pill fe-pill--pending"><i class="pi pi-clock"></i>{{ 'facturacionElectronica.facturacionElectronica.procesando' | translate }}</span></ng-template>
             </td>
           </tr>

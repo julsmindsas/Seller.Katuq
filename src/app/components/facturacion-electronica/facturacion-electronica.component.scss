@@ -533,3 +533,6 @@ $head: var(--kc-font-head);
 // Ticket 1487: el texto y los botones de un rechazo se quedan en la parte visible de la tabla.
 .fe-table-wrap { container-type: inline-size; }
 .fe-reject__body { position: sticky; left: 71px; max-width: calc(100cqw - 91px); }
+
+// Ticket 1488: «Falta correo» es un botón que lleva a la ficha del cliente.
+.fe-pill--accion { border: 0; cursor: pointer; font-family: inherit; font-weight: 700; &:hover { filter: brightness(.96); } &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; } }
