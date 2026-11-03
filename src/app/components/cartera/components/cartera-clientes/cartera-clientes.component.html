@@ -287,11 +287,26 @@
         <i class="pi" [ngClass]="generandoExcel ? 'pi-spin pi-spinner' : 'pi-file-excel'"></i>
         {{ 'cartera.carteraClientes.descargarExcel' | translate }}
       </button>
-      <button type="button" class="cx-export" (click)="descargarPdf()"
-              [disabled]="filtered.length === 0 || generandoPdf">
-        <i class="pi" [ngClass]="generandoPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf'"></i>
-        {{ 'cartera.carteraClientes.descargarPdf' | translate }}
-      </button>
+      <!-- Ticket 1466: PDF de informe, en versión Resumen (1 página) o Completo -->
+      <div class="cx-pdf-caja">
+        <button type="button" class="cx-export" (click)="alternarMenuPdf($event)"
+                [disabled]="filtered.length === 0 || generandoPdf"
+                aria-haspopup="menu" [attr.aria-expanded]="menuPdfAbierto">
+          <i class="pi" [ngClass]="generandoPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf'"></i>
+          {{ 'cartera.carteraClientes.descargarPdf' | translate }}
+          <i class="pi pi-chevron-down cx-pdf-flecha"></i>
+        </button>
+        <div class="cx-pdf-menu" role="menu" *ngIf="menuPdfAbierto" (click)="$event.stopPropagation()">
+          <button type="button" role="menuitem" class="cx-pdf-opcion" (click)="descargarPdf('resumen')">
+            <div class="cx-pdf-titulo">{{ 'cartera.carteraClientes.pdfResumen' | translate }}</div>
+            <div class="cx-pdf-ayuda">{{ 'cartera.carteraClientes.pdfResumenAyuda' | translate }}</div>
+          </button>
+          <button type="button" role="menuitem" class="cx-pdf-opcion" (click)="descargarPdf('completo')">
+            <div class="cx-pdf-titulo">{{ 'cartera.carteraClientes.pdfCompleto' | translate }}</div>
+            <div class="cx-pdf-ayuda">{{ 'cartera.carteraClientes.pdfCompletoAyuda' | translate }}</div>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

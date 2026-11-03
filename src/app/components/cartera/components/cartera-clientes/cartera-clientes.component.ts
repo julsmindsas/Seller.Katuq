@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
   Output,
@@ -26,7 +27,6 @@ import {
   metaPago,
   ORDEN_OPTIONS,
   PagoBadgeMeta,
-  RANGO_ANTIGUEDAD_LABEL,
   rangoAntiguedad,
   RISK_OPTIONS,
   TIPO_PERSONA_OPTIONS,
@@ -37,7 +37,6 @@ import {
   aplicarFiltros,
   CarteraFiltros,
   cuantosFiltrosAvanzados,
-  descripcionFiltrosEs,
   describirFiltros,
   ES_ORDEN,
   FilaVista,
@@ -51,27 +50,10 @@ import {
   VistaCartera,
 } from '../../cartera-filtros.util';
 import { construirLibroCartera } from '../../cartera-excel.util';
+import { cargarLogoPdf, construirPdfCartera, ModoPdfCartera } from '../../cartera-pdf.util';
 import { OpcionMulti } from '../cartera-multi/cartera-multi.component';
 
 import { TranslateService } from '@ngx-translate/core';
-/** Una fila de la descarga: un pedido con saldo (ticket 1130). */
-interface FilaCartera {
-  cliente: string;
-  documento: string;
-  vendedor: string;
-  plazo: string;
-  pedido: string;
-  factura: string;
-  compra: string;
-  entrega: string;
-  limite: string;
-  total: number;
-  pagado: number;
-  saldo: number;
-  diasVencido: number;
-  antiguedad: string;
-}
-
 /** Un segmento de la mini-barra de aging de un cliente (labelKey = clave i18n). */
 interface AgingSegment {
   cssClass: string;
@@ -376,34 +358,7 @@ export class CarteraClientesComponent implements OnChanges {
     return fila ? fila.saldo : Number(cliente.saldoPendiente) || 0;
   }
 
-  // ── Descargas (ticket 1130) ───────────────────────────────────────────────
-  /** Una fila por pedido con saldo, en el mismo orden y con los mismos filtros de la pantalla. */
-  private filasParaDescargar(): FilaCartera[] {
-    const filas: FilaCartera[] = [];
-    for (const c of this.filtered) {
-      for (const p of this.pedidosVisibles(c)) {
-        const dias = Number(p.diasVencido) || 0;
-        filas.push({
-          cliente: c.nombre || '',
-          documento: c.documento || '',
-          vendedor: c.vendedor || '',
-          plazo: this.textoPlazo(c),
-          pedido: p.nroPedido || '',
-          factura: p.factura || '',
-          compra: this.fechaCorta(p.fechaCompra),
-          entrega: this.fechaCorta(p.fechaEntrega),
-          limite: this.fechaCorta(p.payDueDate),
-          total: Number(p.total) || 0,
-          pagado: Number(p.pagado) || 0,
-          saldo: Number(p.saldo) || 0,
-          diasVencido: dias > 0 ? dias : 0,
-          antiguedad: RANGO_ANTIGUEDAD_LABEL[rangoAntiguedad(dias)],
-        });
-      }
-    }
-    return filas;
-  }
-
+  // ── Descargas (tickets 1130, 1465 y 1466) ───────────────────────────────
   /**
    * Ticket 1465: Excel para trabajar la cartera, en tres hojas (Resumen, Por cliente y Detalle), con la misma vista
    * de la pantalla. La librería se carga solo al descargar para no pesar en el resto de la pantalla.
@@ -440,53 +395,52 @@ export class CarteraClientesComponent implements OnChanges {
     }
   }
 
-  async descargarPdf(): Promise<void> {
-    const filas = this.filasParaDescargar();
-    if (!filas.length || this.generandoPdf) return;
+  /** Menú «Descargar PDF» (Resumen o Completo) abierto (ticket 1466). */
+  menuPdfAbierto = false;
+
+  alternarMenuPdf(evento: Event): void {
+    evento.stopPropagation();
+    if (this.generandoPdf) return;
+    this.menuPdfAbierto = !this.menuPdfAbierto;
+  }
+
+  /** Un clic fuera del menú, o Escape, lo cierra. */
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  cerrarMenuPdf(): void {
+    if (!this.menuPdfAbierto) return;
+    this.menuPdfAbierto = false;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Ticket 1466: PDF de informe en hoja horizontal. «Resumen» es solo la página 1 (tarjetas, antigüedad, vendedores y
+   * mayores deudores); «Completo» le suma el detalle de pedidos agrupado por cliente. Sale de la misma vista de la
+   * pantalla (mismos filtros y orden). jsPDF y el logo se cargan solo al descargar.
+   */
+  async descargarPdf(modo: ModoPdfCartera): Promise<void> {
+    if (!this.vista.filas.length || this.generandoPdf) return;
+    this.menuPdfAbierto = false;
     this.generandoPdf = true;
     this.cdr.markForCheck();
     try {
-      const { default: jsPDF } = await import('jspdf');
-      const { default: autoTable } = await import('jspdf-autotable');
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-      const margen = 28;
-      const dinero = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
-      const suma = (campo: 'total' | 'pagado' | 'saldo') => filas.reduce((s, f) => s + f[campo], 0);
-
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(15);
-      pdf.setTextColor(42, 46, 60);
-      pdf.text(`Cartera por cliente · ${this.nombreEmpresa()}`, margen, 36);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      pdf.setTextColor(82, 88, 107);
-      // Ticket 1467: el encabezado dice todos los filtros aplicados; si son muchos, baja de renglón.
-      const anchoTexto = pdf.internal.pageSize.getWidth() - margen * 2;
-      const lineasFiltros: string[] = pdf.splitTextToSize(
-        `${this.descripcionFiltros()} · Generado el ${this.fechaCorta(new Date().toISOString())}`, anchoTexto);
-      pdf.text(lineasFiltros, margen, 52);
-      const inicioTabla = 52 + lineasFiltros.length * 11 + 4;
-
-      autoTable(pdf, {
-        head: [['Cliente', 'Documento', 'Vendedor', 'Plazo', 'Pedido', 'Factura', 'Compra', 'Entrega', 'Límite de pago',
-          'Total', 'Pagado', 'Saldo', 'Días vencido', 'Antigüedad']],
-        body: filas.map((f) => [f.cliente, f.documento, f.vendedor, f.plazo, f.pedido, f.factura, f.compra, f.entrega, f.limite,
-          dinero(f.total), dinero(f.pagado), dinero(f.saldo), String(f.diasVencido), f.antiguedad]),
-        foot: [['TOTAL', '', '', '', '', '', '', '', '', dinero(suma('total')), dinero(suma('pagado')),
-          dinero(suma('saldo')), '', '']],
-        showFoot: 'lastPage',
-        startY: inicioTabla,
-        margin: { left: margen, right: margen },
-        styles: { fontSize: 7.5, cellPadding: 4, overflow: 'linebreak', textColor: [42, 46, 60] as any,
-          lineColor: [236, 237, 243] as any, lineWidth: 0.3 },
-        headStyles: { fillColor: [108, 76, 224] as any, textColor: [255, 255, 255] as any, fontStyle: 'bold' },
-        footStyles: { fillColor: [238, 233, 253] as any, textColor: [42, 46, 60] as any, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [247, 248, 252] as any },
-        columnStyles: {
-          9: { halign: 'right' }, 10: { halign: 'right' }, 11: { halign: 'right' }, 12: { halign: 'center' },
-        },
+      const [{ default: jsPDF }, { default: autoTable }, logo] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+        cargarLogoPdf(this.logoEmpresa()),
+      ]);
+      const pdf = construirPdfCartera(jsPDF, autoTable, {
+        empresa: this.nombreEmpresa(),
+        usuario: this.nombreUsuario(),
+        ahora: new Date(),
+        filtros: describirFiltros(this.filtros).map((c) => [c.grupoEs, c.valorEs]),
+        orden: ES_ORDEN[this.filtros.orden],
+        vista: this.vista,
+        modo,
+        logo,
+        diasPromedio: this.kpisVista ? this.kpisVista.dsoPromedio : null,
       });
-      pdf.save(`${this.nombreArchivo()}.pdf`);
+      pdf.save(`${this.nombreArchivo(modo === 'resumen' ? 'Cartera-Resumen' : 'Cartera')}.pdf`);
     } catch {
       Swal.fire({ icon: 'error', title: this.translate.instant('cartera.carteraClientes.noSePudoGenerarEl'), text: this.translate.instant('cartera.carteraClientes.intentaDeNuevoEnUn') });
     } finally {
@@ -495,9 +449,13 @@ export class CarteraClientesComponent implements OnChanges {
     }
   }
 
-  /** Filtros activos en palabras (en español, como el resto de la descarga), para el encabezado del PDF. */
-  private descripcionFiltros(): string {
-    return descripcionFiltrosEs(this.filtros);
+  /** Logo del comercio (dirección https) para el encabezado del PDF; vacío si no tiene. */
+  private logoEmpresa(): string {
+    try {
+      return JSON.parse(localStorage.getItem('currentCompany') || '{}').logo || '';
+    } catch {
+      return '';
+    }
   }
 
   private nombreEmpresa(): string {
@@ -518,7 +476,7 @@ export class CarteraClientesComponent implements OnChanges {
     }
   }
 
-  private nombreArchivo(): string {
+  private nombreArchivo(prefijo = 'Cartera'): string {
     const empresa = this.nombreEmpresa()
       .normalize('NFD')
       .replace(/[̀-ͯ]/g, '')
@@ -530,7 +488,7 @@ export class CarteraClientesComponent implements OnChanges {
     // Tickets 1467 y 1465: el nombre dice los filtros aplicados y termina con la fecha
     // (ej. Cartera_Empresa_Vendedor-Ana_2026-11-03).
     const filtros = sufijoArchivo(this.filtros);
-    return `Cartera_${empresa || 'empresa'}${filtros ? '_' + filtros : ''}_${fecha}`;
+    return `${prefijo}_${empresa || 'empresa'}${filtros ? '_' + filtros : ''}_${fecha}`;
   }
 
   /** "dd/mm/aaaa" de una fecha ISO; vacío si no hay fecha. */
