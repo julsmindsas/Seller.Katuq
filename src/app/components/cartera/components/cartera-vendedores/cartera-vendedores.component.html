@@ -1,0 +1,55 @@
+<section class="cx-vend" *ngIf="filas.length > 0" [attr.aria-label]="'cartera.carteraVendedores.titulo' | translate">
+  <div class="cx-vend-cabeza">
+    <div>
+      <h2 class="cx-vend-titulo">{{ 'cartera.carteraVendedores.titulo' | translate }}</h2>
+      <p class="cx-vend-sub">{{ 'cartera.carteraVendedores.subtitulo' | translate }}</p>
+    </div>
+    <button type="button" class="cx-info" [attr.title]="'cartera.carteraVendedores.ayuda' | translate"
+            [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta"
+            (click)="alternarAyuda()">
+      <i class="pi pi-info-circle"></i>
+    </button>
+  </div>
+  <div class="cx-ayuda-texto" *ngIf="ayudaAbierta">{{ 'cartera.carteraVendedores.ayuda' | translate }}</div>
+
+  <div class="cx-vend-tabla-wrap">
+    <table class="cx-vend-tabla">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'cartera.carteraVendedores.vendedor' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'cartera.carteraVendedores.carteraTotal' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'cartera.carteraVendedores.vencida' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'cartera.carteraVendedores.pctVencido' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'cartera.carteraVendedores.clientes' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filas; trackBy: trackPorVendedor" [class.is-activa]="f.vendedor && f.vendedor === seleccionado">
+          <th scope="row" class="cx-vend-nombre">
+            <button type="button" class="cx-vend-boton" *ngIf="f.vendedor; else sinVendedor"
+                    [attr.aria-pressed]="f.vendedor === seleccionado" [attr.title]="'cartera.carteraVendedores.filtrar' | translate"
+                    (click)="alElegir(f)">{{ f.vendedor }}</button>
+            <ng-template #sinVendedor><span class="cx-vend-sin">{{ 'cartera.carteraVendedores.sinVendedor' | translate }}</span></ng-template>
+            <span class="cx-vend-barra" aria-hidden="true"><span class="cx-vend-barra-lleno" [style.width.%]="f.pctDelTotal"></span></span>
+          </th>
+          <td class="text-end">
+            <span class="cx-cell-strong">{{ f.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cx-vend-parte">{{ f.pctDelTotal | number:'1.0-1' }}{{ 'cartera.carteraVendedores.delTotal' | translate }}</span>
+          </td>
+          <td class="text-end cx-vend-venc">{{ f.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end">{{ f.pctVencido | number:'1.0-1' }}%</td>
+          <td class="text-end">{{ f.clientes | number }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">{{ 'cartera.carteraVendedores.total' | translate }}</th>
+          <td class="text-end cx-cell-strong">{{ totales.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-vend-venc">{{ totales.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end">{{ totales.pctVencido | number:'1.0-1' }}%</td>
+          <td class="text-end">{{ totales.clientes | number }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>

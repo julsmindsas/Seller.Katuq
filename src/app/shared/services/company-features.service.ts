@@ -72,6 +72,8 @@ export const COMPANY_FEATURE_FLAGS = [
   // Estado del pedido de Katuq a WooCommerce: Entregado → Completado, Cancelado → Cancelado (D-578).
   // Se enciende a mano, primero en sombra. Dueño: Daniel. Se revisa el 2027-04-30.
   'wooOrderStatusPublish',
+  // Evolución mensual de la cartera (ticket 1464): foto diaria y gráfica de 12 meses. Dueño: Daniel. Se retira el 2027-04-30.
+  'carteraEvolucion',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

@@ -36,11 +36,12 @@ export const AGING_BUCKETS: AgingBucketMeta[] = [
 ];
 
 /** Filtro de riesgo del tab "Cartera por Cliente". */
-export type RiskFilter = 'todos' | 'vencida' | 'cupo80' | 'excede' | 'contado' | 'credito';
+export type RiskFilter = 'todos' | 'vencida' | 'porVencer' | 'cupo80' | 'excede' | 'contado' | 'credito';
 
 export const RISK_OPTIONS: { label: string; value: RiskFilter }[] = [
   { label: 'Todos', value: 'todos' },
   { label: 'Con cartera vencida', value: 'vencida' },
+  { label: 'Por vencer en 7 días', value: 'porVencer' },
   { label: 'Cupo > 80%', value: 'cupo80' },
   { label: 'Exceden cupo', value: 'excede' },
   { label: 'Contado', value: 'contado' },

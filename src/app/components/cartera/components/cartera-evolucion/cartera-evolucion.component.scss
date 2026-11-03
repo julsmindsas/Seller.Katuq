@@ -1,0 +1,95 @@
+@import '../../cartera-shared';
+
+:host {
+  @include kc-tokens;
+  display: block;
+  font-family: var(--kc-font-body);
+  min-width: 0;
+}
+
+.cx-evo {
+  @include kc-card;
+  position: relative;
+  padding: 20px 22px;
+  height: 100%;
+}
+.cx-evo-cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cx-evo-titulo {
+  margin: 0;
+  font-family: var(--kc-font-head);
+  font-size: 16px !important;
+  font-weight: 800;
+  color: var(--kc-ink);
+}
+.cx-evo-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+  letter-spacing: normal;
+}
+.cx-evo-lectura {
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+  letter-spacing: normal;
+  strong { color: var(--kc-ink); text-transform: capitalize; }
+}
+// Cambio contra el mes anterior: color más texto, nunca solo color.
+.cx-evo-cambio {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--kc-ink2);
+  &.es-mejor { color: #{$cx-aging-corriente}; }
+  &.es-peor { color: #{$cx-aging-60}; }
+}
+
+.cx-evo-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 12px;
+}
+.cx-evo-ley {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+}
+.cx-evo-ley-nota { color: var(--kc-muted2); font-weight: 600; }
+.cx-evo-cuadro {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.cx-evo-total { background: var(--kc-accent); }
+.cx-evo-vencida { background: #{$cx-aging-60}; }
+
+.cx-evo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+}
+.cx-evo-rejilla {
+  line { stroke: var(--kc-line); stroke-width: 1; }
+  text { fill: var(--kc-muted2); font-size: 11px; font-weight: 600; }
+}
+.cx-evo-barra-total { fill: var(--kc-accent); }
+.cx-evo-barra-vencida { fill: #{$cx-aging-60}; }
+// Meses estimados hacia atrás: más claros, para no confundirlos con una foto real.
+.es-estimado {
+  .cx-evo-barra-total,
+  .cx-evo-barra-vencida { opacity: 0.5; }
+}
+.cx-evo-mes { fill: var(--kc-muted2); font-size: 11px; font-weight: 600; text-transform: capitalize; }

@@ -2,7 +2,7 @@
 
   <!-- KPI cards: cada una explica qué cuenta y, al hacer clic, aplica su filtro (ticket 1464).
        La ayuda se lee con teclado y celular (botón de información) y con lector de pantalla (aria-describedby). -->
-  <div class="cx-grid" *ngIf="kpisVista as k">
+  <div class="cx-grid cx-grid-cinco" *ngIf="kpisVista as k">
     <div class="cx-card cx-card-click cx-accent-purple" role="button" tabindex="0"
          aria-describedby="cx-ayuda-total" (click)="aplicarTarjeta('total')"
          (keydown.enter)="aplicarTarjeta('total')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('total')">
@@ -41,6 +41,26 @@
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'vencida'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</div>
     </div>
 
+    <!-- Por vencer en los próximos 7 días: cobro preventivo (ticket 1464, punto 3) -->
+    <div class="cx-card cx-card-click cx-accent-amber" role="button" tabindex="0" *ngIf="k.porVencer7 as pv"
+         [class.is-active]="riskFilter === 'porVencer'" [attr.aria-pressed]="riskFilter === 'porVencer'"
+         aria-describedby="cx-ayuda-porvencer" (click)="aplicarTarjeta('porVencer')"
+         (keydown.enter)="aplicarTarjeta('porVencer')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('porVencer')">
+      <div class="cx-kpi-head">
+        <span class="cx-kpi-icon"><i class="pi pi-calendar"></i></span>
+        <span class="cx-label">{{ 'cartera.carteraClientes.porVencer' | translate }}</span>
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaPorVencer' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'porVencer'"
+                (click)="alternarAyuda('porVencer', $event)" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+          <i class="pi pi-info-circle"></i>
+        </button>
+      </div>
+      <span id="cx-ayuda-porvencer" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaPorVencer' | translate }}</span>
+      <div class="cx-value">{{ pv.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ pv.clientes | number }} {{ 'cartera.carteraClientes.clienteSPorVencer' | translate }}</div>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'porVencer'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaPorVencer' | translate }}</div>
+    </div>
+
     <div class="cx-card cx-card-click cx-accent-blue" role="button" tabindex="0"
          [class.is-active]="orden === 'vencido'" [attr.aria-pressed]="orden === 'vencido'"
          aria-describedby="cx-ayuda-dias" (click)="aplicarTarjeta('dias')"
@@ -60,7 +80,26 @@
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'dias'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaDias' | translate }}</div>
     </div>
 
-    <div class="cx-card cx-card-click" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'"
+    <!-- Sin cupos configurados en el comercio, «Exceden cupo: 0» no dice nada: se invita a configurarlos (ticket 1464, punto 2) -->
+    <div class="cx-card cx-accent-gray" *ngIf="sinCuposConfigurados">
+      <div class="cx-kpi-head">
+        <span class="cx-kpi-icon"><i class="pi pi-ban"></i></span>
+        <span class="cx-label">{{ 'cartera.carteraClientes.cupoDeCredito' | translate }}</span>
+        <button type="button" class="cx-info" [attr.title]="'cartera.carteraClientes.ayudaSinCupo' | translate"
+                [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta === 'excede'"
+                (click)="alternarAyuda('excede', $event)">
+          <i class="pi pi-info-circle"></i>
+        </button>
+      </div>
+      <div class="cx-value cx-value-texto">{{ 'cartera.carteraClientes.sinCupos' | translate }}</div>
+      <div class="cx-sub">{{ (k.clientesConCupo?.enEmpresa || 0) | number }} {{ 'cartera.carteraClientes.clientesConCupoConfigurado' | translate }}</div>
+      <button type="button" class="cx-cupo-accion" (click)="irAConfigurarCupo($event)">
+        <i class="pi pi-cog"></i> {{ 'cartera.carteraClientes.configurarCupo' | translate }}
+      </button>
+      <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'excede'">{{ 'cartera.carteraClientes.ayudaSinCupo' | translate }}</div>
+    </div>
+
+    <div class="cx-card cx-card-click" *ngIf="!sinCuposConfigurados" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'"
          role="button" tabindex="0" [class.is-active]="riskFilter === 'excede'" [attr.aria-pressed]="riskFilter === 'excede'"
          aria-describedby="cx-ayuda-excede" (click)="aplicarTarjeta('excede')"
          (keydown.enter)="aplicarTarjeta('excede')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('excede')">
@@ -76,8 +115,17 @@
       <span id="cx-ayuda-excede" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaExcede' | translate }}</span>
       <div class="cx-value">{{ k.excedenCupo.cantidad | number }}</div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.clienteSSobreSuCupo' | translate }}</div>
+      <div class="cx-sub cx-sub-second" *ngIf="k.clientesConCupo as cc">{{ cc.enEmpresa | number }} {{ 'cartera.carteraClientes.clientesConCupoConfigurado' | translate }}</div>
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'excede'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaExcede' | translate }}</div>
     </div>
+  </div>
+
+  <!-- Resumen por vendedor (ticket 1464, punto 4) y evolución de 12 meses (punto 5, solo con datos) -->
+  <div class="cx-insights" *ngIf="clientes.length > 0"
+       [class.cx-insights-dos]="evolucion && evolucion.puntos.length > 0">
+    <app-cartera-vendedores [clientes]="clientes" [seleccionado]="vendorFilter"
+                            (elegir)="alElegirVendedor($event)"></app-cartera-vendedores>
+    <app-cartera-evolucion *ngIf="evolucion && evolucion.puntos.length > 0" [evolucion]="evolucion"></app-cartera-evolucion>
   </div>
 
   <!-- Filtros -->

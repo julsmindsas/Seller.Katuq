@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseService } from '../base.service';
-import { CarteraResponse } from './cartera.models';
+import { CarteraEvolucionResponse, CarteraResponse } from './cartera.models';
 
 /**
  * Spec 014 — Finanzas MVP (CxC / Cartera).
@@ -24,5 +24,10 @@ export class CarteraService extends BaseService {
    */
   getCartera(): Observable<CarteraResponse> {
     return this.get<CarteraResponse>(`${this.base}/cartera`);
+  }
+
+  /** GET /cartera/evolucion — fotos mensuales de cartera total y vencida (últimos 12 meses, ticket 1464). */
+  getEvolucion(): Observable<CarteraEvolucionResponse> {
+    return this.get<CarteraEvolucionResponse>(`${this.base}/cartera/evolucion`);
   }
 }

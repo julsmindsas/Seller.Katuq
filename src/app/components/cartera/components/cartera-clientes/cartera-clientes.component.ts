@@ -6,10 +6,12 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import {
   CarteraCliente,
+  CarteraEvolucionResponse,
   CarteraPedido,
   CarteraResponse,
 } from '../../../../shared/services/cartera/cartera.models';
@@ -84,6 +86,8 @@ interface RiesgoMeta {
 })
 export class CarteraClientesComponent implements OnChanges {
   @Input() data: CarteraResponse | null = null;
+  /** Fotos mensuales de la cartera (ticket 1464); null mientras carga o si no hay. */
+  @Input() evolucion: CarteraEvolucionResponse | null = null;
 
   readonly riskOptions = RISK_OPTIONS;
   readonly agingBuckets = AGING_BUCKETS;
@@ -94,9 +98,9 @@ export class CarteraClientesComponent implements OnChanges {
    * Ayuda abierta (botón de información de cada tarjeta y del filtro Riesgo). El texto se muestra
    * a la vista: así se lee con teclado y al tocar en el celular, donde un tooltip no abre (ticket 1464).
    */
-  ayudaAbierta: 'total' | 'vencida' | 'dias' | 'excede' | 'riesgo' | null = null;
+  ayudaAbierta: 'total' | 'vencida' | 'porVencer' | 'dias' | 'excede' | 'riesgo' | null = null;
 
-  alternarAyuda(ayuda: 'total' | 'vencida' | 'dias' | 'excede' | 'riesgo', evento: Event): void {
+  alternarAyuda(ayuda: 'total' | 'vencida' | 'porVencer' | 'dias' | 'excede' | 'riesgo', evento: Event): void {
     evento.stopPropagation(); // no aplicar el filtro de la tarjeta
     this.ayudaAbierta = this.ayudaAbierta === ayuda ? null : ayuda;
   }
@@ -122,7 +126,7 @@ export class CarteraClientesComponent implements OnChanges {
   /** Documento del cliente cuyo detalle está expandido (null = ninguno). */
   expandedDoc: string | null = null;
 
-  constructor(private cdr: ChangeDetectorRef, private translate: TranslateService) {}
+  constructor(private cdr: ChangeDetectorRef, private translate: TranslateService, private router: Router) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -158,6 +162,10 @@ export class CarteraClientesComponent implements OnChanges {
       switch (this.riskFilter) {
         case 'vencida':
           if (!(c.vencido > 0)) return false;
+          break;
+        case 'porVencer':
+          // Ticket 1464: clientes con pedidos que vencen en los próximos 7 días.
+          if (!(Number(c.porVencer7) > 0)) return false;
           break;
         case 'cupo80':
           if (c.cupoUsadoPct == null || c.cupoUsadoPct <= 80) return false;
@@ -222,8 +230,17 @@ export class CarteraClientesComponent implements OnChanges {
     const vencidaMas15 = this.filtered.reduce((suma, c) => suma + this.vencidoVisible(c, 15), 0);
     const dsoPonderado = this.filtered.reduce(
       (suma, c) => suma + (Number(c.dso) || 0) * this.saldoVisible(c), 0);
+    // Por vencer en 7 días (ticket 1464): los pedidos marcados por el servidor entre los que se ven.
+    const porVencerDe = (c: CarteraCliente) => this.pedidosVisibles(c).filter((p) => p.porVencer7);
+    const porVencerMonto = this.filtered.reduce(
+      (suma, c) => suma + porVencerDe(c).reduce((s, p) => s + (Number(p.saldo) || 0), 0), 0);
+    const porVencerPedidos = this.filtered.reduce((suma, c) => suma + porVencerDe(c).length, 0);
+    const porVencerClientes = this.filtered.filter((c) => porVencerDe(c).length > 0).length;
     return {
       ...base,
+      porVencer7: base.porVencer7
+        ? { ...base.porVencer7, monto: porVencerMonto, clientes: porVencerClientes, pedidos: porVencerPedidos }
+        : undefined,
       carteraTotal: { ...base.carteraTotal, monto: total, clientes: this.filtered.length },
       carteraVencida: {
         ...base.carteraVencida,
@@ -238,7 +255,7 @@ export class CarteraClientesComponent implements OnChanges {
 
   // ── Tarjetas clicables (ticket 1464) ──────────────────────────────────────
   /** Tarjeta que aplica su filtro. `total` quita los filtros de riesgo, antigüedad y orden. */
-  aplicarTarjeta(tarjeta: 'total' | 'vencida' | 'dias' | 'excede'): void {
+  aplicarTarjeta(tarjeta: 'total' | 'vencida' | 'porVencer' | 'dias' | 'excede'): void {
     switch (tarjeta) {
       case 'total':
         this.riskFilter = 'todos';
@@ -248,6 +265,10 @@ export class CarteraClientesComponent implements OnChanges {
       case 'vencida':
         this.riskFilter = this.riskFilter === 'vencida' ? 'todos' : 'vencida';
         break;
+      case 'porVencer':
+        // Cobro preventivo (ticket 1464): solo los clientes con pedidos por vencer en 7 días.
+        this.riskFilter = this.riskFilter === 'porVencer' ? 'todos' : 'porVencer';
+        break;
       case 'dias':
         // Lo más atrasado primero: es lo que muestra el promedio. Otro clic vuelve al orden por saldo.
         this.orden = this.orden === 'vencido' ? 'saldo' : 'vencido';
@@ -256,6 +277,26 @@ export class CarteraClientesComponent implements OnChanges {
         this.riskFilter = this.riskFilter === 'excede' ? 'todos' : 'excede';
         break;
     }
+    this.applyFilters();
+    this.cdr.markForCheck();
+  }
+
+  // ── Cupo de crédito y vendedores (ticket 1464) ────────────────────────────
+  /** Ningún cliente del comercio tiene cupo: «Exceden cupo» no diría nada, así que se invita a configurarlo. */
+  get sinCuposConfigurados(): boolean {
+    const cupo = this.data?.kpis?.clientesConCupo;
+    return !!cupo && cupo.enEmpresa === 0;
+  }
+
+  /** Lleva al listado de clientes, donde se edita el cupo de crédito de cada uno. */
+  irAConfigurarCupo(evento?: Event): void {
+    if (evento) evento.stopPropagation();
+    this.router.navigate(['/ventas/clienteslista']);
+  }
+
+  /** Un vendedor del resumen filtra la lista de abajo ('' la deja con todos). */
+  alElegirVendedor(vendedor: string): void {
+    this.vendorFilter = vendedor;
     this.applyFilters();
     this.cdr.markForCheck();
   }

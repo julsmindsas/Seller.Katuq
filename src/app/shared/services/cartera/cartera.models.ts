@@ -40,6 +40,8 @@ export interface CarteraPedido {
   saldo: number;
   /** Días transcurridos desde payDueDate (negativo/0 = aún no vence). */
   diasVencido: number;
+  /** Ticket 1464: vence en los próximos 7 días (días vencido entre -7 y 0). */
+  porVencer7?: boolean;
 }
 
 /** Cartera agregada de un cliente. */
@@ -56,6 +58,9 @@ export interface CarteraCliente {
   vencido: number;
   /** De ese vencido, la parte con más de 15 días. */
   vencidoMas15?: number;
+  /** Ticket 1464: saldo que vence en los próximos 7 días (cobro preventivo). */
+  porVencer7?: number;
+  porVencer7Pedidos?: number;
   pedidosActivos: number;
   aging: AgingBuckets;
   /** % de cupo usado; null si el cliente no tiene cupo configurado. */
@@ -86,6 +91,23 @@ export interface CarteraExcedenCupoKpi {
   cantidad: number;
 }
 
+/** Ticket 1464: cuánto se vence en los próximos 7 días (cobro preventivo). */
+export interface CarteraPorVencerKpi {
+  monto: number;
+  clientes: number;
+  pedidos: number;
+  /** Ventana en días (7). */
+  dias: number;
+}
+
+/** Ticket 1464: clientes con cupo de crédito configurado. */
+export interface CarteraClientesConCupoKpi {
+  /** Los que hoy tienen saldo en cartera. */
+  enCartera: number;
+  /** Todos los de la lista de clientes del comercio. */
+  enEmpresa: number;
+}
+
 /** KPIs agregados server-side. */
 export interface CarteraKpis {
   carteraTotal: CarteraTotalKpi;
@@ -93,6 +115,8 @@ export interface CarteraKpis {
   /** DSO promedio ponderado (días). */
   dsoPromedio: number;
   excedenCupo: CarteraExcedenCupoKpi;
+  clientesConCupo?: CarteraClientesConCupoKpi;
+  porVencer7?: CarteraPorVencerKpi;
   aging: AgingBuckets;
 }
 
@@ -100,4 +124,26 @@ export interface CarteraKpis {
 export interface CarteraResponse {
   kpis: CarteraKpis;
   clientes: CarteraCliente[];
+}
+
+/** Un mes de la evolución: foto de la cartera total y vencida (ticket 1464). */
+export interface CarteraEvolucionPunto {
+  /** «AAAA-MM». */
+  periodo: string;
+  carteraTotal: number;
+  carteraVencida: number;
+  /** % vencido del total (0 a 100). */
+  pctVencido: number;
+  clientes: number;
+  /** "foto" (tomada ese mes) o "reconstruida" (estimada hacia atrás). */
+  origen: string;
+  aproximada: boolean;
+}
+
+/** Respuesta de GET /v1/treasury/cartera/evolucion. */
+export interface CarteraEvolucionResponse {
+  meses: number;
+  puntos: CarteraEvolucionPunto[];
+  /** La bandera de la empresa está encendida (la tarea guarda la foto cada día). */
+  habilitado: boolean;
 }

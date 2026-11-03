@@ -9,7 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { CarteraService } from '../../../shared/services/cartera/cartera.service';
-import { CarteraResponse } from '../../../shared/services/cartera/cartera.models';
+import { CarteraEvolucionResponse, CarteraResponse } from '../../../shared/services/cartera/cartera.models';
 
 /**
  * Spec 014 — Finanzas MVP (CxC / Cartera). Pantalla principal.
@@ -30,6 +30,8 @@ export class CarteraComponent implements OnInit, OnDestroy {
   /** El rol del usuario no puede ver cartera (403). */
   forbidden = false;
   data: CarteraResponse | null = null;
+  /** Fotos mensuales (ticket 1464). Es un extra: si no carga, la pantalla sigue sin la gráfica. */
+  evolucion: CarteraEvolucionResponse | null = null;
 
   activeIndex = 0;
 
@@ -58,11 +60,29 @@ export class CarteraComponent implements OnInit, OnDestroy {
           this.data = res;
           this.loading = false;
           this.cdr.markForCheck();
+          this.cargarEvolucion();
         },
         error: (err) => {
           this.forbidden = err instanceof HttpErrorResponse && err.status === 403;
           this.error = !this.forbidden;
           this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  /** Ticket 1464: la gráfica de 12 meses se pide aparte; un error aquí nunca tumba la cartera. */
+  private cargarEvolucion(): void {
+    this.cartera
+      .getEvolucion()
+      .pipe(timeout(15000), takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.evolucion = res;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.evolucion = null;
           this.cdr.markForCheck();
         },
       });
