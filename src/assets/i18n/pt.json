@@ -9502,5 +9502,8 @@
   "soporte.misIdeas.maestro.apoyo.resumenUno": "1 pessoa da sua empresa precisa disso",
   "soporte.misIdeas.maestro.apoyo.resumenVarias": "{{n}} pessoas da sua empresa precisam disso",
   "soporte.misIdeas.maestro.apoyo.noPudimosGuardar": "Não conseguimos salvar seu apoio",
-  "soporte.misIdeas.maestro.apoyo.revisaTuConexion": "Verifique sua conexão e tente novamente."
+  "soporte.misIdeas.maestro.apoyo.revisaTuConexion": "Verifique sua conexão e tente novamente.",
+  "ventas.pinnedActions.frecuente": "Frequente",
+  "ventas.list.puedesFijarHasta5": "Você pode fixar até 5 ações",
+  "ventas.list.tus5AccionesPersonalesVuelven": "Suas 5 ações pessoais voltam à ordem de sempre. As do seu administrador não mudam."
 }

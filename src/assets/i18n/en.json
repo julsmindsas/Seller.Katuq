@@ -12515,5 +12515,8 @@
   "soporte.misIdeas.maestro.apoyo.resumenUno": "1 person at your company needs this",
   "soporte.misIdeas.maestro.apoyo.resumenVarias": "{{n}} people at your company need this",
   "soporte.misIdeas.maestro.apoyo.noPudimosGuardar": "We could not save your vote",
-  "soporte.misIdeas.maestro.apoyo.revisaTuConexion": "Check your connection and try again."
+  "soporte.misIdeas.maestro.apoyo.revisaTuConexion": "Check your connection and try again.",
+  "ventas.pinnedActions.frecuente": "Frequent",
+  "ventas.list.puedesFijarHasta5": "You can pin up to 5 actions",
+  "ventas.list.tus5AccionesPersonalesVuelven": "Your 5 personal actions go back to the usual order. The ones your administrator set do not change."
 }

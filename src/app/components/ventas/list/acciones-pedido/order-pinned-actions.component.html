@@ -1,9 +1,10 @@
 <!-- D-547 (F2): bloque ACCIONES de 8. Clases con prefijo opa- (ninguna lleva «p-»: AGENTS.md, trampas de CSS global). -->
 <div class="opa-bloque" *ngIf="vista">
-  <div class="opa-grilla" role="group" [attr.aria-label]="'ventas.pinnedActions.accionesPrincipales' | translate">
+  <div class="opa-grilla" [class.opa-grilla-nueve]="panelV2" role="group" [attr.aria-label]="'ventas.pinnedActions.accionesPrincipales' | translate">
     <div class="opa-celda" *ngFor="let t of vista.tarjetas; trackBy: trackTarjeta">
       <button type="button" class="opa-accion"
-              [class.opa-bloqueada]="!t.habilitada" [class.opa-resaltada]="!!t.etiqueta"
+              [class.opa-con-pin]="panelV2 && !!t.pin"
+              [class.opa-bloqueada]="!t.habilitada" [class.opa-resaltada]="panelV2 ? (!!t.etiqueta && !!t.etiquetaAlerta) : !!t.etiqueta"
               [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"
               [attr.aria-haspopup]="t.id === 'discount' && vista.descuentoConMenu ? 'menu' : null"
               [attr.aria-expanded]="t.id === 'discount' && vista.descuentoConMenu ? descuentoAbierto : null"
@@ -15,8 +16,21 @@
           <span class="opa-motivo" *ngIf="!t.habilitada && t.motivo">
             <app-icono-tabler nombre="lock" [tamano]="12"></app-icono-tabler>{{ t.motivo }}
           </span>
-          <span class="opa-etiqueta" *ngIf="t.etiqueta">{{ t.etiqueta }}</span>
+          <span class="opa-etiquetas" *ngIf="t.etiqueta || t.frecuente">
+            <span class="opa-etiqueta" [class.opa-etiqueta-neutra]="panelV2 && !t.etiquetaAlerta" *ngIf="t.etiqueta">{{ t.etiqueta }}</span>
+            <span class="opa-frecuente" *ngIf="t.frecuente">{{ 'ventas.pinnedActions.frecuente' | translate }}</span>
+          </span>
         </span>
+      </button>
+      <!-- D-635: pin de la tarjeta (botón propio, hermano de la tarjeta). Azul si está fijada, gris si no. Las del rol
+           llevan candado, «Fijada por tu administrador» y no se sueltan. Aparece al pasar el mouse o con foco de teclado. -->
+      <button type="button" class="opa-pin" *ngIf="panelV2 && t.pin as ep"
+              [class.opa-pin-fijado]="ep !== 'libre'" [class.opa-pin-rol]="ep === 'rol'"
+              [attr.aria-pressed]="ep !== 'libre'" [attr.aria-disabled]="ep === 'rol' ? 'true' : null"
+              [attr.aria-label]="etiquetaDelPin(t)" [attr.title]="etiquetaDelPin(t)"
+              (click)="alPin(t)">
+        <app-icono-tabler [nombre]="ep === 'libre' ? 'pin' : 'pinned'" [tamano]="15" [relleno]="ep !== 'libre'"></app-icono-tabler>
+        <app-icono-tabler *ngIf="ep === 'rol'" class="opa-pin-candado" nombre="lock" [tamano]="9" [trazo]="2.4"></app-icono-tabler>
       </button>
       <!-- Descuento con descuento aplicado: dos opciones, igual que en «Opciones del pedido» -->
       <div class="opa-menu" *ngIf="t.id === 'discount' && descuentoAbierto" role="menu">
