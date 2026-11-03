@@ -13157,3 +13157,13 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Pruebas:** `woocommerceEstadoAWoo` pasa 15/15. Hay un caso nuevo: sin interruptor no hace nada. Los casos que publicaban ahora piden `"publicar"` de forma explícita. El seed en local, sin Postgres, se niega a correr (salida 3) y no escribe.
 - **Encendido (Daniel):** en `katuq-db`, `config/feature_flags.wooOrderStatusPublish = "sombra"` y la bandera de la empresa (CAFÉ ESCOBAR). Revisar `integration_audit` a 1 día y, si está bien, pasar a `"publicar"`.
 - **Estado:** commiteado y pusheado; FALTA DESPLEGAR (solo back) y correr el seed en el servidor.
+
+### 2026-11-03 — D-584: el interruptor del aviso de estado a WooCommerce entra al catálogo de `platform-flags`, y el script usa Postgres
+- **Qué:** `wooOrderStatusPublish` (D-578) entra a `services/platformFlags.js` con los valores `off` (por defecto), `sombra` y `publicar`. Se cambia con `node scripts/platform-flags.js wooOrderStatusPublish <valor>`: primero simula y escribe solo con `--execute`.
+- **Arreglo del script:** `scripts/platform-flags.js` no instalaba el adaptador de Postgres (D-579), así que leía y escribía el Firestore congelado. Ahora carga el `.env`, llama a `instalarSiCorresponde` y se detiene con salida 3 si no quedó instalado. Vale para todos los interruptores del catálogo.
+- **⚠️ Mientras producción siga en `4481ac39` (sin D-582):** el código viejo solo apaga con el booleano `false`. Cualquier otro valor, incluido el texto `"off"`, lo lee como **publicar**. Hasta desplegar D-582, el interruptor se escribe como `false` (booleano) y no con este script. Con D-582 desplegado, `false`, `"off"` y el campo sin crear apagan.
+- **Pruebas:**
+  - `tests/companies/platformFlags.test.js` pasa 8/8.
+  - `woocommerceEstadoAWoo` pasa 16/16. Hay un caso nuevo: `"off"` apaga.
+  - En local, el script se niega a correr (salida 3) y no escribe.
+- **Estado:** commiteado y pusheado; FALTA DESPLEGAR (back, junto con D-582).
