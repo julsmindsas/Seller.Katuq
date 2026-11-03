@@ -56,12 +56,12 @@ export class CarteraAgingComponent implements OnChanges {
   private static readonly LABEL_MIN_PCT = 9;
 
   /** Acentos de KPI card por rango (border-left). */
-  private static readonly ACCENTS = ['cx-accent-green', 'cx-accent-amber', 'cx-accent-orange', 'cx-accent-red'];
+  private static readonly ACCENTS = ['cx-accent-green', 'cx-accent-amber', 'cx-accent-orange', 'cx-accent-orange', 'cx-accent-red', 'cx-accent-red'];
 
   rows: CarteraCliente[] = [];
   kpis: AgingKpi[] = [];
   segments: AgingBarSegment[] = [];
-  totals: AgingTotals = { corriente: 0, d16_30: 0, d31_60: 0, d60: 0, total: 0 };
+  totals: AgingTotals = { ...CarteraAgingComponent.emptyBuckets(), total: 0 };
   totalCartera = 0;
 
   readonly agingBuckets = AGING_BUCKETS;
@@ -73,7 +73,7 @@ export class CarteraAgingComponent implements OnChanges {
   }
 
   private build(): void {
-    const aging: AgingBuckets = this.data?.kpis?.aging || { corriente: 0, d16_30: 0, d31_60: 0, d60: 0 };
+    const aging: AgingBuckets = this.data?.kpis?.aging || CarteraAgingComponent.emptyBuckets();
     const total = this.data?.kpis?.carteraTotal?.monto || this.sumBuckets(aging);
     this.totalCartera = total;
 
@@ -115,19 +115,32 @@ export class CarteraAgingComponent implements OnChanges {
     // Totales por columna (footer)
     this.totals = this.rows.reduce<AgingTotals>(
       (acc, c) => {
-        acc.corriente += c.aging?.corriente || 0;
-        acc.d16_30 += c.aging?.d16_30 || 0;
-        acc.d31_60 += c.aging?.d31_60 || 0;
-        acc.d60 += c.aging?.d60 || 0;
+        AGING_BUCKETS.forEach((b) => {
+          acc[b.key] += c.aging?.[b.key] || 0;
+        });
         acc.total += c.saldoPendiente || 0;
         return acc;
       },
-      { corriente: 0, d16_30: 0, d31_60: 0, d60: 0, total: 0 },
+      { ...CarteraAgingComponent.emptyBuckets(), total: 0 },
     );
   }
 
+  private static emptyBuckets(): AgingBuckets {
+    return { sin_vencer: 0, d1_15: 0, d16_30: 0, d31_60: 0, d61_90: 0, d90: 0 };
+  }
+
   private sumBuckets(a: AgingBuckets): number {
-    return (a.corriente || 0) + (a.d16_30 || 0) + (a.d31_60 || 0) + (a.d60 || 0);
+    return AGING_BUCKETS.reduce((suma, b) => suma + (a[b.key] || 0), 0);
+  }
+
+  /** Clase de color de texto (cx-seg-xxx → cx-c-xxx). */
+  colClass(segClass: string): string {
+    return segClass.replace('cx-seg-', 'cx-c-');
+  }
+
+  /** Texto de ayuda de cada rango (tooltip de la tarjeta). */
+  ayudaRango(label: string): string {
+    return `Lo que le deben en pedidos del rango «${label}», contado desde la fecha límite de pago de cada pedido.`;
   }
 
   trackByDoc(_index: number, cliente: CarteraCliente): string {

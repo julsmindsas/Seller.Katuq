@@ -18,31 +18,46 @@ export interface AgingBucketMeta {
   cssClass: string;
 }
 
-/** Los 4 rangos de aging en orden de severidad creciente. */
+/**
+ * Los 6 rangos de antigüedad en orden de severidad creciente (ticket 1460).
+ * Son los mismos del servidor: tarjetas, barra del cliente, pestaña Aging,
+ * filtro, Excel y PDF usan esta única lista.
+ */
 export const AGING_BUCKETS: AgingBucketMeta[] = [
-  { key: 'corriente', label: 'Corriente (0-15 días)', short: 'Corriente', cssClass: 'cx-seg-corriente' },
-  { key: 'd16_30',    label: '16-30 días',            short: '16-30 d',   cssClass: 'cx-seg-d16' },
-  { key: 'd31_60',    label: '31-60 días',            short: '31-60 d',   cssClass: 'cx-seg-d31' },
-  { key: 'd60',       label: '60+ días',              short: '60+ d',     cssClass: 'cx-seg-d60' },
+  { key: 'sin_vencer', label: 'Sin vencer',   short: 'Sin vencer', cssClass: 'cx-seg-sin' },
+  { key: 'd1_15',      label: '1-15 días',    short: '1-15 d',     cssClass: 'cx-seg-d1' },
+  { key: 'd16_30',     label: '16-30 días',   short: '16-30 d',    cssClass: 'cx-seg-d16' },
+  { key: 'd31_60',     label: '31-60 días',   short: '31-60 d',    cssClass: 'cx-seg-d31' },
+  { key: 'd61_90',     label: '61-90 días',   short: '61-90 d',    cssClass: 'cx-seg-d61' },
+  { key: 'd90',        label: 'Más de 90 días', short: '+90 d',    cssClass: 'cx-seg-d90' },
 ];
 
 /** Filtro de riesgo del tab "Cartera por Cliente". */
-export type RiskFilter = 'todos' | 'vencida' | 'cupo80' | 'excede';
+export type RiskFilter = 'todos' | 'vencida' | 'cupo80' | 'excede' | 'contado' | 'credito';
 
 export const RISK_OPTIONS: { label: string; value: RiskFilter }[] = [
   { label: 'Todos', value: 'todos' },
   { label: 'Con cartera vencida', value: 'vencida' },
   { label: 'Cupo > 80%', value: 'cupo80' },
   { label: 'Exceden cupo', value: 'excede' },
+  { label: 'Contado', value: 'contado' },
+  { label: 'Crédito', value: 'credito' },
 ];
 
 /**
- * Ticket 1130: filtro de antigüedad por PEDIDO. A diferencia del rango
- * "Corriente" de la barra (que junta lo no vencido con hasta 15 días
- * vencido), aquí lo que no ha vencido va aparte.
+ * Ticket 1502: el cliente es de crédito si tiene cupo asignado (mayor a 0);
+ * con cupo en 0 o sin cupo configurado es de contado.
  */
-export type AntiguedadFiltro = 'todas' | 'sin_vencer' | 'd1_15' | 'd16_30' | 'd31_60' | 'd60';
-export type RangoAntiguedad = Exclude<AntiguedadFiltro, 'todas'>;
+export function esClienteCredito(creditLimit: number | null | undefined): boolean {
+  return (Number(creditLimit) || 0) > 0;
+}
+
+/**
+ * Filtro de antigüedad por PEDIDO (tickets 1130 y 1460). Usa las mismas claves
+ * que los rangos del servidor (AgingBuckets).
+ */
+export type RangoAntiguedad = keyof AgingBuckets;
+export type AntiguedadFiltro = 'todas' | RangoAntiguedad;
 
 export const ANTIGUEDAD_OPTIONS: { label: string; value: AntiguedadFiltro }[] = [
   { label: 'Todas', value: 'todas' },
@@ -50,7 +65,8 @@ export const ANTIGUEDAD_OPTIONS: { label: string; value: AntiguedadFiltro }[] = 
   { label: '1 a 15 días vencido', value: 'd1_15' },
   { label: '16 a 30 días vencido', value: 'd16_30' },
   { label: '31 a 60 días vencido', value: 'd31_60' },
-  { label: 'Más de 60 días vencido', value: 'd60' },
+  { label: '61 a 90 días vencido', value: 'd61_90' },
+  { label: 'Más de 90 días vencido', value: 'd90' },
 ];
 
 /** Nombre del rango para la descarga (Excel y PDF). */
@@ -59,17 +75,19 @@ export const RANGO_ANTIGUEDAD_LABEL: { [rango in RangoAntiguedad]: string } = {
   d1_15: '1 a 15 días vencido',
   d16_30: '16 a 30 días vencido',
   d31_60: '31 a 60 días vencido',
-  d60: 'Más de 60 días vencido',
+  d61_90: '61 a 90 días vencido',
+  d90: 'Más de 90 días vencido',
 };
 
-/** Rango de un pedido según sus días vencidos (0 o negativo = aún no vence). */
+/** Rango de un pedido según sus días vencidos (0 o negativo = aún no vence). Igual al del servidor. */
 export function rangoAntiguedad(diasVencido: number): RangoAntiguedad {
   const dias = Number(diasVencido) || 0;
   if (dias <= 0) return 'sin_vencer';
   if (dias <= 15) return 'd1_15';
   if (dias <= 30) return 'd16_30';
   if (dias <= 60) return 'd31_60';
-  return 'd60';
+  if (dias <= 90) return 'd61_90';
+  return 'd90';
 }
 
 /** Orden de la lista de clientes (ticket 1130). */

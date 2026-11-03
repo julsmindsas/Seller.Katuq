@@ -17,6 +17,7 @@ import {
   AGING_BUCKETS,
   ANTIGUEDAD_OPTIONS,
   AntiguedadFiltro,
+  esClienteCredito,
   metaPago,
   ORDEN_OPTIONS,
   OrdenCartera,
@@ -89,6 +90,15 @@ export class CarteraClientesComponent implements OnChanges {
   readonly antiguedadOptions = ANTIGUEDAD_OPTIONS;
   readonly ordenOptions = ORDEN_OPTIONS;
 
+  /** Qué cuenta cada tarjeta y desde cuándo (tooltips, ticket 1464). */
+  readonly ayudaTarjeta = {
+    total: 'Todo lo que le deben hoy: el saldo de los pedidos que aún no se pagan por completo, sin contar los anulados ni cancelados. Al hacer clic quita los filtros de riesgo y antigüedad.',
+    vencida: 'Saldo de los pedidos que ya pasaron su fecha límite de pago (fecha de entrega más el plazo del cliente), desde el primer día de atraso. Abajo se ve la parte con más de 15 días. Al hacer clic muestra solo los clientes con cartera vencida.',
+    dias: 'Días promedio de cartera: cuántos días llevan los pedidos con saldo, contados desde la fecha de entrega (o de creación si no tienen entrega) y ponderados por lo que se debe. Fórmula: suma de (saldo × días) ÷ suma de saldos. No es el DSO financiero. Al hacer clic ordena por el cliente más atrasado.',
+    excede: 'Clientes cuya deuda ya pasó el cupo de crédito que les asignaste. Solo cuenta clientes con cupo configurado. Al hacer clic muestra esos clientes.',
+    diasCliente: 'Días promedio de cartera de este cliente: cuántos días llevan sus pedidos con saldo desde la entrega, ponderado por lo que debe (suma de saldo × días ÷ suma de saldos). No son sus días vencido.',
+  };
+
   // Filtros (client-side)
   searchTerm = '';
   riskFilter: RiskFilter = 'todos';
@@ -153,6 +163,14 @@ export class CarteraClientesComponent implements OnChanges {
         case 'excede':
           if (!c.excedeCupo) return false;
           break;
+        case 'credito':
+          // Ticket 1502: crédito = cliente con cupo mayor a 0.
+          if (!esClienteCredito(c.creditLimit)) return false;
+          break;
+        case 'contado':
+          // Contado = cupo en 0 o sin cupo configurado.
+          if (esClienteCredito(c.creditLimit)) return false;
+          break;
       }
       if (this.vendorFilter && (c.vendedor || '') !== this.vendorFilter) return false;
       // Antigüedad (ticket 1130): el cliente entra si tiene pedidos con saldo en ese rango.
@@ -176,8 +194,8 @@ export class CarteraClientesComponent implements OnChanges {
    * los del filtro, y no cuadraban (ALMARA: «Con cartera vencida» 31 clientes
    * $19,7 M vs. banner vencida $13,9 M). Ahora, con cualquier filtro activo, el
    * banner se calcula sobre lo que se ve: total = el de la lista, vencida = la
-   * parte con más de 15 días vencida de esos mismos pedidos (misma regla del
-   * servidor), DSO ponderado y clientes sobre su cupo.
+   * parte con 1 o más días vencida de esos mismos pedidos (misma regla del
+   * servidor, ticket 1460), días promedio ponderado y clientes sobre su cupo.
    */
   kpisVista: CarteraResponse['kpis'] | null = null;
 
@@ -186,10 +204,10 @@ export class CarteraClientesComponent implements OnChanges {
       this.antiguedadFilter !== 'todas';
   }
 
-  private vencidoVisible(cliente: CarteraCliente): number {
-    if (this.antiguedadFilter === 'todas') return Number(cliente.vencido) || 0;
+  /** Saldo visible del cliente con más de `desde` días vencido (0 = todo lo vencido). */
+  private vencidoVisible(cliente: CarteraCliente, desde = 0): number {
     return this.pedidosVisibles(cliente)
-      .filter((p) => (Number(p.diasVencido) || 0) > 15)
+      .filter((p) => (Number(p.diasVencido) || 0) > desde)
       .reduce((suma, p) => suma + (Number(p.saldo) || 0), 0);
   }
 
@@ -199,15 +217,45 @@ export class CarteraClientesComponent implements OnChanges {
     if (!this.hayFiltros) return base;
     const total = this.totalVisible;
     const vencida = this.filtered.reduce((suma, c) => suma + this.vencidoVisible(c), 0);
+    const vencidaMas15 = this.filtered.reduce((suma, c) => suma + this.vencidoVisible(c, 15), 0);
     const dsoPonderado = this.filtered.reduce(
       (suma, c) => suma + (Number(c.dso) || 0) * this.saldoVisible(c), 0);
     return {
       ...base,
       carteraTotal: { ...base.carteraTotal, monto: total, clientes: this.filtered.length },
-      carteraVencida: { ...base.carteraVencida, monto: vencida, pct: total > 0 ? (vencida / total) * 100 : 0 },
+      carteraVencida: {
+        ...base.carteraVencida,
+        monto: vencida,
+        pct: total > 0 ? (vencida / total) * 100 : 0,
+        mas15: { monto: vencidaMas15, pct: total > 0 ? (vencidaMas15 / total) * 100 : 0 },
+      },
       dsoPromedio: total > 0 ? Math.round(dsoPonderado / total) : 0,
       excedenCupo: { ...base.excedenCupo, cantidad: this.filtered.filter((c) => c.excedeCupo).length },
     };
+  }
+
+  // ── Tarjetas clicables (ticket 1464) ──────────────────────────────────────
+  /** Tarjeta que aplica su filtro. `total` quita los filtros de riesgo, antigüedad y orden. */
+  aplicarTarjeta(tarjeta: 'total' | 'vencida' | 'dias' | 'excede'): void {
+    switch (tarjeta) {
+      case 'total':
+        this.riskFilter = 'todos';
+        this.antiguedadFilter = 'todas';
+        this.orden = 'saldo';
+        break;
+      case 'vencida':
+        this.riskFilter = this.riskFilter === 'vencida' ? 'todos' : 'vencida';
+        break;
+      case 'dias':
+        // Lo más atrasado primero: es lo que muestra el promedio.
+        this.orden = 'vencido';
+        break;
+      case 'excede':
+        this.riskFilter = this.riskFilter === 'excede' ? 'todos' : 'excede';
+        break;
+    }
+    this.applyFilters();
+    this.cdr.markForCheck();
   }
 
   // ── Antigüedad y orden (ticket 1130) ──────────────────────────────────────
@@ -469,15 +517,27 @@ export class CarteraClientesComponent implements OnChanges {
    */
   riesgo(cliente: CarteraCliente): RiesgoMeta {
     if (cliente.excedeCupo) return { label: 'Excede cupo', cssClass: 'cx-risk-danger' };
-    if ((cliente.vencido || 0) > 0) return { label: 'Vencida', cssClass: 'cx-risk-vencida' };
+    // Ticket 1460: «Al día» solo si ningún pedido tiene días vencido > 0.
+    if ((cliente.vencido || 0) > 0) {
+      const rango = this.rangoMasAlto(cliente);
+      return { label: rango ? `Vencida ${rango}` : 'Vencida', cssClass: 'cx-risk-vencida' };
+    }
     if (cliente.cupoUsadoPct != null && cliente.cupoUsadoPct >= 80) {
       return { label: 'Cupo alto', cssClass: 'cx-risk-warning' };
     }
     return { label: 'Al día', cssClass: 'cx-risk-ok' };
   }
 
+  /** Rango más alto entre los pedidos vencidos del cliente (ej. «1-15»), o vacío. */
+  private rangoMasAlto(cliente: CarteraCliente): string {
+    const maxDias = (cliente.pedidos || []).reduce((max, p) => Math.max(max, Number(p.diasVencido) || 0), 0);
+    if (maxDias <= 0) return '';
+    const meta = this.agingBuckets.find((b) => b.key === rangoAntiguedad(maxDias));
+    return meta ? meta.short.replace(' d', '') : '';
+  }
+
   // ── Mini-barra de aging ───────────────────────────────────────────────────
-  /** Los 4 rangos con su monto, para la leyenda bajo la barra. */
+  /** Los 6 rangos con su monto, para la leyenda bajo la barra. */
   agingLegend(cliente: CarteraCliente): AgingLegendItem[] {
     return this.agingBuckets.map((b) => ({
       cssClass: b.cssClass,

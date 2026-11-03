@@ -1,8 +1,10 @@
 <div class="cx-clientes">
 
-  <!-- KPI cards -->
+  <!-- KPI cards: cada una explica qué cuenta y, al hacer clic, aplica su filtro (ticket 1464) -->
   <div class="cx-grid" *ngIf="kpisVista as k">
-    <div class="cx-card cx-accent-purple">
+    <div class="cx-card cx-card-click cx-accent-purple" role="button" tabindex="0"
+         [title]="ayudaTarjeta.total" (click)="aplicarTarjeta('total')"
+         (keydown.enter)="aplicarTarjeta('total')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('total')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-wallet"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.carteraTotal' | translate }}</span>
@@ -11,25 +13,33 @@
       <div class="cx-sub">{{ k.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
     </div>
 
-    <div class="cx-card cx-accent-red">
+    <div class="cx-card cx-card-click cx-accent-red" role="button" tabindex="0" [class.is-active]="riskFilter === 'vencida'"
+         [title]="ayudaTarjeta.vencida" (click)="aplicarTarjeta('vencida')"
+         (keydown.enter)="aplicarTarjeta('vencida')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('vencida')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-clock"></i></span>
-        <span class="cx-label">{{ 'cartera.carteraClientes.carteraVencida' | translate }}</span>
+        <span class="cx-label">Cartera vencida</span>
       </div>
       <div class="cx-value">{{ k.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-      <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotal15Dias' | translate }}</div>
+      <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}% del total, desde 1 día vencido</div>
+      <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">De ella, más de 15 días: {{ m.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
     </div>
 
-    <div class="cx-card cx-accent-blue">
+    <div class="cx-card cx-card-click cx-accent-blue" role="button" tabindex="0"
+         [title]="ayudaTarjeta.dias" (click)="aplicarTarjeta('dias')"
+         (keydown.enter)="aplicarTarjeta('dias')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('dias')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-chart-bar"></i></span>
-        <span class="cx-label">{{ 'cartera.carteraClientes.dsoPromedio' | translate }}</span>
+        <span class="cx-label">Días promedio de cartera</span>
       </div>
       <div class="cx-value">{{ k.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">{{ 'cartera.carteraClientes.dias' | translate }}</span></div>
       <div class="cx-sub">{{ 'cartera.carteraClientes.antiguedadPromedioDeLaCartera' | translate }}</div>
     </div>
 
-    <div class="cx-card" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'">
+    <div class="cx-card cx-card-click" [ngClass]="k.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'"
+         role="button" tabindex="0" [class.is-active]="riskFilter === 'excede'"
+         [title]="ayudaTarjeta.excede" (click)="aplicarTarjeta('excede')"
+         (keydown.enter)="aplicarTarjeta('excede')" (keydown.space)="$event.preventDefault(); aplicarTarjeta('excede')">
       <div class="cx-kpi-head">
         <span class="cx-kpi-icon"><i class="pi pi-ban"></i></span>
         <span class="cx-label">{{ 'cartera.carteraClientes.excedenCupo' | translate }}</span>
@@ -127,7 +137,7 @@
             <span *ngIf="c.documento"><i class="pi pi-id-card"></i>{{ c.documento }}</span>
             <span *ngIf="c.vendedor" class="cx-meta-vendedor"><i class="pi pi-user"></i>{{ c.vendedor }}</span>
             <span><i class="pi pi-shopping-cart"></i>{{ c.pedidosActivos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
-            <span class="cx-dso"><i class="pi pi-clock"></i>{{ 'cartera.carteraClientes.dsoD' | translate:{dso: (c.dso | number:'1.0-0')} }}</span>
+            <span class="cx-dso" [title]="ayudaTarjeta.diasCliente"><i class="pi pi-clock"></i>Promedio en cartera {{ c.dso | number:'1.0-0' }} d</span>
             <span class="cx-plazo" [title]="'cartera.carteraClientes.plazoDePagoAcordadoCon' | translate"><i class="pi pi-calendar"></i>{{ textoPlazo(c) }}</span>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
   <!-- KPI cards por rango + total -->
   <div class="cx-grid cx-grid-aging">
-    <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis">
+    <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis" [attr.title]="k.isTotal ? 'Todo lo que le deben hoy: pedidos con saldo pendiente.' : ayudaRango(k.label)">
       <div class="cx-kpi-head">
         <span class="cx-dot" *ngIf="!k.isTotal" [ngClass]="k.cssClass"></span>
         <span class="cx-kpi-icon" *ngIf="k.isTotal"><i class="pi pi-wallet"></i></span>
@@ -46,10 +46,7 @@
           <tr>
             <th pSortableColumn="nombre" style="min-width: 200px">{{ 'cartera.carteraAging.cliente' | translate }} <p-sortIcon field="nombre"></p-sortIcon></th>
             <th pSortableColumn="documento" style="min-width: 130px">{{ 'cartera.carteraAging.documento' | translate }} <p-sortIcon field="documento"></p-sortIcon></th>
-            <th pSortableColumn="aging.corriente" class="text-end cx-c-corriente" style="min-width: 130px">{{ 'cartera.carteraAging.corriente' | translate }} <p-sortIcon field="aging.corriente"></p-sortIcon></th>
-            <th pSortableColumn="aging.d16_30" class="text-end cx-c-d16" style="min-width: 120px">{{ 'cartera.carteraAging.1630D' | translate }} <p-sortIcon field="aging.d16_30"></p-sortIcon></th>
-            <th pSortableColumn="aging.d31_60" class="text-end cx-c-d31" style="min-width: 120px">{{ 'cartera.carteraAging.3160D' | translate }} <p-sortIcon field="aging.d31_60"></p-sortIcon></th>
-            <th pSortableColumn="aging.d60" class="text-end cx-c-d60" style="min-width: 120px">{{ 'cartera.carteraAging.60D' | translate }} <p-sortIcon field="aging.d60"></p-sortIcon></th>
+            <th *ngFor="let b of agingBuckets" [pSortableColumn]="'aging.' + b.key" class="text-end" [ngClass]="colClass(b.cssClass)" style="min-width: 120px">{{ b.label }} <p-sortIcon [field]="'aging.' + b.key"></p-sortIcon></th>
             <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 140px">{{ 'cartera.carteraAging.total' | translate }} <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
           </tr>
         </ng-template>
@@ -58,10 +55,7 @@
           <tr>
             <td class="cx-cell-strong">{{ c.nombre || '—' }}</td>
             <td class="cx-cell-doc">{{ c.documento || '—' }}</td>
-            <td class="text-end cx-c-corriente cx-num">{{ c.aging.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d16 cx-num">{{ c.aging.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d31 cx-num">{{ c.aging.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d60 cx-num">{{ c.aging.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ c.aging[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-num cx-num-total">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </ng-template>
@@ -70,10 +64,7 @@
           <tr class="cx-foot">
             <td class="cx-cell-strong">{{ 'cartera.carteraAging.totales' | translate }}</td>
             <td>{{ rows.length | number }} {{ 'cartera.carteraAging.clienteS' | translate }}</td>
-            <td class="text-end cx-c-corriente cx-num">{{ totals.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d16 cx-num">{{ totals.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d31 cx-num">{{ totals.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-c-d60 cx-num">{{ totals.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ totals[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="text-end cx-num cx-foot-total">{{ totals.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </ng-template>

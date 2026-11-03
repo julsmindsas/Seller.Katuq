@@ -14,6 +14,8 @@ $cx-aging-16:        #e0b41b;
 $cx-aging-16-ink:    #c99a0f; // versión legible sobre blanco (textos/columnas)
 $cx-aging-31:        #e0891b;
 $cx-aging-60:        #e0483f;
+$cx-aging-61:        #c0302b; // 61 a 90 días (ticket 1460)
+$cx-aging-90:        #8e1d1d; // más de 90 días
 
 // ── Grid de KPI cards ─────────────────────────────────────────────────────
 .cx-grid {
@@ -54,6 +56,19 @@ $cx-aging-60:        #e0483f;
 .cx-accent-purple { --cx-bar: var(--kc-accent);       --cx-fg: var(--kc-accent);       --cx-wash: var(--kc-accent-wash); }
 .cx-accent-blue   { --cx-bar: var(--kc-blue);         --cx-fg: var(--kc-blue);         --cx-wash: var(--kc-blue-wash); }
 .cx-accent-gray   { --cx-bar: #{$katuq-gray-300};     --cx-fg: var(--kc-ink);          --cx-wash: var(--kc-canvas); }
+
+// Segunda línea de una tarjeta (dato secundario)
+.cx-sub-second { margin-top: 2px; }
+
+// Tarjeta que aplica un filtro al hacer clic (ticket 1464)
+.cx-card-click {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover { box-shadow: 0 8px 22px rgba(95, 63, 224, 0.14); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &.is-active { box-shadow: 0 0 0 2px #5F3FE0; }
+}
 
 // Cabecera del KPI: chip de ícono + etiqueta
 .cx-kpi-head {
@@ -231,10 +246,12 @@ $cx-aging-60:        #e0483f;
 }
 
 // ── Segmentos de aging (mini-bar y barra grande) ──────────────────────────
-.cx-seg-corriente { background: $cx-aging-corriente; }
-.cx-seg-d16       { background: $cx-aging-16; }
-.cx-seg-d31       { background: $cx-aging-31; }
-.cx-seg-d60       { background: $cx-aging-60; }
+.cx-seg-sin { background: $cx-aging-corriente; }
+.cx-seg-d1  { background: $cx-aging-16; }
+.cx-seg-d16 { background: $cx-aging-31; }
+.cx-seg-d31 { background: $cx-aging-60; }
+.cx-seg-d61 { background: $cx-aging-61; }
+.cx-seg-d90 { background: $cx-aging-90; }
 
 .cx-dot {
   width: 10px;
@@ -245,10 +262,12 @@ $cx-aging-60:        #e0483f;
 }
 
 // Tinte de texto por rango (columnas de tabla y leyendas)
-.cx-c-corriente { color: $cx-aging-corriente; }
-.cx-c-d16       { color: $cx-aging-16-ink; }
-.cx-c-d31       { color: $cx-aging-31; }
-.cx-c-d60       { color: $cx-aging-60; }
+.cx-c-sin { color: $cx-aging-corriente; }
+.cx-c-d1  { color: $cx-aging-16-ink; }
+.cx-c-d16 { color: $cx-aging-31; }
+.cx-c-d31 { color: $cx-aging-60; }
+.cx-c-d61 { color: $cx-aging-61; }
+.cx-c-d90 { color: $cx-aging-90; }
 
 .cx-cell-strong { font-weight: 800; color: var(--kc-ink); }
 // Ticket 1386: número de pedido que abre el pedido en otra pestaña.
