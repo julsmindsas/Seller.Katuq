@@ -11,61 +11,78 @@
 > unir y pendiente de la aprobación de Daniel (tarea 0.4, parte de D12).
 > Los detalles de seguridad están en la revisión privada del backend
 > (`openspec/changes/tienda-celular-y-velocidad-seguridad/`).
+> **Citas revalidadas el 3-nov-2026 (tarea 0.4, bloque TX34-B19)** sobre la punta de la rama
+> `feature/tickets-aws-claude-1` (backend `02ccc27c`, front `c134b382`): cada `archivo:línea` de
+> «Context» se comprobó con un script contra el código (55 citas, todas en su línea). Se movieron
+> sobre todo las de `controllers/sites.js` (de ~7.000 a ~10.700 líneas) y `siteHtml.js`. No se
+> tocó ninguna decisión. **No se revalidaron, por depender de la unión de F2-41, D-496 y las
+> suscripciones:** el bloque **Pago** de «Context» (las citas de `crearPedido`, `retomarPago`,
+> `/gracias`, la reserva y la guarda de gemelos) y D12 y D13; se rehacen en la tarea 4.0.
+> «Context» describe el código **del 21-oct**: desde entonces los bloques TX34-B03 (la baliza ya
+> descarta robots), B06 (el panel de filtros cierra con Escape y toque fuera; áreas de 44 px y
+> elementos fijos), B07 (la tarjeta lleva `srcset`, medidas y primera fila sin carga diferida),
+> B13 (el orden suma `novedad` y `mas-vendidos` con su interruptor), B14 y B15 (envío, plazo e IVA
+> en ficha, carrito y checkout) y B16 (cajón) cambiaron esos puntos; las líneas citadas siguen
+> siendo las de esos fragmentos de hoy.
 
 ## Context
 
 **Camino del render publicado** (`controllers/sites.js`):
-- `renderPublico` (6789) responde desde `htmlCache` (en memoria, 60 s, 6772) o llama a
-  `renderPublicoReal` (6923), que llena el catálogo en el servidor con `consultarCatalogo`
-  (~7453). Con `acceso`, `pedido` o `vista_previa` no se cachea. El backend corre en
+- `renderPublico` (7226) responde desde `htmlCache` (en memoria, 60 s, 7213) o llama a
+  `renderPublicoReal` (7369), que llena el catálogo en el servidor con `consultarCatalogo`
+  (7914). Con `acceso`, `pedido` o `vista_previa` no se cachea. El backend corre en
   un solo proceso (`ecosystem.config.js`, `instances: 1`). Detalle de la clave: ver revisión
   privada (S4).
 - El catálogo y los bloques salen del índice compartido `getSearchIndex`
-  (`controllers/productos.js:91`, TTL 5 min, `select` de ~30 campos con descripción,
+  (`controllers/productos.js:135`, TTL 5 min, `select` de ~30 campos con descripción,
   características, garantías, restricciones, etiquetas, `exposicion`, `disponibilidad` y
   `procesoComercial` completos). Lo comparten el Seller (búsqueda por descripción y etiquetas,
-  `productos.js:1105`), el feed, el sitemap, KAI (`services/sites/asesorKai.js:55`) y
+  `productos.js:3296-3301`), el feed, el sitemap, KAI (`services/sites/asesorKai.js:55`) y
   `tools/searchProducts.js`.
 - Además, la tienda hace por empresa en frío una segunda lectura de todo `products`
-  (`cargarVitrinaDeEmpresa`, 9012: `preciosPorTipoCliente` y precio, en `preciosVitrinaCache` y
-  `ofertasVitrinaCache`) y, en plan gratis, una tercera (`productosVisiblesDelPlan`, 9410:
+  (`cargarVitrinaDeEmpresa`, 9514: `preciosPorTipoCliente` y precio, en `preciosVitrinaCache` y
+  `ofertasVitrinaCache`) y, en plan gratis, una tercera (`productosVisiblesDelPlan`, 10269:
   `createdAt`, `fechaCreacion`, en `visiblesCache`).
-- Usan índice y precios de vitrina juntos, además del render: `feedProductos` (1767), `sitemap`
-  (1957), `asesorKai` de la tienda (9463, que además puntúa por descripción, características y
-  etiquetas), `categoriasConFoto` (9214), `productosAfines` (9266), `marcasDeTienda` (9689) y el
-  directorio público (`categoriesFor`, 9709).
-- `enPaginaWeb` (9063) muestra el producto **sin** objeto `marketplace` y lo oculta si el objeto
+- Usan índice y precios de vitrina juntos, además del render: `feedProductos` (2020), `sitemap`
+  (2225), `asesorKai` de la tienda (10310, que además puntúa por descripción, características y
+  etiquetas), `categoriasConFoto` (10062), `productosAfines` (10118), `marcasDeTienda` (10661) y el
+  directorio público (`categoriesFor`, 10692).
+- `enPaginaWeb` (9914) muestra el producto **sin** objeto `marketplace` y lo oculta si el objeto
   existe sin `paginaWeb: true`. `imagenesCount` (del índice) decide la foto de
-  `categoriasConFoto` (9233) y la preferencia de los afines (9297).
-- `consultarCatalogo` (9521) filtra en memoria: vendible (`esVendibleEnTienda`), plan gratis,
+  `categoriasConFoto` (10102) y la preferencia de los afines (10159).
+- `consultarCatalogo` (10385) filtra en memoria: vendible (`esVendibleEnTienda`), plan gratis,
   oferta, precio, categoría exacta, marca, texto (`normalizarBusqueda(titulo|referencia)
-  .includes(q)`), ocasión. Orden: solo `precio-asc` y `precio-desc`; lo demás «cae al orden
+  .includes(q)`), ocasión. Orden **(21-oct; hoy, con B13, también `novedad` y `mas-vendidos` si el
+  interruptor lo permite)**: solo `precio-asc` y `precio-desc`; lo demás «cae al orden
   natural del índice». Lee completos solo los 12 de la página.
 - D-461: en FLORECER el índice tarda ~3,9 s en cargar y cada documento completo pesa ~14 KB.
 
 **Página y script** (`utils/siteHtml.js`, `utils/siteTienda.js`):
-- Cabecera (`siteHtml.js:1330-1400`): marca, buscador (GET que funciona sin JS), enlaces, CTA,
+- Cabecera (`siteHtml.js:1414-1560`, el bloque `encabezado`): marca, buscador (GET que funciona sin JS), enlaces, CTA,
   cuenta, favoritos, carrito y la fila `cabecera__cats`. En ≤600 px la fila se desliza y oculta
-  los enlaces (`3106-3125`). Botones de cabecera con `padding:.35rem` e ícono de 20 px (~31 px,
-  `3413`).
-- Catálogo (`2630-2700`): buscador con espera de 350 ms (~`4980`), orden de 3 opciones (`2678`),
-  panel de filtros que se cierra con ✕ o al elegir un chip (`5033-5045`), no con Escape ni
-  tocando fuera. `traer()` descarta la petición si hay otra en vuelo y falla en silencio
-  (~`4974`).
-- Tarjeta (`fichaDeProducto`, `1180-1255`): `<img loading="lazy">` sin `srcset` ni medidas,
-  tiempo de entrega (`1245`). Ficha: «Precio con IVA incluido» (`885`), plazo (`888`), barra
-  fija ≤640 px (`3839-3846`) que sube carrito y WhatsApp.
-- Aviso de cookies: fijo, `z-index:80`, en ≤760 px a todo el ancho y `bottom:88px` (`3018-3027`).
+  los enlaces (`3286-3301`). Botones de cabecera con `padding:.35rem` e ícono de 20 px (~31 px,
+  `3606-3607`).
+- Catálogo (`2715-2879`): buscador con espera de 350 ms (`5458`), orden de 3 opciones (`2847-2850`;
+  hoy 3 más las de `opcionesDeOrdenNuevas`),
+  panel de filtros que se cierra con ✕ o al elegir un chip (`5520-5551`), no con Escape ni
+  tocando fuera **(21-oct; hoy, B06, también cierra con Escape y toque fuera)**. `traer()` descarta la petición si hay otra en vuelo y falla en silencio
+  (`5417`).
+- Tarjeta (`fichaDeProducto`, `1311-1389`): `<img loading="lazy">` sin `srcset` ni medidas
+  **(21-oct; hoy, B07, `attrsResponsivos` pone `srcset` y medidas y la primera fila no lleva
+  `loading="lazy"`)**,
+  tiempo de entrega (`1385`). Ficha: «Precio con IVA incluido» (`998`; hoy solo si `p.ivaIncluido`, B14/B15), plazo (`1001`), barra
+  fija ≤640 px (`4053-4061`) que sube carrito y WhatsApp.
+- Aviso de cookies: fijo, `z-index:80`, en ≤760 px a todo el ancho y `bottom:88px` (`3193-3205`).
 - Carrito (`siteTienda.js`): +/− de 26 px (`48`), «Quitar» sin relleno y con letra de 0,8 rem
   (`51`), ✕ con relleno
-  `0 .3rem` (`39`). Envío: `envio()` (`391`) da `null` en modo zonas sin zona → «Según tu
-  ciudad» (`624`). Las zonas se cargan al entrar a «Tus datos» (`cargarZonas`, `344`) desde
-  `GET /public/:slug/zonas` (`zonasPublicas`, `controllers/sites.js:2221`; maestro `zonacobro`,
+  `0 .3rem` (`39`). Envío: `envio()` (`713`) da `null` en modo zonas sin zona → «Según tu
+  ciudad» (`950`). Las zonas se cargan al entrar a «Tus datos» (`cargarZonas`, `666`) desde
+  `GET /public/:slug/zonas` (`zonasPublicas`, `controllers/sites.js:2512`; maestro `zonacobro`,
   sin tiempo de entrega). Al crear el pedido: `vaciar();pintarGracias(r);` y a los 1,2 s a la
-  pasarela (`1144`). Si el comprador vuelve atrás desde la pasarela, o la redirección falla,
+  pasarela (`1464-1465`). Si el comprador vuelve atrás desde la pasarela, o la redirección falla,
   el carrito ya está vacío y no hay nada en la tienda para retomar el pago.
-- Baliza: `navigator.sendBeacon(api+'/vista')` (`siteHtml.js:4307`) → `registrarVista`
-  (`controllers/sites.js:5360`): sin filtro de robots; suma `vistasCount`.
+- Baliza: `navigator.sendBeacon(api+'/vista')` (`siteHtml.js:4525`) → `registrarVista`
+  (`controllers/sites.js:5734`): sin filtro de robots; suma `vistasCount`.
 
 **Pago** (`controllers/sites.js`):
 - `crearPedido` genera el enlace de Wompi con un regreso a `gracias?pedido=N` (3686). `/pagar`
@@ -102,7 +119,7 @@ pública Angular `/s/:slug` (`app-routing.module.ts:185`) usa el mismo component
 **Datos que ya existen:** `products.createdAt` o `fechaCreacion` (insignia «Nuevo»,
 `utils/vitrinaProducto.js`, `esNuevo`); `products.attributes` (F2-42, D-495, bandera
 `categoryAttributes` apagada); `exposicion.masvendido` es una marca **manual** del Seller
-(`productosPaginated.js:350`), no un cálculo; `productOrderIndex` guarda ids de pedidos por
+(`productosPaginated.js:351`), no un cálculo; `productOrderIndex` guarda ids de pedidos por
 producto sin cantidades ni fechas, no sirve para 30 días. Índice de Firestore
 `orders(company, fechaCreacion)` ya existe (`firestore.indexes.json`).
 
@@ -193,6 +210,113 @@ producto sin cantidades ni fechas, no sirve para 30 días. Índice de Firestore
     `.navegador/`, sin root y sin tocar el sistema.
   - Se prepara con `npm run lab:tienda:preparar` y se corre con `npm run lab:tienda`, desde
     `functions/`.
+- **Línea base del laboratorio (bloque TX34-B04, 26-oct, con el código de ese día).** 15 plantillas, portada,
+  catálogo y ficha, caliente y frío, mediana de 3, 2.500 productos con fotos originales. Resultado global
+  (480 informes, dos ejecuciones): Rendimiento 86 (65–99) en caliente y 78 (56–91) en frío; Buenas prácticas
+  96 en todas; INP de 19 a 41 ms (el flujo mide CLS 0). Dos ejecuciones seguidas difirieron hasta 14 puntos
+  en 80 medianas (la meta de la 1.1 era 5): **no es estable** y se declara. **Hipótesis del bimodal con
+  evidencia (`bimodal.md` de la corrida):** en el laboratorio el primer pintado observado es de 47 ms en
+  caliente y de ~5,6 s en frío, porque el HTML espera las lecturas de `products` (el modelo de demora de entonces,
+  40 ms por lectura + 1,8 ms por documento, da ~4,5 s por cada lectura completa de 2.500 productos); además, en
+  todas las corridas las fuentes llegan después del primer pintado, así que el puntaje depende de cuánto
+  espera el servidor y no del código del navegador. Es la misma forma que D-461 (primer pintado esperando
+  ~2,4 s en producción). Lo que ya se movió y lo que no: ver la medición acotada.
+- **Medición acotada del 3-nov-2026 (bloque TX34-B19), una sola vez.** Solo las páginas y plantillas que
+  tocan los bloques nuevos, con la misma configuración: catálogo y ficha de `marca-premium` (la peor de la
+  línea base: CLS 0,22 y LCP 7,3 s en el catálogo), `moda-coleccion` (la de la lista de categorías y el
+  cajón, referencia del INP) y `tecnologia-catalogo` (catálogo grande, la de Baudio); Lighthouse 12.2.1,
+  Chrome 131.0.6778.204, mediana de 3, aviso de cookies sin aceptar, balizas bloqueadas. «Base» es la última
+  corrida de la línea base (`linea-base-definitiva`, 26-oct, una ejecución); «Apagado» es el código de hoy con
+  todas las banderas nuevas apagadas; «Encendido» es el mismo código con `drawer`, `shippingEstimate` y
+  `salesRanking` en `show` **solo en la Firestore en memoria del laboratorio** (nunca en producción ni en
+  `katuq_dev`). Cada celda es Rendimiento / LCP / CLS (Buenas prácticas fue 96 en todas).
+
+  | Caliente | Base | Apagado | Encendido |
+  |---|---|---|---|
+  | marca-premium · catálogo | 65 / 7,30 s / 0,222 | 82 / 4,62 s / 0,040 | 82 / 4,62 s / 0,002 |
+  | marca-premium · ficha | 84 / 2,81 s / 0,228 | 94 / 2,81 s / 0,065 | 94 / 2,96 s / 0,024 |
+  | moda-coleccion · catálogo | 80 / 5,31 s / 0,024 | 80 / 5,06 s / 0,007 | 82 / 4,65 s / 0,004 |
+  | moda-coleccion · ficha | 95 / 2,80 s / 0,034 | 95 / 2,81 s / 0,024 | 94 / 2,96 s / 0,027 |
+  | tecnologia-catalogo · catálogo | 78 / 5,75 s / 0,020 | 82 / 4,79 s / 0,003 | 82 / 4,64 s / 0,001 |
+  | tecnologia-catalogo · ficha | 95 / 2,81 s / 0,020 | 95 / 2,81 s / 0,023 | 94 / 2,96 s / 0,022 |
+
+  | Frío | Base | Apagado | Encendido |
+  |---|---|---|---|
+  | marca-premium · catálogo | 56 / 6,91 s / 0,222 | 74 / 4,66 s / 0,040 | 74 / 4,65 s / 0,002 |
+  | marca-premium · ficha | 75 / 2,85 s / 0,228 | 86 / 2,85 s / 0,065 | 85 / 3,00 s / 0,024 |
+  | moda-coleccion · catálogo | 71 / 5,36 s / 0,045 | 74 / 4,66 s / 0,007 | 71 / 5,28 s / 0,004 |
+  | moda-coleccion · ficha | 86 / 2,85 s / 0,034 | 87 / 2,85 s / 0,024 | 85 / 3,00 s / 0,027 |
+  | tecnologia-catalogo · catálogo | 68 / 6,46 s / 0,020 | 73 / 4,84 s / 0,003 | 74 / 4,66 s / 0,001 |
+  | tecnologia-catalogo · ficha | 86 / 2,86 s / 0,020 | 86 / 2,86 s / 0,023 | 85 / 3,00 s / 0,022 |
+
+  - **CLS: cumplido en lo medido.** Mayor valor 0,065 apagado y 0,027 encendido (meta 0,1); la base de
+    `marca-premium` era 0,22. Cierra la parte pendiente de la 3.4 para estas tres plantillas; las otras 12 no
+    se midieron en este bloque.
+  - **LCP: no se cumple en el laboratorio (meta 2,5 s, spec «Metas de carga»).** Ninguna celda de las tablas llega a la
+    meta: la ficha da 2,8–3,0 s y el catálogo 4,6–5,3 s, apagado y encendido. Solo el catálogo en caliente con fotos con
+    variantes (`--fotos uniformes`, ver más abajo) llega a 2,4 s. La causa del catálogo está en el punto siguiente; la de la
+    ficha (LCP 2,8 s en caliente) no se investigó en este bloque. Queda como pendiente de la 6.1.
+  - **INP: dentro de la meta en lo medido, pero el flujo no cubre todo lo que pide la spec.** Meta 200 ms. El flujo con
+    CPU 4x real hizo buscador, agregar y abrir el carrito en «Apagado» (34 / 33 / 19 ms en marca-premium, moda-coleccion y
+    tecnologia-catalogo) y esas tres más el menú en «Encendido» (25 / 21 / 25 ms, con el cajón); CLS 0 en el flujo. Por eso
+    las dos cifras **no son comparables entre sí**. **Faltan** el menú en «Apagado» y **filtrar** (el panel de filtros de B06)
+    en las dos: esa interacción no se midió y la spec la pide. Pendiente de la 6.1.
+  - **Apagado queda idéntico.** Las 28 respuestas comparadas (portada, catálogo, ficha, `/estilos.css` y las tres
+    del API del catálogo con orden normal, `novedad` y `mas-vendidos`, en 4 plantillas, sin nonces) tienen el mismo
+    contenido que el código anterior al bloque B12 (`bb9de72c`): 28 de 28. El laboratorio no escribió nada en la
+    Firestore en memoria ni intentó salir a la red.
+  - **Diferencias de lo encendido (informe, sin tocar código).** Con 3 corridas por celda, una sola ejecución por estado
+    (`repetir 1`, así que esta medición no aporta evidencia de estabilidad) y una inestabilidad conocida de hasta 14 puntos
+    entre ejecuciones, **solo cuentan como cambio los rangos que no se solapan**; 1 punto es ruido. (1) **La ficha pierde de
+    1 a 2 puntos en 5 de sus 6 celdas** (caliente: moda-coleccion y tecnologia-catalogo 95 → 94, marca-premium igual en 94;
+    frío: marca-premium 86 → 85, moda-coleccion 87 → 85, tecnologia-catalogo 86 → 85) y ~0,15 s de FCP y de LCP en las 6
+    (2,81 → 2,96 s en caliente, 2,85 → 3,00 s en frío). Esa caída es pequeña, pero constante en dirección y coherente con el
+    peso agregado: el documento crece 6,6 KB comprimidos (ficha de `marca-premium` 42,3 → 48,9 KB; 156 → 179 KB sin
+    comprimir) por los estilos y el script del cajón y del envío en la página, y el catálogo igual (45,5 → 52,2 KB). Con
+    `paraTodas` lo pagan todas las tiendas; si se quiere recuperar, el camino es mover esos bloques a archivos cacheables
+    (decisión de Daniel, no se hizo). (2) **El catálogo en frío de `moda-coleccion` pasa de 74 a 71** (LCP 4,66 → 5,28 s):
+    las otras dos plantillas en frío no cambian, el TTFB observado es el mismo (5,2–5,3 s) y el rango no se solapa (73–74
+    contra 71–72), así que es el único cambio con evidencia de costo del catálogo; se vuelve a mirar en la 6.1. (3) Las
+    demás diferencias del catálogo están dentro del ruido y **no se leen como mejora ni como costo**: el catálogo en
+    caliente de `moda-coleccion` (80 → 82; la corrida apagada ya iba de 80 a 82) y el de `tecnologia-catalogo` en frío
+    (73 → 74; el rango encendido va de 69 a 74). La mejora de CLS de lo encendido (0,065 → 0,024 en la ficha de
+    `marca-premium`) sí es diferencia de las mediciones, pero ya está por debajo de la meta en los dos estados.
+  - **Por qué el catálogo no llega a 90 y la traza (corridas bajo 90, guardadas en la carpeta de la corrida).** En el
+    catálogo el LCP es la foto de la primera tarjeta (una imagen de 178 × 178 px, `fetchpriority="high"`, no diferida) y
+    el 85 % de su tiempo es la descarga (en la corrida 1: `Load Time` 4.061 ms de un LCP de 4.793; TTFB 604 ms,
+    `Render Delay` 128 ms; FCP 1,8 s, TBT 0 ms): la página trae 14 imágenes de ~110 KiB (1,49 MiB en total) que compiten por la misma conexión 4G simulada.
+    Lighthouse lo dice igual: `uses-responsive-images` ahorraría 1.425 KiB y `modern-image-formats` 278 KiB. Son las fotos
+    originales sin variantes (el laboratorio las siembra así, como en producción antes de D14/D16). **Prueba de que es esa
+    causa:** con las fotos que sí traen variantes `-wN.webp` (`--fotos uniformes`, un sustituto de lo que hará
+    `storeMobile.imageVariants` en `on`) el mismo catálogo en caliente da Rendimiento 97 y LCP 2,4 s en `marca-premium` y
+    en `moda-coleccion`. En frío (74 y 85–87 en la ficha) lo que baja el puntaje es además la espera del servidor
+    (TTFB observado ~5,2 s, el modelo de lectura de 2.500 documentos), que es lo que D1 ataca con una sola lectura. Ni la
+    proyección (`lightIndex`) ni las variantes (`imageVariants`) estaban encendidas en esta medición.
+  - **Cómo repetirlo.** Desde `functions/`, con el candado de `tsc`:
+    `node scripts/laboratorio-tienda/correr.js --plantillas marca-premium,moda-coleccion,tecnologia-catalogo --paginas catalogo,ficha
+    --corridas 3 --repetir 1 --etiqueta <nombre>` para «Apagado»; el mismo comando con `LAB_TIENDA_ENVIO=1 LAB_TIENDA_CAJON=1
+    LAB_TIENDA_RANKING=1` para «Encendido» (las tres variables solo existen en `lib/sembrar.js` del laboratorio y encienden las
+    banderas en la Firestore en memoria; `LAB_TIENDA_RANKING` entró en el commit de este bloque en el backend). Con
+    `--fotos uniformes --modos caliente --sin-inp` se repite la prueba de las fotos con variantes. Las corridas con su
+    `resumen.json` y `tabla.md` quedan fuera de git en `~/.claude/projects/-home-ubuntu-sourcecodejuls-Seller-Katuq/
+    laboratorio-tienda/corridas/2026-11-03-*-b19-*`. La columna «Base» sale de `2026-10-26-200117-linea-base-definitiva`, que
+    solo conserva informes, trazas y flujos
+    (sin `resumen.json` ni `tabla.md`): las medianas por métrica de «Base» se recalcularon de esos informes (B19 verificó que
+    coinciden con las tablas) y quedaron guardadas en `resumen-base.csv` de esa carpeta. La comparación «Apagado idéntico»
+    (28 de 28) se hizo con un script que renderiza el árbol de `bb9de72c` y el de hoy (`node b19-comparar-apagado.js <árbol>
+    <salida.json>`, copia fuera de git en `laboratorio-tienda/`).
+  - **Lo que esto NO demuestra.** Es el laboratorio (red y CPU simuladas, Firestore en memoria con demora modelada,
+    fotos de prueba), 3 de las 15 plantillas y 2 de 3 páginas. No es PageSpeed ni una medición en producción: PageSpeed
+    queda bloqueado hasta el OK de Daniel y la corrida de lectura real (`--real`, tarea 1.3) también. No se prometen
+    90 puntos en producción.
+- **Lecturas y memoria, dry-run (`scripts/medir-render-frio.js`, Firestore en memoria con la demora del modelo; no es
+  producción).** 2.500 productos: el render en frío tarda ~5,4 s en las tres páginas (el índice compartido, 4.686 ms, y los
+  precios de vitrina, 4.664 ms, son dos lecturas de los 2.500 documentos); en caliente, 0 ms. Índice compartido: 1.903 KB
+  leídos y 2,6 MB en memoria; proyección de D1: 1.719 KB leídos (fotos 453 KB) y 3,9 MB. 8.568 productos: ~16,5 s en frío;
+  índice 6.540 KB y 8,8 MB; proyección 5.908 KB (fotos 1.572 KB) y 9,6 MB. Demora ajustada: 46,3 ms por lectura + 1,823 ms
+  por documento. En el laboratorio la proyección pesa algo menos al leer y algo más en memoria (guarda las fotos); sus
+  productos tienen descripciones cortas, así que la diferencia real (documentos de ~14 KB, D-461) solo se sabe con la
+  lectura real, que sigue bloqueada.
 
 ### D3. Baliza sin robots
 - Cliente: no manda `/vista` (ni la búsqueda sin resultados de D7) si `navigator.webdriver` es
@@ -405,7 +529,7 @@ Dos niveles, como manda D-505 y la regla de diseño de `openspec/config.yaml`:
 
 ### D14. Imágenes (TX-37·8)
 - `srcset` y `sizes` en tarjeta, ficha y miniaturas cuando la URL tiene variantes: las del
-  constructor (`-wN.webp`, `srcsetDe`, `siteHtml.js:380`) y las WebP de TX-37
+  constructor (`-wN.webp`, `srcsetDe`, `siteHtml.js:382`) y las WebP de TX-37
   (`Productos/uniformes/…-wN.webp`). La portada uniformada de TX-37 es un JPEG (`-cover.jpg`) y
   **su diseño la deja sin `srcset`** (`fotos-uniformes-producto/design.md`, línea 20, su pregunta
   7): TX-34 respeta eso y solo le pone `srcset` si TX-37 cambia esa respuesta. La tarea 0.6
@@ -426,9 +550,9 @@ Dos niveles, como manda D-505 y la regla de diseño de `openspec/config.yaml`:
     se creó (probado en `variantesFotosTienda.writeSet.test.js`). Los 1920 existen en el Storage pero ninguna
     URL guardada de producto los pide; no se usan en la tienda.
 - **La precarga de la ficha va con el mismo `srcset`.** Hoy la ficha precarga su foto solo con
-  `href` (`siteHtml.js:6478`); si la `<img>` lleva `srcset` y la precarga no, el celular baja dos
+  `href` (`precargaDeFicha`, `siteHtml.js:448`, usada en 7048); si la `<img>` lleva `srcset` y la precarga no, el celular baja dos
   veces la foto del LCP. Cuando la foto tenga variantes, la precarga lleva `imagesrcset` e
-  `imagesizes` iguales a los de la `<img>`, como ya hace `precargaDePortada` (`siteHtml.js:408`).
+  `imagesizes` iguales a los de la `<img>`, como ya hace `precargaDePortada` (`siteHtml.js:460`).
   La prueba compara las dos listas.
 - `sizes` según las columnas de la rejilla (2 en celular, el ajuste de F2-17).
 - La primera fila del catálogo (4 tarjetas) sin `loading="lazy"` y la primera con
@@ -438,7 +562,7 @@ Dos niveles, como manda D-505 y la regla de diseño de `openspec/config.yaml`:
 ### D15. Los clics de anuncios también usan la caché del HTML
 - Hoy la copia del HTML se separa por los identificadores de clic de los anuncios, que cambian en
   cada clic: quien llega por pauta recibe un render en frío, justo el tráfico que paga el
-  comercio. La atribución se lee en el navegador (`siteHtml.js:4271-4277`), no en el render.
+  comercio. La atribución se lee en el navegador (`siteHtml.js:4489-4495`), no en el render.
 - La copia deja de separarse por **la misma lista `CAMPOS`** que captura la página
   (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `gclid`, `gbraid`,
   `wbraid`, `fbclid`, `ttclid`, `msclkid`), tomada de un solo lugar para que no se separen. El
