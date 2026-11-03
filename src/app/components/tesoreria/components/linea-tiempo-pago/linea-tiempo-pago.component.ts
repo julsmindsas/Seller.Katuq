@@ -130,7 +130,10 @@ export class LineaTiempoPagoComponent implements OnChanges, OnDestroy {
 
   private valorDeCampo(campo: string, v: any): string {
     if (v === '' || v === null || v === undefined) return this.translate.instant('tesoreria.lineaTiempo.vacio');
-    return campo === 'valor' ? this.moneda(v) : String(v);
+    if (campo === 'valor') return this.moneda(v);
+    // La imagen del comprobante es una dirección larga: se dice que hubo una imagen, no se pinta la dirección.
+    if (campo === 'archivo' || campo === 'archivoEvidencia') return this.translate.instant('tesoreria.lineaTiempo.archivoCambiado');
+    return String(v);
   }
 
   private t(clave: string, params?: any): string {

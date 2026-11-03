@@ -12506,5 +12506,10 @@
   "tesoreria.lineaTiempo.canal.tesorero": "Tesorería",
   "tesoreria.lineaTiempo.canal.pos": "Punto de venta",
   "tesoreria.lineaTiempo.canal.webhook": "Pasarela de pago",
-  "tesoreria.lineaTiempo.canal.web": "Web"
+  "tesoreria.lineaTiempo.canal.web": "Web",
+  "tesoreria.lineaTiempo.campo.archivo": "la imagen del comprobante",
+  "tesoreria.lineaTiempo.campo.archivoEvidencia": "la evidencia del pago",
+  "tesoreria.lineaTiempo.archivoCambiado": "imagen cargada",
+  "ventas.list.pagoRevisadoNoCambiaTitulo": "El pago no se cambió",
+  "ventas.list.pagoRevisadoNoCambiaTexto": "Ese pago ya fue revisado por Tesorería: no se puede cambiar su valor, su forma de pago ni su comprobante. Anúlalo y registra uno nuevo."
 }

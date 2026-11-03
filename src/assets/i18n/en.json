@@ -12660,5 +12660,10 @@
   "tesoreria.lineaTiempo.canal.tesorero": "Treasury",
   "tesoreria.lineaTiempo.canal.pos": "Point of sale",
   "tesoreria.lineaTiempo.canal.webhook": "Payment gateway",
-  "tesoreria.lineaTiempo.canal.web": "Web"
+  "tesoreria.lineaTiempo.canal.web": "Web",
+  "tesoreria.lineaTiempo.campo.archivo": "the receipt image",
+  "tesoreria.lineaTiempo.campo.archivoEvidencia": "the payment evidence",
+  "tesoreria.lineaTiempo.archivoCambiado": "image uploaded",
+  "ventas.list.pagoRevisadoNoCambiaTitulo": "The payment was not changed",
+  "ventas.list.pagoRevisadoNoCambiaTexto": "That payment was already reviewed by Treasury: its amount, payment method and receipt cannot be changed. Cancel it and register a new one."
 }

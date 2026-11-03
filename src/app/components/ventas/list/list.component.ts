@@ -4054,8 +4054,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!res) return;
         this.refrescarDatos(true);
         const bloqueo = res?.details?.estadoPagoBloqueado;
+        const pagosSinCambio = this.pagosNoCambiados(res);
         if (bloqueo) {
-          this.avisarBloqueoEstadoPago(bloqueo, 'Los demás cambios del pedido sí se guardaron.');
+          this.avisarBloqueoEstadoPago(bloqueo, ['Los demás cambios del pedido sí se guardaron.', pagosSinCambio].filter(Boolean).join(' '));
+          return;
+        }
+        if (pagosSinCambio) {
+          this.avisarPagosNoCambiados(pagosSinCambio);
           return;
         }
         Swal.fire({ icon: 'success', title: this.translate.instant("ventas.list.pedidoActualizadoCorrectamente"),
@@ -7035,6 +7040,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Ticket 1455: con la bandera `motivoRechazoPago`, el servidor no deja cambiar el valor, la forma de pago ni el
+   * comprobante de un pago ya revisado y lo avisa en `details.pagosEditBloqueados`. Devuelve el aviso, o '' si
+   * no hubo nada bloqueado. Sin esto la pantalla diría «actualizado» y el pago seguiría igual.
+   */
+  private pagosNoCambiados(res: any): string {
+    const bloqueados = res?.details?.pagosEditBloqueados;
+    return Array.isArray(bloqueados) && bloqueados.length
+      ? this.translate.instant("ventas.list.pagoRevisadoNoCambiaTexto")
+      : "";
+  }
+
+  private avisarPagosNoCambiados(texto: string) {
+    Swal.fire({
+      icon: "warning",
+      title: this.translate.instant("ventas.list.pagoRevisadoNoCambiaTitulo"),
+      text: texto,
+      confirmButtonText: this.translate.instant("comun.entendido"),
+      confirmButtonColor: "#5F3FE0",
+    });
+  }
+
   // NUEVO MÉTODO SEGURO: Solo actualizar notas sin tocar carrito
   private updateNotasOnly(order: Pedido) {
     // VERIFICACIÓN DE INTEGRIDAD ANTES DE ENVIAR
@@ -7099,6 +7126,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventasService.editOrder(pagosUpdate as any).subscribe({
       next: (data) => {
         console.log("✅ Pagos actualizados en backend exitosamente");
+
+        // Ticket 1455: si el servidor dejó un pago revisado como estaba, la pantalla no puede decir «actualizado».
+        const pagosSinCambio = this.pagosNoCambiados(data);
+        if (pagosSinCambio) {
+          this.refrescarDatos(true);
+          this.avisarPagosNoCambiados(pagosSinCambio);
+          return;
+        }
 
         // Actualizar el pedido en la lista SIN recargar todo
         const index = this.orders.findIndex(
@@ -7641,8 +7676,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (res) => {
         this.refrescarDatos(true);
         const bloqueo = res?.details?.estadoPagoBloqueado;
+        const pagosSinCambio = this.pagosNoCambiados(res);
         if (bloqueo) {
-          this.avisarBloqueoEstadoPago(bloqueo);
+          this.avisarBloqueoEstadoPago(bloqueo, pagosSinCambio);
+          return;
+        }
+        if (pagosSinCambio) {
+          this.avisarPagosNoCambiados(pagosSinCambio);
           return;
         }
         const devolvio = res?.details?.devolucionInventario === true && mercanciaVolvio;

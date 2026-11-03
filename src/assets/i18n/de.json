@@ -9478,5 +9478,10 @@
     "tesoreria.lineaTiempo.canal.tesorero": "Treasury",
     "tesoreria.lineaTiempo.canal.pos": "Kassensystem",
     "tesoreria.lineaTiempo.canal.webhook": "Zahlungsanbieter",
-    "tesoreria.lineaTiempo.canal.web": "Web"
+    "tesoreria.lineaTiempo.canal.web": "Web",
+    "tesoreria.lineaTiempo.campo.archivo": "das Belegbild",
+    "tesoreria.lineaTiempo.campo.archivoEvidencia": "den Zahlungsnachweis",
+    "tesoreria.lineaTiempo.archivoCambiado": "Bild hochgeladen",
+    "ventas.list.pagoRevisadoNoCambiaTitulo": "Die Zahlung wurde nicht geändert",
+    "ventas.list.pagoRevisadoNoCambiaTexto": "Diese Zahlung wurde bereits von der Finanzabteilung geprüft: Betrag, Zahlungsart und Beleg können nicht geändert werden. Storniere sie und erfasse eine neue."
 }

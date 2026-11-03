@@ -9646,5 +9646,10 @@
   "tesoreria.lineaTiempo.canal.tesorero": "Tesouraria",
   "tesoreria.lineaTiempo.canal.pos": "Ponto de venda",
   "tesoreria.lineaTiempo.canal.webhook": "Gateway de pagamento",
-  "tesoreria.lineaTiempo.canal.web": "Web"
+  "tesoreria.lineaTiempo.canal.web": "Web",
+  "tesoreria.lineaTiempo.campo.archivo": "a imagem do comprovante",
+  "tesoreria.lineaTiempo.campo.archivoEvidencia": "a evidência do pagamento",
+  "tesoreria.lineaTiempo.archivoCambiado": "imagem enviada",
+  "ventas.list.pagoRevisadoNoCambiaTitulo": "O pagamento não foi alterado",
+  "ventas.list.pagoRevisadoNoCambiaTexto": "Esse pagamento já foi revisado pela Tesouraria: não é possível alterar o valor, a forma de pagamento nem o comprovante. Anule-o e registre um novo."
 }
