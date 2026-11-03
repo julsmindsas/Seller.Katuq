@@ -9206,5 +9206,6 @@
     "cartera.filtros.deSaldoFiltrado": "Saldo mit diesen Filtern",
     "cartera.filtros.saldoFiltrado": "Saldo mit Filtern",
     "cartera.filtros.cupoSaldoTotal": "Kreditbalken: Gesamtsaldo des Kunden, ohne die Bestellfilter",
-    "cartera.filtros.avisoRangoAlReves": "{{campo}}: Der erste Wert ist größer als der zweite, daher passt kein Kunde. Bitte prüfen."
+    "cartera.filtros.avisoRangoAlReves": "{{campo}}: Der erste Wert ist größer als der zweite, daher passt kein Kunde. Bitte prüfen.",
+    "cartera.carteraClientes.noSePudoGenerarElExcel": "Die Excel-Datei konnte nicht erstellt werden"
 }

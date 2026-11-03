@@ -283,8 +283,8 @@
       {{ vista.recortaPedidos ? ('cartera.filtros.deSaldoFiltrado' | translate) : ('cartera.carteraClientes.deSaldo' | translate) }}
     </div>
     <div class="cx-result-actions">
-      <button type="button" class="cx-export" (click)="descargarExcel()" [disabled]="filtered.length === 0">
-        <i class="pi pi-file-excel"></i>
+      <button type="button" class="cx-export" (click)="descargarExcel()" [disabled]="filtered.length === 0 || generandoExcel">
+        <i class="pi" [ngClass]="generandoExcel ? 'pi-spin pi-spinner' : 'pi-file-excel'"></i>
         {{ 'cartera.carteraClientes.descargarExcel' | translate }}
       </button>
       <button type="button" class="cx-export" (click)="descargarPdf()"

@@ -31,6 +31,12 @@ export interface CarteraPedido {
   /** Ticket 1384: fecha de compra = creación del pedido (ISO) o null. */
   fechaCompra?: string | null;
   estadoPago: string;
+  /** Ticket 1465: ciudad de entrega ('' si no tiene). */
+  ciudad?: string;
+  /** Ticket 1465: el pedido ya está en estado Entregado. */
+  entregado?: boolean;
+  /** Ticket 1465: fecha (ISO) del último abono aprobado, o null si no tiene. */
+  ultimoAbono?: string | null;
   /** Fecha de entrega (ISO) o null si el pedido no la tiene. */
   fechaEntrega: string | null;
   /** Fecha límite de pago = fechaEntrega + payTermDays (ISO) o null. */
@@ -72,6 +78,9 @@ export interface CarteraCliente {
   tipoDocumento?: string;
   /** Ticket 1467: «Empresa (NIT)» o «Persona (CC)», decidido por el servidor. */
   tipoPersona?: TipoPersona;
+  /** Ticket 1465: teléfono y correo del cliente para gestionar el cobro ('' si no tiene). */
+  telefono?: string;
+  correo?: string;
   saldoPendiente: number;
   /** Saldo de los pedidos con 1 o más días vencido (ticket 1460). */
   vencido: number;

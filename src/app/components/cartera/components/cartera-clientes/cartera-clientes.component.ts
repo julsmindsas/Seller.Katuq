@@ -9,7 +9,6 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import {
   CarteraCliente,
@@ -39,6 +38,7 @@ import {
   CarteraFiltros,
   cuantosFiltrosAvanzados,
   descripcionFiltrosEs,
+  describirFiltros,
   ES_ORDEN,
   FilaVista,
   filtrosVacios,
@@ -50,6 +50,7 @@ import {
   sufijoArchivo,
   VistaCartera,
 } from '../../cartera-filtros.util';
+import { construirLibroCartera } from '../../cartera-excel.util';
 import { OpcionMulti } from '../cartera-multi/cartera-multi.component';
 
 import { TranslateService } from '@ngx-translate/core';
@@ -157,6 +158,7 @@ export class CarteraClientesComponent implements OnChanges {
   /** Saldo de lo que se ve con los filtros (todos los clientes de la lista). */
   totalVisible = 0;
   generandoPdf = false;
+  generandoExcel = false;
 
   /** Documento del cliente cuyo detalle está expandido (null = ninguno). */
   expandedDoc: string | null = null;
@@ -402,51 +404,40 @@ export class CarteraClientesComponent implements OnChanges {
     return filas;
   }
 
-  descargarExcel(): void {
-    const filas = this.filasParaDescargar();
-    if (!filas.length) return;
-    const datos: { [columna: string]: string | number }[] = filas.map((f) => ({
-      'Cliente': f.cliente,
-      'Documento': f.documento,
-      'Vendedor': f.vendedor,
-      'Plazo': f.plazo,
-      'Pedido': f.pedido,
-      'Factura': f.factura,
-      'Fecha de compra': f.compra,
-      'Fecha de entrega': f.entrega,
-      'Límite de pago': f.limite,
-      'Total': f.total,
-      'Pagado': f.pagado,
-      'Saldo': f.saldo,
-      'Días vencido': f.diasVencido,
-      'Antigüedad': f.antiguedad,
-    }));
-    const suma = (campo: 'total' | 'pagado' | 'saldo') => filas.reduce((s, f) => s + f[campo], 0);
-    datos.push({
-      'Cliente': 'TOTAL',
-      'Documento': '',
-      'Vendedor': '',
-      'Plazo': '',
-      'Pedido': '',
-      'Factura': '',
-      'Fecha de compra': '',
-      'Fecha de entrega': '',
-      'Límite de pago': '',
-      'Total': suma('total'),
-      'Pagado': suma('pagado'),
-      'Saldo': suma('saldo'),
-      'Días vencido': '',
-      'Antigüedad': '',
-    });
-    const hoja = XLSX.utils.json_to_sheet(datos);
-    hoja['!cols'] = [34, 14, 22, 12, 14, 14, 15, 15, 15, 14, 14, 14, 12, 22].map((wch) => ({ wch }));
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, 'Cartera');
-    // Ticket 1467: una segunda hoja dice con qué filtros se sacó el archivo.
-    const hojaFiltros = XLSX.utils.aoa_to_sheet(this.filasDeFiltros());
-    hojaFiltros['!cols'] = [{ wch: 24 }, { wch: 60 }];
-    XLSX.utils.book_append_sheet(libro, hojaFiltros, 'Filtros');
-    XLSX.writeFile(libro, `${this.nombreArchivo()}.xlsx`);
+  /**
+   * Ticket 1465: Excel para trabajar la cartera, en tres hojas (Resumen, Por cliente y Detalle), con la misma vista
+   * de la pantalla. La librería se carga solo al descargar para no pesar en el resto de la pantalla.
+   */
+  async descargarExcel(): Promise<void> {
+    if (!this.vista.filas.length || this.generandoExcel) return;
+    this.generandoExcel = true;
+    this.cdr.markForCheck();
+    try {
+      const ExcelJS = await import('exceljs');
+      const ahora = new Date();
+      const libro = construirLibroCartera(ExcelJS, {
+        empresa: this.nombreEmpresa(),
+        usuario: this.nombreUsuario(),
+        ahora,
+        filtros: describirFiltros(this.filtros).map((c) => [c.grupoEs, c.valorEs]),
+        orden: ES_ORDEN[this.filtros.orden],
+        vista: this.vista,
+        origen: window.location.origin,
+      });
+      const buffer = await libro.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.nombreArchivo()}.xlsx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      Swal.fire({ icon: 'error', title: this.translate.instant('cartera.carteraClientes.noSePudoGenerarElExcel'), text: this.translate.instant('cartera.carteraClientes.intentaDeNuevoEnUn') });
+    } finally {
+      this.generandoExcel = false;
+      this.cdr.markForCheck();
+    }
   }
 
   async descargarPdf(): Promise<void> {
@@ -509,26 +500,19 @@ export class CarteraClientesComponent implements OnChanges {
     return descripcionFiltrosEs(this.filtros);
   }
 
-  /** Renglones de la hoja «Filtros» del Excel: cada filtro activo, el orden y la fecha en que se generó. */
-  private filasDeFiltros(): string[][] {
-    const filas: string[][] = [['Filtro', 'Valor']];
-    const texto = this.descripcionFiltros();
-    if (texto === 'Toda la cartera') {
-      filas.push(['Filtros', texto]);
-    } else {
-      texto.split(' · ').forEach((par) => {
-        const i = par.indexOf(': ');
-        filas.push(i > 0 ? [par.slice(0, i), par.slice(i + 2)] : ['Filtro', par]);
-      });
-    }
-    filas.push(['Orden', ES_ORDEN[this.filtros.orden]]);
-    filas.push(['Generado el', this.fechaCorta(new Date().toISOString())]);
-    return filas;
-  }
-
   private nombreEmpresa(): string {
     try {
       return JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Quién descarga: nombre de la sesión, o su correo. */
+  private nombreUsuario(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u.name || u.email || '';
     } catch {
       return '';
     }
@@ -540,10 +524,13 @@ export class CarteraClientesComponent implements OnChanges {
       .replace(/[̀-ͯ]/g, '')
       .replace(/[^A-Za-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
-    const fecha = new Date().toISOString().split('T')[0];
-    // Ticket 1467: el nombre dice los filtros aplicados (ej. Cartera_Empresa_2026-11-03_Vendedor-Ana).
+    // Fecha de hoy en hora local (con toISOString saldría el día de mañana después de las 7 p. m. en Colombia).
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+    // Tickets 1467 y 1465: el nombre dice los filtros aplicados y termina con la fecha
+    // (ej. Cartera_Empresa_Vendedor-Ana_2026-11-03).
     const filtros = sufijoArchivo(this.filtros);
-    return `Cartera_${empresa || 'empresa'}_${fecha}${filtros ? '_' + filtros : ''}`;
+    return `Cartera_${empresa || 'empresa'}${filtros ? '_' + filtros : ''}_${fecha}`;
   }
 
   /** "dd/mm/aaaa" de una fecha ISO; vacío si no hay fecha. */

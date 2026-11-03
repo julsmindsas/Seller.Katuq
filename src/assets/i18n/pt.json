@@ -9374,5 +9374,6 @@
   "cartera.filtros.deSaldoFiltrado": "de saldo com estes filtros",
   "cartera.filtros.saldoFiltrado": "Saldo com os filtros",
   "cartera.filtros.cupoSaldoTotal": "Barra de limite: saldo total do cliente, sem os filtros de pedido",
-  "cartera.filtros.avisoRangoAlReves": "{{campo}}: o primeiro valor é maior que o segundo, por isso nenhum cliente aparece. Revise-os."
+  "cartera.filtros.avisoRangoAlReves": "{{campo}}: o primeiro valor é maior que o segundo, por isso nenhum cliente aparece. Revise-os.",
+  "cartera.carteraClientes.noSePudoGenerarElExcel": "Não foi possível gerar o Excel"
 }
