@@ -110,6 +110,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'whatsappBotDirectOrder',
   'whatsappBotAttention',
   'whatsappBotFollowUp',
+  // Formulario de nueva factura mejorado (D-623 fase 1, ticket 1492): plazo a crédito en días, IVA
+  // sugerido, orden de compra del cliente y medio de pago recordado. Solo la factura libre.
+  // Dueño: Daniel. Se retira el 2027-04-30: encendida para todos o eliminada (Artículo XII).
+  'facturaFormularioMejorado',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

@@ -35,10 +35,13 @@ function loadClass(file, extras = {}) {
   vm.runInNewContext(js, globals);
   const Cls = Object.values(globals.exports)[0];
   // D-540 (IDI-B10): el compositor recibe el traductor como tercer argumento; las pruebas usan los textos en español.
+  // D-623: las banderas llegan como último argumento; sin él, todo apagado, como antes.
+  const features = { isEnabled: () => false };
+  if (file === 'manual-invoice-form.component.ts') return class extends Cls { constructor(a, b = {}, c = features) { super(a, b, c); } };
   if (file !== 'invoice-composer.component.ts') return Cls;
   const es = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/assets/i18n/es.json'), 'utf8'));
   const translate = { currentLang: 'es', instant: (key, params = {}) => String(es[key] ?? key).replace(/\{\{\s*(\w+)\s*\}\}/g, (_, p) => params[p]) };
-  return class extends Cls { constructor(a, b, c = translate) { super(a, b, c); } };
+  return class extends Cls { constructor(a, b, c = translate, d = features) { super(a, b, c, d); } };
 }
 function formFixture() {
   const Form = loadClass('manual-invoice-form.component.ts');

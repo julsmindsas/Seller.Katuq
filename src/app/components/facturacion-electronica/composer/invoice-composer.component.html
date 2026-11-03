@@ -53,6 +53,12 @@
               <p>{{ 'facturacionElectronica.invoiceComposer.unMensajeParaTuCliente' | translate }}</p>
             </div>
           </div>
+          <div class="invoice-po" *ngIf="usesPurchaseOrder">
+            <label for="invoice-purchase-order" class="field-label">{{ 'facturacionElectronica.invoiceComposer.ordenDeCompraOReferencia' | translate }} <span class="composer-chip composer-chip--muted">{{ 'facturacionElectronica.invoiceComposer.opcional' | translate }}</span></label>
+            <input id="invoice-purchase-order" class="form-control" type="text" autocomplete="off" [ngModel]="purchaseOrder" (ngModelChange)="changePurchaseOrder($event)" [ngModelOptions]="{standalone: true}" [disabled]="editorDisabled" [class.is-invalid]="!!purchaseOrderError" [attr.aria-invalid]="!!purchaseOrderError" aria-describedby="invoice-purchase-order-help" [placeholder]="'facturacionElectronica.invoiceComposer.ordenDeCompraEjemplo' | translate">
+            <small id="invoice-purchase-order-help" class="field-hint">{{ 'facturacionElectronica.invoiceComposer.ordenDeCompraAyuda' | translate }}</small>
+            <small class="field-error" role="alert" *ngIf="purchaseOrderError">{{ purchaseOrderError }}</small>
+          </div>
           <div class="obs-templates" *ngIf="!observations.trim() && !editorDisabled">
             <span class="obs-templates__label">{{ 'facturacionElectronica.invoiceComposer.usarPlantilla' | translate }}</span>
             <button type="button" class="obs-template" *ngFor="let template of observationTemplates" (click)="applyTemplate(template.text)"><i class="pi pi-plus"></i> {{ template.label }}</button>
