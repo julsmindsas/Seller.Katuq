@@ -12825,7 +12825,7 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Regla:**
   - Quien sube un cambio que el comercio ve agrega una nota a `notas-version.json` (raíz del front) con `fecha`, `tipo` (NUEVO, MEJORA o CORRIGE) y `texto` en una línea, sin jerga ni números de ticket.
   - `update-version.js` publica en `version.json` solo las notas con fecha posterior a la última publicación (`publicada` del `version.json` que trae git). No vacía el archivo: el script corre en cada build, también en los locales.
-  - Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).
+  - ~~Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).~~ **SUPERSEDED por D-581 (2026-11-03):** sin ventana; las novedades van en la campana y solo las que le aplican a cada usuario.
 - **Dónde quedó:** sección «Notas de versión (D-567)» de `AGENTS.md`.
 - **Arranque:** 9 notas de los arreglos subidos y aún no publicados (tickets 1378-1381, 1386, 1410, 1411, 1384, 1360, 1419 y este).
 - **Sin publicar.**
@@ -13028,3 +13028,13 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Caso ALMARA corrido aparte, fuera de git (D-566). Carlos, Rodolfo y Jairo quedan en bodega y sale «6 pedidos de días anteriores siguen como despachados». DAD-014856 dice «está listo y se entrega hoy». El listo que se entrega mañana no aparece.
   - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
 - **Estado:** commiteado y en origin (backend `838c3620` en `backend-aws-security`). Falta desplegar y comprobar con la pantalla de ALMARA.
+
+### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
+- **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
+- **Decisión:**
+  - Se quita la ventana automática de D-567. Las novedades van en una pestaña «Novedades» de la campana, con un punto sin número cuando hay algo nuevo para el usuario.
+  - Cada nota puede declarar `modulos` (rutas del menú). Una nota con módulo solo le sale a quien tiene esa ruta en su menú y la abrió en los últimos 90 días. Sin módulo, la ven todos.
+  - El uso se guarda solo en el navegador, por usuario y empresa; no se envía a ningún lado.
+  - `version.json` agrega `recientes` (notas de los últimos 45 días) para que la pestaña no dependa de una sola versión.
+- **Spec:** `openspec/changes/novedades-sin-modal-por-uso/`.
+- **Estado:** en implementación.
