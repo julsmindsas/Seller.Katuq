@@ -257,9 +257,9 @@
   `off`, la novedad usa las fechas de `products` (select de dos campos, memorizadas 5 min por empresa).
   Pendiente para B19: `?orden=` de la URL de entrada no se aplica en la primera carga (el estado del script nace
   vacío, como hoy, para no cambiar el HTML apagado); sí se conserva al paginar, filtrar y abrir el panel.
-- [ ] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
+- [x] 3.11 «Calcula tu envío», tiempo de entrega e IVA en carrito y checkout (D11).
   **Éxito:** escenarios de EE con zonas, fijo, gratis desde, retiro y ciudad sin zona.
-  — **Parte 1 hecha (TX34-B14), queda `[ ]` hasta la parte 2:** «Calcula tu envío» en la ficha (bajo el precio y el
+  — **Parte 1 hecha (TX34-B14):** «Calcula tu envío» en la ficha (bajo el precio y el
   plazo) y en el carrito (en lugar de «Según tu ciudad», solo con zonas), con la ciudad recordada y preseleccionada
   en el checkout. Nace apagado: `storeMobile.shippingEstimate` en `off` deja el HTML, el script y los estilos como
   hoy (los estilos van en la página, no en la hoja compartida). Zonas (una ciudad con varias muestra todas con
@@ -267,9 +267,29 @@
   envío fijo, gratis desde (cuánto falta), puntos de retiro y «Mi ciudad no está»
   (WhatsApp de la tienda o, sin él, el contacto del pie; nunca costo ni plazo). Solo se guarda en el navegador la
   zona elegida (id y ciudad), vence a las 24 h y al pagar; el cuerpo del POST del pedido y el cálculo del
-  servidor no cambian. **Pendiente (parte 2, TX34-B15):** tiempo de entrega e «IVA incluido» en el carrito y el
-  checkout, y la 3.12.
+  servidor no cambian.
+  — **Parte 2 hecha (TX34-B15):** tiempo de entrega e «IVA incluido» en el carrito y el checkout, con el mismo
+  interruptor `shippingEstimate` (apagado = idéntico a hoy, byte a byte). El botón de agregar de la ficha, la tarjeta, el
+  destacado y las tarjetas que pinta el navegador lleva `data-plazo` (el mismo texto de `tiempoDeEntrega`) y `data-iva`
+  (solo si el precio lleva IVA); la línea del carrito los guarda al agregarse. El carrito dice «Entrega desde N días» con
+  el mayor de los plazos en días (también si otras líneas traen texto libre, D11), o el texto libre del comercio si
+  ninguna línea da días y es uno solo; con textos libres distintos y sin días no dice nada (no hay «mayor» entre textos y
+  elegir uno sería prometer lo que no se sabe). Sin plazo en ninguna línea no dice nada.
+  «Precios con IVA incluido» solo si TODAS las líneas lo llevan (un carrito mixto, o con líneas de un carrito viejo o
+  agregadas desde «Completa tu pedido» o favoritos, que hoy no traen el dato, no lo dice: es conservador a propósito). Dónde: en el carrito, al final de la
+  lista de productos (el pie ya carga el cálculo del envío y a 640 px de alto una nota más dejaba la lista en menos de
+  100 px); en «Tus datos» y «Revisa tu pedido», bajo el total. Solo presentación: el POST del pedido y los totales no
+  cambian (hay prueba). Los carritos viejos del navegador no rompen y no aportan plazo.
 - [ ] 3.12 [si P14] Aviso de la promesa de plazo en la revisión de publicación.
+  — **Parte servidor hecha (TX34-B15); queda `[ ]` hasta que el editor la pinte:** `GET /v1/sites/:id/avisos-publicacion` (empresa del token) devuelve
+  `data.avisos[]`; hoy el aviso `PLAZO_SIN_DATOS` cuando una sección visible (también dentro de las secciones libres)
+  dice que el comprador ve el tiempo de entrega antes de pagar y ningún producto vendible de la empresa tiene tiempo de
+  entrega que el comprador pueda ver (lectura mínima de `products`, por páginas de 300 y con tope de 3.000; no cuenta un
+  producto de categoría oculta ni fuera del tope del plan gratis; con el tope alcanzado sin hallar plazo no afirma
+  «ninguno»). No bloquea publicar y respeta el interruptor `shippingEstimate` (apagado, no avisa ni lee).
+  **Pendiente (front, aparte; sin esto el escenario «Plantilla con la promesa» no se cumple de punta a punta):** que
+  `sitio-editor.component.ts` llame a ese endpoint y sume el aviso a su lista de «lo que falta para vender»
+  (`get pendientes`, que hoy se arma en el navegador y no sabe de los productos).
 - [ ] 3.13 Cajón lateral (D8) en el render publicado, en ≤767 px, con `<details>` como respaldo
   sin JavaScript. **Éxito:** escenarios de TC; revisión visual de las 15 plantillas a 360, 390,
   767 y 768 px con y sin `data-kq-ajustes`, y sin JavaScript.
