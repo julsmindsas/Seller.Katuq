@@ -188,6 +188,22 @@ export class CashClosingComponent {
     return this.pedidos.length > 0 || this.pedidosAnteriores.length > 0;
   }
 
+  /**
+   * Días de las ventas sin cerrar que entran en este cierre:
+   * "03/11/2026", "01/11/2026 y 03/11/2026" o "01/11/2026, 02/11/2026 y 03/11/2026".
+   */
+  get fechasAnteriores(): string {
+    const dias = this.pedidosAnteriores
+      .map((p) => {
+        const d = new Date((p as any).fechaCreacion);
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      })
+      .filter(Boolean);
+    const unicos = Array.from(new Set(dias)).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+    if (unicos.length <= 1) return unicos[0] || '';
+    return unicos.slice(0, -1).join(', ') + ' y ' + unicos[unicos.length - 1];
+  }
+
   /** Efectivo de las ventas de días anteriores que entran en este cierre. */
   get efectivoAnteriores(): number {
     return this.formasPagoAnteriores.find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;

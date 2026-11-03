@@ -140,13 +140,13 @@
                       <span>{{ formatShortDate(item.fecha) }}<ng-container *ngIf="item.turno"> · Cierre {{ item.turno }}</ng-container></span>
                     </div>
                   </div>
-                  <div class="col-md-4 text-center">
-                    <div class="closing-user">
+                  <div class="col-md-5 text-center">
+                    <div class="closing-user" [title]="item.usuarioCierre">
                       <i class="fa fa-user me-2"></i>
                       <span>{{ item.usuarioCierre }}</span>
                     </div>
                   </div>
-                  <div class="col-md-4 text-end">
+                  <div class="col-md-3 text-end">
                     <div class="closing-total text-success">
                       <span>Total: {{ formatCurrency(item.totalVentas) }}</span>
                       <i class="fa fa-line-chart ms-2"></i>

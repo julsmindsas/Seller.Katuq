@@ -45,7 +45,7 @@
     <div style="font-size: 12px;">
       <div><strong>Período:</strong> {{ resumenPeriodo }}<span *ngIf="datosCierre?.turno > 1" style="color: inherit;"> · Cierre {{ datosCierre.turno }} del día</span></div>
       <div><strong>Fecha de emisión:</strong> {{ fechaHoraReporte }}</div>
-      <div><strong>Usuario:</strong> {{ empresaActual?.usuarioActual || 'Sistema' }}</div>
+      <div><strong>Usuario:</strong> {{ usuarioReporte }}</div>
     </div>
   </div>
 
@@ -67,7 +67,7 @@
             <td style="padding: 8px; text-align: right;">{{ totalEfectivo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;" *ngIf="efectivoAnteriores">
-            <td style="padding: 8px; font-weight: bold;">Efectivo de días anteriores:</td>
+            <td style="padding: 8px; font-weight: bold;">Efectivo de ventas sin cerrar del {{ fechasEfectivoAnteriores }}:</td>
             <td style="padding: 8px; text-align: right;">{{ efectivoAnteriores | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">

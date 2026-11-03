@@ -13254,3 +13254,20 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Si todo cuadra, la tarjeta no es clicable. Cada búsqueda nueva quita el filtro.
   - Solo cambia la pantalla: no hay cambios en el backend.
 - **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (solo front).
+
+### 2026-11-03 — D-589: el historial de cierres cuenta cada venta una vez y en su día; el reporte dice de qué fecha son las ventas sin cerrar
+- **Por qué:** al probar la red de seguridad (D-583), un cierre del 04-11 que solo recogió una venta olvidada del 03-11 (3.500) contó como un «día» con /usr/bin/bash. Eso partió el Promedio Diario a la mitad. Además, la venta no entraba en Total Ventas ni en la tarjeta de Efectivo del resumen.
+- **Backend (historial):**
+  - `resumenGeneral.totalVentas` y `formasPago` suman también `ventasDiasAnteriores` de cada cierre. Cada venta entra en un solo cierre, así que no se cuenta dos veces.
+  - Cada cierre devuelve `ventasDiasAnteriores.formasPago` y `dias`: las fechas, en hora Colombia, en que se hicieron esas ventas.
+- **Frontend (resumen del historial):**
+  - «Total Días» cuenta solo los días con ventas: los de cierres con ventas propias, más los días en que se hicieron las ventas recogidas después.
+  - El promedio es Total Ventas ÷ esos días.
+  - En los datos de prueba: Total Ventas 52.700, 1 día, promedio 52.700. Antes: 29.200, 2 días y 64.600.
+- **Reporte impreso y pantalla del cierre:**
+  - La fila «Efectivo de días anteriores» pasa a «Efectivo de ventas sin cerrar del 03/11/2026», con la fecha o las fechas reales.
+  - La tabla muestra la fecha completa (03/11/2026, 5:08 p. m.).
+  - El recuadro amarillo dice «Ventas sin cerrar del 03/11/2026 (N)».
+  - «Usuario» del reporte muestra quién cierra: antes salía siempre «Sistema», porque se leía de la empresa.
+- **Pendiente aparte, no tocado:** el recibo de venta POS dice «Forma de entrega: Efectivo»; muestra la forma de pago.
+- **Estado:** commiteado y pusheado. FALTA DESPLEGAR (el back primero).

@@ -885,3 +885,12 @@
     letter-spacing: normal;
   }
 }
+
+// Encabezado de cada cierre: un correo largo (sin espacios) se salía de su columna y pisaba
+// el total. Ahora se parte dentro de su columna; fecha y total no se parten.
+.cash-closing-history .closing-header {
+  .closing-date span { white-space: nowrap; }
+  .closing-user { justify-content: center; min-width: 0; }
+  .closing-user span { min-width: 0; overflow-wrap: anywhere; color: inherit; letter-spacing: normal; }
+  .closing-total { justify-content: flex-end; white-space: nowrap; }
+}
