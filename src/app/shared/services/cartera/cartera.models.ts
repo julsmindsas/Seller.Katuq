@@ -65,6 +65,12 @@ export interface CompromisoPago {
 /** Ticket 1467: empresa (NIT) o persona (cédula y demás); '' si no se pudo saber. */
 export type TipoPersona = 'empresa' | 'persona' | '';
 
+/** Ticket 1461: relación del cliente con el comercio. Solo «employee», «partner» y «company» son internos. */
+export type TipoRelacion = 'customer' | 'employee' | 'partner' | 'company';
+
+/** Ticket 1461: por qué se sugiere que un cliente es interno (documento igual al de un usuario o al NIT de la empresa). */
+export type SugerenciaInterno = 'usuario' | 'empresa';
+
 /** Cartera agregada de un cliente. */
 export interface CarteraCliente {
   documento: string;
@@ -90,6 +96,10 @@ export interface CarteraCliente {
   porVencer7?: number;
   porVencer7Pedidos?: number;
   pedidosActivos: number;
+  /** Ticket 1461: tipo de relación (solo cuando la empresa tiene la cartera interna encendida). */
+  relationType?: TipoRelacion;
+  /** Ticket 1461: «posible interno», nunca se marca solo. */
+  sugeridoInterno?: SugerenciaInterno;
   aging: AgingBuckets;
   /** % de cupo usado; null si el cliente no tiene cupo configurado. */
   cupoUsadoPct: number | null;
@@ -153,10 +163,29 @@ export interface CarteraResponse {
   kpis: CarteraKpis;
   clientes: CarteraCliente[];
   /**
-   * Ticket 1467 (preparado para el ticket 1461): resumen de la cartera interna (empleados, socios,
-   * empresa propia). Solo cuando el servidor lo manda aparece el filtro «Incluir internos».
+   * Ticket 1461: resumen de la cartera interna (empleados, socios, empresa propia) que el servidor apartó.
+   * Solo viene cuando la empresa tiene la bandera `carteraInterna` encendida; sin ella no aparece nada de esto.
    */
-  internos?: { monto: number; clientes: number } | null;
+  internos?: CarteraInternos | null;
+}
+
+/** Ticket 1461: lo que se apartó (o se incluyó) de cartera interna. */
+export interface CarteraInternos {
+  monto: number;
+  clientes: number;
+  pedidos?: number;
+  porTipo?: { [tipo: string]: { monto: number; clientes: number; pedidos: number } };
+  /** Los internos ya están dentro de la lista y de las cifras («Incluir internos» o vista interna). */
+  incluidos?: boolean;
+}
+
+/** Respuesta de POST /v1/treasury/cartera/relacion. */
+export interface MarcarRelacionResponse {
+  success: boolean;
+  documento: string;
+  relationType: TipoRelacion;
+  fichas: number;
+  actualizadas: number;
 }
 
 /** Un mes de la evolución: foto de la cartera total y vencida (ticket 1464). */

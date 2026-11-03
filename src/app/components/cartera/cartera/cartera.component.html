@@ -52,13 +52,35 @@
         <i class="pi pi-clock"></i>
         <span>{{ 'cartera.cartera.agingAntiguedad' | translate }}</span>
       </button>
+      <!-- Ticket 1461: solo cuando el servidor trae la cartera interna (bandera de la empresa encendida) -->
+      <button *ngIf="data.internos" type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 2"
+              [attr.aria-selected]="activeIndex === 2" (click)="onTabChange({ index: 2 })">
+        <i class="pi pi-users"></i>
+        <span>{{ 'cartera.interna.tab' | translate }}</span>
+      </button>
     </div>
 
     <app-cartera-clientes *ngIf="activeIndex === 0" [data]="data" [evolucion]="evolucion"
-                          [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"></app-cartera-clientes>
+                          [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"
+                          (verInterna)="onTabChange({ index: 2 })" (relacionCambiada)="alCambiarRelacion()"></app-cartera-clientes>
     <app-cartera-aging    *ngIf="activeIndex === 1" [data]="data"
                           [filtros]="filtros" (filtrosChange)="cambiarFiltros($event)"
                           (editarFiltros)="onTabChange({ index: 0 })"></app-cartera-aging>
+
+    <!-- Ticket 1461: Cartera interna (empleados, socios y empresa propia), aparte de la de clientes -->
+    <ng-container *ngIf="activeIndex === 2 && data.internos">
+      <div *ngIf="loadingInterna" class="cx-grid" aria-busy="true">
+        <div class="cx-card cx-skel" *ngFor="let i of [1,2,3,4]"></div>
+      </div>
+      <div *ngIf="errorInterna && !loadingInterna" class="cx-error" role="alert">
+        <i class="pi pi-exclamation-triangle"></i>
+        {{ 'cartera.cartera.noSePudoCargarLa' | translate }}
+        <button type="button" class="cx-retry" (click)="cargarInterna()">{{ 'cartera.cartera.reintentar' | translate }}</button>
+      </div>
+      <app-cartera-clientes *ngIf="dataInterna && !loadingInterna && !errorInterna" [data]="dataInterna" [modoInterno]="true"
+                            [filtros]="filtrosInterna" (filtrosChange)="cambiarFiltrosInterna($event)"
+                            (relacionCambiada)="alCambiarRelacion()"></app-cartera-clientes>
+    </ng-container>
 
   </ng-container>
 </div>

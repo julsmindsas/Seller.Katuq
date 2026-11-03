@@ -12,12 +12,15 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
 import {
   CarteraCliente,
   CarteraEvolucionResponse,
   CarteraPedido,
   CarteraResponse,
+  TipoRelacion,
 } from '../../../../shared/services/cartera/cartera.models';
 import {
   AGING_BUCKETS,
@@ -30,6 +33,9 @@ import {
   ORDEN_OPTIONS,
   PagoBadgeMeta,
   rangoAntiguedad,
+  RELACION_CLAVE,
+  RELACION_OPTIONS,
+  TIPOS_INTERNOS,
   RISK_OPTIONS,
   TIPO_PERSONA_OPTIONS,
   VENCE_OPTIONS,
@@ -52,6 +58,7 @@ import {
   VistaCartera,
 } from '../../cartera-filtros.util';
 import { construirLibroCartera } from '../../cartera-excel.util';
+import { construirLibroNomina } from '../../cartera-nomina-excel.util';
 import { cargarLogoPdf, construirPdfCartera, ModoPdfCartera } from '../../cartera-pdf.util';
 import { OpcionMulti } from '../cartera-multi/cartera-multi.component';
 
@@ -104,6 +111,17 @@ export class CarteraClientesComponent implements OnChanges {
   @Input() filtros: CarteraFiltros = filtrosVacios();
   @Output() filtrosChange = new EventEmitter<CarteraFiltros>();
 
+  /**
+   * Ticket 1461: es la vista «Cartera interna» (solo empleados, socios y empresa propia): no tiene el interruptor
+   * «Incluir internos» ni la gráfica de evolución, y trae el Excel «para nómina».
+   */
+  @Input() modoInterno = false;
+  /** Ticket 1461: la persona quiere ver la cartera interna aparte (botón del resumen). */
+  @Output() verInterna = new EventEmitter<void>();
+  /** Ticket 1461: Tesorería marcó el tipo de relación de un cliente; la pantalla vuelve a pedir la cartera. */
+  @Output() relacionCambiada = new EventEmitter<void>();
+  readonly relacionOpciones = RELACION_OPTIONS;
+
   readonly riskOptions = RISK_OPTIONS;
   readonly agingBuckets = AGING_BUCKETS;
   readonly ordenOptions = ORDEN_OPTIONS;
@@ -119,8 +137,9 @@ export class CarteraClientesComponent implements OnChanges {
   vendedorOpciones: OpcionMulti[] = [];
   /** El panel «Más filtros» está abierto. */
   masAbierto = false;
-  /** «Incluir internos» y «Compromiso de pago» solo aparecen cuando el servidor trae esos datos (tickets 1461 y 1463). */
+  /** La cartera interna solo existe cuando el servidor la trae (bandera `carteraInterna`, ticket 1461). */
   hayInternos = false;
+  /** «Compromiso de pago» solo aparece cuando los pedidos lo traen (ticket 1463). */
   hayCompromisos = false;
 
   /**
@@ -147,7 +166,12 @@ export class CarteraClientesComponent implements OnChanges {
   /** Documento del cliente cuyo detalle está expandido (null = ninguno). */
   expandedDoc: string | null = null;
 
-  constructor(private cdr: ChangeDetectorRef, private translate: TranslateService, private router: Router) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
+    private router: Router,
+    private carteraService: CarteraService,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -160,6 +184,8 @@ export class CarteraClientesComponent implements OnChanges {
     if (changes['filtros'] && changes['filtros'].firstChange && cuantosFiltrosAvanzados(this.filtros) > 0) {
       this.masAbierto = true;
     }
+    // En la vista interna el filtro «Tipo de relación» (Empleado, Socio, Empresa propia) es lo primero que se busca.
+    if (changes['modoInterno'] && this.modoInterno) this.masAbierto = true;
     if (changes['data'] || changes['filtros']) {
       // Las opciones también miran los filtros: lo elegido por la dirección compartida siempre tiene su opción.
       this.vendedorOpciones = this.armarOpcionesVendedor(this.clientes);
@@ -318,6 +344,123 @@ export class CarteraClientesComponent implements OnChanges {
       case 'excede':
         this.cambiar({ riesgo: f.riesgo === 'excede' ? 'todos' : 'excede' });
         return;
+    }
+  }
+
+  // ── Cartera interna (ticket 1461) ─────────────────────────────────────────
+  /** El filtro «Tipo de relación» solo sirve cuando la lista trae internos (vista interna o «Incluir internos»). */
+  get hayRelaciones(): boolean {
+    return this.hayInternos && (this.modoInterno || this.filtros.incluirInternos);
+  }
+
+  /** El resumen «Cartera interna $X (N)» se ve si hay algo apartado o si los internos ya están incluidos. */
+  get mostrarResumenInterno(): boolean {
+    const i = this.data?.internos;
+    return !this.modoInterno && !!i && (i.clientes > 0 || this.filtros.incluirInternos);
+  }
+
+  esInterno(c: CarteraCliente): boolean {
+    return !!c.relationType && TIPOS_INTERNOS.includes(c.relationType as any);
+  }
+
+  claveRelacion(c: CarteraCliente): string {
+    return RELACION_CLAVE[c.relationType || 'customer'];
+  }
+
+  claveSugerencia(c: CarteraCliente): string {
+    return c.sugeridoInterno === 'empresa' ? 'cartera.interna.sugeridoEmpresa' : 'cartera.interna.sugeridoUsuario';
+  }
+
+  /** Cuántos clientes de la lista son de cada tipo interno, para los números del encabezado de la vista interna. */
+  get resumenPorTipo(): { tipo: TipoRelacion; claveKey: string; clientes: number; monto: number }[] {
+    const porTipo = this.data?.internos?.porTipo || {};
+    return TIPOS_INTERNOS.map((t) => ({
+      tipo: t,
+      claveKey: RELACION_CLAVE[t],
+      clientes: porTipo[t]?.clientes || 0,
+      monto: porTipo[t]?.monto || 0,
+    }));
+  }
+
+  /**
+   * Tesorería elige el tipo de relación del cliente (Cliente, Empleado, Socio, Empresa propia). Lo guarda el
+   * servidor en todas las fichas con ese documento y deja el registro en la auditoría de Tesorería.
+   */
+  async cambiarRelacion(c: CarteraCliente, evento?: Event): Promise<void> {
+    if (evento) evento.stopPropagation();
+    const opciones: { [k: string]: string } = {};
+    RELACION_OPTIONS.filter((o) => o.value !== 'todos').forEach((o) => { opciones[o.value] = this.translate.instant(o.labelKey); });
+    const sugerido = c.sugeridoInterno ? this.translate.instant(this.claveSugerencia(c)) : '';
+    const r = await Swal.fire({
+      title: this.translate.instant('cartera.interna.cambiarTitulo'),
+      html: `<div style="text-align:left;color:#211F3A">
+        <strong>${this.escapar(c.nombre || '—')}</strong><br>
+        <span style="color:#6B6890;font-size:13px">${this.escapar(c.documento || '')}</span>
+        ${sugerido ? `<p style="margin:10px 0 0;font-size:13px;color:#6B6890">${this.escapar(sugerido)}</p>` : ''}
+        <p style="margin:10px 0 0;font-size:13px;color:#6B6890">${this.escapar(this.translate.instant('cartera.interna.cambiarAyuda'))}</p>
+      </div>`,
+      input: 'radio',
+      inputOptions: opciones,
+      inputValue: c.relationType || 'customer',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('cartera.interna.guardar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonColor: '#5F3FE0',
+    });
+    if (!r.isConfirmed || !r.value) return;
+    const nuevo = r.value as TipoRelacion;
+    if (nuevo === (c.relationType || 'customer')) return;
+    this.carteraService.marcarRelacion(c.documento, nuevo).subscribe({
+      next: () => {
+        Swal.fire({ icon: 'success', title: this.translate.instant('cartera.interna.guardado'), timer: 1600, showConfirmButton: false });
+        this.relacionCambiada.emit();
+      },
+      error: (err: HttpErrorResponse) => {
+        const sinFicha = err instanceof HttpErrorResponse && err.status === 404;
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('cartera.interna.noSePudoGuardar'),
+          text: this.translate.instant(sinFicha ? 'cartera.interna.sinFicha' : 'cartera.carteraClientes.intentaDeNuevoEnUn'),
+        });
+      },
+    });
+  }
+
+  /** Texto seguro para meter en el HTML de un aviso (nombres y documentos vienen de los datos del comercio). */
+  private escapar(texto: string): string {
+    return String(texto).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] as string));
+  }
+
+  generandoNomina = false;
+
+  /** Excel «para nómina» de lo que se ve en la vista interna (con sus filtros). Solo Tesorería llega aquí. */
+  async descargarNomina(): Promise<void> {
+    if (!this.vista.filas.length || this.generandoNomina) return;
+    this.generandoNomina = true;
+    this.cdr.markForCheck();
+    try {
+      const ExcelJS = await import('exceljs');
+      const ahora = new Date();
+      const libro = construirLibroNomina(ExcelJS, {
+        empresa: this.nombreEmpresa(),
+        usuario: this.nombreUsuario(),
+        ahora,
+        filtros: describirFiltros(this.filtros).map((c) => [c.grupoEs, c.valorEs]),
+        vista: this.vista,
+      });
+      const buffer = await libro.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.nombreArchivo('Cartera-interna-nomina')}.xlsx`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      Swal.fire({ icon: 'error', title: this.translate.instant('cartera.carteraClientes.noSePudoGenerarElExcel'), text: this.translate.instant('cartera.carteraClientes.intentaDeNuevoEnUn') });
+    } finally {
+      this.generandoNomina = false;
+      this.cdr.markForCheck();
     }
   }
 

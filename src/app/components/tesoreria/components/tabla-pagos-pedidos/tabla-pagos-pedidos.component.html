@@ -61,6 +61,8 @@
             <div class="tk-client-info">
               <div class="tk-cell-strong">{{ clienteNombre(pedido) }}</div>
               <div class="tk-cell-muted" *ngIf="pedido?.cliente?.documento">{{ pedido?.cliente?.documento }}</div>
+              <!-- Ticket 1461: el cliente es interno (empleado, socio o empresa propia): no suma en Cartera -->
+              <div class="tk-interno" *ngIf="esInterno(pedido)">{{ 'tesoreria.tablaPagosPedidos.interno' | translate }}</div>
             </div>
           </div>
         </td>
@@ -142,6 +144,12 @@
 
   <div class="tk-error" *ngIf="totalesIncompletos" role="alert">
     <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.tablaPagosPedidos.totalesIncompletos' | translate }}
+  </div>
+
+  <!-- Ticket 1461: la lista todavía incluye a los internos; el aviso dice cuántos hay en esta página -->
+  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && pedidosInternos() > 0" role="note">
+    <i class="pi pi-users me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.tablaPagosPedidos.avisoInternos' | translate:{ cantidad: pedidosInternos() } }}
   </div>
 
   <!-- Totales de la página -->

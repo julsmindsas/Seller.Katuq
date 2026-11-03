@@ -17,6 +17,9 @@ import Swal from "sweetalert2";
 import { ContactoCliente } from "../../modelo/pedido";
 import { mayusculaInicial } from '../../../../shared/utils/mayuscula-inicial';
 import { TranslateService } from '@ngx-translate/core';
+import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
+import { TipoRelacion } from '../../../../shared/services/cartera/cartera.models';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
 export interface ResultadoFormularioCliente {
@@ -182,8 +185,55 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     private modalService: NgbModal,
     private daneCodes: DaneCodesService,
     private translate: TranslateService,
+    private carteraService: CarteraService,
+    public features: CompanyFeaturesService,
   ) {
     this.initForm();
+  }
+
+  // ── Tipo de relación del cliente (cartera interna, ticket 1461) ────────────
+  /** Cliente, Empleado, Socio o Empresa propia. Se guarda aparte del resto de la ficha, por Tesorería. */
+  relationType: TipoRelacion = 'customer';
+  guardandoRelacion = false;
+  readonly relacionOpciones: { value: TipoRelacion; clave: string }[] = [
+    { value: 'customer', clave: 'cartera.interna.cliente' },
+    { value: 'employee', clave: 'cartera.interna.empleado' },
+    { value: 'partner', clave: 'cartera.interna.socio' },
+    { value: 'company', clave: 'cartera.interna.empresaPropia' },
+  ];
+
+  /**
+   * El campo solo se ve al EDITAR un cliente (necesita su documento), con la cartera interna encendida en la
+   * empresa y para los roles de Tesorería (el servidor lo vuelve a exigir). Sin la bandera, la ficha es la de siempre.
+   */
+  get puedeMarcarRelacion(): boolean {
+    if (!(this.isEdit && this.persist && this.target === 'client' && this.clienteData?.documento)) return false;
+    if (!this.features.isEnabled('carteraInterna')) return false;
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
+      return ['Tesorero', 'Administrador', 'Super Administrador'].includes(rol);
+    } catch {
+      return false;
+    }
+  }
+
+  cambiarRelacion(valor: TipoRelacion): void {
+    const anterior = this.relationType;
+    if (valor === anterior || this.guardandoRelacion) return;
+    this.relationType = valor;
+    this.guardandoRelacion = true;
+    this.carteraService.marcarRelacion(String(this.clienteData?.documento || ''), valor).subscribe({
+      next: () => {
+        this.guardandoRelacion = false;
+        if (this.clienteData) this.clienteData = { ...this.clienteData, relationType: valor === 'customer' ? undefined : valor };
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: this.translate.instant('cartera.interna.guardado'), showConfirmButton: false, timer: 1800 });
+      },
+      error: () => {
+        this.guardandoRelacion = false;
+        this.relationType = anterior;
+        Swal.fire({ icon: 'error', title: this.translate.instant('cartera.interna.noSePudoGuardar'), text: this.translate.instant('cartera.interna.sinFicha') });
+      },
+    });
   }
 
   ngOnInit(): void {
@@ -252,6 +302,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   /** Carga un cliente existente en el formulario (edición o "ya existe"). */
   private cargarEnFormulario(cliente: any): void {
     this.formulario.patchValue(cliente);
+    this.relationType = ['employee', 'partner', 'company'].includes(cliente?.relationType) ? cliente.relationType : 'customer';
 
     // Legacy: algunos clientes guardan el nombre completo en `nombres_completos`
     // con `apellidos_completos` vacío. Separar para que cada campo muestre lo suyo.

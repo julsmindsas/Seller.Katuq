@@ -51,6 +51,10 @@
       </div>
       <div class="tk-value">{{ metrics.carteraPendiente.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
       <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} {{ 'tesoreria.gestionPagos.pedidoSPorCobrar' | translate }}</div>
+      <!-- Ticket 1461: lo interno no suma aquí (igual que en Cartera) y se ve aparte -->
+      <div class="tk-sub tk-sub-interna" *ngIf="metrics.carteraPendiente.internos?.cantidad">
+        {{ 'tesoreria.gestionPagos.carteraInternaAparte' | translate:{ monto: (metrics.carteraPendiente.internos?.monto | currency:'COP':'symbol-narrow':'1.0-0'), cantidad: (metrics.carteraPendiente.internos?.cantidad | number) } }}
+      </div>
     </div>
     <div class="tk-card tk-accent-purple">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.porRevisar' | translate }}
@@ -128,6 +132,7 @@
       <app-tabla-pagos-pedidos
         *ngIf="activeIndex === 1"
         [estadosPago]="presetSinPago"
+        [clavesInternas]="metrics?.clavesInternas || []"
         mode="sinPago"
         [active]="activeIndex === 1"
         (changed)="onDataChanged()">

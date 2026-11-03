@@ -74,6 +74,8 @@ export const COMPANY_FEATURE_FLAGS = [
   'wooOrderStatusPublish',
   // Evolución mensual de la cartera (ticket 1464): foto diaria y gráfica de 12 meses. Dueño: Daniel. Se retira el 2027-04-30.
   'carteraEvolucion',
+  // Cartera interna separada (ticket 1461, D-586): tipo de relación del cliente, Cartera sin internos y vista «Cartera interna». Dueño: Daniel. Se retira el 2027-05-31.
+  'carteraInterna',
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',

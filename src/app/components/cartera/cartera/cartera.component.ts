@@ -43,7 +43,15 @@ export class CarteraComponent implements OnInit, OnDestroy {
   /** Fotos mensuales (ticket 1464). Es un extra: si no carga, la pantalla sigue sin la gráfica. */
   evolucion: CarteraEvolucionResponse | null = null;
 
+  /** 0 = Cartera por cliente, 1 = Aging, 2 = Cartera interna (ticket 1461, solo con la bandera encendida). */
   activeIndex = 0;
+
+  /** Ticket 1461: la vista «Cartera interna» (solo empleados, socios y empresa propia); se pide cuando se abre. */
+  dataInterna: CarteraResponse | null = null;
+  loadingInterna = false;
+  errorInterna = false;
+  /** Los filtros de la vista interna son propios (no viajan en la dirección ni se mezclan con los de Cartera). */
+  filtrosInterna: CarteraFiltros = filtrosVacios();
 
   /** Filtros de la cartera, compartidos por «Cartera por cliente» y «Aging» (ticket 1467). */
   filtros: CarteraFiltros = filtrosVacios();
@@ -64,7 +72,7 @@ export class CarteraComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const dir = this.route.snapshot.queryParamMap;
     this.filtros = filtrosDesdeUrl(dir);
-    this.activeIndex = dir.get('vista') === 'aging' ? 1 : 0;
+    this.activeIndex = this.indiceDeVista(dir.get('vista'));
     this.load();
     // Una dirección con filtros abierta estando ya en Cartera (o el botón atrás) también los aplica.
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((m) => this.alCambiarLaDireccion(m));
@@ -92,8 +100,14 @@ export class CarteraComponent implements OnInit, OnDestroy {
             this.escribirUrl$.next();
           }
           this.loading = false;
+          // Ticket 1461: sin cartera interna en el servidor (bandera apagada) no hay tercera vista.
+          if (!res.internos && this.activeIndex === 2) {
+            this.activeIndex = 0;
+            this.escribirUrl$.next();
+          }
           this.cdr.markForCheck();
           this.cargarEvolucion();
+          if (this.activeIndex === 2 && res.internos) this.cargarInterna();
         },
         error: (err) => {
           this.forbidden = err instanceof HttpErrorResponse && err.status === 403;
@@ -124,6 +138,48 @@ export class CarteraComponent implements OnInit, OnDestroy {
   onTabChange(event: { index: number }): void {
     this.activeIndex = event.index;
     this.escribirUrl$.next();
+    if (event.index === 2 && !this.dataInterna) this.cargarInterna();
+  }
+
+  private indiceDeVista(vista: string | null): number {
+    return vista === 'aging' ? 1 : vista === 'interna' ? 2 : 0;
+  }
+
+  private vistaDeIndice(indice: number): string | null {
+    return indice === 1 ? 'aging' : indice === 2 ? 'interna' : null;
+  }
+
+  /** Ticket 1461: la cartera de empleados, socios y empresa propia (el servidor la manda aparte). */
+  cargarInterna(): void {
+    this.loadingInterna = true;
+    this.errorInterna = false;
+    this.cdr.markForCheck();
+    this.cartera
+      .getCartera(false, true)
+      .pipe(timeout(15000), takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.dataInterna = res;
+          this.loadingInterna = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.errorInterna = true;
+          this.loadingInterna = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  cambiarFiltrosInterna(nuevos: CarteraFiltros): void {
+    this.filtrosInterna = { ...nuevos, incluirInternos: false };
+    this.cdr.markForCheck();
+  }
+
+  /** Tesorería marcó el tipo de relación de un cliente: todo se vuelve a pedir (la lista cambia de lugar). */
+  alCambiarRelacion(): void {
+    this.dataInterna = null;
+    this.load();
   }
 
   /** Un tab cambió un filtro: se guarda para los dos tabs y en la dirección. */
@@ -138,11 +194,12 @@ export class CarteraComponent implements OnInit, OnDestroy {
   private alCambiarLaDireccion(m: ParamMap): void {
     if (this.escribiendoUrl) return;
     const leidos = filtrosDesdeUrl(m);
-    const indice = m.get('vista') === 'aging' ? 1 : 0;
+    const indice = this.indiceDeVista(m.get('vista'));
     let cambio = false;
     if (indice !== this.activeIndex) {
       this.activeIndex = indice;
       cambio = true;
+      if (indice === 2 && this.data?.internos && !this.dataInterna) this.cargarInterna();
     }
     if (!mismosFiltros(leidos, this.filtros)) {
       const recargar = leidos.incluirInternos !== this.filtros.incluirInternos;
@@ -155,7 +212,7 @@ export class CarteraComponent implements OnInit, OnDestroy {
 
   /** Escribe los filtros y el tab en la dirección, sin llenar el historial y sin tocar otros parámetros. */
   private escribirDireccion(): void {
-    const params = { ...filtrosAUrl(this.filtros), vista: this.activeIndex === 1 ? 'aging' : null };
+    const params = { ...filtrosAUrl(this.filtros), vista: this.vistaDeIndice(this.activeIndex) };
     this.escribiendoUrl = true;
     const terminar = () => { this.escribiendoUrl = false; };
     this.router

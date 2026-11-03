@@ -29,7 +29,10 @@ export interface MetricCount {
 /** GET /metrics — todo calculado server-side. */
 export interface TreasuryMetrics {
   recaudadoHoy: MetricAmount;
-  carteraPendiente: MetricAmount;
+  /** Ticket 1461: con la cartera interna encendida, `internos` es lo que se apartó (empleados, socios, empresa propia). */
+  carteraPendiente: MetricAmount & { internos?: MetricAmount };
+  /** Ticket 1461: claves de documento de los clientes internos (solo con la cartera interna encendida). */
+  clavesInternas?: string[];
   porRevisar: MetricAmount;
   sinPago: MetricCount;
   alertasActivas: MetricCount;

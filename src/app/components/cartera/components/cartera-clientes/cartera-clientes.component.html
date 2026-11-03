@@ -120,6 +120,35 @@
     </div>
   </div>
 
+  <!-- Ticket 1461: vista «Cartera interna»: qué es y cuánto hay por tipo -->
+  <div class="cx-interna-cabeza" *ngIf="modoInterno && hayInternos">
+    <p class="cx-interna-texto">{{ 'cartera.interna.internaSub' | translate }}</p>
+    <div class="cx-interna-tipos">
+      <div class="cx-interna-tipo" *ngFor="let t of resumenPorTipo">
+        <div class="cx-interna-tipo-nombre">{{ t.claveKey | translate }}</div>
+        <div class="cx-interna-tipo-monto">{{ t.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="cx-interna-tipo-sub">{{ t.clientes | number }} {{ 'cartera.carteraClientes.clienteS' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket 1461: lo que se apartó (o ya se incluyó) de cartera interna. El interruptor está a la vista, no escondido -->
+  <div class="cx-interna-resumen" *ngIf="mostrarResumenInterno && data?.internos as i" role="region"
+       [attr.aria-label]="'cartera.interna.titulo' | translate">
+    <span class="cx-interna-icono" aria-hidden="true"><i class="pi pi-users"></i></span>
+    <div class="cx-interna-resumen-texto">
+      <strong class="cx-interna-resumen-titulo">{{ 'cartera.interna.resumen' | translate:{ monto: (i.monto | currency:'COP':'symbol-narrow':'1.0-0'), clientes: (i.clientes | number) } }}</strong>
+      <div class="cx-interna-resumen-sub">{{ (filtros.incluirInternos ? 'cartera.interna.incluidosAviso' : 'cartera.interna.apartadosAviso') | translate }}</div>
+    </div>
+    <label class="cx-interruptor cx-interna-interruptor" for="cx-internos">
+      <input id="cx-internos" type="checkbox" [ngModel]="filtros.incluirInternos" (ngModelChange)="cambiar({ incluirInternos: $event })">
+      <span class="cx-interruptor-texto">{{ 'cartera.filtros.grupoInternos' | translate }}</span>
+    </label>
+    <button type="button" class="cx-export" (click)="verInterna.emit()">
+      <i class="pi pi-arrow-right" aria-hidden="true"></i> {{ 'cartera.interna.verInterna' | translate }}
+    </button>
+  </div>
+
   <!-- Resumen por vendedor (ticket 1464, punto 4) y evolución de 12 meses (punto 5, solo con datos) -->
   <div class="cx-insights" *ngIf="clientes.length > 0"
        [class.cx-insights-dos]="evolucion && evolucion.puntos.length > 0">
@@ -261,13 +290,12 @@
           <option *ngFor="let opt of compromisoOptions" [value]="opt.value">{{ opt.labelKey | translate }}</option>
         </select>
       </div>
-      <!-- Preparado para el ticket 1461: solo se ve cuando el servidor trae la cartera interna -->
-      <div class="cx-field cx-field-interno" *ngIf="hayInternos">
-        <label for="cx-internos">{{ 'cartera.filtros.grupoInternos' | translate }}</label>
-        <label class="cx-interruptor" for="cx-internos">
-          <input id="cx-internos" type="checkbox" [ngModel]="filtros.incluirInternos" (ngModelChange)="cambiar({ incluirInternos: $event })">
-          <span class="cx-interruptor-texto">{{ 'cartera.filtros.internosAyuda' | translate }}</span>
-        </label>
+      <!-- Ticket 1461: tipo de relación, cuando la lista trae internos (vista interna o «Incluir internos») -->
+      <div class="cx-field" *ngIf="hayRelaciones">
+        <label for="cx-relacion">{{ 'cartera.interna.grupoRelacion' | translate }}</label>
+        <select id="cx-relacion" [ngModel]="filtros.relacion" (ngModelChange)="cambiar({ relacion: $event })">
+          <option *ngFor="let opt of relacionOpciones" [value]="opt.value">{{ opt.labelKey | translate }}</option>
+        </select>
       </div>
     </div>
   </div>
@@ -283,6 +311,10 @@
       {{ vista.recortaPedidos ? ('cartera.filtros.deSaldoFiltrado' | translate) : ('cartera.carteraClientes.deSaldo' | translate) }}
     </div>
     <div class="cx-result-actions">
+      <button type="button" class="cx-export cx-export-nomina" *ngIf="modoInterno" (click)="descargarNomina()" [disabled]="filtered.length === 0 || generandoNomina">
+        <i class="pi" [ngClass]="generandoNomina ? 'pi-spin pi-spinner' : 'pi-file-excel'"></i>
+        {{ 'cartera.interna.descargarNomina' | translate }}
+      </button>
       <button type="button" class="cx-export" (click)="descargarExcel()" [disabled]="filtered.length === 0 || generandoExcel">
         <i class="pi" [ngClass]="generandoExcel ? 'pi-spin pi-spinner' : 'pi-file-excel'"></i>
         {{ 'cartera.carteraClientes.descargarExcel' | translate }}
@@ -310,8 +342,15 @@
     </div>
   </div>
 
+  <!-- Empty: la vista interna no tiene a nadie -->
+  <div *ngIf="clientes.length === 0 && modoInterno" class="cx-empty">
+    <i class="pi pi-users"></i>
+    <div class="cx-empty-title">{{ 'cartera.interna.vacio' | translate }}</div>
+    <div>{{ 'cartera.interna.vacioAyuda' | translate }}</div>
+  </div>
+
   <!-- Empty: sin cartera en absoluto -->
-  <div *ngIf="clientes.length === 0" class="cx-empty">
+  <div *ngIf="clientes.length === 0 && !modoInterno" class="cx-empty">
     <i class="pi pi-check-circle"></i>
     <div class="cx-empty-title">{{ 'cartera.carteraAging.noHayCarteraPendiente' | translate }}</div>
     <div>{{ 'cartera.carteraClientes.todosLosPedidosEstanAl' | translate }}</div>
@@ -339,6 +378,13 @@
           <div class="cx-client-name">
             <span class="cx-client-nombre">{{ c.nombre || '—' }}</span>
             <span class="cx-risk" [ngClass]="riesgo(c).cssClass">{{ riesgo(c).label }}</span>
+            <span class="cx-tipo-relacion" *ngIf="esInterno(c)">{{ claveRelacion(c) | translate }}</span>
+            <!-- Ticket 1461: «posible interno». Nunca se marca solo: una persona de Tesorería decide -->
+            <button type="button" class="cx-sugerencia" *ngIf="c.sugeridoInterno && !esInterno(c)"
+                    [attr.title]="claveSugerencia(c) | translate" (click)="cambiarRelacion(c, $event)"
+                    (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+              <i class="pi pi-question-circle" aria-hidden="true"></i> {{ 'cartera.interna.marcarSugerido' | translate }}
+            </button>
           </div>
           <div class="cx-client-meta">
             <span *ngIf="c.documento"><i class="pi pi-id-card"></i>{{ c.documento }}</span>
@@ -346,6 +392,10 @@
             <span><i class="pi pi-shopping-cart"></i>{{ c.pedidosActivos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
             <span class="cx-dso" [title]="'cartera.carteraClientes.ayudaDiasCliente' | translate"><i class="pi pi-clock"></i>{{ 'cartera.carteraClientes.promedioEnCartera' | translate:{dias: (c.dso | number:'1.0-0')} }}</span>
             <span class="cx-plazo" [title]="'cartera.carteraClientes.plazoDePagoAcordadoCon' | translate"><i class="pi pi-calendar"></i>{{ textoPlazo(c) }}</span>
+            <button type="button" class="cx-relacion-accion" *ngIf="hayInternos" (click)="cambiarRelacion(c, $event)"
+                    (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">
+              <i class="pi pi-tag" aria-hidden="true"></i> {{ 'cartera.interna.tipoRelacion' | translate }}
+            </button>
           </div>
         </div>
 

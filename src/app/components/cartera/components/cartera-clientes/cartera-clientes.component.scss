@@ -403,8 +403,6 @@
   input { min-width: 0; padding-left: 10px; padding-right: 8px; }
 }
 
-.cx-field.cx-field-interno { justify-content: flex-end; }
-
 .cx-field .cx-interruptor {
   display: flex;
   align-items: center;
@@ -527,3 +525,110 @@
   font-size: 11.5px;
   line-height: 1.3;
 }
+
+// ── Cartera interna (ticket 1461): plano, lila y morado; sin gradientes ───────────────────────
+// Resumen «Cartera interna $X (N)» con el interruptor a la vista.
+.cx-interna-resumen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--kc-accent-wash);
+  border: 1px solid #e4dff7;
+  border-radius: 16px;
+}
+.cx-interna-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.cx-interna-resumen-texto { flex: 1 1 260px; min-width: 0; }
+.cx-interna-resumen-titulo {
+  display: block;
+  font-family: var(--kc-font-head);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--kc-ink);
+  letter-spacing: normal;
+}
+.cx-interna-resumen-sub { margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--kc-ink2); }
+.cx-interna-interruptor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  letter-spacing: normal;
+  text-transform: none;
+
+  input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #5F3FE0; }
+}
+
+// Encabezado de la vista interna: qué es y cuánto hay por tipo.
+.cx-interna-cabeza {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e4dff7;
+  border-radius: 16px;
+}
+.cx-interna-texto { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--kc-ink2); letter-spacing: normal; }
+.cx-interna-tipos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cx-interna-tipo { padding: 10px 12px; background: var(--kc-accent-wash); border-radius: 11px; min-width: 0; }
+.cx-interna-tipo-nombre {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--kc-muted2);
+}
+.cx-interna-tipo-monto { margin-top: 2px; font-family: var(--kc-font-head); font-size: 18px; font-weight: 800; color: var(--kc-ink); overflow-wrap: anywhere; }
+.cx-interna-tipo-sub { font-size: 12px; color: var(--kc-ink2); }
+@media (max-width: 600px) {
+  .cx-interna-tipos { grid-template-columns: 1fr; }
+  .cx-interna-resumen .cx-export { width: 100%; justify-content: center; }
+}
+
+// Tipo de relación en la tarjeta del cliente, «¿Es interno? Marcar» y el botón de cambiar el tipo.
+.cx-tipo-relacion {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent) !important;
+  font-size: 10.5px !important;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cx-sugerencia,
+.cx-relacion-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #e4dff7;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kc-accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { background: var(--kc-accent-wash); }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+.cx-sugerencia { background: #fdf6dc; border-color: #f1e3b0; color: #{$cx-aging-16-ink}; &:hover { background: #fbefc4; } }

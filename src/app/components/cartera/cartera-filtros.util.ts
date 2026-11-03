@@ -17,6 +17,9 @@ import {
   esClienteCredito,
   RISK_OPTIONS,
   RiskFilter,
+  RELACION_ES,
+  RELACION_OPTIONS,
+  RelacionFiltro,
   TIPO_PERSONA_OPTIONS,
   TipoPersonaFiltro,
   VENCE_OPTIONS,
@@ -37,6 +40,8 @@ export interface CarteraFiltros {
   busqueda: string;
   riesgo: RiskFilter;
   tipoPersona: TipoPersonaFiltro;
+  /** Ticket 1461: tipo de relación (Cliente, Empleado, Socio, Empresa propia); solo cuenta si el servidor la trae. */
+  relacion: RelacionFiltro;
   /** Selección múltiple; SIN_VENDEDOR = clientes sin vendedor. Vacío = todos. */
   vendedores: string[];
   /** Selección múltiple de rangos de antigüedad (por pedido). Vacío = todos. */
@@ -66,6 +71,7 @@ export function filtrosVacios(orden: OrdenCartera = 'saldo'): CarteraFiltros {
     busqueda: '',
     riesgo: 'todos',
     tipoPersona: 'todos',
+    relacion: 'todos',
     vendedores: [],
     antiguedad: [],
     estadosPago: [],
@@ -89,6 +95,7 @@ export function filtrosVacios(orden: OrdenCartera = 'saldo'): CarteraFiltros {
 export function cuantosFiltrosAvanzados(f: CarteraFiltros): number {
   let n = 0;
   if (f.tipoPersona !== 'todos') n++;
+  if (f.relacion !== 'todos') n++;
   if (f.estadosPago.length) n++;
   if (f.factura !== 'todas') n++;
   if (f.vence !== 'todos') n++;
@@ -202,6 +209,7 @@ export function clienteCumple(c: CarteraCliente, f: CarteraFiltros): boolean {
       break;
   }
   if (f.tipoPersona !== 'todos' && (c.tipoPersona || '') !== f.tipoPersona) return false;
+  if (f.relacion !== 'todos' && (c.relationType || 'customer') !== f.relacion) return false;
   if (f.vendedores.length) {
     const vendedor = (c.vendedor || '').trim();
     const clave = vendedor || SIN_VENDEDOR;
@@ -391,6 +399,10 @@ export function describirFiltros(f: CarteraFiltros): ChipFiltro[] {
     chips.push({ id: 'tipo', grupoKey: 'cartera.filtros.grupoTipo', valorKey: claveOpcion(TIPO_PERSONA_OPTIONS, f.tipoPersona), grupoEs: 'Tipo de cliente', valorEs: ES_TIPO[f.tipoPersona],
       quitar: (x) => ({ ...x, tipoPersona: 'todos' }) });
   }
+  if (f.relacion !== 'todos') {
+    chips.push({ id: 'relacion', grupoKey: 'cartera.interna.grupoRelacion', valorKey: claveOpcion(RELACION_OPTIONS, f.relacion), grupoEs: 'Tipo de relación', valorEs: RELACION_ES[f.relacion],
+      quitar: (x) => ({ ...x, relacion: 'todos' }) });
+  }
   f.vendedores.forEach((v) => {
     const sin = v === SIN_VENDEDOR;
     chips.push({ id: 'vendedor:' + v, grupoKey: 'cartera.carteraClientes.vendedor',
@@ -488,7 +500,7 @@ export function sufijoArchivo(f: CarteraFiltros): string {
 
 /** Nombres de los parámetros de la URL que son de los filtros (para no tocar otros). */
 export const PARAMS_FILTROS = [
-  'q', 'riesgo', 'tipo', 'vend', 'antig', 'pago', 'fact', 'vence', 'smin', 'smax',
+  'q', 'riesgo', 'tipo', 'rel', 'vend', 'antig', 'pago', 'fact', 'vence', 'smin', 'smax',
   'cd', 'ch', 'ed', 'eh', 'ld', 'lh', 'comp', 'int', 'orden', 'vista',
 ] as const;
 
@@ -519,6 +531,7 @@ export function filtrosDesdeUrl(leer: { get(k: string): string | null; getAll(k:
     busqueda: (leer.get('q') || '').slice(0, 120),
     riesgo: unicoDe(leer.get('riesgo'), RISK_OPTIONS.map((o) => o.value), vacios.riesgo),
     tipoPersona: unicoDe(leer.get('tipo'), TIPO_PERSONA_OPTIONS.map((o) => o.value), vacios.tipoPersona),
+    relacion: unicoDe(leer.get('rel'), RELACION_OPTIONS.map((o) => o.value), vacios.relacion),
     vendedores,
     antiguedad,
     estadosPago: pagos,
@@ -558,6 +571,7 @@ export function filtrosAUrl(f: CarteraFiltros): ParamsUrl {
     q: f.busqueda.trim() || null,
     riesgo: f.riesgo !== v.riesgo ? f.riesgo : null,
     tipo: f.tipoPersona !== v.tipoPersona ? f.tipoPersona : null,
+    rel: f.relacion !== v.relacion ? f.relacion : null,
     vend: f.vendedores.length ? [...f.vendedores] : null,
     // En el orden de las opciones, así la misma selección da siempre la misma dirección.
     antig: f.antiguedad.length ? AGING_BUCKETS.map((b) => b.key as string).filter((k) => f.antiguedad.includes(k as RangoAntiguedad)) : null,

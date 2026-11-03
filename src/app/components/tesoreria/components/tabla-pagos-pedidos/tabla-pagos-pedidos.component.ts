@@ -19,6 +19,7 @@ import { VentasService } from '../../../../shared/services/ventas/ventas.service
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { OrdersTotals } from '../../../../shared/services/treasury/treasury.models';
+import { claveDocumento } from '../../../../shared/utils/clave-documento';
 import {
   filtroPedidosTesoreria,
   metaEstado,
@@ -56,6 +57,8 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   @Input() estadosPago: string[] = [];
   @Input() mode: TablaModo = 'porRevisar';
   @Input() active = false;
+  /** Ticket 1461: claves de documento de los clientes internos (vacío si la cartera interna está apagada). */
+  @Input() clavesInternas: string[] = [];
 
   /** Notifica al padre que un pago cambió de estado (para refrescar KPIs). */
   @Output() changed = new EventEmitter<void>();
@@ -348,6 +351,26 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   get totalesIncompletos(): boolean {
     return this.totales?.truncado === true;
   }
+  // ── Clientes internos (ticket 1461) ───────────────────────────────────────
+  private internosDe: string[] | null = null;
+  private internosSet = new Set<string>();
+
+  /** ¿El cliente del pedido es interno? Misma clave de documento que el servidor (sin puntos, guiones ni dígito de verificación). */
+  esInterno(pedido: any): boolean {
+    if (!this.clavesInternas || this.clavesInternas.length === 0) return false;
+    if (this.internosDe !== this.clavesInternas) {
+      this.internosDe = this.clavesInternas;
+      this.internosSet = new Set(this.clavesInternas);
+    }
+    const clave = claveDocumento(pedido?.cliente?.documento);
+    return !!clave && this.internosSet.has(clave);
+  }
+
+  /** Cuántos pedidos de la página son de clientes internos. */
+  pedidosInternos(): number {
+    return this.orders.reduce((n, p) => n + (this.esInterno(p) ? 1 : 0), 0);
+  }
+
   totalPedidos(): number {
     return this.totales ? this.totales.totalItems : this.orders.length;
   }

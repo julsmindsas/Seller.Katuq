@@ -60,6 +60,29 @@ export const TIPO_PERSONA_OPTIONS: { labelKey: string; value: TipoPersonaFiltro 
 ];
 
 /**
+ * Ticket 1461: tipo de relación del cliente con el comercio. «Cliente» es lo normal; los otros tres son
+ * cartera interna (se manejan por otra vía, por ejemplo descuento de nómina).
+ */
+export type RelacionFiltro = 'todos' | 'customer' | 'employee' | 'partner' | 'company';
+export const RELACION_OPTIONS: { labelKey: string; value: RelacionFiltro }[] = [
+  { labelKey: 'cartera.interna.todos',    value: 'todos' },
+  { labelKey: 'cartera.interna.cliente',  value: 'customer' },
+  { labelKey: 'cartera.interna.empleado', value: 'employee' },
+  { labelKey: 'cartera.interna.socio',    value: 'partner' },
+  { labelKey: 'cartera.interna.empresaPropia', value: 'company' },
+];
+/** Los tres tipos internos, en el orden en que se muestran. */
+export const TIPOS_INTERNOS: ('employee' | 'partner' | 'company')[] = ['employee', 'partner', 'company'];
+/** Textos en español para los archivos (Excel y PDF no se traducen). */
+export const RELACION_ES: { [k: string]: string } = {
+  customer: 'Cliente', employee: 'Empleado', partner: 'Socio', company: 'Empresa propia',
+};
+/** Clave i18n de cada tipo. */
+export const RELACION_CLAVE: { [k: string]: string } = {
+  customer: 'cartera.interna.cliente', employee: 'cartera.interna.empleado', partner: 'cartera.interna.socio', company: 'cartera.interna.empresaPropia',
+};
+
+/**
  * Ticket 1467: estados de pago del filtro. «Pospendiente» se llama «Pago en revisión» (ticket 1448) y
  * «Crédito», «Pago parcial» y «Procesando» solo aparecen cuando algún pedido ya está en ese estado.
  */
