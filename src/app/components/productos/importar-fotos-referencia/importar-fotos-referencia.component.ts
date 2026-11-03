@@ -4,9 +4,12 @@ import { FormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { ImagenService } from '../../../shared/utils/image.service';
 import { FotosPorReferenciaService } from '../../../shared/services/productos/fotos-por-referencia.service';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
+import { MENSAJE_ESTANDAR_FOTO, mensajeDeAviso, mensajeDeRechazo } from '../../../shared/services/productos/photo-quality';
+import { evaluarArchivoEstandar } from '../../../shared/services/productos/photo-quality-canvas';
 
 /** Estados que devuelve el backend por archivo (services/productos/fotosPorReferencia.js). */
-type Estado = 'asignada' | 'sin_producto' | 'ambiguo' | 'repetida' | 'formato_no_valido' | 'nombre_no_valido' | 'muy_pesada';
+type Estado = 'asignada' | 'sin_producto' | 'ambiguo' | 'repetida' | 'formato_no_valido' | 'nombre_no_valido' | 'muy_pesada' | 'ilegible';
 
 interface Fila {
   nombre: string;
@@ -18,6 +21,10 @@ interface Fila {
   orden: number | null;
   archivo?: File;
   resultado?: 'ok' | 'error';
+  /** D-629 (bandera fotosEstandar): motivo del rechazo, con qué hacer. */
+  detalle?: string;
+  /** D-629: avisos suaves (pequeña, no cuadrada); la foto se sube igual. */
+  avisos?: string[];
 }
 
 interface Grupo {
@@ -30,6 +37,8 @@ interface Grupo {
 
 const EXTENSIONES = ['jpg', 'jpeg', 'png', 'webp'];
 const MAX_BYTES = 5 * 1024 * 1024;
+/** D-629: fotos que se revisan a la vez en el navegador (decodificar gasta memoria). */
+const REVISIONES_A_LA_VEZ = 4;
 const PRODUCTOS_POR_TANDA = 50;
 const SUBIDAS_A_LA_VEZ = 3;
 
@@ -41,6 +50,7 @@ export const TEXTO_ESTADO: Record<Estado, string> = {
   formato_no_valido: 'Formato no válido',
   nombre_no_valido: 'Nombre no válido',
   muy_pesada: 'Muy pesada',
+  ilegible: 'No se puede leer',
 };
 
 /**
@@ -63,6 +73,9 @@ export class ImportarFotosReferenciaComponent {
   paso: 'elegir' | 'vista' | 'aplicando' | 'resumen' = 'elegir';
   modo: 'agregar' | 'reemplazar' = 'agregar';
   revisando = false;
+  /** D-629: avance de la revisión de las fotos (solo con la bandera fotosEstandar). */
+  revisadas = 0;
+  totalPorRevisar = 0;
   descargandoReferencias = false;
   error = '';
   filas: Fila[] = [];
@@ -71,10 +84,31 @@ export class ImportarFotosReferenciaComponent {
   aplicados = 0;
   huboCambios = false;
 
-  constructor(private api: FotosPorReferenciaService, private imagenes: ImagenService, private cdr: ChangeDetectorRef) {}
+  /** D-629: mensaje único del estándar (no anuncia ninguna conversión); se muestra solo con fotosEstandar. */
+  readonly mensajeEstandarFoto = MENSAJE_ESTANDAR_FOTO;
+
+  constructor(
+    private api: FotosPorReferenciaService,
+    private imagenes: ImagenService,
+    private cdr: ChangeDetectorRef,
+    private features: CompanyFeaturesService,
+  ) {}
+
+  /** Con la bandera apagada la pantalla es la de siempre (5 MB, sin avisos por foto). */
+  get fotosEstandarActiva(): boolean { return this.features.isEnabled('fotosEstandar'); }
 
   get asignadas(): Fila[] { return this.filas.filter((f) => f.estado === 'asignada'); }
-  get noAsignadas(): Fila[] { return this.filas.filter((f) => f.estado !== 'asignada'); }
+  /** Sin producto o con nombre dudoso. Con fotosEstandar las rechazadas se cuentan aparte, no aquí. */
+  get noAsignadas(): Fila[] { return this.filas.filter((f) => f.estado !== 'asignada' && !this.esRechazada(f)); }
+  /** D-629: fotos que se suben pero llevan un aviso suave. */
+  get conAviso(): Fila[] { return this.asignadas.filter((f) => !!f.avisos?.length); }
+  /** D-629: fotos que no se agregan porque pesan de más o no se pueden leer. */
+  get rechazadas(): Fila[] { return this.filas.filter((f) => this.esRechazada(f)); }
+
+  /** Con la bandera apagada «muy pesada» sigue siendo una fila más de «sin asignar», como siempre. */
+  private esRechazada(f: Fila): boolean {
+    return this.fotosEstandarActiva && (f.estado === 'muy_pesada' || f.estado === 'ilegible');
+  }
 
   /** Lee los archivos elegidos (varios o una carpeta) y pide la vista previa. */
   async elegirArchivos(evento: Event): Promise<void> {
@@ -88,11 +122,14 @@ export class ImportarFotosReferenciaComponent {
       // En una carpeta pueden venir otros archivos: solo cuentan los que parecen imágenes.
       const imagenes = archivos.filter((a) => a.type.startsWith('image/') || EXTENSIONES.includes(this.extension(a.name)));
       const respuesta: any = await this.api.previsualizar(imagenes.map((a) => a.name));
+      const estandar = this.fotosEstandarActiva;
       this.filas = (respuesta?.archivos || []).map((fila: Fila, i: number) => {
         const archivo = imagenes[i];
-        const pesada = fila.estado === 'asignada' && archivo.size > MAX_BYTES;
+        // Con fotosEstandar el máximo es 15 MB y lo decide la validación compartida (más abajo).
+        const pesada = !estandar && fila.estado === 'asignada' && archivo.size > MAX_BYTES;
         return { ...fila, archivo, estado: pesada ? 'muy_pesada' : fila.estado };
       });
+      if (estandar) await this.revisarFotos();
       this.armarGrupos();
       this.paso = 'vista';
     } catch (e: any) {
@@ -101,6 +138,38 @@ export class ImportarFotosReferenciaComponent {
       this.revisando = false;
       this.cdr.detectChanges();
     }
+  }
+
+  /**
+   * D-629: revisa cada foto asignada con la misma validación de la carga individual
+   * (`evaluarArchivoEstandar`): rechazo claro si pesa más de 15 MB o no se puede leer, y avisos
+   * suaves si el lado menor es menor de 800 px o se aleja de 1:1. Una foto rechazada no frena a las
+   * demás: queda fuera de la importación y aparece con su motivo en la vista previa y el reporte.
+   */
+  private async revisarFotos(): Promise<void> {
+    const pendientes = this.asignadas;
+    this.revisadas = 0;
+    this.totalPorRevisar = pendientes.length;
+    let siguiente = 0;
+    const trabajador = async () => {
+      while (siguiente < pendientes.length) {
+        const fila = pendientes[siguiente++];
+        try {
+          const evaluacion = await evaluarArchivoEstandar(fila.archivo as File);
+          if (evaluacion.rechazo) {
+            fila.estado = evaluacion.rechazo === 'pesada' ? 'muy_pesada' : 'ilegible';
+            fila.detalle = mensajeDeRechazo(evaluacion.rechazo, (fila.archivo as File).size);
+          } else if (evaluacion.avisos.length) {
+            fila.avisos = evaluacion.avisos.map((aviso) => mensajeDeAviso(aviso));
+          }
+        } catch {
+          // Si la revisión falla por un error inesperado la foto sigue su camino normal.
+        }
+        this.revisadas++;
+        if (this.revisadas % 10 === 0) this.cdr.detectChanges();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(REVISIONES_A_LA_VEZ, pendientes.length) }, trabajador));
   }
 
   private extension(nombre: string): string {
@@ -126,6 +195,8 @@ export class ImportarFotosReferenciaComponent {
     this.paso = 'elegir';
     this.filas = [];
     this.grupos = [];
+    this.revisadas = 0;
+    this.totalPorRevisar = 0;
   }
 
   /** Sube las fotos asignadas y las aplica por tandas de productos. */
@@ -187,15 +258,25 @@ export class ImportarFotosReferenciaComponent {
 
   /** Reporte en Excel: cada archivo con su estado y el producto al que fue. */
   descargarReporte(): void {
+    const estandar = this.fotosEstandarActiva;
     const filas = this.filas.map((f) => ({
       Archivo: f.nombre,
-      Estado: f.estado === 'asignada' && f.resultado === 'error' ? 'No se pudo subir' : this.textoEstado[f.estado],
+      Estado: this.estadoParaReporte(f, estandar),
       Referencia: f.referencia || '',
       Producto: f.titulo || '',
+      // D-629: con la bandera, el reporte dice por qué se rechazó o de qué se avisó cada foto.
+      ...(estandar ? { Detalle: f.detalle || (f.avisos || []).join(' ') } : {}),
     }));
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(filas), 'Fotos');
     XLSX.writeFile(libro, `importar-fotos-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  private estadoParaReporte(f: Fila, estandar: boolean): string {
+    if (f.estado === 'asignada' && f.resultado === 'error') return 'No se pudo subir';
+    if (estandar && (f.estado === 'muy_pesada' || f.estado === 'ilegible')) return 'Rechazada';
+    if (estandar && f.estado === 'asignada' && f.avisos?.length) return 'Con aviso';
+    return this.textoEstado[f.estado];
   }
 
   /** Lista de referencias de la empresa, para nombrar las fotos. */

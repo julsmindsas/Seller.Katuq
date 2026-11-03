@@ -73,7 +73,12 @@ $ifr-error-soft: #FDECEC;
 .ifr-ref { font-size: 13px; font-weight: 700; color: $ifr-ink; }
 .ifr-archivos { display: flex; flex-wrap: wrap; gap: 6px; }
 .ifr-archivo { font-size: 12px; color: $ifr-sec-text; background: $ifr-surface; border: 1px solid $ifr-line; border-radius: 8px; padding: 2px 8px; }
-.ifr-fila { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.ifr-fila { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.ifr-fila-detalle { flex: 1 1 100%; }
+.ifr-archivo--aviso { border-color: $ifr-alerta-soft; background: #fffaf2; }
+// D-629: una línea por foto con aviso; color y tamaño propios (span creado por *ngIf/*ngFor).
+.ifr-aviso { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: baseline; }
+.ifr-aviso-texto { font-size: 12.5px; line-height: 1.45; color: $ifr-alerta; letter-spacing: normal; }
 
 .ifr-barra { height: 8px; background: $ifr-line; border-radius: 20px; overflow: hidden; }
 .ifr-barra-valor { height: 100%; background: $ifr-accent; transition: width .2s ease; }

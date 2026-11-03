@@ -1,4 +1,4 @@
-import { AvisoCalidad, Grises, avisosDeCalidad, grisDe, medidasParaCalidad, varianzaLaplaciano } from './photo-quality';
+import { AvisoCalidad, ESTANDAR_FOTO, EvaluacionFoto, Grises, avisosDeCalidad, evaluarFotoEstandar, grisDe, medidasParaCalidad, varianzaLaplaciano } from './photo-quality';
 
 /**
  * Aviso de calidad al subir una foto — la parte que usa el DOM (D-501). Lee la foto en un canvas,
@@ -58,4 +58,30 @@ function grisesDe(img: HTMLImageElement, ancho: number, alto: number): Grises | 
     data[i] = grisDe(rgba[p], rgba[p + 1], rgba[p + 2]);
   }
   return { width: m.width, height: m.height, data };
+}
+
+/** Medidas que lee el navegador; `null` si no puede decodificar el archivo como imagen (D-629). */
+export function leerMedidasDeFoto(archivo: Blob): Promise<{ ancho: number; alto: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ ancho: img.naturalWidth || img.width, alto: img.naturalHeight || img.height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Evalúa un archivo contra el estándar de foto de producto (D-629): la misma validación de la
+ * carga individual y de «Importar fotos». Una foto de más de 15 MB se rechaza sin decodificarla.
+ */
+export async function evaluarArchivoEstandar(archivo: File | Blob): Promise<EvaluacionFoto> {
+  const medidas = archivo.size > ESTANDAR_FOTO.maxBytes ? null : await leerMedidasDeFoto(archivo);
+  return evaluarFotoEstandar({ bytes: archivo.size, ancho: medidas?.ancho, alto: medidas?.alto, legible: !!medidas });
 }

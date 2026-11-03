@@ -64,13 +64,11 @@ import { CompanyFeaturesService } from "../../../shared/services/company-feature
 import type { CompanyFeatureFlag } from "../../../shared/services/company-features.service";
 import { editorDeProducto, fechaHoraColombia } from "../historial-producto/historial-producto.util";
 import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
-import { medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
+import { evaluarArchivoEstandar, medirCalidadDeArchivo } from "../../../shared/services/productos/photo-quality-canvas";
 import {
-  ESTANDAR_FOTO,
   MENSAJE_ESTANDAR_FOTO,
   UMBRALES_CALIDAD_ESTANDAR,
   avisosDeCalidad,
-  evaluarFotoEstandar,
   mensajeDeAviso,
   mensajeDeRechazo,
   textoDeAvisos,
@@ -3128,23 +3126,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   /** El mensaje único del estándar (no anuncia ninguna conversión). */
   readonly mensajeEstandarFoto = MENSAJE_ESTANDAR_FOTO;
 
-  /** Medidas que lee el navegador; `null` si no puede decodificar el archivo como imagen. */
-  private leerMedidasDeFoto(archivo: File): Promise<{ ancho: number; alto: number } | null> {
-    return new Promise((resolve) => {
-      const url = URL.createObjectURL(archivo);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        resolve({ ancho: img.naturalWidth || img.width, alto: img.naturalHeight || img.height });
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        resolve(null);
-      };
-      img.src = url;
-    });
-  }
-
   private escaparHtml(texto: string): string {
     return String(texto).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
   }
@@ -3209,14 +3190,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       // D-629: rechazo claro (pesa más de 15 MB o no se puede leer) y avisos suaves. Una foto
       // rechazada no frena a las demás.
       if (estandar) {
-        // Una foto de más de 15 MB se rechaza sin gastar tiempo en decodificarla.
-        const medidas = originalFile.size > ESTANDAR_FOTO.maxBytes ? null : await this.leerMedidasDeFoto(originalFile);
-        const evaluacion = evaluarFotoEstandar({
-          bytes: originalFile.size,
-          ancho: medidas?.ancho,
-          alto: medidas?.alto,
-          legible: !!medidas,
-        });
+        const evaluacion = await evaluarArchivoEstandar(originalFile);
         if (evaluacion.rechazo) {
           rechazadas.push(`<div><strong>${this.escaparHtml(originalFile.name)}</strong>: ${this.escaparHtml(mensajeDeRechazo(evaluacion.rechazo, originalFile.size))}</div>`);
           continue;

@@ -30,7 +30,9 @@
             <li><code>ALM-04789.jpg</code> <span class="ifr-texto">cero a la izquierda que la referencia no tiene</span></li>
             <li><code>ALM-4789 (1).jpg</code> <span class="ifr-texto">copia hecha por Windows</span></li>
           </ul>
-          <div class="ifr-texto">Formatos JPG, PNG o WebP, hasta 5 MB por foto. No importa si el nombre va en mayúsculas o minúsculas.</div>
+          <div class="ifr-texto" *ngIf="!fotosEstandarActiva">Formatos JPG, PNG o WebP, hasta 5 MB por foto. No importa si el nombre va en mayúsculas o minúsculas.</div>
+          <!-- D-629 (bandera fotosEstandar): el estándar de foto, igual que en la carga individual -->
+          <div class="ifr-texto" *ngIf="fotosEstandarActiva">{{ mensajeEstandarFoto }} No importa si el nombre va en mayúsculas o minúsculas.</div>
           <button type="button" class="ifr-btn ifr-btn--sec" (click)="descargarReferencias()" [disabled]="descargandoReferencias">
             <i class="pi" [class.pi-download]="!descargandoReferencias" [class.pi-spin]="descargandoReferencias" [class.pi-spinner]="descargandoReferencias"></i>
             Descargar lista de referencias
@@ -46,7 +48,8 @@
             <i class="pi pi-folder-open"></i> Elegir una carpeta
             <input type="file" webkitdirectory multiple (change)="elegirArchivos($event)" [disabled]="revisando" hidden>
           </label>
-          <span class="ifr-texto" *ngIf="revisando"><i class="pi pi-spin pi-spinner"></i> Revisando nombres…</span>
+          <span class="ifr-texto" *ngIf="revisando && !totalPorRevisar"><i class="pi pi-spin pi-spinner"></i> Revisando nombres…</span>
+          <span class="ifr-texto" *ngIf="revisando && totalPorRevisar"><i class="pi pi-spin pi-spinner"></i> Revisando fotos… {{ revisadas }} de {{ totalPorRevisar }}</span>
         </div>
       </ng-container>
 
@@ -55,6 +58,8 @@
         <div class="ifr-resumen">
           <span class="ifr-chip ifr-chip--ok">{{ asignadas.length }} fotos para {{ grupos.length }} productos</span>
           <span class="ifr-chip ifr-chip--alerta" *ngIf="noAsignadas.length">{{ noAsignadas.length }} sin asignar</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="conAviso.length">{{ conAviso.length }} con aviso</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="rechazadas.length">{{ rechazadas.length }} rechazadas</span>
         </div>
 
         <div class="ifr-modo">
@@ -72,10 +77,17 @@
               <span class="ifr-texto ifr-muted">{{ g.fotosActuales }} fotos hoy</span>
             </div>
             <div class="ifr-archivos">
-              <span class="ifr-archivo" *ngFor="let f of g.filas; let i = index">
+              <span class="ifr-archivo" *ngFor="let f of g.filas; let i = index" [class.ifr-archivo--aviso]="f.avisos?.length">
                 {{ i + 1 }}. {{ f.nombre }}
               </span>
             </div>
+            <!-- D-629: avisos suaves por foto; la foto se sube igual -->
+            <ng-container *ngFor="let f of g.filas">
+              <div class="ifr-aviso" *ngIf="f.avisos?.length">
+                <span class="ifr-chip ifr-chip--alerta">Con aviso</span>
+                <span class="ifr-aviso-texto"><strong>{{ f.nombre }}</strong>: {{ f.avisos?.join(' ') }}</span>
+              </div>
+            </ng-container>
           </div>
 
           <div class="ifr-producto ifr-producto--alerta" *ngIf="noAsignadas.length">
@@ -83,6 +95,16 @@
             <div class="ifr-fila" *ngFor="let f of noAsignadas">
               <span class="ifr-texto">{{ f.nombre }}</span>
               <span class="ifr-chip ifr-chip--alerta">{{ textoEstado[f.estado] }}</span>
+            </div>
+          </div>
+
+          <!-- D-629: fotos rechazadas (más de 15 MB o ilegibles), con el motivo; no cuentan como «sin asignar» -->
+          <div class="ifr-producto ifr-producto--alerta" *ngIf="rechazadas.length">
+            <div class="ifr-producto-cabeza"><span class="ifr-ref">No se agregan</span></div>
+            <div class="ifr-fila" *ngFor="let f of rechazadas">
+              <span class="ifr-texto">{{ f.nombre }}</span>
+              <span class="ifr-chip ifr-chip--alerta">Rechazada</span>
+              <span class="ifr-aviso-texto ifr-fila-detalle" *ngIf="f.detalle">{{ f.detalle }}</span>
             </div>
           </div>
         </div>
@@ -101,6 +123,8 @@
           <span class="ifr-chip ifr-chip--ok">{{ aplicados }} productos con fotos nuevas</span>
           <span class="ifr-chip ifr-chip--alerta" *ngIf="fallidas">{{ fallidas }} fotos no se pudieron subir</span>
           <span class="ifr-chip ifr-chip--alerta" *ngIf="noAsignadas.length">{{ noAsignadas.length }} sin asignar</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="conAviso.length">{{ conAviso.length }} con aviso</span>
+          <span class="ifr-chip ifr-chip--alerta" *ngIf="rechazadas.length">{{ rechazadas.length }} rechazadas</span>
         </div>
         <div class="ifr-texto">Descarga el reporte para ver qué pasó con cada foto.</div>
       </ng-container>
