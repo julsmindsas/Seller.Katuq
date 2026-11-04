@@ -9853,5 +9853,12 @@
   "importador.especificaciones.aviso.sin_referencia": "Linha {{fila}}: falta a Referência (SKU); não se sabe a que produto pertencem as especificações.",
   "importador.especificaciones.aviso.referencia_repetida": "Linha {{fila}}: a Referência (SKU) {{referencia}} aparece mais de uma vez no arquivo; nenhuma dessas linhas foi carregada.",
   "importador.especificaciones.columnasSinClave": "{{n}} colunas sem [chave] no cabeçalho são ignoradas: {{lista}}.",
-  "importador.especificaciones.columnasRepetidas": "Há colunas repetidas ({{lista}}); só a primeira de cada uma é lida."
+  "importador.especificaciones.columnasRepetidas": "Há colunas repetidas ({{lista}}); só a primeira de cada uma é lida.",
+  "productos.exportarEspecificaciones.titulo": "Planilha de especificações (opcional)",
+  "productos.exportarEspecificaciones.sinHoja": "Sem planilha de especificações",
+  "productos.exportarEspecificaciones.ayuda": "Se você escolher uma categoria, o arquivo traz uma planilha \"Especificações\" com os produtos exportados dessa categoria e de suas subcategorias, pronta para corrigir e enviar de novo por Importar.",
+  "productos.exportarEspecificaciones.sinProductos": "Entre os produtos exportados não há nenhum dessa categoria nem de suas subcategorias. O arquivo foi baixado sem a planilha \"Especificações\".",
+  "productos.exportarEspecificaciones.sinHojaOmitidos": "O arquivo foi baixado sem a planilha \"Especificações\": {{sinReferencia}} produtos dessa categoria não têm referência e {{sinRuta}} produtos exportados não puderam ser localizados na árvore de categorias (sem categoria, fora da árvore ou ambígua).",
+  "productos.exportarEspecificaciones.omitidos": "A planilha \"Especificações\" deixou de fora {{sinReferencia}} produtos da categoria sem referência e {{sinRuta}} produtos exportados que não puderam ser localizados na árvore de categorias (sem categoria, fora da árvore ou ambígua).",
+  "productos.exportarEspecificaciones.tiposDistintos": "Estes atributos têm o mesmo nome e tipo diferente em subcategorias, e essas células ficam vazias: {{claves}}."
 }

@@ -12865,5 +12865,12 @@
   "importador.especificaciones.aviso.sin_referencia": "Row {{fila}}: the Reference (SKU) is missing; it is not known which product the specifications belong to.",
   "importador.especificaciones.aviso.referencia_repetida": "Row {{fila}}: the Reference (SKU) {{referencia}} appears more than once in the file; none of those rows were loaded.",
   "importador.especificaciones.columnasSinClave": "{{n}} columns without a [key] in the header are ignored: {{lista}}.",
-  "importador.especificaciones.columnasRepetidas": "There are repeated columns ({{lista}}); only the first of each is read."
+  "importador.especificaciones.columnasRepetidas": "There are repeated columns ({{lista}}); only the first of each is read.",
+  "productos.exportarEspecificaciones.titulo": "Specifications sheet (optional)",
+  "productos.exportarEspecificaciones.sinHoja": "No specifications sheet",
+  "productos.exportarEspecificaciones.ayuda": "If you choose a category, the file includes a \"Specifications\" sheet with the exported products of that category and its subcategories, ready to correct and upload again through Import.",
+  "productos.exportarEspecificaciones.sinProductos": "None of the exported products belong to that category or its subcategories. The file was downloaded without the \"Specifications\" sheet.",
+  "productos.exportarEspecificaciones.sinHojaOmitidos": "The file was downloaded without the \"Specifications\" sheet: {{sinReferencia}} products of that category have no reference and {{sinRuta}} exported products could not be placed in the category tree (no category, outside the tree or ambiguous).",
+  "productos.exportarEspecificaciones.omitidos": "The \"Specifications\" sheet left out {{sinReferencia}} products of the category without a reference and {{sinRuta}} exported products that could not be placed in the category tree (no category, outside the tree or ambiguous).",
+  "productos.exportarEspecificaciones.tiposDistintos": "These attributes have the same name and a different type in subcategories, and those cells are left empty: {{claves}}."
 }

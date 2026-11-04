@@ -12711,5 +12711,12 @@
   "importador.especificaciones.aviso.sin_referencia": "Fila {{fila}}: falta la Referencia (SKU); no se sabe a qué producto pertenecen las especificaciones.",
   "importador.especificaciones.aviso.referencia_repetida": "Fila {{fila}}: la Referencia (SKU) {{referencia}} aparece más de una vez en el archivo; no se cargó ninguna de esas filas.",
   "importador.especificaciones.columnasSinClave": "{{n}} columnas sin [clave] en el encabezado se ignoran: {{lista}}.",
-  "importador.especificaciones.columnasRepetidas": "Hay columnas repetidas ({{lista}}); solo se lee la primera de cada una."
+  "importador.especificaciones.columnasRepetidas": "Hay columnas repetidas ({{lista}}); solo se lee la primera de cada una.",
+  "productos.exportarEspecificaciones.titulo": "Hoja de especificaciones (opcional)",
+  "productos.exportarEspecificaciones.sinHoja": "Sin hoja de especificaciones",
+  "productos.exportarEspecificaciones.ayuda": "Si eliges una categoría, el archivo trae una hoja «Especificaciones» con los productos exportados de esa categoría y sus subcategorías, lista para corregir y volver a subir por Importar.",
+  "productos.exportarEspecificaciones.sinProductos": "En lo exportado no hay productos de esa categoría ni de sus subcategorías. El archivo se descargó sin la hoja «Especificaciones».",
+  "productos.exportarEspecificaciones.sinHojaOmitidos": "El archivo se descargó sin la hoja «Especificaciones»: {{sinReferencia}} productos de esa categoría no tienen referencia y {{sinRuta}} productos exportados no se pudieron ubicar en el árbol de categorías (sin categoría, fuera del árbol o ambigua).",
+  "productos.exportarEspecificaciones.omitidos": "La hoja «Especificaciones» dejó fuera {{sinReferencia}} productos de la categoría sin referencia y {{sinRuta}} productos exportados que no se pudieron ubicar en el árbol de categorías (sin categoría, fuera del árbol o ambigua).",
+  "productos.exportarEspecificaciones.tiposDistintos": "Estos atributos tienen el mismo nombre y distinto tipo en subcategorías, y esas celdas salen vacías: {{claves}}."
 }

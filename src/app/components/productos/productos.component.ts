@@ -18,16 +18,23 @@ import { ToastrService } from 'ngx-toastr';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, firstValueFrom, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
 import { LoaderService } from '../../shared/services/loader.service';
 import { CompanyFeatureFlag, CompanyFeaturesService } from '../../shared/services/company-features.service';
 import { editorDeProducto, fechaHoraColombia } from './historial-producto/historial-producto.util';
 import { rutaDeFiltros } from './fotos-uniformes/fotos-uniformes-entradas';
+import { TranslateService } from '@ngx-translate/core';
+// Hoja «Especificaciones» del export (D-495, ticket 1234, F2-42, F3, tarea 10.5). Solo con la bandera `categoryAttributes`.
+import { CatalogAttributesService, EsquemasRespuesta } from '../../shared/services/catalogo/catalog-attributes.service';
+import { HOJA_ESPECIFICACIONES, hojaDeExportacion } from '../../shared/services/catalogo/hoja-especificaciones';
+import { RutaDePlantilla, rutasParaPlantilla } from '../../shared/services/catalogo/importacion-especificaciones';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
 /** D-501: bandera por comercio de «Uniformar fotos» (nace apagada, D-385). */
 const BANDERA_FOTOS_UNIFORMES: CompanyFeatureFlag = 'productPhotoUniform';
+/** D-495: bandera por comercio de los atributos por categoría (nace apagada, D-505). */
+const BANDERA_ATRIBUTOS: CompanyFeatureFlag = 'categoryAttributes';
 
 @Component({
   selector: 'app-productos',
@@ -219,6 +226,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // Export dialog
   showExportDialog = false;
+  /** Categorías con atributos que se ofrecen en el diálogo (solo con la bandera `categoryAttributes`). */
+  exportCategoriasEsp: RutaDePlantilla[] = [];
+  /** Ruta elegida para la hoja «Especificaciones»; '' = sin hoja (el export de siempre). */
+  exportCategoriaEsp = '';
+  private exportEsquemas: EsquemasRespuesta | null = null;
   exportando = false;        // export en progreso (trayendo todas las páginas)
   exportProgress = 0;        // productos traídos hasta ahora
   exportTotal = 0;           // total esperado (según la paginación)
@@ -371,6 +383,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
         try {
           const parsed = flatedParse(p.categorias);
           const ruta = ProductosComponent.rutaCategoria(parsed);
+          // El texto original queda aparte (no enumerable: no viaja al formulario, al JSON ni al Excel) para que la
+          // hoja «Especificaciones» del export ubique el producto igual que el servidor, que lee el texto y no
+          // este objeto: un nodo sin `parent` queda aquí con `ruta` de un solo nivel aunque no sea una raíz.
+          Object.defineProperty(p, '_categoriasTexto', { value: p.categorias, enumerable: false, writable: true, configurable: true });
           // Reconstruir sin referencias circulares (parent) para que JSON.stringify funcione
           p.categorias = {
             label: parsed.label ?? parsed.data?.nombre ?? '',
@@ -462,7 +478,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
     private toastr: ToastrService,
     private integrationsService: IntegrationsService,
     private loaderService: LoaderService,
-    private features: CompanyFeaturesService
+    private features: CompanyFeaturesService,
+    // Solo se usan con la bandera `categoryAttributes` (hoja «Especificaciones» del export).
+    private atributos: CatalogAttributesService,
+    private translate: TranslateService
   ) { }
 
   // ---- F5-30: «Traer mi tienda» (solo con la bandera storeMigrationImport) ----
@@ -1635,6 +1654,94 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   exportToExcel() {
     this.showExportDialog = true;
+    if (this.especificacionesActivas) void this.cargarEsquemasParaExport();
+  }
+
+  // ── Hoja «Especificaciones» del export (bandera `categoryAttributes`, ticket 1234, F2-42, F3; design.md E10) ──
+  //
+  // Con la bandera, el diálogo ofrece elegir una categoría y el libro suma la hoja «Especificaciones» con los
+  // productos exportados de esa categoría y de sus subcategorías. Los valores salen de los documentos COMPLETOS
+  // que el export ya trae (fetchAllProductosParaExport) o de los seleccionados en la tabla: no hay ruta de
+  // lectura nueva ni valores del índice. La lógica (qué productos, qué columnas, formato de cada celda) es PURA y
+  // vive en services/catalogo/hoja-especificaciones.ts, con el mismo formato de encabezados que la plantilla del
+  // importador: la hoja exportada se reimporta tal cual. Apagada, el libro es el de siempre.
+
+  get especificacionesActivas(): boolean {
+    return this.features.isEnabled(BANDERA_ATRIBUTOS);
+  }
+
+  /** Lee los esquemas de la empresa para ofrecer las categorías. Si falla, no se ofrece nada y el export es el de siempre. */
+  async cargarEsquemasParaExport(): Promise<void> {
+    if (!this.especificacionesActivas) return;
+    try {
+      const r = await firstValueFrom(this.atributos.getSchemas());
+      this.exportEsquemas = r;
+      this.exportCategoriasEsp = this.conCategoriasPadre(rutasParaPlantilla(r && r.schemas, r && r.indice), r && r.indice);
+    } catch {
+      this.exportEsquemas = null;
+      this.exportCategoriasEsp = [];
+    }
+    if (!this.exportCategoriasEsp.some(c => c.ruta === this.exportCategoriaEsp)) this.exportCategoriaEsp = '';
+  }
+
+  /**
+   * Además de las categorías con atributos, se ofrecen sus padres aunque no tengan atributos propios: elegir
+   * «Electrónica» trae los productos de «Electrónica > Routers» (spec: la categoría o sus subcategorías).
+   */
+  private conCategoriasPadre(rutas: RutaDePlantilla[], indice: any): RutaDePlantilla[] {
+    const nombres: Record<string, string[]> = indice && indice.rutas && typeof indice.rutas === 'object' ? indice.rutas : {};
+    const ya = new Set(rutas.map(r => r.ruta));
+    const extra: RutaDePlantilla[] = [];
+    for (const r of rutas) {
+      const partes = r.ruta.split(' > ');
+      for (let i = 1; i < partes.length; i++) {
+        const padre = partes.slice(0, i).join(' > ');
+        if (ya.has(padre) || !Object.prototype.hasOwnProperty.call(nombres, padre)) continue;
+        ya.add(padre);
+        extra.push({ ruta: padre, etiqueta: (nombres[padre] || []).join(' > ') || padre, atributos: 0, heredados: 0 });
+      }
+    }
+    return [...rutas, ...extra].sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, 'es'));
+  }
+
+  /**
+   * Suma la hoja «Especificaciones» al libro. No hace nada sin bandera, sin categoría elegida o sin esquemas.
+   * Si la categoría no tiene productos en lo exportado, el libro sale sin la hoja y se avisa.
+   */
+  private sumarHojaEspecificaciones(wb: XLSX.WorkBook, source: any[]): void {
+    if (!this.especificacionesActivas || !this.exportCategoriaEsp || !this.exportEsquemas) return;
+    // Solo lo que lee la ubicación y la hoja, con `categorias` como la lee el servidor (el texto original).
+    const docs = source.map(p => ({
+      categorias: p && p._categoriasTexto !== undefined ? p._categoriasTexto : p?.categorias,
+      exposicion: p?.exposicion,
+      identificacion: p?.identificacion,
+      attributes: p?.attributes,
+    }));
+    const hoja = hojaDeExportacion(docs, this.exportCategoriaEsp, this.exportEsquemas.indice, this.exportEsquemas.schemas);
+    const sinReferencia = hoja.sinReferencia;
+    const sinRuta = hoja.sinRuta;
+    const hayHoja = hoja.incluidos > 0 && hoja.columnas.length > 0;
+    if (!hayHoja) {
+      if (sinReferencia === 0 && sinRuta === 0 && hoja.incluidos === 0) {
+        this.toastr.info(this.translate.instant('productos.exportarEspecificaciones.sinProductos'), 'Exportar');
+      } else {
+        this.toastr.warning(this.translate.instant('productos.exportarEspecificaciones.sinHojaOmitidos', { sinReferencia, sinRuta }), 'Exportar');
+      }
+      return;
+    }
+    const ws = XLSX.utils.aoa_to_sheet(hoja.filas);
+    ws['!cols'] = hoja.filas[0].map((_, i) => ({ wch: i === 0 ? 20 : 24 }));
+    XLSX.utils.book_append_sheet(wb, ws, HOJA_ESPECIFICACIONES);
+    // Lo que la hoja deja fuera se avisa: no hay que creer que salió completa.
+    if (sinReferencia > 0 || sinRuta > 0) {
+      this.toastr.warning(this.translate.instant('productos.exportarEspecificaciones.omitidos', { sinReferencia, sinRuta }), 'Exportar');
+    }
+    if (hoja.clavesConTipoDistinto.length > 0) {
+      this.toastr.warning(
+        this.translate.instant('productos.exportarEspecificaciones.tiposDistintos', { claves: hoja.clavesConTipoDistinto.join(', ') }),
+        'Exportar',
+      );
+    }
   }
 
   doExport(): void {
@@ -1860,6 +1967,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
       wsVol['!cols'] = [{ wch: 20 }, { wch: 28 }, { wch: 28 }, { wch: 24 }, { wch: 16 }];
       XLSX.utils.book_append_sheet(wb, wsVol, 'Precios por volumen');
     }
+
+    // Tercera hoja, solo con la bandera `categoryAttributes` y una categoría elegida: las especificaciones.
+    this.sumarHojaEspecificaciones(wb, source);
 
     const hasFilters = Object.values(this.filtros).some(v => v !== '' && v !== null && v !== 'activo');
     const suffix = hasSelected

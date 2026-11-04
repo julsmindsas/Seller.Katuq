@@ -932,6 +932,17 @@
             </div>
         </div>
 
+        <!-- Hoja «Especificaciones» (bandera categoryAttributes, F2-42, F3): solo si hay categorías con atributos. -->
+        <div *ngIf="especificacionesActivas && exportCategoriasEsp.length > 0" class="mt-3">
+            <label class="fw-semibold d-block mb-1" for="exportCategoriaEsp">{{ 'productos.exportarEspecificaciones.titulo' | translate }}</label>
+            <select id="exportCategoriaEsp" class="form-select" name="exportCategoriaEsp"
+                [(ngModel)]="exportCategoriaEsp" [disabled]="exportando">
+                <option value="">{{ 'productos.exportarEspecificaciones.sinHoja' | translate }}</option>
+                <option *ngFor="let c of exportCategoriasEsp" [value]="c.ruta">{{ c.etiqueta }}<ng-container *ngIf="c.atributos > 0"> ({{ c.atributos }})</ng-container></option>
+            </select>
+            <div class="form-text">{{ 'productos.exportarEspecificaciones.ayuda' | translate }}</div>
+        </div>
+
         <!-- Solo aparece si el archivo va incompleto, que es el único caso en que
              esto le importa a alguien. -->
         <div *ngIf="columnasSinMarcar > 0" class="alert alert-warning py-2 mt-3 mb-0 small">

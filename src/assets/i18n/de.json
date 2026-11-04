@@ -9685,5 +9685,12 @@
     "importador.especificaciones.aviso.sin_referencia": "Zeile {{fila}}: Die Referenz (SKU) fehlt; es ist nicht bekannt, zu welchem Produkt die Spezifikationen gehören.",
     "importador.especificaciones.aviso.referencia_repetida": "Zeile {{fila}}: Die Referenz (SKU) {{referencia}} kommt in der Datei mehrfach vor; keine dieser Zeilen wurde geladen.",
     "importador.especificaciones.columnasSinClave": "{{n}} Spalten ohne [Schlüssel] in der Kopfzeile werden ignoriert: {{lista}}.",
-    "importador.especificaciones.columnasRepetidas": "Es gibt doppelte Spalten ({{lista}}); nur die erste jeder Spalte wird gelesen."
+    "importador.especificaciones.columnasRepetidas": "Es gibt doppelte Spalten ({{lista}}); nur die erste jeder Spalte wird gelesen.",
+    "productos.exportarEspecificaciones.titulo": "Blatt mit Spezifikationen (optional)",
+    "productos.exportarEspecificaciones.sinHoja": "Kein Spezifikationsblatt",
+    "productos.exportarEspecificaciones.ayuda": "Wenn du eine Kategorie wählst, enthält die Datei ein Blatt «Spezifikationen» mit den exportierten Produkten dieser Kategorie und ihrer Unterkategorien, bereit zum Korrigieren und erneuten Hochladen über Importieren.",
+    "productos.exportarEspecificaciones.sinProductos": "Unter den exportierten Produkten gibt es keines aus dieser Kategorie oder ihren Unterkategorien. Die Datei wurde ohne das Blatt «Spezifikationen» heruntergeladen.",
+    "productos.exportarEspecificaciones.sinHojaOmitidos": "Die Datei wurde ohne das Blatt «Spezifikationen» heruntergeladen: {{sinReferencia}} Produkte dieser Kategorie haben keine Referenz und {{sinRuta}} exportierte Produkte konnten im Kategoriebaum nicht zugeordnet werden (ohne Kategorie, außerhalb des Baums oder mehrdeutig).",
+    "productos.exportarEspecificaciones.omitidos": "Das Blatt «Spezifikationen» lässt {{sinReferencia}} Produkte der Kategorie ohne Referenz und {{sinRuta}} exportierte Produkte aus, die im Kategoriebaum nicht zugeordnet werden konnten (ohne Kategorie, außerhalb des Baums oder mehrdeutig).",
+    "productos.exportarEspecificaciones.tiposDistintos": "Diese Attribute haben in Unterkategorien denselben Namen, aber einen anderen Typ; diese Zellen bleiben leer: {{claves}}."
 }
