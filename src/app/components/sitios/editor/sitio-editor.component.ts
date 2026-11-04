@@ -3164,9 +3164,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   agregar(tipo: string): void {
     if (!this.contenido) return;
-    // P0-17: una página propia hereda el encabezado y el pie del inicio; el servidor descarta los suyos al guardar.
-    if (this.paginaActiva !== -1 && (tipo === "encabezado" || tipo === "footer")) {
-      this.toastr.info("El encabezado y el pie viven en el inicio y todas las páginas los heredan.");
+    // P0-17: una página propia hereda el encabezado y el pie del inicio. Si el inicio tiene el suyo, la página no
+    // lleva otro (el servidor lo descarta al guardar y no lo pinta); si no lo tiene, la página sí puede llevarlo.
+    if (this.paginaActiva !== -1 && (tipo === "encabezado" || tipo === "footer") && this.inicioTiene(tipo)) {
+      this.toastr.info(
+        tipo === "encabezado"
+          ? "Esta página ya usa el encabezado del inicio: todas las páginas lo heredan."
+          : "Esta página ya usa el pie del inicio: todas las páginas lo heredan."
+      );
       this.cerrarAgregar();
       return;
     }
@@ -3189,23 +3194,45 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.resolverProductosDePrevia();
   }
 
+  /** ¿El inicio tiene un bloque visible de este tipo? (P0-17: el encabezado y el pie que heredan las páginas.) */
+  inicioTiene(tipo: string): boolean {
+    return ((this.contenido && this.contenido.bloques) || []).some((b: any) => b && b.tipo === tipo && b.visible !== false);
+  }
+
   /**
    * P0-19: ¿este enlace del menú lleva a una sección que no existe en el inicio? La página publicada no lo
-   * muestra. Mismas anclas que pinta el servidor (utils/siteHtml.js): las fijas de productos, contacto
-   * (formulario), catálogo y categorías, y «seccion-N» por posición; «#top» siempre sirve.
+   * muestra. Es la misma tabla de ids que pinta el servidor (utils/siteHtml.js): los bloques con id fijo lo
+   * usan (productos, categorías, destacado, sucursales, agenda, contacto, catálogo) y el resto lleva
+   * «seccion-N» por su posición. Una vitrina sin productos disponibles no se publica (P0-13): su ancla no
+   * existe. Mientras los productos de la vista previa no cargan, la vitrina cuenta. «#top» siempre sirve.
    */
   anclaSinDestino(url: string): boolean {
     const m = /^#(.+)$/.exec(String(url || "").trim());
     if (!m || m[1].toLowerCase() === "top") return false;
+    const FIJOS: { [tipo: string]: string } = {
+      categorias: "categorias",
+      destacado: "destacado",
+      sucursales: "sucursales",
+      agenda: "agenda",
+      formulario: "contacto",
+      catalogo: "catalogo",
+      explorar: "catalogo",
+      ficha: "producto",
+      gracias: "gracias",
+    };
     const ids = new Set<string>();
     const bloques = ((this.contenido && this.contenido.bloques) || []).filter((b: any) => b && b.visible !== false);
+    const primeraVitrina = bloques.findIndex((b: any) => b.tipo === "productos");
     bloques.forEach((b: any, i: number) => {
-      ids.add(`seccion-${i}`);
       const d = b.datos || {};
-      if (b.tipo === "productos" && ((d.productoIds || []).length || (d.productos || []).length)) ids.add("productos");
-      if (b.tipo === "formulario") ids.add("contacto");
-      if (b.tipo === "catalogo") ids.add("catalogo");
-      if (b.tipo === "categorias") ids.add("categorias");
+      if (b.tipo === "productos") {
+        const elegidos: string[] = d.productoIds || [];
+        const conocidos = elegidos.filter((id) => this.productosPrevia.has(id));
+        const hay = elegidos.length > 0 && (conocidos.length === 0 || conocidos.some((id) => (this.productosPrevia.get(id) as any)?.disponible));
+        if (hay) ids.add(i === primeraVitrina ? "productos" : `productos-${i}`);
+      } else {
+        ids.add(FIJOS[b.tipo] || `seccion-${i}`);
+      }
     });
     return !ids.has(m[1]);
   }
