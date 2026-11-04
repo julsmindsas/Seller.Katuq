@@ -28,6 +28,17 @@ export interface TemaSitio extends AjustesEstilo {
   /** Estilo de página completo: clasico | editorial | boutique | minimal | audaz. */
   estilo?: string;
   animaciones?: boolean;
+  /**
+   * Diseño nuevo (v2, PLAN-V2 T01): 2 lo enciende en la página publicada. Esta vista previa todavía pinta el diseño
+   * de siempre; el publicado lo arma el backend (`siteEstilosV2.js`).
+   */
+  sistemaVisual?: 1 | 2;
+  /** v2: fondo de la barra de anuncio, el pie y las secciones con superficie «estructura». */
+  colorEstructura?: string;
+  /** v2: nivel de efectos. Vacío = sigue a `animaciones`. */
+  efectos?: "" | "ninguno" | "sutil" | "expresivo";
+  /** v2: letra de datos y referencias ("mono" = monoespaciada del sistema). */
+  fuenteDatos?: "" | "mono";
 }
 
 /**
@@ -57,6 +68,7 @@ const FAMILIAS: { [id: string]: string } = {
   sora: '"Sora", system-ui, sans-serif',
   jakarta: '"Plus Jakarta Sans", system-ui, sans-serif',
   inter: '"Inter", system-ui, sans-serif',
+  archivo: '"Archivo", system-ui, sans-serif',
 };
 
 /** Espejo de `ESTILOS` en siteHtml.js. Mismos valores, mismas claves. */
@@ -598,6 +610,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     sora: "Sora:wght@300;400;500;600;700",
     jakarta: "Plus+Jakarta+Sans:wght@300;400;500;600;700;800",
     inter: "Inter:wght@300;400;500;600;700",
+    archivo: "Archivo:wght@400;500;600;700;800",
   };
 
   /** Ids ya pedidos, para no repetir el <link> en cada cambio del tema. */
