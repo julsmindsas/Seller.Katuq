@@ -146,6 +146,8 @@ export interface AvisoDeFila {
   fila: number;
   motivo: 'sin_referencia' | 'referencia_repetida';
   mensaje: string;
+  /** La referencia repetida (para que quien pinta el aviso lo traduzca sin parsear el mensaje). */
+  referencia?: string;
 }
 
 export interface ColumnaLeida {
@@ -278,7 +280,7 @@ export function leerHoja(filas: unknown, esquema?: Definicion[] | null): Lectura
     for (const f of salida.filas) {
       if ((cuenta.get(f.referencia) || 0) > 1) {
         if (!salida.referenciasRepetidas.includes(f.referencia)) salida.referenciasRepetidas.push(f.referencia);
-        salida.avisos.push({ fila: f.fila, motivo: 'referencia_repetida', mensaje: `Fila ${f.fila}: la Referencia (SKU) ${f.referencia} aparece más de una vez en el archivo, no se cargó ninguna de esas filas.` });
+        salida.avisos.push({ fila: f.fila, motivo: 'referencia_repetida', referencia: f.referencia, mensaje: `Fila ${f.fila}: la Referencia (SKU) ${f.referencia} aparece más de una vez en el archivo, no se cargó ninguna de esas filas.` });
       } else buenas.push(f);
     }
     salida.filas = buenas;
