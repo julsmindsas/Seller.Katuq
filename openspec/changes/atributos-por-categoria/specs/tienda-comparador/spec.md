@@ -23,7 +23,7 @@ WHERE la función está encendida, THE system SHALL permitir agregar productos a
 
 ### Requirement: Productos de distintas categorías [F4]
 
-WHEN la comparación tiene productos de categorías distintas, THE system SHALL mostrar todos los atributos comparables de todos, con una marca de «no aplica» donde un producto no tiene ese atributo.
+WHEN la comparación tiene productos de categorías distintas, THE system SHALL mostrar todos los atributos comparables de todos, con una marca de «no aplica» donde la categoría de un producto no tiene ese atributo, distinta de «sin dato» donde la categoría lo tiene pero el producto no lo cargó; un «no aplica» no cuenta como valor distinto al resaltar.
 
 *Fuente: diseño (pregunta 6 de la propuesta, por aprobar).*
 
@@ -34,7 +34,7 @@ WHEN la comparación tiene productos de categorías distintas, THE system SHALL 
 
 ### Requirement: Solo productos que la tienda vende [F4]
 
-THE system SHALL entregar para la comparación datos solo de productos que el catálogo de la tienda mostraría: de la misma empresa del sitio publicado con catálogo visible, activos, publicados en la web, con precio de venta al público, fuera de categorías ocultas y visibles en el plan. IF un producto pedido no cumple, THEN THE system SHALL dejarlo fuera sin entregar ningún dato suyo. THE system SHALL leer para cada comparación a lo sumo los productos comparados.
+THE system SHALL entregar para la comparación datos solo de productos que el catálogo de la tienda mostraría: de la misma empresa del sitio publicado con catálogo visible, activos, publicados en la web, con precio de venta al público, fuera de categorías ocultas y visibles en el plan. IF un producto pedido no cumple, THEN THE system SHALL dejarlo fuera sin entregar ningún dato suyo. THE system SHALL leer para cada comparación, con la tienda ya cargada, a lo sumo los productos comparados (más el sitio y, con sesión, el cliente); la primera petición después de que se vence la carga periódica de la tienda puede leer más, como ya ocurre en el catálogo.
 
 *Fuente: comentario 1 del ticket y propuesta aprobada del 18-oct («mismos candados del catálogo»); ticket 1214 (F0-02: categorías ocultas); ticket 1244 (F5-28: precios mayoristas nunca visibles sin sesión).*
 
@@ -50,7 +50,7 @@ THE system SHALL entregar para la comparación datos solo de productos que el ca
 
 ### Requirement: Precio del cliente en la comparación [F4]
 
-WHILE el visitante tiene sesión de cliente con lista de precios, THE system SHALL mostrar en la comparación el precio de su lista. THE system SHALL NOT entregar ese precio a quien no tiene sesión, ni guardarlo donde otro visitante lo pueda recibir.
+WHILE el visitante tiene sesión de cliente con lista de precios, THE system SHALL mostrar en la comparación el precio de su lista. THE system SHALL NOT entregar ese precio a quien no tiene sesión, ni guardarlo donde otro visitante lo pueda recibir. IF el bloque de catálogo del sitio oculta los precios, THEN THE system SHALL NOT entregar ningún precio en la comparación, ni con sesión.
 
 *Fuente: D-518 F2-42·4; ticket 1244 (F5-28).*
 

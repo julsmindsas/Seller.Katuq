@@ -361,11 +361,14 @@ Cada sub-cambio lleva su `design.md` y su `tasks.md` (3 páginas o menos), se ap
 
 ## 11. F4 · Comparador
 
-- [ ] 11.1 [P] Pruebas en rojo: `tests/sitios/comparador.contract.test.js` (prueba 4), con precio de vitrina en 0 y bloque de catálogo oculto.
+- [x] 11.1 [P] Pruebas en rojo: `tests/sitios/comparador.contract.test.js` (prueba 4), con precio de vitrina en 0 y bloque de catálogo oculto.
   - Dep: 8.0.
+  - Hecho (2026-11-03, bloque F242-B13, copia local, la prueba no va a git, D-566): 28 pruebas, todas en rojo antes del código (`compararPublico` no existía). Cubren 404 iguales, el candado por producto, hasta 4 ids, `Cache-Control`, precio con y sin sesión, filas, lecturas, ninguna escritura y el registro sin valores. Con 5 mutaciones del código, 4 hacen fallar pruebas; la del plan gratis la cubre dos veces (el servicio y `leerProductosDeTienda`).
 - [ ] 11.2 **Con diff aprobado (ruta pública).** `GET /public/:slug/comparar` (E9): candado con `esPublicableEnTienda` y el plan sobre la fuente de la tienda, atributos de los derivados, hasta 4 documentos para la vitrina.
   - Dep: 11.1, 9.4, 9.5.
   - Éxito: 11.1 en verde.
+  - Avance (2026-11-03, bloque F242-B13, copia local, sin unir): `GET /public/:slug/comparar` con el mismo limitador que `/catalogo`, manejador `compararPublico` y `services/sites/comparador.js`; 11.1 en verde (32 de 32 tras la corrección). Sigue sin marcar hasta el diff aprobado de Daniel (ruta pública nueva, precios con sesión). Decisiones que Daniel confirma: si el bloque oculta los precios, la comparación tampoco los entrega; el registro `catalogo.comparador` (sin ids, títulos ni valores) solo sale si tarda más de 500 ms.
+  - Corrección de la revisión (2026-11-03): el registro `catalogo.comparador` sale solo si tarda más de 500 ms (como `catalogo.facetas`); el documento se vuelve a mirar (activo y precio de vitrina mayor que 0) antes de entregar; cada fila trae `aplica[]` («no aplica» frente a «sin dato») y `difiere` solo cuenta a los que aplica; 32 pruebas en verde. La spec `tienda-comparador` recoge tres precisiones que Daniel confirma con el diff: lecturas «con la tienda cargada», marca «no aplica» y sin precios si el bloque los oculta.
 - [ ] 11.3 **Con diff aprobado (tienda).** Botón «Comparar» en tarjeta y ficha, barra, diálogo y tabla (E9).
   - Dep: 11.2.
   - Éxito: sin la bandera, instantáneas iguales; 390 px sin desplazamiento de la página, también con `tecnologia-catalogo`.
