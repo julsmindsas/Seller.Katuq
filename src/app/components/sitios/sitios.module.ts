@@ -14,6 +14,7 @@ import { TiendaEnUnPasoComponent } from "./tienda-en-un-paso/tienda-en-un-paso.c
 import { SitioRenderModule } from "../sitio-render/sitio-render.module";
 import { AlBodyModule } from "../../shared/directives/al-body.module";
 import { FotosUniformesComponent } from "../productos/fotos-uniformes/fotos-uniformes.component";
+import { PanelesSitioModule } from "./editor/paneles/paneles-sitio.module";
 
 /**
  * Editor de landings y tiendas. La vista previa reusa `SitioRenderModule`, el
@@ -25,7 +26,8 @@ import { FotosUniformesComponent } from "../productos/fotos-uniformes/fotos-unif
  */
 @NgModule({
   // FotosUniformesComponent (standalone): «Uniformar fotos» desde el editor (TX-37 · 7.12).
-  imports: [CommonModule, FormsModule, TranslateModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule, FotosUniformesComponent],
+  // PanelesSitioModule: los paneles del diseño nuevo que monta `<app-panel-sitio>` (PLAN-V2 T03, paneles/registro.ts).
+  imports: [CommonModule, FormsModule, TranslateModule, DragDropModule, SitiosRoutingModule, SitioRenderModule, SelectorProductosModule, AlBodyModule, FotosUniformesComponent, PanelesSitioModule],
   declarations: [
     SitiosListaComponent,
     SitioEditorComponent,

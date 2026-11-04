@@ -1,0 +1,94 @@
+import { Directive, EventEmitter, Input, Output, Type } from "@angular/core";
+import { BloqueSitio } from "../../../sitio-render/sitio-render.component";
+import { ContenidoSitio } from "../../sitios.service";
+
+/**
+ * Registro de los paneles del diseño nuevo (PLAN-V2 §3, tanda T03). Es el espejo en el editor del registro de módulos
+ * del servidor (`functions/utils/sitioModulos/index.js`): cada bloque o pieza nueva trae su panel en
+ * `paneles/<nombre>/`, y así las tandas T06 a T24 no editan a la vez `sitio-editor.component.{ts,html}`.
+ *
+ * ── Contrato de un panel ─────────────────────────────────────────────────────────────────────────────────────────
+ *  - El componente extiende `PanelSitioBase`: recibe `bloque` (el bloque elegido; null en un panel de la Tienda) y
+ *    `contenido` (el sitio: tema, tienda, páginas). Edita EN SU LUGAR `bloque.datos` o `contenido.tienda.<campo>` y,
+ *    después de cada cambio, llama `avisar()`: el editor marca el borrador como cambiado, refresca la vista previa y
+ *    lo guarda solo, igual que con cualquier otro campo.
+ *  - Se declara en `PanelesSitioModule` (o es `standalone`). Sigue la regla de diseño del Seller (`cfg-*`, acento
+ *    `#5F3FE0`, sin degradados) y ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md).
+ *  - El servidor normaliza todo al guardar: el panel ayuda y avisa, pero no es la validación.
+ *
+ * ── Quién toca este archivo ──────────────────────────────────────────────────────────────────────────────────────
+ *  Las líneas de `PANELES_SITIO` las aplica el orquestador al integrar cada tanda; el subagente entrega su línea en la
+ *  respuesta y hace commit solo de su carpeta.
+ */
+
+/** Base de todo panel: entradas y salida comunes. */
+@Directive()
+export abstract class PanelSitioBase {
+  /** El bloque elegido en el editor. null en los paneles de la pestaña Tienda. */
+  @Input() bloque: BloqueSitio | null = null;
+  /** El sitio entero (tema, tienda, páginas). */
+  @Input() contenido: ContenidoSitio | null = null;
+  /** Avisa al editor que algo cambió (marca sucio, refresca la previa y programa el guardado). */
+  @Output() cambio = new EventEmitter<void>();
+
+  protected avisar(): void {
+    this.cambio.emit();
+  }
+}
+
+export interface PanelSitio {
+  /** Identificador único; el mismo `nombre` del módulo del servidor (`plano`, `barras`, `ficha`). */
+  id: string;
+  /** El componente del panel. */
+  componente: Type<PanelSitioBase>;
+  /** Tipo de bloque que edita (`plano`, `guia`). Sin tipo, el panel es de la pestaña Tienda (`tienda`). */
+  tipo?: string;
+  /**
+   * Solo para un tipo NUEVO: cómo se ofrece en «Agregar una sección». Se ofrece únicamente con el diseño nuevo
+   * encendido (el servidor no pinta un tipo nuevo en v1). `familia` es una de las de `FAMILIAS_BLOQUE` del editor.
+   */
+  catalogo?: { nombre: string; descripcion: string; icono: string; familia?: string };
+  /** Datos con que nace el bloque al agregarlo (sin datos falsos: lo que falta se pide en el panel). */
+  datosIniciales?: () => any;
+  /** Una línea para la ficha «Se ve en la Vista fiel» que el espejo pinta en lugar del bloque. */
+  resumen?: (datos: any) => string;
+  /** Panel de la pestaña Tienda (Tienda › Atención, Tienda › Fichas de producto). Solo con el diseño nuevo. */
+  tienda?: { titulo: string; descripcion?: string };
+}
+
+/**
+ * Los paneles registrados. Cada tanda trae su línea:
+ *   T06 Tienda › Atención · T08 Tienda › Fichas de producto · T13 plano · T17 guia · T20 pedidoRapido
+ */
+export const PANELES_SITIO: PanelSitio[] = [];
+
+/** El panel que edita un tipo de bloque, si lo hay. */
+export function panelDeTipo(tipo: string, lista: PanelSitio[] = PANELES_SITIO): PanelSitio | null {
+  return lista.find((p) => !!p.tipo && p.tipo === tipo) || null;
+}
+
+/** Los paneles de la pestaña Tienda, en el orden del registro. */
+export function panelesDeTienda(lista: PanelSitio[] = PANELES_SITIO): PanelSitio[] {
+  return lista.filter((p) => !p.tipo && !!p.tienda);
+}
+
+/** Las entradas de «Agregar una sección» de los tipos nuevos (solo se ofrecen con el diseño nuevo). */
+export function catalogoDisenoNuevo(lista: PanelSitio[] = PANELES_SITIO): { tipo: string; nombre: string; descripcion: string; icono: string; familia?: string }[] {
+  return lista
+    .filter((p) => !!p.tipo && !!p.catalogo)
+    .map((p) => ({ tipo: p.tipo as string, ...(p.catalogo as { nombre: string; descripcion: string; icono: string; familia?: string }) }));
+}
+
+/** Lo que el espejo del editor necesita para la ficha «Se ve en la Vista fiel» de cada tipo nuevo. */
+export interface FichaFiel {
+  nombre: string;
+  resumen?: (datos: any) => string;
+}
+
+export function fichasFieles(lista: PanelSitio[] = PANELES_SITIO): { [tipo: string]: FichaFiel } {
+  const salida: { [tipo: string]: FichaFiel } = {};
+  for (const p of lista) {
+    if (p.tipo && p.catalogo) salida[p.tipo] = { nombre: p.catalogo.nombre, resumen: p.resumen };
+  }
+  return salida;
+}

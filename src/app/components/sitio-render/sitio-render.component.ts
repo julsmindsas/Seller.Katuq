@@ -258,6 +258,31 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
    */
   @Input() cajonLateral = false;
 
+  /**
+   * Diseño nuevo (PLAN-V2 T03): nombre y resumen de los tipos de bloque que este espejo no dibuja (los nuevos de los
+   * módulos). El editor los toma de `sitios/editor/paneles/registro.ts`; aquí no se importa el registro para no traer
+   * los paneles a la página pública.
+   */
+  @Input() fichasV2: { [tipo: string]: { nombre: string; resumen?: (datos: any) => string } } = {};
+
+  /**
+   * La ficha «Se ve en la Vista fiel» de un bloque que el espejo no dibuja: su nombre y una línea de resumen (texto, para
+   * que la detección de cambios compare valores y no objetos nuevos). Solo en el editor.
+   */
+  nombreFiel(bloque: BloqueSitio): string {
+    const ficha = (this.fichasV2 || {})[bloque.tipo];
+    return ficha ? ficha.nombre : this.nombreDeBloque(bloque.tipo);
+  }
+
+  resumenFiel(bloque: BloqueSitio): string {
+    const ficha = (this.fichasV2 || {})[bloque.tipo];
+    try {
+      return ficha && ficha.resumen ? String(ficha.resumen(bloque.datos || {}) || "") : "";
+    } catch {
+      return "";
+    }
+  }
+
   /** Id de la cabecera cuyo panel lateral está abierto en la previa (estado de la vista, no se guarda). */
   menuAbierto: string | null = null;
   private botonMenu: HTMLElement | null = null;
@@ -1065,6 +1090,9 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     video: "Video",
     resenas: "Lo que dicen tus clientes",
     ubicacion: "Dónde estás",
+    // PLAN-V2 T03: los dos que este espejo no dibuja (salen como ficha «Se ve en la Vista fiel»), con su nombre.
+    sucursales: "Sucursales",
+    agenda: "Agenda de visitas",
     footer: "Pie de página",
   };
 

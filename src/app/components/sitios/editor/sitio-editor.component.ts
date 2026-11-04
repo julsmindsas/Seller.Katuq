@@ -33,6 +33,8 @@ import { avisoContraste, avisoContrastePrincipal, combinacionUsable, contraste, 
 import { ajustesDeEstiloCompletos } from "../../sitio-render/ajustes-estilo";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../iconos-sitio";
 import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
+// Diseño nuevo (PLAN-V2 T03): paneles de los bloques y piezas nuevas, cada uno en su carpeta de `paneles/`.
+import { PanelSitio, catalogoDisenoNuevo, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -881,7 +883,16 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    */
   fondosSugeridos = ["#f7f7fb", "#f3f0ff", "#fff8f0", "#f2f9f5", "#211d33"];
 
-  catalogoBloques = CATALOGO_BLOQUES;
+  /**
+   * Las secciones que se pueden agregar. Diseño nuevo (PLAN-V2 T03): los tipos nuevos de los paneles registrados
+   * (`paneles/registro.ts`) se ofrecen solo con el diseño nuevo encendido: con el de siempre la página no los pinta.
+   */
+  get catalogoBloques(): typeof CATALOGO_BLOQUES {
+    return this.disenoNuevo ? this.catalogoConV2 : CATALOGO_BLOQUES;
+  }
+  /** Las entradas de los tipos nuevos; el registro es fijo, así que se arman una vez (listas estables para la vista). */
+  private readonly catalogoV2 = catalogoDisenoNuevo();
+  private readonly catalogoConV2 = [...CATALOGO_BLOQUES, ...this.catalogoV2];
 
   /**
    * Los 29 tipos crudos, en cuatro familias. Una lista plana de 29 obliga a
@@ -896,9 +907,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   get catalogoPorFamilia(): { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] {
     const porTipo = new Map(this.catalogoBloques.map((c) => [c.tipo, c]));
     const usados = new Set<string>();
+    // PLAN-V2 T03: un tipo nuevo va en la familia que declara su panel (si no, en «Otros»).
+    const nuevos = this.disenoNuevo ? this.catalogoV2 : [];
     const familias = this.FAMILIAS_BLOQUE.map((f) => ({
       nombre: f.nombre,
-      bloques: f.tipos.map((t) => porTipo.get(t)).filter((c): c is (typeof CATALOGO_BLOQUES)[number] => {
+      bloques: [...f.tipos, ...nuevos.filter((n) => n.familia === f.nombre).map((n) => n.tipo)].map((t) => porTipo.get(t)).filter((c): c is (typeof CATALOGO_BLOQUES)[number] => {
         if (!c) return false;
         usados.add(c.tipo);
         return true;
@@ -2600,20 +2613,50 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.bloqueActual ? this.bloqueActual.id : null;
   }
 
+  /**
+   * La entrada del catálogo de un tipo. Los tipos nuevos (PLAN-V2 T03) se nombran aunque el diseño nuevo esté apagado:
+   * la sección sigue en la lista del editor con su nombre, aunque la página publicada no la pinte.
+   */
+  private entradaDeTipo(tipo: string): (typeof CATALOGO_BLOQUES)[number] | undefined {
+    return CATALOGO_BLOQUES.find((b) => b.tipo === tipo) || this.catalogoV2.find((b) => b.tipo === tipo);
+  }
+
   nombreDeTipo(tipo: string): string {
-    const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
+    const encontrado = this.entradaDeTipo(tipo);
     return encontrado ? encontrado.nombre : tipo;
   }
 
   descripcionDeTipo(tipo: string): string {
-    const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
+    const encontrado = this.entradaDeTipo(tipo);
     return encontrado ? encontrado.descripcion : "";
   }
 
   /** Trazo del ícono de la sección (atributo `d` de un <path>). */
   iconoDeTipo(tipo: string): string {
-    const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
+    const encontrado = this.entradaDeTipo(tipo);
     return encontrado ? encontrado.icono : "M4 5h16v14H4z";
+  }
+
+  // ── Paneles del diseño nuevo (PLAN-V2 T03, paneles/registro.ts) ─────────────
+
+  /** El panel propio del bloque elegido, si su tipo trae uno. */
+  panelDeBloque(b: BloqueSitio | null): PanelSitio | null {
+    return b ? panelDeTipo(b.tipo) : null;
+  }
+
+  /** Los paneles de la pestaña Tienda (Atención, Fichas de producto…). Solo con el diseño nuevo, que es quien los usa. */
+  get panelesTiendaV2(): PanelSitio[] {
+    return this.disenoNuevo ? this.panelesTienda : SitioEditorComponent.SIN_PANELES;
+  }
+  private readonly panelesTienda = panelesDeTienda();
+  private static readonly SIN_PANELES: PanelSitio[] = [];
+
+  /** Nombre y resumen de los tipos nuevos para la ficha «Se ve en la Vista fiel» del espejo. */
+  readonly fichasV2 = fichasFieles();
+
+  /** Un panel avisó que cambió algo: lo mismo que cualquier campo del editor. */
+  alCambiarPanel(): void {
+    this.marcarSucio();
   }
 
   // ── Estilo de la página ────────────────────────────────────────────────────
@@ -3217,7 +3260,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       this.cerrarAgregar();
       return;
     }
-    const datos = JSON.parse(JSON.stringify(BLOQUE_NUEVO[tipo] || {}));
+    // PLAN-V2 T03: un tipo nuevo nace con los datos que declara su panel.
+    const panel = panelDeTipo(tipo);
+    const datos = JSON.parse(JSON.stringify(BLOQUE_NUEVO[tipo] || (panel && panel.datosIniciales ? panel.datosIniciales() : null) || {}));
     // El id local solo sirve para identificar el bloque en pantalla; el backend
     // lo normaliza al guardar.
     const id = `b_${Date.now()}_${tipo}`;

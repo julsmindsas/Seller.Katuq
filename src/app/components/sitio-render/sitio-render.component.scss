@@ -24,6 +24,68 @@
   }
 }
 
+// Diseño nuevo (PLAN-V2 T03): ficha de un bloque que el espejo no dibuja. Es una pieza del editor, no de la página:
+// colores propios del Seller (no los del tema del sitio) para que se lea sobre cualquier fondo. Cada span lleva color y
+// tamaño propios (trampa `span.ng-star-inserted` de AGENTS.md).
+.ficha-fiel {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+
+  &__caja {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 18px 20px;
+    border: 1.5px dashed #cfc5f7;
+    border-radius: 16px;
+    background: #f6f4ff;
+    color: #211f3a;
+    text-align: left;
+  }
+
+  &__icono {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: #ece7ff;
+    color: #5f3fe0;
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__nombre {
+    color: #211f3a;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+
+  &__resumen {
+    color: #211f3a;
+    font-size: 14px;
+    line-height: 1.45;
+    letter-spacing: normal;
+  }
+
+  &__nota {
+    color: #5c5878;
+    font-size: 13px;
+    line-height: 1.45;
+    letter-spacing: normal;
+  }
+}
+
 // Los titulares tienen su propia fuente, peso y tracking: es la mitad de lo que
 // distingue un estilo de página de otro.
 h1,
