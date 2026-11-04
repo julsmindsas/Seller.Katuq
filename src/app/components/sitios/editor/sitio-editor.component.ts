@@ -2133,7 +2133,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const limpio = (v: string) => String(v || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = limpio(this.busquedaAjuste).trim();
     if (q.length < 2) return [];
-    return SitioEditorComponent.AJUSTES.filter((a) => limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
+    return SitioEditorComponent.AJUSTES.filter((a) => ((a as { grupo?: string }).grupo !== "disenoNuevo" || this.puedeDisenoNuevo) && limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
   }
 
   irAAjuste(a: { texto: string; panel: string; grupo?: string }): void {
@@ -2676,6 +2676,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /**
+   * Diseño nuevo (v2): se ofrece solo con la bandera `siteDesignV2` de la empresa. Si la página ya lo usa, el grupo
+   * sigue a la vista para poder apagarlo. El servidor tampoco deja encenderlo sin la bandera.
+   */
+  get puedeDisenoNuevo(): boolean {
+    return this.disenoNuevo || !!(this.features && this.features.isEnabled("siteDesignV2"));
+  }
+
+  /**
    * Diseño nuevo (v2, PLAN-V2 T01): solo escribe `tema.sistemaVisual` (2 o 1). Lo demás del sitio no cambia y se
    * puede volver al de siempre en cualquier momento.
    */
@@ -2844,12 +2852,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         return t[clave] ? this.contrasteDe(t[clave], t.colorSecundario) : null;
       case "colorFondoAlterno":
         return t.colorFondoAlterno ? this.contrasteDe(t.colorTexto, t.colorFondoAlterno) : null;
-      // v2: el pie y la barra llevan el texto que más se lea sobre la estructura (el publicado lo mide igual).
+      // v2: el pie y la barra llevan el texto que se lea sobre la estructura, como lo mide el publicado
+      // (`textoSobre` de siteEstilosV2): el del tema, o el fondo de la página, o blanco o casi negro (el que más se lea).
       case "colorEstructura": {
         if (!t.colorEstructura) return null;
-        const a = this.contrasteDe(t.colorTexto, t.colorEstructura);
-        const b = this.contrasteDe(t.colorSecundario, t.colorEstructura);
-        return a && a.ok ? a : b && b.ok ? b : a;
+        for (const texto of [t.colorTexto || "#222222", t.colorSecundario || "#ffffff"]) {
+          const k = this.contrasteDe(texto, t.colorEstructura);
+          if (k && k.ok) return k;
+        }
+        const blanco = contraste("#ffffff", t.colorEstructura) || 0;
+        const negro = contraste("#111111", t.colorEstructura) || 0;
+        return this.contrasteDe(blanco >= negro ? "#ffffff" : "#111111", t.colorEstructura);
       }
       default:
         return null;

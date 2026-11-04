@@ -176,6 +176,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // Landings por objetivo, fase 1 (D-633, tickets 1396 a 1399): bandeja «Leads landing», consentimiento de la
   // Ley 1581 en el formulario de leads y /l/{slug}. Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-04-30.
   'landingsV2',
+  // Diseño nuevo de las páginas del constructor de sitios (PLAN-V2 T01): «Diseño nuevo» en Estilo del editor. Apagada,
+  // no se ofrece (si la página ya lo usa, se puede apagar). El servidor tampoco deja encenderlo sin ella. Mismo nombre
+  // que el backend. Dueño: Daniel. Se retira el 2027-06-30: encendida para todos o eliminada.
+  'siteDesignV2',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

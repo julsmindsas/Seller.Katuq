@@ -2209,8 +2209,9 @@
         <!-- ── Diseño nuevo (v2, PLAN-V2 T01) ──
              El interruptor solo escribe tema.sistemaVisual. La vista previa de
              esta pantalla sigue en el diseño de siempre: el publicado lo arma el
-             servidor, así que se recomienda revisarlo con la vista previa real. -->
-        <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'disenoNuevo'">
+             servidor, así que se recomienda revisarlo con la vista previa real.
+             Solo con la bandera siteDesignV2 (o si la página ya lo usa, para apagarlo). -->
+        <div class="grupo acordeon" *ngIf="puedeDisenoNuevo" [class.is-abierto]="estiloAbierto === 'disenoNuevo'">
           <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('disenoNuevo')" [attr.aria-expanded]="estiloAbierto === 'disenoNuevo'">
             <span class="acordeon__titulo">Diseño nuevo</span>
             <span class="acordeon__resumen">{{ disenoNuevo ? 'Encendido' : 'Apagado' }}</span>
