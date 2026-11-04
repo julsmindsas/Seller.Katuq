@@ -31,6 +31,7 @@ import {
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
 import { avisoContraste, avisoContrastePrincipal, combinacionUsable, contraste, mismosColores } from "../contraste";
 import { ajustesDeEstiloCompletos } from "../../sitio-render/ajustes-estilo";
+import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../iconos-sitio";
 import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
@@ -3643,29 +3644,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { tipo: "espacio", nombre: "+ Espacio" },
   ];
 
-  /** Los mismos íconos que dibujan el servidor y la vista previa. */
-  iconosDisponibles = [
-    "envio", "garantia", "pago", "reloj", "estrella", "corazon",
-    "chat", "ubicacion", "regalo", "hoja", "escudo", "rayo",
-  ];
-
-  private static readonly TRAZOS_ICONO: { [k: string]: string } = {
-    envio: "M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
-    garantia: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z M9 12l2 2 4-4",
-    pago: "M2 7h20v10H2zM2 11h20M6 15h3",
-    reloj: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2",
-    estrella: "m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
-    corazon: "M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z",
-    chat: "M4 5h16v11H8l-4 3z",
-    ubicacion: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11zM12 10h.01",
-    regalo: "M3 11h18v9H3zM3 7h18v4H3zM12 7v13M8 7a2.5 2.5 0 1 1 4-2c2-2 4-1 4 1 0 1-1 1-1 1z",
-    hoja: "M20 4C10 4 4 9 4 17c0 1 0 2 1 3 6-9 9-10 15-11z",
-    escudo: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z",
-    rayo: "M13 3 5 14h6l-1 7 8-11h-6z",
-  };
+  /** Los mismos íconos que dibujan el servidor y la vista previa (iconos-sitio.ts). */
+  iconosDisponibles = [...ICONOS_SITIO];
 
   trazoIcono(nombre: string): string {
-    return SitioEditorComponent.TRAZOS_ICONO[nombre] || "";
+    return TRAZOS_ICONO_SITIO[nombre] || "";
   }
 
   // ── Dónde va cada elemento ─────────────────────────────────────────────────
@@ -4904,6 +4887,51 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const b = this.bloqueActual;
     if (!b) return;
     b.datos.items.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** Diseño nuevo (PLAN-V2 T02): los bloques que llevan cabecera de sección. Solo se editan con el diseño nuevo. */
+  private static readonly CON_CABECERA_V2 = ["productos", "categorias", "columnas", "seccion", "galeria", "marcas", "resenas", "faq"];
+
+  conCabeceraV2(tipo: string): boolean {
+    return this.disenoNuevo && SitioEditorComponent.CON_CABECERA_V2.includes(tipo);
+  }
+
+  /** Pie v2: hasta 5 columnas, cada una con su título y hasta 8 enlaces (los topes del servidor). */
+  agregarColumnaPie(): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    const columnas = Array.isArray(b.datos.columnas) ? b.datos.columnas : [];
+    if (columnas.length >= 5) return;
+    b.datos.columnas = [...columnas, { titulo: "", enlaces: [{ etiqueta: "", url: "" }] }];
+    this.marcarSucio();
+  }
+
+  quitarColumnaPie(i: number): void {
+    const b = this.bloqueActual;
+    if (!b || !Array.isArray(b.datos.columnas)) return;
+    b.datos.columnas.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  agregarEnlaceAColumnaPie(columna: { enlaces?: { etiqueta: string; url: string }[] }): void {
+    const enlaces = Array.isArray(columna.enlaces) ? columna.enlaces : [];
+    if (enlaces.length >= 8) return;
+    columna.enlaces = [...enlaces, { etiqueta: "", url: "" }];
+    this.marcarSucio();
+  }
+
+  quitarEnlaceDeColumnaPie(columna: { enlaces?: { etiqueta: string; url: string }[] }, i: number): void {
+    if (!Array.isArray(columna.enlaces)) return;
+    columna.enlaces.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** Pie v2: el contacto de la columna de marca. Un campo vacío no se guarda (el servidor lo descarta). */
+  ponerContactoPie(campo: "whatsapp" | "linea" | "horario", valor: string): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    b.datos.contacto = { ...(b.datos.contacto || {}), [campo]: valor };
     this.marcarSucio();
   }
 

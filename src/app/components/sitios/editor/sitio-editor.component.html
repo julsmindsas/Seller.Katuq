@@ -1520,6 +1520,55 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
               Agregar enlace
             </button>
+
+            <!-- Diseño nuevo (PLAN-V2 T02): columnas del pie y contacto de la columna de marca. -->
+            <ng-container *ngIf="disenoNuevo">
+              <h4 class="subgrupo">Columnas del pie <small>(diseño nuevo)</small></h4>
+              <p class="nota">Hasta 5 columnas con su título y 8 enlaces. Sin columnas, el pie arma las de siempre. Tus
+                páginas (políticas, términos) salen solas aunque no las pongas aquí.</p>
+              <div class="pie-col" *ngFor="let c of (b.datos.columnas || []); let ci = index">
+                <div class="campo">
+                  <label>Título de la columna {{ ci + 1 }}</label>
+                  <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()" maxlength="40" placeholder="Ej.: Ayuda" />
+                </div>
+                <div class="repetible" *ngFor="let e of c.enlaces; let ei = index">
+                  <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
+                  <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o /ruta" />
+                  <button class="repetible__quitar" (click)="quitarEnlaceDeColumnaPie(c, ei)">Quitar</button>
+                  <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará.</small>
+                </div>
+                <div class="pie-col__acciones">
+                  <button class="agregar agregar--sm" *ngIf="(c.enlaces?.length || 0) < 8" (click)="agregarEnlaceAColumnaPie(c)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+                    Agregar enlace
+                  </button>
+                  <button class="enlace-sutil" (click)="quitarColumnaPie(ci)">Quitar columna</button>
+                </div>
+              </div>
+              <button class="agregar agregar--sm" *ngIf="(b.datos.columnas?.length || 0) < 5" (click)="agregarColumnaPie()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+                Agregar columna
+              </button>
+
+              <h4 class="subgrupo">Contacto en el pie <small>(diseño nuevo)</small></h4>
+              <div class="campo">
+                <label>WhatsApp</label>
+                <input type="tel" inputmode="tel" [ngModel]="b.datos.contacto?.whatsapp" (ngModelChange)="ponerContactoPie('whatsapp', $event)"
+                       maxlength="20" placeholder="300 123 4567" />
+                <small>Sin número, el botón usa el teléfono de tu empresa.</small>
+              </div>
+              <div class="campo">
+                <label>Línea de atención</label>
+                <input type="text" [ngModel]="b.datos.contacto?.linea" (ngModelChange)="ponerContactoPie('linea', $event)" maxlength="40" placeholder="601 000 0000" />
+              </div>
+              <div class="campo">
+                <label>Horario de atención</label>
+                <input type="text" [ngModel]="b.datos.contacto?.horario" (ngModelChange)="ponerContactoPie('horario', $event)" maxlength="80"
+                       placeholder="Lunes a sábado, 8:00 a. m. a 6:00 p. m." />
+              </div>
+              <p class="aviso aviso--info">Las columnas y el contacto se ven en la página publicada con el diseño nuevo.
+                Esta vista previa todavía muestra el pie de siempre: revísalo con «Ver cómo queda».</p>
+            </ng-container>
           </ng-container>
 
 
@@ -1656,6 +1705,39 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
+          </ng-container>
+
+          <!-- Diseño nuevo (PLAN-V2 T02, DISENO §3.1): la cabecera de la sección, igual en los 8 bloques que la usan. -->
+          <ng-container *ngIf="conCabeceraV2(b.tipo)">
+            <h4 class="subgrupo">Cabecera de la sección <small>(diseño nuevo)</small></h4>
+            <div class="campo">
+              <label>Antetítulo</label>
+              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" placeholder="Ej.: Lo más elegido" />
+              <small>Una o dos palabras sobre el título, con un punto del color de tu marca.</small>
+            </div>
+            <div class="campo">
+              <label>Segunda parte del título</label>
+              <input type="text" [(ngModel)]="b.datos.tituloSuave" (ngModelChange)="marcarSucio()" maxlength="80" placeholder="Ej.: y para qué sirve." />
+              <small>Sigue al título en un tono más suave.</small>
+            </div>
+            <div class="campo">
+              <label>Línea de apoyo</label>
+              <input type="text" [(ngModel)]="b.datos.subtitulo" (ngModelChange)="marcarSucio()" maxlength="200" />
+            </div>
+            <div class="campo-doble">
+              <div class="campo">
+                <label>Texto del enlace</label>
+                <input type="text" [(ngModel)]="b.datos.enlaceTexto" (ngModelChange)="marcarSucio()" maxlength="30" placeholder="Ver todos" />
+              </div>
+              <div class="campo">
+                <label>A dónde lleva</label>
+                <input type="text" [(ngModel)]="b.datos.enlaceUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" />
+              </div>
+            </div>
+            <small class="aviso" *ngIf="b.datos.enlaceTexto && !b.datos.enlaceUrl">Sin destino, el enlace no se muestra.</small>
+            <small class="aviso" *ngIf="anclaSinDestino(b.datos.enlaceUrl)">Esa sección no existe en tu inicio: el enlace no se mostrará.</small>
+            <p class="nota" *ngIf="b.tipo === 'productos' || b.tipo === 'categorias'">Sin enlace propio, «Ver todos» lleva a tu catálogo.</p>
+            <p class="aviso aviso--info">Se ve en la página publicada con el diseño nuevo; revísalo con «Ver cómo queda».</p>
           </ng-container>
 
           <!-- ── Herramientas avanzadas: lienzo libre y objetos colocables ──

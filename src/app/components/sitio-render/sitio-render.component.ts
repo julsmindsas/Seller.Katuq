@@ -2,6 +2,7 @@ import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnIni
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { contenidoDelMenu, ContenidoMenu } from "./cajon-previa";
 import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes, variablesDeSeccion, variablesDeTono } from "./ajustes-estilo";
+import { TRAZOS_ICONO_SITIO } from "../sitios/iconos-sitio";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -939,27 +940,12 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
-   * Trazos de los íconos de tarjeta. Son los mismos que dibuja el servidor
-   * (`utils/siteHtml.js`): si divergen, la vista previa mostraría un ícono que
-   * la página publicada no tiene.
+   * Trazo de un ícono de tarjeta. Son los mismos que dibuja el servidor
+   * (`utils/siteHtml.js`, copiados en `sitios/iconos-sitio.ts`): si divergen, la
+   * vista previa mostraría un ícono que la página publicada no tiene.
    */
-  private static readonly TRAZOS: { [k: string]: string } = {
-    envio: "M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
-    garantia: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z M9 12l2 2 4-4",
-    pago: "M2 7h20v10H2zM2 11h20M6 15h3",
-    reloj: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2",
-    estrella: "m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
-    corazon: "M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z",
-    chat: "M4 5h16v11H8l-4 3z",
-    ubicacion: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11zM12 10h.01",
-    regalo: "M3 11h18v9H3zM3 7h18v4H3zM12 7v13M8 7a2.5 2.5 0 1 1 4-2c2-2 4-1 4 1 0 1-1 1-1 1z",
-    hoja: "M20 4C10 4 4 9 4 17c0 1 0 2 1 3 6-9 9-10 15-11z",
-    escudo: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z",
-    rayo: "M13 3 5 14h6l-1 7 8-11h-6z",
-  };
-
   trazoIcono(nombre: string): string {
-    return SitioRenderComponent.TRAZOS[nombre] || "";
+    return TRAZOS_ICONO_SITIO[nombre] || "";
   }
 
   /** Cinco posiciones: true = estrella encendida. */

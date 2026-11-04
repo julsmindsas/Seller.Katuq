@@ -3774,6 +3774,22 @@ input.is-error { border-color: #b42318 !important; }
   }
 }
 
+// Diseño nuevo (PLAN-V2 T02): una columna del pie, con su título y sus enlaces.
+.pie-col {
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+}
+
 .subgrupo {
   margin: 16px 0 8px;
   font-size: 11px;
