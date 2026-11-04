@@ -272,7 +272,8 @@
         </section>
 
         <!-- Productos. El id fijo es el destino del ancla "#productos". -->
-        <section *ngSwitchCase="'productos'" class="bloque productos" id="productos">
+        <section *ngSwitchCase="'productos'" class="bloque productos" id="productos"
+                 [hidden]="!previsualizacion && !bloque.datos.productos?.length">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
           <div class="productos__grid" [class.productos__grid--fila]="bloque.datos.carrusel" *ngIf="bloque.datos.productos?.length"
                [class.productos__grid--pocos]="bloque.datos.productos.length <= 4">
@@ -297,7 +298,9 @@
           <!-- En el editor no hay nada que mostrar por dos razones distintas, y
                conviene distinguirlas: o no eligió productos, o los que eligió
                están agotados y por eso no saldrán publicados. -->
+          <!-- P0-13: sin productos, la sección no se publica (espejo de siteHtml.js). -->
           <ng-container *ngIf="!bloque.datos.productos?.length && previsualizacion">
+            <p class="vacio"><strong>Sección oculta: sin productos.</strong> No sale en tu página publicada.</p>
             <p class="vacio" *ngIf="!bloque.datos.productoIds?.length">
               Todavía no has elegido productos para este bloque.
             </p>
@@ -306,9 +309,6 @@
               mostrarán mientras sigan sin stock.
             </p>
           </ng-container>
-          <p class="vacio" *ngIf="!bloque.datos.productos?.length && !previsualizacion">
-            No hay productos disponibles en este momento.
-          </p>
         </section>
 
         <!-- Busca tu detalle. Las listas se llenan al publicar. -->

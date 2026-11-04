@@ -562,6 +562,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
       case "marcas": return (d.logos || []).some((l: any) => l && l.url) || !!d.desdeCatalogo;
       case "sucursales": return (d.sedes || []).length > 0 || d.usarPuntosDeRetiro !== false;
       case "categorias": return (this.categorias || []).length > 0;
+      // P0-13: una vitrina sin productos no se publica.
+      case "productos": return (d.productos || []).length > 0;
       default: return true;
     }
   }

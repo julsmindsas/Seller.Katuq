@@ -1344,6 +1344,8 @@ h3 {
   h3, p, .formato { color: #fff; position: relative; z-index: 1; }
   .tarjeta__icono { color: #fff; position: relative; z-index: 1; }
   .boton, .tarjeta__etiqueta { position: relative; z-index: 1; }
+  // P0-15 (espejo de siteHtml.js): con foto, todo el contenido va abajo, sobre la parte oscura del velo.
+  .boton { margin-top: 0; }
 }
 .tarjeta__fondo {
   position: absolute; inset: 0; width: 100%; height: 100%;
