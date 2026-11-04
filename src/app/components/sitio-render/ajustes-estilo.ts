@@ -7,7 +7,7 @@
  * arma el servidor; esto hace que la vista previa del editor muestre lo mismo.
  * Al tocar aquí, tocar allá.
  */
-import { canales, contraste, esOscuro, mezclar, primarioAccesible } from "../sitios/contraste";
+import { contraste, primarioAccesible, superficieOscura } from "../sitios/contraste";
 
 export interface AjustesEstilo {
   colorFondoAlterno?: string;
@@ -182,20 +182,53 @@ export function variablesDeTono(
     "--sitio-fondo": fondo,
     "--sitio-secundario-sobre-primario": (contraste(fondo, boton.fondo) || 0) >= 4.5 ? fondo : boton.texto,
   };
-  if (esOscuro(fondo)) {
-    vars["--sitio-borde"] = `rgba(${canales(texto)},.14)`;
+  // Revisión de los P0: el juego oscuro solo si el texto del tema se lee sobre el fondo (con texto oscuro sobre
+  // fondo oscuro las tarjetas siguen blancas, como en el servidor).
+  const oscuro = superficieOscura(fondo, texto, boton.fondo);
+  if (oscuro) {
+    vars["--sitio-borde"] = oscuro.borde;
     vars["--sitio-sombra"] = "none";
     vars["color-scheme"] = "dark";
     // P0-16 y contraste en oscuro: disco del ícono teñido, borde de «Agregar» con su propio color y tarjetas,
     // promo, producto de «tienda» y reseñas sobre una superficie apenas más clara que el fondo.
     vars["--sitio-disco"] = "color-mix(in srgb, var(--sitio-primario) 14%, transparent)";
-    vars["--sitio-borde-control"] = "color-mix(in srgb, currentColor 38%, transparent)";
-    const superficie = mezclar(texto, fondo, 0.07);
-    if (superficie) {
-      vars["--sitio-superficie"] = superficie;
-      vars["--sitio-texto-superficie"] = texto;
-      vars["--sitio-acento-superficie"] = (contraste(boton.fondo, superficie) || 0) >= 4.5 ? boton.fondo : texto;
-    }
+    vars["--sitio-borde-control"] = "color-mix(in srgb, currentColor 50%, transparent)";
+    vars["--sitio-superficie"] = oscuro.superficie;
+    vars["--sitio-texto-superficie"] = oscuro.texto;
+    vars["--sitio-acento-superficie"] = oscuro.acento;
+  }
+  return vars;
+}
+
+/**
+ * Revisión de los P0 (espejo de `cssDeSecciones` en functions/utils/siteHtml.js): en un sitio oscuro, la sección
+ * con color de fondo propio trae su fondo, su texto y su juego de superficie. Fondo claro: tarjetas blancas,
+ * borde del estilo y controles claros. Fondo oscuro con texto legible: superficie y borde medidos con su texto.
+ * En los sitios claros no devuelve nada.
+ */
+export function variablesDeSeccion(
+  t: { colorPrimario?: string; colorSecundario?: string; colorTexto?: string } | null | undefined,
+  e: { fondo?: string; fondoImagen?: string; colorTexto?: string } | null | undefined
+): { [k: string]: string } {
+  const a = t || {};
+  const est = e || {};
+  const textoTema = hex(a.colorTexto) || "#222222";
+  const primario = primarioAccesible(hex(a.colorPrimario) || "#111111").fondo;
+  const fondo = hex(est.fondo);
+  if (!fondo || est.fondoImagen || !superficieOscura(hex(a.colorSecundario) || "#ffffff", textoTema, primario)) return {};
+  const textoSeccion = hex(est.colorTexto) || textoTema;
+  const so = superficieOscura(fondo, textoSeccion, primario);
+  const vars: { [k: string]: string } = { "--sitio-fondo": fondo };
+  if (hex(est.colorTexto)) vars["--sitio-texto"] = hex(est.colorTexto);
+  if (so) {
+    vars["--sitio-superficie"] = so.superficie;
+    vars["--sitio-texto-superficie"] = so.texto;
+    vars["--sitio-acento-superficie"] = so.acento;
+    vars["--sitio-borde"] = so.borde;
+  } else {
+    for (const n of ["superficie", "texto-superficie", "acento-superficie", "disco", "borde-control"]) vars[`--sitio-${n}`] = "initial";
+    vars["--sitio-borde"] = "var(--sitio-borde-base)";
+    vars["color-scheme"] = "light";
   }
   return vars;
 }
@@ -210,6 +243,9 @@ export function variablesDeAjustes(
   const legible = (c: string) => ((contraste(c, fondo) || 0) >= 4.5 ? c : texto);
   const vars: { [k: string]: string } = {};
   const alterno = hex(a.colorFondoAlterno);
+  const primario = primarioAccesible(hex(a.colorPrimario) || "#111111").fondo;
+  // Revisión de los P0 (espejo de siteHtml.js): ¿la página es oscura con su texto legible?
+  const oscuroPagina = superficieOscura(fondo, texto, primario);
   // Revisión 2026-10-18: texto de las piezas de fondo blanco fijo (tarjetas, buscador).
   const sobreBlanco = (contraste(texto, "#ffffff") || 0) >= 4.5 ? texto : "#222222";
   if (alterno || sobreBlanco !== texto) vars["--sitio-texto-sobre-blanco"] = sobreBlanco;
@@ -225,7 +261,21 @@ export function variablesDeAjustes(
     vars["--sitio-texto-alterno"] = textoAlterno;
     // Revisión 2026-10-18: enlaces, oferta, contorno y color de marca medidos contra el alterno.
     legibleAlterno = (c: string) => ((contraste(c, alterno) || 0) >= 4.5 ? c : textoAlterno);
-    vars["--sitio-acento-alterno"] = legibleAlterno(primarioAccesible(hex(a.colorPrimario) || "#111111").fondo);
+    vars["--sitio-acento-alterno"] = legibleAlterno(primario);
+    // Revisión de los P0 (espejo de siteHtml.js): en un sitio oscuro la sección alterna trae su juego de
+    // superficie; si es clara, sin esas variables las tarjetas vuelven a blanco y el borde al del estilo.
+    if (oscuroPagina) {
+      const so = superficieOscura(alterno, textoAlterno, primario);
+      if (so) {
+        vars["--sitio-superficie-alterno"] = so.superficie;
+        vars["--sitio-texto-superficie-alterno"] = so.texto;
+        vars["--sitio-acento-superficie-alterno"] = so.acento;
+        vars["--sitio-borde-alterno"] = so.borde;
+        vars["--sitio-esquema-alterno"] = "dark";
+      } else {
+        vars["--sitio-esquema-alterno"] = "light";
+      }
+    }
   }
   const boton = hex(a.colorBoton);
   if (boton) {

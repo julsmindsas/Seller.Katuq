@@ -52,6 +52,29 @@ export function contraste(a: string, b: string): number | null {
 }
 
 /**
+ * Espejo de `superficieOscura` (functions/utils/contrasteColor.js): el juego de
+ * superficie de un fondo oscuro, solo si su texto se lee sobre él (4,5:1). Con
+ * texto oscuro sobre fondo oscuro devuelve null y las tarjetas siguen blancas.
+ */
+export function superficieOscura(
+  fondo: string,
+  texto: string,
+  primario: string
+): { superficie: string; texto: string; borde: string; acento: string } | null {
+  if (!esOscuro(fondo) || (contraste(texto, fondo) || 0) < CONTRASTE_MINIMO) return null;
+  const superficie = mezclar(texto, fondo, 0.07);
+  const c = canales(texto);
+  if (!superficie || !c) return null;
+  const textoHex = "#" + c.split(",").map((v) => Number(v).toString(16).padStart(2, "0")).join("");
+  return {
+    superficie,
+    texto: textoHex,
+    borde: `rgba(${c},.14)`,
+    acento: (contraste(primario, superficie) || 0) >= CONTRASTE_MINIMO ? primario : textoHex,
+  };
+}
+
+/**
  * Espejo de `primarioAccesible` (functions/utils/contrasteColor.js): el color de
  * un botón y el texto que va encima. Si el blanco no alcanza 4,5:1, oscurece
  * apenas el color; si haría falta mucho, lo conserva y el texto va oscuro.

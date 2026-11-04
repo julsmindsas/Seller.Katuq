@@ -1589,7 +1589,7 @@ h3 {
   gap: 0.6rem;
   flex-wrap: wrap;
 
-  input { flex: 1; min-width: 180px; padding: 0.8rem 1rem; border: 0; border-radius: var(--sitio-radio-sm, 8px); font: inherit; }
+  input { flex: 1; min-width: 180px; padding: 0.8rem 1rem; border: 0; border-radius: var(--sitio-radio-sm, 8px); font: inherit; color-scheme: light; }
   // P0-06 (espejo de siteHtml.js): sobre la caja del principal, el fondo del botón es el color que se lee sobre ella.
   .boton { background: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff)); color: var(--sitio-primario); border-color: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff)); }
 }
@@ -1768,6 +1768,11 @@ h3 {
   background-color: var(--sitio-fondo-alterno); color: var(--sitio-texto-alterno);
   --sitio-texto: var(--sitio-texto-alterno); --sitio-acento: var(--sitio-acento-alterno);
   --sitio-contorno: var(--sitio-contorno-alterno);
+  // Revisión de los P0 (espejo de siteHtml.js): el alterno trae su fondo y su juego de superficie; sin sus
+  // variables (todo sitio claro) la superficie queda sin definir y el borde es el del estilo.
+  --sitio-fondo: var(--sitio-fondo-alterno); --sitio-superficie: var(--sitio-superficie-alterno);
+  --sitio-texto-superficie: var(--sitio-texto-superficie-alterno); --sitio-acento-superficie: var(--sitio-acento-superficie-alterno);
+  --sitio-borde: var(--sitio-borde-alterno, var(--sitio-borde-base)); color-scheme: var(--sitio-esquema-alterno, normal);
 }
 .sitio[data-kq-ajustes~="alterno"] .envoltura[data-alterno] .tarjeta:not(.tarjeta--fondo):not(.tarjeta--icono) {
   color: var(--sitio-texto-superficie, var(--sitio-texto-sobre-blanco)); --sitio-texto: var(--sitio-texto-superficie, var(--sitio-texto-sobre-blanco));

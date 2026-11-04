@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { contenidoDelMenu, ContenidoMenu } from "./cajon-previa";
-import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes, variablesDeTono } from "./ajustes-estilo";
+import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes, variablesDeSeccion, variablesDeTono } from "./ajustes-estilo";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -920,7 +920,9 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     if (e.alineacion) estilo["text-align"] = ALINEACION[e.alineacion];
     if (e.ancho === "completo") estilo["max-width"] = "100%";
     if (e.ancho === "angosto") estilo["max-width"] = "42rem";
-    return estilo;
+    // Revisión de los P0 (espejo de cssDeSecciones): en un sitio oscuro, la sección con fondo propio trae su
+    // juego de superficie (tarjetas, reseñas y borde que se leen sobre ESE fondo).
+    return { ...estilo, ...variablesDeSeccion(this.tema, e) };
   }
 
   /**
