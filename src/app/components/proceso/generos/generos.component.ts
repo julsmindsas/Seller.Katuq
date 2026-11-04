@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 import { CrearGenerosComponent } from './crear-generos/crear-generos.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -24,8 +23,7 @@ export class GenerosComponent implements OnInit {
   constructor(
     private service: MaestroService, 
     private router: Router,
-    private modalService: NgbModal,
-    private translate: TranslateService
+    private modalService: NgbModal
   ) {
     this.cargarDatos();
   }
@@ -77,24 +75,24 @@ export class GenerosComponent implements OnInit {
 
   deleteGeneros(row) {
     Swal.fire({
-      title: this.translate.instant('proceso.generos.confirmarEliminar'),
-      text: this.translate.instant('proceso.comun.noPodraRevertir'),
+      title: '¿Está seguro de eliminar el género?',
+      text: "¡No podrá revertir los cambios!",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      cancelButtonText: this.translate.instant('comun.cancelar'),
-      confirmButtonText: this.translate.instant('proceso.comun.siEliminar')
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Sí, eliminar!'
     }).then((result) => {
       if (result.isConfirmed) {
         this.service.deleteGenrre(row).subscribe(r => {
           console.log(r);
           if (r) {
             Swal.fire({
-              title: this.translate.instant('proceso.comun.eliminado'),
-              text: this.translate.instant('proceso.comun.eliminadoExito'),
+              title: 'Eliminado!',
+              text: 'Eliminado con éxito',
               icon: 'success',
-              confirmButtonText: this.translate.instant('comun.aceptar')
+              confirmButtonText: 'Ok'
             });
             this.cargarDatos();
           }

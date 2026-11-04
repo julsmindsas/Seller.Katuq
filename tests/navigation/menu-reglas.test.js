@@ -130,10 +130,23 @@ test('ningún grupo se dibuja con un solo hijo, para ningún rol (el grupo de un
   }
 });
 
-test('ninguna ruta cambió: solo se suma Landings', () => {
+test('ninguna ruta cambió: solo se suman Landings y el Centro de ayuda (D-628)', () => {
   const { todo } = menuDe();
   const rutas = new Set(todo.flatMap(i => [i.path, ...(i.children || []).map(c => c.path)]).filter(Boolean));
   const antes = require('./fixtures/menu-rutas-antes-f3.json').rutas;
   assert.deepEqual(antes.filter(r => !rutas.has(r)), [], 'ninguna ruta de antes de F3 desapareció');
-  assert.deepEqual([...rutas].filter(r => !antes.includes(r)), ['sitios/landings'], 'la única ruta nueva es Landings');
+  assert.deepEqual([...rutas].filter(r => !antes.includes(r)).sort(), ['centro-de-ayuda', 'centro-de-ayuda/administrar', 'sitios/landings', 'sitios/leads'], 'las únicas rutas nuevas son Landings, Leads landing (D-633) y el Centro de ayuda (D-628)');
+});
+
+test('Leads landing (D-633) solo se ofrece con la bandera landingsV2 y a quien ve «Mis sitios»', () => {
+  const rutas = (opciones) => {
+    const { nav } = fixture(1440, opciones);
+    const r = nav.getMenuItems().flatMap(i => [i, ...(i.children || [])]).map(i => i.path);
+    nav.ngOnDestroy();
+    return r;
+  };
+  const sitios = { user: { rol: 'Vendedor', company: 'QA' }, paths: ['sitios'] };
+  assert(!rutas(sitios).includes('sitios/leads'), 'sin la bandera no aparece');
+  assert(rutas({ ...sitios, flags: { landingsV2: true } }).includes('sitios/leads'), 'con la bandera aparece');
+  assert(!rutas({ user: { rol: 'Vendedor', company: 'QA' }, paths: ['ventas/pedidos'], flags: { landingsV2: true } }).includes('sitios/leads'), 'quien no ve «Mis sitios» no la ve');
 });

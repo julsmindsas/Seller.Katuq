@@ -1356,3 +1356,6 @@ transition: all 0.3s ease;
   .ticket-stats { flex-direction: column; }
   .stat-box.progress { transform: none; margin: 0; }
 }
+
+// Ticket 1443: el input nativo queda oculto; se abre con el botón «Adjuntar archivos».
+.hidden-file-input { display: none; }

@@ -13,6 +13,7 @@ El backend no cambió su forma de escribir. Sigue usando la API de Firestore (`a
 - **Frontend:** el Seller no lee ni escribe datos de Katuq directo en Firestore; todo pasa por el backend (`BaseService` + interceptor). La única excepción es `geocoding_cache` (`geocoding.service.ts`), una caché propia del front. No se agregan usos nuevos de `AngularFirestore`.
 - **Consultas e índices:** Postgres no rechaza una consulta por falta de índice, como hacía Firestore; la responde, pero lenta. Toda consulta nueva sobre colecciones grandes (`orders`, `products`, `inventory`, `clients`) necesita su índice en Postgres. `firebase deploy --only firestore:indexes` ya no sirve para producción. Lo que más pesa son los documentos grandes, como los pedidos de 20-30 KB: traer solo los campos que la pantalla usa (`select()`) y paginar.
 - **No se borran registros de `katuq-db`** sin el sí de Daniel, tampoco las cuentas y los datos de prueba.
+- **Desplegar:** a producción solo llega el código. Lo que se haga en la copia de desarrollo (datos, configuraciones, índices) se repite en producción. El orden es índices nuevos, luego código, luego datos o configuraciones, y al final verificar. Está en «Desplegar un cambio a producción» del `CLAUDE.md` del backend.
 - **El detalle técnico** está en el `CLAUDE.md` del backend (repositorio privado): cómo funciona el adaptador, cómo se crean los índices, cómo deben arrancar los scripts y cómo se entra a la base. Este repositorio es público: aquí no van direcciones, llaves ni fallas de seguridad.
 
 ## Inicio de sesión y fuentes de verdad
@@ -71,11 +72,14 @@ Muchas pruebas llevan contraseñas, tokens o datos reales. Por eso, desde el 202
 - **La evidencia va en el mensaje de commit o en el contrato:** qué pruebas se corrieron y su resultado.
 - **Los subagentes siguen la misma regla:** `git commit -- <archivos>` nunca incluye pruebas nuevas.
 
-## Notas de versión (D-567)
+## Notas de versión (D-567, D-581)
 
-Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Por eso:
+Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Desde D-581 no sale ninguna ventana: las notas se ven en la pestaña «Novedades» de la campana, y a cada usuario solo le salen las de las pantallas que usa. Por eso:
 
-- **Quien sube un cambio que el comercio ve** agrega una nota a `notas-version.json` (raíz del front): `{ "fecha": "<ISO de hoy>", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "texto": "..." }`. Una línea, sin jerga, sin números de ticket ni D-XXX, hablándole al comercio («Ahora puedes…», «Ya no…»).
+- **Quien sube un cambio que el comercio ve** agrega una nota a `notas-version.json` (raíz del front): `{ "fecha": "<ISO de hoy>", "tipo": "NUEVO" | "MEJORA" | "CORRIGE", "modulos": ["<ruta del menú>"], "texto": "..." }`. Una línea, sin jerga, sin números de ticket ni D-XXX, hablándole al comercio («Ahora puedes…», «Ya no…»).
+- **`modulos` dice de qué pantallas es la nota.** Se usan las rutas del menú de `nav.service.ts`, por ejemplo `facturacion-electronica`, `ventas/ventas-pos` o `ventas` para todo el módulo. La nota solo le sale a quien tiene esa ruta en su menú y la abrió en los últimos 90 días. Sin `modulos` la ven todos, así que se deja sin módulo solo lo que le sirve a cualquiera (el menú, el encabezado). El build avisa si un módulo no existe.
+- **La fecha es la de antes de compilar,** no una posterior: una nota con fecha después de la publicación sale otra vez en la versión siguiente.
+- **`"retirada": true`** marca una nota cuyo tema ya no existe: se queda en el archivo pero no se publica.
 - **No se borran notas.** `update-version.js` publica solo las de fecha posterior a la última publicación (`publicada` del `src/assets/version.json` en git).
 - **Cambios internos** (refactors, pruebas, documentación) no llevan nota.
 
@@ -252,6 +256,7 @@ Toda pantalla nueva, o vieja que se toque, debe verse como "Regístrese" y "Todo
 - `src/environments/environment.prod.ts` → producción (`https://back.katuq.com`).
 - Para usar el backend local, configurar `urlApi` en `environment.ts` a `http://localhost:3300`. Verificar el destino antes de probar operaciones de escritura.
 - El backend local de cada dev se conecta a `katuq_dev`, una copia de producción que se refresca cada madrugada, nunca a la base de producción. Los pasos para conectarse están en `local/aws/dev/README.md` del backend. Un backend local sin el adaptador de Postgres trabaja sobre el Firestore congelado: no sirve.
+- **Configuración de desarrollo:** cuando Daniel le pase a una sesión el archivo `katuq-desarrollo.env` (o su contenido pegado en el chat), va entero en `katuq_admin_back_firebase/functions/.env`, nunca en este repositorio. Trae llaves reales: no se muestra, no se copia a otra carpeta y no se sube a git. Si la sesión no lo tiene, se le pide a Daniel. El resto (certificado, cómo revisarlo y arrancar) está en la regla 6 de «Base de datos» del `CLAUDE.md` del backend.
 
 ## Servicios locales y puertos
 

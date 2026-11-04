@@ -78,6 +78,8 @@ export class OrdenesCompraComponent implements OnInit {
       case 'recibida': return 'kc-pill--ok';
       case 'parcial': return 'kc-pill--warn';
       case 'anulada': return 'kc-pill--slate';
+      // Borrador (Qué comprar → Generar órdenes de compra): trabajo por revisar, todavía no se le pidió al proveedor.
+      case 'borrador': return 'kc-pill--accent';
       default: return 'kc-pill--info';
     }
   }
@@ -93,7 +95,8 @@ export class OrdenesCompraComponent implements OnInit {
     this.inventarioService.getBodegas().subscribe({
       next: (bodegas) => {
         this.bodegas = (bodegas || []).filter((b: any) => b?.idBodega);
-        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || this.bodegas[0]?.idBodega || '';
+        // Ticket 1469: antes arrancaba en la primera bodega (por ejemplo «En tránsito») y escondía órdenes.
+        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || this.bodegaRecordada();
         this.cargar();
       },
       error: () => {
@@ -196,6 +199,11 @@ export class OrdenesCompraComponent implements OnInit {
   }
 
   crearOrden(): void {
+    // Ticket 1469: con «Todas las bodegas» hay que decir cuál recibe la mercancía.
+    if (!this.bodegaSeleccionada) {
+      Swal.fire('Falta la bodega', 'Escoja arriba la bodega que va a recibir la mercancía.', 'warning');
+      return;
+    }
     if (!this.proveedorNombre.trim()) {
       Swal.fire('Falta el proveedor', 'Escriba a quién se le compró.', 'warning');
       return;
@@ -614,6 +622,35 @@ export class OrdenesCompraComponent implements OnInit {
     });
   }
 
+  /** Un borrador pasa a orden abierta: ya se le pide al proveedor. No mueve inventario. */
+  confirmarBorrador(): void {
+    if (!this.orden) return;
+    const id = this.orden.id;
+    Swal.fire({
+      title: '¿Confirmar esta orden?',
+      text: 'Deja de ser borrador y pasa a pedida. Todavía no entra nada al inventario: eso pasa cuando se reciba.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'Volver',
+      confirmButtonColor: '#5F3FE0',
+    }).then((resultado) => {
+      if (!resultado.isConfirmed) return;
+      this.guardando = true;
+      this.inventarioService.confirmarBorradorOrden(id).subscribe({
+        next: () => {
+          this.guardando = false;
+          Swal.fire({ icon: 'success', title: 'Orden confirmada', timer: 1500, showConfirmButton: false });
+          this.abrirOrden(id);
+        },
+        error: (err) => {
+          this.guardando = false;
+          Swal.fire('Error', err?.error?.message || 'No se pudo confirmar.', 'error');
+        },
+      });
+    });
+  }
+
   anular(): void {
     if (!this.orden) return;
     Swal.fire({
@@ -637,6 +674,30 @@ export class OrdenesCompraComponent implements OnInit {
    * Bodega pedida en la dirección (?bodega=BOD-001). Sirve para llegar desde
    * la lista de bodegas ya enfocado en una, sin volver a escogerla.
    */
+  /** Ticket 1469: recuerda la última bodega elegida (por empresa, en este navegador). */
+  alCambiarBodega(): void {
+    try { localStorage.setItem(this.claveBodega(), this.bodegaSeleccionada || ''); } catch (_) { /* sin almacenamiento */ }
+    this.cargar();
+  }
+
+  verTodasLasBodegas(): void {
+    this.bodegaSeleccionada = '';
+    this.alCambiarBodega();
+  }
+
+  private bodegaRecordada(): string {
+    try {
+      const guardada = localStorage.getItem(this.claveBodega()) || '';
+      return this.bodegas.some((b: any) => b.idBodega === guardada) ? guardada : '';
+    } catch (_) { return ''; }
+  }
+
+  private claveBodega(): string {
+    let empresa = '';
+    try { empresa = JSON.parse(localStorage.getItem('user') || '{}')?.company || ''; } catch (_) { /* sin sesión */ }
+    return `katuq.ordenesCompra.bodega.${empresa}`;
+  }
+
   private bodegaPedidaEnLaUrl(): string {
     const pedida = new URLSearchParams(window.location.search).get('bodega') || '';
     return this.bodegas.some((b: any) => b.idBodega === pedida) ? pedida : '';

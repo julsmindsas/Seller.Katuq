@@ -9,6 +9,7 @@ import { SitioEditorComponent } from "./editor/sitio-editor.component";
 import { SelectorProductosModule } from "./selector-productos/selector-productos.module";
 import { MarcaComponent } from "./marca/marca.component";
 import { MetricasComponent } from "./metricas/metricas.component";
+import { LeadsLandingComponent } from "./leads/leads-landing.component";
 import { TiendaEnUnPasoComponent } from "./tienda-en-un-paso/tienda-en-un-paso.component";
 import { SitioRenderModule } from "../sitio-render/sitio-render.module";
 import { AlBodyModule } from "../../shared/directives/al-body.module";
@@ -30,6 +31,8 @@ import { FotosUniformesComponent } from "../productos/fotos-uniformes/fotos-unif
     SitioEditorComponent,
     MarcaComponent,
     MetricasComponent,
+    // Bandeja «Leads de landing» (D-633, fase 1; bandera landingsV2).
+    LeadsLandingComponent,
     // Tienda en minutos con IA, en un solo paso (bandera singleStepStore). Solo se dibuja
     // cuando SitiosListaComponent lo pide con la bandera prendida.
     TiendaEnUnPasoComponent,

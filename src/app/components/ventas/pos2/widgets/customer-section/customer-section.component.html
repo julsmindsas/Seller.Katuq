@@ -1,10 +1,10 @@
 <div class="card customer-sticky">
     <div class="tarjeta-cabeza card-no-border p-3">
         <div class="header-top">
-            <h5 class="m-0"><i class="fa fa-user-circle me-2"></i>{{ 'ventas.customerSection.cliente' | translate }}</h5>
+            <h5 class="m-0"><i class="fa fa-user-circle me-2"></i>{{ "Cliente" | translate }}</h5>
             <button class="btn-nuevo-cliente" (click)="openModal()">
                 <i class="fa fa-plus"></i>
-                <span>{{ 'ventas.customerSection.nuevo' | translate }}</span>
+                <span>{{ "Nuevo" | translate }}</span>
             </button>
         </div>
     </div>
@@ -18,11 +18,11 @@
                     <span class="cli-datos">
                         <span class="cli-nombre">{{ datosCliente?.nombres_completos }} {{ datosCliente?.apellidos_completos }}</span>
                         <span class="cli-doc">{{ datosCliente?.documento }}</span>
-                        <span class="cli-aviso" *ngIf="facturacionIncompleta">{{ 'ventas.customerSection.facturacionIncompleta' | translate }}</span>
+                        <span class="cli-aviso" *ngIf="facturacionIncompleta">{{ 'Facturación incompleta' | translate }}</span>
                     </span>
                     <i class="fa fa-angle-down cli-flecha" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="cli-cambiar" (click)="cambiarCliente()" [attr.aria-label]="'ventas.customerSection.cambiarCliente' | translate">{{ 'ventas.customerSection.cambiar' | translate }}</button>
+                <button type="button" class="cli-cambiar" (click)="cambiarCliente()" aria-label="Cambiar cliente">{{ 'Cambiar' | translate }}</button>
             </div>
 
             <!-- Autocompletado de clientes -->
@@ -39,7 +39,7 @@
                     [minLength]="3"
                     [forceSelection]="false"
                     [showClear]="true"
-                    placeholder="{{ 'ventas.customerSection.buscarPorDocumento' | translate }}"
+                    placeholder="{{ 'Buscar por documento, nombre, correo...' | translate }}"
                     styleClass="cliente-autocomplete"
                     inputStyleClass="cliente-search-input"
                 >
@@ -64,7 +64,7 @@
                     <ng-template pTemplate="empty">
                         <div class="empty-results">
                             <i class="fa fa-user-times"></i>
-                            <span>{{ 'ventas.customerSection.noSeEncontraronClientes' | translate }}</span>
+                            <span>{{ 'No se encontraron clientes' | translate }}</span>
                         </div>
                     </ng-template>
                 </p-autoComplete>
@@ -74,7 +74,7 @@
             </div>
             <!-- D-540: «Nuevo» junto al buscador (solo escritorio). -->
             <button type="button" class="cli-nuevo" [class.cli-oculto]="datosCliente && !cambiando" (click)="openModal()">
-                <i class="fa fa-plus" aria-hidden="true"></i> {{ 'ventas.customerSection.nuevo' | translate }}
+                <i class="fa fa-plus" aria-hidden="true"></i> {{ 'Nuevo' | translate }}
             </button>
 
             <!-- Cliente seleccionado (en escritorio, solo con la línea desplegada) -->
@@ -82,18 +82,18 @@
                 <div class="cliente-cabeza">
                     <div class="cliente-status">
                         <i class="fa fa-check-circle"></i>
-                        <span>{{ 'ventas.customerSection.clienteAsociado' | translate }}</span>
+                        <span>Cliente Asociado</span>
                     </div>
                     <div class="cliente-actions">
                         <!-- Ticket 1328: métricas de compra del cliente (spec 009) -->
                         <button class="btn-action" type="button" (click)="mostrarMetricas = true"
-                                [title]="'ventas.customerSection.verMetricas' | translate" [attr.aria-label]="'ventas.customerSection.verMetricasDelCliente' | translate">
+                                title="Ver métricas" aria-label="Ver métricas del cliente">
                             <i class="fa fa-line-chart"></i>
                         </button>
-                        <button class="btn-action" (click)="editarCliente()" [title]="'comun.editar' | translate">
+                        <button class="btn-action" (click)="editarCliente()" title="Editar">
                             <i class="fa fa-pencil"></i>
                         </button>
-                        <button class="btn-action btn-action-danger" (click)="limpiar()" [title]="'ventas.customerSection.quitar' | translate">
+                        <button class="btn-action btn-action-danger" (click)="limpiar()" title="Quitar">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
@@ -115,9 +115,9 @@
                     <!-- D-419 (ticket 1171): a quién se factura la venta -->
                     <div class="cliente-facturacion" [class.incompleta]="facturacionIncompleta">
                         <i class="fa fa-file-text-o"></i>
-                        <span class="cf-label">{{ 'ventas.customerSection.facturacion' | translate }}:</span>
+                        <span class="cf-label">{{ 'Facturación' | translate }}:</span>
                         <span class="cf-valor">{{ resumenFacturacion }}</span>
-                        <button type="button" class="cf-cambiar" (click)="abrirFacturacion()">{{ 'ventas.customerSection.cambiar' | translate }}</button>
+                        <button type="button" class="cf-cambiar" (click)="abrirFacturacion()">{{ 'Cambiar' | translate }}</button>
                     </div>
                     <div class="cliente-contact">
                         <div class="contact-item" *ngIf="datosCliente?.numero_celular_comprador">
@@ -138,7 +138,7 @@
 <!-- Ticket 1328: métricas del cliente asociado a la venta -->
 <p-dialog [(visible)]="mostrarMetricas" [modal]="true" [dismissableMask]="true" [draggable]="false"
           [resizable]="false" appendTo="body" [style]="{ width: '640px', maxWidth: '95vw' }"
-          [header]="'ventas.customerSection.metricasDelCliente' | translate">
+          header="Métricas del cliente">
     <app-customer-metrics *ngIf="mostrarMetricas" [documento]="datosCliente?.documento" [compacto]="true">
     </app-customer-metrics>
 </p-dialog>

@@ -89,3 +89,80 @@ export function ochoAcciones(rol?: RolAcciones | null, pines?: readonly string[]
   const delRol = accionesDelRol(rol);
   return [...delRol, ...accionesPersonales(delRol, pines)];
 }
+
+// ── Panel ACCIONES de nueve (D-635, ticket 1472), detrás de la bandera `panelAccionesV2` ─────────────────
+// Delta sobre D-547: 4 del rol + 5 personales. Los 5 personales se llenan así, sin repetir las del rol:
+//   1. lo que el usuario fijó, en su orden (hasta 5);
+//   2. las más usadas en los últimos 30 días (días distintos de uso), marcadas «Frecuente»;
+//   3. el orden fijo nuevo: Pagos, Cambiar estado, Notas, Historial, Editar dirección y luego el resto de la grilla.
+// Lo «Frecuente» sale de `usageDays`, que llega con `GET /me` UNA vez por sesión: no cambia durante la jornada.
+// Con la bandera apagada todo queda como en D-547 (8 acciones, 4 pines, orden fijo de antes).
+
+export const ESPACIOS_USUARIO_V2 = 5;
+
+const PRIMERAS_DEL_ORDEN_V2: AccionPedidoId[] = ['payments', 'changeStatus', 'notes', 'history', 'editAddress'];
+export const ORDEN_FIJO_PERSONALES_V2: AccionPedidoId[] = [
+  ...PRIMERAS_DEL_ORDEN_V2,
+  ...IDS_ACCIONES_FIJAS.filter(id => !PRIMERAS_DEL_ORDEN_V2.includes(id)),
+];
+
+/** Lo que el bloque necesita saber de las acciones: cuáles son, cuáles salieron del uso y cuántos pines caben. */
+export interface PanelAcciones {
+  /** Primero las del rol y después las personales (8 sin la bandera, 9 con ella). */
+  acciones: AccionPedidoId[];
+  /** Personales que entraron por uso (no por pin): llevan la etiqueta «Frecuente». Vacío sin la bandera. */
+  frecuentes: AccionPedidoId[];
+  /** Pines personales que caben: 4 sin la bandera, 5 con ella. */
+  maxPines: number;
+}
+
+/**
+ * Las acciones más usadas: solo las 16 fijas con al menos un día de uso, sin las de `excluir`. Más días primero; a
+ * igualdad gana la que va antes en el orden fijo. Se devuelven, como mucho, `cuantas`.
+ */
+export function accionesFrecuentes(
+  usageDays: Record<string, number> | null | undefined,
+  excluir: readonly string[],
+  cuantas: number,
+): AccionPedidoId[] {
+  if (!usageDays || cuantas <= 0) return [];
+  return ORDEN_FIJO_PERSONALES_V2
+    .filter(id => !excluir.includes(id) && Number(usageDays[id]) >= 1)
+    .map((id, orden) => ({ id, orden, dias: Number(usageDays[id]) }))
+    .sort((a, b) => b.dias - a.dias || a.orden - b.orden)
+    .slice(0, cuantas)
+    .map(x => x.id);
+}
+
+/** Los 5 espacios personales del panel de nueve: pines, luego lo más usado, luego el orden fijo. */
+export function personalesV2(
+  rol: readonly AccionPedidoId[],
+  pines?: readonly string[] | null,
+  usageDays?: Record<string, number> | null,
+): { personales: AccionPedidoId[]; frecuentes: AccionPedidoId[] } {
+  const personales: AccionPedidoId[] = [];
+  for (const id of fijasDistintas(pines)) {
+    if (rol.includes(id) || personales.length >= ESPACIOS_USUARIO_V2) continue;
+    personales.push(id);
+  }
+  const frecuentes = accionesFrecuentes(usageDays, [...rol, ...personales], ESPACIOS_USUARIO_V2 - personales.length);
+  personales.push(...frecuentes);
+  for (const id of ORDEN_FIJO_PERSONALES_V2) {
+    if (personales.length >= ESPACIOS_USUARIO_V2) break;
+    if (!rol.includes(id) && !personales.includes(id)) personales.push(id);
+  }
+  return { personales, frecuentes };
+}
+
+/** El panel de acciones: de nueve con la bandera `panelAccionesV2` y de ocho sin ella (D-547). */
+export function panelAcciones(
+  rol?: RolAcciones | null,
+  pines?: readonly string[] | null,
+  usageDays?: Record<string, number> | null,
+  v2 = false,
+): PanelAcciones {
+  const delRol = accionesDelRol(rol);
+  if (!v2) return { acciones: [...delRol, ...accionesPersonales(delRol, pines)], frecuentes: [], maxPines: ESPACIOS_USUARIO };
+  const { personales, frecuentes } = personalesV2(delRol, pines, usageDays);
+  return { acciones: [...delRol, ...personales], frecuentes, maxPines: ESPACIOS_USUARIO_V2 };
+}

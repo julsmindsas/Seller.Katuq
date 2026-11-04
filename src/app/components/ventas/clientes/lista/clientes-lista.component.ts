@@ -108,8 +108,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private http: HttpClient,
         private clientConfig: ClientConfigService,
         private sitiosService: SitiosService,
-        private translate: TranslateService,
-        private listaService: ClientesListaService
+        private listaService: ClientesListaService,
+        private translate: TranslateService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -610,7 +610,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.messageService.add({
                     severity: 'error',
                     summary: this.translate.instant('ventas.clientesLista.errorExportar'),
-                    detail: this.translate.instant('ventas.clientesLista.errorExportarTexto'),
+                    detail: this.translate.instant('ventas.clientesLista.errorExportarIntentar'),
                     life: 5000
                 });
             }

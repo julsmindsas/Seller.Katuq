@@ -1,11 +1,11 @@
 <div class="bv-acciones">
   <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="puedeGuardar" [disabled]="guardando" (click)="guardar.emit()">
     <i class="fa fa-floppy-o" aria-hidden="true"></i>
-    <span class="bv-txt">{{ (guardando ? 'ventas.borradoresVenta.guardando' : (borradorActivo !== null ? 'ventas.borradoresVenta.actualizar' : 'ventas.borradoresVenta.guardar')) | translate }}</span>
+    <span class="bv-txt">{{ guardando ? 'Guardando…' : (borradorActivo !== null ? 'Actualizar borrador' : 'Guardar borrador') }}</span>
   </button>
   <button type="button" class="cfg-btn cfg-btn--sec" (click)="abrir()">
     <i class="fa fa-folder-open-o" aria-hidden="true"></i>
-    <span class="bv-txt">{{ 'ventas.borradoresVenta.borradores' | translate }}</span>
+    <span class="bv-txt">Borradores</span>
     <span class="bv-contador" *ngIf="borradores.length">{{ borradores.length }}</span>
   </button>
 </div>
@@ -19,40 +19,40 @@
   [style]="{ width: '900px', maxWidth: '96vw' }"
   appendTo="body"
   styleClass="bv-dialogo"
-  [header]="'ventas.borradoresVenta.titulo' | translate"
+  header="Borradores de venta"
 >
   <div class="bv-cuerpo">
-    <p class="bv-sub">{{ 'ventas.borradoresVenta.subtitulo' | translate }}</p>
+    <p class="bv-sub">Ventas guardadas para terminar después. Vencen a los 30 días sin cambios.</p>
 
     <div class="bv-estado" *ngIf="cargando && !borradores.length">
-      <span class="bv-muted">{{ 'ventas.borradoresVenta.cargando' | translate }}</span>
+      <span class="bv-muted">Cargando borradores…</span>
     </div>
 
     <div class="cfg-aviso cfg-aviso--error" *ngIf="error && !cargando">
-      <span class="bv-txt">{{ 'ventas.borradoresVenta.errorCargar' | translate }}</span>
-      <button type="button" class="bv-link" (click)="cargar()">{{ 'ventas.borradoresVenta.reintentar' | translate }}</button>
+      <span class="bv-txt">No se pudieron cargar los borradores.</span>
+      <button type="button" class="bv-link" (click)="cargar()">Reintentar</button>
     </div>
 
     <div class="cfg-vacio" *ngIf="!cargando && !error && !borradores.length">
       <div class="cfg-vacio__icono"><i class="fa fa-folder-open-o" aria-hidden="true"></i></div>
-      <h3 class="cfg-vacio__titulo">{{ 'ventas.borradoresVenta.vacioTitulo' | translate }}</h3>
-      <p class="cfg-vacio__texto">{{ 'ventas.borradoresVenta.vacioTexto' | translate }}</p>
+      <h3 class="cfg-vacio__titulo">No hay borradores</h3>
+      <p class="cfg-vacio__texto">Use "Guardar borrador" cuando una venta quede a medias.</p>
     </div>
 
     <div class="bv-lista" *ngIf="borradores.length">
       <div class="bv-fila bv-fila--cabeza">
-        <span class="bv-col bv-col--cliente">{{ 'ventas.borradoresVenta.colVenta' | translate }}</span>
-        <span class="bv-col bv-col--num">{{ 'ventas.borradoresVenta.colProductos' | translate }}</span>
-        <span class="bv-col bv-col--num">{{ 'ventas.borradoresVenta.colTotal' | translate }}</span>
-        <span class="bv-col">{{ 'ventas.borradoresVenta.colGuardo' | translate }}</span>
-        <span class="bv-col">{{ 'ventas.borradoresVenta.colVence' | translate }}</span>
+        <span class="bv-col bv-col--cliente">Venta</span>
+        <span class="bv-col bv-col--num">Productos</span>
+        <span class="bv-col bv-col--num">Total estimado</span>
+        <span class="bv-col">Guardó</span>
+        <span class="bv-col">Vence</span>
         <span class="bv-col bv-col--acc"></span>
       </div>
       <div class="bv-fila" *ngFor="let b of borradores">
         <div class="bv-col bv-col--cliente">
           <span class="bv-nombre">{{ nombreDe(b) }}</span>
           <span class="bv-muted" *ngIf="b.nombre && b.resumen?.clienteNombre">{{ b.resumen.clienteNombre }}</span>
-          <span class="bv-muted" *ngIf="b.resumen?.documento">{{ 'ventas.borradoresVenta.documento' | translate: { doc: b.resumen.documento } }}</span>
+          <span class="bv-muted" *ngIf="b.resumen?.documento">Doc. {{ b.resumen.documento }}</span>
         </div>
         <div class="bv-col bv-col--num"><span class="bv-dato">{{ b.resumen?.lineas || 0 }}</span></div>
         <div class="bv-col bv-col--num"><span class="bv-dato">{{ (b.resumen?.totalEstimado || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
@@ -61,13 +61,13 @@
           <span class="bv-muted">{{ b.updatedAt | date:'d MMM, h:mm a' }}</span>
         </div>
         <div class="bv-col">
-          <span class="bv-vence" [class.bv-vence--pronto]="b.venceEnDias <= 3">{{ (b.venceEnDias === 1 ? 'ventas.borradoresVenta.vence.one' : 'ventas.borradoresVenta.vence.other') | translate: { n: b.venceEnDias } }}</span>
+          <span class="bv-vence" [class.bv-vence--pronto]="b.venceEnDias <= 3">{{ b.venceEnDias === 1 ? 'en 1 día' : 'en ' + b.venceEnDias + ' días' }}</span>
         </div>
         <div class="bv-col bv-col--acc">
           <button type="button" class="cfg-btn" [disabled]="!!ocupadoId" (click)="retomar(b)">
-            <span class="bv-txt">{{ (ocupadoId === b.id ? 'ventas.borradoresVenta.abriendo' : 'ventas.borradoresVenta.retomar') | translate }}</span>
+            <span class="bv-txt">{{ ocupadoId === b.id ? 'Abriendo…' : 'Retomar' }}</span>
           </button>
-          <button type="button" class="cfg-btn cfg-btn--peligro" [disabled]="!!ocupadoId" (click)="eliminar(b)" [attr.aria-label]="'ventas.borradoresVenta.eliminarAria' | translate">
+          <button type="button" class="cfg-btn cfg-btn--peligro" [disabled]="!!ocupadoId" (click)="eliminar(b)" aria-label="Eliminar borrador">
             <i class="fa fa-trash-o" aria-hidden="true"></i>
           </button>
         </div>

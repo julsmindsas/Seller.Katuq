@@ -17,8 +17,13 @@ export interface AccionesUsuario {
   /** `dismissed[id]` = fecha hasta la que no se vuelve a sugerir esa acción. */
   dismissed: Record<string, string>;
   lastSuggestionAt: string;
-  /** Días distintos de los últimos 7 en que usó cada acción. */
+  /**
+   * Días distintos en que usó cada acción: los últimos 7 y, con el panel de nueve (`panelAccionesV2`, D-635), los
+   * últimos 30. Llega UNA vez por sesión: lo «Frecuente» se calcula con esto y no cambia durante la jornada.
+   */
   usageDays: Record<string, number>;
+  /** D-635: solo con el panel de nueve. Días distintos de los últimos 7: es lo que usan las sugerencias de fijar. */
+  usageDays7?: Record<string, number>;
 }
 
 /** Sin documento único del usuario (404 o 409) el bloque usa los valores por defecto: perfil General sin pines. */
@@ -36,7 +41,10 @@ export function normalizarAcciones(r: unknown): AccionesUsuario {
   if (esObjeto(o['usageDays'])) for (const [k, v] of Object.entries(o['usageDays'])) if (Number.isFinite(Number(v))) numeros[k] = Number(v);
   const rechazadas: Record<string, string> = {};
   if (esObjeto(o['dismissed'])) for (const [k, v] of Object.entries(o['dismissed'])) if (typeof v === 'string') rechazadas[k] = v;
+  const semana: Record<string, number> = {};
+  if (esObjeto(o['usageDays7'])) for (const [k, v] of Object.entries(o['usageDays7'])) if (Number.isFinite(Number(v))) semana[k] = Number(v);
   return {
+    ...(esObjeto(o['usageDays7']) ? { usageDays7: semana } : {}),
     role: {
       profile: typeof role['profile'] === 'string' ? role['profile'] : null,
       actions: Array.isArray(role['actions']) ? role['actions'].filter((x: unknown) => typeof x === 'string') : null,

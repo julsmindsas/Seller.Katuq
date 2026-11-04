@@ -12755,7 +12755,6 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **de-CH:** borrador escrito por el agente (Opttia no responde aquí), con «Sie»; sigue oculto hasta la revisión nativa.
 - **Pruebas:** `test:i18n` 222/222 (prueba nueva `asistentes-cierre.test.js`, 7 casos), `opttia-chat-ui` y `opttia-markdown` en verde, `i18n:check` 0 errores, tsc con candado sin errores.
 - **Sin marcar:** 13.6 y 13.7 (falta `build:prod` y la revisión en navegador a 1440 y 390 px). 13.2 a 13.5 quedan marcadas con los seis sub-bloques B12a a B12f hechos.
-||||||| bc135796
 
 
 ### 2026-10-26 — D-499 2.4 aprobada por Daniel y subida
@@ -12825,7 +12824,7 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Regla:**
   - Quien sube un cambio que el comercio ve agrega una nota a `notas-version.json` (raíz del front) con `fecha`, `tipo` (NUEVO, MEJORA o CORRIGE) y `texto` en una línea, sin jerga ni números de ticket.
   - `update-version.js` publica en `version.json` solo las notas con fecha posterior a la última publicación (`publicada` del `version.json` que trae git). No vacía el archivo: el script corre en cada build, también en los locales.
-  - Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).
+  - ~~Al entrar a una versión nueva con notas, el Seller muestra una vez la ventana «Novedades de la versión X» (`aviso-actualizacion`, clave `notasVersionVistas` en el navegador).~~ **SUPERSEDED por D-581 (2026-11-03):** sin ventana; las novedades van en la campana y solo las que le aplican a cada usuario.
 - **Dónde quedó:** sección «Notas de versión (D-567)» de `AGENTS.md`.
 - **Arranque:** 9 notas de los arreglos subidos y aún no publicados (tickets 1378-1381, 1386, 1410, 1411, 1384, 1360, 1419 y este).
 - **Sin publicar.**
@@ -13003,3 +13002,280 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Republicar o apagar app.katuq.com.
   - Revisar el pedido DAD-014498 de ALMARA.
   - Los pendientes de operación y seguridad están en el `CLAUDE.md` del backend (repositorio privado).
+
+### 2026-11-03 — D-620 a D-625: propuestas OpenSpec de las épicas de Facturación ALMARA y OH MY STORE (aws-claude-2)
+- **Estado:** las seis en borrador, pendientes de aprobación de Daniel. No se implementa nada hasta aprobar proposal, spec, plan y tasks, y en módulos sensibles hasta que Daniel apruebe el diff.
+- **D-620** `openspec/changes/fe-retenciones-e-iva/` (ticket 1483): IVA por tarifa y retenciones por factura con neto a pagar. Hoy el UBL no tiene `WithholdingTaxTotal`. El IVA $0 de octubre sale de las líneas al 0 %: lo confirma el contador. Es parte de FE-08.
+- **D-621** `openspec/changes/fe-detalle-del-documento/` (ticket 1489): el detalle muestra totales (ya llegan en `totals`), líneas (endpoint `/lineas` del ticket 1279), pago y vencimiento. Abonos y mora solo se leen de Cartera, coordinado con aws-claude-1.
+- **D-622** `openspec/changes/fe-tablero-de-estado-dian/` (ticket 1491): con el comercio activo en producción, Configuración DIAN abre un tablero (resolución, rango, consecutivos, vigencia y certificado) en vez del paso 1. La causa: `openDianFromDirectRoute` fija `dianStep = 1` sin mirar el estado. Las alertas reutilizan los umbrales de D-448.
+- **D-623** `openspec/changes/fe-formulario-nueva-factura/` (ticket 1492): plazo en días a crédito, IVA sugerido, orden de compra y medio de pago recordado.
+  - **Riesgo:** `invoicePayment.js` emite facturas de pedido a crédito sin `dueDate` y, por lo tanto, sin `PaymentDueDate`. La guardia va primero, como un cambio aparte.
+- **D-624** `openspec/changes/pedido-despacho-rapido/` (ticket 1473, OH MY STORE): «Despacho rápido» en el pedido, reutilizando los endpoints de Logística para crear y despachar la orden de envío. Sin endpoint nuevo y sin tocar inventario.
+- **D-625** `openspec/changes/facturar-desde-pendiente/` (ticket 1474, OH MY STORE): permitir facturar con el pago en Pendiente. La regla de «Aprobado o Preaprobado» está solo en el front (`list.component.ts:1443`). Pasar el pedido a Preaprobado afecta inventario e `is_paid` hacia Cereza y Shopify: quedan 8 preguntas para Daniel.
+- **Bitácora del día (aws-claude-2, rama `feature/tickets-aws-claude-2`, sin desplegar):** resueltos 1480, 1485, 1486, 1487, 1488, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1501, 1503 y 1436. El 1490 queda con una pregunta al comercio. El detalle está en las notas internas de cada ticket.
+
+### 2026-11-03 — D-626 a D-630: propuestas OpenSpec de las ideas de prioridad 3 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel. Varias piden aprobar colecciones o endpoints nuevos.
+- **D-626** `openspec/changes/compras-ciclo-completo/` (tickets 1468, 1469 y 1470): una sola regla de costos y la relación producto-proveedor (colección nueva por aprobar). Fases: A costo en línea y proveedor, B cantidades y órdenes por proveedor, C ciclo de la orden, D factura y cuentas por pagar, E indicadores.
+  - **Riesgo hoy:** `recibir()` del front hace dos llamadas sin atomicidad (inventario y después la orden): si la segunda falla y se reintenta, el inventario puede entrar dos veces. La fase C lo pasa a una sola operación del backend, con idempotencia y bajo D-134.
+  - **Acuerdo con aws-claude-1:** Compras es dueña del saldo por pagar y Tesorería solo lo lee, sin tocar `listPayments`, `getMetrics` ni la cola de revisión.
+- **D-627** `openspec/changes/mis-ideas-estados-y-rediseno/` (tickets 1442 y 1443): campo `ideaEstado` con seis estados, proyectado a `status` para que el tablero de Support no cambie. Migración con dry-run. Rediseño maestro-detalle como Mis Tickets. El «me sirve» necesita endpoint propio.
+- **D-628** `openspec/changes/centro-de-ayuda/` (tickets 1437 a 1441): base de conocimiento global (colecciones nuevas por aprobar), herramienta MCP `search_help_center` para Opttia, sitio público sin datos de comercios y «Qué hay de nuevo» sobre las notas de D-567.
+- **D-629** `openspec/changes/imagenes-de-producto/` (tickets 1426 y 1427): estándar de foto, WebP con la tubería de `siteImagenes` y migración por lotes con dry-run, sin borrar originales ni escribir en Shopify. Propone dividir el 1427.
+- **D-630** `openspec/changes/kcat-catalogos/` (tickets 1389 a 1395): paraguas de las 7 épicas en el orden de Jairo. El mayor riesgo es duplicar la tienda (sitios). E1.7/E1.8 (escribir el maestro de productos) y E7.3/E1.12 (reservar stock) quedan fuera, con propuesta propia.
+- **Bitácora (aws-claude-2):**
+  - Avances parciales en 1443 (bcac8677), 1470 (e5719c03 y 91776a5e) y 1469 (e1fff70c).
+  - 1300 (lentitud): se recopiló el trabajo de rendimiento y se le preguntó a Daniel si se cierra.
+  - Los FE pendientes esperan aprobar las fases 2 a 5 de D-499.
+  - Reportes: D-551 tiene tareas abiertas.
+  - WP-INT está asignado a Mónica.
+
+### 2026-11-03 — D-631 a D-635: propuestas del lote que pasó aws-claude-1 (aws-claude-2)
+- **Estado:** las cinco en borrador, pendientes de aprobación de Daniel.
+- **D-631** `openspec/changes/conv-omnicanal/` (CONV, tickets 1298 y 1301-1313): paraguas de conversaciones omnicanal.
+  - Mucho ya existe: el dominio de mensajería D-437 y los buzones.
+  - Fases: A+B, C→D, E, G (piloto de Vidagas), F+H, y J cierra. I ya estaba resuelto (D-509).
+  - Quedan 10 preguntas.
+  - Riesgo de código: `whatsappWebhook.js` acepta sin firma si falta `KAPSO_WEBHOOK_SECRET`. En producción está definido, y la corrección va aparte.
+- **D-632** `openspec/changes/kcom-comunicaciones/` (KCOM-E1 a E5, tickets 1400-1404): se cruza con CONV.
+  - Propone un solo plan: KCOM aporta E3 (vender desde el chat), E4 (TikTok) y E5 (seguridad).
+  - No crear `channelAccounts`, porque duplicaría `messaging_lines`.
+  - El borrador de respuestas a TikTok declara Firestore y GCP: hay que corregirlo por D-579.
+- **D-633** `openspec/changes/klan-landings/` (KLAN-E1 a E4, tickets 1396-1399): buena parte ya existe (sitios landing, atribución, CAPI, Consent Mode, JSON-LD, sitemap, `llms.txt`).
+  - Faltan: L1/L3/L6 como secuencias, `/l/{slug}`, bandeja de leads, consentimiento y A/B.
+  - **Riesgo:** los tokens de CAPI se guardan en texto plano en el documento del sitio (`siteBlocks.js:1620-1632`). Cifrarlos va primero en la E2. Por la decisión de Daniel del 3-nov («no rotar nada»), queda solo como nota.
+- **D-634** `openspec/changes/sesiones-y-tiempo-conectado/` (#1506): hoy el servidor no guarda sesiones (JWT de 24 h sin `sid`, solo `ultimoIngreso`).
+  - Fase 1: `sid` en el JWT, la colección `userSessions` (por aprobar) y un latido cada 5 minutos.
+  - `isAuth` y el interceptor no cambian.
+  - «Cerrar otras sesiones» va en una fase con spec propia.
+- **D-635** `openspec/changes/panel-acciones-pedido/` (ticket 1472): delta sobre D-547.
+  - Casi todo está cubierto, y el error al fijar tiene arreglo (3b4f1627 y 38c89c71, por confirmar en producción).
+  - Lo nuevo: 9 acciones, «Frecuente» a 30 días y el orden fijo. Se trabaja un cambio a la vez, coordinado con aws-claude-1.
+
+### 2026-11-03 — Fases 1 implementadas detrás de banderas apagadas (aws-claude-2)
+- **Autorización:** Daniel escogió «Solo lo seguro»: dar por aprobadas las propuestas que no tocan módulos sensibles e implementar su fase 1 hoy, con bandera por empresa apagada (D-505).
+- **Implementado** en la rama `feature/tickets-aws-claude-2`, front y backend, sin desplegar:
+  - D-623 `facturaFormularioMejorado`: plazo a crédito en días, IVA sugerido, orden de compra en observaciones y último medio de pago del cliente. Ticket 1492.
+  - D-622 `dianTableroEstado`: tablero de estado DIAN con alertas en los umbrales de D-448. Ticket 1491.
+  - D-621 `dianDetalleAmpliado`: totales, IVA por tarifa, pago y vencimiento en el detalle; `/lineas` crece de forma aditiva. Ticket 1489.
+  - D-626 `comprasV2`, fases A y B: colección `productoProveedores`, regla única de costos, borradores por proveedor y «Qué producir». Tickets 1468, 1469 y 1470.
+  - D-627 `misIdeasV2`: `ideaEstado` proyectado a `status`, apoyo «A mí también me sirve» y migración con dry-run sin correr. Tickets 1442 y 1443.
+  - D-629 `fotosEstandar`: avisos y rechazo al subir fotos de producto. Tickets 1426 y 1427.
+  - D-628 `centroDeAyuda`: colecciones `helpArticles` y `helpArticleVersions`, administración de Julsmind y MCP `search_help_center`. Tickets 1437 a 1441.
+  - D-635 `panelAccionesV2`: 9 acciones, «Frecuente» a 30 días y pin desde el panel. Ticket 1472.
+  - D-633 `landingsV2`: bandeja de leads, consentimiento de la Ley 1581 y alias `/l/{slug}`. Tickets 1396-1399.
+- **Sin implementar,** esperando que Daniel revise el diseño:
+  - D-620 (XML de la DIAN);
+  - fase C de D-626 (recepción de inventario);
+  - D-634 (auth);
+  - D-625 y D-624 (estado y despacho del pedido);
+  - CONV, KCOM y KCAT.
+- **Notas de versión (D-567):** no se agregaron, porque se publicarían con la bandera apagada. Van cuando se encienda cada una.
+- **Ticket 1320:** reglas de Firestore cerradas en `seguridad/firebase/` del backend, sin publicar; 17/17 en el emulador.
+
+### 2026-11-03 — Decisiones de Daniel sobre la revisión de las fases 1 (aws-claude-2)
+- **Daniel aprobó** («si aprobado») las cuatro decisiones de la revisión adversaria de las fases 1:
+  1. **D-623:** con `facturaFormularioMejorado` encendida, la orden de compra del cliente queda escrita como `cbc:Note` en el XML firmado y en el PDF. Es lo esperado.
+  2. **D-633:** con `landingsV2` encendida, si llega un lead sin la casilla de autorización desde una página vieja en caché, se responde 409 `PAGINA_DESACTUALIZADA` y se pide recargar. Nunca se guarda un lead sin autorización (Ley 1581).
+  3. **Índices:** los cuatro sugeridos, más uno de la revisión, quedan en `firestore.indexes.json` del backend:
+     - `dian_invoice_requests` (companyId, status, selection.invoice.customerId, selection.source, updatedAt desc);
+     - `ordenes_compra` (company, estado, idBodega);
+     - `ordenes_compra` (company, estado, createdAt desc);
+     - `prospects` (company, fuente, date_add desc);
+     - `prospects` (company, fuente, status, date_add desc): la bandeja filtrada por estado y sus conteos.
+     
+     `scripts/migracion-postgres/indices-fsdb.js` los traduce a SQL. Se crean en `katuq-db` con `CREATE INDEX CONCURRENTLY` cuando Daniel lo diga, antes de encender las banderas. Ninguna sesión los aplica.
+  4. **Pendientes corregidos en el backend:**
+     - **Compras V2, sin cambio:** quitar solo `opcionesProveedor[].costoCompra` no protege nada. La fila sigue trayendo `costoUnitario` y `resumen.valorEstimado`, y V1 siempre los mostró. Además, el borrador saldría con el costo del proveedor principal. Ocultarle los costos a quien no tiene permiso, en toda la pantalla, queda como decisión de producto de Daniel.
+     - **D-621:** al aceptar una factura, el documento de `dian_documents` guarda `payment` (forma, medio y vencimiento, igual al XML). El detalle usa ese pago primero, aunque el pedido haya cambiado o no se pueda reconstruir. Las facturas anteriores siguen en «No disponible».
+     - El campo nuevo de la auditoría y el `payment` que devuelve `buildInvoiceXML` son aditivos: el XML no cambia.
+     - Este es el único cambio en el camino de emisión, así que Daniel revisa su diff antes de publicar.
+
+
+### 2026-11-03 — D-580: «En vivo» cuenta en la calle solo lo que salió hoy
+- **Pedido de Daniel (3-nov):** "validar las métricas de En vivo... hay unas métricas exageradas, disque 92 horas".
+- **Qué pasaba (ALMARA FELICIDAD, 3-nov, 10 a. m.):**
+  - «Tu flota» mostraba «En ruta · 3 · 94 h», 114 h, 118 h y 145 h. Por ejemplo, Carlos salió ese día a las 8:31 a. m. y ya había entregado 2 pedidos. Las 94 h salían de DAD-014810, despachado el 30-oct, y DAD-014808 seguía igual desde el 31-oct. Nadie los marcó entregados.
+  - La ventana de En vivo trae 7 días de pedidos sin cerrar, así que un pedido «Despachado» seguía «en ruta» hasta 7 días. La pastilla contaba desde la salida más vieja y el aviso del servidor desde la más reciente: tampoco coincidían.
+  - «#DAD-014856 lleva 86 h listo para salir»: se entregaba ese día, pero no tenía hora de empacado y el radar contaba desde la creación.
+- **Decisión (Daniel, 3-nov: «si» a la propuesta de tres puntos):**
+  1. A un mensajero propio solo se le cuenta como en ruta o en la calle lo que salió hoy (por la hora de salida o, si no se vio, la de llegada). El tiempo corre desde su salida más reciente, igual en la pantalla y en el servidor. Las transportadoras siguen contando lo de días anteriores: un envío a otra ciudad tarda días.
+  2. Los pedidos de días anteriores que siguen «despachados» con un mensajero propio van en un solo punto de «Atención ahora» (tipo `sin_cerrar`, revisar): «N pedidos de días anteriores siguen como despachados», con quién los lleva, y lleva a la ficha del que tiene más. La ficha del mensajero los lista aparte.
+  3. Un listo sin hora de listo (ni de empacado) no cuenta horas desde la creación: dice «está listo y se entrega hoy», «está listo y debía entregarse el …» (urgente) o «está listo para salir». No aparece si llegó hace 45 min o menos. Además, un listo que se entrega otro día ya no aparece.
+- **Backend:**
+  - `services/enVivo/proyeccion.js`: la proyección lleva `entrega`, el día pactado (`fechaEntrega`) en hora de Colombia.
+  - `services/enVivo/radar.js`: `salioHoy`, en ruta y sin cerrar en `atencionComercio`, y la regla nueva de listos.
+  - `services/enVivo/distribuidor.js`: la `flota` de la foto marca `enRuta` solo con salidas de hoy. Eso también corrige «N mensajeros en la calle» y los mensajeros libres del plan de despachos.
+- **Front:**
+  - `utilidades/flota.ts`: `salioElMismoDia`, y la salida más reciente.
+  - `ficha/utilidades/mensajero.ts` y su plantilla: la sección «De días anteriores, sin marcar como entregados».
+  - El tipo `sin_cerrar` en los modelos y en los íconos.
+- **Spec:** delta en `openspec/changes/tablero-en-vivo/specs/centro-comercio-en-vivo/spec.md`.
+- **Pruebas:**
+  - Backend: las 15 de `tests/enVivo` en verde. Se actualizaron tres versionadas: la forma exacta de la proyección y del detalle (`entrega`) y el título del listo sin hora de listo.
+  - Caso ALMARA corrido aparte, fuera de git (D-566). Carlos, Rodolfo y Jairo quedan en bodega y sale «6 pedidos de días anteriores siguen como despachados». DAD-014856 dice «está listo y se entrega hoy». El listo que se entrega mañana no aparece.
+  - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
+- **Estado:** commiteado y en origin (backend `838c3620` en `backend-aws-security`). Falta desplegar y comprobar con la pantalla de ALMARA.
+
+### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
+- **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
+- **Decisión:**
+  - Se quita la ventana automática de D-567. Las novedades van en una pestaña «Novedades» de la campana, con un punto sin número cuando hay algo nuevo para el usuario.
+  - Cada nota puede declarar `modulos` (rutas del menú). Una nota con módulo solo le sale a quien tiene esa ruta en su menú y la abrió en los últimos 90 días. Sin módulo, la ven todos.
+  - El uso se guarda solo en el navegador, por usuario y empresa; no se envía a ningún lado.
+  - `version.json` agrega `recientes` (notas de los últimos 45 días) para que la pestaña no dependa de una sola versión.
+- **Spec:** `openspec/changes/novedades-sin-modal-por-uso/`.
+- **Front:**
+  - `shared/services/novedades-version.service.ts` (`NovedadesVersionService`; el `NovedadesService` que ya existía es el de los anuncios de D-108 y no cambia);
+  - `shared/components/novedades-lista/`;
+  - pestañas y punto en `notification-center`;
+  - `aviso-actualizacion` sin la capa de novedades y con «Ver notas» filtrado.
+- **Build:** `update-version.js` publica `modulos` y `recientes`, deja fuera las notas `retirada` y avisa los módulos que no existen en el menú.
+- **Notas:** las 41 de `notas-version.json` quedaron etiquetadas con su pantalla. Dos notas sobre la ventana vieja quedaron `retirada`. Las cinco de facturación del 3-nov se fecharon a las 14:50Z: tenían una fecha posterior a su propia publicación (14:56:43Z) y habrían salido otra vez.
+- **Pruebas:** arnés fuera de git (D-566), con datos de mentira. Pasaron los 14 casos de la spec:
+  - nota general;
+  - nota de un módulo usado o no usado;
+  - nota de un módulo fuera del menú;
+  - navegador sin historial o sin almacenamiento;
+  - dos empresas en el mismo navegador;
+  - uso de hace 100 días;
+  - punto con una nota posterior y al marcar vistas.
+- **Compilación:** `ng build --configuration production` sin errores. Gradientes y primarios prohibidos en los archivos tocados: 0 antes y 0 después.
+- **Estado:** EN PROD en la versión 2026.11.03.2 (solo front). Esa versión también subió el front de D-580, que ya estaba en la rama. Se verificó en `sellercenter.katuq.com` con la sesión de Daniel:
+  - no sale la ventana;
+  - la campana muestra el punto y las pestañas;
+  - «Novedades» lista 8 notas: las generales y las de «En vivo», que se usó en ese navegador. Las de facturación no salen porque ahí no se ha abierto esa pantalla;
+  - a 390 px (iframe del mismo origen) no hay scroll horizontal ni texto cortado.
+
+### 2026-11-03 — D-582: WooCommerce, el aviso de estado a la tienda queda apagado si nadie lo enciende, y el seed siembra en Postgres
+- **Qué se encontró:** D-576, D-577 y D-578 ya están en producción. El back salió el 1-nov con `4481ac39` (D-579) y el front con la versión 2026.10.30.1. Pero el interruptor general `config/feature_flags.wooOrderStatusPublish` nunca se creó. En el código de D-578, «sin crear» valía **publicar**, así que lo único que frenaba el aviso eran las banderas de cada empresa.
+- **Arreglo (`services/woocommerce/estadoAWoo.js`):**
+  - Solo `"sombra"` o `"publicar"` encienden el aviso.
+  - `false`, el campo sin crear o cualquier otro valor lo dejan apagado para todos.
+  - Un script de prueba que fuerza el modo sigue pudiendo correr sin el interruptor, pero no si el interruptor está en `false`.
+- **Seed (`scripts/seed-woocommerce-templates.js`):** antes escribía en Firestore, que quedó congelado el 1-nov. Ahora carga el `.env`, instala el adaptador de Postgres (`instalarSiCorresponde`) y se detiene con salida 3 si no quedó instalado. Solo se puede correr en el servidor de producción.
+- **Pruebas:** `woocommerceEstadoAWoo` pasa 15/15. Hay un caso nuevo: sin interruptor no hace nada. Los casos que publicaban ahora piden `"publicar"` de forma explícita. El seed en local, sin Postgres, se niega a correr (salida 3) y no escribe.
+- **Encendido (Daniel):** en `katuq-db`, `config/feature_flags.wooOrderStatusPublish = "sombra"` y la bandera de la empresa (CAFÉ ESCOBAR). Revisar `integration_audit` a 1 día y, si está bien, pasar a `"publicar"`.
+- **Estado:** commiteado y pusheado; FALTA DESPLEGAR (solo back) y correr el seed en el servidor.
+
+### 2026-11-03 — D-583: cierre de caja POS por día Colombia, con las ventas de días anteriores aparte
+- **Problema:**
+  - El cierre cortaba el día en UTC: el «lunes» iba del domingo 7 p. m. al lunes 6:59 p. m., y lo vendido después de las 7 p. m. caía en el día siguiente.
+  - Si se cerraba la caja y después se vendía, esa venta no entraba en ningún cierre. El cierre del mismo día lo frena el candado de doble cierre, y el del día siguiente no la incluía.
+  - El cierre no guardaba descuentos ni impuestos. El informe viejo leía `totalImpuestos`, pero el campo del pedido es `totalImpuesto`, así que siempre daba 0.
+  - La vista previa usaba `/pos/all/filter`, que recalcula los totales, y el cierre usaba los guardados: podían no coincidir.
+- **Decisión (aprobada por el comercio usuario en el chat, opción 1 de 2):**
+  - El día va de 12:00 a. m. a 11:59 p. m. hora Colombia (UTC-5).
+  - Cada cierre recoge, APARTE, las ventas de días anteriores que quedaron sin cerrar. Se registran en su fecha y no suman al «Total Ventas» del período, pero su efectivo cuenta para la diferencia.
+  - Solo se buscan desde el día del último cierre del comercio, con un máximo de 31 días. Así, un comercio que nunca cierra caja no recibe meses de ventas de golpe.
+  - Se descartó la opción 2 (varios cierres el mismo día, como turnos).
+- **Backend:**
+  - `services/pos/cierreCaja.js` es nuevo y concentra el rango, la búsqueda (con `select('estadoProceso')` y `getAll` para no leer pedidos ya cerrados), el resumen y la diferencia.
+  - `cashClosing` usa ese módulo. Con `soloPrevisualizar: true` responde `{ yaCerrado, delPeriodo, anteriores }` sin escribir nada. Es el mismo endpoint, no hay ruta nueva.
+  - El cierre guarda `totalDescuentos`, `totalImpuestos`, `diferenciaEfectivo`, `rango` y `ventasDiasAnteriores` (`total`, `formasPago`, `pedidos`, `desde`). Los pedidos de días anteriores quedan marcados con `cierreCaja.ventaDeDiaAnterior`.
+  - El historial devuelve `diferencia`, descuentos, impuestos y `ventasDiasAnteriores`.
+  - Ya no se escribe `_id` dentro del pedido al cerrarlo.
+- **Frontend:**
+  - La vista previa pide al backend lo que entraría en el cierre.
+  - Las ventas de días anteriores salen en un bloque aparte, en la pantalla y en el reporte impreso.
+  - Antes de cerrar sale una alerta: «si después de este cierre haces otra venta el <día>, queda registrada con esa fecha, no entra en este cierre y no suma a las ventas del día siguiente; aparece aparte en el próximo cierre».
+  - Si el día ya tiene cierre, la vista previa lo explica.
+  - Las formas de pago se agrupan sin importar mayúsculas.
+  - `fechaFormateada` mostraba el día anterior porque leía «AAAA-MM-DD» como UTC; se corrigió.
+  - El historial usa la diferencia guardada y solo la recalcula en los cierres viejos.
+- **Limitación:** una empresa suspendida (D-287) ya no ve la vista previa, porque `/cash-closing` es escritura. De todos modos no podía cerrar.
+- **Pruebas:**
+  - `tests/pos/cierreCaja.test.js` (local, D-566): 10/10. Cubre el rango Colombia, la venta del lunes a las 8 p. m., el tope de 31 días, un comercio sin cierres previos, descuentos e impuestos y la diferencia.
+  - El front compila (`ng serve`).
+  - Falta probarlo en el navegador contra `katuq_dev`.
+- **Índices:** el filtro de `orders` por `company + typeOrder + fechaCreacion` ya existía. La consulta nueva de `cashClosings` (`company`, orden por `fechaCreacion`) es sobre una colección pequeña.
+- **Estado:** commiteado y pusheado (3-nov) junto con D-585 a D-588. FALTA DESPLEGAR, el back primero. Probado por el usuario en el navegador contra `katuq_dev` (FLORECER).
+
+### 2026-11-03 — D-584: el interruptor del aviso de estado a WooCommerce entra al catálogo de `platform-flags`, y el script usa Postgres
+- **Qué:** `wooOrderStatusPublish` (D-578) entra a `services/platformFlags.js` con los valores `off` (por defecto), `sombra` y `publicar`. Se cambia con `node scripts/platform-flags.js wooOrderStatusPublish <valor>`: primero simula y escribe solo con `--execute`.
+- **Arreglo del script:** `scripts/platform-flags.js` no instalaba el adaptador de Postgres (D-579), así que leía y escribía el Firestore congelado. Ahora carga el `.env`, llama a `instalarSiCorresponde` y se detiene con salida 3 si no quedó instalado. Vale para todos los interruptores del catálogo.
+- **⚠️ Mientras producción siga en `4481ac39` (sin D-582):** el código viejo solo apaga con el booleano `false`. Cualquier otro valor, incluido el texto `"off"`, lo lee como **publicar**. Hasta desplegar D-582, el interruptor se escribe como `false` (booleano) y no con este script. Con D-582 desplegado, `false`, `"off"` y el campo sin crear apagan.
+- **Pruebas:**
+  - `tests/companies/platformFlags.test.js` pasa 8/8.
+  - `woocommerceEstadoAWoo` pasa 16/16. Hay un caso nuevo: `"off"` apaga.
+  - En local, el script se niega a correr (salida 3) y no escribe.
+- **Estado:** commiteado y pusheado; FALTA DESPLEGAR (back, junto con D-582).
+
+### 2026-11-03 — D-585: varios cierres de caja el mismo día (turnos)
+- **Por qué:** al probar D-583, el usuario pidió que una venta hecha después del cierre (por ejemplo, un cliente que llega 3 minutos después de cerrar) se pueda cerrar EL MISMO DÍA, para que la plata cuadre ese día. Con D-583 sola, esa venta esperaba hasta el cierre del día siguiente. Eligió la opción B.
+- **Qué cambia:**
+  - **Turnos:** se quitó el candado que permitía un solo cierre por `fechaCierre`. Cada cierre toma solo las ventas que siguen abiertas y guarda `turno` (1, 2, 3… del día). El pedido guarda `cierreCaja.turno` y `cierreCaja.cierreId`.
+  - **Contra cierres cruzados (doble clic, dos cajas):** el cierre se escribe en una transacción que relee los pedidos y responde 409 si alguno ya está `Cerrado`. El turno se numera dentro de la misma transacción.
+  - **Vista previa:** devuelve `turno`, `cierresDelDia` y `saldoFinalAnterior`. La pantalla sugiere el saldo inicial con el saldo final del cierre anterior del día, con un aviso, y la cajera lo puede cambiar. En el título sale «Cierre N del día».
+  - **Sin ventas pendientes:** dice que ya quedaron en el cierre o los cierres del día y que, si vende algo más, haga otro cierre.
+  - **Alerta antes de cerrar:** si después vendes, haz otro cierre ese día (cierre N+1); si nadie vuelve a cerrar ese día, la venta aparece aparte en el próximo cierre (red de seguridad de D-583).
+  - **Historial y reporte impreso:** muestran «Cierre N».
+- **Se mantiene de D-583:** el día Colombia, las ventas de días anteriores aparte, los descuentos e impuestos y la diferencia guardada.
+- **Pruebas:**
+  - Las de la lógica (`tests/pos/cierreCaja.test.js`) siguen 10/10.
+  - El front compila.
+  - La prueba en el navegador es contra `katuq_dev` con FLORECER. Ya está hecho el cierre 1 del 03-11 (POS-000004, $170.500).
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (el back primero).
+
+### 2026-11-03 — D-586: cierre de caja con descuadre, se permite pero con observación obligatoria
+- **Por qué:** al probar, el usuario vio que se podía cerrar con un faltante de $200 y preguntó si había que bloquearlo. Se decidió **no bloquear**: si el sistema no deja cerrar con diferencia, la cajera escribe el número esperado y el faltante desaparece del registro. Los descuadres reales pasan (vuelto mal dado, billete falso) y lo seguro es que queden registrados y con responsable.
+- **Qué cambia:**
+  - **Observación obligatoria:** con diferencia (sobra o falta, |dif| ≥ $0,01), «Observaciones» es obligatoria. El backend responde 400 `observacionObligatoria` y la pantalla lo frena antes, marcando el campo en rojo.
+  - **Alerta de confirmación:** muestra el FALTANTE o SOBRANTE en grande, a nombre de quien cierra.
+  - **Historial:** la diferencia sale en rojo si hay descuadre y en verde si cuadra.
+  - **Botón «Completar Cierre»:** se oculta cuando el cierre termina. Antes seguía visible y confundía, aunque no duplicaba nada.
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR. Probado en `katuq_dev` con FLORECER: cierres 1, 2 y 3 del 03-11. El cierre 3 se cerró con faltante de $200 antes de esta regla.
+
+### 2026-11-03 — D-587: ajustes de cierre de caja (solo Administrador) y «Diferencia de caja» en el resumen del historial
+- **Por qué:**
+  - El resumen del historial mostraba solo «Total Ventas», y daba a entender que había entrado toda la plata. El descuadre solo se veía cierre por cierre.
+  - El usuario preguntó cómo cuadrar la caja cuando aparece un faltante. Se decidió **no editar el cierre**, porque se podría borrar un faltante sin rastro, y **registrar un ajuste**, como en contabilidad. Puede hacerlo **solo el Administrador** (opción A): la cajera que tuvo el descuadre no lo corrige sola.
+- **Backend:**
+  - Ruta nueva `POST /v1/orders/cash-closing-adjustment`, aprobada por el usuario en el chat, con `auth` + `requireJwtTenant` + `requireRole(['Administrador','Super Administrador'])`.
+  - Recibe `{ cierreId, valor (≠ 0), motivo (obligatorio) }`. La empresa y el correo salen del JWT.
+  - En una transacción agrega `{ valor, motivo, usuarioEmail, fecha }` a `cashClosings/{id}.ajustes` y recalcula `diferenciaAjustada` = `diferenciaEfectivo` + suma de ajustes. El cierre original no cambia.
+  - Un cierre de otra empresa responde 404.
+  - El historial devuelve `ajustes` y `diferenciaAjustada`.
+- **Frontend (historial):**
+  - El resumen tiene una cuarta tarjeta, «Diferencia de caja»: la suma del periodo con ajustes, en rojo o verde, y cuántos cierres siguen con descuadre. «Total Ventas» dice «Lo que se vendió».
+  - En cada cierre se muestran:
+    - «Diferencia al cerrar», que nunca cambia;
+    - los ajustes, con valor, motivo, quién y cuándo;
+    - «Diferencia después de ajustes».
+  - El botón «Registrar ajuste» solo aparece para el Administrador, en cierres que siguen sin cuadrar. Sugiere el valor que hace cuadrar y pide el motivo.
+- **Verificado:** sin sesión, la ruta responde 401; el front compila. Falta la prueba en el navegador con FLORECER (cierre 3 con faltante de $200).
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (el back primero: trae la ruta nueva).
+
+### 2026-11-03 — D-588: la tarjeta «Diferencia de caja» filtra el historial a los cierres con descuadre
+- **Por qué:** el usuario pidió que, al tocar la tarjeta, la lista muestre solo los cierres que no cuadran, para no revisarlos uno por uno cuando son muchos.
+- **Qué:**
+  - Tocar la tarjeta (o Enter con el teclado) alterna el filtro «solo descuadre», con la diferencia vigente: la que queda después de los ajustes de D-587.
+  - La pantalla baja hasta la lista y muestra el aviso «Mostrando solo los N cierres con descuadre», con el botón «Ver todos».
+  - Si todo cuadra, la tarjeta no es clicable. Cada búsqueda nueva quita el filtro.
+  - Solo cambia la pantalla: no hay cambios en el backend.
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (solo front).
+
+### 2026-11-03 — D-589: el historial de cierres cuenta cada venta una vez y en su día; el reporte dice de qué fecha son las ventas sin cerrar
+- **Por qué:** al probar la red de seguridad (D-583), un cierre del 04-11 que solo recogió una venta olvidada del 03-11 (3.500) contó como un «día» con /usr/bin/bash. Eso partió el Promedio Diario a la mitad. Además, la venta no entraba en Total Ventas ni en la tarjeta de Efectivo del resumen.
+- **Backend (historial):**
+  - `resumenGeneral.totalVentas` y `formasPago` suman también `ventasDiasAnteriores` de cada cierre. Cada venta entra en un solo cierre, así que no se cuenta dos veces.
+  - Cada cierre devuelve `ventasDiasAnteriores.formasPago` y `dias`: las fechas, en hora Colombia, en que se hicieron esas ventas.
+- **Frontend (resumen del historial):**
+  - «Total Días» cuenta solo los días con ventas: los de cierres con ventas propias, más los días en que se hicieron las ventas recogidas después.
+  - El promedio es Total Ventas ÷ esos días.
+  - En los datos de prueba: Total Ventas 52.700, 1 día, promedio 52.700. Antes: 29.200, 2 días y 64.600.
+- **Reporte impreso y pantalla del cierre:**
+  - La fila «Efectivo de días anteriores» pasa a «Efectivo de ventas sin cerrar del 03/11/2026», con la fecha o las fechas reales.
+  - La tabla muestra la fecha completa (03/11/2026, 5:08 p. m.).
+  - El recuadro amarillo dice «Ventas sin cerrar del 03/11/2026 (N)».
+  - «Usuario» del reporte muestra quién cierra: antes salía siempre «Sistema», porque se leía de la empresa.
+- **Pendiente aparte, no tocado:** el recibo de venta POS dice «Forma de entrega: Efectivo»; muestra la forma de pago.
+- **Estado:** commiteado y pusheado. FALTA DESPLEGAR (el back primero).
+
+### 2026-11-03 — D-590: el recibo de venta POS ya no dice «Forma de entrega: Efectivo»
+- **Causa:** desde mayo de 2025, `pos-checkout.service.ts` hacía `pedido.formaEntrega = paymentMethod` en el cobro normal y en el de Wompi. Eso pisaba el «Recoge en tienda» que pone `createPedidoObject`, y el pedido POS quedaba con la forma de pago como forma de entrega. En `katuq_dev` (FLORECER), las ventas POS-000007 a POS-000009 tienen `formaEntrega: "Efectivo"` y en el carrito, «Recoge en tienda».
+- **Arreglo:**
+  - Se quitaron las dos asignaciones; `formaDePago` se sigue poniendo igual.
+  - La tirilla (`factura-tirilla`) lee la forma de entrega de `carrito[0].configuracion.datosEntrega.formaEntrega` (regla del proyecto). Si no la hay, usa `pedido.formaEntrega`, salvo que sea igual a la forma de pago. Así las ventas viejas se reimprimen bien.
+- **Revisado:** ninguna lógica compara `formaEntrega` con una forma de pago. Las comparaciones existentes buscan «Envío a Domicilio», que una venta POS no es ni antes ni después. No se corrigen datos viejos.
+- **Estado:** commiteado y pusheado (solo front). FALTA DESPLEGAR. Compila con `ng serve`.

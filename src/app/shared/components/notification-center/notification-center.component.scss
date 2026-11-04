@@ -1084,3 +1084,56 @@
 }
 .btn.btn-link { color: #5F3FE0; }
 .btn:focus-visible, .btn-icon:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
+/* D-581: novedades de versión en su propia pestaña */
+.novedades-punto {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5F3FE0;
+  border: 2px solid #fff;
+}
+
+.nc-pestanas {
+  display: flex;
+  gap: 6px;
+  padding: 12px 20px 0;
+  border-bottom: 1px solid #ececf4;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.nc-pestana {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #8f8bab;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { color: #5F3FE0; }
+
+  &.activa {
+    color: #5F3FE0;
+    border-bottom-color: #5F3FE0;
+  }
+
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+
+.nc-pestana-punto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5F3FE0;
+}

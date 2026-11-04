@@ -250,7 +250,8 @@ export class PosCheckoutService {
     // Establecer estados
     pedido.estadoPago = EstadoPago.Aprobado;
     pedido.estadoProceso = EstadoProceso.Entregado;
-    pedido.formaEntrega = paymentMethod;
+    // D-590: la forma de entrega la pone createPedidoObject ("Recoge en tienda"); antes aquí
+    // se pisaba con la forma de pago y el recibo decía "Forma de entrega: Efectivo".
     pedido.formaDePago = paymentMethod;
     // D-419: no se copia el número de pedido como número de factura.
 
@@ -281,7 +282,8 @@ export class PosCheckoutService {
 
     // Establecer estado inicial como pendiente
     pedido.estadoPago = EstadoPago.Pendiente;
-    pedido.formaEntrega = paymentMethod;
+    // D-590: la forma de entrega la pone createPedidoObject ("Recoge en tienda"); antes aquí
+    // se pisaba con la forma de pago y el recibo decía "Forma de entrega: Efectivo".
     pedido.formaDePago = paymentMethod;
     // Asegurar fechaEntrega para que aparezca en la lista de pedidos (filtro por fechaEntrega)
     if (!pedido.fechaEntrega) {

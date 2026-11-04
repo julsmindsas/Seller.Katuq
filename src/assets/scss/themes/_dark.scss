@@ -2054,8 +2054,9 @@ body {
 						color: $dark-all-font-color;
 					}
 
-					border-top: 1px solid $dark-body-background;
-					background-color: $dark-card-background;
+					// Ticket 1497: footer vacío, sin franja; toma el fondo de la página.
+					border-top: 0;
+					background-color: transparent;
 				}
 
 				.form-select {

@@ -67,13 +67,15 @@ function envios(idioma) {
     status() { return of({ status: 'processing' }); },
   };
   const Form = cargarClase('manual-invoice-form.component.ts');
-  const form = new Form(new forms.FormBuilder());
+  // Banderas apagadas (D-623 `facturaFormularioMejorado`): el envío debe quedar idéntico al de siempre.
+  const banderas = { isEnabled: () => false };
+  const form = new Form(new forms.FormBuilder(), servicio, banderas);
   form.chooseCustomer({ customerId: 'cliente-unidad', billingProfile: -1 });
   form.form.patchValue({ payment: { meansId: '1', meansCode: '42' } });
   form.items.at(0).patchValue({ description: 'Servicio de prueba', quantity: 2, unitPrice: 1000, taxRate: 19 });
   const Composer = cargarClase('invoice-composer.component.ts');
   const t = traductor(idioma);
-  const composer = new Composer(servicio, { getActiveCompanyId: () => 'ShopA' }, t);
+  const composer = new Composer(servicio, { getActiveCompanyId: () => 'ShopA' }, t, banderas);
   composer.integration = { enabled: true, config: { environment: 'produccion', numbering: { prefix: 'JULS', current: 41 } } };
   composer.manualForm = form;
   let emitida;

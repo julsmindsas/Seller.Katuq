@@ -9,7 +9,6 @@ import {
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
-import { TranslateService } from "@ngx-translate/core";
 import { AngularFireStorage } from "@angular/fire/compat/storage";
 import { finalize } from "rxjs/operators";
 import { EstadoPago, Pago, Pedido } from "../modelo/pedido";
@@ -37,7 +36,7 @@ export class AsentarpagomanualComponent implements OnInit {
   /** Spec 013 — flag por empresa: con tesorería activa el pago va a verificación server-side. */
   treasuryEnabled: boolean = false;
   readonly tooltipPagoTesoreria =
-    "ventas.asentarpagomanual.tooltipTesoreria";
+    "Con tesorería activa, la gestión de pagos se hace desde el módulo Tesorería";
 
   constructor(
     private formasPagoService: MaestroService,
@@ -45,7 +44,6 @@ export class AsentarpagomanualComponent implements OnInit {
     private modalService: NgbModal,
     private ventasService: VentasService,
     private treasuryService: TreasuryService,
-    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -62,11 +60,11 @@ export class AsentarpagomanualComponent implements OnInit {
     ) {
       this.permiteAsentarPago = false;
       Swal.fire({
-        title: this.translate.instant('ventas.asentarpagomanual.alerta'),
-        text: this.translate.instant('ventas.asentarpagomanual.yaPagado'),
+        title: "¡Alerta!",
+        text: "Este pedido ya se encuentra pagado.",
         icon: "warning",
         confirmButtonColor: "#5F3FE0",
-        confirmButtonText: this.translate.instant('comun.aceptar'),
+        confirmButtonText: "Aceptar",
       });
       return;
     }
@@ -338,8 +336,8 @@ export class AsentarpagomanualComponent implements OnInit {
 
       if (this.selectedFile) {
         Swal.fire({
-          title: this.translate.instant('ventas.asentarpagomanual.subiendo'),
-          text: this.translate.instant('ventas.asentarpagomanual.espere'),
+          title: "Subiendo archivo...",
+          text: "Por favor espere...",
           allowOutsideClick: false,
           showConfirmButton: false,
           willOpen: () => {
@@ -366,8 +364,8 @@ export class AsentarpagomanualComponent implements OnInit {
     } else {
       Swal.fire({
         icon: "error",
-        title: this.translate.instant('ventas.asentarpagomanual.oops'),
-        text: this.translate.instant('ventas.asentarpagomanual.completeCampos'),
+        title: "Oops...",
+        text: "Por favor complete los campos requeridos",
       });
     }
   }
@@ -410,8 +408,8 @@ export class AsentarpagomanualComponent implements OnInit {
       };
 
       Swal.fire({
-        title: this.translate.instant('ventas.asentarpagomanual.registrando'),
-        text: this.translate.instant('ventas.asentarpagomanual.enviandoTesoreria'),
+        title: "Registrando pago...",
+        text: "Enviando a verificación de tesorería...",
         allowOutsideClick: false,
         showConfirmButton: false,
         willOpen: () => {
@@ -451,10 +449,10 @@ export class AsentarpagomanualComponent implements OnInit {
 
           Swal.fire({
             icon: "success",
-            title: this.translate.instant('ventas.asentarpagomanual.registrado'),
-            text: this.translate.instant('ventas.asentarpagomanual.enRevision'),
+            title: "Pago registrado",
+            text: "El pago quedó en revisión de tesorería.",
             confirmButtonColor: "#5F3FE0",
-            confirmButtonText: this.translate.instant('comun.aceptar'),
+            confirmButtonText: "Aceptar",
           }).then(() => {
             this.modalService.dismissAll(order);
             this.cancelar();
@@ -464,10 +462,10 @@ export class AsentarpagomanualComponent implements OnInit {
           console.error("Error registrando pago en tesorería:", error);
           Swal.fire({
             icon: "error",
-            title: this.translate.instant('ventas.asentarpagomanual.errorRegistrar'),
+            title: "No se pudo registrar el pago",
             text:
               error?.error?.message ||
-              this.translate.instant('ventas.asentarpagomanual.errorRegistrarTexto'),
+              "Intenta de nuevo o contacta a soporte.",
           });
         },
       });
@@ -475,8 +473,8 @@ export class AsentarpagomanualComponent implements OnInit {
 
     if (this.selectedFile) {
       Swal.fire({
-        title: this.translate.instant('ventas.asentarpagomanual.subiendo'),
-        text: this.translate.instant('ventas.asentarpagomanual.espere'),
+        title: "Subiendo archivo...",
+        text: "Por favor espere...",
         allowOutsideClick: false,
         showConfirmButton: false,
         willOpen: () => {
@@ -541,8 +539,8 @@ export class AsentarpagomanualComponent implements OnInit {
     if (this.isPagoBloqueadoPorTesoreria(pago)) {
       Swal.fire({
         icon: "info",
-        title: this.translate.instant('ventas.asentarpagomanual.tesoreriaActiva'),
-        text: this.translate.instant(this.tooltipPagoTesoreria),
+        title: "Tesorería activa",
+        text: this.tooltipPagoTesoreria,
       });
       return;
     }
@@ -649,20 +647,20 @@ export class AsentarpagomanualComponent implements OnInit {
     if (this.isPagoBloqueadoPorTesoreria(pago)) {
       Swal.fire({
         icon: "info",
-        title: this.translate.instant('ventas.asentarpagomanual.tesoreriaActiva'),
-        text: this.translate.instant(this.tooltipPagoTesoreria),
+        title: "Tesorería activa",
+        text: this.tooltipPagoTesoreria,
       });
       return;
     }
     Swal.fire({
-      title: this.translate.instant('proceso.comun.estaSeguro'),
-      text: this.translate.instant('ventas.asentarpagomanual.eliminarTexto', { fecha: pago.fecha, valor: pago.valor, comprobante: pago.numeroComprobante, pedido: this.pedido.nroPedido }),
+      title: "¿Está seguro?",
+      text: `Está seguro de eliminar el pago con fecha ${pago.fecha} y valor ${pago.valor} y número de comprobante ${pago.numeroComprobante} del pedido ${this.pedido.nroPedido}?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#D64545",
       cancelButtonColor: "#8f8bab",
-      confirmButtonText: this.translate.instant('comun.eliminar'),
-      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // DEBUG: Log antes de eliminar

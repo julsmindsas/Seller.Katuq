@@ -7,7 +7,6 @@ import {
   Output,
 } from "@angular/core";
 import Swal from "sweetalert2";
-import { TranslateService } from "@ngx-translate/core";
 import { Pedido } from "../modelo/pedido";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { InfoIndicativos } from "src/Mock/indicativosPais";
@@ -84,7 +83,6 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     private modalService: NgbModal,
     private service: MaestroService,
     private infoIndicativo: InfoIndicativos,
-    private translate: TranslateService,
   ) {
     this.paises = this.inforPaises.paises.map((x) => {
       return x.Pais;
@@ -157,32 +155,32 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     const ciudad = String(this.ciudad_municipio || "").trim();
     const depto = String(this.departamento || "").trim();
 
-    if (razon.length < 3) { faltan.push(this.translate.instant("ventas.pedidoFacturacion.faltaRazonSocial")); }
-    if (!tipo) { faltan.push(this.translate.instant("ventas.pedidoFacturacion.faltaTipoDocumento")); }
-    if (!doc) { faltan.push(this.translate.instant("ventas.pedidoFacturacion.faltaNumeroDocumento")); }
+    if (razon.length < 3) { faltan.push("Razón social o nombre completo"); }
+    if (!tipo) { faltan.push("Tipo de documento"); }
+    if (!doc) { faltan.push("Número de documento"); }
     // Ticket 1040 (OH MY STORE): decir solo "Ciudad" dejaba al vendedor sin
     // salida, porque la ciudad es un desplegable en cascada que permanece
     // vacío hasta elegir el departamento. El aviso ahora dice qué hacer.
     if (!ciudad) {
       faltan.push(
         depto
-          ? this.translate.instant("ventas.pedidoFacturacion.faltaCiudad")
-          : this.translate.instant("ventas.pedidoFacturacion.faltaDepartamentoCiudad"),
+          ? "Ciudad"
+          : "Departamento y luego Ciudad (la lista de ciudades se llena al elegir el departamento)",
       );
     }
-    if (!celular) { faltan.push(this.translate.instant("ventas.pedidoFacturacion.faltaCelular")); }
-    if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push(this.translate.instant("ventas.pedidoFacturacion.faltaCorreo")); }
+    if (!celular) { faltan.push("Celular"); }
+    if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push("Correo electrónico válido"); }
 
     // El documento debe tener forma de documento: el "-4" no pasa.
     let docInvalido = "";
     if (doc) {
       const limpio = doc.replace(/[\s.]/g, "").toUpperCase();
       if (tipo === "NIT") {
-        if (!/^\d{6,12}(-\d)?$/.test(limpio)) { docInvalido = this.translate.instant("ventas.pedidoFacturacion.nitInvalido"); }
+        if (!/^\d{6,12}(-\d)?$/.test(limpio)) { docInvalido = "El NIT debe ser numérico, con el dígito de verificación opcional después de un guion (ej: 901072822-4)."; }
       } else if (tipo === "PA") {
-        if (!/^[A-Z0-9]{4,20}$/.test(limpio)) { docInvalido = this.translate.instant("ventas.pedidoFacturacion.pasaporteInvalido"); }
+        if (!/^[A-Z0-9]{4,20}$/.test(limpio)) { docInvalido = "El pasaporte debe tener solo letras y números (entre 4 y 20)."; }
       } else if (!/^\d{4,15}$/.test(limpio.split("-")[0])) {
-        docInvalido = this.translate.instant("ventas.pedidoFacturacion.documentoInvalido");
+        docInvalido = "El número de documento debe ser numérico (entre 4 y 15 dígitos).";
       }
     }
 
@@ -190,15 +188,15 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
     const partes: string[] = [];
     if (faltan.length) {
-      partes.push(`<b>${this.translate.instant("ventas.pedidoFacturacion.faltanOEstanMal")}</b><ul style="text-align:left;margin:8px 0 0 18px">${faltan.map((f) => `<li>${f}</li>`).join("")}</ul>`);
+      partes.push(`<b>Faltan o están mal:</b><ul style="text-align:left;margin:8px 0 0 18px">${faltan.map((f) => `<li>${f}</li>`).join("")}</ul>`);
     }
     if (docInvalido) { partes.push(`<div style="text-align:left;margin-top:8px">${docInvalido}</div>`); }
     Swal.fire({
       icon: "warning",
-      title: this.translate.instant("ventas.pedidoFacturacion.revisaDatos"),
+      title: "Revisa los datos de facturación",
       html: partes.join(""),
-      footer: this.translate.instant("ventas.pedidoFacturacion.revisaDatosFooter"),
-      confirmButtonText: this.translate.instant("ventas.pedidoFacturacion.corregir"),
+      footer: "Con estos datos se emite la factura electrónica; si están mal, la factura sale mal.",
+      confirmButtonText: "Corregir",
     });
     return false;
   }
@@ -227,10 +225,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     // fallaba en silencio y "Guardar" no hacia nada. Ahora se avisa.
     if (!this.documentoBusqueda || !this.formulario) {
       Swal.fire({
-        title: this.translate.instant("ventas.pedidoFacturacion.noSePudoGuardar"),
-        text: this.translate.instant("ventas.pedidoFacturacion.primeroSeleccioneCliente"),
+        title: "No se pudo guardar",
+        text: "Primero busque y seleccione el cliente del pedido; los datos de facturación se guardan sobre ese cliente.",
         icon: "warning",
-        confirmButtonText: this.translate.instant("comun.ok"),
+        confirmButtonText: "Ok",
       });
       return false;
     }
@@ -274,10 +272,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           this.modalService.dismissAll();
 
           Swal.fire({
-            title: this.translate.instant("ventas.pedidoFacturacion.guardado"),
-            text: this.translate.instant("ventas.pedidoFacturacion.datosGuardadosExito"),
+            title: "Guardado!",
+            text: "Datos de facturación guardados con éxito",
             icon: "success",
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
             timer: 2000,
           });
 
@@ -287,10 +285,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         error: (err) => {
           console.error("Error al guardar dirección de facturación:", err);
           Swal.fire({
-            title: this.translate.instant("comun.error"),
-            text: this.translate.instant("ventas.pedidoFacturacion.noSePudoGuardarDireccion"),
+            title: "Error",
+            text: "No se pudo guardar la dirección de facturación. Intente nuevamente.",
             icon: "error",
-            confirmButtonText: this.translate.instant("comun.ok"),
+            confirmButtonText: "Ok",
           });
         },
       });
@@ -318,11 +316,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         }
         console.error("Error consultando el cliente para guardar facturación:", err);
         Swal.fire({
-          title: this.translate.instant("ventas.pedidoFacturacion.noSePudoGuardar"),
+          title: "No se pudo guardar",
           text: err?.error?.error || err?.error?.message ||
-            this.translate.instant("ventas.pedidoFacturacion.noSePudoConsultarCliente"),
+            "No se pudo consultar el cliente del pedido. Intente de nuevo.",
           icon: "error",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       },
     });
@@ -345,10 +343,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     this.pedidoGral = { ...this.pedidoGral };
 
     Swal.fire({
-      title: this.translate.instant("ventas.pedidoFacturacion.datosSeleccionados"),
+      title: "Datos Seleccionados!",
       text: this.datosFacturacionElectronica[index].alias,
       icon: "success",
-      confirmButtonText: this.translate.instant("comun.ok"),
+      confirmButtonText: "Ok",
     });
 
     // Siempre emitir el pedido actualizado para que el componente padre pueda guardarlo
@@ -370,7 +368,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   //     title: "Factura Generada!",
   //     text: "Factura generada con exito",
   //     icon: "success",
-  //     confirmButtonText: this.translate.instant("comun.ok"),
+  //     confirmButtonText: "Ok",
   //   });
   // }
 
@@ -485,10 +483,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.service.editClient(this.formulario.value).subscribe((r) => {
         console.log(r);
         Swal.fire({
-          title: this.translate.instant("ventas.pedidoFacturacion.eliminado"),
-          text: this.translate.instant("ventas.pedidoFacturacion.eliminadoExito"),
+          title: "Eliminado!",
+          text: "Eliminado con exito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       });
     });
@@ -540,12 +538,12 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         const preguntarUso: Promise<any> = esLaFacturacionEnUso
           ? Promise.resolve()
           : Swal.fire({
-              title: this.translate.instant("ventas.pedidoFacturacion.datosFacturacionGuardados"),
-              text: this.translate.instant("ventas.pedidoFacturacion.usarDatosEnPedido"),
+              title: "Datos de facturación guardados",
+              text: "¿Quieres usar estos datos actualizados en el pedido?",
               icon: "question",
               showCancelButton: true,
-              confirmButtonText: this.translate.instant("ventas.pedidoFacturacion.siUsarEnPedido"),
-              cancelButtonText: this.translate.instant("ventas.pedidoFacturacion.noSoloGuardarlos"),
+              confirmButtonText: "Sí, usar en el pedido",
+              cancelButtonText: "No, solo guardarlos",
               confirmButtonColor: "#5F3FE0",
             }).then((r) => { if (r.isConfirmed) aplicarEnPedido(); });
         preguntarUso.then(() => {
@@ -570,10 +568,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           });
 
         Swal.fire({
-          title: this.translate.instant("ventas.pedidoFacturacion.editado"),
-          text: this.translate.instant("ventas.pedidoFacturacion.editadoExito"),
+          title: "Editado!",
+          text: "Editado con éxito",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
           timer: 2000,
         });
 
@@ -595,10 +593,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       error: (err) => {
         console.error("Error al editar datos de facturación:", err);
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.pedidoFacturacion.noSePudieronGuardarDatos"),
+          title: "Error",
+          text: "No se pudieron guardar los datos de facturación. Por favor intente nuevamente.",
           icon: "error",
-          confirmButtonText: this.translate.instant("comun.ok"),
+          confirmButtonText: "Ok",
         });
       }
     });
@@ -736,14 +734,14 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   quitarDireccionFacturacion(): void {
     Swal.fire({
-      title: this.translate.instant("ventas.pedidoFacturacion.estasSeguro"),
-      text: this.translate.instant("ventas.pedidoFacturacion.deseasQuitarDireccion"),
+      title: "¿Estás seguro?",
+      text: "¿Deseas quitar la dirección de facturación del pedido?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#D64545",
       cancelButtonColor: "#8f8bab",
-      confirmButtonText: this.translate.instant("ventas.pedidoFacturacion.siQuitarDireccion"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, quitar dirección",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // Quitar la dirección de facturación
@@ -767,10 +765,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         }
         
         Swal.fire({
-          title: this.translate.instant("ventas.pedidoFacturacion.direccionQuitada"),
-          text: this.translate.instant("ventas.pedidoFacturacion.direccionRemovida"),
+          title: "Dirección Quitada",
+          text: "La dirección de facturación ha sido removida del pedido.",
           icon: "success",
-          confirmButtonText: this.translate.instant("comun.aceptar"),
+          confirmButtonText: "Aceptar",
         });
       }
     });

@@ -7,7 +7,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { TranslateService } from '@ngx-translate/core';
 import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
 import { NotificationPreferencesService } from '../../services/notifications/notification-preferences.service';
-import { 
+import { NovedadesVersionService } from '../../services/novedades-version.service';
+import { NotaVersion } from '../../services/version-check.service';
+import {
   KatuqNotification, 
   NotificationType, 
   NotificationPriority, 
@@ -69,6 +71,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   public showPreferences = false;
   public showClearConfirm = false;
 
+  /** D-581: las novedades de versión viven en su propia pestaña, sin mezclarse con los avisos. */
+  public vista: 'avisos' | 'novedades' = 'avisos';
+  public novedades: NotaVersion[] = [];
+  public hayNovedades = false;
+
   /** Ticket 1178: sonido de notificaciones. Misma llave que usa el sidebar al sonar. */
   public soundEnabled: boolean = localStorage.getItem('notificationSound') !== 'false';
 
@@ -90,7 +97,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     private preferencesService: NotificationPreferencesService,
     private renderer: Renderer2,
     private router: Router,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private novedadesService: NovedadesVersionService
   ) {
     this.setupSearchDebouncing();
   }
@@ -133,6 +141,21 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(status => {
         this.connectionStatus = status;
+      });
+
+    // D-581: novedades que le aplican a este usuario y si hay alguna sin ver
+    this.novedadesService.iniciar();
+    this.novedadesService.novedades$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(novedades => {
+        this.novedades = novedades;
+        // Con la pestaña abierta, lo que llega queda visto de una vez.
+        if (this.isOpen && this.vista === 'novedades') this.novedadesService.marcarVistas(novedades);
+      });
+    this.novedadesService.hayNuevas$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(hay => {
+        this.hayNovedades = hay;
       });
 
     // Cargar preferencias in-app
@@ -240,6 +263,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
 
     if (this.isOpen) {
       this.resetFilters();
+      // Si lo único pendiente son novedades, se abre directo en ellas.
+      this.cambiarVista(this.hayNovedades && this.unreadCount === 0 ? 'novedades' : 'avisos');
       // Mover overlay y panel al body para escapar del stacking context del header
       setTimeout(() => {
         if (this.overlayEl?.nativeElement) {
@@ -252,6 +277,16 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
           this.searchInput.nativeElement.focus();
         }
       }, 0);
+    }
+  }
+
+  /** D-581: abrir «Novedades» deja vistas las que le aplican. */
+  public cambiarVista(vista: 'avisos' | 'novedades'): void {
+    this.vista = vista;
+    if (vista === 'novedades') {
+      this.showPreferences = false;
+      this.showClearConfirm = false;
+      this.novedadesService.marcarVistas(this.novedades);
     }
   }
 

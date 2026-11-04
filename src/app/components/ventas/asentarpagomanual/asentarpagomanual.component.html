@@ -71,7 +71,7 @@
                 <button type="button"
                         class="cfg-btn cfg-btn--peligro pago-btn"
                         [disabled]="isPagoBloqueadoPorTesoreria(pago)"
-                        [title]="isPagoBloqueadoPorTesoreria(pago) ? (tooltipPagoTesoreria | translate) : ''"
+                        [title]="isPagoBloqueadoPorTesoreria(pago) ? tooltipPagoTesoreria : ''"
                         (click)="eliminarPago(pago)">
                   <i class="pi pi-trash"></i>
                   {{ 'Eliminar' | translate }}

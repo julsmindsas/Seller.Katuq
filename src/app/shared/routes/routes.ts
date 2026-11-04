@@ -4,6 +4,7 @@ import { AdminGuard } from "../guard/admin.guard"; // Importar AdminGuard
 import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar SubscriptionGuard
 import { InicioGuard } from "../guards/inicio.guard";
 import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
+import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.guard";
 
 export const content: Routes = [
   {
@@ -399,6 +400,15 @@ export const content: Routes = [
       import("../../components/nps/nps.module").then((m) => m.NpsModule),
     canActivate: [AuthGuard],
     data: { title: "NPS" },
+  },
+  // Centro de ayuda, fase 1 (D-628): artículos de Katuq y de la empresa, y su administración para Julsmind.
+  // Exige la bandera `centroDeAyuda` (CentroAyudaGuard); el servidor responde 403 sin ella.
+  {
+    path: "centro-de-ayuda",
+    loadChildren: () =>
+      import("../../components/centro-de-ayuda/centro-ayuda.module").then((m) => m.CentroAyudaModule),
+    canActivate: [AuthGuard, CentroAyudaGuard],
+    data: { title: "Centro de ayuda" },
   },
   {
     // Agenda de servicios (D-491). Además de la sesión, exige la bandera `serviceAgenda` (AgendaGuard).

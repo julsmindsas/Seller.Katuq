@@ -1,5 +1,5 @@
 import { HttpContext } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -8,7 +8,9 @@ import {
   AccionesUsuario, accionesPorOmision, normalizarAcciones,
 } from '../../../components/ventas/list/acciones-pedido/acciones-pedido.me';
 import { AccionPedidoId } from '../../../components/ventas/list/acciones-pedido/acciones-pedido.catalogo';
+import { PanelAcciones, panelAcciones } from '../../../components/ventas/list/acciones-pedido/acciones-pedido.ocho';
 import { BaseService } from '../base.service';
+import { CompanyFeaturesService } from '../company-features.service';
 import { SKIP_LOADER } from '../interceptor/loader.interceptor';
 
 /**
@@ -29,6 +31,7 @@ export type { AccionesUsuario, RolAccionesServidor } from '../../../components/v
 @Injectable({ providedIn: 'root' })
 export class OrderActionsService extends BaseService {
   private readonly base = '/v1/order-actions';
+  private readonly features = inject(CompanyFeaturesService);
 
   private readonly estadoSubject = new BehaviorSubject<AccionesUsuario | null>(null);
   /** El estado cargado; `null` mientras no se haya cargado o si la carga falló (el bloque queda como en F1). */
@@ -42,6 +45,36 @@ export class OrderActionsService extends BaseService {
 
   get estado(): AccionesUsuario | null {
     return this.estadoSubject.value;
+  }
+
+  /**
+   * D-635 (ticket 1472): `true` con la bandera `panelAccionesV2` (y `orderPinnedActions`, de la que es un delta). Es el
+   * panel de nueve: 4 del rol y 5 personales, hasta 5 pines y «Frecuente» sobre 30 días de uso. Apagada, todo es D-547.
+   */
+  get panelV2(): boolean {
+    return this.features.isEnabled('orderPinnedActions') && this.features.isEnabled('panelAccionesV2');
+  }
+
+  private panelMemo: { de: AccionesUsuario | null; v2: boolean; valor: PanelAcciones } | null = null;
+
+  /**
+   * Las acciones del bloque (8, o 9 con `panelV2`), las «Frecuente» y los pines que caben. Se calcula con el estado
+   * que llegó al iniciar la sesión y devuelve el mismo objeto mientras ese estado no cambie: por eso lo «Frecuente»
+   * no se mueve durante la jornada; solo cambia cuando el usuario fija, suelta o restablece.
+   */
+  get panel(): PanelAcciones {
+    const me = this.estadoSubject.value;
+    const v2 = this.panelV2;
+    if (!this.panelMemo || this.panelMemo.de !== me || this.panelMemo.v2 !== v2) {
+      this.panelMemo = { de: me, v2, valor: panelAcciones(me?.role, me?.pinned, me?.usageDays, v2) };
+    }
+    return this.panelMemo.valor;
+  }
+
+  /** Los días de uso de la última semana, que son los que cuentan las sugerencias de fijar. */
+  get usoSemanal(): Record<string, number> {
+    const me = this.estadoSubject.value;
+    return me?.usageDays7 || me?.usageDays || {};
   }
 
   /**

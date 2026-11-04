@@ -38,7 +38,6 @@ import { ActivatedRoute } from "@angular/router";
 // import * as jsPDF from 'jspdf';
 import html2canvas from "html2canvas";
 import Swal from "sweetalert2";
-import { TranslateService } from "@ngx-translate/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { PedidoEntregaComponent } from "../entrega/pedido-entrega.component";
 import { PedidosUtilService } from "../service/pedidos.util.service";
@@ -85,13 +84,12 @@ import {
   EstadoAcciones,
   estadoAcciones,
 } from "./acciones-pedido/acciones-pedido.estado";
-import { accionesDelRol, ochoAcciones } from "./acciones-pedido/acciones-pedido.ocho";
+import { accionesDelRol } from "./acciones-pedido/acciones-pedido.ocho";
 import { decidirPin, reemplazarPin } from "./acciones-pedido/acciones-pedido.pines";
 import { cuentaComoUso, idFijaPorTitulo } from "./acciones-pedido/acciones-pedido.uso";
 import { AccionResaltada, resaltada, resaltadaSoloEnModal } from "./acciones-pedido/acciones-pedido.resaltada";
 import { diaColombia } from "./acciones-pedido/acciones-pedido.dia";
 import { sugerencia } from "./acciones-pedido/acciones-pedido.sugerencia";
-import { AccionesUsuario } from "./acciones-pedido/acciones-pedido.me";
 import { OrderActionsService } from "../../../shared/services/ventas/order-actions.service";
 
 /** Estados en los que el pedido ya salió de la bodega (ticket 1318). */
@@ -231,14 +229,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaReemplazo: { pedidoId: string; invoiceId: string; numero: string; url: string | null } | null = null;
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
-    { value: "8", label: "ventas.list.nDias" },
-    { value: "15", label: "ventas.list.nDias" },
-    { value: "30", label: "ventas.list.nDias" },
-    { value: "45", label: "ventas.list.nDias" },
-    { value: "60", label: "ventas.list.nDias" },
-    { value: "90", label: "ventas.list.nDias" },
-    { value: "120", label: "ventas.list.nDias" },
-    { value: "exacta", label: "ventas.list.fechaExacta" },
+    { value: "8", label: "8 días" },
+    { value: "15", label: "15 días" },
+    { value: "30", label: "30 días" },
+    { value: "45", label: "45 días" },
+    { value: "60", label: "60 días" },
+    { value: "90", label: "90 días" },
+    { value: "120", label: "120 días" },
+    { value: "exacta", label: "Fecha exacta" },
   ];
 
   // Variables temporales para el modal de cambio de estado
@@ -687,32 +685,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!pedido) return;
     const katuqOrderId = (pedido as any)?.cd || (pedido as any)?.id;
     if (!katuqOrderId) {
-      Swal.fire({ icon: 'error', title: this.translate.instant("ventas.list.pedidoSinId"), text: this.translate.instant("ventas.list.noSePudoIdentificarEl") });
+      Swal.fire({ icon: 'error', title: 'Pedido sin ID', text: 'No se pudo identificar el pedido.' });
       return;
     }
 
     // [Spec 002.1 Fase 3] Canónica = inglés (`integrations`); fallback temporal a español.
     const _osmosis = (pedido as any)?.integrations?.osmosis || (pedido as any)?.integraciones?.osmosis || {};
     const yaTiene = !!_osmosis.id;
-    const titulo = yaTiene ? this.translate.instant("ventas.list.resincronizarConCereza") : this.translate.instant("ventas.list.enviarPedidoACereza");
+    const titulo = yaTiene ? 'Resincronizar con Cereza' : 'Enviar pedido a Cereza';
     const detalle = yaTiene
-      ? this.translate.instant("ventas.list.cerezaForzarSync", { pedido: pedido.nroPedido, osm: _osmosis.id })
-      : this.translate.instant("ventas.list.cerezaSeraEnviado", { pedido: pedido.nroPedido });
+      ? `Se forzara una sincronizacion con Cereza para el pedido <strong>${pedido.nroPedido}</strong> (OSM-${_osmosis.id}).`
+      : `El pedido <strong>${pedido.nroPedido}</strong> sera enviado a Cereza/Guia Cereza para fulfillment.`;
 
     Swal.fire({
       title: titulo,
-      html: `${detalle}<br><br><span class="text-muted">${this.translate.instant("ventas.list.clienteNombre", { cliente: pedido.cliente?.nombres_completos || this.translate.instant("ventas.list.noAplica") })}</span>`,
+      html: `${detalle}<br><br><span class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</span>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#4A44C2',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: yaTiene ? this.translate.instant("ventas.list.resincronizar") : this.translate.instant("ventas.list.enviar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: yaTiene ? 'Resincronizar' : 'Enviar',
+      cancelButtonText: 'Cancelar',
     }).then((result) => {
       if (!result.isConfirmed) return;
 
       Swal.fire({
-        title: this.translate.instant("ventas.list.enviandoACereza"),
+        title: 'Enviando a Cereza...',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading(),
       });
@@ -724,8 +722,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (resp?.success !== false) {
             Swal.fire({
               icon: 'success',
-              title: this.translate.instant("ventas.list.pedidoEnviadoACereza"),
-              html: this.translate.instant("ventas.list.cerezaSincronizadoHtml", { pedido: pedido.nroPedido }) + (osmId ? this.translate.instant("ventas.list.cerezaIdHtml", { osm: osmId }) : ''),
+              title: 'Pedido enviado a Cereza',
+              html: `<p>Pedido <strong>${pedido.nroPedido}</strong> sincronizado.</p>${osmId ? `<p>Identificador Cereza: <strong>OSM-${osmId}</strong></p>` : ''}`,
               confirmButtonColor: '#10B981',
             });
             // Refrescar la lista para mostrar el nuevo OSM-XX en la fila
@@ -735,19 +733,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           } else {
             Swal.fire({
               icon: 'warning',
-              title: this.translate.instant("ventas.list.cerezaRespondioConError"),
-              text: resp?.message || this.translate.instant("ventas.list.noSePudoEnviarEl"),
+              title: 'Cereza respondio con error',
+              text: resp?.message || 'No se pudo enviar el pedido. Revisa la configuracion de Osmosis.',
             });
           }
         },
         error: (err: any) => {
           Swal.close();
-          const msg = err?.error?.message || err?.message || this.translate.instant("ventas.list.errorDesconocidoAlContactarCereza");
+          const msg = err?.error?.message || err?.message || 'Error desconocido al contactar Cereza.';
           Swal.fire({
             icon: 'error',
-            title: this.translate.instant("ventas.list.errorAlEnviarACereza"),
+            title: 'Error al enviar a Cereza',
             text: msg,
-            footer: this.translate.instant("ventas.list.verificaQueLaIntegracionOsmosis"),
+            footer: 'Verifica que la integracion Osmosis este configurada en /integrations.',
           });
         },
       });
@@ -968,7 +966,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sugerenciaEvaluada = true;
     const me = this.orderActions.estado;
     if (!me) return;
-    const id = sugerencia(me.usageDays, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
+    const id = sugerencia(this.orderActions.usoSemanal, this.accionesDelBloque, me.dismissed, me.lastSuggestionAt, diaColombia());
     if (!id) return;
     this.sugerenciaPedido = id;
     this.orderActions.registrarSugerencia(id, "shown").pipe(takeUntil(this.destroy$)).subscribe({ error: () => { /* en silencio */ } });
@@ -983,7 +981,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   rechazarSugerencia(id: AccionPedidoId): void {
     this.orderActions.registrarSugerencia(id, "dismissed").pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { if (this.sugerenciaPedido === id) this.sugerenciaPedido = null; },
-      error: () => this.toastrService.error(this.translate.instant("ventas.list.noPudimosGuardarTusAcciones"), this.translate.instant("ventas.list.accionesDelPedido")),
+      error: () => this.toastrService.error("No pudimos guardar tus acciones. Intenta de nuevo.", "Acciones del pedido"),
     });
   }
 
@@ -1000,13 +998,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       && !!this.orderActions.estado;
   }
 
-  private ochoMemo: { de: AccionesUsuario | null; valor: AccionPedidoId[] } = { de: null, valor: [] };
-
-  /** Las 8 acciones: las 4 del rol (o General) y las 4 personales. Mismo arreglo mientras el estado no cambie. */
+  /**
+   * Las acciones del bloque: las 4 del rol (o General) y las personales (4; con `panelAccionesV2`, 5). Mismo arreglo
+   * mientras el estado no cambie. Lo calcula `OrderActionsService.panel` con el uso que llegó al iniciar la sesión.
+   */
   get accionesDelBloque(): AccionPedidoId[] {
-    const me = this.orderActions.estado;
-    if (me !== this.ochoMemo.de) this.ochoMemo = { de: me, valor: ochoAcciones(me?.role, me?.pinned) };
-    return this.ochoMemo.valor;
+    return this.orderActions.panel.acciones;
+  }
+
+  /** D-635: panel de nueve con la bandera `panelAccionesV2`. */
+  get panelV2(): boolean {
+    return this.orderActions.panelV2;
+  }
+
+  /** D-635: las personales que entraron por uso («Frecuente»). */
+  get accionesFrecuentes(): AccionPedidoId[] {
+    return this.orderActions.panel.frecuentes;
   }
 
   private resaltadaMemo: AccionResaltada | null = null;
@@ -1060,18 +1067,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   restablecerAccionesBloque(): void {
     Swal.fire({
-      title: this.translate.instant("ventas.list.restablecerAcciones"),
-      text: this.translate.instant("ventas.list.tus4AccionesPersonalesVuelven"),
+      title: "Restablecer acciones",
+      text: this.panelV2
+        ? "Tus 5 acciones personales vuelven al orden de siempre. Las de tu administrador no cambian."
+        : "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#5F3FE0",
-      confirmButtonText: this.translate.instant("ventas.list.restablecer"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Restablecer",
+      cancelButtonText: "Cancelar",
       showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: () =>
         firstValueFrom(this.orderActions.guardarPines([])).catch(() => {
-          Swal.showValidationMessage(this.translate.instant("ventas.list.noPudimosGuardarTusAcciones"));
+          Swal.showValidationMessage("No pudimos guardar tus acciones. Intenta de nuevo.");
           return null;
         }),
     });
@@ -1106,7 +1115,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   fijarAccionDelModal(ev: { id: AccionPedidoId; fijar: boolean }): void {
     if (!this.bloquePersonalizado || this.guardandoPines) return;
-    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario);
+    const decision = decidirPin(ev.id, ev.fijar, this.accionesDelRolPedido, this.pinesDelUsuario, this.orderActions.panel.maxPines);
     if (decision.tipo === "guardar") {
       this.guardarPinesDelModal(decision.lista);
     } else if (decision.tipo === "elegir") {
@@ -1120,7 +1129,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .guardarPines(lista)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.guardandoPines = false; }))
       .subscribe({
-        error: (e) => this.toastrService.error(motivoAccionesNoGuardadas(e), this.translate.instant("ventas.list.accionesDelPedido")),
+        error: (e) => this.toastrService.error(motivoAccionesNoGuardadas(e), "Acciones del pedido"),
       });
   }
 
@@ -1130,15 +1139,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const id of actuales) opciones[id] = accionPorId(id).titulo;
     this.guardandoPines = true;
     Swal.fire({
-      title: this.translate.instant("ventas.list.yaFijaste4Acciones"),
-      text: this.translate.instant("ventas.list.cualReemplazamos", { accion: accionPorId(entra).titulo }),
+      title: this.panelV2 ? "Puedes fijar hasta 5 acciones" : "Ya fijaste 4 acciones",
+      text: `¿Cuál reemplazamos por «${accionPorId(entra).titulo}»?`,
       input: "radio",
       inputOptions: opciones,
-      inputValidator: (valor) => (valor ? null : this.translate.instant("ventas.list.escogeLaAccionQueSale")),
+      inputValidator: (valor) => (valor ? null : "Escoge la acción que sale."),
       showCancelButton: true,
       confirmButtonColor: "#5F3FE0",
-      confirmButtonText: this.translate.instant("ventas.list.reemplazar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Reemplazar",
+      cancelButtonText: "Cancelar",
       showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: (sale: string) =>
@@ -1506,7 +1515,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // D-500: con la bandera, si el proveedor de este pedido no se puede usar, se explica y no se
     // ofrece otro.
     if (!provider) {
-      Swal.fire({ icon: 'warning', title: this.translate.instant("ventas.list.noSePuedeFacturarEste"), text: this.motivoSinProveedor(pedido), confirmButtonColor: '#5F3FE0' });
+      Swal.fire({ icon: 'warning', title: 'No se puede facturar este pedido', text: this.motivoSinProveedor(pedido), confirmButtonColor: '#5F3FE0' });
       return;
     }
 
@@ -1523,7 +1532,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Siigo: modal con tipo de documento + forma de pago + vencimiento de crédito (D-042)
     Swal.fire({
-      title: this.translate.instant("ventas.list.cargandoDatosDeFacturacion"),
+      title: 'Cargando datos de facturación...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     });
@@ -1549,8 +1558,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // success:false; decirle al comercio que es momentáneo, no que revise su configuración.
         if (!documentTypes.length && (docs?.data?.success === false || docs?.success === false)) {
           Swal.fire({
-            title: this.translate.instant("ventas.list.proveedorNoRespondio", { proveedor: providerDisplayName }),
-            text: this.translate.instant("ventas.list.noPudimosConectarnos", { proveedor: providerDisplayName }),
+            title: `${providerDisplayName} no respondió`,
+            text: `No pudimos conectarnos con ${providerDisplayName} en este momento. Intenta de nuevo en unos minutos.`,
             icon: 'warning',
             confirmButtonColor: '#5F3FE0'
           });
@@ -1559,8 +1568,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (!documentTypes.length) {
           Swal.fire({
-            title: this.translate.instant("comun.error"),
-            text: this.translate.instant("ventas.list.sinTiposDocumento", { proveedor: providerDisplayName }),
+            title: 'Error',
+            text: `No se encontraron tipos de documento en ${providerDisplayName}. Verifique la configuración.`,
             icon: 'error'
           });
           return;
@@ -1608,8 +1617,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         Swal.close();
         console.error('Error cargando datos de facturación:', error);
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.list.noSeCargaronDatosFacturacion", { proveedor: providerDisplayName }),
+          title: 'Error',
+          text: `No se pudieron cargar los datos de facturación de ${providerDisplayName}`,
           icon: 'error'
         });
       }
@@ -1982,7 +1991,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Parsear textos del rol y enviar al backend para resolución
         const prefixFilters = prefijosTexto.split(',').map((p: string) => p.trim()).filter((p: string) => p);
 
-        Swal.fire({ title: this.translate.instant("ventas.list.cargandoPrefijos"), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Cargando prefijos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         this.integrationsService.resolvePrefixes(provider, prefixFilters).subscribe({
           next: (response: any) => {
@@ -1991,8 +2000,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             if (prefijos.length === 0) {
               this.toastrService.warning(
-                this.translate.instant("ventas.list.prefijosNoCoinciden", { prefijos: prefijosTexto }),
-                this.translate.instant("ventas.list.prefijoNoEncontrado"), { timeOut: 8000 }
+                `Los prefijos del rol (${prefijosTexto}) no coinciden con los del proveedor. Se usará el prefijo por defecto.`,
+                'Prefijo no encontrado', { timeOut: 8000 }
               );
               this.mostrarConfirmacionFactura(pedido, providerDisplayName);
               return;
@@ -2006,30 +2015,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             // Múltiples prefijos → selector
             const inputOptions: { [key: string]: string } = {};
             prefijos.forEach((p: any) => {
-              inputOptions[p.id] = p.nombre || p.codigo || this.translate.instant("ventas.list.prefijoId", { id: p.id });
+              inputOptions[p.id] = p.nombre || p.codigo || `Prefijo ${p.id}`;
             });
 
             Swal.fire({
-              title: this.facturaReemplazo ? this.translate.instant("ventas.list.refacturarPedido") : this.translate.instant("ventas.list.generarFacturaPregunta"),
+              title: this.facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?',
               html: `
                 ${this.avisoReemplazoHtml(pedido)}
-                <p>${this.translate.instant("ventas.list.seGeneraraFacturaEn", { proveedor: providerDisplayName })}</p>
+                <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
                 <p><strong>${pedido.nroPedido}</strong></p>
-                <p class="text-muted">${this.translate.instant("ventas.list.clienteNombre", { cliente: pedido.cliente?.nombres_completos || this.translate.instant("ventas.list.noAplica") })}</p>
-                <p class="text-muted">${this.translate.instant("ventas.list.totalPesos", { total: (pedido.subtotal || 0).toLocaleString() })}</p>
+                <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+                <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
                 <hr>
-                <p><strong>${this.translate.instant("ventas.list.seleccioneElPrefijoDeFacturacion")}</strong></p>
+                <p><strong>Seleccione el prefijo de facturación:</strong></p>
               `,
               input: 'select',
               inputOptions,
-              inputPlaceholder: this.translate.instant("ventas.list.seleccioneUnPrefijo"),
+              inputPlaceholder: 'Seleccione un prefijo',
               icon: 'question',
               showCancelButton: true,
               confirmButtonColor: '#3085d6',
               cancelButtonColor: '#d33',
-              confirmButtonText: this.translate.instant("ventas.list.generarFactura"),
-              cancelButtonText: this.translate.instant("comun.cancelar"),
-              inputValidator: (value) => !value ? this.translate.instant("ventas.list.debeSeleccionarUnPrefijo") : null
+              confirmButtonText: 'Generar factura',
+              cancelButtonText: 'Cancelar',
+              inputValidator: (value) => !value ? 'Debe seleccionar un prefijo' : null
             }).then((result) => {
               if (result.isConfirmed && result.value) {
                 this.ejecutarFacturacionSiigo(pedido, undefined, parseInt(result.value, 10));
@@ -2038,7 +2047,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           },
           error: () => {
             Swal.close();
-            this.toastrService.warning(this.translate.instant("ventas.list.noSePudieronCargarLos"), this.translate.instant("ventas.list.aviso"));
+            this.toastrService.warning('No se pudieron cargar los prefijos. Se usará el prefijo por defecto.', 'Aviso');
             this.mostrarConfirmacionFactura(pedido, providerDisplayName);
           }
         });
@@ -2055,28 +2064,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const destino = clienteDeFactura(pedido);
     const porError = facturaPorErrorAConsumidorFinal(pedido);
     Swal.fire({
-      title: this.facturaReemplazo ? this.translate.instant("ventas.list.refacturarPedido") : this.translate.instant("ventas.list.generarFacturaPregunta"),
+      title: this.facturaReemplazo ? 'Refacturar pedido' : '¿Generar Factura Electrónica?',
       html: `
         ${this.avisoReemplazoHtml(pedido)}
-        <p>${this.translate.instant("ventas.list.seGeneraraFacturaEn", { proveedor: escaparHtml(providerDisplayName) })}</p>
+        <p>Se generará una factura en <strong>${escaparHtml(providerDisplayName)}</strong> para:</p>
         <p><strong>${escaparHtml(pedido.nroPedido)}</strong></p>
-        <p>${this.translate.instant("ventas.list.seFacturaAHtml", { nombre: escaparHtml(destino.nombre || this.translate.instant("ventas.list.noAplica")), tipo: escaparHtml(destino.tipoDocumento), documento: escaparHtml(destino.documento) })}</p>
-        ${porError ? `<p style="color:#B45309">${this.translate.instant("ventas.list.ojoConsumidorFinalHtml", { cliente: escaparHtml(pedido.cliente?.nombres_completos || this.translate.instant("ventas.list.elCliente")), documento: escaparHtml(pedido.cliente?.documento) })}</p>` : ''}
-        <p class="text-muted">${this.translate.instant("ventas.list.totalPesos", { total: (pedido.subtotal || 0).toLocaleString() })}</p>
-        ${prefijoUnico ? `<p class="text-muted">${this.translate.instant("ventas.list.prefijoNombre", { prefijo: escaparHtml(prefijoUnico.nombre || prefijoUnico.codigo) })}</p>` : ''}
+        <p>Se factura a: <strong>${escaparHtml(destino.nombre || 'N/A')}</strong> · ${escaparHtml(destino.tipoDocumento)} ${escaparHtml(destino.documento)}</p>
+        ${porError ? `<p style="color:#B45309"><strong>Ojo:</strong> la factura saldrá a CONSUMIDOR FINAL, no a ${escaparHtml(pedido.cliente?.nombres_completos || 'el cliente')} (${escaparHtml(pedido.cliente?.documento)}). Si es para el cliente, cancela y corrige primero "Facturación" en el pedido.</p>` : ''}
+        <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
+        ${prefijoUnico ? `<p class="text-muted">Prefijo: ${escaparHtml(prefijoUnico.nombre || prefijoUnico.codigo)}</p>` : ''}
       `,
       icon: porError ? 'warning' : 'question',
       ...(porError ? {
         input: 'checkbox' as const,
         inputValue: 0,
-        inputPlaceholder: this.translate.instant("ventas.list.siConsumidorFinal"),
-        inputValidator: (marcado: any) => (marcado ? null : this.translate.instant("ventas.list.marcaLaCasilla")),
+        inputPlaceholder: 'Sí, es una venta a Consumidor Final',
+        inputValidator: (marcado: any) => (marcado ? null : 'Marca la casilla o corrige los datos de facturación del pedido.'),
       } : {}),
       showCancelButton: true,
       confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#d33',
-      confirmButtonText: this.facturaReemplazo ? this.translate.instant("ventas.list.refacturar") : this.translate.instant("ventas.list.generarFactura"),
-      cancelButtonText: this.translate.instant("comun.cancelar")
+      confirmButtonText: this.facturaReemplazo ? 'Refacturar' : 'Generar factura',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.ejecutarFacturacionSiigo(pedido, undefined, prefijoUnico?.id);
@@ -2106,7 +2115,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Toast inmediato — no bloquea la UI
     this.toastrService.info(
-      this.translate.instant("ventas.list.generandoFactura", { pedido: nroPedido }),
+      `Generando factura para ${nroPedido}. Te avisaremos cuando termine.`,
       `${providerDisplayName}`,
       { timeOut: 5000 }
     );
@@ -2138,28 +2147,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // El 202 solo confirma que se recibio — la factura se procesa en background
           // NO marcar como completada todavia
           this.toastrService.info(
-            this.translate.instant("ventas.list.facturandoSegundoPlano", { pedido: nroPedido }),
+            `Facturando pedido ${nroPedido} en segundo plano. Refresca en unos minutos.`,
             `${providerDisplayName}`,
             { timeOut: 8000 }
           );
         } else {
           this.toastrService.error(
-            response.message || this.translate.instant("ventas.list.noSePudoGenerarLa"),
-            this.translate.instant("ventas.list.errorProveedor", { proveedor: providerDisplayName }),
+            response.message || 'No se pudo generar la factura',
+            `Error - ${providerDisplayName}`,
             { timeOut: 10000 }
           );
         }
       },
       error: (error) => {
         console.error('Error al facturar pedido:', error);
-        const errorMessage = error.error?.message || error.message || this.translate.instant("ventas.list.errorDesconocido");
+        const errorMessage = error.error?.message || error.message || 'Error desconocido';
 
         // Limpiar flag para permitir reintento
         (pedido as any)._facturando = false;
 
         this.toastrService.error(
           `${nroPedido}: ${errorMessage}`,
-          this.translate.instant("ventas.list.errorProveedor", { proveedor: providerDisplayName }),
+          `Error - ${providerDisplayName}`,
           { timeOut: 15000 }
         );
       }
@@ -2191,40 +2200,42 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       : null;
     if (esDian && !notaTotalDian) {
       Swal.fire({
-        title: this.translate.instant("ventas.list.primeroLaNotaCredito"),
-        html: this.translate.instant("ventas.list.liberarPrimeroNotaHtml", { numero }),
+        title: 'Primero la nota crédito',
+        html: `Para liberar la factura <strong>${numero}</strong> primero anúlala con <strong>Nota crédito</strong> (anulación total DIAN) desde este pedido.`,
         icon: 'info',
         confirmButtonColor: '#5F3FE0',
       });
       return;
     }
-    const sistema = escaparHtml(esDian ? this.translate.instant("ventas.list.laDian") : this.getAccountingProviderDisplayName());
+    const sistema = escaparHtml(esDian ? 'la DIAN' : this.getAccountingProviderDisplayName());
 
     Swal.fire({
-      title: this.translate.instant("ventas.list.liberarLaFacturaNumero", { numero }),
+      title: `Liberar la factura ${numero}`,
       html: `
-        <p style="text-align:left">${this.translate.instant("ventas.list.liberarUsaloSoloHtml", { numero, sistema })}</p>
-        <p style="text-align:left" class="text-muted mb-0">${this.translate.instant("ventas.list.laFacturaAnuladaQuedaEn")}</p>
-        ${esDian ? `<p style="text-align:left" class="mt-2">${this.translate.instant("ventas.list.notaCreditoDianHtml", { nota: escaparHtml(notaTotalDian.number || notaTotalDian.cude) })}</p>` : ''}
+        <p style="text-align:left">Úsalo solo si la factura <strong>${numero}</strong> ya está anulada con una nota crédito en ${sistema}.
+        Katuq no anula nada en ${sistema}: solo quita la factura de este pedido para que puedas corregir
+        "Facturación" y volver a facturar.</p>
+        <p style="text-align:left" class="text-muted mb-0">La factura anulada queda en el historial del pedido.</p>
+        ${esDian ? `<p style="text-align:left" class="mt-2">Nota crédito DIAN: <strong>${escaparHtml(notaTotalDian.number || notaTotalDian.cude)}</strong></p>` : ''}
       `,
       icon: 'warning',
       ...(esDian ? {} : {
         input: 'text' as const,
-        inputLabel: this.translate.instant("ventas.list.numeroDeLaNotaCredito"),
-        inputPlaceholder: this.translate.instant("ventas.list.ejNotaCredito"),
+        inputLabel: 'Número de la nota crédito',
+        inputPlaceholder: 'Ej.: NC-1234',
         inputAttributes: { maxlength: '60', autocomplete: 'off' },
-        inputValidator: (valor: string) => ((valor || '').trim() ? null : this.translate.instant("ventas.list.escribeElNumeroDeLa")),
+        inputValidator: (valor: string) => ((valor || '').trim() ? null : 'Escribe el número de la nota crédito.'),
       }),
       showCancelButton: true,
       confirmButtonColor: '#5F3FE0',
-      confirmButtonText: this.translate.instant("ventas.list.liberarFactura"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: 'Liberar factura',
+      cancelButtonText: 'Cancelar',
       showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: (valor: string) =>
         firstValueFrom(this.integrationsService.releaseOrderInvoice(pedido._id, esDian ? null : (valor || '').trim()))
           .catch((error) => {
-            Swal.showValidationMessage(error?.error?.message || this.translate.instant("ventas.list.noSePudoLiberarLa"));
+            Swal.showValidationMessage(error?.error?.message || 'No se pudo liberar la factura.');
             return null;
           }),
     }).then((result) => {
@@ -2241,8 +2252,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data.date_upd) p.date_upd = data.date_upd;
       this.changeDetectorRef.detectChanges();
       Swal.fire({
-        title: this.translate.instant("ventas.list.facturaLiberada"),
-        html: this.translate.instant("ventas.list.facturaLiberadaHtml", { numero }),
+        title: 'Factura liberada',
+        html: `La factura <strong>${numero}</strong> ya no está en el pedido.<br>
+          Ahora corrige <strong>Facturación</strong> con los datos del cliente y usa <strong>Facturar</strong>.`,
         icon: 'success',
         confirmButtonColor: '#5F3FE0',
       });
@@ -2259,37 +2271,38 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const nro = escaparHtml(pedido?.nroPedido || '');
     if (!correo) {
       Swal.fire({
-        title: this.translate.instant("ventas.list.elClienteNoTieneCorreo"),
-        html: this.translate.instant("ventas.list.sinCorreoHtml", { pedido: nro }),
+        title: 'El cliente no tiene correo',
+        html: `El pedido <strong>${nro}</strong> no tiene correo del cliente. Agrégalo en <strong>Editar cliente</strong> y vuelve a intentar.`,
         icon: 'info',
         confirmButtonColor: '#5F3FE0',
       });
       return;
     }
     Swal.fire({
-      title: this.translate.instant("ventas.list.enviarDeNuevoLaConfirmacion"),
+      title: 'Enviar de nuevo la confirmación',
       html: `
-        <p style="text-align:left">${this.translate.instant("ventas.list.reenvioConfirmacionHtml", { pedido: nro })}</p>
-        <p style="text-align:left" class="mb-0">${this.translate.instant("ventas.list.llegaraAHtml", { correo: escaparHtml(correo) })}</p>
+        <p style="text-align:left">Se enviará al cliente el correo de confirmación del pedido <strong>${nro}</strong>
+        con los datos actuales: productos, totales, dirección y fecha de entrega.</p>
+        <p style="text-align:left" class="mb-0">Llegará a: <strong>${escaparHtml(correo)}</strong></p>
       `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#5F3FE0',
-      confirmButtonText: this.translate.instant("ventas.list.enviar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: 'Enviar',
+      cancelButtonText: 'Cancelar',
       showLoaderOnConfirm: true,
       allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: () =>
         firstValueFrom(this.ventasService.reenviarConfirmacionPedido(pedido._id))
           .catch((error) => {
-            Swal.showValidationMessage(error?.error?.message || this.translate.instant("ventas.list.noSePudoEnviarLa"));
+            Swal.showValidationMessage(error?.error?.message || 'No se pudo enviar la confirmación.');
             return null;
           }),
     }).then((result) => {
       const data = result.isConfirmed ? (result.value as any)?.data : null;
       if (!data) return;
       (pedido as any).confirmacionReenviada = { en: data.en, a: data.correo };
-      this.toastrService.success(this.translate.instant("ventas.list.confirmacionEnviadaA", { correo: data.correo }), this.translate.instant("ventas.list.pedidoNumero", { pedido: pedido.nroPedido || '' }));
+      this.toastrService.success(`Confirmación enviada a ${data.correo}`, `Pedido ${pedido.nroPedido || ''}`);
     });
   }
 
@@ -2303,7 +2316,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const trackId = fiscal.cufe || fiscal.invoiceId;
     if (!trackId) return;
 
-    Swal.fire({ title: this.translate.instant("ventas.list.consultandoDian"), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Consultando DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.integrationsService.getDianDocumentStatus(trackId).subscribe({
       next: (response: any) => {
         const data = response?.data || response;
@@ -2311,13 +2324,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const messages = data?.errorMessages || data?.statusMessages || [];
         Swal.fire({
           icon: accepted ? 'success' : 'info',
-          title: accepted ? this.translate.instant("ventas.list.documentoAceptadoPorLaDian") : this.translate.instant("ventas.list.estadoRecibidoDeLaDian"),
-          html: `<p><strong>${pedido.nroFactura}</strong></p><p>${messages.length ? messages.join('<br>') : (data?.statusDescription || this.translate.instant("ventas.list.consultaCompletada"))}</p>`,
+          title: accepted ? 'Documento aceptado por la DIAN' : 'Estado recibido de la DIAN',
+          html: `<p><strong>${pedido.nroFactura}</strong></p><p>${messages.length ? messages.join('<br>') : (data?.statusDescription || 'Consulta completada.')}</p>`,
         });
       },
       error: (error) => Swal.fire({
-        icon: 'error', title: this.translate.instant("ventas.list.noSePudoConsultarLa"),
-        text: error?.error?.message || error?.message || this.translate.instant("ventas.list.errorDesconocido")
+        icon: 'error', title: 'No se pudo consultar la DIAN',
+        text: error?.error?.message || error?.message || 'Error desconocido'
       })
     });
   }
@@ -2336,8 +2349,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         URL.revokeObjectURL(url);
       },
       error: (error) => Swal.fire({
-        icon: 'error', title: this.translate.instant("ventas.list.noSePudoDescargarEl"),
-        text: error?.error?.message || error?.message || this.translate.instant("ventas.list.elArtefactoNoEstaDisponible")
+        icon: 'error', title: 'No se pudo descargar el documento',
+        text: error?.error?.message || error?.message || 'El artefacto no está disponible.'
       })
     });
   }
@@ -2346,28 +2359,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const fiscal = (pedido as any)?.facturacionElectronica || {};
     const existingCredit = Array.isArray(fiscal.notes) && fiscal.notes.some((note: any) => note?.type === 'credit');
     if (existingCredit) {
-      Swal.fire({ icon: 'warning', title: this.translate.instant("ventas.list.yaExisteUnaNotaCredito"), text: this.translate.instant("ventas.list.reviseLasNotasDelDocumento") });
+      Swal.fire({ icon: 'warning', title: 'Ya existe una nota crédito', text: 'Revise las notas del documento antes de emitir otra corrección.' });
       return;
     }
     const orderId = (pedido as any)?._id || (pedido as any)?.cd || (pedido as any)?.id;
     const issueDate = fiscal.issueDate || (fiscal.createdAt ? String(fiscal.createdAt).slice(0, 10) : '');
     const reference = { number: pedido.nroFactura, cufe: fiscal.cufe || fiscal.invoiceId, issueDate };
     if (!orderId || !reference.number || !reference.cufe || !reference.issueDate) {
-      Swal.fire({ icon: 'error', title: this.translate.instant("ventas.list.faltanDatosFiscales"), text: this.translate.instant("ventas.list.elPedidoNoTieneId") });
+      Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'El pedido no tiene ID, CUFE, número o fecha de la factura de origen.' });
       return;
     }
 
     Swal.fire({
       icon: 'warning',
-      title: this.translate.instant("ventas.list.anularTotalmenteLaFactura"),
-      html: this.translate.instant("ventas.list.notaTotalHtml", { numero: reference.number }),
+      title: '¿Anular totalmente la factura?',
+      html: `Se emitirá una <strong>nota crédito electrónica por el total</strong> de ${reference.number}. Esta operación fiscal no se puede deshacer.`,
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("ventas.list.emitirNotaCredito"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: 'Emitir nota crédito',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#d33'
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
-      Swal.fire({ title: this.translate.instant("ventas.list.enviandoNotaALaDian"), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'Enviando nota a la DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       this.integrationsService.createDianNote('credit', {
         orderId,
         reference,
@@ -2376,11 +2389,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (response: any) => {
           const note = response?.data || response;
           fiscal.notes = [...(fiscal.notes || []), { type: 'credit', number: note.number, cude: note.cude, artifactsAvailable: !!note.artifacts }];
-          Swal.fire({ icon: 'success', title: this.translate.instant("ventas.list.notaCreditoAceptada"), text: this.translate.instant("ventas.list.notaTransmitida", { nota: note.number }) });
+          Swal.fire({ icon: 'success', title: 'Nota crédito aceptada', text: `${note.number} fue transmitida y aceptada por la DIAN.` });
         },
         error: (error) => Swal.fire({
-          icon: 'error', title: this.translate.instant("ventas.list.laNotaNoPudoCompletarse"),
-          text: error?.error?.message || error?.message || this.translate.instant("ventas.list.errorDesconocido")
+          icon: 'error', title: 'La nota no pudo completarse',
+          text: error?.error?.message || error?.message || 'Error desconocido'
         })
       });
     });
@@ -2389,17 +2402,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   crearAjusteDian(pedido: Pedido): void {
     if (!this.esFacturaDian(pedido)) return;
     Swal.fire({
-      title: this.translate.instant("ventas.list.tipoDeAjusteDian"),
+      title: 'Tipo de ajuste DIAN',
       input: 'select',
       inputOptions: {
-        credit: this.translate.instant("ventas.list.opcionNotaCredito"),
-        debit: this.translate.instant("ventas.list.opcionNotaDebito")
+        credit: 'Nota crédito — disminuye el valor de la factura',
+        debit: 'Nota débito — aumenta el valor de la factura'
       },
-      inputPlaceholder: this.translate.instant("ventas.list.seleccioneElTipoDeNota"),
+      inputPlaceholder: 'Seleccione el tipo de nota',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("ventas.list.continuar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
-      inputValidator: (value) => value ? null : this.translate.instant("ventas.list.seleccioneElTipoDeNota")
+      confirmButtonText: 'Continuar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => value ? null : 'Seleccione el tipo de nota'
     }).then((typeResult) => {
       if (!typeResult.isConfirmed || !typeResult.value) return;
       this.abrirFormularioAjusteDian(pedido, typeResult.value as 'credit' | 'debit');
@@ -2412,7 +2425,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const issueDate = fiscal.issueDate || (fiscal.createdAt ? String(fiscal.createdAt).slice(0, 10) : '');
     const reference = { number: pedido.nroFactura, cufe: fiscal.cufe || fiscal.invoiceId, issueDate };
     if (!orderId || !reference.number || !reference.cufe || !reference.issueDate) {
-      Swal.fire({ icon: 'error', title: this.translate.instant("ventas.list.faltanDatosFiscales"), text: this.translate.instant("ventas.list.noSePuedeIdentificarCompletamente") });
+      Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'No se puede identificar completamente la factura de origen.' });
       return;
     }
 
@@ -2433,36 +2446,36 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const options = causes.map(([code, label]) => `<option value="${code}">${code} — ${label}</option>`).join('');
 
     Swal.fire({
-      title: noteType === 'credit' ? this.translate.instant("ventas.list.nuevaNotaCredito") : this.translate.instant("ventas.list.nuevaNotaDebito"),
+      title: noteType === 'credit' ? 'Nueva nota crédito' : 'Nueva nota débito',
       html: `
         <div class="text-start">
-          <label for="dian-note-cause"><strong>${this.translate.instant("ventas.list.causalDian")}</strong></label>
+          <label for="dian-note-cause"><strong>Causal DIAN</strong></label>
           <select id="dian-note-cause" class="swal2-select" style="width:100%;margin:8px 0 14px">${options}</select>
-          <label for="dian-note-description"><strong>${this.translate.instant("ventas.list.detalleDelAjuste")}</strong></label>
-          <input id="dian-note-description" class="swal2-input" style="width:100%;margin:8px 0 14px" placeholder="${this.translate.instant("ventas.list.expliqueElMotivoFiscal")}">
-          <label for="dian-note-base"><strong>${this.translate.instant("ventas.list.valorAntesDeIva")}</strong></label>
+          <label for="dian-note-description"><strong>Detalle del ajuste</strong></label>
+          <input id="dian-note-description" class="swal2-input" style="width:100%;margin:8px 0 14px" placeholder="Explique el motivo fiscal">
+          <label for="dian-note-base"><strong>Valor antes de IVA</strong></label>
           <input id="dian-note-base" type="number" min="0.01" step="0.01" class="swal2-input" style="width:100%;margin:8px 0 14px" placeholder="0.00">
-          <label for="dian-note-tax"><strong>${this.translate.instant("ventas.list.tarifaIva")}</strong></label>
+          <label for="dian-note-tax"><strong>Tarifa IVA</strong></label>
           <select id="dian-note-tax" class="swal2-select" style="width:100%;margin:8px 0"><option value="0">0%</option><option value="5">5%</option><option value="19">19%</option></select>
         </div>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("ventas.list.transmitirALaDian"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: 'Transmitir a la DIAN',
+      cancelButtonText: 'Cancelar',
       preConfirm: () => {
         const popup = Swal.getPopup();
         const code = (popup?.querySelector('#dian-note-cause') as HTMLSelectElement)?.value;
         const description = (popup?.querySelector('#dian-note-description') as HTMLInputElement)?.value.trim();
         const baseAmount = Number((popup?.querySelector('#dian-note-base') as HTMLInputElement)?.value);
         const taxRate = Number((popup?.querySelector('#dian-note-tax') as HTMLSelectElement)?.value);
-        if (!description) return Swal.showValidationMessage(this.translate.instant("ventas.list.escribaElMotivoFiscalDel"));
-        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage(this.translate.instant("ventas.list.ingreseUnValorMayorQue"));
+        if (!description) return Swal.showValidationMessage('Escriba el motivo fiscal del ajuste');
+        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingrese un valor mayor que cero');
         return { code, description, baseAmount, taxRate };
       }
     }).then((formResult) => {
       if (!formResult.isConfirmed || !formResult.value) return;
       const value = formResult.value as { code: string; description: string; baseAmount: number; taxRate: number };
-      Swal.fire({ title: this.translate.instant("ventas.list.transmitiendoALaDian"), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'Transmitiendo a la DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       this.integrationsService.createDianNote(noteType, {
         orderId,
         reference,
@@ -2476,11 +2489,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             amount: note.amount, correction: { code: value.code, description: value.description },
             adjustment: { baseAmount: value.baseAmount, taxRate: value.taxRate }, artifactsAvailable: !!note.artifacts
           }];
-          Swal.fire({ icon: 'success', title: this.translate.instant("ventas.list.notaAceptadaPorLaDian"), text: this.translate.instant("ventas.list.notaEmitida", { nota: note.number }) });
+          Swal.fire({ icon: 'success', title: 'Nota aceptada por la DIAN', text: `${note.number} fue emitida correctamente.` });
         },
         error: (error) => Swal.fire({
-          icon: 'error', title: this.translate.instant("ventas.list.laDianNoAceptoEl"),
-          text: error?.error?.message || error?.message || this.translate.instant("ventas.list.errorDesconocido")
+          icon: 'error', title: 'La DIAN no aceptó el ajuste',
+          text: error?.error?.message || error?.message || 'Error desconocido'
         })
       });
     });
@@ -2872,15 +2885,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // inputValidator rechaza cualquier otro texto (Enter sin coincidencia no elimina).
     const esperado = String(order?.nroPedido ?? '').trim();
     Swal.fire({
-      title: this.translate.instant("ventas.list.eliminarPedido"),
-      text: this.translate.instant("ventas.list.confirmarEliminarEscribe", { numero: esperado }),
+      title: 'Eliminar pedido',
+      text: `Para confirmar, escribe el número del pedido (${esperado}). Se borra para siempre.`,
       icon: 'warning',
       input: 'text',
       inputPlaceholder: esperado,
-      inputAttributes: { autocomplete: 'off', 'aria-label': this.translate.instant("ventas.list.numeroDelPedido") },
+      inputAttributes: { autocomplete: 'off', 'aria-label': 'Número del pedido' },
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("comun.eliminar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
       confirmButtonColor: '#D64545',
       focusCancel: false,
       didOpen: () => {
@@ -3487,7 +3500,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private integrationsService: IntegrationsService,
     private treasuryService: TreasuryService,
     private logisticaService: LogisticaService,
-    private translate: TranslateService,
   ) {
     this.registerCustomFilters();
     this.setupSearchDebounce();
@@ -3622,7 +3634,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               this.filteredOrderNumbers = [];
               this.ordersByName = [];
               this.isSearching = false;
-              this.toastrService.error(this.searchError, this.translate.instant("ventas.list.errorDeBusqueda"));
+              this.toastrService.error(this.searchError, "Error de Búsqueda");
             });
         }
       },
@@ -3663,7 +3675,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   selectOrder(item: any): void {
     if (!item || !item.nroPedido) {
-      this.toastrService.warning(this.translate.instant("ventas.list.pedidoInvalidoSeleccionado"), this.translate.instant("ventas.list.advertencia"));
+      this.toastrService.warning("Pedido inválido seleccionado", "Advertencia");
       return;
     }
 
@@ -3711,8 +3723,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Mostrar notificación de éxito
     this.toastrService.success(
-      this.translate.instant("ventas.list.pedidoCargado", { pedido: item.nroPedido }),
-      this.translate.instant("ventas.list.pedidoEncontrado"),
+      `Pedido #${item.nroPedido} cargado correctamente`,
+      "Pedido Encontrado",
     );
 
     // Limpiar errores de búsqueda
@@ -3736,7 +3748,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFiltersState();
 
     // Mostrar notificación
-    this.toastrService.info(this.translate.instant("ventas.list.filtroDeBusquedaLimpiado"), this.translate.instant("ventas.list.filtroLimpiado"));
+    this.toastrService.info("Filtro de búsqueda limpiado", "Filtro Limpiado");
   }
 
   /**
@@ -4059,8 +4071,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // flujo y los guardados siguientes de la sesión ya no salían, sin ningún aviso.
       switchMap(order => this.ventasService.editOrder(order, { exigirVersion: true }).pipe(
         catchError((e) => {
-          Swal.fire({ icon: 'error', title: this.translate.instant("ventas.list.errorAlActualizarElPedido"),
-                      text: e?.isStaleWrite ? e.message : this.translate.instant("ventas.list.noSePudieronGuardarLos") });
+          Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
+                      text: e?.isStaleWrite ? e.message : 'No se pudieron guardar los cambios. Intenta nuevamente.' });
           return of(null);
         })
       )),
@@ -4079,12 +4091,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.avisarPagosNoCambiados(pagosSinCambio);
           return;
         }
-        Swal.fire({ icon: 'success', title: this.translate.instant("ventas.list.pedidoActualizadoCorrectamente"),
+        Swal.fire({ icon: 'success', title: 'Pedido actualizado correctamente',
                     showConfirmButton: false, timer: 1500 });
       },
       error: () => {
-        Swal.fire({ icon: 'error', title: this.translate.instant("ventas.list.errorAlActualizarElPedido"),
-                    text: this.translate.instant("ventas.list.noSePudieronGuardarLos") });
+        Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
+                    text: 'No se pudieron guardar los cambios. Intenta nuevamente.' });
       }
     });
 
@@ -5101,9 +5113,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       
       Swal.fire({
         icon: "error",
-        title: this.translate.instant("ventas.list.errorAlProcesarPedidos"),
-        text: this.translate.instant("ventas.list.noSePudieronProcesarLos"),
-        confirmButtonText: this.translate.instant("ventas.list.reintentar"),
+        title: "Error al procesar pedidos",
+        text: "No se pudieron procesar los pedidos. Por favor, intente nuevamente.",
+        confirmButtonText: "Reintentar",
       });
     }
   }
@@ -5264,9 +5276,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           Swal.fire({
             icon: "error",
-            title: this.translate.instant("ventas.list.errorAlCargarPedidos"),
-            text: this.translate.instant("ventas.list.noSePudieronCargarLos2"),
-            confirmButtonText: this.translate.instant("ventas.list.reintentar"),
+            title: "Error al cargar pedidos",
+            text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
+            confirmButtonText: "Reintentar",
           });
         },
       });
@@ -5455,17 +5467,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Utilizado para optimizar el espacio visual en la tabla
    */
   private static readonly PROCESO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
-    ProducidoTotalmente: { short: "ventas.list.procesoCorto.producidoTotalmente", full: "ventas.list.procesoLargo.producidoTotalmente" },
-    ProducidoParcialmente: { short: "ventas.list.procesoCorto.producidoParcialmente", full: "ventas.list.procesoLargo.producidoParcialmente" },
-    SinProducir: { short: "ventas.list.procesoCorto.sinProducir", full: "ventas.list.procesoLargo.sinProducir" },
-    EnProduccion: { short: "ventas.list.procesoCorto.enProduccion", full: "ventas.list.procesoLargo.enProduccion" },
-    ParaDespachar: { short: "ventas.list.procesoCorto.paraDespachar", full: "ventas.list.procesoLargo.paraDespachar" },
-    Despachado: { short: "ventas.list.procesoCorto.despachado", full: "ventas.list.procesoLargo.despachado" },
-    Entregado: { short: "ventas.list.procesoCorto.entregado", full: "ventas.list.procesoLargo.entregado" },
-    Empacado: { short: "ventas.list.procesoCorto.empacado", full: "ventas.list.procesoLargo.empacado" },
-    Producido: { short: "ventas.list.procesoCorto.producido", full: "ventas.list.procesoLargo.producido" },
-    Rechazado: { short: "ventas.list.procesoCorto.rechazado", full: "ventas.list.procesoLargo.rechazado" },
-    Cerrado: { short: "ventas.list.procesoCorto.cerrado", full: "ventas.list.procesoLargo.cerrado" },
+    ProducidoTotalmente: { short: "Prod. Total", full: "Producido Totalmente - Producción completada al 100%" },
+    ProducidoParcialmente: { short: "Prod. Parcial", full: "Producido Parcialmente - Producción en progreso parcial" },
+    SinProducir: { short: "Sin Producir", full: "Sin Producir - Pendiente de iniciar producción" },
+    EnProduccion: { short: "En Prod.", full: "En Producción - Actualmente en fabricación" },
+    ParaDespachar: { short: "P. Despachar", full: "Para Despachar - Listo para envío" },
+    Despachado: { short: "Despachado", full: "Despachado - Enviado al cliente" },
+    Entregado: { short: "Entregado", full: "Entregado - Entregado al cliente" },
+    Empacado: { short: "Empacado", full: "Empacado - Empacado y listo" },
+    Producido: { short: "Producido", full: "Producido - Producción finalizada" },
+    Rechazado: { short: "Rechazado", full: "Rechazado - Proceso rechazado" },
+    Cerrado: { short: "Cerrado", full: "Cerrado - Pedido finalizado" },
   };
 
   getStatusDisplay(status: string): { short: string; full: string } {
@@ -5477,20 +5489,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // distinguir un Pospendiente (pago subido, en revisión de tesorería) de
     // un Pendiente real — reportado por Almara: "asenté el pago y sigue
     // Pendiente" cuando el server SÍ estaba en Pospendiente.
-    Pospendiente: { short: "ventas.list.pagoCorto.pospendiente", full: "ventas.list.pagoLargo.pospendiente" },
-    Pendiente: { short: "ventas.list.pagoCorto.pendiente", full: "ventas.list.pagoLargo.pendiente" },
-    PreAprobado: { short: "ventas.list.pagoCorto.preAprobado", full: "ventas.list.pagoLargo.preAprobado" },
-    Credito: { short: "ventas.list.pagoCorto.credito", full: "ventas.list.pagoLargo.credito" },
-    Aprobado: { short: "ventas.list.pagoCorto.aprobado", full: "ventas.list.pagoLargo.aprobado" },
-    Rechazado: { short: "ventas.list.pagoCorto.rechazado", full: "ventas.list.pagoLargo.rechazado" },
-    Cancelado: { short: "ventas.list.pagoCorto.cancelado", full: "ventas.list.pagoLargo.cancelado" },
-    Precancelado: { short: "ventas.list.pagoCorto.precancelado", full: "ventas.list.pagoLargo.precancelado" },
+    Pospendiente: { short: "Pospendiente", full: "Pospendiente - Pago subido, en revisión de tesorería" },
+    Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
+    PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
+    Credito: { short: "Crédito", full: "Crédito - Se cobra después, no en la entrega" },
+    Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },
+    Rechazado: { short: "Rechazado", full: "Rechazado - Pago rechazado por la entidad" },
+    Cancelado: { short: "Cancelado", full: "Cancelado - Pedido cancelado manualmente" },
+    Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado - En proceso de cancelación" },
   };
 
   /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
   etiquetaEstadoPago(estado: string): string {
-    if (estado === EstadoPago.Pospendiente) return this.translate.instant("ventas.list.pagoCorto.pospendiente");
-    if (estado === EstadoPago.Credito) return this.translate.instant("ventas.list.pagoCorto.credito");
+    if (estado === EstadoPago.Pospendiente) return "Pago en revisión";
+    if (estado === EstadoPago.Credito) return "Crédito";
     return estado;
   }
 
@@ -5517,7 +5529,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Solo si el pedido de verdad quedó cancelado: una cancelación a medias (la marca ya dice
       // "cancelado" pero el pedido sigue vivo en la cola de despachos) no es una cancelación.
       return proceso === 'Cancelado'
-        ? { texto: 'ventas.list.waCancelo', clase: 'badge-danger', titulo: 'ventas.list.waCanceloTitulo' }
+        ? { texto: 'Canceló por WhatsApp', clase: 'badge-danger', titulo: 'El cliente canceló el pedido desde el mensaje de WhatsApp.' }
         : null;
     }
     // Un pedido que ya se cayó (cancelado, rechazado) no está "por confirmar".
@@ -5531,14 +5543,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Importa justo cuando el pedido ya salió: hay que alcanzar a avisarle al mensajero o a la transportadora.
       return terminado
         ? null
-        : { texto: 'ventas.list.waPidioCancelar', clase: 'badge-danger', titulo: 'ventas.list.waPidioCancelarTitulo' };
+        : { texto: 'Pidió cancelar', clase: 'badge-danger', titulo: 'El cliente pidió cancelar por WhatsApp, pero el pedido ya estaba en proceso: hay que resolverlo con él.' };
     }
     if (conf.estado === 'confirmado') {
-      return { texto: 'ventas.list.waConfirmado', clase: 'badge-success', titulo: 'ventas.list.waConfirmadoTitulo' };
+      return { texto: 'Confirmado', clase: 'badge-success', titulo: 'El cliente confirmó el pedido desde el mensaje de WhatsApp.' };
     }
     return yaSalio
       ? null
-      : { texto: 'ventas.list.waPorConfirmar', clase: 'badge-warning', titulo: 'ventas.list.waPorConfirmarTitulo' };
+      : { texto: 'Por confirmar', clase: 'badge-warning', titulo: 'Le enviamos el mensaje por WhatsApp y el cliente todavía no responde.' };
   }
 
   // ============================================================
@@ -5568,13 +5580,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const lista = Array.isArray(res) ? res : res ? [res] : [];
         const pedido = lista.find((p: any) => p?.nroPedido === nroPedido);
         if (!pedido) {
-          this.toastrService.warning(this.translate.instant("ventas.list.noEncontramosPedido", { pedido: nroPedido }), this.translate.instant("ventas.list.pedidoRepartido"));
+          this.toastrService.warning(`No encontramos el pedido ${nroPedido}. Búscalo por su número.`, 'Pedido repartido');
           return;
         }
         if (this.modoVista === 'split') this.seleccionarPedidoDetalle(pedido);
         else this.selectOrder(pedido);
       },
-      error: () => this.toastrService.error(this.translate.instant("ventas.list.noSePudoAbrirPedido", { pedido: nroPedido }), this.translate.instant("ventas.list.pedidoRepartido")),
+      error: () => this.toastrService.error(`No se pudo abrir el pedido ${nroPedido}. Intenta de nuevo.`, 'Pedido repartido'),
     });
   }
 
@@ -5706,7 +5718,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** "entrega" o "creación", para el subtítulo del encabezado. */
   get nombreFechaFiltro(): string {
-    return this.tipoFechaFiltroActual === "fechaCreacion" ? "ventas.list.fechaCreacion" : "ventas.list.fechaEntrega";
+    return this.tipoFechaFiltroActual === "fechaCreacion" ? "creación" : "entrega";
   }
 
   getTotalPedidos(): number {
@@ -5942,15 +5954,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if (estado === "revisados") {
       // Filtro de revisados
       this.toastrService.info(
-        this.translate.instant("ventas.list.filtroDeRevisadosProximamente"),
-        this.translate.instant("ventas.list.informacion"),
+        "Filtro de revisados - Próximamente",
+        "Información",
       );
       return;
     } else if (estado === "noRevisados") {
       // Filtro de no revisados
       this.toastrService.info(
-        this.translate.instant("ventas.list.filtroDeNoRevisadosProximamente"),
-        this.translate.instant("ventas.list.informacion"),
+        "Filtro de no revisados - Próximamente",
+        "Información",
       );
       return;
     } else if (estado === "pendientesPago") {
@@ -5959,8 +5971,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.table.filter(["Pendiente", "Pospendiente"], "estadoPago", "in");
       }
       this.toastrService.info(
-        this.translate.instant("ventas.list.filtrandoPendientesPago", { n: this.getPendientesPagoCount() }),
-        this.translate.instant("ventas.list.filtroAplicado"),
+        `Filtrando ${this.getPendientesPagoCount()} pedidos pendientes de pago`,
+        "Filtro Aplicado",
       );
       return;
     } else if (estado === "aprobadosHoy") {
@@ -5984,8 +5996,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       this.toastrService.success(
-        this.translate.instant("ventas.list.mostrandoAprobadosHoy", { n: pedidosAprobadosHoy.length }),
-        this.translate.instant("ventas.list.filtroAplicado"),
+        `Mostrando ${pedidosAprobadosHoy.length} pedidos aprobados hoy`,
+        "Filtro Aplicado",
       );
       return;
     } else if (estado === "urgentes") {
@@ -6021,8 +6033,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       this.toastrService.warning(
-        this.translate.instant("ventas.list.urgentesRequierenAtencion", { n: pedidosUrgentes.length }),
-        this.translate.instant("ventas.list.pedidosUrgentes"),
+        `${pedidosUrgentes.length} pedidos urgentes requieren atención inmediata`,
+        "Pedidos Urgentes",
         { timeOut: 5000 },
       );
       return;
@@ -6039,8 +6051,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Mostrar solo estos pedidos usando un filtro custom
       this.toastrService.info(
-        this.translate.instant("ventas.list.mostrandoConSaldo", { n: pedidosConAnticipo.length }),
-        this.translate.instant("ventas.list.filtroAplicado"),
+        `Mostrando ${pedidosConAnticipo.length} pedidos con saldo pendiente`,
+        "Filtro Aplicado",
       );
 
       // No hay un campo directo para filtrar, se debe implementar lógica personalizada
@@ -6053,8 +6065,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       );
 
       this.toastrService.info(
-        this.translate.instant("ventas.list.mostrandoConDescuento", { n: pedidosConDescuento.length }),
-        this.translate.instant("ventas.list.filtroAplicado"),
+        `Mostrando ${pedidosConDescuento.length} pedidos con descuento aplicado`,
+        "Filtro Aplicado",
       );
       return;
     } else {
@@ -6317,14 +6329,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         next: () => {
           // Opcional: mostrar notificación de éxito
           this.toastrService.success(
-            this.translate.instant("ventas.list.fechaDeImpresionRegistrada"),
-            this.translate.instant("ventas.list.pedidoActualizado"),
+            "Fecha de impresión registrada",
+            "Pedido actualizado",
           );
         },
         error: () => {
           this.toastrService.error(
-            this.translate.instant("ventas.list.noSePudoActualizarLa"),
-            this.translate.instant("comun.error"),
+            "No se pudo actualizar la fecha de impresión",
+            "Error",
           );
         },
       });
@@ -6382,7 +6394,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   generarOrdenVenta(order: Pedido): void {
     if (!order) {
-      this.toastrService.error(this.translate.instant("ventas.list.noSeHaSeleccionadoUn"), this.translate.instant("comun.error"));
+      this.toastrService.error('No se ha seleccionado un pedido', 'Error');
       return;
     }
     const pedidoActualizado = this.actualizarPedidoParaPDF(order);
@@ -6800,7 +6812,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   imprimirToPdf() {
     const htmlPdfEl = document.getElementById("htmlPdf");
     if (!htmlPdfEl) {
-      this.toastrService.error(this.translate.instant("ventas.list.noHayContenidoParaImprimir"), this.translate.instant("comun.error"));
+      this.toastrService.error("No hay contenido para imprimir", "Error");
       return;
     }
     let printContents = htmlPdfEl.innerHTML;
@@ -6893,8 +6905,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.canModifyBasicData(order)) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noSePuedenModificarLos"),
-        this.translate.instant("ventas.list.pedidoNoModificable"),
+        "No se pueden modificar los datos del cliente en pedidos entregados",
+        "Pedido No Modificable",
       );
       return;
     }
@@ -7056,9 +7068,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const valor = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
       .format(Number(bloqueo.porVerificar) || 0);
     const motivosCredito: { [k: string]: string } = {
-      "credito-no-activo": this.translate.instant("ventas.list.creditoNoActivo"),
-      "credito-transicion-no-permitida": this.translate.instant("ventas.list.creditoDesdeOtroEstado"),
-      "credito-solo-tesoreria": this.translate.instant("ventas.list.creditoSoloTesoreria"),
+      "credito-no-activo": "El estado Crédito todavía no está activo para tu empresa. Escríbenos por soporte y te lo activamos.",
+      "credito-transicion-no-permitida": "Un pedido solo pasa a Crédito desde Pendiente, Preaprobado o Rechazado, y sin pagos por revisar.",
+      "credito-solo-tesoreria": "Un pedido en Crédito solo lo cambia Tesorería, con un motivo. Los demás cambios del pedido sí se guardaron.",
     };
     const motivo = bloqueo.motivo && motivosCredito[bloqueo.motivo]
       ? motivosCredito[bloqueo.motivo]
@@ -7067,9 +7079,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       : `Tu rol no puede pasar pedidos a ${bloqueo.intento || "ese estado"}. Pídeselo a Tesorería o a un administrador.`;
     Swal.fire({
       icon: "warning",
-      title: this.translate.instant("ventas.list.elEstadoDePagoNo"),
+      title: "El estado de pago no cambió",
       text: nota ? `${motivo} ${nota}` : motivo,
-      confirmButtonText: this.translate.instant("comun.entendido"),
+      confirmButtonText: "Entendido",
       confirmButtonColor: "#5F3FE0",
     });
   }
@@ -7082,7 +7094,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private pagosNoCambiados(res: any): string {
     const bloqueados = res?.details?.pagosEditBloqueados;
     return Array.isArray(bloqueados) && bloqueados.length
-      ? this.translate.instant("ventas.list.pagoRevisadoNoCambiaTexto")
+      ? "Ese pago ya fue revisado por Tesorería: no se puede cambiar su valor, su forma de pago ni su comprobante. Anúlalo y registra uno nuevo."
       : "";
   }
 
@@ -7103,18 +7115,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const r = await Swal.fire({
       icon: "question",
-      title: this.translate.instant("ventas.list.creditoCupoTitulo"),
-      text: this.translate.instant("ventas.list.creditoCupoTexto"),
+      title: "Este cliente no tiene cupo de crédito",
+      text: "Escribe el cupo y lo guardamos en la ficha del cliente. Un cliente con cupo se cuenta como empresarial.",
       input: "number",
       inputAttributes: { min: "1", step: "1" },
-      inputPlaceholder: this.translate.instant("ventas.list.creditoCupoEjemplo"),
+      inputPlaceholder: "Ej. 5000000",
       showCancelButton: true,
       showDenyButton: true,
-      confirmButtonText: this.translate.instant("ventas.list.creditoGuardarCupo"),
-      denyButtonText: this.translate.instant("ventas.list.creditoSinCupo"),
-      cancelButtonText: this.translate.instant("comun.volver"),
+      confirmButtonText: "Guardar cupo y marcar Crédito",
+      denyButtonText: "Marcar sin cupo",
+      cancelButtonText: "Volver",
       confirmButtonColor: "#5F3FE0",
-      inputValidator: (v) => (!v || Number(v) <= 0 ? this.translate.instant("ventas.list.creditoCupoInvalido") : undefined),
+      inputValidator: (v) => (!v || Number(v) <= 0 ? "Escribe un valor mayor que cero" : undefined),
     });
     if (r.isConfirmed) return Math.round(Number(r.value));
     if (r.isDenied) return null;
@@ -7125,9 +7137,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const sinFicha = estado === "sin_ficha" || estado === "sin_documento";
     Swal.fire({
       icon: "info",
-      title: this.translate.instant("ventas.list.creditoMarcadoTitulo"),
-      text: this.translate.instant(sinFicha ? "ventas.list.creditoSinFichaTexto" : "ventas.list.creditoSinCupoTexto"),
-      confirmButtonText: this.translate.instant("comun.entendido"),
+      title: "El pedido quedó en Crédito",
+      text: (sinFicha ? "No encontramos la ficha de este cliente, así que no se guardó el cupo. Crea o completa la ficha del cliente." : "El cliente sigue sin cupo de crédito. Pídele a un administrador que lo escriba en la ficha del cliente."),
+      confirmButtonText: "Entendido",
       confirmButtonColor: "#5F3FE0",
     });
   }
@@ -7135,9 +7147,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private avisarPagosNoCambiados(texto: string) {
     Swal.fire({
       icon: "warning",
-      title: this.translate.instant("ventas.list.pagoRevisadoNoCambiaTitulo"),
+      title: "El pago no se cambió",
       text: texto,
-      confirmButtonText: this.translate.instant("comun.entendido"),
+      confirmButtonText: "Entendido",
       confirmButtonColor: "#5F3FE0",
     });
   }
@@ -7149,9 +7161,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error("🚨 ABORT: Carrito vacío, no se actualizará nada");
       Swal.fire({
         icon: "error",
-        title: this.translate.instant("ventas.list.errorCritico"),
-        text: this.translate.instant("ventas.list.elPedidoNoTieneProductos"),
-        confirmButtonText: this.translate.instant("ventas.list.recargar"),
+        title: "Error Crítico",
+        text: "El pedido no tiene productos. No se puede actualizar.",
+        confirmButtonText: "Recargar",
         preConfirm: () => window.location.reload(),
       });
       return;
@@ -7176,7 +7188,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.refrescarDatos();
       Swal.fire({
         icon: "success",
-        title: this.translate.instant("ventas.list.notasActualizadasCorrectamente"),
+        title: "Notas actualizadas correctamente",
         showConfirmButton: false,
         timer: 1500,
       });
@@ -7225,7 +7237,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         Swal.fire({
           icon: "success",
-          title: this.translate.instant("ventas.list.pagosActualizadosCorrectamente"),
+          title: "Pagos actualizados correctamente",
           showConfirmButton: false,
           timer: 1500,
         });
@@ -7239,9 +7251,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error("❌ Error actualizando pagos:", error);
         Swal.fire({
           icon: "error",
-          title: this.translate.instant("ventas.list.errorAlActualizarPagos"),
-          text: this.translate.instant("ventas.list.noSePudieronGuardarLos2"),
-          confirmButtonText: this.translate.instant("ventas.list.reintentar"),
+          title: "Error al actualizar pagos",
+          text: "No se pudieron guardar los cambios en el servidor",
+          confirmButtonText: "Reintentar",
         });
       },
     });
@@ -7369,8 +7381,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const estado = String(order?.estadoProceso || '');
     if (estado !== "Entregado" && estado !== "Despachado") {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.estaOpcionEstaDisponibleDesde"),
-        this.translate.instant("ventas.list.estadoInvalido"),
+        "Esta opción está disponible desde que el pedido sale a despacho",
+        "Estado inválido",
       );
       return;
     }
@@ -7500,9 +7512,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!order.carrito || order.carrito.length === 0) {
       Swal.fire({
         icon: "error",
-        title: this.translate.instant("ventas.list.noSePuedeEditar"),
-        text: this.translate.instant("ventas.list.estePedidoNoTieneProductos"),
-        confirmButtonText: this.translate.instant("comun.entendido"),
+        title: "No se puede editar",
+        text: "Este pedido no tiene productos en el carrito.",
+        confirmButtonText: "Entendido",
       });
       return;
     }
@@ -7556,9 +7568,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         );
         Swal.fire({
           icon: "error",
-          title: this.translate.instant("ventas.list.errorCritico"),
-          text: this.translate.instant("ventas.list.seDetectoUnProblemaCon"),
-          confirmButtonText: this.translate.instant("comun.entendido"),
+          title: "Error Crítico",
+          text: "Se detectó un problema con los productos del pedido. No se actualizarán las notas por seguridad.",
+          confirmButtonText: "Entendido",
         });
         return;
       }
@@ -7578,9 +7590,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error("🚨 PÉRDIDA DE PRODUCTOS DETECTADA");
         Swal.fire({
           icon: "error",
-          title: this.translate.instant("ventas.list.productosPerdidos"),
-          text: this.translate.instant("ventas.list.seperdieronProductos", { antes: productosAntes, despues: productosDespues }),
-          confirmButtonText: this.translate.instant("ventas.list.recargarPagina"),
+          title: "¡PRODUCTOS PERDIDOS!",
+          text: `Se perdieron productos: Antes ${productosAntes}, Después ${productosDespues}`,
+          confirmButtonText: "Recargar página",
           preConfirm: () => {
             window.location.reload();
           },
@@ -7675,13 +7687,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.modalService.dismissAll("confirmed");
       const r = await Swal.fire({
         icon: 'warning',
-        title: this.translate.instant("ventas.list.porQueSeDevuelveEl"),
-        text: this.translate.instant("ventas.list.pasaDeA", { desde: this.originalEstadoProceso, hasta: this.tempEstadoProceso }),
+        title: '¿Por qué se devuelve el pedido?',
+        text: `Pasa de ${this.originalEstadoProceso} a ${this.tempEstadoProceso}. El motivo queda en el historial del pedido.`,
         input: 'textarea',
-        inputPlaceholder: this.translate.instant("ventas.list.ejElClienteNoRecibio"),
+        inputPlaceholder: 'Ej.: el cliente no recibió, se reprograma la entrega',
         showCancelButton: true,
-        confirmButtonText: this.translate.instant("ventas.list.devolverElPedido"),
-        cancelButtonText: this.translate.instant("comun.cancelar"),
+        confirmButtonText: 'Devolver el pedido',
+        cancelButtonText: 'Cancelar',
         inputValidator: (v) => (!v || !String(v).trim() ? 'Escribe el motivo' : undefined),
       });
       if (!r.isConfirmed) {
@@ -7700,13 +7712,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.modalService.dismissAll("confirmed");
       const r = await Swal.fire({
         icon: 'warning',
-        title: this.translate.instant("ventas.list.porQueSeCancelaEl"),
-        text: this.translate.instant("ventas.list.quedaraCancelado", { pedido: order.nroPedido || this.translate.instant("ventas.list.elPedido") }),
+        title: '¿Por qué se cancela el pedido?',
+        text: `${order.nroPedido || 'El pedido'} quedará cancelado. El motivo queda guardado en el pedido.`,
         input: 'textarea',
-        inputPlaceholder: this.translate.instant("ventas.list.ejElClienteDesistioDe"),
+        inputPlaceholder: 'Ej.: el cliente desistió de la compra',
         showCancelButton: true,
-        confirmButtonText: this.translate.instant("ventas.list.cancelarElPedido"),
-        cancelButtonText: this.translate.instant("comun.volver"),
+        confirmButtonText: 'Cancelar el pedido',
+        cancelButtonText: 'Volver',
         inputValidator: (v) => (!v || !String(v).trim() ? 'Escribe el motivo de la cancelación' : undefined),
       });
       if (!r.isConfirmed) {
@@ -7766,7 +7778,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Tesorería activa puede no dejarlo (pagos por verificar o rol sin permiso).
     // skip check: el usuario cambió el estado manualmente.
     this.prepararParaGuardar(orderToUpdate as Pedido, true);
-    Swal.fire({ title: this.translate.instant("ventas.list.guardando"), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: "Guardando…", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     this.ventasService.editOrder(orderToUpdate as Pedido, { exigirVersion: true }).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.refrescarDatos(true);
@@ -7787,9 +7799,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const devolvio = res?.details?.devolucionInventario === true && mercanciaVolvio;
         Swal.fire({
           icon: "success",
-          title: this.translate.instant("ventas.list.estadoDePagoActualizado"),
-          text: this.translate.instant("ventas.list.estadoCambiadoA", { estado: orderToUpdate.estadoPago }) +
-            (devolvio ? this.translate.instant("ventas.list.elInventarioSeDevolvioA") : ""),
+          title: "Estado de pago actualizado",
+          text: `El estado se cambió a: ${orderToUpdate.estadoPago}` +
+            (devolvio ? ". El inventario se devolvió a la bodega." : ""),
           showConfirmButton: false,
           timer: devolvio ? 2500 : 1500,
         });
@@ -7801,8 +7813,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const motivo = typeof e?.error?.error === 'string' && e.error.error.length < 200 ? e.error.error : '';
         Swal.fire({
           icon: "error",
-          title: this.translate.instant("ventas.list.noSePudoCambiarEl"),
-          text: e?.isStaleWrite ? e.message : (motivo || this.translate.instant("ventas.list.elCambioNoSeGuardo")),
+          title: "No se pudo cambiar el estado",
+          text: e?.isStaleWrite ? e.message : (motivo || "El cambio no se guardó. Intenta de nuevo."),
         });
       },
     });
@@ -7821,14 +7833,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ): void {
     // Confirmar eliminación
     Swal.fire({
-      title: this.translate.instant("ventas.list.eliminarImagen2"),
-      text: this.translate.instant("ventas.list.seguroEliminarImagen", { titulo: preferencia.titulo }),
+      title: "¿Eliminar imagen?",
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${preferencia.titulo}"?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // Buscar la preferencia en la configuración del item
@@ -7853,8 +7865,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Mostrar confirmación
           Swal.fire({
-            title: this.translate.instant("ventas.list.imagenEliminada"),
-            text: this.translate.instant("ventas.list.laImagenHaSidoEliminada"),
+            title: "Imagen eliminada",
+            text: "La imagen ha sido eliminada correctamente.",
             icon: "success",
             timer: 2000,
             showConfirmButton: false,
@@ -7900,8 +7912,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch { }
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noModificarProductosEstado", { estado: order.estadoProceso }),
-        this.translate.instant("ventas.list.pedidoCongelado"),
+        `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
+        "Pedido Congelado",
       );
       return;
     }
@@ -8030,8 +8042,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   addProductToCart(content: any, order: Pedido) {
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noAgregarProductosEstado", { estado: order.estadoProceso }),
-        this.translate.instant("ventas.list.pedidoCongelado"),
+        `No se pueden agregar productos. El pedido está en estado: ${order.estadoProceso}`,
+        "Pedido Congelado",
       );
       return;
     }
@@ -8099,16 +8111,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 const precioBase = configuracionResult.producto?.precio?.precioUnitarioConIva || 0;
                 const ivaProducto = configuracionResult.producto?.precio?.precioUnitarioIva || '0';
                 Swal.fire({
-                  title: this.translate.instant("ventas.list.precioManual"),
-                  html: `<p style="margin-bottom:0.5rem;">${this.translate.instant("ventas.list.productoPermitePrecioManual", { producto: configuracionResult.producto?.crearProducto?.titulo || '' })}</p>
-                         <p style="font-size:0.85rem;color:#64748b;">${this.translate.instant("ventas.list.precioBaseIva", { precio: precioBase.toLocaleString('es-CO'), iva: ivaProducto })}</p>
+                  title: 'Precio Manual',
+                  html: `<p style="margin-bottom:0.5rem;">El producto <b>${configuracionResult.producto?.crearProducto?.titulo || ''}</b> permite precio manual.</p>
+                         <p style="font-size:0.85rem;color:#64748b;">Precio base: <b>$${precioBase.toLocaleString('es-CO')}</b> (IVA ${ivaProducto}%)</p>
                          <div style="display:flex;gap:0.75rem;align-items:flex-end;margin-top:0.75rem;">
                            <div style="flex:1;">
-                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">${this.translate.instant("ventas.list.precioBaseSinIva")}</label>
-                             <input id="swal-precio-manual" type="number" class="swal2-input" placeholder="${this.translate.instant("ventas.list.ej3000")}" min="0" step="100" style="margin:0;width:100%;">
+                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">Precio base (sin IVA)</label>
+                             <input id="swal-precio-manual" type="number" class="swal2-input" placeholder="Ej: 3000" min="0" step="100" style="margin:0;width:100%;">
                            </div>
                            <div style="flex:0 0 auto;">
-                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">${this.translate.instant("ventas.list.iva")}</label>
+                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">IVA</label>
                              <select id="swal-iva-manual" class="swal2-input" style="margin:0;padding:0.4rem 0.5rem;min-width:80px;">
                                <option value="0" ${ivaProducto === '0' ? 'selected' : ''}>0%</option>
                                <option value="5" ${ivaProducto === '5' ? 'selected' : ''}>5%</option>
@@ -8118,15 +8130,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                            </div>
                          </div>`,
                   showCancelButton: true,
-                  confirmButtonText: this.translate.instant("ventas.list.aplicarPrecio"),
-                  cancelButtonText: this.translate.instant("ventas.list.usarPrecioBase"),
+                  confirmButtonText: 'Aplicar precio',
+                  cancelButtonText: 'Usar precio base',
                   confirmButtonColor: '#5F3FE0',
                   focusConfirm: false,
                   preConfirm: () => {
                     const precioInput = (document.getElementById('swal-precio-manual') as HTMLInputElement)?.value;
                     const ivaInput = (document.getElementById('swal-iva-manual') as HTMLSelectElement)?.value;
                     if (precioInput && (isNaN(Number(precioInput)) || Number(precioInput) < 0)) {
-                      Swal.showValidationMessage(this.translate.instant("ventas.list.ingreseUnPrecioValido"));
+                      Swal.showValidationMessage('Ingrese un precio válido');
                       return false;
                     }
                     return { precio: precioInput, iva: ivaInput };
@@ -8150,17 +8162,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 const ivaDefault = configuracionResult.producto?.precio?.precioUnitarioIva || '0';
                 const tituloProducto = configuracionResult.producto?.crearProducto?.titulo || '';
                 Swal.fire({
-                  title: this.translate.instant("ventas.list.impuestoIva"),
-                  html: `<p style="margin-bottom:0.75rem;">${this.translate.instant("ventas.list.seleccionaIvaPara", { producto: tituloProducto })}</p>
+                  title: 'Impuesto (IVA)',
+                  html: `<p style="margin-bottom:0.75rem;">Selecciona el IVA para <b>${tituloProducto}</b>.</p>
                          <select id="swal-iva-solo" class="swal2-input" style="margin:0;padding:0.4rem 0.5rem;width:100%;">
-                           <option value="0" ${ivaDefault === '0' ? 'selected' : ''}>${this.translate.instant("ventas.list.ivaExcluido")}</option>
+                           <option value="0" ${ivaDefault === '0' ? 'selected' : ''}>0% - Excluido</option>
                            <option value="5" ${ivaDefault === '5' ? 'selected' : ''}>5%</option>
-                           <option value="8" ${ivaDefault === '8' ? 'selected' : ''}>${this.translate.instant("ventas.list.ivaImpoconsumo")}</option>
+                           <option value="8" ${ivaDefault === '8' ? 'selected' : ''}>8% - Impoconsumo</option>
                            <option value="19" ${ivaDefault === '19' ? 'selected' : ''}>19%</option>
                          </select>`,
                   showCancelButton: true,
-                  confirmButtonText: this.translate.instant("ventas.list.aplicar"),
-                  cancelButtonText: this.translate.instant("ventas.list.usarIvaOriginal"),
+                  confirmButtonText: 'Aplicar',
+                  cancelButtonText: 'Usar IVA original',
                   confirmButtonColor: '#5F3FE0',
                   focusConfirm: false,
                   preConfirm: () => {
@@ -8202,8 +8214,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Permitir a administradores aplicar descuentos incluso en pedidos congelados
     if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noAplicarDescuentosEstado", { estado: pedido.estadoProceso }),
-        this.translate.instant("ventas.list.pedidoCongelado"),
+        `No se pueden aplicar descuentos. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
       );
       return;
     }
@@ -8315,9 +8327,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.toastrService.success(
       res.tipo === "envio_gratis"
-        ? this.translate.instant("ventas.list.envioGratisAplicado")
-        : this.translate.instant("ventas.list.codigoAplicado", { codigo: this.descuentoAplicado.codigo, valor: (pedido.totalDescuento || 0).toLocaleString() }),
-      this.translate.instant("ventas.list.descuentoAplicado"),
+        ? "Envío gratis aplicado."
+        : `Código "${this.descuentoAplicado.codigo}" aplicado. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
+      "Descuento Aplicado",
       { timeOut: 5000, progressBar: true, positionClass: "toast-bottom-right" },
     );
   }
@@ -8360,8 +8372,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(pedido);
 
           this.toastrService.success(
-            this.translate.instant("ventas.list.cuponAplicado", { codigo, valor: (pedido.totalDescuento || 0).toLocaleString() }),
-            this.translate.instant("ventas.list.descuentoAplicado"),
+            `Cupón "${codigo}" aplicado exitosamente. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
+            "Descuento Aplicado",
             {
               timeOut: 5000,
               progressBar: true,
@@ -8372,7 +8384,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         error: (err) => {
           this.validandoDescuento = false;
           this.errorCodigoDescuento = "Ocurrió un error al validar el cupón";
-          this.toastrService.error(this.translate.instant("ventas.list.errorAlValidarElCupon"), this.translate.instant("comun.error"), {
+          this.toastrService.error("Error al validar el cupón", "Error", {
             timeOut: 4000,
             progressBar: true,
             positionClass: "toast-bottom-right",
@@ -8455,16 +8467,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Permitir a administradores editar descuentos incluso en pedidos congelados
     if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noEditarDescuentosEstado", { estado: pedido.estadoProceso }),
-        this.translate.instant("ventas.list.pedidoCongelado"),
+        `No se pueden editar descuentos. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
       );
       return;
     }
 
     if ((!pedido.porceDescuento || pedido.porceDescuento <= 0) && !pedido.descuentoAplicado) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.estePedidoNoTieneDescuento"),
-        this.translate.instant("ventas.list.sinDescuento"),
+        "Este pedido no tiene descuento aplicado",
+        "Sin Descuento",
       );
       return;
     }
@@ -8559,8 +8571,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.nuevoPorcentajeDescuento < 0 || this.nuevoPorcentajeDescuento > 100) {
       this.toastrService.error(
-        this.translate.instant("ventas.list.elPorcentajeDeDescuentoDebe"),
-        this.translate.instant("ventas.list.errorDeValidacion"),
+        "El porcentaje de descuento debe estar entre 0 y 100",
+        "Error de Validación",
       );
       return;
     }
@@ -8573,7 +8585,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     if (!pedidoOriginal) {
-      this.toastrService.error(this.translate.instant("ventas.list.noSeEncontroElPedido"), this.translate.instant("comun.error"));
+      this.toastrService.error("No se encontró el pedido en la lista", "Error");
       this.guardandoDescuento = false;
       return;
     }
@@ -8604,8 +8616,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         this.guardandoDescuento = false;
         this.toastrService.success(
-          this.nuevoPorcentajeDescuento === 0 ? this.translate.instant("ventas.list.descuentoEliminadoOk") : this.translate.instant("ventas.list.descuentoActualizadoOk"),
-          this.translate.instant("ventas.list.descuentoActualizado"),
+          `Descuento ${this.nuevoPorcentajeDescuento === 0 ? 'eliminado' : 'actualizado'} exitosamente`,
+          "Descuento Actualizado",
           {
             timeOut: 3000,
             progressBar: true,
@@ -8623,8 +8635,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.guardandoDescuento = false;
         console.error("Error al actualizar el descuento:", err);
         this.toastrService.error(
-          this.translate.instant("ventas.list.errorAlActualizarElDescuento"),
-          this.translate.instant("comun.error"),
+          "Error al actualizar el descuento. Por favor, intente nuevamente.",
+          "Error",
           {
             timeOut: 4000,
             progressBar: true,
@@ -8644,14 +8656,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     Swal.fire({
-      title: this.translate.instant("ventas.list.eliminarDescuento2"),
-      text: this.translate.instant("ventas.list.estaAccionEliminaraElDescuento"),
+      title: "¿Eliminar descuento?",
+      text: "Esta acción eliminará el descuento aplicado al pedido. ¿Desea continuar?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // Establecer el porcentaje en 0
@@ -8677,8 +8689,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Mostrar mensaje de éxito
           this.toastrService.success(
-            this.translate.instant("ventas.list.pedidoEliminadoOk", { pedido: pedido.nroPedido }),
-            this.translate.instant("ventas.list.pedidoEliminado"),
+            `Pedido ${pedido.nroPedido} eliminado exitosamente`,
+            "Pedido Eliminado",
           );
 
           // Remover el pedido de la lista local
@@ -8695,16 +8707,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         error: (error) => {
           console.error("❌ Error al eliminar pedido:", error);
           this.toastrService.error(
-            this.translate.instant("ventas.list.errorEliminarPedido", { pedido: pedido.nroPedido }),
-            this.translate.instant("ventas.list.errorAlEliminar"),
+            `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
+            "Error al Eliminar",
           );
         },
       });
     } catch (error) {
       console.error("❌ Error inesperado al eliminar pedido:", error);
       this.toastrService.error(
-        this.translate.instant("ventas.list.ocurrioUnErrorInesperadoAl"),
-        this.translate.instant("comun.error"),
+        "Ocurrió un error inesperado al eliminar el pedido",
+        "Error",
       );
     }
   }
@@ -8715,14 +8727,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private eliminarPedidoSinProductos(pedido: Pedido) {
     Swal.fire({
-      title: this.translate.instant("ventas.list.pedidoSinProductos"),
-      text: this.translate.instant("ventas.list.pedidoSinProductosEliminar", { pedido: pedido.nroPedido }),
+      title: "⚠️ Pedido Sin Productos",
+      text: `El pedido ${pedido.nroPedido} se quedó sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar automáticamente este pedido?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminarPedido"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar pedido",
+      cancelButtonText: "Cancelar",
       allowOutsideClick: false,
       allowEscapeKey: false,
     }).then((result) => {
@@ -8742,8 +8754,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // Mostrar mensaje de éxito
               this.toastrService.success(
-                this.translate.instant("ventas.list.pedidoEliminadoAuto", { pedido: pedido.nroPedido }),
-                this.translate.instant("ventas.list.pedidoEliminado"),
+                `Pedido ${pedido.nroPedido} eliminado automáticamente por no tener productos`,
+                "Pedido Eliminado",
               );
 
               // Remover el pedido de la lista local
@@ -8763,8 +8775,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 error,
               );
               this.toastrService.error(
-                this.translate.instant("ventas.list.errorEliminarPedido", { pedido: pedido.nroPedido }),
-                this.translate.instant("ventas.list.errorAlEliminar"),
+                `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
+                "Error al Eliminar",
               );
             },
           });
@@ -8774,15 +8786,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             error,
           );
           this.toastrService.error(
-            this.translate.instant("ventas.list.ocurrioUnErrorInesperadoAl"),
-            this.translate.instant("comun.error"),
+            "Ocurrió un error inesperado al eliminar el pedido",
+            "Error",
           );
         }
       } else {
         // Si el usuario cancela, mostrar mensaje informativo
         this.toastrService.info(
-          this.translate.instant("ventas.list.pedidoSeMantendra", { pedido: pedido.nroPedido }),
-          this.translate.instant("ventas.list.pedidoMantenido"),
+          `El pedido ${pedido.nroPedido} se mantendrá en el sistema pero no tendrá productos. Considera agregar productos o eliminarlo manualmente.`,
+          "Pedido Mantenido",
         );
       }
     });
@@ -8798,8 +8810,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // EXCEPTO para productos fantasma que siempre se pueden eliminar
     if (!this.canDeleteProducts(pedido) && !this.isGhostProduct(item)) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noEliminarProductosEstado", { pago: pedido.estadoPago, proceso: pedido.estadoProceso }),
-        this.translate.instant("ventas.list.eliminacionNoPermitida"),
+        `No se pueden eliminar productos. Solo se permiten eliminaciones cuando el estado de pago es "Pendiente" o el estado de proceso es "SinProducir". Estado actual - Pago: ${pedido.estadoPago}, Proceso: ${pedido.estadoProceso}`,
+        "Eliminación No Permitida",
       );
       return;
     }
@@ -8807,8 +8819,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Mostrar mensaje especial si se está eliminando un producto fantasma
     if (this.isGhostProduct(item)) {
       this.toastrService.info(
-        this.translate.instant("ventas.list.eliminandoFantasma"),
-        this.translate.instant("ventas.list.eliminacionEspecial"),
+        "Eliminando producto fantasma (producto con datos corruptos). Se está saltando la restricción de estado para limpiar el pedido.",
+        "Eliminación Especial",
         { timeOut: 5000 },
       );
     }
@@ -8833,14 +8845,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private confirmarEliminacionUltimoProducto(item: Carrito, pedido: Pedido) {
     Swal.fire({
-      title: this.translate.instant("ventas.list.ultimoProductoDelPedido"),
-      text: this.translate.instant("ventas.list.alEliminarUltimo", { producto: item.producto?.crearProducto?.titulo || this.translate.instant("ventas.list.esteProducto"), pedido: pedido.nroPedido }),
+      title: "⚠️ Último Producto del Pedido",
+      text: `Al eliminar "${item.producto?.crearProducto?.titulo || "este producto"}" el pedido ${pedido.nroPedido} se quedará sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar el producto y el pedido completo?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminarProductoYPedido"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar producto y pedido",
+      cancelButtonText: "Cancelar",
       allowOutsideClick: false,
       allowEscapeKey: false,
     }).then((result) => {
@@ -8874,23 +8886,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Mostrar mensaje de éxito
             this.toastrService.success(
-              this.translate.instant("ventas.list.productoRemovido", { producto: item.producto?.crearProducto?.titulo || this.translate.instant("ventas.list.eliminadoMinuscula") }),
-              this.translate.instant("ventas.list.productoEliminado"),
+              `Producto "${item.producto?.crearProducto?.titulo || "eliminado"}" removido del pedido exitosamente`,
+              "Producto Eliminado",
             );
 
             // Ahora eliminar el pedido completo directamente ya que está vacío
             this.eliminarPedidoCompleto(pedido);
           } else {
             this.toastrService.error(
-              this.translate.instant("ventas.list.noSePudoEncontrarEl"),
-              this.translate.instant("ventas.list.errorAlEliminar"),
+              "No se pudo encontrar el producto en el pedido",
+              "Error al Eliminar",
             );
           }
         } catch (error) {
           console.error("Error al eliminar último producto del pedido:", error);
           this.toastrService.error(
-            this.translate.instant("ventas.list.ocurrioUnErrorAlEliminar"),
-            this.translate.instant("comun.error"),
+            "Ocurrió un error al eliminar el producto",
+            "Error",
           );
         }
       }
@@ -8904,14 +8916,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private confirmarEliminacionProducto(item: Carrito, pedido: Pedido) {
     Swal.fire({
-      title: this.translate.instant("ventas.list.eliminarProducto"),
-      text: this.translate.instant("ventas.list.seguroEliminarProducto", { producto: item.producto?.crearProducto?.titulo || this.translate.instant("ventas.list.esteProducto") }),
+      title: "¿Eliminar producto?",
+      text: `¿Estás seguro de que quieres eliminar "${item.producto?.crearProducto?.titulo || "este producto"}" del pedido?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         try {
@@ -8941,8 +8953,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 next: (res: any) => {
                   if (res?.restored > 0) {
                     this.toastrService.info(
-                      this.translate.instant("ventas.list.unidadesDevueltas", { n: res.restored }),
-                      this.translate.instant("ventas.list.inventarioDevuelto"),
+                      `${res.restored} unidades devueltas al inventario`,
+                      "Inventario Devuelto",
                     );
                   }
                 },
@@ -8952,20 +8964,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Mostrar mensaje de éxito
             this.toastrService.success(
-              this.translate.instant("ventas.list.productoRemovido", { producto: item.producto?.crearProducto?.titulo || this.translate.instant("ventas.list.eliminadoMinuscula") }),
-              this.translate.instant("ventas.list.productoEliminado"),
+              `Producto "${item.producto?.crearProducto?.titulo || "eliminado"}" removido del pedido exitosamente`,
+              "Producto Eliminado",
             );
           } else {
             this.toastrService.error(
-              this.translate.instant("ventas.list.noSePudoEncontrarEl"),
-              this.translate.instant("ventas.list.errorAlEliminar"),
+              "No se pudo encontrar el producto en el pedido",
+              "Error al Eliminar",
             );
           }
         } catch (error) {
           console.error("Error al eliminar producto del pedido:", error);
           this.toastrService.error(
-            this.translate.instant("ventas.list.ocurrioUnErrorAlEliminar"),
-            this.translate.instant("comun.error"),
+            "Ocurrió un error al eliminar el producto",
+            "Error",
           );
         }
       }
@@ -9131,19 +9143,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteOrder(order: Pedido) {
     Swal.fire({
-      title: this.translate.instant("ventas.list.estasSeguro"),
-      text: this.translate.instant("ventas.list.noPodrasRevertirEsto"),
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: this.translate.instant("ventas.list.siEliminarlo"),
+      confirmButtonText: "Si, eliminarlo",
     }).then((result) => {
       if (result.isConfirmed) {
         this.ventasService.deleteOrder(order).subscribe((data) => {
           console.log(data);
           this.refrescarDatos();
-          Swal.fire(this.translate.instant("ventas.list.eliminado"), this.translate.instant("ventas.list.elPedidoHaSidoEliminado"), "success");
+          Swal.fire("Eliminado", "El pedido ha sido eliminado.", "success");
         });
       }
     });
@@ -9155,11 +9167,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!empresaPedido) {
       Swal.fire({
-        title: this.translate.instant("comun.error"),
-        text: this.translate.instant("ventas.list.noSePuedeDeterminarLa"),
+        title: "Error",
+        text: "No se puede determinar la empresa del pedido.",
         icon: "error",
         confirmButtonColor: "#3085d6",
-        confirmButtonText: this.translate.instant("comun.aceptar"),
+        confirmButtonText: "Aceptar",
       });
       return;
     }
@@ -9195,11 +9207,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (usuariosEmpresa.length === 0) {
           Swal.fire({
-            title: this.translate.instant("comun.error"),
-            text: this.translate.instant("ventas.list.sinUsuariosEmpresa", { empresa: empresaPedido }),
+            title: "Error",
+            text: `No hay usuarios disponibles en la empresa ${empresaPedido}.`,
             icon: "error",
             confirmButtonColor: "#3085d6",
-            confirmButtonText: this.translate.instant("comun.aceptar"),
+            confirmButtonText: "Aceptar",
           });
           return;
         }
@@ -9227,8 +9239,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         Swal.fire({
-          title: this.translate.instant("ventas.list.asignarAsesor"),
-          text: this.translate.instant("ventas.list.seleccionaAsesor", { empresa: empresaPedido }),
+          title: "Asignar Asesor",
+          text: `Selecciona el asesor que deseas asignar a este pedido de ${empresaPedido}:`,
           input: "select",
           inputOptions: options.reduce((acc, option) => {
             acc[option.value] = option.label;
@@ -9243,8 +9255,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           showCancelButton: true,
           confirmButtonColor: "#3085d6",
           cancelButtonColor: "#d33",
-          confirmButtonText: this.translate.instant("ventas.list.asignarAsesor"),
-          cancelButtonText: this.translate.instant("comun.cancelar"),
+          confirmButtonText: "Asignar Asesor",
+          cancelButtonText: "Cancelar",
           inputValidator: (value) => {
             if (!value) {
               return "Debes seleccionar un asesor";
@@ -9268,11 +9280,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               this.editOrder(order);
 
               Swal.fire({
-                title: this.translate.instant("ventas.list.asesorAsignado"),
-                text: this.translate.instant("ventas.list.asesorAsignadoTexto", { asesor: userLite.name }),
+                title: "Asesor Asignado",
+                text: `El asesor ${userLite.name} ha sido asignado exitosamente al pedido.`,
                 icon: "success",
                 confirmButtonColor: "#3085d6",
-                confirmButtonText: this.translate.instant("comun.aceptar"),
+                confirmButtonText: "Aceptar",
               });
             }
           }
@@ -9281,11 +9293,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (error) => {
         console.error("Error al cargar usuarios:", error);
         Swal.fire({
-          title: this.translate.instant("comun.error"),
-          text: this.translate.instant("ventas.list.noSePudoCargarLa"),
+          title: "Error",
+          text: "No se pudo cargar la lista de asesores. Intenta nuevamente.",
           icon: "error",
           confirmButtonColor: "#3085d6",
-          confirmButtonText: this.translate.instant("comun.aceptar"),
+          confirmButtonText: "Aceptar",
         });
       },
     );
@@ -9422,8 +9434,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Mostrar loading
     this.loading = true;
     const toastRef = this.toastrService.info(
-      this.translate.instant("ventas.list.preparandoExportacionEstoPuedeTomar"),
-      this.translate.instant("ventas.list.exportando"),
+      'Preparando exportación... Esto puede tomar un momento.',
+      'Exportando',
       { disableTimeOut: true, tapToDismiss: false }
     );
 
@@ -9505,14 +9517,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Exportar a Excel
         this.exportarExcelConDatos(pedidosProcesados);
         this.toastrService.success(
-          this.translate.instant("ventas.list.exportadosN", { n: pedidosProcesados.length }),
-          this.translate.instant("ventas.list.exportacionCompletada")
+          `Exportados ${pedidosProcesados.length} pedidos exitosamente`,
+          'Exportación completada'
         );
       } else if (response && response.orders && response.orders.length === 0) {
         this.toastrService.clear(toastRef.toastId);
         this.toastrService.warning(
-          this.translate.instant("ventas.list.noSeEncontraronPedidosEn"),
-          this.translate.instant("ventas.list.sinDatos")
+          'No se encontraron pedidos en el rango de fechas seleccionado',
+          'Sin datos'
         );
       } else {
         throw new Error(response?.error || 'No se recibieron datos del servidor');
@@ -9523,8 +9535,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Ticket 1081: el backend explica por qué no exporta (rango con más de 6000
       // pedidos u otra exportación en curso) en `error.error.error`.
       this.toastrService.error(
-        error?.error?.error || error.message || this.translate.instant("ventas.list.errorAlObtenerLosPedidos"),
-        this.translate.instant("ventas.list.errorDeExportacion")
+        error?.error?.error || error.message || 'Error al obtener los pedidos para exportar. Intente nuevamente.',
+        'Error de exportación'
       );
     } finally {
       this.loading = false;
@@ -10813,12 +10825,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           order.estadoProceso === EstadoProceso.EnProduccion
             ? "Pedido marcado como revisado y enviado a producción"
             : "Pedido marcado como revisado";
-        this.toastrService.success(mensaje, this.translate.instant("comun.exito"));
+        this.toastrService.success(mensaje, "Éxito");
         this.refrescarDatos();
       },
       error: (error) => {
         console.error("Error al marcar como revisado:", error);
-        this.toastrService.error(this.translate.instant("ventas.list.errorAlMarcarComoRevisado"), this.translate.instant("comun.error"));
+        this.toastrService.error("Error al marcar como revisado", "Error");
       },
     });
   }
@@ -10828,12 +10840,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // D-547 5.3: ventana de Katuq (Swal) en lugar de confirm() del navegador. Lo que pasa al confirmar no cambia.
     Swal.fire({
-      title: this.translate.instant("ventas.list.quitarLaRevision"),
-      text: this.translate.instant("ventas.list.estaSeguroDeQuitarLa"),
+      title: "Quitar la revisión",
+      text: "¿Está seguro de quitar la revisión de este pedido?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: this.translate.instant("ventas.list.quitarRevision"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Quitar revisión",
+      cancelButtonText: "Cancelar",
       confirmButtonColor: "#5F3FE0",
       cancelButtonColor: "#6c757d",
     }).then((resultado) => {
@@ -10848,14 +10860,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.ventasService.editOrder(order, { exigirVersion: true }).subscribe({
         next: () => {
           this.toastrService.success(
-            this.translate.instant("ventas.list.revisionRemovidaCorrectamente"),
-            this.translate.instant("comun.exito"),
+            "Revisión removida correctamente",
+            "Éxito",
           );
           this.refrescarDatos();
         },
         error: (error) => {
           console.error("Error al quitar revisión:", error);
-          this.toastrService.error(this.translate.instant("ventas.list.errorAlQuitarRevision"), this.translate.instant("comun.error"));
+          this.toastrService.error("Error al quitar revisión", "Error");
         },
       });
     });
@@ -10873,20 +10885,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   duplicarPedido(order: Pedido): void {
     if (!order) {
-      this.toastrService.error(this.translate.instant("ventas.list.pedidoInvalido"), this.translate.instant("comun.error"));
+      this.toastrService.error("Pedido inválido", "Error");
       return;
     }
 
     // Mostrar confirmación antes de duplicar
     Swal.fire({
-      title: this.translate.instant("ventas.list.duplicarPedido"),
-      text: this.translate.instant("ventas.list.seguroDuplicar", { pedido: order.nroPedido }),
+      title: "¿Duplicar pedido?",
+      text: `¿Está seguro de que desea duplicar el pedido ${order.nroPedido}?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: this.translate.instant("ventas.list.siDuplicar"),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: "Sí, duplicar",
+      cancelButtonText: "Cancelar",
       reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
@@ -11023,45 +11035,45 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 // la copia llega dos veces; no es una copia nueva.
                 if (res?._duplicadoEvitado) {
                   this.toastrService.warning(
-                    this.translate.instant("ventas.list.noSeCreoOtraCopia", { pedido: res.nroPedido || this.translate.instant("ventas.list.esePedido") }),
-                    this.translate.instant("ventas.list.pedidoYaCreado"),
+                    `No se creó otra copia: ${res.nroPedido || "ese pedido"} ya se había creado hace un momento.`,
+                    "Pedido ya creado",
                   );
                   this.refrescarDatos(true);
                   return;
                 }
                 const nuevo = res?.order?.nroPedido || res?.nroPedido || "";
                 this.toastrService.success(
-                  nuevo ? this.translate.instant("ventas.list.duplicadoComo", { pedido: nuevo }) : this.translate.instant("ventas.list.pedidoDuplicadoCorrectamente"),
-                  this.translate.instant("comun.exito"),
+                  nuevo ? `Pedido duplicado como ${nuevo}` : "Pedido duplicado correctamente",
+                  "Éxito",
                 );
                 this.refrescarDatos(true); // Forzar refresco después de duplicar
               },
               error: () => {
                 this.toastrService.error(
-                  this.translate.instant("ventas.list.noSePudoDuplicarEl"),
-                  this.translate.instant("comun.error"),
+                  "No se pudo duplicar el pedido",
+                  "Error",
                 );
               },
             });
           }).catch(() => {
             // Ticket 1445: si armar el correo falla, antes no pasaba nada en pantalla.
             this.toastrService.error(
-              this.translate.instant("ventas.list.noSePudoPrepararEl"),
-              this.translate.instant("comun.error"),
+              "No se pudo preparar el pedido duplicado. Intente de nuevo.",
+              "Error",
             );
           });
         },
         error: () => {
           this.toastrService.error(
-            this.translate.instant("ventas.list.noSePudoObtenerEl"),
-            this.translate.instant("comun.error"),
+            "No se pudo obtener el consecutivo para el nuevo pedido",
+            "Error",
           );
         },
       });
     } catch (e) {
       this.toastrService.error(
-        this.translate.instant("ventas.list.ocurrioUnErrorAlDuplicar"),
-        this.translate.instant("comun.error"),
+        "Ocurrió un error al duplicar el pedido",
+        "Error",
       );
     }
   }
@@ -11122,8 +11134,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   verHistorialPedido(pedido: Pedido): void {
     if (!pedido || !pedido._id) {
       this.toastrService.error(
-        this.translate.instant("ventas.list.noSePuedeVerEl"),
-        this.translate.instant("comun.error"),
+        "No se puede ver el historial de este pedido",
+        "Error",
       );
       return;
     }
@@ -11149,14 +11161,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           if (this.currentOrderHistory.length === 0) {
             this.toastrService.info(
-              this.translate.instant("ventas.list.noHayCambiosDeEstado"),
-              this.translate.instant("ventas.list.sinHistorial"),
+              "No hay cambios de estado registrados para este pedido",
+              "Sin historial",
             );
           }
         } else {
           this.historyError =
             response.error || "No se pudo cargar el historial";
-          this.toastrService.error(this.historyError, this.translate.instant("comun.error"));
+          this.toastrService.error(this.historyError, "Error");
         }
       },
       error: (error) => {
@@ -11165,8 +11177,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.historyError =
           error.error?.error || error.message || "Error desconocido";
         this.toastrService.error(
-          this.translate.instant("ventas.list.noSePudoCargarEl"),
-          this.translate.instant("comun.error"),
+          "No se pudo cargar el historial del pedido",
+          "Error",
         );
       },
     });
@@ -11198,13 +11210,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   abrirModalEditarIva(pedido: Pedido): void {
     if (!pedido || !pedido._id) {
-      this.toastrService.error(this.translate.instant("ventas.list.noSePuedeEditarEl"), this.translate.instant("comun.error"));
+      this.toastrService.error("No se puede editar el IVA de este pedido", "Error");
       return;
     }
     if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
       this.toastrService.warning(
-        this.translate.instant("ventas.list.noEditarIvaEstado", { estado: pedido.estadoProceso }),
-        this.translate.instant("ventas.list.pedidoCongelado"),
+        `No se puede editar el IVA. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
       );
       return;
     }
@@ -11235,7 +11247,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    this.toastrService.success(this.translate.instant("ventas.list.ivaDeLaLineaActualizado"), this.translate.instant("ventas.list.ivaActualizado"), {
+    this.toastrService.success("IVA de la línea actualizado exitosamente", "IVA Actualizado", {
       timeOut: 3000,
       progressBar: true,
       positionClass: "toast-bottom-right",
@@ -11251,15 +11263,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   limpiarNotasHuerfanasPedido(pedido: Pedido) {
     if (!pedido) {
-      this.toastrService.warning(this.translate.instant("ventas.list.noSeSeleccionoUnPedido"), this.translate.instant("ventas.list.aviso"));
+      this.toastrService.warning('No se seleccionó un pedido', 'Aviso');
       return;
     }
 
     const notasProduccion = pedido.notasPedido?.notasProduccion;
     if (!notasProduccion || notasProduccion.length === 0) {
       this.toastrService.info(
-        this.translate.instant("ventas.list.estePedidoNoTieneNotas"),
-        this.translate.instant("ventas.list.sinNotas")
+        'Este pedido no tiene notas de producción.',
+        'Sin notas'
       );
       return;
     }
@@ -11328,8 +11340,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (notasHuerfanas.length === 0) {
       this.toastrService.info(
-        this.translate.instant("ventas.list.sinNotasHuerfanasTexto"),
-        this.translate.instant("ventas.list.sinNotasHuerfanas")
+        'No se encontraron notas huérfanas en este pedido. Todas las notas corresponden a productos existentes.',
+        'Sin notas huérfanas'
       );
       return;
     }
@@ -11340,24 +11352,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .join('\n');
 
     Swal.fire({
-      title: this.translate.instant("ventas.list.notasHuerfanasEncontradas", { n: notasHuerfanas.length }),
-      html: `<p>${this.translate.instant("ventas.list.notasNoVinculadasHtml", { pedido: pedido.nroPedido || '' })}</p>
+      title: `Se encontraron ${notasHuerfanas.length} nota(s) huérfana(s)`,
+      html: `<p>Las siguientes notas de producción no están vinculadas a ningún producto actual del pedido <b>${pedido.nroPedido || ''}</b>:</p>
              <div style="text-align:left; max-height:200px; overflow-y:auto; font-size:0.85em; background:#f8f9fa; padding:10px; border-radius:5px;">
                ${notasHuerfanas.map((n: any) =>
                  `<div style="margin-bottom:6px; padding:4px; border-bottom:1px solid #dee2e6;">
-                    <b>${n.producto || n.productoId || this.translate.instant("ventas.list.productoDesconocido")}</b><br>
-                    <span>${n.descripcion || n.nota || this.translate.instant("ventas.list.sinTexto")}</span>
-                    ${n.archivos?.length ? '<br><small>' + this.translate.instant("ventas.list.archivosAdjuntos", { n: n.archivos.length }) + '</small>' : ''}
+                    <b>${n.producto || n.productoId || 'Producto desconocido'}</b><br>
+                    <span>${n.descripcion || n.nota || 'Sin texto'}</span>
+                    ${n.archivos?.length ? '<br><small>(' + n.archivos.length + ' archivo(s) adjunto(s))</small>' : ''}
                   </div>`
                ).join('')}
              </div>
-             <p class="mt-2">${this.translate.instant("ventas.list.notasValidasHtml", { n: notasValidas.length })}</p>`,
+             <p class="mt-2">Notas válidas que se conservarán: <b>${notasValidas.length}</b></p>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: this.translate.instant("ventas.list.siEliminarNotas", { n: notasHuerfanas.length }),
-      cancelButtonText: this.translate.instant("comun.cancelar"),
+      confirmButtonText: `Sí, eliminar ${notasHuerfanas.length} nota(s)`,
+      cancelButtonText: 'Cancelar',
     }).then((result) => {
       if (result.isConfirmed) {
         // Reemplazar con solo las notas válidas
@@ -11367,8 +11379,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.editOrder(pedido);
 
         this.toastrService.success(
-          this.translate.instant("ventas.list.notasHuerfanasEliminadas", { n: notasHuerfanas.length, pedido: pedido.nroPedido || '' }),
-          this.translate.instant("ventas.list.notasLimpiadas")
+          `Se eliminaron ${notasHuerfanas.length} nota(s) huérfana(s) del pedido ${pedido.nroPedido || ''}.`,
+          'Notas limpiadas'
         );
 
         console.log(`🧹 Notas huérfanas eliminadas del pedido ${pedido.nroPedido}:`, {

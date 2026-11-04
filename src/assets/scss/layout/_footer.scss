@@ -2,8 +2,11 @@
      47. Footer CSS Start
 ==========================**/
 .footer{
-  background-color: $footer_bg_color;
-  box-shadow: $footer_box_shadow;
+  // Ticket 1497: el footer del layout está vacío (app-footer comentado) y solo deja
+  // espacio abajo. Sin fondo ni sombra: toma el fondo de la página en cada tema.
+  // Antes: $footer_bg_color (blanco) y $footer_box_shadow, que pintaban una franja blanca.
+  background-color: transparent;
+  box-shadow: none;
   padding: 15px 0;
   bottom: 0;
   left: 0;

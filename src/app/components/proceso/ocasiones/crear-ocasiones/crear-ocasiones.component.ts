@@ -3,7 +3,6 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-crear-ocasiones',
@@ -21,8 +20,7 @@ export class CrearOcasionesComponent implements OnInit {
   constructor(
     private fb: FormBuilder, 
     private service: MaestroService,
-    public activeModal: NgbActiveModal,
-    private translate: TranslateService
+    public activeModal: NgbActiveModal
   ) {
     this.ocasionForm = this.fb.group({
       id: [''],
@@ -51,7 +49,7 @@ export class CrearOcasionesComponent implements OnInit {
 
   guardar() {
     if (this.ocasionForm.invalid) {
-      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
+      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
       return;
     }
 
@@ -67,23 +65,23 @@ export class CrearOcasionesComponent implements OnInit {
     this.service.createEditOcasion(this.ocasionForm.value).subscribe({
       next: (r) => {
         Swal.fire({
-          title: this.translate.instant('proceso.comun.guardado'),
-          text: this.translate.instant('proceso.comun.guardadoExito'),
+          title: 'Guardado!',
+          text: 'Guardado con éxito',
           icon: 'success',
-          confirmButtonText: this.translate.instant('comun.aceptar')
+          confirmButtonText: 'Ok'
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
-        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.errorGuardar'), 'error');
+        Swal.fire('Error', 'Ocurrió un error al guardar', 'error');
       }
     });
   }
 
   editar() {
     if (this.ocasionForm.invalid) {
-      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
+      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
       return;
     }
 
@@ -99,16 +97,16 @@ export class CrearOcasionesComponent implements OnInit {
     this.service.createEditOcasion(formData).subscribe({
       next: (r) => {
         Swal.fire({
-          title: this.translate.instant('proceso.comun.actualizado'),
-          text: this.translate.instant('proceso.comun.actualizadoExito'),
+          title: 'Actualizado!',
+          text: 'Actualizado con éxito',
           icon: 'success',
-          confirmButtonText: this.translate.instant('comun.aceptar')
+          confirmButtonText: 'Ok'
         }).then(() => {
           this.activeModal.close('success');
         });
       },
       error: (error) => {
-        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.errorActualizar'), 'error');
+        Swal.fire('Error', 'Ocurrió un error al actualizar', 'error');
       }
     });
   }

@@ -11,7 +11,7 @@
     
     <!-- Opcional: mantener un indicador visual simple -->
     <td *ngIf="isColumnVisible('opciones')" class="text-center options-cell" style="width: 3rem;">
-        <i class="pi pi-ellipsis-h text-muted" [title]="'ventas.list.clicDerechoParaVerOpciones' | translate"></i>
+        <i class="pi pi-ellipsis-h text-muted" [title]="'Click derecho para ver opciones' | translate"></i>
     </td>
 </tr>
 
@@ -27,15 +27,15 @@
             <i class="pi pi-cog"></i>
         </div>
         <div class="menu-header-content">
-            <h6 class="menu-title">{{ 'ventas.list.opcionesDelPedido' | translate }}</h6>
-            <small class="menu-subtitle">{{ 'ventas.list.pedido2' | translate }}{{ selectedOrder?.nroPedido }}</small>
+            <h6 class="menu-title">{{ 'Opciones del Pedido' | translate }}</h6>
+            <small class="menu-subtitle">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
         </div>
     </div>
     
     <div class="context-menu-content">
         <!-- Grupo: Acciones Principales -->
         <div class="menu-group">
-            <div class="menu-group-label">{{ 'ventas.list.principales' | translate }}</div>
+            <div class="menu-group-label">{{ 'Principales' | translate }}</div>
             
             <div class="menu-item" (click)="executeAction('pdf', selectedOrder)">
                 <div class="menu-item-icon pdf-action">
@@ -43,7 +43,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Imprimir PDF' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.generarDocumento' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Generar documento' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Ctrl+P</div>
             </div>
@@ -54,7 +54,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Producción' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.gestionarProceso' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Gestionar proceso' | translate }}</small>
                 </div>
             </div>
         </div>
@@ -69,7 +69,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Cliente' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.datosDelCliente' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Datos del cliente' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Ctrl+U</div>
             </div>
@@ -80,7 +80,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Dirección' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.direccionDeEntrega' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Dirección de entrega' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Ctrl+D</div>
             </div>
@@ -91,7 +91,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Facturación' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.datosDeFacturacion' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Datos de facturación' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Ctrl+F</div>
             </div>
@@ -102,7 +102,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Notas' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.comentariosAdicionales' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Comentarios adicionales' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Ctrl+N</div>
             </div>
@@ -110,7 +110,7 @@
         
         <!-- Grupo: Gestión (solo si no es producción) -->
         <div class="menu-group" *ngIf="!isFromProduction">
-            <div class="menu-group-label">{{ 'ventas.list.gestion' | translate }}</div>
+            <div class="menu-group-label">{{ 'Gestión' | translate }}</div>
             
             <div class="menu-item" (click)="executeAction('paymentStatus', selectedOrder)">
                 <div class="menu-item-icon payment-action">
@@ -118,7 +118,7 @@
                 </div>
                 <div class="menu-item-content">
                     <span class="menu-item-title">{{ 'Estado de Pago' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.cambiarEstado' | translate }}</small>
+                    <small class="menu-item-desc">{{ 'Cambiar estado' | translate }}</small>
                 </div>
             </div>
             
@@ -127,8 +127,8 @@
                     <i class="fa fa-shopping-cart"></i>
                 </div>
                 <div class="menu-item-content">
-                    <span class="menu-item-title">{{ 'ventas.list.agregarProductos' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.anadirMasProductos' | translate }}</small>
+                    <span class="menu-item-title">{{ 'Agregar Productos' | translate }}</span>
+                    <small class="menu-item-desc">{{ 'Añadir más productos' | translate }}</small>
                 </div>
             </div>
             
@@ -137,8 +137,8 @@
                     <i class="fa fa-users"></i>
                 </div>
                 <div class="menu-item-content">
-                    <span class="menu-item-title">{{ 'ventas.list.asignarAsesor' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.cambiarResponsable' | translate }}</small>
+                    <span class="menu-item-title">{{ 'Asignar Asesor' | translate }}</span>
+                    <small class="menu-item-desc">{{ 'Cambiar responsable' | translate }}</small>
                 </div>
             </div>
             
@@ -147,8 +147,8 @@
                     <i class="fa fa-history"></i>
                 </div>
                 <div class="menu-item-content">
-                    <span class="menu-item-title">{{ 'ventas.list.historialDePagos' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.verTodosLosPagos' | translate }}</small>
+                    <span class="menu-item-title">{{ 'Historial Pagos' | translate }}</span>
+                    <small class="menu-item-desc">{{ 'Ver todos los pagos' | translate }}</small>
                 </div>
             </div>
         </div>
@@ -156,15 +156,15 @@
         <!-- Grupo: Peligroso (solo usuarios autorizados) -->
         <div class="menu-group" *ngIf="canDeleteOrder() && !isFromProduction">
             <div class="menu-separator"></div>
-            <div class="menu-group-label danger-label">{{ 'ventas.list.zonaPeligrosa' | translate }}</div>
+            <div class="menu-group-label danger-label">{{ 'Zona Peligrosa' | translate }}</div>
             
             <div class="menu-item danger-item" (click)="executeAction('delete', selectedOrder)">
                 <div class="menu-item-icon delete-action">
                     <i class="fa fa-trash"></i>
                 </div>
                 <div class="menu-item-content">
-                    <span class="menu-item-title">{{ 'ventas.list.eliminarPedido' | translate }}</span>
-                    <small class="menu-item-desc">{{ 'ventas.list.eliminarPermanentemente' | translate }}</small>
+                    <span class="menu-item-title">{{ 'Eliminar Pedido' | translate }}</span>
+                    <small class="menu-item-desc">{{ 'Eliminar permanentemente' | translate }}</small>
                 </div>
                 <div class="menu-item-shortcut">Del</div>
             </div>

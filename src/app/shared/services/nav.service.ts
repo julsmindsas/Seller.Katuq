@@ -124,8 +124,12 @@ export class NavService implements OnDestroy {
   private dropshippingPrendido: boolean = false;
   // Agenda de servicios (D-491): bandera `serviceAgenda`. Último valor con el que se filtró el menú.
   private agendaPrendida: boolean = false;
+  // Centro de ayuda (D-628): bandera `centroDeAyuda`. Último valor con el que se filtró el menú.
+  private ayudaPrendida = false;
   // NPS por comercio (D-490): bandera `npsModulo`. Último valor con el que se filtró el menú.
   private npsPrendido: boolean = false;
+  // Leads de landing (D-633): bandera `landingsV2`. Último valor con el que se filtró el menú.
+  private landingsV2Prendido = false;
 
   constructor(
     private router: Router,
@@ -184,10 +188,26 @@ export class NavService implements OnDestroy {
         }
       });
     this.features
+      .isEnabled$("centroDeAyuda")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.ayudaPrendida) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
+    this.features
       .isEnabled$("npsModulo")
       .pipe(takeUntil(this.unsubscriber))
       .subscribe((prendida) => {
         if (prendida !== this.npsPrendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
+    this.features
+      .isEnabled$("landingsV2")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.landingsV2Prendido) {
           this.filterMenuItemsByAuthorization();
         }
       });
@@ -226,6 +246,10 @@ export class NavService implements OnDestroy {
   getMenuOriginal(): Menu[] {
     return this.ALLMENUITEMS.map((item) => {
       if (item.isOnlySuperAdministrador || item.isOnlyAdmin) {
+        return null;
+      }
+      // Centro de ayuda (D-628): con la bandera `centroDeAyuda` apagada, el selector de Roles no ofrece «Ayuda».
+      if (item.id === "ayuda" && !this.features.isEnabled("centroDeAyuda")) {
         return null;
       }
 
@@ -324,6 +348,10 @@ export class NavService implements OnDestroy {
     this.agendaPrendida = this.features.isEnabled("serviceAgenda");
     // NPS por comercio (D-490): igual, con su bandera.
     this.npsPrendido = this.features.isEnabled("npsModulo");
+    // Centro de ayuda (D-628): igual, con su bandera.
+    this.ayudaPrendida = this.features.isEnabled("centroDeAyuda");
+    // Leads de landing (D-633): igual, con su bandera.
+    this.landingsV2Prendido = this.features.isEnabled("landingsV2");
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -374,6 +402,17 @@ export class NavService implements OnDestroy {
           ) {
             return false;
           }
+
+          // Centro de ayuda (D-628): con la bandera `centroDeAyuda`, lo ve cualquier rol; su administración,
+          // solo el Super Administrador de Julsmind (el servidor responde 403 a los demás).
+          if (child.path && (child.path === "centro-de-ayuda" || child.path.startsWith("centro-de-ayuda/"))) {
+            if (!this.ayudaPrendida) return false;
+            return child.path === "centro-de-ayuda" ||
+              (isSuperAdmin && String(user.company || "").trim().toLowerCase() === "julsmind");
+          }
+
+          // Leads de landing (D-633): sin la bandera `landingsV2` no se ofrece.
+          if (child.path === "sitios/leads" && !this.landingsV2Prendido) return false;
 
           // Filtros normales de autorización y roles
           return (
@@ -580,6 +619,8 @@ export class NavService implements OnDestroy {
         // D-546: las landings son un tipo de sitio dentro de «Mis sitios» (como los catálogos, ticket 1175).
         // No tiene permiso propio: la ve quien ve «Mis sitios» (`inheritsPermissionFrom`), igual que D-416.
         { path: "sitios/landings", title: "Landings", type: "link", icon: "layout", inheritsPermissionFrom: "sitios" },
+        // D-633 (fase 1): bandeja de leads de las landings; solo con la bandera `landingsV2`. Hereda el permiso de «Mis sitios».
+        { path: "sitios/leads", title: "Leads landing", type: "link", icon: "users", inheritsPermissionFrom: "sitios" },
         // Ticket 1175: acceso directo a los catálogos digitales (vitrina D-141).
         {
           path: "sitios/catalogos",
@@ -1216,6 +1257,20 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "notificaciones", title: "Notificaciones", type: "link", icon: "settings" },
+      ],
+    },
+    // Centro de ayuda (D-628): solo con la bandera `centroDeAyuda`. Quien no administra ve un solo hijo y el
+    // grupo se dibuja como el enlace directo «Ayuda».
+    {
+      id: "ayuda",
+      title: "Ayuda",
+      menuIcon: "notes",
+      icon: "help-circle",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "centro-de-ayuda", title: "Artículos", type: "link", icon: "book" },
+        { path: "centro-de-ayuda/administrar", title: "Administrar", type: "link", icon: "edit", isOnlySuperAdministrador: true },
       ],
     },
 

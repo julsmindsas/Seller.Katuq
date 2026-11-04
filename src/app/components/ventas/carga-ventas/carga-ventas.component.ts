@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ToastrService } from 'ngx-toastr';
-import { TranslateService } from '@ngx-translate/core';
 import { KatuqIntelligenceService } from '../../../shared/katuqintelligence/katuq-intelligence.service';
 
 @Component({
@@ -22,8 +21,7 @@ export class CargaVentasComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private toastr: ToastrService,
-    private katuqService: KatuqIntelligenceService,
-    private translate: TranslateService
+    private katuqService: KatuqIntelligenceService
   ) { }
 
   ngOnInit(): void {
@@ -57,11 +55,11 @@ export class CargaVentasComponent implements OnInit {
           if (e.target?.result instanceof ArrayBuffer) {
             this.processExcelFile(e.target.result);
           } else {
-            this.toastr.error(this.translate.instant('ventas.cargaVentas.errorLeerExcel'), this.translate.instant('comun.error'));
+            this.toastr.error('Error al leer el archivo Excel', 'Error');
           }
         }
       } catch (error) {
-        this.toastr.error(this.translate.instant('ventas.cargaVentas.errorLeer', { error }), this.translate.instant('comun.error'));
+        this.toastr.error(`Error al leer el archivo: ${error}`, 'Error');
       }
     };
 
@@ -78,9 +76,9 @@ export class CargaVentasComponent implements OnInit {
       if (this.fileData.length > 0) {
         this.dataHeaders = Object.keys(this.fileData[0]);
       }
-      this.toastr.success(this.translate.instant('ventas.cargaVentas.jsonCargado'), this.translate.instant('comun.exito'));
+      this.toastr.success('Archivo JSON cargado correctamente', 'Éxito');
     } catch (error) {
-      this.toastr.error(this.translate.instant('ventas.cargaVentas.jsonFormato'), this.translate.instant('comun.error'));
+      this.toastr.error('El archivo JSON no tiene el formato correcto', 'Error');
     }
   }
 
@@ -102,16 +100,16 @@ export class CargaVentasComponent implements OnInit {
         this.dataHeaders = Object.keys(this.fileData[0]);
       }
 
-      this.toastr.success(this.translate.instant('ventas.cargaVentas.excelCargado'), this.translate.instant('comun.exito'));
+      this.toastr.success('Archivo Excel cargado correctamente', 'Éxito');
     } catch (error) {
-      this.toastr.error(this.translate.instant('ventas.cargaVentas.excelFormato'), this.translate.instant('comun.error'));
+      this.toastr.error('El archivo Excel no tiene el formato correcto', 'Error');
     }
   }
 
 
   processFile(): void {
     if (!this.fileData.length) {
-      this.toastr.warning(this.translate.instant('ventas.cargaVentas.sinDatos'), this.translate.instant('ventas.cargaVentas.advertencia'));
+      this.toastr.warning('No hay datos para procesar', 'Advertencia');
       return;
     }
 
@@ -119,19 +117,19 @@ export class CargaVentasComponent implements OnInit {
       next: (response: any) => {
         this.processingSuccess = true;
         this.processingResult = `Se procesaron ${response.orders.length} registros correctamente.`;
-        this.toastr.success(this.translate.instant('ventas.cargaVentas.procesados'), this.translate.instant('comun.exito'));
+        this.toastr.success('Datos procesados correctamente', 'Éxito');
       },
       error: (error) => {
         this.processingSuccess = false;
         this.processingResult = `Error al procesar los datos: ${error.message}`;
-        this.toastr.error(this.translate.instant('ventas.cargaVentas.errorProcesar'), this.translate.instant('comun.error'));
+        this.toastr.error('Error al procesar los datos', 'Error');
       }
     });
   }
 
   processWithKAI(): void {
     if (!this.fileData.length) {
-      this.toastr.warning(this.translate.instant('ventas.cargaVentas.sinDatosKai'), this.translate.instant('ventas.cargaVentas.advertencia'));
+      this.toastr.warning('No hay datos para procesar con KAI', 'Advertencia');
       return;
     }
 
@@ -139,12 +137,12 @@ export class CargaVentasComponent implements OnInit {
       next: (response: any) => {
         this.processingSuccess = true;
         this.processingResult = `KAI ha procesado ${response.processed} registros correctamente.`;
-        this.toastr.success(this.translate.instant('ventas.cargaVentas.procesadosKai'), this.translate.instant('comun.exito'));
+        this.toastr.success('Datos procesados por KAI correctamente', 'Éxito');
       },
       error: (error) => {
         this.processingSuccess = false;
         this.processingResult = `Error al procesar los datos con KAI: ${error.message}`;
-        this.toastr.error(this.translate.instant('ventas.cargaVentas.errorKai'), this.translate.instant('comun.error'));
+        this.toastr.error('Error al procesar con KAI', 'Error');
       }
     });
   }

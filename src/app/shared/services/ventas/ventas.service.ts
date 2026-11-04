@@ -581,6 +581,23 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/cash-closing', cierreData);
   }
 
+  /**
+   * D-583: lo que entraría en el cierre, sin cerrar nada. Usa la misma selección del
+   * backend que el cierre: ventas del período (día Colombia) y, aparte, las de días
+   * anteriores que quedaron sin cerrar. Responde { yaCerrado, delPeriodo, anteriores }.
+   */
+  previsualizarCierreCaja(datos: { fechaCierre: string; fechaFin: string; company: string }): Observable<any> {
+    return this.post<any>('/v1/orders/cash-closing', { ...datos, soloPrevisualizar: true });
+  }
+
+  /**
+   * D-587: ajuste de un cierre con descuadre (solo Administrador). No edita el cierre:
+   * le agrega una corrección con valor, motivo, quién y cuándo.
+   */
+  registrarAjusteCierre(datos: { cierreId: string; valor: number; motivo: string }): Observable<any> {
+    return this.post<any>('/v1/orders/cash-closing-adjustment', datos);
+  }
+
   getCashClosingHistory(filter: any) {
     return this.post<any>('/v1/orders/cash-closing-history', filter);
   }

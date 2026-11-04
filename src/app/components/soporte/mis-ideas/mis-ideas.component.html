@@ -1,4 +1,7 @@
-<div class="cfg-pagina tickets-dashboard" [class.loading]="isLoading">
+<!-- D-627: con la bandera misIdeasV2 se muestra el rediseño maestro-detalle; apagada, queda esta vista. -->
+<app-mis-ideas-maestro *ngIf="v2"></app-mis-ideas-maestro>
+
+<div *ngIf="!v2" class="cfg-pagina tickets-dashboard" [class.loading]="isLoading">
   <!-- Loading overlay when fetching data -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
@@ -12,7 +15,7 @@
       <p class="cfg-sub">{{ 'soporte.misIdeas.gestionaTusIdeasYSugerencias' | translate }}</p>
     </div>
     <div class="cfg-acciones">
-      <button class="cfg-btn" routerLink="/nueva-idea">
+      <button class="cfg-btn" routerLink="/soporte" [queryParams]="{ tipo: 'idea' }">
         <i class="fa fa-plus"></i> {{ 'soporte.misIdeas.nuevaIdea' | translate }}
       </button>
     </div>
@@ -112,7 +115,7 @@
     </div>
     <h3 class="cfg-vacio__titulo">{{ 'soporte.misIdeas.noHayIdeasQueMostrar' | translate }}</h3>
     <p class="cfg-vacio__texto">{{ 'soporte.misIdeas.noSeEncontraronIdeasCon' | translate }}</p>
-    <button class="cfg-btn" routerLink="/nueva-idea">{{ 'soporte.misIdeas.proponerUnaIdea' | translate }}</button>
+    <button class="cfg-btn" routerLink="/soporte" [queryParams]="{ tipo: 'idea' }">{{ 'soporte.misIdeas.proponerUnaIdea' | translate }}</button>
   </div>
 
   <!-- Ideas List -->
@@ -126,7 +129,7 @@
            tabindex="0"
            [attr.aria-controls]="'idea-details-' + i">
         <div class="ticket-info">
-          <div class="ticket-id">#{{idea.cd || ('soporte.misIdeas.sinId' | translate)}}</div>
+          <div class="ticket-id">#{{idea.nroTicket || idea.cd || ('soporte.misIdeas.sinId' | translate)}}</div>
           <h3 class="ticket-title">{{idea.asunto}}</h3>
           <div class="ticket-meta">
             <span class="ticket-date"><i class="fa fa-calendar"></i> {{idea.fechaRegistro | date:'dd/MM/yyyy'}}</span>
@@ -134,15 +137,16 @@
           </div>
         </div>
         <div class="ticket-status-wrapper">
-          <span class="ticket-status" [ngClass]="idea.status.toLowerCase()">
+          <!-- Ticket 1443: el estado de la idea se deduce del estado del ticket. -->
+          <span class="ticket-status" [ngClass]="estadoIdea(idea)">
             <i class="fa" 
                [ngClass]="{
-                 'fa-search': idea.status.toLowerCase() === 'evaluando',
-                 'fa-cogs': idea.status.toLowerCase() === 'desarrollo',
-                 'fa-check-circle': idea.status.toLowerCase() === 'implementado',
-                 'fa-times-circle': idea.status.toLowerCase() === 'rechazado'
+                 'fa-search': estadoIdea(idea) === 'evaluando',
+                 'fa-cogs': estadoIdea(idea) === 'desarrollo',
+                 'fa-check-circle': estadoIdea(idea) === 'implementado',
+                 'fa-times-circle': estadoIdea(idea) === 'rechazado'
                }"></i>
-            {{idea.status}}
+            {{ etiquetaEstadoIdea(idea) | translate }}
           </span>
           <div class="expand-icon">
             <i class="fa" [ngClass]="expandedTickets[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>

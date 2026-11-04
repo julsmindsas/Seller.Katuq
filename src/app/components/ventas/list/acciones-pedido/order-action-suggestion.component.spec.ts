@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IconoTablerComponent } from '../../../../shared/icons/icono-tabler.component';
 import { OrderActionSuggestionComponent } from './order-action-suggestion.component';
 
@@ -23,9 +22,7 @@ describe('OrderActionSuggestionComponent (D-547 F2)', () => {
   const botones = (el: HTMLElement) => Array.from(el.querySelectorAll('button')) as HTMLButtonElement[];
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ declarations: [OrderActionSuggestionComponent], imports: [IconoTablerComponent, TranslateModule.forRoot()] });
-    TestBed.inject(TranslateService).setTranslation('es', {"ventas.actionSuggestion.fijar":"Fijar","ventas.actionSuggestion.ahoraNo":"Ahora no"});
-    TestBed.inject(TranslateService).use('es');
+    TestBed.configureTestingModule({ declarations: [OrderActionSuggestionComponent], imports: [IconoTablerComponent] });
     fijar = 0; ahoraNo = 0;
   });
 

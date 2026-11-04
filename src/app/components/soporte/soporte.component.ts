@@ -142,6 +142,10 @@ export class SoporteComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Ticket 1443: «Nueva idea» (desde Mis Ideas) llega con ?tipo=idea y deja el tipo elegido.
+    const tipoInicial = this.router.parseUrl(this.router.url).queryParams['tipo'];
+    const tipo = this.tiposSolicitud.find((t) => t.key === tipoInicial);
+    if (tipo) this.elegirTipo(tipo);
     // Existing code remains...
     this.users = [{
       "id": "5",

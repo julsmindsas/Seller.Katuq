@@ -1,13 +1,13 @@
 <div class="modal-header">
   <div>
-    <h5 class="modal-title mb-0">{{ 'proceso.historialRedenciones.titulo' | translate }}</h5>
+    <h5 class="modal-title mb-0">Historial de redenciones</h5>
     <small class="text-muted">
       <span *ngIf="descuento?.codigoPersonalizado" class="badge bg-secondary">{{ descuento?.codigoPersonalizado }}</span>
-      <span *ngIf="!descuento?.codigoPersonalizado" class="badge bg-info text-dark">{{ 'proceso.historialRedenciones.promocion' | translate }}</span>
+      <span *ngIf="!descuento?.codigoPersonalizado" class="badge bg-info text-dark">Promoción</span>
       <span *ngIf="descuento?.nombre">&nbsp;{{ descuento?.nombre }}</span>
     </small>
   </div>
-  <button type="button" class="close btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()">
+  <button type="button" class="close btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()">
     <span aria-hidden="true">&times;</span>
   </button>
 </div>
@@ -20,8 +20,8 @@
   <div *ngIf="!cargando">
     <!-- Resumen -->
     <div class="d-flex justify-content-between mb-3" *ngIf="redenciones.length > 0">
-      <span class="text-muted">{{ 'proceso.historialRedenciones.totalUsos' | translate }} <strong>{{ redenciones.length }}</strong></span>
-      <span class="text-muted">{{ 'proceso.historialRedenciones.totalDescontado' | translate }}
+      <span class="text-muted">Total de usos: <strong>{{ redenciones.length }}</strong></span>
+      <span class="text-muted">Total descontado:
         <strong>{{ totalDescontado | currency:'USD':'symbol':'1.0-0' }}</strong>
       </span>
     </div>
@@ -29,7 +29,7 @@
     <!-- Sin redenciones -->
     <div *ngIf="redenciones.length === 0" class="text-center text-muted py-4">
       <i class="icofont icofont-history" style="font-size: 32px;"></i>
-      <p class="mb-0 mt-2">{{ 'proceso.historialRedenciones.sinRedenciones' | translate }}</p>
+      <p class="mb-0 mt-2">Este código aún no ha sido redimido.</p>
     </div>
 
     <!-- Tabla -->
@@ -37,12 +37,12 @@
       <table class="table table-sm table-striped align-middle">
         <thead>
           <tr>
-            <th>{{ 'proceso.historialRedenciones.colFecha' | translate }}</th>
-            <th>{{ 'proceso.historialRedenciones.colCliente' | translate }}</th>
-            <th>{{ 'proceso.historialRedenciones.colPedido' | translate }}</th>
-            <th class="text-end">{{ 'proceso.historialRedenciones.colDescontado' | translate }}</th>
-            <th class="text-end">{{ 'proceso.historialRedenciones.colTotalPedido' | translate }}</th>
-            <th>{{ 'proceso.historialRedenciones.colProductos' | translate }}</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Pedido</th>
+            <th class="text-end">Descontado</th>
+            <th class="text-end">Total pedido</th>
+            <th>Productos</th>
           </tr>
         </thead>
         <tbody>
@@ -64,5 +64,5 @@
 </div>
 
 <div class="modal-footer">
-  <button class="btn btn-secondary" (click)="activeModal.close()">{{ 'comun.cerrar' | translate }}</button>
+  <button class="btn btn-secondary" (click)="activeModal.close()">Cerrar</button>
 </div>

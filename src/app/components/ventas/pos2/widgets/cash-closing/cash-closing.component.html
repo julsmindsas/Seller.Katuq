@@ -1,14 +1,14 @@
 <div class="cash-closing-container">
   <div class="card main-card">
     <div class="cc-cabeza d-flex justify-content-between align-items-center">
-      <h4><i class="fa fa-money me-2"></i>{{ 'ventas.cashClosing.titulo' | translate }}</h4>
-      <div class="header-actions" *ngIf="informe.totalVentas > 0">
+      <h4><i class="fa fa-money me-2"></i>Cierre de Caja<span class="turno-chip" *ngIf="turno > 1 && mostrarBotonCompletar">Cierre {{turno}} del día</span></h4>
+      <div class="header-actions" *ngIf="hayVentas">
         <div class="btn-group">
           <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
-            <i class="fa fa-print me-1"></i> {{ 'ventas.cashClosing.imprimirPc' | translate }}
+            <i class="fa fa-print me-1"></i> Imprimir PC
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm" (click)="imprimirPOS()">
-            <i class="fa fa-file-text-o me-1"></i> {{ 'ventas.cashClosing.imprimirPos' | translate }}
+            <i class="fa fa-file-text-o me-1"></i> Imprimir POS
           </button>
         </div>
       </div>
@@ -19,24 +19,24 @@
         <div class="step" [ngClass]="{'active': !mostrarBotonCompletar, 'completed': mostrarBotonCompletar}">
           <div class="step-number">1</div>
           <div class="step-content">
-            <h6>{{ 'ventas.cashClosing.seleccionarPeriodo' | translate }}</h6>
-            <p>{{ 'ventas.cashClosing.elijaElRango' | translate }}</p>
+            <h6>Seleccionar período</h6>
+            <p>Elija el rango de fechas para el cierre</p>
           </div>
         </div>
         <div class="step-connector"></div>
         <div class="step" [ngClass]="{'active': mostrarBotonCompletar && !cierreFinalizado, 'disabled': !mostrarBotonCompletar, 'completed': cierreFinalizado}">
           <div class="step-number">2</div>
           <div class="step-content">
-            <h6>{{ 'ventas.cashClosing.completarDatos' | translate }}</h6>
-            <p>{{ 'ventas.cashClosing.ingreseSaldos' | translate }}</p>
+            <h6>Completar datos</h6>
+            <p>Ingrese saldos y observaciones</p>
           </div>
         </div>
         <div class="step-connector"></div>
         <div class="step" [ngClass]="{'disabled': !cierreFinalizado, 'active': cierreFinalizado}">
           <div class="step-number">3</div>
           <div class="step-content">
-            <h6>{{ 'ventas.cashClosing.finalizar' | translate }}</h6>
-            <p>{{ 'ventas.cashClosing.cierreCompletado' | translate }}</p>
+            <h6>Finalizar</h6>
+            <p>Cierre completado</p>
           </div>
         </div>
       </div>
@@ -45,13 +45,13 @@
         <!-- Panel de selección de fechas -->
         <div class="panel-container mb-4">
           <div class="panel-header">
-            <h5><i class="fa fa-calendar-o me-2"></i>{{ 'ventas.cashClosing.periodoDeCierre' | translate }}</h5>
+            <h5><i class="fa fa-calendar-o me-2"></i>Período de Cierre</h5>
           </div>
           <div class="panel-body">
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group mb-3">
-                  <label for="fechaCierre" class="form-label">{{ 'ventas.cashClosing.fechaInicio' | translate }}</label>
+                  <label for="fechaCierre" class="form-label">Fecha Inicio</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                     <input type="date" class="form-control" id="fechaCierre" [(ngModel)]="fechaCierre" name="fechaCierre">
@@ -60,7 +60,7 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group mb-3">
-                  <label for="fechaFin" class="form-label">{{ 'ventas.cashClosing.fechaFin' | translate }}</label>
+                  <label for="fechaFin" class="form-label">Fecha Fin</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                     <input type="date" class="form-control" id="fechaFin" [(ngModel)]="fechaFin" name="fechaFin">
@@ -70,61 +70,83 @@
             </div>
             <div class="button-action text-end mt-2" *ngIf="!mostrarBotonCompletar">
               <button type="submit" class="btn btn-primary">
-                <i class="fa fa-calculator me-2"></i>{{ 'ventas.cashClosing.calcularResumen' | translate }}
+                <i class="fa fa-calculator me-2"></i>Calcular Resumen
               </button>
             </div>
           </div>
         </div>
 
         <!-- Resumen de ventas -->
-        <div class="panel-container mb-4" *ngIf="informe.totalVentas > 0" id="imprimible">
+        <div class="panel-container mb-4" *ngIf="hayVentas" id="imprimible">
           <!-- Encabezado para impresión -->
           <div class="print-header d-none">
-            <h3>{{ 'ventas.cashClosing.cierreDeCajaMayus' | translate }}</h3>
+            <h3>CIERRE DE CAJA</h3>
             <div class="empresa-info">
               <p><strong>{{empresa}}</strong></p>
-              <p>{{ 'ventas.cashClosing.periodo' | translate }} <strong>{{resumenPeriodo}}</strong></p>
-              <p>{{ 'ventas.cashClosing.fechaDeEmision' | translate }} <strong>{{fechaHoraReporte()}}</strong></p>
+              <p>Período: <strong>{{resumenPeriodo}}</strong></p>
+              <p>Fecha de emisión: <strong>{{fechaHoraReporte()}}</strong></p>
             </div>
             <div class="separator-line"></div>
           </div>
           
           <div class="panel-header">
-            <h5><i class="fa fa-line-chart me-2"></i>{{ 'ventas.cashClosing.resumenDeVentas' | translate }}</h5>
+            <h5><i class="fa fa-line-chart me-2"></i>Resumen de Ventas</h5>
           </div>
           <div class="panel-body">
             <div class="row">
               <div class="col-md-5">
                 <div class="summary-card">
-                  <h6><i class="fa fa-credit-card me-2"></i>{{ 'ventas.cashClosing.formasDePago' | translate }}</h6>
+                  <h6><i class="fa fa-credit-card me-2"></i>Formas de pago</h6>
                   <div class="card-divider"></div>
                   <div class="informe-item" *ngFor="let formaPago of formasPago">
                     <span>{{formaPago.nombre}}:</span>
                     <strong>${{formaPago.total | number:'1.2-2'}}</strong>
                   </div>
                   <div class="informe-item total">
-                    <span>{{ 'ventas.cashClosing.totalVentas' | translate }}</span>
+                    <span>Total Ventas:</span>
                     <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
+                  </div>
+
+                  <!-- D-583: ventas de días anteriores sin cerrar, aparte -->
+                  <div class="anteriores-aviso" *ngIf="pedidosAnteriores.length > 0">
+                    <div class="anteriores-titulo">
+                      <i class="fa fa-clock-o me-2"></i>Ventas sin cerrar del {{fechasAnteriores}} ({{pedidosAnteriores.length}})
+                    </div>
+                    <span class="anteriores-texto">
+                      Se hicieron después del último cierre. Quedan con su fecha y
+                      <strong>no suman al Total Ventas</strong>, pero su efectivo está en la caja.
+                    </span>
+                    <div class="informe-item" *ngFor="let formaPago of formasPagoAnteriores">
+                      <span>{{formaPago.nombre}}:</span>
+                      <strong>${{formaPago.total | number:'1.2-2'}}</strong>
+                    </div>
+                    <div class="informe-item total">
+                      <span>Total días anteriores:</span>
+                      <strong>${{totalAnteriores | number:'1.2-2'}}</strong>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="col-md-7" *ngIf="mostrarBotonCompletar">
                 <div class="summary-card">
-                  <h6><i class="fa fa-money me-2"></i>{{ 'ventas.cashClosing.datosDelCierre' | translate }}</h6>
+                  <h6><i class="fa fa-money me-2"></i>Datos del Cierre</h6>
                   <div class="card-divider"></div>
                   <div class="row">
                     <div class="col-md-6">
                       <div class="form-group mb-3">
-                        <label class="form-label">{{ 'ventas.cashClosing.saldoInicial' | translate }}</label>
+                        <label class="form-label">Saldo Inicial</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
                           <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="0.01">
                         </div>
+                        <small class="saldo-sugerido" *ngIf="saldoInicialSugerido">
+                          Es el saldo final del cierre anterior de hoy (lo que quedó en la caja). Cámbialo si sacaron plata.
+                        </small>
                       </div>
                     </div>
                     <div class="col-md-6">
                       <div class="form-group mb-3">
-                        <label class="form-label">{{ 'ventas.cashClosing.saldoFinal' | translate }}</label>
+                        <label class="form-label">Saldo Final</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
                           <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="0.01" required>
@@ -133,11 +155,13 @@
                     </div>
                   </div>
                   <div class="form-group mb-3">
-                    <label class="form-label">{{ 'ventas.cashClosing.observaciones' | translate }}</label>
-                    <textarea class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3" [placeholder]="'ventas.cashClosing.ingreseObservaciones' | translate"></textarea>
+                    <label class="form-label">Observaciones<span class="obligatoria" *ngIf="efectivoFinal && hayDescuadre"> · obligatorio: explica la diferencia</span></label>
+                    <textarea class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3"
+                      [class.falta-explicar]="efectivoFinal && hayDescuadre && !observaciones?.trim()"
+                      [placeholder]="efectivoFinal && hayDescuadre ? '¿Por qué sobra o falta plata? Ej.: di mal un vuelto' : 'Ingrese observaciones relevantes del cierre...'"></textarea>
                   </div>
                   <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}" *ngIf="efectivoFinal">
-                    <span>{{ 'ventas.cashClosing.diferenciaEnEfectivo' | translate }}</span>
+                    <span>Diferencia en Efectivo:</span>
                     <strong>${{calcularDiferencia() | number:'1.2-2'}}</strong>
                   </div>
                 </div>
@@ -146,16 +170,16 @@
 
             <!-- Tabla de Productos -->
             <div class="productos-section mt-4">
-              <h6><i class="fa fa-cube me-2"></i>{{ 'ventas.cashClosing.productosVendidos' | translate: { n: informe.totalProductos } }}</h6>
+              <h6><i class="fa fa-cube me-2"></i>Productos Vendidos ({{informe.totalProductos}})</h6>
               <div class="table-responsive">
                 <table class="table table-sm table-striped">
                   <thead>
                     <tr>
-                      <th>{{ 'ventas.cashClosing.colProducto' | translate }}</th>
-                      <th class="text-center">{{ 'ventas.cashClosing.colCantidad' | translate }}</th>
-                      <th class="text-end">{{ 'ventas.cashClosing.colPrecioUnit' | translate }}</th>
-                      <th class="text-end">{{ 'ventas.cashClosing.colTotal' | translate }}</th>
-                      <th>{{ 'ventas.cashClosing.colPedido' | translate }}</th>
+                      <th>Producto</th>
+                      <th class="text-center">Cantidad</th>
+                      <th class="text-end">Precio Unit.</th>
+                      <th class="text-end">Total</th>
+                      <th>Pedido</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -169,7 +193,7 @@
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td colspan="1"><strong>{{ 'ventas.cashClosing.totalProductos' | translate }}</strong></td>
+                      <td colspan="1"><strong>Total Productos:</strong></td>
                       <td class="text-center"><strong>{{informe.totalProductos}}</strong></td>
                       <td colspan="1"></td>
                       <td class="text-end"><strong>${{calcularTotalProductos() | number:'1.2-2'}}</strong></td>
@@ -185,15 +209,15 @@
               <div class="print-signatures">
                 <div class="signature-line">
                   <p>__________________________________</p>
-                  <p>{{ 'ventas.cashClosing.responsableDeCaja' | translate }}</p>
+                  <p>Responsable de Caja</p>
                 </div>
                 <div class="signature-line">
                   <p>__________________________________</p>
-                  <p>{{ 'ventas.cashClosing.supervisor' | translate }}</p>
+                  <p>Supervisor</p>
                 </div>
               </div>
               <div class="print-notes">
-                <p><strong>{{ 'ventas.cashClosing.observacionesDosPuntos' | translate }}</strong> {{observaciones || ('ventas.cashClosing.sinObservaciones' | translate)}}</p>
+                <p><strong>Observaciones:</strong> {{observaciones || 'Sin observaciones'}}</p>
               </div>
             </div>
           </div>
@@ -201,10 +225,10 @@
         
         <div class="button-group mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="modal.dismissAll()">
-            <i class="fa fa-times-circle me-2"></i>{{ 'comun.cancelar' | translate }}
+            <i class="fa fa-times-circle me-2"></i>Cancelar
           </button>
-          <button type="button" class="btn btn-confirmar" *ngIf="mostrarBotonCompletar" (click)="completarCierre()">
-            <i class="fa fa-check-circle me-2"></i>{{ 'ventas.cashClosing.completarCierre' | translate }}
+          <button type="button" class="btn btn-confirmar" *ngIf="mostrarBotonCompletar && !cierreFinalizado" (click)="completarCierre()">
+            <i class="fa fa-check-circle me-2"></i>Completar Cierre
           </button>
         </div>
       </form>

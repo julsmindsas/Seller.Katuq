@@ -82,6 +82,7 @@ const ICONO_POR_TIPO: Readonly<Record<TipoAlertaRadar, IconoId>> = {
   listo: 'caja',
   demorado: 'reloj',
   mensajero: 'moto',
+  sin_cerrar: 'check',
   sin_pago: 'tarjeta',
 };
 

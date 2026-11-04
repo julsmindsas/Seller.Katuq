@@ -62,6 +62,7 @@ import { AdaptiveNavigationComponent } from './components/adaptive-navigation/ad
 import { HapticFeedbackService } from './services/haptic-feedback.service';
 // Notification Center
 import { NotificationCenterComponent } from './components/notification-center/notification-center.component';
+import { NovedadesListaComponent } from './components/novedades-lista/novedades-lista.component';
 import { NotificationManagerService } from './services/notifications/notification-manager.service';
 import { NotificationPreferencesService } from './services/notifications/notification-preferences.service';
 // Shared Filters Component
@@ -128,6 +129,7 @@ import { IconoTablerComponent } from './icons/icono-tabler.component';
     AdaptiveNavigationComponent,
     // Notification Center
     NotificationCenterComponent,
+    NovedadesListaComponent,
     // Shared Filters Component
     SharedFiltersComponent,
     // Usage Widget Component

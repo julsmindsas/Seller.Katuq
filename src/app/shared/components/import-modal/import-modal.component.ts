@@ -1047,8 +1047,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     private columnMappingService: ColumnMappingService,
     private maestroService: MaestroService,
     private features: CompanyFeaturesService,
-    private translate: TranslateService,
-    private atributos: CatalogAttributesService
+    private atributos: CatalogAttributesService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {

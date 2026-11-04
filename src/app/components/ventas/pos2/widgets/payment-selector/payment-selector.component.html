@@ -3,25 +3,25 @@
     <div class="header-top">
       <!-- Elegir el método ABRE el flujo de cobro (openPaymentFlow), así que el
            título dice lo que realmente pasa al hacer clic. -->
-      <h5 class="m-0">{{ 'ventas.paymentSelector.cobrarCon' | translate }}</h5>
+      <h5 class="m-0">{{ 'Cobrar con' | translate }}</h5>
     </div>
   </div>
   <div class="card-body pt-0 order-details p-3">
     <div class="payment-options">
-      <div class="icons" role="group" [attr.aria-label]="'ventas.paymentSelector.cobrarCon' | translate">
+      <div class="icons" role="group" aria-label="Cobrar con">
         <button (click)="handleCashPayment()" class="icon" [class.selected]="selectedMethod === 'Efectivo'">
-          <img src="assets/images/dashboard-8/payment-option/cash.svg" [alt]="'ventas.paymentSelector.efectivo' | translate" />
-          <span>{{ 'ventas.paymentSelector.efectivo' | translate }}</span>
+          <img src="assets/images/dashboard-8/payment-option/cash.svg" alt="Efectivo" />
+          <span>Efectivo</span>
         </button>
         
         <button (click)="handleCardPayment()" class="icon" [class.selected]="selectedMethod === 'Métodos Electrónicos'">
-          <img src="assets/images/dashboard-8/payment-option/card.svg" [alt]="'ventas.paymentSelector.metodosElectronicos' | translate" />
-          <span>{{ 'ventas.paymentSelector.metodosElectronicos' | translate }}</span>
+          <img src="assets/images/dashboard-8/payment-option/card.svg" alt="Métodos Electrónicos" />
+          <span>Métodos Electrónicos</span>
         </button>
         
         <button (click)="handleEWalletPayment()" class="icon" [class.selected]="selectedMethod === 'E-Wallet'">
-          <img src="assets/images/dashboard-8/payment-option/wallet.svg" [alt]="'ventas.paymentSelector.eWallet' | translate" />
-          <span>{{ 'ventas.paymentSelector.eWallet' | translate }}</span>
+          <img src="assets/images/dashboard-8/payment-option/wallet.svg" alt="E-wallet" />
+          <span>E-wallet</span>
         </button>
       </div>
     </div>

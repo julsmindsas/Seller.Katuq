@@ -1,19 +1,19 @@
 <div class="cfg-pagina">
     <header class="cfg-cabeza">
         <div class="cfg-cabeza__textos">
-            <span class="cfg-eyebrow">{{ 'proceso.comun.configuracion' | translate }}</span>
-            <h1 class="cfg-titulo">{{ 'proceso.tiposCliente.titulo' | translate }}</h1>
-            <p class="cfg-sub">{{ 'proceso.tiposCliente.subtitulo' | translate }}</p>
+            <span class="cfg-eyebrow">{{ "Configuración" | translate }}</span>
+            <h1 class="cfg-titulo">{{ "Tipos de Cliente" | translate }}</h1>
+            <p class="cfg-sub">{{ "Segmenta tus clientes para ofrecer diferentes ofertas a cada grupo." | translate }}</p>
         </div>
 
         <div class="cfg-acciones">
             <button class="cfg-btn" type="button" (click)="openCrearModal()">
-                <i placement="top" [ngbTooltip]="'proceso.comun.nuevo' | translate" class="icofont icofont-plus"></i>
-                <span>{{ 'proceso.tiposCliente.crear' | translate }}</span>
+                <i placement="top" ngbTooltip="Nuevo" class="icofont icofont-plus"></i>
+                <span>{{ "Crear Tipo de Cliente" | translate }}</span>
             </button>
             <button class="cfg-btn cfg-btn--sec" type="button">
                 <i class="icofont icofont-file-excel"></i>
-                <span>{{ 'proceso.comun.excel' | translate }}</span>
+                <span>{{ "Excel" | translate }}</span>
             </button>
         </div>
     </header>
@@ -32,28 +32,28 @@
                     'descripcion',
                     'activo'
                 ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
-                [currentPageReportTemplate]="'proceso.tabla.paginacion' | translate">
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
 
                 <ng-template pTemplate="header">
                     <tr>
                         <th class="text-center" pSortableColumn="nombre">
-                            {{ 'proceso.tabla.nombre' | translate }}
+                            {{ "Nombre" | translate }}
                             <p-sortIcon field="nombre"></p-sortIcon>
                         </th>
                         <th class="text-center col-descripcion" pSortableColumn="descripcion">
-                            {{ 'proceso.tabla.descripcion' | translate }}
+                            {{ "Descripción" | translate }}
                             <p-sortIcon field="descripcion"></p-sortIcon>
                         </th>
                         <th class="text-center" pSortableColumn="esPrecioBase">
-                            {{ 'proceso.tiposCliente.precioBase' | translate }}
+                            {{ "Precio base" | translate }}
                             <p-sortIcon field="esPrecioBase"></p-sortIcon>
                         </th>
                         <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
-                            {{ 'proceso.tabla.activo' | translate }}
+                            {{ "Activo" | translate }}
                             <p-sortIcon field="activo"></p-sortIcon>
                         </th>
                         <th class="text-center">
-                            {{ 'proceso.tabla.acciones' | translate }}
+                            {{ "Acciones" | translate }}
                         </th>
                     </tr>
                 </ng-template>
@@ -73,7 +73,7 @@
                             <!-- Marca excluyente: el precio de este tipo también es el
                                  precio base del producto. Se cambia en Editar. -->
                             <span class="badge-precio-base" *ngIf="row.esPrecioBase">
-                                <i class="pi pi-star-fill"></i> {{ 'proceso.tiposCliente.precioBase' | translate }}
+                                <i class="pi pi-star-fill"></i> {{ "Precio base" | translate }}
                             </span>
                             <span class="texto-vacio" *ngIf="!row.esPrecioBase">—</span>
                         </td>
@@ -83,7 +83,7 @@
                                  reversible a la papelera, que sí borra. -->
                             <label class="switch"
                                 placement="top"
-                                [ngbTooltip]="(row.active === false ? 'proceso.comun.activar' : 'proceso.comun.desactivar') | translate">
+                                ngbTooltip="{{ (row.active === false ? 'Activar' : 'Desactivar') | translate }}">
                                 <input class="toggle" type="checkbox" [checked]="row.active !== false"
                                     [disabled]="guardandoActivo[row.id]"
                                     (change)="toggleActivo(row)" />
@@ -91,11 +91,11 @@
                             </label>
                         </td>
                         <td class="text-center">
-                            <i placement="top" [ngbTooltip]="'comun.editar' | translate"
+                            <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
                             </i>
-                            <i placement="top" [ngbTooltip]="'comun.eliminar' | translate"
+                            <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-trash fc-danger" (click)="deleteTipoCliente(row)">
                             </i>
@@ -105,13 +105,13 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td [attr.colspan]="isMobile ? 4 : 5">{{ 'proceso.tabla.sinDatos' | translate }}</td>
+                        <td [attr.colspan]="isMobile ? 4 : 5">{{ "No hay datos disponibles" | translate }}</td>
                     </tr>
                 </ng-template>
 
                 <ng-template pTemplate="summary">
                     <div class="flex align-items-center justify-content-between">
-                        {{ 'proceso.tabla.totalConsulta' | translate: { n: rows ? rows.length : 0 } }}
+                        {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "registros" | translate }}.
                     </div>
                 </ng-template>
             </p-table>

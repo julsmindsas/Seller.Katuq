@@ -144,6 +144,10 @@ export interface ContenidoMensajero {
   tituloLleva: string;
   filas: FilaVista[];
   restantes: number;
+  /** Pedidos de días anteriores que siguen "despachados" (solo mensajero propio). Vacío si no hay. */
+  tituloSinCerrar: string;
+  filasSinCerrar: FilaVista[];
+  restantesSinCerrar: number;
   nota: string;
 }
 

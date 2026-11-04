@@ -4,7 +4,6 @@ import { VentasService } from '../../../../../shared/services/ventas/ventas.serv
 import swal from 'sweetalert2';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { formasPagoComoNumeros, normalizarHistorialCierres } from './historial-cierres.normalizar';
-import { TranslateService } from '@ngx-translate/core';
 
 // Interfaz para un pedido individual dentro del historial
 interface Pedido {
@@ -32,6 +31,16 @@ interface HistorialItem {
   cantidadProductos: number;
   totalDescuentos: number;
   totalImpuestos: number;
+  /** D-583: diferencia guardada al cerrar (null en cierres viejos). */
+  diferencia?: number | null;
+  /** D-583: ventas de días anteriores que recogió este cierre. */
+  ventasDiasAnteriores?: { total: number; cantidadPedidos: number } | null;
+  /** D-585: número de cierre del día (turno); null en cierres viejos. */
+  turno?: number | null;
+  /** D-587: id del cierre (cashClosings) y sus ajustes de administrador. */
+  id?: string;
+  ajustes?: { valor: number; motivo: string; usuarioEmail: string | null; fecha: string }[];
+  diferenciaAjustada?: number | null;
   pedidos: Pedido[];
   formasPago: { [key: string]: number };
 }
@@ -81,8 +90,7 @@ export class CashClosingHistoryComponent implements OnInit {
   constructor(
     public activeModal: NgbActiveModal,
     private ventasService: VentasService,
-    private fb: FormBuilder,
-    private translate: TranslateService
+    private fb: FormBuilder
   ) { 
     // Inicializar con el mes actual
     const today = new Date();
@@ -143,15 +151,16 @@ export class CashClosingHistoryComponent implements OnInit {
     this.ventasService.getCashClosingHistory(filter).subscribe({
       next: (data: CashClosingHistoryResponse) => {
         this.historyData = this.procesarRespuestaHistorial(data, { fechaInicio: fechaInicioStr, fechaFin: fechaFinStr });
+        this.soloDescuadre = false; // D-588: cada búsqueda arranca mostrando todos
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading cash closing history:', error);
         swal.fire({
-          title: this.translate.instant('comun.error'),
-          text: this.translate.instant('ventas.cashClosingHistory.errorCargar'),
+          title: 'Error',
+          text: 'No se pudo cargar el historial de cierres de caja. Por favor, intente de nuevo.',
           icon: 'error',
-          confirmButtonText: this.translate.instant('comun.aceptar')
+          confirmButtonText: 'Aceptar'
         });
         this.loading = false;
       }
@@ -276,10 +285,10 @@ export class CashClosingHistoryComponent implements OnInit {
     
     if (fechaInicio > fechaFin) {
       swal.fire({
-        title: this.translate.instant('comun.error'),
-        text: this.translate.instant('ventas.cashClosingHistory.fechaInicioMayor'),
+        title: 'Error',
+        text: 'La fecha de inicio no puede ser mayor que la fecha de fin.',
         icon: 'error',
-        confirmButtonText: this.translate.instant('comun.entendido')
+        confirmButtonText: 'Entendido'
       });
       return;
     }
@@ -306,14 +315,131 @@ export class CashClosingHistoryComponent implements OnInit {
    * cierre daba una diferencia al cerrarlo y otra al consultarlo.
    */
   diferenciaCierre(item: HistorialItem): number {
+    // D-583: la que vio el cajero al cerrar (incluye el efectivo de ventas de días
+    // anteriores). Los cierres viejos no la traen: se recalcula como antes.
+    if (typeof item.diferencia === 'number') return item.diferencia;
     return (item.efectivoFinal || 0) - ((item.efectivoInicial || 0) + this.efectivoDeCierre(item));
   }
 
   /** Texto corto para la cajera: Cuadra / Sobra $X / Falta $X. */
   estadoCuadre(item: HistorialItem): string {
-    const d = this.diferenciaCierre(item);
-    if (d === 0) return this.translate.instant('ventas.cashClosingHistory.cuadra');
-    return this.translate.instant(d > 0 ? 'ventas.cashClosingHistory.sobra' : 'ventas.cashClosingHistory.falta', { monto: this.formatCurrency(Math.abs(d)) });
+    return this.textoDiferencia(this.diferenciaCierre(item));
+  }
+
+  textoDiferencia(d: number): string {
+    if (!d) return 'Cuadra';
+    return (d > 0 ? 'Sobra ' : 'Falta ') + this.formatCurrency(Math.abs(d));
+  }
+
+  /** D-587: diferencia vigente: después de los ajustes del administrador, si los hay. */
+  diferenciaActual(item: HistorialItem): number {
+    return typeof item.diferenciaAjustada === 'number' ? item.diferenciaAjustada : this.diferenciaCierre(item);
+  }
+
+  /** D-587: suma de los descuadres del periodo (con ajustes). */
+  get diferenciaPeriodo(): number {
+    const lista: HistorialItem[] = this.historyData?.historial || [];
+    return Math.round(lista.reduce((suma, item) => suma + this.diferenciaActual(item), 0) * 100) / 100;
+  }
+
+  /** D-587: cuántos cierres del periodo siguen sin cuadrar (con ajustes). */
+  get cierresConDescuadre(): number {
+    const lista: HistorialItem[] = this.historyData?.historial || [];
+    return lista.filter((item) => Math.abs(this.diferenciaActual(item)) >= 0.01).length;
+  }
+
+  /** D-588: la tarjeta "Diferencia de caja" filtra la lista a los cierres que no cuadran. */
+  soloDescuadre = false;
+
+  get historialVisible(): HistorialItem[] {
+    const lista: HistorialItem[] = this.historyData?.historial || [];
+    return this.soloDescuadre ? lista.filter((item) => Math.abs(this.diferenciaActual(item)) >= 0.01) : lista;
+  }
+
+  alternarSoloDescuadre(): void {
+    // Si todo cuadra no hay nada que filtrar; si estaba activo, siempre se puede quitar.
+    if (!this.soloDescuadre && this.cierresConDescuadre === 0) return;
+    this.soloDescuadre = !this.soloDescuadre;
+    if (this.soloDescuadre) {
+      setTimeout(() => document.getElementById('lista-cierres')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }
+
+  abs(valor: number): number {
+    return Math.abs(Number(valor) || 0);
+  }
+
+  /** D-587: solo el Administrador ve el botón (el backend también lo exige). */
+  get esAdministrador(): boolean {
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
+      return rol === 'Administrador' || rol === 'Super Administrador';
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * D-587: agrega un ajuste al cierre (valor + motivo). El cierre original no cambia;
+   * el valor sugerido es lo que falta para que cuadre.
+   */
+  registrarAjuste(item: HistorialItem): void {
+    const actual = this.diferenciaActual(item);
+    const sugerido = Math.round(-actual * 100) / 100;
+    swal.fire({
+      title: 'Registrar ajuste',
+      html:
+        `<div style="text-align:left">Hoy este cierre está en <strong>${this.textoDiferencia(actual)}</strong>. `
+        + 'El cierre no se cambia: el ajuste queda guardado aparte, con tu nombre y la fecha.<br><br>'
+        + '<label style="font-weight:600">Valor del ajuste</label>'
+        + `<input id="ajuste-valor" type="number" step="0.01" class="swal2-input" style="margin:6px 0 4px 0;width:100%" value="${sugerido}">`
+        + '<small style="color:#6b6880">Positivo si apareció plata; negativo si falta más. Con el valor sugerido el cierre cuadra.</small><br><br>'
+        + '<label style="font-weight:600">Motivo</label>'
+        + '<textarea id="ajuste-motivo" class="swal2-textarea" style="margin:6px 0 0 0;width:100%" placeholder="Ej.: apareció el billete debajo de la caja"></textarea></div>',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar ajuste',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#5F3FE0',
+      reverseButtons: true,
+      focusConfirm: false,
+      preConfirm: () => {
+        const valor = Number((document.getElementById('ajuste-valor') as HTMLInputElement)?.value);
+        const motivo = ((document.getElementById('ajuste-motivo') as HTMLTextAreaElement)?.value || '').trim();
+        if (!Number.isFinite(valor) || valor === 0) {
+          swal.showValidationMessage('El valor debe ser distinto de $0');
+          return false;
+        }
+        if (!motivo) {
+          swal.showValidationMessage('Escribe el motivo del ajuste');
+          return false;
+        }
+        return { valor, motivo };
+      }
+    }).then((resultado) => {
+      if (!resultado.isConfirmed || !resultado.value || !item.id) return;
+      this.ventasService.registrarAjusteCierre({ cierreId: item.id, ...resultado.value }).subscribe(
+        (respuesta: any) => {
+          item.ajustes = respuesta?.ajustes || item.ajustes;
+          item.diferenciaAjustada = respuesta?.diferenciaAjustada;
+          swal.fire({
+            title: 'Ajuste guardado',
+            text: `El cierre quedó en: ${this.textoDiferencia(this.diferenciaActual(item))}.`,
+            icon: 'success',
+            confirmButtonColor: '#5F3FE0'
+          });
+        },
+        (error) => {
+          swal.fire({
+            title: error?.status === 403 ? 'Sin permiso' : 'No se pudo guardar',
+            text: error?.status === 403
+              ? 'Solo un Administrador puede registrar ajustes.'
+              : (error?.error?.error || 'Intenta de nuevo.'),
+            icon: 'error',
+            confirmButtonColor: '#5F3FE0'
+          });
+        }
+      );
+    });
   }
 
   // Funciones de formato (mantener las que aún se necesiten)

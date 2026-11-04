@@ -1,5 +1,5 @@
 import { MensajeroEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
-import { claveDeNombre } from './formato';
+import { claveDeNombre, diaDeColombia } from './formato';
 
 /** Un mensajero (moto) o una transportadora (camión) con lo que lleva ahora. */
 export interface EntradaFlota {
@@ -9,9 +9,26 @@ export interface EntradaFlota {
   enRuta: boolean;
   /** Pedidos que lleva ahora. */
   pedidos: number;
-  /** Instante (ms) en que salió con el pedido más viejo que aún lleva; null si no se sabe. */
+  /** Instante (ms) de su salida más reciente con pedidos que aún lleva; null si no se sabe. */
   salioEn: number | null;
   pedidoIds: string[];
+}
+
+/** Hora (ms) en que salió el pedido; si no se vio, la de llegada. */
+export function salidaDe(pedido: PedidoEnVivo): number | null {
+  const ms = pedido.horas?.camino ?? pedido.tS ?? pedido.tC;
+  return typeof ms === 'number' && Number.isFinite(ms) ? ms : null;
+}
+
+/**
+ * ¿Salió el día de `referenciaMs` (hora de Colombia)? Un pedido de un mensajero propio que salió
+ * otro día y sigue "despachado" no es alguien en la calle: es un pedido que nadie cerró. Sin
+ * referencia no se filtra.
+ */
+export function salioElMismoDia(pedido: PedidoEnVivo, referenciaMs: number | null): boolean {
+  if (referenciaMs === null) return true;
+  const ms = salidaDe(pedido);
+  return ms !== null && diaDeColombia(ms) === diaDeColombia(referenciaMs);
 }
 
 /**
@@ -21,11 +38,17 @@ export interface EntradaFlota {
  *
  * `actualizadoEn` y `mensajero.salioEn` (ms desde que salió, medido al armar la foto) son el
  * respaldo si el pedido no trae la hora en que se vio salir.
+ *
+ * A un mensajero propio solo se le cuenta lo que salió HOY (el día de `ahoraMs`, o de
+ * `actualizadoEn`), y el tiempo es desde su salida más reciente, igual que "lleva X en la calle"
+ * del servidor. Las transportadoras sí cuentan lo de días anteriores: un envío a otra ciudad
+ * tarda días.
  */
 export function armarFlota(
   flota: ReadonlyArray<MensajeroEnVivo>,
   pedidos: ReadonlyArray<PedidoEnVivo>,
-  actualizadoEn: number | null
+  actualizadoEn: number | null,
+  ahoraMs: number | null = actualizadoEn
 ): EntradaFlota[] {
   const enCamino = pedidos.filter((p) => p.etapa === 'camino' && !!p.transportador);
   const porTransportador = new Map<string, PedidoEnVivo[]>();
@@ -42,7 +65,7 @@ export function armarFlota(
   for (const mensajero of flota) {
     const clave = claveDeNombre(mensajero.nombre);
     propios.add(clave);
-    const suyos = porTransportador.get(clave) ?? [];
+    const suyos = (porTransportador.get(clave) ?? []).filter((p) => salioElMismoDia(p, ahoraMs));
     const salidas = suyos.map((p) => p.horas.camino).filter((h): h is number => typeof h === 'number');
     const respaldo =
       actualizadoEn !== null && typeof mensajero.salioEn === 'number' ? actualizadoEn - mensajero.salioEn : null;
@@ -53,7 +76,7 @@ export function armarFlota(
       tipo: 'mensajero',
       enRuta,
       pedidos: suyos.length || (enRuta ? mensajero.pedidos ?? 0 : 0),
-      salioEn: salidas.length > 0 ? Math.min(...salidas) : enRuta ? respaldo : null,
+      salioEn: salidas.length > 0 ? Math.max(...salidas) : enRuta ? respaldo : null,
       pedidoIds: suyos.map((p) => p.id),
     });
   }

@@ -1,0 +1,49 @@
+<div class="cfg-pagina">
+  <a class="ay-enlace-volver" routerLink="/centro-de-ayuda">
+    <i class="pi pi-arrow-left" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ 'centroAyuda.volver' | translate }}</span>
+  </a>
+
+  <section class="cfg-card" *ngIf="cargando">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.cargando' | translate }}</p>
+    </div>
+  </section>
+
+  <section class="cfg-card" *ngIf="noEncontrado">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-search"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'centroAyuda.noEncontrado' | translate }}</p>
+      <p class="cfg-vacio__texto">{{ 'centroAyuda.noEncontradoTexto' | translate }}</p>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span class="ay-heredar">{{ error }}</span>
+  </p>
+
+  <article class="cfg-card ay-articulo" *ngIf="articulo">
+    <div class="ay-etiquetas">
+      <span class="cfg-pill cfg-pill--info">{{ NOMBRE_MODULO[articulo.module] | translate }}</span>
+      <span class="cfg-pill cfg-pill--neutro">{{ NOMBRE_TIPO[articulo.type] | translate }}</span>
+      <span class="cfg-pill" *ngIf="articulo.scope === 'company'">{{ 'centroAyuda.deTuEmpresa' | translate }}</span>
+    </div>
+    <h1 class="cfg-titulo" style="margin: 12px 0 6px">{{ articulo.title }}</h1>
+    <p class="cfg-sub" *ngIf="articulo.summary">{{ articulo.summary }}</p>
+    <div class="ay-meta" style="margin: 12px 0 18px">
+      <span class="ay-heredar" *ngIf="articulo.updatedAt">{{ 'centroAyuda.actualizadoEl' | translate:{ fecha: fecha(articulo.updatedAt) } }}</span>
+      <span class="ay-heredar" *ngIf="articulo.appliesToVersion">{{ 'centroAyuda.aplicaVersion' | translate:{ version: articulo.appliesToVersion } }}</span>
+    </div>
+
+    <div class="ay-contenido">
+      <ng-container *ngFor="let b of bloques">
+        <h2 *ngIf="b.tipo === 'titulo'">{{ b.texto }}</h2>
+        <p *ngIf="b.tipo === 'parrafo'">{{ b.texto }}</p>
+        <ul *ngIf="b.tipo === 'lista'"><li *ngFor="let i of b.items">{{ i }}</li></ul>
+        <ol *ngIf="b.tipo === 'pasos'"><li *ngFor="let i of b.items">{{ i }}</li></ol>
+      </ng-container>
+    </div>
+  </article>
+</div>

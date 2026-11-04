@@ -2,7 +2,6 @@
 import { Component } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cash-payment',
@@ -18,7 +17,7 @@ export class CashPaymentComponent {
   /** Denominaciones de billete colombianas para los atajos del modal. */
   readonly billetes: number[] = [5000, 10000, 20000, 50000, 100000];
 
-  constructor(public activeModal: NgbActiveModal, private translate: TranslateService) {}
+  constructor(public activeModal: NgbActiveModal) {}
 
   /**
    * Atajo de billete: escribe el monto recibido y recalcula el cambio con el
@@ -42,10 +41,10 @@ export class CashPaymentComponent {
       this.activeModal.close({ amountReceived: this.amountPaid, paymentType: 'cash', change: this.change });
     } else {
       Swal.fire({
-        title: this.translate.instant('comun.error'),
-        text: this.translate.instant('ventas.cashPayment.montoInsuficiente'),
+        title: 'Error',
+        text: 'El monto entregado no es suficiente.',
         icon: 'error',
-        confirmButtonText: this.translate.instant('ventas.pos.ok')
+        confirmButtonText: 'OK'
       }); 
     }
   }

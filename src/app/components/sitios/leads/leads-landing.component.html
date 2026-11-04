@@ -1,0 +1,114 @@
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'sitiosLeads.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'sitiosLeads.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'sitiosLeads.sub' | translate }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <a class="cfg-btn cfg-btn--sec" routerLink="/sitios/landings">
+        <i class="pi pi-th-large" aria-hidden="true"></i>
+        <span>{{ 'sitiosLeads.verLandings' | translate }}</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="cfg-card">
+    <div class="ll-chips" role="group" [attr.aria-label]="'sitiosLeads.filtrarPorEstado' | translate">
+      <button type="button" class="ll-chip" [class.is-activo]="!filtroEstado" [attr.aria-pressed]="!filtroEstado" (click)="elegirEstado('')">
+        {{ 'sitiosLeads.todos' | translate }} <span class="ll-chip__n">{{ total }}</span>
+      </button>
+      <button type="button" class="ll-chip" *ngFor="let e of ESTADOS" [class.is-activo]="filtroEstado === e"
+        [attr.aria-pressed]="filtroEstado === e" (click)="elegirEstado(e)">
+        {{ 'sitiosLeads.estado.' + e | translate }} <span class="ll-chip__n">{{ conteo[e] || 0 }}</span>
+      </button>
+    </div>
+    <div class="ll-barra">
+      <label class="ll-filtro">
+        <span class="ll-etiqueta">{{ 'sitiosLeads.asignadoA' | translate }}</span>
+        <select class="ll-sel" [(ngModel)]="filtroAsignado" (ngModelChange)="cargar()">
+          <option value="">{{ 'sitiosLeads.todos' | translate }}</option>
+          <option value="sin-asignar">{{ 'sitiosLeads.sinAsignar' | translate }}</option>
+          <option *ngFor="let p of equipo" [value]="p.email">{{ p.nombre }}</option>
+        </select>
+      </label>
+      <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="hayFiltro" (click)="limpiarFiltros()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+        <span>{{ 'sitiosLeads.limpiar' | translate }}</span>
+      </button>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+    <span class="ll-heredar">{{ 'sitiosLeads.errorCargar' | translate }}</span>
+  </p>
+
+  <section class="cfg-card" *ngIf="cargando && !leads.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-spin pi-spinner"></i></span>
+      <p class="cfg-vacio__titulo">{{ 'sitiosLeads.cargando' | translate }}</p>
+    </div>
+  </section>
+
+  <section class="cfg-card" *ngIf="!cargando && !error && !leads.length">
+    <div class="cfg-vacio">
+      <span class="cfg-vacio__icono" aria-hidden="true"><i class="pi pi-users"></i></span>
+      <p class="cfg-vacio__titulo">{{ (hayFiltro ? 'sitiosLeads.vacioFiltroTitulo' : 'sitiosLeads.vacioTitulo') | translate }}</p>
+      <p class="cfg-vacio__texto">{{ (hayFiltro ? 'sitiosLeads.vacioFiltroTexto' : 'sitiosLeads.vacioTexto') | translate }}</p>
+    </div>
+  </section>
+
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="recortado" role="status">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <span class="ll-heredar">{{ 'sitiosLeads.recortado' | translate }}</span>
+  </p>
+
+  <div class="ll-lista" *ngIf="leads.length">
+    <article class="cfg-card ll-lead" *ngFor="let l of leads; trackBy: porId" [attr.aria-busy]="guardando.has(l.id)">
+      <div class="ll-lead__cabeza">
+        <div class="ll-lead__quien">
+          <h2 class="ll-lead__nombre">{{ l.nombre }}</h2>
+          <span class="ll-meta" *ngIf="l.fecha">{{ fecha(l.fecha) }}<ng-container *ngIf="l.landingSlug"> · {{ l.landingSlug }}</ng-container></span>
+        </div>
+        <span class="cfg-pill" [ngClass]="CLASE_ESTADO[l.estado]">{{ 'sitiosLeads.estado.' + l.estado | translate }}</span>
+      </div>
+
+      <div class="ll-contacto">
+        <a *ngIf="l.telefono" class="ll-enlace" [href]="'tel:' + l.telefono"><i class="pi pi-phone" aria-hidden="true"></i> <span class="ll-enlace__txt">{{ l.telefono }}</span></a>
+        <a *ngIf="l.correo" class="ll-enlace" [href]="'mailto:' + l.correo"><i class="pi pi-envelope" aria-hidden="true"></i> <span class="ll-enlace__txt">{{ l.correo }}</span></a>
+      </div>
+
+      <p class="ll-mensaje" *ngIf="l.mensaje">{{ l.mensaje }}</p>
+      <span class="ll-meta" *ngIf="campana(l)">{{ 'sitiosLeads.campana' | translate }}: {{ campana(l) }}</span>
+
+      <div class="ll-controles">
+        <label class="ll-filtro">
+          <span class="ll-etiqueta">{{ 'sitiosLeads.estadoEtiqueta' | translate }}</span>
+          <select class="ll-sel" [ngModel]="l.estado" (ngModelChange)="cambiarEstado(l, $event)" [disabled]="guardando.has(l.id)">
+            <option *ngFor="let e of ESTADOS" [value]="e">{{ 'sitiosLeads.estado.' + e | translate }}</option>
+          </select>
+        </label>
+        <label class="ll-filtro" *ngIf="puedeAsignar; else soloVer">
+          <span class="ll-etiqueta">{{ 'sitiosLeads.asignadoA' | translate }}</span>
+          <select class="ll-sel" [ngModel]="l.asignadoA || ''" (ngModelChange)="asignar(l, $event)" [disabled]="guardando.has(l.id)">
+            <option value="">{{ 'sitiosLeads.sinAsignar' | translate }}</option>
+            <option *ngIf="l.asignadoA && !equipo.length" [value]="l.asignadoA">{{ l.asignadoNombre || l.asignadoA }}</option>
+            <option *ngFor="let p of equipo" [value]="p.email">{{ p.nombre }}</option>
+          </select>
+        </label>
+        <ng-template #soloVer>
+          <div class="ll-filtro">
+            <span class="ll-etiqueta">{{ 'sitiosLeads.asignadoA' | translate }}</span>
+            <span class="ll-valor">{{ l.asignadoNombre || l.asignadoA || ('sitiosLeads.sinAsignar' | translate) }}</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <span class="ll-meta ll-consentimiento" *ngIf="l.consentimiento?.aceptado">
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
+        {{ 'sitiosLeads.consentimiento' | translate:{ fecha: fecha(l.consentimiento?.fecha || null) } }}
+      </span>
+    </article>
+  </div>
+</div>
