@@ -1,33 +1,25 @@
 {
-  "version": "2026.11.04.1 - 4 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-04T14:29:17.173Z",
+  "version": "2026.11.04.2 - 4 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-04T14:52:31.455Z",
   "notas": [
     {
-      "fecha": "2026-11-03T22:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Facturación electrónica abre más rápido: la franja de estado, las facturas y los pedidos aparecen a medida que están listos, sin bloquear la pantalla.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-04T13:00:35Z",
+      "fecha": "2026-11-04T14:44:33Z",
       "tipo": "CORRIGE",
-      "texto": "En Productos, la columna «Categoría» ya muestra la categoría de los productos que llegan desde tu tienda en línea, aunque vengan con varias categorías.",
+      "texto": "En «En vivo», los tiempos largos se leen en días («lleva 6 días sin producir») y no en horas, el mapa ya no pone en la moto pedidos de días anteriores y una transportadora deja de salir «en ruta» con envíos de hace más de 5 días: esos pedidos aparecen en el aviso para que los marques entregados.",
       "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-11-04T13:00:35Z",
-      "tipo": "MEJORA",
-      "texto": "En el editor de tu tienda, la vista previa «Celular» muestra el botón Menú y el panel lateral tal como los verán tus clientes en el teléfono.",
-      "modulos": [
-        "sitios"
+        "en-vivo"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-04T14:44:33Z",
+      "tipo": "CORRIGE",
+      "texto": "En «En vivo», los tiempos largos se leen en días («lleva 6 días sin producir») y no en horas, el mapa ya no pone en la moto pedidos de días anteriores y una transportadora deja de salir «en ruta» con envíos de hace más de 5 días: esos pedidos aparecen en el aviso para que los marques entregados.",
+      "modulos": [
+        "en-vivo"
+      ]
+    },
     {
       "fecha": "2026-11-04T13:00:35Z",
       "tipo": "CORRIGE",
@@ -497,16 +489,8 @@
       "modulos": [
         "productos"
       ]
-    },
-    {
-      "fecha": "2026-10-27T20:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Las fotos de un producto se cargan en un solo lugar: arrástralas para cambiar el orden y elige cuál es la principal con «Hacer principal». Al eliminar una foto se quita solo esa.",
-      "modulos": [
-        "productos"
-      ]
     }
   ],
-  "commit": "653ea6d73df153f305eba6386227ec53fd14162e",
+  "commit": "0ab1be6736562663236fbe64ebc8b4cf61ff5d89",
   "cambiosSinCommit": 0
 }
