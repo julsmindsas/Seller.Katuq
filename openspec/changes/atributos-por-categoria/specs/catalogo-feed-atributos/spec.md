@@ -19,12 +19,18 @@ WHERE la función está encendida, WHEN se genera el catálogo de productos de l
 
 - **WHEN** el comercio definió un atributo «Marca»
 - **THEN** ese atributo no sale como detalle, porque la marca ya va en su propio campo
+- **AND** tampoco salen las variantes («Marca del producto», «Precio unitario», «Código de barras (EAN)», «Número de parte») ni lo que el catálogo ya manda como condición, disponibilidad, enlace o imagen; se omite de más antes que repetir
 
 ### Requirement: Tipo de producto con la ruta completa [F5]
 
-WHERE la función está encendida, THE system SHALL publicar como tipo de producto la ruta completa de su categoría, con los nombres como los escribió el comercio y de la más general a la más específica, hasta 750 caracteres. IF el producto no tiene una ruta clara, THEN THE system SHALL publicar el tipo de producto de hoy.
+WHERE la función está encendida, THE system SHALL publicar como tipo de producto la ruta completa de su categoría, con los nombres como los escribió el comercio y de la más general a la más específica, hasta 750 caracteres. IF el producto no tiene una ruta clara, THEN THE system SHALL publicar el tipo de producto de hoy. IF algún nivel de la ruta es una categoría oculta de la tienda o una que el comercio excluyó del catálogo, THEN THE system SHALL publicar el tipo de producto de hoy, para no nombrar en Google y Meta una categoría que el comercio no muestra o no quiere anunciar.
 
-*Fuente: D-518 F2-42·6 («a Meta, `product_type` con la ruta completa»); Meta, campos del catálogo (`product_type`, 750 caracteres, «Home & Garden > Kitchen & Dining > …»); Google, `product_type`.*
+*Fuente: D-518 F2-42·6 («a Meta, `product_type` con la ruta completa»); la regla de categorías ocultas o excluidas la añadió la revisión del bloque B15 (3-nov) y la confirma Daniel con el diff; Meta, campos del catálogo (`product_type`, 750 caracteres, «Home & Garden > Kitchen & Dining > …»); Google, `product_type`.*
+
+#### Scenario: Ruta con una categoría oculta o excluida
+
+- **WHEN** un producto está en «Regalos > Tecnología» y «Regalos» es una categoría oculta de la tienda (o está excluida del catálogo)
+- **THEN** su tipo de producto es el de hoy y el catálogo no nombra la categoría oculta o excluida
 
 #### Scenario: Router en el catálogo de Meta
 
