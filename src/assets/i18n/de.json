@@ -9634,5 +9634,7 @@
     "tesoreria.ajusteAlPeso.noSePudoGuardar": "Der Rundungsausgleich konnte nicht gespeichert werden",
     "tesoreria.ajusteAlPeso.noSePudoCargar": "Der Rundungsausgleich konnte nicht geladen werden",
     "tesoreria.alertasTesoreria.tipoSobrepago": "Überzahlung nicht ausgeglichen",
-    "tesoreria.alertasTesoreria.textoSobrepago": "Eine Zahlung hat mehr Geld hinterlassen, als die Bestellung schuldete, und überschreitet die Toleranz des Rundungsausgleichs. Prüfen Sie, ob es zurückgezahlt werden muss."
+    "tesoreria.alertasTesoreria.textoSobrepago": "Eine Zahlung hat mehr Geld hinterlassen, als die Bestellung schuldete, und überschreitet die Toleranz des Rundungsausgleichs. Prüfen Sie, ob es zurückgezahlt werden muss.",
+    "tesoreria.alertasTesoreria.tituloAvisos": "Hinweise der Finanzabteilung",
+    "tesoreria.alertasTesoreria.casosDistintos": "verschiedene Fälle"
 }

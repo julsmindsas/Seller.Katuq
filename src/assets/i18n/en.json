@@ -12814,5 +12814,7 @@
   "tesoreria.ajusteAlPeso.noSePudoGuardar": "The rounding adjustment could not be saved",
   "tesoreria.ajusteAlPeso.noSePudoCargar": "The rounding adjustment could not be loaded",
   "tesoreria.alertasTesoreria.tipoSobrepago": "Overpayment not adjusted",
-  "tesoreria.alertasTesoreria.textoSobrepago": "A payment left more money than the order owed and exceeds the rounding adjustment tolerance. Check whether it should be returned."
+  "tesoreria.alertasTesoreria.textoSobrepago": "A payment left more money than the order owed and exceeds the rounding adjustment tolerance. Check whether it should be returned.",
+  "tesoreria.alertasTesoreria.tituloAvisos": "Treasury notices",
+  "tesoreria.alertasTesoreria.casosDistintos": "different cases"
 }

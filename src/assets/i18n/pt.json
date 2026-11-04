@@ -9802,5 +9802,7 @@
   "tesoreria.ajusteAlPeso.noSePudoGuardar": "Não foi possível salvar o ajuste de arredondamento",
   "tesoreria.ajusteAlPeso.noSePudoCargar": "Não foi possível carregar o ajuste de arredondamento",
   "tesoreria.alertasTesoreria.tipoSobrepago": "Pagamento a mais sem ajustar",
-  "tesoreria.alertasTesoreria.textoSobrepago": "Um pagamento deixou mais dinheiro do que o pedido devia e passa da tolerância do ajuste de arredondamento. Verifique se é preciso devolvê-lo."
+  "tesoreria.alertasTesoreria.textoSobrepago": "Um pagamento deixou mais dinheiro do que o pedido devia e passa da tolerância do ajuste de arredondamento. Verifique se é preciso devolvê-lo.",
+  "tesoreria.alertasTesoreria.tituloAvisos": "Avisos da Tesouraria",
+  "tesoreria.alertasTesoreria.casosDistintos": "casos diferentes"
 }

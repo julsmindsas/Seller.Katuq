@@ -12660,5 +12660,7 @@
   "tesoreria.ajusteAlPeso.noSePudoGuardar": "No se pudo guardar el ajuste al peso",
   "tesoreria.ajusteAlPeso.noSePudoCargar": "No se pudo cargar el ajuste al peso",
   "tesoreria.alertasTesoreria.tipoSobrepago": "Pago de más sin ajustar",
-  "tesoreria.alertasTesoreria.textoSobrepago": "Un pago dejó más dinero del que debía el pedido y pasa de la tolerancia del ajuste al peso. Revisa si hay que devolverlo."
+  "tesoreria.alertasTesoreria.textoSobrepago": "Un pago dejó más dinero del que debía el pedido y pasa de la tolerancia del ajuste al peso. Revisa si hay que devolverlo.",
+  "tesoreria.alertasTesoreria.tituloAvisos": "Avisos de Tesorería",
+  "tesoreria.alertasTesoreria.casosDistintos": "casos distintos"
 }
