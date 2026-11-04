@@ -276,6 +276,7 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
   { id: "outfit", nombre: "Outfit", pista: "Geométrica y limpia", familia: '"Outfit", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "sora", nombre: "Sora", pista: "Técnica y clara", familia: '"Sora", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "inter", nombre: "Inter", pista: "La más legible en pantalla", familia: '"Inter", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "archivo", nombre: "Archivo", pista: "Firme, de tecnología", familia: '"Archivo", system-ui, sans-serif', grupo: "cuerpo" },
   // Las de siempre, sin descarga.
   { id: "sistema", nombre: "Del sistema", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif", grupo: "cuerpo" },
   { id: "serif", nombre: "Serif clásica", pista: "Georgia, sin descargar nada", familia: 'Georgia, "Times New Roman", serif', grupo: "titulo" },
@@ -1080,7 +1081,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       // El tema se completa campo por campo, no con `d.tema || {…}`: un sitio
       // creado antes de que existieran las fuentes por separado o el estilo
       // llega con el objeto viejo, y el panel enlazaría contra `undefined`.
+      // Diseño nuevo (v2): se PARTE del tema guardado, para que los campos que
+      // este editor no nombra (sistemaVisual, colorEstructura, efectos…) no se
+      // pierdan en el siguiente guardado.
       tema: {
+        ...((d.tema as object) || {}),
         colorPrimario: (d.tema && d.tema.colorPrimario) || "#111111",
         colorSecundario: (d.tema && d.tema.colorSecundario) || "#ffffff",
         colorTexto: (d.tema && d.tema.colorTexto) || "#222222",
@@ -2121,6 +2126,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Medidas", donde: "Estilo", panel: "diseno", grupo: "medidas", claves: "ancho espacio espaciado tamaño letra titulos" },
     { texto: "Letra", donde: "Estilo", panel: "diseno", grupo: "letra", claves: "fuente tipografia" },
     { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "kai propuesta diseño" },
+    { texto: "Diseño nuevo", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "sistema visual estructura linea premium nuevo" },
   ] as { texto: string; donde: string; panel: string; claves: string; grupo?: string }[];
 
   get ajustesEncontrados(): { texto: string; donde: string; panel: string; grupo?: string }[] {
@@ -2664,6 +2670,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  /** Diseño nuevo (v2): ¿la página publicada usa el sistema visual nuevo? */
+  get disenoNuevo(): boolean {
+    return !!this.contenido && Number((this.contenido.tema as any).sistemaVisual) === 2;
+  }
+
+  /**
+   * Diseño nuevo (v2, PLAN-V2 T01): solo escribe `tema.sistemaVisual` (2 o 1). Lo demás del sitio no cambia y se
+   * puede volver al de siempre en cualquier momento.
+   */
+  alternarDisenoNuevo(): void {
+    if (!this.contenido) return;
+    this.contenido.tema = { ...this.contenido.tema, sistemaVisual: this.disenoNuevo ? 1 : 2 };
+    this.marcarSucio();
+  }
+
   alternarAnimaciones(): void {
     if (!this.contenido) return;
     const t = this.contenido.tema as any;
@@ -2823,6 +2844,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         return t[clave] ? this.contrasteDe(t[clave], t.colorSecundario) : null;
       case "colorFondoAlterno":
         return t.colorFondoAlterno ? this.contrasteDe(t.colorTexto, t.colorFondoAlterno) : null;
+      // v2: el pie y la barra llevan el texto que más se lea sobre la estructura (el publicado lo mide igual).
+      case "colorEstructura": {
+        if (!t.colorEstructura) return null;
+        const a = this.contrasteDe(t.colorTexto, t.colorEstructura);
+        const b = this.contrasteDe(t.colorSecundario, t.colorEstructura);
+        return a && a.ok ? a : b && b.ok ? b : a;
+      }
       default:
         return null;
     }
