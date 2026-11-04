@@ -7,7 +7,7 @@
  * arma el servidor; esto hace que la vista previa del editor muestre lo mismo.
  * Al tocar aquí, tocar allá.
  */
-import { canales, contraste, esOscuro, primarioAccesible } from "../sitios/contraste";
+import { canales, contraste, esOscuro, mezclar, primarioAccesible } from "../sitios/contraste";
 
 export interface AjustesEstilo {
   colorFondoAlterno?: string;
@@ -186,6 +186,16 @@ export function variablesDeTono(
     vars["--sitio-borde"] = `rgba(${canales(texto)},.14)`;
     vars["--sitio-sombra"] = "none";
     vars["color-scheme"] = "dark";
+    // P0-16 y contraste en oscuro: disco del ícono teñido, borde de «Agregar» con su propio color y tarjetas,
+    // promo, producto de «tienda» y reseñas sobre una superficie apenas más clara que el fondo.
+    vars["--sitio-disco"] = "color-mix(in srgb, var(--sitio-primario) 14%, transparent)";
+    vars["--sitio-borde-control"] = "color-mix(in srgb, currentColor 38%, transparent)";
+    const superficie = mezclar(texto, fondo, 0.07);
+    if (superficie) {
+      vars["--sitio-superficie"] = superficie;
+      vars["--sitio-texto-superficie"] = texto;
+      vars["--sitio-acento-superficie"] = (contraste(boton.fondo, superficie) || 0) >= 4.5 ? boton.fondo : texto;
+    }
   }
   return vars;
 }
