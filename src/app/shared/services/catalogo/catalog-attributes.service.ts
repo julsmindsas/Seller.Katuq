@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 
 import { BaseService } from '../base.service';
 import { AttributeSchemas, IndiceDeRutas, ValorAtributo } from './atributos-categoria';
+import type { FilaDeLote } from './hoja-especificaciones';
+import type { RespuestaLote } from './importacion-especificaciones';
 
 export interface EsquemasRespuesta {
   version: number;
@@ -57,5 +59,15 @@ export class CatalogAttributesService extends BaseService {
   /** Escribe solo las claves enviadas; `null` borra. No reenvía el producto a las tiendas conectadas. */
   saveProductAttributes(cd: string, attributes: Record<string, ValorAtributo>): Observable<GuardadoAtributosProducto> {
     return this.postSinLoader<GuardadoAtributosProducto>('/v1/productos/attributes', { cd, attributes });
+  }
+
+  /**
+   * Carga masiva de especificaciones (hoja «Especificaciones» del importador, F3): hasta 200 filas
+   * por petición. Escribe solo `attributes.<clave>` de cada producto y no reenvía nada a las tiendas
+   * conectadas. Es idempotente: repetir la misma tanda no cambia nada, así que se puede reintentar.
+   * La respuesta trae el resultado por fila (un valor inválido rechaza esa fila, no el lote).
+   */
+  saveProductAttributesBatch(filas: FilaDeLote[]): Observable<RespuestaLote> {
+    return this.postSinLoader<RespuestaLote>('/v1/productos/attributes/lote', { filas });
   }
 }

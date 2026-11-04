@@ -262,6 +262,12 @@ export class OrdenesDespachoComponent implements OnInit {
     return Math.max(0, Number(pedido?.faltaPorPagar) || 0);
   }
 
+  /** Ticket 1448: con «No cobrar» (Crédito, Aprobado) el mensajero no cobra: se muestra 0 y `faltaPorPagar` no se toca. */
+  valorACobrarEnEntrega(pedido) {
+    if (pedido?.cobroEnEntrega?.accion === 'no_cobrar' || String(pedido?.estadoPago || '').toLowerCase() === 'credito') return 0;
+    return this.getValorACobrarPorPedido(pedido);
+  }
+
   // Métodos para manejo de transportadores integrados
   loadLogisticsIntegrations(): void {
     this.integrationsService.getIntegrationsByCategory(IntegrationCategory.LOGISTICS)

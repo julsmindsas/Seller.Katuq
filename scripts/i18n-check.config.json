@@ -70,7 +70,9 @@
       "Ref",
       "WhatsApp Business",
       "Top {{top}}",
-      "NUIP"
+      "NUIP",
+      "Web",
+      "Nequi, Daviplata…"
     ],
     "en": [
       "NIT/Doc",
@@ -1012,7 +1014,11 @@
       "Fiel",
       "Hibernando",
       "Canal preferido",
-      "Página {{page}} de {{total}}"
+      "Página {{page}} de {{total}}",
+      "Por: {{quien}}",
+      "Pedido {{nro}}",
+      "Últimos 4 dígitos",
+      "Editado"
     ],
     "de": [
       "Original",

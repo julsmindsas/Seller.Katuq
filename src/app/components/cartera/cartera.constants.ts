@@ -205,8 +205,9 @@ export interface PagoBadgeMeta {
  */
 export const PAGO_BADGE_META: { [estado: string]: PagoBadgeMeta } = {
   Pendiente:      { label: 'Pendiente',    badgeClass: 'cx-badge-pendiente' },
-  Pospendiente:   { label: 'Por revisar',  badgeClass: 'cx-badge-pendiente' },
+  Pospendiente:   { label: 'Pago en revisión',  badgeClass: 'cx-badge-pendiente' },
   PreAprobado:    { label: 'Pre-aprobado', badgeClass: 'cx-badge-preaprobado' },
+  Credito:        { label: 'Crédito',      badgeClass: 'cx-badge-preaprobado' },
   'Pago Parcial': { label: 'Pago parcial', badgeClass: 'cx-badge-preaprobado' },
   Procesando:     { label: 'Procesando',   badgeClass: 'cx-badge-preaprobado' },
 };

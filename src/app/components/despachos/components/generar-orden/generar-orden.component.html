@@ -195,7 +195,7 @@
                                             <div class="goe-card__row">
                                                 <span class="goe-card__nro">{{ pedido.nroPedido }}</span>
                                                 <span class="goe-pill" [ngClass]="getEstadoPagoClass(pedido.estadoPago)">
-                                                    {{ pedido.estadoPago }}
+                                                    {{ etiquetaEstadoPago(pedido.estadoPago) }}
                                                 </span>
                                                 <span class="goe-pill goe-pill--urgente" *ngIf="esEntregaUrgente(pedido)">HOY</span>
                                                 <span class="goe-pill goe-pill--info" *ngIf="pedidoExisteEnOrden(pedido)">En otra orden</span>
@@ -361,7 +361,7 @@
                                                     </ng-container>
                                                     <ng-container *ngSwitchCase="'estadoPago'">
                                                         <span class="badge" [ngClass]="getEstadoPagoClass(pedido.estadoPago)">
-                                                            {{ pedido.estadoPago }}
+                                                            {{ etiquetaEstadoPago(pedido.estadoPago) }}
                                                         </span>
                                                     </ng-container>
                                                     <ng-container *ngSwitchDefault>
@@ -734,7 +734,7 @@
                                                     <label class="info-label">{{ "Estado de Pago" | translate }}</label>
                                                     <div class="info-value">
                                                         <span class="badge" [ngClass]="getEstadoPagoClass(pedidoSeleccionadoDetalle.estadoPago)">
-                                                            {{ pedidoSeleccionadoDetalle.estadoPago }}
+                                                            {{ etiquetaEstadoPago(pedidoSeleccionadoDetalle.estadoPago) }}
                                                         </span>
                                                     </div>
                                                 </div>

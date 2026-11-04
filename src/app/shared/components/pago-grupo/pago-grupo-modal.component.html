@@ -1,0 +1,169 @@
+<div class="modal-header pgv-cabeza">
+  <div>
+    <h5 class="pgv-titulo"><i class="pi pi-wallet" aria-hidden="true"></i> {{ 'tesoreria.pagoGrupo.titulo' | translate }}</h5>
+    <div class="pgv-sub">{{ cliente || vista?.cliente }}<ng-container *ngIf="documento"> · {{ documento }}</ng-container></div>
+  </div>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body pgv-cuerpo">
+  <div class="pgv-nota">{{ 'tesoreria.pagoGrupo.ayuda' | translate }}</div>
+
+  <div class="pgv-cargando" *ngIf="cargando" role="status">{{ 'tesoreria.pagoGrupo.cargando' | translate }}</div>
+  <div class="pgv-aviso pgv-aviso-error" *ngIf="errorCarga" role="alert">{{ errorCarga }}</div>
+
+  <ng-container *ngIf="!cargando && !errorCarga">
+    <!-- Otros formatos del mismo documento con pedidos abiertos: Cartera los cuenta como otro cliente -->
+    <div class="pgv-aviso pgv-aviso-alerta" role="note" *ngFor="let v of vista?.variantes">
+      {{ 'tesoreria.pagoGrupo.variante' | translate:{ documento: v.documento, n: v.pedidos } }}
+    </div>
+    <div class="pgv-aviso pgv-aviso-alerta" role="note" *ngIf="vista?.truncado">
+      {{ 'tesoreria.pagoGrupo.truncado' | translate:{ n: pedidos.length } }}
+    </div>
+
+    <div class="pgv-aviso pgv-aviso-info" *ngIf="pedidos.length === 0">{{ 'tesoreria.pagoGrupo.sinPedidos' | translate }}</div>
+
+    <ng-container *ngIf="pedidos.length > 0">
+      <!-- 1. Datos del pago -->
+      <div class="pgv-seccion">{{ 'tesoreria.pagoGrupo.datos' | translate }}</div>
+      <div class="pgv-grid">
+        <div class="pgv-campo">
+          <label class="pgv-etiqueta" for="pgv-valor">{{ 'tesoreria.historialPagos.valor' | translate }} *</label>
+          <input id="pgv-valor" type="number" class="pgv-input" min="1" inputmode="numeric" placeholder="0"
+                 [ngModel]="pago.valor" (ngModelChange)="alCambiarValor($event)" name="pgvValor">
+        </div>
+        <div class="pgv-campo">
+          <label class="pgv-etiqueta" for="pgv-fecha">{{ 'tesoreria.historialPagos.fecha' | translate }} *</label>
+          <input id="pgv-fecha" type="date" class="pgv-input" [(ngModel)]="pago.fecha" name="pgvFecha">
+        </div>
+        <div class="pgv-campo">
+          <label class="pgv-etiqueta" for="pgv-forma">{{ 'tesoreria.registrarPago.formaDePago' | translate }} *</label>
+          <select id="pgv-forma" class="pgv-input" [(ngModel)]="pago.formaPago" name="pgvForma">
+            <option value="">{{ 'tesoreria.registrarPago.seleccionar' | translate }}</option>
+            <option *ngFor="let fp of formasPago" [value]="fp?.id">{{ fp?.nombre }}</option>
+          </select>
+        </div>
+        <div class="pgv-campo">
+          <label class="pgv-etiqueta" for="pgv-ref">{{ 'tesoreria.registrarPago.numeroDeComprobante' | translate }} *</label>
+          <input id="pgv-ref" type="text" class="pgv-input" maxlength="80" [(ngModel)]="pago.referencia" name="pgvRef">
+        </div>
+        <div class="pgv-campo pgv-campo-ancho">
+          <label class="pgv-etiqueta" for="pgv-notas">{{ 'tesoreria.historialPagos.notas' | translate }}</label>
+          <input id="pgv-notas" type="text" class="pgv-input" maxlength="500" [(ngModel)]="pago.notas" name="pgvNotas">
+        </div>
+        <div class="pgv-campo pgv-campo-ancho">
+          <label class="pgv-etiqueta" for="pgv-archivo">{{ 'tesoreria.pagoGrupo.comprobante' | translate }} *</label>
+          <div class="pgv-archivo" [class.is-arrastrando]="arrastrando" [class.tiene-archivo]="archivo"
+               (dragover)="$event.preventDefault(); arrastrando = true" (dragleave)="arrastrando = false" (drop)="alSoltarArchivo($event)">
+            <input id="pgv-archivo" type="file" class="pgv-archivo-input" accept=".pdf,.jpg,.jpeg,.png" (change)="alElegirArchivo($event)">
+            <div class="pgv-archivo-texto" *ngIf="!archivo"><i class="pi pi-cloud-upload" aria-hidden="true"></i> {{ 'tesoreria.registrarPago.arrastraElComprobanteOHaz' | translate }}</div>
+            <div class="pgv-archivo-texto" *ngIf="archivo"><i class="pi pi-file" aria-hidden="true"></i> {{ archivo.name }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Reparto -->
+      <div class="pgv-seccion">{{ 'tesoreria.pagoGrupo.reparto' | translate }}</div>
+      <div class="pgv-nota">{{ 'tesoreria.pagoGrupo.repartoAyuda' | translate }}</div>
+      <div class="pgv-barra">
+        <button type="button" class="pgv-btn pgv-btn-sec" (click)="autoRepartir()" [disabled]="valor <= 0 || guardando">
+          <i class="pi pi-sort-amount-down" aria-hidden="true"></i> {{ 'tesoreria.pagoGrupo.repartirAuto' | translate }}
+        </button>
+      </div>
+
+      <table class="pgv-tabla">
+        <thead>
+          <tr>
+            <th class="pgv-col-marca">
+              <input type="checkbox" [checked]="todosElegidos" (change)="alternarTodos()" [disabled]="guardando"
+                     [attr.aria-label]="'tesoreria.pagoGrupo.incluirTodos' | translate">
+            </th>
+            <th>{{ 'tesoreria.pagoGrupo.colPedido' | translate }}</th>
+            <th>{{ 'tesoreria.pagoGrupo.colEstado' | translate }}</th>
+            <th class="pgv-num">{{ 'tesoreria.pagoGrupo.colSaldo' | translate }}</th>
+            <th class="pgv-num">{{ 'tesoreria.pagoGrupo.colParte' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of pedidos; trackBy: trackByPedido" [class.pgv-fila-apagada]="!incluido.has(p.orderId)" [class.pgv-fila-bloqueada]="p.tope <= 0">
+            <td class="pgv-col-marca">
+              <input type="checkbox" [checked]="incluido.has(p.orderId)" [disabled]="p.tope <= 0 || guardando" (change)="alternar(p.orderId)"
+                     [attr.aria-label]="'tesoreria.pagoGrupo.incluir' | translate:{ nro: p.nroPedido }">
+            </td>
+            <td [attr.data-etiqueta]="'tesoreria.pagoGrupo.colPedido' | translate">
+              <div class="pgv-nro">{{ p.nroPedido }}</div>
+              <div class="pgv-fecha">{{ p.fechaCreacion | date:'dd/MM/yyyy' }}</div>
+              <div class="pgv-revision" *ngIf="p.enRevision > 0 && p.tope > 0">
+                {{ 'tesoreria.pagoGrupo.enRevision' | translate:{ valor: (p.enRevision | currency:'COP':'symbol-narrow':'1.0-0'), tope: (p.tope | currency:'COP':'symbol-narrow':'1.0-0') } }}
+              </div>
+              <div class="pgv-revision" *ngIf="p.tope <= 0">{{ 'tesoreria.pagoGrupo.sinTope' | translate }}</div>
+            </td>
+            <td [attr.data-etiqueta]="'tesoreria.pagoGrupo.colEstado' | translate">{{ etiquetaEstado(p.estadoPago) }}</td>
+            <td class="pgv-num" [attr.data-etiqueta]="'tesoreria.pagoGrupo.colSaldo' | translate">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="pgv-num" [attr.data-etiqueta]="'tesoreria.pagoGrupo.colParte' | translate">
+              <input type="number" class="pgv-input pgv-input-parte" min="0" inputmode="numeric"
+                     [class.pgv-input-mal]="parteSupera(p)" [disabled]="!incluido.has(p.orderId) || p.tope <= 0 || guardando"
+                     [ngModel]="partes[p.orderId] || null" (ngModelChange)="alCambiarParte(p.orderId, $event)" [name]="'pgvParte' + p.orderId"
+                     [attr.aria-label]="'tesoreria.pagoGrupo.parteDe' | translate:{ nro: p.nroPedido }">
+              <div class="pgv-error-parte" *ngIf="parteSupera(p)">{{ 'tesoreria.pagoGrupo.parteSupera' | translate:{ tope: (p.tope | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Cuánto queda sin repartir, en vivo -->
+      <div class="pgv-resumen" role="status" aria-live="polite">
+        <div class="pgv-dato">
+          <div class="pgv-dato-etq">{{ 'tesoreria.pagoGrupo.valorDelPago' | translate }}</div>
+          <div class="pgv-dato-val">{{ valor | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        </div>
+        <div class="pgv-dato">
+          <div class="pgv-dato-etq">{{ 'tesoreria.pagoGrupo.repartido' | translate }}</div>
+          <div class="pgv-dato-val">{{ repartido | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        </div>
+        <div class="pgv-dato" [class.pgv-dato-ok]="valor > 0 && sinRepartir === 0" [class.pgv-dato-mal]="sinRepartir !== 0">
+          <div class="pgv-dato-etq">{{ 'tesoreria.pagoGrupo.sinRepartir' | translate }}</div>
+          <div class="pgv-dato-val">{{ sinRepartir | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        </div>
+      </div>
+      <div class="pgv-aviso pgv-aviso-alerta" role="status" *ngIf="sobrante > 0">
+        {{ 'tesoreria.pagoGrupo.sobra' | translate:{ valor: (sobrante | currency:'COP':'symbol-narrow':'1.0-0') } }}
+      </div>
+      <div class="pgv-aviso pgv-aviso-alerta" role="status" *ngIf="sobrante === 0 && sinRepartir > 0 && valor > 0">
+        {{ 'tesoreria.pagoGrupo.faltaRepartir' | translate:{ valor: (sinRepartir | currency:'COP':'symbol-narrow':'1.0-0') } }}
+      </div>
+      <div class="pgv-aviso pgv-aviso-alerta" role="status" *ngIf="sinRepartir < 0">
+        {{ 'tesoreria.pagoGrupo.repartidoDeMas' | translate:{ valor: (-sinRepartir | currency:'COP':'symbol-narrow':'1.0-0') } }}
+      </div>
+      <div class="pgv-aviso pgv-aviso-alerta" role="status" *ngIf="conParte.length > maxPedidos">
+        {{ 'tesoreria.pagoGrupo.maximo' | translate:{ max: maxPedidos } }}
+      </div>
+    </ng-container>
+
+    <!-- Errores del intento anterior -->
+    <div class="pgv-aviso pgv-aviso-error" role="alert" *ngIf="error">
+      {{ error }}
+      <ul class="pgv-lista-errores" *ngIf="detalleErrores.length">
+        <li *ngFor="let e of detalleErrores">{{ e }}</li>
+      </ul>
+      <ul class="pgv-lista-errores" *ngIf="resultados.length">
+        <li *ngFor="let r of resultados">
+          {{ 'tesoreria.pagoGrupo.pedidoN' | translate:{ nro: r.nroPedido } }}:
+          {{ (r.estado === 'error' || r.estado === 'en_curso') ? (r.motivo || ('tesoreria.pagoGrupo.pendiente' | translate)) : ('tesoreria.pagoGrupo.listo' | translate) }}
+        </li>
+      </ul>
+      <p class="pgv-salida" *ngIf="bloqueado">{{ 'tesoreria.pagoGrupo.incompletoBloqueado' | translate }}</p>
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-footer pgv-pie">
+  <button type="button" class="pgv-btn pgv-btn-enlace" *ngIf="alUnSoloPedido" (click)="unSoloPedido()" [disabled]="guardando">
+    {{ 'tesoreria.pagoGrupo.unSoloPedido' | translate }}
+  </button>
+  <button type="button" class="pgv-btn pgv-btn-sec" (click)="cerrar()" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="pgv-btn" (click)="registrar()" [disabled]="!puedeRegistrar">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i>
+    {{ (incompleto ? 'tesoreria.pagoGrupo.reintentar' : 'tesoreria.pagoGrupo.registrar') | translate }}
+  </button>
+</div>

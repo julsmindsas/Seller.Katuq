@@ -224,7 +224,7 @@
         </span>
         <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
           <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
-          {{ quickFilters.estadoPago }}
+          {{ etiquetaEstadoPago(quickFilters.estadoPago) }}
           <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
             <i class="pi pi-times"></i>
           </button>

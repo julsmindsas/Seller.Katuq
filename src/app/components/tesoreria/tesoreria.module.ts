@@ -22,7 +22,10 @@ import { AlertasTesoreriaComponent } from './components/alertas-tesoreria/alerta
 // Modales
 import { RevisarPagoComponent } from './components/revisar-pago/revisar-pago.component';
 import { RegistrarPagoComponent } from './components/registrar-pago/registrar-pago.component';
+import { AjustesComprobanteComponent } from './components/ajustes-comprobante/ajustes-comprobante.component';
+import { AjusteAlPesoComponent } from './components/ajuste-al-peso/ajuste-al-peso.component';
 import { CambiarEstadoPagoComponent } from './components/cambiar-estado-pago/cambiar-estado-pago.component';
+import { LineaTiempoPagoComponent, HistorialPagoModalComponent } from './components/linea-tiempo-pago/linea-tiempo-pago.component';
 
 /**
  * Spec 013 — Tesorería MVP. Módulo lazy del área de tesorería.
@@ -36,7 +39,11 @@ import { CambiarEstadoPagoComponent } from './components/cambiar-estado-pago/cam
     AlertasTesoreriaComponent,
     RevisarPagoComponent,
     RegistrarPagoComponent,
+    AjustesComprobanteComponent,
+    AjusteAlPesoComponent,
     CambiarEstadoPagoComponent,
+    LineaTiempoPagoComponent,
+    HistorialPagoModalComponent,
   ],
   imports: [
     CommonModule,

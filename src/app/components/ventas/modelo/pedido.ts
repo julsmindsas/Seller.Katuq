@@ -71,6 +71,8 @@ export interface Pedido {
   estadoProceso: EstadoProceso;
   shippingOrder?: any;
   estadoPago: EstadoPago;
+  /** Ticket 1448: marca de crédito; la escribe solo el servidor al marcar el pedido como Crédito. */
+  credito?: { por?: string | null; fecha?: string };
   nroFactura?: string;
   fechaFactura?: string;
   PagosAsentados?: Pago[];
@@ -280,6 +282,8 @@ export enum EstadoPago {
   Rechazado = "Rechazado",
   Precancelado = "Precancelado",
   Cancelado = "Cancelado",
+  /** Ticket 1448: pedido de crédito (se produce, despacha y entrega sin cobrar). Solo con la bandera `estadoCredito`. */
+  Credito = "Credito",
 }
 export enum EstadoProceso {
   SinProducir = "SinProducir",

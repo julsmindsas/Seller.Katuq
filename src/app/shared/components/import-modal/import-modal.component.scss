@@ -578,3 +578,66 @@ $ix-tint: $cfg-tint;
 }
 
 .batch-info small { color: $ix-muted !important; }
+
+// ── Hoja «Especificaciones» (bandera categoryAttributes, ticket 1234, F2-42, F3) ──
+// Solo presentación, con los tokens de arriba. Los nombres de clase no llevan «p-» (el
+// `[class*="p-"]` global les forzaría el tamaño de letra).
+.ixe-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  max-width: 460px;
+  text-align: left;
+
+  label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ix-muted;
+  }
+
+  .ixe-select {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid $ix-line;
+    border-radius: 11px;
+    background: #fff;
+    color: $ix-ink;
+    font-size: 13.5px;
+
+    &:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  }
+
+  .ixe-ayuda {
+    color: $ix-muted;
+    font-size: 12px;
+    letter-spacing: normal;
+  }
+}
+
+.ixe-resultado {
+  width: 100%;
+  margin-top: 16px;
+  text-align: left;
+
+  .ixe-resultado__titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $ix-muted;
+
+    i { color: $ix-accent; font-size: 13px; }
+  }
+
+  .result-stats { justify-content: flex-start; }
+
+  .ixe-ref { color: $ix-muted; font-size: 12px; }
+}

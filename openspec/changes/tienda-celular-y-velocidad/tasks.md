@@ -27,10 +27,15 @@
   (`tienda-celular-y-velocidad-seguridad`). **Éxito:** sus controles quedan como criterio de las
   tareas 3.5b, 3.7, 3.9, 3.14 y 4.x, y su tarea 2.0 entra en los arreglos de F2-41 antes de
   unirlo.
-- [ ] 0.4 Revalidar las citas archivo:línea de `design.md` sobre la punta de
+- [x] 0.4 Revalidar las citas archivo:línea de `design.md` sobre la punta de
   `feature/tickets-web` (hoy con F2-41 sin commit). **Éxito:** citas corregidas en el diseño.
-  - Parte de D12 y del regreso a `/gracias` (bloque **Pago**): hecha el 21-oct (bloque TX34-B01).
-    Falta el resto del diseño.
+  - Parte de D12 y del regreso a `/gracias` (bloque **Pago**): hecha el 21-oct (bloque TX34-B01);
+    **no se vuelve a hacer hasta la 4.0** (ver más abajo).
+  — **Hecha el 3-nov (bloque TX34-B19), con una parte pendiente a propósito (el bloque Pago, D12 y D13; ver abajo)** sobre la punta de `feature/tickets-aws-claude-1` (backend `02ccc27c`):
+  26 citas corregidas en `design.md` y 55 comprobadas con un script contra el código (todas en su línea). Las que más se
+  movieron fueron las de `controllers/sites.js` (`renderPublico` 6789 → 7226, `consultarCatalogo` 9521 → 10385) y las de
+  `siteHtml.js` (cabecera 1330-1400 → 1414-1560). No se tocó ninguna decisión. **Quedan sin revalidar a propósito** el bloque
+  **Pago** de «Context» y D12 y D13, que dependen de la unión de F2-41, D-496 y las suscripciones: se rehacen en la 4.0.
 - [ ] 0.5 Lectura de producción, solo lectura y sin ejecutar JavaScript de las páginas:
   - HTML en frío y en caliente de FLORECER, OH MY STORE y lino-y-lona (`curl`, 5 veces);
   - número de productos y pedidos de 30 días por empresa con tienda publicada (para dimensionar
@@ -50,19 +55,33 @@
 
 ## 1. Medición base y caracterización (sin cambiar comportamiento)
 
-- [ ] 1.1 [P] Laboratorio (D2): `renderPublico` real sobre la Firestore en memoria
+- [x] 1.1 [P] Laboratorio (D2): `renderPublico` real sobre la Firestore en memoria
   (`scripts/lib/firestoreFalsa`), 15 sitios de muestra, catálogo de prueba de 2.500 productos con
   fotos del peso medido en 0.5, corrida caliente y fría (con la demora de 1.3), Lighthouse 12.2.1
   y Chromium con versión fija como `devDependencies`, mediana de 3, aviso de cookies encendido,
   balizas y píxeles bloqueados, flujo de INP.
   - **Éxito:** `npm run lab:tienda` deja el JSON de cada corrida y una tabla por plantilla y
     página. Dos corridas seguidas difieren 5 puntos o menos (VE «Cómo se mide»).
-- [ ] 1.2 Línea base del laboratorio con el código actual, con trazas de toda corrida bajo 90.
+  — **Hecho (bloque TX34-B04, commit `b0815594` del backend):** `npm run lab:tienda` deja el JSON, la traza de toda corrida
+  bajo 90, `resumen.json` y `tabla.md`. **Lo que NO se cumplió:** la estabilidad. Dos ejecuciones seguidas difirieron hasta
+  14 puntos en 80 medianas (la meta es 5; ver D2). Se marca hecha porque el laboratorio existe y mide; la inestabilidad queda
+  escrita y es la razón de que las comparaciones del bloque B19 se hagan en la misma sesión (apagado contra encendido).
+  **Criterio sin cumplir, abierto en la 6.1:** «dos corridas seguidas difieren 5 puntos o menos». Hasta que se cumpla, una
+  diferencia de 1–2 puntos entre dos ejecuciones no se lee como cambio; la medición acotada del B19 usó una sola ejecución
+  por estado (`repetir 1`) y no aporta evidencia de estabilidad.
+- [x] 1.2 Línea base del laboratorio con el código actual, con trazas de toda corrida bajo 90.
   **Éxito:** tabla base guardada; hipótesis del bimodal escrita con evidencia.
-- [ ] 1.3 [P] `scripts/medir-render-frio.js --dry-run` (D2): tiempos por etapa del render, bytes
+  — **Hecha (bloque TX34-B04, commit `7f48ba89`; cifras y hipótesis en D2 desde el bloque TX34-B19).** Las corridas están
+  fuera de git, en `~/.claude/projects/…/laboratorio-tienda/corridas/`.
+- [x] 1.3 [P] `scripts/medir-render-frio.js --dry-run` (D2): tiempos por etapa del render, bytes
   y memoria del índice y de la proyección (con `imagenesPrincipales`), y demora por lectura, en
   FLORECER, OH MY STORE y lino-y-lona. **Éxito:** cifras en `design.md`; la demora alimenta la
   corrida fría de 1.1.
+  — **Hecha en `--dry-run` (Firestore en memoria); cifras en D2 desde el bloque TX34-B19.** El script existe desde el bloque
+  TX34-B04; el 3-nov se corrió con 2.500 y 8.568 productos. **Bloqueado, espera el OK de Daniel:** la lectura de producción
+  (`--real --sitios …`) con FLORECER, OH MY STORE y lino-y-lona; hasta entonces las cifras de bytes y memoria de la
+  proyección son del laboratorio, no de documentos reales de ~14 KB. **Criterio sin cumplir:** «cifras de FLORECER, OH MY STORE
+  y lino-y-lona» en `design.md` (hay cifras del laboratorio con 2.500 y 8.568 productos, no de esas tres tiendas).
 - [x] 1.4 [P] Caracterización del catálogo: prueba dorada de `consultarCatalogo` con un catálogo
   de muestra (texto, categoría, marca, precio, oferta, ocasión, los 3 órdenes de hoy, plan gratis
   y ocultas). **Éxito:** verde con el código de hoy.
@@ -99,17 +118,33 @@
   lista; con `--estricto` no tolera ninguna (TX34-B06 las corrige y la lista se vacía).
   Script `npm run test:tienda-celular` (incluye `rendimientoMovil.test.js`); sin el Chromium del
   laboratorio el e2e se salta con un mensaje y sale con código 0.
-- [ ] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
+- [x] 1.6 [S] Caracterización del pago: `/gracias` en cada estado (aprobado, pendiente, rechazado,
   anulado, vencido, a cuotas, con y sin regreso válido) y `/pagar` en cada estado, incluido el
   pedido del bot (F4-40 D11). Se apoya en `pedidoTiendaCaracterizacion`, `recordatorioPagoBase` y
   `pagoTiendaConciliacionBase`.
   - **Éxito:** verde con el código de hoy y con F2-41 unido.
-- [ ] 1.7 [S] Caracterización del reintento del checkout: el mismo POST de crear pedido enviado
+  — Hecha el 3-nov (bloque TX34-B20), sin cambiar código: `tests/sitios/caracterizacionGraciasPagar.test.js`
+  (10 pruebas, 9 grupos con instantánea propia), en la copia local del backend (D-566, no va a git).
+  Cubre `/gracias` en cada estado del pedido (aprobado, pendiente, rechazado, anulado, vencido, a cuotas), con y
+  sin regreso válido, y `/pagar` en cada estado. Hallazgos para 4.1 y 4.2: un pedido vencido o anulado con pago
+  «Pendiente» sigue diciendo «Tu pago está en proceso»; `/pagar` de un pedido con pago «Rechazado» pero proceso
+  vivo no lo frena. El pedido del bot (F4-40 D11) NO está en esta rama: se agrega a la 1.6 cuando llegue. La
+  prueba versionada `tests/pagoCuotas/regresoGracias.test.js` se puso al día con los módulos nuevos de la página.
+- [x] 1.7 [S] Caracterización del reintento del checkout: el mismo POST de crear pedido enviado
   dos veces, la segunda como si la primera respuesta se hubiera perdido (con celular y sin él).
   Fija qué devuelve hoy (`_duplicadoEvitado`, mismo `nroPedido`), que no descuenta inventario dos
   veces, no aparta otra reserva, y qué efectos repite (enlace de pago, contadores; D-496).
   - **Éxito:** verde con el código de hoy y con F2-41 unido; si deja un hueco, se anota para el
     diff de la 4.4.
+  — Hecha el 3-nov (bloque TX34-B20), sin cambiar código: `tests/sitios/caracterizacionReintentoCheckout.test.js`
+  (19 pruebas), en la copia local del backend (D-566). Con celular el segundo envío devuelve el mismo pedido
+  sin otro consecutivo, descuento ni reserva, pero repite el enlace de pago, el correo al comprador, los avisos,
+  el evento del sitio, el contador de pedidos del sitio y el uso del cupón. **Huecos para la 4.4:** (1) hay
+  casos en que el reintento no se reconoce y crea un segundo pedido (compradores sin dato de contacto
+  suficiente en la ficha, y dos envíos casi simultáneos); (2) el reintento falla con error aunque su pedido ya
+  existe cuando la compra consumió la última unidad, un cupón de uso limitado o el tope del plan gratis;
+  (3) el borde de reconocimiento es de 2 minutos contados desde que se armó el pedido. La 4.4 necesita la
+  clave de idempotencia (diff aparte, con aprobación).
 
 ## 2. Contract tests primero (rojos hasta implementar; Artículo VIII)
 
@@ -127,20 +162,28 @@
 - [x] 2.3 [P] `POST /vista` con agente de robot o automatizado → 204 sin escribir.
   — **`tests/sitios/vistaSinRobots.contract.test.js` (8 pruebas, roja contra el código anterior);
   bloque TX34-B03.**
-- [ ] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
+- [x] 2.4 [P] Write-set: la tarea nocturna solo escribe `storeProductStats` [si P1]; la proyección
   y el buscador no escriben. Canario: una escritura en `products` u `orders` hace fallar la prueba.
   — **Avance (bloque TX34-B08): parte proyección hecha** (revisión estática de `indiceTienda.js` con
   canarios y una corrida con la Firestore en solo lectura, en `indiceTiendaSombra.test.js`).
   **Parte tarea nocturna hecha (bloque TX34-B12):** `ventasRecientes.writeSet.test.js` (29 pruebas: canario
   que falla con una escritura en `products`, `orders`, `inventory` o `inventoryMovement`, revisión estática del
-  módulo y corrida con la Firestore falsa que solo escribe `storeProductStats/{docId de la empresa}`). Falta el
-  buscador (TX34-B10).
+  módulo y corrida con la Firestore falsa que solo escribe `storeProductStats/{docId de la empresa}`).
   **Parte `storeImageVariants` hecha (bloque TX34-B17):** `variantesFotosTienda.writeSet.test.js` (56 pruebas, con
   Storage y Firestore falsos): el dry-run no escribe ni abre el Storage; `compute` solo crea archivos nuevos con la
   precondición de que no existan y escribe solo `storeImageVariants/{docId}` (un `set` sin merge); `products`,
   `inventory`, `orders` y consecutivos quedan intactos; destino ocupado (otro token o empresa) omite la foto sin
   escribir nada de ella; revisión estática con canarios (un `update`, un `set`, un `batch`, un borrado o un segundo
   `save` agregados al módulo la hacen fallar); `indiceTienda.js` sigue leyendo solo `products`.
+  **Parte buscador y autocompletar hecha (bloque TX34-B19):** `buscadorSinEscrituras.test.js` (4 pruebas: `buscadorTienda.js`
+  y `sugerenciasTienda.js` no abren Firestore ni escriben, con canario; la única escritura del buscador en el controlador es
+  `registrarEvento` del evento `busqueda_sin_resultado`, detrás de `modoBuscador === "on"`), más lo que ya probaban
+  `sugerencias.contract.test.js` («solo lee», 19 pruebas, esta sí corrida con la Firestore en solo lectura) y
+  `buscadorTienda.test.js` (el evento: saneado, nada con `off` o `shadow`). Con esto las cuatro partes de la 2.4 están.
+  **Límite declarado:** el control del controlador del buscador es una revisión estática por texto (qué escritura hay entre
+  `busqueda_sin_resultado` y el `204`), no una corrida con la Firestore en solo lectura: si se reescribe ese tramo, la prueba
+  puede fallar o dejar pasar un cambio, así que se revisa a mano en cada cambio de `controllers/sites.js` ahí. Las pruebas
+  no van a git (D-566).
 - [ ] 2.5 [S] `/gracias`: «Reintentar pago» solo con regreso válido, pago rechazado o anulado,
   reserva vigente e interruptor encendido; la promesa del correo solo con regreso válido y correo
   salido o elegible.
@@ -180,7 +223,9 @@
   mismo `srcset`, primera fila sin carga diferida, medidas reservadas; la portada JPEG de TX-37
   sin `srcset` salvo que TX-37 cambie su pregunta 7. **Éxito:** 2.6 en verde, VE «Fotos del
   tamaño justo» y CLS ≤ 0,1 en el laboratorio.
-  — **Hecha (bloque TX34-B07):** `srcset` y `sizes` en tarjeta (2 columnas en celular), ficha y miniaturas con las variantes `-wN.webp` (constructor y TX-37); precarga de la ficha con la misma lista, tomada de la primera foto del bloque; el script de la ficha cambia `srcset` y `src` juntos; primera fila del catálogo (4) sin `loading=lazy` y la primera con `fetchpriority=high`, también en las tarjetas que arma el script; el espacio de la foto ya lo reserva `aspect-ratio`. Portada `-cover.jpg` y fotos sin variantes, como hoy. **Pendiente de medir:** CLS en el laboratorio (no se corrió la medición completa).
+  — **Hecha (bloque TX34-B07):** `srcset` y `sizes` en tarjeta (2 columnas en celular), ficha y miniaturas con las variantes `-wN.webp` (constructor y TX-37); precarga de la ficha con la misma lista, tomada de la primera foto del bloque; el script de la ficha cambia `srcset` y `src` juntos; primera fila del catálogo (4) sin `loading=lazy` y la primera con `fetchpriority=high`, también en las tarjetas que arma el script; el espacio de la foto ya lo reserva `aspect-ratio`. Portada `-cover.jpg` y fotos sin variantes, como hoy. **CLS medido el 3-nov (bloque TX34-B19):** en el laboratorio, catálogo y ficha de `marca-premium`, `moda-coleccion` y
+  `tecnologia-catalogo`, el CLS máximo es 0,065 con todo apagado y 0,027 con el cajón, el envío y el ranking encendidos (meta
+  0,1; la base de `marca-premium` era 0,22). Se cumple en esas tres plantillas; las otras 12 se miden en la 6.1.
 - [x] 3.5 Proyección de tienda (D1) en modo sombra, con invalidación, para todo lo público
   (catálogo, ficha, categorías con foto, afines, marcas, plan gratis, feed, sitemap, directorio y
   el precio y lo vendible de KAI). Banderas de D10 en `config/feature_flags.storeMobile` y
@@ -213,6 +258,10 @@
   **Pendiente:** la medición 1.3 repetida sobre FLORECER y OH MY STORE (bloqueada); la bandera
   `storeLightIndex` en FLORECER al desplegar; P18: las facetas de F2-42 deben leer de la proyección
   (punto de extensión documentado en `indiceTienda.js`; no se tocó F2-42).
+  **Nota (bloque TX34-B19):** la medición 1.3 repetida solo se hizo en `--dry-run` (D2): el índice compartido y la proyección
+  en 2.500 y 8.568 productos, con el modo `lightIndex` apagado. **No se midió el laboratorio con `lightIndex` en `on`** (no estaba
+  entre las piezas de la medición acotada): queda para la 6.1, junto con la sombra en FLORECER. El encendido de los otros
+  interruptores no cambió ninguna respuesta del catálogo apagado (28 de 28 respuestas iguales).
 - [x] 3.5b Clave de la caché del HTML sin parámetros de campaña (D15, revisión privada S4).
   **Éxito:** VE «Quien llega por un anuncio no espera de más»; prueba de atribución del pedido
   igual que hoy.
@@ -366,15 +415,55 @@
 
 ## 5. Vista previa del editor (front)
 
-- [ ] 5.1 Espejo en `sitio-render` (`.sitio--movil`): cajón, 16 px y 44 px, con las clases del
+- [x] 5.1 Espejo en `sitio-render` (`.sitio--movil`): cajón, 16 px y 44 px, con las clases del
   render publicado. **Éxito:** TC «La vista previa del editor muestra lo mismo»; `npm run build`
   sin errores; sin gradientes ni primarios prohibidos nuevos en el módulo.
-- [ ] 5.2 [si P13] Revisar `/s/:slug` con el mismo componente.
+  — **Hecho (TX34-B18):** `sitio-render` recibe `cajonLateral` (por defecto `false`) y el editor se lo pasa desde la
+  bandera de empresa `storeDrawer` (`cajonLateralPrevia`). Solo en la previa «Celular» y con la bandera, la cabecera lleva
+  `cabecera--cajon` y el botón «Menú» (`kq-menu` / `kq-menu__boton`, 44 px) en lugar de la fila de categorías y los enlaces
+  sueltos; el panel (`kq-menu__capa` > `kq-menu__panel`, mismas clases, mismos grupos y textos: categorías visibles hasta 8,
+  enlaces, «Mi cuenta»/«Favoritos» si vende, WhatsApp del bloque de WhatsApp) sale en la capa pegada arriba del lienzo y mide
+  lo que el marco. Abre con el botón y cierra con ✕, Escape, toque fuera o al elegir un renglón; atrapa el foco y lo devuelve
+  al botón. Estado del componente: no toca servicios, eventos del editor ni modales. Sin la bandera, la previa muestra la fila
+  de hoy, igual que el sitio publicado sin ella. El contenido del panel vive en `cajon-previa.ts` (espejo de
+  `siteCajonLateral.js`). Además, dentro de `.sitio--movil`: campos de 16 px (D-461) y áreas de 44 px en el buscador, el
+  carrito, «boton--chico», enlaces y categorías de la cabecera, «Agregar» y enlaces del pie (la misma lista de `siteTienda.js`
+  que existe en la previa; los controles del propio editor no cambian). Sin textos nuevos en otros idiomas (el módulo no usa
+  i18n). Sin degradados ni primarios prohibidos nuevos (SCSS 2 → 2, TS 1 → 1, HTML 0 → 0).
+  **Límites conocidos (la previa no sigue al servidor en estos casos):** la bandera de empresa es lo único que el front
+  conoce. El interruptor general `storeMobile.drawer` (incluido el kill switch: apagado o en sombra) y `paraTodas` viven en
+  el servidor. Por eso, con el interruptor general apagado y `storeDrawer` encendido, la previa muestra el cajón y la tienda
+  publicada la fila; con `paraTodas` y sin `storeDrawer`, al revés. Cerrarlo exige que una respuesta que el editor ya recibe
+  traiga el modo efectivo (cambio de backend aparte, con su aprobación). Hasta entonces, antes de encender `paraTodas` o de
+  usar el kill switch hay que tener presente que las previas no lo reflejan. La previa tampoco pinta «Mi cuenta» y
+  «Favoritos» en la barra (nunca lo hizo), ni el modo conversión, ni el celular del pie como WhatsApp del panel (el front no
+  recibe el contacto de la empresa), ni sabe si el catálogo está en otra página (`catalogoAparte`): como la fila de hoy, muestra
+  las categorías cuando la cabecera las pide. Sin categorías reales usa las de ejemplo, igual que la fila.
+  **Pendiente de cierre:** revisión visual en el editor real a 1440 y 390 px (se probó el CSS compilado con una réplica del
+  marcado en Chrome, no el editor) y el build completo, que aquí no se corre; se comprobó con `tsc` y `ngc --noEmit`.
+- [x] 5.2 [si P13] Revisar `/s/:slug` con el mismo componente.
+  — **Revisada (TX34-B18), sin cambios de código — RESULTADO: `/s/:slug` NO recibe estos cambios.** `sitio-publico` usa
+  `app-sitio-render` sin `dispositivo` ni `cajonLateral`; todo lo nuevo (cajón, 16 px y 44 px) cuelga de `.sitio--movil` o
+  de `cajonLateral`, así que esa ruta, en un celular real, sigue como estaba (no cumple D-461 ni D9). La ruta sigue declarada
+  en `app-routing.module.ts`, pero ningún enlace interno apunta a `/s/` (la tienda real sale del HTML del backend). Decide
+  Daniel: retirar la ruta, o abrir un cambio aparte para que use las reglas móviles por ancho de pantalla.
 
 ## 6. Medición final y encendido (cada paso con OK de Daniel)
 
 - [ ] 6.1 Laboratorio completo con todo encendido. **Éxito:** VE en verde en las 15 plantillas;
   si una no llega, informe con la causa antes de seguir.
+  — **Antes de esto, medición acotada hecha el 3-nov (bloque TX34-B19; cifras y trazas en D2).** Con `drawer`, `shippingEstimate`
+  y `salesRanking` en `show` en el laboratorio: CLS ≤ 0,027, INP 21–25 ms, Buenas prácticas 96, catálogo 82 en caliente y 71–74 en
+  frío (por debajo de 90) y ficha 94 en caliente y 85 en frío. La causa del catálogo bajo 90 son las 14 fotos originales sin
+  variantes (con fotos con variantes, 97 y LCP 2,4 s) y, en frío, la espera de las lecturas del servidor. **Pendientes para esta
+  tarea:** (1) las otras 12 plantillas y la portada; (2) `lightIndex` en `on` e `imageVariants` en `on` con fotos convertidas; (3)
+  el costo de ~6,6 KB comprimidos por página y ~0,15 s de LCP de la ficha con el cajón y el envío encendidos (D2); (4) el catálogo
+  en frío de `moda-coleccion` (74 → 71); (5) la lectura real de la 1.3 y PageSpeed en producción (6.3), bloqueados hasta el OK
+  de Daniel; (6) encender las banderas solo con su OK: todas nacen apagadas; (7) **LCP de 2,5 s o menos: no se cumple** (ficha
+  2,8–3,0 s, catálogo 4,6–5,3 s en todas las celdas; 2,4 s solo con fotos con variantes); (8) **INP incompleto:** la spec pide
+  menú, buscar, filtrar, agregar y carrito, y el flujo no incluyó «filtrar» (ni el menú en «Apagado»), así que 19–34 ms y 21–25 ms
+  no son comparables; (9) **estabilidad del laboratorio** (la 1.1): repetir con `--repetir 2` o más antes de dar por válidas
+  diferencias de 1–2 puntos; (10) la ficha pierde 1–2 puntos en 5 de sus 6 celdas con lo encendido (D2).
 - [ ] 6.2 FLORECER (sus banderas en `companies.featureFlags`): `lightIndex`, `search`, `drawer`,
   `shippingEstimate` en `on`; `salesRanking` en `show`; revisión a 1440 y 390 px. **Éxito:** una
   semana sin diferencias ni errores.

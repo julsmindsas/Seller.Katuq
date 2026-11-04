@@ -1,5 +1,6 @@
 import { puntoEsProtegido, tienePuntoValido } from "../../../shared/utils/client-delivery";
 import {
+  inject,
   Component,
   ElementRef,
   OnInit,
@@ -14,6 +15,7 @@ import {
   ChangeDetectorRef,
 } from "@angular/core";
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import { VentasService, UbicacionEntregaGuardada } from "../../../shared/services/ventas/ventas.service";
 import {
   Carrito,
@@ -209,6 +211,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   formulario: any;
   pedidoSeleccionado: Pedido;
   estadosPago = Object.values(EstadoPago);
+  // Ticket 1448: con inject() para no cambiar el constructor.
+  private companyFeaturesCredito = inject(CompanyFeaturesService);
   ciudadSeleccionada: string;
   ESTADOPAGO: any[];
   configuracionCarritoSeleccionado: Carrito;
@@ -2794,6 +2798,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         EstadoPago.Aprobado,
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
+        EstadoPago.Credito, // Ticket 1448: un pedido de crédito se despacha sin cobro previo
       ],
       tipoFecha: "fechaEntrega",
     };
@@ -7149,6 +7154,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         EstadoPago.Aprobado,
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
+        EstadoPago.Credito, // Ticket 1448: un pedido de crédito se despacha sin cobro previo
       ],
       tipoFecha: "fechaEntrega", // El rango de fecha de logística filtra por fecha de entrega
       soloConDespacho: true // D-491: sin pedidos solo de servicios
@@ -7276,9 +7282,13 @@ export class DespachosComponent implements OnInit, OnDestroy {
       { label: 'PreAprobado', value: 'PreAprobado' },
       { label: 'Rechazado', value: 'Rechazado' },
       { label: 'Cancelado', value: 'Cancelado' },
-      { label: 'Pospendiente', value: 'Pospendiente' },
+      { label: 'Pago en revisión', value: 'Pospendiente' },
       { label: 'Precancelado', value: 'Precancelado' }
     ];
+    // Ticket 1448: «Crédito» solo se ofrece como filtro con la bandera `estadoCredito` encendida.
+    if (this.companyFeaturesCredito.isEnabled('estadoCredito')) {
+      this.estadosPagoOptions.push({ label: 'Crédito', value: 'Credito' });
+    }
 
     // Opciones para estados de proceso
     this.estadosProcesoOptions = [
@@ -7553,6 +7563,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         case 'Aprobado':
           return 'status-success';
         case 'PreAprobado':
+        case 'Credito':
           return 'status-info';
         case 'Rechazado':
         case 'Cancelado':

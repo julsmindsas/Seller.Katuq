@@ -17,6 +17,15 @@
     </div>
   </div>
 
+  <!-- Ticket 1453: el comprobante es parte de un pago repartido entre varios pedidos -->
+  <div class="tk-grupo-aviso mb-3" *ngIf="grupoActivo && grupoPagoId">
+    <div class="tk-grupo-titulo"><i class="pi pi-sitemap me-1" aria-hidden="true"></i>{{ 'tesoreria.revisarPago.grupoAviso' | translate }}</div>
+    <label class="tk-grupo-casilla" for="tk-decidir-grupo">
+      <input id="tk-decidir-grupo" type="checkbox" [(ngModel)]="decidirGrupo" [disabled]="submitting">
+      <span class="tk-grupo-texto">{{ 'tesoreria.revisarPago.grupoDecidir' | translate }}</span>
+    </label>
+  </div>
+
   <!-- Datos del pago -->
   <div class="tk-pago-grid mb-3">
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
@@ -33,6 +42,19 @@
       </button>
       <ng-template #sinArchivo><span class="tk-pago-value text-muted">{{ 'tesoreria.revisarPago.sinArchivo' | translate }}</span></ng-template>
     </div>
+  </div>
+
+  <!-- Ticket 1449: lo que la lectura del comprobante dejó y lo que la persona cambió; verificado en banco -->
+  <div class="tk-alert-warning mb-3" *ngIf="camposEditadosTexto">
+    <i class="pi pi-pencil me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.comprobante.editadoAMano' | translate:{campos: camposEditadosTexto} }}
+  </div>
+  <div class="tk-note mb-3" *ngIf="pago?.leidoConIA && !camposEditadosTexto">
+    <i class="pi pi-eye me-1" aria-hidden="true"></i> {{ 'tesoreria.comprobante.leidoSinCambios' | translate }}
+  </div>
+  <div class="tk-note mb-3" *ngIf="verificadoEnBanco as verif">
+    <i class="pi pi-check-circle me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.comprobante.verificadoPor' | translate:{quien: verif.por, fecha: (verif.fecha | date:'dd/MM/yyyy HH:mm')} }}
   </div>
 
   <!-- Notas del vendedor (ticket 1140): la nota que escribió quien asentó el pago en Pedidos
@@ -71,11 +93,41 @@
     {{ 'tesoreria.revisarPago.laAlerta' | translate }} <strong>{{ 'tesoreria.revisarPago.noApruebaNiRechaza' | translate }}</strong>{{ 'tesoreria.revisarPago.verificaElDineroDirectamenteEn' | translate }} <strong>{{ 'tesoreria.revisarPago.qrVerificador' | translate }}</strong> {{ 'tesoreria.revisarPago.compruebaElPagoRealEn' | translate }}
   </div>
 
+  <!-- Ticket 1455: historial del pago (quién lo subió y qué se hizo con él) -->
+  <div class="mb-3" *ngIf="paymentId">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="verHistorial = !verHistorial" [attr.aria-expanded]="verHistorial">
+      <i class="pi pi-history me-1"></i> {{ (verHistorial ? 'tesoreria.revisarPago.ocultarHistorial' : 'tesoreria.revisarPago.verHistorialDelPago') | translate }}
+    </button>
+    <div class="mt-2" *ngIf="verHistorial">
+      <app-linea-tiempo-pago [paymentId]="paymentId"></app-linea-tiempo-pago>
+    </div>
+  </div>
+
   <!-- Formulario de rechazo (motivo obligatorio) -->
   <div class="tk-reject-box" *ngIf="showRejectForm">
-    <label class="form-label" for="tk-motivo-rechazo">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
-    <textarea id="tk-motivo-rechazo" class="form-control" rows="3" [(ngModel)]="motivoRechazo"
-              [placeholder]="'tesoreria.revisarPago.ejElDineroNoAparece' | translate"></textarea>
+    <!-- Ticket 1455: con la bandera, el motivo se elige de la lista; «Otro» pide el texto -->
+    <ng-container *ngIf="usaListaDeMotivos; else motivoLibre">
+      <label class="form-label" for="tk-motivo-lista">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
+      <select id="tk-motivo-lista" class="form-select mb-2" [(ngModel)]="motivoCodigo">
+        <option value="">{{ 'tesoreria.revisarPago.eligeUnMotivo' | translate }}</option>
+        <option *ngFor="let m of motivosLista" [value]="m.codigo">{{ nombreMotivo(m) }}</option>
+      </select>
+      <label class="form-label" for="tk-motivo-detalle">
+        {{ (esOtro ? 'tesoreria.revisarPago.cuentanosQuePaso' : 'tesoreria.revisarPago.detalleOpcional') | translate }}
+        <span class="text-danger" *ngIf="esOtro">*</span>
+      </label>
+      <textarea id="tk-motivo-detalle" class="form-control" rows="3" maxlength="500" [(ngModel)]="motivoRechazo"
+                [placeholder]="'tesoreria.revisarPago.ejElDineroNoAparece' | translate"></textarea>
+      <div class="tk-reject-ayuda" *ngIf="esOtro && motivoRechazo.trim().length < minimoOtro">
+        {{ 'tesoreria.revisarPago.minimoCaracteres' | translate:{minimo: minimoOtro} }}
+      </div>
+      <div class="tk-reject-ayuda">{{ 'tesoreria.revisarPago.noEscribasDatosPersonales' | translate }}</div>
+    </ng-container>
+    <ng-template #motivoLibre>
+      <label class="form-label" for="tk-motivo-rechazo">{{ 'tesoreria.revisarPago.motivoDelRechazo' | translate }} <span class="text-danger">*</span></label>
+      <textarea id="tk-motivo-rechazo" class="form-control" rows="3" [(ngModel)]="motivoRechazo"
+                [placeholder]="'tesoreria.revisarPago.ejElDineroNoAparece' | translate"></textarea>
+    </ng-template>
   </div>
 </div>
 
@@ -84,16 +136,16 @@
 
   <ng-container *ngIf="!showRejectForm">
     <button type="button" class="cfg-btn cfg-btn--peligro" (click)="mostrarRechazo()" [disabled]="submitting">
-      <i class="pi pi-times-circle me-1"></i> {{ 'tesoreria.revisarPago.rechazar' | translate }}
+      <i class="pi pi-times-circle me-1"></i> {{ (decideGrupo ? 'tesoreria.revisarPago.rechazarGrupo' : 'tesoreria.revisarPago.rechazar') | translate }}
     </button>
     <button type="button" class="cfg-btn tk-btn-ok" (click)="aprobar()" [disabled]="submitting">
-      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ 'tesoreria.revisarPago.aprobar' | translate }}
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> {{ (decideGrupo ? 'tesoreria.revisarPago.aprobarGrupo' : 'tesoreria.revisarPago.aprobar') | translate }}
     </button>
   </ng-container>
 
   <ng-container *ngIf="showRejectForm">
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="showRejectForm = false" [disabled]="submitting">{{ 'comun.volver' | translate }}</button>
-    <button type="button" class="cfg-btn tk-btn-err" (click)="confirmarRechazo()" [disabled]="submitting || !motivoRechazo.trim()">
+    <button type="button" class="cfg-btn tk-btn-err" (click)="confirmarRechazo()" [disabled]="submitting || !rechazoValido">
       <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-times-circle'"></i> {{ 'tesoreria.revisarPago.confirmarRechazo' | translate }}
     </button>
   </ng-container>

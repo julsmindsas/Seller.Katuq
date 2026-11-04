@@ -1,10 +1,14 @@
 import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { Tooltip } from 'primeng/tooltip';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AjustesComprobanteComponent } from '../components/ajustes-comprobante/ajustes-comprobante.component';
+import { AjusteAlPesoComponent } from '../components/ajuste-al-peso/ajuste-al-peso.component';
 import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { TreasuryService } from '../../../shared/services/treasury/treasury.service';
 import { TreasuryMetrics } from '../../../shared/services/treasury/treasury.models';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import {
   filtroPedidosTesoreria,
   PRESET_POR_REVISAR,
@@ -40,7 +44,48 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private treasury: TreasuryService, private ventas: VentasService) {}
+  constructor(
+    private treasury: TreasuryService,
+    private ventas: VentasService,
+    private features: CompanyFeaturesService,
+    private modal: NgbModal,
+  ) {}
+
+  /**
+   * Ticket 1449 (bandera `comprobantePrimero`): los ajustes del comprobante y las cuentas receptoras los cambia un
+   * Administrador. Esto solo decide si se muestra el botón; el servidor vuelve a exigir el rol.
+   */
+  get puedeAjustarComprobante(): boolean {
+    if (!this.features.isEnabled('comprobantePrimero')) return false;
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}')?.rol;
+      return rol === 'Administrador' || rol === 'Super Administrador';
+    } catch {
+      return false;
+    }
+  }
+
+  abrirAjustesComprobante(): void {
+    this.modal.open(AjustesComprobanteComponent, { size: 'lg', backdrop: 'static', scrollable: true });
+  }
+
+  /**
+   * Ticket 1452 (bandera `ajusteAlPeso`): la tolerancia del ajuste al peso la cambia un Administrador. Esto solo decide
+   * si se muestra el botón; el servidor vuelve a exigir el rol.
+   */
+  get puedeConfigurarAjusteAlPeso(): boolean {
+    if (!this.features.isEnabled('ajusteAlPeso')) return false;
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}')?.rol;
+      return rol === 'Administrador' || rol === 'Super Administrador';
+    } catch {
+      return false;
+    }
+  }
+
+  abrirAjusteAlPeso(): void {
+    this.modal.open(AjusteAlPesoComponent, { size: 'lg', backdrop: 'static', scrollable: true });
+  }
 
   ngOnInit(): void {
     this.loadMetrics();
@@ -92,7 +137,12 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
   private loadSinPago(): void {
     const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial;
     const rango = rangoPorDefecto();
-    const filtro = filtroPedidosTesoreria(company, PRESET_SIN_PAGO, rango.desde, rango.hasta);
+    const filtro: any = filtroPedidosTesoreria(company, PRESET_SIN_PAGO, rango.desde, rango.hasta);
+    // Ticket 1461 (tarea 3.1): la lista «Sin pago» abre con «Incluir internos» apagado, así que la tarjeta cuenta
+    // lo mismo: sin los clientes internos. El servidor vuelve a comprobar la bandera y sin ella ignora el campo.
+    if (this.features.isEnabled('carteraInterna')) {
+      filtro.excluirClientesInternos = true;
+    }
     this.sinPagoCantidad = null;
     this.sinPagoError = false;
     this.ventas

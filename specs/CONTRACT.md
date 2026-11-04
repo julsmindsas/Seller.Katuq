@@ -13279,3 +13279,22 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - La tirilla (`factura-tirilla`) lee la forma de entrega de `carrito[0].configuracion.datosEntrega.formaEntrega` (regla del proyecto). Si no la hay, usa `pedido.formaEntrega`, salvo que sea igual a la forma de pago. Así las ventas viejas se reimprimen bien.
 - **Revisado:** ninguna lógica compara `formaEntrega` con una forma de pago. Las comparaciones existentes buscan «Envío a Domicilio», que una venta POS no es ni antes ni después. No se corrigen datos viejos.
 - **Estado:** commiteado y pusheado (solo front). FALTA DESPLEGAR. Compila con `ng serve`.
+
+### 2026-11-03 — D-660 a D-670: pagos y cartera de ALMARA, propuestas y fases 1 detrás de banderas apagadas (aws-claude-1)
+- **Estado:** las once son **propuestas pendientes de aprobación de Daniel**. Las fases 1 que se implementaron tocan pagos (módulo sensible): ninguna se publica sin que Daniel apruebe su diff, una a la vez. Todo está en la rama `feature/tickets-aws-claude-1` (front y backend), sin desplegar.
+- **Implementadas en fase 1, con bandera por empresa apagada (D-505):**
+  - **D-660** `estado-pago-credito` (ticket 1448), bandera `estadoCredito`: estado de pago «Crédito» y «Pago en revisión» en Pedidos, Tesorería, Cartera, Producción y Despachos; «Cobrar saldo $X en la entrega» / «No cobrar» en las órdenes de despacho y la app de mensajeros. El cupo solo lo fija Tesorería. Trae un script de migración a Crédito con simulación, sin correr.
+  - **D-661** `pago-varios-pedidos` (ticket 1453), bandera `pagoVariosPedidos`: un pago para varios pedidos del mismo cliente. Se guarda como N documentos `payments`, uno por pedido, unidos por `grupoPagoId` (con `grupoValorTotal` y `grupoPedidos`).
+  - **D-662** `comprobante-primero-ia` (ticket 1449), bandera `comprobantePrimero`: registrar el pago subiendo primero el comprobante; la lectura de IA solo sugiere y la referencia repetida se detecta sin importar mayúsculas, espacios o ceros.
+  - **D-663** `ajuste-al-peso` (ticket 1452), bandera `ajusteAlPeso`: al aprobar un pago, el saldo o sobrante pequeño se cierra solo con una línea auditada; pantalla de configuración para el Administrador.
+  - **D-665** `motivo-rechazo-auditoria-pagos` (ticket 1455), bandera `motivoRechazoPago`: rechazar exige un motivo de la lista, historial del pago en pantalla y la edición del pedido ya no cambia un pago revisado.
+  - **D-666** `cartera-interna` (ticket 1461), bandera `carteraInterna`: tarea 3.1, «Sin pago» puede dejar fuera a empleados, socios y la propia empresa con el interruptor «Incluir internos».
+- **Solo propuesta, sin código:** D-664 `siigo-recibos-de-caja` (1458), D-667 `calidad-datos-clientes` (1462), D-668 `acciones-tarjeta-cartera` (1463), D-669 `alerta-pedido-duplicado` (1459; primero medir) y D-670 `cambiar-cliente-pedido` (1505).
+- **Otros trabajos de la rama, sin desplegar:**
+  - F2-42 (D-531) `atributos-por-categoria`, bandera `categoryAttributes`: facetas del catálogo, comparador, feed para Google y Meta, plantilla e importación de especificaciones por Excel y export con la hoja «Especificaciones». Las marcas sin corte de 40 (arreglo de D-472) aplican a todas las tiendas.
+  - TX-34 (D-531): la vista previa «Celular» del editor de sitios muestra el menú y el panel lateral.
+  - OH MY STORE: la columna «Categoría» muestra también las categorías que Cereza guarda como lista; no cambia el dato.
+  - Wompi (1446): la revisión de avisos descartados lee Postgres con el adaptador (D-579). Faltan acciones en producción que decide Daniel: el pago de DAD-014884 y los 10 enlaces sin pedido.
+- **Pruebas:** unitarias de cada fase en la copia local (D-566, fuera de git). `companyFeatureFlags.test.js` (versionada) se regeneró con las banderas nuevas. Build del front sin errores tras el merge con `feature/venta-asistida-mejorada` (c5eb21d7) y backend con `backend-aws-security` (e722e2d8).
+- **Notas de versión (D-567):** no se agregaron; van cuando se encienda cada bandera.
+- **Antes de encender:** revisar con Daniel los índices que pidan las consultas nuevas de pagos (`grupoPagoId`) y de cartera; ninguna sesión los crea por su cuenta.

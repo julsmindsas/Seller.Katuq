@@ -25,6 +25,29 @@
       <label for="tk-hasta-{{ mode }}">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
       <input id="tk-hasta-{{ mode }}" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
     </div>
+
+    <!-- Ticket 1461 (tarea 3.1): igual que en Cartera, los internos quedan fuera salvo que se pidan -->
+    <label class="tk-interruptor" for="tk-internos" *ngIf="verInterruptorInternos">
+      <input id="tk-internos" type="checkbox" [ngModel]="incluirInternos" (ngModelChange)="cambiarIncluirInternos($event)">
+      <span class="tk-interruptor-texto">{{ 'tesoreria.tablaPagosPedidos.incluirInternos' | translate }}</span>
+    </label>
+  </div>
+
+  <!-- Ticket 1453 (bandera pagoVariosPedidos): un solo pago para varios pedidos del mismo cliente -->
+  <div class="tk-barra-marcas" *ngIf="verMarcas">
+    <button type="button" class="btn btn-primary tk-btn-sm" [disabled]="!puedeRegistrarVarios" (click)="abrirPagoVarios()">
+      <i class="pi pi-wallet" aria-hidden="true"></i> {{ 'tesoreria.tablaPagosPedidos.registrarVarios' | translate }}
+    </button>
+    <div class="tk-marcas-texto" *ngIf="seleccion.size > 0 && !marcasDeVariosClientes" role="status">
+      {{ 'tesoreria.tablaPagosPedidos.marcados' | translate:{ n: seleccion.size } }}
+    </div>
+    <div class="tk-marcas-texto tk-marcas-aviso" *ngIf="marcasDeVariosClientes" role="status">
+      {{ 'tesoreria.tablaPagosPedidos.variosClientes' | translate }}
+    </div>
+    <div class="tk-marcas-texto" *ngIf="seleccion.size === 0">{{ 'tesoreria.tablaPagosPedidos.ayudaMarcas' | translate }}</div>
+    <button type="button" class="btn btn-outline-secondary tk-btn-sm" *ngIf="seleccion.size > 0" (click)="quitarMarcas()">
+      {{ 'tesoreria.tablaPagosPedidos.quitarMarcas' | translate }}
+    </button>
   </div>
 
   <!-- Tabla lazy server-side -->
@@ -37,6 +60,10 @@
 
     <ng-template pTemplate="header">
       <tr>
+        <th class="tk-col-marca" *ngIf="verMarcas">
+          <input type="checkbox" [checked]="todosMarcadosEnPagina" (change)="alternarMarcaPagina()"
+                 [attr.aria-label]="'tesoreria.tablaPagosPedidos.marcarTodos' | translate">
+        </th>
         <th style="min-width: 150px">{{ 'tesoreria.historialPagos.pedido' | translate }}</th>
         <th style="min-width: 200px">{{ 'tesoreria.tablaPagosPedidos.cliente' | translate }}</th>
         <th style="min-width: 180px">{{ 'tesoreria.tablaPagosPedidos.pago' | translate }}</th>
@@ -49,6 +76,10 @@
 
     <ng-template pTemplate="body" let-pedido let-i="rowIndex">
       <tr>
+        <td class="tk-col-marca" *ngIf="verMarcas">
+          <input type="checkbox" [checked]="marcado(pedido)" [disabled]="!puedeMarcarse(pedido)" (change)="alternarMarca(pedido)"
+                 [attr.aria-label]="('tesoreria.tablaPagosPedidos.marcarPedido' | translate) + ' ' + pedido?.nroPedido">
+        </td>
         <!-- Pedido: nro + fecha -->
         <td>
           <div class="tk-cell-order">{{ pedido?.nroPedido }}</div>
@@ -100,6 +131,10 @@
           <div *ngIf="mode === 'rechazados' && motivoRechazo(pedido)" class="tk-reject-reason mt-1">
             <i class="pi pi-info-circle"></i> {{ motivoRechazo(pedido) }}
           </div>
+          <!-- Ticket 1455: quién rechazó y cuándo -->
+          <div *ngIf="mode === 'rechazados' && quienRechazo(pedido) as rz" class="tk-reject-quien">
+            {{ 'tesoreria.tablaPagosPedidos.rechazadoPorEl' | translate:{quien: (rz.quien || '—'), fecha: (rz.cuando | date:'dd/MM/yyyy HH:mm')} }}
+          </div>
         </td>
 
         <!-- Vendedor -->
@@ -144,6 +179,13 @@
                   (click)="abrirRegistrar(pedido)">
             <i class="pi pi-refresh"></i> {{ 'tesoreria.tablaPagosPedidos.nuevoPago' | translate }}
           </button>
+
+          <!-- Ticket 1455: historial de los pagos del pedido -->
+          <button *ngIf="mode === 'rechazados' || mode === 'porRevisar'" type="button"
+                  class="btn btn-outline-secondary tk-btn-sm tk-btn-historial-pedido"
+                  (click)="verHistorialPedido(pedido)">
+            <i class="pi pi-history"></i> {{ 'tesoreria.tablaPagosPedidos.verHistorial' | translate }}
+          </button>
         </td>
       </tr>
     </ng-template>
@@ -164,8 +206,14 @@
     <i class="pi pi-exclamation-triangle me-1"></i> {{ 'tesoreria.tablaPagosPedidos.totalesIncompletos' | translate }}
   </div>
 
-  <!-- Ticket 1461: la lista todavía incluye a los internos; el aviso dice cuántos hay en esta página -->
-  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && pedidosInternos() > 0" role="note">
+  <!-- Ticket 1461 (tarea 3.1): sin «Incluir internos», el aviso dice cuántos pedidos quedaron fuera de la lista y del pie -->
+  <div class="tk-aviso-interno" *ngIf="excluirInternos && internosOcultos > 0" role="note">
+    <i class="pi pi-users me-1" aria-hidden="true"></i>
+    {{ 'tesoreria.tablaPagosPedidos.avisoInternosFuera' | translate:{ cantidad: internosOcultos } }}
+  </div>
+
+  <!-- Con «Incluir internos» la lista los trae marcados; el aviso dice cuántos hay en esta página -->
+  <div class="tk-aviso-interno" *ngIf="mode === 'sinPago' && !excluirInternos && pedidosInternos() > 0" role="note">
     <i class="pi pi-users me-1" aria-hidden="true"></i>
     {{ 'tesoreria.tablaPagosPedidos.avisoInternos' | translate:{ cantidad: pedidosInternos() } }}
   </div>

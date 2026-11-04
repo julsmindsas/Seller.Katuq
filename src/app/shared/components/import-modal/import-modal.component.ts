@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
@@ -20,6 +20,27 @@ import {
 import { MobileFileUploadComponent } from '../import-components/mobile-file-upload/mobile-file-upload.component';
 
 import { TranslateService } from '@ngx-translate/core';
+// Hoja «Especificaciones» (D-495, ticket 1234, F2-42, F3, tarea 10.4). Solo con la bandera `categoryAttributes`.
+import { CatalogAttributesService, EsquemasRespuesta } from '../../services/catalogo/catalog-attributes.service';
+import { AvisoDeFila, HOJA_ESPECIFICACIONES, LecturaDeHoja } from '../../services/catalogo/hoja-especificaciones';
+import {
+  ErrorDeFila,
+  FalloDeLote,
+  FiltroPorModo,
+  ResumenEspecificaciones,
+  RutaDePlantilla,
+  agregarOmitidas,
+  cargarEnLotes,
+  filasPorReintentar,
+  filasRechazadas,
+  filtrarPorModo,
+  hayContenido,
+  hojaEspecificacionesDePlantilla,
+  leerEspecificaciones,
+  rutasParaPlantilla,
+  totalRechazadas,
+  unirResumenes,
+} from '../../services/catalogo/importacion-especificaciones';
 interface ImportConfig {
   title: string;
   endpoint: string;
@@ -275,6 +296,41 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   avisosFotos: { fila: number; referencia: string; campo: string; valor: string; mensaje: string }[] = [];
   /** Resumen de fotos del último import; null si el archivo no traía fotos. */
   resumenFotos: { guardadas: number; productos: number; convertidas: number; avisos: number; ignoradas: number } | null = null;
+
+  // --- Hoja «Especificaciones» (bandera `categoryAttributes`, ticket 1234, F2-42, F3) ---
+  //
+  // Campos y no getters (ver el comentario de `camposObligatorios`). Con la bandera apagada
+  // nada de esto se llena ni se pregunta: la hoja se ignora y el flujo es el de siempre.
+  /** La empresa tiene prendida la bandera y estamos importando productos. */
+  especificacionesActivas = false;
+  /** Esquemas e índice de rutas de la empresa (GET de esquemas), para la plantilla y la lectura. */
+  esquemasEspecificaciones: EsquemasRespuesta | null = null;
+  /** Categorías que tienen atributos: las que se pueden elegir al descargar la plantilla. */
+  categoriasPlantilla: RutaDePlantilla[] = [];
+  /** Clave de ruta elegida; vacía = la plantilla de siempre, sin la hoja. */
+  categoriaPlantilla = '';
+  /** Lo que se leyó de la hoja «Especificaciones» del archivo subido; null si no trae. */
+  lecturaEspecificaciones: LecturaDeHoja | null = null;
+  /** El archivo no trae productos en «Plantilla», solo especificaciones: import-products no se llama. */
+  soloEspecificaciones = false;
+  /** Resultado por fila del lote; null mientras no se haya mandado. */
+  resumenEspecificaciones: ResumenEspecificaciones | null = null;
+  enviandoEspecificaciones = false;
+  loteEspecificaciones = 0;
+  totalLotesEspecificaciones = 0;
+  /** Hay filas rechazadas, avisos de lectura o tandas sin enviar para bajar en Excel. */
+  hayRechazadasEspecificaciones = false;
+  /** Se puede volver a mandar lo que no llegó (el lote es idempotente). */
+  puedeReintentarEspecificaciones = false;
+  /** Las primeras filas rechazadas para pintar (campo, no getter: va en un *ngFor). */
+  rechazadasEnPantalla: { fila: number; referencia: string; texto: string }[] = [];
+  /** Cuántas filas rechazadas se muestran en pantalla (el Excel trae todas). */
+  static readonly FILAS_ESPECIFICACIONES_EN_PANTALLA = 50;
+  /**
+   * El padre cierra el modal al recibir `importComplete`. Si hubo especificaciones, se espera a que
+   * la persona vea el resultado por fila y se avisa al cerrar (`onDialogHide`).
+   */
+  private importacionPendienteDeAviso: ImportResult | null = null;
 
   // --- Categorías: aviso antes y resumen después (D-148) ---
   //
@@ -991,6 +1047,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     private columnMappingService: ColumnMappingService,
     private maestroService: MaestroService,
     private features: CompanyFeaturesService,
+    private atributos: CatalogAttributesService,
     private translate: TranslateService
   ) {}
 
@@ -1088,6 +1145,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Si se sale de la pantalla sin cerrar el diálogo, el padre igual se entera de la importación.
+    this.avisarImportacionPendiente();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -1112,6 +1171,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     // Fotos por enlace: solo productos y solo si la empresa tiene la bandera.
     // Apagada, la configuración es la de siempre (mismo objeto, mismas columnas).
     this.fotosPorUrlActivas = this.type === 'product' && this.features.isEnabled('productImportPhotos');
+    // Hoja «Especificaciones»: solo productos y solo con la bandera.
+    this.especificacionesActivas = this.type === 'product' && this.features.isEnabled('categoryAttributes');
 
     if (this.type === 'customer') {
       this.config = this.customerConfig;
@@ -1132,11 +1193,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   onDialogShow(): void {
     this.loadConfig();
+    if (this.especificacionesActivas) void this.cargarEsquemasDeEspecificaciones();
   }
 
   onDialogHide(): void {
+    // Si hubo especificaciones, el aviso al padre esperó a que se viera el resultado (ver `importacionPendienteDeAviso`).
+    this.avisarImportacionPendiente();
     this.resetState();
     this.visibleChange.emit(false);
+  }
+
+  /** Avisa al padre de la importación que esperaba a que se viera el resultado de las especificaciones. */
+  private avisarImportacionPendiente(): void {
+    const pendiente = this.importacionPendienteDeAviso;
+    this.importacionPendienteDeAviso = null;
+    if (pendiente) this.importComplete.emit(pendiente);
   }
 
   private resetState(): void {
@@ -1164,6 +1235,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.productosConVolumen = 0;
     this.avisosFotos = [];
     this.resumenFotos = null;
+    this.reiniciarEspecificaciones();
     this.mappingFields = [];
     this.availableColumns = [];
     this.importMode = 'upsert';
@@ -1320,6 +1392,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     reader.onload = async (e: any) => {
       try {
         let data: any[] = [];
+        this.reiniciarEspecificaciones();
 
         if (file.name.endsWith('.json')) {
           const jsonData = JSON.parse(e.target.result);
@@ -1333,16 +1406,28 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           // las hojas en Excel, se importaría la ayuda como si fueran filas.
           const hojaDatos = workbook.SheetNames.find(n => n.trim().toLowerCase() === 'plantilla')
             ?? workbook.SheetNames[0];
-          data = XLSX.utils.sheet_to_json(workbook.Sheets[hojaDatos]);
+          // Con la bandera, un archivo que trae SOLO «Especificaciones» no tiene hoja de productos: su
+          // primera hoja no se lee como si fueran productos. Apagada, se lee como siempre.
+          const esSoloEspecificaciones = this.especificacionesActivas && this.esHojaEspecificaciones(hojaDatos);
+          data = esSoloEspecificaciones ? [] : XLSX.utils.sheet_to_json(workbook.Sheets[hojaDatos]);
 
           // Hoja opcional de precios por volumen (D-148). Un producto puede
           // tener N rangos, así que no entran como columnas de la fila del
           // producto: van en su propia hoja, una fila por rango, enlazadas por
           // referencia — igual que se ven en el formulario.
           this.leerHojaPreciosVolumen(workbook);
+
+          // Hoja opcional de especificaciones por producto (bandera `categoryAttributes`). Se lee aparte,
+          // como la de precios por volumen; apagada, ni se mira.
+          await this.leerHojaEspecificaciones(workbook);
         }
 
         if (data.length === 0) {
+          // Sin productos pero con especificaciones: se cargan solas, sin llamar a import-products.
+          if (this.especificacionesActivas && hayContenido(this.lecturaEspecificaciones)) {
+            this.entrarEnModoSoloEspecificaciones();
+            return;
+          }
           this.messageService.add({
             severity: 'warn',
             summary: this.translate.instant('importador.importModal.archivoVacio'),
@@ -1725,6 +1810,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Archivo con solo «Especificaciones»: no hay productos que importar ni mapeo que confirmar.
+    if (this.soloEspecificaciones) {
+      await this.cargarSoloEspecificaciones();
+      return;
+    }
+
     if (!this.confirmedMappings || Object.keys(this.confirmedMappings).length === 0) {
       console.log('[ImportModal] ⚠️ No hay mapeos confirmados');
       this.messageService.add({
@@ -1901,6 +1992,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       this.productosSinCategoria = totalSinCategoria;
       this.resumenFotos = hayInformeDeFotos ? fotos : null;
 
+      // Especificaciones (hoja aparte, bandera `categoryAttributes`): van DESPUÉS de los productos, en la
+      // misma ejecución (se espera la importación, sin temporizadores). Un fallo aquí no toca el resultado
+      // de los productos: `enviarEspecificaciones` no lanza.
+      await this.enviarEspecificaciones({ modo: this.importMode, detalles: allOmitted, totalOmitidos: totalOmitted });
+
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
       let detail = '';
       if (totalCreated > 0 && totalUpdated > 0) {
@@ -1936,7 +2032,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         life: totalOmitted > 0 ? 10000 : 5000
       });
 
-      this.importComplete.emit(this.importResult);
+      if (this.resumenEspecificaciones) {
+        // El padre cierra el modal al recibir esto: se avisa al cerrar, para que se vea el resultado por fila.
+        // Si había otra importación esperando (no se cerró el diálogo entre las dos), se avisa antes de pisarla.
+        this.avisarImportacionPendiente();
+        this.importacionPendienteDeAviso = this.importResult;
+      } else {
+        this.importComplete.emit(this.importResult);
+      }
       // No cierra automáticamente: el usuario puede revisar errores o eliminar
 
     } catch (error: any) {
@@ -2905,6 +3008,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       ], { origin: -1 });
     }
 
+    // Hoja «Especificaciones» de la categoría elegida (bandera `categoryAttributes`). Sin categoría
+    // elegida —o con la bandera apagada— la plantilla es la de siempre.
+    this.sumarHojaEspecificaciones(wb, wsAyuda);
+
     XLSX.writeFile(wb, `plantilla_${entidad}_katuq.xlsx`);
 
     const requeridas = this.config.templateColumns
@@ -2938,6 +3045,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.productosConVolumen = 0;
     this.avisosFotos = [];
     this.resumenFotos = null;
+    this.reiniciarEspecificaciones();
     this.mappingFields = [];
     this.availableColumns = [];
     this.standardCustomerTemplate = false;
@@ -2969,9 +3077,264 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   canImport(): boolean {
+    // Solo especificaciones: no hay mapeo que confirmar; basta con tener filas que mandar.
+    if (this.soloEspecificaciones) {
+      return !!this.uploadedFile && !!this.lecturaEspecificaciones && this.lecturaEspecificaciones.filas.length > 0 && !this.isUploading;
+    }
     return !!this.uploadedFile &&
            Object.keys(this.confirmedMappings).length > 0 &&
            !this.isUploading &&
            !this.isAnalyzingColumns;
+  }
+
+  // ── Hoja «Especificaciones» (bandera `categoryAttributes`, ticket 1234, F2-42, F3; design.md E10) ──
+  //
+  // La lógica (qué categorías ofrecer, cómo se arma y se lee la hoja, tandas de 200, resultado por fila,
+  // «Filas rechazadas») es PURA y vive en services/catalogo/importacion-especificaciones.ts. Aquí solo se
+  // conecta con Excel, el servicio y la pantalla. Quien manda es el servidor: vuelve a validar cada fila.
+
+  /** Lee los esquemas de la empresa (para la plantilla y para leer la hoja). Si falla, no se ofrece nada y todo sigue como hoy. */
+  async cargarEsquemasDeEspecificaciones(): Promise<void> {
+    if (!this.especificacionesActivas) return;
+    try {
+      const r = await firstValueFrom(this.atributos.getSchemas());
+      this.esquemasEspecificaciones = r;
+      this.categoriasPlantilla = rutasParaPlantilla(r && r.schemas, r && r.indice);
+    } catch {
+      this.esquemasEspecificaciones = null;
+      this.categoriasPlantilla = [];
+    }
+    if (!this.categoriasPlantilla.some(c => c.ruta === this.categoriaPlantilla)) this.categoriaPlantilla = '';
+  }
+
+  private esHojaEspecificaciones(nombre: string | undefined): boolean {
+    return !!nombre && this.normHeader(nombre) === this.normHeader(HOJA_ESPECIFICACIONES);
+  }
+
+  private sumarHojaEspecificaciones(wb: XLSX.WorkBook, wsAyuda: XLSX.WorkSheet): void {
+    if (!this.especificacionesActivas || this.type !== 'product' || !this.categoriaPlantilla || !this.esquemasEspecificaciones) return;
+    const hoja = hojaEspecificacionesDePlantilla(this.esquemasEspecificaciones.schemas, this.esquemasEspecificaciones.indice, this.categoriaPlantilla);
+    if (!hoja) return;
+    const ws = XLSX.utils.aoa_to_sheet(hoja.filas);
+    ws['!cols'] = hoja.anchos.map(wch => ({ wch }));
+    XLSX.utils.book_append_sheet(wb, ws, HOJA_ESPECIFICACIONES);
+    // La ayuda va al final de «Instrucciones», donde la persona ya está mirando qué significa cada columna.
+    XLSX.utils.sheet_add_aoa(wsAyuda, [[], ...hoja.instrucciones], { origin: -1 });
+  }
+
+  private async leerHojaEspecificaciones(workbook: XLSX.WorkBook): Promise<void> {
+    if (!this.especificacionesActivas || this.type !== 'product') return;
+    const nombre = workbook.SheetNames.find(n => this.esHojaEspecificaciones(n));
+    if (!nombre) return;
+    if (!this.esquemasEspecificaciones) await this.cargarEsquemasDeEspecificaciones();
+    const filas = XLSX.utils.sheet_to_json(workbook.Sheets[nombre]);
+    const e = this.esquemasEspecificaciones;
+    const lectura = leerEspecificaciones(filas, e && e.schemas, e && e.indice);
+    this.lecturaEspecificaciones = hayContenido(lectura) ? lectura : null;
+  }
+
+  private entrarEnModoSoloEspecificaciones(): void {
+    this.soloEspecificaciones = true;
+    this.parsedData = [];
+    this.sourceColumns = [];
+    this.previewData = [];
+    this.mappingResult = null;
+    this.confirmedMappings = {};
+    this.showMappingPreview = false;
+    this.showPreview = true;
+  }
+
+  private reiniciarEspecificaciones(): void {
+    this.lecturaEspecificaciones = null;
+    this.soloEspecificaciones = false;
+    this.resumenEspecificaciones = null;
+    this.enviandoEspecificaciones = false;
+    this.loteEspecificaciones = 0;
+    this.totalLotesEspecificaciones = 0;
+    this.hayRechazadasEspecificaciones = false;
+    this.puedeReintentarEspecificaciones = false;
+    this.rechazadasEnPantalla = [];
+  }
+
+  /** Cuántas filas de la hoja se van a mandar (para el botón y el panel). */
+  get filasEspecificacionesPorEnviar(): number {
+    return this.lecturaEspecificaciones ? this.lecturaEspecificaciones.filas.length : 0;
+  }
+
+  private mandarTanda(filas: any[]): Promise<any> {
+    return firstValueFrom(this.atributos.saveProductAttributesBatch(filas));
+  }
+
+  /**
+   * Manda la hoja por tandas y deja el resultado por fila. NO lanza: un fallo (sin sesión, función apagada,
+   * servidor caído) queda anotado y la importación de productos que ya terminó no se toca.
+   */
+  private async enviarEspecificaciones(filtro?: FiltroPorModo): Promise<void> {
+    const lectura = this.lecturaEspecificaciones;
+    if (!this.especificacionesActivas || !lectura || lectura.filas.length === 0) return;
+    this.enviandoEspecificaciones = true;
+    this.loteEspecificaciones = 0;
+    this.totalLotesEspecificaciones = 0;
+    // «Solo crear nuevos»: los productos que ya existían no se tocaron, sus especificaciones tampoco.
+    const { enviar, omitidas } = filtrarPorModo(lectura.filas, filtro);
+    try {
+      const resumen = await cargarEnLotes(
+        enviar,
+        filas => this.mandarTanda(filas),
+        { alAvanzar: (lote, total) => { this.loteEspecificaciones = lote; this.totalLotesEspecificaciones = total; } },
+      );
+      this.resumenEspecificaciones = agregarOmitidas(resumen, omitidas);
+    } finally {
+      this.enviandoEspecificaciones = false;
+    }
+    this.actualizarEstadoDeEspecificaciones();
+    this.avisarResultadoDeEspecificaciones();
+  }
+
+  private actualizarEstadoDeEspecificaciones(): void {
+    const r = this.resumenEspecificaciones;
+    const avisos = this.lecturaEspecificaciones ? this.lecturaEspecificaciones.avisos : [];
+    this.hayRechazadasEspecificaciones = totalRechazadas(r, avisos) > 0;
+    this.puedeReintentarEspecificaciones = !!r && filasPorReintentar(r, this.lecturaEspecificaciones).length > 0;
+    const pantalla: { fila: number; referencia: string; texto: string }[] = [];
+    for (const f of r ? r.filas : []) {
+      if (f.estado !== 'error') continue;
+      for (const e of f.errores) {
+        // El mensaje del servidor ya dice las opciones válidas cuando el valor no era una de ellas.
+        const opciones = Array.isArray(e.opciones) && e.opciones.length && !e.mensaje.includes(e.opciones[0]) ? ` (${e.opciones.join(' · ')})` : '';
+        pantalla.push({ fila: f.fila, referencia: f.referencia, texto: `${this.textoDeErrorEspecificaciones(e)}${opciones}` });
+      }
+      if (pantalla.length >= ImportModalComponent.FILAS_ESPECIFICACIONES_EN_PANTALLA) break;
+    }
+    this.rechazadasEnPantalla = pantalla.slice(0, ImportModalComponent.FILAS_ESPECIFICACIONES_EN_PANTALLA);
+  }
+
+  private async cargarSoloEspecificaciones(): Promise<void> {
+    const lectura = this.lecturaEspecificaciones;
+    if (!lectura) return;
+    this.isUploading = true;
+    this.importTotalRecords = lectura.filas.length;
+    try {
+      await this.enviarEspecificaciones();
+      const r = this.resumenEspecificaciones;
+      // La pantalla de resultado del modal cuenta filas de especificaciones. No se avisa al padre: no se
+      // importó ningún producto (su aviso habla de «productos importados»).
+      this.importResult = {
+        success: r ? r.ok + r.sinCambios : 0,
+        failed: r ? r.rechazadas + r.noEnviadas : lectura.filas.length,
+        errors: [],
+      };
+    } finally {
+      this.isUploading = false;
+    }
+  }
+
+  /** Vuelve a mandar solo lo que no llegó. Repetirlo es seguro: el lote no cambia lo que ya está igual. */
+  async reintentarEspecificaciones(): Promise<void> {
+    if (this.enviandoEspecificaciones) return;
+    const anterior = this.resumenEspecificaciones;
+    const pendientes = filasPorReintentar(anterior, this.lecturaEspecificaciones);
+    if (!anterior || !pendientes.length) return;
+    this.enviandoEspecificaciones = true;
+    this.isUploading = true;
+    try {
+      const nuevo = await cargarEnLotes(
+        pendientes,
+        filas => this.mandarTanda(filas),
+        { alAvanzar: (lote, total) => { this.loteEspecificaciones = lote; this.totalLotesEspecificaciones = total; } },
+      );
+      this.resumenEspecificaciones = unirResumenes(anterior, nuevo);
+      if (this.soloEspecificaciones) {
+        const r = this.resumenEspecificaciones;
+        this.importResult = { success: r.ok + r.sinCambios, failed: r.rechazadas + r.noEnviadas, errors: [] };
+      }
+    } finally {
+      this.enviandoEspecificaciones = false;
+      this.isUploading = false;
+    }
+    this.actualizarEstadoDeEspecificaciones();
+    this.avisarResultadoDeEspecificaciones();
+  }
+
+  /** Texto (ya traducido) de por qué una tanda no llegó. */
+  textoDeFalloEspecificaciones(f: FalloDeLote): string {
+    return this.textoDeCodigoEspecificaciones(f.codigo);
+  }
+
+  /**
+   * El motivo de un fallo de tanda. «Los productos ya quedaron guardados» solo se dice cuando el archivo
+   * trajo productos (en el modo solo-especificaciones no se importó ninguno).
+   */
+  textoDeCodigoEspecificaciones(codigo: string): string {
+    const base = this.translate.instant(`importador.especificaciones.fallo.${codigo}`);
+    const aclara = ['sin_sesion', 'sin_permiso', 'no_disponible'].includes(codigo);
+    return !this.soloEspecificaciones && aclara ? `${base} ${this.translate.instant('importador.especificaciones.productosGuardados')}` : base;
+  }
+
+  /** Lo que se le dice a la persona de un error de fila: el del servidor, salvo los que se generan aquí. */
+  textoDeErrorEspecificaciones(e: ErrorDeFila): string {
+    if (e.motivo === 'sin_respuesta' || e.motivo === 'omitida_por_modo' || e.motivo === 'omitida_por_modo_incierta') {
+      return this.translate.instant(`importador.especificaciones.error.${e.motivo}`);
+    }
+    return e.mensaje;
+  }
+
+  /** Aviso de la lectura de la hoja, en el idioma de la persona. */
+  textoDeAvisoEspecificaciones(a: AvisoDeFila): string {
+    return this.translate.instant(`importador.especificaciones.aviso.${a.motivo}`, { fila: a.fila, referencia: a.referencia || '' });
+  }
+
+  private avisarResultadoDeEspecificaciones(): void {
+    const r = this.resumenEspecificaciones;
+    if (!r) return;
+    if (r.detenidoPor) {
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('importador.especificaciones.noSeCargaron'),
+        detail: this.textoDeCodigoEspecificaciones(r.detenidoPor),
+        life: 10000
+      });
+    } else if (r.noEnviadas > 0) {
+      const f = r.fallos[0];
+      this.messageService.add({
+        severity: 'warn',
+        summary: this.translate.instant('importador.especificaciones.faltaronFilas', { n: r.noEnviadas }),
+        detail: this.textoDeCodigoEspecificaciones(f.codigo),
+        life: 10000
+      });
+    } else if (r.rechazadas > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: this.translate.instant('importador.especificaciones.conRechazadas', { ok: r.ok + r.sinCambios, rechazadas: r.rechazadas }),
+        detail: this.translate.instant('importador.especificaciones.revisaLasRechazadas'),
+        life: 10000
+      });
+    } else {
+      this.messageService.add({
+        severity: 'success',
+        summary: this.translate.instant('importador.especificaciones.cargadas', { n: r.ok + r.sinCambios }),
+        detail: this.translate.instant('importador.especificaciones.soloEspecificaciones'),
+        life: 5000
+      });
+    }
+  }
+
+  /** Excel «Filas rechazadas»: fila, referencia, especificación, motivo y opciones válidas. */
+  descargarEspecificacionesRechazadas(): void {
+    if (!this.hayRechazadasEspecificaciones) return;
+    const avisos = this.lecturaEspecificaciones ? this.lecturaEspecificaciones.avisos : [];
+    const t = (k: string) => this.translate.instant(`importador.especificaciones.col.${k}`);
+    const filas = filasRechazadas(this.resumenEspecificaciones, {
+      avisos,
+      encabezados: [t('fila'), t('referencia'), t('especificacion'), t('motivo'), t('opciones')],
+      textoDeFallo: f => this.textoDeFalloEspecificaciones(f),
+      textoDeError: e => this.textoDeErrorEspecificaciones(e),
+      textoDeAviso: a => this.textoDeAvisoEspecificaciones(a),
+    });
+    const hoja = XLSX.utils.aoa_to_sheet(filas);
+    hoja['!cols'] = [{ wch: 14 }, { wch: 22 }, { wch: 26 }, { wch: 60 }, { wch: 40 }];
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Filas rechazadas');
+    XLSX.writeFile(libro, `errores_especificaciones_${this.importResult?.batchId || 'sin_lote'}.xlsx`);
   }
 }

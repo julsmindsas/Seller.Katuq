@@ -18,6 +18,16 @@ import {
   ReviewAction,
   ReviewQueueFilters,
   ReviewQueueResponse,
+  PaymentAuditResponse,
+  VistaPreviaPagoGrupo,
+  PagoGrupoPayload,
+  RegistroPagoGrupoResponse,
+  RevisionPagoGrupoResponse,
+  LecturaComprobanteResponse,
+  ComprobanteConfigVista,
+  ComprobanteConfigPayload,
+  AjusteAlPesoConfigVista,
+  AjusteAlPesoConfigPayload,
 } from './treasury.models';
 
 /**
@@ -71,9 +81,45 @@ export class TreasuryService extends BaseService {
     return this.post<SubmitPaymentResponse>(`${this.base}/payments/submit`, payload);
   }
 
+  /** POST /payments/read-receipt — ticket 1449: el servidor lee el comprobante ya subido a Storage y SUGIERE los datos (no registra nada). */
+  readReceipt(orderId: string, archivoUrl: string): Observable<LecturaComprobanteResponse> {
+    return this.post<LecturaComprobanteResponse>(`${this.base}/payments/read-receipt`, { orderId, archivoUrl });
+  }
+
+  /** GET /comprobante/config — ticket 1449: cuentas activas, comprobante obligatorio y formas sin referencia. `completo`: solo Administrador. */
+  getComprobanteConfig(completo = false): Observable<ComprobanteConfigVista> {
+    return this.get<ComprobanteConfigVista>(`${this.base}/comprobante/config${completo ? '?completo=1' : ''}`);
+  }
+
+  /** PUT /comprobante/config — ticket 1449: solo Administrador. */
+  saveComprobanteConfig(payload: ComprobanteConfigPayload): Observable<ComprobanteConfigVista> {
+    return this.put<ComprobanteConfigVista>(`${this.base}/comprobante/config`, payload);
+  }
+
+  /** GET /ajuste-al-peso/config — ticket 1452: tolerancias del ajuste al peso; con la bandera apagada, `habilitada: false`. */
+  getAjusteAlPesoConfig(): Observable<AjusteAlPesoConfigVista> {
+    return this.get<AjusteAlPesoConfigVista>(`${this.base}/ajuste-al-peso/config`);
+  }
+
+  /** PUT /ajuste-al-peso/config — ticket 1452: solo Administrador. */
+  saveAjusteAlPesoConfig(payload: AjusteAlPesoConfigPayload): Observable<AjusteAlPesoConfigVista> {
+    return this.put<AjusteAlPesoConfigVista>(`${this.base}/ajuste-al-peso/config`, payload);
+  }
+
   /** POST /payments/:id/review — decisión del tesorero (idempotente en el server). */
-  reviewPayment(paymentId: string, action: ReviewAction, motivo: string = ''): Observable<ReviewPaymentResponse> {
-    return this.post<ReviewPaymentResponse>(`${this.base}/payments/${paymentId}/review`, { action, motivo });
+  reviewPayment(paymentId: string, action: ReviewAction, motivo: string = '', motivoCodigo: string = ''): Observable<ReviewPaymentResponse> {
+    // Ticket 1455: `motivoCodigo` (motivo de la lista) solo viaja cuando la empresa tiene la bandera `motivoRechazoPago`.
+    return this.post<ReviewPaymentResponse>(`${this.base}/payments/${paymentId}/review`, motivoCodigo ? { action, motivo, motivoCodigo } : { action, motivo });
+  }
+
+  /** GET /payments/:id/audit — ticket 1455: línea de tiempo de un pago (quién lo subió, lo decidió y qué cambió después). */
+  getPaymentAudit(paymentId: string, page = 1): Observable<PaymentAuditResponse> {
+    return this.get<PaymentAuditResponse>(`${this.base}/payments/${encodeURIComponent(paymentId)}/audit?page=${page}`);
+  }
+
+  /** GET /orders/:orderId/payments-audit — ticket 1455: línea de tiempo de todos los pagos de un pedido. */
+  getOrderPaymentsAudit(orderId: string, page = 1): Observable<PaymentAuditResponse> {
+    return this.get<PaymentAuditResponse>(`${this.base}/orders/${encodeURIComponent(orderId)}/payments-audit?page=${page}`);
   }
 
   /** POST /payments/:id/annul — ticket 1361: deshace un pago Aprobado (motivo obligatorio). */
@@ -92,12 +138,15 @@ export class TreasuryService extends BaseService {
     nuevoEstado: string,
     motivo: string,
     mercanciaVolvioABodega = false,
+    cupoCredito?: number,
   ): Observable<ChangePaymentStateResponse> {
     // D-493: mercanciaVolvioABodega = "el producto volvió a la bodega" (pedido ya despachado).
+    // Ticket 1448: `cupoCredito` solo viaja al marcar Crédito; el servidor lo guarda en la ficha si el cliente no tiene cupo.
     return this.post<ChangePaymentStateResponse>(`${this.base}/orders/${orderId}/payment-state`, {
       nuevoEstado,
       motivo,
       mercanciaVolvioABodega,
+      ...(cupoCredito !== undefined ? { cupoCredito } : {}),
     });
   }
 
@@ -143,9 +192,29 @@ export class TreasuryService extends BaseService {
     nroPedido?: string;
     cliente?: string;
     formaPago?: string;
+    /** Ticket 1461 (tarea 3.1): sin los pedidos de clientes internos (el servidor exige la bandera `carteraInterna`). */
+    excluirInternos?: boolean;
   }): Observable<OrdersTotals> {
     const qs = this.buildQuery({ ...filtros, estadosPago: filtros.estadosPago.join(',') });
     return this.get<OrdersTotals>(`${this.base}/orders/totals?${qs}`);
+  }
+
+  /** POST /payments/group/preview — ticket 1453: pedidos abiertos del cliente con su saldo y el reparto sugerido (solo lee). */
+  previewGroupPayment(documento: string, valor = 0): Observable<VistaPreviaPagoGrupo> {
+    return this.post<VistaPreviaPagoGrupo>(`${this.base}/payments/group/preview`, { documento, valor });
+  }
+
+  /** POST /payments/group — ticket 1453: UN pago repartido entre varios pedidos del mismo cliente (queda en revisión). */
+  registerGroupPayment(payload: PagoGrupoPayload): Observable<RegistroPagoGrupoResponse> {
+    return this.post<RegistroPagoGrupoResponse>(`${this.base}/payments/group`, payload);
+  }
+
+  /** POST /payments/group/:grupoPagoId/review — ticket 1453: aprueba o rechaza todo el pago de grupo en un paso. */
+  reviewGroupPayment(grupoPagoId: string, action: ReviewAction, motivo = '', motivoCodigo = ''): Observable<RevisionPagoGrupoResponse> {
+    return this.post<RevisionPagoGrupoResponse>(
+      `${this.base}/payments/group/${encodeURIComponent(grupoPagoId)}/review`,
+      motivoCodigo ? { action, motivo, motivoCodigo } : { action, motivo },
+    );
   }
 
   /** POST /alerts/:id/resolve — marca la alerta como resuelta. */

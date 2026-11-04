@@ -97,6 +97,11 @@
           <ng-template #refPlano>
             <span class="tk-ref">{{ item?.referencia || '—' }}</span>
           </ng-template>
+          <!-- Ticket 1449: marcas que pone el servidor al registrar con la lectura del comprobante -->
+          <small class="tk-hist-marca tk-hist-marca--editado" *ngIf="item?.camposEditados?.length"
+                 [title]="camposEditados(item)">{{ 'tesoreria.comprobante.editadoAManoCorto' | translate }}</small>
+          <small class="tk-hist-marca tk-hist-marca--banco" *ngIf="item?.verificadoEnBanco"
+                 [title]="item?.verificadoEnBanco?.por || ''">{{ 'tesoreria.comprobante.verificadoEnBanco' | translate }}</small>
         </td>
         <td class="text-end tk-money">{{ item?.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
         <td class="tk-cell-date">{{ (item?.fechaTransaccion || item?.createdAt) | date:'dd/MM/yyyy' }}</td>
@@ -105,6 +110,11 @@
             <i class="pi" [ngClass]="meta(item?.estadoVerificacion).icon"></i>
             {{ meta(item?.estadoVerificacion).label }}
           </span>
+          <!-- Ticket 1455: por qué se rechazó, y quién y cuándo -->
+          <div class="tk-hist-motivo" *ngIf="item?.estadoVerificacion === 'Rechazado' && item?.motivoRechazo">
+            {{ item?.motivoRechazo }}
+            <div class="tk-hist-motivo-quien" *ngIf="item?.revisadoPor">{{ 'tesoreria.historialPagos.rechazadoPorEl' | translate:{quien: item?.revisadoPor, fecha: (item?.revisadoAt | date:'dd/MM/yyyy HH:mm')} }}</div>
+          </div>
         </td>
         <td class="tk-cell-user">{{ item?.registradoPor || '—' }}</td>
         <td class="tk-cell-user">{{ item?.revisadoPor || '—' }}</td>
@@ -112,6 +122,10 @@
         <td class="tk-cell-notas" [title]="item?.notas || ''">{{ item?.notas || '—' }}</td>
         <!-- Ticket 1361: deshacer un pago aprobado por error -->
         <td>
+          <button *ngIf="item?.id" type="button" class="btn btn-outline-secondary btn-sm tk-btn-historial"
+                  (click)="verHistorial(item)">
+            <i class="pi pi-history"></i> {{ 'tesoreria.historialPagos.verHistorial' | translate }}
+          </button>
           <button *ngIf="sePuedeAnular(item)" type="button" class="btn btn-outline-danger btn-sm"
                   [disabled]="anulando === item?.id" (click)="anular(item)">
             <i class="pi" [ngClass]="anulando === item?.id ? 'pi-spin pi-spinner' : 'pi-undo'"></i> {{ 'tesoreria.historialPagos.anular' | translate }}

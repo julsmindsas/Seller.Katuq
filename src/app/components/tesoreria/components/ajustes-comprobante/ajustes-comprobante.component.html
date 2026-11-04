@@ -1,0 +1,75 @@
+<div class="modal-header">
+  <h5 class="modal-title"><i class="pi pi-cog me-2" aria-hidden="true"></i>{{ 'tesoreria.ajustesComprobante.titulo' | translate }}</h5>
+  <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="tk-ajc-estado" *ngIf="cargando" role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> {{ 'comun.cargando' | translate }}</div>
+  <div class="tk-ajc-estado tk-ajc-estado--err" *ngIf="errorCarga" role="alert">{{ 'tesoreria.ajustesComprobante.noSePudoCargar' | translate }}</div>
+
+  <ng-container *ngIf="!cargando && !errorCarga">
+    <p class="tk-ajc-ayuda">{{ 'tesoreria.ajustesComprobante.ayuda' | translate }}</p>
+
+    <div class="tk-ajc-seccion">{{ 'tesoreria.ajustesComprobante.reglas' | translate }}</div>
+    <label class="tk-ajc-casilla" for="tk-ajc-obligatorio">
+      <input id="tk-ajc-obligatorio" type="checkbox" [(ngModel)]="obligatorio">
+      <span class="tk-ajc-casilla-texto"><strong>{{ 'tesoreria.ajustesComprobante.obligatorio' | translate }}</strong><br>{{ 'tesoreria.ajustesComprobante.obligatorioAyuda' | translate }}</span>
+    </label>
+
+    <div class="row g-3 mt-1">
+      <div class="col-md-4">
+        <label class="form-label" for="tk-ajc-dias">{{ 'tesoreria.ajustesComprobante.dias' | translate }}</label>
+        <input id="tk-ajc-dias" type="number" class="form-control" min="1" max="365" [(ngModel)]="antiguedadMaximaDias">
+        <small class="text-muted d-block mt-1">{{ 'tesoreria.ajustesComprobante.diasAyuda' | translate }}</small>
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="tk-ajc-formas">{{ 'tesoreria.ajustesComprobante.formasSinReferencia' | translate }}</label>
+        <input id="tk-ajc-formas" type="text" class="form-control" [(ngModel)]="formasSinReferenciaTexto" maxlength="400" autocomplete="off">
+        <small class="text-muted d-block mt-1">{{ 'tesoreria.ajustesComprobante.formasAyuda' | translate }}</small>
+      </div>
+    </div>
+
+    <div class="tk-ajc-seccion tk-ajc-seccion--sep">{{ 'tesoreria.ajustesComprobante.cuentas' | translate }}</div>
+    <p class="tk-ajc-ayuda">{{ 'tesoreria.ajustesComprobante.cuentasAyuda' | translate }}</p>
+
+    <div class="tk-ajc-vacio" *ngIf="!cuentas.length"><i class="pi pi-wallet" aria-hidden="true"></i> {{ 'tesoreria.ajustesComprobante.sinCuentas' | translate }}</div>
+
+    <div class="tk-ajc-cuenta" *ngFor="let c of cuentas; let i = index; trackBy: trackPorIndice">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label" [for]="'tk-ajc-medio-' + i">{{ 'tesoreria.ajustesComprobante.medio' | translate }}</label>
+          <input [id]="'tk-ajc-medio-' + i" type="text" class="form-control" [(ngModel)]="c.medio" maxlength="30" autocomplete="off"
+                 [placeholder]="'tesoreria.ajustesComprobante.medioEjemplo' | translate">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" [for]="'tk-ajc-banco-' + i">{{ 'tesoreria.ajustesComprobante.banco' | translate }}</label>
+          <input [id]="'tk-ajc-banco-' + i" type="text" class="form-control" [(ngModel)]="c.banco" maxlength="40" autocomplete="off">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" [for]="'tk-ajc-alias-' + i">{{ 'tesoreria.ajustesComprobante.alias' | translate }}</label>
+          <input [id]="'tk-ajc-alias-' + i" type="text" class="form-control" [(ngModel)]="c.alias" maxlength="40" autocomplete="off">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" [for]="'tk-ajc-u4-' + i">{{ 'tesoreria.ajustesComprobante.ultimos4' | translate }}</label>
+          <input [id]="'tk-ajc-u4-' + i" type="text" inputmode="numeric" class="form-control" [(ngModel)]="c.ultimos4" (ngModelChange)="soloUltimos4(c)" maxlength="12" autocomplete="off">
+        </div>
+        <div class="col-md-1 text-end">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="quitarCuenta(i)" [attr.aria-label]="'comun.eliminar' | translate"><i class="pi pi-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <label class="tk-ajc-casilla tk-ajc-casilla--chica" [for]="'tk-ajc-activa-' + i">
+        <input [id]="'tk-ajc-activa-' + i" type="checkbox" [(ngModel)]="c.activa">
+        <span class="tk-ajc-casilla-texto">{{ 'tesoreria.ajustesComprobante.activa' | translate }}</span>
+      </label>
+    </div>
+
+    <button type="button" class="cfg-btn cfg-btn--sec mt-2" (click)="agregarCuenta()"><i class="pi pi-plus" aria-hidden="true"></i> {{ 'tesoreria.ajustesComprobante.agregarCuenta' | translate }}</button>
+  </ng-container>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
+  <button type="button" class="cfg-btn" (click)="guardar()" [disabled]="cargando || errorCarga || guardando || !valido">
+    <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'" aria-hidden="true"></i> {{ 'comun.guardar' | translate }}
+  </button>
+</div>

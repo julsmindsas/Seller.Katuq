@@ -562,9 +562,10 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     const statusMap: { [key: string]: { short: string, full: string } } = {
       // Spec 013: "Pendiente" como short label hacía indistinguible el pago
       // en revisión de tesorería de un pendiente real (reporte Almara).
-      'Pospendiente': { short: 'Pospendiente', full: 'Pospendiente - Pago subido, en revisión de tesorería' },
+      'Pospendiente': { short: 'Pago en revisión', full: 'Pago en revisión - Pago subido, en revisión de tesorería' },
       'Pendiente': { short: 'Pendiente', full: 'Pendiente' },
       'PreAprobado': { short: 'Pre-Aprob.', full: 'Pre-Aprobado' },
+      'Credito': { short: 'Crédito', full: 'Crédito - Se entrega sin cobrar; el saldo queda en Cartera' },
       'Aprobado': { short: 'Aprobado', full: 'Aprobado' },
       'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
       'Cancelado': { short: 'Cancelado', full: 'Cancelado' },
