@@ -1488,6 +1488,7 @@
             <div class="campo">
               <label>Texto</label>
               <input type="text" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()" maxlength="400" />
+              <small>Va en la última línea del pie, junto a tu razón social. Ej.: «Tu negocio · Todos los derechos reservados».</small>
             </div>
             <button class="opcion" [class.is-active]="b.datos.mostrarRedes"
                     (click)="b.datos.mostrarRedes = !b.datos.mostrarRedes; marcarSucio()">
@@ -1499,6 +1500,8 @@
               <textarea rows="3" [(ngModel)]="b.datos.horarios" (ngModelChange)="marcarSucio()" maxlength="400"
                         placeholder="Lunes a viernes: 10am a 6pm&#10;Sábados: 9am a 2pm"></textarea>
               <small>Un renglón por línea. "Día: horas" se alinea solo.</small>
+              <small class="aviso" *ngIf="disenoNuevo && b.datos.columnas?.length">Con columnas propias, el diseño nuevo no
+                muestra estos horarios: usa «Horario de atención» en «Contacto en el pie».</small>
             </div>
             <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarMediosPago"
                     title="Franja con lo que aceptas: tarjetas, PSE, Nequi, contra entrega… según tu pestaña Tienda"
@@ -1520,12 +1523,21 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
               Agregar enlace
             </button>
+            <small class="aviso" *ngIf="disenoNuevo && b.datos.columnas?.length">Con columnas propias, el diseño nuevo no
+              muestra estos enlaces: ponlos en una de tus columnas.</small>
 
-            <!-- Diseño nuevo (PLAN-V2 T02): columnas del pie y contacto de la columna de marca. -->
+            <!-- Diseño nuevo (PLAN-V2 T02): lema, columnas del pie y contacto de la columna de marca. -->
             <ng-container *ngIf="disenoNuevo">
+              <div class="campo">
+                <label>Lema bajo el logo <small>(diseño nuevo)</small></label>
+                <input type="text" [ngModel]="b.datos.lema" (ngModelChange)="b.datos.lema = $event; marcarSucio()" maxlength="140"
+                       placeholder="Ej.: Tecnología que te conecta." />
+                <small>Una o dos líneas bajo tu logo. Si lo dejas vacío, no sale.</small>
+              </div>
               <h4 class="subgrupo">Columnas del pie <small>(diseño nuevo)</small></h4>
               <p class="nota">Hasta 5 columnas con su título y 8 enlaces. Sin columnas, el pie arma las de siempre. Tus
-                páginas (políticas, términos) salen solas aunque no las pongas aquí.</p>
+                páginas (políticas, términos) salen solas aunque no las pongas aquí, y tu correo y tu dirección pasan a
+                la columna del logo.</p>
               <div class="pie-col" *ngFor="let c of (b.datos.columnas || []); let ci = index">
                 <div class="campo">
                   <label>Título de la columna {{ ci + 1 }}</label>

@@ -5,8 +5,21 @@
  *
  * Diseño nuevo (PLAN-V2 T02, DISENO §3.4): a los 12 de siempre se suman 23 de tecnología, hogar y negocio. Los de
  * wifi, camara, casa, celular, audifonos, parlante, tv, bateria, cerradura, servidor, camion, herramienta, cuadricula,
- * soporte, devolucion y factura vienen de Feather (https://feathericons.com, licencia MIT, Copyright (c) 2013-2023
- * Cole Bemis; el aviso completo está junto a `TRAZOS_ICONO` en el backend), pasados a un solo trazo.
+ * soporte, devolucion y factura vienen de Feather (https://feathericons.com), pasados a un solo trazo. Aviso de
+ * Feather (licencia MIT), que va con toda copia de esos trazos:
+ *
+ *   The MIT License (MIT) — Copyright (c) 2013-2023 Cole Bemis
+ *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ *   documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ *   the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+ *   to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *   The above copyright notice and this permission notice shall be included in all copies or substantial portions
+ *   of the Software.
+ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ *   THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ *   CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ *   DEALINGS IN THE SOFTWARE.
  */
 export const ICONOS_SITIO: readonly string[] = [
   "envio", "garantia", "pago", "reloj", "estrella", "corazon", "chat", "ubicacion", "regalo", "hoja", "escudo", "rayo",
