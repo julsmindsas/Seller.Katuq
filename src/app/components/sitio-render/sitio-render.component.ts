@@ -506,6 +506,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
       "--sitio-fuente": this.familiaTipografica(t.fuenteCuerpo || base),
       "--sitio-fuente-titulo": this.familiaTipografica(t.fuenteTitulo || base),
       ...variablesDeTono(t),
+      // El borde del estilo, para las cajas de fondo blanco fijo (con tema oscuro el de la página es claro).
+      "--sitio-borde-base": (ESTILOS[t.estilo || "clasico"] || ESTILOS.clasico)["--sitio-borde"],
       ...variablesDeAjustes(t),
     };
   }

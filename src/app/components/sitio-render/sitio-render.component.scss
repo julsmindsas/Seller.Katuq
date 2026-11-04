@@ -1659,6 +1659,8 @@ h3 {
 /* ── "Busca tu detalle", burbuja de WhatsApp y pie con horarios/pagos (espejo de siteHtml.js) ── */
 .buscador { background: color-mix(in srgb, var(--sitio-primario, #111) 7%, var(--sitio-secundario, #fff)); }
 // Revisión 2026-10-18: caja blanca fija; su texto es el que se lee sobre blanco (sin la variable, hereda).
+// P0-10 (espejo de siteHtml.js): las cajas de fondo blanco fijo conservan controles claros y el borde del estilo.
+.buscador__caja, .kq-popup__caja { color-scheme: light; --sitio-borde: var(--sitio-borde-base, rgba(0, 0, 0, 0.08)); }
 .buscador__caja { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: var(--sitio-radio, 16px); padding: 1.4rem 1.5rem; box-shadow: var(--sitio-sombra, none); color: var(--sitio-texto-sobre-blanco);
   h2 { margin: 0 0 1rem; font-size: 1.5rem; }
   .boton { margin-top: 1rem; }
