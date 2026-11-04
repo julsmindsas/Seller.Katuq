@@ -334,6 +334,14 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   menú en cajón). F2-42 no duplica ese panel.
 - Estilos con las variables del tema del sitio y `:focus-visible` (D-460); áreas de 44 px.
 - Se revisa también con la plantilla `tecnologia-catalogo` de TX-36 (`data/siteTemplates.js:1141`).
+- **Hecho en 9.7 (parte 1):** `utils/siteHtmlFacetas.js`. `vistaFacetas(h, M)` describe el panel una sola vez: el servidor la corre con un `h` que
+  escribe HTML escapado y el navegador con otro que usa `createElement` y `textContent` (el script lleva su texto), así el HTML de una dirección
+  compartida y el repintado son iguales por construcción y ningún valor entra como HTML (S2). El estado son los pares nombre=valor de la dirección;
+  los enlaces y la dirección salen en un orden canónico. «Limpiar todo» quita todos los filtros y la búsqueda; deja solo lo que pone la ruta
+  (`/c/<slug>`, `/marca/<slug>`) o `?categoria=`: la categoría de `?cat=` es un filtro y tiene su chip. La dirección con filtros solo se escribe en la
+  página propia del catálogo (`?catalogo=1`, `/c/`, `/marca/`): el catálogo del inicio filtra sin cambiarla. La caché del HTML (`siteCacheClave.js`)
+  distingue ahora `cat`, `a.<clave>` y las marcas u ocasiones repetidas (sin eso, una dirección con filtros recibía la copia de otra). Sin JavaScript, el
+  rango numérico no se puede cambiar (un formulario no junta dos campos en `a.<clave>=min-max`); lo ya marcado viaja oculto y no se pierde, y el grupo del rango se oculta sin JavaScript para no ofrecer un control que no envía (decisión pendiente de Daniel: ampliar el lector de B05). El panel respeta `mostrarCategorias` y `mostrarPrecio` del bloque. La caché del HTML guarda con la clave base las páginas que no usaron los filtros (tiendas sin la bandera).
 
 ### E8. SEO de las direcciones con filtros
 - Con filtros más allá de la categoría o la marca de la página: `robots noindex,follow` y
