@@ -383,6 +383,17 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - Barra flotante «Comparar (n)»; el quinto avisa «Máximo 4».
   - Diálogo con tabla (`role="dialog"`, foco atrapado, Esc cierra) y primera columna fija; en
     390 px la tabla se desplaza dentro de su caja, no la página.
+  - **Hecho en 11.3 y 11.4 (copia local, 3-nov, B14):** `utils/siteHtmlComparador.js`. El servidor escribe el botón (tarjeta del catálogo y ficha; las del bloque «productos» y de venta cruzada no lo llevan); el script del navegador pone el mismo botón en las tarjetas que arma (gancho de `ficha(p,pos)` en `script()`), guarda la selección en
+    `localStorage` con la clave `kq_cmp_<slug>` (ids con el patrón de `sanitizar.idFirestore`, a lo sumo 4, todo en try/catch: si falla, la selección
+    vive en memoria), pinta la barra «Comparar (n)» (con `n` menor de 2 no abre y avisa), el aviso «Máximo 4 productos» (región `role=status`) y el
+    diálogo. La tabla se pide a `/comparar` con la sesión del cliente si la hay (el navegador no calcula ningún precio) y todo texto del servidor entra con
+    `textContent` (S2); la foto y el enlace solo se usan si son `https:` o una ruta propia. Filas con valores distintos: fondo suave y el texto «Valores
+    distintos» (no solo color); «—» con «No aplica» (texto oculto) frente a «Sin dato». Lo que el servidor ya no entrega se saca de la selección. La
+    columna de las características y el encabezado quedan fijos (`position: sticky`); en celular el cuadro ocupa la pantalla y solo la caja de la tabla
+    se desplaza. Sin la bandera `comparador` no llega a `siteHtml.js` y el HTML y el script salen idénticos a los de hoy. Estilos con las variables del
+    tema, sin degradados. Revisión: los avisos van a una región `role=status` siempre presente (no se esconde con la barra); al vaciar, el foco pasa
+    al último botón de producto; la barra se apila con el aviso de cookies, el carrito, WhatsApp y KAI (variable `--kq-cmp-alto` para KAI); dos
+    pestañas comparten la selección (evento `storage`); `activo()` es la única condición que enciende el comparador.
 
 ### E10. Plantilla por categoría (F3)
 - **Seller, importador** (`import-modal`, solo productos y con la bandera): al descargar se
@@ -533,7 +544,7 @@ verdad son los de la fuente sintética. El script marca cada uno en `reglas.p95P
   pestañas de F1, a 1280 y 390 px, con tres tiendas. En la página entera quedan dos fallas que la tienda ya tenía con y
   sin bandera y que no se tocaron para no cambiar el HTML ni la hoja de todas las tiendas: el enlace «Ir al inicio» del
   encabezado y el contraste de «Plazo de entrega» y «Quedan pocas unidades». Decisión pendiente de Daniel. El comparador
-  (F4) sigue pendiente de su propia revisión.
+  (F4): 0 fallas de axe (comparador y página entera, salvo esas dos) cerrado y abierto, a 1280 y 390 px, con tres tiendas (B14, 11.4).
 
 ## Hallazgos (H1, H2 y H3 son del paso 3 de D-518 y no esperan la aprobación de la ampliación)
 

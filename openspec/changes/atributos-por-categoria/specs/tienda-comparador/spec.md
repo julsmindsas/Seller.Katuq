@@ -16,10 +16,26 @@ WHERE la función está encendida, THE system SHALL permitir agregar productos a
 - **THEN** ve los tres con «Tecnología WiFi», «Velocidad (Mbps)» y «Puertos LAN» en filas
 - **AND** las filas con valores distintos están resaltadas
 
+#### Scenario: Un solo producto
+
+- **WHEN** el visitante tiene un solo producto y pulsa «Comparar (1)»
+- **THEN** no se abre la comparación y ve «Elige al menos 2 productos para comparar»
+
 #### Scenario: Quinto producto
 
 - **WHEN** el visitante ya tiene 4 productos y agrega otro
 - **THEN** ve «Máximo 4 productos» y la comparación sigue con los 4
+
+### Requirement: Dónde aparece el comparador [F4]
+
+THE system SHALL mostrar el botón «Comparar» en las tarjetas del catálogo y en la ficha, y SHALL NOT mostrarlo en otras tarjetas (bloque «productos», venta cruzada), que no pasan por los candados del catálogo. THE system SHALL NOT mostrar el comparador en la vista previa del editor ni en una tienda sin un bloque de catálogo visible publicado, aunque la función esté encendida. THE system SHALL mantener la barra «Comparar (n)» sin cruzarse con el aviso de cookies, el carrito, WhatsApp ni KAI. Cada aviso («Máximo 4 productos», «Quitado de la comparación», «Comparación vacía») SHALL anunciarse a los lectores de pantalla aunque la barra se esconda, y WHEN la barra se esconde con el foco adentro THE system SHALL pasar el foco a un botón de producto. WHEN la selección cambia en otra pestaña de la misma tienda, THE system SHALL reflejarla en la que está abierta.
+
+*Fuente: revisión del bloque F242-B14 (3-nov-2026); ticket 1250 (TX-35).*
+
+#### Scenario: Tienda sin catálogo visible
+
+- **WHEN** la función está encendida pero el sitio publicado no tiene un bloque de catálogo visible
+- **THEN** la tienda no muestra botón ni barra, y la comparación responde «no encontrado»
 
 ### Requirement: Productos de distintas categorías [F4]
 
