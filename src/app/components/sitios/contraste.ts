@@ -17,6 +17,31 @@ function luminancia(hex: string): number | null {
   return 0.2126 * canal(0) + 0.7152 * canal(2) + 0.0722 * canal(4);
 }
 
+/**
+ * P0-10, espejo de `esOscuro` (functions/utils/contrasteColor.js): un fondo es
+ * oscuro cuando el blanco contrasta con él más que el negro (luminancia < 0,179).
+ */
+export function esOscuro(fondo: string): boolean {
+  const l = luminancia(fondo);
+  return l !== null && l < 0.179;
+}
+
+/** «r,g,b» de un hex de 6 dígitos (para armar un rgba()); null si no lo es. */
+export function canales(c: string): string | null {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(c || "").trim());
+  return m ? [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)).join(",") : null;
+}
+
+/** Mezcla `a` sobre `b` con proporción `t` (0 a 1), en hex. Espejo de `mezclar` del servidor. */
+export function mezclar(a: string, b: string, t: number): string | null {
+  const ca = canales(a);
+  const cb = canales(b);
+  if (!ca || !cb) return null;
+  const va = ca.split(",").map(Number);
+  const vb = cb.split(",").map(Number);
+  return "#" + va.map((v, i) => Math.max(0, Math.min(255, Math.round(t * v + (1 - t) * vb[i]))).toString(16).padStart(2, "0")).join("");
+}
+
 /** Razón de contraste (1 a 21), o null si algún color no es un hex válido. */
 export function contraste(a: string, b: string): number | null {
   const la = luminancia(a);

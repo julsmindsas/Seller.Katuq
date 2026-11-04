@@ -103,6 +103,15 @@ h3 {
     margin: 0 auto;
   }
 
+  // P0-04 (espejo de siteHtml.js): alineada a un lado, la caja del texto va a ese lado (fija o carrusel).
+  &--izquierda &__contenido {
+    margin-left: 0;
+  }
+
+  &--derecha &__contenido {
+    margin-right: 0;
+  }
+
   // A pantalla completa. En la previa se acota a la altura del lienzo, que no
   // es la del visitante; el 100svh real lo pone el backend al publicar.
   &--completa {
@@ -427,7 +436,8 @@ h3 {
   font-size: 0.9rem;
   text-align: center;
 
-  nav {
+  // P0-01 (espejo de siteHtml.js): las columnas de enlaces llevan su propio ritmo.
+  nav:not(.pie__col) {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -487,7 +497,8 @@ h3 {
 // Pie con marca y columnas (espejo de siteHtml.js).
 .pie { text-align: left; }
 .pie__grid { display: grid; gap: 2rem; grid-template-columns: 1fr; }
-@media (min-width: 760px) { .pie__grid { grid-template-columns: 1.4fr 1fr 1fr; } }
+// P0-01: la misma rejilla del publicado (la de antes era inválida allá y el pie salía en una columna).
+@media (min-width: 760px) { .pie__grid { grid-template-columns: minmax(240px, 1.5fr) repeat(auto-fit, minmax(150px, 1fr)); } }
 .pie__logo { height: 44px; width: auto; max-width: 200px; object-fit: contain; }
 .pie__nombre { font-family: var(--sitio-fuente-titulo); font-size: 1.4rem; }
 .pie__col { display: flex; flex-direction: column; gap: 0.45rem; h3 { margin: 0 0 0.35rem; font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75; font-weight: 600; } }
@@ -1543,7 +1554,7 @@ h3 {
   padding: 1.75rem;
   border-radius: var(--sitio-radio, 12px);
   background: var(--sitio-primario);
-  color: var(--sitio-secundario, #fff);
+  color: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff));
 
   h2 { margin: 0 0 0.25rem; font-size: 1.4rem; }
   p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
@@ -1554,7 +1565,8 @@ h3 {
   flex-wrap: wrap;
 
   input { flex: 1; min-width: 180px; padding: 0.8rem 1rem; border: 0; border-radius: var(--sitio-radio-sm, 8px); font: inherit; }
-  .boton { background: var(--sitio-secundario, #fff); color: var(--sitio-primario); border-color: var(--sitio-secundario, #fff); }
+  // P0-06 (espejo de siteHtml.js): sobre la caja del principal, el fondo del botón es el color que se lee sobre ella.
+  .boton { background: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff)); color: var(--sitio-primario); border-color: var(--sitio-secundario-sobre-primario, var(--sitio-secundario, #fff)); }
 }
 @media (min-width: 860px) {
   .suscripcion__caja { grid-template-columns: 1fr auto; align-items: center; padding: 2.25rem 2.5rem; }
@@ -1692,7 +1704,7 @@ h3 {
 .sitio[data-kq-ajustes~="boton-chico"] .boton:not(.boton--chico) { padding: 0.6rem 1.15rem; font-size: 0.88rem; }
 .sitio[data-kq-ajustes~="boton-grande"] .boton:not(.boton--chico) { padding: 1rem 2.1rem; font-size: 1.05rem; }
 // Revisión 2026-10-18: con «Contorno», el color de botón tiñe el contorno en vez de rellenar.
-.sitio[data-kq-ajustes~="color-boton"]:not([data-kq-ajustes~="boton-contorno"]) .boton:not(.boton--whatsapp):not(.boton--secundario):not(.boton--borde) {
+.sitio[data-kq-ajustes~="color-boton"]:not([data-kq-ajustes~="boton-contorno"]) .boton:not(.boton--whatsapp):not(.boton--secundario):not(.boton--borde):not(.boton--sobre-primario) {
   background: var(--sitio-boton); border-color: var(--sitio-boton); color: var(--sitio-sobre-boton);
 }
 .sitio[data-kq-ajustes~="boton-contorno"] .boton:not(.boton--whatsapp) { background: transparent; color: var(--sitio-contorno); border: 2px solid currentColor; }
@@ -1713,7 +1725,8 @@ h3 {
 .sitio[data-kq-ajustes~="sin-foto2"] .producto__foto2 { display: none; }
 .sitio[data-kq-ajustes~="color-etiqueta"] :is(.producto__oferta, .producto__insignia--nuevo) { background: var(--sitio-etiqueta); color: var(--sitio-sobre-etiqueta); }
 .sitio[data-kq-ajustes~="color-oferta"] .producto--oferta .producto__precio > span { color: var(--sitio-oferta); }
-.sitio[data-kq-ajustes~="color-enlace"] :is(.texto, .columna, .faq) a { color: var(--sitio-enlace); }
+// P0-09: el color de enlace no tiñe los botones de la columna.
+.sitio[data-kq-ajustes~="color-enlace"] :is(.texto, .columna, .faq) a:not(.boton) { color: var(--sitio-enlace); }
 // Revisión 2026-10-18: los enlaces del texto entran por [innerHTML] y no llevan
 // el atributo del encapsulado; sin ::ng-deep la regla de arriba no los alcanza.
 .sitio[data-kq-ajustes~="color-enlace"] .texto .formato ::ng-deep a,

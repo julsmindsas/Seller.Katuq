@@ -7,7 +7,7 @@
  * arma el servidor; esto hace que la vista previa del editor muestre lo mismo.
  * Al tocar aquí, tocar allá.
  */
-import { contraste, primarioAccesible } from "../sitios/contraste";
+import { canales, contraste, esOscuro, primarioAccesible } from "../sitios/contraste";
 
 export interface AjustesEstilo {
   colorFondoAlterno?: string;
@@ -163,6 +163,31 @@ export function medidasDeAjustes(vars: { [k: string]: string }, t: AjustesEstilo
   if (titulos) salida["--sitio-titulo-escala"] = por(vars["--sitio-titulo-escala"], titulos);
   if (ANCHO_LECTURA[a.anchoContenido || ""]) salida["--sitio-ancho"] = ANCHO_LECTURA[a.anchoContenido || ""];
   return salida;
+}
+
+/**
+ * P0-08 y P0-10, espejo de `variablesTema` (functions/utils/siteHtml.js): el
+ * fondo de la página como variable y, con fondo oscuro, borde claro, sin sombra
+ * y controles nativos oscuros. Con fondo claro solo agrega `--sitio-fondo`.
+ */
+export function variablesDeTono(
+  t: { colorPrimario?: string; colorSecundario?: string; colorTexto?: string } | null | undefined
+): { [k: string]: string } {
+  const a = t || {};
+  const fondo = hex(a.colorSecundario) || "#ffffff";
+  const texto = hex(a.colorTexto) || "#222222";
+  // P0-06: el color que se lee sobre el principal (caja del boletín y su botón), como en el servidor.
+  const boton = primarioAccesible(hex(a.colorPrimario) || "#111111");
+  const vars: { [k: string]: string } = {
+    "--sitio-fondo": fondo,
+    "--sitio-secundario-sobre-primario": (contraste(fondo, boton.fondo) || 0) >= 4.5 ? fondo : boton.texto,
+  };
+  if (esOscuro(fondo)) {
+    vars["--sitio-borde"] = `rgba(${canales(texto)},.14)`;
+    vars["--sitio-sombra"] = "none";
+    vars["color-scheme"] = "dark";
+  }
+  return vars;
 }
 
 /** Colores extra siempre legibles y columnas, como variables CSS. */

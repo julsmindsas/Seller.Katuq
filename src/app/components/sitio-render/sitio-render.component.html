@@ -194,6 +194,8 @@
                  [class.hero--completa]="!esMosaico(bloque.datos) && bloque.datos.altura === 'completa'"
                  [class.hero--velo-claro]="bloque.datos.veloClaro"
                  [class.hero--mosaico]="esMosaico(bloque.datos)"
+                 [class.hero--izquierda]="!esMosaico(bloque.datos) && alineacion(bloque.datos.alineacion) === 'left'"
+                 [class.hero--derecha]="!esMosaico(bloque.datos) && alineacion(bloque.datos.alineacion) === 'right'"
                  [style.textAlign]="esMosaico(bloque.datos) ? null : alineacion(bloque.datos.alineacion)">
 
           <!-- Mosaico: titular a un lado, rejilla de fotos al otro. Espejo de
@@ -621,7 +623,7 @@
             </div>
             <div class="suscripcion__form">
               <input type="email" placeholder="tu@correo.com" disabled />
-              <a class="boton"
+              <a class="boton boton--sobre-primario"
                  [attr.contenteditable]="previsualizacion ? true : null"
                  [class.editable]="previsualizacion"
                  (blur)="alEditarTexto($event, bloque.id, {campo:'textoBoton'})"

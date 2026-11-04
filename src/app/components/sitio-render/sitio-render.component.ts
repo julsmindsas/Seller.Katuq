@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { contenidoDelMenu, ContenidoMenu } from "./cajon-previa";
-import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes } from "./ajustes-estilo";
+import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes, variablesDeTono } from "./ajustes-estilo";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -505,6 +505,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
       "--sitio-texto": t.colorTexto || "#222222",
       "--sitio-fuente": this.familiaTipografica(t.fuenteCuerpo || base),
       "--sitio-fuente-titulo": this.familiaTipografica(t.fuenteTitulo || base),
+      ...variablesDeTono(t),
       ...variablesDeAjustes(t),
     };
   }
@@ -907,7 +908,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
       estilo["background-position"] = "center";
     }
     if (e.colorTexto) estilo["color"] = e.colorTexto;
-    if (AIRE[e.espaciado]) {
+    // P0-11 (espejo de siteHtml.js): las barras (anuncio y encabezado) no toman el aire de sección.
+    if (AIRE[e.espaciado] && bloque.tipo !== "anuncio" && bloque.tipo !== "encabezado") {
       estilo["padding-top"] = AIRE[e.espaciado];
       estilo["padding-bottom"] = AIRE[e.espaciado];
     }
