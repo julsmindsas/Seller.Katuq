@@ -282,6 +282,11 @@ export function variablesDeAjustes(
     const b = primarioAccesible(boton);
     vars["--sitio-boton"] = b.fondo;
     vars["--sitio-sobre-boton"] = b.texto;
+    // Revisión de P0-06 (espejo de siteHtml.js): «Suscribirme» usa el color de botón si se distingue de la caja.
+    if ((contraste(b.fondo, primario) || 0) >= 3) {
+      vars["--sitio-boton-sobre-primario"] = b.fondo;
+      vars["--sitio-sobre-boton-sobre-primario"] = b.texto;
+    }
   }
   const enlace = hex(a.colorEnlace);
   if (enlace) vars["--sitio-enlace"] = legible(enlace);
