@@ -524,6 +524,7 @@
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="30" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+              <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el menú.</small>
             </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()"
@@ -1512,6 +1513,7 @@
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://…" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+              <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el pie.</small>
             </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()">

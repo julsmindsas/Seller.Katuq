@@ -273,6 +273,14 @@ h3 {
   }
 }
 
+// P0-18 (espejo de siteHtml.js): en celular, con fila de categorías y sin cajón, los enlaces del menú
+// encabezan la fila deslizable en vez de desaparecer.
+.cabecera__cats .cabecera__cats-menu { display: none; }
+.sitio--movil .cabecera:not(.cabecera--cajon):has(.cabecera__cats) {
+  .cabecera__enlaces { display: none; }
+  .cabecera__cats .cabecera__cats-menu { display: inline-flex; }
+}
+
 .sitio--movil .cabecera {
   gap: 0.6rem;
 

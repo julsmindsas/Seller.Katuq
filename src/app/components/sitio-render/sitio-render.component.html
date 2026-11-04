@@ -172,6 +172,11 @@
 
           <!-- Las categorías reales las resuelve el servidor al publicar. -->
           <nav class="cabecera__cats" *ngIf="bloque.datos.mostrarCategorias">
+            <!-- P0-18 (espejo de siteHtml.js): en celular y sin cajón, los enlaces del menú encabezan la fila. -->
+            <ng-container *ngIf="!cajonActivo(bloque.datos)">
+              <a class="cabecera__cats-menu" *ngFor="let e of bloque.datos.enlaces" [href]="e.url"
+                 (click)="registrarClic('cta', bloque.id, $event)">{{ e.etiqueta }}</a>
+            </ng-container>
             <ng-container *ngIf="categorias.length; else catsDemo">
               <a *ngFor="let c of categorias.slice(0, 8)">{{ c.nombre }}</a>
             </ng-container>

@@ -3164,6 +3164,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   agregar(tipo: string): void {
     if (!this.contenido) return;
+    // P0-17: una página propia hereda el encabezado y el pie del inicio; el servidor descarta los suyos al guardar.
+    if (this.paginaActiva !== -1 && (tipo === "encabezado" || tipo === "footer")) {
+      this.toastr.info("El encabezado y el pie viven en el inicio y todas las páginas los heredan.");
+      this.cerrarAgregar();
+      return;
+    }
     const datos = JSON.parse(JSON.stringify(BLOQUE_NUEVO[tipo] || {}));
     // El id local solo sirve para identificar el bloque en pantalla; el backend
     // lo normaliza al guardar.
@@ -3181,6 +3187,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.cerrarAgregar();
     this.marcarSucio();
     this.resolverProductosDePrevia();
+  }
+
+  /**
+   * P0-19: ¿este enlace del menú lleva a una sección que no existe en el inicio? La página publicada no lo
+   * muestra. Mismas anclas que pinta el servidor (utils/siteHtml.js): las fijas de productos, contacto
+   * (formulario), catálogo y categorías, y «seccion-N» por posición; «#top» siempre sirve.
+   */
+  anclaSinDestino(url: string): boolean {
+    const m = /^#(.+)$/.exec(String(url || "").trim());
+    if (!m || m[1].toLowerCase() === "top") return false;
+    const ids = new Set<string>();
+    const bloques = ((this.contenido && this.contenido.bloques) || []).filter((b: any) => b && b.visible !== false);
+    bloques.forEach((b: any, i: number) => {
+      ids.add(`seccion-${i}`);
+      const d = b.datos || {};
+      if (b.tipo === "productos" && ((d.productoIds || []).length || (d.productos || []).length)) ids.add("productos");
+      if (b.tipo === "formulario") ids.add("contacto");
+      if (b.tipo === "catalogo") ids.add("catalogo");
+      if (b.tipo === "categorias") ids.add("categorias");
+    });
+    return !ids.has(m[1]);
   }
 
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
