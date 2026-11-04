@@ -13133,6 +13133,7 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Caso de ALMARA en el scratchpad (sin commitear, D-566): «#DAD-014795 lleva 6 días sin producir» y «14 pedidos de días anteriores siguen como despachados · Por mensajero o transportadora: Yulie Osorno (11), Jairo (2) y CARLOS (1)». Un envío de 4 días sigue en ruta.
   - Front: `armarFlota` deja a CARLOS «en ruta · 1 · 45 min», a Jairo «en bodega» y a enviame «en ruta · 2 · 4 días», sin Yulie; el mapa queda con los mismos pedidos.
   - `ng build --configuration production` sin errores.
+- **Estado:** EN PROD el 4-nov: backend `81a36e4c` y front 2026.11.04.2. Comprobado en la pantalla de ALMARA: el radar dice «#DAD-014795 lleva 6 días sin producir», y el mapa muestra «CARLOS · 6 pedidos» y «John · 2 pedidos», igual que la lista, sin Jairo ni maria en la calle. «Yulie Osorno» queda «En ruta · 9 · 4 días»: sus envíos de hace más de 5 días pasaron al aviso. Si es una persona del equipo, el comercio debe registrarla como mensajera.
 
 ### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
 - **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
