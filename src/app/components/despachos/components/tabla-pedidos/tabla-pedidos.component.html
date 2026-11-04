@@ -153,13 +153,14 @@
                                                 [ngClass]="{
                                                     'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                     'badge-success': pedido?.estadoPago === 'Aprobado',
-                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                    'badge-info': pedido?.estadoPago === 'PreAprobado' || pedido?.estadoPago === 'Credito',
                                                     'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                 }">
                                                 <i class="status-icon pi" [ngClass]="{
                                                     'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                     'pi-check-circle': pedido?.estadoPago === 'Aprobado',
                                                     'pi-eye': pedido?.estadoPago === 'PreAprobado',
+ 'pi-calendar': pedido?.estadoPago === 'Credito',
                                                     'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                 }"></i>
                                                 <span class="status-dot"></span>

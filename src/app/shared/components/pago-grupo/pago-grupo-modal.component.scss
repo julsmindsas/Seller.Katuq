@@ -1,0 +1,83 @@
+// Ticket 1453: ventana «Registrar pago a varios pedidos». Plano, acento #5F3FE0, tinta #211F3A, sin gradientes,
+// radios 16/11. Clases con prefijo pgv- y sin «p-» en el nombre (el CSS global fuerza el tamaño de letra a esas clases).
+// Todo texto tiene color y tamaño propios (span.ng-star-inserted pinta de azul los spans creados por *ngIf).
+.pgv-cabeza { border-bottom: 1px solid #e4dff7; align-items: flex-start; }
+.pgv-titulo { display: flex; align-items: center; gap: 8px; margin: 0; color: #211f3a; font-size: 17px; font-weight: 800; i { color: #5f3fe0; font-size: 16px; } }
+.pgv-sub { margin-top: 4px; font-size: 12.5px; color: #6b6890; letter-spacing: normal; overflow-wrap: anywhere; }
+.pgv-cuerpo { color: #211f3a; font-size: 14px; }
+.pgv-pie { border-top: 1px solid #e4dff7; gap: 8px; flex-wrap: wrap; }
+
+.pgv-seccion { margin: 18px 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.pgv-nota { margin: 6px 0; font-size: 12.5px; line-height: 1.4; color: #6b6890; letter-spacing: normal; }
+.pgv-cargando { padding: 10px 0; color: #6b6890; font-size: 13px; }
+
+.pgv-aviso { padding: 10px 14px; margin: 10px 0; border-radius: 11px; font-size: 13px; line-height: 1.45; letter-spacing: normal; }
+.pgv-aviso-error { background: #fdeceb; color: #b42318; }
+.pgv-aviso-alerta { background: #fdf6dc; color: #8a5a10; }
+.pgv-aviso-info { background: #f3f0ff; color: #211f3a; }
+.pgv-lista-errores { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; }
+.pgv-salida { margin: 8px 0 0; font-size: 12.5px; letter-spacing: normal; }
+
+.pgv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; @media (max-width: 600px) { grid-template-columns: minmax(0, 1fr); } }
+.pgv-campo { min-width: 0; }
+.pgv-campo-ancho { grid-column: 1 / -1; }
+.pgv-etiqueta { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.pgv-input {
+  width: 100%; padding: 9px 12px; border: 1px solid #d9d3f0; border-radius: 11px; background: #fff; color: #211f3a;
+  font-family: inherit; font-size: 14px; letter-spacing: normal;
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
+  &:disabled { background: #f5f2ff; color: #6b6890; }
+}
+.pgv-input-parte { text-align: right; min-width: 110px; font-variant-numeric: tabular-nums; }
+.pgv-input-mal { border-color: #b42318; background: #fdeceb; }
+
+.pgv-archivo { position: relative; padding: 12px 14px; border: 1.5px dashed #c9bff5; border-radius: 11px; background: #f5f2ff; text-align: center;
+  &.is-arrastrando { border-color: #5f3fe0; background: #ede8ff; }
+  &.tiene-archivo { border-style: solid; border-color: #17994f; background: #e7f6ec; }
+}
+.pgv-archivo-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.pgv-archivo-texto { font-size: 13px; color: #211f3a; overflow-wrap: anywhere; i { color: #5f3fe0; margin-right: 6px; } }
+
+.pgv-barra { display: flex; justify-content: flex-end; margin: 6px 0 8px; }
+
+.pgv-tabla { width: 100%; border-collapse: collapse; font-size: 13px; color: #211f3a;
+  th { padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; border-bottom: 1px solid #e4dff7; }
+  td { padding: 10px; vertical-align: top; border-bottom: 1px solid #efeaff; }
+}
+.pgv-num { text-align: right; font-variant-numeric: tabular-nums; }
+.pgv-col-marca { width: 34px; input { width: 18px; height: 18px; accent-color: #5f3fe0; cursor: pointer; } input:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; } }
+.pgv-fila-apagada td { color: #8f8bab; }
+.pgv-fila-bloqueada { background: #faf8ff; }
+.pgv-nro { font-weight: 800; color: #211f3a; }
+.pgv-fecha { font-size: 12px; color: #6b6890; }
+.pgv-revision { margin-top: 4px; font-size: 12px; color: #8a5a10; letter-spacing: normal; }
+.pgv-error-parte { margin-top: 4px; font-size: 12px; color: #b42318; letter-spacing: normal; }
+
+.pgv-resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 6px; @media (max-width: 600px) { grid-template-columns: minmax(0, 1fr); } }
+.pgv-dato { padding: 10px 14px; border-radius: 11px; background: #f5f2ff; }
+.pgv-dato-ok { background: #e7f6ec; .pgv-dato-val { color: #17994f; } }
+.pgv-dato-mal { background: #fdeceb; .pgv-dato-val { color: #b42318; } }
+.pgv-dato-etq { font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; }
+.pgv-dato-val { margin-top: 4px; font-size: 18px; font-weight: 800; color: #211f3a; font-variant-numeric: tabular-nums; }
+
+.pgv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 18px; border: 1px solid #5f3fe0; border-radius: 11px;
+  background: #5f3fe0; color: #fff; font-family: inherit; font-size: 13.5px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:hover:not(:disabled) { background: #5233c9; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+.pgv-btn-sec { background: #fff; color: #211f3a; border-color: #d9d3f0; &:hover:not(:disabled) { background: #f3f0ff; } }
+.pgv-btn-enlace { background: transparent; border-color: transparent; color: #5f3fe0; margin-right: auto; &:hover:not(:disabled) { background: #f3f0ff; } }
+
+// En pantallas angostas cada fila de la tabla se vuelve una tarjeta: sin scroll horizontal.
+@media (max-width: 600px) {
+  .pgv-tabla, .pgv-tabla tbody, .pgv-tabla tr, .pgv-tabla td { display: block; width: 100%; }
+  .pgv-tabla thead { position: absolute; left: -9999px; }
+  .pgv-tabla tr { margin-bottom: 10px; border: 1px solid #e4dff7; border-radius: 11px; overflow: hidden; }
+  .pgv-tabla td { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #efeaff; text-align: right; }
+  .pgv-tabla td:last-child { border-bottom: 0; }
+  .pgv-tabla td[data-etiqueta]::before { content: attr(data-etiqueta); flex: 0 0 auto; font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #6b6890; text-align: left; }
+  .pgv-col-marca { justify-content: flex-start; }
+  .pgv-input-parte { min-width: 0; width: 140px; }
+}

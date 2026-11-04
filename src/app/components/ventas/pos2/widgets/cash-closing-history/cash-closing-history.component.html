@@ -69,17 +69,31 @@
         </div>
         <div class="card-body">
           <div class="row text-center stats-container">
-            <div class="col-md-4 mb-3 stat-item">
+            <div class="col-md-3 col-6 mb-3 stat-item">
               <span class="d-block text-muted stat-label">Total Días</span>
               <strong class="d-block fs-5 stat-value">{{ formatNumber(historyData.resumenGeneral.totalDias) }}</strong>
             </div>
-            <div class="col-md-4 mb-3 stat-item">
+            <div class="col-md-3 col-6 mb-3 stat-item">
               <span class="d-block text-muted stat-label">Total Ventas</span>
               <strong class="d-block fs-5 text-success stat-value">{{ formatCurrency(historyData.resumenGeneral.totalVentas) }}</strong>
+              <small class="d-block stat-nota">Lo que se vendió</small>
             </div>
-            <div class="col-md-4 mb-3 stat-item">
+            <div class="col-md-3 col-6 mb-3 stat-item">
               <span class="d-block text-muted stat-label">Promedio Diario</span>
               <strong class="d-block fs-5 stat-value">{{ formatCurrency(historyData.resumenGeneral.promedioDiario) }}</strong>
+            </div>
+            <!-- D-587: si la plata que se contó cuadra con lo vendido en el periodo -->
+            <div class="col-md-3 col-6 mb-3 stat-item"
+              [class.stat-filtro]="cierresConDescuadre > 0" [class.stat-filtro--activo]="soloDescuadre"
+              [attr.role]="cierresConDescuadre > 0 ? 'button' : null" [attr.tabindex]="cierresConDescuadre > 0 ? 0 : null"
+              [attr.aria-pressed]="cierresConDescuadre > 0 ? soloDescuadre : null"
+              [title]="cierresConDescuadre > 0 ? (soloDescuadre ? 'Ver todos los cierres' : 'Ver solo los cierres con descuadre') : ''"
+              (click)="alternarSoloDescuadre()" (keydown.enter)="alternarSoloDescuadre()">
+              <span class="d-block text-muted stat-label">Diferencia de caja</span>
+              <strong class="d-block fs-5 stat-value"
+                [class.cuadre-mal]="diferenciaPeriodo !== 0" [class.cuadre-bien]="diferenciaPeriodo === 0">{{ textoDiferencia(diferenciaPeriodo) }}</strong>
+              <small class="d-block stat-nota">{{ cierresConDescuadre === 0 ? 'Todos los cierres cuadran' : cierresConDescuadre + (cierresConDescuadre === 1 ? ' cierre con descuadre' : ' cierres con descuadre') }}</small>
+              <small class="d-block stat-accion" *ngIf="cierresConDescuadre > 0">{{ soloDescuadre ? 'Ver todos ↺' : 'Ver solo estos →' }}</small>
             </div>
           </div>
           <hr class="divider">
@@ -107,10 +121,15 @@
       </div>
 
       <!-- Historial Detallado por Día/Cierre -->
-      <h3 class="section-title mb-3">Historial de Cierres</h3>
+      <h3 class="section-title mb-3" id="lista-cierres">Historial de Cierres</h3>
+      <!-- D-588: filtro activo desde la tarjeta "Diferencia de caja" -->
+      <div class="filtro-aviso d-print-none" *ngIf="soloDescuadre">
+        <span class="filtro-aviso-texto">Mostrando solo los <strong>{{ historialVisible.length }}</strong> cierres con descuadre.</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="alternarSoloDescuadre()">Ver todos</button>
+      </div>
       <div *ngIf="historyData.historial && historyData.historial.length > 0; else noHistory">
         <div class="closing-list">
-          <div class="closing-item mb-4" *ngFor="let item of historyData.historial; let i = index">
+          <div class="closing-item mb-4" *ngFor="let item of historialVisible; let i = index">
             <div class="card border-0 shadow-sm">
               <!-- Encabezado del cierre -->
               <div class="cch-cabeza closing-header">
@@ -118,16 +137,16 @@
                   <div class="col-md-4">
                     <div class="closing-date">
                       <i class="fa fa-calendar-check-o me-2"></i>
-                      <span>{{ formatShortDate(item.fecha) }}</span>
+                      <span>{{ formatShortDate(item.fecha) }}<ng-container *ngIf="item.turno"> · Cierre {{ item.turno }}</ng-container></span>
                     </div>
                   </div>
-                  <div class="col-md-4 text-center">
-                    <div class="closing-user">
+                  <div class="col-md-5 text-center">
+                    <div class="closing-user" [title]="item.usuarioCierre">
                       <i class="fa fa-user me-2"></i>
                       <span>{{ item.usuarioCierre }}</span>
                     </div>
                   </div>
-                  <div class="col-md-4 text-end">
+                  <div class="col-md-3 text-end">
                     <div class="closing-total text-success">
                       <span>Total: {{ formatCurrency(item.totalVentas) }}</span>
                       <i class="fa fa-line-chart ms-2"></i>
@@ -157,8 +176,32 @@
                               <td>{{ formatCurrency(item.efectivoFinal) }}</td>
                             </tr>
                             <tr>
-                              <th scope="row">Diferencia (contado − debía haber)</th>
-                              <td>{{ estadoCuadre(item) }}</td>
+                              <th scope="row">Diferencia al cerrar (contado − debía haber)</th>
+                              <td [class.cuadre-mal]="diferenciaCierre(item) !== 0" [class.cuadre-bien]="diferenciaCierre(item) === 0">{{ estadoCuadre(item) }}</td>
+                            </tr>
+                            <!-- D-587: ajustes del administrador (el cierre original no se edita) -->
+                            <tr *ngFor="let ajuste of (item.ajustes || [])">
+                              <th scope="row">Ajuste</th>
+                              <td>
+                                {{ ajuste.valor > 0 ? '+' : '−' }}{{ formatCurrency(abs(ajuste.valor)) }} · «{{ ajuste.motivo }}»
+                                <small class="d-block stat-nota">por {{ ajuste.usuarioEmail || 'sin registrar' }} · {{ formatShortDate(ajuste.fecha) }}</small>
+                              </td>
+                            </tr>
+                            <tr *ngIf="item.ajustes?.length">
+                              <th scope="row">Diferencia después de ajustes</th>
+                              <td [class.cuadre-mal]="diferenciaActual(item) !== 0" [class.cuadre-bien]="diferenciaActual(item) === 0">{{ textoDiferencia(diferenciaActual(item)) }}</td>
+                            </tr>
+                            <tr *ngIf="esAdministrador && item.id && diferenciaActual(item) !== 0">
+                              <th scope="row"></th>
+                              <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary d-print-none" (click)="registrarAjuste(item)">
+                                  <i class="fa fa-pencil-square-o me-1"></i>Registrar ajuste
+                                </button>
+                              </td>
+                            </tr>
+                            <tr *ngIf="item.ventasDiasAnteriores?.cantidadPedidos">
+                              <th scope="row">Ventas de días anteriores (aparte)</th>
+                              <td>{{ item.ventasDiasAnteriores.cantidadPedidos }} · {{ formatCurrency(item.ventasDiasAnteriores.total) }}</td>
                             </tr>
                           </tbody>
                         </table>

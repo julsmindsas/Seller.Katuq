@@ -28,6 +28,12 @@ interface DatosCierre {
     totalProductos: number;
   };
   empresa: string;
+  /** D-583: ventas de días anteriores que quedaron sin cerrar y entran aparte. */
+  formasPagoAnteriores?: FormaPago[];
+  totalAnteriores?: number;
+  pedidosAnteriores?: { nroPedido: string; fechaCreacion: string; formaDePago: string; total: number }[];
+  /** D-585: número de cierre del día (turno). */
+  turno?: number;
 }
 
 @Component({
@@ -148,8 +154,10 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
    */
   fechaFormateada(fecha: string): string {
     if (!fecha) return '';
-    
-    const fechaObj = new Date(fecha);
+
+    // "2026-11-02" con new Date() es medianoche UTC: en Colombia salía 01/11.
+    const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+    const fechaObj = partes ? new Date(+partes[1], +partes[2] - 1, +partes[3]) : new Date(fecha);
     return fechaObj.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -192,7 +200,46 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
    * Calcula la diferencia de efectivo
    */
   get diferenciaCaja(): number {
-    return this.datosCierre.efectivoFinal - (this.datosCierre.efectivoInicial + this.totalEfectivo);
+    return this.datosCierre.efectivoFinal - (this.datosCierre.efectivoInicial + this.totalEfectivo + this.efectivoAnteriores);
+  }
+
+  /** D-583: efectivo de las ventas de días anteriores que entran en este cierre. */
+  get efectivoAnteriores(): number {
+    return (this.datosCierre.formasPagoAnteriores || []).find(fp => (fp.nombre || '').toLowerCase() === 'efectivo')?.total || 0;
+  }
+
+  /** Fecha y hora completas de una venta ("03/11/2026, 5:08 p. m."), en la hora del equipo. */
+  horaVenta(iso: string): string {
+    const d = new Date(iso);
+    if (!iso || isNaN(d.getTime())) return '';
+    return d.toLocaleString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  /**
+   * Días en que se hicieron las ventas en EFECTIVO de días anteriores que entran en
+   * este cierre: "03/11/2026", "01/11/2026 y 03/11/2026" o "01/11/2026, 02/11/2026 y 03/11/2026".
+   */
+  get fechasEfectivoAnteriores(): string {
+    const dias = (this.datosCierre?.pedidosAnteriores || [])
+      .filter((v) => (v.formaDePago || '').toLowerCase() === 'efectivo')
+      .map((v) => {
+        const d = new Date(v.fechaCreacion);
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      })
+      .filter(Boolean);
+    const unicos = Array.from(new Set(dias)).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
+    if (unicos.length <= 1) return unicos[0] || '';
+    return unicos.slice(0, -1).join(', ') + ' y ' + unicos[unicos.length - 1];
+  }
+
+  /** Quien hizo el cierre (antes salía siempre "Sistema": se leía de la empresa). */
+  get usuarioReporte(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return u.name || u.nombre || u.email || 'Sin registrar';
+    } catch {
+      return 'Sin registrar';
+    }
   }
 
   /**

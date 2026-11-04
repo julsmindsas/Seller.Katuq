@@ -5,8 +5,9 @@ import Swal from 'sweetalert2';
 
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { debePreguntarSiVolvio, preguntarSiVolvio } from '../../../../shared/utils/pedido-mercancia-devuelta';
+import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
 import {
-  PAYMENT_STATE_TRANSITIONS,
+  transicionesDesde,
   MOTIVOS_CAMBIO_ESTADO,
   metaEstado,
   PaymentStateMeta,
@@ -32,6 +33,8 @@ export class CambiarEstadoPagoComponent implements OnInit {
   motivoSeleccionado = '';
   motivoOtro = '';
   submitting = false;
+  /** Ticket 1448: cupo de crédito que se guarda en la ficha del cliente al marcar Crédito (opcional). */
+  cupoCredito: number | null = null;
 
   readonly motivos = MOTIVOS_CAMBIO_ESTADO;
   readonly OTRO = 'Otro';
@@ -41,11 +44,13 @@ export class CambiarEstadoPagoComponent implements OnInit {
     private treasury: TreasuryService,
     private toastr: ToastrService,
     private translate: TranslateService,
+    private features: CompanyFeaturesService,
   ) {}
 
   ngOnInit(): void {
     this.estadoActual = this.pedido?.estadoPago || '';
-    this.estadosDisponibles = PAYMENT_STATE_TRANSITIONS[this.estadoActual] || [];
+    // Ticket 1448: Crédito se ofrece solo con la bandera `estadoCredito`; el servidor valida igual (409 si no).
+    this.estadosDisponibles = transicionesDesde(this.estadoActual, this.features.isEnabled('estadoCredito'));
   }
 
   meta(estado: string): PaymentStateMeta {
@@ -68,6 +73,8 @@ export class CambiarEstadoPagoComponent implements OnInit {
     switch (this.estadoSeleccionado) {
       case 'PreAprobado':
         return 'El pedido quedará como pago parcial verificado, con saldo pendiente por cobrar.';
+      case 'Credito':
+        return this.translate.instant('tesoreria.cambiarEstadoPago.mensajeCredito');
       case 'Aprobado':
         return 'El pedido quedará totalmente pagado y se dispararán los efectos de aprobación (facturación / notificaciones).';
       case 'Rechazado':
@@ -92,9 +99,20 @@ export class CambiarEstadoPagoComponent implements OnInit {
       mercanciaVolvio = respuesta;
     }
     this.submitting = true;
-    this.treasury.changePaymentState(this.pedido?._id, this.estadoSeleccionado, this.motivoFinal, mercanciaVolvio).subscribe({
+    const cupo = this.estadoSeleccionado === 'Credito' && Number(this.cupoCredito) > 0 ? Math.round(Number(this.cupoCredito)) : undefined;
+    this.treasury.changePaymentState(this.pedido?._id, this.estadoSeleccionado, this.motivoFinal, mercanciaVolvio, cupo).subscribe({
       next: (res) => {
         this.submitting = false;
+        if (res?.cupoPendiente === true) {
+          const sinFicha = res.cupo?.estado === 'sin_ficha' || res.cupo?.estado === 'sin_documento';
+          Swal.fire({
+            icon: 'info',
+            title: this.translate.instant('ventas.list.creditoMarcadoTitulo'),
+            text: this.translate.instant(sinFicha ? 'ventas.list.creditoSinFichaTexto' : 'ventas.list.creditoSinCupoTexto'),
+            confirmButtonText: this.translate.instant('comun.entendido'),
+            confirmButtonColor: '#5F3FE0',
+          });
+        }
         const devolvio = mercanciaVolvio && res?.devolucionInventario === true;
         this.toastr.success(
           this.translate.instant('tesoreria.cambiarEstadoPago.estadoCambiadoA', { estado: this.meta(this.estadoSeleccionado).label }) +

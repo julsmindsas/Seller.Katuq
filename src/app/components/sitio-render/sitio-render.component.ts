@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from "@angular/core";
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
+import { contenidoDelMenu, ContenidoMenu } from "./cajon-previa";
 import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes } from "./ajustes-estilo";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
@@ -187,6 +188,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() tema: TemaSitio | null = null;
 
   ngOnChanges(cambios: SimpleChanges): void {
+    // El panel no sobrevive a un cambio de dispositivo ni a apagar la bandera (como al ensanchar la pantalla publicada).
+    if ((cambios["dispositivo"] || cambios["cajonLateral"]) && this.menuAbierto && !this.bloqueMenu) this.cerrarMenu(false);
     if (!cambios["tema"] || !this.tema) return;
     // Se piden las dos por separado: un tema puede tener serif de titular y
     // sans de cuerpo, y cada una es una descarga distinta.
@@ -207,11 +210,13 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (typeof window === "undefined") return;
+    document.addEventListener("keydown", this.alEscapeCaptura, true);
     const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!quieto) this.reloj = setInterval(() => { this.paso++; }, 5000);
   }
 
   ngOnDestroy(): void {
+    if (typeof document !== "undefined") document.removeEventListener("keydown", this.alEscapeCaptura, true);
     if (this.reloj) clearInterval(this.reloj);
   }
 
@@ -232,6 +237,107 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   }
   /** Ancho simulado en la vista previa del editor. */
   @Input() dispositivo: "escritorio" | "movil" = "escritorio";
+
+  /**
+   * TX-34 (D8): ¿la tienda lleva el menú en cajón lateral? El editor lo toma de la bandera `storeDrawer` de la empresa.
+   * Apagado (por defecto), la previa «Celular» muestra la fila de categorías y los enlaces de siempre, igual que el sitio
+   * publicado sin la bandera. Solo se usa con `dispositivo = "movil"`.
+   */
+  @Input() cajonLateral = false;
+
+  /** Id de la cabecera cuyo panel lateral está abierto en la previa (estado de la vista, no se guarda). */
+  menuAbierto: string | null = null;
+  private botonMenu: HTMLElement | null = null;
+  private enfocarAlAbrir = false;
+
+  /** El botón ✕ del panel: cuando aparece, recibe el foco (como el cajón publicado). */
+  @ViewChild("cerrarMenuRef") set cerrarMenuRef(ref: ElementRef<HTMLElement> | undefined) {
+    if (ref && this.enfocarAlAbrir) {
+      this.enfocarAlAbrir = false;
+      ref.nativeElement.focus({ preventScroll: true });
+    }
+  }
+
+  /** Los enlaces del panel se calculan en cada ciclo: sin esto Angular recrearía los <a> y el foco se perdería. */
+  porIndice(i: number): number {
+    return i;
+  }
+
+  /** Lo que lleva el panel de la cabecera `d`, o null si no hay nada (entonces no hay botón «Menú»). */
+  contenidoMenu(d: any): ContenidoMenu | null {
+    return contenidoDelMenu(d, { categorias: this.categorias, tiendaActiva: this.tiendaActiva, bloques: this.bloques });
+  }
+
+  /** ¿Esta cabecera lleva el botón «Menú»? Solo en la previa «Celular», con la bandera y con algo que mostrar. */
+  cajonActivo(d: any): boolean {
+    return this.cajonLateral === true && this.dispositivo === "movil" && this.contenidoMenu(d) !== null;
+  }
+
+  /** La cabecera cuyo panel está abierto (null si ninguno, o si dejó de aplicar: se pasó a «Computador», etc.). */
+  get bloqueMenu(): BloqueSitio | null {
+    if (!this.menuAbierto) return null;
+    const b = (this.bloques || []).find((x) => x.id === this.menuAbierto && x.tipo === "encabezado");
+    return b && this.cajonActivo(b.datos) ? b : null;
+  }
+
+  alternarMenu(id: string, ev: Event): void {
+    if (this.menuAbierto === id) return this.cerrarMenu(true);
+    this.botonMenu = (ev && (ev.currentTarget as HTMLElement)) || null;
+    this.enfocarAlAbrir = true;
+    this.menuAbierto = id;
+  }
+
+  cerrarMenu(devolverFoco = true): void {
+    if (!this.menuAbierto) return;
+    this.menuAbierto = null;
+    this.enfocarAlAbrir = false;
+    const boton = this.botonMenu;
+    this.botonMenu = null;
+    if (devolverFoco && boton && boton.focus) boton.focus({ preventScroll: true });
+  }
+
+  /**
+   * Escape cierra el panel (solo si está abierto) y no sigue hacia el editor, para que un solo Escape no cierre también la
+   * sección o el cuadro que el editor tenga abierto. Se escucha en la fase de captura del documento: corre antes que los
+   * atajos del editor.
+   */
+  private alEscapeCaptura = (ev: KeyboardEvent): void => {
+    if (ev.key !== "Escape" || !this.menuAbierto) return;
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.cerrarMenu(true);
+  };
+
+  /** Foco atrapado: Tab y Mayús+Tab dan la vuelta dentro del panel. */
+  alTeclearEnMenu(ev: KeyboardEvent): void {
+    if (ev.key !== "Tab") return;
+    const panel = ev.currentTarget as HTMLElement;
+    const lista = Array.from(panel.querySelectorAll<HTMLElement>("a[href],button:not([disabled])")).filter((e) => e.getClientRects().length > 0);
+    if (!lista.length) {
+      ev.preventDefault();
+      return;
+    }
+    const primero = lista[0];
+    const ultimo = lista[lista.length - 1];
+    const activo = document.activeElement;
+    if (!panel.contains(activo)) {
+      ev.preventDefault();
+      primero.focus();
+    } else if (ev.shiftKey && activo === primero) {
+      ev.preventDefault();
+      ultimo.focus();
+    } else if (!ev.shiftKey && activo === ultimo) {
+      ev.preventDefault();
+      primero.focus();
+    }
+  }
+
+  /** Un enlace o botón del panel: en la previa no lleva a ningún lado; solo cierra el panel, como el publicado. */
+  elegirEnMenu(ev: Event, devolverFoco: boolean): void {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.cerrarMenu(devolverFoco);
+  }
 
   /** Estado del envío del lead, gobernado por el padre. */
   @Input() enviandoLead = false;

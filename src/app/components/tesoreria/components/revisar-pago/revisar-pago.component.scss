@@ -89,5 +89,48 @@
   background: $cfg-err-soft;
 }
 
+// Ticket 1455: ayudas bajo el motivo del rechazo (color y tamaño propios: span/div creados por *ngIf)
+.tk-reject-ayuda {
+  margin-top: 0.4rem;
+  font-size: 12px;
+  color: $cfg-muted;
+  letter-spacing: normal;
+}
+
 .mb-3 { margin-bottom: 1rem; }
+.mt-2 { margin-top: 0.5rem; }
 .mt-1 { margin-top: 0.35rem; }
+
+// Ticket 1453: aviso de pago repartido entre varios pedidos. Plano, lila y acento #5F3FE0; ningún nombre lleva «p-».
+.tk-grupo-aviso {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #e4dff7;
+  background: #f3f0ff;
+  border-radius: 11px;
+}
+.tk-grupo-titulo {
+  font-size: 13px;
+  font-weight: 800;
+  color: #211F3A;
+  letter-spacing: normal;
+}
+.tk-grupo-casilla {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+  min-height: 32px;
+  cursor: pointer;
+  letter-spacing: normal;
+  text-transform: none;
+
+  input { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #5F3FE0; cursor: pointer; }
+  input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+}
+.tk-grupo-texto {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #211F3A;
+  letter-spacing: normal;
+}

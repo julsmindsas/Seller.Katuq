@@ -177,8 +177,8 @@
     <div *ngIf="pedido?.fechaEntrega">
       <strong>Fecha de entrega:</strong> {{ pedido.fechaEntrega | date:'dd/MM/yyyy' }}
     </div>
-    <div *ngIf="pedido?.formaEntrega">
-      <strong>Forma de entrega:</strong> {{ pedido.formaEntrega }}
+    <div *ngIf="formaEntregaRecibo">
+      <strong>Forma de entrega:</strong> {{ formaEntregaRecibo }}
     </div>
     <div *ngIf="pedido?.nroFactura && pedido?.nroFactura !== pedido?.referencia && pedido?.nroFactura !== pedido?.nroPedido">
       <strong>Factura electrónica:</strong> {{ pedido.nroFactura }}

@@ -135,6 +135,13 @@ export class SharedFiltersComponent implements OnInit, OnDestroy {
 
   constructor(private translate: TranslateService) {}
 
+  /** Ticket 1448: nombre en pantalla del filtro de pago elegido (el valor del filtro no cambia). */
+  etiquetaEstadoPago(valor: string): string {
+    if (valor === 'Pospendiente') return this.translate.instant('filters.sharedFilters.pospendiente');
+    if (valor === 'Credito') return this.translate.instant('ventas.list.pagoCorto.credito');
+    return valor;
+  }
+
   ngOnDestroy(): void {
     this.cambioIdioma?.unsubscribe();
   }

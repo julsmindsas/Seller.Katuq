@@ -1,0 +1,73 @@
+@import '../../tesoreria-shared';
+
+// Ticket 1455: línea de tiempo del pago. Plana, tonos suaves del canon; sin gradientes ni primarios paralelos.
+// Ninguna clase lleva «p-» en su nombre (trampa de CSS global); los textos llevan color y tamaño propios.
+@include config-pagina;
+@include tk-modal-canon;
+
+.lt-contenedor { display: flex; flex-direction: column; gap: 12px; }
+
+.lt-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 12px;
+  text-align: center;
+  color: $cfg-muted;
+  i { font-size: 22px; color: $cfg-muted; }
+}
+.lt-estado-texto { font-size: 13.5px; color: $cfg-muted; letter-spacing: normal; }
+.lt-estado-error { color: $cfg-err; i, .lt-estado-texto { color: $cfg-err; } }
+
+.lt-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lt-evento {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+}
+
+.lt-icono {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: $cfg-tint;
+  color: $cfg-muted;
+  font-size: 15px;
+}
+.lt-tono-ok .lt-icono { background: $cfg-ok-soft; color: $cfg-ok; }
+.lt-tono-err .lt-icono { background: $cfg-err-soft; color: $cfg-err; }
+.lt-tono-warn .lt-icono { background: $cfg-warn-soft; color: $cfg-warn; }
+.lt-tono-info .lt-icono { background: $cfg-info-soft; color: $cfg-info; }
+
+.lt-cuerpo { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lt-titulo { font-size: 14px; font-weight: 800; color: $cfg-ink; line-height: 1.35; letter-spacing: normal; word-break: break-word; }
+.lt-pago { font-size: 12px; font-weight: 700; color: $cfg-muted; letter-spacing: normal; }
+.lt-linea { font-size: 13px; color: $cfg-body; letter-spacing: normal; word-break: break-word; }
+.lt-motivo {
+  font-size: 13px;
+  color: $cfg-err;
+  background: $cfg-err-soft;
+  border-radius: 8px;
+  padding: 6px 10px;
+  letter-spacing: normal;
+  word-break: break-word;
+  strong { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: $cfg-err; }
+}
+.lt-hora { font-size: 11.5px; color: $cfg-muted; font-variant-numeric: tabular-nums; }
+
+.lt-mas { display: flex; justify-content: center; }

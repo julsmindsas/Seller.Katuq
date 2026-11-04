@@ -3685,6 +3685,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   arrastrandoSobreChat = false;
   subiendoFotoIA = false;
 
+  /**
+   * TX-34 (D8): la previa «Celular» pinta el menú en cajón lateral cuando la tienda lo lleva, para mostrar lo mismo que el
+   * sitio publicado. Sigue la bandera de la empresa `storeDrawer` (nace apagada). Solo decide qué se MUESTRA en la previa.
+   */
+  get cajonLateralPrevia(): boolean {
+    return !!(this.features && this.features.isEnabled("storeDrawer"));
+  }
+
   get puedeEditarConIA(): boolean {
     return !!(this.features && this.features.isEnabled("landingPrompt"));
   }

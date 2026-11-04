@@ -13158,6 +13158,39 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Encendido (Daniel):** en `katuq-db`, `config/feature_flags.wooOrderStatusPublish = "sombra"` y la bandera de la empresa (CAFÉ ESCOBAR). Revisar `integration_audit` a 1 día y, si está bien, pasar a `"publicar"`.
 - **Estado:** commiteado y pusheado; FALTA DESPLEGAR (solo back) y correr el seed en el servidor.
 
+### 2026-11-03 — D-583: cierre de caja POS por día Colombia, con las ventas de días anteriores aparte
+- **Problema:**
+  - El cierre cortaba el día en UTC: el «lunes» iba del domingo 7 p. m. al lunes 6:59 p. m., y lo vendido después de las 7 p. m. caía en el día siguiente.
+  - Si se cerraba la caja y después se vendía, esa venta no entraba en ningún cierre. El cierre del mismo día lo frena el candado de doble cierre, y el del día siguiente no la incluía.
+  - El cierre no guardaba descuentos ni impuestos. El informe viejo leía `totalImpuestos`, pero el campo del pedido es `totalImpuesto`, así que siempre daba 0.
+  - La vista previa usaba `/pos/all/filter`, que recalcula los totales, y el cierre usaba los guardados: podían no coincidir.
+- **Decisión (aprobada por el comercio usuario en el chat, opción 1 de 2):**
+  - El día va de 12:00 a. m. a 11:59 p. m. hora Colombia (UTC-5).
+  - Cada cierre recoge, APARTE, las ventas de días anteriores que quedaron sin cerrar. Se registran en su fecha y no suman al «Total Ventas» del período, pero su efectivo cuenta para la diferencia.
+  - Solo se buscan desde el día del último cierre del comercio, con un máximo de 31 días. Así, un comercio que nunca cierra caja no recibe meses de ventas de golpe.
+  - Se descartó la opción 2 (varios cierres el mismo día, como turnos).
+- **Backend:**
+  - `services/pos/cierreCaja.js` es nuevo y concentra el rango, la búsqueda (con `select('estadoProceso')` y `getAll` para no leer pedidos ya cerrados), el resumen y la diferencia.
+  - `cashClosing` usa ese módulo. Con `soloPrevisualizar: true` responde `{ yaCerrado, delPeriodo, anteriores }` sin escribir nada. Es el mismo endpoint, no hay ruta nueva.
+  - El cierre guarda `totalDescuentos`, `totalImpuestos`, `diferenciaEfectivo`, `rango` y `ventasDiasAnteriores` (`total`, `formasPago`, `pedidos`, `desde`). Los pedidos de días anteriores quedan marcados con `cierreCaja.ventaDeDiaAnterior`.
+  - El historial devuelve `diferencia`, descuentos, impuestos y `ventasDiasAnteriores`.
+  - Ya no se escribe `_id` dentro del pedido al cerrarlo.
+- **Frontend:**
+  - La vista previa pide al backend lo que entraría en el cierre.
+  - Las ventas de días anteriores salen en un bloque aparte, en la pantalla y en el reporte impreso.
+  - Antes de cerrar sale una alerta: «si después de este cierre haces otra venta el <día>, queda registrada con esa fecha, no entra en este cierre y no suma a las ventas del día siguiente; aparece aparte en el próximo cierre».
+  - Si el día ya tiene cierre, la vista previa lo explica.
+  - Las formas de pago se agrupan sin importar mayúsculas.
+  - `fechaFormateada` mostraba el día anterior porque leía «AAAA-MM-DD» como UTC; se corrigió.
+  - El historial usa la diferencia guardada y solo la recalcula en los cierres viejos.
+- **Limitación:** una empresa suspendida (D-287) ya no ve la vista previa, porque `/cash-closing` es escritura. De todos modos no podía cerrar.
+- **Pruebas:**
+  - `tests/pos/cierreCaja.test.js` (local, D-566): 10/10. Cubre el rango Colombia, la venta del lunes a las 8 p. m., el tope de 31 días, un comercio sin cierres previos, descuentos e impuestos y la diferencia.
+  - El front compila (`ng serve`).
+  - Falta probarlo en el navegador contra `katuq_dev`.
+- **Índices:** el filtro de `orders` por `company + typeOrder + fechaCreacion` ya existía. La consulta nueva de `cashClosings` (`company`, orden por `fechaCreacion`) es sobre una colección pequeña.
+- **Estado:** commiteado y pusheado (3-nov) junto con D-585 a D-588. FALTA DESPLEGAR, el back primero. Probado por el usuario en el navegador contra `katuq_dev` (FLORECER).
+
 ### 2026-11-03 — D-584: el interruptor del aviso de estado a WooCommerce entra al catálogo de `platform-flags`, y el script usa Postgres
 - **Qué:** `wooOrderStatusPublish` (D-578) entra a `services/platformFlags.js` con los valores `off` (por defecto), `sombra` y `publicar`. Se cambia con `node scripts/platform-flags.js wooOrderStatusPublish <valor>`: primero simula y escribe solo con `--execute`.
 - **Arreglo del script:** `scripts/platform-flags.js` no instalaba el adaptador de Postgres (D-579), así que leía y escribía el Firestore congelado. Ahora carga el `.env`, llama a `instalarSiCorresponde` y se detiene con salida 3 si no quedó instalado. Vale para todos los interruptores del catálogo.
@@ -13167,3 +13200,101 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - `woocommerceEstadoAWoo` pasa 16/16. Hay un caso nuevo: `"off"` apaga.
   - En local, el script se niega a correr (salida 3) y no escribe.
 - **Estado:** commiteado y pusheado; FALTA DESPLEGAR (back, junto con D-582).
+
+### 2026-11-03 — D-585: varios cierres de caja el mismo día (turnos)
+- **Por qué:** al probar D-583, el usuario pidió que una venta hecha después del cierre (por ejemplo, un cliente que llega 3 minutos después de cerrar) se pueda cerrar EL MISMO DÍA, para que la plata cuadre ese día. Con D-583 sola, esa venta esperaba hasta el cierre del día siguiente. Eligió la opción B.
+- **Qué cambia:**
+  - **Turnos:** se quitó el candado que permitía un solo cierre por `fechaCierre`. Cada cierre toma solo las ventas que siguen abiertas y guarda `turno` (1, 2, 3… del día). El pedido guarda `cierreCaja.turno` y `cierreCaja.cierreId`.
+  - **Contra cierres cruzados (doble clic, dos cajas):** el cierre se escribe en una transacción que relee los pedidos y responde 409 si alguno ya está `Cerrado`. El turno se numera dentro de la misma transacción.
+  - **Vista previa:** devuelve `turno`, `cierresDelDia` y `saldoFinalAnterior`. La pantalla sugiere el saldo inicial con el saldo final del cierre anterior del día, con un aviso, y la cajera lo puede cambiar. En el título sale «Cierre N del día».
+  - **Sin ventas pendientes:** dice que ya quedaron en el cierre o los cierres del día y que, si vende algo más, haga otro cierre.
+  - **Alerta antes de cerrar:** si después vendes, haz otro cierre ese día (cierre N+1); si nadie vuelve a cerrar ese día, la venta aparece aparte en el próximo cierre (red de seguridad de D-583).
+  - **Historial y reporte impreso:** muestran «Cierre N».
+- **Se mantiene de D-583:** el día Colombia, las ventas de días anteriores aparte, los descuentos e impuestos y la diferencia guardada.
+- **Pruebas:**
+  - Las de la lógica (`tests/pos/cierreCaja.test.js`) siguen 10/10.
+  - El front compila.
+  - La prueba en el navegador es contra `katuq_dev` con FLORECER. Ya está hecho el cierre 1 del 03-11 (POS-000004, $170.500).
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (el back primero).
+
+### 2026-11-03 — D-586: cierre de caja con descuadre, se permite pero con observación obligatoria
+- **Por qué:** al probar, el usuario vio que se podía cerrar con un faltante de $200 y preguntó si había que bloquearlo. Se decidió **no bloquear**: si el sistema no deja cerrar con diferencia, la cajera escribe el número esperado y el faltante desaparece del registro. Los descuadres reales pasan (vuelto mal dado, billete falso) y lo seguro es que queden registrados y con responsable.
+- **Qué cambia:**
+  - **Observación obligatoria:** con diferencia (sobra o falta, |dif| ≥ $0,01), «Observaciones» es obligatoria. El backend responde 400 `observacionObligatoria` y la pantalla lo frena antes, marcando el campo en rojo.
+  - **Alerta de confirmación:** muestra el FALTANTE o SOBRANTE en grande, a nombre de quien cierra.
+  - **Historial:** la diferencia sale en rojo si hay descuadre y en verde si cuadra.
+  - **Botón «Completar Cierre»:** se oculta cuando el cierre termina. Antes seguía visible y confundía, aunque no duplicaba nada.
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR. Probado en `katuq_dev` con FLORECER: cierres 1, 2 y 3 del 03-11. El cierre 3 se cerró con faltante de $200 antes de esta regla.
+
+### 2026-11-03 — D-587: ajustes de cierre de caja (solo Administrador) y «Diferencia de caja» en el resumen del historial
+- **Por qué:**
+  - El resumen del historial mostraba solo «Total Ventas», y daba a entender que había entrado toda la plata. El descuadre solo se veía cierre por cierre.
+  - El usuario preguntó cómo cuadrar la caja cuando aparece un faltante. Se decidió **no editar el cierre**, porque se podría borrar un faltante sin rastro, y **registrar un ajuste**, como en contabilidad. Puede hacerlo **solo el Administrador** (opción A): la cajera que tuvo el descuadre no lo corrige sola.
+- **Backend:**
+  - Ruta nueva `POST /v1/orders/cash-closing-adjustment`, aprobada por el usuario en el chat, con `auth` + `requireJwtTenant` + `requireRole(['Administrador','Super Administrador'])`.
+  - Recibe `{ cierreId, valor (≠ 0), motivo (obligatorio) }`. La empresa y el correo salen del JWT.
+  - En una transacción agrega `{ valor, motivo, usuarioEmail, fecha }` a `cashClosings/{id}.ajustes` y recalcula `diferenciaAjustada` = `diferenciaEfectivo` + suma de ajustes. El cierre original no cambia.
+  - Un cierre de otra empresa responde 404.
+  - El historial devuelve `ajustes` y `diferenciaAjustada`.
+- **Frontend (historial):**
+  - El resumen tiene una cuarta tarjeta, «Diferencia de caja»: la suma del periodo con ajustes, en rojo o verde, y cuántos cierres siguen con descuadre. «Total Ventas» dice «Lo que se vendió».
+  - En cada cierre se muestran:
+    - «Diferencia al cerrar», que nunca cambia;
+    - los ajustes, con valor, motivo, quién y cuándo;
+    - «Diferencia después de ajustes».
+  - El botón «Registrar ajuste» solo aparece para el Administrador, en cierres que siguen sin cuadrar. Sugiere el valor que hace cuadrar y pide el motivo.
+- **Verificado:** sin sesión, la ruta responde 401; el front compila. Falta la prueba en el navegador con FLORECER (cierre 3 con faltante de $200).
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (el back primero: trae la ruta nueva).
+
+### 2026-11-03 — D-588: la tarjeta «Diferencia de caja» filtra el historial a los cierres con descuadre
+- **Por qué:** el usuario pidió que, al tocar la tarjeta, la lista muestre solo los cierres que no cuadran, para no revisarlos uno por uno cuando son muchos.
+- **Qué:**
+  - Tocar la tarjeta (o Enter con el teclado) alterna el filtro «solo descuadre», con la diferencia vigente: la que queda después de los ajustes de D-587.
+  - La pantalla baja hasta la lista y muestra el aviso «Mostrando solo los N cierres con descuadre», con el botón «Ver todos».
+  - Si todo cuadra, la tarjeta no es clicable. Cada búsqueda nueva quita el filtro.
+  - Solo cambia la pantalla: no hay cambios en el backend.
+- **Estado:** commiteado y pusheado con D-583. FALTA DESPLEGAR (solo front).
+
+### 2026-11-03 — D-589: el historial de cierres cuenta cada venta una vez y en su día; el reporte dice de qué fecha son las ventas sin cerrar
+- **Por qué:** al probar la red de seguridad (D-583), un cierre del 04-11 que solo recogió una venta olvidada del 03-11 (3.500) contó como un «día» con /usr/bin/bash. Eso partió el Promedio Diario a la mitad. Además, la venta no entraba en Total Ventas ni en la tarjeta de Efectivo del resumen.
+- **Backend (historial):**
+  - `resumenGeneral.totalVentas` y `formasPago` suman también `ventasDiasAnteriores` de cada cierre. Cada venta entra en un solo cierre, así que no se cuenta dos veces.
+  - Cada cierre devuelve `ventasDiasAnteriores.formasPago` y `dias`: las fechas, en hora Colombia, en que se hicieron esas ventas.
+- **Frontend (resumen del historial):**
+  - «Total Días» cuenta solo los días con ventas: los de cierres con ventas propias, más los días en que se hicieron las ventas recogidas después.
+  - El promedio es Total Ventas ÷ esos días.
+  - En los datos de prueba: Total Ventas 52.700, 1 día, promedio 52.700. Antes: 29.200, 2 días y 64.600.
+- **Reporte impreso y pantalla del cierre:**
+  - La fila «Efectivo de días anteriores» pasa a «Efectivo de ventas sin cerrar del 03/11/2026», con la fecha o las fechas reales.
+  - La tabla muestra la fecha completa (03/11/2026, 5:08 p. m.).
+  - El recuadro amarillo dice «Ventas sin cerrar del 03/11/2026 (N)».
+  - «Usuario» del reporte muestra quién cierra: antes salía siempre «Sistema», porque se leía de la empresa.
+- **Pendiente aparte, no tocado:** el recibo de venta POS dice «Forma de entrega: Efectivo»; muestra la forma de pago.
+- **Estado:** commiteado y pusheado. FALTA DESPLEGAR (el back primero).
+
+### 2026-11-03 — D-590: el recibo de venta POS ya no dice «Forma de entrega: Efectivo»
+- **Causa:** desde mayo de 2025, `pos-checkout.service.ts` hacía `pedido.formaEntrega = paymentMethod` en el cobro normal y en el de Wompi. Eso pisaba el «Recoge en tienda» que pone `createPedidoObject`, y el pedido POS quedaba con la forma de pago como forma de entrega. En `katuq_dev` (FLORECER), las ventas POS-000007 a POS-000009 tienen `formaEntrega: "Efectivo"` y en el carrito, «Recoge en tienda».
+- **Arreglo:**
+  - Se quitaron las dos asignaciones; `formaDePago` se sigue poniendo igual.
+  - La tirilla (`factura-tirilla`) lee la forma de entrega de `carrito[0].configuracion.datosEntrega.formaEntrega` (regla del proyecto). Si no la hay, usa `pedido.formaEntrega`, salvo que sea igual a la forma de pago. Así las ventas viejas se reimprimen bien.
+- **Revisado:** ninguna lógica compara `formaEntrega` con una forma de pago. Las comparaciones existentes buscan «Envío a Domicilio», que una venta POS no es ni antes ni después. No se corrigen datos viejos.
+- **Estado:** commiteado y pusheado (solo front). FALTA DESPLEGAR. Compila con `ng serve`.
+
+### 2026-11-03 — D-660 a D-670: pagos y cartera de ALMARA, propuestas y fases 1 detrás de banderas apagadas (aws-claude-1)
+- **Estado:** las once son **propuestas pendientes de aprobación de Daniel**. Las fases 1 que se implementaron tocan pagos (módulo sensible): ninguna se publica sin que Daniel apruebe su diff, una a la vez. Todo está en la rama `feature/tickets-aws-claude-1` (front y backend), sin desplegar.
+- **Implementadas en fase 1, con bandera por empresa apagada (D-505):**
+  - **D-660** `estado-pago-credito` (ticket 1448), bandera `estadoCredito`: estado de pago «Crédito» y «Pago en revisión» en Pedidos, Tesorería, Cartera, Producción y Despachos; «Cobrar saldo $X en la entrega» / «No cobrar» en las órdenes de despacho y la app de mensajeros. El cupo solo lo fija Tesorería. Trae un script de migración a Crédito con simulación, sin correr.
+  - **D-661** `pago-varios-pedidos` (ticket 1453), bandera `pagoVariosPedidos`: un pago para varios pedidos del mismo cliente. Se guarda como N documentos `payments`, uno por pedido, unidos por `grupoPagoId` (con `grupoValorTotal` y `grupoPedidos`).
+  - **D-662** `comprobante-primero-ia` (ticket 1449), bandera `comprobantePrimero`: registrar el pago subiendo primero el comprobante; la lectura de IA solo sugiere y la referencia repetida se detecta sin importar mayúsculas, espacios o ceros.
+  - **D-663** `ajuste-al-peso` (ticket 1452), bandera `ajusteAlPeso`: al aprobar un pago, el saldo o sobrante pequeño se cierra solo con una línea auditada; pantalla de configuración para el Administrador.
+  - **D-665** `motivo-rechazo-auditoria-pagos` (ticket 1455), bandera `motivoRechazoPago`: rechazar exige un motivo de la lista, historial del pago en pantalla y la edición del pedido ya no cambia un pago revisado.
+  - **D-666** `cartera-interna` (ticket 1461), bandera `carteraInterna`: tarea 3.1, «Sin pago» puede dejar fuera a empleados, socios y la propia empresa con el interruptor «Incluir internos».
+- **Solo propuesta, sin código:** D-664 `siigo-recibos-de-caja` (1458), D-667 `calidad-datos-clientes` (1462), D-668 `acciones-tarjeta-cartera` (1463), D-669 `alerta-pedido-duplicado` (1459; primero medir) y D-670 `cambiar-cliente-pedido` (1505).
+- **Otros trabajos de la rama, sin desplegar:**
+  - F2-42 (D-531) `atributos-por-categoria`, bandera `categoryAttributes`: facetas del catálogo, comparador, feed para Google y Meta, plantilla e importación de especificaciones por Excel y export con la hoja «Especificaciones». Las marcas sin corte de 40 (arreglo de D-472) aplican a todas las tiendas.
+  - TX-34 (D-531): la vista previa «Celular» del editor de sitios muestra el menú y el panel lateral.
+  - OH MY STORE: la columna «Categoría» muestra también las categorías que Cereza guarda como lista; no cambia el dato.
+  - Wompi (1446): la revisión de avisos descartados lee Postgres con el adaptador (D-579). Faltan acciones en producción que decide Daniel: el pago de DAD-014884 y los 10 enlaces sin pedido.
+- **Pruebas:** unitarias de cada fase en la copia local (D-566, fuera de git). `companyFeatureFlags.test.js` (versionada) se regeneró con las banderas nuevas. Build del front sin errores tras el merge con `feature/venta-asistida-mejorada` (c5eb21d7) y backend con `backend-aws-security` (e722e2d8).
+- **Notas de versión (D-567):** no se agregaron; van cuando se encienda cada bandera.
+- **Antes de encender:** revisar con Daniel los índices que pidan las consultas nuevas de pagos (`grupoPagoId`) y de cartera; ninguna sesión los crea por su cuenta.

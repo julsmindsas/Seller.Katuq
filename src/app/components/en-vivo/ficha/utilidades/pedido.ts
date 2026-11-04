@@ -171,7 +171,9 @@ export function pagoDe(estadoPago: string | null | undefined): { texto: string; 
     case 'pendiente':
       return { texto: 'Pendiente', clase: 't-warn' };
     case 'pospendiente':
-      return { texto: 'Pospendiente', clase: 't-warn' };
+      return { texto: 'Pago en revisión', clase: 't-warn' };
+    case 'credito':
+      return { texto: 'Crédito', clase: 't-info' };
     case 'preaprobado':
       return { texto: 'Pre-aprobado', clase: 't-info' };
     case 'rechazado':

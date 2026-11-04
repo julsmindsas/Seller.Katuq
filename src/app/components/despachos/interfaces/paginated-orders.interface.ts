@@ -24,6 +24,8 @@ export interface PaginatedOrdersResponse {
     entregados: number;
     porCobrar: number;
   };
+  /** Ticket 1461: pedidos de clientes internos que quedaron fuera (solo si se pidió excluirlos). */
+  internosOcultos?: number;
 }
 
 /**

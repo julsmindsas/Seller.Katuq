@@ -2787,6 +2787,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * - Vendedores: Pendiente, Pospendiente, PreAprobado, Aprobado
    */
   getAvailablePaymentStates(): EstadoPago[] {
+    // Ticket 1448: «Crédito» solo se ofrece con la bandera `estadoCredito` encendida (o si el pedido ya está en Crédito).
+    return this.estadosDePagoSegunBandera(this.estadosDePagoPorRol());
+  }
+
+  private estadosDePagoSegunBandera(estados: EstadoPago[]): EstadoPago[] {
+    const credito = this.companyFeatures.isEnabled("estadoCredito");
+    const sinCredito = estados.filter((e) => e !== EstadoPago.Credito);
+    if (!credito) return this.originalEstadoPago === EstadoPago.Credito ? estados : sinCredito;
+    return sinCredito.concat([EstadoPago.Credito]);
+  }
+
+  private estadosDePagoPorRol(): EstadoPago[] {
     // Super admins y administradores ven todos los estados.
     // Spec 013 — con tesorería activa, el camino recomendado para cambios manuales
     // de estado es el módulo de Tesorería (/tesoreria → Cambiar estado), que exige
@@ -3557,7 +3569,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     { label: "Aprobado", value: "Aprobado" },
     { label: "Pendiente", value: "Pendiente" },
     { label: "PreAprobado", value: "PreAprobado" },
-    { label: "Pospendiente", value: "Pospendiente" },
+    { label: "Pago en revisión", value: "Pospendiente" },
     { label: "Rechazado", value: "Rechazado" },
     { label: "Precancelado", value: "Precancelado" },
     { label: "Cancelado", value: "Cancelado" },
@@ -4145,6 +4157,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarAccesoCambiarCliente();
+    // Ticket 1448: «Crédito» solo se ofrece como filtro con la bandera `estadoCredito` encendida.
+    if (this.companyFeatures.isEnabled("estadoCredito")) {
+      this.estadosPagoOptions.push({ label: "Crédito", value: "Credito" });
+    }
     // D-547 (F2): con la bandera encendida se piden las acciones del rol y del usuario UNA vez por sesión
     // (abrir un pedido no consulta nada). Apagada, no se hace ninguna petición.
     if (!this.isFromProduction && this.companyFeatures.isEnabled("orderPinnedActions")) {
@@ -4177,8 +4193,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!res) return;
         this.refrescarDatos(true);
         const bloqueo = res?.details?.estadoPagoBloqueado;
+        const pagosSinCambio = this.pagosNoCambiados(res);
         if (bloqueo) {
-          this.avisarBloqueoEstadoPago(bloqueo, 'Los demás cambios del pedido sí se guardaron.');
+          this.avisarBloqueoEstadoPago(bloqueo, ['Los demás cambios del pedido sí se guardaron.', pagosSinCambio].filter(Boolean).join(' '));
+          return;
+        }
+        if (pagosSinCambio) {
+          this.avisarPagosNoCambiados(pagosSinCambio);
           return;
         }
         Swal.fire({ icon: 'success', title: 'Pedido actualizado correctamente',
@@ -4713,6 +4734,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           "Aprobado",
           "Pendiente",
           "Pospendiente",
+          "Credito", // Ticket 1448
         ];
       } else {
         // Para modo no producción, incluir todos los estados de pago posibles
@@ -4725,6 +4747,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           "Rechazado",
           "Precancelado",
           "Cancelado",
+          "Credito", // Ticket 1448
         ];
       }
     }
@@ -4990,7 +5013,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Spec 013: "Pospendiente" también es intocable para el recálculo —
           // lo administra SOLO el servidor (pago en revisión de tesorería),
           // incluso si el flag de tesorería aún no cargó (null) en esta sesión.
-          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente"];
+          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente", "Credito"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
           // Spec 013 — con tesorería activa el estadoPago lo decide el SERVIDOR
@@ -5580,11 +5603,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     Pospendiente: { short: "Pospendiente", full: "Pospendiente - Pago subido, en revisión de tesorería" },
     Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
     PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
+    Credito: { short: "Crédito", full: "Crédito - Se cobra después, no en la entrega" },
     Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },
     Rechazado: { short: "Rechazado", full: "Rechazado - Pago rechazado por la entidad" },
     Cancelado: { short: "Cancelado", full: "Cancelado - Pedido cancelado manualmente" },
     Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado - En proceso de cancelación" },
   };
+
+  /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
+  etiquetaEstadoPago(estado: string): string {
+    if (estado === EstadoPago.Pospendiente) return "Pago en revisión";
+    if (estado === EstadoPago.Credito) return "Crédito";
+    return estado;
+  }
 
   /**
    * Helper para mostrar estados de pago abreviados con tooltips
@@ -7116,7 +7147,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }, 0);
       const faltaPorPagarRecalculado = Math.max(0, (order.totalPedididoConDescuento || 0) - anticipoRecalculado);
       if (faltaPorPagarRecalculado > 0) {
-        order.estadoPago = EstadoPago.PreAprobado;
+        // Ticket 1448: un pedido con la marca de crédito vuelve a Crédito, no a PreAprobado.
+        order.estadoPago = order.credito?.fecha ? EstadoPago.Credito : EstadoPago.PreAprobado;
         order.anticipo = anticipoRecalculado;
         order.faltaPorPagar = faltaPorPagarRecalculado;
         console.log(`🔄 APROBADO → PREAPROBADO en editOrder - Pedido ${order.nroPedido}: faltaPorPagar=${faltaPorPagarRecalculado}`);
@@ -7146,13 +7178,88 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     const valor = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
       .format(Number(bloqueo.porVerificar) || 0);
-    const motivo = bloqueo.motivo === "pagos-en-verificacion"
+    const motivosCredito: { [k: string]: string } = {
+      "credito-no-activo": "El estado Crédito todavía no está activo para tu empresa. Escríbenos por soporte y te lo activamos.",
+      "credito-transicion-no-permitida": "Un pedido solo pasa a Crédito desde Pendiente, Preaprobado o Rechazado, y sin pagos por revisar.",
+      "credito-solo-tesoreria": "Un pedido en Crédito solo lo cambia Tesorería, con un motivo. Los demás cambios del pedido sí se guardaron.",
+    };
+    const motivo = bloqueo.motivo && motivosCredito[bloqueo.motivo]
+      ? motivosCredito[bloqueo.motivo]
+      : bloqueo.motivo === "pagos-en-verificacion"
       ? `Este pedido tiene ${valor} en pagos por verificar en Tesorería. Mientras estén pendientes, el estado lo cambia Tesorería: aprueba o rechaza esos pagos en Finanzas → Tesorería y el pedido se actualiza solo.`
       : `Tu rol no puede pasar pedidos a ${bloqueo.intento || "ese estado"}. Pídeselo a Tesorería o a un administrador.`;
     Swal.fire({
       icon: "warning",
       title: "El estado de pago no cambió",
       text: nota ? `${motivo} ${nota}` : motivo,
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#5F3FE0",
+    });
+  }
+
+  /**
+   * Ticket 1455: con la bandera `motivoRechazoPago`, el servidor no deja cambiar el valor, la forma de pago ni el
+   * comprobante de un pago ya revisado y lo avisa en `details.pagosEditBloqueados`. Devuelve el aviso, o '' si
+   * no hubo nada bloqueado. Sin esto la pantalla diría «actualizado» y el pago seguiría igual.
+   */
+  private pagosNoCambiados(res: any): string {
+    const bloqueados = res?.details?.pagosEditBloqueados;
+    return Array.isArray(bloqueados) && bloqueados.length
+      ? "Ese pago ya fue revisado por Tesorería: no se puede cambiar su valor, su forma de pago ni su comprobante. Anúlalo y registra uno nuevo."
+      : "";
+  }
+
+  /**
+   * Ticket 1448: al marcar Crédito, si el cliente no tiene cupo en su ficha se invita a escribirlo. Devuelve el cupo
+   * (número), `null` si se sigue sin cupo (o el cliente ya tiene) o "volver" si la persona se arrepiente.
+   */
+  private async pedirCupoCredito(order: Pedido): Promise<number | null | "volver"> {
+    const documento = order?.cliente?.documento;
+    if (documento) {
+      try {
+        const res: any = await firstValueFrom(this.maestroService.getClientByDocument({ documento }));
+        const ficha = Array.isArray(res) ? res[0] : res;
+        if (Number(ficha?.creditLimit) > 0) return null;
+      } catch {
+        /* sin poder leer la ficha, se pregunta igual: el servidor no pisa un cupo que ya exista */
+      }
+    }
+    const r = await Swal.fire({
+      icon: "question",
+      title: "Este cliente no tiene cupo de crédito",
+      text: "Escribe el cupo y lo guardamos en la ficha del cliente. Un cliente con cupo se cuenta como empresarial.",
+      input: "number",
+      inputAttributes: { min: "1", step: "1" },
+      inputPlaceholder: "Ej. 5000000",
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Guardar cupo y marcar Crédito",
+      denyButtonText: "Marcar sin cupo",
+      cancelButtonText: "Volver",
+      confirmButtonColor: "#5F3FE0",
+      inputValidator: (v) => (!v || Number(v) <= 0 ? "Escribe un valor mayor que cero" : undefined),
+    });
+    if (r.isConfirmed) return Math.round(Number(r.value));
+    if (r.isDenied) return null;
+    return "volver";
+  }
+
+  private avisarCupoPendiente(estado?: string) {
+    const sinFicha = estado === "sin_ficha" || estado === "sin_documento";
+    Swal.fire({
+      icon: "info",
+      title: "El pedido quedó en Crédito",
+      text: (sinFicha ? "No encontramos la ficha de este cliente, así que no se guardó el cupo. Crea o completa la ficha del cliente." : "El cliente sigue sin cupo de crédito. Pídele a un administrador que lo escriba en la ficha del cliente."),
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#5F3FE0",
+    });
+  }
+
+  private avisarPagosNoCambiados(texto: string) {
+    Swal.fire({
+      icon: "warning",
+      title: "El pago no se cambió",
+      text: texto,
       confirmButtonText: "Entendido",
       confirmButtonColor: "#5F3FE0",
     });
@@ -7222,6 +7329,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventasService.editOrder(pagosUpdate as any).subscribe({
       next: (data) => {
         console.log("✅ Pagos actualizados en backend exitosamente");
+
+        // Ticket 1455: si el servidor dejó un pago revisado como estaba, la pantalla no puede decir «actualizado».
+        const pagosSinCambio = this.pagosNoCambiados(data);
+        if (pagosSinCambio) {
+          this.refrescarDatos(true);
+          this.avisarPagosNoCambiados(pagosSinCambio);
+          return;
+        }
 
         // Actualizar el pedido en la lista SIN recargar todo
         const index = this.orders.findIndex(
@@ -7725,11 +7840,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       motivoCancelacion = String(r.value).trim().slice(0, 500);
     }
 
+    // Ticket 1448 (bandera `estadoCredito`): al marcar Crédito, si el cliente no tiene cupo se invita a escribirlo y el
+    // servidor lo guarda en la ficha (campo de paso `_cupoCredito`). Sin cupo escrito, el pedido igual queda en Crédito.
+    let cupoCredito: number | null = null;
+    if (this.tempEstadoPago === EstadoPago.Credito && this.originalEstadoPago !== EstadoPago.Credito) {
+      this.modalService.dismissAll("confirmed");
+      const respuesta = await this.pedirCupoCredito(order);
+      if (respuesta === "volver") {
+        order.estadoPago = this.originalEstadoPago;
+        order.estadoProceso = this.originalEstadoProceso;
+        return;
+      }
+      cupoCredito = respuesta;
+    }
+
     const orderToUpdate = {
       ...order,
       estadoPago: this.tempEstadoPago,
       estadoProceso: this.tempEstadoProceso
     };
+    if (cupoCredito !== null) (orderToUpdate as any)._cupoCredito = cupoCredito;
     if (mercanciaVolvio) (orderToUpdate as any).mercanciaVolvioABodega = true;
     if (motivoCancelacion) {
       (orderToUpdate as any).motivoCancelacion = motivoCancelacion;
@@ -7764,8 +7894,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (res) => {
         this.refrescarDatos(true);
         const bloqueo = res?.details?.estadoPagoBloqueado;
+        const pagosSinCambio = this.pagosNoCambiados(res);
         if (bloqueo) {
-          this.avisarBloqueoEstadoPago(bloqueo);
+          this.avisarBloqueoEstadoPago(bloqueo, pagosSinCambio);
+          return;
+        }
+        if (pagosSinCambio) {
+          this.avisarPagosNoCambiados(pagosSinCambio);
+          return;
+        }
+        if (res?.details?.cupoPendiente === true) {
+          this.avisarCupoPendiente(res.details.cupoCredito?.estado);
           return;
         }
         const devolvio = res?.details?.devolucionInventario === true && mercanciaVolvio;
@@ -9085,6 +9224,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Recalcular estadoPago completo según nuevo total vs lo pagado
       if (order.faltaPorPagar <= 0) {
         order.estadoPago = EstadoPago.Aprobado;
+      } else if (order.estadoPago === EstadoPago.Credito || order.credito?.fecha) {
+        // Ticket 1448: un pedido de crédito con saldo sigue en Crédito aunque tenga abonos.
+        order.estadoPago = EstadoPago.Credito;
       } else if (anticipoReal > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
         order.estadoPago = EstadoPago.PreAprobado;
       } else {

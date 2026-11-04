@@ -3,6 +3,37 @@
      cdkDropList [cdkDropListDisabled]="!previsualizacion"
      (cdkDropListDropped)="soltarBloque($event)">
 
+  <!-- TX-34 D8: panel lateral del menú, espejo del cajón publicado (mismas clases). En la previa «Celular» el lienzo se
+       desplaza dentro del marco, así que la capa va pegada arriba (sticky) y mide lo que el marco, en vez de cubrir toda la
+       pantalla del editor. Cierra con ✕, Escape y toque fuera; atrapa el foco; no cambia nada del sitio. -->
+  <div class="kq-menu__ancla" *ngIf="bloqueMenu as cab">
+    <div class="kq-menu__capa" (click)="cerrarMenu(true)" (wheel)="$event.preventDefault()">
+      <div class="kq-menu__panel" role="dialog" aria-modal="true" aria-label="Menú" tabindex="-1"
+           (click)="$event.stopPropagation()" (wheel)="$event.stopPropagation()" (keydown)="alTeclearEnMenu($event)">
+        <ng-container *ngIf="contenidoMenu(cab.datos) as menu">
+          <div class="kq-menu__cabeza">
+            <span class="kq-menu__titulo">Menú</span>
+            <button type="button" class="kq-menu__cerrar" #cerrarMenuRef data-kq-menu-cerrar aria-label="Cerrar menú"
+                    (click)="elegirEnMenu($event, true)">✕</button>
+          </div>
+          <nav class="kq-menu__grupo kq-menu__grupo--cats" aria-label="Categorías" *ngIf="menu.categorias.length">
+            <a href="#" *ngFor="let c of menu.categorias" (click)="elegirEnMenu($event, true)">{{ c }}</a>
+          </nav>
+          <nav class="kq-menu__grupo" aria-label="Enlaces de la tienda" *ngIf="menu.enlaces.length">
+            <a href="#" *ngFor="let e of menu.enlaces; trackBy: porIndice" (click)="elegirEnMenu($event, true)">{{ e.etiqueta }}</a>
+          </nav>
+          <div class="kq-menu__grupo" *ngIf="menu.tienda">
+            <button type="button" class="kq-menu__item" data-kq-mi-cuenta (click)="elegirEnMenu($event, false)">Mi cuenta</button>
+            <button type="button" class="kq-menu__item" data-kq-favoritos (click)="elegirEnMenu($event, false)">Favoritos</button>
+          </div>
+          <div class="kq-menu__grupo" *ngIf="menu.whatsapp">
+            <a class="kq-menu__item" href="#" data-clic="whatsapp" (click)="elegirEnMenu($event, true)">WhatsApp</a>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
   <ng-container *ngFor="let bloque of bloquesVisibles; let i = index">
     <!-- Insertar AQUÍ: la línea con el "+" entre dos secciones. Es el gesto de
          Wix y Shopify: agregar donde uno está mirando, no al final para luego
@@ -88,7 +119,17 @@
         <!-- Encabezado. El logo y el nombre no se guardan en el bloque: salen
              del kit de marca de la empresa, igual que en la página publicada. -->
         <header *ngSwitchCase="'encabezado'" class="bloque cabecera"
-                [class.cabecera--fija]="bloque.datos.fijo">
+                [class.cabecera--fija]="bloque.datos.fijo"
+                [class.cabecera--cajon]="cajonActivo(bloque.datos)">
+          <!-- TX-34 D8: botón «Menú» de la previa «Celular», con las clases del render publicado. Solo con la bandera
+               de la tienda (`cajonLateral`); sin ella queda la fila de siempre. El panel se pinta arriba de todo. -->
+          <div class="kq-menu" *ngIf="cajonActivo(bloque.datos)">
+            <button type="button" class="kq-menu__boton" aria-label="Menú" aria-haspopup="dialog"
+                    [attr.aria-expanded]="menuAbierto === bloque.id ? 'true' : 'false'"
+                    (click)="alternarMenu(bloque.id, $event)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+          </div>
           <div class="cabecera__marca">
             <img *ngIf="bloque.datos.mostrarLogo !== false && logo"
                  class="cabecera__logo" [src]="logo" [alt]="nombreDeMarca(bloque.datos)" />

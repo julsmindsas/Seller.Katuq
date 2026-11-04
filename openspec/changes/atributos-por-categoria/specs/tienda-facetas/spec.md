@@ -112,7 +112,7 @@ WHEN la tienda ya tiene su catálogo cargado, THE system SHALL responder la cons
 
 ### Requirement: Filtros accesibles [F2]
 
-THE system SHALL permitir usar los filtros, los chips y «Limpiar todo» solo con el teclado, con foco visible y con un nombre que diga el valor y su conteo, y SHALL anunciar el nuevo total de productos al filtrar. La revisión automática de accesibilidad SHALL dar cero fallas en computador y en celular.
+THE system SHALL permitir usar los filtros, los chips y «Limpiar todo» solo con el teclado, con foco visible y con un nombre que diga el valor y su conteo, y SHALL anunciar el nuevo total de productos al filtrar. La revisión automática de accesibilidad SHALL dar cero fallas en computador y en celular en los filtros del catálogo y en las pestañas de la ficha.
 
 *Fuente: ticket 1250 (TX-35: WCAG 2.1 AA, «navegación completa con teclado; foco visible»).*
 
@@ -120,3 +120,24 @@ THE system SHALL permitir usar los filtros, los chips y «Limpiar todo» solo co
 
 - **WHEN** una persona marca «WiFi 6» con el teclado
 - **THEN** oye o ve «WiFi 6, 12 productos» y luego el nuevo total
+
+### Requirement: Las direcciones con filtros no se indexan [F2]
+
+WHEN la dirección de la tienda trae filtros más allá de la categoría o la marca de la propia página, THE system SHALL pedirle al buscador que no la indexe pero siga sus enlaces, e indicarle como dirección principal la página de esa categoría o marca. THE system SHALL dejar igual el mapa del sitio y las páginas sin filtros adicionales.
+
+*Fuente: revisión de seguridad S1 (combinaciones infinitas de filtros); diseño E8.*
+
+#### Scenario: Filtros sobre una categoría
+
+- **WHEN** un robot abre «Networking» con «WiFi 6» y una marca marcadas
+- **THEN** la página pide no ser indexada y señala a «Networking» como su dirección principal
+
+#### Scenario: La propia categoría no es un filtro
+
+- **WHEN** un robot abre «Networking» pidiendo la categoría «Networking»
+- **THEN** la página sale igual que «Networking» sin filtros
+
+#### Scenario: Mapa del sitio
+
+- **WHEN** se visitan direcciones con filtros
+- **THEN** el mapa del sitio es el mismo

@@ -1413,6 +1413,15 @@ export class OrdenesDespachoV2Component implements OnInit {
   }
 
   /**
+   * Ticket 1448: lo que el mensajero cobra en la entrega. Con «No cobrar» (Crédito, Aprobado) es 0, para no mostrar un
+   * monto junto a «No cobrar». Solo es de presentación: `faltaPorPagar` (lo que ve Cartera) no se toca.
+   */
+  valorACobrarEnEntrega(pedido: any): number {
+    if (pedido?.cobroEnEntrega?.accion === 'no_cobrar' || String(pedido?.estadoPago || '').toLowerCase() === 'credito') return 0;
+    return this.getValorACobrarPorPedido(pedido);
+  }
+
+  /**
    * Verifica si una orden necesita actualizar el estado de sus pedidos basándose en el transportador asignado
    */
   private updateOrderStateIfNeeded(order: any): void {

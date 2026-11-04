@@ -1,5 +1,9 @@
 .cash-closing-container {
   padding: 1rem;
+  // La ventana no tiene .modal-body (que es lo que scrollea en katuq-modal): sin esto
+  // el cierre se cortaba abajo y no se llegaba a "Completar Cierre". 3.5rem = márgenes del modal centrado.
+  max-height: calc(100vh - 3.5rem);
+  overflow-y: auto;
 
   .main-card {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -1110,5 +1114,67 @@
     border: 1px solid var(--kc-line) !important;
     border-radius: 18px !important;
     box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04) !important;
+  }
+}
+
+// D-583: ventas de días anteriores sin cerrar (aparte del Total Ventas).
+.anteriores-aviso {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--ds-warn-soft);
+  border: 1px solid var(--ds-warn);
+  border-radius: 11px;
+
+  .anteriores-titulo {
+    font-weight: 600;
+    color: var(--ds-ink);
+    margin-bottom: 4px;
+  }
+
+  .anteriores-texto {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--ds-body);
+    margin-bottom: 8px;
+    letter-spacing: normal;
+  }
+}
+
+// D-585: número de cierre del día y saldo inicial sugerido.
+.cash-closing-container {
+  .turno-chip {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 10px;
+    border-radius: 11px;
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
+    font-size: 0.8rem;
+    font-weight: 600;
+    vertical-align: middle;
+    letter-spacing: normal;
+  }
+
+  .saldo-sugerido {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--ds-muted);
+    letter-spacing: normal;
+  }
+}
+
+// D-586: con descuadre, Observaciones es obligatoria.
+.cash-closing-container {
+  .obligatoria {
+    color: var(--ds-err);
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  textarea.falta-explicar {
+    border-color: var(--ds-err);
+    background: var(--ds-err-soft);
   }
 }

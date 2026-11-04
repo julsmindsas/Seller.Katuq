@@ -184,7 +184,7 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 
 ---
 
-# Ampliación del 2026-10-21 — F2 a F5 y hallazgos (PENDIENTE DE APROBACIÓN)
+# Ampliación del 2026-10-21 — F2 a F5 y hallazgos (APROBADA EN BLOQUE EL 2026-10-21; DIFFS PENDIENTES)
 
 > Lo de arriba (F0 y F1) está aprobado y hecho. Esta sección es nueva. Aplica D-518
 > F2-42·1 a ·8. Backend `wt-back-tickets-web/functions` (`feature/tickets-web`, HEAD 097ede2e;
@@ -213,6 +213,27 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 - **Si no:** la fuente es `getSearchIndex` (+ `attributes` en la máscara) y el mapa de
   `cargarVitrinaDeEmpresa`, como se describe en E2 y E5.
 - 9.2 y 9.3 (motor puro) no dependen de la decisión; 9.4 a 9.6 sí.
+- **Hecho en 9.4 (3-nov, bloque F242-B06), pregunta 11 con la proyección:** `fuenteDeFacetas(company, marca)`
+  (`controllers/sites.js`) decide por la bandera y no por el modo de `storeMobile.lightIndex`.
+  - Bandera `categoryAttributes` ON, con el modo en `off`, `shadow` u `on`: la fuente de las facetas es
+    `fuenteProy(company, false, {atributos: true})`. Es solo lectura de `products`. Con el modo en `off` es
+    una lectura MÁS que las tres de hoy mientras el catálogo siga por el índice compartido; solo las reemplaza
+    si el cableado (9.6) sirve, con la bandera ON, el catálogo, las facetas y los derivados desde esta misma
+    fuente. El modo sigue decidiendo qué fuente sirve el resto de la tienda.
+  - Bandera OFF, con cualquier modo: no hay fuente de facetas (`null`), no se piden atributos y no se calcula
+    nada; el camino de hoy sigue por `conFuente` sin cambios.
+  - `getSearchIndex` no cambia (prueba estática). La proyección suma `categoriasProducto` y
+    `exposicionCategorias` a TODA entrada cuando se piden atributos, no solo a las que tienen `attributes`,
+    porque la faceta de categoría cuenta a todos los productos por su ruta. Ese campo es memoria nueva de la
+    proyección y entra en la medición de 9.9.
+  - **Contrato para el cableado (9.6):** `indiceDeTienda` guarda un solo registro por empresa y pedir
+    `atributos` sobre uno cargado sin ellos lo amplía (segunda lectura y otra `lista`). Con la bandera ON se
+    piden `atributos` desde la primera vez (no una fuente sin ellos y otra con ellos en paralelo) y los
+    derivados se arman sobre la misma `lista` que cuenta las facetas. Si la proyección falla, el catálogo
+    se sirve sin facetas, como hoy.
+  - **Orden de unión (9.11):** 9.2 y 9.3 (motor puro) → TX-34 D1 (proyección en modo sombra) → 9.4 → 9.5 y 9.6.
+    El panel de filtros deslizable en celular es de `tienda-celular` de TX-34; F2-42 le entrega el mismo
+    panel de facetas y no lo duplica.
 
 ### E1. Motor de facetas puro (`services/catalogo/facetas.js`)
 - `filtrarYContar({productos, filtros, precioDe, derivados, esquemaFacetas})` →
@@ -245,6 +266,14 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   (pregunta 3). Sin esto, cada consulta volvería a parsear 8.568 categorías.
 - Cada recarga de la fuente recalcula los derivados de todos los productos: ese costo se mide en
   frío (E12), porque Osmosis, Shopify y WooCommerce invalidan en cada sincronización.
+- **Hecho en 9.4:** `services/catalogo/derivadosFacetas.js` (puro). `derivadosDeFacetas(lista, registro)`
+  devuelve un `Map` por `cd` con `ruta`, `ancestros`, `etiquetas`, `marca`, `marcaNombre`, `ocasiones`,
+  `oferta` y `valores`. `valores` trae solo lo válido para el esquema efectivo de la ruta y solo de los
+  atributos filtrables o comparables (el comparador de E9 lee de ahí; guardar también los comparables suma
+  memoria por producto y se mide en 9.9). Los arreglos de multiselección también son inmutables. El `WeakMap` guarda el `Map` con la
+  firma de los esquemas: otro contenido de esquemas recalcula; un registro renovado con el mismo contenido
+  reutiliza. Los derivados son inmutables. `esquemaDeFacetas(registro)` entrega al motor solo los atributos
+  `filterable`, con herencia.
 
 ### E3. Filtros en la dirección
 - `cat=<routeKey>`; `marca=<nombre>` repetible; `precioMin`, `precioMax`, `oferta=1`,
@@ -305,10 +334,32 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   menú en cajón). F2-42 no duplica ese panel.
 - Estilos con las variables del tema del sitio y `:focus-visible` (D-460); áreas de 44 px.
 - Se revisa también con la plantilla `tecnologia-catalogo` de TX-36 (`data/siteTemplates.js:1141`).
+- **Hecho en 9.7 (parte 1):** `utils/siteHtmlFacetas.js`. `vistaFacetas(h, M)` describe el panel una sola vez: el servidor la corre con un `h` que
+  escribe HTML escapado y el navegador con otro que usa `createElement` y `textContent` (el script lleva su texto), así el HTML de una dirección
+  compartida y el repintado son iguales por construcción y ningún valor entra como HTML. El estado son los pares nombre=valor de la dirección;
+  los enlaces y la dirección salen en un orden canónico. «Limpiar todo» quita todos los filtros y la búsqueda; deja solo lo que pone la ruta
+  (`/c/<slug>`, `/marca/<slug>`) o `?categoria=`: la categoría de `?cat=` es un filtro y tiene su chip. La dirección con filtros solo se escribe en la
+  página propia del catálogo (`?catalogo=1`, `/c/`, `/marca/`): el catálogo del inicio filtra sin cambiarla. La caché del HTML (`siteCacheClave.js`)
+  distingue ahora `cat`, `a.<clave>` y las marcas u ocasiones repetidas (sin eso, una dirección con filtros recibía la copia de otra). Sin JavaScript, el
+  rango numérico no se puede cambiar (un formulario no junta dos campos en `a.<clave>=min-max`); lo ya marcado viaja oculto y no se pierde, y el grupo del rango se oculta sin JavaScript para no ofrecer un control que no envía (decisión pendiente de Daniel: ampliar el lector de B05). El panel respeta `mostrarCategorias` y `mostrarPrecio` del bloque. La caché del HTML guarda con la clave base las páginas que no usaron los filtros (tiendas sin la bandera).
 
 ### E8. SEO de las direcciones con filtros
 - Con filtros más allá de la categoría o la marca de la página: `robots noindex,follow` y
   canónica a la página de la categoría o la marca. El sitemap no cambia.
+- **Hecho en 9.7 (parte 2):** «filtros más allá de la página» = cualquier `a.<clave>`, `q`, `ocasion`, `precioMin`,
+  `precioMax`, `presupuesto` u `oferta` con valor, un `cat` o `marca` que NO nombre la propia categoría o marca de la
+  página, o un chip que no sea la marca de la ruta; cuenta aunque el lector no reconozca el valor (una combinación
+  inventada tampoco se indexa). `cat=` o `marca=` que nombran la propia página no son filtro extra (así el `noindex` nunca
+  acompaña a una canónica que apunta a la misma dirección). `orden` y `pagina` siguen como hoy (`noindex`, sin canónica).
+  La canónica es la página de la ruta (`/c/<slug>` aunque se haya elegido una subcategoría con `cat=`, `/marca/<slug>`);
+  si la categoría de la ruta no está en la miga de lo elegido, se queda la de hoy (la categoría elegida, que es una página
+  real) y, sin categoría ni marca, `/?catalogo=1` (con `?catalogo=1&cat=X`, la categoría X). Con `/marca/<slug>?marca=OTRA`
+  manda la marca elegida, como hoy (decisión pendiente de Daniel). Solo con la bandera; si el motor de facetas cae al
+  camino de hoy, la bandera se lee de la empresa y la regla de topes sigue valiendo (no se abre con el servicio degradado). Sin
+  la bandera, nada cambia. `utils/siteHtml.js` deja salir la canónica junto al `noindex` solo cuando el controlador lo
+  pide (`canonicaConNoindex`), contra el comentario de la cabecera (que lo evitaba en el resto de páginas; la señal de
+  `noindex` con canónica a una página indexable es la que pide el diseño, y se vigila en Search Console antes de encender
+  la bandera en un comercio con tráfico orgánico). La copia en caché de estas direcciones lleva siempre la clave con los filtros.
 
 ### E9. Comparador (F4)
 - `GET /v1/sites/public/:slug/comparar?ids=a,b,c,d[&acceso=…]`, con el tope de `eventoLimiter`.
@@ -332,6 +383,17 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - Barra flotante «Comparar (n)»; el quinto avisa «Máximo 4».
   - Diálogo con tabla (`role="dialog"`, foco atrapado, Esc cierra) y primera columna fija; en
     390 px la tabla se desplaza dentro de su caja, no la página.
+  - **Hecho en 11.3 y 11.4 (copia local, 3-nov, B14):** `utils/siteHtmlComparador.js`. El servidor escribe el botón (tarjeta del catálogo y ficha; las del bloque «productos» y de venta cruzada no lo llevan); el script del navegador pone el mismo botón en las tarjetas que arma (gancho de `ficha(p,pos)` en `script()`), guarda la selección en
+    `localStorage` con la clave `kq_cmp_<slug>` (ids con el patrón de `sanitizar.idFirestore`, a lo sumo 4, todo en try/catch: si falla, la selección
+    vive en memoria), pinta la barra «Comparar (n)» (con `n` menor de 2 no abre y avisa), el aviso «Máximo 4 productos» (región `role=status`) y el
+    diálogo. La tabla se pide a `/comparar` con la sesión del cliente si la hay (el navegador no calcula ningún precio) y todo texto del servidor entra con
+    `textContent`; la foto y el enlace solo se usan si son `https:` o una ruta propia. Filas con valores distintos: fondo suave y el texto «Valores
+    distintos» (no solo color); «—» con «No aplica» (texto oculto) frente a «Sin dato». Lo que el servidor ya no entrega se saca de la selección. La
+    columna de las características y el encabezado quedan fijos (`position: sticky`); en celular el cuadro ocupa la pantalla y solo la caja de la tabla
+    se desplaza. Sin la bandera `comparador` no llega a `siteHtml.js` y el HTML y el script salen idénticos a los de hoy. Estilos con las variables del
+    tema, sin degradados. Revisión: los avisos van a una región `role=status` siempre presente (no se esconde con la barra); al vaciar, el foco pasa
+    al último botón de producto; la barra se apila con el aviso de cookies, el carrito, WhatsApp y KAI (variable `--kq-cmp-alto` para KAI); dos
+    pestañas comparten la selección (evento `storage`); `activo()` es la única condición que enciende el comparador.
 
 ### E10. Plantilla por categoría (F3)
 - **Seller, importador** (`import-modal`, solo productos y con la bandera): al descargar se
@@ -405,10 +467,85 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   sin sesión simulada) y da p50 y p95, costo en frío y bytes. Prueba de que no escribe, como 0.3.
 - Registro `catalogo.facetas` `{company, productos, facetas, duracionMs}` solo si pasa de 500 ms.
 
+### Resultado de la medición de E12 (bloque F242-B10, 2026-11-03; solo lectura)
+
+> **Los datos son de la copia `katuq_dev` del día (D-579), NO de producción.** Antes de encender hay que repetir la
+> corrida en una copia fresca. Script: `functions/scripts/medir-facetas.js` (backend `wt-back-tickets-web`). Exige
+> `--dry-run`, no escribe (toda la base pasa por una envoltura que bloquea y anota cualquier escritura), se niega si
+> `PGDATABASE` no es `katuq_dev` y solo enciende `categoryAttributes` **en memoria** para poder medir una empresa que la
+> tiene apagada. En la copia, OH MY STORE tiene 8.608 productos (en octubre eran 8.568) y 3 tipos de cliente con
+> precios de lista; FLORECER, 2.171 productos y ninguno. Ninguna de las dos tiene atributos cargados: por eso el
+> script repite el motor con **atributos simulados en memoria** (30 % de los productos y 4 atributos por categoría
+> raíz), que es el peor caso que debe aguantar.
+
+**Resultado: CUMPLE. Ninguna regla de parada se activa.** 8 escenarios (catálogo completo, categoría raíz, categoría
+profunda con marca, dos atributos marcados, rango de precio con orden, búsqueda con orden, el cruce más pesado de tres
+grupos a la vez —categoría, marca, atributos y precio— y la búsqueda con el buscador encendido por memoria, que incluye los
+valores de atributos) x 30 corridas, en caliente, con y sin una sesión simulada (el tipo de cliente con más precios de lista).
+Una corrida cuenta solo si devuelve el catálogo con facetas y con resultados: una respuesta rápida que sea un 404, un 500,
+una salida sin facetas o un escenario vacío deja el resultado en INCOMPLETO, no en CUMPLE.
+
+**Qué es medido y qué es estimado.** Solo `catalogoPublico` (script con `--slug`, o la prueba de CI) es de punta a punta.
+En OH MY STORE no hay un sitio publicado en la copia, así que allí «sin sesión» es la respuesta armada
+(`consultarCatalogo`), que no busca el sitio ni las categorías ocultas, y «con sesión» es **una suma de p95 sueltos**
+(respuesta armada + segunda lectura de 12 documentos + acceso del cliente): **estimado**. Los números de punta a punta de
+verdad son los de la fuente sintética. El script marca cada uno en `reglas.p95PuntaAPunta.origen`.
+
+| Regla de E12 | Tope | OH MY STORE (copia katuq_dev) | Fuente sintética de 8.568 (peor caso) |
+|---|---|---|---|
+| p95 sin sesión | 1.000 ms | 18 ms (la respuesta armada completa: motor, 12 documentos y calificaciones; **no es de punta a punta**) | 19 a 37 ms (`catalogoPublico` real sobre una base falsa, medido de punta a punta) |
+| p95 con sesión | 1.000 ms | 27 ms (**estimado**: respuesta armada + segunda lectura de 12 documentos + acceso del cliente) | 34 a 69 ms (medido de punta a punta) |
+| p95 con atributos simulados | 1.000 ms | 18 ms (**estimado**: motor + 12 documentos + acceso) | ya incluido arriba: la fuente trae atributos en el 30 % |
+| Derivados + `porTipoCliente` en cada recarga en frío | 500 ms | 26 ms (derivados 22, listas 4); con atributos simulados 65 ms | 30 a 35 ms (derivados 19 a 23, listas 11) |
+| Memoria que F2-42 suma por empresa | 20 MB | 6,8 MB (atributos y categorías retenidos 3,5; `porTipoCliente` 1,3; derivados 1,9) | 13,5 MB (6,0 + 5,3 + 2,2) |
+| CPU p95 de una consulta | 200 ms (Q-S2) | 20 a 40 ms como máximo (cuatro corridas) | 108 ms como máximo (incluye el costo de la base falsa) |
+
+- **Fuente sintética:** 8.568 productos, 180 rutas en forma 5 (arreglos de texto sin ruta), **12 tipos de cliente con
+  precio de lista en cada producto** (el peor caso de `porTipoCliente`), atributos en el 30 % y 10 % en oferta. La
+  Firestore falsa recorre todas las claves en cada consulta: el número es conservador. Se corrió dos veces.
+- **El motor es barato; lo caro de la página sigue siendo la lectura:** el motor responde en 3 a 5 ms p95 con los
+  8.608 productos de OH MY STORE (hasta 20 ms con los atributos simulados); la respuesta armada, en 13 a 18 ms,
+  de los cuales 7 a 9 ms son la lectura de los 12 documentos.
+- **Costo en frío de F2-42 por recarga de la proyección:** 26 ms de CPU (65 ms con atributos simulados) más la
+  lectura ampliada de `products` (atributos, categorías y listas): entre 0,2 y 0,4 s más en cinco corridas,
+  sobre unos 3,1 s que ya tardaba la lectura de TX-34 en OH MY STORE (FLORECER: 0,04 a 0,08 s sobre 0,9 s). La petición
+  que dispara la recarga paga ese costo completo; es el de TX-34 y no entra en la meta, que es «en caliente».
+- **Ojo con el margen de los 500 ms:** la regla de E12 cuenta solo derivados y `porTipoCliente` (26 a 65 ms). Si a eso
+  se le suma la lectura ampliada de `products`, la recarga en frío de OH MY STORE queda entre 0,3 y 0,47 s: pegada al tope.
+  El script lo avisa como advertencia cuando la suma pasa del 80 % del tope (en la última corrida: 473 ms), sin cambiar el
+  veredicto. Esa lectura se midió con pocas cargas (3 por tipo): repetirla antes de encender.
+- **Memoria, el margen más corto:** la fuente sintética gasta 1,6 KB por producto con 12 tipos de cliente (20 MB
+  alcanzan para unos 12.700 productos así); OH MY STORE, 0,8 KB por producto con 3 tipos (unos 25.000 productos). Un comercio con más de unos
+  12.000 productos y muchos tipos de cliente con lista en cada uno se acerca al tope: volver a medirlo antes de
+  encenderle la bandera. Las categorías crudas que ahora retiene toda entrada con atributos son la parte más grande
+  (3,5 MB en OH MY STORE): si algún comercio pasa el tope, se guarda la ruta ya resuelta en vez del crudo
+  (nota de 9.4).
+- **Frecuencia de recarga (recurso alternativo de E12, `date_edit` en las últimas 24 h):** OH MY STORE tuvo 530
+  productos editados en 12 de las 24 horas, hasta 131 a 158 en una sola. `date_edit` es un **piso**: Osmosis, Shopify y
+  WooCommerce invalidan la proyección en cada sincronización sin tocar `date_edit`. El **techo** es 12 recargas por hora
+  (el TTL de 5 minutos), unos 0,3 a 0,44 s extra de F2-42 cada una, es decir 4 a 5 s de trabajo por hora, entre 0,1 y
+  0,15 % de un núcleo. **Estas cifras son por instancia de la función**: cada instancia activa guarda su propia
+  proyección, paga su lectura en frío y su memoria. FLORECER: 0 productos editados.
+- **Q-S2 (decisión):** la CPU por consulta queda lejos de los 200 ms, así que no se agrega un limitador propio; se vuelve a
+  medir con las condiciones de «Resumen de evidencia al 2026-11-03», más abajo. El texto completo para Daniel está en la
+  revisión privada de seguridad.
+- **Qué no se midió:** el comercio con Shopify o WooCommerce (los registros de sincronización de producción quedan
+  bloqueados) y `catalogoPublico` de punta a punta sobre un sitio real publicado (OH MY STORE no tiene sitio en la
+  copia; el script lo mide con `--slug`, y con sesión con un token en la variable de entorno `MEDIR_FACETAS_ACCESO`; la
+  prueba de CI lo mide sobre la fuente sintética). Tampoco se mide el orden «más vendido», que lee ventas de los pedidos.
+- **Búsqueda con el buscador encendido:** en OH MY STORE el motor responde en 5 ms p95 (8 ms con los atributos
+  simulados, que sí entran en la búsqueda) y el cruce de tres grupos, en 3 ms (6 ms con simulados). Ninguna de las dos
+  empresas tiene hoy el buscador encendido ni atributos reales visibles.
+
 ### E13. Accesibilidad (TX-35, #1250)
 - Panel, chips, pestañas de F1 (teclado con flechas) y comparador: axe-core con reglas
   WCAG 2.1 A/AA en 0 fallas a 1280 y 390 px, como D-460; foco visible y nombres accesibles
   (cada casilla dice el valor y su conteo).
+- **Hecho en 9.10 (copia local, 3-nov, B12):** 0 fallas de axe (WCAG 2.1 A/AA) DENTRO del catálogo con facetas y de las
+  pestañas de F1, a 1280 y 390 px, con tres tiendas. En la página entera quedan dos fallas que la tienda ya tenía con y
+  sin bandera y que no se tocaron para no cambiar el HTML ni la hoja de todas las tiendas: el enlace «Ir al inicio» del
+  encabezado y el contraste de «Plazo de entrega» y «Quedan pocas unidades». Decisión pendiente de Daniel. El comparador
+  (F4): 0 fallas de axe (comparador y página entera, salvo esas dos) cerrado y abierto, a 1280 y 390 px, con tres tiendas (B14, 11.4).
 
 ## Hallazgos (H1, H2 y H3 son del paso 3 de D-518 y no esperan la aprobación de la ampliación)
 
@@ -432,6 +569,68 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - **Arreglo propuesto (pregunta 12):** revisar en solo lectura si, en cada una de las 4
     empresas, el primer documento es el mismo que elige D2. Si lo es, ningún lector choca y basta
     14.14. Si no, unificar con un script `--dry-run` antes de encender la bandera en esa empresa.
+
+### Resultado de H1 y H2 (bloque F242-B04, 2026-11-03; solo lectura)
+
+> **Los datos son de la copia `katuq_dev` del día (D-579), NO de producción.** Los números de
+> producción pueden ser distintos; antes de encender hay que repetir la corrida en una copia
+> fresca el día de encender. Script: `functions/scripts/verificar-atributos-empresa.js`
+> (backend `wt-back-tickets-web`), que exige `--dry-run`, no escribe, se niega si `PGDATABASE` no es
+> `katuq_dev` y se detiene si el adaptador de Postgres no queda instalado. Imprime solo conteos, ids de
+> documentos, estados y el texto de `sitio.company`. Este documento es público: las empresas de H2 van con
+> alias (A a D); los nombres reales quedan en el informe privado.
+
+**H1 · empresa única** (una sola empresa por `nomComercial` y el mismo texto en `sitio.company`):
+
+| Empresa | Documentos con ese `nomComercial` | Sitios (estado) | `sitio.company` = `nomComercial` | Simulación de `set-company-feature.js` (sin `--execute`) | Resultado |
+|---|---|---|---|---|---|
+| FLORECER | 1 | 2 (borrador, borrador) | Sí, en los 2 | Encendería solo `categoryAttributes`, con `merge` | **Coincide** |
+| Baudio Corporation Colombia SAS | 1 | 0 (ningún sitio tiene un `company` parecido) | No hay con qué comparar | Encendería solo `categoryAttributes`, con `merge` | **PARAR y escalar a Daniel**: no se cumple el criterio (falta el sitio); no encender hasta comparar `sitio.company` con el `nomComercial` |
+
+- El script imprime el texto exacto de `sitio.company` (en FLORECER, idéntico al `nomComercial` en sus 2 sitios) y lista los
+  sitios cuyo `company` se parece pero no es igual (hoy ninguno). En toda la copia hay 134 empresas y 14 sitios. Ninguna de
+  las dos empresas tiene homónimos, ni siquiera a ojo (mayúsculas, tildes o espacios).
+- La bandera `categoryAttributes` está apagada (ausente) en las dos.
+- La tienda compara el texto exacto y `requireFeature` lo recorta y cae al id: el script revisa las dos
+  rutas y la prueba comprueba que la simulación da lo mismo que `applyChange` de `set-company-feature.js`.
+- **Regla de parada:** con dos documentos o un texto distinto en `sitio.company`, el veredicto es
+  «PARAR y escalar a Daniel». Sin sitio tampoco se cumple el criterio: **Baudio queda en PARAR** (la conclusión del script
+  lo trae como bloqueo para encender, no como aviso) hasta que tenga sitio y se compare su `sitio.company`.
+
+**H2 · primer documento de `categorias`** (empresas con más de un documento; solo conteos e ids):
+
+| Empresa | Documentos | Forma de cada documento | Primero por id = `limit(1)` = D2 con bandera = sin bandera = «crear» de onboarding | `set-company-feature.js` (simulación sin `--execute`) | Resultado |
+|---|---|---|---|---|---|
+| Empresa A | 2 | árbol legible, árbol legible | Sí | Se niega: no existe una empresa con ese nombre | **Coincide por desempate** (D2 elige el primero por id) |
+| Empresa B | 3 | árbol legible (los 3) | Sí | Encendería solo `categoryAttributes` (hoy apagada) | **Coincide por desempate** |
+| Empresa C | 2 | árbol legible, árbol legible | Sí | Encendería solo `categoryAttributes` (hoy apagada) | **Coincide por desempate** |
+| Empresa D | 2 | árbol legible, árbol legible | Sí | Se niega: no existe una empresa con ese nombre | **Coincide por desempate** |
+
+- Son 4 empresas con varios documentos, la misma cantidad de la medición del 18-oct en producción (los
+  nombres de aquella medición no quedaron escritos, así que no se pueden cotejar; en la copia hay 136 empresas con
+  `categorias` y 141 documentos). Como todos los documentos son árboles legibles, D2 desempata
+  por id y elige el primero: ningún lector choca con Maestros. Es una coincidencia por desempate, no por
+  diseño: si alguno de esos documentos pierde el árbol, deja de coincidir (el script lo detecta).
+- **Dos de las 4 (A y D) no tienen una empresa en `companies` con ese nombre** (el `company` de sus
+  documentos de categorías no es un `nomComercial` existente ni un id): el script corre la misma resolución que
+  `set-company-feature.js`, que se niega («no existe»), así que la bandera no se enciende. Queda como aviso para Daniel, no como bloqueo.
+- Ninguna de las 4 tiene la bandera encendida. Ninguna se enciende sin el OK de Daniel.
+- **Inventario de lectores y escritores vuelto a correr** (`collection("categorias")` y constantes, sobre
+  `functions/` sin pruebas ni `node_modules`, y también las listas de nombres de colección): 15 archivos y
+  29 aperturas, y la prueba falla si aparece uno nuevo. El inventario de arriba cambió de línea y suma tres
+  lectores que no estaban escritos (todos toman el primero por id, solo leen y coinciden hoy):
+  - `arbolDeCategorias` de `sites.js` (categorías permitidas de las cuotas, `limit(1)`);
+  - `nodoDeCategoria` de `services/mcp/productos/altaProducto.js` (`limit(1)`);
+  - `rutasDeCategorias` de `tools/updateProduct.js` (`limit(1)`).
+  Además, `createCategoriesOnboarding` (`onboarding.js:955`) elige por su propio puntaje (hoja con `categoria`
+  gana), no por `documentoQueEditaElMaestro`; hoy da el mismo documento. Las líneas movidas:
+  `importCategories` `limit(1)` en `onboarding.js:3757` y `update` en `:4288`; `checkCategoriesExist` en `:1955`.
+  Un escritor más, que no es de producción: `scripts/clone-company.js` copia el documento de `categorias` de una
+  empresa a otra desde una lista de colecciones (si se corre sobre una empresa que ya tiene árbol, crea un segundo
+  documento). El inventario ya lo vigila.
+  Límite del grep: no ve nombres armados en tiempo de ejecución ni colecciones leídas con un nombre que llega de afuera.
+- **Si algún día no coincide:** el script de unificación con `--dry-run` queda **pendiente y bloqueado**
+  (escribe en el dato de producción): espera revisión de diseño de Daniel (pregunta 12).
 - **H3. 500 al guardar el árbol, cuando falla.** Desde 3.2, si la transacción (o la lectura de la
   bandera) falla, `createCategoria` responde 500 (`controllers/categorias.js:204-209`). Antes
   borraba el documento y respondía 200 aunque `add` fallara
@@ -441,7 +640,7 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
   - Paso 1, solo lectura: buscar en el registro del servidor `catalogo.atributos.esquemas` con
     `operacion: "maestro"` y `resultado: "error"` desde el despliegue de `84e1081e` (empresas,
     cantidad y fechas).
-  - Si no hay casos: H3 queda como robustez (S7 de la revisión privada y el código del error en
+  - Si no hay casos: H3 queda como robustez (según la revisión privada y el código del error en
     el registro, sin valores), con diff aprobado.
   - Si hay casos: medir en solo lectura la forma del documento de esas empresas y reproducir en
     el emulador. Hipótesis, en orden: más de 1 MiB (Maestros guarda la foto de la categoría como
@@ -453,7 +652,7 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 - **H5. Marcas cortadas en 40.** `/marca/<nombre>` se resuelve sobre la lista cortada
   (`sites.js:8891-8895`) y el bloque de marcas (`marcasDeTienda`, `:8997`) también corta en 40.
   Con E4 deja de haber corte en las facetas; para todas las tiendas, pregunta 1.
-- **H6. Documentos.** 5.1 y 5.2 se marcan hechas (CONTRACT.md, D-495 F1); la resolución del
+- **H6. Documentos (hecho, B19, 2026-11-03).** 5.1 y 5.2 se marcan hechas (CONTRACT.md, D-495 F1); la resolución del
   ticket remite a «F2-42b», que no existe, y F2-42·1 pide anotar en el ticket que disponibilidad
   y valoración quedan fuera (tarea 8.6, la hace quien atiende el ticket, D-518 T·1).
 
@@ -514,3 +713,33 @@ ni lecturas nuevas; se declaran y esperan la pregunta 3.
 - Un comercio que cambia una categoría de nombre: los alias de F1 resuelven las rutas viejas.
 - `guardarArbol` de D-498 sin transacción puede pisar un renombre hecho en Maestros durante una
   importación (pregunta 13).
+
+## Resumen de evidencia al 2026-11-03 (bloque F242-B19)
+
+- **Estado:** la ampliación (E0 a E13) está implementada en la copia local de `feature/tickets-aws-claude-1`, detrás de
+  `categoryAttributes` (apagada), sin push, sin despliegue y sin encender en ninguna empresa. **Excepción: H5** (marcas sin corte en 40, commit de back `7d135b76`) actúa sin la bandera y cambia el HTML de las tiendas con 25 a 40 marcas; si se une la rama se decide aparte. Con la bandera apagada,
+  las instantáneas de caracterización de la tienda (`caracterizacionTiendaPublica` 18/18, `consultarCatalogo.golden` 4/4) y las
+  de 10.0 del Seller (9/9) pasan sin cambios.
+- **Dónde están los datos de este documento:** H1 y H2 (empresa única y primer documento de `categorias`) arriba, en
+  «Resultado de H1 y H2»; la medición de velocidad, en «Resultado de la medición de E12». Ambos son de la copia `katuq_dev`,
+  no de producción, y se repiten en una copia fresca el día de encender.
+- **Decisión sobre Q-S2 (límite de consultas propio para el catálogo con facetas):** no se agrega. La CPU de una consulta
+  fue de 20 a 40 ms en OH MY STORE y de 108 ms como máximo en la fuente sintética, contra un umbral de 200 ms. Se vuelve a
+  medir con `scripts/medir-facetas.js --dry-run` antes de encender en cada comercio nuevo, si un comercio pasa de unos 12.000
+  productos o de 12 tipos de cliente con lista, cuando 5 tiendas o más tengan la bandera encendida o si cambia el motor de
+  `catalogoFacetas.js`; si en cualquiera de esos casos el p95 de CPU pasa de 200 ms, un limitador por tienda pasa de propuesto a
+  recomendado. Queda registrado como propuesta, no activado, y Daniel lo lee con los diffs. El razonamiento completo está en la
+  revisión privada.
+- **Qué se puede probar sin Daniel y ya se probó:** motor de facetas y conteos (criterio 1 sobre catálogos sintéticos),
+  catálogo con facetas, precio del cliente mayorista, panel y chips a 1440 y 390 px con Chromium, accesibilidad (axe) en el
+  catálogo, las pestañas y el comparador, comparador con sus candados, feed, lote de atributos en el emulador, y la plantilla,
+  la lectura y el export del Seller con `node --test`.
+- **Lo que no se puede probar sin Daniel:** el criterio 1 en «Networking» de Baudio con sus datos (Baudio no tiene sitio en la
+  copia; 9.12), JSON-LD en una ficha real (12.4), el feed en Merchant Center y Meta (12.5), el `build:prod` y la revisión
+  visual del Seller (10.6), y la frecuencia de recarga de un comercio con Shopify o WooCommerce (los registros de sincronización
+  de producción no se leen desde aquí).
+- **Estado de las 14 preguntas de la propuesta:** quedaron resueltas con la recomendación escrita (aprobación en bloque del
+  2026-10-21). Las que se convirtieron en decisión de presentación o de alcance durante la implementación se listan en
+  `tasks.md`, «Resumen de evidencia al 2026-11-03», punto 2.
+- **H6 (documentos): hecho.** 5.1 y 5.2 están en `[x]`, la tabla de evidencia por bloque está en `tasks.md`, y las casillas que
+  piden contrato o ticket (8.0, 8.6, 13.1) dicen BLOQUEADA y por qué.

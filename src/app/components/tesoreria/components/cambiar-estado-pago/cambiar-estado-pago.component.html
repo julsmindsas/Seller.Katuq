@@ -31,6 +31,14 @@
       <i class="pi pi-info-circle me-1"></i> {{ mensajeContextual }}
     </div>
 
+    <!-- Ticket 1448: cupo de crédito del cliente (se guarda en su ficha si no tiene) -->
+    <div class="mt-3" *ngIf="estadoSeleccionado === 'Credito'">
+      <label class="tk-block-label" for="tk-cupo-credito">{{ 'tesoreria.cambiarEstadoPago.cupoCredito' | translate }}</label>
+      <input id="tk-cupo-credito" type="number" min="1" step="1" class="form-control" [(ngModel)]="cupoCredito"
+             [placeholder]="'tesoreria.cambiarEstadoPago.cupoCreditoEjemplo' | translate">
+      <small class="tk-estado-desc d-block mt-1">{{ 'tesoreria.cambiarEstadoPago.cupoCreditoAyuda' | translate }}</small>
+    </div>
+
     <!-- Motivo -->
     <div class="mt-3">
       <label class="tk-block-label">{{ 'tesoreria.cambiarEstadoPago.motivo' | translate }} <span class="text-danger">*</span></label>

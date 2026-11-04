@@ -60,12 +60,24 @@ export function normalizarHistorialCierres(data: any, periodo: { fechaInicio: st
   }
 
   const resumen = respuesta.resumenGeneral && typeof respuesta.resumenGeneral === 'object' ? respuesta.resumenGeneral : {};
-  const dias = new Set(historial.map((i) => String(i.fecha || '').slice(0, 10)).filter(Boolean));
-  const totalVentas = num(resumen.totalVentas) ?? historial.reduce((s, i) => s + (i.totalVentas || 0), 0);
+  // D-589: un día cuenta si tuvo ventas: el de un cierre con ventas propias, o el día en que
+  // se hizo una venta que otro cierre recogió después. Un cierre que solo recogió ventas
+  // olvidadas ($0 propias) ya no parte el promedio a la mitad.
+  const dias = new Set<string>();
+  for (const i of historial) {
+    if ((i.totalVentas || 0) > 0) dias.add(String(i.fecha || '').slice(0, 10));
+    for (const d of (i.ventasDiasAnteriores?.dias || [])) dias.add(String(d).slice(0, 10));
+  }
+  dias.delete('');
+  const anteriores = (i: any): number => num(i.ventasDiasAnteriores?.total) ?? 0;
+  // El backend ya suma las ventas de días anteriores en resumenGeneral.totalVentas (D-589).
+  const totalVentas = num(resumen.totalVentas) ?? historial.reduce((s, i) => s + (i.totalVentas || 0) + anteriores(i), 0);
   const totalDias = num(resumen.totalDias) ?? dias.size;
   const formas: { [k: string]: number } = {};
   for (const item of historial) {
     for (const [k, v] of Object.entries(item.formasPago as { [k: string]: number })) formas[k] = (formas[k] || 0) + v;
+    // D-589: el efectivo (y demás) de las ventas de días anteriores también entra al resumen.
+    for (const [k, v] of Object.entries(formasPagoComoNumeros(item.ventasDiasAnteriores?.formasPago))) formas[k] = (formas[k] || 0) + v;
   }
 
   respuesta.historial = historial;

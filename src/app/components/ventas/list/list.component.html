@@ -354,7 +354,7 @@
                                                                 [ngClass]="{
                                                                     'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                                     'badge-success': pedido?.estadoPago === 'Aprobado',
-                                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                                    'badge-info': pedido?.estadoPago === 'PreAprobado' || pedido?.estadoPago === 'Credito',
                                                                     'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                                 }">{{ getPaymentStatusDisplay(pedido?.estadoPago).short }}</span>
                                                             <span class="modern-badge pedido-pill"
@@ -441,7 +441,7 @@
                                                                 [ngClass]="{
                                                                     'badge-warning': pedidoDetalle?.estadoPago === 'Pendiente' || pedidoDetalle?.estadoPago === 'Pospendiente',
                                                                     'badge-success': pedidoDetalle?.estadoPago === 'Aprobado',
-                                                                    'badge-info': pedidoDetalle?.estadoPago === 'PreAprobado',
+                                                                    'badge-info': pedidoDetalle?.estadoPago === 'PreAprobado' || pedidoDetalle?.estadoPago === 'Credito',
                                                                     'badge-danger': pedidoDetalle?.estadoPago === 'Rechazado' || pedidoDetalle?.estadoPago === 'Cancelado' || pedidoDetalle?.estadoPago === 'Precancelado'
                                                                 }">{{ 'Pago' | translate }}: {{ getPaymentStatusDisplay(pedidoDetalle?.estadoPago).short }}</span>
                                                             <span class="modern-badge pedido-pill"
@@ -1262,13 +1262,14 @@
                                                     [ngClass]="{
                                                         'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                         'badge-success': pedido?.estadoPago === 'Aprobado',
-                                                        'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                        'badge-info': pedido?.estadoPago === 'PreAprobado' || pedido?.estadoPago === 'Credito',
                                                         'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                     }">
                                                     <i class="status-icon pi" [ngClass]="{
                                                         'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                         'pi-check-circle': pedido?.estadoPago === 'Aprobado',
                                                         'pi-eye': pedido?.estadoPago === 'PreAprobado',
+ 'pi-calendar': pedido?.estadoPago === 'Credito',
                                                         'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                     }"></i>
                                                     {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
@@ -2008,10 +2009,10 @@
                         <span class="status-badge" [ngClass]="{
                             'badge-warning': pedidoSeleccionado?.estadoPago === 'Pendiente' || pedidoSeleccionado?.estadoPago === 'Pospendiente',
                             'badge-success': pedidoSeleccionado?.estadoPago === 'Aprobado',
-                            'badge-info': pedidoSeleccionado?.estadoPago === 'PreAprobado',
+                            'badge-info': pedidoSeleccionado?.estadoPago === 'PreAprobado' || pedidoSeleccionado?.estadoPago === 'Credito',
                             'badge-danger': pedidoSeleccionado?.estadoPago === 'Rechazado' || pedidoSeleccionado?.estadoPago === 'Cancelado'
                         }">
-                            {{ pedidoSeleccionado?.estadoPago }}
+                            {{ etiquetaEstadoPago(pedidoSeleccionado?.estadoPago) }}
                         </span>
                     </div>
                     <div class="status-arrow">
@@ -2037,7 +2038,7 @@
                     <select class="form-select estado-select" [(ngModel)]="tempEstadoPago">
                         <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
                         <option *ngFor="let estado of getAvailablePaymentStates(); trackBy: trackByEstado" [value]="estado">
-                            {{ estado }}
+                            {{ etiquetaEstadoPago(estado) }}
                         </option>
                     </select>
                 </div>
@@ -2088,6 +2089,14 @@
                     <div>
                         <strong>{{ 'Nota' | translate }}</strong>
                         <p>{{ 'Se marcará como aprobación manual.' | translate }}</p>
+                    </div>
+                </div>
+
+                <div class="custom-alert alert-warning-custom" *ngIf="tempEstadoPago === 'Credito' && originalEstadoPago !== 'Credito'">
+                    <i class="pi pi-calendar"></i>
+                    <div>
+                        <strong>Nota</strong>
+                        <p>Con Crédito el pedido se produce, se despacha y se entrega sin cobrar. El saldo queda en Cartera. Si el cliente no tiene cupo, te lo pediremos.</p>
                     </div>
                 </div>
 

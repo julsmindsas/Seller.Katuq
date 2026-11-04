@@ -18,8 +18,36 @@
   </div>
 
   <form [formGroup]="form" class="row g-3">
+    <!-- Ticket 1449: paso 1, el comprobante -->
+    <div class="col-12" *ngIf="comprobantePrimero">
+      <div class="tk-reg-titulo">{{ 'tesoreria.registrarPago.paso1Titulo' | translate }}</div>
+      <p class="tk-reg-ayuda">{{ 'tesoreria.registrarPago.paso1Ayuda' | translate }}</p>
+      <ng-container *ngTemplateOutlet="zonaArchivo"></ng-container>
+      <div class="tk-reg-estado" *ngIf="subiendoArchivo || leyendo" role="status">
+        <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+        {{ (subiendoArchivo ? 'tesoreria.registrarPago.subiendoComprobante' : 'tesoreria.registrarPago.leyendo') | translate }}
+      </div>
+      <div class="tk-reg-estado tk-reg-estado--ok" *ngIf="!subiendoArchivo && !leyendo && lectura?.modo === 'ia'" role="status">
+        <i class="pi pi-check-circle" aria-hidden="true"></i> {{ mensajeLectura }}
+      </div>
+      <div class="tk-reg-estado tk-reg-estado--aviso" *ngIf="!subiendoArchivo && !leyendo && mensajeLectura && lectura?.modo !== 'ia'" role="status">
+        <i class="pi pi-info-circle" aria-hidden="true"></i> {{ mensajeLectura }}
+      </div>
+      <div class="tk-reg-estado tk-reg-estado--aviso" *ngIf="faltaComprobanteObligatorio" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i> {{ 'tesoreria.registrarPago.comprobanteObligatorio' | translate }}
+      </div>
+      <label class="tk-reg-verif" for="tk-reg-verificado" *ngIf="mostrarVerificadoEnBanco">
+        <input id="tk-reg-verificado" type="checkbox" [(ngModel)]="verificadoEnBanco" [ngModelOptions]="{standalone: true}">
+        <span class="tk-reg-verif-texto">
+          <strong>{{ 'tesoreria.registrarPago.verificadoEnBanco' | translate }}</strong><br>
+          {{ 'tesoreria.registrarPago.verificadoEnBancoAyuda' | translate }}
+        </span>
+      </label>
+    </div>
+
     <div class="col-md-4">
-      <label class="form-label" for="tk-reg-fecha">{{ 'tesoreria.historialPagos.fecha' | translate }} <span class="text-danger">*</span></label>
+      <label class="form-label" for="tk-reg-fecha">{{ 'tesoreria.historialPagos.fecha' | translate }} <span class="text-danger">*</span>
+        <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('fecha') }"></ng-container></label>
       <input id="tk-reg-fecha" type="date" class="form-control" formControlName="fecha">
     </div>
 
@@ -32,52 +60,88 @@
     </div>
 
     <div class="col-md-4">
-      <label class="form-label" for="tk-reg-valor">{{ 'tesoreria.historialPagos.valor' | translate }} <span class="text-danger">*</span></label>
+      <label class="form-label" for="tk-reg-valor">{{ 'tesoreria.historialPagos.valor' | translate }} <span class="text-danger">*</span>
+        <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('valor') }"></ng-container></label>
       <div class="input-group">
         <span class="input-group-text">$</span>
         <input id="tk-reg-valor" type="number" class="form-control" formControlName="valor" min="0" placeholder="0">
       </div>
       <small class="text-muted d-block mt-1">{{ 'tesoreria.registrarPago.faltaPorPagar2' | translate:{faltaPorPagar: (faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0')} }}</small>
+      <small class="text-muted d-block mt-1" *ngIf="comprobantePrimero">{{ 'tesoreria.registrarPago.valorSinPrellenar' | translate }}</small>
       <div class="text-warning small mt-1" *ngIf="valorExcedido">
         <i class="pi pi-exclamation-triangle"></i> {{ 'tesoreria.registrarPago.elValorSuperaLoQue' | translate }}
       </div>
     </div>
 
     <div class="col-md-6">
-      <label class="form-label" for="tk-reg-ref">{{ 'tesoreria.registrarPago.numeroDeComprobante' | translate }} <span class="text-danger">*</span></label>
+      <label class="form-label" for="tk-reg-ref">{{ 'tesoreria.registrarPago.numeroDeComprobante' | translate }} <span class="text-danger" *ngIf="!(comprobantePrimero && formaSinReferencia)">*</span>
+        <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('referencia') }"></ng-container></label>
       <input id="tk-reg-ref" type="text" class="form-control" formControlName="numeroComprobante" [placeholder]="'tesoreria.registrarPago.ejM1234567' | translate">
     </div>
+
+    <ng-container *ngIf="comprobantePrimero">
+      <div class="col-md-4">
+        <label class="form-label" for="tk-reg-banco">{{ 'tesoreria.registrarPago.banco' | translate }}
+          <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('banco') }"></ng-container></label>
+        <input id="tk-reg-banco" type="text" class="form-control" formControlName="banco" maxlength="40" autocomplete="off">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="tk-reg-hora">{{ 'tesoreria.registrarPago.hora' | translate }}
+          <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('hora') }"></ng-container></label>
+        <input id="tk-reg-hora" type="time" class="form-control" formControlName="hora">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="tk-reg-cuenta">{{ 'tesoreria.registrarPago.cuentaDestino' | translate }}
+          <ng-container *ngTemplateOutlet="insignia; context: { origen: origenCampo('cuentaDestinoUltimos4') }"></ng-container></label>
+        <input id="tk-reg-cuenta" type="text" inputmode="numeric" class="form-control" formControlName="cuentaUltimos4" maxlength="4" autocomplete="off"
+               [placeholder]="'tesoreria.registrarPago.cuentaDestinoEjemplo' | translate">
+        <small class="text-muted d-block mt-1">{{ 'tesoreria.registrarPago.cuentaDestinoAyuda' | translate }}</small>
+      </div>
+    </ng-container>
 
     <div class="col-md-6">
       <label class="form-label" for="tk-reg-notas">{{ 'tesoreria.historialPagos.notas' | translate }}</label>
       <input id="tk-reg-notas" type="text" class="form-control" formControlName="notas" [placeholder]="'tesoreria.registrarPago.observacionesOpcional' | translate">
     </div>
 
-    <!-- Archivo -->
-    <div class="col-12">
-      <label class="form-label">{{ 'tesoreria.registrarPago.comprobanteOpcional' | translate }}</label>
-      <div class="tk-file-drop" [class.is-dragover]="isDragOver" [class.has-file]="selectedFile"
-           (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
-        <input id="tk-reg-archivo" type="file" class="tk-file-input"
-               accept=".pdf,.jpg,.jpeg,.png" (change)="onFileChange($event)">
-        <div class="tk-file-empty" *ngIf="!selectedFile">
-          <i class="pi pi-cloud-upload"></i>
-          <span>{{ 'tesoreria.registrarPago.arrastraElComprobanteOHaz' | translate }}</span>
-          <small>{{ 'tesoreria.registrarPago.pdfJpgOPng' | translate }}</small>
-        </div>
-        <div class="tk-file-selected" *ngIf="selectedFile">
-          <i class="pi pi-file"></i>
-          <span class="tk-file-name">{{ selectedFile.name }}</span>
-          <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeFile()"><i class="pi pi-times"></i></button>
-        </div>
-      </div>
+    <!-- Archivo: con la bandera `comprobantePrimero` va primero (ticket 1449); si no, al final como siempre -->
+    <div class="col-12" *ngIf="!comprobantePrimero">
+      <ng-container *ngTemplateOutlet="zonaArchivo"></ng-container>
     </div>
   </form>
 </div>
 
 <div class="modal-footer">
   <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()" [disabled]="submitting">{{ 'comun.cancelar' | translate }}</button>
-  <button type="button" class="cfg-btn" (click)="registrar()" [disabled]="submitting || form.invalid">
+  <button type="button" class="cfg-btn" (click)="registrar()" [disabled]="submitting || form.invalid || subiendoArchivo || leyendo || faltaComprobanteObligatorio">
     <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> {{ 'tesoreria.registrarPago.registrarYAprobar' | translate }}
   </button>
 </div>
+
+<!-- Zona para soltar o elegir el comprobante (se usa arriba o abajo según la bandera `comprobantePrimero`) -->
+<ng-template #zonaArchivo>
+  <label class="form-label" *ngIf="!comprobantePrimero">{{ 'tesoreria.registrarPago.comprobanteOpcional' | translate }}</label>
+  <div class="tk-file-drop" [class.is-dragover]="isDragOver" [class.has-file]="selectedFile"
+       (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+    <input id="tk-reg-archivo" type="file" class="tk-file-input"
+           [attr.aria-label]="'tesoreria.registrarPago.comprobanteOpcional' | translate"
+           accept=".pdf,.jpg,.jpeg,.png,.webp" (change)="onFileChange($event)">
+    <div class="tk-file-empty" *ngIf="!selectedFile">
+      <i class="pi pi-cloud-upload"></i>
+      <span>{{ 'tesoreria.registrarPago.arrastraElComprobanteOHaz' | translate }}</span>
+      <small>{{ (comprobantePrimero ? 'tesoreria.registrarPago.fotoOCapturaJpgPng' : 'tesoreria.registrarPago.pdfJpgOPng') | translate }}</small>
+    </div>
+    <div class="tk-file-selected" *ngIf="selectedFile">
+      <i class="pi pi-file"></i>
+      <span class="tk-file-name">{{ selectedFile.name }}</span>
+      <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeFile()" [attr.aria-label]="'comun.eliminar' | translate"><i class="pi pi-times"></i></button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Insignia de un campo (ticket 1449): Leído por Katuq / Editado / Revisar. Solo informa; el servidor decide qué quedó editado -->
+<ng-template #insignia let-origen="origen">
+  <small class="tk-reg-origen tk-reg-origen--ia" *ngIf="origen === 'ia'">{{ 'tesoreria.registrarPago.insigniaLeido' | translate }}</small>
+  <small class="tk-reg-origen tk-reg-origen--editado" *ngIf="origen === 'editado'">{{ 'tesoreria.registrarPago.insigniaEditado' | translate }}</small>
+  <small class="tk-reg-origen tk-reg-origen--revisar" *ngIf="origen === 'revisar'">{{ 'tesoreria.registrarPago.insigniaRevisar' | translate }}</small>
+</ng-template>

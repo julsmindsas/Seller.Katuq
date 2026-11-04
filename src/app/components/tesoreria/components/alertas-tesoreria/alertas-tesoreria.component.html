@@ -5,10 +5,10 @@
     <div class="tk-alertas-id">
       <span class="tk-alertas-chip" aria-hidden="true"><i class="pi pi-flag"></i></span>
       <div>
-        <div class="tk-alertas-title">{{ 'tesoreria.alertasTesoreria.alertasAntiFraude' | translate }}</div>
+        <div class="tk-alertas-title">{{ (hayPagoDeMas ? 'tesoreria.alertasTesoreria.tituloAvisos' : 'tesoreria.alertasTesoreria.alertasAntiFraude') | translate }}</div>
         <div class="tk-alertas-sub">
           {{ totalAlertas | number }} {{ soloActivas ? ('tesoreria.alertasTesoreria.alertaSActivaS' | translate) : ('tesoreria.alertasTesoreria.alertaSRegistradaS' | translate) }}
-          · {{ totalGrupos | number }} {{ 'tesoreria.alertasTesoreria.referenciaSDistintas' | translate }}
+          · {{ totalGrupos | number }} {{ (hayPagoDeMas ? 'tesoreria.alertasTesoreria.casosDistintos' : 'tesoreria.alertasTesoreria.referenciaSDistintas') | translate }}
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@
         <div class="tk-alert-top">
           <span class="tk-alert-icon" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
           <span class="tk-alert-type">{{ tipoLabel(grupo) }}</span>
-          <span *ngIf="grupo?.referencia" class="tk-order-chip">{{ grupo.referencia }}</span>
+          <span *ngIf="grupo?.referencia && grupo?.alertType !== 'sobrepago'" class="tk-order-chip">{{ grupo.referencia }}</span>
           <span class="tk-sev-badge" [ngClass]="grupo?.severity === 'high' ? 'sev-high' : 'sev-medium'">
             {{ grupo?.severity === 'high' ? ('tesoreria.alertasTesoreria.alta' | translate) : ('tesoreria.alertasTesoreria.media' | translate) }}
           </span>
@@ -73,7 +73,7 @@
       </div>
 
       <div class="tk-alert-buttons" *ngIf="!grupo?.resolved">
-        <button type="button" class="btn btn-primary tk-btn-sm" (click)="irARevisar()">
+        <button *ngIf="grupo?.alertType !== 'sobrepago'" type="button" class="btn btn-primary tk-btn-sm" (click)="irARevisar()">
           <i class="pi pi-search"></i> {{ 'tesoreria.alertasTesoreria.irARevisar' | translate }}
         </button>
         <button type="button" class="btn btn-outline-secondary tk-btn-sm" [disabled]="resolviendo === grupo.key" (click)="resolver(grupo)">

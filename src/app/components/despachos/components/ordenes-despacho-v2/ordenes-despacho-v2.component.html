@@ -223,7 +223,9 @@
                     </td>
                     <td>{{ formatDate(pedido.fechaEntrega) }}</td>
                     <td class="text-end">
-                      <strong class="text-success">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <strong class="text-success">{{ valorACobrarEnEntrega(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <!-- Ticket 1448: instrucción de cobro que calcula el servidor (solo con la bandera estadoCredito) -->
+                      <div class="cobro-entrega" *ngIf="pedido.cobroEnEntrega?.texto" [ngClass]="'cobro-entrega--' + pedido.cobroEnEntrega.accion">{{ pedido.cobroEnEntrega.texto }}</div>
                     </td>
                   </tr>
                 </tbody>
@@ -330,7 +332,8 @@
                       <small class="text-muted">{{ (pedido.envio?.direccionEntrega || 'N/A') | slice:0:30 }}<span *ngIf="(pedido.envio?.direccionEntrega || '').length > 30">...</span></small>
                     </td>
                     <td class="text-end">
-                      <strong class="text-success" style="font-size: 0.75rem;">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <strong class="text-success" style="font-size: 0.75rem;">{{ valorACobrarEnEntrega(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <div class="cobro-entrega" *ngIf="pedido.cobroEnEntrega?.texto" [ngClass]="'cobro-entrega--' + pedido.cobroEnEntrega.accion">{{ pedido.cobroEnEntrega.texto }}</div>
                       <div class="text-muted" style="font-size: 0.7rem;">{{ formatDate(pedido.fechaEntrega) }}</div>
                     </td>
                   </tr>

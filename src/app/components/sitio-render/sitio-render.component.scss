@@ -1756,3 +1756,182 @@ h3 {
 // raíz es la del panel, así que se aproxima con zoom sobre el lienzo.
 .sitio[data-kq-ajustes~="texto-chico"] { zoom: 0.9375; }
 .sitio[data-kq-ajustes~="texto-grande"] { zoom: 1.0625; }
+
+// ── TX-34 (bloque TX34-B18): vista previa «Celular» = sitio publicado en celular ─────────────────────────────
+// Espejo de `functions/utils/siteCajonLateral.js` (cajón lateral, D8) y de la hoja móvil de `siteTienda.js` / `siteHtml.js`
+// (campos de 16 px de D-461 y áreas de 44 px de D9). Aquí el celular lo marca la clase `.sitio--movil` (el lienzo se
+// estrecha a 390 px) y no una media query, porque el ancho real de la pantalla del editor es otro.
+// Ninguna clase nueva lleva «p-» (trampa de `[class*="p-"]`); los span creados por *ngIf llevan color y tamaño propios
+// (trampa de `span.ng-star-inserted`); sin degradados ni primarios fuera del tema del sitio.
+
+// Campos de formulario: 16 px, para que el iPhone no amplíe la página al tocarlos (D-461). Los campos de la barra del
+// editor (insertar, barra flotante) no son del sitio y no entran: aquí solo hay campos del lienzo.
+.sitio--movil :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+  font-size: 16px !important;
+}
+
+// Áreas de toque de 44 px en lo que el sitio publicado mide así. Se quedan fuera los controles del propio editor
+// (asa, barra flotante, "+" de insertar), que no existen en el sitio publicado.
+.sitio--movil {
+  .cabecera__buscar input { min-height: 44px; }
+  .cabecera__carrito {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+    font-size: max(14px, 0.875rem);
+
+    b { top: 4px; right: 2px; font-size: max(12px, 0.75rem); }
+  }
+  .boton--chico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    font-size: max(14px, 0.875rem);
+  }
+  .cabecera__enlaces a,
+  .cabecera__cats a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: max(14px, 0.875rem);
+  }
+  .catalogo__barra { min-height: 44px; display: flex; align-items: center; font-size: 16px; }
+  .catalogo__chips span { display: inline-flex; align-items: center; min-height: 44px; font-size: max(14px, 0.875rem); }
+  .pie__col a { display: flex; align-items: center; min-height: 44px; }
+  .pie__col h3,
+  .pie__pagos-t { font-size: max(12px, 0.75rem); }
+  .producto__insignia { font-size: max(12px, 0.75rem); }
+}
+
+// «Agregar»: el estilo «Tienda de regalos» fija su tamaño con `.sitio[data-estilo="tienda"] .kq-agregar` (0,3,0); aquí se
+// sube la especificidad para que el mínimo de 14 px y los 44 px valgan también con ese estilo.
+.sitio.sitio--movil[data-estilo] .kq-agregar { min-height: 44px; font-size: max(14px, 0.875rem); }
+
+// Cajón lateral. Sin la bandera no existe ni el botón ni el panel: la cabecera queda como estaba.
+.kq-menu { display: none; }
+.kq-menu__boton {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.sitio--movil .cabecera--cajon {
+  .kq-menu { display: block; order: -3; flex: none; }
+  .cabecera__cats,
+  .cabecera__enlaces { display: none; }
+  .cabecera__buscar { order: 4; max-width: none; width: 100%; flex-basis: 100%; }
+}
+.sitio--movil[data-kq-ajustes~="logo-centro"] .cabecera--cajon .kq-menu { order: 0; }
+
+// La capa va pegada arriba del lienzo y mide lo que el marco del celular (390 × 844): el lienzo se desplaza dentro
+// del marco, así que `position: fixed` cubriría toda la pantalla del editor.
+.kq-menu__ancla {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 90;
+  overflow: visible;
+}
+.kq-menu__capa {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 844px;
+  background: rgba(0, 0, 0, 0.45);
+}
+// Los ajustes de tamaño de texto aplican `zoom` a todo `.sitio`, capa incluida: se compensa para que la capa mida siempre
+// lo que el marco (844 px) y no deje una franja sin oscurecer ni se salga de él.
+.sitio[data-kq-ajustes~="texto-chico"] .kq-menu__capa { height: calc(844px / 0.9375); }
+.sitio[data-kq-ajustes~="texto-grande"] .kq-menu__capa { height: calc(844px / 1.0625); }
+.kq-menu__panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: min(320px, 85%);
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1rem 1.5rem;
+  background: var(--sitio-secundario);
+  color: var(--sitio-texto);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+  text-align: left;
+
+  &:focus { outline: none; }
+  a,
+  .kq-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.4rem 0.5rem;
+    margin: 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: max(14px, 1rem);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: normal;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  a:hover,
+  .kq-menu__item:hover { background: rgba(127, 127, 127, 0.14); }
+  a:focus-visible,
+  .kq-menu__item:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: -3px; }
+}
+.kq-menu__boton:focus-visible,
+.kq-menu__cerrar:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: -3px; }
+.kq-menu__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 56px;
+}
+.kq-menu__titulo {
+  // Es un span creado por *ngIf: sin color y tamaño propios lo pinta la regla global span.ng-star-inserted.
+  color: inherit !important;
+  font-size: max(14px, 1.05rem) !important;
+  font-weight: 700;
+  font-family: var(--sitio-fuente-titulo, inherit);
+}
+.kq-menu__cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: max(14px, 1.25rem);
+  cursor: pointer;
+}
+.kq-menu__grupo { display: flex; flex-direction: column; padding: 0.35rem 0; }
+.kq-menu__grupo + .kq-menu__grupo { border-top: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1)); }
+.kq-menu__grupo--cats a { text-transform: uppercase; letter-spacing: 0.08em; font-size: max(14px, 0.875rem); }
+.sitio[data-kq-ajustes~="menu-mayusculas-si"] .kq-menu__panel :is(.kq-menu__grupo--cats a, nav a) { text-transform: uppercase; letter-spacing: 0.06em; }
+.sitio[data-kq-ajustes~="menu-mayusculas-no"] .kq-menu__panel :is(.kq-menu__grupo--cats a, nav a) { text-transform: none; letter-spacing: normal; }

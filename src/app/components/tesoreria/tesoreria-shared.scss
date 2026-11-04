@@ -164,6 +164,16 @@
   border-radius: 12px;
   padding: 11px 14px;
 }
+// Ticket 1455: quién rechazó el pago y cuándo (nodo creado por *ngIf: color y tamaño propios)
+.tk-reject-quien {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+  letter-spacing: normal;
+}
+.tk-btn-historial-pedido { margin-top: 4px; white-space: nowrap; }
+
 .tk-reject-reason {
   display: inline-flex;
   align-items: center;
