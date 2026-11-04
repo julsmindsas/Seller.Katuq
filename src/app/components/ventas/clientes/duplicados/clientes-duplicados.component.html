@@ -1,4 +1,4 @@
-<!-- Ticket 1462 (D-667): vista de solo lectura, regla de diseño Katuq (cfg-card, cfg-pill, cfg-aviso, cfg-vacio). -->
+<!-- Ticket 1462 (D-667): reporte y unión de duplicados, regla de diseño Katuq (cfg-card, cfg-pill, cfg-aviso, cfg-vacio). -->
 <section class="cfg-card dupl-panel" aria-live="polite">
   <div class="dupl-cabeza">
     <div class="dupl-textos">
@@ -19,8 +19,37 @@
 
   <p class="cfg-aviso dupl-aviso">
     <i class="pi pi-info-circle" aria-hidden="true"></i>
-    <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.soloLectura' | translate }}</span>
+    <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.fusion.aviso' | translate }}</span>
   </p>
+
+  <!-- Última unión hecha: se puede deshacer sin tocar pedidos. -->
+  <div class="cfg-aviso cfg-aviso--ok dupl-aviso" *ngIf="ultimaFusion as u" role="status">
+    <i class="pi pi-check-circle" aria-hidden="true"></i>
+    <span class="dupl-aviso__texto">
+      {{ 'ventas.clientesDuplicados.fusion.hecha' | translate: { duplicado: u.duplicadoNombre || ('ventas.clientesDuplicados.sinNombre' | translate), principal: u.principalNombre || ('ventas.clientesDuplicados.sinNombre' | translate) } }}
+      {{ 'ventas.clientesDuplicados.fusion.hechaPedidos' | translate }}
+      {{ 'ventas.clientesDuplicados.fusion.deshacerNota' | translate }}
+      <span class="dupl-aviso__texto" *ngIf="u.indiceDesactualizado">{{ 'ventas.clientesDuplicados.fusion.indiceDesactualizado' | translate }}</span>
+    </span>
+    <button type="button" class="cfg-btn cfg-btn--sec dupl-reintentar" [disabled]="u.deshaciendo" (click)="deshacerUltima()">
+      {{ (u.deshaciendo ? 'ventas.clientesDuplicados.fusion.deshaciendo' : 'ventas.clientesDuplicados.fusion.deshacer') | translate }}
+    </button>
+    <button type="button" class="cfg-btn cfg-btn--sec dupl-reintentar" [disabled]="u.deshaciendo" (click)="cerrarUltima()">
+      {{ 'ventas.clientesDuplicados.fusion.cerrar' | translate }}
+    </button>
+    <span class="dupl-aviso__texto dupl-aviso__texto--error" *ngIf="u.error" role="alert">
+      {{ 'ventas.clientesDuplicados.fusion.err.' + u.error | translate }}
+    </span>
+  </div>
+
+  <!-- Tras deshacer: algún valor se cambió después de la unión y se dejó como estaba. -->
+  <div class="cfg-aviso cfg-aviso--warn dupl-aviso" *ngIf="avisoDeshecho" role="status">
+    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+    <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.fusion.deshechaParcial' | translate }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec dupl-reintentar" (click)="cerrarAvisoDeshecho()">
+      {{ 'ventas.clientesDuplicados.fusion.cerrar' | translate }}
+    </button>
+  </div>
 
   <p class="cfg-aviso cfg-aviso--error dupl-aviso" *ngIf="error" role="alert">
     <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
@@ -28,7 +57,7 @@
     <button type="button" class="cfg-btn cfg-btn--sec dupl-reintentar" (click)="cargar()">{{ 'ventas.clientesDuplicados.reintentar' | translate }}</button>
   </p>
 
-  <article class="dupl-grupo" *ngFor="let g of grupos; trackBy: trackGrupo">
+  <article class="dupl-grupo" *ngFor="let g of grupos; let gi = index; trackBy: trackGrupo">
     <header class="dupl-grupo__cabeza">
       <span class="cfg-pill" [class.cfg-pill--warn]="g.motivo === 'DOCUMENTO'" [class.cfg-pill--info]="g.motivo !== 'DOCUMENTO'">
         {{ (g.motivo === 'DOCUMENTO' ? 'ventas.clientesDuplicados.motivoDocumento' : 'ventas.clientesDuplicados.motivoNombre') | translate }}
@@ -38,7 +67,111 @@
         {{ 'ventas.clientesDuplicados.resumenGrupo' | translate: { fichas: g.totalFichas, pedidos: g.totalPedidos } }}
         · {{ g.totalSaldo | currency:'COP':'symbol-narrow':'1.0-0' }}
       </span>
+      <button type="button" class="cfg-btn cfg-btn--sec dupl-unir" *ngIf="g.fichas.length > 1 && !fusionAbiertaEn(g)" (click)="iniciarFusion(g)">
+        <i class="pi pi-link" aria-hidden="true"></i>
+        {{ 'ventas.clientesDuplicados.fusion.unir' | translate }}
+      </button>
     </header>
+
+    <!-- Unir dos fichas de este grupo: elegir, mirar qué pasaría, decidir las diferencias y confirmar. -->
+    <section class="dupl-union" *ngIf="fusionAbiertaEn(g) && fusion as f" aria-live="polite">
+      <h3 class="dupl-union__titulo">{{ 'ventas.clientesDuplicados.fusion.titulo' | translate }}</h3>
+      <p class="dupl-union__ayuda">{{ 'ventas.clientesDuplicados.fusion.ayuda' | translate }}</p>
+
+      <div class="dupl-union__elige">
+        <div class="dupl-union__campo">
+          <label class="dupl-etiqueta" [attr.for]="'dupl-principal-' + gi">{{ 'ventas.clientesDuplicados.fusion.principal' | translate }}</label>
+          <select class="dupl-select" [id]="'dupl-principal-' + gi" [disabled]="!!f.trabajando" (change)="elegirPrincipal(g, $any($event.target).value)">
+            <option *ngFor="let x of g.fichas" [value]="x.cd" [selected]="x.cd === f.principalCd">{{ x.nombre || ('ventas.clientesDuplicados.sinNombre' | translate) }} · {{ x.documento }}</option>
+          </select>
+        </div>
+        <div class="dupl-union__campo">
+          <label class="dupl-etiqueta" [attr.for]="'dupl-unida-' + gi">{{ 'ventas.clientesDuplicados.fusion.duplicado' | translate }}</label>
+          <select class="dupl-select" [id]="'dupl-unida-' + gi" [disabled]="!!f.trabajando" (change)="elegirDuplicado(g, $any($event.target).value)">
+            <option *ngFor="let x of g.fichas" [value]="x.cd" [selected]="x.cd === f.duplicadoCd">{{ x.nombre || ('ventas.clientesDuplicados.sinNombre' | translate) }} · {{ x.documento }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Vista previa: lo que se uniría y las diferencias. Aún no se escribe nada. -->
+      <div class="dupl-previa" *ngIf="f.vista as v">
+        <p class="dupl-previa__titulo">{{ 'ventas.clientesDuplicados.fusion.previaTitulo' | translate }}</p>
+        <p class="dupl-previa__pedidos">
+          {{ 'ventas.clientesDuplicados.fusion.pedidosQuedan' | translate: { n: v.resumen.pedidos, saldo: (v.resumen.saldo | currency:'COP':'symbol-narrow':'1.0-0') } }}
+          <span class="dupl-previa__parcial" *ngIf="v.pedidosParcial">{{ 'ventas.clientesDuplicados.parcial' | translate }}</span>
+        </p>
+        <p class="dupl-previa__pedidos" *ngIf="v.resumen.pedidosSinFicha">
+          {{ 'ventas.clientesDuplicados.fusion.pedidosSinFicha' | translate: { n: v.resumen.pedidosSinFicha, saldo: (v.resumen.saldoSinFicha | currency:'COP':'symbol-narrow':'1.0-0') } }}
+        </p>
+        <ul class="dupl-previa__cifras">
+          <li class="dupl-cifra">
+            <span class="dupl-etiqueta">{{ 'ventas.clientesDuplicados.fusion.direcciones' | translate }}</span>
+            <span class="dupl-cifra__valor">{{ v.resumen.direcciones.nuevos }}</span>
+          </li>
+          <li class="dupl-cifra">
+            <span class="dupl-etiqueta">{{ 'ventas.clientesDuplicados.fusion.perfiles' | translate }}</span>
+            <span class="dupl-cifra__valor">{{ v.resumen.perfiles.nuevos }}</span>
+          </li>
+          <li class="dupl-cifra">
+            <span class="dupl-etiqueta">{{ 'ventas.clientesDuplicados.fusion.contactos' | translate }}</span>
+            <span class="dupl-cifra__valor">{{ v.resumen.contactos.nuevos }}</span>
+          </li>
+          <li class="dupl-cifra">
+            <span class="dupl-etiqueta">{{ 'ventas.clientesDuplicados.fusion.notas' | translate }}</span>
+            <span class="dupl-cifra__valor">{{ v.resumen.notas.nuevos }}</span>
+          </li>
+          <li class="dupl-cifra">
+            <span class="dupl-etiqueta">{{ 'ventas.clientesDuplicados.fusion.etiquetas' | translate }}</span>
+            <span class="dupl-cifra__valor">{{ v.resumen.etiquetas.nuevos }}</span>
+          </li>
+        </ul>
+        <p class="dupl-previa__nota">{{ 'ventas.clientesDuplicados.fusion.sinRepetir' | translate }}</p>
+
+        <ul class="dupl-choques" *ngIf="v.choques.length">
+          <li class="dupl-choque" *ngFor="let c of v.choques" [class.dupl-choque--pide]="c.bloqueante">
+            <span class="dupl-choque__texto" [id]="'dupl-choque-' + gi + '-' + c.codigo">
+              {{ 'ventas.clientesDuplicados.fusion.choque.' + c.codigo | translate: { principal: valorChoque(c, 'principal'), duplicado: valorChoque(c, 'duplicado'), cantidad: c.cantidad || 0 } }}
+            </span>
+            <div class="dupl-opciones" *ngIf="c.bloqueante" role="radiogroup" [attr.aria-labelledby]="'dupl-choque-' + gi + '-' + c.codigo">
+              <label class="dupl-opcion">
+                <input type="radio" [name]="'dupl-dec-' + gi + '-' + c.codigo" [checked]="decisionDe(c) === 'principal'" (change)="decidir(c, 'principal')">
+                <span class="dupl-opcion__texto">{{ 'ventas.clientesDuplicados.fusion.dejarPrincipal' | translate: { valor: valorChoque(c, 'principal') } }}</span>
+              </label>
+              <label class="dupl-opcion">
+                <input type="radio" [name]="'dupl-dec-' + gi + '-' + c.codigo" [checked]="decisionDe(c) === 'duplicado'" (change)="decidir(c, 'duplicado')">
+                <span class="dupl-opcion__texto">{{ 'ventas.clientesDuplicados.fusion.dejarDuplicado' | translate: { valor: valorChoque(c, 'duplicado') } }}</span>
+              </label>
+            </div>
+          </li>
+        </ul>
+        <p class="cfg-aviso cfg-aviso--warn dupl-aviso" *ngIf="faltaDecidir" role="status">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.fusion.faltaDecidir' | translate }}</span>
+        </p>
+      </div>
+
+      <p class="cfg-aviso cfg-aviso--error dupl-aviso" *ngIf="f.error" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span class="dupl-aviso__texto">{{ 'ventas.clientesDuplicados.fusion.err.' + f.error | translate }}</span>
+      </p>
+
+      <div class="dupl-union__acciones">
+        <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="!!f.trabajando" (click)="cancelarFusion()">
+          {{ 'ventas.clientesDuplicados.fusion.cancelar' | translate }}
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="f.vista" [disabled]="!!f.trabajando" (click)="verVistaPrevia()">
+          {{ 'ventas.clientesDuplicados.fusion.revisarDeNuevo' | translate }}
+        </button>
+        <button type="button" class="cfg-btn" *ngIf="!f.vista" [disabled]="!!f.trabajando || f.principalCd === f.duplicadoCd" (click)="verVistaPrevia()">
+          <i class="pi" [ngClass]="f.trabajando === 'previa' ? 'pi-spin pi-spinner' : 'pi-eye'" aria-hidden="true"></i>
+          {{ (f.trabajando === 'previa' ? 'ventas.clientesDuplicados.fusion.revisando' : 'ventas.clientesDuplicados.fusion.verPrevia') | translate }}
+        </button>
+        <button type="button" class="cfg-btn" *ngIf="f.vista" [disabled]="!puedeUnir" (click)="confirmarFusion(g)">
+          <i class="pi" [ngClass]="f.trabajando === 'unir' ? 'pi-spin pi-spinner' : 'pi-link'" aria-hidden="true"></i>
+          {{ (f.trabajando === 'unir' ? 'ventas.clientesDuplicados.fusion.uniendo' : 'ventas.clientesDuplicados.fusion.confirmar') | translate }}
+        </button>
+      </div>
+    </section>
 
     <ul class="dupl-fichas">
       <li class="dupl-ficha" *ngFor="let f of g.fichas; trackBy: trackFicha">

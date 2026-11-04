@@ -223,7 +223,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             email: f.email,
             estado: f.estado,
             tipoCliente: f.tipoCliente,
-            etiquetas: f.etiquetas
+            etiquetas: f.etiquetas,
+            ocultarFusionados: this.features.isEnabled('calidadDatosClientes')
         };
     }
 

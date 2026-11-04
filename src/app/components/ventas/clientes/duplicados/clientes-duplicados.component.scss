@@ -37,6 +37,7 @@
 
 .dupl-aviso { align-items: center; flex-wrap: wrap; }
 .dupl-aviso__texto { flex: 1 1 200px; min-width: 0; font-size: 13px; color: inherit; }
+.dupl-aviso__texto--error { color: var(--ds-err); font-weight: 700; }
 .dupl-reintentar { min-height: 34px; }
 
 // ── Grupos ──
@@ -69,6 +70,80 @@
   letter-spacing: normal;
   color: var(--ds-warn);
 }
+
+// ── Unir dos fichas (paso B): panel plano dentro del grupo, tokens --ds-*, sin gradientes ──
+.dupl-unir { min-height: 36px; padding: 0 12px; margin-left: auto; }
+
+.dupl-union {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-radius: 16px;
+}
+
+.dupl-union__titulo { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: normal; color: var(--ds-ink); }
+.dupl-union__ayuda { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: normal; color: var(--ds-body); }
+
+.dupl-union__elige { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; }
+.dupl-union__campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.dupl-etiqueta {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+
+.dupl-select {
+  min-height: 40px;
+  width: 100%;
+  padding: 0 10px;
+  background: var(--ds-chip-bg);
+  border: 1px solid var(--ds-control-border);
+  border-radius: 10px;
+  color: var(--ds-ink);
+  font-size: 13.5px;
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+}
+
+.dupl-previa {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
+  border-radius: 11px;
+}
+
+.dupl-previa__titulo { margin: 0; font-size: 13.5px; font-weight: 800; letter-spacing: normal; color: var(--ds-ink); }
+.dupl-previa__pedidos { margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: normal; color: var(--ds-body); }
+.dupl-previa__parcial { display: block; font-size: 12px; color: var(--ds-warn); }
+.dupl-previa__nota { margin: 0; font-size: 12px; letter-spacing: normal; color: var(--ds-muted); }
+
+.dupl-previa__cifras { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.dupl-cifra { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: var(--ds-surface); border: 1px solid var(--ds-line); border-radius: 11px; }
+.dupl-cifra__valor { font-size: 18px; font-weight: 800; color: var(--ds-ink); }
+
+.dupl-choques { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dupl-choque { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--ds-surface); border: 1px solid var(--ds-line); border-radius: 11px; }
+.dupl-choque--pide { background: var(--ds-warn-soft); border-color: var(--ds-line); }
+.dupl-choque__texto { font-size: 13px; line-height: 1.5; color: var(--ds-body); overflow-wrap: anywhere; }
+.dupl-choque--pide .dupl-choque__texto { color: var(--ds-warn); font-weight: 700; }
+
+.dupl-opciones { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.dupl-opcion { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 32px; }
+.dupl-opcion input { accent-color: #5F3FE0; width: 16px; height: 16px; margin: 0; }
+.dupl-opcion input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+.dupl-opcion__texto { font-size: 13px; color: var(--ds-ink); overflow-wrap: anywhere; }
+
+.dupl-union__acciones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+.dupl-unir:focus-visible, .dupl-union__acciones .cfg-btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
 // ── Fichas del grupo ──
 .dupl-fichas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -128,6 +203,9 @@
   .dupl-ficha { grid-template-columns: 1fr 1fr; }
   .dupl-ficha__quien { grid-column: 1 / -1; }
   .dupl-ficha__abrir { grid-column: 1 / -1; width: 100%; }
+  .dupl-unir { width: 100%; margin-left: 0; }
+  .dupl-union__acciones { flex-direction: column-reverse; }
+  .dupl-union__acciones .cfg-btn { width: 100%; white-space: normal; }
   .dupl-criterios { width: 100%; }
   .dupl-criterios .cfg-btn { flex: 1 1 auto; white-space: normal; }
 }

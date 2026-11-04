@@ -18,6 +18,8 @@ export interface ClientesPaginaParams {
   estado?: string | null;
   tipoCliente?: string | null;
   etiquetas?: string[];
+  /** Con la bandera `calidadDatosClientes`: pide al servidor esconder los clientes ya unidos a otro (ticket 1462). */
+  ocultarFusionados?: boolean;
 }
 
 export interface ClientesPagina {
@@ -61,6 +63,73 @@ export interface DuplicadosPagina {
   escaneadas: number;
 }
 
+/** Elección de quién gana cuando las dos fichas difieren (cupo, plazo o tipo de relación). */
+export type FusionElige = 'principal' | 'duplicado';
+
+export interface FusionDecisiones {
+  cupo?: FusionElige;
+  plazo?: FusionElige;
+  relationType?: FusionElige;
+}
+
+/** Diferencia o aviso de la vista previa de una fusión (POST /v1/clients/merge con dryRun, ticket 1462). */
+export interface FusionChoque {
+  /** CUPO | PLAZO | RELACION (bloquean hasta decidir) · PERFIL_MISMO_DOCUMENTO | COBRO_EN_AMBAS | FORMATO_ANTIGUO (avisan). */
+  codigo: string;
+  bloqueante: boolean;
+  principal?: number | string;
+  duplicado?: number | string;
+  decision?: FusionElige;
+  cantidad?: number;
+  campo?: string;
+}
+
+export interface FusionFicha {
+  cd: string;
+  nombre: string;
+  documento: string;
+  tipoDocumento: string;
+  creditLimit: number;
+  payTermDays: number;
+  relationType: string;
+  pedidos: number;
+  saldo: number;
+}
+
+export interface FusionConteo { nuevos: number; repetidos: number; }
+
+export interface FusionVista {
+  dryRun: true;
+  principal: FusionFicha;
+  duplicado: FusionFicha;
+  resumen: {
+    direcciones: FusionConteo; perfiles: FusionConteo; contactos: FusionConteo; notas: FusionConteo; etiquetas: FusionConteo;
+    pedidos: number; saldo: number;
+    /** Pedidos que solo citan el documento (no la ficha) cuando las dos fichas lo comparten: no se sabe de cuál son. */
+    pedidosSinFicha?: number; saldoSinFicha?: number;
+  };
+  pedidosParcial: boolean;
+  choques: FusionChoque[];
+  sinDecidir: string[];
+  puedeFusionar: boolean;
+}
+
+export interface FusionResultado {
+  dryRun: false;
+  fusionado: true;
+  principalCd: string;
+  duplicadoCd: string;
+  /** Falso si el índice de búsqueda no se pudo sincronizar (la unión quedó hecha). */
+  indiceAlDia?: boolean;
+}
+
+/** Respuesta de deshacer: lo que se revirtió y lo que se dejó porque se cambió después de la unión. */
+export interface FusionDeshecha {
+  deshecho: boolean;
+  restaurado?: string[];
+  noRestaurado?: string[];
+}
+
 /**
  * Lista de clientes de la pantalla «Clientes»: el servidor pagina, ordena, filtra y cuenta.
  * La pantalla propia muestra su carga, así que no se enciende el loader global.
@@ -79,6 +148,7 @@ export class ClientesListaService extends BaseService {
     ];
     texto.forEach(([k, v]) => { if (v && String(v).trim()) { params = params.set(k, String(v).trim()); } });
     (p.etiquetas || []).forEach(t => { params = params.append('etiquetas', t); });
+    if (p.ocultarFusionados) { params = params.set('fusionados', 'ocultar'); }
     return this.http.get<ClientesPagina>(`${environment.urlApi}/v1/clients/list`, {
       params,
       context: new HttpContext().set(SKIP_LOADER, true),
@@ -93,6 +163,30 @@ export class ClientesListaService extends BaseService {
       params,
       context: new HttpContext().set(SKIP_LOADER, true),
     });
+  }
+
+  /**
+   * Vista previa de unir `duplicadoCd` en `principalCd` (solo lee; el servidor responde dryRun por defecto).
+   * Administrador y Tesorería, con la bandera calidadDatosClientes.
+   */
+  previsualizarFusion(principalCd: string, duplicadoCd: string, decisiones?: FusionDecisiones): Observable<FusionVista> {
+    return this.http.post<FusionVista>(`${environment.urlApi}/v1/clients/merge`,
+      { principalCd, duplicadoCd, dryRun: true, decisiones: decisiones || {} },
+      { context: new HttpContext().set(SKIP_LOADER, true) });
+  }
+
+  /** Une de verdad (`dryRun: false`). No toca pedidos, pagos ni facturas. */
+  fusionar(principalCd: string, duplicadoCd: string, decisiones?: FusionDecisiones): Observable<FusionResultado> {
+    return this.http.post<FusionResultado>(`${environment.urlApi}/v1/clients/merge`,
+      { principalCd, duplicadoCd, dryRun: false, decisiones: decisiones || {} },
+      { context: new HttpContext().set(SKIP_LOADER, true) });
+  }
+
+  /** Deshace una unión hecha. */
+  deshacerFusion(principalCd: string, duplicadoCd: string): Observable<FusionDeshecha> {
+    return this.http.post<FusionDeshecha>(`${environment.urlApi}/v1/clients/merge/undo`,
+      { principalCd, duplicadoCd },
+      { context: new HttpContext().set(SKIP_LOADER, true) });
   }
 
   /** Ficha completa (la lista solo trae las columnas de la tabla). */
