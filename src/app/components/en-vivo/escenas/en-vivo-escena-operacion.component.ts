@@ -26,6 +26,7 @@ import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.pue
 import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
+import { sinPedidosSinCerrar } from '../utilidades/flota';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
 import type { CapaPropuesta } from './capa-propuesta';
 import { leerTokens } from './escena-tokens';
@@ -186,13 +187,16 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     return { ...d, burbujasWhatsapp: this.capa?.burbujasLanzadas ?? 0, burbujasVivas: this.capa?.burbujasVivas ?? 0 };
   }
 
-  /** Vuelve a dejar la escena igual al estado real. */
+  /**
+   * Vuelve a dejar la escena igual al estado real. Los "en camino" que ya no siguen en la calle
+   * (de un mensajero, los de días anteriores) no se suben a ninguna moto: el mapa cuenta lo mismo que la flota.
+   */
   sincronizar(): void {
     this.pendienteSync = false;
     const e = this.estado.estado;
     this.ultimaFoto = e.actualizadoEn;
     this.escena?.fijarEtapas(e.etapas);
-    this.escena?.aplicarFoto(e.pedidos, e.flota);
+    this.escena?.aplicarFoto(sinPedidosSinCerrar(e.pedidos, e.flota, e.actualizadoEn), e.flota);
   }
 
   // ----------------------------------------------------------------- montaje

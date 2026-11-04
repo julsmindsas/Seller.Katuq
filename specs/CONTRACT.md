@@ -13117,6 +13117,23 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
 - **Estado:** EN PROD. Backend desde `a9382963` (lo subió otra sesión el 3-nov; el 4-nov producción quedó en `88f67202`) y front desde 2026.11.03.2 (hoy 2026.11.04.1). Comprobado el 4-nov en la pantalla de ALMARA: CARLOS «En ruta · 6 · 45 min», John «En ruta · 4 · 1 h 3 min», «Despachados 36 · 2 mensajeros en la calle», y la alerta «11 pedidos de días anteriores siguen como despachados». Quedan pendientes: el mapa todavía cuenta los pedidos viejos (CARLOS 8, Jairo 3 y maria 1 sobre la calle, con Jairo «En bodega» en la lista); un mensajero sin registrar sale como transportadora con 143 h («Yulie Osorno»); y el radar dice «lleva 155 h 53 min sin producir» en vez de días.
 
+### 2026-11-04 — D-580 (adenda): el mapa, las transportadoras y las horas largas de «En vivo»
+
+- **Por qué:** al comprobar D-580 en la pantalla de ALMARA quedaban tres cifras infladas. El mapa ponía en la moto los pedidos viejos («CARLOS · 8 pedidos» con 6 en la lista, y Jairo con 3 en la calle estando «En bodega»). «Yulie Osorno», que no está en la flota y por eso cuenta como transportadora, salía «En ruta · 11 · 143 h 49 min». Y el radar decía «lleva 155 h 53 min sin producir». El usuario pidió arreglarlas.
+- **Regla nueva:** un envío con transportadora (cualquier nombre fuera de la flota) sigue en camino hasta **5 días** después de su salida; pasado eso es un pedido que nadie cerró, igual que lo de días anteriores de un mensajero propio. No sale en la flota ni en el mapa y entra al aviso `sin_cerrar`, que dice «Por mensajero o transportadora: …» cuando hay una transportadora y manda su nombre completo para abrir su ficha.
+- **Duraciones:** desde 24 h se escriben en días, en el radar del servidor (`duracionTexto`) y en la pantalla (`duracion`): «1 día y 3 h», «6 días».
+- **Backend:** `services/enVivo/radar.js` (`TRANSITO_MAXIMO_MS`, el bloque 3b y `duracionTexto`).
+- **Front:**
+  - `utilidades/flota.ts`: `sigueEnLaCalle` y `sinPedidosSinCerrar`; `armarFlota` aplica los 5 días a las transportadoras.
+  - `utilidades/formato.ts`.
+  - `ficha/utilidades/mensajero.ts`.
+  - La escena de la operación sube a las motos solo lo que sigue en la calle.
+- **Pruebas:**
+  - Las 15 pruebas versionadas de `tests/enVivo` pasan.
+  - Caso de ALMARA en el scratchpad (sin commitear, D-566): «#DAD-014795 lleva 6 días sin producir» y «14 pedidos de días anteriores siguen como despachados · Por mensajero o transportadora: Yulie Osorno (11), Jairo (2) y CARLOS (1)». Un envío de 4 días sigue en ruta.
+  - Front: `armarFlota` deja a CARLOS «en ruta · 1 · 45 min», a Jairo «en bodega» y a enviame «en ruta · 2 · 4 días», sin Yulie; el mapa queda con los mismos pedidos.
+  - `ng build --configuration production` sin errores.
+
 ### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
 - **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
 - **Decisión:**

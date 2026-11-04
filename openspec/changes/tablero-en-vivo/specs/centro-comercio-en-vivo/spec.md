@@ -25,7 +25,7 @@ La pantalla SHALL listar lo que necesita la operación, del más urgente al meno
 | Listo sin despachar (urgente) | un pedido lleva más de 45 minutos listo para salir; la sugerencia nombra un mensajero libre, o la transportadora si va a otra ciudad |
 | Demorado | un pedido lleva más del doble de lo normal de hoy en su etapa, y al menos 60 minutos |
 | Mensajero en la calle | un mensajero lleva más de 80 minutos fuera con pedidos que salieron hoy |
-| Sin cerrar (D-580) | pedidos de días anteriores siguen «despachados» con un mensajero propio; un solo punto con el total y quién los lleva |
+| Sin cerrar (D-580) | pedidos de días anteriores siguen «despachados» con un mensajero propio, o con una transportadora hace más de 5 días; un solo punto con el total y quién los lleva |
 | Sin pago | un pedido lleva más de 90 minutos sin pago confirmado |
 | Racha | en la última hora llegaron al menos 5 pedidos y el doble de lo normal |
 
@@ -42,6 +42,14 @@ MUST mostrarse a lo sumo 3 listos, 2 demorados y 2 sin pago. Un pedido listo que
 #### Scenario: Pedidos de días anteriores sin cerrar (D-580)
 - **WHEN** Carlos salió hoy a las 8:30 a. m. y ya entregó lo de hoy, pero dos pedidos suyos del 30 y 31 de octubre siguen «despachados»
 - **THEN** Carlos sale "En bodega", no "lleva 94 h en la calle", y aparece "2 pedidos de días anteriores siguen como despachados" con la sugerencia de marcarlos entregados
+
+#### Scenario: Envíos con transportadora de hace casi una semana (D-580, adenda)
+- **WHEN** una transportadora tiene 11 pedidos «despachados» hace 6 días y otra, 2 despachados hace 1 y 4 días
+- **THEN** la primera no sale en la flota ni en el mapa, sus 11 pedidos entran al aviso «… siguen como despachados» ("Por mensajero o transportadora: …"), y la segunda sigue "En ruta · 2 · 4 días"
+
+#### Scenario: Tiempos de más de un día
+- **WHEN** un pedido lleva 155 horas y 53 minutos sin producir
+- **THEN** el punto dice "lleva 6 días sin producir"; de 24 a 47 horas se escribe "1 día y N h", y por debajo de 24 horas sigue en horas y minutos
 
 #### Scenario: Todo al día
 - **WHEN** no hay nada listo, demorado ni sin pago
@@ -74,7 +82,7 @@ La pantalla SHALL mostrar los 6 productos más vendidos hoy por el comercio, con
 - **THEN** ese producto baja 2 unidades en la lista
 
 ### Requirement: Paneles sobre la escena
-En pantallas anchas, "Lo próximo" y "Tu flota" SHALL flotar a la izquierda de la escena, y la lista de eventos a la derecha. "Tu flota" muestra cada mensajero, si está en bodega o en ruta, con cuántos pedidos y desde hace cuánto. A un mensajero propio solo se le cuenta lo que salió hoy, y el tiempo corre desde su salida más reciente; las transportadoras cuentan también lo de días anteriores, porque un envío a otra ciudad tarda días. La ficha del mensajero muestra aparte sus pedidos de días anteriores que siguen «despachados» (D-580). La escena MUST encuadrarse para que nada quede tapado, y "Ampliar" MUST quitar los paneles.
+En pantallas anchas, "Lo próximo" y "Tu flota" SHALL flotar a la izquierda de la escena, y la lista de eventos a la derecha. "Tu flota" muestra cada mensajero, si está en bodega o en ruta, con cuántos pedidos y desde hace cuánto. A un mensajero propio solo se le cuenta lo que salió hoy, y el tiempo corre desde su salida más reciente; las transportadoras cuentan también lo de días anteriores, porque un envío a otra ciudad tarda días, pero solo hasta 5 días desde la salida. La ficha del mensajero o de la transportadora muestra aparte lo que ya no cuenta y sigue «despachado», y el mapa MUST NOT poner esos pedidos en una moto o un camión: cuenta lo mismo que la flota (D-580). La escena MUST encuadrarse para que nada quede tapado, y "Ampliar" MUST quitar los paneles.
 
 #### Scenario: Mensajero en ruta
 - **WHEN** Carlos sale con 2 pedidos

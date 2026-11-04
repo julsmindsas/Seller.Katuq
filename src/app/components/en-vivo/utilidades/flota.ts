@@ -31,6 +31,43 @@ export function salioElMismoDia(pedido: PedidoEnVivo, referenciaMs: number | nul
   return ms !== null && diaDeColombia(ms) === diaDeColombia(referenciaMs);
 }
 
+/** Un envío con transportadora tarda días; pasados 5 desde la salida, nadie lo cerró (igual que el radar del servidor). */
+export const TRANSITO_MAXIMO_MS = 5 * 24 * 60 * 60 * 1000;
+
+/**
+ * ¿Sigue en la calle a `referenciaMs`? Lo de un mensajero propio, si salió ese mismo día; lo de una
+ * transportadora, si salió hace 5 días o menos. Lo demás sigue "despachado" porque nadie lo cerró.
+ * Sin referencia no se filtra.
+ */
+export function sigueEnLaCalle(
+  pedido: PedidoEnVivo,
+  tipo: 'mensajero' | 'transportadora',
+  referenciaMs: number | null
+): boolean {
+  if (referenciaMs === null) return true;
+  if (tipo === 'mensajero') return salioElMismoDia(pedido, referenciaMs);
+  const ms = salidaDe(pedido);
+  return ms === null || referenciaMs - ms <= TRANSITO_MAXIMO_MS;
+}
+
+/**
+ * Los pedidos sin los "en camino" que ya no siguen en la calle (`sigueEnLaCalle`; quien no es de
+ * la flota cuenta como transportadora). Así el mapa pone en cada moto lo mismo que cuenta la flota.
+ */
+export function sinPedidosSinCerrar(
+  pedidos: ReadonlyArray<PedidoEnVivo>,
+  flota: ReadonlyArray<MensajeroEnVivo>,
+  referenciaMs: number | null
+): PedidoEnVivo[] {
+  const propios = new Set(flota.map((m) => claveDeNombre(m.nombre)));
+  return pedidos.filter(
+    (p) =>
+      p.etapa !== 'camino' ||
+      !p.transportador ||
+      sigueEnLaCalle(p, propios.has(claveDeNombre(p.transportador)) ? 'mensajero' : 'transportadora', referenciaMs)
+  );
+}
+
 /**
  * Arma la flota para la pantalla: los mensajeros propios que manda el servidor (solo nombre y si
  * van en ruta) más lo que cada uno lleva, sacado de los pedidos "en camino" de la foto, y las
@@ -41,8 +78,8 @@ export function salioElMismoDia(pedido: PedidoEnVivo, referenciaMs: number | nul
  *
  * A un mensajero propio solo se le cuenta lo que salió HOY (el día de `ahoraMs`, o de
  * `actualizadoEn`), y el tiempo es desde su salida más reciente, igual que "lleva X en la calle"
- * del servidor. Las transportadoras sí cuentan lo de días anteriores: un envío a otra ciudad
- * tarda días.
+ * del servidor. Las transportadoras sí cuentan lo de días anteriores, porque un envío a otra
+ * ciudad tarda días, pero solo hasta 5 (`sigueEnLaCalle`).
  */
 export function armarFlota(
   flota: ReadonlyArray<MensajeroEnVivo>,
@@ -65,7 +102,7 @@ export function armarFlota(
   for (const mensajero of flota) {
     const clave = claveDeNombre(mensajero.nombre);
     propios.add(clave);
-    const suyos = (porTransportador.get(clave) ?? []).filter((p) => salioElMismoDia(p, ahoraMs));
+    const suyos = (porTransportador.get(clave) ?? []).filter((p) => sigueEnLaCalle(p, 'mensajero', ahoraMs));
     const salidas = suyos.map((p) => p.horas.camino).filter((h): h is number => typeof h === 'number');
     const respaldo =
       actualizadoEn !== null && typeof mensajero.salioEn === 'number' ? actualizadoEn - mensajero.salioEn : null;
@@ -81,10 +118,12 @@ export function armarFlota(
     });
   }
 
-  porTransportador.forEach((suyos, clave) => {
+  porTransportador.forEach((todos, clave) => {
     if (propios.has(clave)) return;
     // Solo entra lo que el servidor marcó como transportadora externa; lo demás que no esté en la flota se omite.
-    if (!suyos.some((p) => p.tipoTransportador === 'transportadora')) return;
+    if (!todos.some((p) => p.tipoTransportador === 'transportadora')) return;
+    const suyos = todos.filter((p) => sigueEnLaCalle(p, 'transportadora', ahoraMs));
+    if (suyos.length === 0) return;
     const salidas = suyos.map((p) => p.horas.camino).filter((h): h is number => typeof h === 'number');
     salida.push({
       clave,
