@@ -346,6 +346,20 @@ I: por aprobar. II: specs sin tecnología. IV: idempotente por clave. V y X: no 
 ### E8. SEO de las direcciones con filtros
 - Con filtros más allá de la categoría o la marca de la página: `robots noindex,follow` y
   canónica a la página de la categoría o la marca. El sitemap no cambia.
+- **Hecho en 9.7 (parte 2):** «filtros más allá de la página» = cualquier `a.<clave>`, `q`, `ocasion`, `precioMin`,
+  `precioMax`, `presupuesto` u `oferta` con valor, un `cat` o `marca` que NO nombre la propia categoría o marca de la
+  página, o un chip que no sea la marca de la ruta; cuenta aunque el lector no reconozca el valor (una combinación
+  inventada tampoco se indexa). `cat=` o `marca=` que nombran la propia página no son filtro extra (así el `noindex` nunca
+  acompaña a una canónica que apunta a la misma dirección). `orden` y `pagina` siguen como hoy (`noindex`, sin canónica).
+  La canónica es la página de la ruta (`/c/<slug>` aunque se haya elegido una subcategoría con `cat=`, `/marca/<slug>`);
+  si la categoría de la ruta no está en la miga de lo elegido, se queda la de hoy (la categoría elegida, que es una página
+  real) y, sin categoría ni marca, `/?catalogo=1` (con `?catalogo=1&cat=X`, la categoría X). Con `/marca/<slug>?marca=OTRA`
+  manda la marca elegida, como hoy (decisión pendiente de Daniel). Solo con la bandera; si el motor de facetas cae al
+  camino de hoy, la bandera se lee de la empresa y la regla sigue valiendo (S1 no se abre con el servicio degradado). Sin
+  la bandera, nada cambia. `utils/siteHtml.js` deja salir la canónica junto al `noindex` solo cuando el controlador lo
+  pide (`canonicaConNoindex`), contra el comentario de la cabecera (que lo evitaba en el resto de páginas; la señal de
+  `noindex` con canónica a una página indexable es la que pide el diseño, y se vigila en Search Console antes de encender
+  la bandera en un comercio con tráfico orgánico). La copia en caché de estas direcciones lleva siempre la clave con los filtros.
 
 ### E9. Comparador (F4)
 - `GET /v1/sites/public/:slug/comparar?ids=a,b,c,d[&acceso=…]`, con el tope de `eventoLimiter`.
@@ -515,6 +529,11 @@ verdad son los de la fuente sintética. El script marca cada uno en `reglas.p95P
 - Panel, chips, pestañas de F1 (teclado con flechas) y comparador: axe-core con reglas
   WCAG 2.1 A/AA en 0 fallas a 1280 y 390 px, como D-460; foco visible y nombres accesibles
   (cada casilla dice el valor y su conteo).
+- **Hecho en 9.10 (copia local, 3-nov, B12):** 0 fallas de axe (WCAG 2.1 A/AA) DENTRO del catálogo con facetas y de las
+  pestañas de F1, a 1280 y 390 px, con tres tiendas. En la página entera quedan dos fallas que la tienda ya tenía con y
+  sin bandera y que no se tocaron para no cambiar el HTML ni la hoja de todas las tiendas: el enlace «Ir al inicio» del
+  encabezado y el contraste de «Plazo de entrega» y «Quedan pocas unidades». Decisión pendiente de Daniel. El comparador
+  (F4) sigue pendiente de su propia revisión.
 
 ## Hallazgos (H1, H2 y H3 son del paso 3 de D-518 y no esperan la aprobación de la ampliación)
 
