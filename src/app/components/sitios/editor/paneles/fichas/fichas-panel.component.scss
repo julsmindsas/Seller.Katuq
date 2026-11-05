@@ -313,3 +313,39 @@
   font-weight: 600;
   color: var(--kb-muted-2);
 }
+
+// T10: el nombre del catálogo como referencia bajo el nombre corto.
+.catalogo {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--kb-muted-2);
+}
+
+// T10: «Suele ir con»: foto, nombre como se lee en la ficha y acciones.
+.afin {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--kb-line-4);
+  border-radius: 11px;
+  background: #fff;
+
+  &__nombre {
+    min-width: 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--kb-ink);
+    // Dos líneas: en el panel angosto el nombre completo se lee (una sola línea lo cortaba en «Cámara Pan…»).
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

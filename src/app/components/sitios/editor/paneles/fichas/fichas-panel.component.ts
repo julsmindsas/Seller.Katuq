@@ -8,6 +8,7 @@ import {
   FichaProducto,
   PreguntaFicha,
   TOPES_FICHAS,
+  afinesLimpios,
   clavePromesa,
   comoSeLeeAsesor,
   firmaDeAsesor,
@@ -38,9 +39,12 @@ interface ProductoDeFicha {
 }
 
 /**
- * Tienda › Fichas de producto (PLAN-V2 T08): para qué sirve cada producto y lo que pregunta la gente, sin tocar el
+ * Tienda › Fichas de producto (PLAN-V2 T08 y T10): para qué sirve cada producto y lo que pregunta la gente, sin tocar el
  * producto en el catálogo (D-134). Lo pinta el módulo `ficha` del servidor, solo con el diseño nuevo:
+ *  - el nombre corto (T10), con que se lee el producto en su ficha y en sus tarjetas (el carrito y el pedido siguen con
+ *    el del catálogo);
  *  - «Ideal para» y hasta 3 datos clave, en la tarjeta del producto y bajo el título de su ficha;
+ *  - «Suele ir con» (T10): hasta 3 productos que la ficha ofrece con casillas desmarcadas, para sumarlos al carrito;
  *  - «Así se instala» (hasta 5 pasos) y «Preguntas que ya respondimos» (hasta 5), en la ficha;
  *  - «Pregúntale al técnico», que abre WhatsApp con la pregunta (no guarda nada).
  *
@@ -62,6 +66,8 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
   mostrando = TANDA;
   /** El selector de productos está abierto. */
   eligiendo = false;
+  /** T10: producto cuyo «Suele ir con» se está eligiendo en el selector ("" = ninguno). */
+  eligiendoAfines = "";
   /** Filtro de la lista cuando hay muchas fichas. */
   filtro = "";
   /** Nombre y foto de cada producto con ficha (de referencia; no se guardan). */
@@ -96,6 +102,12 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
   get asesores(): AsesorTienda[] {
     const t = this.tienda;
     return (t && Array.isArray(t.asesores) && t.asesores) || [];
+  }
+
+  /** T10: la palanca de venta cruzada del comercio (Tienda): apagada, «Suele ir con» no sale. */
+  get ventaCruzadaApagada(): boolean {
+    const t = this.tienda;
+    return !!t && t.ventaCruzada === false;
   }
 
   get confirmadas(): string[] {
@@ -160,9 +172,11 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
 
   resumenDe(f: FichaProducto): string {
     const partes = [
+      f.nombre ? `Se lee «${f.nombre}»` : "",
       f.ideal ? `Ideal para ${f.ideal}` : "Sin «Ideal para»",
       (f.pasos || []).length ? `${f.pasos!.length} paso${f.pasos!.length === 1 ? "" : "s"}` : "",
       (f.preguntas || []).length ? `${f.preguntas!.length} pregunta${f.preguntas!.length === 1 ? "" : "s"}` : "",
+      (f.afines || []).length ? `suele ir con ${f.afines!.length}` : "",
     ];
     return partes.filter(Boolean).join(" · ");
   }
@@ -190,6 +204,7 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
   /** Los textos de la ficha con un marcador entre corchetes («[POR CONFIRMAR]»): nunca se publican. */
   marcadoresDe(f: FichaProducto): string[] {
     const textos = [
+      f.nombre || "",
       f.ideal || "",
       ...(f.datos || []),
       ...(f.pasos || []),
@@ -259,7 +274,9 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
 
   /** Pide el nombre y la foto solo de las fichas que se ven (de a 24), no de las 200. */
   private cargarVisibles(): void {
-    this.cargarProductos(this.fichasVisibles.map((f) => f.productoId));
+    // T10: también los afines de la ficha abierta (hasta 3), que se muestran con su nombre y su foto.
+    const abierta = this.abierta ? this.fichas.find((f) => f.productoId === this.abierta) : null;
+    this.cargarProductos([...this.fichasVisibles.map((f) => f.productoId), ...((abierta && abierta.afines) || [])]);
   }
 
   private cargarProductos(ids: string[]): void {
@@ -345,6 +362,63 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     this.abierta = this.abierta === id ? "" : id;
     this.nuevoPaso = "";
     this.nuevaPregunta = this.preguntaVacia();
+    // T10: el nombre y la foto de sus afines, para mostrarlos (de a 3, ya en la tanda de 24).
+    const f = this.abierta && this.fichas.find((x) => x.productoId === this.abierta);
+    if (f && (f.afines || []).length) this.cargarProductos(f.afines!);
+  }
+
+  // ── T10: nombre corto y «Suele ir con» ───────────────────────────────────────────────────────────────────────────
+
+  cambiarNombre(f: FichaProducto, valor: string): void {
+    f.nombre = valor;
+    this.avisar();
+  }
+
+  /** El nombre corto es más largo que el del catálogo: no acorta nada. */
+  nombreMasLargo(f: FichaProducto): boolean {
+    const catalogo = (this.productos[f.productoId] && this.productos[f.productoId].titulo) || "";
+    return !!catalogo && !!(f.nombre || "").trim() && (f.nombre || "").trim().length >= catalogo.trim().length;
+  }
+
+  elegirAfines(f: FichaProducto): void {
+    this.eligiendoAfines = f.productoId;
+  }
+
+  get idsAfinesEligiendo(): string[] {
+    const f = this.fichas.find((x) => x.productoId === this.eligiendoAfines);
+    return (f && f.afines) || [];
+  }
+
+  /** El selector devuelve los afines en su orden: sin el propio producto, sin repetir y hasta 3. */
+  aplicarAfines(ids: string[]): void {
+    const f = this.fichas.find((x) => x.productoId === this.eligiendoAfines);
+    this.eligiendoAfines = "";
+    if (!f) return;
+    const propio = (ids || []).includes(f.productoId);
+    f.afines = afinesLimpios(ids, f.productoId);
+    if (propio) this.toastr.info("Un producto no puede ir consigo mismo: lo quitamos de «Suele ir con».");
+    this.cargarProductos(f.afines);
+    this.avisar();
+  }
+
+  quitarAfin(f: FichaProducto, id: string): void {
+    f.afines = (f.afines || []).filter((x) => x !== id);
+    this.avisar();
+  }
+
+  moverAfin(f: FichaProducto, k: number, dir: -1 | 1): void {
+    const lista = (f.afines || []).slice();
+    const destino = k + dir;
+    if (destino < 0 || destino >= lista.length) return;
+    [lista[k], lista[destino]] = [lista[destino], lista[k]];
+    f.afines = lista;
+    this.avisar();
+  }
+
+  /** Cómo se lee un afín en la ficha: su nombre corto si tiene ficha con nombre; si no, el del catálogo. */
+  nombreDeAfin(id: string): string {
+    const f = this.fichas.find((x) => x.productoId === id);
+    return (f && (f.nombre || "").trim()) || this.tituloDe(id);
   }
 
   // ── Edición de una ficha ──────────────────────────────────────────────────────────────────────────────────────

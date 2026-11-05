@@ -1,6 +1,6 @@
 /**
- * Datos de Tienda › Fichas de producto (PLAN-V2 T08) en el editor: los mismos topes y reglas del módulo del servidor
- * (`functions/utils/sitioModulos/ficha.js`). El servidor normaliza al guardar; aquí solo se ayuda y se avisa.
+ * Datos de Tienda › Fichas de producto (PLAN-V2 T08 y T10) en el editor: los mismos topes y reglas del módulo del
+ * servidor (`functions/utils/sitioModulos/ficha.js`). El servidor normaliza al guardar; aquí solo se ayuda y se avisa.
  */
 
 export interface AsesorTienda {
@@ -26,10 +26,17 @@ export interface PreguntaFicha {
 
 export interface FichaProducto {
   productoId: string;
+  /**
+   * T10: el nombre corto con que se LEE el producto en su ficha y en sus tarjetas (el del catálogo, acortado sin cambiar
+   * lo que dice). El producto no cambia (D-134) y el carrito y el pedido siguen con el nombre del catálogo.
+   */
+  nombre?: string;
   ideal?: string;
   datos?: string[];
   pasos?: string[];
   preguntas?: PreguntaFicha[];
+  /** T10: hasta 3 productos que «Suelen ir con» este (ids del catálogo, sin él mismo). */
+  afines?: string[];
 }
 
 export const TOPES_FICHAS = Object.freeze({
@@ -46,7 +53,22 @@ export const TOPES_FICHAS = Object.freeze({
   respuesta: 600,
   nombre: 60,
   especialidad: 60,
+  /** T10: nombre corto y «Suele ir con». */
+  nombreCorto: 60,
+  afines: 3,
 });
+
+/** T10: los afines que se guardan: sin el propio producto, sin repetir y hasta 3 (la misma regla del servidor). */
+export function afinesLimpios(ids: string[] | null | undefined, propio: string): string[] {
+  const salida: string[] = [];
+  for (const id of ids || []) {
+    const limpio = String(id || "").trim();
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(limpio) || limpio === propio || salida.includes(limpio)) continue;
+    salida.push(limpio);
+    if (salida.length >= TOPES_FICHAS.afines) break;
+  }
+  return salida;
+}
 
 /** ¿La ficha lleva pasos o preguntas? (cuenta para el tope de 40, igual que el servidor). */
 export function tieneDetalle(f: FichaProducto | null | undefined): boolean {
