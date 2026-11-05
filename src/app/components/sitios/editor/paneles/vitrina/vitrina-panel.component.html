@@ -1,0 +1,82 @@
+<!-- Pestañas de la vitrina del diseño nuevo (PLAN-V2 T15). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<section class="vitrina" *ngIf="bloque">
+  <h4 class="vitrina__subgrupo">Pestañas <small>(diseño nuevo)</small></h4>
+
+  <button type="button" class="vitrina__opcion" [class.is-active]="conPestanas" [attr.aria-pressed]="conPestanas"
+          (click)="conPestanas ? desactivar() : activar()">
+    <span class="vitrina__opcion-txt">
+      <strong>Separar en pestañas</strong>
+      <small>Hasta {{ topes.pestanas }} pestañas («En la casa», «En el negocio»…), cada una con hasta {{ topes.porPestana }} de los productos de esta vitrina.</small>
+    </span>
+    <span class="vitrina__palanca" aria-hidden="true"><span></span></span>
+  </button>
+
+  <ng-container *ngIf="conPestanas">
+    <p class="vitrina__nota">Los productos se eligen arriba, como siempre; aquí marcas cuáles van en cada pestaña. En computador se ven
+      en filas de 4 y en el celular se deslizan de lado. La vista editable los muestra todos seguidos: las pestañas se ven en la
+      Vista fiel.</p>
+    <button type="button" class="vitrina__fiel" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+
+    <ul class="vitrina__avisos" *ngIf="avisosCabecera.length">
+      <li *ngFor="let a of avisosCabecera">{{ a }}</li>
+    </ul>
+    <p class="vitrina__aviso" *ngIf="datos.carrusel">Con pestañas, «Mostrar en carrusel» no se usa: la vitrina va en filas.</p>
+    <p class="vitrina__aviso" *ngIf="!idsVitrina.length">Primero elige los productos de la vitrina (arriba).</p>
+    <p class="vitrina__aviso" *ngIf="listas.length === 1">Con una sola pestaña lista no salen las pestañas: se ven sus productos.</p>
+    <div class="vitrina__aviso" *ngIf="sinPestana.length">
+      <span class="vitrina__aviso-txt">{{ sinPestana.length }} producto{{ sinPestana.length === 1 ? '' : 's' }} de la vitrina no
+        está{{ sinPestana.length === 1 ? '' : 'n' }} en ninguna pestaña y no se ve{{ sinPestana.length === 1 ? '' : 'n' }}.</span>
+      <button type="button" class="vitrina__enlace" *ngIf="pestanas.length && !llena(pestanas[0])" (click)="agregarSueltos()">Ponerlos en la primera pestaña</button>
+    </div>
+
+    <div class="vitrina__pestana" *ngFor="let p of pestanas; let i = index; trackBy: porIndice">
+      <div class="vitrina__cabeza">
+        <strong class="vitrina__nombre">Pestaña {{ i + 1 }}</strong>
+        <div class="vitrina__acciones">
+          <button type="button" class="vitrina__icono" (click)="moverPestana(i, -1)" [disabled]="i === 0" aria-label="Subir esta pestaña">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+          </button>
+          <button type="button" class="vitrina__icono" (click)="moverPestana(i, 1)" [disabled]="i === pestanas.length - 1" aria-label="Bajar esta pestaña">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <button type="button" class="vitrina__quitar" (click)="quitarPestana(i)">Quitar</button>
+        </div>
+      </div>
+
+      <label class="vitrina__etiqueta" [attr.for]="'vitrina-nombre-' + i">Nombre</label>
+      <input [id]="'vitrina-nombre-' + i" type="text" [attr.maxlength]="topes.etiqueta" [(ngModel)]="p.etiqueta" (ngModelChange)="cambiar()"
+             placeholder="En la casa" />
+
+      <span class="vitrina__etiqueta" [id]="'vitrina-prods-' + i">Productos <small class="vitrina__cuenta">({{ p.productoIds?.length || 0 }} de {{ topes.porPestana }})</small></span>
+      <ul class="vitrina__productos" role="group" [attr.aria-labelledby]="'vitrina-prods-' + i">
+        <li *ngFor="let id of idsVitrina">
+          <button type="button" class="vitrina__producto" [class.is-active]="lleva(p, id)" [attr.aria-pressed]="lleva(p, id)"
+                  [disabled]="!lleva(p, id) && llena(p)" (click)="alternar(p, id)">
+            <img class="vitrina__foto" *ngIf="imagenDe(id) as foto" [src]="foto" alt="" />
+            <span class="vitrina__foto vitrina__foto--vacia" *ngIf="!imagenDe(id)"></span>
+            <span class="vitrina__titulo">{{ tituloDe(id) }}</span>
+            <svg class="vitrina__marca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+          </button>
+        </li>
+      </ul>
+
+      <ul class="vitrina__avisos" *ngIf="avisosDe(p, i).length">
+        <li *ngFor="let a of avisosDe(p, i)">{{ a }}</li>
+      </ul>
+    </div>
+
+    <button type="button" class="vitrina__agregar" *ngIf="pestanas.length < topes.pestanas" (click)="agregarPestana()">+ Agregar una pestaña</button>
+  </ng-container>
+
+  <!-- «Agregar a mi propuesta» (T17): solo cuando la página tiene la guía, que es la que sabe atenderlo. -->
+  <button type="button" class="vitrina__opcion" *ngIf="hayGuia || datos.accionSecundaria === 'propuesta'"
+          [class.is-active]="datos.accionSecundaria === 'propuesta'" [attr.aria-pressed]="datos.accionSecundaria === 'propuesta'"
+          (click)="alternarPropuesta()">
+    <span class="vitrina__opcion-txt">
+      <strong>«Agregar a mi propuesta» en cada tarjeta</strong>
+      <small *ngIf="hayGuia">Un segundo botón que suma el producto a la propuesta de la guía de esta página.</small>
+      <small *ngIf="!hayGuia">Esta página no tiene la guía de la propuesta: el botón no se ve hasta que la agregues.</small>
+    </span>
+    <span class="vitrina__palanca" aria-hidden="true"><span></span></span>
+  </button>
+</section>
