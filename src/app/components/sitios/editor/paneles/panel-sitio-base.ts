@@ -15,6 +15,11 @@ export abstract class PanelSitioBase {
   @Input() bloque: BloqueSitio | null = null;
   /** El sitio entero (tema, tienda, páginas). */
   @Input() contenido: ContenidoSitio | null = null;
+  /**
+   * El nombre del sitio (PLAN-V2 T08): la página lo usa donde habla del negocio sin un dato propio («Un técnico de
+   * Baudio»), así que el panel lo muestra igual. Nunca el nombre comercial del maestro, que es la clave de la empresa.
+   */
+  @Input() nombreSitio = "";
   /** Avisa al editor que algo cambió (marca sucio, refresca la previa y programa el guardado). */
   @Output() cambio = new EventEmitter<void>();
   /**

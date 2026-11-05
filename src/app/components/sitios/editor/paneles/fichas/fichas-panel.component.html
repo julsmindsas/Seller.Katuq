@@ -8,7 +8,14 @@
 <h4 class="subgrupo">Quién responde <small>({{ asesores.length }} de {{ topes.asesores }})</small></h4>
 <p class="nota">
   Firman las respuestas y salen en «Pregúntale al técnico». Su nombre y su foto se publican solo si te autorizaron; si no,
-  la página dice «Un técnico de {{ negocio }}».
+  la página dice su especialidad o «Un técnico de {{ negocio }}».
+</p>
+<p class="aviso aviso--info" *ngIf="!asesores.length">
+  La caja «Pregúntale al técnico» sale en tus fichas cuando agregues aquí al menos a una persona (y tu sitio tenga
+  WhatsApp). Sin nadie que responda, la página no dice que hay un técnico.
+</p>
+<p class="aviso" *ngFor="let a of asesoresConMarcador">
+  «{{ a.nombre || a.especialidad }}» tiene un dato entre corchetes. Ese dato no se publica: escribe el real.
 </p>
 
 <div class="repetible" *ngFor="let a of asesores; trackBy: porIndice">
@@ -38,7 +45,7 @@
   <button type="button" class="opcion" [class.is-active]="!!a.autorizado" [attr.aria-pressed]="!!a.autorizado" (click)="alternarAutorizado(a)">
     <span class="opcion__texto">
       <strong>Autorizó publicar su nombre y su foto</strong>
-      <small>Guarda la constancia. Sin autorización la página dice «Un técnico de {{ negocio }}».</small>
+      <small>Guarda la constancia. Sin autorización la página dice «{{ sinPermiso(a) }}».</small>
     </span>
     <span class="palanca"><span></span></span>
   </button>
@@ -56,8 +63,14 @@
 </h4>
 <button type="button" class="agregar" (click)="abrirSelector()">+ Elegir productos con ficha</button>
 
+<p class="aviso aviso--info" *ngFor="let v of vitrinasParciales">
+  En «{{ v.titulo }}», {{ v.con }} de {{ v.total }} productos tienen «Ideal para» o datos. Las tarjetas de una vitrina los
+  muestran cuando todos los tienen, para que no queden huecos entre el nombre y el precio.
+</p>
+
 <div class="campo" *ngIf="fichas.length > 6">
-  <input type="text" [(ngModel)]="filtro" placeholder="Buscar entre tus fichas" aria-label="Buscar entre tus fichas" />
+  <input type="text" [ngModel]="filtro" (ngModelChange)="cambiarFiltro($event)" placeholder="Buscar entre tus fichas"
+         aria-label="Buscar entre tus fichas" />
 </div>
 
 <p class="vacio-fichas" *ngIf="!fichas.length">
@@ -134,6 +147,7 @@
         <input type="date" [ngModel]="q.fecha || ''" (ngModelChange)="cambiarPregunta(q, 'fecha', $event)" aria-label="Fecha de la respuesta" />
       </div>
       <span class="repetible__aviso" *ngIf="!(q.respuesta || '').trim()">Sin respuesta no se publica.</span>
+      <small class="firma" *ngIf="(q.respuesta || '').trim()">Sale firmada: {{ firmaDe(q.asesor) }}{{ q.fecha ? ' · ' + q.fecha : '' }}</small>
     </div>
     <div class="repetible repetible--nueva" *ngIf="(f.preguntas || []).length < topes.preguntas && puedeDetalle(f)">
       <span class="numero">Nueva pregunta</span>
@@ -152,6 +166,11 @@
               [disabled]="!(nuevaPregunta.pregunta || '').trim() || !(nuevaPregunta.respuesta || '').trim()">Agregar pregunta</button>
     </div>
 
+    <!-- Marcadores por llenar: no se publican nunca -->
+    <div class="aviso" *ngFor="let texto of marcadoresDe(f)">
+      «{{ texto }}» tiene un dato entre corchetes. No se publica: escribe el dato real o quítalo.
+    </div>
+
     <!-- Promesas sin confirmar: no se publican -->
     <div class="aviso" *ngFor="let texto of promesasDe(f)">
       «{{ texto }}» promete condiciones de venta (envío, garantía, tiempos o descuentos). No se publica hasta que confirmes que lo
@@ -162,6 +181,10 @@
     <button type="button" class="quitar-ficha" (click)="quitarFicha(f)">Quitar esta ficha</button>
   </div>
 </div>
+
+<button type="button" class="agregar" *ngIf="quedanPorMostrar > 0" (click)="verMas()">
+  Ver {{ quedanPorMostrar > 24 ? 24 : quedanPorMostrar }} fichas más ({{ quedanPorMostrar }} sin mostrar)
+</button>
 
 <app-selector-productos
   *ngIf="eligiendo"

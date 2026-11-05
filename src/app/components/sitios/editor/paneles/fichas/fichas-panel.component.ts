@@ -8,12 +8,28 @@ import {
   FichaProducto,
   PreguntaFicha,
   TOPES_FICHAS,
-  hoyColombia,
+  clavePromesa,
+  comoSeLeeAsesor,
+  firmaDeAsesor,
   idDeAsesor,
+  llevaRanura,
   primeraImagen,
   promesaSinConfirmar,
   tieneDetalle,
+  tieneMarcador,
 } from "./fichas-datos";
+
+/** Cuántas fichas se muestran (y se piden al servidor) por tanda. */
+const TANDA = 24;
+/** Cuántas confirmaciones de promesas guarda el sitio (el servidor corta en 40). */
+const MAX_CONFIRMADAS = 40;
+
+/** Una vitrina en la que solo unos productos tienen «Ideal para» o datos: la página no se los muestra a ninguno. */
+interface VitrinaParcial {
+  titulo: string;
+  con: number;
+  total: number;
+}
 
 /** Lo que el panel muestra de un producto con ficha (nombre y foto, de referencia). */
 interface ProductoDeFicha {
@@ -42,6 +58,8 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
 
   /** Producto cuya ficha está abierta para editar (una a la vez). */
   abierta = "";
+  /** Cuántas fichas de la lista se muestran (de a 24: solo de esas se piden el nombre y la foto). */
+  mostrando = TANDA;
   /** El selector de productos está abierto. */
   eligiendo = false;
   /** Filtro de la lista cuando hay muchas fichas. */
@@ -61,7 +79,7 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarProductos(this.fichas.map((f) => f.productoId));
+    this.cargarVisibles();
   }
 
   // ── Lectura ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -85,8 +103,10 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     return (t && t.promesasConfirmadas) || [];
   }
 
-  /** En la página va el nombre comercial de la empresa (del maestro); el editor no lo tiene a mano. */
-  readonly negocio = "tu negocio";
+  /** El nombre del sitio, el mismo que usa la página para «Un técnico de …». */
+  get negocio(): string {
+    return (this.nombreSitio || "").trim() || "la tienda";
+  }
 
   get conDetalle(): number {
     return this.fichas.filter((f) => tieneDetalle(f)).length;
@@ -97,10 +117,35 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     return tieneDetalle(f) || this.conDetalle < this.topes.conDetalle;
   }
 
-  get fichasVisibles(): FichaProducto[] {
+  /** Las fichas que coinciden con la búsqueda (por nombre ya cargado, «Ideal para» o datos). */
+  private get filtradas(): FichaProducto[] {
     const q = this.filtro.trim().toLowerCase();
     if (!q) return this.fichas;
-    return this.fichas.filter((f) => (this.tituloDe(f.productoId) + " " + (f.ideal || "")).toLowerCase().includes(q));
+    return this.fichas.filter((f) =>
+      [this.productos[f.productoId] ? this.productos[f.productoId].titulo : "", f.ideal || "", ...(f.datos || [])].join(" ").toLowerCase().includes(q)
+    );
+  }
+
+  /** Las que se pintan: de a 24 (la abierta siempre). Solo de estas se piden el nombre y la foto. */
+  get fichasVisibles(): FichaProducto[] {
+    const lista = this.filtradas.slice(0, this.mostrando);
+    const abierta = this.abierta && this.fichas.find((f) => f.productoId === this.abierta);
+    return abierta && !lista.includes(abierta) ? [...lista, abierta] : lista;
+  }
+
+  get quedanPorMostrar(): number {
+    return Math.max(0, this.filtradas.length - this.mostrando);
+  }
+
+  verMas(): void {
+    this.mostrando += TANDA;
+    this.cargarVisibles();
+  }
+
+  cambiarFiltro(valor: string): void {
+    this.filtro = valor;
+    this.mostrando = TANDA;
+    this.cargarVisibles();
   }
 
   tituloDe(id: string): string {
@@ -127,9 +172,55 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     return a ? a.nombre || a.especialidad || "Sin nombre" : "";
   }
 
-  /** Lo que se lee en la página como quien responde. */
+  /** Lo que se lee en la página como quien responde (la misma regla del servidor). */
   comoSeLee(a: AsesorTienda): string {
-    return a.autorizado && a.nombre ? a.nombre : `Un técnico de ${this.negocio}`;
+    return comoSeLeeAsesor(a, this.nombreSitio);
+  }
+
+  /** Cómo se lee esta persona si no autoriza publicar su nombre y su foto. */
+  sinPermiso(a: AsesorTienda): string {
+    return comoSeLeeAsesor({ ...a, autorizado: false }, this.nombreSitio);
+  }
+
+  /** La firma con que sale una respuesta, sin la fecha («Respondió un técnico de redes y WiFi»). */
+  firmaDe(id: string | undefined): string {
+    return firmaDeAsesor(this.asesores.find((x) => x.id === id) || null, this.nombreSitio);
+  }
+
+  /** Los textos de la ficha con un marcador entre corchetes («[POR CONFIRMAR]»): nunca se publican. */
+  marcadoresDe(f: FichaProducto): string[] {
+    const textos = [
+      f.ideal || "",
+      ...(f.datos || []),
+      ...(f.pasos || []),
+      ...(f.preguntas || []).reduce((acc: string[], q) => acc.concat([q.pregunta || "", q.respuesta || ""]), []),
+    ];
+    return Array.from(new Set(textos.filter((t) => tieneMarcador(t))));
+  }
+
+  /** Quien responde con un marcador en su nombre o su especialidad: ese dato no se publica. */
+  get asesoresConMarcador(): AsesorTienda[] {
+    return this.asesores.filter((a) => tieneMarcador(a.nombre) || tieneMarcador(a.especialidad));
+  }
+
+  /**
+   * Las vitrinas (inicio y páginas) en las que solo unos productos tienen «Ideal para» o datos: la tarjeta los muestra
+   * en todos los productos de la vitrina o en ninguno, para no dejar huecos entre el nombre y el precio.
+   */
+  get vitrinasParciales(): VitrinaParcial[] {
+    const c: any = this.contenido;
+    if (!c || !this.fichas.length) return [];
+    const porId = new Map(this.fichas.map((f) => [f.productoId, f] as [string, FichaProducto]));
+    const bloques: any[] = [...(c.bloques || []), ...((c.paginas || []) as any[]).reduce((acc: any[], p: any) => acc.concat(p.bloques || []), [])];
+    const salida: VitrinaParcial[] = [];
+    for (const b of bloques) {
+      if (!b || b.tipo !== "productos" || b.visible === false) continue;
+      const ids: string[] = ((b.datos && b.datos.productoIds) || []).filter(Boolean);
+      if (!ids.length) continue;
+      const con = ids.filter((id) => llevaRanura(porId.get(id), this.confirmadas)).length;
+      if (con > 0 && con < ids.length) salida.push({ titulo: String((b.datos && b.datos.titulo) || "Productos").trim() || "Productos", con, total: ids.length });
+    }
+    return salida;
   }
 
   /** Los textos de la ficha que prometen algo sin confirmar: no se publican hasta confirmarlos. */
@@ -166,9 +257,14 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     return this.fichas.map((f) => f.productoId);
   }
 
+  /** Pide el nombre y la foto solo de las fichas que se ven (de a 24), no de las 200. */
+  private cargarVisibles(): void {
+    this.cargarProductos(this.fichasVisibles.map((f) => f.productoId));
+  }
+
   private cargarProductos(ids: string[]): void {
-    const faltan = ids.filter((id) => id && !this.productos[id]);
-    if (!faltan.length) return;
+    const faltan = ids.filter((id) => id && !this.productos[id]).slice(0, TANDA);
+    if (!faltan.length || this.cargandoProductos) return;
     this.cargandoProductos = true;
     this.service.productosPorIds(faltan).subscribe({
       next: (res) => {
@@ -177,6 +273,10 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
           const crear: any = p.crearProducto || {};
           this.productos[p.cd] = { titulo: crear.titulo || "Sin nombre", imagen: primeraImagen(crear) };
         }
+        // Un id que ya no existe en el catálogo no se vuelve a pedir.
+        for (const id of faltan) if (!this.productos[id]) this.productos[id] = { titulo: "", imagen: null };
+        // Lo que quedó por cargar mientras esta tanda volvía (otra búsqueda, «Ver más»).
+        this.cargarVisibles();
       },
       error: () => {
         this.cargandoProductos = false;
@@ -218,9 +318,9 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
       }
     }
     t.fichas = elegidos.map((id) => porId.get(id) || { productoId: id });
-    this.cargarProductos(elegidos);
     const nueva = elegidos.find((id) => !porId.has(id));
     if (nueva) this.abrir(nueva);
+    this.cargarVisibles();
     this.avisar();
   }
 
@@ -316,16 +416,28 @@ export class FichasPanelComponent extends PanelSitioBase implements OnInit {
     this.avisar();
   }
 
-  /** Confirmar una promesa la deja publicar, igual que «Confirma lo que promete tu sitio» al publicar. */
+  /**
+   * Confirmar una promesa la deja publicar, igual que «Confirma lo que promete tu sitio» al publicar. No repite una que
+   * ya está, y al llegar a 40 avisa en vez de borrar en silencio las más viejas (que pueden ser las de otras páginas).
+   */
   confirmarPromesa(texto: string): void {
     const t = this.tienda;
     if (!t) return;
-    t.promesasConfirmadas = [...(t.promesasConfirmadas || []), texto].slice(-40);
+    const actuales: string[] = (t.promesasConfirmadas || []).slice();
+    if (actuales.some((c) => clavePromesa(c) === clavePromesa(texto))) return;
+    if (actuales.length >= MAX_CONFIRMADAS) {
+      this.toastr.warning(
+        `Ya confirmaste ${MAX_CONFIRMADAS} frases, el máximo. Cambia esta frase por una que no prometa condiciones, o quita otra de la lista de promesas confirmadas.`
+      );
+      return;
+    }
+    t.promesasConfirmadas = [...actuales, texto];
     this.avisar();
   }
 
+  /** La fecha nace vacía: la página solo muestra la fecha que el comercio puso (no la de hoy por defecto). */
   private preguntaVacia(): PreguntaFicha {
-    return { pregunta: "", respuesta: "", asesor: "", fecha: hoyColombia() };
+    return { pregunta: "", respuesta: "", asesor: "", fecha: "" };
   }
 
   // ── Quién responde ────────────────────────────────────────────────────────────────────────────────────────────

@@ -8,7 +8,10 @@ export interface AsesorTienda {
   nombre?: string;
   especialidad?: string;
   foto?: string;
-  /** Autorizó publicar su nombre y su foto. Sin esto la página dice «Un técnico de {negocio}». */
+  /**
+   * Autorizó publicar su nombre y su foto. Sin esto la página dice su especialidad («Técnico de redes y WiFi») o, sin
+   * especialidad, «Un técnico de {nombre del sitio}» (`comoSeLeeAsesor`).
+   */
   autorizado?: boolean;
 }
 
@@ -95,6 +98,54 @@ const PROMESAS: RegExp[] = [
   /\d{1,2}\s*%\s*(de\s+)?(descuento|dcto|off)/i,
 ];
 const MARCADOR = /\[confirma[^\]]*\]/i;
+
+/**
+ * Un marcador de algo por llenar: «[POR CONFIRMAR]», «[VALOR]». El servidor nunca lo publica (`ficha.js`, MARCADOR),
+ * ni aunque el comercio confirme la frase: hay que escribir el dato real.
+ */
+const CORCHETES = /\[[^\]]{2,}\]/;
+
+export function tieneMarcador(texto: string | null | undefined): boolean {
+  return CORCHETES.test(String(texto || ""));
+}
+
+/** Especialidades que se leen como un oficio, igual que el servidor (`ficha.js`, OFICIO). */
+const OFICIO = /^(t[ée]cnic[oa]|asesora?|ingenier[oa]|especialista|instaladora?|expert[oa]|consultora?)(?![a-záéíóúñ])/i;
+
+const sinMarcador = (v: string | undefined) => (v && !tieneMarcador(v) ? v.trim() : "");
+
+/**
+ * Cómo se lee en la página quien responde, en la caja «Pregúntale al técnico» (la misma regla de `ficha.js`,
+ * `quienResponde`): su nombre si autorizó; si no, su especialidad; si tampoco, «Un técnico de {sitio}».
+ */
+export function comoSeLeeAsesor(a: AsesorTienda | null | undefined, nombreSitio: string): string {
+  const nombre = sinMarcador(a && a.nombre);
+  const especialidad = sinMarcador(a && a.especialidad);
+  if (a && a.autorizado && nombre) return nombre;
+  if (especialidad) return especialidad;
+  return nombreSitio ? `Un técnico de ${nombreSitio}` : "Un técnico de la tienda";
+}
+
+/** La firma de una respuesta en la página, sin la fecha (la misma regla de `ficha.js`, `firmaDe`). */
+export function firmaDeAsesor(a: AsesorTienda | null | undefined, nombreSitio: string): string {
+  const nombre = sinMarcador(a && a.nombre);
+  const especialidad = sinMarcador(a && a.especialidad);
+  if (a && a.autorizado && nombre) return [`Respondió ${nombre}`, especialidad].filter(Boolean).join(" · ");
+  const oficio = especialidad ? OFICIO.exec(especialidad) : null;
+  if (oficio) {
+    const palabra = oficio[1].toLowerCase();
+    const una = /a$/.test(palabra) && palabra !== "especialista";
+    return `Respondió ${una ? "una" : "un"} ${especialidad.charAt(0).toLowerCase()}${especialidad.slice(1)}`;
+  }
+  return nombreSitio ? `Respondió un técnico de ${nombreSitio}` : "Respondió un técnico de la tienda";
+}
+
+/** ¿La ficha pinta algo en la tarjeta («Ideal para» o un dato que se publica)? */
+export function llevaRanura(f: FichaProducto | null | undefined, confirmadas: string[] | null | undefined): boolean {
+  if (!f) return false;
+  const vale = (t: string | undefined) => !!String(t || "").trim() && !tieneMarcador(t) && !promesaSinConfirmar(t || "", confirmadas);
+  return vale(f.ideal) || (f.datos || []).some((x) => vale(x));
+}
 
 export function esPromesa(texto: string): boolean {
   const t = String(texto || "");

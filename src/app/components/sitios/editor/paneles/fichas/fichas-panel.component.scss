@@ -304,3 +304,12 @@
     outline: 3px solid #7c5cff !important;
   }
 }
+
+// La firma con que sale una respuesta en la página (el mismo texto del servidor).
+.firma {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kb-muted-2);
+}
