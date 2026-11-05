@@ -1,0 +1,174 @@
+<!-- Tienda › Fichas de producto (PLAN-V2 T08). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<p class="nota">
+  Cuenta para qué sirve cada producto. Sale en su tarjeta y en su ficha con el diseño nuevo, y se ve completo en la
+  Vista fiel. No cambia el producto en tu catálogo.
+</p>
+
+<!-- ── Quién responde ── -->
+<h4 class="subgrupo">Quién responde <small>({{ asesores.length }} de {{ topes.asesores }})</small></h4>
+<p class="nota">
+  Firman las respuestas y salen en «Pregúntale al técnico». Su nombre y su foto se publican solo si te autorizaron; si no,
+  la página dice «Un técnico de {{ negocio }}».
+</p>
+
+<div class="repetible" *ngFor="let a of asesores; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <span class="numero">{{ comoSeLee(a) }}</span>
+    <button type="button" class="mini mini--quitar" (click)="quitarAsesor(a)">Quitar</button>
+  </div>
+  <div class="asesor">
+    <div class="asesor__foto">
+      <img *ngIf="a.foto" [src]="a.foto" alt="" />
+      <svg *ngIf="!a.foto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.6" /><path d="M2.5 24c.6-5.6 4.6-9 9.5-9s8.9 3.4 9.5 9z" /></svg>
+    </div>
+    <div class="asesor__campos">
+      <input type="text" [maxlength]="topes.nombre" [ngModel]="a.nombre || ''" (ngModelChange)="cambiarAsesor(a, 'nombre', $event)"
+             placeholder="Nombre" aria-label="Nombre de quien responde" />
+      <input type="text" [maxlength]="topes.especialidad" [ngModel]="a.especialidad || ''"
+             (ngModelChange)="cambiarAsesor(a, 'especialidad', $event)" placeholder="Técnico de redes y WiFi" aria-label="Especialidad" />
+    </div>
+  </div>
+  <div class="asesor__acciones">
+    <label class="enlace-texto subir">
+      {{ subiendoFoto === a.id ? 'Subiendo…' : a.foto ? 'Cambiar foto' : 'Subir foto' }}
+      <input type="file" accept="image/*" (change)="subirFoto($event, a)" [disabled]="subiendoFoto === a.id" />
+    </label>
+    <button type="button" class="enlace-texto" *ngIf="a.foto" (click)="quitarFoto(a)">Quitar foto</button>
+  </div>
+  <button type="button" class="opcion" [class.is-active]="!!a.autorizado" [attr.aria-pressed]="!!a.autorizado" (click)="alternarAutorizado(a)">
+    <span class="opcion__texto">
+      <strong>Autorizó publicar su nombre y su foto</strong>
+      <small>Guarda la constancia. Sin autorización la página dice «Un técnico de {{ negocio }}».</small>
+    </span>
+    <span class="palanca"><span></span></span>
+  </button>
+</div>
+
+<div class="nuevo" *ngIf="asesores.length < topes.asesores">
+  <input type="text" [maxlength]="topes.nombre" [(ngModel)]="nuevoAsesor" (keydown.enter)="agregarAsesor()"
+         placeholder="Nombre de quien responde" aria-label="Nombre de quien responde" />
+  <button type="button" class="nuevo__boton" (click)="agregarAsesor()" [disabled]="!nuevoAsesor.trim()">Agregar</button>
+</div>
+
+<!-- ── Fichas ── -->
+<h4 class="subgrupo">
+  Fichas <small>({{ fichas.length }} de {{ topes.fichas }} · {{ conDetalle }} de {{ topes.conDetalle }} con pasos o preguntas)</small>
+</h4>
+<button type="button" class="agregar" (click)="abrirSelector()">+ Elegir productos con ficha</button>
+
+<div class="campo" *ngIf="fichas.length > 6">
+  <input type="text" [(ngModel)]="filtro" placeholder="Buscar entre tus fichas" aria-label="Buscar entre tus fichas" />
+</div>
+
+<p class="vacio-fichas" *ngIf="!fichas.length">
+  Todavía no hay fichas. Elige los productos que más vendes o los que más preguntan y cuenta para qué sirven.
+</p>
+
+<div class="ficha" *ngFor="let f of fichasVisibles; trackBy: porProducto" [class.is-abierta]="abierta === f.productoId">
+  <button type="button" class="ficha__cabeza" (click)="abrir(f.productoId)" [attr.aria-expanded]="abierta === f.productoId">
+    <span class="ficha__foto">
+      <img *ngIf="imagenDe(f.productoId) as img" [src]="img" alt="" />
+    </span>
+    <span class="ficha__titulos">
+      <strong>{{ tituloDe(f.productoId) }}</strong>
+      <small>{{ resumenDe(f) }}</small>
+    </span>
+    <svg class="ficha__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </button>
+
+  <div class="ficha__cuerpo" *ngIf="abierta === f.productoId">
+    <div class="campo">
+      <label [attr.for]="'ideal-' + f.productoId">Ideal para</label>
+      <input [id]="'ideal-' + f.productoId" type="text" [maxlength]="topes.ideal" [ngModel]="f.ideal || ''"
+             (ngModelChange)="cambiarIdeal(f, $event)" placeholder="casas de 2 pisos o con muros gruesos" />
+      <small>Escríbelo como continuación de «Ideal para…». {{ (f.ideal || '').length }} de {{ topes.ideal }}.</small>
+      <small class="alerta" *ngIf="idealRepetido(f)">No repitas «Ideal para»: la página ya lo pone (lo quitamos al guardar).</small>
+    </div>
+
+    <div class="campo">
+      <label>Datos clave <small class="suave">(hasta {{ topes.datos }}, como chips)</small></label>
+      <div class="datos">
+        <input *ngFor="let k of [0, 1, 2]" type="text" [maxlength]="topes.dato" [ngModel]="datoDe(f, k)"
+               (ngModelChange)="cambiarDato(f, k, $event)" [placeholder]="['WiFi 6', 'AX3000', '3 unidades'][k]"
+               [attr.aria-label]="'Dato clave ' + (k + 1)" />
+      </div>
+    </div>
+
+    <p class="aviso" *ngIf="!puedeDetalle(f)">
+      Ya hay {{ topes.conDetalle }} fichas con pasos o preguntas, el máximo. Quítaselos a otra para sumarlos aquí.
+    </p>
+
+    <!-- Así se instala -->
+    <h5 class="subgrupo subgrupo--chico">Así se instala <small>({{ (f.pasos || []).length }} de {{ topes.pasos }})</small></h5>
+    <div class="paso" *ngFor="let paso of f.pasos || []; let k = index; trackBy: porIndice">
+      <span class="paso__n">{{ k + 1 }}</span>
+      <input type="text" [maxlength]="topes.paso" [ngModel]="paso" (ngModelChange)="cambiarPaso(f, k, $event)"
+             [attr.aria-label]="'Paso ' + (k + 1)" />
+      <button type="button" class="mini" (click)="moverPaso(f, k, -1)" [disabled]="k === 0" aria-label="Subir este paso">↑</button>
+      <button type="button" class="mini" (click)="moverPaso(f, k, 1)" [disabled]="k === (f.pasos || []).length - 1" aria-label="Bajar este paso">↓</button>
+      <button type="button" class="mini mini--quitar" (click)="quitarPaso(f, k)">Quitar</button>
+    </div>
+    <div class="nuevo" *ngIf="(f.pasos || []).length < topes.pasos && puedeDetalle(f)">
+      <input type="text" [maxlength]="topes.paso" [(ngModel)]="nuevoPaso" (keydown.enter)="agregarPaso(f)"
+             placeholder="Conectas la primera unidad al módem de tu operador." aria-label="Nuevo paso" />
+      <button type="button" class="nuevo__boton" (click)="agregarPaso(f)" [disabled]="!nuevoPaso.trim()">Agregar</button>
+    </div>
+
+    <!-- Preguntas respondidas -->
+    <h5 class="subgrupo subgrupo--chico">Preguntas que ya respondimos <small>({{ (f.preguntas || []).length }} de {{ topes.preguntas }})</small></h5>
+    <p class="nota nota--chica">Solo preguntas reales de tus clientes, con su respuesta. Salen en la ficha en un acordeón.</p>
+    <div class="repetible" *ngFor="let q of f.preguntas || []; let k = index; trackBy: porIndice">
+      <div class="repetible__cabeza">
+        <span class="numero">Pregunta {{ k + 1 }}</span>
+        <button type="button" class="mini mini--quitar" (click)="quitarPregunta(f, k)">Quitar</button>
+      </div>
+      <input type="text" [maxlength]="topes.pregunta" [ngModel]="q.pregunta || ''" (ngModelChange)="cambiarPregunta(q, 'pregunta', $event)"
+             placeholder="La pregunta, como la hizo el cliente" aria-label="Pregunta" />
+      <textarea rows="3" [maxlength]="topes.respuesta" [ngModel]="q.respuesta || ''" (ngModelChange)="cambiarPregunta(q, 'respuesta', $event)"
+                placeholder="La respuesta del técnico" aria-label="Respuesta"></textarea>
+      <div class="fila-campos">
+        <select [ngModel]="q.asesor || ''" (ngModelChange)="cambiarPregunta(q, 'asesor', $event)" aria-label="Quién respondió">
+          <option value="">Un técnico de {{ negocio }}</option>
+          <option *ngFor="let a of asesores" [value]="a.id">{{ a.nombre || a.especialidad || a.id }}</option>
+        </select>
+        <input type="date" [ngModel]="q.fecha || ''" (ngModelChange)="cambiarPregunta(q, 'fecha', $event)" aria-label="Fecha de la respuesta" />
+      </div>
+      <span class="repetible__aviso" *ngIf="!(q.respuesta || '').trim()">Sin respuesta no se publica.</span>
+    </div>
+    <div class="repetible repetible--nueva" *ngIf="(f.preguntas || []).length < topes.preguntas && puedeDetalle(f)">
+      <span class="numero">Nueva pregunta</span>
+      <input type="text" [maxlength]="topes.pregunta" [(ngModel)]="nuevaPregunta.pregunta" placeholder="¿Me sirve con el módem de mi operador?"
+             aria-label="Nueva pregunta" />
+      <textarea rows="3" [maxlength]="topes.respuesta" [(ngModel)]="nuevaPregunta.respuesta" placeholder="La respuesta del técnico"
+                aria-label="Respuesta de la nueva pregunta"></textarea>
+      <div class="fila-campos">
+        <select [(ngModel)]="nuevaPregunta.asesor" aria-label="Quién respondió">
+          <option value="">Un técnico de {{ negocio }}</option>
+          <option *ngFor="let a of asesores" [value]="a.id">{{ a.nombre || a.especialidad || a.id }}</option>
+        </select>
+        <input type="date" [(ngModel)]="nuevaPregunta.fecha" aria-label="Fecha de la respuesta" />
+      </div>
+      <button type="button" class="nuevo__boton" (click)="agregarPregunta(f)"
+              [disabled]="!(nuevaPregunta.pregunta || '').trim() || !(nuevaPregunta.respuesta || '').trim()">Agregar pregunta</button>
+    </div>
+
+    <!-- Promesas sin confirmar: no se publican -->
+    <div class="aviso" *ngFor="let texto of promesasDe(f)">
+      «{{ texto }}» promete condiciones de venta (envío, garantía, tiempos o descuentos). No se publica hasta que confirmes que lo
+      cumples.
+      <br /><button type="button" (click)="confirmarPromesa(texto)">Sí, lo cumplo</button>
+    </div>
+
+    <button type="button" class="quitar-ficha" (click)="quitarFicha(f)">Quitar esta ficha</button>
+  </div>
+</div>
+
+<app-selector-productos
+  *ngIf="eligiendo"
+  [seleccionados]="idsConFicha"
+  [maximo]="topes.fichas"
+  tituloElegidos="Con ficha"
+  subtitulo="Elige los productos que tendrán «Ideal para», pasos o preguntas. Quitar uno aquí borra su ficha."
+  (confirmar)="aplicarSeleccion($event)"
+  (cerrar)="eligiendo = false">
+</app-selector-productos>
