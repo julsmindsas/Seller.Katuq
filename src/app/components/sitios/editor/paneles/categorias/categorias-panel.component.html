@@ -1,0 +1,61 @@
+<!-- Tienda › Nombres de categorías (tanda N2). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<p class="nota">
+  Tu catálogo guarda los nombres sin tildes y en minúscula. Escribe aquí cómo se deben leer en la página
+  («Cámaras con batería»). Salen en las baldosas de categorías, en el menú y en la fila de categorías del encabezado.
+  No cambian la categoría en tu catálogo.
+</p>
+
+<p class="aviso aviso--info" *ngIf="!cargando && !error && categorias.length && sinNombre">
+  {{ sinNombre }} {{ sinNombre === 1 ? 'categoría visible sale' : 'categorías visibles salen' }} con el nombre del catálogo
+  (mayúscula inicial y sin tildes).
+</p>
+<p class="aviso" *ngIf="error">{{ error }}</p>
+<p class="cargando" *ngIf="cargando">Cargando las categorías de tu catálogo…</p>
+
+<ng-container *ngIf="!cargando && !error">
+  <p class="vacio" *ngIf="!categorias.length">
+    <strong class="vacio__titulo">Tu catálogo todavía no tiene categorías</strong>
+    <span class="vacio__texto">Cuando tus productos tengan categoría, aquí podrás darles un nombre para la página.</span>
+  </p>
+
+  <ng-container *ngIf="categorias.length">
+    <div class="cabeza-lista">
+      <h4 class="subgrupo">Categorías <small>({{ conNombre }} con nombre · tope de {{ topes.entradas }})</small></h4>
+      <input *ngIf="categorias.length > 8" type="search" class="filtro" [(ngModel)]="filtro" (ngModelChange)="mostrando = 24"
+             placeholder="Buscar una categoría" aria-label="Buscar una categoría" />
+    </div>
+
+    <div class="fila-cat" *ngFor="let c of visibles; let i = index; trackBy: porClave" [class.fila-cat--oculta]="c.oculta">
+      <div class="fila-cat__foto" aria-hidden="true">
+        <img *ngIf="c.imagen" [src]="c.imagen" alt="" loading="lazy" />
+        <span class="fila-cat__inicial" *ngIf="!c.imagen">{{ comoSaleSinNombre(c).charAt(0) }}</span>
+      </div>
+      <div class="fila-cat__campos">
+        <label class="fila-cat__rotulo" [attr.for]="'cat-nombre-' + i">
+          <span class="fila-cat__maestro">{{ c.nombre }}</span>
+          <span class="fila-cat__dato">{{ c.total }} {{ c.total === 1 ? 'producto' : 'productos' }}<ng-container *ngIf="c.oculta"> · oculta en la tienda</ng-container></span>
+        </label>
+        <input type="text" [id]="'cat-nombre-' + i" [maxlength]="topes.etiqueta" [ngModel]="etiqueta(c)"
+               (ngModelChange)="cambiar(c, $event)" [placeholder]="comoSaleSinNombre(c)" [disabled]="sinCupo(c)" />
+        <small class="fila-cat__lee">Se lee: <strong class="fila-cat__lee-nombre">{{ seLee(c) }}</strong></small>
+        <p class="aviso aviso--fila" *ngIf="enMayusculas(c)">
+          Va en MAYÚSCULAS. En la página se lee mejor con mayúscula inicial.
+          <br /><button type="button" (click)="pasarAMayusculaInicial(c)">Pasar a mayúscula inicial</button>
+        </p>
+        <p class="aviso aviso--fila" *ngIf="conMarcador(c)">Tiene un dato entre corchetes: no se publica. Escribe el nombre real.</p>
+        <p class="aviso aviso--fila aviso--info" *ngIf="sinCupo(c)">Ya hay {{ topes.entradas }} categorías con nombre: quita uno para nombrar esta.</p>
+        <button type="button" class="enlace-texto" *ngIf="!etiqueta(c) && !sinCupo(c)" (click)="usarDelCatalogo(c)">Empezar con el del catálogo</button>
+      </div>
+    </div>
+
+    <button type="button" class="mas" *ngIf="filtradas.length > mostrando" (click)="verMas()">
+      Ver más categorías ({{ filtradas.length - mostrando }})
+    </button>
+
+    <p class="aviso" *ngIf="huerfanas.length">
+      {{ huerfanas.length }} {{ huerfanas.length === 1 ? 'nombre es de una categoría' : 'nombres son de categorías' }} que ya no
+      está{{ huerfanas.length === 1 ? '' : 'n' }} en tu catálogo ({{ huerfanas[0].etiqueta || huerfanas[0].categoria }}{{ huerfanas.length > 1 ? '…' : '' }}).
+      <br /><button type="button" (click)="quitarHuerfanas()">Quitar {{ huerfanas.length === 1 ? 'ese nombre' : 'esos nombres' }}</button>
+    </p>
+  </ng-container>
+</ng-container>

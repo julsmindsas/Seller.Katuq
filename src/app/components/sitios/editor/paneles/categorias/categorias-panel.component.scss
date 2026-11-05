@@ -1,0 +1,173 @@
+// Tienda › Nombres de categorías (tanda N2): los campos comunes de los paneles más la lista de categorías. Regla de diseño
+// Katuq: acento #5F3FE0, sin degradados, ninguna clase con «p-» y todo span con color y tamaño propios
+// (trampa `span.ng-star-inserted`).
+@import "../barras/campos-panel";
+
+.cargando {
+  margin: 8px 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kb-muted);
+}
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 14px;
+  padding: 16px;
+  border: 1.5px dashed var(--kb-line-4);
+  border-radius: 13px;
+
+  &__titulo {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--kb-ink);
+  }
+
+  &__texto {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--kb-muted-2);
+  }
+}
+
+.cabeza-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 4px 0 10px;
+
+  .subgrupo {
+    margin: 0;
+  }
+}
+
+.filtro {
+  @include kb-input;
+  flex: 1 1 180px;
+  max-width: 240px;
+  padding: 9px 12px;
+}
+
+.fila-cat {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: #fff;
+
+  &--oculta {
+    background: var(--kb-surface-3);
+  }
+
+  &__foto {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    overflow: hidden;
+    background: var(--kb-surface-3);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__inicial {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--kb-muted);
+  }
+
+  &__campos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    input[type="text"] {
+      @include kb-input;
+      padding: 10px 12px;
+    }
+  }
+
+  &__rotulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    margin: 0;
+    letter-spacing: normal;
+  }
+
+  &__maestro {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--kb-muted);
+  }
+
+  &__dato {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--kb-muted-2);
+  }
+
+  &__lee {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--kb-muted-2);
+  }
+
+  &__lee-nombre {
+    font-weight: 800;
+    color: var(--kb-ink);
+  }
+}
+
+.aviso--fila {
+  margin: 0;
+}
+
+.enlace-texto {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--kb-font);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5f3fe0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.mas {
+  @include kb-btn-ghost(10px, 16px, 13px);
+  width: 100%;
+  margin: 4px 0 14px;
+}
+
+// Trampa de CSS global: `p` trae letter-spacing propio; en este panel se lee normal.
+p,
+.nota,
+.aviso,
+.vacio,
+.cargando {
+  letter-spacing: normal;
+}
