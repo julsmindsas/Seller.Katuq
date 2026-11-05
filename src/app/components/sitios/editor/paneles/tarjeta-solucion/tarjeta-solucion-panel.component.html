@@ -1,0 +1,123 @@
+<!-- Tarjeta «solución» del diseño nuevo (PLAN-V2 T14). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<section class="sol" *ngIf="tarjeta">
+  <h5 class="subgrupo">Qué la resuelve</h5>
+  <div class="segmentos" role="group" [attr.aria-label]="'Qué resuelve la tarjeta ' + (indice + 1)">
+    <button type="button" [class.is-activo]="fuente === 'piezas'" [attr.aria-pressed]="fuente === 'piezas'" (click)="elegirFuente('piezas')">Piezas</button>
+    <button type="button" [class.is-activo]="fuente === 'kit'" [attr.aria-pressed]="fuente === 'kit'" (click)="elegirFuente('kit')">Kit</button>
+    <button type="button" [class.is-activo]="fuente === 'nada'" [attr.aria-pressed]="fuente === 'nada'" (click)="elegirFuente('nada')">Sin total</button>
+  </div>
+  <p class="nota" *ngIf="fuente !== 'nada'">La página suma el precio de hoy de cada pieza. Si una se agota o deja de estar a la
+    venta, en vez del total dice «Consúltalo con un asesor».</p>
+
+  <!-- Piezas -->
+  <div class="campo" *ngIf="fuente === 'piezas'">
+    <ul class="sol__piezas" *ngIf="piezas.length">
+      <li class="sol__pieza" *ngFor="let p of piezas; trackBy: porId">
+        <img *ngIf="p.imagen" [src]="p.imagen" alt="" />
+        <span class="sol__nombre">{{ p.titulo || 'Cargando…' }}</span>
+        <button type="button" class="mini mini--quitar" (click)="quitarPieza(p.id)" [attr.aria-label]="'Quitar ' + (p.titulo || 'esta pieza')">Quitar</button>
+      </li>
+    </ul>
+    <button type="button" class="agregar" (click)="eligiendo = true">
+      {{ piezas.length ? 'Cambiar las piezas' : 'Elegir las piezas' }} (hasta {{ topes.piezas }}, una de cada una)
+    </button>
+  </div>
+
+  <!-- Kit de un combo -->
+  <div class="campo" *ngIf="fuente === 'kit'">
+    <label [attr.for]="uid + '-combo'">Kit</label>
+    <select [id]="uid + '-combo'" [ngModel]="t.comboId || ''" (ngModelChange)="elegirCombo($event)" [disabled]="cargandoCombos">
+      <option value="">{{ cargandoCombos ? 'Cargando tus kits…' : 'Elige un kit' }}</option>
+      <option *ngFor="let c of listaCombos || []; trackBy: porId" [value]="c.id">{{ c.nombre }} ({{ c.piezas }} {{ c.piezas === 1 ? 'pieza' : 'piezas' }})</option>
+    </select>
+    <small>Dice «Kit completo» con la suma de las piezas y cantidades del combo, el mismo del plano y del POS. Los combos se
+      crean en Maestros › Combos.</small>
+  </div>
+  <p class="aviso" *ngIf="fuente === 'kit' && listaCombos && t.comboId && !nombreDelCombo">Ese kit ya no está activo: la
+    tarjeta dice «Consúltalo con un asesor».</p>
+
+  <div class="campo">
+    <label [attr.for]="uid + '-nota'">{{ fuente === 'nada' ? 'Nota (opcional)' : 'Nombre corto de lo que la resuelve' }}</label>
+    <input [id]="uid + '-nota'" type="text" [maxlength]="topes.nota" [(ngModel)]="t.nota" (ngModelChange)="cambiar()"
+           [placeholder]="fuente === 'kit' ? '6 piezas para el local' : fuente === 'piezas' ? 'Deco X50, paquete de 3' : 'Lleva cableado: te lo cotiza un asesor.'" />
+    <small *ngIf="fuente === 'piezas'">Sin él, la tarjeta muestra el nombre completo de cada pieza.</small>
+  </div>
+
+  <!-- A dónde lleva -->
+  <h5 class="subgrupo">A dónde lleva</h5>
+  <div class="campo">
+    <label [attr.for]="uid + '-plano'">Espacio del plano</label>
+    <select [id]="uid + '-plano'" [ngModel]="t.plano || ''" (ngModelChange)="elegirPlano($event)">
+      <option value="">Ninguno: usa el botón de arriba</option>
+      <option *ngFor="let e of espacios; trackBy: porValor" [value]="e.valor">{{ e.texto }}</option>
+      <option *ngIf="planoPerdido" [value]="t.plano">{{ t.plano }} (no está en esta página)</option>
+    </select>
+    <small *ngIf="t.plano && !planoPerdido">El botón lleva a ese espacio del plano, con el texto de arriba o, sin texto, «Ver el
+      plano». El destino de arriba no se usa.</small>
+    <small *ngIf="!espacios.length && !planoSinAncla">Esta página no tiene un plano. Agrégalo para que la tarjeta lleve a uno
+      de sus espacios.</small>
+  </div>
+  <p class="aviso" *ngIf="planoSinAncla">El plano de esta página no tiene ancla. Ponle una en Estilo › Ancla para poder
+    enlazar sus espacios.</p>
+  <p class="aviso" *ngIf="planoPerdido">Ese espacio ya no está en un plano visible de esta página: el botón no sale. Elige
+    otro o quítalo.</p>
+  <p class="aviso aviso--info" *ngIf="comboDelEspacio">Ese espacio arma su kit con un combo.
+    <button type="button" (click)="usarKitDelEspacio()">Usar el mismo kit en la tarjeta</button>
+  </p>
+  <p class="aviso" *ngIf="kitDistintoDelPlano">La tarjeta y ese espacio del plano usan kits distintos: dirían totales
+    distintos.</p>
+
+  <div class="campo">
+    <label [attr.for]="uid + '-cta2'">Segundo enlace (opcional)</label>
+    <input [id]="uid + '-cta2'" type="text" [maxlength]="topes.cta2Texto" [(ngModel)]="t.cta2Texto" (ngModelChange)="cambiar()"
+           placeholder="Hablar con un asesor" />
+    <input type="text" class="sol__destino" [(ngModel)]="t.cta2Url" (ngModelChange)="cambiar()" placeholder="Destino: #contacto, /empresas o https://…"
+           [attr.aria-label]="'Destino del segundo enlace de la tarjeta ' + (indice + 1)" />
+  </div>
+
+  <!-- Lo que incluye -->
+  <h5 class="subgrupo">Lo que incluye <small>({{ t.incluye?.length || 0 }} de {{ topes.incluye }})</small></h5>
+  <ul class="sol__lineas" *ngIf="t.incluye?.length">
+    <li *ngFor="let l of t.incluye; let k = index; trackBy: porIndice">
+      <span class="sol__linea">{{ l }}</span>
+      <button type="button" class="mini mini--quitar" (click)="quitarLinea(k)" [attr.aria-label]="'Quitar la línea ' + (k + 1)">Quitar</button>
+    </li>
+  </ul>
+  <div class="sol__nueva" *ngIf="(t.incluye?.length || 0) < topes.incluye">
+    <input type="text" [maxlength]="topes.textoIncluye" [(ngModel)]="nuevaLinea" (keydown.enter)="agregarLinea()"
+           placeholder="Factura electrónica a nombre de tu empresa" [attr.aria-label]="'Nueva línea de la tarjeta ' + (indice + 1)" />
+    <button type="button" class="mini" (click)="agregarLinea()" [disabled]="!nuevaLinea.trim()">Agregar</button>
+  </div>
+
+  <!-- Oscura -->
+  <button type="button" class="opcion" [class.is-active]="oscura" [attr.aria-pressed]="oscura" (click)="alternarOscura()">
+    <span class="opcion__texto">
+      <strong>Tarjeta oscura</strong>
+      <small>Para empresas, con el color de la barra y el pie. Sus enlaces son botones y el primero va relleno.</small>
+    </span>
+    <span class="palanca"><span></span></span>
+  </button>
+  <p class="aviso" *ngIf="oscura && !conEstructura">Tu tema no tiene color de estructura (Estilo › Diseño nuevo): la tarjeta
+    se ve clara.</p>
+
+  <div class="campo" *ngIf="t.imagen">
+    <label [attr.for]="uid + '-alt'">Descripción de la ilustración</label>
+    <input [id]="uid + '-alt'" type="text" [maxlength]="topes.alt" [(ngModel)]="t.alt" (ngModelChange)="cambiar()"
+           placeholder="Plano de una tienda con 6 puntos" />
+    <small>Sin descripción, la imagen se toma como decorativa.</small>
+  </div>
+
+  <p class="aviso" *ngFor="let a of avisos">{{ a }}</p>
+
+  <button type="button" class="enlace-texto" (click)="pedirVistaFiel()">Ver la tarjeta en la Vista fiel</button>
+</section>
+
+<app-selector-productos
+  *ngIf="eligiendo"
+  [seleccionados]="t.productoIds || []"
+  [maximo]="topes.piezas"
+  tituloElegidos="Lo resuelven"
+  subtitulo="Elige hasta 4 piezas. La tarjeta suma una de cada una con el precio del momento en que alguien abra tu página."
+  (confirmar)="aplicarPiezas($event)"
+  (cerrar)="eligiendo = false">
+</app-selector-productos>
