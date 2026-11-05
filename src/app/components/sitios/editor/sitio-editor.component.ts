@@ -2325,6 +2325,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Letra", donde: "Estilo", panel: "diseno", grupo: "letra", claves: "fuente tipografia" },
     { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "kai propuesta diseño" },
     { texto: "Diseño nuevo", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "sistema visual estructura linea premium nuevo" },
+    // Cierre de N1: el control «Títulos de sección» (tema.titulosSeccion) también se encuentra al buscar.
+    { texto: "Títulos de sección", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "titulos grandes tamaño seccion premium" },
   ] as { texto: string; donde: string; panel: string; claves: string; grupo?: string }[];
 
   get ajustesEncontrados(): { texto: string; donde: string; panel: string; grupo?: string }[] {
