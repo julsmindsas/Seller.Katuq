@@ -11,19 +11,21 @@
     <span class="vitrina__palanca" aria-hidden="true"><span></span></span>
   </button>
 
+  <!-- Revisión 6: con el diseño nuevo el panel avisa siempre de los textos que afirman ventas, haya pestañas o no. -->
+  <ul class="vitrina__avisos" *ngIf="avisosCabecera.length">
+    <li *ngFor="let a of avisosCabecera">{{ a }}</li>
+  </ul>
+
   <ng-container *ngIf="conPestanas">
     <p class="vitrina__nota">Los productos se eligen arriba, como siempre; aquí marcas cuáles van en cada pestaña. En computador se ven
-      en filas de 4 y en el celular se deslizan de lado. La vista editable los muestra todos seguidos: las pestañas se ven en la
+      en filas de {{ columnas }}, en tableta de 2 y en el celular se deslizan de lado. La vista editable los muestra todos seguidos: las pestañas se ven en la
       Vista fiel.</p>
     <button type="button" class="vitrina__fiel" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
 
-    <ul class="vitrina__avisos" *ngIf="avisosCabecera.length">
-      <li *ngFor="let a of avisosCabecera">{{ a }}</li>
-    </ul>
-    <p class="vitrina__aviso" *ngIf="datos.carrusel">Con pestañas, «Mostrar en carrusel» no se usa: la vitrina va en filas.</p>
+    <p class="vitrina__aviso" *ngIf="datos.carrusel && listas.length">Con pestañas, «Mostrar en carrusel» no se usa: la vitrina va en filas.</p>
     <p class="vitrina__aviso" *ngIf="!idsVitrina.length">Primero elige los productos de la vitrina (arriba).</p>
     <p class="vitrina__aviso" *ngIf="listas.length === 1">Con una sola pestaña lista no salen las pestañas: se ven sus productos.</p>
-    <div class="vitrina__aviso" *ngIf="sinPestana.length">
+    <div class="vitrina__aviso" *ngIf="sinPestana.length && listas.length">
       <span class="vitrina__aviso-txt">{{ sinPestana.length }} producto{{ sinPestana.length === 1 ? '' : 's' }} de la vitrina no
         está{{ sinPestana.length === 1 ? '' : 'n' }} en ninguna pestaña y no se ve{{ sinPestana.length === 1 ? '' : 'n' }}.</span>
       <button type="button" class="vitrina__enlace" *ngIf="pestanas.length && !llena(pestanas[0])" (click)="agregarSueltos()">Ponerlos en la primera pestaña</button>
@@ -47,7 +49,7 @@
       <input [id]="'vitrina-nombre-' + i" type="text" [attr.maxlength]="topes.etiqueta" [(ngModel)]="p.etiqueta" (ngModelChange)="cambiar()"
              placeholder="En la casa" />
 
-      <span class="vitrina__etiqueta" [id]="'vitrina-prods-' + i">Productos <small class="vitrina__cuenta">({{ p.productoIds?.length || 0 }} de {{ topes.porPestana }})</small></span>
+      <span class="vitrina__etiqueta" [id]="'vitrina-prods-' + i">Productos <small class="vitrina__cuenta">({{ cuenta(p) }} de {{ topes.porPestana }})</small></span>
       <ul class="vitrina__productos" role="group" [attr.aria-labelledby]="'vitrina-prods-' + i">
         <li *ngFor="let id of idsVitrina">
           <button type="button" class="vitrina__producto" [class.is-active]="lleva(p, id)" [attr.aria-pressed]="lleva(p, id)"

@@ -10,10 +10,15 @@ import {
   TOPES_VITRINA,
   afirmaVentas,
   avisosDeCabecera,
+  columnasDelTema,
+  idsDePestana,
   pestanaLista,
   seVenEnComputador,
   tieneMarcador,
 } from "./vitrina-datos";
+
+/** Columnas de la rejilla en tableta (768 a 1023 px), como en la página. */
+const COLUMNAS_TABLETA = 2;
 
 /** Lo que el panel muestra de un producto de la vitrina (nombre y foto, de referencia; no se guarda). */
 interface ProductoDeVitrina {
@@ -81,9 +86,15 @@ export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
     return this.pestanas.length > 0;
   }
 
-  /** Las pestañas que salen en la página (con nombre y productos). */
+  /** Las pestañas que salen en la página (con un nombre que se publica y con productos de la vitrina). */
   get listas(): PestanaVitrina[] {
-    return this.pestanas.filter((p) => pestanaLista(p));
+    return this.pestanas.filter((p) => pestanaLista(p, this.idsVitrina));
+  }
+
+  /** Las columnas de computador de la página: las del tema o 4. */
+  get columnas(): number {
+    const c: any = this.contenido;
+    return columnasDelTema(c && c.tema);
   }
 
   /** ¿La página tiene la guía de la propuesta (T17)? Solo entonces «Agregar a mi propuesta» hace algo. */
@@ -108,15 +119,24 @@ export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
     return (p.productoIds || []).includes(id);
   }
 
-  /** ¿Se puede marcar otro producto en esta pestaña? (tope de 8) */
+  /** Cuántos productos de la vitrina lleva la pestaña (uno que se quitó de la vitrina ya no cuenta). */
+  cuenta(p: PestanaVitrina): number {
+    return idsDePestana(p, this.idsVitrina).length;
+  }
+
+  /** ¿Se puede marcar otro producto en esta pestaña? (tope de 8, contando solo los que siguen en la vitrina) */
   llena(p: PestanaVitrina): boolean {
-    return (p.productoIds || []).length >= this.topes.porPestana;
+    return this.cuenta(p) >= this.topes.porPestana;
   }
 
   // ── Avisos (las mismas reglas que la página) ──────────────────────────────────────────────────────────────────
 
+  /**
+   * Avisos de la cabecera, siempre con el diseño nuevo (este panel solo sale con él): con pestañas, lo que la página
+   * cambia; sin pestañas, lo que conviene cambiar (la vitrina sale con el texto tal cual).
+   */
   get avisosCabecera(): string[] {
-    return this.conPestanas ? avisosDeCabecera(this.datos) : [];
+    return avisosDeCabecera(this.datos, this.listas.length > 0);
   }
 
   /** Los productos de la vitrina que no están en ninguna pestaña: con pestañas no se ven. */
@@ -127,15 +147,33 @@ export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
 
   avisosDe(p: PestanaVitrina, i: number): string[] {
     const avisos: string[] = [];
-    const n = (p.productoIds || []).length;
+    const n = this.cuenta(p);
     const nombre = String(p.etiqueta || "").trim();
     if (!nombre) avisos.push(`La pestaña ${i + 1} no sale hasta que tenga nombre.`);
     else if (tieneMarcador(nombre)) avisos.push("El nombre tiene algo por llenar entre corchetes: esta pestaña no sale.");
-    else if (afirmaVentas(nombre)) avisos.push(`«${nombre}» dice que son los más vendidos: la pestaña se lee «${this.destacados}».`);
+    else if (afirmaVentas(nombre)) avisos.push(`«${nombre}» dice que son los más vendidos, y todavía no hay ventas reales que lo respalden: esta pestaña no sale hasta que le cambies el nombre.`);
+    else if (this.pestanas.some((q, k) => k !== i && String(q.etiqueta || "").trim().toLowerCase() === nombre.toLowerCase())) {
+      avisos.push("Otra pestaña se llama igual: tus clientes no sabrán cuál es cuál.");
+    }
     if (!n) avisos.push("Marca al menos un producto: sin productos la pestaña no sale.");
-    const vistos = seVenEnComputador(n);
-    if (vistos < n) avisos.push(`Tiene ${n}: en computador se ven ${vistos}, para que la última fila no quede a medias. Con 4 u 8 se ven todos.`);
+    const computador = seVenEnComputador(n, this.columnas);
+    const tableta = seVenEnComputador(n, COLUMNAS_TABLETA);
+    if (computador < n || tableta < n) {
+      const donde = [computador < n ? `${computador} en computador` : "", tableta < n ? `${tableta} en tableta` : ""].filter(Boolean).join(" y ");
+      const enTodas = this.cantidadesSinRecorte;
+      const consejo = enTodas.length ? ` Con ${enTodas.length > 1 ? enTodas.slice(0, -1).join(", ") + " u " + enTodas[enTodas.length - 1] : enTodas[0]} se ven todos en cualquier pantalla.` : "";
+      avisos.push(`Tiene ${n}: se ven ${donde}, para que la última fila no quede a medias; en el celular se ven todos.${consejo}`);
+    }
     return avisos;
+  }
+
+  /** Cantidades (de 3 a 8) que se ven completas en computador y en tableta: 4 u 8 con 4 columnas. */
+  get cantidadesSinRecorte(): number[] {
+    const salida: number[] = [];
+    for (let n = 3; n <= this.topes.porPestana; n++) {
+      if (seVenEnComputador(n, this.columnas) === n && seVenEnComputador(n, COLUMNAS_TABLETA) === n) salida.push(n);
+    }
+    return salida;
   }
 
   // ── Cambios ─────────────────────────────────────────────────────────────────────────────────────────────────────
