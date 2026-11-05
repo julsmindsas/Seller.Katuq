@@ -16,7 +16,8 @@ export interface InfoCategoria {
   chips?: string[];
 }
 
-export const TOPES_CATEGORIAS = Object.freeze({ entradas: 40, etiqueta: 40 });
+/** Topes del servidor (`bandas.js`): 120 categorías con nombre (cierre de N2) y 40 caracteres por nombre. */
+export const TOPES_CATEGORIAS = Object.freeze({ entradas: 120, etiqueta: 40 });
 
 /** La clave con que se compara una categoría: sin tildes, en minúscula y sin espacios de más (igual que el servidor). */
 export function claveCategoria(nombre: string | null | undefined): string {
@@ -50,10 +51,26 @@ export function nombreDelMaestro(nombre: string | null | undefined): string {
   return t.charAt(0).toLocaleUpperCase("es-CO") + t.slice(1);
 }
 
-/** Pasa un nombre a mayúscula inicial («CÁMARAS PAN/TILT» → «Cámaras pan/tilt»), sin tocar sus letras. */
+/** Palabras cortas del español que nunca son siglas: en un nombre en MAYÚSCULAS se pasan a minúscula. */
+const PALABRAS_CORTAS = new Set(["a", "al", "de", "del", "el", "en", "la", "las", "lo", "los", "o", "u", "y", "e", "con", "sin", "por", "su", "sus", "mi", "tu", "un", "una"]);
+
+/**
+ * Pasa un nombre en MAYÚSCULAS a mayúscula inicial («CÁMARAS PAN/TILT» → «Cámaras pan/tilt») sin bajar las siglas: se
+ * conservan las palabras con dígitos («L3», «RJ45», «4G») y las de hasta 3 letras que no son palabras del español («USB»,
+ * «ONT», «NVR»). Así «SWITCH ADMINISTRABLE L3» queda «Switch administrable L3» y «ADAPTADOR USB A RJ45», «Adaptador USB a
+ * RJ45». No inventa tildes.
+ */
 export function mayusculaInicial(texto: string | null | undefined): string {
-  const t = String(texto || "").replace(/\s+/g, " ").trim().toLocaleLowerCase("es-CO");
-  return t ? t.charAt(0).toLocaleUpperCase("es-CO") + t.slice(1) : "";
+  const palabras = String(texto || "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (!palabras.length) return "";
+  const salida = palabras.map((p, k) => {
+    const letras = p.replace(/[^\p{L}]/gu, "");
+    const esSigla = /\d/.test(p) || (letras.length >= 2 && letras.length <= 3 && !PALABRAS_CORTAS.has(letras.toLocaleLowerCase("es-CO")));
+    if (esSigla && p === p.toLocaleUpperCase("es-CO")) return p;
+    const baja = p.toLocaleLowerCase("es-CO");
+    return k === 0 ? baja.charAt(0).toLocaleUpperCase("es-CO") + baja.slice(1) : baja;
+  });
+  return salida.join(" ");
 }
 
 /** Un marcador de algo por llenar («[NOMBRE]»): la página no lo publica. */

@@ -2,6 +2,8 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { CategoriaSitio, SitiosService } from "../../../sitios.service";
 import { PanelSitioBase } from "../panel-sitio-base";
+import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
+import { NOMBRES_ICONO } from "../barras/barras-datos";
 import {
   InfoCategoria,
   TOPES_CATEGORIAS,
@@ -15,6 +17,12 @@ import {
 
 /** Cuántas categorías se muestran por tanda. */
 const TANDA = 24;
+
+/**
+ * Cuántas categorías devuelve como máximo el servidor (`GET /v1/sites/:id/categorias`, las de más productos). Si llegan
+ * todas esas, puede haber más en el catálogo: entonces un nombre curado que no está en la lista NO se toma por huérfano.
+ */
+const MAX_LISTA = 120;
 
 /** Una fila del panel: la categoría del catálogo y su nombre curado, si lo tiene. */
 interface FilaCategoria {
@@ -33,7 +41,8 @@ interface FilaCategoria {
  *
  * Guarda `contenido.tienda.categoriasInfo = [{ categoria, etiqueta, …lo demás que ya tuviera }]`. Una entrada que no cura
  * nada se quita; para borrar todo deja la lista vacía (el servidor conserva una clave que el editor no manda). El tope es
- * de 40 categorías con nombre, igual que el servidor.
+ * de 120 categorías con nombre, igual que el servidor. Cada categoría puede llevar también su ícono (la forma «Íconos» de
+ * la banda Categorías: si a una de las que salen le falta, la banda va con fotos).
  */
 @Component({
   selector: "app-panel-categorias",
@@ -42,6 +51,9 @@ interface FilaCategoria {
 })
 export class CategoriasPanelComponent extends PanelSitioBase implements OnInit {
   readonly topes = TOPES_CATEGORIAS;
+  /** Cierre de N2: el ícono de cada categoría, del catálogo cerrado del servidor (`ICONOS`). */
+  readonly iconos = ICONOS_SITIO.map((id) => ({ id, nombre: NOMBRES_ICONO[id] || id }));
+  readonly trazos: { readonly [id: string]: string } = TRAZOS_ICONO_SITIO as any;
 
   categorias: FilaCategoria[] = [];
   cargando = false;
@@ -116,9 +128,49 @@ export class CategoriasPanelComponent extends PanelSitioBase implements OnInit {
     return this.categorias.filter((c) => !c.oculta && !String(this.etiqueta(c)).trim()).length;
   }
 
+  /** Las categorías que salen en la tienda (las ocultas no). */
+  get visiblesEnTienda(): number {
+    return this.categorias.filter((c) => !c.oculta).length;
+  }
+
+  /** ¿Alguna categoría ya tiene ícono? (Solo entonces se avisa de las que faltan.) */
+  get conIcono(): boolean {
+    return this.info.some((c) => !!c && !!c.icono);
+  }
+
+  /** Las categorías visibles que siguen sin ícono. */
+  get sinIcono(): number {
+    return this.categorias.filter((c) => !c.oculta && !this.iconoDe(c)).length;
+  }
+
+  iconoDe(c: FilaCategoria): string {
+    const e = this.entrada(c);
+    return (e && e.icono) || "";
+  }
+
+  /** Cambia el ícono de una categoría y conserva lo demás que tenga curado. Sin ícono ni nada más, la entrada se quita. */
+  cambiarIcono(c: FilaCategoria, valor: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    const icono = ICONOS_SITIO.includes(valor) ? valor : "";
+    const lista = this.info.slice();
+    const k = lista.findIndex((x) => claveCategoria(x && x.categoria) === c.clave);
+    if (k >= 0) {
+      const nueva: InfoCategoria = { ...lista[k], icono };
+      if (!icono) delete nueva.icono;
+      if (curaAlgo(nueva)) lista[k] = nueva;
+      else lista.splice(k, 1);
+    } else if (icono) {
+      if (lista.length >= this.topes.entradas) return;
+      lista.push({ categoria: c.nombre, icono });
+    }
+    t.categoriasInfo = lista;
+    this.avisar();
+  }
+
   /** Lo curado que ya no corresponde a ninguna categoría del catálogo (cambió de nombre o se quedó sin productos). */
   get huerfanas(): InfoCategoria[] {
-    if (!this.categorias.length) return [];
+    if (!this.categorias.length || this.categorias.length >= MAX_LISTA) return [];
     const claves = new Set(this.categorias.map((c) => c.clave));
     return this.info.filter((c) => !claves.has(claveCategoria(c.categoria)));
   }

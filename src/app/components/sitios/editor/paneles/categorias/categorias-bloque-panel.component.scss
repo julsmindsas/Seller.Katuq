@@ -1,0 +1,13 @@
+// La banda «Categorías» del diseño nuevo (cierre de N2): los campos comunes de los paneles. Regla de diseño Katuq:
+// acento #5F3FE0, sin degradados y ninguna clase con «p-».
+@import "../barras/campos-panel";
+
+.rotulo {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+}

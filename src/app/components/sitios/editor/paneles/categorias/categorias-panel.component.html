@@ -1,13 +1,13 @@
 <!-- Tienda › Nombres de categorías (tanda N2). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
 <p class="nota">
-  Tu catálogo guarda los nombres sin tildes y en minúscula. Escribe aquí cómo se deben leer en la página
-  («Cámaras con batería»). Salen en las baldosas de categorías, en el menú y en la fila de categorías del encabezado.
-  No cambian la categoría en tu catálogo.
+  Si tu catálogo guarda los nombres sin tildes o en MAYÚSCULAS, escribe aquí cómo se deben leer en la página
+  («Cámaras con batería»). Salen en las baldosas de categorías, en el menú, en la fila de categorías del encabezado y en
+  los filtros del catálogo. No cambian la categoría en tu catálogo.
 </p>
 
 <p class="aviso aviso--info" *ngIf="!cargando && !error && categorias.length && sinNombre">
-  {{ sinNombre }} {{ sinNombre === 1 ? 'categoría visible sale' : 'categorías visibles salen' }} con el nombre del catálogo
-  (mayúscula inicial y sin tildes).
+  {{ sinNombre }} {{ sinNombre === 1 ? 'categoría visible sale' : 'categorías visibles salen' }} con el nombre del catálogo,
+  con mayúscula inicial.
 </p>
 <p class="aviso" *ngIf="error">{{ error }}</p>
 <p class="cargando" *ngIf="cargando">Cargando las categorías de tu catálogo…</p>
@@ -19,6 +19,10 @@
   </p>
 
   <ng-container *ngIf="categorias.length">
+    <p class="aviso aviso--info" *ngIf="sinIcono && conIcono">
+      Para que la banda de categorías salga con íconos, cada categoría que se muestra necesita el suyo: si a una le falta,
+      la banda sale con fotos. Faltan {{ sinIcono }} de las {{ visiblesEnTienda }} visibles.
+    </p>
     <div class="cabeza-lista">
       <h4 class="subgrupo">Categorías <small>({{ conNombre }} con nombre · tope de {{ topes.entradas }})</small></h4>
       <input *ngIf="categorias.length > 8" type="search" class="filtro" [(ngModel)]="filtro" (ngModelChange)="mostrando = 24"
@@ -45,6 +49,15 @@
         <p class="aviso aviso--fila" *ngIf="conMarcador(c)">Tiene un dato entre corchetes: no se publica. Escribe el nombre real.</p>
         <p class="aviso aviso--fila aviso--info" *ngIf="sinCupo(c)">Ya hay {{ topes.entradas }} categorías con nombre: quita uno para nombrar esta.</p>
         <button type="button" class="enlace-texto" *ngIf="!etiqueta(c) && !sinCupo(c)" (click)="usarDelCatalogo(c)">Empezar con el del catálogo</button>
+        <div class="icono-cat" *ngIf="!sinCupo(c)">
+          <svg class="icono-cat__muestra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path *ngIf="iconoDe(c) && trazos[iconoDe(c)]" [attr.d]="trazos[iconoDe(c)]" />
+          </svg>
+          <select [ngModel]="iconoDe(c)" (ngModelChange)="cambiarIcono(c, $event)" [attr.aria-label]="'Ícono de ' + seLee(c)">
+            <option value="">Sin ícono</option>
+            <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
+          </select>
+        </div>
       </div>
     </div>
 

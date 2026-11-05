@@ -1,0 +1,24 @@
+<!-- La banda «Categorías» del diseño nuevo (cierre de N2). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<h4 class="subgrupo">Categorías <small>(diseño nuevo)</small></h4>
+<p class="aviso aviso--info">
+  La vista previa editable muestra la banda de siempre. Cómo la verán tus clientes, con la foto y el nombre debajo, está
+  en la Vista fiel.
+  <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+</p>
+
+<span class="rotulo">Forma</span>
+<div class="segmentos" role="group" aria-label="Forma de las baldosas">
+  <button type="button" [class.is-activo]="forma === ''" [attr.aria-pressed]="forma === ''" (click)="elegirForma('')">Fotos</button>
+  <button type="button" [class.is-activo]="forma === 'iconos'" [attr.aria-pressed]="forma === 'iconos'" (click)="elegirForma('iconos')">Íconos</button>
+</div>
+<p class="nota" *ngIf="forma === 'iconos'">
+  Con íconos, cada categoría que sale necesita el suyo en Tienda › Nombres de categorías. Si a una le falta, la banda sale
+  con fotos.<ng-container *ngIf="!conIcono"> Todavía ninguna tiene ícono.</ng-container>
+</p>
+
+<span class="rotulo">Cantidad de productos</span>
+<div class="segmentos" role="group" aria-label="Mostrar cuántos productos tiene cada categoría">
+  <button type="button" [class.is-activo]="!conTotal" [attr.aria-pressed]="!conTotal" (click)="elegirTotal(false)">No mostrar</button>
+  <button type="button" [class.is-activo]="conTotal" [attr.aria-pressed]="conTotal" (click)="elegirTotal(true)">Mostrar</button>
+</div>
+<p class="nota">Lo recomendado es no mostrarla: «44 productos» es un dato de tu inventario, no le ayuda a quien compra.</p>

@@ -110,10 +110,9 @@
   }
 
   &__maestro {
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: normal;
     color: var(--kb-muted);
   }
 
@@ -171,3 +170,24 @@ p,
 .cargando {
   letter-spacing: normal;
 }
+
+// Cierre de N2: el ícono de cada categoría (la forma «Íconos» de la banda Categorías). Ninguna clase lleva «p-».
+.icono-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+
+  &__muestra {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    color: var(--kb-ink, #211f3a);
+  }
+
+  select {
+    min-height: 36px;
+    max-width: 220px;
+  }
+}
+
