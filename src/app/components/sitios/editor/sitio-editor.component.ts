@@ -5137,7 +5137,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   limpiarEstilo(bloque: any): void {
+    // Revisión de T13: el ancla y la superficie no son un estilo que este botón deba quitar. El ancla la usan los enlaces
+    // de la portada, el menú y las tarjetas (`#plano`, `plano:casa`), y la superficie la elige el panel de la sección
+    // (el plano). Quitarlas rompía esos enlaces sin aviso. Se conserva solo lo que traía.
+    const previo = bloque.estilo || {};
+    const conservar: any = {};
+    if (previo.ancla) conservar.ancla = previo.ancla;
+    if (previo.superficie) conservar.superficie = previo.superficie;
     delete bloque.estilo;
+    if (Object.keys(conservar).length) Object.assign(this.estiloDe(bloque), conservar);
     this.marcarSucio();
   }
 
