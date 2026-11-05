@@ -1057,6 +1057,11 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     return l.productoId;
   }
 
+  /** Las opciones de «Punto que abre la entrada»: se arman nuevas en cada pasada, así que se siguen por su número. */
+  porNumeroDePunto(_: number, o: { n: number }): number {
+    return o.n;
+  }
+
   // ── Datos de referencia (solo lectura) ──────────────────────────────────────────────────────────────────────────
 
   /**

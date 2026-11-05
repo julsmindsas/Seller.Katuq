@@ -314,7 +314,7 @@
           <select [ngModel]="x.punto || 0" (ngModelChange)="ponerPuntoDeEntrada(x, $event)" [disabled]="!x.espacio"
                   [attr.aria-label]="'Punto que abre la entrada ' + (k + 1)">
             <option [ngValue]="0">Sin punto</option>
-            <option *ngFor="let o of puntosDeEspacioId(x.espacio)" [ngValue]="o.n">{{ o.texto }}</option>
+            <option *ngFor="let o of puntosDeEspacioId(x.espacio); trackBy: porNumeroDePunto" [ngValue]="o.n">{{ o.texto }}</option>
           </select>
         </div>
         <select [(ngModel)]="x.icono" (ngModelChange)="cambiar()" [attr.aria-label]="'Ícono de la entrada ' + (k + 1)">

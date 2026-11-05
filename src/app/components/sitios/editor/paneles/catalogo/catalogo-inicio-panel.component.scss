@@ -1,0 +1,82 @@
+// Sección del catálogo en el inicio (diseño nuevo): los campos comunes de los paneles. Regla de diseño Katuq: acento
+// #5F3FE0, sin degradados, ninguna clase con «p-» y todo span con color y tamaño propios (trampa `span.ng-star-inserted`).
+@import "../barras/campos-panel";
+
+.rotulo {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+}
+
+// Trampa de CSS global: `p` trae letter-spacing propio.
+p,
+.nota,
+.aviso {
+  letter-spacing: normal;
+}
+
+// El dibujo de «así se ve»: una sección esquemática con las filas que ocupan los productos elegidos.
+.mock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 14px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: var(--kb-surface-3);
+
+  &__titulo {
+    display: block;
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kb-ink);
+  }
+
+  &__chips {
+    display: flex;
+    gap: 5px;
+  }
+
+  &__chip {
+    display: block;
+    width: 38px;
+    height: 14px;
+    border: 1.5px solid var(--kb-line-4);
+    border-radius: 99px;
+    background: #fff;
+  }
+
+  &__rejilla {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  &__celda {
+    display: block;
+    aspect-ratio: 1 / 1.1;
+    border: 1.5px solid var(--kb-line-4);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  &__boton {
+    align-self: center;
+    padding: 5px 14px;
+    border: 1.5px solid var(--kb-line-4);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--kb-ink-2);
+  }
+}

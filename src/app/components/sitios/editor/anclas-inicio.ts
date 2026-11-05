@@ -79,3 +79,58 @@ export function anclaSinDestino(url: string, bloques: any[], opciones: OpcionesA
   if (!m || m[1].toLowerCase() === "top") return false;
   return !anclasDelInicio(bloques, opciones).has(m[1]);
 }
+
+/**
+ * Las páginas propias del sitio como las responde el servidor: una ruta de un solo tramo (`/empresas`) es una página
+ * que el comercio creó o un 404 («Esta página no existe o se retiró»). `/`, `/gracias`, `/pagar`, `/baja`, `/p/…`,
+ * `/c/…`, `/marca/…`, `/l/…` y `/r/…` las atiende el sitio por su cuenta; lo de varios tramos no se revisa aquí.
+ */
+const RUTAS_DEL_SITIO = new Set(["p", "c", "marca", "l", "r", "gracias", "pagar", "baja"]);
+
+/**
+ * ¿Este destino es una página interna de un solo tramo (`/empresas`, `/evora`) que el sitio no tiene? El servidor la
+ * publica igual y quien la toca llega a un 404, así que el editor lo avisa. Lo que no es una ruta así (`#ancla`,
+ * `https://…`, `/?catalogo=1`, `/c/mesh`, `/p/…`) no se revisa.
+ */
+export function paginaInternaQueNoExiste(url: string, paginas: ReadonlyArray<{ ruta?: string } | null> | null | undefined): boolean {
+  const crudo = String(url || "").trim();
+  if (!crudo.startsWith("/") || crudo.startsWith("//")) return false;
+  const ruta = crudo.split(/[?#]/)[0];
+  const m = /^\/([A-Za-z0-9-]{1,60})\/?$/.exec(ruta);
+  if (!m) return false;
+  const tramo = m[1].toLowerCase();
+  if (RUTAS_DEL_SITIO.has(tramo)) return false;
+  return !(paginas || []).some((p) => !!p && String(p.ruta || "").toLowerCase() === tramo);
+}
+
+/** Un destino que el menú, la barra o un botón puede ofrecer: el valor que se escribe y cómo se llama la sección. */
+export interface DestinoDeInicio {
+  valor: string;
+  texto: string;
+}
+
+/**
+ * Los destinos con nombre del inicio, para el `<datalist>` de todos los campos «A dónde lleva»: las anclas propias de
+ * las secciones (`#kits`) y los ids fijos (`#catalogo`, `#contacto`…). No ofrece `#seccion-N`: ese número cambia al mover
+ * u ocultar una sección y es justo lo que el ancla con nombre viene a evitar.
+ */
+export function destinosDelInicio(bloques: any[], opciones: OpcionesAnclas & { nombreDe: (bloque: any) => string }): DestinoDeInicio[] {
+  const visibles = (bloques || []).filter((b) => b && b.visible !== false && (opciones.disenoNuevo || !esTipoNuevoSitio(b.tipo)));
+  const salida: DestinoDeInicio[] = [];
+  const vistos = new Set<string>();
+  const poner = (valor: string, texto: string) => {
+    if (vistos.has(valor)) return;
+    vistos.add(valor);
+    salida.push({ valor, texto });
+  };
+  for (const b of visibles) {
+    const fijo = ID_FIJO_DE_BLOQUE[b.tipo];
+    const propia = opciones.disenoNuevo && !fijo ? anclaValida(b.estilo && b.estilo.ancla) : "";
+    const titulo = String((b.datos && (b.datos.titulo || b.datos.etiqueta)) || "").trim().slice(0, 40);
+    const nombre = `${opciones.nombreDe(b)}${titulo ? ` · ${titulo}` : ""}`;
+    if (propia) poner(`#${propia}`, nombre);
+    else if (fijo) poner(`#${fijo}`, nombre);
+  }
+  return salida;
+}
+

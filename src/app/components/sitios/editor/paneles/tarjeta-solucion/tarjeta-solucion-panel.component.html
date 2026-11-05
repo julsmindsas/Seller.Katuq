@@ -87,7 +87,7 @@
     <label [attr.for]="uid + '-cta2'">Segundo enlace (opcional)</label>
     <input [id]="uid + '-cta2'" type="text" [maxlength]="topes.cta2Texto" [(ngModel)]="t.cta2Texto" (ngModelChange)="cambiar()"
            placeholder="Hablar con un asesor" />
-    <input type="text" class="sol__destino" [(ngModel)]="t.cta2Url" (ngModelChange)="cambiar()" placeholder="Destino: #contacto, /empresas o https://…"
+    <input type="text" class="sol__destino" list="kq-destinos-inicio" [(ngModel)]="t.cta2Url" (ngModelChange)="cambiar()" placeholder="Destino: #contacto, /empresas o https://…"
            [attr.aria-label]="'Destino del segundo enlace de la tarjeta ' + (indice + 1)" />
   </div>
 

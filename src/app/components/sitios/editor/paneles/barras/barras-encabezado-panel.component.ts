@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { PanelSitioBase } from "../panel-sitio-base";
-import { EnlaceMenu, TOPES, anclaQueNoExiste, conMenu, menuDe } from "./barras-datos";
+import { EnlaceMenu, TOPES, anclaQueNoExiste, avisoDeDestino, conMenu, menuDe } from "./barras-datos";
 
 /**
  * Encabezado del diseño nuevo (PLAN-V2 T06, DISENO §3.7): el menú de hasta 7 enlaces con submenús, dónde van las
@@ -108,6 +108,14 @@ export class BarrasEncabezadoPanelComponent extends PanelSitioBase {
   /** P0-19: un enlace a una sección que no existe no se publica. */
   sinDestino(url: string): boolean {
     return anclaQueNoExiste(url, (this.contenido && this.contenido.bloques) || []);
+  }
+
+  /**
+   * El aviso de un destino roto: una sección que no existe (el enlace no se muestra) o una página interna (`/empresas`)
+   * que el sitio no tiene (el enlace se muestra y da 404).
+   */
+  avisoDestino(url: string): string {
+    return avisoDeDestino(url, this.contenido, "menu");
   }
 
   // ── Categorías ─────────────────────────────────────────────────────────────────────────────────────────────────

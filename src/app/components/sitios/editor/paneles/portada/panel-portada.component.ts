@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, DoCheck } from "@angular/core";
 import { ToastrService } from "ngx-toastr";
 import { SitiosService } from "../../../sitios.service";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
@@ -16,6 +16,28 @@ interface EspacioPortada {
   url?: string;
   plano?: string;
   icono?: string;
+}
+
+/**
+ * Lo que una foto del carrusel dice distinto del texto común de la portada (`diapositivas` del servidor, DISENO §3.8).
+ * Se liga a su foto por la URL (`imagen`): si el comercio quita una foto o la cambia de lugar, su texto la sigue.
+ * Lo que queda vacío lo toma de la portada.
+ */
+interface DiapositivaPortada {
+  imagen: string;
+  alt?: string;
+  titulo?: string;
+  subtitulo?: string;
+  ctaTexto?: string;
+  ctaUrl?: string;
+  alineacion?: string;
+  foco?: string;
+}
+
+/** Una foto del carrusel con su texto, para pintar su tarjeta. */
+interface FotoCarrusel {
+  url: string;
+  d: DiapositivaPortada;
 }
 
 /** Un paso de «Cómo funciona» o un sello con ícono. */
@@ -36,7 +58,9 @@ interface DestinoPlano {
  * (título, subtítulo y botón), solo con el diseño nuevo encendido: con el de siempre, nada de esto se ve en la página.
  *
  * Edita en su lugar `bloque.datos`: `composicion`, `antetitulo`, `resaltado`, `cta2Texto`, `cta2Url`, `sellosForma`,
- * `sellos` y `espacios`. El servidor los normaliza al guardar (topes, íconos y destinos); aquí se ayuda y se avisa.
+ * `sellos`, `espacios` y, con «Foto a lo ancho» y dos o más fotos en el carrusel, el botón secundario y el texto de cada
+ * foto (`diapositivas`: texto alternativo, título, apoyo, botón, alineación y foco). El servidor los normaliza al
+ * guardar (topes, íconos y destinos); aquí se ayuda y se avisa.
  * Las fotos se suben con el mismo servicio del editor y se avisa si se quedan cortas para la tarjeta (460 px de alto en
  * computador). Nunca toca los productos ni la tienda.
  */
@@ -45,7 +69,7 @@ interface DestinoPlano {
   templateUrl: "./panel-portada.component.html",
   styleUrls: ["./panel-portada.component.scss"],
 })
-export class PanelPortadaComponent extends PanelSitioBase {
+export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
   static readonly MAX_ESPACIOS = 3;
   static readonly MAX_SELLOS = 4;
   /** Topes del servidor: el nombre cabe en dos líneas de la tarjeta más angosta (DISENO D2). */
@@ -60,6 +84,36 @@ export class PanelPortadaComponent extends PanelSitioBase {
   readonly maxSellos = PanelPortadaComponent.MAX_SELLOS;
   readonly maxTitulo = PanelPortadaComponent.MAX_TITULO;
   readonly maxEnlace = PanelPortadaComponent.MAX_ENLACE;
+
+  static readonly MAX_ALT = 120;
+  static readonly MAX_TITULO_FOTO = 120;
+  static readonly MAX_APOYO_FOTO = 240;
+  static readonly MAX_BOTON_FOTO = 40;
+
+  readonly maxAlt = PanelPortadaComponent.MAX_ALT;
+  readonly maxTituloFoto = PanelPortadaComponent.MAX_TITULO_FOTO;
+  readonly maxApoyoFoto = PanelPortadaComponent.MAX_APOYO_FOTO;
+  readonly maxBotonFoto = PanelPortadaComponent.MAX_BOTON_FOTO;
+  /** Alineación de una foto: vacío = la de la portada. */
+  readonly alineaciones: Array<{ valor: string; etiqueta: string }> = [
+    { valor: "", etiqueta: "Como la portada" },
+    { valor: "izquierda", etiqueta: "Izquierda" },
+    { valor: "centro", etiqueta: "Centro" },
+    { valor: "derecha", etiqueta: "Derecha" },
+  ];
+  /** Qué parte de la foto se conserva al recortar: vacío = la de la portada. */
+  readonly focos: Array<{ valor: string; etiqueta: string }> = [
+    { valor: "", etiqueta: "Como la portada" },
+    { valor: "centro", etiqueta: "Centro" },
+    { valor: "arriba", etiqueta: "Arriba" },
+    { valor: "abajo", etiqueta: "Abajo" },
+    { valor: "izquierda", etiqueta: "Izquierda" },
+    { valor: "derecha", etiqueta: "Derecha" },
+  ];
+
+  /** Las fotos del carrusel con su texto (se rehace cuando el editor agrega, quita o mueve una foto). */
+  fotos: FotoCarrusel[] = [];
+  private firmaFotos = "";
 
   /** Índice del espacio cuya foto se está subiendo (-1 = ninguna). */
   subiendo = -1;
@@ -78,6 +132,62 @@ export class PanelPortadaComponent extends PanelSitioBase {
 
   get conEspacios(): boolean {
     return this.datos.composicion === "espacios";
+  }
+
+  /**
+   * Las fotos del carrusel las agrega, quita y mueve el editor (campo «Carrusel», arriba); aquí se detecta el cambio y
+   * cada foto se empareja con su texto por la URL. Una foto nueva nace sin texto (usa el de la portada) y el texto de
+   * una foto que ya no está se descarta.
+   */
+  ngDoCheck(): void {
+    const urls = this.urlsCarrusel();
+    const firma = `${this.bloque ? (this.bloque as any).id || "" : ""}|${urls.join("\n")}`;
+    if (firma === this.firmaFotos) return;
+    this.firmaFotos = firma;
+    const previas: DiapositivaPortada[] = (Array.isArray(this.datos.diapositivas) ? this.datos.diapositivas : []).filter(
+      (x: any) => x && typeof x === "object"
+    );
+    const usadas = new Set<DiapositivaPortada>();
+    this.fotos = urls.map((url) => {
+      let d = previas.find((x) => x.imagen === url && !usadas.has(x));
+      if (!d) d = { imagen: url };
+      usadas.add(d);
+      return { url, d };
+    });
+    if (urls.length) this.datos.diapositivas = this.fotos.map((f) => f.d);
+  }
+
+  /** Las URLs de las fotos del carrusel (el editor guarda cada una como texto; se acepta también { url }). */
+  private urlsCarrusel(): string[] {
+    const lista = Array.isArray(this.datos.imagenes) ? this.datos.imagenes : [];
+    return lista.map((x: any) => (typeof x === "string" ? x : x && x.url ? String(x.url) : "")).filter(Boolean);
+  }
+
+  /** Hay carrusel (dos o más fotos) y la portada es «Foto a lo ancho»: cada foto puede llevar su texto. */
+  get conCarrusel(): boolean {
+    return !this.conEspacios && this.fotos.length >= 2;
+  }
+
+  /** Cualquier foto con texto propio (título, apoyo, botón o alineación): la portada pasa a un texto por foto. */
+  get conTextoPorFoto(): boolean {
+    return this.conCarrusel && this.fotos.some((f) => !!(f.d.titulo || f.d.subtitulo || f.d.ctaTexto || f.d.alineacion));
+  }
+
+  /** Avisos de una foto, en el orden en que se resuelven (ninguno impide publicar). */
+  avisosDeFoto(f: FotoCarrusel): string[] {
+    const avisos: string[] = [];
+    const d = f.d;
+    if (!String(d.alt || "").trim()) avisos.push("Sin descripción, esta foto se considera decorativa y quien usa lector de pantalla no la oye.");
+    const texto = String(d.ctaTexto || "").trim();
+    const destino = String(d.ctaUrl || "").trim();
+    if (texto && !destino) avisos.push("Escribe a dónde lleva el botón: sin destino, esta foto sale sin botón.");
+    if (!texto && destino) avisos.push("Escribe el texto del botón: sin él, el destino no se usa.");
+    return avisos;
+  }
+
+  /** El botón secundario sale solo con destino (sin él abriría una página que no existe). */
+  get secundarioSinDestino(): boolean {
+    return !!String(this.datos.cta2Texto || "").trim() && !String(this.datos.cta2Url || "").trim();
   }
 
   get espacios(): EspacioPortada[] {

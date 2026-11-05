@@ -106,6 +106,11 @@ export interface TiendaSitio {
    * Lista vacía la borra (el servidor conserva una clave que no llega).
    */
   categoriasInfo?: InfoCategoria[];
+  /**
+   * Diseño nuevo (foto genérica, Tienda › Nombres de categorías): la foto que la página muestra en los productos sin foto
+   * cuya categoría no tiene la suya. Una URL subida por el editor; "" la quita (el servidor conserva una clave que no llega).
+   */
+  fotoGenerica?: string;
 }
 
 /** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */

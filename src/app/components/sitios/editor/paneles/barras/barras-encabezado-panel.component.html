@@ -19,9 +19,9 @@
   </div>
   <input type="text" maxlength="30" placeholder="Nombre del enlace (Casa, Productos…)" aria-label="Nombre del enlace"
          [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
-  <input type="text" placeholder="#seccion, /ruta o https://…" aria-label="Destino del enlace"
+  <input type="text" list="kq-destinos-inicio" placeholder="#seccion, /ruta o https://…" aria-label="Destino del enlace"
          [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
-  <p class="repetible__aviso" *ngIf="sinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará.</p>
+  <p class="repetible__aviso" *ngIf="avisoDestino(e.url) as aviso">{{ aviso }}</p>
   <button type="button" class="enlace-texto" [attr.aria-expanded]="abierto === k" (click)="alternarSubmenu(k)">
     {{ abierto === k ? 'Cerrar submenú' : 'Submenú (' + (e.hijos?.length || 0) + ')' }}
   </button>
@@ -29,7 +29,7 @@
     <div class="hijos__fila" *ngFor="let h of e.hijos; let j = index; trackBy: porIndice">
       <input type="text" maxlength="30" placeholder="Nombre" aria-label="Nombre del enlace del submenú"
              [ngModel]="h.etiqueta" (ngModelChange)="cambiarHijo(k, j, 'etiqueta', $event)" />
-      <input type="text" placeholder="Destino" aria-label="Destino del enlace del submenú"
+      <input type="text" list="kq-destinos-inicio" placeholder="Destino" aria-label="Destino del enlace del submenú"
              [ngModel]="h.url" (ngModelChange)="cambiarHijo(k, j, 'url', $event)" />
       <button type="button" class="mini mini--quitar" (click)="quitarHijo(k, j)">Quitar</button>
     </div>

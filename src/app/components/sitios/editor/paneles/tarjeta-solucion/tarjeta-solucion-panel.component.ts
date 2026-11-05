@@ -204,8 +204,11 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
   elegirFuente(f: FuenteSolucion): void {
     if (!this.tarjeta || f === this.fuente) return;
     if (f === "piezas") {
-      this.tarjeta.comboId = "";
+      // Solo se abre el selector: no se toca nada ni se marca cambio hasta que lleguen las piezas (`aplicarPiezas`). Antes
+      // se avisaba aquí, el autoguardado reconstruía el panel a los ~2,5 s y el selector se cerraba solo con lo elegido.
+      // Si se cierra sin elegir, el kit que tenía la tarjeta sigue ahí.
       this.eligiendo = true;
+      return;
     } else if (f === "kit") {
       this.tarjeta.productoIds = [];
       this.cargarCombos();

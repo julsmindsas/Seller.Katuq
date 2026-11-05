@@ -1,0 +1,36 @@
+<!-- Ancla y tono del fondo de una sección del diseño nuevo. Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<section class="asup" *ngIf="bloque && (conAncla || conSuperficie || anclaFija)">
+  <h5 class="asup__titulo">Ancla y fondo <small>(diseño nuevo)</small></h5>
+
+  <!-- Tono del fondo -->
+  <div class="asup__grupo" *ngIf="conSuperficie">
+    <span class="asup__rotulo" [id]="uid + '-tono'">Tono del fondo</span>
+    <div class="segmentos" role="group" [attr.aria-labelledby]="uid + '-tono'">
+      <button type="button" [class.is-activo]="!superficie" [attr.aria-pressed]="!superficie" (click)="elegirSuperficie('')">Claro</button>
+      <button type="button" [class.is-activo]="superficie === 'estructura'" [attr.aria-pressed]="superficie === 'estructura'"
+              [disabled]="!conEstructura && superficie !== 'estructura'" (click)="elegirSuperficie('estructura')">Oscuro</button>
+      <button type="button" [class.is-activo]="superficie === 'alterna'" [attr.aria-pressed]="superficie === 'alterna'" (click)="elegirSuperficie('alterna')">Alterno</button>
+    </div>
+    <small class="asup__ayuda">Claro es el fondo de la página. Oscuro usa el color de la barra y el pie. Alterno es el de las franjas intercaladas.</small>
+    <p class="asup__aviso" *ngIf="fondoPropio">Esta sección tiene un fondo propio (color o foto, más abajo): manda sobre este tono.</p>
+    <p class="asup__aviso" *ngIf="!conEstructura">Para tener el tono Oscuro, pon un color de estructura en Estilo › Diseño nuevo.</p>
+  </div>
+
+  <!-- Ancla propia -->
+  <div class="asup__grupo" *ngIf="conAncla">
+    <label class="asup__rotulo" [attr.for]="uid + '-ancla'">Ancla</label>
+    <input [id]="uid + '-ancla'" type="text" maxlength="40" autocomplete="off" spellcheck="false"
+           [ngModel]="anclaEnCampo" (ngModelChange)="ponerAncla($event)" (blur)="soltarAncla()" placeholder="preguntas" />
+    <small class="asup__ayuda">El nombre para llevar aquí desde el menú, la barra, el pie o un botón: escribe
+      <code class="asup__codigo">#{{ ancla || 'preguntas' }}</code> en su destino. No cambia aunque muevas u ocultes secciones.</small>
+    <p class="asup__aviso" *ngIf="avisoAncla">{{ avisoAncla }}</p>
+    <div class="asup__acciones">
+      <button type="button" class="asup__boton" *ngIf="anclaSugerida" (click)="usarSugerida()">Usar «{{ anclaSugerida }}»</button>
+      <button type="button" class="asup__boton asup__boton--suave" *ngIf="ancla" (click)="quitarAncla()">Quitar el ancla</button>
+    </div>
+  </div>
+
+  <!-- Id fijo -->
+  <p class="asup__nota" *ngIf="anclaFija">Esta sección ya tiene su ancla fija: <code class="asup__codigo">#{{ anclaFija }}</code>. Úsala en los enlaces
+    del menú, la barra o los botones.</p>
+</section>

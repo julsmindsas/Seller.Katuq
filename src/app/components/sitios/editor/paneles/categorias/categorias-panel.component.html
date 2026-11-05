@@ -5,6 +5,43 @@
   los filtros del catálogo. No cambian la categoría en tu catálogo.
 </p>
 
+<!-- Foto genérica: lo que se ve donde un producto no tiene foto (solo en la página; el producto no cambia). -->
+<section class="foto-gral">
+  <h4 class="subgrupo">Productos sin foto <small>(foto genérica)</small></h4>
+  <p class="nota">
+    Si un producto no tiene foto, la página muestra una imagen de referencia en su lugar: no se cambia el producto. Sin
+    configurar nada sale una placa con el ícono de su categoría y su marca. Puedes subir una foto para toda la tienda y,
+    en cada categoría de abajo, la suya (esa va primero).
+  </p>
+  <div class="foto-gral__fila">
+    <div class="vista" [style.background]="colores.pagina" [style.borderColor]="colores.borde" role="img"
+         aria-label="Así se ve un producto sin foto en tu página">
+      <div class="vista__foto" [style.background]="colores.fondo">
+        <img *ngIf="muestraFoto" [src]="muestraFoto" alt="" />
+        <span *ngIf="!muestraFoto" class="vista__disco" [style.background]="colores.disco" [style.color]="colores.icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="muestraTrazo" /></svg>
+        </span>
+        <span *ngIf="!muestraFoto" class="vista__marca" [style.color]="colores.marca">MARCA</span>
+        <span *ngIf="muestraFoto" class="vista__ref">Foto de referencia</span>
+      </div>
+      <span class="vista__nombre" [style.color]="colores.texto">Nombre del producto</span>
+    </div>
+    <div class="foto-gral__acciones">
+      <span class="foto-gral__rotulo">Foto genérica de la tienda</span>
+      <span class="foto-gral__dato" *ngIf="!fotoGenerica">Sin foto: sale la placa con el ícono de la categoría.</span>
+      <span class="foto-gral__dato" *ngIf="fotoGenerica">Sale en los productos sin foto cuya categoría no tiene la suya.</span>
+      <div class="foto-gral__botones">
+        <label class="boton-subir">
+          {{ subiendo === 'general' ? 'Subiendo…' : (fotoGenerica ? 'Cambiar la foto' : 'Elegir una foto') }}
+          <input type="file" accept="image/*" (change)="subirFotoGeneral($event)" [disabled]="!!subiendo" />
+        </label>
+        <button type="button" class="enlace-texto" *ngIf="fotoGenerica" (click)="quitarFotoGeneral()">Quitar foto</button>
+      </div>
+      <small class="foto-gral__ayuda">Mejor cuadrada y de al menos 600×600 px. La página la rotula «Foto de referencia».</small>
+    </div>
+  </div>
+</section>
+
 <p class="aviso aviso--info" *ngIf="!cargando && !error && categorias.length && sinNombre">
   {{ sinNombre }} {{ sinNombre === 1 ? 'categoría visible sale' : 'categorías visibles salen' }} con el nombre del catálogo,
   con mayúscula inicial.
@@ -49,6 +86,25 @@
         <p class="aviso aviso--fila" *ngIf="conMarcador(c)">Tiene un dato entre corchetes: no se publica. Escribe el nombre real.</p>
         <p class="aviso aviso--fila aviso--info" *ngIf="sinCupo(c)">Ya hay {{ topes.entradas }} categorías con nombre: quita uno para nombrar esta.</p>
         <button type="button" class="enlace-texto" *ngIf="!etiqueta(c) && !sinCupo(c)" (click)="usarDelCatalogo(c)">Empezar con el del catálogo</button>
+        <div class="foto-cat" *ngIf="!sinCupo(c)">
+          <div class="foto-cat__vista" [style.background]="colores.fondo" aria-hidden="true">
+            <img *ngIf="vistaDe(c).foto" [src]="vistaDe(c).foto" alt="" loading="lazy" />
+            <span *ngIf="!vistaDe(c).foto" class="foto-cat__disco" [style.background]="colores.disco" [style.color]="colores.icono">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="vistaDe(c).trazo" /></svg>
+            </span>
+          </div>
+          <div class="foto-cat__acciones">
+            <span class="foto-cat__rotulo">Foto genérica de la categoría</span>
+            <div class="foto-cat__botones">
+              <label class="boton-subir boton-subir--chico">
+                {{ subiendo === c.clave ? 'Subiendo…' : (fotoDe(c) ? 'Cambiar' : 'Elegir una foto') }}
+                <input type="file" accept="image/*" (change)="subirFotoCategoria($event, c)" [disabled]="!!subiendo" />
+              </label>
+              <button type="button" class="enlace-texto" *ngIf="fotoDe(c)" (click)="quitarFotoCategoria(c)">Quitar</button>
+            </div>
+            <small class="foto-cat__ayuda" *ngIf="fotoDe(c)">También es la foto de la baldosa de esta categoría.</small>
+          </div>
+        </div>
         <div class="icono-cat" *ngIf="!sinCupo(c)">
           <svg class="icono-cat__muestra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path *ngIf="iconoDe(c) && trazos[iconoDe(c)]" [attr.d]="trazos[iconoDe(c)]" />

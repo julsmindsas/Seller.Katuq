@@ -1,12 +1,16 @@
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
+import { ToastrService } from "ngx-toastr";
 import { CategoriaSitio, SitiosService } from "../../../sitios.service";
 import { PanelSitioBase } from "../panel-sitio-base";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
 import { NOMBRES_ICONO } from "../barras/barras-datos";
 import {
+  ColoresPlaca,
   InfoCategoria,
   TOPES_CATEGORIAS,
+  TRAZO_PLACA_DEFECTO,
+  coloresDePlaca,
   claveCategoria,
   curaAlgo,
   mayusculaInicial,
@@ -55,13 +59,18 @@ export class CategoriasPanelComponent extends PanelSitioBase implements OnInit {
   readonly iconos = ICONOS_SITIO.map((id) => ({ id, nombre: NOMBRES_ICONO[id] || id }));
   readonly trazos: { readonly [id: string]: string } = TRAZOS_ICONO_SITIO as any;
 
+  /** El ícono por defecto de la placa (una caja). */
+  readonly trazoDefecto = TRAZO_PLACA_DEFECTO;
+
+  /** Qué foto genérica se está subiendo: "" (ninguna), "general" (la de la tienda) o la clave de la categoría. */
+  subiendo = "";
   categorias: FilaCategoria[] = [];
   cargando = false;
   error = "";
   filtro = "";
   mostrando = TANDA;
 
-  constructor(private service: SitiosService, private route: ActivatedRoute) {
+  constructor(private service: SitiosService, private route: ActivatedRoute, private toastr: ToastrService) {
     super();
   }
 
@@ -166,6 +175,116 @@ export class CategoriasPanelComponent extends PanelSitioBase implements OnInit {
     }
     t.categoriasInfo = lista;
     this.avisar();
+  }
+
+  // ── Foto genérica: lo que se ve donde un producto no tiene foto ────────────────────────────────────────────────────
+
+  /** La foto genérica de toda la tienda (`tienda.fotoGenerica`); "" si no hay. */
+  get fotoGenerica(): string {
+    return String(this.tienda.fotoGenerica || "");
+  }
+
+  /** Los colores de la página, para dibujar «cómo queda». */
+  get colores(): ColoresPlaca {
+    return coloresDePlaca(this.contenido && (this.contenido as any).tema);
+  }
+
+  /** La foto genérica de una categoría (`categoriasInfo[].imagen`); "" si no tiene. */
+  fotoDe(c: FilaCategoria): string {
+    const e = this.entrada(c);
+    return (e && e.imagen) || "";
+  }
+
+  /**
+   * Cómo se ve un producto sin foto de esta categoría (o de ninguna, con `null`): la foto de su categoría, la de la tienda
+   * o, si no hay, la placa con el ícono de la categoría. La misma regla que aplica la página.
+   */
+  vistaDe(c: FilaCategoria | null): { foto: string; trazo: string } {
+    const e = c ? this.entrada(c) : undefined;
+    const icono = (e && e.icono) || "";
+    return { foto: (e && e.imagen) || this.fotoGenerica, trazo: (icono && this.trazos[icono]) || TRAZO_PLACA_DEFECTO };
+  }
+
+  /** La categoría con la que se dibuja la vista de la foto de la tienda: la primera que ya tiene ícono, o ninguna. */
+  get categoriaDeMuestra(): FilaCategoria | null {
+    return this.categorias.find((c) => !c.oculta && !!this.iconoDe(c) && !this.fotoDe(c)) || null;
+  }
+
+  /** La foto con que se dibuja la vista de la tienda (primitivas: un objeto nuevo en cada revisión rompería el enlace en dev). */
+  get muestraFoto(): string {
+    return this.vistaDe(this.categoriaDeMuestra).foto;
+  }
+
+  get muestraTrazo(): string {
+    return this.vistaDe(this.categoriaDeMuestra).trazo;
+  }
+
+  subirFotoGeneral(evento: Event): void {
+    this.subirFoto(evento, "general", (url) => {
+      const t: any = this.contenido && (this.contenido as any).tienda;
+      if (!t) return;
+      t.fotoGenerica = url;
+      this.avisar();
+    });
+  }
+
+  quitarFotoGeneral(): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    // Vacía, no borrada: el servidor conserva una clave que el editor no manda.
+    t.fotoGenerica = "";
+    this.avisar();
+  }
+
+  subirFotoCategoria(evento: Event, c: FilaCategoria): void {
+    this.subirFoto(evento, c.clave, (url) => this.cambiarFoto(c, url));
+  }
+
+  quitarFotoCategoria(c: FilaCategoria): void {
+    this.cambiarFoto(c, "");
+  }
+
+  /** Cambia la foto de una categoría y conserva lo demás que tenga curado. Sin foto ni nada más, la entrada se quita. */
+  private cambiarFoto(c: FilaCategoria, imagen: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    const lista = this.info.slice();
+    const k = lista.findIndex((x) => claveCategoria(x && x.categoria) === c.clave);
+    if (k >= 0) {
+      const nueva: InfoCategoria = { ...lista[k], imagen };
+      if (!imagen) delete nueva.imagen;
+      if (curaAlgo(nueva)) lista[k] = nueva;
+      else lista.splice(k, 1);
+    } else if (imagen) {
+      if (lista.length >= this.topes.entradas) return;
+      lista.push({ categoria: c.nombre, imagen });
+    }
+    t.categoriasInfo = lista;
+    this.avisar();
+  }
+
+  /** Sube la foto elegida a la carpeta de sitios y le pasa su URL a `guardar`. */
+  private subirFoto(evento: Event, quien: string, guardar: (url: string) => void): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+    this.subiendo = quien;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendo = "";
+        input.value = "";
+        if (!res || !res.success || !res.url) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        guardar(res.url);
+      },
+      error: () => {
+        this.subiendo = "";
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
   }
 
   /** Lo curado que ya no corresponde a ninguna categoría del catálogo (cambió de nombre o se quedó sin productos). */

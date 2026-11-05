@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
 import { PanelSitioBase } from "../panel-sitio-base";
-import { MensajeBarra, NOMBRES_ICONO, TOPES, conMensajes, mensajesDe } from "./barras-datos";
+import { MensajeBarra, NOMBRES_ICONO, TOPES, avisoDeDestino, conMensajes, mensajesDe } from "./barras-datos";
 
 /**
  * Barra de anuncio del diseño nuevo (PLAN-V2 T06, DISENO §3.6, decisión D8): hasta 3 mensajes con ícono y enlace, y
@@ -98,6 +98,14 @@ export class BarrasAnuncioPanelComponent extends PanelSitioBase {
     lista.splice(k, 1);
     this.datos.enlacesBarra = lista;
     this.avisar();
+  }
+
+  /**
+   * Un destino que no sirve: una sección que no existe en el inicio o una página interna (`/empresas`) que el sitio no
+   * tiene. La barra lo publica igual y no lleva a ningún lado (el menú del encabezado, en cambio, lo esconde).
+   */
+  avisoDestino(url: string): string {
+    return avisoDeDestino(url, this.contenido, "barra");
   }
 
   porIndice(k: number): number {
