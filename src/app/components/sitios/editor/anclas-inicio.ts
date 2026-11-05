@@ -8,7 +8,8 @@ import { esTipoNuevoSitio } from "./paneles/tipos-nuevos";
  *    reemplaza, salvo en los bloques de id fijo y en las vitrinas;
  *  - los bloques de id fijo suman ese id (catálogo, contacto, categorías…);
  *  - una vitrina suma `productos` (la primera) o `productos-N` solo si tiene productos que se publican (P0-13); en el
- *    diseño nuevo, si tiene ancla propia, esa en vez de su id fijo (tanda N1, como `renderSitio`);
+ *    diseño nuevo, si tiene ancla propia, esa en vez de su id fijo (tanda N1, como `renderSitio`), y la primera sigue
+ *    respondiendo también a `productos`, que pasa a su cabecera (cierre de N1);
  *  - un tipo nuevo de los módulos solo existe con el diseño nuevo.
  */
 
@@ -60,7 +61,11 @@ export function anclasDelInicio(bloques: any[], opciones: OpcionesAnclas): Set<s
     const propia = opciones.disenoNuevo && !ID_FIJO_DE_BLOQUE[b.tipo] ? anclaValida(b.estilo && b.estilo.ancla) : "";
     ids.add(b.tipo === "productos" ? `seccion-${i}` : propia || `seccion-${i}`);
     if (b.tipo === "productos") {
-      if (vitrina(b)) ids.add(propia || (i === primeraVitrina ? "productos" : `productos-${i}`));
+      if (vitrina(b)) {
+        ids.add(propia || (i === primeraVitrina ? "productos" : `productos-${i}`));
+        // Cierre de N1: con ancla propia, la primera vitrina sigue respondiendo a «#productos» (en su cabecera).
+        if (propia && i === primeraVitrina) ids.add("productos");
+      }
     } else if (ID_FIJO_DE_BLOQUE[b.tipo]) {
       ids.add(ID_FIJO_DE_BLOQUE[b.tipo]);
     }
