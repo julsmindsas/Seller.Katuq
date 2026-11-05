@@ -20,6 +20,14 @@ import { FichaSaludComponent } from './componentes/ficha/ficha-salud.component';
 import { FichaSoporteComponent } from './componentes/ficha/ficha-soporte.component';
 import { FichaHistorialComponent } from './componentes/ficha/ficha-historial.component';
 import { CuentasExcluidasComponent } from './componentes/excluidas/cuentas-excluidas.component';
+import { SegmentosComponent } from './componentes/segmentos/segmentos.component';
+import { CalidadDatosComponent } from './componentes/calidad/calidad-datos.component';
+import { SugerenciasComponent } from './componentes/sugerencias/sugerencias.component';
+import { CobrosComponent } from './componentes/cobros/cobros.component';
+import { AdopcionComponent } from './componentes/adopcion/adopcion.component';
+import { ExportarComerciosComponent } from './componentes/exportar/exportar-comercios.component';
+import { FichaIntegracionesComponent } from './componentes/ficha/ficha-integraciones.component';
+import { FichaInformeComponent } from './componentes/ficha/ficha-informe.component';
 
 /**
  * D-700 13.3 — Rutas internas del módulo (la ruta `plataforma` la registra `routes.ts` con `AuthGuard` y
@@ -35,6 +43,11 @@ const rutas: Routes = [
       { path: 'tendencias', component: TendenciasComponent },
       { path: 'comercios', component: ComerciosTablaComponent },
       { path: 'comercios/:docId', component: ComercioFichaComponent },
+      { path: 'segmentos', component: SegmentosComponent },
+      { path: 'cobros', component: CobrosComponent },
+      { path: 'adopcion', component: AdopcionComponent },
+      { path: 'calidad', component: CalidadDatosComponent },
+      { path: 'sugerencias', component: SugerenciasComponent },
       { path: 'excluidas', component: CuentasExcluidasComponent },
       { path: '**', redirectTo: 'resumen' },
     ],
@@ -49,6 +62,8 @@ const rutas: Routes = [
     TendenciasComponent, GraficoTendenciaComponent, ComerciosTablaComponent,
     ComercioFichaComponent, FichaSeccionComponent, FichaIdentidadComponent, FichaSuscripcionPagosComponent,
     FichaUsoComponent, FichaSaludComponent, FichaSoporteComponent, FichaHistorialComponent, CuentasExcluidasComponent,
+    SegmentosComponent, CalidadDatosComponent, SugerenciasComponent, CobrosComponent, AdopcionComponent, ExportarComerciosComponent,
+    FichaIntegracionesComponent, FichaInformeComponent,
   ],
   providers: [PlataformaContextoService],
 })

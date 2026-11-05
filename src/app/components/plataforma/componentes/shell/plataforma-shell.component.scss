@@ -170,10 +170,23 @@ body:not(.dark-only) .pl-raiz {
 
 // ── Contenedores de las pantallas hijas ──
 .pl-raiz app-resumen, .pl-raiz app-tendencias, .pl-raiz app-comercios-tabla, .pl-raiz app-cuentas-excluidas, .pl-raiz app-comercio-ficha,
-.pl-raiz app-ficha-identidad { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pl-raiz app-ficha-identidad, .pl-raiz app-segmentos, .pl-raiz app-cobros, .pl-raiz app-adopcion, .pl-raiz app-calidad-datos, .pl-raiz app-sugerencias,
+.pl-raiz app-exportar-comercios { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .pl-raiz .pl-ficha > * { min-width: 0; }
 .pl-raiz .pl-titulo-ficha { margin: 0; font-size: 20px; font-weight: 800; color: var(--ds-ink); }
 
 // Estado del dato en la lista de comercios (corte, parcial, desactualizada).
 .pl-raiz .pl-meta-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .pl-raiz .pl-pastillas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+
+// ── Segmentos, calidad de datos y exportación (D-700 14.6) ──
+.pl-raiz .pl-segmentos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.pl-raiz .pl-segmento { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 12px 14px; text-align: left; white-space: normal; }
+.pl-raiz .pl-segmento__nombre { font-size: 13.5px; font-weight: 800; color: inherit; }
+.pl-raiz .pl-segmento__cuenta { font-size: 12px; font-weight: 400; color: var(--ds-muted); }
+.pl-raiz .cfg-btn.pl-activo .pl-segmento__cuenta { color: var(--ds-accent-ink); }
+.pl-raiz .pl-calidad__item { display: flex; flex-direction: column; gap: 8px; }
+.pl-raiz .pl-calidad__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; width: 100%; }
+.pl-raiz .pl-calidad__acciones { display: flex; align-items: center; gap: 10px; }
+.pl-raiz .pl-calidad__empresas { width: 100%; max-height: 280px; overflow: auto; }
+.pl-raiz .pl-exportar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0; }

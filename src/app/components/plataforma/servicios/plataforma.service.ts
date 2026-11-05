@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { HttpContext, HttpResponse } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interceptor';
 import { BaseService } from '../../../shared/services/base.service';
 import {
-  Definiciones, Excluidas, FiltrosTabla, Listado, MePlataforma, NombreSeccion, Overview, SobrePlataforma, Tendencias,
+  Calidad, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
+  ResumenSegmento, SobrePlataforma, Sugerencias, Tendencias,
 } from '../plataforma.tipos';
-import { paramsDeFiltros, queryString } from '../logica/consulta';
+import { paramsDeFiltros, paramsExportacion, queryString } from '../logica/consulta';
 
 /**
  * D-700 13.3 — Todas las llamadas a `/v1/platform`. Extiende `BaseService` (el interceptor pone la autorización);
@@ -47,6 +51,35 @@ export class PlataformaService extends BaseService {
 
   definiciones(): Observable<SobrePlataforma<Definiciones>> {
     return this.getSinLoader('/v1/platform/definitions');
+  }
+
+  segmentos(): Observable<SobrePlataforma<{ segmentos: ResumenSegmento[] } | null>> {
+    return this.getSinLoader('/v1/platform/segments');
+  }
+
+  segmento(clave: string): Observable<SobrePlataforma<ListaSegmento | null>> {
+    return this.getSinLoader(`/v1/platform/segments/${encodeURIComponent(clave)}`);
+  }
+
+  calidad(): Observable<SobrePlataforma<Calidad | null>> {
+    return this.getSinLoader('/v1/platform/data-quality');
+  }
+
+  sugerencias(): Observable<SobrePlataforma<Sugerencias>> {
+    return this.getSinLoader('/v1/platform/suggestions');
+  }
+
+  /**
+   * Exporta la lista de comercios (con los filtros actuales) en CSV o PDF. Va como `blob` por el mismo cliente HTTP de
+   * `BaseService` (con la autorización del interceptor): sin enlaces con credenciales ni ventanas nuevas. El servidor deja
+   * el registro de quién exportó y con qué filtros.
+   */
+  exportarComercios(f: FiltrosTabla, formato: FormatoExportacion): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${environment.urlApi}/v1/platform/exports/companies${queryString(paramsExportacion(f, formato))}`, {
+      responseType: 'blob',
+      observe: 'response',
+      context: new HttpContext().set(SKIP_LOADER, true),
+    });
   }
 
   /** Solo el operador: relanza el cálculo de la capa viva. El servidor responde 202. */

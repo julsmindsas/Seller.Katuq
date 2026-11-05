@@ -16,6 +16,11 @@ const CICLOS: Array<[string, string]> = [
 const TIPOS: Array<[string, string]> = [
   ['real', 'Real'], ['porConfirmar', 'Por confirmar'], ['demo', 'Demo'], ['prueba', 'Prueba'], ['cortesia', 'Cortesía'], ['interna', 'Interna'],
 ];
+const SEGMENTOS: Array<[string, string]> = [
+  ['nuevos_sin_primer_pedido', 'Nuevos sin primer pedido'], ['pagan_sin_medio_de_pago', 'Pagan sin medio de pago'],
+  ['premium_ventas_en_caida', 'Premium con ventas en caída'], ['gratuitos_cerca_limite', 'Gratuitos en el límite de integraciones'],
+  ['plan_vencido_o_por_vencer', 'Plan vencido o por vencer'],
+];
 const COLUMNAS: Array<{ orden: string | null; clave: string; der?: boolean }> = [
   { orden: 'nombre', clave: 'nombre' }, { orden: null, clave: 'ciclo' }, { orden: null, clave: 'plan' }, { orden: 'alta', clave: 'alta' },
   { orden: 'pedidos', clave: 'pedidos', der: true }, { orden: 'gmv', clave: 'gmv', der: true }, { orden: 'contratado', clave: 'contratado', der: true },
@@ -32,6 +37,7 @@ const COLUMNAS: Array<{ orden: string | null; clave: string; der?: boolean }> = 
 export class ComerciosTablaComponent implements OnInit, OnDestroy {
   readonly textos = TEXTOS;
   readonly t = TEXTOS.comercios;
+  readonly segmentos = SEGMENTOS;
   readonly ciclos = CICLOS;
   readonly tipos = TIPOS;
   readonly planes = Object.keys(TEXTOS.comercios.planesNombres);
@@ -64,7 +70,7 @@ export class ComerciosTablaComponent implements OnInit, OnDestroy {
     this.busqueda$.next();
   }
 
-  cambiar(campo: 'ciclo' | 'tipoCuenta' | 'plan', valor: string): void {
+  cambiar(campo: 'segmento' | 'ciclo' | 'tipoCuenta' | 'plan', valor: string): void {
     this.filtros = { ...this.filtros, [campo]: valor, pagina: 1 };
     this.cargar$.next();
   }

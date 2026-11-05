@@ -31,8 +31,10 @@ import { TEXTOS } from '../../plataforma.textos';
         <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId"></app-ficha-suscripcion-pagos>
         <app-ficha-uso [docId]="docId"></app-ficha-uso>
         <app-ficha-salud [docId]="docId"></app-ficha-salud>
+        <app-ficha-integraciones [docId]="docId"></app-ficha-integraciones>
         <app-ficha-soporte [docId]="docId"></app-ficha-soporte>
         <app-ficha-historial [docId]="docId"></app-ficha-historial>
+        <app-ficha-informe class="pl-ficha__ancha" [docId]="docId"></app-ficha-informe>
       </div>
     </ng-container>
   `,

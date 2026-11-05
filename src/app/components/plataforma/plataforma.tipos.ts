@@ -61,6 +61,15 @@ export interface Overview {
   };
   calidadDeDatos: Record<string, number>;
   cuentasExcluidas: number;
+  /** Panel de integraciones por proveedor: «configurado», no «usado». */
+  adopcionProveedores?: AdopcionProveedores;
+}
+
+export interface AdopcionProveedores {
+  tipo: string;
+  conCenso: number;
+  estado: string;
+  lista: Array<{ id: string; comercios: number; porcentaje: number | null }>;
 }
 
 export interface PuntoTendencia {
@@ -96,6 +105,9 @@ export interface FilaComercio {
   diasAtrasoMax: number | null;
   ultimoPago: { estado: string; fecha: string | null; monto: number | null; medio: string | null } | null;
   ticketsAbiertos: number | null;
+  saludPuntaje?: number | null;
+  saludNivel?: string | null;
+  saludParcial?: boolean | null;
   calidad: string[];
   parcial: boolean;
   desactualizada: boolean;
@@ -110,6 +122,7 @@ export interface Listado {
 
 export interface FiltrosTabla {
   q: string;
+  segmento: string;
   ciclo: string;
   tipoCuenta: string;
   plan: string;
@@ -156,3 +169,72 @@ export interface EstadoCarga<T> {
   codigo: string | null;
   datos: T | null;
 }
+
+/** Segmentos accionables (D-700 14.3). */
+export interface ResumenSegmento {
+  clave: string;
+  nombre: string;
+  criterio: string;
+  disponible: boolean;
+  motivo?: string;
+  cantidad: number | null;
+  sinDato: number;
+}
+
+export interface FilaSegmento {
+  docId: string;
+  nomComercial: string | null;
+  ciclo: string | null;
+  clasePlan: string | null;
+  datos: Record<string, unknown> | null;
+}
+
+export interface ListaSegmento {
+  clave: string;
+  nombre: string;
+  criterio: string;
+  disponible: boolean;
+  motivo?: string;
+  cantidad: number | null;
+  sinDato: number;
+  filas: FilaSegmento[];
+}
+
+/** Calidad de datos (D-700 14.3). */
+export interface ItemCalidad {
+  clave: string;
+  nombre: string;
+  grupo: 'comercio' | 'calculo' | 'lectura' | string;
+  aviso: string | null;
+  cantidad: number;
+  empresas: Array<{ docId: string; nomComercial: string | null }>;
+  truncada: boolean;
+}
+
+export interface Calidad {
+  empresasEvaluadas: number;
+  empresasConAvisos: number;
+  items: ItemCalidad[];
+}
+
+/** Sugerencias de los comercios (D-700 14.4): nunca el texto completo. */
+export interface TemaSugerido {
+  tema: string;
+  comercios: number;
+  pedidos: number;
+  abiertos: number;
+  estados: string[];
+  categoria: string | null;
+}
+
+export interface Sugerencias {
+  estado: string;
+  nota: string;
+  totalPedidos: number;
+  pedidosSinComercio: number;
+  temas: TemaSugerido[];
+  categorias: Array<{ categoria: string; etiqueta: string; comercios: number; temas: number; pedidos: number }>;
+  ideasEnSoporte: { estado: string; tickets: number | null; comercios: number | null };
+}
+
+export type FormatoExportacion = 'csv' | 'pdf';

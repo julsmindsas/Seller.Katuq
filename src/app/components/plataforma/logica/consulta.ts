@@ -7,13 +7,14 @@ import { FiltrosTabla, Listado } from '../plataforma.tipos';
 export const TAMANOS = [10, 25, 50, 100];
 
 export function filtrosIniciales(): FiltrosTabla {
-  return { q: '', ciclo: '', tipoCuenta: '', plan: '', orden: 'nombre', dir: 'asc', pagina: 1, tamano: 25 };
+  return { q: '', segmento: '', ciclo: '', tipoCuenta: '', plan: '', orden: 'nombre', dir: 'asc', pagina: 1, tamano: 25 };
 }
 
 export function paramsDeFiltros(f: FiltrosTabla): Record<string, string> {
   const p: Record<string, string> = {};
   const q = (f.q || '').trim().slice(0, 100);
   if (q) p['q'] = q;
+  if (f.segmento) p['segmento'] = f.segmento;
   if (f.ciclo) p['ciclo'] = f.ciclo;
   if (f.tipoCuenta) p['tipoCuenta'] = f.tipoCuenta;
   if (f.plan) p['plan'] = f.plan;
@@ -21,6 +22,15 @@ export function paramsDeFiltros(f: FiltrosTabla): Record<string, string> {
   p['dir'] = f.dir === 'desc' ? 'desc' : 'asc';
   p['pagina'] = String(Math.max(1, Math.floor(f.pagina || 1)));
   p['tamano'] = String(TAMANOS.includes(f.tamano) ? f.tamano : 25);
+  return p;
+}
+
+/** Parámetros de la exportación: los mismos filtros de la lista, sin paginar, más el formato. */
+export function paramsExportacion(f: FiltrosTabla, formato: 'csv' | 'pdf'): Record<string, string> {
+  const p = paramsDeFiltros(f);
+  delete p['pagina'];
+  delete p['tamano'];
+  p['formato'] = formato === 'pdf' ? 'pdf' : 'csv';
   return p;
 }
 

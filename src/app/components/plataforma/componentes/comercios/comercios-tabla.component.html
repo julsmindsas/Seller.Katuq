@@ -5,6 +5,12 @@
     <label>{{ t.buscar }}
       <input type="search" [value]="filtros.q" (input)="escribir($any($event.target).value)" maxlength="100" autocomplete="off" />
     </label>
+    <label>{{ t.segmentos }}
+      <select [value]="filtros.segmento" (change)="cambiar('segmento', $any($event.target).value)">
+        <option value="">{{ t.todosSegmentos }}</option>
+        <option *ngFor="let c of segmentos" [value]="c[0]" [selected]="filtros.segmento === c[0]">{{ c[1] }}</option>
+      </select>
+    </label>
     <label>{{ t.ciclos }}
       <select [value]="filtros.ciclo" (change)="cambiar('ciclo', $any($event.target).value)">
         <option value="">{{ t.todosCiclos }}</option>
@@ -24,6 +30,8 @@
       </select>
     </label>
   </div>
+
+  <app-exportar-comercios [filtros]="filtros"></app-exportar-comercios>
 
   <div class="pl-esqueleto" *ngIf="estado.cargando" role="status" [attr.aria-label]="textos.cargando"></div>
 
