@@ -1,0 +1,34 @@
+<section class="cfg-card" [attr.aria-label]="nombre">
+  <div class="pl-grafico__cabeza">
+    <h2>{{ nombre }}</h2>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="alternar()" [attr.aria-pressed]="verTabla">
+      {{ verTabla ? textos.tendencias.verGrafico : textos.tendencias.verTabla }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="!verTabla">
+    <div class="pl-grafico__lienzo" *ngIf="resultado && ajustes" role="img" tabindex="0" [attr.aria-label]="grafico?.resumen">
+      <app-viz-chart [result]="resultado" chartType="line" [colors]="colores" [altura]="280" [radio]="11" [ajustes]="ajustes"></app-viz-chart>
+    </div>
+    <div class="cfg-vacio" *ngIf="!resultado">
+      <div class="cfg-vacio__icono"><i class="pi pi-chart-line" aria-hidden="true"></i></div>
+      <h3 class="cfg-vacio__titulo">{{ textos.tendencias.sinDato }}</h3>
+      <p class="cfg-vacio__texto">{{ textos.tendencias.sinDatoTexto }}</p>
+    </div>
+  </ng-container>
+
+  <div class="pl-tabla-caja pl-tabla-siempre" *ngIf="verTabla && grafico">
+    <table class="pl-tabla">
+      <caption class="pl-muted">{{ grafico.resumen }}</caption>
+      <thead><tr><th scope="col">{{ textos.tendencias.mes }}</th><th scope="col" class="pl-der">{{ textos.tendencias.valor }}</th><th scope="col">{{ textos.tendencias.estado }}</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let f of grafico.filas">
+          <td>{{ f.etiqueta }}</td>
+          <td class="pl-der pl-num">{{ f.texto }}</td>
+          <td><span class="cfg-pill cfg-pill--neutro" *ngIf="f.insignia">{{ f.insignia }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="pl-leyenda">{{ textos.tendencias.leyenda }}</p>
+</section>

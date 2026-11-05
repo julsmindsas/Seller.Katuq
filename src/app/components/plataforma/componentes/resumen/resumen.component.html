@@ -1,0 +1,25 @@
+<ng-container *ngIf="estado.datos as r">
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="r.meta.desactualizado" role="status">
+    {{ textos.desactualizado(r.meta.corteColombia || '—') }} ({{ antiguedad(r.meta.antiguedadHoras) }})
+  </p>
+  <p class="cfg-aviso" *ngIf="r.meta.parcial && r.datos" role="status">{{ textos.parcial }}</p>
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="r.meta.cobroAutomatico?.advertencia" role="status">
+    {{ textos.cobroAutomatico }}: {{ r.meta.cobroAutomatico?.advertencia }}
+  </p>
+  <p class="cfg-aviso" *ngIf="r.datos?.rotulo" role="status">{{ r.datos?.rotulo }}</p>
+
+  <section class="cfg-card" *ngIf="!r.datos">
+    <div class="cfg-vacio">
+      <div class="cfg-vacio__icono"><i class="pi pi-chart-bar" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo">{{ textos.sinCalcular }}</h2>
+    </div>
+  </section>
+
+  <div class="pl-rejilla" *ngIf="r.datos as d">
+    <app-kpi-seccion *ngFor="let s of secciones" [clave]="s" [overview]="d" [meta]="r.meta" [definiciones]="definiciones"></app-kpi-seccion>
+  </div>
+</ng-container>
+
+<div class="pl-rejilla" *ngIf="estado.cargando || estado.error">
+  <app-kpi-seccion *ngFor="let s of secciones" [clave]="s" [cargando]="estado.cargando" [error]="estado.error" (reintentar)="reintentar()"></app-kpi-seccion>
+</div>

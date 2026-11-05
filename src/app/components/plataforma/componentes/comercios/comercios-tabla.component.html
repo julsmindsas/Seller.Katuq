@@ -1,0 +1,108 @@
+<section class="cfg-card">
+  <h2 class="cfg-card__titulo">{{ t.titulo }}</h2>
+
+  <div class="pl-filtros" role="search">
+    <label>{{ t.buscar }}
+      <input type="search" [value]="filtros.q" (input)="escribir($any($event.target).value)" maxlength="100" autocomplete="off" />
+    </label>
+    <label>{{ t.ciclos }}
+      <select [value]="filtros.ciclo" (change)="cambiar('ciclo', $any($event.target).value)">
+        <option value="">{{ t.todosCiclos }}</option>
+        <option *ngFor="let c of ciclos" [value]="c[0]" [selected]="filtros.ciclo === c[0]">{{ c[1] }}</option>
+      </select>
+    </label>
+    <label>{{ t.tipos }}
+      <select [value]="filtros.tipoCuenta" (change)="cambiar('tipoCuenta', $any($event.target).value)">
+        <option value="">{{ t.todosTipos }}</option>
+        <option *ngFor="let c of tipos" [value]="c[0]" [selected]="filtros.tipoCuenta === c[0]">{{ c[1] }}</option>
+      </select>
+    </label>
+    <label>{{ t.planes }}
+      <select [value]="filtros.plan" (change)="cambiar('plan', $any($event.target).value)">
+        <option value="">{{ t.todosPlanes }}</option>
+        <option *ngFor="let c of planes" [value]="c" [selected]="filtros.plan === c">{{ planTexto(c) }}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="pl-esqueleto" *ngIf="estado.cargando" role="status" [attr.aria-label]="textos.cargando"></div>
+
+  <div class="pl-error" *ngIf="!estado.cargando && estado.error">
+    <p class="cfg-aviso cfg-aviso--error">{{ estado.error }}</p>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="reintentar()">{{ textos.reintentar }}</button>
+  </div>
+
+  <ng-container *ngIf="estado.datos as r">
+    <div class="cfg-vacio" *ngIf="!r.datos">
+      <div class="cfg-vacio__icono"><i class="pi pi-building" aria-hidden="true"></i></div>
+      <h3 class="cfg-vacio__titulo">{{ textos.sinCalcular }}</h3>
+    </div>
+
+    <ng-container *ngIf="r.datos as l">
+      <div class="cfg-vacio" *ngIf="!l.filas.length">
+        <div class="cfg-vacio__icono"><i class="pi pi-search" aria-hidden="true"></i></div>
+        <h3 class="cfg-vacio__titulo">{{ t.vacioTitulo }}</h3>
+        <p class="cfg-vacio__texto">{{ t.vacioTexto }}</p>
+      </div>
+
+      <ng-container *ngIf="l.filas.length">
+        <div class="pl-tabla-caja">
+          <table class="pl-tabla">
+            <thead>
+              <tr>
+                <th *ngFor="let c of columnas" scope="col" [class.pl-der]="c.der" [class.pl-orden]="c.orden && filtros.orden === c.orden" [attr.aria-sort]="ariaOrden(c.orden)">
+                  <button type="button" *ngIf="c.orden" (click)="ordenar(c.orden)">{{ rotuloColumna(c.clave) }}{{ filtros.orden === c.orden ? (filtros.dir === 'asc' ? ' ▲' : ' ▼') : '' }}</button>
+                  <ng-container *ngIf="!c.orden">{{ rotuloColumna(c.clave) }}</ng-container>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let f of l.filas; trackBy: trackFila">
+                <td><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
+                  <div><small class="pl-muted" *ngIf="f.tipoCuenta.tipo !== 'real'">{{ f.tipoCuenta.tipo }}</small></div></td>
+                <td>{{ cicloTexto(f.ciclo) }}</td>
+                <td>{{ planTexto(f.clasePlan) }}</td>
+                <td>{{ f.altaFecha | fechaCo:false }}</td>
+                <td class="pl-der pl-num">{{ (f.pedidosMes === null ? '—' : f.pedidosMes) }}</td>
+                <td class="pl-der pl-num">{{ f.gmvMes | cop }}</td>
+                <td class="pl-der pl-num">{{ f.contratadoCOP | cop }}</td>
+                <td class="pl-der pl-num">{{ f.cobradoMes | cop }}</td>
+                <td class="pl-der pl-num">{{ f.porCobrar | cop }}</td>
+                <td class="pl-der pl-num">{{ f.mora | cop }}</td>
+                <td>{{ f.ultimoIngreso | fechaCo:false }}</td>
+                <td>{{ ultimoPago(f.ultimoPago) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pl-tarjetas">
+          <article class="pl-tarjeta" *ngFor="let f of l.filas; trackBy: trackFila">
+            <a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('ciclo') }}</b><div>{{ cicloTexto(f.ciclo) }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('plan') }}</b><div>{{ planTexto(f.clasePlan) }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('gmv') }}</b><div class="pl-num">{{ f.gmvMes | cop }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('contratado') }}</b><div class="pl-num">{{ f.contratadoCOP | cop }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('cobrado') }}</b><div class="pl-num">{{ f.cobradoMes | cop }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('mora') }}</b><div class="pl-num">{{ f.mora | cop }}</div></div>
+            <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('ultimoPago') }}</b><div>{{ ultimoPago(f.ultimoPago) }}</div></div>
+          </article>
+        </div>
+      </ng-container>
+
+      <div class="pl-pie-tabla">
+        <div *ngIf="totales(l).total !== null">{{ t.total($any(totales(l).total)) }}</div>
+        <label class="pl-muted">{{ t.filas }}
+          <select [value]="filtros.tamano" (change)="cambiarTamano($any($event.target).value)">
+            <option *ngFor="let n of tamanos" [value]="n" [selected]="filtros.tamano === n">{{ n }}</option>
+          </select>
+        </label>
+        <div class="pl-paginas">
+          <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="l.paginacion.pagina <= 1" (click)="ir(l.paginacion.pagina - 1)">{{ t.anterior }}</button>
+          <div>{{ t.pagina(l.paginacion.pagina, l.paginacion.paginas) }}</div>
+          <button type="button" class="cfg-btn cfg-btn--sec" [disabled]="l.paginacion.pagina >= l.paginacion.paginas" (click)="ir(l.paginacion.pagina + 1)">{{ t.siguiente }}</button>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</section>

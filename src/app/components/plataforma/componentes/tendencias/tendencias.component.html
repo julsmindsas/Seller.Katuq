@@ -1,0 +1,23 @@
+<div class="pl-rejilla" *ngIf="estado.cargando">
+  <div class="pl-esqueleto" *ngFor="let s of orden" role="status" [attr.aria-label]="textos.cargando"></div>
+</div>
+
+<section class="cfg-card pl-error" *ngIf="!estado.cargando && estado.error">
+  <p class="cfg-aviso cfg-aviso--error">{{ estado.error }}</p>
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="reintentar()">{{ textos.reintentar }}</button>
+</section>
+
+<ng-container *ngIf="estado.datos as r">
+  <section class="cfg-card" *ngIf="!r.datos">
+    <div class="cfg-vacio">
+      <div class="cfg-vacio__icono"><i class="pi pi-chart-line" aria-hidden="true"></i></div>
+      <h2 class="cfg-vacio__titulo">{{ textos.sinCalcular }}</h2>
+    </div>
+  </section>
+  <ng-container *ngIf="r.datos as d">
+    <p class="cfg-aviso" role="status">{{ d.nota }}</p>
+    <div class="pl-graficos">
+      <app-grafico-tendencia *ngFor="let k of orden" [clave]="k" [unidad]="d.series[k]?.unidad || 'n'" [puntos]="d.series[k]?.puntos || []"></app-grafico-tendencia>
+    </div>
+  </ng-container>
+</ng-container>
