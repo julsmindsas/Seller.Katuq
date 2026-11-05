@@ -210,6 +210,15 @@ export class CategoriasPanelComponent extends PanelSitioBase implements OnInit {
     return this.categorias.find((c) => !c.oculta && !!this.iconoDe(c) && !this.fotoDe(c)) || null;
   }
 
+  /** La foto con que se dibuja la vista de la tienda (primitivas: un objeto nuevo en cada revisión rompería el enlace en dev). */
+  get muestraFoto(): string {
+    return this.vistaDe(this.categoriaDeMuestra).foto;
+  }
+
+  get muestraTrazo(): string {
+    return this.vistaDe(this.categoriaDeMuestra).trazo;
+  }
+
   subirFotoGeneral(evento: Event): void {
     this.subirFoto(evento, "general", (url) => {
       const t: any = this.contenido && (this.contenido as any).tienda;

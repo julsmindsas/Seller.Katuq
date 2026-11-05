@@ -13,16 +13,16 @@
     configurar nada sale una placa con el ícono de su categoría y su marca. Puedes subir una foto para toda la tienda y,
     en cada categoría de abajo, la suya (esa va primero).
   </p>
-  <div class="foto-gral__fila" *ngIf="vistaDe(categoriaDeMuestra) as v">
+  <div class="foto-gral__fila">
     <div class="vista" [style.background]="colores.pagina" [style.borderColor]="colores.borde" role="img"
          aria-label="Así se ve un producto sin foto en tu página">
       <div class="vista__foto" [style.background]="colores.fondo">
-        <img *ngIf="v.foto" [src]="v.foto" alt="" />
-        <span *ngIf="!v.foto" class="vista__disco" [style.background]="colores.disco" [style.color]="colores.icono">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="v.trazo" /></svg>
+        <img *ngIf="muestraFoto" [src]="muestraFoto" alt="" />
+        <span *ngIf="!muestraFoto" class="vista__disco" [style.background]="colores.disco" [style.color]="colores.icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="muestraTrazo" /></svg>
         </span>
-        <span *ngIf="!v.foto" class="vista__marca" [style.color]="colores.marca">MARCA</span>
-        <span *ngIf="v.foto" class="vista__ref">Foto de referencia</span>
+        <span *ngIf="!muestraFoto" class="vista__marca" [style.color]="colores.marca">MARCA</span>
+        <span *ngIf="muestraFoto" class="vista__ref">Foto de referencia</span>
       </div>
       <span class="vista__nombre" [style.color]="colores.texto">Nombre del producto</span>
     </div>
