@@ -1,6 +1,9 @@
 import { Type } from "@angular/core";
 import { PanelSitioBase } from "./panel-sitio-base";
 import { PanelPortadaComponent } from "./portada/panel-portada.component";
+import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
+import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
+import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -58,6 +61,15 @@ export interface PanelSitio {
  *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T17 guia · T20 pedidoRapido
  */
 export const PANELES_SITIO: PanelSitio[] = [
+  // T06 (módulo `barras`): Tienda › Atención, y lo nuevo del encabezado y de la barra de anuncio, que sale debajo de sus
+  // campos de siempre (con el diseño nuevo).
+  {
+    id: "barras",
+    componente: AtencionPanelComponent,
+    tienda: { titulo: "Atención", descripcion: "El horario y el tiempo de respuesta reales de tu WhatsApp. Los usa el botón «Asesor» del encabezado." },
+  },
+  { id: "barrasEncabezado", tipo: "encabezado", componente: BarrasEncabezadoPanelComponent },
+  { id: "barrasAnuncio", tipo: "anuncio", componente: BarrasAnuncioPanelComponent },
   // T07 (módulo `portada`): la portada «Espacios». Extiende el bloque `hero`: sale debajo de sus campos de siempre.
   { id: "portada", componente: PanelPortadaComponent, tipo: "hero" },
 ];

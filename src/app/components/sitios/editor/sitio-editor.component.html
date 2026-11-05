@@ -478,7 +478,8 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <button class="opcion" [class.is-active]="b.datos.mostrarCategorias"
+            <!-- PLAN-V2 T06: con el diseño nuevo, las categorías se eligen en «Categorías en el menú» (fila o submenú). -->
+            <button class="opcion" *ngIf="!disenoNuevo" [class.is-active]="b.datos.mostrarCategorias"
                     (click)="b.datos.mostrarCategorias = !b.datos.mostrarCategorias; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Menú de categorías</strong>
@@ -517,6 +518,8 @@
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
 
+            <!-- PLAN-V2 T06: con el diseño nuevo, el menú (hasta 7 enlaces con submenú) se edita en su panel, abajo. -->
+            <ng-container *ngIf="!disenoNuevo">
             <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.enlaces)">
             <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
@@ -532,10 +535,14 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
               Agregar enlace
             </button>
+            </ng-container>
           </ng-container>
 
           <!-- Barra de anuncios -->
           <ng-container *ngIf="b.tipo === 'anuncio'">
+            <!-- PLAN-V2 T06: con el diseño nuevo, los mensajes (hasta 3) y la ayuda se editan en su panel, abajo, y la
+                 barra no desfila (D8). -->
+            <ng-container *ngIf="!disenoNuevo">
             <div class="campo">
               <label>Anuncio</label>
               <input type="text" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()"
@@ -555,6 +562,7 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
+            </ng-container>
           </ng-container>
 
           <ng-container *ngIf="b.tipo === 'hero'">
@@ -1727,7 +1735,7 @@
 
           <!-- Diseño nuevo (PLAN-V2 T03): el panel propio del bloque, si su tipo trae uno (paneles/registro.ts). -->
           <app-panel-sitio *ngIf="panelDeBloque(b) as panelPropio" [panel]="panelPropio" [bloque]="b" [contenido]="contenido"
-                           (cambio)="alCambiarPanel()"></app-panel-sitio>
+                           (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-sitio>
 
           <!-- Diseño nuevo (PLAN-V2 T02, DISENO §3.1): la cabecera de la sección, igual en los 8 bloques que la usan. -->
           <ng-container *ngIf="conCabeceraV2(b.tipo)">
@@ -3308,7 +3316,7 @@
               (click)="abrirGrupoTienda(p.tienda?.titulo || '')" (keydown.enter)="abrirGrupoTienda(p.tienda?.titulo || '')"
               (keydown.space)="$event.preventDefault(); abrirGrupoTienda(p.tienda?.titulo || '')">{{ p.tienda?.titulo }}</h3>
           <p class="nota" *ngIf="p.tienda?.descripcion">{{ p.tienda?.descripcion }}</p>
-          <app-panel-sitio [panel]="p" [contenido]="contenido" (cambio)="alCambiarPanel()"></app-panel-sitio>
+          <app-panel-sitio [panel]="p" [contenido]="contenido" (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-sitio>
         </div>
 
       </div>

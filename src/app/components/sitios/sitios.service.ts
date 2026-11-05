@@ -86,6 +86,15 @@ export interface TiendaSitio {
   promociones?: PromocionSitio[];
   /** Los correos que la tienda le manda al comprador, personalizados (D-317). */
   correos?: CorreosTienda;
+  /**
+   * Diseño nuevo (PLAN-V2 T06, Tienda › Atención): horario y tiempo de respuesta reales del WhatsApp, para el botón
+   * «Asesor» del encabezado. null la borra (el servidor conserva una clave que no llega).
+   */
+  atencion?: {
+    horario?: { activo: boolean; dias: number[]; desde: string; hasta: string } | null;
+    tiempoRespuesta?: string;
+    fueraDeHorario?: string;
+  } | null;
 }
 
 /** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */

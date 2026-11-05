@@ -35,6 +35,7 @@ import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../iconos-sitio";
 import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
 // Diseño nuevo (PLAN-V2 T03): paneles de los bloques y piezas nuevas, cada uno en su carpeta de `paneles/`.
 import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
+import { anclaSinDestino as anclaSinDestinoEnInicio } from "./anclas-inicio";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -3457,40 +3458,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /**
    * P0-19: ¿este enlace del menú lleva a una sección que no existe en el inicio? La página publicada no lo
-   * muestra. Es la misma tabla de ids que pinta el servidor (utils/siteHtml.js): los bloques con id fijo lo
-   * usan (productos, categorías, destacado, sucursales, agenda, contacto, catálogo) y el resto lleva
-   * «seccion-N» por su posición. Una vitrina sin productos disponibles no se publica (P0-13): su ancla no
-   * existe. Mientras los productos de la vista previa no cargan, la vitrina cuenta. «#top» siempre sirve.
+   * muestra. Usa la misma regla que el servidor (`anclas-inicio.ts`, compartida con los paneles del diseño nuevo):
+   * cada bloque lleva «seccion-N» por su posición (en el diseño nuevo, su ancla propia la reemplaza), los de id fijo
+   * suman el suyo (productos, categorías, destacado, sucursales, agenda, contacto, catálogo) y una vitrina sin
+   * productos disponibles no se publica (P0-13): su ancla no existe. Mientras los productos de la vista previa no
+   * cargan, la vitrina cuenta. «#top» siempre sirve.
    */
   anclaSinDestino(url: string): boolean {
-    const m = /^#(.+)$/.exec(String(url || "").trim());
-    if (!m || m[1].toLowerCase() === "top") return false;
-    const FIJOS: { [tipo: string]: string } = {
-      categorias: "categorias",
-      destacado: "destacado",
-      sucursales: "sucursales",
-      agenda: "agenda",
-      formulario: "contacto",
-      catalogo: "catalogo",
-      explorar: "catalogo",
-      ficha: "producto",
-      gracias: "gracias",
-    };
-    const ids = new Set<string>();
-    const bloques = ((this.contenido && this.contenido.bloques) || []).filter((b: any) => b && b.visible !== false);
-    const primeraVitrina = bloques.findIndex((b: any) => b.tipo === "productos");
-    bloques.forEach((b: any, i: number) => {
-      const d = b.datos || {};
-      if (b.tipo === "productos") {
-        const elegidos: string[] = d.productoIds || [];
+    return anclaSinDestinoEnInicio(url, (this.contenido && this.contenido.bloques) || [], {
+      disenoNuevo: this.disenoNuevo,
+      vitrinaSePublica: (b: any) => {
+        const elegidos: string[] = (b.datos && b.datos.productoIds) || [];
         const conocidos = elegidos.filter((id) => this.productosPrevia.has(id));
-        const hay = elegidos.length > 0 && (conocidos.length === 0 || conocidos.some((id) => (this.productosPrevia.get(id) as any)?.disponible));
-        if (hay) ids.add(i === primeraVitrina ? "productos" : `productos-${i}`);
-      } else {
-        ids.add(FIJOS[b.tipo] || `seccion-${i}`);
-      }
+        return elegidos.length > 0 && (conocidos.length === 0 || conocidos.some((id) => (this.productosPrevia.get(id) as any)?.disponible));
+      },
     });
-    return !ids.has(m[1]);
   }
 
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */

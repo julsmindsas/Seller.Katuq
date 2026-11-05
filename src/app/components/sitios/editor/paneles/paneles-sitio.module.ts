@@ -5,6 +5,9 @@ import { SelectorProductosModule } from "../../selector-productos/selector-produ
 import { AlBodyModule } from "../../../../shared/directives/al-body.module";
 import { PanelSitioComponent } from "./panel-sitio.component";
 import { PanelPortadaComponent } from "./portada/panel-portada.component";
+import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
+import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
+import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 
 /**
  * Paneles del diseño nuevo del editor de sitios (PLAN-V2 T03). Cada panel nuevo se declara aquí (o se importa, si es
@@ -15,7 +18,7 @@ import { PanelPortadaComponent } from "./portada/panel-portada.component";
  */
 @NgModule({
   imports: [CommonModule, FormsModule, SelectorProductosModule, AlBodyModule],
-  declarations: [PanelSitioComponent, PanelPortadaComponent],
+  declarations: [PanelSitioComponent, AtencionPanelComponent, BarrasEncabezadoPanelComponent, BarrasAnuncioPanelComponent, PanelPortadaComponent],
   exports: [PanelSitioComponent],
 })
 export class PanelesSitioModule {}
