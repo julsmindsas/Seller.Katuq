@@ -1,4 +1,4 @@
-import { Component, ComponentRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, ViewContainerRef } from "@angular/core";
+import { AfterViewInit, Component, ComponentRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, ViewContainerRef } from "@angular/core";
 import { Subscription } from "rxjs";
 import { BloqueSitio } from "../../../sitio-render/sitio-render.component";
 import { ContenidoSitio } from "../../sitios.service";
@@ -13,7 +13,7 @@ import { PanelSitio, PanelSitioBase } from "./registro";
   selector: "app-panel-sitio",
   template: "<ng-container #ancla></ng-container>",
 })
-export class PanelSitioComponent implements OnChanges, OnDestroy {
+export class PanelSitioComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() panel: PanelSitio | null = null;
   @Input() bloque: BloqueSitio | null = null;
   @Input() contenido: ContenidoSitio | null = null;
@@ -26,9 +26,17 @@ export class PanelSitioComponent implements OnChanges, OnDestroy {
 
   ngOnChanges(cambios: SimpleChanges): void {
     if (cambios["panel"]) this.montar();
-    if (this.ref) {
-      this.ref.setInput("bloque", this.bloque);
-      this.ref.setInput("contenido", this.contenido);
+    this.pasarEntradas();
+  }
+
+  /**
+   * Con `static: true` el ancla ya existe en el primer `ngOnChanges`; si algún día no (otra plantilla, otro anfitrión),
+   * el panel se monta aquí y no se pierde.
+   */
+  ngAfterViewInit(): void {
+    if (!this.ref && this.panel) {
+      this.montar();
+      this.pasarEntradas();
     }
   }
 
@@ -36,9 +44,15 @@ export class PanelSitioComponent implements OnChanges, OnDestroy {
     this.desmontar();
   }
 
+  private pasarEntradas(): void {
+    if (!this.ref) return;
+    this.ref.setInput("bloque", this.bloque);
+    this.ref.setInput("contenido", this.contenido);
+  }
+
   private montar(): void {
     this.desmontar();
-    if (!this.panel || !this.panel.componente) return;
+    if (!this.panel || !this.panel.componente || !this.ancla) return;
     this.ref = this.ancla.createComponent(this.panel.componente);
     this.suscripcion = this.ref.instance.cambio.subscribe(() => this.cambio.emit());
   }

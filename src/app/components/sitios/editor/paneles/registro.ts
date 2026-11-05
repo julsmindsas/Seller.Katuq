@@ -1,6 +1,7 @@
 import { Directive, EventEmitter, Input, Output, Type } from "@angular/core";
 import { BloqueSitio } from "../../../sitio-render/sitio-render.component";
 import { ContenidoSitio } from "../../sitios.service";
+export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 
 /**
  * Registro de los paneles del diseño nuevo (PLAN-V2 §3, tanda T03). Es el espejo en el editor del registro de módulos
@@ -15,6 +16,13 @@ import { ContenidoSitio } from "../../sitios.service";
  *  - Se declara en `PanelesSitioModule` (o es `standalone`). Sigue la regla de diseño del Seller (`cfg-*`, acento
  *    `#5F3FE0`, sin degradados) y ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md).
  *  - El servidor normaliza todo al guardar: el panel ayuda y avisa, pero no es la validación.
+ *  - Para BORRAR un campo de la tienda (`contenido.tienda.<campo>`), el panel lo deja en lista vacía (o null), nunca
+ *    lo quita con `delete`: el servidor conserva los campos que el editor no manda (para no perderlos con un editor
+ *    viejo), así que una clave ausente vuelve con su valor anterior.
+ *  - Los paneles solo salen con el diseño nuevo encendido (el de un bloque y los de la Tienda): con el de siempre, lo
+ *    que se llene no se vería en la página y sus textos contarían en la revisión de promesas de un diseño que no los
+ *    pinta.
+ *  - Los tipos nuevos (`TIPOS_NUEVOS_SITIO`) no se componen a mano (no son lienzo), igual que en el servidor.
  *
  * ── Quién toca este archivo ──────────────────────────────────────────────────────────────────────────────────────
  *  Las líneas de `PANELES_SITIO` las aplica el orquestador al integrar cada tanda; el subagente entrega su línea en la
@@ -50,7 +58,7 @@ export interface PanelSitio {
   catalogo?: { nombre: string; descripcion: string; icono: string; familia?: string };
   /** Datos con que nace el bloque al agregarlo (sin datos falsos: lo que falta se pide en el panel). */
   datosIniciales?: () => any;
-  /** Una línea para la ficha «Se ve en la Vista fiel» que el espejo pinta en lugar del bloque. */
+  /** Una línea de resumen para la ficha que el espejo pinta en lugar del bloque. */
   resumen?: (datos: any) => string;
   /** Panel de la pestaña Tienda (Tienda › Atención, Tienda › Fichas de producto). Solo con el diseño nuevo. */
   tienda?: { titulo: string; descripcion?: string };
@@ -79,7 +87,7 @@ export function catalogoDisenoNuevo(lista: PanelSitio[] = PANELES_SITIO): { tipo
     .map((p) => ({ tipo: p.tipo as string, ...(p.catalogo as { nombre: string; descripcion: string; icono: string; familia?: string }) }));
 }
 
-/** Lo que el espejo del editor necesita para la ficha «Se ve en la Vista fiel» de cada tipo nuevo. */
+/** Lo que el espejo del editor necesita para la ficha de cada tipo nuevo. */
 export interface FichaFiel {
   nombre: string;
   resumen?: (datos: any) => string;

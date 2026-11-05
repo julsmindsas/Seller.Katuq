@@ -3,6 +3,7 @@ import { CdkDragDrop } from "@angular/cdk/drag-drop";
 import { contenidoDelMenu, ContenidoMenu } from "./cajon-previa";
 import { AjustesEstilo, fichasDeAjustes, medidasDeAjustes, seccionesAlternas, variablesDeAjustes, variablesDeSeccion, variablesDeTono } from "./ajustes-estilo";
 import { TRAZOS_ICONO_SITIO } from "../sitios/iconos-sitio";
+import { esTipoNuevoSitio } from "../sitios/editor/paneles/tipos-nuevos";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -266,12 +267,23 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() fichasV2: { [tipo: string]: { nombre: string; resumen?: (datos: any) => string } } = {};
 
   /**
-   * La ficha «Se ve en la Vista fiel» de un bloque que el espejo no dibuja: su nombre y una línea de resumen (texto, para
+   * La ficha de un bloque que el espejo no dibuja: su nombre y una línea de resumen (texto, para
    * que la detección de cambios compare valores y no objetos nuevos). Solo en el editor.
    */
   nombreFiel(bloque: BloqueSitio): string {
     const ficha = (this.fichasV2 || {})[bloque.tipo];
     return ficha ? ficha.nombre : this.nombreDeBloque(bloque.tipo);
+  }
+
+  /**
+   * La nota de la ficha. Un tipo nuevo con el diseño de siempre no sale en la página publicada; lo demás sí sale, solo
+   * que este espejo no lo dibuja (Sucursales, Agenda, los tipos nuevos): se revisa con «Ver cómo queda».
+   */
+  notaFiel(bloque: BloqueSitio): string {
+    const disenoNuevo = Number(this.tema && this.tema.sistemaVisual) === 2;
+    return esTipoNuevoSitio(bloque.tipo) && !disenoNuevo
+      ? "Solo se ve con el diseño nuevo."
+      : "No se dibuja aquí: míralo con «Ver cómo queda».";
   }
 
   resumenFiel(bloque: BloqueSitio): string {
@@ -1090,7 +1102,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     video: "Video",
     resenas: "Lo que dicen tus clientes",
     ubicacion: "Dónde estás",
-    // PLAN-V2 T03: los dos que este espejo no dibuja (salen como ficha «Se ve en la Vista fiel»), con su nombre.
+    // PLAN-V2 T03: los dos que este espejo no dibuja (salen como ficha del espejo), con su nombre.
     sucursales: "Sucursales",
     agenda: "Agenda de visitas",
     footer: "Pie de página",
@@ -1143,7 +1155,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     // Misma regla que el render publicado: si la previa dibujara un lienzo donde
     // la página no lo pinta, el comerciante diseñaría una cosa y publicaría otra.
     if (!bloque || !bloque.lienzo || this.dispositivo === "movil") return false;
-    return !SitioRenderComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
+    // PLAN-V2 T03: los tipos nuevos de los módulos tampoco son lienzo (el servidor los descarta como tal).
+    return !SitioRenderComponent.BLOQUES_CONECTADOS.includes(bloque.tipo) && !esTipoNuevoSitio(bloque.tipo);
   }
 
   /**

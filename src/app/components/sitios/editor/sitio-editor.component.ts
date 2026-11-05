@@ -34,7 +34,7 @@ import { ajustesDeEstiloCompletos } from "../../sitio-render/ajustes-estilo";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../iconos-sitio";
 import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
 // Diseño nuevo (PLAN-V2 T03): paneles de los bloques y piezas nuevas, cada uno en su carpeta de `paneles/`.
-import { PanelSitio, catalogoDisenoNuevo, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
+import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -2639,9 +2639,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // ── Paneles del diseño nuevo (PLAN-V2 T03, paneles/registro.ts) ─────────────
 
-  /** El panel propio del bloque elegido, si su tipo trae uno. */
+  /**
+   * El panel propio del bloque elegido, si su tipo trae uno. Solo con el diseño nuevo: con el de siempre lo que se
+   * llene no se vería (el servidor no pinta los módulos en v1).
+   */
   panelDeBloque(b: BloqueSitio | null): PanelSitio | null {
-    return b ? panelDeTipo(b.tipo) : null;
+    return b && this.disenoNuevo ? panelDeTipo(b.tipo) : null;
   }
 
   /** Los paneles de la pestaña Tienda (Atención, Fichas de producto…). Solo con el diseño nuevo, que es quien los usa. */
@@ -2651,7 +2654,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private readonly panelesTienda = panelesDeTienda();
   private static readonly SIN_PANELES: PanelSitio[] = [];
 
-  /** Nombre y resumen de los tipos nuevos para la ficha «Se ve en la Vista fiel» del espejo. */
+  /** Nombre y resumen de los tipos nuevos para la ficha del espejo del espejo. */
   readonly fichasV2 = fichasFieles();
 
   /** Un panel avisó que cambió algo: lo mismo que cualquier campo del editor. */
@@ -3758,9 +3761,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     "encabezado",
   ];
 
-  /** ¿Este bloque se puede colocar a mano? */
+  /**
+   * ¿Este bloque se puede colocar a mano? Los tipos nuevos de los módulos (PLAN-V2 T03) tampoco: el servidor no los
+   * vuelve lienzo y la página publicada saldría distinta de lo que el comerciante compuso.
+   */
   permiteLienzo(bloque: any): boolean {
-    return !!bloque && !SitioEditorComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
+    return !!bloque && !SitioEditorComponent.BLOQUES_CONECTADOS.includes(bloque.tipo) && !esTipoNuevoSitio(bloque.tipo);
   }
 
   // ── Maquetas: las formas con nombre de un bloque ───────────────────────────

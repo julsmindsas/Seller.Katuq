@@ -799,9 +799,9 @@
           </nav>
         </footer>
 
-        <!-- Diseño nuevo (PLAN-V2 T03): un bloque que este espejo no dibuja (los tipos nuevos de los módulos) se ve en
-             el editor como una ficha con su nombre y su resumen; completo, en la Vista fiel y en la página publicada.
-             Fuera del editor no ocupa lugar. -->
+        <!-- Diseño nuevo (PLAN-V2 T03): un bloque que este espejo no dibuja (los tipos nuevos de los módulos, Sucursales
+             y Agenda) se ve en el editor como una ficha con su nombre, su resumen y dónde verlo (`notaFiel`). Fuera del
+             editor no ocupa lugar. -->
         <ng-container *ngSwitchDefault>
           <section class="bloque ficha-fiel" *ngIf="previsualizacion">
             <div class="ficha-fiel__caja">
@@ -811,7 +811,7 @@
               <div class="ficha-fiel__texto">
                 <strong class="ficha-fiel__nombre">{{ nombreFiel(bloque) }}</strong>
                 <span class="ficha-fiel__resumen" *ngIf="resumenFiel(bloque) as resumen">{{ resumen }}</span>
-                <span class="ficha-fiel__nota">Este bloque se ve en la Vista fiel. Mientras tanto, míralo con «Ver cómo queda».</span>
+                <span class="ficha-fiel__nota">{{ notaFiel(bloque) }}</span>
               </div>
             </div>
           </section>
