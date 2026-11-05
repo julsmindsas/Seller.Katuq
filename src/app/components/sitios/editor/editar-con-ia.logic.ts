@@ -105,6 +105,26 @@ export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
 ];
 
 /**
+ * Diseño nuevo (PLAN-V2 T27): ideas para una página con `tema.sistemaVisual: 2`. El servidor solo aplica lo del diseño
+ * nuevo en esas páginas (bandera `siteDesignV2`); en las demás, las ideas son las de siempre.
+ */
+export const SUGERENCIAS_EDITAR_IA_V2: ReadonlyArray<string> = [
+  'Haz el título de la portada más llamativo',
+  'Pon los destacados sobre fondo oscuro',
+  'Sube el movimiento de la página a expresivo',
+  'Pon los títulos de sección más grandes',
+  'Cambia el antetítulo de la portada',
+  'Escribe mejor los nombres de las pestañas de destacados',
+  'Muestra el botón de WhatsApp solo en celular',
+  '¿Por qué no puedo publicar?',
+];
+
+/** Las ideas para empezar según el diseño de la página. */
+export function sugerenciasEditarIA(disenoNuevo: boolean): ReadonlyArray<string> {
+  return disenoNuevo ? SUGERENCIAS_EDITAR_IA_V2 : SUGERENCIAS_EDITAR_IA;
+}
+
+/**
  * Ticket 1248: «¿por qué no puedo publicar?», «¿qué me falta para publicar?».
  * Se responde con el checklist real del editor, sin IA. Una orden («publica la
  * página») no entra: eso es el botón Publicar.

@@ -806,9 +806,11 @@ export class SitiosService extends BaseService {
   /**
    * Página con IA desde una descripción (bandera `landingPrompt`): el servidor interpreta el
    * texto, arma la página en BORRADOR y responde con su id. En producción tarda unos 5 segundos (medido el 9-oct).
+   * PLAN-V2 T27: con la bandera `siteDesignV2`, la página nace con el diseño nuevo y trae `disenoNuevo` y los
+   * `pendientes` que el comercio completa en el editor (sin la bandera, no vienen).
    */
   crearConDescripcion(body: { descripcion: string; nombre?: string }): Observable<
-    Respuesta<{ id: string; nombre: string; slug: string; tipo: string; estado: string }>
+    Respuesta<{ id: string; nombre: string; slug: string; tipo: string; estado: string; disenoNuevo?: boolean; pendientes?: string[] }>
   > {
     return this.post<any>("/v1/onboarding/pagina-con-ia", body);
   }
