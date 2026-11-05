@@ -107,6 +107,9 @@
 .portada__espacio,
 .portada__sello {
   display: grid;
+  // Una sola columna que nunca crece más que la tarjeta: sin esto, el control más ancho ensancha la columna y los
+  // campos se salen de la tarjeta.
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
   padding: 12px;
   margin-bottom: 10px;
@@ -160,6 +163,14 @@
     outline: 3px solid #7c5cff;
     outline-offset: 1px;
   }
+}
+
+.portada__miniatura {
+  width: 56px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--kb-line-3);
 }
 
 .portada__foto {

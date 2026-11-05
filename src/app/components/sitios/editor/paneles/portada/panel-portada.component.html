@@ -8,10 +8,73 @@
       <button type="button" [class.is-active]="!conEspacios" [attr.aria-pressed]="!conEspacios" (click)="elegirComposicion('')">Foto a lo ancho</button>
       <button type="button" [class.is-active]="conEspacios" [attr.aria-pressed]="conEspacios" (click)="elegirComposicion('espacios')">Espacios</button>
     </div>
-    <small class="portada__ayuda" *ngIf="!conEspacios">La portada de siempre: tu foto de fondo con el título encima.</small>
+    <small class="portada__ayuda" *ngIf="!conEspacios">La portada de siempre: tu foto de fondo con el título encima. Con dos o más
+      fotos en «Carrusel» (arriba), cada una puede llevar su propio texto, más abajo.</small>
     <small class="portada__ayuda" *ngIf="conEspacios">El título a la izquierda y hasta tres tarjetas de espacio a la derecha
       («En la casa», «En el negocio»…). Se ve completa en la Vista fiel.</small>
   </div>
+
+  <!-- Foto a lo ancho: botón secundario y, con carrusel, el texto de cada foto -->
+  <ng-container *ngIf="!conEspacios">
+    <div class="portada__campo">
+      <label class="portada__etiqueta" for="portada-cta2-ancho">Botón secundario (opcional)</label>
+      <input id="portada-cta2-ancho" type="text" maxlength="40" [(ngModel)]="datos.cta2Texto" (ngModelChange)="cambiar()"
+             placeholder="Ver productos" />
+      <input type="text" class="portada__segundo" [(ngModel)]="datos.cta2Url" (ngModelChange)="cambiar()"
+             placeholder="Destino: /?catalogo=1, #contacto o https://…" aria-label="Destino del botón secundario" />
+      <small class="portada__ayuda">Sale junto al botón principal, también en cada foto del carrusel. Sin destino no sale.</small>
+      <p class="portada__aviso" *ngIf="secundarioSinDestino">Escribe a dónde lleva: sin destino, el botón secundario no sale en la página.</p>
+    </div>
+
+    <ng-container *ngIf="conCarrusel">
+      <h4 class="portada__subgrupo">Texto de cada foto <small>({{ fotos.length }} fotos)</small></h4>
+      <p class="portada__nota">Cada foto puede decir algo distinto, y el texto cambia junto con ella. Lo que dejes vacío lo toma de
+        la portada: el título, el subtítulo y el botón de arriba. El título de la primera foto es el título principal de la página.</p>
+      <small class="portada__ayuda" *ngIf="!conTextoPorFoto">Mientras ninguna foto tenga título, subtítulo, botón o alineación
+        propios, la portada sale con un solo texto, como hasta ahora.</small>
+
+      <div class="portada__espacio" *ngFor="let f of fotos; let i = index; trackBy: porIndice">
+        <div class="portada__cabeza">
+          <strong class="portada__nombre">Foto {{ i + 1 }} de {{ fotos.length }}</strong>
+          <img class="portada__miniatura" [src]="f.url" alt="" />
+        </div>
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-alt-' + i">Qué se ve en la foto</label>
+        <input [id]="'portada-foto-alt-' + i" type="text" [attr.maxlength]="maxAlt" [(ngModel)]="f.d.alt" (ngModelChange)="cambiar()"
+               placeholder="Una frase corta, como se la dirías a alguien por teléfono" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-titulo-' + i">Título de esta foto</label>
+        <input [id]="'portada-foto-titulo-' + i" type="text" [attr.maxlength]="maxTituloFoto" [(ngModel)]="f.d.titulo" (ngModelChange)="cambiar()"
+               [attr.placeholder]="datos.titulo || 'Si lo dejas vacío, sale el de la portada'" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-apoyo-' + i">Subtítulo de esta foto</label>
+        <input [id]="'portada-foto-apoyo-' + i" type="text" [attr.maxlength]="maxApoyoFoto" [(ngModel)]="f.d.subtitulo" (ngModelChange)="cambiar()"
+               [attr.placeholder]="datos.subtitulo || 'Si lo dejas vacío, sale el de la portada'" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-boton-' + i">Texto del botón</label>
+        <input [id]="'portada-foto-boton-' + i" type="text" [attr.maxlength]="maxBotonFoto" [(ngModel)]="f.d.ctaTexto" (ngModelChange)="cambiar()"
+               [attr.placeholder]="datos.ctaTexto || 'Si lo dejas vacío, sale el de la portada'" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-destino-' + i">A dónde lleva el botón</label>
+        <input [id]="'portada-foto-destino-' + i" type="text" [(ngModel)]="f.d.ctaUrl" (ngModelChange)="cambiar()"
+               placeholder="/?catalogo=1, #contacto o https://…" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-alinea-' + i">Alineación del texto</label>
+        <select [id]="'portada-foto-alinea-' + i" [ngModel]="f.d.alineacion || ''" (ngModelChange)="f.d.alineacion = $event; cambiar()">
+          <option *ngFor="let a of alineaciones" [value]="a.valor">{{ a.etiqueta }}</option>
+        </select>
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-foco-' + i">Qué parte de la foto se conserva</label>
+        <select [id]="'portada-foto-foco-' + i" [ngModel]="f.d.foco || ''" (ngModelChange)="f.d.foco = $event; cambiar()">
+          <option *ngFor="let o of focos" [value]="o.valor">{{ o.etiqueta }}</option>
+        </select>
+
+        <ul class="portada__avisos" *ngIf="avisosDeFoto(f).length">
+          <li *ngFor="let a of avisosDeFoto(f)">{{ a }}</li>
+        </ul>
+      </div>
+    </ng-container>
+  </ng-container>
 
   <ng-container *ngIf="conEspacios">
     <div class="portada__campo">
