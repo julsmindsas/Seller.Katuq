@@ -214,7 +214,7 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!this.features.isEnabled('carteraInterna')) return false;
     try {
       const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
-      return ['Tesorero', 'Administrador', 'Super Administrador'].includes(rol);
+      return ['Tesorero', 'Tesoreria', 'Tesorería', 'Administrador', 'Super Administrador'].includes(rol);
     } catch {
       return false;
     }

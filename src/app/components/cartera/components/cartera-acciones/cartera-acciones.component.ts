@@ -180,7 +180,7 @@ export class CarteraAccionesComponent implements OnInit, OnDestroy {
     try {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
       const rol = u.rol || u.role || '';
-      return normalizarRol(rol) === 'tesorero' || esFamiliaAdministrador(rol);
+      return ['tesorero', 'tesoreria'].includes(normalizarRol(rol)) || esFamiliaAdministrador(rol);
     } catch {
       return false;
     }
