@@ -396,7 +396,17 @@ const OPCIONES_ESTILO = {
     { id: "", nombre: "Normales" },
     { id: "grande", nombre: "Grandes" },
   ],
+  // Diseño nuevo (EFECTOS.md): tema.efectos. «Ninguno» deja la página quieta; «Sutil» y «Expresivo» la mueven. Va
+  // amarrado a «Las secciones aparecen al bajar» (tema.animaciones): ver `elegirEfectos`.
+  efectos: [
+    { id: "ninguno", nombre: "Ninguno" },
+    { id: "sutil", nombre: "Sutil" },
+    { id: "expresivo", nombre: "Expresivo" },
+  ],
 };
+
+/** Niveles de efectos del diseño nuevo; los mismos que acepta el servidor (`siteBlocks.NIVELES_EFECTOS`). */
+const NIVELES_EFECTOS = ["ninguno", "sutil", "expresivo"];
 
 /**
  * Secciones ya armadas.
@@ -2327,13 +2337,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Diseño nuevo", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "sistema visual estructura linea premium nuevo" },
     // Cierre de N1: el control «Títulos de sección» (tema.titulosSeccion) también se encuentra al buscar.
     { texto: "Títulos de sección", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "titulos grandes tamaño seccion premium" },
-  ] as { texto: string; donde: string; panel: string; claves: string; grupo?: string }[];
+    // «Efectos» (tema.efectos) vive en Movimiento y solo existe con el diseño nuevo ENCENDIDO (`soloV2`).
+    { texto: "Efectos", donde: "Estilo", panel: "diseno", grupo: "movimiento", soloV2: true, claves: "movimiento animaciones expresivo sutil ninguno visuales" },
+  ] as { texto: string; donde: string; panel: string; claves: string; grupo?: string; soloV2?: boolean }[];
 
   get ajustesEncontrados(): { texto: string; donde: string; panel: string; grupo?: string }[] {
     const limpio = (v: string) => String(v || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = limpio(this.busquedaAjuste).trim();
     if (q.length < 2) return [];
-    return SitioEditorComponent.AJUSTES.filter((a) => ((a as { grupo?: string }).grupo !== "disenoNuevo" || this.puedeDisenoNuevo) && limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
+    return SitioEditorComponent.AJUSTES.filter((a) => ((a as { grupo?: string }).grupo !== "disenoNuevo" || this.puedeDisenoNuevo) && (!(a as { soloV2?: boolean }).soloV2 || this.disenoNuevo) && limpio(`${a.texto} ${a.claves}`).includes(q)).slice(0, 8);
   }
 
   irAAjuste(a: { texto: string; panel: string; grupo?: string }): void {
@@ -2973,9 +2985,68 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  /**
+   * Nivel de efectos que de verdad pinta el servidor en el diseño nuevo (`siteBlocks.nivelEfectos`): el elegido, o, si
+   * no hay uno, el que sale de «Las secciones aparecen al bajar» (sutil si está encendido, ninguno si no).
+   */
+  get nivelEfectos(): string {
+    const t: any = this.contenido ? this.contenido.tema : {};
+    if (NIVELES_EFECTOS.includes(t.efectos)) return t.efectos;
+    return t.animaciones === true ? "sutil" : "ninguno";
+  }
+
+  /**
+   * ¿La página se mueve? Con el diseño de siempre es `animaciones`, como antes; con el nuevo, el nivel de efectos.
+   * El interruptor, el resumen de Movimiento y los botones de Efectos leen esto, así nunca se contradicen.
+   */
+  get movimientoEncendido(): boolean {
+    if (!this.contenido) return false;
+    return this.disenoNuevo ? this.nivelEfectos !== "ninguno" : this.contenido.tema.animaciones === true;
+  }
+
+  /** Resumen de la cabecera de Movimiento. Con el diseño de siempre dice lo mismo que antes. */
+  get resumenMovimiento(): string {
+    if (!this.disenoNuevo) return this.movimientoEncendido ? "Encendido" : "Apagado";
+    const o = OPCIONES_ESTILO.efectos.find((x) => x.id === this.nivelEfectos);
+    return this.nivelEfectos === "ninguno" || !o ? "Apagado" : o.nombre;
+  }
+
+  /** Texto bajo «Efectos»: qué hace el nivel elegido. */
+  get notaEfectos(): string {
+    switch (this.nivelEfectos) {
+      case "expresivo":
+        return "Lo de «Sutil» y además movimientos más vistosos en la portada y en las piezas destacadas. Si un cliente pidió menos movimiento en su celular o computador, la ve quieta.";
+      case "sutil":
+        return "Las secciones aparecen al bajar y las fotos y tarjetas reaccionan al pasar el mouse.";
+      default:
+        return "La página queda quieta: sin apariciones ni movimientos.";
+    }
+  }
+
+  /**
+   * Diseño nuevo: escribe `tema.efectos` y deja `animaciones` de acuerdo con él. «Ninguno» apaga «Las secciones
+   * aparecen al bajar»; «Sutil» y «Expresivo» lo encienden. Así el interruptor y los botones nunca se contradicen, y al
+   * volver al diseño de siempre la página se mueve (o no) igual que con el nuevo.
+   */
+  elegirEfectos(nivel: string): void {
+    if (!this.contenido || !NIVELES_EFECTOS.includes(nivel)) return;
+    const t: any = this.contenido.tema;
+    const animaciones = nivel !== "ninguno";
+    if (t.efectos === nivel && t.animaciones === animaciones) return;
+    this.contenido.tema = { ...t, efectos: nivel, animaciones };
+    this.marcarSucio();
+  }
+
   alternarAnimaciones(): void {
     if (!this.contenido) return;
     const t = this.contenido.tema as any;
+    // Si la página ya tiene un nivel de efectos elegido (o usa el diseño nuevo), el interruptor lo mueve con él:
+    // apagar = «Ninguno»; encender = «Sutil», o «Expresivo» si ese era el elegido. Sin nivel elegido y con el diseño
+    // de siempre hace exactamente lo de antes: solo cambia `animaciones`.
+    if (this.disenoNuevo || NIVELES_EFECTOS.includes(t.efectos)) {
+      this.elegirEfectos(this.movimientoEncendido ? "ninguno" : t.efectos === "expresivo" ? "expresivo" : "sutil");
+      return;
+    }
     this.contenido.tema = { ...t, animaciones: t.animaciones !== true };
     this.marcarSucio();
   }
@@ -4380,6 +4451,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (p.tema && Object.keys(p.tema).length) {
       c.tema = { ...c.tema, ...p.tema };
       Object.keys(p.tema).forEach((k) => tocado.tema.add(k));
+      // Si KAI prende o apaga «Las secciones aparecen al bajar» y la página ya tiene un nivel de efectos elegido, el
+      // nivel lo sigue (apagar = «Ninguno», prender desde «Ninguno» = «Sutil»), igual que con el interruptor. Queda
+      // anotado para que «Volver a como estaba» también lo devuelva.
+      const anim = (p.tema as any).animaciones;
+      const ef = c.tema.efectos;
+      if (typeof anim === "boolean" && NIVELES_EFECTOS.includes(ef) && (ef !== "ninguno") !== anim) {
+        c.tema = { ...c.tema, efectos: anim ? "sutil" : "ninguno" };
+        tocado.tema.add("efectos");
+      }
     }
     if (p.orden && p.orden.length === c.bloques.length) {
       const porId = new Map(c.bloques.map((b: any) => [b.id, b]));

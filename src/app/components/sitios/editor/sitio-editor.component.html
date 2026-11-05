@@ -2714,11 +2714,21 @@
         <div class="grupo acordeon" [class.is-abierto]="estiloAbierto === 'movimiento'">
           <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('movimiento')" [attr.aria-expanded]="estiloAbierto === 'movimiento'">
             <span class="acordeon__titulo">Movimiento</span>
-            <span class="acordeon__resumen">{{ contenido.tema.animaciones ? 'Encendido' : 'Apagado' }}</span>
+            <span class="acordeon__resumen">{{ resumenMovimiento }}</span>
             <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
           </button>
           <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'movimiento'">
-          <button class="opcion" [class.is-active]="contenido.tema.animaciones"
+          <!-- Diseño nuevo (EFECTOS.md): tema.efectos. Solo con el diseño nuevo encendido; con el de siempre este grupo
+               queda como estaba. «Ninguno» apaga el interruptor de abajo y «Sutil»/«Expresivo» lo encienden. -->
+          <div class="campo" *ngIf="disenoNuevo">
+            <label id="lbl-efectos">Efectos</label>
+            <div class="segmentos" role="group" aria-labelledby="lbl-efectos">
+              <button type="button" *ngFor="let o of opcionesEstilo.efectos" [class.is-active]="nivelEfectos === o.id"
+                      [attr.aria-pressed]="nivelEfectos === o.id" (click)="elegirEfectos(o.id)">{{ o.nombre }}</button>
+            </div>
+            <small class="nota-estilo">{{ notaEfectos }}</small>
+          </div>
+          <button class="opcion" [class.is-active]="movimientoEncendido"
                   (click)="alternarAnimaciones()">
             <span class="opcion__texto">
               <strong>Las secciones aparecen al bajar</strong>
