@@ -2,7 +2,8 @@
 // Este componente va sin encapsulación: las piezas `cfg-*` y `pl-*` sirven a todas las pantallas del módulo.
 // Ojo con las trampas globales: ningún nombre de clase lleva «p-», todo texto lleva color propio y el h1 usa !important.
 @import '../../../../shared/styles/config-pagina';
-@include config-pagina;
+// Acotado a `.pl-raiz`: sin encapsulación, la base no debe volverse global y pisar otras pantallas con `cfg-*`.
+.pl-raiz { @include config-pagina; }
 
 .pl-raiz {
   max-width: 1360px;
@@ -20,15 +21,21 @@
   // Contraste AA de los avisos y las pastillas en claro (los pares base quedan entre 2,6 y 4,3 a 1).
   .cfg-aviso, .cfg-aviso p, .cfg-aviso div { color: inherit; }
 }
+// Tintas de contraste AA propias del módulo (excepción registrada en tasks.md 13.x): los tokens `--ds-*` de estado
+// quedan entre 2,6 y 4,3 a 1 sobre su fondo suave. Solo en tema claro; el oscuro usa los tokens.
 body:not(.dark-only) .pl-raiz {
-  .cfg-aviso { color: #1a5fbf; }
-  .cfg-aviso--ok { color: #176b3a; }
-  .cfg-aviso--warn { color: #8a4f00; }
-  .cfg-aviso--error { color: #b42e2e; }
-  .cfg-pill--ok { color: #176b3a !important; }
-  .cfg-pill--warn { color: #8a4f00 !important; }
-  .cfg-pill--error { color: #b42e2e !important; }
-  .cfg-pill--info { color: #1a5fbf !important; }
+  --pl-tinta-info: #1a5fbf;
+  --pl-tinta-ok: #176b3a;
+  --pl-tinta-warn: #8a4f00;
+  --pl-tinta-error: #b42e2e;
+  .cfg-aviso { color: var(--pl-tinta-info); }
+  .cfg-aviso--ok { color: var(--pl-tinta-ok); }
+  .cfg-aviso--warn { color: var(--pl-tinta-warn); }
+  .cfg-aviso--error { color: var(--pl-tinta-error); }
+  .cfg-pill--ok { color: var(--pl-tinta-ok) !important; }
+  .cfg-pill--warn { color: var(--pl-tinta-warn) !important; }
+  .cfg-pill--error { color: var(--pl-tinta-error) !important; }
+  .cfg-pill--info { color: var(--pl-tinta-info) !important; }
 }
 
 // ── Vista y pestañas ──
@@ -166,3 +173,7 @@ body:not(.dark-only) .pl-raiz {
 .pl-raiz app-ficha-identidad { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .pl-raiz .pl-ficha > * { min-width: 0; }
 .pl-raiz .pl-titulo-ficha { margin: 0; font-size: 20px; font-weight: 800; color: var(--ds-ink); }
+
+// Estado del dato en la lista de comercios (corte, parcial, desactualizada).
+.pl-raiz .pl-meta-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pl-raiz .pl-pastillas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }

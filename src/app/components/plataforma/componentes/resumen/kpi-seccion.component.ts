@@ -65,6 +65,10 @@ export class KpiSeccionComponent implements OnChanges {
     return id && this.definiciones ? this.definiciones.find((d) => d.id === id) || null : null;
   }
 
+  get mesTexto(): string {
+    return mesLegible(this.overview && this.overview.mes);
+  }
+
   get fechaCalculo(): string {
     return this.meta && this.meta.corte ? fechaCo(this.meta.corte) : '—';
   }

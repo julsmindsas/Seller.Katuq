@@ -33,6 +33,11 @@
   </div>
 
   <ng-container *ngIf="estado.datos as r">
+    <div class="pl-meta-lista" role="note">
+      <small class="pl-muted">{{ textos.corte }}: {{ r.meta?.corte ? (r.meta.corte | fechaCo) : '—' }}</small>
+      <span class="cfg-pill cfg-pill--warn" *ngIf="r.meta?.parcial">{{ t.parcial }}</span>
+      <span class="cfg-pill cfg-pill--warn" *ngIf="r.meta?.desactualizado">{{ t.desactualizada }}</span>
+    </div>
     <div class="cfg-vacio" *ngIf="!r.datos">
       <div class="cfg-vacio__icono"><i class="pi pi-building" aria-hidden="true"></i></div>
       <h3 class="cfg-vacio__titulo">{{ textos.sinCalcular }}</h3>
@@ -59,7 +64,11 @@
             <tbody>
               <tr *ngFor="let f of l.filas; trackBy: trackFila">
                 <td><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
-                  <div><small class="pl-muted" *ngIf="f.tipoCuenta.tipo !== 'real'">{{ f.tipoCuenta.tipo }}</small></div></td>
+                  <div><small class="pl-muted" *ngIf="f.tipoCuenta.tipo !== 'real'">{{ f.tipoCuenta.tipo }}</small></div>
+                  <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
+                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
+                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+                  </div></td>
                 <td>{{ cicloTexto(f.ciclo) }}</td>
                 <td>{{ planTexto(f.clasePlan) }}</td>
                 <td>{{ f.altaFecha | fechaCo:false }}</td>
@@ -79,6 +88,10 @@
         <div class="pl-tarjetas">
           <article class="pl-tarjeta" *ngFor="let f of l.filas; trackBy: trackFila">
             <a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
+            <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
+              <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
+              <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+            </div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('ciclo') }}</b><div>{{ cicloTexto(f.ciclo) }}</div></div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('plan') }}</b><div>{{ planTexto(f.clasePlan) }}</div></div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('gmv') }}</b><div class="pl-num">{{ f.gmvMes | cop }}</div></div>

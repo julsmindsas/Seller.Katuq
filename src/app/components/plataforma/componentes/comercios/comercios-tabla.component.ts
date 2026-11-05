@@ -20,7 +20,7 @@ const COLUMNAS: Array<{ orden: string | null; clave: string; der?: boolean }> = 
   { orden: 'nombre', clave: 'nombre' }, { orden: null, clave: 'ciclo' }, { orden: null, clave: 'plan' }, { orden: 'alta', clave: 'alta' },
   { orden: 'pedidos', clave: 'pedidos', der: true }, { orden: 'gmv', clave: 'gmv', der: true }, { orden: 'contratado', clave: 'contratado', der: true },
   { orden: 'cobrado', clave: 'cobrado', der: true }, { orden: 'porCobrar', clave: 'porCobrar', der: true }, { orden: 'mora', clave: 'mora', der: true },
-  { orden: 'ultimoIngreso', clave: 'ultimoIngreso' }, { orden: null, clave: 'ultimoPago' },
+  { orden: 'ultimoIngreso', clave: 'ultimoIngreso' }, { orden: 'ultimoPago', clave: 'ultimoPago' },
 ];
 
 /** D-700 13.6 — Comercios: filtros, orden y paginación en el servidor; en pantallas angostas la tabla es una lista de tarjetas. */

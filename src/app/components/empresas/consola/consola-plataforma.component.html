@@ -41,7 +41,7 @@
   </header>
 
   <!-- D-700 (E-8): mientras conviven las dos consolas, esta dice que sus cifras no son las oficiales. -->
-  <div class="aviso-no-oficial" role="note">
+  <div class="aviso-no-oficial" role="note" *ngIf="mostrarNuevaConsola">
     <i class="fa fa-info-circle"></i>
     <p>{{ 'empresas.consolaPlataforma.cifrasNoOficiales' | translate }}</p>
   </div>

@@ -5,7 +5,7 @@ import { ReportResult, VizType } from '../../components/dashboard/model/report-s
 @Component({
   selector: 'app-viz-chart',
   template: `
-    <div *ngIf="chartOption" echarts [options]="chartOption" class="chart-host" [style.height.px]="altura" [style.border-radius.px]="radio"></div>
+    <div *ngIf="chartOption" echarts [options]="chartOption" class="chart-host" [style.height.px]="altura || null" [style.border-radius.px]="radio ?? null"></div>
     <div *ngIf="!chartOption" class="chart-empty">Sin datos suficientes para graficar</div>
   `,
   styles: [
@@ -58,11 +58,11 @@ export class VizChartComponent {
     this.compute();
   }
 
-  /** Alto del lienzo en px. Sin él, 480 como siempre (Reportes se ve igual). */
-  @Input() altura = 480;
+  /** Alto del lienzo en px. Sin él no se escribe estilo en línea: manda la hoja (480 px) o la del consumidor. */
+  @Input() altura: number | null = null;
 
-  /** Radio de las esquinas en px. Sin él, 8 como siempre. */
-  @Input() radio = 8;
+  /** Radio de las esquinas en px. Sin él no se escribe estilo en línea: manda la hoja (8 px) o la del consumidor. */
+  @Input() radio: number | null = null;
 
   /**
    * Opciones de ECharts que se mezclan al final sobre las que arma el componente (por ejemplo para

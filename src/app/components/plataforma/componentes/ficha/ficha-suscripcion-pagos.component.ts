@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { TEXTOS } from '../../plataforma.textos';
-import { textoONulo, textoSiNo } from '../../logica/formato';
+import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
 
 /** D-700 13.7a — Suscripción y pagos: contratado, cobrado, por cobrar, mora, facturas y pagos. */
 @Component({
@@ -58,6 +58,6 @@ export class FichaSuscripcionPagosComponent {
   ultimoPago(u: { estado?: string; fecha?: string | null; monto?: number | null; medio?: string | null; transaccion?: string | null } | null | undefined): string {
     if (!u) return '—';
     if (u.estado === 'sin_pagos') return 'sin pagos';
-    return `${u.fecha || '—'} · ${u.medio || '—'}${u.transaccion ? ' ' + u.transaccion : ''}`;
+    return `${u.fecha ? fechaCo(u.fecha, false) : '—'} · ${u.medio || '—'}${u.transaccion ? ' ' + u.transaccion : ''}`;
   }
 }

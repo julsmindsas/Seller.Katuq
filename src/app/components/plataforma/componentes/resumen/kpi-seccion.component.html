@@ -42,7 +42,7 @@
       <small>{{ textos.universo }}: {{ universo }}</small>
       <small>{{ textos.corte }}: {{ fechaCalculo }}</small>
       <small *ngIf="meta?.reglaVersion">{{ textos.version }}: {{ meta?.reglaVersion }}</small>
-      <small *ngIf="overview?.mes">{{ textos.mes }}: {{ overview?.mes }}</small>
+      <small *ngIf="overview?.mes">{{ textos.mes }}: {{ mesTexto }}</small>
     </div>
   </ng-container>
 </section>

@@ -2,6 +2,7 @@ import { Injectable, OnDestroy } from "@angular/core";
 import { Subject, BehaviorSubject, fromEvent, Observable, of } from "rxjs";
 import { takeUntil, debounceTime } from "rxjs/operators";
 import { Router } from "@angular/router";
+import { ENLACE_PLATAFORMA_ACTIVO } from "../../components/plataforma/plataforma.enlace";
 import { CartSingletonService } from "./ventas/cart.singleton.service";
 import { UtilsService } from "./utils.service";
 import { CompanyFeaturesService } from "./company-features.service";
@@ -455,6 +456,8 @@ export class NavService implements OnDestroy {
         // D-485: la pauta es de Katuq, no del Super Administrador de otra empresa.
         ((item.path === "/marketing/pauta" || item.path === "/plataforma") &&
           String(user.company || "").trim().toLowerCase() !== "julsmind") ||
+        // D-700: el enlace de Plataforma sale solo cuando se enciende su interruptor.
+        (item.path === "/plataforma" && !ENLACE_PLATAFORMA_ACTIVO) ||
         (item.isOnlyAdmin && !isJulsmindAdmin) ||
         !authorizedPaths.includes(item.path) ||
         (item.path &&

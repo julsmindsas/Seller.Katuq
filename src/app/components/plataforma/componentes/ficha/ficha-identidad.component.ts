@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { TEXTOS } from '../../plataforma.textos';
-import { textoONulo, textoSiNo } from '../../logica/formato';
+import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
 
 /** D-700 13.7a — Identidad (del perfil ya cargado) y usuarios con contactos enmascarados. */
 @Component({
@@ -29,6 +29,8 @@ import { textoONulo, textoSiNo } from '../../logica/formato';
 
     <app-ficha-seccion [docId]="docId" nombre="usuarios" [titulo]="textos.ficha.secciones.identidad + ': usuarios'">
       <ng-template let-d>
+        <p class="cfg-aviso cfg-aviso--warn" *ngIf="d.estado === 'sin_dato'; else conUsuarios">{{ d.motivo || textos.ficha.usuariosSinDato }}</p>
+        <ng-template #conUsuarios>
         <p class="pl-muted">{{ textos.ficha.enmascarado }} Con ingreso en 30 días: {{ nulo(d.conIngreso30d) }} de {{ nulo(d.total) }}.</p>
         <ul class="pl-lista" *ngIf="d.usuarios?.length; else sinUsuarios">
           <li *ngFor="let u of d.usuarios">
@@ -38,6 +40,7 @@ import { textoONulo, textoSiNo } from '../../logica/formato';
           </li>
         </ul>
         <ng-template #sinUsuarios><p class="pl-muted">Sin usuarios en la lista.</p></ng-template>
+        </ng-template>
       </ng-template>
     </app-ficha-seccion>
   `,
@@ -52,6 +55,6 @@ export class FichaIdentidadComponent {
   conversion(c: { estado?: string; fecha?: string | null; diasDesdeAlta?: number | null } | null | undefined): string {
     if (!c || c.estado === 'sin_dato') return '—';
     if (c.estado === 'sin_pagos') return 'sin pagos';
-    return `${c.fecha || '—'}${typeof c.diasDesdeAlta === 'number' ? ` (${c.diasDesdeAlta} días después del alta)` : ''}`;
+    return `${c.fecha ? fechaCo(c.fecha, false) : '—'}${typeof c.diasDesdeAlta === 'number' ? ` (${c.diasDesdeAlta} días después del alta)` : ''}`;
   }
 }

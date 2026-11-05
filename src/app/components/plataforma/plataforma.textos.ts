@@ -107,6 +107,10 @@ export const TEXTOS = {
   },
   comercios: {
     titulo: 'Comercios',
+    parcial: 'Parcial',
+    desactualizada: 'Desactualizada',
+    parcialAyuda: 'Alguna cifra de este comercio está incompleta.',
+    desactualizadaAyuda: 'Las cifras de este comercio son de un corte anterior.',
     buscar: 'Buscar por nombre',
     todosCiclos: 'Todos los ciclos',
     todosTipos: 'Todos los tipos de cuenta',
@@ -136,6 +140,7 @@ export const TEXTOS = {
       identidad: 'Identidad', suscripcion: 'Suscripción y pagos', uso: 'Uso', salud: 'Salud', soporte: 'Soporte', historial: 'Historial',
     },
     enmascarado: 'Los contactos se muestran enmascarados.',
+    usuariosSinDato: 'No se pudo determinar la lista de usuarios de este comercio.',
     ticketsArchivados: 'Archivados (aparte de los resueltos)',
     sinTickets: 'Sin tickets en la lista',
     sinHistorial: 'Sin cambios de estado registrados',
