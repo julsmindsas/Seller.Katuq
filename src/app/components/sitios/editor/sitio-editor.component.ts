@@ -2862,6 +2862,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   readonly fichasV2 = fichasFieles();
 
   /**
+   * Cierre de PLAN-V2 T10: los nombres cortos de Tienda › Fichas para la tarjeta del espejo (productoId → nombre), sin
+   * los que traen un marcador «[…]», que la página no publica. Se rearma solo cuando cambia la lista de fichas, para que
+   * la detección de cambios reciba el mismo objeto mientras tanto.
+   */
+  get nombresCortosPrevia(): { [productoId: string]: string } | null {
+    const fichas = this.contenido && this.contenido.tienda ? (this.contenido.tienda as any).fichas : null;
+    if (fichas !== this.fichasDeNombres) {
+      this.fichasDeNombres = fichas;
+      const mapa: { [productoId: string]: string } = {};
+      for (const f of Array.isArray(fichas) ? fichas : []) {
+        const nombre = String((f && f.nombre) || "").replace(/\s+/g, " ").trim();
+        if (f && f.productoId && nombre && !/\[[^\]]{2,}\]/.test(nombre)) mapa[String(f.productoId)] = nombre;
+      }
+      this.nombresCortosCache = Object.keys(mapa).length ? mapa : null;
+    }
+    return this.nombresCortosCache;
+  }
+  private fichasDeNombres: unknown = undefined;
+  private nombresCortosCache: { [productoId: string]: string } | null = null;
+
+  /**
    * PLAN-V2 T15: ¿la vitrina va con pestañas en la página? Solo con el diseño nuevo y al menos una pestaña lista (la
    * regla del servidor). Entonces va en filas y «Mostrar en carrusel» no se usa.
    */

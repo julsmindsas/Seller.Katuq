@@ -267,6 +267,20 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() fichasV2: { [tipo: string]: { nombre: string; resumen?: (datos: any) => string } } = {};
 
   /**
+   * Cierre de PLAN-V2 T10: los nombres cortos de Tienda › Fichas (productoId → nombre, ya sin marcadores). Con el diseño
+   * nuevo, la tarjeta de este espejo lee ese nombre, como la página publicada; con el de siempre, el del catálogo. El
+   * carrito y el pedido siguen con el del catálogo.
+   */
+  @Input() nombresCortos: { [productoId: string]: string } | null = null;
+
+  /** El nombre con que se lee un producto en la tarjeta del espejo (el corto en v2, si lo hay; si no, el del catálogo). */
+  nombreLeido(p: any): string {
+    const titulo = String((p && p.titulo) || "");
+    if (Number(this.tema && this.tema.sistemaVisual) !== 2 || !this.nombresCortos || !p || !p.productoId) return titulo;
+    return this.nombresCortos[String(p.productoId)] || titulo;
+  }
+
+  /**
    * La ficha de un bloque que el espejo no dibuja: su nombre y una línea de resumen (texto, para
    * que la detección de cambios compare valores y no objetos nuevos). Solo en el editor.
    */

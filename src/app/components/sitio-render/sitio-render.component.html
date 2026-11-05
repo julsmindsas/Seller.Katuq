@@ -292,7 +292,7 @@
                 <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
                 <img *ngIf="p.imagen && p.imagen2" class="producto__foto2" [src]="p.imagen2" alt="" loading="lazy" />
               </div>
-              <h3>{{ p.titulo }}</h3>
+              <h3>{{ nombreLeido(p) }}</h3>
               <p class="producto__precio"><span class="producto__actual">{{ precio(p.precioConIva) }}</span>
                 <s class="producto__antes" *ngIf="enOferta(p)">{{ precio(p.precioAntes) }}</s></p>
               <button *ngIf="tiendaActiva && bloque.datos.permitirCompra" type="button" class="kq-agregar"
