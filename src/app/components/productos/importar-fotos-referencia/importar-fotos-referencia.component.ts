@@ -279,21 +279,87 @@ export class ImportarFotosReferenciaComponent {
     return this.textoEstado[f.estado];
   }
 
-  /** Lista de referencias de la empresa, para nombrar las fotos. */
+  /**
+   * Ejemplo para nombrar las fotos, con las referencias de la empresa. Hoja «Cómo nombrar»: una
+   * referencia real con nombres que sirven y que no. Hoja «Tus referencias»: el nombre exacto de
+   * cada foto por producto y un aviso cuando la referencia no se puede escribir en un archivo.
+   * Las reglas son las del backend (services/productos/fotosPorReferencia.js).
+   */
   async descargarReferencias(): Promise<void> {
     this.descargandoReferencias = true;
     try {
       const r: any = await this.api.referencias();
-      const filas = (r?.productos || []).map((p: any) => ({ Referencia: p.referencia, Producto: p.titulo, 'Fotos actuales': p.fotos }));
+      const productos: { referencia: string; titulo: string; fotos: number }[] = (r?.productos || [])
+        .map((p: any) => ({ referencia: String(p.referencia || '').trim(), titulo: p.titulo || '', fotos: p.fotos || 0 }))
+        .filter((p: { referencia: string }) => p.referencia);
+      const existentes = new Set(productos.map((p) => p.referencia.toLowerCase()));
+      const nombres = productos.map((p) => this.nombresDeFotos(p.referencia, existentes));
+      const filas = productos.map((p, i) => ({
+        Referencia: p.referencia,
+        Producto: p.titulo,
+        'Fotos actuales': p.fotos,
+        'Foto principal': nombres[i].principal,
+        'Más fotos': nombres[i].mas,
+        Revisar: nombres[i].revisar,
+      }));
+      const ejemplo = productos.find((p, i) => !nombres[i].revisar)?.referencia || 'ALM-4789';
       const libro = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(filas), 'Referencias');
-      XLSX.writeFile(libro, 'referencias-para-fotos.xlsx');
+      XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(this.filasDeEjemplo(ejemplo)), 'Cómo nombrar');
+      XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(filas), 'Tus referencias');
+      XLSX.writeFile(libro, 'ejemplo-nombres-de-fotos.xlsx');
     } catch {
-      this.error = 'No pudimos descargar la lista de referencias.';
+      this.error = 'No pudimos descargar el ejemplo. Intenta de nuevo.';
     } finally {
       this.descargandoReferencias = false;
       this.cdr.detectChanges();
     }
+  }
+
+  /**
+   * Cómo se nombran las fotos de una referencia, con las mismas reglas del backend: sin espacios,
+   * «-N» (1 a 99) para las demás fotos y «ambiguo» cuando el nombre también es otra referencia.
+   */
+  private nombresDeFotos(ref: string, existentes: Set<string>): { principal: string; mas: string; revisar: string } {
+    if (/\s/.test(ref)) {
+      return { principal: '', mas: '', revisar: 'La referencia tiene espacios y ningún archivo puede llegar a este producto. Cámbiala en el producto (por ejemplo, un guion en vez del espacio) para importarle fotos.' };
+    }
+    if (/[\\/:*?"<>|]/.test(ref)) {
+      return { principal: '', mas: '', revisar: 'La referencia tiene un carácter que un archivo no puede llevar (/ \\ : * ? " < > |). Cámbiala en el producto para importarle fotos.' };
+    }
+    const m = ref.match(/^(.+)-(\d{1,3})$/);
+    const n = m ? Number(m[2]) : 0;
+    if (m && n >= 1 && n <= 99 && existentes.has(m[1].toLowerCase())) {
+      return {
+        principal: '',
+        mas: `${ref}-1.jpg, ${ref}-2.jpg…`,
+        revisar: `${ref}.jpg no sirve porque también es el nombre de la foto ${n} de ${m[1]}. Nombra las fotos de este producto ${ref}-1.jpg, ${ref}-2.jpg…`,
+      };
+    }
+    const choques: number[] = [];
+    for (let k = 1; k <= 99; k++) if (existentes.has(`${ref}-${k}`.toLowerCase())) choques.push(k);
+    if (!choques.length) return { principal: `${ref}.jpg`, mas: `${ref}-1.jpg, ${ref}-2.jpg…`, revisar: '' };
+    const libres: number[] = [];
+    for (let k = 1; k <= 99 && libres.length < 2; k++) if (!choques.includes(k)) libres.push(k);
+    return {
+      principal: `${ref}.jpg`,
+      mas: libres.map((k) => `${ref}-${k}.jpg`).join(', ') + '…',
+      revisar: `No uses ${choques.map((k) => `${ref}-${k}.jpg`).join(', ')}: es la referencia de otro producto.`,
+    };
+  }
+
+  /** Hoja «Cómo nombrar»: una referencia de la empresa con nombres que sirven y que no. */
+  private filasDeEjemplo(ref: string): { Archivo: string; '¿Sirve?': string; 'Qué pasa': string }[] {
+    const otraLetra = ref === ref.toLowerCase() ? ref.toUpperCase() : ref.toLowerCase();
+    return [
+      { Archivo: `${ref}.jpg`, '¿Sirve?': 'Sí', 'Qué pasa': `Foto principal de ${ref}` },
+      { Archivo: `${ref}-1.jpg`, '¿Sirve?': 'Sí', 'Qué pasa': `Otra foto de ${ref}` },
+      { Archivo: `${ref}-2.png`, '¿Sirve?': 'Sí', 'Qué pasa': `Otra foto de ${ref}, después de la -1` },
+      { Archivo: `${otraLetra}-3.JPG`, '¿Sirve?': 'Sí', 'Qué pasa': 'Mayúsculas o minúsculas dan igual' },
+      { Archivo: `${ref} (1).jpg`, '¿Sirve?': 'No', 'Qué pasa': 'Copia hecha por Windows: quítale « (1)»' },
+      { Archivo: `${ref}_1.jpg`, '¿Sirve?': 'No', 'Qué pasa': 'Guion bajo: usa guion (-)' },
+      { Archivo: `${ref} rojo.jpg`, '¿Sirve?': 'No', 'Qué pasa': 'Texto extra o espacios en el nombre' },
+      { Archivo: `${ref}.heic`, '¿Sirve?': 'No', 'Qué pasa': 'Formato: usa JPG, PNG o WebP' },
+    ];
   }
 
   cerrar(): void {
