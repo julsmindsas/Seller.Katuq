@@ -28,7 +28,7 @@
     </div>
 
     <p class="portada__nota" *ngIf="ctaAAncla">El botón principal lleva a una sección de esta página. Mientras esa sección no
-      se vea (por ejemplo, el plano oculto), la página muestra «Ver productos» y lleva al catálogo.</p>
+      se vea (por ejemplo, el plano oculto), la página muestra «Ver productos», lleva al catálogo y no muestra los pasos 1-2-3.</p>
 
     <div class="portada__campo">
       <label class="portada__etiqueta" for="portada-cta2">Botón secundario (opcional)</label>
@@ -59,14 +59,14 @@
       </div>
 
       <label class="portada__etiqueta" [attr.for]="'portada-titulo-' + i">Nombre</label>
-      <input [id]="'portada-titulo-' + i" type="text" maxlength="30" [(ngModel)]="e.titulo" (ngModelChange)="cambiar()" placeholder="En la casa" />
+      <input [id]="'portada-titulo-' + i" type="text" [attr.maxlength]="maxTitulo" [(ngModel)]="e.titulo" (ngModelChange)="cambiar()" placeholder="En la casa" />
 
       <label class="portada__etiqueta" [attr.for]="'portada-texto-' + i">Texto</label>
       <input [id]="'portada-texto-' + i" type="text" maxlength="90" [(ngModel)]="e.texto" (ngModelChange)="cambiar()"
              placeholder="WiFi en todos los cuartos, cámaras y cerradura." />
 
-      <label class="portada__etiqueta">Foto</label>
-      <div class="portada__foto">
+      <span class="portada__etiqueta" [id]="'portada-foto-' + i">Foto</span>
+      <div class="portada__foto" role="group" [attr.aria-labelledby]="'portada-foto-' + i">
         <img *ngIf="e.imagen" [src]="e.imagen" alt="" />
         <label class="portada__archivo">
           {{ subiendo === i ? 'Subiendo…' : (e.imagen ? 'Cambiar la foto' : 'Elegir una foto') }}
@@ -82,8 +82,8 @@
         <input [id]="'portada-alt-' + i" type="text" maxlength="120" [(ngModel)]="e.alt" (ngModelChange)="cambiar()"
                placeholder="Sala de una casa con luz cálida" />
 
-        <label class="portada__etiqueta">Foto para celular (opcional)</label>
-        <div class="portada__foto">
+        <span class="portada__etiqueta" [id]="'portada-foto-movil-' + i">Foto para celular (opcional)</span>
+        <div class="portada__foto" role="group" [attr.aria-labelledby]="'portada-foto-movil-' + i">
           <img *ngIf="e.imagenMovil" [src]="e.imagenMovil" alt="" />
           <label class="portada__archivo">
             {{ e.imagenMovil ? 'Cambiar' : 'Elegir' }}
@@ -107,7 +107,7 @@
       </ng-container>
 
       <label class="portada__etiqueta" [attr.for]="'portada-enlace-' + i">Texto del enlace</label>
-      <input [id]="'portada-enlace-' + i" type="text" maxlength="30" [(ngModel)]="e.enlaceTexto" (ngModelChange)="cambiar()" placeholder="Ver el plano" />
+      <input [id]="'portada-enlace-' + i" type="text" [attr.maxlength]="maxEnlace" [(ngModel)]="e.enlaceTexto" (ngModelChange)="cambiar()" placeholder="Ver el plano" />
 
       <label class="portada__etiqueta" [attr.for]="'portada-url-' + i">Lleva a</label>
       <input [id]="'portada-url-' + i" type="text" [(ngModel)]="e.url" (ngModelChange)="cambiar()" placeholder="/?catalogo=1, /c/mesh o https://…" />
@@ -137,8 +137,8 @@
       <button type="button" [class.is-active]="datos.sellosForma !== 'pasos'" [attr.aria-pressed]="datos.sellosForma !== 'pasos'"
               (click)="elegirFormaSellos('')">Con ícono</button>
     </div>
-    <small class="portada__ayuda">Los pasos dicen cómo se compra («Eliges tu espacio»). No pongas aquí envíos ni garantías
-      que no hayas confirmado.</small>
+    <small class="portada__ayuda">Los pasos dicen cómo se compra en tu tienda. No pongas aquí envíos ni garantías que no hayas
+      confirmado, ni pasos de algo que tu página no tiene (como «Agregas el kit» sin un plano).</small>
 
     <div class="portada__sello" *ngFor="let s of sellos; let k = index; trackBy: porIndice">
       <div class="portada__cabeza">

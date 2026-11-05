@@ -2,7 +2,7 @@ import { Component } from "@angular/core";
 import { ToastrService } from "ngx-toastr";
 import { SitiosService } from "../../../sitios.service";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
-import { PanelSitioBase } from "../registro";
+import { PanelSitioBase } from "../panel-sitio-base";
 
 /** Un espacio de la portada, como lo guarda el servidor (`utils/sitioModulos/portada.js`). */
 interface EspacioPortada {
@@ -48,6 +48,9 @@ interface DestinoPlano {
 export class PanelPortadaComponent extends PanelSitioBase {
   static readonly MAX_ESPACIOS = 3;
   static readonly MAX_SELLOS = 4;
+  /** Topes del servidor: el nombre cabe en dos líneas de la tarjeta más angosta (DISENO D2). */
+  static readonly MAX_TITULO = 22;
+  static readonly MAX_ENLACE = 20;
   /** La tarjeta mide hasta 460 px de alto y unos 240 de ancho: a doble densidad, una foto de 900×600 o más. */
   static readonly FOTO_ALTO_MINIMO = 900;
   static readonly FOTO_ANCHO_MINIMO = 600;
@@ -55,6 +58,8 @@ export class PanelPortadaComponent extends PanelSitioBase {
   readonly iconos = ICONOS_SITIO;
   readonly maxEspacios = PanelPortadaComponent.MAX_ESPACIOS;
   readonly maxSellos = PanelPortadaComponent.MAX_SELLOS;
+  readonly maxTitulo = PanelPortadaComponent.MAX_TITULO;
+  readonly maxEnlace = PanelPortadaComponent.MAX_ENLACE;
 
   /** Índice del espacio cuya foto se está subiendo (-1 = ninguna). */
   subiendo = -1;
@@ -87,8 +92,9 @@ export class PanelPortadaComponent extends PanelSitioBase {
 
   elegirComposicion(valor: "" | "espacios"): void {
     this.datos.composicion = valor;
-    // La primera vez que se elige, nacen los tres pasos del artboard: son instrucciones de la tienda, no promesas.
-    if (valor === "espacios" && !this.sellos.length && !this.datos.sellosForma) {
+    // La primera vez que se elige, y solo si la página ya tiene un plano con ancla, nacen los tres pasos del artboard:
+    // hablan del kit del plano, así que sin plano serían contenido falso (DISENO §1, principio 5).
+    if (valor === "espacios" && !this.sellos.length && !this.datos.sellosForma && this.destinosDePlano.length) {
       this.datos.sellosForma = "pasos";
       this.datos.sellos = [{ titulo: "Eliges tu espacio" }, { titulo: "Ves qué va y dónde" }, { titulo: "Agregas el kit" }];
     }
@@ -106,9 +112,27 @@ export class PanelPortadaComponent extends PanelSitioBase {
     return !!r && !String(this.datos.titulo || "").includes(r);
   }
 
-  /** El botón principal va a una sección de esta página (#ancla): si no está, la página muestra «Ver productos». */
+  /**
+   * El botón principal va a una sección de esta página (#ancla): si no está, la página muestra «Ver productos» y oculta
+   * los pasos 1-2-3 (hablan de esa sección). `#top` y `#catalogo` no cuentan: siempre llevan a algún lado.
+   */
   get ctaAAncla(): boolean {
-    return /^#[\w-]{1,60}$/.test(String(this.datos.ctaUrl || "").trim());
+    const m = /^#([\w-]{1,60})$/.exec(String(this.datos.ctaUrl || "").trim());
+    return !!m && m[1] !== "top" && m[1] !== "catalogo";
+  }
+
+  /** Los bloques de la página donde está esta portada (el inicio o una página propia). */
+  private get bloquesDeSuPagina(): any[] {
+    const c = this.contenido;
+    if (!c || !this.bloque) return [];
+    if ((c.bloques || []).includes(this.bloque)) return c.bloques || [];
+    const pagina = (c.paginas || []).find((p) => (p.bloques || []).includes(this.bloque as any));
+    return pagina ? pagina.bloques || [] : c.bloques || [];
+  }
+
+  /** ¿Hay en esta página una sección visible con ese ancla propia? (La misma revisión que hace el servidor al publicar.) */
+  private anclaEnSuPagina(ancla: string): boolean {
+    return !!ancla && this.bloquesDeSuPagina.some((b) => b && b.visible !== false && String(((b as any).estilo || {}).ancla || "") === ancla);
   }
 
   // ── Espacios ──────────────────────────────────────────────────────────────
@@ -189,13 +213,23 @@ export class PanelPortadaComponent extends PanelSitioBase {
     this.avisar();
   }
 
-  /** Avisos de un espacio, en el orden en que el comercio los resuelve. */
+  /**
+   * Avisos de un espacio, en el orden en que el comercio los resuelve. Los que dicen «no se puede publicar» son los
+   * mismos que revisa el servidor al publicar (`utils/sitioModulos/portada.js`, `pendientesDePublicar`).
+   */
   avisosDe(e: EspacioPortada): string[] {
     const avisos: string[] = [];
-    if (!String(e.titulo || "").trim()) avisos.push("Ponle un nombre: sin nombre, el espacio no sale en la página.");
+    const tieneAlgo = !!(e.imagen || String(e.texto || "").trim() || String(e.url || "").trim() || String(e.plano || "").trim());
+    if (!String(e.titulo || "").trim()) {
+      avisos.push(tieneAlgo ? "Ponle un nombre: sin nombre no se puede publicar." : "Ponle un nombre: sin nombre, el espacio no sale en la página.");
+    }
     if (e.imagen && !String(e.alt || "").trim()) avisos.push("Describe la foto en una frase: sin la descripción no se puede publicar.");
-    if (!String(e.url || "").trim() && !String(e.plano || "").trim()) avisos.push("Elige a dónde lleva: sin destino, la tarjeta no se puede tocar.");
-    else if (!String(e.url || "").trim()) avisos.push("Solo lleva al plano: si el plano está oculto, la tarjeta no lleva a ninguna parte. Ponle también un destino.");
+    const url = String(e.url || "").trim();
+    const ancla = String(e.plano || "").split(":")[0].trim();
+    if (!url && !ancla) avisos.push("Elige a dónde lleva: sin destino, la tarjeta no se puede tocar.");
+    else if (!url && !this.anclaEnSuPagina(ancla)) {
+      avisos.push(`Solo lleva al plano y en esta página no hay una sección visible con el ancla «${ancla}»: así no se puede publicar. Ponle también un destino.`);
+    }
     return avisos;
   }
 
@@ -204,11 +238,10 @@ export class PanelPortadaComponent extends PanelSitioBase {
     return this.espacios.length > 0 && this.espacios.every((e) => !!e.imagen);
   }
 
-  /** Los espacios de los planos de la página que tienen ancla propia (el plano llega con PLAN-V2 T11). */
+  /** Los espacios de los planos de esta página que tienen ancla propia (el plano llega con PLAN-V2 T11). */
   get destinosDePlano(): DestinoPlano[] {
     const salida: DestinoPlano[] = [];
-    const bloques = (this.contenido && this.contenido.bloques) || [];
-    for (const b of bloques) {
+    for (const b of this.bloquesDeSuPagina) {
       const ancla = String(((b as any).estilo || {}).ancla || "");
       if (b.tipo !== "plano" || !ancla) continue;
       const espacios = Array.isArray(b.datos && b.datos.espacios) ? b.datos.espacios : [];
