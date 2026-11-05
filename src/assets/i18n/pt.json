@@ -9552,6 +9552,7 @@
   "cartera.carteraClientes.ayudaSinCupo": "Nenhum cliente tem limite de crédito. Quando você atribuir limites, aqui verá quantos o ultrapassam. O limite é configurado ao editar cada cliente na lista de clientes.",
   "cartera.carteraVendedores.titulo": "Carteira por vendedor",
   "cartera.carteraVendedores.subtitulo": "Quem concentra a carteira e quanto está vencido.",
+  "cartera.carteraVendedores.resumen": "{{n}} vendedores · {{vencida}} vencida. Toque para ver o detalhe.",
   "cartera.carteraVendedores.ayuda": "Cada cliente conta para o vendedor do seu pedido. A carteira vencida é a dos pedidos com 1 ou mais dias de atraso. A porcentagem vencida é a parte vencida do que esse vendedor tem a receber. Ao clicar em um vendedor, a lista abaixo soma os clientes dele ao filtro; outro clique o remove. Dá para escolher vários.",
   "cartera.carteraVendedores.vendedor": "Vendedor",
   "cartera.carteraVendedores.carteraTotal": "Carteira total",
