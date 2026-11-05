@@ -1,3 +1,9 @@
+<p class="aviso aviso--info">
+  La vista previa editable sigue mostrando el encabezado de siempre (4 enlaces, sin el botón del asesor ni los
+  submenús). Tu encabezado nuevo, tal como lo verán tus clientes, está en la Vista fiel.
+  <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+</p>
+
 <h4 class="subgrupo">Menú <small>(diseño nuevo, hasta {{ topes.menu }} enlaces)</small></h4>
 <p class="nota">
   En computador salen en una fila junto al logo; si no caben, o en celular, van en el botón ☰. Cada enlace puede abrir
@@ -44,6 +50,10 @@
   Tus categorías reales cuelgan de «{{ enlaceDeCategorias }}», con «Ver todo» al final.
 </p>
 <p class="aviso" *ngIf="modoCategorias !== 'no' && !hayCatalogo">Las categorías necesitan un catálogo en tu sitio para tener a dónde llevar.</p>
+<p class="nota" *ngIf="modoCategorias !== 'no'">
+  Salen con el nombre que tienen en tus productos, con mayúscula en cada palabra, igual que en tu catálogo. Si alguna
+  está mal escrita (sin tildes, toda en mayúsculas), corrígela en tus productos: así se ve bien en todo el sitio.
+</p>
 
 <ng-container *ngIf="datos.mostrarBuscador">
   <div class="campo">
@@ -73,5 +83,9 @@
   </p>
   <p class="aviso aviso--info" *ngIf="!conHorario">
     Sin horario, el botón no dice «En línea». Ponlo en <strong>Tienda › Atención</strong>.
+  </p>
+  <p class="nota" *ngIf="conHorario">
+    En computador, al pasar el mouse sobre el botón se lee «En línea» y tu tiempo de respuesta, o tu texto de fuera de
+    horario. El punto se llena cuando atiendes y queda vacío cuando no.
   </p>
 </ng-container>

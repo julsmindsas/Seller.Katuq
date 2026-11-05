@@ -18,11 +18,14 @@ export class PanelSitioComponent implements OnChanges, AfterViewInit, OnDestroy 
   @Input() bloque: BloqueSitio | null = null;
   @Input() contenido: ContenidoSitio | null = null;
   @Output() cambio = new EventEmitter<void>();
+  /** El panel pide ver la Vista fiel (lo que la previa editable no dibuja igual que la página). */
+  @Output() verFiel = new EventEmitter<void>();
 
   @ViewChild("ancla", { read: ViewContainerRef, static: true }) ancla!: ViewContainerRef;
 
   private ref: ComponentRef<PanelSitioBase> | null = null;
   private suscripcion: Subscription | null = null;
+  private suscripcionFiel: Subscription | null = null;
 
   ngOnChanges(cambios: SimpleChanges): void {
     if (cambios["panel"]) this.montar();
@@ -55,11 +58,14 @@ export class PanelSitioComponent implements OnChanges, AfterViewInit, OnDestroy 
     if (!this.panel || !this.panel.componente || !this.ancla) return;
     this.ref = this.ancla.createComponent(this.panel.componente);
     this.suscripcion = this.ref.instance.cambio.subscribe(() => this.cambio.emit());
+    this.suscripcionFiel = this.ref.instance.verFiel.subscribe(() => this.verFiel.emit());
   }
 
   private desmontar(): void {
     if (this.suscripcion) this.suscripcion.unsubscribe();
+    if (this.suscripcionFiel) this.suscripcionFiel.unsubscribe();
     this.suscripcion = null;
+    this.suscripcionFiel = null;
     if (this.ref) this.ref.destroy();
     this.ref = null;
     if (this.ancla) this.ancla.clear();

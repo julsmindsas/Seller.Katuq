@@ -17,8 +17,17 @@ export abstract class PanelSitioBase {
   @Input() contenido: ContenidoSitio | null = null;
   /** Avisa al editor que algo cambió (marca sucio, refresca la previa y programa el guardado). */
   @Output() cambio = new EventEmitter<void>();
+  /**
+   * Pide al editor que muestre la Vista fiel (PLAN-V2 T04): lo que la previa editable no dibuja igual que la página
+   * (el encabezado y la barra del diseño nuevo, por ejemplo) se ve ahí, tal como lo arma el servidor.
+   */
+  @Output() verFiel = new EventEmitter<void>();
 
   protected avisar(): void {
     this.cambio.emit();
+  }
+
+  pedirVistaFiel(): void {
+    this.verFiel.emit();
   }
 }

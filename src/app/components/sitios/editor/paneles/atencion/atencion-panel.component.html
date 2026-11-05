@@ -10,7 +10,7 @@
 <button type="button" class="opcion" [class.is-active]="!!horario" [attr.aria-pressed]="!!horario" (click)="alternarHorario()">
   <span class="opcion__texto">
     <strong>Horario de atención</strong>
-    <small>Con horario, el botón dice «En línea» cuando atiendes (hora de Colombia). Sin horario no lo dice.</small>
+    <small>Con horario, el punto del botón se llena cuando atiendes (hora de Colombia) y, al pasar el mouse, dice «En línea». Sin horario no lo dice.</small>
   </span>
   <span class="palanca"><span></span></span>
 </button>
@@ -45,18 +45,18 @@
   <label for="atencion-tiempo">Tiempo de respuesta</label>
   <input id="atencion-tiempo" type="text" maxlength="40" [ngModel]="atencion.tiempoRespuesta || ''"
          (ngModelChange)="cambiarTexto('tiempoRespuesta', $event)" placeholder="Respondemos en menos de 15 minutos" />
-  <small>Solo lo que de verdad cumples: se lee junto a «En línea».</small>
+  <small>Solo lo que de verdad cumples: se lee junto a «En línea» al pasar el mouse sobre el botón.</small>
 </div>
 
 <div class="campo">
   <label for="atencion-fuera">Fuera de horario</label>
   <input id="atencion-fuera" type="text" maxlength="120" [ngModel]="atencion.fueraDeHorario || ''"
          (ngModelChange)="cambiarTexto('fueraDeHorario', $event)" placeholder="Te respondemos mañana desde las 8 a. m." />
-  <small>Lo que lee la persona cuando escribe fuera de tu horario.</small>
+  <small>Lo que lee la persona al pasar el mouse sobre el botón fuera de tu horario. El mensaje de WhatsApp no cambia.</small>
 </div>
 
 <h4 class="subgrupo">Así se ve ahora <small>(hora de Colombia)</small></h4>
 <div class="muestra" aria-live="polite">
-  <span class="boton-muestra"><span class="punto" *ngIf="horario" [style.background]="colorPunto"></span>Asesor</span>
+  <span class="boton-muestra"><span class="punto" *ngIf="horario" [class.is-en-linea]="enLinea" [style.background]="enLinea ? colorPunto : null"></span>Asesor</span>
   <span class="estado">{{ estadoAhora }}</span>
 </div>

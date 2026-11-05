@@ -1,3 +1,5 @@
+import { anclaSinDestino } from "../../anclas-inicio";
+
 /**
  * Datos de las barras del diseño nuevo (PLAN-V2 T06) en el editor: los mismos topes y reglas del módulo del servidor
  * (`functions/utils/sitioModulos/barras.js`). El servidor normaliza al guardar; aquí solo se ayuda y se avisa.
@@ -64,8 +66,10 @@ export function menuDe(datos: any): EnlaceMenu[] {
 }
 
 /**
- * Guarda el menú en los datos del bloque: `menu` con todo y `enlaces` con los 4 primeros sin submenú (lo que pinta el
- * diseño de siempre). El servidor compara los dos: si no coinciden, manda `enlaces`.
+ * Guarda el menú en los datos del bloque: `menu` con todo (también lo que está a medio llenar, para no borrárselo al
+ * comercio mientras escribe) y `enlaces` con los 4 primeros enlaces COMPLETOS, sin submenú (lo que pinta el diseño de
+ * siempre). El servidor guarda el menú mientras `enlaces` sea su comienzo; si no, manda `enlaces`. Copiar en `enlaces`
+ * un enlace a medias hacía que, al guardar dos veces, el servidor creyera que `enlaces` cambió y borrara el resto.
  */
 export function conMenu(datos: any, menu: EnlaceMenu[]): void {
   const limpio = menu.slice(0, TOPES.menu).map((e) => {
@@ -73,7 +77,10 @@ export function conMenu(datos: any, menu: EnlaceMenu[]): void {
     return hijos.length ? { etiqueta: e.etiqueta, url: e.url, hijos } : { etiqueta: e.etiqueta, url: e.url };
   });
   datos.menu = limpio;
-  datos.enlaces = limpio.slice(0, 4).map((e) => ({ etiqueta: e.etiqueta, url: e.url }));
+  datos.enlaces = limpio
+    .filter((e) => String(e.etiqueta || "").trim() && String(e.url || "").trim())
+    .slice(0, 4)
+    .map((e) => ({ etiqueta: e.etiqueta, url: e.url }));
 }
 
 /** Los mensajes de la barra: los guardados o, si no hay, el texto de siempre como el primero. */
@@ -119,24 +126,9 @@ export function enLineaAhora(h: HorarioAtencion | null | undefined, ahora = new 
 
 /**
  * ¿Este destino es un ancla que no existe en el inicio? (P0-19: el menú publicado no muestra un enlace a una sección
- * que no está.) Versión corta de la del editor: ids fijos, `seccion-N` y las anclas propias del diseño nuevo.
+ * que no está.) Es la misma regla del editor y del servidor (`../../anclas-inicio.ts`): en el diseño nuevo, el ancla
+ * propia de una sección reemplaza a `seccion-N` y una vitrina sin productos no cuenta.
  */
-export function anclaQueNoExiste(url: string, bloques: any[]): boolean {
-  const m = /^#(.+)$/.exec(String(url || "").trim());
-  if (!m || m[1].toLowerCase() === "top") return false;
-  const fijos: { [tipo: string]: string } = {
-    categorias: "categorias", destacado: "destacado", sucursales: "sucursales", agenda: "agenda", formulario: "contacto",
-    catalogo: "catalogo", explorar: "catalogo", ficha: "producto", gracias: "gracias",
-  };
-  const ids = new Set<string>();
-  let vitrinas = 0;
-  (bloques || [])
-    .filter((b) => b && b.visible !== false)
-    .forEach((b, i) => {
-      const propia = b.estilo && typeof b.estilo.ancla === "string" ? b.estilo.ancla : "";
-      if (propia) ids.add(propia);
-      if (b.tipo === "productos") ids.add(vitrinas++ === 0 ? "productos" : `productos-${i}`);
-      else ids.add(fijos[b.tipo] || `seccion-${i}`);
-    });
-  return !ids.has(m[1]);
+export function anclaQueNoExiste(url: string, bloques: any[], disenoNuevo = true): boolean {
+  return anclaSinDestino(url, bloques, { disenoNuevo });
 }

@@ -1,11 +1,16 @@
 <h4 class="subgrupo">Barra de anuncio <small>(diseño nuevo)</small></h4>
+<p class="aviso aviso--info">
+  La vista previa editable sigue mostrando la barra de siempre. Tu barra nueva, tal como la verán tus clientes, está en
+  la Vista fiel.
+  <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+</p>
 <div class="segmentos" role="group" aria-label="Cómo se ordena la barra">
   <button type="button" [class.is-activo]="disposicion === 'barra'" [attr.aria-pressed]="disposicion === 'barra'" (click)="elegirDisposicion('barra')">Mensajes y ayuda</button>
   <button type="button" [class.is-activo]="disposicion === 'centro'" [attr.aria-pressed]="disposicion === 'centro'" (click)="elegirDisposicion('centro')">Centrada</button>
 </div>
 <p class="nota">
-  La barra queda quieta: no desfila. En computador salen hasta 3 mensajes; en celular, solo el primero. Si un mensaje
-  promete envíos, garantía o tiempos, tendrás que confirmarlo antes de publicar.
+  La barra queda quieta: no desfila, aunque antes la tuvieras desfilando. En computador salen hasta 3 mensajes; en
+  celular, solo el primero. Si un mensaje promete envíos, garantía o tiempos, tendrás que confirmarlo antes de publicar.
 </p>
 
 <div class="repetible" *ngFor="let m of mensajes; let k = index; let primero = first; let ultimo = last; trackBy: porIndice">
