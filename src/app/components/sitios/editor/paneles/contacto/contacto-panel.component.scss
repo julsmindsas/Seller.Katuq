@@ -1,0 +1,22 @@
+// «Contacto y cotización» del diseño nuevo: los campos comunes de los paneles. Regla de diseño Katuq: acento #5F3FE0, sin
+// degradados y ninguna clase con «p-» (y todo span con color propio, trampa `span.ng-star-inserted`).
+@import "../barras/campos-panel";
+
+.opciones {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.fila-opcion {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  align-items: center;
+
+  input[type="text"] {
+    @include kb-input;
+    background: #fff;
+    padding: 11px 13px;
+  }
+}

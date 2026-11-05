@@ -1,0 +1,108 @@
+<!-- «Contacto y cotización» del diseño nuevo (módulo `contacto`). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<h4 class="subgrupo">Contacto y cotización <small>(diseño nuevo)</small></h4>
+<p class="aviso aviso--info">
+  La vista previa editable muestra el formulario de siempre. Cómo lo verán tus clientes, con la columna de confianza y la
+  tarjeta del formulario, está en la Vista fiel.
+  <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+</p>
+
+<div class="campo">
+  <label [attr.for]="uid + '-antetitulo'">Antetítulo</label>
+  <input [id]="uid + '-antetitulo'" type="text" [maxlength]="topes.antetitulo" [ngModel]="antetitulo" (ngModelChange)="cambiarAntetitulo($event)"
+         placeholder="Para empresas" />
+  <small>La frase corta de arriba del título. Opcional.</small>
+</div>
+
+<h4 class="subgrupo">Puntos de confianza <small>(de 2 a 4, opcional)</small></h4>
+<p class="nota">
+  Lo que le das a quien escribe: «Asesoría especializada», «Cotización formal»… Escribe solo lo que cumples. Sin puntos, la
+  columna sale sin lista. Si un punto promete envíos, garantía o tiempos, tendrás que confirmarlo antes de publicar.
+</p>
+<div class="repetible" *ngFor="let p of puntos; let k = index; let primero = first; let ultimo = last; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <strong class="numero">Punto {{ k + 1 }}</strong>
+    <button type="button" class="mini" [disabled]="primero" (click)="moverPunto(k, -1)" aria-label="Subir punto">↑</button>
+    <button type="button" class="mini" [disabled]="ultimo" (click)="moverPunto(k, 1)" aria-label="Bajar punto">↓</button>
+    <button type="button" class="mini mini--quitar" (click)="quitarPunto(k)">Quitar</button>
+  </div>
+  <input type="text" [maxlength]="topes.textoPunto" placeholder="Asesoría especializada para tu proyecto" aria-label="Texto del punto"
+         [ngModel]="p.texto" (ngModelChange)="cambiarPunto(k, 'texto', $event)" />
+  <div class="icono-fila">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path *ngIf="p.icono && trazos[p.icono]" [attr.d]="trazos[p.icono]" />
+    </svg>
+    <select [ngModel]="p.icono" (ngModelChange)="cambiarPunto(k, 'icono', $event)" aria-label="Ícono del punto">
+      <option value="">Un chulo (por defecto)</option>
+      <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
+    </select>
+  </div>
+</div>
+<button type="button" class="agregar" [disabled]="puntos.length >= topes.puntos" (click)="agregarPunto()">Agregar punto</button>
+
+<h4 class="subgrupo">¿Qué necesitas? <small>(opcional)</small></h4>
+<p class="nota">
+  Opciones que quien escribe puede marcar (una o varias), por ejemplo «Redes y WiFi», «Cámaras y seguridad», «Energía». Lo que
+  marque te llega en la nota del prospecto o de la cotización. Sin opciones, la pregunta no sale.
+</p>
+<div class="opciones">
+  <div class="fila-opcion" *ngFor="let o of intereses; let k = index; trackBy: porIndice">
+    <input type="text" [maxlength]="topes.textoInteres" [attr.aria-label]="'Opción ' + (k + 1)" placeholder="Redes y WiFi"
+           [ngModel]="o" (ngModelChange)="cambiarInteres(k, $event)" />
+    <button type="button" class="mini mini--quitar" (click)="quitarInteres(k)" [attr.aria-label]="'Quitar la opción ' + (k + 1)">Quitar</button>
+  </div>
+</div>
+<button type="button" class="agregar" [disabled]="intereses.length >= topes.intereses" (click)="agregarInteres()">Agregar opción</button>
+
+<h4 class="subgrupo">Lo que se pide</h4>
+<button type="button" class="opcion" [class.is-active]="pideEmpresa" [attr.aria-pressed]="pideEmpresa" (click)="alternarEmpresa()">
+  <span class="opcion__texto">
+    <strong>Empresa</strong>
+    <small>Un campo opcional para el nombre de la empresa de quien escribe. Llega en la nota del contacto.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+<p class="nota">El nombre, el teléfono o WhatsApp, el correo y el mensaje se activan arriba, en «Qué le pides al visitante».</p>
+
+<h4 class="subgrupo">Canales a la vista</h4>
+<p class="nota">
+  Debajo del texto salen los canales que tu sitio ya tiene. Si no hay el dato, el canal no sale: nunca se inventa uno.
+</p>
+<button type="button" class="opcion" [class.is-active]="canalVisible('whatsapp')" [attr.aria-pressed]="canalVisible('whatsapp')" (click)="alternarCanal('whatsapp')">
+  <span class="opcion__texto">
+    <strong>WhatsApp</strong>
+    <small *ngIf="whatsappDelSitio">Sale el de tu sitio: {{ whatsappDelSitio }}.</small>
+    <small *ngIf="!whatsappDelSitio">Sale el WhatsApp de tu sitio (bloque de WhatsApp) o, si no hay, el celular de tu empresa. Hoy tu sitio no tiene un bloque de WhatsApp con número.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+<button type="button" class="opcion" [class.is-active]="canalVisible('correo')" [attr.aria-pressed]="canalVisible('correo')" (click)="alternarCanal('correo')">
+  <span class="opcion__texto">
+    <strong>Correo</strong>
+    <small>Sale el correo de tu empresa, el mismo del pie de página. Si no lo tiene registrado, no sale.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+<button type="button" class="opcion" [class.is-active]="canalVisible('horario')" [attr.aria-pressed]="canalVisible('horario')" (click)="alternarCanal('horario')">
+  <span class="opcion__texto">
+    <strong>Horario</strong>
+    <small *ngIf="horarioDelSitio">Sale el de Tienda › Atención: {{ horarioDelSitio }}.</small>
+    <small *ngIf="!horarioDelSitio">Sale solo si lo configuras en Tienda › Atención. Hoy no hay horario.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+
+<div class="campo">
+  <label [attr.for]="uid + '-respuesta'">Tiempo de respuesta</label>
+  <input [id]="uid + '-respuesta'" type="text" [maxlength]="topes.respuesta" [ngModel]="respuesta" (ngModelChange)="cambiarRespuesta($event)"
+         placeholder="Respondemos el mismo día hábil" />
+  <small>Opcional y vacío por defecto. Escríbelo solo si lo cumples: es una promesa a tu cliente.</small>
+</div>
+
+<h4 class="subgrupo">Fondo de la sección</h4>
+<div class="segmentos" role="group" aria-label="Fondo de la sección">
+  <button type="button" [class.is-activo]="!superficie" [attr.aria-pressed]="!superficie" (click)="elegirSuperficie('')">Claro</button>
+  <button type="button" [class.is-activo]="superficie === 'estructura'" [attr.aria-pressed]="superficie === 'estructura'" (click)="elegirSuperficie('estructura')">Oscuro</button>
+  <button type="button" [class.is-activo]="superficie === 'alterna'" [attr.aria-pressed]="superficie === 'alterna'" (click)="elegirSuperficie('alterna')">Alterno</button>
+</div>
+<p class="nota">Oscuro usa el color de la barra y el pie de tu tema; los colores del formulario siguen al tema en los dos fondos.</p>
+<p class="aviso" *ngIf="superficie === 'estructura' && !conEstructura">Tu tema no tiene color de estructura (Estilo › Diseño nuevo): la sección se ve clara.</p>

@@ -10,6 +10,7 @@ import { PanelPlanoComponent } from "./plano/plano-panel.component";
 import { resumenPlano } from "./plano/plano-datos";
 import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
 import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
+import { ContactoPanelComponent } from "./contacto/contacto-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -65,7 +66,7 @@ export interface PanelSitio {
 /**
  * Los paneles registrados. Cada tanda trae su línea:
  *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T15 vitrina · N2 bandas
- *   T17 guia · T20 pedidoRapido
+ *   T17 guia · T20 pedidoRapido · contacto (formulario de contacto y cotización)
  */
 export const PANELES_SITIO: PanelSitio[] = [
   // T06 (módulo `barras`): Tienda › Atención, y lo nuevo del encabezado y de la barra de anuncio, que sale debajo de sus
@@ -119,6 +120,9 @@ export const PANELES_SITIO: PanelSitio[] = [
       descripcion: "Cómo se leen tus categorías en la página, con sus tildes. No cambia la categoría en tu catálogo.",
     },
   },
+  // Módulo `contacto` (5-nov): el formulario de contacto o cotización con su columna de confianza. Extiende el bloque
+  // `formulario`: sale debajo de sus campos de siempre (título, descripción, qué se pide, botón y destino).
+  { id: "contacto", tipo: "formulario", componente: ContactoPanelComponent },
 ];
 
 /** El panel que edita un tipo de bloque, si lo hay. */
