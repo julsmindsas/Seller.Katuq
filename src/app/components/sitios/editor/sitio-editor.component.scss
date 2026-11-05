@@ -583,6 +583,11 @@
     li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin: 4px 0; }
   }
   &__cambios-titulo { font-weight: 800; color: var(--kb-muted-2, #6f6a85); text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px !important; }
+  // Diseño nuevo: la propuesta de Opttia (lo que no hizo, lo que conviene saber y la decisión).
+  &__cambios--no li, &__cambios--aviso li { align-items: flex-start; }
+  &__motivo { color: var(--kb-body, #4b4766); font-size: 12.5px; line-height: 1.45; strong { color: var(--kb-ink, #211f3a); font-weight: 700; } }
+  &__decision { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--kb-line, #ece9f6); white-space: normal; }
+  &__estado { font-size: 12px; font-weight: 700; color: var(--kb-muted-2, #6f6a85); letter-spacing: normal; }
   &__icono { width: 18px; text-align: center; flex: none; }
   &__muestras {
     display: inline-flex;

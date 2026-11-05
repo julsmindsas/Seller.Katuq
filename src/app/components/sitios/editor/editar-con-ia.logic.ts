@@ -1,9 +1,11 @@
 /**
  * Editar la página con IA desde el editor (bandera `landingPrompt`) — lógica pura del chat.
  *
- * El comercio escribe lo que quiere cambiar y el servidor devuelve la página cambiada; el editor la
- * pone en pantalla (entra a su historial) y NO guarda hasta que la persona toque Guardar. Quien
- * manda sobre la función es el servidor (`requireFeature('landingPrompt')`).
+ * El comercio escribe lo que quiere cambiar y el servidor devuelve la página cambiada. En una página de siempre el
+ * editor la pone en pantalla de una vez (entra a su historial). En una página del diseño nuevo, Opttia edita por
+ * OPERACIONES (como lo hacemos a mano) y el servidor devuelve una PROPUESTA: qué cambia, qué no y por qué; la página
+ * no cambia hasta que la persona toca «Aplicar cambios». Lo aplicado se autoguarda como cualquier cambio del editor y
+ * «Deshacer» (o Ctrl+Z) lo quita. Quien manda sobre la función es el servidor (`requireFeature('landingPrompt')`).
  */
 
 export const INSTRUCCION_MIN = 3;
@@ -19,12 +21,36 @@ export interface CambioIA {
   colores?: string[];
 }
 
+/** Lo que Opttia no hizo de lo que se pidió, y por qué (en palabras de cualquiera, lo escribe el servidor). */
+export interface RechazoIA {
+  texto: string;
+  motivo: string;
+}
+
+/**
+ * Una propuesta de Opttia sobre una página del diseño nuevo. `contenido` es la página como quedaría (solo en memoria:
+ * no se guarda en la conversación) y `huella` la de la página cuando se pidió: si la persona la cambió mientras Opttia
+ * pensaba, la propuesta ya no se aplica (se pide de nuevo).
+ */
+export interface PropuestaIA {
+  estado: 'pendiente' | 'aplicada' | 'descartada' | 'vencida';
+  pagina: number;
+  huella: string;
+  contenido?: { bloques: any[]; tema: any; tiendaCambios: { [clave: string]: any } };
+}
+
 export interface MensajeEditarIA {
   rol: 'comercio' | 'ia';
   texto: string;
   error?: boolean;
-  /** Lo que cambió en la página con este mensaje. */
+  /** Lo que cambió en la página con este mensaje (o, en una propuesta, lo que cambiaría). */
   cambios?: CambioIA[];
+  /** Lo que no se hizo y por qué. */
+  rechazos?: RechazoIA[];
+  /** Lo que conviene saber (promesas que se confirman al publicar, plano oculto…). */
+  avisos?: string[];
+  /** Diseño nuevo: la propuesta que la persona aplica o descarta. */
+  propuesta?: PropuestaIA;
   /** Cuántas imágenes acompañaron el mensaje (solo para mostrar "📎 2 imágenes"). */
   adjuntos?: number;
   /** Ticket 1248: pendientes del checklist con su botón para corregir (no se guardan en la conversación). */
@@ -74,6 +100,10 @@ export function serializarConversacion(mensajes: MensajeEditarIA[]): string {
       texto: String(m.texto || '').slice(0, 1200),
       ...(m.error ? { error: true } : {}),
       ...(Array.isArray(m.cambios) && m.cambios.length ? { cambios: m.cambios.slice(0, 12) } : {}),
+      ...(Array.isArray(m.rechazos) && m.rechazos.length ? { rechazos: m.rechazos.slice(0, 12) } : {}),
+      ...(Array.isArray(m.avisos) && m.avisos.length ? { avisos: m.avisos.slice(0, 8) } : {}),
+      // La página propuesta no se guarda en el navegador: tras recargar, una propuesta pendiente ya no se puede aplicar.
+      ...(m.propuesta ? { propuesta: { estado: m.propuesta.estado === 'pendiente' ? 'vencida' : m.propuesta.estado, pagina: m.propuesta.pagina, huella: '' } } : {}),
       ...(m.adjuntos ? { adjuntos: m.adjuntos } : {}),
     })),
   );
@@ -109,13 +139,13 @@ export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
  * nuevo en esas páginas (bandera `siteDesignV2`); en las demás, las ideas son las de siempre.
  */
 export const SUGERENCIAS_EDITAR_IA_V2: ReadonlyArray<string> = [
-  'Haz el título de la portada más llamativo',
-  'Pon los destacados sobre fondo oscuro',
+  'Pon la portada como carrusel con fotos que ya tengo, cada una con su texto',
+  'Arma la vitrina con pestañas: en la casa, en el negocio y para moverte',
+  'Ponle un ícono a cada categoría',
+  'Pon el catálogo en el inicio con 8 productos',
+  'Convierte el contacto en un cotizador por pasos',
+  'Ponle nombre a las preguntas frecuentes y agrégalas al menú',
   'Sube el movimiento de la página a expresivo',
-  'Pon los títulos de sección más grandes',
-  'Cambia el antetítulo de la portada',
-  'Escribe mejor los nombres de las pestañas de destacados',
-  'Muestra el botón de WhatsApp solo en celular',
   '¿Por qué no puedo publicar?',
 ];
 
@@ -131,6 +161,27 @@ export function sugerenciasEditarIA(disenoNuevo: boolean): ReadonlyArray<string>
  */
 export function preguntaPorPublicar(texto: string): boolean {
   return /(por ?qu[eé]|no (puedo|me deja|se puede)|qu[eé] (me )?falta|qu[eé] necesito)[^.]{0,40}public/i.test(String(texto || ''));
+}
+
+/**
+ * Huella corta de un valor (la de la página cuando se pidió una propuesta). No es criptográfica: solo dice si la página
+ * cambió entre el pedido y el clic en «Aplicar cambios».
+ */
+export function huellaDe(valor: any): string {
+  const texto = JSON.stringify(valor === undefined ? null : valor);
+  let h = 5381;
+  for (let i = 0; i < texto.length; i++) h = ((h << 5) + h + texto.charCodeAt(i)) | 0;
+  return `${texto.length.toString(36)}.${(h >>> 0).toString(36)}`;
+}
+
+/** Las claves de la tienda que la edición por operaciones lee o cambia (lo demás de la tienda no viaja). */
+export const CLAVES_TIENDA_IA: ReadonlyArray<string> = ['fichas', 'categoriasInfo', 'fotoGenerica', 'promesasConfirmadas', 'categoriasOcultas', 'categoriasMostradas'];
+
+export function tiendaParaIA(tienda: any): { [clave: string]: any } {
+  const t = tienda && typeof tienda === 'object' ? tienda : {};
+  const salida: { [clave: string]: any } = {};
+  for (const k of CLAVES_TIENDA_IA) if (t[k] !== undefined) salida[k] = t[k];
+  return salida;
 }
 
 /** Tipo plano a propósito: el proyecto compila sin `strictNullChecks` y ahí una unión no se estrecha con `!ok`. */

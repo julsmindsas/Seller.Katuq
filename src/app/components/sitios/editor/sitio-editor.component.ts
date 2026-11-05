@@ -27,6 +27,8 @@ import {
   textoAvance,
   validarInstruccion,
   preguntaPorPublicar,
+  huellaDe,
+  tiendaParaIA,
 } from "./editar-con-ia.logic";
 import { pdfAImagenes, reducirImagen } from "./editar-con-ia.archivos";
 import { avisoContraste, avisoContrastePrincipal, combinacionUsable, contraste, mismosColores } from "../contraste";
@@ -4170,8 +4172,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   // ── Editar con IA, conversando (bandera landingPrompt) ──
   // Pensado para alguien sin conocimientos técnicos: escribe lo que quiere (o muestra una foto, una
-  // captura o un PDF de cómo le gustaría) y la página cambia en pantalla. El servidor devuelve la página
-  // cambiada; aquí se aplica y entra al historial (Ctrl+Z). Nada se guarda hasta tocar Guardar.
+  // captura o un PDF de cómo le gustaría). En una página de siempre el cambio se pinta de una vez; en una
+  // del diseño nuevo, Opttia propone (qué cambia, qué no y por qué) y la página cambia solo con «Aplicar
+  // cambios». Lo aplicado entra al historial (Ctrl+Z), a «Deshacer» del chat y se autoguarda como
+  // cualquier cambio del editor.
   mensajesIA: MensajeEditarIA[] = [];
   mensajeIA = "";
   editandoIA = false;
@@ -4218,7 +4222,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** El último mensaje de la IA que cambió algo: debajo van "Me gusta, guardar" y "Deshacer". */
   get ultimoCambioIA(): MensajeEditarIA | null {
     const m = this.mensajesIA[this.mensajesIA.length - 1];
-    return m && m.rol === "ia" && Array.isArray(m.cambios) && m.cambios.length ? m : null;
+    // Una propuesta del diseño nuevo no es un cambio hecho: debajo de ella van «Aplicar cambios» y «Descartar».
+    return m && m.rol === "ia" && !m.propuesta && Array.isArray(m.cambios) && m.cambios.length ? m : null;
   }
 
   /** La conversación de esta página se recuerda en este navegador (sin imágenes). */
@@ -4425,6 +4430,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     }
     this.editandoIA = true;
     const inicio = Date.now();
+    // Diseño nuevo: la edición por operaciones también lee la tienda (fichas, categorías, foto genérica). La huella de lo
+    // que se mandó dice, al aplicar, si la persona cambió la página mientras Opttia pensaba.
+    const tiendaIA = this.disenoNuevo ? tiendaParaIA((this.contenido as any).tienda) : null;
+    const huellaPedido = this.huellaParaIA();
     this.textoAvanceIA = textoAvance(0, referencias.length);
     this.relojAvanceIA = setInterval(() => {
       this.textoAvanceIA = textoAvance((Date.now() - inicio) / 1000, referencias.length);
@@ -4440,7 +4449,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         siteId: this.id,
         instruccion: v.instruccion,
         historial,
-        contenido: { bloques: this.bloques, tema: (this.contenido as any).tema },
+        contenido: { bloques: this.bloques, tema: (this.contenido as any).tema, ...(tiendaIA ? { tienda: tiendaIA } : {}) },
         ...(referencias.length ? { referencias } : {}),
       })
       .subscribe({
@@ -4449,6 +4458,20 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           const d = res && res.data;
           if (!res || !res.success || !d) {
             this.decirIA({ rol: "ia", texto: (res && (res as any).message) || "No pude aplicar el cambio.", error: true });
+            return;
+          }
+          // Diseño nuevo: una PROPUESTA. No se toca la página hasta que la persona la aplique.
+          if (d.modo === "propuesta") {
+            this.decirIA({
+              rol: "ia",
+              texto: d.mensaje,
+              cambios: d.cambios || [],
+              rechazos: d.rechazos || [],
+              avisos: d.avisos || [],
+              ...(d.aplicados > 0
+                ? { propuesta: { estado: "pendiente" as const, pagina: paginaDelPedido, huella: huellaPedido, contenido: { bloques: d.bloques, tema: d.tema, tiendaCambios: d.tiendaCambios || {} } } }
+                : {}),
+            });
             return;
           }
           // Solo se aplica sobre la misma página que se pidió (si la persona cambió de página, no se pisa otra).
@@ -4474,6 +4497,50 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   guardarDesdeChatIA(): void {
     this.guardar();
+  }
+
+  /** La huella de lo que la edición por operaciones lee: los bloques de la página activa, el tema y la tienda que viaja. */
+  private huellaParaIA(): string {
+    const c: any = this.contenido || {};
+    return huellaDe({ bloques: this.bloques, tema: c.tema, tienda: this.disenoNuevo ? tiendaParaIA(c.tienda) : null, pagina: this.paginaActiva });
+  }
+
+  /** «Aplicar cambios»: la propuesta pasa a la página, entra a «Deshacer» y al historial, y se autoguarda. */
+  aplicarPropuestaChatIA(m: MensajeEditarIA): void {
+    const p = m && m.propuesta;
+    if (!p || p.estado !== "pendiente" || !p.contenido || !this.contenido || this.editandoIA) return;
+    if (p.pagina !== this.paginaActiva || p.huella !== this.huellaParaIA()) {
+      p.estado = "vencida";
+      p.contenido = undefined;
+      this.decirIA({ rol: "ia", texto: "Cambiaste la página mientras pensaba, así que no apliqué esta propuesta para no pisar lo tuyo. Pídemelo de nuevo y la armo sobre lo que tienes ahora.", error: true });
+      return;
+    }
+    this.pilaDeshacerIA.push(JSON.stringify(this.contenido));
+    if (this.pilaDeshacerIA.length > 20) this.pilaDeshacerIA.shift();
+    const pagina = this.paginaEnEdicion;
+    if (pagina) pagina.bloques = p.contenido.bloques as any;
+    else (this.contenido as any).bloques = p.contenido.bloques;
+    (this.contenido as any).tema = p.contenido.tema;
+    const claves = Object.keys(p.contenido.tiendaCambios || {});
+    if (claves.length) (this.contenido as any).tienda = { ...((this.contenido as any).tienda || {}), ...p.contenido.tiendaCambios };
+    p.estado = "aplicada";
+    p.contenido = undefined;
+    this.seleccionado = -1;
+    this.marcarSucio();
+    this.decirIA({
+      rol: "ia",
+      texto: "Listo, apliqué la propuesta. Se guarda sola en unos segundos en el borrador; si no te gusta, toca «Deshacer».",
+      cambios: (m.cambios || []).slice(0, 12),
+    });
+  }
+
+  /** «Descartar»: la propuesta se queda en la conversación, sin tocar la página. */
+  descartarPropuestaChatIA(m: MensajeEditarIA): void {
+    const p = m && m.propuesta;
+    if (!p || p.estado !== "pendiente") return;
+    p.estado = "descartada";
+    p.contenido = undefined;
+    this.recordarConversacion();
   }
 
   deshacerChatIA(): void {

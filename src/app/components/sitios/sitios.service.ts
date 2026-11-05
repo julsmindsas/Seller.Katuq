@@ -784,13 +784,15 @@ export class SitiosService extends BaseService {
 
   /**
    * Editar la página con IA (bandera `landingPrompt`): manda lo que pide el comercio y la página tal como
-   * está en el editor (sin guardar); vuelve la página cambiada. El servidor NO guarda nada.
+   * está en el editor (sin guardar); vuelve la página cambiada. El servidor NO guarda nada. En una página del diseño
+   * nuevo vuelve una PROPUESTA (`modo: "propuesta"`): lo que cambiaría, lo que no y por qué, y la página como quedaría.
    */
   editarConIA(body: {
     siteId: string;
     instruccion: string;
     historial: { rol: 'comercio' | 'ia'; texto: string }[];
-    contenido: { bloques: any[]; tema: any };
+    /** `tienda`: solo en el diseño nuevo, las claves que lee la edición por operaciones (`tiendaParaIA`). */
+    contenido: { bloques: any[]; tema: any; tienda?: any };
     /** Fotos, capturas o páginas de un PDF ya reducidas a JPEG (data URL), hasta 3. */
     referencias?: string[];
   }): Observable<
@@ -802,6 +804,12 @@ export class SitiosService extends BaseService {
       mensaje: string;
       cambios?: { icono: string; texto: string; colores?: string[] }[];
       referenciasMiradas?: number;
+      /** Diseño nuevo: la edición por operaciones devuelve una propuesta. */
+      modo?: 'propuesta';
+      tiendaCambios?: { [clave: string]: any };
+      rechazos?: { texto: string; motivo: string }[];
+      avisos?: string[];
+      operaciones?: any[];
     }>
   > {
     // Sin la pantalla de carga global: el chat muestra su propio avance ("Mirando tu imagen…").

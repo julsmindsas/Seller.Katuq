@@ -117,7 +117,8 @@
 
       <!-- ── Con IA: pedirle cambios a la página conversando ──
            Para alguien sin conocimientos técnicos: escribe como a un diseñador, o muestra una foto,
-           una captura o un PDF de cómo le gustaría. Nada se guarda hasta tocar Guardar. -->
+           una captura o un PDF de cómo le gustaría. En el diseño nuevo, Opttia PROPONE y la persona aplica
+           o descarta; lo aplicado se autoguarda y «Deshacer» lo quita. -->
       <div class="panel__contenido" *ngIf="panel === 'ia' && puedeEditarConIA">
         <div class="chat-ia" [class.chat-ia--soltando]="arrastrandoSobreChat"
              (dragover)="alArrastrarSobreChat($event, true)" (dragleave)="alArrastrarSobreChat($event, false)"
@@ -127,9 +128,14 @@
             <h3>✨ Diseña tu página conversando</h3>
             <button type="button" class="chat-ia__nueva" *ngIf="mensajesIA.length && !editandoIA" (click)="empezarDeNuevoIA()">Empezar de nuevo</button>
           </div>
-          <p class="chat-ia__intro">
+          <p class="chat-ia__intro" *ngIf="!disenoNuevo">
             Escríbeme como le hablarías a un diseñador: <em>«quiero colores más alegres»</em>, <em>«un título que venda más»</em>.
             También puedes <strong>mostrarme una foto, una captura o un PDF</strong> de cómo te gustaría que se viera.
+          </p>
+          <p class="chat-ia__intro" *ngIf="disenoNuevo">
+            Pídeme lo que harías en el editor: <em>«pon un carrusel con texto por foto»</em>, <em>«arma la vitrina con pestañas»</em>,
+            <em>«ponle ícono a cada categoría»</em>. Te muestro <strong>una propuesta</strong> y tu página cambia solo si la aplicas.
+            Uso tus productos y las fotos que ya tienes; nunca invento datos de tu negocio.
           </p>
 
           <!-- Conversación (el mensaje más nuevo queda abajo, a la vista) -->
@@ -150,7 +156,7 @@
                   </li>
                 </ul>
                 <ul class="chat-ia__cambios" *ngIf="m.cambios?.length">
-                  <li class="chat-ia__cambios-titulo">Esto cambié:</li>
+                  <li class="chat-ia__cambios-titulo">{{ m.propuesta ? 'Te propongo:' : 'Esto cambié:' }}</li>
                   <li *ngFor="let c of m.cambios">
                     <span class="chat-ia__icono" aria-hidden="true">{{ c.icono }}</span>
                     <span>{{ c.texto }}</span>
@@ -159,6 +165,30 @@
                     </span>
                   </li>
                 </ul>
+                <!-- Diseño nuevo: lo que no se hizo, con su porqué, y lo que conviene saber -->
+                <ul class="chat-ia__cambios chat-ia__cambios--no" *ngIf="m.rechazos?.length">
+                  <li class="chat-ia__cambios-titulo">No lo hice:</li>
+                  <li *ngFor="let r of m.rechazos">
+                    <span class="chat-ia__icono" aria-hidden="true">✋</span>
+                    <span class="chat-ia__motivo"><strong>{{ r.texto }}</strong>: {{ r.motivo }}</span>
+                  </li>
+                </ul>
+                <ul class="chat-ia__cambios chat-ia__cambios--aviso" *ngIf="m.avisos?.length">
+                  <li class="chat-ia__cambios-titulo">Ten en cuenta:</li>
+                  <li *ngFor="let a of m.avisos">
+                    <span class="chat-ia__icono" aria-hidden="true">💡</span>
+                    <span class="chat-ia__motivo">{{ a }}</span>
+                  </li>
+                </ul>
+                <div class="chat-ia__decision" *ngIf="m.propuesta">
+                  <ng-container *ngIf="m.propuesta.estado === 'pendiente'">
+                    <button type="button" class="btn-primario btn-primario--sm" (click)="aplicarPropuestaChatIA(m)" [disabled]="editandoIA">Aplicar cambios</button>
+                    <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="descartarPropuestaChatIA(m)" [disabled]="editandoIA">Descartar</button>
+                  </ng-container>
+                  <span class="chat-ia__estado" *ngIf="m.propuesta.estado === 'aplicada'">✓ Aplicada</span>
+                  <span class="chat-ia__estado" *ngIf="m.propuesta.estado === 'descartada'">Descartada</span>
+                  <span class="chat-ia__estado" *ngIf="m.propuesta.estado === 'vencida'">Ya no se puede aplicar: pídemela de nuevo</span>
+                </div>
               </div>
             </ng-container>
           </div>
