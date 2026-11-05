@@ -13385,3 +13385,63 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Pruebas:** sintaxis de los archivos tocados sin errores; `test:sitios-listo` 5 ok y `test:sitios-versiones` 13 ok. `test:sitios-publicacion` (7 fallas) y `test:cotizaciones-contract` (2 fallas, IVA de `calcularTotales`) fallan igual en `24ec1edf`, antes de la mezcla.
 - **Verificado en producción:** `katuq-api` en línea y sin errores tras el reinicio; la tienda de Baudio (`baudio-tienda.katuq.com`) sale con el pie en columnas y la pausa del carrusel.
 - **No verificado:** el editor en el navegador ni la Vista fiel con la bandera encendida.
+
+### 2026-11-05 (tarde) — D-680 a D-685: tienda de Baudio en producción (borradores), efectos «expresivo», vista previa navegable, Opttia v2 y contacto v2 (aws-claude-1)
+
+- **D-680. Datos de Baudio en producción, con el sí de Daniel en el chat del 5-nov.**
+  - Se borraron los 2 sitios publicados que no se usaban: `baudio-tienda` y `baudio-tienda-ia`. Hay respaldo previo, privado.
+  - Los 793 productos quedaron con `marketplace.paginaWeb=true` y `disponibilidad.inventariable=false`. Baudio tiene 0 registros en `inventory`. Se guardó un respaldo de los valores previos. Si Baudio carga existencias, hay que volver a marcarlos como inventariables.
+  - Se subieron 24 fotos oficiales de los fabricantes (TP-Link, Mercusys, Eufy, Anker, Soundcore) a productos que no tenían foto. Quedaron en Storage, en `Productos/<id>/<uuid>.jpg`.
+  - `siteDesignV2` está encendida solo para Baudio, con el script `set-company-feature.js`: primero en simulación y después escrita.
+- **D-681. Dos borradores armados con el EDITOR, sin publicar.**
+  - «Baudio — Tienda premium» (`baudio-premium`): diseño C′.
+  - «Baudio — Tienda moderna» (`baudio-moderna`): oscura, con carrusel de 4 fotos.
+  - Pendientes antes de publicar:
+    - envío: hoy está en tarifa fija 0;
+    - pasarela propia de pago;
+    - correo genérico en el pie;
+    - textos [B] y fotos de prueba.
+- **D-682. Efectos «expresivo» de verdad** (back 68fc6eaf, 11c4e8ea y cf811c9f; front 881bd64d y 360b98de).
+  - Va en la capa `utils/siteEfectosV2.js`, solo en secciones v2 con nivel expresivo:
+    - entrada del apoyo y los botones sin opacidad;
+    - halo que respira;
+    - parallax desde 769 px;
+    - borde de luz, máximo 2;
+    - luz de borde con el puntero;
+    - inclinación solo en la tarjeta firma;
+    - rejillas escalonadas;
+    - cifras que cuentan;
+    - View Transitions.
+  - El titular y la foto principal de la portada NO se animan (LCP, EFECTOS §1). Con movimiento reducido no se mueve nada.
+  - En el editor está el control «Efectos» (Ninguno · Sutil · Expresivo) en Estilo › Movimiento.
+  - Arreglo aparte: el aviso «Tu tienda va a nacer sin productos» quedaba debajo del asistente (bd7c8bd1).
+- **D-683. La vista previa del borrador se puede recorrer** (58813278 y 825ea5af).
+  - Las lecturas públicas (catálogo, búsqueda, ficha, etc.) aceptan la firma de la vista previa. Se verifica igual que el render y el token tiene que ser del mismo sitio.
+  - Las escrituras se bloquean en el navegador y en el servidor (403 con aviso).
+  - Las respuestas van con `private, no-store` y `noindex`.
+  - Los enlaces internos se reescriben para no salir de la vista previa.
+- **D-684. Opttia crea y edita sitios v2 con la bandera** (PLAN-V2 T27; back 25839cb1, ab1533b4 y 37d9992f; front b6265280).
+  - Usa productos reales y vendibles, elegidos por referencia.
+  - No inventa teléfonos, horarios, promesas ni precios.
+  - El plano nace oculto.
+  - Máximo 6 bandas.
+  - Sin la bandera, todo sigue igual (X1).
+  - Pendiente: diff en kai `site_tools.py`, que está en otra rama.
+- **D-685. Contacto y cotización v2** (back 2fa921e2, 4d32b529 y cf811c9f; front 1d7626dd).
+  - El bloque `formulario` con `sistemaVisual: 2` sale en dos columnas:
+    - a un lado, la confianza: puntos y canales reales;
+    - al otro, una tarjeta con chips «¿Qué necesitas?», empresa opcional y estados de error y de éxito.
+  - Tiene superficie clara u oscura y efectos.
+  - El lead guarda `empresa` → `companyName` e `interes`, saneados y con tope. El envío sigue por el mismo `/lead`.
+- **Huecos del constructor encontrados al armar** (siguiente tanda; están en `baudio-v2/docs/PENDIENTES-INFORME.md`):
+  - «Agregar una sección» no responde al clic (ngFor sin trackBy).
+  - Ocultar «Todo el catálogo» deja 404 en el catálogo sin avisar.
+  - El selector de piezas de la tarjeta solución se cierra solo.
+  - Faltan ancla y superficie por sección.
+  - El carrusel no tiene texto ni alt por foto, y el botón secundario queda tapado.
+  - «Seguir comprando» de la ficha da 404 en TODAS las tiendas (`href="./"`).
+- **Pruebas:**
+  - X1 de 0511c167 contra HEAD: 516 páginas. Las v1 son 0 distintas, en plantillas y en publicadas. Las diferencias son solo v2 (61 plantillas, 20 publicadas de la copia) o borradores de vista previa (73).
+  - Suites de sitios: 127 en verde y las 3 fallas conocidas.
+  - Build del front: sin errores.
+  - Pruebas nuevas: locales (D-566).
