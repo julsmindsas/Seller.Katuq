@@ -5,7 +5,7 @@
  */
 
 /** Roles con permiso para decidir (informativo en FE; el enforcement es server-side). */
-export const TREASURY_ROLES: string[] = ['Tesorero', 'Administrador', 'Super Administrador'];
+export const TREASURY_ROLES: string[] = ['Tesorero', 'Tesoreria', 'Administrador', 'Super Administrador'];
 
 /** Presets de estadosPago por pestaña del listado de pedidos. */
 export const PRESET_POR_REVISAR: string[] = ['Pospendiente'];

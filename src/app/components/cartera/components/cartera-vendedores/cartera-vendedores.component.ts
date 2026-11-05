@@ -23,6 +23,30 @@ export class CarteraVendedoresComponent implements OnChanges {
   filas: ResumenVendedor[] = [];
   totales = { carteraTotal: 0, carteraVencida: 0, pctVencido: 0, clientes: 0 };
   ayudaAbierta = false;
+  /**
+   * Ticket 1574 (ALMARA): la sección empujaba hacia abajo el resto de Cartera. Sale contraída,
+   * con un resumen (vendedores y vencida), y se abre con un clic; se recuerda en este navegador.
+   * Con un vendedor elegido se muestra abierta para que el filtro activo no quede escondido.
+   */
+  abierta = false;
+  private static readonly CLAVE_ABIERTA = 'katuq.cartera.vendedores.abierta';
+
+  constructor() {
+    try {
+      this.abierta = localStorage.getItem(CarteraVendedoresComponent.CLAVE_ABIERTA) === '1';
+    } catch { /* sin almacenamiento: queda contraída */ }
+  }
+
+  get mostrarTabla(): boolean {
+    return this.abierta || this.seleccionados.length > 0;
+  }
+
+  alternarAbierta(): void {
+    this.abierta = !this.mostrarTabla;
+    try {
+      localStorage.setItem(CarteraVendedoresComponent.CLAVE_ABIERTA, this.abierta ? '1' : '0');
+    } catch { /* sin almacenamiento */ }
+  }
 
   ngOnChanges(): void {
     this.filas = resumenPorVendedor(this.clientes);

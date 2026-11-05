@@ -9384,6 +9384,7 @@
   "cartera.carteraClientes.ayudaSinCupo": "Ningún cliente tiene cupo de crédito. Cuando les asignes un cupo, aquí verás cuántos lo exceden. El cupo se configura al editar cada cliente en el listado de clientes.",
   "cartera.carteraVendedores.titulo": "Cartera por vendedor",
   "cartera.carteraVendedores.subtitulo": "Quién concentra la cartera y cuánta está vencida.",
+  "cartera.carteraVendedores.resumen": "{{n}} vendedores · {{vencida}} vencida. Toca para ver el detalle.",
   "cartera.carteraVendedores.ayuda": "Cada cliente cuenta para el vendedor de su pedido. La cartera vencida es la de los pedidos con 1 o más días de atraso. El porcentaje vencido es la parte vencida de lo que debe ese vendedor. Al hacer clic en un vendedor, la lista de abajo suma sus clientes al filtro; otro clic lo quita. Se pueden elegir varios.",
   "cartera.carteraVendedores.vendedor": "Vendedor",
   "cartera.carteraVendedores.carteraTotal": "Cartera total",

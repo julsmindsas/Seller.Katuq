@@ -1,9 +1,14 @@
 <section class="cx-vend" *ngIf="filas.length > 0" [attr.aria-label]="'cartera.carteraVendedores.titulo' | translate">
   <div class="cx-vend-cabeza">
-    <div>
-      <h2 class="cx-vend-titulo">{{ 'cartera.carteraVendedores.titulo' | translate }}</h2>
-      <p class="cx-vend-sub">{{ 'cartera.carteraVendedores.subtitulo' | translate }}</p>
-    </div>
+    <button type="button" class="cx-vend-plegar" [attr.aria-expanded]="mostrarTabla" aria-controls="cx-vend-cuerpo"
+            (click)="alternarAbierta()">
+      <i class="pi" [ngClass]="mostrarTabla ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+      <span class="cx-vend-textos">
+        <span class="cx-vend-titulo">{{ 'cartera.carteraVendedores.titulo' | translate }}</span>
+        <span class="cx-vend-sub" *ngIf="mostrarTabla">{{ 'cartera.carteraVendedores.subtitulo' | translate }}</span>
+        <span class="cx-vend-sub" *ngIf="!mostrarTabla">{{ 'cartera.carteraVendedores.resumen' | translate:{ n: filas.length, vencida: (totales.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+      </span>
+    </button>
     <button type="button" class="cx-info" [attr.title]="'cartera.carteraVendedores.ayuda' | translate"
             [attr.aria-label]="'cartera.carteraClientes.masInformacion' | translate" [attr.aria-expanded]="ayudaAbierta"
             (click)="alternarAyuda()">
@@ -12,7 +17,7 @@
   </div>
   <div class="cx-ayuda-texto" *ngIf="ayudaAbierta">{{ 'cartera.carteraVendedores.ayuda' | translate }}</div>
 
-  <div class="cx-vend-tabla-wrap">
+  <div class="cx-vend-tabla-wrap" id="cx-vend-cuerpo" *ngIf="mostrarTabla">
     <table class="cx-vend-tabla">
       <thead>
         <tr>

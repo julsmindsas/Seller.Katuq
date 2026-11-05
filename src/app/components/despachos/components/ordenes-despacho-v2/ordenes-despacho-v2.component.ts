@@ -1222,6 +1222,13 @@ export class OrdenesDespachoV2Component implements OnInit {
         console.error('Error creando envío con transportadora:', error);
         this.isDispatchingShipment = false;
 
+        if (this.esEsperaAgotada(error)) {
+          this.avisarEsperaAgotada();
+          this.loadInitialOrders();
+          this.closeTransporterModal();
+          return;
+        }
+
         Swal.fire({
           icon: 'error',
           title: 'Error en Despacho',
@@ -1229,6 +1236,26 @@ export class OrdenesDespachoV2Component implements OnInit {
           confirmButtonText: 'Entendido'
         });
       }
+    });
+  }
+
+  /**
+   * La transportadora no respondió a tiempo (ticket 1576). El servidor web
+   * corta a los 60 s con 504 (o 502/503), pero el backend
+   * sigue y el despacho puede terminar bien después. Por eso no se dice
+   * «intenta nuevamente»: se pide revisar la lista antes de reintentar, para
+   * no crear el envío dos veces en la transportadora.
+   */
+  private esEsperaAgotada(error: any): boolean {
+    return [502, 503, 504].includes(error?.status);
+  }
+
+  private avisarEsperaAgotada(): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'La transportadora no respondió a tiempo',
+      text: 'El despacho pudo haber quedado hecho. Revisa la lista de órdenes antes de volver a intentarlo, para no crear el envío dos veces.',
+      confirmButtonText: 'Entendido'
     });
   }
 

@@ -9564,6 +9564,7 @@
   "cartera.carteraClientes.ayudaSinCupo": "No customer has a credit limit. Once you assign limits, you will see here how many go over. The limit is set when editing each customer in the customer list.",
   "cartera.carteraVendedores.titulo": "Receivables by salesperson",
   "cartera.carteraVendedores.subtitulo": "Who holds the receivables and how much is overdue.",
+  "cartera.carteraVendedores.resumen": "{{n}} sellers · {{vencida}} overdue. Tap to see the details.",
   "cartera.carteraVendedores.ayuda": "Each customer counts for the salesperson on their order. Overdue balance is the balance of orders 1 or more days late. The overdue percentage is the overdue part of what that salesperson is owed. Clicking a salesperson adds their customers to the filter of the list below; another click removes it. You can pick several.",
   "cartera.carteraVendedores.vendedor": "Salesperson",
   "cartera.carteraVendedores.carteraTotal": "Total receivables",

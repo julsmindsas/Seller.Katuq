@@ -13373,3 +13373,15 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Las pruebas nuevas son locales (D-566). Versionadas actualizadas, sin credenciales: `companyFeatureFlags` (79 banderas), `listoParaVender`, `alternoYContorno`, `test-sitios-publicacion` y la instantánea `fichaEspecificaciones`.
 - **Notas de versión:** las del diseño nuevo van retiradas hasta encender la bandera. La de las promesas sí sale.
 - **Siguiente:** Daniel publica. Con su sí del 5-nov, se enciende `siteDesignV2` solo para Baudio y su tienda se arma como borrador desde el editor de sellercenter.
+
+
+### 2026-11-05 — Publicados el editor de tiendas (front 2026.11.05.1) y su backend (`0511c167`)
+
+- **Solicitud:** Daniel pidió «git pull y publiquemos». La rama no traía código nuevo frente a producción; eligió mezclar `feature/tickets-aws-claude-1` y publicar.
+- **Front:** avance directo de `feature/venta-asistida-mejorada` a `412151d4` (53 commits del editor de tiendas, PLAN-V2). Release `7fac3f9e`, versión 2026.11.05.1, sobre la base viva 2026.11.04.2 (`0ab1be67`). Candado y verify-dist en verde; `version.json` y el texto «Suele ir con» comprobados en sellercenter.katuq.com. Salen tres notas para el comercio, todas de Sitios; las del diseño nuevo siguen retiradas.
+- **Backend:** las tres notas dependían de la rama del backend `feature/tickets-aws-claude-1` (75 commits), que no estaba en `backend-aws-security`. Avance directo a `0511c167` y despliegue en el EC2: de `81a36e4c` a `0511c167`, sin paquetes, índices ni datos nuevos. Subieron también D-636 (bandera apagada), D-637, la baja de los recordatorios de cobro (bandera apagada) y `4eb1729a`.
+- **Aprobación de Daniel (5-nov):** subir la cotización web de N líneas (`00d72088`, `e04acc71`; ningún endpoint la llama todavía; cotiza al precio de vitrina) y el lote del carrito (`e2d2d17a`, `c87b0153`; solo se prende con el diseño nuevo, bandera `siteDesignV2` apagada).
+- **Pendiente:** las alertas a Slack de crones e integraciones quedan apagadas hasta poner `SLACK_WEBHOOK_URL` y `SLACK_WEBHOOK_URL_ERRORES` en el `.env` del servidor (`4eb1729a`).
+- **Pruebas:** sintaxis de los archivos tocados sin errores; `test:sitios-listo` 5 ok y `test:sitios-versiones` 13 ok. `test:sitios-publicacion` (7 fallas) y `test:cotizaciones-contract` (2 fallas, IVA de `calcularTotales`) fallan igual en `24ec1edf`, antes de la mezcla.
+- **Verificado en producción:** `katuq-api` en línea y sin errores tras el reinicio; la tienda de Baudio (`baudio-tienda.katuq.com`) sale con el pie en columnas y la pausa del carrusel.
+- **No verificado:** el editor en el navegador ni la Vista fiel con la bandera encendida.

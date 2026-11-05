@@ -9384,6 +9384,7 @@
     "cartera.carteraClientes.ayudaSinCupo": "Kein Kunde hat ein Kreditlimit. Sobald Sie Limits vergeben, sehen Sie hier, wie viele sie überschreiten. Das Limit wird beim Bearbeiten jedes Kunden in der Kundenliste festgelegt.",
     "cartera.carteraVendedores.titulo": "Forderungen pro Verkäufer",
     "cartera.carteraVendedores.subtitulo": "Wer die Forderungen hält und wie viel überfällig ist.",
+    "cartera.carteraVendedores.resumen": "{{n}} Verkäufer · {{vencida}} überfällig. Tippen, um die Details zu sehen.",
     "cartera.carteraVendedores.ayuda": "Jeder Kunde zählt für den Verkäufer seiner Bestellung. Überfälliger Saldo ist der Saldo der Bestellungen mit 1 oder mehr Tagen Verzug. Der überfällige Prozentsatz ist der überfällige Anteil dessen, was dieser Verkäufer offen hat. Ein Klick auf einen Verkäufer fügt seine Kunden dem Filter der Liste unten hinzu; ein weiterer Klick entfernt ihn. Es können mehrere gewählt werden.",
     "cartera.carteraVendedores.vendedor": "Verkäufer",
     "cartera.carteraVendedores.carteraTotal": "Forderungen gesamt",

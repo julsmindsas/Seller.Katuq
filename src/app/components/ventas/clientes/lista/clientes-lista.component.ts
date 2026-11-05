@@ -381,7 +381,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         try {
             const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
             // Igual que el servidor (requireRole): Tesorero y toda la familia Administrador.
-            return normalizarRol(rol) === 'tesorero' || esFamiliaAdministrador(rol);
+            return ['tesorero', 'tesoreria'].includes(normalizarRol(rol)) || esFamiliaAdministrador(rol);
         } catch {
             return false;
         }
