@@ -745,7 +745,9 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
-            <button class="opcion" [class.is-active]="b.datos.carrusel"
+            <!-- PLAN-V2 T15: con pestañas listas (diseño nuevo) la vitrina va en filas y el carrusel no se usa. La misma regla
+                 de la página: al menos una pestaña con nombre que se publica y con productos de la vitrina. -->
+            <button class="opcion" [class.is-active]="b.datos.carrusel" *ngIf="!vitrinaConPestanas(b)"
                     title="Una sola fila que se desliza con flechas y con el dedo"
                     (click)="b.datos.carrusel = !b.datos.carrusel; marcarSucio()">
               <span class="opcion__texto"><strong>Mostrar en carrusel</strong><small>Una fila con flechas, como las tiendas grandes</small></span>
@@ -1742,7 +1744,7 @@
             <h4 class="subgrupo">Cabecera de la sección <small>(diseño nuevo)</small></h4>
             <div class="campo">
               <label>Antetítulo</label>
-              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" placeholder="Ej.: Lo más elegido" />
+              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" placeholder="Ej.: Destacados" />
               <small>Una o dos palabras sobre el título, con un punto del color de tu marca.</small>
             </div>
             <div class="campo">

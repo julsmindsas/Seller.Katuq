@@ -37,6 +37,7 @@ import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente"
 import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
 import { anclaSinDestino as anclaSinDestinoEnInicio } from "./anclas-inicio";
 import { clavePromesa } from "./paneles/fichas/fichas-datos";
+import { pestanasListas } from "./paneles/vitrina/vitrina-datos";
 
 /** Cuántas confirmaciones de promesas guarda el sitio (el servidor corta en 40, `siteBlocks.js`). */
 const MAX_PROMESAS_CONFIRMADAS = 40;
@@ -2851,6 +2852,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** Nombre y resumen de los tipos nuevos para la ficha del espejo del espejo. */
   readonly fichasV2 = fichasFieles();
+
+  /**
+   * PLAN-V2 T15: ¿la vitrina va con pestañas en la página? Solo con el diseño nuevo y al menos una pestaña lista (la
+   * regla del servidor). Entonces va en filas y «Mostrar en carrusel» no se usa.
+   */
+  vitrinaConPestanas(b: BloqueSitio | null): boolean {
+    return !!b && b.tipo === "productos" && this.disenoNuevo && pestanasListas(b.datos).length > 0;
+  }
 
   /** Un panel avisó que cambió algo: lo mismo que cualquier campo del editor. */
   alCambiarPanel(): void {

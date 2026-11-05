@@ -5,6 +5,7 @@ import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
 import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 import { FichasPanelComponent } from "./fichas/fichas-panel.component";
+import { VitrinaPanelComponent } from "./vitrina/vitrina-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -59,7 +60,8 @@ export interface PanelSitio {
 
 /**
  * Los paneles registrados. Cada tanda trae su línea:
- *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T17 guia · T20 pedidoRapido
+ *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T15 vitrina · T17 guia
+ *   T20 pedidoRapido
  */
 export const PANELES_SITIO: PanelSitio[] = [
   // T06 (módulo `barras`): Tienda › Atención, y lo nuevo del encabezado y de la barra de anuncio, que sale debajo de sus
@@ -83,6 +85,9 @@ export const PANELES_SITIO: PanelSitio[] = [
       descripcion: "Para qué sirve cada producto, cómo se instala y las preguntas que ya respondiste. Salen en su tarjeta y en su ficha.",
     },
   },
+  // T15 (módulo `vitrina`): las pestañas de la vitrina. Extiende el bloque `productos`: sale debajo de sus campos de
+  // siempre.
+  { id: "vitrina", tipo: "productos", componente: VitrinaPanelComponent },
 ];
 
 /** El panel que edita un tipo de bloque, si lo hay. */
