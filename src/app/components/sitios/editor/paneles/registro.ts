@@ -1,7 +1,11 @@
-import { Directive, EventEmitter, Input, Output, Type } from "@angular/core";
-import { BloqueSitio } from "../../../sitio-render/sitio-render.component";
-import { ContenidoSitio } from "../../sitios.service";
+import { Type } from "@angular/core";
+import { PanelSitioBase } from "./panel-sitio-base";
+import { PanelPortadaComponent } from "./portada/panel-portada.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
+// La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
+// círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
+// quien la importaba de aquí. Los paneles la importan de "./panel-sitio-base", nunca de este archivo.
+export { PanelSitioBase } from "./panel-sitio-base";
 
 /**
  * Registro de los paneles del diseño nuevo (PLAN-V2 §3, tanda T03). Es el espejo en el editor del registro de módulos
@@ -29,21 +33,6 @@ export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
  *  respuesta y hace commit solo de su carpeta.
  */
 
-/** Base de todo panel: entradas y salida comunes. */
-@Directive()
-export abstract class PanelSitioBase {
-  /** El bloque elegido en el editor. null en los paneles de la pestaña Tienda. */
-  @Input() bloque: BloqueSitio | null = null;
-  /** El sitio entero (tema, tienda, páginas). */
-  @Input() contenido: ContenidoSitio | null = null;
-  /** Avisa al editor que algo cambió (marca sucio, refresca la previa y programa el guardado). */
-  @Output() cambio = new EventEmitter<void>();
-
-  protected avisar(): void {
-    this.cambio.emit();
-  }
-}
-
 export interface PanelSitio {
   /** Identificador único; el mismo `nombre` del módulo del servidor (`plano`, `barras`, `ficha`). */
   id: string;
@@ -66,9 +55,12 @@ export interface PanelSitio {
 
 /**
  * Los paneles registrados. Cada tanda trae su línea:
- *   T06 Tienda › Atención · T08 Tienda › Fichas de producto · T13 plano · T17 guia · T20 pedidoRapido
+ *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T17 guia · T20 pedidoRapido
  */
-export const PANELES_SITIO: PanelSitio[] = [];
+export const PANELES_SITIO: PanelSitio[] = [
+  // T07 (módulo `portada`): la portada «Espacios». Extiende el bloque `hero`: sale debajo de sus campos de siempre.
+  { id: "portada", componente: PanelPortadaComponent, tipo: "hero" },
+];
 
 /** El panel que edita un tipo de bloque, si lo hay. */
 export function panelDeTipo(tipo: string, lista: PanelSitio[] = PANELES_SITIO): PanelSitio | null {

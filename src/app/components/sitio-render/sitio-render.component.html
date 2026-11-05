@@ -114,7 +114,7 @@
         </button>
       </div>
 
-      <ng-container [ngSwitch]="bloque.tipo">
+      <ng-container [ngSwitch]="tipoEnEspejo(bloque)">
 
         <!-- Encabezado. El logo y el nombre no se guardan en el bloque: salen
              del kit de marca de la empresa, igual que en la página publicada. -->
@@ -798,6 +798,22 @@
                (click)="registrarClic('cta', bloque.id, $event)">{{ e.etiqueta }}</a>
           </nav>
         </footer>
+
+        <!-- Diseño nuevo (PLAN-V2 T07): la portada «Espacios» no se dibuja aquí (X3); la ficha dice qué lleva y dónde verla. -->
+        <ng-container *ngSwitchCase="'hero-espacios'">
+          <section class="bloque ficha-fiel">
+            <div class="ficha-fiel__caja">
+              <span class="ficha-fiel__icono" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <div class="ficha-fiel__texto">
+                <strong class="ficha-fiel__nombre">Portada «Espacios»</strong>
+                <span class="ficha-fiel__resumen" *ngIf="resumenEspacios(bloque) as resumen">{{ resumen }}</span>
+                <span class="ficha-fiel__nota">{{ notaFiel(bloque) }}</span>
+              </div>
+            </div>
+          </section>
+        </ng-container>
 
         <!-- Diseño nuevo (PLAN-V2 T03): un bloque que este espejo no dibuja (los tipos nuevos de los módulos, Sucursales
              y Agenda) se ve en el editor como una ficha con su nombre, su resumen y dónde verlo (`notaFiel`). Fuera del

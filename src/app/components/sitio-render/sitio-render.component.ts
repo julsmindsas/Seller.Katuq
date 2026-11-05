@@ -286,6 +286,28 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
       : "No se dibuja aquí: míralo con «Ver cómo queda».";
   }
 
+  /**
+   * PLAN-V2 T07: el caso del espejo para cada bloque. La portada «Espacios» del diseño nuevo no se dibuja aquí: en el
+   * editor sale como ficha (`hero-espacios`) con su título y sus espacios. Fuera del editor sigue la portada de siempre.
+   */
+  tipoEnEspejo(bloque: BloqueSitio): string {
+    const datos = (bloque && bloque.datos) || {};
+    const disenoNuevo = Number(this.tema && this.tema.sistemaVisual) === 2;
+    return this.previsualizacion && disenoNuevo && bloque.tipo === "hero" && datos.composicion === "espacios"
+      ? "hero-espacios"
+      : bloque.tipo;
+  }
+
+  /** La línea de la ficha de la portada «Espacios»: el título y los nombres de sus espacios. */
+  resumenEspacios(bloque: BloqueSitio): string {
+    const datos = (bloque && bloque.datos) || {};
+    const nombres = (Array.isArray(datos.espacios) ? datos.espacios : [])
+      .map((e: any) => String((e && e.titulo) || "").trim())
+      .filter(Boolean);
+    const titulo = String(datos.titulo || "").trim();
+    return [titulo, nombres.join(", ")].filter(Boolean).join(" · ");
+  }
+
   resumenFiel(bloque: BloqueSitio): string {
     const ficha = (this.fichasV2 || {})[bloque.tipo];
     try {

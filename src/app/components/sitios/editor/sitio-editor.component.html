@@ -558,6 +558,10 @@
           </ng-container>
 
           <ng-container *ngIf="b.tipo === 'hero'">
+            <!-- PLAN-V2 T07: con «Espacios» las fotos van en cada espacio (panel de abajo) y lo de la foto de fondo se
+                 esconde; se queda guardado y vuelve si se elige otra maqueta. -->
+            <p class="aviso aviso--info" *ngIf="portadaEspacios(b)">Con «Espacios» las fotos van en cada espacio, más abajo.
+              La foto de fondo, el mosaico y el carrusel que tenías quedan guardados y vuelven si eliges otra maqueta.</p>
             <div class="campo">
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
@@ -575,6 +579,7 @@
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <small>Una sección de la página (#productos, #contacto) o una dirección https.</small>
             </div>
+            <ng-container *ngIf="!portadaEspacios(b)">
             <div class="campo campo--avanzado">
               <label>Alineación</label>
               <select [(ngModel)]="b.datos.alineacion" (ngModelChange)="marcarSucio()">
@@ -689,6 +694,7 @@
                 </span>
                 <span class="palanca"><span></span></span>
               </button>
+            </ng-container>
             </ng-container>
           </ng-container>
 
@@ -2190,7 +2196,9 @@
                 </select>
               </div>
 
-              <div class="campo">
+              <!-- PLAN-V2 T07: la portada «Espacios» ocupa siempre el ancho de la página (su título y sus tarjetas van en
+                   5/12 y 7/12); un ancho angosto la rompería. -->
+              <div class="campo" *ngIf="!portadaEspacios(b)">
                 <label>Ancho</label>
                 <select [ngModel]="estiloDe(b).ancho" (ngModelChange)="cambiarEstilo(b, 'ancho', $event)">
                   <option value="angosto">Angosto</option>

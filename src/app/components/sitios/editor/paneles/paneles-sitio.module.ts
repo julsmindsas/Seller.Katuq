@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { SelectorProductosModule } from "../../selector-productos/selector-productos.module";
 import { AlBodyModule } from "../../../../shared/directives/al-body.module";
 import { PanelSitioComponent } from "./panel-sitio.component";
+import { PanelPortadaComponent } from "./portada/panel-portada.component";
 
 /**
  * Paneles del diseño nuevo del editor de sitios (PLAN-V2 T03). Cada panel nuevo se declara aquí (o se importa, si es
@@ -14,7 +15,7 @@ import { PanelSitioComponent } from "./panel-sitio.component";
  */
 @NgModule({
   imports: [CommonModule, FormsModule, SelectorProductosModule, AlBodyModule],
-  declarations: [PanelSitioComponent],
+  declarations: [PanelSitioComponent, PanelPortadaComponent],
   exports: [PanelSitioComponent],
 })
 export class PanelesSitioModule {}

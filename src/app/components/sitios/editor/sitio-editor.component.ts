@@ -4543,7 +4543,16 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Las de este bloque. Vacío en los que no tienen dónde elegir. */
   maquetasDe(bloque: any): any[] {
     if (!bloque) return [];
-    return this.maquetas.filter((m) => m.bloque === bloque.tipo);
+    // PLAN-V2 T07: las maquetas del diseño nuevo («Espacios») solo se ofrecen con él encendido.
+    return this.maquetas.filter((m) => m.bloque === bloque.tipo && (!m.v2 || this.disenoNuevo));
+  }
+
+  /**
+   * PLAN-V2 T07: ¿la portada va con «Espacios»? Entonces la foto de fondo, el mosaico, el carrusel, la alineación, el
+   * alto, el velo y el ancho de la sección no hacen nada (las fotos van en cada espacio) y el editor no los muestra.
+   */
+  portadaEspacios(bloque: any): boolean {
+    return this.disenoNuevo && !!bloque && bloque.tipo === "hero" && !!bloque.datos && bloque.datos.composicion === "espacios";
   }
 
   /** Qué foto lleva el bloque ahora. Misma regla que el servidor. */
@@ -4565,9 +4574,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (!bloque) return null;
     const d = bloque.datos || {};
     const modo = this.modoDeFoto(d);
+    // PLAN-V2 T07: «Espacios» no depende de la foto de fondo (no declara `foto`), y las de foto no valen con
+    // `composicion: "espacios"` (la misma regla de `maquetaActiva` en data/siteMaquetas.js).
+    const composicion = (x: any) => (x && x.composicion) || "";
     return (
       this.maquetasDe(bloque).find(
-        (m) => m.foto === modo && Object.keys(m.forma).every((c) => d[c] === m.forma[c])
+        (m) =>
+          (!m.foto || m.foto === modo) &&
+          composicion(m.forma) === composicion(d) &&
+          Object.keys(m.forma).every((c) => d[c] === m.forma[c])
       ) || null
     );
   }
@@ -4581,6 +4596,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     Object.keys(maqueta.forma).forEach((campo) => {
       bloque.datos[campo] = maqueta.forma[campo];
     });
+    // PLAN-V2 T07: una maqueta de foto saca la portada de «Espacios» (sus espacios y textos se quedan guardados).
+    if (bloque.tipo === "hero" && !("composicion" in maqueta.forma) && bloque.datos.composicion) bloque.datos.composicion = "";
     // Si le falta la foto que esa forma necesita, se dice en el momento: si no,
     // el comerciante elige "Mosaico", no ve ningún cambio y no sabe por qué.
     this.avisoMaqueta = this.faltaParaMaqueta(bloque, maqueta);
@@ -4595,6 +4612,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * no sube fotos por su cuenta — son del comerciante —, así que se le dice.
    */
   faltaParaMaqueta(bloque: any, maqueta: any): string {
+    // PLAN-V2 T07: «Espacios» no usa la foto de fondo; sus fotos van en cada espacio, en el panel de abajo.
+    if (!maqueta.foto) return "";
     if (this.modoDeFoto(bloque.datos) === maqueta.foto) return "";
     const PIDE: { [id: string]: string } = {
       una: "Sube una foto de portada para que se vea así",
@@ -4623,6 +4642,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         "M2 2h17v24H2z M5 10h11v2H5z M5 15h7v1.5H5z M21 2h8v11h-8z M31 2h7v11h-7z M21 15h8v11h-8z M31 15h7v11h-7z",
       carrusel: "M2 2h36v24H2z M13 11h14v2H13z M15 21h2v2h-2z M19 21h2v2h-2z M23 21h2v2h-2z",
       tipografica: "M8 9h24v3H8z M12 15h16v2H12z M15 20h10v1.5H15z",
+      // PLAN-V2 T07: el título a la izquierda y tres tarjetas altas a la derecha.
+      espacios: "M2 2h36v24H2z M5 9h10v2.5H5z M5 14h8v1.5H5z M5 18h6v2H5z M18 5h5.5v18H18z M25 5h5.5v18H25z M32 5h4v18h-4z",
 
       // ── Encabezado ──
       // La barra de arriba con sus huecos, y debajo el cuerpo insinuado.
@@ -6292,9 +6313,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           const p = this.pendientesCriticos[0];
           if (p) p.ir();
         }
+        // PLAN-V2 T07: lo que le falta a la portada «Espacios» (un nombre, la descripción de una foto, un destino) lleva
+        // a esa portada, con su panel abierto y sus avisos a la vista.
+        if (cuerpo.codigo === "PORTADA_INCOMPLETA") this.irAPortada((cuerpo.data && cuerpo.data.pendientes) || []);
         this.toastr.error(cuerpo.message || "No pudimos publicar.");
       },
     });
+  }
+
+  /** PLAN-V2 T07: abre la página y la portada del primer pendiente que devolvió el servidor al publicar. */
+  private irAPortada(pendientes: { pagina?: number; bloqueId?: string }[]): void {
+    const p = pendientes[0];
+    if (!p || typeof p.bloqueId !== "string" || !p.bloqueId) return;
+    const pagina = typeof p.pagina === "number" && p.pagina >= 0 && p.pagina < this.paginas.length ? p.pagina : -1;
+    if (pagina !== this.paginaActiva) this.irAPagina(pagina);
+    this.seleccionarPorId(p.bloqueId);
   }
 
   despublicar(): void {
