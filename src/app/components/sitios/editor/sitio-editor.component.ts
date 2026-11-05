@@ -3989,15 +3989,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /**
    * Cerrar el ojo del catálogo no es como cerrar el de cualquier sección: el buscador, las categorías del menú y las
-   * baldosas llevan a él. Se dice qué pasa de verdad. Con el catálogo «en su propia página» solo se oculta la banda
-   * «Explorar la tienda» del inicio y el catálogo sigue; si el bloque ES la rejilla del inicio, ocultarlo quita el
-   * catálogo y esos enlaces dejan de llevar a algo.
+   * baldosas llevan a él. Se dice qué pasa de verdad. Con el catálogo «en su propia página» solo se oculta lo que el
+   * inicio muestra de él (la banda «Explorar la tienda» o su sección de productos) y el catálogo sigue; si el bloque ES
+   * la rejilla del inicio, ocultarlo quita el catálogo y esos enlaces dejan de llevar a algo.
    */
   avisarAlOcultarCatalogo(b: BloqueSitio | null | undefined): void {
     if (!b || b.tipo !== "catalogo") return;
     if (b.datos && b.datos.enPagina === true) {
       this.toastr.info(
-        "Ocultaste solo la banda «Explorar la tienda» del inicio. El catálogo, las categorías y el buscador siguen funcionando en su propia página.",
+        "Ocultaste el catálogo del inicio. El catálogo, las categorías y el buscador siguen funcionando en su propia página.",
         "Catálogo",
         { timeOut: 9000 }
       );
@@ -4014,7 +4014,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   notaDeSeccionOculta(b: BloqueSitio): string {
     if (!b || b.visible !== false || b.tipo !== "catalogo") return "";
     return b.datos && b.datos.enPagina === true
-      ? "Solo se oculta la banda del inicio: el catálogo sigue en su página."
+      ? "Solo se oculta en el inicio: el catálogo sigue en su página."
       : "Con esta sección oculta no hay catálogo: el buscador y las categorías no llevan a nada.";
   }
 
