@@ -2083,6 +2083,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private relojFiel: any = null;
   /** Último aviso de «no se envía nada» (uno cada 5 segundos, no uno por clic). */
   private avisoCortadoEn = 0;
+  /**
+   * Verdadero mientras se atiende un clic hecho DENTRO de la Vista fiel: la sección ya está a la vista del comercio, así
+   * que se marca sin mover la página (si se moviera, saltaría y el encabezado fijo taparía su título).
+   */
+  private desdeFiel = false;
   private marcoFielEl?: ElementRef<HTMLIFrameElement>;
   @ViewChild("marcoFiel") set marcoFielRef(el: ElementRef<HTMLIFrameElement> | undefined) {
     this.marcoFielEl = el;
@@ -2217,8 +2222,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (m.tipo === "seleccion") {
       const id = typeof m.id === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(m.id) ? m.id : "";
       if (!id || !this.bloques.some((b) => b.id === id)) return;
-      this.seleccionarDesdePrevia(id);
-      this.marcarEnFiel(id, false);
+      // `seleccionar` marca la sección en el marco; desde aquí, sin desplazarla.
+      this.desdeFiel = true;
+      try {
+        this.seleccionarDesdePrevia(id);
+      } finally {
+        this.desdeFiel = false;
+      }
     } else if (m.tipo === "listo") {
       this.marcarEnFiel(this.idBloqueActivo, true);
     } else if (m.tipo === "cortado" && Date.now() - this.avisoCortadoEn > 5000) {
@@ -3088,8 +3098,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
     // cambiar de sección deja de venir a cuento.
     this.avisoMaqueta = "";
-    // PLAN-V2 T04: en la Vista fiel, la sección elegida se marca y se muestra.
-    this.marcarEnFiel(this.idBloqueActivo, true);
+    // PLAN-V2 T04: en la Vista fiel, la sección elegida se marca y se muestra (si se tocó en el marco, ya está a la vista).
+    this.marcarEnFiel(this.idBloqueActivo, !this.desdeFiel);
   }
 
   /**
