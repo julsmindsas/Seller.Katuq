@@ -606,6 +606,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   /** Escape cierra lo que esté abierto encima de la lista, de adentro hacia afuera. */
   @HostListener("document:keydown.escape")
   alEscape(): void {
+    // Con un aviso de SweetAlert abierto (p. ej. «Tu tienda va a nacer sin productos»), Escape es su «Volver»: lo
+    // cierra SweetAlert y el asistente se queda abierto.
+    if (Swal.isVisible()) return;
     if (this.mostrandoSelector) { this.mostrandoSelector = false; return; }
     if (this.mostrandoMarca) { this.mostrandoMarca = false; return; }
     if (this.sitioMetricas) { this.sitioMetricas = null; return; }
@@ -866,6 +869,12 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
           confirmButtonText: "Crearla igual",
           cancelButtonText: "Volver",
           focusCancel: true,
+          // El asistente es un velo colgado del <body> con z-index 1200 (`appAlBody`, `kb-modal-velo`) y SweetAlert
+          // pinta a 1060: el aviso quedaba debajo y el clic caía en el velo. Solo este aviso sube por encima del velo.
+          willOpen: () => {
+            const capa = Swal.getContainer();
+            if (capa) capa.style.zIndex = "1300";
+          },
         });
         if (!r.isConfirmed) return;
         this.avisoTiendaVaciaAceptado = true;
