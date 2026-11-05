@@ -1,33 +1,16 @@
 {
-  "version": "2026.11.05.2 - 5 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-05T18:44:26.292Z",
-  "notas": [
-    {
-      "fecha": "2026-11-05T15:57:50Z",
-      "tipo": "CORRIGE",
-      "texto": "Si la transportadora tarda en responder al despachar, ya no te sale un error que te pide intentarlo de nuevo: te avisa que el despacho pudo quedar hecho y actualiza la lista para que lo revises antes de reintentar.",
-      "modulos": [
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T16:18:38Z",
-      "tipo": "MEJORA",
-      "texto": "La sección Cartera por vendedor sale contraída con un resumen (cuántos vendedores y cuánto está vencido) y se abre con un clic; tu navegador recuerda si la dejaste abierta.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T16:18:38Z",
-      "tipo": "CORRIGE",
-      "texto": "En Pedidos POS, «Historial pagos y asentar pagos» ya abre el formulario para registrar el pago, y cambiar el estado de pago o los datos del cliente te lleva a hacerlo desde Ventas › Pedidos, en vez de mostrar una pantalla en blanco.",
-      "modulos": [
-        "pos/list-ventas"
-      ]
-    }
-  ],
+  "version": "2026.11.05.3 - 5 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-05T18:52:37.162Z",
+  "notas": [],
   "recientes": [
+    {
+      "fecha": "2026-11-05T17:06:11Z",
+      "tipo": "CORRIGE",
+      "texto": "Al crear una tienda en Mis sitios, el aviso de que va a nacer sin productos ya sale encima del asistente y puedes elegir «Crearla igual» o «Volver».",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-05T16:18:38Z",
       "tipo": "MEJORA",
@@ -493,16 +476,8 @@
       "fecha": "2026-10-29T14:08:45Z",
       "tipo": "MEJORA",
       "texto": "Opttia aplica el tono compartido de tu comercio a los colaboradores autorizados y te ayuda a responder quejas sin ofrecer abonos o gestiones que no se han aprobado."
-    },
-    {
-      "fecha": "2026-10-28T20:10:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida.",
-      "modulos": [
-        "en-vivo"
-      ]
     }
   ],
-  "commit": "88b518d4189401dba2f26f289c2f6b7a3c262914",
+  "commit": "06b50a77ad0433f105f05a334df5f599a635818f",
   "cambiosSinCommit": 0
 }
