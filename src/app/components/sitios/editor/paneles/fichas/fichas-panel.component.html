@@ -124,7 +124,9 @@
     <h5 class="subgrupo subgrupo--chico">Suele ir con <small>({{ (f.afines || []).length }} de {{ topes.afines }})</small></h5>
     <p class="nota nota--chica">
       Productos que se suelen comprar con este. Salen en su ficha, antes del botón, con casillas sin marcar: si el comprador
-      marca alguno, el botón suma el total y agrega todo de una vez. Solo salen los que tu tienda vende hoy, con existencias.
+      marca alguno, el botón suma el total y agrega todo de una vez. Solo salen los que tu tienda vende hoy, con existencias,
+      y no salen si este producto pide elegir una talla, un color u otra opción antes de comprarlo. Elige productos que
+      se compran tal cual: se agregan sin elegir opciones.
     </p>
     <p class="aviso aviso--info" *ngIf="ventaCruzadaApagada && (f.afines || []).length">
       Tienes apagada la venta cruzada de tu tienda: «Suele ir con» no sale en la ficha hasta que la enciendas.
@@ -132,9 +134,9 @@
     <div class="afin" *ngFor="let id of f.afines || []; let k = index; trackBy: porIndice">
       <span class="ficha__foto"><img *ngIf="imagenDe(id) as img" [src]="img" alt="" /></span>
       <span class="afin__nombre">{{ nombreDeAfin(id) }}</span>
-      <button type="button" class="mini" (click)="moverAfin(f, k, -1)" [disabled]="k === 0" aria-label="Subir este producto">↑</button>
-      <button type="button" class="mini" (click)="moverAfin(f, k, 1)" [disabled]="k === (f.afines || []).length - 1" aria-label="Bajar este producto">↓</button>
-      <button type="button" class="mini mini--quitar" (click)="quitarAfin(f, id)">Quitar</button>
+      <button type="button" class="mini" (click)="moverAfin(f, k, -1)" [disabled]="k === 0" [attr.aria-label]="'Subir ' + nombreDeAfin(id)">↑</button>
+      <button type="button" class="mini" (click)="moverAfin(f, k, 1)" [disabled]="k === (f.afines || []).length - 1" [attr.aria-label]="'Bajar ' + nombreDeAfin(id)">↓</button>
+      <button type="button" class="mini mini--quitar" (click)="quitarAfin(f, id)" [attr.aria-label]="'Quitar ' + nombreDeAfin(id)">Quitar</button>
     </div>
     <button type="button" class="agregar" (click)="elegirAfines(f)">
       {{ (f.afines || []).length ? 'Cambiar los productos que suelen ir con este' : '+ Elegir productos que suelen ir con este' }}
