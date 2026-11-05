@@ -769,6 +769,10 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
           return;
         }
         this.mostrandoAsistente = false;
+        // PLAN-V2 T27: con el diseño nuevo, Opttia dice qué queda por completar en el editor (dibujo del plano, horario…).
+        if (data.disenoNuevo && Array.isArray(data.pendientes) && data.pendientes.length) {
+          this.toastr.info(data.pendientes.slice(0, 3).join(" "), "Para terminar tu página", { timeOut: 15000 });
+        }
         this.router.navigate(["/sitios/editor", data.id]);
       },
       error: (e) => {
