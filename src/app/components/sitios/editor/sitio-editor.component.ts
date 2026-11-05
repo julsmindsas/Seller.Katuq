@@ -36,6 +36,10 @@ import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente"
 // Diseño nuevo (PLAN-V2 T03): paneles de los bloques y piezas nuevas, cada uno en su carpeta de `paneles/`.
 import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
 import { anclaSinDestino as anclaSinDestinoEnInicio } from "./anclas-inicio";
+import { clavePromesa } from "./paneles/fichas/fichas-datos";
+
+/** Cuántas confirmaciones de promesas guarda el sitio (el servidor corta en 40, `siteBlocks.js`). */
+const MAX_PROMESAS_CONFIRMADAS = 40;
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -2434,23 +2438,39 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       if (!r.isConfirmed) return;
       // Lo último que escribiste se guarda ANTES (así queda en «Borradores
       // guardados») y el guardado automático no corre mientras se restaura.
-      this.conBorradorGuardado("restaurar", () => {
-        this.aplicandoVersion = true;
-        this.service.restaurarVersion(this.id, v.id).subscribe({
-          next: (res) => {
-            if (!res || !res.success) {
-              this.aplicandoVersion = false;
-              this.toastr.error((res && res.message) || "No pudimos restaurar esa versión.");
-              return;
-            }
-            this.recargarTrasCambioDelServidor("Versión restaurada y publicada.");
-          },
-          error: (err) => {
-            this.aplicandoVersion = false;
-            this.toastr.error(err?.error?.message || "No pudimos restaurar esa versión.");
-          },
-        });
-      });
+      this.conBorradorGuardado("restaurar", () => this.ejecutarRestauracion(v));
+    });
+  }
+
+  /**
+   * Restaura la versión en el servidor. Revisión de PLAN-V2 T05 (D11): si la versión promete algo que el comercio no ha
+   * confirmado, se muestra el mismo aviso de publicar; lo que confirma se guarda en el borrador (sin publicarlo) y la
+   * restauración se vuelve a intentar. Antes solo salía el mensaje, y para confirmar había que publicar el borrador.
+   */
+  private ejecutarRestauracion(v: { id: string; publicadaEn: string }): void {
+    this.aplicandoVersion = true;
+    this.service.restaurarVersion(this.id, v.id).subscribe({
+      next: (res) => {
+        if (!res || !res.success) {
+          this.aplicandoVersion = false;
+          this.toastr.error((res && res.message) || "No pudimos restaurar esa versión.");
+          return;
+        }
+        this.recargarTrasCambioDelServidor("Versión restaurada y publicada.");
+      },
+      error: (err) => {
+        this.aplicandoVersion = false;
+        const cuerpo = (err && err.error) || {};
+        if (cuerpo.codigo === "PROMESAS_SIN_CONFIRMAR") {
+          this.confirmarPromesas(((cuerpo.data && cuerpo.data.promesas) || []) as PromesaSitio[], {
+            confirmadasEnUso: cuerpo.data && cuerpo.data.confirmadasEnUso,
+            textoConfirmar: "Sí, las cumplo. Restaurar",
+            despues: () => this.conBorradorGuardado("restaurar", () => this.ejecutarRestauracion(v)),
+          });
+          return;
+        }
+        this.toastr.error(cuerpo.message || "No pudimos restaurar esa versión.");
+      },
     });
   }
 
@@ -6252,12 +6272,23 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * garantías, descuentos) que Katuq no puede poner en boca del comercio. Se
    * publica solo si el comercio confirma que las cumple; si no, las corrige.
    */
-  private async confirmarPromesas(promesas: PromesaSitio[]): Promise<void> {
+  private async confirmarPromesas(
+    promesas: PromesaSitio[],
+    opciones: { confirmadasEnUso?: string[]; textoConfirmar?: string; despues?: () => void } = {}
+  ): Promise<void> {
     if (!promesas.length || !this.contenido) return;
     const esc = (v: string) => String(v || "").replace(/[&<>"']/g, (ch) => (({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as any)[ch]));
     const marcador = promesas.some((p) => p.marcador);
+    // Revisión de PLAN-V2 T05: cada frase dice dónde está («Inicio › Componer a mano › tarjeta …») y, si es de una
+    // sección, «Ver dónde está» cierra el aviso y la abre en el editor.
     const items = promesas
-      .map((p) => `<li style="margin:0 0 8px"><strong>${esc(p.texto)}</strong><br><small style="color:#6b6880">${esc(p.donde)}</small></li>`)
+      .map((p, i) =>
+        `<li style="margin:0 0 12px"><strong>${esc(p.texto)}</strong><small style="display:block;margin-top:2px;line-height:1.35;color:#6b6880">${esc(p.donde)}</small>` +
+        (p.bloqueId
+          ? `<button type="button" data-kq-ir-promesa="${i}" style="display:block;margin:4px 0 0;padding:0;background:none;border:0;color:#5F3FE0;font-weight:600;font-size:14px;line-height:1.35;text-decoration:underline;cursor:pointer">Ver dónde está</button>`
+          : "") +
+        "</li>"
+      )
       .join("");
     const r = await Swal.fire({
       title: "Confirma lo que promete tu sitio",
@@ -6267,15 +6298,53 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         (marcador ? `<p style="text-align:left;margin:10px 0 0;color:#B42318">Hay un texto entre corchetes: cámbialo por tus condiciones reales antes de publicar.</p>` : ""),
       showCancelButton: true,
       showConfirmButton: !marcador,
-      confirmButtonText: "Sí, las cumplo. Publicar",
+      confirmButtonText: opciones.textoConfirmar || "Sí, las cumplo. Publicar",
       cancelButtonText: "Las corrijo primero",
       confirmButtonColor: "#5F3FE0",
+      didOpen: (popup) => {
+        popup.querySelectorAll<HTMLButtonElement>("[data-kq-ir-promesa]").forEach((b) =>
+          b.addEventListener("click", () => {
+            const p = promesas[Number(b.getAttribute("data-kq-ir-promesa"))];
+            Swal.close();
+            if (p) this.irAPromesa(p);
+          })
+        );
+      },
     });
     if (!r.isConfirmed) return;
     const t = this.contenido.tienda;
-    t.promesasConfirmadas = [...(t.promesasConfirmadas || []), ...promesas.map((p) => p.texto)].slice(-40);
+    const nuevas = promesas.map((p) => p.texto);
+    // Sin cortar a ciegas (antes, `.slice(-40)` borraba las más viejas y el sitio podía pedir confirmar sin fin): si no
+    // caben, se sueltan las de frases que ya no están en el sitio (`confirmadasEnUso`, del servidor), y si aun así no
+    // caben, se avisa y no se guarda nada.
+    let lista = unicasPorClave([...(t.promesasConfirmadas || []), ...nuevas]);
+    if (lista.length > MAX_PROMESAS_CONFIRMADAS && Array.isArray(opciones.confirmadasEnUso)) {
+      lista = unicasPorClave([...opciones.confirmadasEnUso, ...nuevas]);
+    }
+    if (lista.length > MAX_PROMESAS_CONFIRMADAS) {
+      Swal.fire({
+        icon: "warning",
+        title: "Tu sitio promete demasiadas cosas",
+        text:
+          `Tu sitio tiene más de ${MAX_PROMESAS_CONFIRMADAS} frases que prometen envíos, garantías o descuentos, y solo se pueden ` +
+          "confirmar " + MAX_PROMESAS_CONFIRMADAS + ". Cambia algunas por frases que no prometan condiciones, o únelas en una sola, y vuelve a intentarlo.",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#5F3FE0",
+      });
+      return;
+    }
+    t.promesasConfirmadas = lista;
     this.marcarSucio();
-    this.guardar(true);
+    if (opciones.despues) opciones.despues();
+    else this.guardar(true);
+  }
+
+  /** Revisión de PLAN-V2 T05: abre la página y la sección donde está una promesa del aviso. */
+  private irAPromesa(p: PromesaSitio): void {
+    if (typeof p.bloqueId !== "string" || !p.bloqueId) return;
+    const pagina = typeof p.pagina === "number" && p.pagina >= 0 && p.pagina < this.paginas.length ? p.pagina : -1;
+    if (pagina !== this.paginaActiva) this.irAPagina(pagina);
+    this.seleccionarDesdePrevia(p.bloqueId);
   }
 
   private publicarAhora(): void {
@@ -6297,7 +6366,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         const cuerpo = (e && e.error) || {};
         // Ticket 1221: el servidor encontró promesas sin confirmar.
         if (cuerpo.codigo === "PROMESAS_SIN_CONFIRMAR") {
-          this.confirmarPromesas(((cuerpo.data && cuerpo.data.promesas) || []) as PromesaSitio[]);
+          this.confirmarPromesas(((cuerpo.data && cuerpo.data.promesas) || []) as PromesaSitio[], {
+            confirmadasEnUso: cuerpo.data && cuerpo.data.confirmadasEnUso,
+          });
           return;
         }
         // Ticket 1213: lo que falta para vender lleva al primer campo.
@@ -6533,11 +6604,27 @@ interface PendienteSitio {
   ir: () => void;
 }
 
-/** Una promesa de venta que el servidor pide confirmar (ticket 1221). */
+/** Una promesa de venta que el servidor pide confirmar (ticket 1221). Revisión de PLAN-V2 T05: si es de una sección,
+ * su página (-1 es el inicio), la sección y el elemento, para llevar a ella. */
 interface PromesaSitio {
   texto: string;
   donde: string;
   marcador?: boolean;
+  pagina?: number;
+  bloqueId?: string;
+  elemento?: number;
+}
+
+/** Frases sin repetir, con la misma clave del servidor (`clavePromesa`); se queda la primera. */
+function unicasPorClave(lista: string[]): string[] {
+  const vistas = new Set<string>();
+  return lista.filter((c) => {
+    if (typeof c !== "string" || !c.trim()) return false;
+    const k = clavePromesa(c);
+    if (vistas.has(k)) return false;
+    vistas.add(k);
+    return true;
+  });
 }
 
 function normalizarCategoria(valor: string): string {
