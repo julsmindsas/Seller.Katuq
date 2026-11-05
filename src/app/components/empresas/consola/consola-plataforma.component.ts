@@ -28,6 +28,7 @@ import { escaparHtml } from '../../../shared/utils/escapar-html';
 import { mensajeErrorInforme, periodoMesAnterior, validarPeriodo } from '../../../shared/utils/informe-ejecutivo';
 
 import { TranslateService } from '@ngx-translate/core';
+import { esPlataformaKatuq } from '../../../modules/marketing/guards/plataforma.guard';
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
 
@@ -113,6 +114,8 @@ const ESCALONES = [
   styleUrls: ['./consola-plataforma.component.scss'],
 })
 export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
+  /** D-700: el enlace a la nueva consola solo se ofrece a quien puede abrirla (el servidor decide de verdad). */
+  readonly mostrarNuevaConsola = esPlataformaKatuq();
   cargando = false;
   error = '';
 

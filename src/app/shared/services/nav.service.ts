@@ -453,7 +453,7 @@ export class NavService implements OnDestroy {
       if (
         (item.isOnlySuperAdministrador && !isSuperAdmin) ||
         // D-485: la pauta es de Katuq, no del Super Administrador de otra empresa.
-        (item.path === "/marketing/pauta" &&
+        ((item.path === "/marketing/pauta" || item.path === "/plataforma") &&
           String(user.company || "").trim().toLowerCase() !== "julsmind") ||
         (item.isOnlyAdmin && !isJulsmindAdmin) ||
         !authorizedPaths.includes(item.path) ||
@@ -1015,6 +1015,17 @@ export class NavService implements OnDestroy {
       icon: "target",
       type: "link",
       path: "/marketing/pauta",
+      active: false,
+      isOnlySuperAdministrador: true,
+    },
+    // D-700: métricas de plataforma del superadmin. Misma condición de empresa que la pauta.
+    {
+      id: "plataforma",
+      title: "Plataforma",
+      menuIcon: "chart-bar",
+      icon: "bar-chart-2",
+      type: "link",
+      path: "/plataforma",
       active: false,
       isOnlySuperAdministrador: true,
     },

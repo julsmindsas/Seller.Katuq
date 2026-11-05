@@ -97,6 +97,25 @@ $r-sm: 11px;
   i { margin-right: 8px; color: $acento; }
 }
 
+.btn-nueva-consola {
+  text-decoration: none;
+  color: $acento;
+}
+
+/* D-700: aviso de que esta consola no trae las cifras oficiales. Par fuerte / fondo suave, plano. */
+.aviso-no-oficial {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: $acento-suave;
+  border-radius: $r-md;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+
+  > i { color: $acento; margin-top: 2px; }
+  p { margin: 0; font-size: 0.85rem; line-height: 1.5; color: $ink; }
+}
+
 .aviso-error {
   display: flex;
   align-items: center;
