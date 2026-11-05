@@ -308,6 +308,28 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     return [titulo, nombres.join(", ")].filter(Boolean).join(" · ");
   }
 
+  /**
+   * PLAN-V2 T14: ¿este elemento son tarjetas «solución» del diseño nuevo en el editor? Entonces el espejo no las dibuja
+   * (el total, lo que no se publica y el enlace al plano los decide el servidor) y muestra la ficha. Con el diseño de
+   * siempre se pintan con su base, «Con foto», igual que la página.
+   */
+  solucionFiel(el: any): boolean {
+    return (
+      this.previsualizacion &&
+      Number(this.tema && this.tema.sistemaVisual) === 2 &&
+      !!el && el.tipo === "tarjetas" && !!el.datos && el.datos.variante === "solucion"
+    );
+  }
+
+  /** La línea de la ficha de las tarjetas «solución»: cuántas y sus títulos. */
+  resumenSolucion(el: any): string {
+    const titulos = ((el && el.datos && el.datos.items) || [])
+      .map((t: any) => String((t && t.titulo) || "").trim())
+      .filter(Boolean);
+    if (!titulos.length) return "Todavía sin tarjetas con título.";
+    return `${titulos.length} ${titulos.length === 1 ? "tarjeta" : "tarjetas"}: ${titulos.join(" · ")}`;
+  }
+
   resumenFiel(bloque: BloqueSitio): string {
     const ficha = (this.fichasV2 || {})[bloque.tipo];
     try {

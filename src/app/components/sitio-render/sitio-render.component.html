@@ -919,7 +919,22 @@
                 <hr class="separador__linea" *ngIf="el.datos.linea" />
               </div>
 
-              <div *ngIf="el.tipo === 'tarjetas'" class="tarjetas"
+              <!-- PLAN-V2 T14: las tarjetas «solución» del diseño nuevo no se dibujan aquí (su total, lo que no se publica y
+                   el enlace al plano los decide el servidor): en el editor salen como ficha con sus títulos y dónde verlas. -->
+              <div *ngIf="el.tipo === 'tarjetas' && solucionFiel(el)" class="ficha-fiel ficha-fiel--elemento">
+                <div class="ficha-fiel__caja">
+                  <span class="ficha-fiel__icono" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </span>
+                  <div class="ficha-fiel__texto">
+                    <strong class="ficha-fiel__nombre">Tarjetas «Solución con productos»</strong>
+                    <span class="ficha-fiel__resumen" *ngIf="resumenSolucion(el) as resumen">{{ resumen }}</span>
+                    <span class="ficha-fiel__nota">Lo que las resuelve, su total y los enlaces al plano se ven en la Vista fiel («Ver cómo queda»).</span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="el.tipo === 'tarjetas' && !solucionFiel(el)" class="tarjetas"
                    [class.tarjetas--2]="el.datos.porFila === 2"
                    [class.tarjetas--3]="el.datos.porFila === 3"
                    [class.tarjetas--4]="el.datos.porFila === 4">
@@ -938,7 +953,8 @@
                         (keydown)="alTeclearEnTexto($event, true)"
                         (paste)="alPegar($event)">{{ t.etiqueta }}</span>
 
-                  <img *ngIf="el.datos.variante === 'imagen' && t.imagen" class="tarjeta__foto"
+                  <!-- PLAN-V2 T14: fuera del diseño nuevo, la tarjeta «solución» se pinta con su base, «Con foto», como en la página. -->
+                  <img *ngIf="(el.datos.variante === 'imagen' || el.datos.variante === 'solucion') && t.imagen" class="tarjeta__foto"
                        [src]="t.imagen" [alt]="t.titulo || ''" />
                   <svg *ngIf="(el.datos.variante === 'icono' || el.datos.variante === 'fondo') && trazoIcono(t.icono)" class="tarjeta__icono"
                        width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"

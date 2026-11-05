@@ -9,6 +9,7 @@ import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
 import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 import { FichasPanelComponent } from "./fichas/fichas-panel.component";
+import { TarjetaSolucionPanelComponent } from "./tarjeta-solucion/tarjeta-solucion-panel.component";
 
 /**
  * Paneles del diseño nuevo del editor de sitios (PLAN-V2 T03). Cada panel nuevo se declara aquí (o se importa, si es
@@ -26,7 +27,10 @@ import { FichasPanelComponent } from "./fichas/fichas-panel.component";
     BarrasAnuncioPanelComponent,
     PanelPortadaComponent,
     FichasPanelComponent,
+    TarjetaSolucionPanelComponent,
   ],
-  exports: [PanelSitioComponent],
+  // PLAN-V2 T14: la tarjeta «solución» es un panel de ELEMENTO (va dentro de cada tarjeta), así que el editor lo usa
+  // directo con su selector y no por el registro de bloques.
+  exports: [PanelSitioComponent, TarjetaSolucionPanelComponent],
 })
 export class PanelesSitioModule {}

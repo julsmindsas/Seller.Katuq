@@ -1999,6 +1999,8 @@
                       <option value="icono">Con ícono</option>
                       <option value="precio">Con precio</option>
                       <option value="simple">Solo texto</option>
+                      <!-- PLAN-V2 T14: solo con el diseño nuevo (o si ya la tiene, para no perderla al editar). -->
+                      <option value="solucion" *ngIf="disenoNuevo || el.datos.variante === 'solucion'">Solución con productos</option>
                     </select>
                     <select [(ngModel)]="el.datos.porFila" (ngModelChange)="marcarSucio()">
                       <option [ngValue]="2">2 por fila</option>
@@ -2017,7 +2019,8 @@
                     <input *ngIf="el.datos.variante === 'precio'" type="text" [(ngModel)]="t.precio"
                            (ngModelChange)="marcarSucio()" placeholder="Precio (ej: $50.000)" maxlength="40" />
 
-                    <div class="iconos" *ngIf="el.datos.variante === 'icono'">
+                    <!-- PLAN-V2 T14: la tarjeta «solución» sin foto lleva su ícono. -->
+                    <div class="iconos" *ngIf="el.datos.variante === 'icono' || (disenoNuevo && el.datos.variante === 'solucion' && !t.imagen)">
                       <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
                               [class.is-active]="t.icono === ic"
                               (click)="t.icono = ic; marcarSucio()" [title]="ic">
@@ -2028,7 +2031,7 @@
                       </button>
                     </div>
 
-                    <div class="mini-imagen" *ngIf="el.datos.variante === 'imagen' || el.datos.variante === 'fondo'">
+                    <div class="mini-imagen" *ngIf="el.datos.variante === 'imagen' || el.datos.variante === 'fondo' || el.datos.variante === 'solucion'">
                       <img *ngIf="t.imagen" [src]="t.imagen" alt="" />
                       <label class="btn-fantasma btn-fantasma--sm">
                         {{ t.imagen ? 'Cambiar' : 'Subir foto' }}
@@ -2037,12 +2040,17 @@
                       </label>
                     </div>
 
+                    <!-- PLAN-V2 T14: en la tarjeta «solución» del diseño nuevo, la etiqueta va arriba del título (antetítulo). -->
                     <input type="text" [(ngModel)]="t.etiqueta" (ngModelChange)="marcarSucio()"
-                           placeholder="Etiqueta de esquina (opcional)" maxlength="30" />
+                           [placeholder]="disenoNuevo && el.datos.variante === 'solucion' ? 'Antetítulo (opcional)' : 'Etiqueta de esquina (opcional)'" maxlength="30" />
                     <input type="text" [(ngModel)]="t.ctaTexto" (ngModelChange)="marcarSucio()"
                            placeholder="Texto del botón (opcional)" maxlength="30" />
                     <input type="text" [(ngModel)]="t.ctaUrl" (ngModelChange)="marcarSucio()"
                            placeholder="#contacto" />
+                    <!-- PLAN-V2 T14: lo propio de la tarjeta «solución» (piezas o kit con su total, espacio del plano, oscura). -->
+                    <app-panel-tarjeta-solucion *ngIf="disenoNuevo && el.datos.variante === 'solucion'" [tarjeta]="t" [indice]="j"
+                                                [bloque]="b" [contenido]="contenido" [nombreSitio]="sitio?.nombre || ''"
+                                                (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-tarjeta-solucion>
                     <button class="repetible__quitar" (click)="quitarTarjeta(el, j)">Quitar tarjeta</button>
                   </div>
 

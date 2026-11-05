@@ -31,6 +31,16 @@
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 
+  // PLAN-V2 T14: la ficha de un elemento (tarjetas «solución») va dentro de su sección, a lo ancho del contenido.
+  &--elemento {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+
+    .ficha-fiel__caja {
+      max-width: none;
+    }
+  }
+
   &__caja {
     display: flex;
     align-items: flex-start;
