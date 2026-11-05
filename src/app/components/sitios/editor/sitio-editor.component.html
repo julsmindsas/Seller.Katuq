@@ -2357,6 +2357,15 @@
               <button type="button" class="enlace-sutil" (click)="verVistaFiel()" [disabled]="cargandoFiel">
                 {{ cargandoFiel ? 'Cargando…' : 'Ver cómo queda' }}
               </button>
+              <!-- Tanda N1 (E1): tema.titulosSeccion. «Grandes» = la escala de títulos de la tienda premium. -->
+              <div class="campo">
+                <label id="lbl-titulos-seccion">Títulos de sección</label>
+                <div class="segmentos" role="group" aria-labelledby="lbl-titulos-seccion">
+                  <button type="button" *ngFor="let o of opcionesEstilo.titulosSeccion" [class.is-active]="($any(contenido.tema).titulosSeccion || '') === o.id"
+                          [attr.aria-pressed]="($any(contenido.tema).titulosSeccion || '') === o.id" (click)="cambiarAjuste('titulosSeccion', o.id)">{{ o.nombre }}</button>
+                </div>
+                <small class="nota-estilo">«Grandes» pone el título de cada sección más grande y con más peso, como en una tienda premium.</small>
+              </div>
               <h4 class="subgrupo">Color de estructura <small>(opcional)</small></h4>
               <div class="colores">
                 <div class="color">

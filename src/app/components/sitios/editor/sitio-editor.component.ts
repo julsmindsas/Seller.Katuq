@@ -390,6 +390,12 @@ const OPCIONES_ESTILO = {
     { id: "", nombre: "Normales" },
     { id: "grande", nombre: "Grandes" },
   ],
+  // Diseño nuevo (tanda N1, E1): «Grandes» pone el título de cada sección en la escala de la tienda premium (hasta
+  // 50 px, en 800 si la letra lo trae). Solo existe con el diseño nuevo; es otro campo que «Títulos» de Medidas.
+  titulosSeccion: [
+    { id: "", nombre: "Normales" },
+    { id: "grande", nombre: "Grandes" },
+  ],
 };
 
 /**
