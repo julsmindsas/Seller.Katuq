@@ -815,6 +815,23 @@
           </section>
         </ng-container>
 
+        <!-- Diseño nuevo (cierre de N2): categorías, marcas, suscripción, WhatsApp en línea y columnas se ven distinto en la
+             página (módulo `bandas`): aquí salen como ficha con su título y dónde verlas. -->
+        <ng-container *ngSwitchCase="'banda-v2'">
+          <section class="bloque ficha-fiel">
+            <div class="ficha-fiel__caja">
+              <span class="ficha-fiel__icono" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <div class="ficha-fiel__texto">
+                <strong class="ficha-fiel__nombre">{{ nombreDeBloque(bloque.tipo) }}</strong>
+                <span class="ficha-fiel__resumen" *ngIf="resumenBanda(bloque) as resumen">{{ resumen }}</span>
+                <span class="ficha-fiel__nota">Con el diseño nuevo se ve distinto: míralo con «Ver cómo queda».</span>
+              </div>
+            </div>
+          </section>
+        </ng-container>
+
         <!-- Diseño nuevo (PLAN-V2 T03): un bloque que este espejo no dibuja (los tipos nuevos de los módulos, Sucursales
              y Agenda) se ve en el editor como una ficha con su nombre, su resumen y dónde verlo (`notaFiel`). Fuera del
              editor no ocupa lugar. -->
@@ -921,6 +938,21 @@
 
               <!-- PLAN-V2 T14: las tarjetas «solución» del diseño nuevo no se dibujan aquí (su total, lo que no se publica y
                    el enlace al plano los decide el servidor): en el editor salen como ficha con sus títulos y dónde verlas. -->
+              <!-- Cierre de N2: las tarjetas «Con foto de fondo» del diseño nuevo van en 4:5, con «Descubrir →» como enlace y
+                   en carrusel en el celular: en el editor salen como ficha y se ven en la Vista fiel. -->
+              <div *ngIf="el.tipo === 'tarjetas' && fondoFiel(el)" class="ficha-fiel ficha-fiel--elemento">
+                <div class="ficha-fiel__caja">
+                  <span class="ficha-fiel__icono" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </span>
+                  <div class="ficha-fiel__texto">
+                    <strong class="ficha-fiel__nombre">Tarjetas «Con foto de fondo»</strong>
+                    <span class="ficha-fiel__resumen" *ngIf="resumenSolucion(el) as resumen">{{ resumen }}</span>
+                    <span class="ficha-fiel__nota">Con el diseño nuevo se ven distinto: míralas con «Ver cómo queda».</span>
+                  </div>
+                </div>
+              </div>
+
               <div *ngIf="el.tipo === 'tarjetas' && solucionFiel(el)" class="ficha-fiel ficha-fiel--elemento">
                 <div class="ficha-fiel__caja">
                   <span class="ficha-fiel__icono" aria-hidden="true">
@@ -934,7 +966,7 @@
                 </div>
               </div>
 
-              <div *ngIf="el.tipo === 'tarjetas' && !solucionFiel(el)" class="tarjetas"
+              <div *ngIf="el.tipo === 'tarjetas' && !solucionFiel(el) && !fondoFiel(el)" class="tarjetas"
                    [class.tarjetas--2]="el.datos.porFila === 2"
                    [class.tarjetas--3]="el.datos.porFila === 3"
                    [class.tarjetas--4]="el.datos.porFila === 4">

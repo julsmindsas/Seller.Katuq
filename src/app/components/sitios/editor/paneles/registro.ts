@@ -6,6 +6,8 @@ import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.compo
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 import { FichasPanelComponent } from "./fichas/fichas-panel.component";
 import { VitrinaPanelComponent } from "./vitrina/vitrina-panel.component";
+import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
+import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -60,8 +62,8 @@ export interface PanelSitio {
 
 /**
  * Los paneles registrados. Cada tanda trae su línea:
- *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T15 vitrina · T17 guia
- *   T20 pedidoRapido
+ *   T06 Tienda › Atención · T07 portada · T08 Tienda › Fichas de producto · T13 plano · T15 vitrina · N2 bandas
+ *   T17 guia · T20 pedidoRapido
  */
 export const PANELES_SITIO: PanelSitio[] = [
   // T06 (módulo `barras`): Tienda › Atención, y lo nuevo del encabezado y de la barra de anuncio, que sale debajo de sus
@@ -88,6 +90,18 @@ export const PANELES_SITIO: PanelSitio[] = [
   // T15 (módulo `vitrina`): las pestañas de la vitrina. Extiende el bloque `productos`: sale debajo de sus campos de
   // siempre.
   { id: "vitrina", tipo: "productos", componente: VitrinaPanelComponent },
+  // N2 (módulo `bandas`): Tienda › Nombres de categorías (`tienda.categoriasInfo`), los nombres e íconos con que se leen
+  // las categorías en las baldosas, el menú, la fila del encabezado y los filtros del catálogo del diseño nuevo; y la
+  // forma de la banda «Categorías» (fotos o íconos, y si muestra la cantidad), debajo de sus campos de siempre.
+  { id: "bandasCategorias", tipo: "categorias", componente: CategoriasBloquePanelComponent },
+  {
+    id: "bandas",
+    componente: CategoriasPanelComponent,
+    tienda: {
+      titulo: "Nombres de categorías",
+      descripcion: "Cómo se leen tus categorías en la página, con sus tildes. No cambia la categoría en tu catálogo.",
+    },
+  },
 ];
 
 /** El panel que edita un tipo de bloque, si lo hay. */

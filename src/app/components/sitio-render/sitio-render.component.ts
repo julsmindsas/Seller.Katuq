@@ -293,9 +293,42 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   tipoEnEspejo(bloque: BloqueSitio): string {
     const datos = (bloque && bloque.datos) || {};
     const disenoNuevo = Number(this.tema && this.tema.sistemaVisual) === 2;
-    return this.previsualizacion && disenoNuevo && bloque.tipo === "hero" && datos.composicion === "espacios"
-      ? "hero-espacios"
-      : bloque.tipo;
+    if (this.previsualizacion && disenoNuevo && bloque.tipo === "hero" && datos.composicion === "espacios") return "hero-espacios";
+    // Cierre de N2: con el diseño nuevo, las bandas del módulo `bandas` del servidor (categorías, marcas, suscripción,
+    // WhatsApp en línea y columnas) se ven distinto a como las dibuja este espejo (sin velo, sin conteos, sin cajas del
+    // acento ni píldoras): en el editor salen como ficha y se revisan en la Vista fiel. El WhatsApp flotante sigue igual.
+    if (this.previsualizacion && disenoNuevo && SitioRenderComponent.BANDAS_V2.includes(bloque.tipo) && !(bloque.tipo === "whatsapp" && datos.flotante)) {
+      return "banda-v2";
+    }
+    return bloque.tipo;
+  }
+
+  /** Cierre de N2: los tipos de v1 que el diseño nuevo pinta con el módulo `bandas` del servidor. */
+  static readonly BANDAS_V2: readonly string[] = ["categorias", "marcas", "suscripcion", "whatsapp", "columnas"];
+
+  /** La línea de la ficha de una banda del diseño nuevo: su título, o lo que la distingue. */
+  resumenBanda(bloque: BloqueSitio): string {
+    const datos = (bloque && bloque.datos) || {};
+    const titulo = String(datos.titulo || "").trim();
+    if (bloque.tipo === "columnas") {
+      const cols = (Array.isArray(datos.columnas) ? datos.columnas : []).map((c: any) => String((c && c.titulo) || "").trim()).filter(Boolean);
+      return [titulo, cols.join(" · ")].filter(Boolean).join(" · ");
+    }
+    if (bloque.tipo === "whatsapp") return String(datos.etiqueta || "Escríbenos por WhatsApp").trim();
+    if (bloque.tipo === "categorias") return [titulo, datos.variante === "iconos" ? "con íconos" : "con fotos"].filter(Boolean).join(" · ");
+    return titulo;
+  }
+
+  /**
+   * Cierre de N2: ¿estas tarjetas «Con foto de fondo» son del diseño nuevo en el editor? Entonces el espejo no las dibuja
+   * (en la página van en 4:5, con «Descubrir →» como enlace y en carrusel en el celular) y muestra la ficha.
+   */
+  fondoFiel(el: any): boolean {
+    return (
+      this.previsualizacion &&
+      Number(this.tema && this.tema.sistemaVisual) === 2 &&
+      !!el && el.tipo === "tarjetas" && !!el.datos && el.datos.variante === "fondo"
+    );
   }
 
   /** La línea de la ficha de la portada «Espacios»: el título y los nombres de sus espacios. */
