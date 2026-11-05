@@ -31,8 +31,9 @@
       <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
     </select>
   </div>
-  <input type="text" placeholder="Al tocarlo lleva a (opcional): #seccion, /ruta o https://…" aria-label="Destino del mensaje"
+  <input type="text" list="kq-destinos-inicio" placeholder="Al tocarlo lleva a (opcional): #seccion, /ruta o https://…" aria-label="Destino del mensaje"
          [ngModel]="m.url" (ngModelChange)="cambiarMensaje(k, 'url', $event)" />
+  <p class="repetible__aviso" *ngIf="avisoDestino(m.url) as aviso">{{ aviso }}</p>
 </div>
 <button type="button" class="agregar" [disabled]="mensajes.length >= topes.mensajes" (click)="agregarMensaje()">Agregar mensaje</button>
 
@@ -45,8 +46,9 @@
     </div>
     <input type="text" maxlength="24" placeholder="Ayuda" aria-label="Nombre del enlace de ayuda"
            [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
-    <input type="text" placeholder="#preguntas, /ruta o https://…" aria-label="Destino del enlace de ayuda"
+    <input type="text" list="kq-destinos-inicio" placeholder="#preguntas, /ruta o https://…" aria-label="Destino del enlace de ayuda"
            [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
+    <p class="repetible__aviso" *ngIf="avisoDestino(e.url) as aviso">{{ aviso }}</p>
   </div>
   <button type="button" class="agregar" [disabled]="enlaces.length >= topes.enlacesBarra" (click)="agregarEnlace()">Agregar enlace de ayuda</button>
 </ng-container>

@@ -1,4 +1,4 @@
-import { anclaSinDestino } from "../../anclas-inicio";
+import { anclaSinDestino, paginaInternaQueNoExiste } from "../../anclas-inicio";
 
 /**
  * Datos de las barras del diseño nuevo (PLAN-V2 T06) en el editor: los mismos topes y reglas del módulo del servidor
@@ -132,3 +132,21 @@ export function enLineaAhora(h: HorarioAtencion | null | undefined, ahora = new 
 export function anclaQueNoExiste(url: string, bloques: any[], disenoNuevo = true): boolean {
   return anclaSinDestino(url, bloques, { disenoNuevo });
 }
+
+/**
+ * El aviso de un destino roto, con lo que de verdad pasa. Un `#ancla` que no existe: en el menú el servidor no publica
+ * el enlace; en la barra de anuncio se publica y no lleva a ningún lado. Una página interna (`/empresas`) que el sitio
+ * no tiene: se publica y quien la toca llega a un 404. Vacío si el destino sirve o no es de los que se revisan.
+ */
+export function avisoDeDestino(url: string, contenido: { bloques?: any[]; paginas?: any[] } | null | undefined, donde: "menu" | "barra"): string {
+  if (anclaQueNoExiste(url, (contenido && contenido.bloques) || [])) {
+    return donde === "menu"
+      ? "Esa sección no existe en tu inicio: este enlace no se mostrará."
+      : "Esa sección no existe en tu inicio: el enlace se publica y no lleva a ningún lado. Ponle ancla a la sección (Estilo de esta sección) o cambia el destino.";
+  }
+  if (paginaInternaQueNoExiste(url, contenido && contenido.paginas)) {
+    return "Esa página no existe en tu sitio: quien toque el enlace verá un error 404. Crea la página (botón + de Páginas) o cambia el destino.";
+  }
+  return "";
+}
+
