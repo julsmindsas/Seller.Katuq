@@ -2732,8 +2732,10 @@
                   (click)="alternarAnimaciones()">
             <span class="opcion__texto">
               <strong>Las secciones aparecen al bajar</strong>
-              <small>Un desvanecido suave cuando entran en pantalla. La portada no se
-                mueve.</small>
+              <!-- Con el diseño nuevo la portada sí se mueve en «Expresivo» (la nota de «Efectos» dice qué hace cada
+                   nivel): «La portada no se mueve» queda solo para el diseño de siempre. -->
+              <small>Un desvanecido suave cuando entran en pantalla.<ng-container *ngIf="!disenoNuevo"> La portada no se
+                mueve.</ng-container></small>
             </span>
             <span class="palanca"><span></span></span>
           </button>

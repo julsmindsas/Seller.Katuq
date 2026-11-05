@@ -3015,7 +3015,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   get notaEfectos(): string {
     switch (this.nivelEfectos) {
       case "expresivo":
-        return "Lo de «Sutil» y además movimientos más vistosos en la portada y en las piezas destacadas. Si un cliente pidió menos movimiento en su celular o computador, la ve quieta.";
+        return "Lo de «Sutil» y además: la portada entra por partes con un brillo de tu color detrás, el botón principal lleva un borde de luz, las fotos de la portada se desplazan un poco al bajar y las tarjetas entran una tras otra y se iluminan cerca del mouse. Si un cliente pidió menos movimiento en su celular o computador, la ve quieta.";
       case "sutil":
         return "Las secciones aparecen al bajar y las fotos y tarjetas reaccionan al pasar el mouse.";
       default:
