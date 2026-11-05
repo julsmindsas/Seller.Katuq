@@ -5,7 +5,7 @@ import { ReportResult, VizType } from '../../components/dashboard/model/report-s
 @Component({
   selector: 'app-viz-chart',
   template: `
-    <div *ngIf="chartOption" echarts [options]="chartOption" class="chart-host"></div>
+    <div *ngIf="chartOption" echarts [options]="chartOption" class="chart-host" [style.height.px]="altura" [style.border-radius.px]="radio"></div>
     <div *ngIf="!chartOption" class="chart-empty">Sin datos suficientes para graficar</div>
   `,
   styles: [
@@ -30,6 +30,7 @@ export class VizChartComponent {
   private _chartType: VizType = 'bar';
   private _colors: string[] | null = null;
   private _compacta = false;
+  private _ajustes: EChartsOption | null = null;
   chartOption: EChartsOption | null = null;
 
   @Input() set result(r: ReportResult | null) {
@@ -57,6 +58,21 @@ export class VizChartComponent {
     this.compute();
   }
 
+  /** Alto del lienzo en px. Sin él, 480 como siempre (Reportes se ve igual). */
+  @Input() altura = 480;
+
+  /** Radio de las esquinas en px. Sin él, 8 como siempre. */
+  @Input() radio = 8;
+
+  /**
+   * Opciones de ECharts que se mezclan al final sobre las que arma el componente (por ejemplo para
+   * dibujar series con huecos o punteadas). Sin ellas, el gráfico queda como siempre.
+   */
+  @Input() set ajustes(o: EChartsOption | null | undefined) {
+    this._ajustes = o || null;
+    this.compute();
+  }
+
   private compute(): void {
     if (!this._result || this._result.rows.length === 0) {
       this.chartOption = null;
@@ -65,6 +81,9 @@ export class VizChartComponent {
     this.buildOption();
     if (this.chartOption && this._colors) {
       this.chartOption = { ...this.chartOption, color: this._colors };
+    }
+    if (this.chartOption && this._ajustes) {
+      this.chartOption = { ...this.chartOption, ...this._ajustes };
     }
   }
 
