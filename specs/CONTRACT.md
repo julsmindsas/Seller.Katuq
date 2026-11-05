@@ -13323,3 +13323,53 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **D-637 — Cambio de cliente vs. guardado completo con copia vieja (ticket 1505, bloqueante T-12 de D-670).** Daniel aprobó proteger el guardado genérico. `updateOrderInternal` conserva `cliente`, `clienteId`, `facturacion` y `cambiosDeCliente` del pedido guardado cuando este tiene más entradas en `cambiosDeCliente` que la copia que llega; sin entradas, o con igual o mayor número en la copia, no cambia nada. Sin lecturas nuevas. Back `1732fded`. El guard de `/orders/edit` (T-07) sigue aparte.
 - **Pruebas:** nuevas locales (D-566): guardCambioCliente 5 casos, preciosVolumen 15, bandera 4; versionadas y vecinas en verde (historialPedido, cambioCliente 40/40 y 44/44, companyFeatureFlags con 78 banderas). Revisión adversaria (Sonnet) sin defectos.
 - **Mezcla:** ambos en `backend-aws-security` (`24ec1edf`), sin publicar.
+
+### 2026-11-05 — D-671 a D-679: constructor de sitios v2, el diseño nuevo detrás de bandera (aws-claude-1)
+- **Estado:** en la rama `feature/tickets-aws-claude-1` (back `0511c167`, front `412151d4`), ya mezclada con `backend-aws-security` y `feature/venta-asistida-mejorada`; sin publicar. La bandera por empresa `siteDesignV2` nace apagada: ninguna tienda cambia al desplegar. Daniel autorizó el 4-nov subagentes Opus solo para este trabajo. Plan y diseño fuera del repo, en la memoria de la sesión (PLAN-V2, DISENO).
+- **D-671 — Diseño nuevo de páginas.** `tema.sistemaVisual: 2` pinta `<html data-sv="2">`, y solo se puede guardar con `siteDesignV2` (Artículo XII, se retira el 2027-06-30). Regla de oro: el HTML de v1 sale idéntico byte a byte (verificado en 302 páginas de plantillas y de la copia). Las piezas nuevas son módulos registrados en `utils/sitioModulos/` (contrato en su `index.js`): solo pintan en v2, su CSS va en el `<style nonce>` de la página, sin `style=` ni cambios en la hoja compartida. Letra Archivo.
+- **D-672 — Diffs sensibles aprobados por Daniel el 5-nov** («bueno aprobado»), después de comprobar que ninguno toca venta asistida, pedidos internos, POS ni inventario:
+  - T04, Vista fiel del editor (`4473219a`..`b643fcd6`): ruta `/:id/vista-fiel` firmada por 15 minutos para el origen del Seller; la vista no envía nada.
+  - T09, lote del carrito `data-kq-add-lote` (`e2d2d17a`, `c87b0153`): hasta 30 líneas y exige precio.
+  - T19, cotización web de varias líneas (`00d72088`, `e04acc71`): cotiza al precio de vitrina.
+  - M3, `crearPedido` del sitio (`842bc22c`): solo en v2, suma a la lista de comprables las piezas de los planos con `permitirCompra`.
+- **D-673 — Núcleo premium v2.**
+  - Títulos: `tema.titulosSeccion: "grande"`, no `escalaTitulos` (ese ya existía y cambia v1). Dos escalas, 50/30 y 36/24 px, sin multiplicar por «Títulos» de Medidas.
+  - Precio sin espacio tras el signo en todo v2: servidor, scripts, carrito, «Comprar ahora» y comparador. Todo `replace` con grupos sobre HTML con precios usa función (un «$1» se leía como grupo).
+  - Tarjeta v2: precio, «IVA incluido» y «Agregar» ámbar compacto, con el pie según el ancho de la tarjeta. Cambia DISENO §3.3.
+  - Además: acordeones con chevron, `<noscript>` después de la hoja solo en v2, y catálogo con migas, nombre curado de la categoría y filtro de precio con miles.
+- **D-674 — Bandas v2 (módulo `bandas`).**
+  - Es dueño de `tienda.categoriasInfo`: hasta 120 nombres, sin repetidas. `GET /v1/sites/:id/categorias` devuelve hasta 120 nombres y foto solo para las 60 primeras.
+  - «Íconos» sale solo si todas las categorías visibles tienen ícono.
+  - Ningún título de banda supera al de la sección.
+  - Marcas sin conteo ni marquesina, WhatsApp en línea y tarjetas «fondo» con carrusel hasta 767 px en 4:5.
+  - El menú usa la misma regla de nombres.
+- **D-675 — Ficha de producto v2.**
+  - Nombre corto: `tienda.fichas[].nombre`, hasta 60 caracteres. Sale en el h1, las tarjetas, el catálogo y las migas. El carrito, el pedido, el JSON-LD y el título conservan el del maestro (D-134).
+  - «Suele ir con» sale de `tienda.fichas[].afines` (hasta 3) y respeta `ventaCruzada`.
+  - Filas de confianza: solo la de pago, y no con `compraPorWhatsapp`. Envío, cambios y garantía no salen de las promesas confirmadas.
+  - El contrato de módulos suma `ctx.compraPorWhatsapp` y los ganchos `migas`, `sobreTitulo` y `antesDeCompra`.
+- **D-676 — Plano y kit.**
+  - Bloque `plano` con espacios, puntos, kit (combo o piezas sueltas) y otra versión del kit.
+  - La tarjeta del punto va dentro del plano, o debajo si el plano mide menos de 720 px. El kit va al lado desde 1280 px.
+  - A los módulos v2 solo llegan los productos que la tienda vende (activos, en la web y en una categoría visible): si falta una pieza, el kit sale «no disponible».
+  - Panel «Plano y kit» en el editor, con la ventana «Ubicar los puntos».
+- **D-677 — Promesas al publicar.** La revisión mira también las tarjetas y los textos largos, y dice en qué sección está cada frase. Efecto: 16 de los 39 sitios publicados de la copia tendrán que confirmar alguna frase (máximo 3) la próxima vez que publiquen. Antes de desplegar, revisar las publicaciones programadas.
+- **D-678 — Vitrina y tarjeta «solución».** La vitrina admite hasta 3 pestañas con los productos de la misma vitrina, y una pestaña que afirma ventas no se publica. Toma su ancla propia y conserva `#productos` en su cabecera. La tarjeta «solución» lleva `comboId`.
+- **D-679 — Encabezado, portada y ficha I.**
+  - El menú admite hasta 7 enlaces con submenú y el botón «Asesor».
+  - La portada muestra los espacios en tarjetas con foto.
+  - «Ideal para» va en todas las tarjetas de una vitrina o en ninguna.
+- **Pendientes que decide Daniel:**
+  - `<noscript>` en v1;
+  - garantía legal;
+  - quitar `http://localhost:4200` de `ORIGENES_SELLER` en producción;
+  - logo para fondo oscuro (`logoSobreOscuro`);
+  - campo propio para las filas de envío y cambios;
+  - que el pedido de M3 también revise que la pieza se venda.
+- **Pruebas:**
+  - Suites de sitios: 125, después de mezclar con las principales; fallan solo las 3 conocidas.
+  - X1: 481 páginas, las 302 de v1 idénticas byte a byte.
+  - `tsc` y el build del front, en 0.
+  - Las pruebas nuevas son locales (D-566). Versionadas actualizadas, sin credenciales: `companyFeatureFlags` (79 banderas), `listoParaVender`, `alternoYContorno`, `test-sitios-publicacion` y la instantánea `fichaEspecificaciones`.
+- **Notas de versión:** las del diseño nuevo van retiradas hasta encender la bandera. La de las promesas sí sale.
+- **Siguiente:** Daniel publica. Con su sí del 5-nov, se enciende `siteDesignV2` solo para Baudio y su tienda se arma como borrador desde el editor de sellercenter.
