@@ -6,6 +6,8 @@ import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.compo
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
 import { FichasPanelComponent } from "./fichas/fichas-panel.component";
 import { VitrinaPanelComponent } from "./vitrina/vitrina-panel.component";
+import { PanelPlanoComponent } from "./plano/plano-panel.component";
+import { resumenPlano } from "./plano/plano-datos";
 import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
 import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
@@ -86,6 +88,21 @@ export const PANELES_SITIO: PanelSitio[] = [
       titulo: "Fichas de producto",
       descripcion: "Para qué sirve cada producto, cómo se instala y las preguntas que ya respondiste. Salen en su tarjeta y en su ficha.",
     },
+  },
+  // T13 (módulo `plano`): el plano con el kit. Tipo NUEVO: se ofrece en «Agregar una sección» solo con el diseño nuevo.
+  // Nace sin espacios y sin compra: el comercio enciende «Agregar el kit» en el panel cuando el kit está validado.
+  {
+    id: "plano",
+    tipo: "plano",
+    componente: PanelPlanoComponent,
+    catalogo: {
+      nombre: "Plano y kit",
+      descripcion: "El plano de tu espacio con las piezas numeradas y el kit con su total.",
+      icono: "M3 10.5 12 3l9 7.5V21H3zM9 21v-6h6v6",
+      familia: "Para vender",
+    },
+    datosIniciales: () => ({ espacios: [] }),
+    resumen: (d: any) => resumenPlano(d),
   },
   // T15 (módulo `vitrina`): las pestañas de la vitrina. Extiende el bloque `productos`: sale debajo de sus campos de
   // siempre.

@@ -11,6 +11,8 @@ import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel
 import { FichasPanelComponent } from "./fichas/fichas-panel.component";
 import { TarjetaSolucionPanelComponent } from "./tarjeta-solucion/tarjeta-solucion-panel.component";
 import { VitrinaPanelComponent } from "./vitrina/vitrina-panel.component";
+import { PanelPlanoComponent } from "./plano/plano-panel.component";
+import { UbicarPuntosComponent } from "./plano/ubicar-puntos.component";
 import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
 import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
 
@@ -32,6 +34,8 @@ import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-p
     FichasPanelComponent,
     TarjetaSolucionPanelComponent,
     VitrinaPanelComponent,
+    PanelPlanoComponent,
+    UbicarPuntosComponent,
     CategoriasPanelComponent,
     CategoriasBloquePanelComponent,
   ],
