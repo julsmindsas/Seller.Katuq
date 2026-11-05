@@ -219,7 +219,10 @@ export interface Calidad {
 
 /** Sugerencias de los comercios (D-700 14.4): nunca el texto completo. */
 export interface TemaSugerido {
-  tema: string;
+  /** `null` en la fila «otros temas» (los pedidos de un solo comercio no muestran texto). */
+  tema: string | null;
+  agrupado?: boolean;
+  temasAgrupados?: number;
   comercios: number;
   pedidos: number;
   abiertos: number;

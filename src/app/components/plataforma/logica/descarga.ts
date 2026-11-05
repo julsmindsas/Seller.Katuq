@@ -17,6 +17,10 @@ export function guardarBlob(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);
   enlace.href = url;
   enlace.download = nombre;
+  enlace.style.display = 'none';
+  // El enlace va al documento para que todos los navegadores acepten el clic; la URL se libera tarde para no cortar la descarga.
+  document.body.appendChild(enlace);
   enlace.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(enlace);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

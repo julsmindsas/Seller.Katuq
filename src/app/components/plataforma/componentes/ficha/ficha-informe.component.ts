@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
-import { CompaniesService } from '../../../../services/companies.service';
+import { PlataformaService } from '../../servicios/plataforma.service';
 import { mensajeErrorInforme, periodoMesAnterior, validarPeriodo } from '../../../../shared/utils/informe-ejecutivo';
 import { guardarBlob, nombreDeCabecera } from '../../logica/descarga';
 import { TEXTOS } from '../../plataforma.textos';
 
 /**
- * D-700 14.6 — «Informe de ventas (PDF)» del comercio: usa el informe ejecutivo que ya existe. El PDF viaja como `blob` por el
- * servicio de empresas (con la autorización del usuario) y se guarda en el navegador.
+ * D-700 14.6 — «Informe de ventas (PDF)» del comercio: usa el informe ejecutivo, entregado por plataforma para dejar registro de la descarga. El PDF viaja como `blob` por el
+ * servicio de plataforma (con la autorización del usuario) y se guarda en el navegador.
  */
 @Component({
   selector: 'app-ficha-informe',
@@ -35,14 +35,14 @@ export class FichaInformeComponent implements OnDestroy {
   error: string | null = null;
   private fin$ = new Subject<void>();
 
-  constructor(private empresas: CompaniesService, private cd: ChangeDetectorRef) {}
+  constructor(private plataforma: PlataformaService, private cd: ChangeDetectorRef) {}
 
   generar(): void {
     if (this.generando) return;
     this.error = validarPeriodo(this.desde, this.hasta);
     if (this.error) { this.cd.markForCheck(); return; }
     this.generando = true;
-    this.empresas.getInformeEjecutivo(this.docId, this.desde, this.hasta).pipe(
+    this.plataforma.descargarInforme(this.docId, this.desde, this.hasta).pipe(
       takeUntil(this.fin$),
       finalize(() => { this.generando = false; this.cd.markForCheck(); }),
     ).subscribe({

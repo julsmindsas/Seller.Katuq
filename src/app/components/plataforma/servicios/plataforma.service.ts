@@ -82,6 +82,19 @@ export class PlataformaService extends BaseService {
     });
   }
 
+  /**
+   * Informe ejecutivo de ventas de un comercio (PDF). Pasa por plataforma para dejar el registro de quién lo descargó. Va como
+   * `blob` con la autorización del interceptor.
+   */
+  descargarInforme(docId: string, desde: string, hasta: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/informe`, {
+      params: { desde, hasta },
+      responseType: 'blob',
+      observe: 'response',
+      context: new HttpContext().set(SKIP_LOADER, true),
+    });
+  }
+
   /** Solo el operador: relanza el cálculo de la capa viva. El servidor responde 202. */
   recalcular(): Observable<SobrePlataforma<{ estado: string }>> {
     return this.postSinLoader('/v1/platform/recalculate', {});

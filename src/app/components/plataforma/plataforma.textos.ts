@@ -202,7 +202,8 @@ export const TEXTOS = {
   },
   sugerencias: {
     titulo: 'Sugerencias de los comercios',
-    texto: 'Los temas que más piden, contando comercios distintos. Nunca se muestra el texto completo de lo que escribieron.',
+    texto: 'Los temas que piden 2 o más comercios, contando comercios distintos. Lo que pide un solo comercio va junto en «otros temas». Nunca se muestra el texto completo de lo que escribieron.',
+    otrosTemas: (n?: number) => `Otros temas (${n || 0}, de un solo comercio)`,
     tema: 'Tema',
     comercios: 'Comercios',
     pedidos: 'Pedidos',

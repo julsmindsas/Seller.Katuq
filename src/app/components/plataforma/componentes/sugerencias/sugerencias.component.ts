@@ -33,7 +33,7 @@ import { TEXTOS } from '../../plataforma.textos';
             <thead><tr><th scope="col">{{ t.tema }}</th><th scope="col" class="pl-der">{{ t.comercios }}</th><th scope="col" class="pl-der">{{ t.pedidos }}</th><th scope="col" class="pl-der">{{ t.abiertos }}</th><th scope="col">{{ t.categoria }}</th></tr></thead>
             <tbody>
               <tr *ngFor="let x of s.temas; trackBy: trackTema">
-                <td>{{ x.tema }}</td>
+                <td>{{ x.agrupado ? t.otrosTemas(x.temasAgrupados) : x.tema }}</td>
                 <td class="pl-der pl-num"><strong>{{ x.comercios }}</strong></td>
                 <td class="pl-der pl-num">{{ x.pedidos }}</td>
                 <td class="pl-der pl-num">{{ x.abiertos }}</td>
@@ -45,7 +45,7 @@ import { TEXTOS } from '../../plataforma.textos';
         <ng-container *ngIf="s.categorias.length">
           <h3 class="pl-subtitulo">{{ t.categorias }}</h3>
           <ul class="pl-lista">
-            <li *ngFor="let c of s.categorias"><div>{{ c.etiqueta }}</div><div class="pl-num">{{ c.comercios }} comercios · {{ c.temas }} temas</div></li>
+            <li *ngFor="let c of s.categorias"><div>{{ c.etiqueta }}</div><div class="pl-num">{{ c.comercios }} {{ c.comercios === 1 ? 'comercio' : 'comercios' }} · {{ c.temas }} {{ c.temas === 1 ? 'tema' : 'temas' }}</div></li>
           </ul>
         </ng-container>
         <p class="pl-muted pl-num">{{ t.ideas }}: {{ numero(s.ideasEnSoporte.tickets) }} en {{ numero(s.ideasEnSoporte.comercios) }} comercios</p>
@@ -76,7 +76,7 @@ export class SugerenciasComponent implements OnInit, OnDestroy {
     this.fin$.complete();
   }
 
-  trackTema(_: number, x: { tema: string }): string {
-    return x.tema;
+  trackTema(_: number, x: { tema: string | null }): string {
+    return x.tema === null ? '__otros__' : x.tema;
   }
 }
