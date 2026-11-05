@@ -435,3 +435,28 @@
 </div>
 </div>
 </div>
+
+<!-- Ticket 1575: plantillas que la lista usaba y nunca tuvo (abrían una ventana vacía). -->
+<ng-template #modalContent let-modal>
+    <div class="modal-header">
+        <h5 class="modal-title mb-0" id="modal-basic-title">{{ 'Vista pedido para imprimir' | translate }}</h5>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <div [innerHtml]="htmlModal" id="htmlPdf"></div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.close('Save click')">{{ 'Cerrar' | translate }}</button>
+        <button type="button" class="btn btn-primary" (click)="imprimirToPdf()">{{ 'Imprimir' | translate }}</button>
+    </div>
+</ng-template>
+
+<ng-template #pagosModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">{{ 'Historial pagos' | translate }}</h4>
+        <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <app-asentarpagomanual [pedido]="pedidoSeleccionado"></app-asentarpagomanual>
+    </div>
+</ng-template>

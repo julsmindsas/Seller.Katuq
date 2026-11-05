@@ -470,30 +470,9 @@ export class POSListOrdersComponent implements OnInit {
     }, 500); // Ajusta el retraso según sea necesario
   }
 
-  editDatosClientes(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
-    this.modalService.open(content, {
-      size: 'xl',
-      scrollable: true,
-      centered: true,
-      fullscreen: false,
-      ariaLabelledBy: 'modal-basic-title'
-    }
-    ).result.then((result) => {
-      console.log(result);
-
-    }
-      , (reason) => {
-        if (reason == 'Cross click') {
-          return;
-        }
-        console.log(reason);
-        this.clienteSeleccionado = null;
-        order.cliente = reason;
-        this.editOrder(order);
-
-      });
-
+  /** Ticket 1575: igual que el cambio de estado, esta lista no tiene la ventana de datos del cliente. */
+  editDatosClientes(_content, order: Pedido) {
+    this.avisarHacerloEnPedidos(order, 'editar los datos del cliente');
   }
 
   private editOrder(order: Pedido) {
@@ -603,30 +582,46 @@ export class POSListOrdersComponent implements OnInit {
   }
 
   // edutar Notas
-  editarEstadoPago(content, order: Pedido) {
-    this.clienteSeleccionado = order.cliente;
-    this.pedidoSeleccionado = order;
-    //inicializr formulario con los datos del cliente tiene las mismas propiedades
-    this.initForms(this.clienteSeleccionado);
-    this.modalService.open(content, {
-      size: 'lg',
-      scrollable: true,
-      centered: true,
-      fullscreen: false,
-      ariaLabelledBy: 'modal-basic-title'
-    }
-    ).result.then((result) => {
-      console.log(result);
+  /**
+   * Ticket 1575: esta lista nunca tuvo la ventana de cambio de estado de pago:
+   * abría una pantalla vacía y, al cerrarla, guardaba el pedido sin cambios con
+   * el aviso «Pedido actualizado correctamente». Los pedidos POS salen también
+   * en Ventas › Pedidos, donde el cambio de estado sí está completo (motivo de
+   * cancelación, crédito, devoluciones, Tesorería). Se lleva al usuario allá.
+   */
+  editarEstadoPago(_content, order: Pedido) {
+    this.avisarHacerloEnPedidos(order, 'cambiar el estado de pago');
+  }
 
-    }
-      , (reason) => {
-        if (reason == 'Cross click') {
-          return;
-        }
-        this.editOrder(order);
+  private avisarHacerloEnPedidos(order: Pedido, accion: string) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Hazlo desde Ventas › Pedidos',
+      html: `Para ${accion} del pedido <b>${String(order?.nroPedido || '').replace(/[<>&]/g, '')}</b>, búscalo en <b>Ventas › Pedidos</b>: allí salen también los pedidos POS, y desde sus opciones puedes ${accion} y facturarlo en Siigo.`,
+      confirmButtonText: 'Entendido'
+    });
+  }
 
-      });
-
+  private guardarSoloPagos(order: Pedido) {
+    const pagosUpdate = {
+      _id: order._id,
+      nroPedido: order.nroPedido,
+      PagosAsentados: order.PagosAsentados || [],
+      anticipo: order.anticipo,
+      faltaPorPagar: order.faltaPorPagar,
+      estadoPago: order.estadoPago,
+      totalPedididoConDescuento: order.totalPedididoConDescuento,
+    };
+    this.ventasService.editOrder(pagosUpdate as any).subscribe({
+      next: () => {
+        this.refrescarDatos();
+        Swal.fire({ icon: 'success', title: 'Pago guardado', showConfirmButton: false, timer: 1500 });
+      },
+      error: (err) => {
+        this.refrescarDatos();
+        Swal.fire({ icon: 'error', title: 'No se pudo guardar el pago', text: err?.error?.message || err?.error?.error || 'Intenta de nuevo.' });
+      }
+    });
   }
 
   cambiarEstadoPago(order: Pedido) {
@@ -837,11 +832,14 @@ export class POSListOrdersComponent implements OnInit {
 
       }
         , (reason) => {
-          if (reason == 'Cross click') {
+          // Ticket 1575: el formulario de pagos cierra con el pedido ya actualizado
+          // (dismissAll(order)). Cualquier otro cierre (X, Esc, clic afuera) llega
+          // con un texto y no se guarda nada. Se guardan solo los campos de pagos,
+          // igual que en Ventas › Pedidos (updatePagosOnly).
+          if (!reason || typeof reason !== 'object' || !reason.nroPedido) {
             return;
           }
-
-          this.editOrder(reason);
+          this.guardarSoloPagos(reason);
 
         });
   }
