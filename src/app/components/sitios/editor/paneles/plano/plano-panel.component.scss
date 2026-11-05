@@ -1,0 +1,755 @@
+// Panel del plano y kit (PLAN-V2 T13). Usa los campos comunes de los paneles del diseño nuevo (`_campos-panel.scss`).
+// Regla de diseño Katuq: plano, acento #5F3FE0, sin degradados, avisos en par color fuerte / fondo suave, ninguna clase
+// con «p-», todo span con color propio (trampa `span.ng-star-inserted`) y `letter-spacing` normal en `p` y `a`.
+@import "../barras/campos-panel";
+
+// Trampa de `span.ng-star-inserted` (azul): los span de este panel heredan el color de su caja. Con el encapsulado,
+// `span` queda como `span[_ngcontent-…]`: la misma especificidad de la regla global, que pierde por ir antes; y las
+// clases de cada span (0,2,0) le siguen ganando a esta.
+span {
+  color: inherit;
+}
+
+p,
+a {
+  letter-spacing: normal;
+}
+
+.plano {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1.5px solid var(--kb-line-4);
+}
+
+// ── Encabezado del panel ──
+
+.plano__intro {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 14px;
+}
+
+.plano__sub {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--kb-body);
+}
+
+.subgrupo--sin-margen {
+  margin: 0;
+}
+
+.plano__fila-tit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 10px;
+}
+
+// ── Estado vacío ──
+
+.plano__vacio {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 22px 16px;
+  margin-bottom: 14px;
+  text-align: center;
+  border: 1.5px dashed #d6d1ec;
+  border-radius: 16px;
+  background: var(--kb-accent-wash-3);
+  color: #5f3fe0;
+
+  .plano__vacio-tit {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--kb-ink) !important;
+  }
+
+  .plano__vacio-txt {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--kb-body) !important;
+  }
+
+  .plano__primario {
+    margin-top: 6px;
+  }
+}
+
+// ── Botones propios ──
+
+.plano__primario {
+  @include kb-btn-base;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #5f3fe0;
+  color: #fff;
+  font-size: 13.5px;
+
+  &--ancho {
+    width: 100%;
+    margin: 4px 0 10px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #5232d4;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}
+
+.plano__secundario {
+  @include kb-btn-ghost(10px, 14px, 13px);
+  width: 100%;
+  margin-bottom: 4px;
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+// ── Pestañas de espacios ──
+
+.plano__pestanas {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  scrollbar-width: thin;
+}
+
+.plano__pestana {
+  @include kb-btn-base;
+  flex: none;
+  gap: 6px;
+  min-height: 38px;
+  max-width: 150px;
+  padding: 0 14px;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--kb-ink-2);
+
+  .plano__pestana-txt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .plano__pestana-marca {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 99px;
+    background: var(--kb-warn-wash);
+    color: #8a5a12 !important;
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+
+  &.is-activa {
+    border-color: #5f3fe0;
+    background: #f1edff;
+    color: #5f3fe0;
+  }
+
+  &--mas {
+    width: 38px;
+    padding: 0;
+    border-style: dashed;
+    color: #5f3fe0;
+    font-size: 17px;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.plano__espacio {
+  padding: 14px 14px 10px;
+  margin-bottom: 16px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--kb-shadow-card);
+}
+
+// ── Estado del kit en vivo (par color fuerte / fondo suave) ──
+
+.plano__estado {
+  display: grid;
+  gap: 3px;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+
+  .plano__estado-tit {
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .plano__estado-txt {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &--ok {
+    background: var(--kb-ok-wash);
+    border-color: #c9ecd7;
+    color: #146c3a;
+  }
+
+  &--aviso {
+    background: var(--kb-warn-wash);
+    border-color: #f6dfb8;
+    color: #8a5a12;
+  }
+
+  &--info {
+    background: var(--kb-accent-wash);
+    border-color: #dcd3fb;
+    color: #3d2a99;
+  }
+
+  &--vacio {
+    background: var(--kb-surface-2);
+    border-color: var(--kb-line-4);
+    color: var(--kb-ink-2);
+  }
+}
+
+.plano__ayuda {
+  display: block;
+  margin: -6px 0 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--kb-muted-2);
+
+  &--bloque {
+    margin: 0 0 10px;
+  }
+}
+
+.plano__marca {
+  margin: -8px 0 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #8a5a12;
+}
+
+.plano__codigo {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--kb-chip-2);
+  font-size: 11px;
+  color: var(--kb-ink-2);
+}
+
+.plano__rotulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--kb-ink);
+}
+
+.plano__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -2px 0 12px;
+}
+
+.plano__chip {
+  @include kb-btn-base;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kb-muted);
+
+  svg {
+    display: none;
+  }
+
+  &.is-activo {
+    border-color: #5f3fe0;
+    background: #f1edff;
+    color: #5f3fe0;
+
+    svg {
+      display: block;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+// ── Foto del plano: miniatura con el mismo marco de la página ──
+
+.plano__marco {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #1c1a26;
+  border: 1px solid var(--kb-line-4);
+
+  &--vacio {
+    background: var(--kb-surface-2);
+    border-style: dashed;
+  }
+}
+
+.plano__marco-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plano__marco-pto {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  transform: translate(-50%, -50%);
+  background: #5f3fe0;
+  box-shadow: 0 0 0 2px #fff;
+  color: #fff !important;
+  font-size: 10.5px;
+  font-weight: 800;
+
+  &.is-fuera {
+    background: #8b879f;
+  }
+}
+
+.plano__marco-vacio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kb-muted) !important;
+}
+
+.plano__foto-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.plano__archivo {
+  @include kb-btn-ghost(9px, 14px, 13px);
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &.is-ocupado {
+    color: var(--kb-disabled);
+  }
+
+  &:focus-within {
+    outline: 3px solid #7c5cff;
+  }
+}
+
+.plano__medida {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--kb-muted);
+}
+
+// ── Kit ──
+
+.plano__lineas {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.plano__linea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 12px;
+  background: #fff;
+
+  &.is-fuera {
+    border-color: #f6dfb8;
+    background: #fffaf1;
+  }
+}
+
+.plano__foto {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--kb-line-3);
+  background: #fff;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.plano__linea-txt {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.plano__linea-nom {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--kb-ink);
+  overflow-wrap: anywhere;
+}
+
+.plano__linea-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.plano__linea-pts {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kb-muted) !important;
+
+  &--sin {
+    color: #8a5a12 !important;
+  }
+}
+
+.plano__pastilla {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--kb-warn-wash);
+  color: #8a5a12 !important;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.plano__cantidad {
+  @include kb-input;
+  flex: none;
+  width: 58px;
+  padding: 7px 8px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.plano__cant-fija {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--kb-ink-2);
+}
+
+.mini--x {
+  width: 30px;
+  color: var(--kb-danger);
+}
+
+.plano__elegir {
+  @include kb-btn-base;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border: 1.5px dashed #d6d1ec;
+  border-radius: 12px;
+  background: #fff;
+  color: #5f3fe0;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+
+  img {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    object-fit: contain;
+    border: 1px solid var(--kb-line-3);
+  }
+
+  .plano__elegir-txt {
+    flex: 1;
+    min-width: 0;
+    color: var(--kb-ink);
+  }
+
+  &:hover {
+    border-color: #5f3fe0;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.plano__ok {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #146c3a !important;
+}
+
+// ── Puntos ──
+
+.plano__puntos {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+  }
+}
+
+.plano__num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 99px;
+  background: #5f3fe0;
+  color: #fff !important;
+  font-size: 11.5px;
+  font-weight: 800;
+
+  &.is-fuera {
+    background: #8b879f;
+  }
+}
+
+.plano__punto-txt {
+  min-width: 0;
+  display: grid;
+}
+
+.plano__punto-nom {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--kb-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plano__punto-zona {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kb-muted) !important;
+}
+
+.plano__avisos {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+
+  li {
+    padding: 9px 12px;
+    border-radius: 11px;
+    background: var(--kb-warn-wash);
+    border: 1px solid #f6dfb8;
+    color: #8a5a12;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  &--generales {
+    margin-top: 12px;
+  }
+}
+
+.plano__pie-esp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--kb-line);
+
+  .mini--quitar {
+    margin-left: auto;
+  }
+}
+
+// ── Grupos plegables ──
+
+.plano__grupo {
+  border-top: 1px solid var(--kb-line-4);
+}
+
+.plano__grupo-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font-family: var(--kb-font);
+  cursor: pointer;
+  text-align: left;
+
+  .plano__grupo-tit {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--kb-muted);
+
+    small {
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+  }
+
+  svg {
+    flex: none;
+    color: var(--kb-muted);
+    transition: transform 0.15s ease;
+  }
+
+  &[aria-expanded="true"] svg {
+    transform: rotate(90deg);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.plano__grupo-cuerpo {
+  padding: 2px 0 12px;
+}
+
+.plano__cortos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+
+  li {
+    display: grid;
+    gap: 4px;
+  }
+
+  input[type="text"] {
+    @include kb-input;
+    padding: 10px 12px;
+  }
+}
+
+.plano__corto-cat {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--kb-muted-2);
+  overflow-wrap: anywhere;
+}
+
+.plano__fila-txt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -4px 0 14px;
+
+  .plano__ayuda {
+    flex: 1;
+    margin: 0;
+  }
+}
+
+.repetible {
+  textarea {
+    @include kb-input;
+    background: #fff;
+  }
+}
+
+.repetible__cabeza .mini--quitar {
+  margin-left: 2px;
+}
+
+.plano__oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

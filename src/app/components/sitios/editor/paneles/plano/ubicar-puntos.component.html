@@ -1,0 +1,146 @@
+<!-- Ventana «Ubicar los puntos» (PLAN-V2 T13). `appAlBody`: el velo cuelga del <body> para tapar también el menú.
+     Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<div class="velo" appAlBody>
+  <div #caja class="caja" role="dialog" aria-modal="true" [attr.aria-labelledby]="uid + '-tit'" (keydown)="alTeclaVentana($event)">
+    <header class="caja__cab">
+      <div class="caja__titulos">
+        <span class="caja__eyebrow">Plano y kit</span>
+        <h5 class="caja__titulo" [id]="uid + '-tit'">Ubicar los puntos</h5>
+        <span class="caja__sub">{{ titulo }} · {{ puntos.length }} de {{ topes.puntos }} puntos</span>
+      </div>
+      <div class="caja__espacios" role="group" aria-label="Espacio" *ngIf="espacios.length > 1">
+        <button type="button" *ngFor="let x of espacios; let k = index; trackBy: porObjeto" class="caja__espacio"
+                [class.is-activo]="k === indice" [attr.aria-pressed]="k === indice" (click)="elegirEspacio(k)">{{ x.nombre?.trim() || 'Espacio ' + (k + 1) }}</button>
+      </div>
+      <button type="button" class="caja__cerrar" (click)="cerrar.emit()" aria-label="Cerrar la ventana">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="caja__cuerpo">
+      <!-- El plano -->
+      <div class="escena">
+        <div #marco class="escena__marco" [ngClass]="'escena__marco--' + claseRelacion" tabindex="-1" [style.aspect-ratio]="relacion"
+             (click)="alClicMarco($event)"
+             [class.is-lleno]="puntos.length >= topes.puntos" [class.is-sin-foto]="!e.imagen"
+             aria-label="Plano: toca donde va una pieza para agregar un punto">
+          <img *ngIf="e.imagen" class="escena__img" [src]="e.imagen" alt="" draggable="false" />
+          <svg class="escena__capa" [attr.viewBox]="'0 0 100 ' + alto" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <circle *ngFor="let h of halos" class="escena__halo" [attr.cx]="h.cx" [attr.cy]="h.cy" [attr.r]="h.r" vector-effect="non-scaling-stroke" />
+            <line *ngFor="let s of senales" class="escena__senal" [attr.x1]="s.x1" [attr.y1]="s.y1" [attr.x2]="s.x2" [attr.y2]="s.y2" vector-effect="non-scaling-stroke" />
+          </svg>
+          <button #pto type="button" class="escena__pto" *ngFor="let p of puntos; let k = index; trackBy: porObjeto"
+                  [style.left.%]="p.x" [style.top.%]="p.y" [class.is-sel]="k === sel" [class.is-aviso]="conAviso(k + 1)"
+                  [class.is-fuera]="!enKit(p)" [attr.aria-label]="etiquetaPunto(p, k)"
+                  (pointerdown)="empezarArrastre($event, k)" (pointermove)="moverArrastre($event)" (pointerup)="soltarArrastre()"
+                  (pointercancel)="soltarArrastre()" (keydown)="alTeclaPunto($event, k)" (focus)="seleccionar(k)"
+                  (click)="$event.stopPropagation()">{{ k + 1 }}</button>
+        </div>
+        <p class="escena__pista">
+          <span class="escena__pista-txt"><b>Clic en el plano:</b> agrega un punto.</span>
+          <span class="escena__pista-txt"><b>Arrastra</b> un punto para moverlo.</span>
+          <span class="escena__pista-txt"><b>Flechas:</b> 0,5 %, con Mayús 5 %. <b>Supr:</b> lo quita.</span>
+        </p>
+        <p class="escena__nota" *ngIf="!e.imagen">Este espacio no tiene foto del plano: súbela en el panel. Mientras, puedes ubicar los
+          puntos sobre el marco vacío.</p>
+      </div>
+
+      <!-- Los avisos, la lista y, abierto en su fila, el punto elegido -->
+      <aside class="lado">
+        <!-- La cabecera y los avisos quedan fijos arriba: se ven mientras se edita un punto abajo. -->
+        <div class="lado__fijo">
+        <div class="lado__cab">
+          <h6 class="lado__tit">Puntos <small>({{ puntos.length }} de {{ topes.puntos }})</small></h6>
+          <button type="button" class="lado__agregar" (click)="agregarAlCentro()" [disabled]="puntos.length >= topes.puntos">+ En el centro</button>
+        </div>
+
+        <ul class="avisos" *ngIf="avisos.length" aria-label="Avisos de los puntos">
+          <li *ngFor="let a of avisos" class="avisos__item" [ngClass]="'avisos__item--' + a.tipo">{{ a.texto }}</li>
+        </ul>
+        </div>
+
+        <p class="lado__vacio" *ngIf="!puntos.length">Haz clic en el plano donde va la primera pieza.</p>
+
+        <ol class="lista" *ngIf="puntos.length" (pointermove)="moverOrden($event)" (pointerup)="soltarOrden()" (pointercancel)="orden = null">
+          <li #fila *ngFor="let p of puntos; let k = index; trackBy: porObjeto" class="lista__fila" [class.is-sel]="k === sel"
+              [class.is-arrastre]="orden?.desde === k" [class.is-marca]="marcaAntes(k)">
+            <div class="lista__cab">
+              <button type="button" class="lista__asa" (pointerdown)="empezarOrden($event, k)" (keydown)="alTeclaAsa($event, k)"
+                      [attr.aria-label]="'Ordenar el punto ' + (k + 1) + ': flecha arriba o abajo'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+              </button>
+              <button type="button" class="lista__item" (click)="alternarFila(k)" [attr.aria-expanded]="k === sel"
+                      [attr.aria-controls]="uid + '-det-' + k">
+                <span class="lista__num" [class.is-fuera]="!enKit(p)">{{ k + 1 }}</span>
+                <span class="lista__txt">
+                  <span class="lista__nom">{{ nombreDePunto(p) }}</span>
+                  <span class="lista__zona">{{ p.zona || 'Sin zona' }}</span>
+                </span>
+                <span class="lista__alerta" *ngIf="conAviso(k + 1)" aria-label="con aviso">!</span>
+              </button>
+            </div>
+
+            <div class="detalle" *ngIf="k === sel" [id]="uid + '-det-' + k">
+              <label class="detalle__rotulo" [attr.for]="uid + '-pieza'">Pieza</label>
+              <select #selPieza [id]="uid + '-pieza'" [ngModel]="p.productoId || ''" (ngModelChange)="ponerPieza(p, $event)">
+                <option value="">Elige una pieza del kit</option>
+                <option *ngFor="let l of lineas; trackBy: porId" [value]="l.productoId">{{ nombreDe(l.productoId) }}</option>
+                <option *ngIf="piezaFuera" [value]="piezaFuera">{{ nombreDe(piezaFuera) }} (no está en el kit)</option>
+              </select>
+              <span class="detalle__aviso" *ngIf="!lineas.length">Este espacio todavía no tiene kit: elígelo en el panel.</span>
+
+              <label class="detalle__rotulo" [attr.for]="uid + '-zona'">Zona</label>
+              <input [id]="uid + '-zona'" type="text" [maxlength]="topes.zona" [(ngModel)]="p.zona" (ngModelChange)="cambiar()" placeholder="Sala · piso 1" />
+
+              <label class="detalle__rotulo" [attr.for]="uid + '-que'">Qué es</label>
+              <textarea [id]="uid + '-que'" rows="2" [maxlength]="topes.que" [(ngModel)]="p.que" (ngModelChange)="cambiar()"
+                        placeholder="La unidad principal: va conectada al módem de tu operador."></textarea>
+
+              <label class="detalle__rotulo" [attr.for]="uid + '-porque'">Por qué va ahí</label>
+              <textarea [id]="uid + '-porque'" rows="3" [maxlength]="topes.porque" [(ngModel)]="p.porque" (ngModelChange)="cambiar()"
+                        placeholder="Junto al módem y en alto: desde aquí reparte la señal a las otras unidades."></textarea>
+
+              <label class="detalle__rotulo" [attr.for]="uid + '-radio'">Cobertura <small>{{ p.radio ? p.radio + ' % del ancho' : 'sin halo' }}</small></label>
+              <input [id]="uid + '-radio'" class="detalle__rango" type="range" min="0" [max]="topes.radio" step="1" [ngModel]="p.radio || 0"
+                     (ngModelChange)="ponerRadio(p, $event)" />
+
+              <div class="detalle__fila">
+                <div>
+                  <label class="detalle__rotulo" [attr.for]="uid + '-senal'">Señal desde</label>
+                  <select [id]="uid + '-senal'" [ngModel]="p.senal || 0" (ngModelChange)="ponerSenal(p, $event)">
+                    <option [ngValue]="0">Ninguna</option>
+                    <ng-container *ngFor="let q of puntos; let j = index; trackBy: porObjeto">
+                      <option *ngIf="j !== sel" [ngValue]="j + 1">Punto {{ j + 1 }}</option>
+                    </ng-container>
+                  </select>
+                </div>
+                <div>
+                  <label class="detalle__rotulo" [attr.for]="uid + '-unidad'">Unidad</label>
+                  <select [id]="uid + '-unidad'" [ngModel]="p.unidad || 0" (ngModelChange)="ponerUnidad(p, $event)">
+                    <option [ngValue]="0">—</option>
+                    <option *ngFor="let u of unidades" [ngValue]="u">{{ u }}</option>
+                  </select>
+                </div>
+              </div>
+              <small class="detalle__ayuda" *ngIf="p.unidad && deUnidades > 1">Se lee «{{ nombreDePunto(p) }} · unidad {{ p.unidad }} de {{ deUnidades }}».</small>
+              <small class="detalle__ayuda" *ngIf="!p.unidad">Unidad: para un paquete de varias piezas iguales («unidad 2 de 3»).</small>
+
+              <button type="button" class="detalle__quitar" (click)="quitar(sel)">Quitar este punto</button>
+            </div>
+          </li>
+          <li class="lista__fin" *ngIf="marcaAlFinal" aria-hidden="true"></li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="caja__pie">
+      <span class="caja__deshacer" *ngIf="deshacer">
+        <span class="caja__deshacer-txt">{{ deshacer.texto }}</span>
+        <button type="button" class="caja__enlace" (click)="rehacerPunto()">Deshacer</button>
+      </span>
+      <span class="caja__guardado">Los cambios se guardan solos.</span>
+      <button type="button" class="caja__listo" (click)="cerrar.emit()">Listo</button>
+    </footer>
+    <div class="oculto" aria-live="polite">{{ anuncio }}</div>
+  </div>
+</div>
