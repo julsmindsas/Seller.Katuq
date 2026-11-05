@@ -1,0 +1,249 @@
+// Panel de la portada «Espacios» (PLAN-V2 T07). Usa los tokens y piezas del editor (`katuq-builder`), que el editor
+// declara en su :host y llegan aquí por herencia. Plano, sin degradados; ninguna clase lleva «p-» (AGENTS.md).
+@import "../../../../../shared/styles/katuq-builder";
+
+:host {
+  display: block;
+}
+
+.portada {
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1.5px solid var(--kb-line-4);
+
+  input[type="text"],
+  select {
+    @include kb-input;
+    margin-bottom: 10px;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a7a3bd' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+  }
+}
+
+.portada__subgrupo {
+  margin: 16px 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+
+  small {
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--kb-muted-2);
+  }
+}
+
+.portada__campo {
+  margin-bottom: 14px;
+}
+
+.portada__etiqueta {
+  @include kb-label;
+}
+
+.portada__pide {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--kb-muted-2);
+}
+
+.portada__ayuda {
+  @include kb-hint;
+  margin-top: 0;
+  margin-bottom: 10px;
+
+  &--error {
+    color: var(--kb-danger);
+  }
+}
+
+.portada__nota {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--kb-accent-wash);
+  border: 1px solid var(--kb-accent-line);
+  color: var(--kb-accent-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.portada__aviso {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--kb-warn-wash);
+  border: 1px solid #f6dfb8;
+  color: #8a5a12;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.portada__segmentado {
+  @include kb-segmented;
+  margin-bottom: 8px;
+
+  button:focus-visible {
+    outline: 3px solid #7c5cff;
+    outline-offset: 1px;
+  }
+}
+
+.portada__segundo {
+  margin-top: 0;
+}
+
+.portada__espacio,
+.portada__sello {
+  display: grid;
+  gap: 0;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: var(--kb-surface-3);
+
+  input[type="text"],
+  select {
+    background: var(--kb-surface);
+  }
+}
+
+.portada__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.portada__nombre {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kb-muted-2);
+}
+
+.portada__acciones {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.portada__icono {
+  @include kb-btn-icono(28px);
+}
+
+.portada__quitar {
+  border: 0;
+  background: transparent;
+  color: var(--kb-danger);
+  font-family: var(--kb-font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 4px;
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff;
+    outline-offset: 1px;
+  }
+}
+
+.portada__foto {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  img {
+    width: 42px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--kb-line-3);
+  }
+}
+
+.portada__archivo {
+  @include kb-btn-base;
+  position: relative;
+  flex: 1 1 140px;
+  border: 1.5px dashed var(--kb-line-5);
+  background: var(--kb-surface);
+  color: var(--kb-accent-fg);
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-within {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash);
+  }
+
+  input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.portada__ico-fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  select {
+    flex: 1;
+  }
+}
+
+.portada__ico-muestra {
+  flex: none;
+  margin-top: 12px;
+  color: var(--kb-ink);
+}
+
+.portada__avisos {
+  margin: 4px 0 0;
+  padding: 8px 10px 8px 26px;
+  border-radius: 10px;
+  background: var(--kb-warn-wash);
+  color: #8a5a12;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  li + li {
+    margin-top: 4px;
+  }
+}
+
+.portada__agregar {
+  @include kb-btn-ghost(10px, 14px, 13px);
+  width: 100%;
+  margin-bottom: 8px;
+  color: var(--kb-accent-fg);
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff;
+    outline-offset: 1px;
+  }
+}
