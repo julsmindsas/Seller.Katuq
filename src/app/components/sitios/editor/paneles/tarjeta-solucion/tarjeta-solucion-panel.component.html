@@ -28,7 +28,7 @@
     <label [attr.for]="uid + '-combo'">Kit</label>
     <select [id]="uid + '-combo'" [ngModel]="t.comboId || ''" (ngModelChange)="elegirCombo($event)" [disabled]="cargandoCombos">
       <option value="">{{ cargandoCombos ? 'Cargando tus kits…' : 'Elige un kit' }}</option>
-      <option *ngFor="let c of listaCombos || []; trackBy: porId" [value]="c.id">{{ c.nombre }} ({{ c.piezas }} {{ c.piezas === 1 ? 'pieza' : 'piezas' }})</option>
+      <option *ngFor="let c of listaCombos || []; trackBy: porId" [value]="c.id">{{ c.nombre }} ({{ c.piezas }} {{ c.piezas === 1 ? 'pieza' : 'piezas' }}{{ c.piezas > topes.piezasKit ? ': sin total' : '' }})</option>
     </select>
     <small>Dice «Kit completo» con la suma de las piezas y cantidades del combo, el mismo del plano y del POS. Los combos se
       crean en Maestros › Combos.</small>
@@ -36,11 +36,27 @@
   <p class="aviso" *ngIf="fuente === 'kit' && listaCombos && t.comboId && !nombreDelCombo">Ese kit ya no está activo: la
     tarjeta dice «Consúltalo con un asesor».</p>
 
+  <!-- El nombre corto de cada pieza: así la nombra la tarjeta (y cuando se agota, «Tapo P110M: agotado»). -->
+  <div class="campo" *ngIf="piezasDeLaTarjeta.length">
+    <span class="sol__rotulo">Nombre corto de cada pieza</span>
+    <ul class="sol__cortos">
+      <li *ngFor="let p of piezasDeLaTarjeta; trackBy: porId">
+        <label class="sol__nombre" [attr.for]="uid + '-c-' + p.id">{{ p.titulo || 'Cargando…' }}</label>
+        <input [id]="uid + '-c-' + p.id" type="text" [maxlength]="topes.nombreCorto" [ngModel]="nombreCorto(p.id)"
+               (ngModelChange)="ponerNombre(p.id, $event)" placeholder="Tapo C220" />
+        <span class="sol__alerta" *ngIf="nombreCortoConMarcador(p.id)">Tiene algo entre corchetes: se lee el del catálogo.</span>
+      </li>
+    </ul>
+    <small>Así se lee cada pieza en la tarjeta. Sin él, sale el nombre del catálogo, cortado.</small>
+  </div>
+
   <div class="campo">
-    <label [attr.for]="uid + '-nota'">{{ fuente === 'nada' ? 'Nota (opcional)' : 'Nombre corto de lo que la resuelve' }}</label>
+    <label [attr.for]="uid + '-nota'">{{ fuente === 'nada' ? 'Nota (opcional)' : fuente === 'kit' ? 'Detalle del kit (opcional)' : 'Resumen de las piezas (opcional)' }}</label>
     <input [id]="uid + '-nota'" type="text" [maxlength]="topes.nota" [(ngModel)]="t.nota" (ngModelChange)="cambiar()"
-           [placeholder]="fuente === 'kit' ? '6 piezas para el local' : fuente === 'piezas' ? 'Deco X50, paquete de 3' : 'Lleva cableado: te lo cotiza un asesor.'" />
-    <small *ngIf="fuente === 'piezas'">Sin él, la tarjeta muestra el nombre completo de cada pieza.</small>
+           [placeholder]="fuente === 'kit' ? '6 piezas para el local' : fuente === 'piezas' ? 'Deco X50, paquete de 3' : '*Lleva cableado:* te lo cotiza un asesor.'" />
+    <small *ngIf="fuente === 'piezas'">Va en lugar de la lista de nombres.</small>
+    <small *ngIf="fuente === 'kit'">Va después de «Kit completo», en lugar de cuántas piezas lleva.</small>
+    <small *ngIf="fuente === 'nada'">Admite negrita con asteriscos: *Lleva cableado:* te lo cotiza un asesor.</small>
   </div>
 
   <!-- A dónde lleva -->
@@ -53,14 +69,14 @@
       <option *ngIf="planoPerdido" [value]="t.plano">{{ t.plano }} (no está en esta página)</option>
     </select>
     <small *ngIf="t.plano && !planoPerdido">El botón lleva a ese espacio del plano, con el texto de arriba o, sin texto, «Ver el
-      plano». El destino de arriba no se usa.</small>
+      plano». Si el plano no sale en la página (por ejemplo, mientras lo tienes oculto), lleva al destino de arriba.</small>
     <small *ngIf="!espacios.length && !planoSinAncla">Esta página no tiene un plano. Agrégalo para que la tarjeta lleve a uno
       de sus espacios.</small>
   </div>
   <p class="aviso" *ngIf="planoSinAncla">El plano de esta página no tiene ancla. Ponle una en Estilo › Ancla para poder
     enlazar sus espacios.</p>
-  <p class="aviso" *ngIf="planoPerdido">Ese espacio ya no está en un plano visible de esta página: el botón no sale. Elige
-    otro o quítalo.</p>
+  <p class="aviso" *ngIf="planoPerdido">Ese espacio no sale en un plano visible de esta página: la tarjeta usa el botón de
+    arriba (si tiene texto y destino) o no lleva botón. Elige otro espacio o quítalo.</p>
   <p class="aviso aviso--info" *ngIf="comboDelEspacio">Ese espacio arma su kit con un combo.
     <button type="button" (click)="usarKitDelEspacio()">Usar el mismo kit en la tarjeta</button>
   </p>

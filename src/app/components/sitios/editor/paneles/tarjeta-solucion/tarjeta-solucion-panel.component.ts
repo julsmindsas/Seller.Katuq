@@ -14,6 +14,10 @@ import {
   espaciosDePlanos,
   fuenteDe,
   hayPlanoSinAncla,
+  lineasPublicables,
+  nombreCortoDe,
+  ponerNombreCorto,
+  tieneMarcador,
 } from "./tarjeta-solucion-datos";
 
 /** Lo que el panel muestra de una pieza (nombre y foto, de referencia; no se guarda). */
@@ -26,7 +30,9 @@ interface PiezaVista {
 interface ComboVista {
   id: string;
   nombre: string;
+  /** Piezas distintas (un producto repetido cuenta una vez, como en la página). */
   piezas: number;
+  productoIds: string[];
 }
 
 /** Nombres y fotos ya pedidos, compartidos entre las tarjetas del editor (no se piden dos veces). */
@@ -70,7 +76,7 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
 
   ngOnChanges(cambios: SimpleChanges): void {
     if (cambios["tarjeta"]) {
-      this.cargarPiezas();
+      this.cargarPiezas(this.t.productoIds || []);
       if (this.tarjeta && this.tarjeta.comboId) this.cargarCombos();
     }
   }
@@ -119,24 +125,79 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
     return this.t.superficie === "estructura";
   }
 
-  get avisos(): string[] {
+  private get confirmadas(): string[] {
     const tienda: any = this.contenido && this.contenido.tienda;
-    return avisosDeTextos(this.tarjeta, tienda && tienda.promesasConfirmadas);
+    return (tienda && tienda.promesasConfirmadas) || [];
+  }
+
+  get avisos(): string[] {
+    const salida = avisosDeTextos(this.tarjeta, this.confirmadas);
+    // Principio 5: sin nombre corto, la página lee el nombre del catálogo (largo, cortado con puntos suspensivos).
+    const sinNombre = this.piezasDeLaTarjeta.filter((p) => p.titulo && !this.nombreCorto(p.id).trim());
+    if (sinNombre.length) {
+      const cuales = sinNombre.map((p) => `«${p.titulo}»`).join(", ");
+      salida.push(
+        this.t.nota && this.t.nota.trim()
+          ? `Sin nombre corto, si una pieza se agota la tarjeta la nombra como en el catálogo: ${cuales}.`
+          : `Sin nombre corto, la tarjeta muestra el nombre del catálogo, cortado: ${cuales}. Escribe el nombre corto o un resumen.`
+      );
+    }
+    if (this.oscura && this.conEstructura) {
+      const n = lineasPublicables(this.tarjeta, this.confirmadas);
+      if (n < 3) salida.push(`La tarjeta oscura publica ${n === 0 ? "ninguna línea" : n === 1 ? "1 línea" : `${n} líneas`} de «Lo que incluye»: se verá vacía. Escribe al menos 3 que sean ciertas.`);
+    }
+    if (this.fuente === "kit" && this.comboElegido && this.comboElegido.piezas > this.topes.piezasKit) {
+      salida.push(`Ese kit tiene ${this.comboElegido.piezas} piezas distintas: con más de ${this.topes.piezasKit} la tarjeta no da total y dice «Consúltalo con un asesor».`);
+    }
+    return salida;
   }
 
   get piezas(): { id: string; titulo: string; imagen: string | null }[] {
     return (this.t.productoIds || []).map((id) => ({ id, titulo: (PIEZAS[id] && PIEZAS[id].titulo) || "", imagen: (PIEZAS[id] && PIEZAS[id].imagen) || null }));
   }
 
+  get comboElegido(): ComboVista | null {
+    return (this.listaCombos || []).find((x) => x.id === this.t.comboId) || null;
+  }
+
   get nombreDelCombo(): string {
-    const c = (this.listaCombos || []).find((x) => x.id === this.t.comboId);
+    const c = this.comboElegido;
     return c ? c.nombre : "";
+  }
+
+  /** Las piezas que usa la tarjeta hoy: las elegidas o las del kit (para sus nombres cortos). */
+  get piezasDeLaTarjeta(): { id: string; titulo: string; imagen: string | null }[] {
+    const ids = this.fuente === "kit" ? (this.comboElegido ? this.comboElegido.productoIds : []) : this.fuente === "piezas" ? this.t.productoIds || [] : [];
+    return ids.map((id) => ({ id, titulo: (PIEZAS[id] && PIEZAS[id].titulo) || "", imagen: (PIEZAS[id] && PIEZAS[id].imagen) || null }));
+  }
+
+  nombreCorto(id: string): string {
+    return nombreCortoDe(this.tarjeta, id);
+  }
+
+  nombreCortoConMarcador(id: string): boolean {
+    return tieneMarcador(this.nombreCorto(id));
   }
 
   // ── Cambios ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
   cambiar(): void {
     this.avisar();
+  }
+
+  /** El nombre corto de una pieza («Tapo P110M»). Solo se guardan los de las piezas que la tarjeta usa. */
+  ponerNombre(id: string, valor: string): void {
+    if (!this.tarjeta) return;
+    ponerNombreCorto(this.tarjeta, id, valor, this.piezasDeLaTarjeta.map((p) => p.id));
+    this.avisar();
+  }
+
+  /** Al cambiar de piezas o de kit, los nombres de piezas que ya no están se quitan. */
+  private podarNombres(): void {
+    if (!this.tarjeta || !Array.isArray(this.tarjeta.nombres)) return;
+    const vigentes = this.fuente === "kit" ? (this.comboElegido ? this.comboElegido.productoIds : null) : this.t.productoIds || [];
+    if (!vigentes) return; // los combos todavía no cargan: no se borra nada a ciegas
+    this.tarjeta.nombres = this.tarjeta.nombres.filter((n) => n && vigentes.includes(n.productoId));
   }
 
   /** Piezas, kit o nada: la página usa una sola fuente, así que al cambiar se borra la otra. */
@@ -152,6 +213,7 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
       this.tarjeta.comboId = "";
       this.tarjeta.productoIds = [];
     }
+    this.podarNombres();
     this.avisar();
   }
 
@@ -160,13 +222,15 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
     if (!this.tarjeta) return;
     this.tarjeta.productoIds = (ids || []).slice(0, this.topes.piezas);
     if (this.tarjeta.productoIds.length) this.tarjeta.comboId = "";
-    this.cargarPiezas();
+    this.cargarPiezas(this.tarjeta.productoIds);
+    this.podarNombres();
     this.avisar();
   }
 
   quitarPieza(id: string): void {
     if (!this.tarjeta) return;
     this.tarjeta.productoIds = (this.tarjeta.productoIds || []).filter((x) => x !== id);
+    this.podarNombres();
     this.avisar();
   }
 
@@ -174,6 +238,9 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
     if (!this.tarjeta) return;
     this.tarjeta.comboId = id || "";
     if (this.tarjeta.comboId) this.tarjeta.productoIds = [];
+    const c = this.comboElegido;
+    if (c) this.cargarPiezas(c.productoIds);
+    this.podarNombres();
     this.avisar();
   }
 
@@ -228,9 +295,9 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
 
   // ── Datos de referencia ─────────────────────────────────────────────────────────────────────────────────────────
 
-  /** Nombre y foto de las piezas elegidas (de a 4; las que ya se pidieron no se vuelven a pedir). */
-  private cargarPiezas(): void {
-    const faltan = (this.t.productoIds || []).filter((id) => id && !PIEZAS[id]);
+  /** Nombre y foto de unas piezas (las que ya se pidieron no se vuelven a pedir). */
+  private cargarPiezas(ids: string[]): void {
+    const faltan = (ids || []).filter((id) => id && !PIEZAS[id]);
     if (!faltan.length) return;
     this.service.productosPorIds(faltan).subscribe({
       next: (res) => {
@@ -257,7 +324,12 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
               resolver(
                 crudos
                   .filter((c) => c && c.activo !== false && c.id)
-                  .map((c) => ({ id: String(c.id), nombre: String(c.nombre || "Sin nombre"), piezas: Array.isArray(c.productos) ? c.productos.length : 0 }))
+                  .map((c) => {
+                    const productoIds = Array.from(
+                      new Set<string>((Array.isArray(c.productos) ? c.productos : []).map((p: any) => String((p && p.productoId) || "")).filter(Boolean))
+                    );
+                    return { id: String(c.id), nombre: String(c.nombre || "Sin nombre"), piezas: productoIds.length, productoIds };
+                  })
               );
             },
             error: () => resolver([]),
@@ -270,6 +342,8 @@ export class TarjetaSolucionPanelComponent extends PanelSitioBase implements OnC
       this.listaCombos = lista;
       this.cargandoCombos = false;
       if (!lista.length) combos = null;
+      const c = this.comboElegido;
+      if (c) this.cargarPiezas(c.productoIds);
     });
   }
 }

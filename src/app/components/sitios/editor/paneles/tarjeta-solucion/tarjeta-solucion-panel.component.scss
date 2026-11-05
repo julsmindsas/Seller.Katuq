@@ -53,6 +53,46 @@
   margin-top: 8px;
 }
 
+// Trampa de AGENTS.md: `p` trae letter-spacing global.
+.nota,
+.aviso {
+  letter-spacing: normal;
+}
+
+.sol__rotulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--kb-ink);
+}
+
+.sol__cortos {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+
+  li {
+    display: grid;
+    gap: 4px;
+  }
+
+  .sol__nombre {
+    font-weight: 500;
+    color: #5c5878;
+  }
+}
+
+.sol__alerta {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #8a5a12;
+}
+
 .sol__nueva {
   display: grid;
   grid-template-columns: 1fr auto;
