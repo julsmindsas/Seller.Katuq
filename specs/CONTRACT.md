@@ -13334,3 +13334,10 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Pruebas:** sintaxis de los archivos tocados sin errores; `test:sitios-listo` 5 ok y `test:sitios-versiones` 13 ok. `test:sitios-publicacion` (7 fallas) y `test:cotizaciones-contract` (2 fallas, IVA de `calcularTotales`) fallan igual en `24ec1edf`, antes de la mezcla.
 - **Verificado en producción:** `katuq-api` en línea y sin errores tras el reinicio; la tienda de Baudio (`baudio-tienda.katuq.com`) sale con el pie en columnas y la pausa del carrusel.
 - **No verificado:** el editor en el navegador ni la Vista fiel con la bandera encendida.
+
+### 2026-11-05 — Publicados el front 2026.11.05.2 y el backend `8e01d051`
+
+- **Front:** release `aabe6ff4`, versión 2026.11.05.2 sobre `88b518d4` (base viva 2026.11.05.1). Lleva el rol «Tesoreria» como Tesorero (ticket 1573), los pagos de Pedidos POS (`268bcc5b`; Daniel aprobó el diff de pagos el 5-nov antes de publicar), «Cartera por vendedor» contraída y el aviso de despacho cuando la transportadora no responde. Candado y verify-dist en verde; `version.json` comprobado en sellercenter.katuq.com.
+- **Backend:** EC2 de `0511c167` a `8e01d051`, sin paquetes ni índices. Ocho commits marcados «Aprobado por Daniel el 5-nov»: Movee con límite de espera, rol «Tesoreria», entorno de Wompi por prefijo de llave, «Limpiar precios» solo para administradores y los pasos 1 a 3 del ticket 1510 (categorías de Cereza como nodo). Los scripts `repair-1572` y `migrar-categorias-lista-1510` solo quedan en el servidor: no se corrieron.
+- **Verificado:** `katuq-api` en línea tras el reinicio; el log solo trae los avisos de arranque de siempre y los flujos de OH MY STORE retomaron.
+- **No verificado:** cada flujo en pantalla (pagos POS, Wompi, Movee, categorías de Cereza); queda a cargo de las sesiones dueñas.
