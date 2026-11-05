@@ -1,18 +1,20 @@
 <!-- Ventana «Ubicar los puntos» (PLAN-V2 T13). `appAlBody`: el velo cuelga del <body> para tapar también el menú.
      Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
-<div class="velo" appAlBody>
-  <div #caja class="caja" role="dialog" aria-modal="true" [attr.aria-labelledby]="uid + '-tit'" (keydown)="alTeclaVentana($event)">
+<!-- Revisión de T13 (hallazgo 3): el foco no sale de la caja (Tab da la vuelta, el resto de la página queda `inert`), y
+     un clic en el velo lo devuelve a la caja. -->
+<div #velo class="velo" appAlBody (mousedown)="alPresionarVelo($event)">
+  <div #caja class="caja" role="dialog" aria-modal="true" tabindex="-1" [attr.aria-labelledby]="uid + '-tit'" (keydown)="alTeclaVentana($event)">
     <header class="caja__cab">
       <div class="caja__titulos">
         <span class="caja__eyebrow">Plano y kit</span>
-        <h5 class="caja__titulo" [id]="uid + '-tit'">Ubicar los puntos</h5>
+        <h2 class="caja__titulo" [id]="uid + '-tit'">Ubicar los puntos</h2>
         <span class="caja__sub">{{ titulo }} · {{ puntos.length }} de {{ topes.puntos }} puntos</span>
       </div>
       <div class="caja__espacios" role="group" aria-label="Espacio" *ngIf="espacios.length > 1">
         <button type="button" *ngFor="let x of espacios; let k = index; trackBy: porObjeto" class="caja__espacio"
                 [class.is-activo]="k === indice" [attr.aria-pressed]="k === indice" (click)="elegirEspacio(k)">{{ x.nombre?.trim() || 'Espacio ' + (k + 1) }}</button>
       </div>
-      <button type="button" class="caja__cerrar" (click)="cerrar.emit()" aria-label="Cerrar la ventana">
+      <button type="button" class="caja__cerrar" (click)="cerrarVentana()" aria-label="Cerrar la ventana">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </header>
@@ -50,7 +52,7 @@
         <!-- La cabecera y los avisos quedan fijos arriba: se ven mientras se edita un punto abajo. -->
         <div class="lado__fijo">
         <div class="lado__cab">
-          <h6 class="lado__tit">Puntos <small>({{ puntos.length }} de {{ topes.puntos }})</small></h6>
+          <h3 class="lado__tit">Puntos <small>({{ puntos.length }} de {{ topes.puntos }})</small></h3>
           <button type="button" class="lado__agregar" (click)="agregarAlCentro()" [disabled]="puntos.length >= topes.puntos">+ En el centro</button>
         </div>
 
@@ -139,7 +141,7 @@
         <button type="button" class="caja__enlace" (click)="rehacerPunto()">Deshacer</button>
       </span>
       <span class="caja__guardado">Los cambios se guardan solos.</span>
-      <button type="button" class="caja__listo" (click)="cerrar.emit()">Listo</button>
+      <button type="button" class="caja__listo" (click)="cerrarVentana()">Listo</button>
     </footer>
     <div class="oculto" aria-live="polite">{{ anuncio }}</div>
   </div>

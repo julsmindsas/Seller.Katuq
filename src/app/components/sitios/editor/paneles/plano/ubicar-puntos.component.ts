@@ -66,6 +66,7 @@ export class UbicarPuntosComponent implements OnInit, OnChanges, AfterViewInit, 
   @Output() cerrar = new EventEmitter<void>();
 
   @ViewChild("caja") caja?: ElementRef<HTMLElement>;
+  @ViewChild("velo") velo?: ElementRef<HTMLElement>;
   @ViewChild("marco") marco?: ElementRef<HTMLElement>;
   @ViewChild("selPieza") selPieza?: ElementRef<HTMLSelectElement>;
   @ViewChildren("pto") ptos?: QueryList<ElementRef<HTMLButtonElement>>;
@@ -88,6 +89,20 @@ export class UbicarPuntosComponent implements OnInit, OnChanges, AfterViewInit, 
   /** Qué enfocar en cuanto la vista se dibuje. */
   private enfocar: { que: "pto" | "pieza" | "asa" | "marco"; k: number } | null = null;
 
+  /** Lo que la ventana dejó `inert` al abrirse (para devolverlo como estaba). */
+  private inertes: { el: HTMLElement; ariaHidden: string | null }[] = [];
+  /**
+   * Esc, escuchado en la captura de `window`: la ventana lo atiende ANTES que el `document:keydown` del editor, esté
+   * donde esté el foco. Antes, con el foco fuera de la caja (un clic en el velo), Esc cerraba la sección entera.
+   */
+  private readonly alTeclaGlobal = (ev: KeyboardEvent): void => {
+    if (ev.key !== "Escape" && ev.key !== "Esc") return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    this.cerrarVentana();
+  };
+
   constructor(private cargando: LoaderService) {}
 
   /**
@@ -97,10 +112,62 @@ export class UbicarPuntosComponent implements OnInit, OnChanges, AfterViewInit, 
    */
   ngOnInit(): void {
     this.cargando.suppressGlobalLoader();
+    window.addEventListener("keydown", this.alTeclaGlobal, true);
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener("keydown", this.alTeclaGlobal, true);
+    this.soltarFondo();
     this.cargando.releaseGlobalLoader();
+  }
+
+  /**
+   * El editor de atrás queda `inert` (ni foco, ni clic, ni lector de pantalla) mientras la ventana está abierta: todo hijo
+   * del <body> menos el velo, que `appAlBody` cuelga ahí. Lo que ya era `inert` no se toca.
+   */
+  private bloquearFondo(): void {
+    const velo = this.velo && this.velo.nativeElement;
+    if (!velo || typeof document === "undefined") return;
+    for (const hijo of Array.from(document.body.children) as HTMLElement[]) {
+      if (hijo === velo || hijo.contains(velo) || hijo.hasAttribute("inert") || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(hijo.tagName)) continue;
+      this.inertes.push({ el: hijo, ariaHidden: hijo.getAttribute("aria-hidden") });
+      hijo.setAttribute("inert", "");
+      hijo.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  private soltarFondo(): void {
+    for (const { el, ariaHidden } of this.inertes) {
+      el.removeAttribute("inert");
+      if (ariaHidden === null) el.removeAttribute("aria-hidden");
+      else el.setAttribute("aria-hidden", ariaHidden);
+    }
+    this.inertes = [];
+  }
+
+  /** Lo que se puede enfocar dentro de la caja, en orden. */
+  private enfocables(): HTMLElement[] {
+    const caja = this.caja && this.caja.nativeElement;
+    if (!caja) return [];
+    const sel = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return (Array.from(caja.querySelectorAll(sel)) as HTMLElement[]).filter((el) => el.offsetParent !== null || el === document.activeElement);
+  }
+
+  /**
+   * Cierra la ventana. El editor deja de estar `inert` YA, antes de avisar: el panel devuelve el foco al botón «Ubicar
+   * los puntos» en una microtarea, que corre antes de que Angular destruya esta ventana, y un botón `inert` no se enfoca.
+   */
+  cerrarVentana(): void {
+    this.soltarFondo();
+    this.cerrar.emit();
+  }
+
+  /** Un clic en el velo (fuera de la caja) no le quita el foco a la ventana. */
+  alPresionarVelo(ev: MouseEvent): void {
+    if (this.velo && ev.target === this.velo.nativeElement) {
+      ev.preventDefault();
+      if (this.caja && !this.caja.nativeElement.contains(document.activeElement)) this.caja.nativeElement.focus();
+    }
   }
 
   ngOnChanges(cambios: SimpleChanges): void {
@@ -117,6 +184,7 @@ export class UbicarPuntosComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   ngAfterViewInit(): void {
+    this.bloquearFondo();
     // Al abrir, el foco va al primer punto (o al plano), dentro de la ventana.
     this.enfocar = this.puntos.length ? { que: "pto", k: 0 } : { que: "marco", k: 0 };
     Promise.resolve().then(() => this.aplicarFoco());
@@ -465,9 +533,21 @@ export class UbicarPuntosComponent implements OnInit, OnChanges, AfterViewInit, 
    * escucha Esc) y los atajos del editor (deshacer, guardar) no corren por detrás.
    */
   alTeclaVentana(ev: KeyboardEvent): void {
-    if (ev.key === "Escape") {
-      ev.preventDefault();
-      this.cerrar.emit();
+    // Esc lo atiende `alTeclaGlobal`, en la captura de `window`. Tab da la vuelta dentro de la caja.
+    if (ev.key === "Tab") {
+      const lista = this.enfocables();
+      if (lista.length) {
+        const primero = lista[0];
+        const ultimo = lista[lista.length - 1];
+        const activo = document.activeElement as HTMLElement | null;
+        if (ev.shiftKey && (activo === primero || activo === this.caja?.nativeElement)) {
+          ev.preventDefault();
+          ultimo.focus();
+        } else if (!ev.shiftKey && activo === ultimo) {
+          ev.preventDefault();
+          primero.focus();
+        }
+      }
     }
     ev.stopPropagation();
   }

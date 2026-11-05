@@ -294,12 +294,25 @@ export function lineasDe(e: EspacioPlano, combos: ComboVista[] | null): { lineas
   return { lineas: (e.lineas || []).filter((l) => l && l.productoId).map((l) => ({ productoId: l.productoId, cantidad: l.cantidad || 1 })), motivo: "" };
 }
 
+/** El id de un producto como lo acepta el servidor (`idFirestore`, `ID_PRODUCTO` del registro de módulos). */
+export const ID_PRODUCTO = /^[A-Za-z0-9_-]{1,128}$/;
+
+/**
+ * ¿La página usa este combo? La misma regla del lector del servidor (`LECTURAS.combos`): solo un combo con `activo`
+ * en `true` (no basta con que no diga `false`) y con un id válido. Revisión de T13: con `activo !== false`, un combo
+ * sin el campo se veía completo en el panel y «no disponible» en la página.
+ */
+export function comboSirve(c: any): boolean {
+  return !!c && c.activo === true && typeof c.id === "string" && ID_PRODUCTO.test(c.id);
+}
+
 /** Las líneas de un combo crudo del servidor: una por producto (las repetidas se suman). */
 export function lineasDeCombo(productos: any[]): LineaKit[] {
   const porId = new Map<string, number>();
   for (const p of Array.isArray(productos) ? productos : []) {
-    const id = String((p && p.productoId) || "");
-    if (!id) continue;
+    const id = String((p && p.productoId) || "").trim();
+    // La misma regla del servidor: un id que no es de producto no es una línea.
+    if (!ID_PRODUCTO.test(id)) continue;
     const cantidad = Number.isInteger(p.cantidad) && p.cantidad > 0 ? p.cantidad : 1;
     porId.set(id, (porId.get(id) || 0) + cantidad);
   }
@@ -389,7 +402,7 @@ const MOTIVO: { [estado: string]: string } = {
   agotado: "está agotada",
   inactivo: "no está activa en tu catálogo",
   sinPrecio: "no tiene precio",
-  fuera: "no se ve en tu tienda",
+  fuera: "no sale en tu tienda (inactiva, fuera de la página web o en una categoría oculta)",
   falta: "ya no está en tu catálogo",
 };
 
@@ -459,6 +472,29 @@ export function piezasDelBloque(d: DatosPlano, combos: ComboVista[] | null): str
   }
   if (d.instalacionId) salida.push(d.instalacionId);
   return Array.from(new Set(salida));
+}
+
+// ── Objetos recién agregados ───────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Una entrada «Empieza por lo que te pasa» recién agregada. Nace llevando a un espacio (el que se edita o el primero):
+ * el servidor descarta una entrada SIN NINGÚN campo (`normalizarEntrada` devuelve null), y el autoguardado, al poner en
+ * el editor lo guardado, la borraba a los 2,5 s sin avisar (revisión de T13, hallazgo 1). null si no hay espacios.
+ */
+export function entradaNueva(d: DatosPlano, espacioActual?: EspacioPlano | null): EntradaPlano | null {
+  const espacios = (d && d.espacios) || [];
+  const destino = (espacioActual && idValido(espacioActual.id) && espacioActual) || espacios.find((e) => idValido(e && e.id));
+  return destino ? { espacio: destino.id } : null;
+}
+
+/**
+ * Otra versión del kit recién agregada. Nace cambiando la primera pieza del kit, por la misma razón que la entrada:
+ * vacía, el servidor la descarta y el autoguardado la borraba (el selector de «Por» tarda más que el guardado). null
+ * si el kit no tiene piezas.
+ */
+export function alternativaNueva(lineas: LineaKit[]): AlternativaPlano | null {
+  const primera = (lineas || []).find((l) => l && ID_PRODUCTO.test(String(l.productoId || "")));
+  return primera ? { de: primera.productoId } : null;
 }
 
 // ── Puntos ─────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -630,12 +666,24 @@ export function marcoSugerido(ancho: number, alto: number, proporcion: Proporcio
 
 // ── Resumen para la vista editable ─────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Los puntos de un espacio que la página pinta: con pieza y, si el kit son piezas sueltas, con una pieza del kit (la
+ * página descarta los demás). Con un combo, el resumen no lo lee: cuenta los que tienen pieza.
+ */
+export function puntosQueSalen(e: EspacioPlano): number {
+  const puntos = (e.puntos || []).filter((p) => p && p.productoId);
+  if (e.comboId) return puntos.length;
+  const enKit = new Set((e.lineas || []).map((l) => l && l.productoId).filter(Boolean));
+  return puntos.filter((p) => enKit.has(p.productoId as string)).length;
+}
+
 /** La línea de la ficha del espejo: «3 espacios: Apartamento, Casa, Local · 18 puntos». */
 export function resumenPlano(d: DatosPlano | null | undefined): string {
   const pintados = espaciosPintados(d);
   if (!pintados.length) return "Todavía sin un espacio con nombre y kit: no sale en la página.";
   const nombres = pintados.map(({ e }) => sinMarcador(e.nombre)).join(", ");
-  const puntos = pintados.reduce((t, { e }) => t + (e.puntos || []).filter((p) => p && p.productoId).length, 0);
+  // Revisión de T13 (hallazgo 13): un punto con una pieza fuera del kit no sale en la página; no se cuenta.
+  const puntos = pintados.reduce((t, { e }) => t + puntosQueSalen(e), 0);
   const n = pintados.length;
   return `${n} ${n === 1 ? "espacio" : "espacios"}: ${nombres} · ${puntos} ${puntos === 1 ? "punto" : "puntos"}`;
 }

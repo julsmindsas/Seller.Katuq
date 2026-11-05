@@ -55,7 +55,7 @@ p {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--kb-muted);
+  color: var(--kb-body);
 }
 
 .caja__titulo {
@@ -77,8 +77,11 @@ p {
   margin-left: auto;
 
   .caja__espacio {
+    // Revisión de T13 (hallazgos 7 y 8): texto legible (4,5:1) y 44 px de alto.
+    min-height: 44px;
     padding: 8px 14px;
     font-size: 12.5px;
+    color: var(--kb-body);
 
     &.is-activo {
       background: #fff;
@@ -94,7 +97,7 @@ p {
 }
 
 .caja__cerrar {
-  @include kb-cerrar(40px);
+  @include kb-cerrar(44px);
   margin-left: 12px;
 
   .caja__titulos + & {
@@ -196,6 +199,7 @@ p {
 }
 
 .escena__pto {
+  // El disco mide 34 px, pero se toca en 44 (revisión de T13, hallazgo 8): el `::before` agranda la zona del toque.
   position: absolute;
   display: grid;
   place-items: center;
@@ -215,12 +219,19 @@ p {
   touch-action: none;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 99px;
+  }
+
   &:active {
     cursor: grabbing;
   }
 
   &.is-fuera {
-    background: #8b879f;
+    background: #6b6880;
     box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px rgba(139, 135, 159, 0.4);
   }
 
@@ -304,7 +315,7 @@ p {
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--kb-muted);
+  color: var(--kb-body);
 
   small {
     font-weight: 600;
@@ -315,6 +326,7 @@ p {
 
 .lado__agregar {
   @include kb-btn-ghost(7px, 12px, 12.5px);
+  min-height: 44px;
 
   &:focus-visible {
     outline: 3px solid #7c5cff !important;
@@ -385,11 +397,12 @@ p {
   display: grid;
   place-items: center;
   flex: none;
-  width: 28px;
+  width: 32px;
+  min-height: 44px;
   border: 0;
   border-radius: 10px 0 0 10px;
   background: transparent;
-  color: var(--kb-muted-3);
+  color: var(--kb-body);
   cursor: grab;
   touch-action: none;
 
@@ -435,7 +448,7 @@ p {
   font-weight: 800;
 
   &.is-fuera {
-    background: #8b879f;
+    background: #6b6880;
   }
 }
 
@@ -457,7 +470,7 @@ p {
 .lista__zona {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--kb-muted);
+  color: var(--kb-body);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -494,6 +507,11 @@ p {
     background: #fff;
   }
 
+  input[type="text"],
+  select {
+    min-height: 44px;
+  }
+
   textarea {
     resize: vertical;
     line-height: 1.4;
@@ -509,12 +527,13 @@ p {
   small {
     margin-left: 6px;
     font-weight: 600;
-    color: var(--kb-muted);
+    color: var(--kb-body);
   }
 }
 
 .detalle__rango {
   width: 100%;
+  min-height: 44px;
   accent-color: #5f3fe0;
 }
 
@@ -533,7 +552,7 @@ p {
   font-size: 11.5px;
   font-weight: 600;
   line-height: 1.4;
-  color: var(--kb-muted-2);
+  color: var(--kb-body);
 }
 
 .detalle__aviso {
@@ -544,7 +563,8 @@ p {
 
 .detalle__quitar {
   justify-self: start;
-  margin-top: 6px;
+  min-height: 44px;
+  margin-top: 2px;
   padding: 6px 0;
   border: 0;
   background: none;
@@ -609,9 +629,10 @@ p {
 }
 
 .caja__enlace {
+  min-height: 44px;
   border: 0;
   background: none;
-  padding: 0;
+  padding: 0 4px;
   font-family: var(--kb-font);
   font-size: 12.5px;
   font-weight: 800;
@@ -628,7 +649,7 @@ p {
   margin-left: auto;
   font-size: 12px;
   font-weight: 600;
-  color: var(--kb-muted);
+  color: var(--kb-body);
 }
 
 .caja__listo {
@@ -702,5 +723,17 @@ p {
     overflow: visible;
     border-left: 0;
     border-top: 1px solid var(--kb-line);
+  }
+}
+
+// Movimiento reducido (revisión de T13, hallazgo 12): la ventana aparece sin el «pop» y los puntos cambian sin transición.
+@media (prefers-reduced-motion: reduce) {
+  .caja {
+    animation: none;
+  }
+
+  .escena__pto,
+  .lista__fila {
+    transition: none;
   }
 }

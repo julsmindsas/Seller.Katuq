@@ -38,7 +38,7 @@
   <!-- ── Espacios ── -->
   <div class="plano__bloque">
     <div class="plano__fila-tit">
-      <h5 class="subgrupo subgrupo--sin-margen">Espacios <small>({{ espacios.length }} de {{ topes.espacios }})</small></h5>
+      <h4 class="subgrupo subgrupo--sin-margen">Espacios <small>({{ espacios.length }} de {{ topes.espacios }})</small></h4>
     </div>
 
     <div class="plano__vacio" *ngIf="!espacios.length">
@@ -48,13 +48,16 @@
       <button type="button" class="plano__primario" (click)="agregarEspacio()">Agregar el primer espacio</button>
     </div>
 
-    <div class="plano__pestanas" role="tablist" aria-label="Espacios del plano" *ngIf="espacios.length">
-      <button type="button" role="tab" class="plano__pestana" *ngFor="let x of espacios; let k = index; trackBy: porObjeto"
-              [class.is-activa]="k === pestana" [attr.aria-selected]="k === pestana" [attr.id]="uid + '-tab-' + k"
-              [attr.aria-controls]="uid + '-esp'" (click)="pestana = k">
-        <span class="plano__pestana-txt">{{ x.nombre?.trim() || 'Espacio ' + (k + 1) }}</span>
-        <span class="plano__pestana-marca" *ngIf="!sePinta(x)" title="Todavía no sale en la página" aria-label="(no sale todavía)">!</span>
-      </button>
+    <!-- El «+» va fuera de la lista de pestañas: un `tablist` solo lleva pestañas (revisión de T13). -->
+    <div class="plano__pestanas-fila" *ngIf="espacios.length">
+      <div class="plano__pestanas" role="tablist" aria-label="Espacios del plano">
+        <button type="button" role="tab" class="plano__pestana" *ngFor="let x of espacios; let k = index; trackBy: porObjeto"
+                [class.is-activa]="k === pestana" [attr.aria-selected]="k === pestana" [attr.id]="uid + '-tab-' + k"
+                [attr.aria-controls]="uid + '-esp'" (click)="pestana = k">
+          <span class="plano__pestana-txt">{{ x.nombre?.trim() || 'Espacio ' + (k + 1) }}</span>
+          <span class="plano__pestana-marca" *ngIf="!sePinta(x)" title="Todavía no sale en la página" aria-label="(no sale todavía)">!</span>
+        </button>
+      </div>
       <button type="button" class="plano__pestana plano__pestana--mas" *ngIf="espacios.length < topes.espacios" (click)="agregarEspacio()"
               aria-label="Agregar un espacio">+</button>
     </div>
@@ -112,7 +115,7 @@
         lo que te pasa» o desde un enlace de la portada o de una tarjeta.</small>
 
       <!-- Foto del plano -->
-      <h5 class="subgrupo">Foto del plano</h5>
+      <h4 class="subgrupo">Foto del plano</h4>
       <div class="plano__marco" [style.aspect-ratio]="relacion(esp)" [class.plano__marco--vacio]="!esp.imagen">
         <img *ngIf="esp.imagen" class="plano__marco-img" [src]="esp.imagen" [alt]="esp.alt || ''" />
         <span class="plano__marco-pto" *ngFor="let p of esp.puntos || []; let k = index; trackBy: porObjeto"
@@ -150,7 +153,7 @@
       </div>
 
       <!-- Kit -->
-      <h5 class="subgrupo">Kit</h5>
+      <h4 class="subgrupo">Kit</h4>
       <div class="segmentos" role="group" aria-label="De dónde salen las piezas del kit">
         <button type="button" [class.is-activo]="fuenteDe(esp) === 'combo'" [attr.aria-pressed]="fuenteDe(esp) === 'combo'"
                 (click)="elegirFuente(esp, 'combo')">Un combo</button>
@@ -210,7 +213,7 @@
       </ng-container>
 
       <!-- Otra versión del kit -->
-      <h5 class="subgrupo">Otra versión del kit <small>(opcional)</small></h5>
+      <h4 class="subgrupo">Otra versión del kit <small>(opcional)</small></h4>
       <p class="plano__ayuda plano__ayuda--bloque">Cambia una pieza por otra, como WiFi 6 o WiFi 7. El comprador elige una versión y el
         total cambia.</p>
       <ng-container *ngIf="esp.alternativas?.length">
@@ -227,7 +230,7 @@
           </div>
           <label class="plano__rotulo" [attr.for]="uid + '-de-' + k">Cambia</label>
           <select [id]="uid + '-de-' + k" [(ngModel)]="a.de" (ngModelChange)="cambiar()">
-            <option value="">Elige una pieza del kit</option>
+            <option value="" disabled>Elige una pieza del kit</option>
             <option *ngFor="let l of lineas(esp); trackBy: porLinea" [value]="l.productoId">{{ nombreDe(l.productoId) }}</option>
           </select>
           <span class="plano__rotulo">Por</span>
@@ -247,7 +250,7 @@
               (click)="agregarAlternativa(esp)">+ Agregar otra versión</button>
 
       <!-- Puntos -->
-      <h5 class="subgrupo">Puntos <small>({{ esp.puntos?.length || 0 }} de {{ topes.puntos }})</small></h5>
+      <h4 class="subgrupo">Puntos <small>({{ esp.puntos?.length || 0 }} de {{ topes.puntos }})</small></h4>
       <ol class="plano__puntos" *ngIf="esp.puntos?.length">
         <li *ngFor="let p of esp.puntos; let k = index; trackBy: porObjeto">
           <span class="plano__num" [class.is-fuera]="!p.productoId">{{ k + 1 }}</span>
@@ -305,7 +308,7 @@
                placeholder="Casa de 2 pisos · Deco en el segundo piso" [attr.aria-label]="'Detalle de la entrada ' + (k + 1)" />
         <div class="fila-campos">
           <select [ngModel]="x.espacio || ''" (ngModelChange)="elegirEspacioDeEntrada(x, $event)" [attr.aria-label]="'Espacio de la entrada ' + (k + 1)">
-            <option value="">Lleva al espacio…</option>
+            <option value="" disabled>Lleva al espacio…</option>
             <option *ngFor="let y of espacios; trackBy: porObjeto" [value]="y.id">{{ y.nombre || y.id }}</option>
           </select>
           <select [ngModel]="x.punto || 0" (ngModelChange)="ponerPuntoDeEntrada(x, $event)" [disabled]="!x.espacio"
@@ -320,7 +323,8 @@
         </select>
         <span class="repetible__aviso" *ngIf="motivoEntrada(x)">{{ motivoEntrada(x) }}</span>
       </div>
-      <button type="button" class="agregar" *ngIf="entradas.length < topes.entradas" (click)="agregarEntrada()">+ Agregar una entrada</button>
+      <button type="button" class="agregar" *ngIf="entradas.length < topes.entradas" (click)="agregarEntrada()" [disabled]="!espacios.length">+ Agregar una entrada</button>
+      <p class="nota" *ngIf="!espacios.length && entradas.length < topes.entradas">Primero agrega un espacio: cada entrada lleva a uno.</p>
     </div>
   </div>
 
@@ -339,7 +343,9 @@
         <li *ngFor="let id of piezasConNombre; trackBy: porId">
           <label class="plano__corto-cat" [attr.for]="uid + '-corto-' + id">{{ tituloCatalogo(id) }}</label>
           <input [id]="uid + '-corto-' + id" type="text" [maxlength]="topes.nombreCorto" [ngModel]="nombreCorto(id)"
-                 (ngModelChange)="ponerNombreCorto(id, $event)" placeholder="Deco X50" />
+                 (ngModelChange)="ponerNombreCorto(id, $event)" placeholder="Deco X50" [disabled]="topeDeNombres(id)" />
+          <span class="repetible__aviso" *ngIf="topeDeNombres(id)">Ya hay {{ topes.nombres }} nombres cortos, el máximo: quita uno
+            para nombrar esta pieza. Mientras, se lee el nombre del catálogo.</span>
           <span class="repetible__aviso" *ngIf="cortoConMarcador(id)">Tiene un dato entre corchetes: se lee el del catálogo.</span>
         </li>
       </ul>
@@ -412,18 +418,22 @@
         <button type="button" [class.is-activo]="superficie === 'alterna'" [attr.aria-pressed]="superficie === 'alterna'" (click)="elegirSuperficie('alterna')">Alterno</button>
       </div>
       <small class="plano__ayuda">Oscuro usa el color de la barra y el pie: el plano se lee como un escenario.</small>
+      <p class="aviso aviso--info" *ngIf="!superficie && conEstructura">El plano luce más como un escenario con el fondo Oscuro, el de
+        tu barra y tu pie.
+        <button type="button" (click)="elegirSuperficie('estructura')">Usar el fondo oscuro</button></p>
       <p class="aviso" *ngIf="superficie === 'estructura' && !conEstructura">Tu tema no tiene color de estructura (Estilo › Diseño nuevo):
         la sección se ve clara.</p>
 
       <div class="campo">
         <label [attr.for]="uid + '-ancla'">Ancla</label>
-        <input [id]="uid + '-ancla'" type="text" maxlength="40" [ngModel]="ancla" (ngModelChange)="ponerAncla($event)" placeholder="plano" />
+        <input [id]="uid + '-ancla'" type="text" maxlength="40" [ngModel]="anclaEnCampo" (ngModelChange)="ponerAncla($event)"
+               (blur)="soltarAncla()" placeholder="plano" />
         <small>La portada, el menú y las tarjetas llevan aquí con <code class="plano__codigo">#{{ ancla || 'plano' }}</code>, y a un
           espacio con <code class="plano__codigo">{{ ancla || 'plano' }}:{{ e?.id || 'casa' }}</code>.</small>
       </div>
       <div class="aviso" *ngIf="avisoAncla">
         {{ avisoAncla }}
-        <button type="button" *ngIf="!ancla && anclaSugerida" (click)="ponerAncla(anclaSugerida)">Usar «{{ anclaSugerida }}»</button>
+        <button type="button" *ngIf="!ancla && anclaSugerida" (click)="ponerAncla(anclaSugerida); soltarAncla()">Usar «{{ anclaSugerida }}»</button>
       </div>
     </div>
   </div>

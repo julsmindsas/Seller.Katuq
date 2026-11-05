@@ -22,10 +22,13 @@ import {
   Proporcion,
   TOPES_PLANO,
   altoRelativo,
+  alternativaNueva,
   anclaValida,
   avisoDeFoto,
   avisosDePuntos,
+  comboSirve,
   conVitrina,
+  entradaNueva,
   espacioSePinta,
   espaciosPintados,
   estadosDelKit,
@@ -46,18 +49,42 @@ import {
   tituloDeEspacio,
 } from "./plano-datos";
 
+/** La página de un sitio: su slug y si tiene algo publicado; `null` si nunca se publicó; "error" si no se pudo leer. */
+type PaginaSitio = { slug: string; publicado: boolean } | null | "error";
+
 /**
- * Nombre, foto, precio de lista y si está activa, del catálogo del comercio (`by-ids`), compartidos por todos los planos
- * del editor (no se piden dos veces). `null` = el producto ya no es de la empresa o se borró.
+ * Lo que el panel ya leyó, POR EMPRESA (revisión de T13, hallazgo 6): si alguien cambia de empresa sin recargar, no ve
+ * los combos ni las piezas de la anterior. Lo de la página publicada y los combos se vuelven a pedir pasado un minuto
+ * (el mismo `max-age` del servidor), para que publicar o cambiar un combo se vea sin recargar el editor.
  */
-const CATALOGO: { [id: string]: PiezaInfo | null } = {};
-/** Las piezas como las ve la página publicada de cada sitio (por slug). `null` = la página no la muestra. */
-const VITRINA: { [slug: string]: { [id: string]: PiezaDeVitrina | null } } = {};
-/** El slug de cada sitio y si tiene algo publicado (por id del sitio). */
-const SITIOS: { [id: string]: Promise<{ slug: string; publicado: boolean } | null> } = {};
-/** Los combos activos de la empresa: se piden una vez por minuto. */
-let combosCache: { cuando: number; lista: Promise<ComboVista[] | null> } | null = null;
-/** El tamaño de cada foto de plano ya medida (por URL). */
+interface LecturasEmpresa {
+  /** Nombre, foto, precio de lista y si está activa, del catálogo (`by-ids`). `null` = ya no es de la empresa o se borró. */
+  catalogo: { [id: string]: PiezaInfo | null };
+  /** Las piezas como las ve la página publicada de cada sitio (por slug). `null` = la página no la muestra. */
+  vitrina: { [slug: string]: { cuando: number; piezas: { [id: string]: PiezaDeVitrina | null } } };
+  /** El slug de cada sitio y si tiene algo publicado (por id del sitio). */
+  sitios: { [id: string]: { cuando: number; pagina: Promise<PaginaSitio> } };
+  /** Los combos activos de la empresa. */
+  combos: { cuando: number; lista: Promise<ComboVista[] | null> } | null;
+}
+const LECTURAS: { [empresa: string]: LecturasEmpresa } = {};
+/** Un minuto: lo que dura lo leído de la página publicada y de los combos. */
+const VIGENCIA_MS = 60000;
+
+function empresaActual(): string {
+  try {
+    return String(((JSON.parse(localStorage.getItem("user") || "{}") || {}) as any).company || "");
+  } catch {
+    return "";
+  }
+}
+
+function lecturas(): LecturasEmpresa {
+  const k = empresaActual();
+  return (LECTURAS[k] = LECTURAS[k] || { catalogo: {}, vitrina: {}, sitios: {}, combos: null });
+}
+
+/** El tamaño de cada foto de plano ya medida (por URL; una foto es la misma en cualquier empresa). */
 const MEDIDAS: { [url: string]: { ancho: number; alto: number; vectorial: boolean } } = {};
 
 /** A qué se está eligiendo productos con el selector. */
@@ -117,6 +144,13 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
    * mientras se pregunta; `null` si el sitio nunca se publicó (entonces el panel no afirma existencias).
    */
   pagina: { slug: string; publicado: boolean } | null | undefined = undefined;
+  /** No se pudo leer la página publicada (o sus piezas): el panel no afirma existencias, y no dice «no publicada». */
+  paginaFallo = false;
+  /**
+   * Lo que el comercio está escribiendo en el ancla. Solo pasa a `estilo.ancla` cuando sirve (o queda vacía): el
+   * servidor vacía un ancla inválida, y el autoguardado borraba «plano-» a media escritura (revisión de T13, hallazgo 2).
+   */
+  borradorAncla: string | null = null;
 
   constructor(
     private service: SitiosService,
@@ -214,14 +248,14 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
   nombreDe = (id: string): string => {
     const corto = sinMarcador(this.nombreCorto(id));
     if (corto) return corto;
-    const p = CATALOGO[id];
+    const p = lecturas().catalogo[id];
     if (p === undefined) return "Cargando…";
     if (p === null) return "Producto que ya no está";
     return p.titulo || "Sin nombre";
   };
 
   tituloCatalogo(id: string): string {
-    const p = CATALOGO[id];
+    const p = lecturas().catalogo[id];
     return p === undefined ? "Cargando…" : p === null ? "Ya no está en tu catálogo" : p.titulo || "Sin nombre";
   }
 
@@ -230,10 +264,10 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
    * está publicado, la vista de la página (precio de vitrina y disponible). `undefined` mientras carga.
    */
   pieza(id: string): PiezaInfo | null | undefined {
-    const c = CATALOGO[id];
+    const c = lecturas().catalogo[id];
     if (c === undefined || this.pagina === undefined) return undefined;
     if (this.pagina === null) return c;
-    const v = (VITRINA[this.pagina.slug] || {})[id];
+    const v = this.piezasDePagina(this.pagina.slug)[id];
     if (v === undefined) return undefined;
     if (c === null && v === null) return null;
     return conVitrina(c, v);
@@ -248,10 +282,15 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
 
   /** La foto de la pieza: la que muestra la página, si se conoce; si no, la del catálogo. */
   imagenDe(id: string): string | null {
-    const v = this.pagina ? (VITRINA[this.pagina.slug] || {})[id] : null;
+    const v = this.pagina ? this.piezasDePagina(this.pagina.slug)[id] : null;
     if (v && v.imagen) return v.imagen;
-    const p = CATALOGO[id];
+    const p = lecturas().catalogo[id];
     return (p && p.imagen) || null;
+  }
+
+  private piezasDePagina(slug: string): { [id: string]: PiezaDeVitrina | null } {
+    const v = lecturas().vitrina[slug];
+    return (v && v.piezas) || {};
   }
 
   textoEstadoPieza(id: string): string {
@@ -261,7 +300,7 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     if (p.estado === "agotado") return "Agotado";
     if (p.estado === "inactivo") return "Inactivo";
     if (p.estado === "sinPrecio") return "Sin precio";
-    if (p.estado === "fuera") return "No se ve en tu tienda";
+    if (p.estado === "fuera") return "No sale en tu tienda";
     return "";
   }
 
@@ -322,7 +361,12 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     const cuantas = `${lineas.length} ${lineas.length === 1 ? "producto" : "productos"}${unidades !== lineas.length ? ` · ${unidades} unidades` : ""}`;
     if (base.completo) {
       if (base.cotizar) return { tono: "info", titulo: `Kit completo · ${cuantas}`, texto: "Lleva una pieza para cotizar o más de 50 unidades de una: la página lo cotiza con un asesor, no lo lleva al carrito." };
-      const sinExistencias = this.pagina === null ? " Tu página todavía no está publicada: las existencias se ven en la Vista fiel." : "";
+      const sinExistencias =
+        this.pagina !== null
+          ? ""
+          : this.paginaFallo
+          ? " No pudimos leer tu página publicada: las existencias se ven en la Vista fiel."
+          : " Tu página todavía no está publicada: las existencias se ven en la Vista fiel.";
       return {
         tono: "ok",
         titulo: `Kit completo · ${cuantas}`,
@@ -417,7 +461,7 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
           this.toastr.error("No pudimos crear el combo.");
           return;
         }
-        combosCache = null;
+        lecturas().combos = null;
         // El combo nuevo ya se conoce: se usa sin esperar la lista.
         const nuevo: ComboVista = { id, nombre: payload.nombre, lineas: lineas.map((l) => ({ productoId: l.productoId, cantidad: l.cantidad || 1 })) };
         this.combos = [nuevo, ...(this.combos || []).filter((c) => c.id !== id)];
@@ -439,7 +483,10 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
   agregarAlternativa(e: EspacioPlano): void {
     const lista = Array.isArray(e.alternativas) ? e.alternativas : [];
     if (lista.length >= this.topes.alternativas) return;
-    e.alternativas = [...lista, { de: "", por: "", etiqueta: "" }];
+    // Nace cambiando la primera pieza: vacía, el autoguardado la borraba (revisión de T13, hallazgo 1).
+    const nueva = alternativaNueva(this.lineas(e));
+    if (!nueva) return;
+    e.alternativas = [...lista, nueva];
     this.cambiar();
   }
 
@@ -509,7 +556,8 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     if (!e) return;
     const enlaces = this.enlacesA(e);
     const r = await Swal.fire({
-      title: `¿Quitar «${tituloDeEspacio(e) || `Espacio ${k + 1}`}»?`,
+      // `titleText` y no `title`: SweetAlert pinta `title` como HTML, y el nombre lo escribe el comercio (hallazgo 9).
+      titleText: `¿Quitar «${tituloDeEspacio(e) || `Espacio ${k + 1}`}»?`,
       text: `Se borran su foto, su kit y sus ${(e.puntos || []).length} puntos de este plano.${
         enlaces ? ` ${enlaces === 1 ? "Un enlace de la página lleva" : `${enlaces} enlaces de la página llevan`} a este espacio: dejará${enlaces === 1 ? "" : "n"} de abrirlo.` : ""
       } El combo, si tiene, sigue en Maestros › Combos.`,
@@ -676,7 +724,10 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
 
   agregarEntrada(): void {
     if (this.entradas.length >= this.topes.entradas) return;
-    this.datos.entradas = [...this.entradas, { texto: "", detalle: "", icono: "", espacio: "" }];
+    // Nace llevando al espacio que se edita: vacía, el autoguardado la borraba (revisión de T13, hallazgo 1).
+    const nueva = entradaNueva(this.datos, this.e);
+    if (!nueva) return;
+    this.datos.entradas = [...this.entradas, nueva];
     this.cambiar();
   }
 
@@ -695,7 +746,10 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
   }
 
   elegirEspacioDeEntrada(x: EntradaPlano, id: string): void {
-    x.espacio = id || "";
+    // Una entrada siempre lleva a un espacio (la opción vacía es solo el rótulo): sin él, y sin texto, el servidor la
+    // descartaría al guardar.
+    if (!id) return;
+    x.espacio = id;
     x.punto = undefined;
     this.cambiar();
   }
@@ -754,8 +808,17 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
   ponerNombreCorto(id: string, valor: string): void {
     const limpio = String(valor || "").slice(0, this.topes.nombreCorto);
     const otros = (this.datos.nombres || []).filter((x) => x && x.productoId !== id && String(x.nombre || "").trim());
-    this.datos.nombres = limpio.trim() ? [...otros, { productoId: id, nombre: limpio }].slice(0, this.topes.nombres) : otros;
+    // Revisión de T13 (hallazgo 10): con el tope lleno, un nombre nuevo no se corta en silencio: el campo ya está
+    // deshabilitado y lo dice; esto es por si llega igual.
+    if (limpio.trim() && otros.length >= this.topes.nombres) return;
+    this.datos.nombres = limpio.trim() ? [...otros, { productoId: id, nombre: limpio }] : otros;
     this.cambiar();
+  }
+
+  /** ¿Ya hay 24 nombres cortos y esta pieza no tiene el suyo? Entonces su campo no acepta uno nuevo. */
+  topeDeNombres(id: string): boolean {
+    const con = (this.datos.nombres || []).filter((x) => x && String(x.nombre || "").trim());
+    return con.length >= this.topes.nombres && !con.some((x) => x.productoId === id);
   }
 
   conMarcador(texto: string | undefined): boolean {
@@ -876,15 +939,39 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     return bloquesDeSuPagina(this.contenido, this.bloque).some((b: any) => b && b !== this.bloque && b.estilo && b.estilo.ancla === valor);
   }
 
+  /** Lo que se ve en el campo del ancla: lo que se escribe, o la guardada. */
+  get anclaEnCampo(): string {
+    return this.borradorAncla !== null ? this.borradorAncla : this.ancla;
+  }
+
+  /**
+   * Cada tecla queda en el borrador; solo un ancla que sirve (o el campo vacío) pasa a `estilo.ancla`. Así el
+   * autoguardado no borra «plano-» mientras se escribe «plano-casa».
+   */
   ponerAncla(valor: string): void {
-    this.estilo.ancla = String(valor || "").trim().toLowerCase();
-    this.cambiar();
+    const v = String(valor || "").trim().toLowerCase();
+    this.borradorAncla = v;
+    if (!v || anclaValida(v)) {
+      if ((this.ancla || "") !== v) {
+        this.estilo.ancla = v;
+        this.cambiar();
+      }
+    }
+  }
+
+  /** Al salir del campo: si lo escrito sirve, el borrador ya es la guardada; si no, queda a la vista con su aviso. */
+  soltarAncla(): void {
+    if (this.borradorAncla === null) return;
+    if (!this.borradorAncla || anclaValida(this.borradorAncla)) this.borradorAncla = null;
   }
 
   get avisoAncla(): string {
-    const a = this.ancla;
+    const a = this.anclaEnCampo;
     if (!a) return "Sin ancla, ni la portada ni las tarjetas pueden llevar a un espacio de este plano.";
-    if (!anclaValida(a)) return "Ese ancla no sirve: usa minúsculas, números y guiones («plano»), sin «seccion-» ni nombres que ya usa la página.";
+    if (!anclaValida(a)) {
+      const guardada = this.ancla && this.ancla !== a ? ` Mientras, sigue «${this.ancla}».` : "";
+      return `Ese ancla no sirve: usa minúsculas, números y guiones («plano»), sin «seccion-» ni nombres que ya usa la página. No se guarda hasta que sirva.${guardada}`;
+    }
     if (this.anclaOcupada(a)) return "Otra sección de esta página ya usa ese ancla: la página se la quita a esta.";
     return "";
   }
@@ -909,20 +996,31 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
       if (tieneMarcador(v)) salida.push(`${donde}: «${v}» tiene un dato por llenar entre corchetes y no se publica.`);
       else if (promesaSinConfirmar(v, this.confirmadas)) salida.push(`${donde}: «${v}» promete algo que no has confirmado; así no se puede publicar.`);
     };
+    // Revisión de T13 (hallazgo 11): el servidor revisa las promesas en TODOS los textos del bloque; el panel también.
     revisar(d.etiqueta, "El antetítulo");
     revisar(d.titulo, "El título");
     revisar(d.tituloSuave, "La segunda parte del título");
     revisar(d.subtitulo, "La línea de apoyo");
+    revisar((d as any).enlaceTexto, "El texto del enlace");
     if (!d.revisadoPor) revisar(d.nota, "La línea del kit");
     for (const e of this.espacios) {
       const nombre = tituloDeEspacio(e) || e.id;
+      if (!tieneMarcador(e.nombre)) revisar(e.nombre, `El nombre de «${nombre}»`);
       revisar(e.detalle, `El detalle de «${nombre}»`);
+      revisar(e.alt, `Lo que muestra el plano de «${nombre}»`);
+      revisar(e.etiquetaBase, `${nombre}, nombre de la versión sugerida`);
+      (e.alternativas || []).forEach((a, k) => revisar(a && a.etiqueta, `${nombre}, nombre de la versión ${k + 2}`));
       (e.puntos || []).forEach((p, k) => {
         revisar(p.zona, `${nombre}, punto ${k + 1} (zona)`);
         revisar(p.que, `${nombre}, punto ${k + 1} (qué es)`);
         revisar(p.porque, `${nombre}, punto ${k + 1} (por qué va ahí)`);
       });
     }
+    this.entradas.forEach((x, k) => {
+      if (!tieneMarcador(x.texto)) revisar(x.texto, `Entrada ${k + 1}`);
+      revisar(x.detalle, `Entrada ${k + 1} (detalle)`);
+    });
+    for (const n of this.datos.nombres || []) if (n && !tieneMarcador(n.nombre)) revisar(n.nombre, "Un nombre corto");
     if (d.permitirCompra === true && !this.tiendaEncendida) {
       salida.push("Tu tienda no está encendida (Tienda › Vender en línea): «Agregar el kit» no sale y queda «Enviar a un asesor».");
     }
@@ -961,7 +1059,10 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
 
   // ── Datos de referencia (solo lectura) ──────────────────────────────────────────────────────────────────────────
 
-  /** El slug del sitio y si está publicado (una vez por sitio). Con él, el estado del kit sale de la vista de la página. */
+  /**
+   * El slug del sitio y si está publicado (una vez por panel; la lectura vale un minuto). Con él, el estado del kit sale
+   * de la vista de la página publicada. Si no se pudo leer, el panel no afirma existencias ni dice «no publicada».
+   */
   private cargarPagina(): void {
     if (this.pagina !== undefined) return;
     const id = (this.route && this.route.snapshot && this.route.snapshot.paramMap.get("id")) || "";
@@ -969,52 +1070,69 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
       this.pagina = null;
       return;
     }
-    if (!SITIOS[id]) {
-      SITIOS[id] = new Promise((resolver) => {
-        this.planoKit.sitio(id).subscribe({
-          next: (res) => {
-            const d = (res && res.data) || {};
-            resolver(d.slug ? { slug: String(d.slug), publicado: !!d.published } : null);
-          },
-          error: () => resolver(null),
-        });
-      });
+    const L = lecturas();
+    const previa = L.sitios[id];
+    if (!previa || Date.now() - previa.cuando > VIGENCIA_MS) {
+      L.sitios[id] = {
+        cuando: Date.now(),
+        pagina: new Promise<PaginaSitio>((resolver) => {
+          this.planoKit.sitio(id).subscribe({
+            next: (res) => {
+              const d = (res && res.data) || {};
+              resolver(d.slug ? { slug: String(d.slug), publicado: !!d.published } : null);
+            },
+            error: () => resolver("error"),
+          });
+        }),
+      };
     }
-    SITIOS[id].then((p) => {
+    const lectura = L.sitios[id];
+    lectura.pagina.then((p) => {
       if (!this.vivo) return;
-      this.pagina = p && p.publicado ? p : null;
+      if (p === "error") {
+        // Que la próxima apertura lo intente de nuevo.
+        if (L.sitios[id] === lectura) delete L.sitios[id];
+        this.paginaFallo = true;
+        this.pagina = null;
+      } else {
+        this.paginaFallo = false;
+        this.pagina = p && p.publicado ? p : null;
+      }
       this.cargarPiezas();
     });
   }
 
   /**
    * Lo que falta saber de las piezas: del catálogo (nombre, foto, activa; de a 24) y, si el sitio está publicado, de la
-   * vista de la página (precio de vitrina y disponible; de a 30, el tope del servidor).
+   * vista de la página (precio de vitrina y disponible; de a 30, el tope del servidor; vale un minuto).
    */
   cargarPiezas(): void {
+    const L = lecturas();
     const ids = piezasDelBloque(this.datos, this.combos).filter(Boolean);
-    const faltan = ids.filter((id) => !(id in CATALOGO));
+    const faltan = ids.filter((id) => !(id in L.catalogo));
     for (let i = 0; i < faltan.length; i += 24) {
       const tanda = faltan.slice(i, i + 24);
-      for (const id of tanda) CATALOGO[id] = undefined as any;
+      for (const id of tanda) L.catalogo[id] = undefined as any;
       this.planoKit.productosPorIds(tanda).subscribe({
         next: (res) => {
           const vistos = new Set<string>();
           for (const p of (res && res.products) || []) {
             vistos.add(p.cd);
-            CATALOGO[p.cd] = piezaDesdeProducto(p, primeraImagen((p as any).crearProducto || {}));
+            L.catalogo[p.cd] = piezaDesdeProducto(p, primeraImagen((p as any).crearProducto || {}));
           }
-          for (const id of tanda) if (!vistos.has(id)) CATALOGO[id] = null;
+          for (const id of tanda) if (!vistos.has(id)) L.catalogo[id] = null;
         },
         error: () => {
-          for (const id of tanda) delete CATALOGO[id];
+          for (const id of tanda) delete L.catalogo[id];
           this.toastr.error("No pudimos cargar las piezas del kit.");
         },
       });
     }
     const pagina = this.pagina;
     if (!pagina) return;
-    const vitrina = (VITRINA[pagina.slug] = VITRINA[pagina.slug] || {});
+    const previa = L.vitrina[pagina.slug];
+    if (!previa || Date.now() - previa.cuando > VIGENCIA_MS) L.vitrina[pagina.slug] = { cuando: Date.now(), piezas: {} };
+    const vitrina = L.vitrina[pagina.slug].piezas;
     const sinVer = ids.filter((id) => !(id in vitrina));
     for (let i = 0; i < sinVer.length; i += 30) {
       const tanda = sinVer.slice(i, i + 30);
@@ -1026,18 +1144,20 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
         },
         error: () => {
           for (const id of tanda) delete vitrina[id];
-          // Sin la vista de la página, el panel no afirma existencias: usa solo el catálogo.
+          // Sin la vista de la página, el panel no afirma existencias: usa solo el catálogo y lo dice.
+          this.paginaFallo = true;
           this.pagina = null;
         },
       });
     }
   }
 
-  /** Los combos activos de la empresa (los mismos del POS). Solo se leen. */
+  /** Los combos activos de la empresa (los mismos del POS). Solo se leen; la lista vale un minuto. */
   cargarCombos(): void {
     if (this.combos || this.cargandoCombos) return;
-    if (!combosCache || Date.now() - combosCache.cuando > 60000) {
-      combosCache = {
+    const L = lecturas();
+    if (!L.combos || Date.now() - L.combos.cuando > VIGENCIA_MS) {
+      L.combos = {
         cuando: Date.now(),
         lista: new Promise<ComboVista[] | null>((resolver) => {
           this.planoKit.combos().subscribe({
@@ -1045,7 +1165,8 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
               const crudos: any[] = Array.isArray(res) ? res : (res && (res.data || res.combos)) || [];
               resolver(
                 crudos
-                  .filter((c) => c && c.activo !== false && c.id)
+                  // La regla del lector del servidor: `activo === true` y un id válido (revisión de T13, hallazgo 6).
+                  .filter((c) => comboSirve(c))
                   .map((c) => ({ id: String(c.id), nombre: String(c.nombre || "Sin nombre"), lineas: lineasDeCombo(c.productos) }))
               );
             },
@@ -1055,12 +1176,13 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
       };
     }
     this.cargandoCombos = true;
-    combosCache.lista.then((lista) => {
+    const lectura = L.combos;
+    lectura.lista.then((lista) => {
       if (!this.vivo) return;
       this.cargandoCombos = false;
       if (lista === null) {
         // Sin la lista no se sabe qué lleva un combo: los kits que usan uno quedan «sin leer», no «no disponibles».
-        combosCache = null;
+        if (L.combos === lectura) L.combos = null;
         this.combosFallaron = true;
         this.toastr.error("No pudimos cargar tus combos.");
         return;

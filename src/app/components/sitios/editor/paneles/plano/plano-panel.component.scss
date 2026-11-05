@@ -16,6 +16,11 @@ a {
 }
 
 .plano {
+  // Revisión de T13 (hallazgo 7): los textos de ayuda y de las opciones vienen de los campos comunes en
+  // `--kb-muted`/`--kb-muted-2` (2,8 a 3,5:1). En este panel se leen en `--kb-body` (4,5:1 o más) sin tocar los comunes.
+  --kb-muted: var(--kb-body);
+  --kb-muted-2: var(--kb-body);
+  --kb-muted-3: var(--kb-body);
   margin-top: 10px;
   padding-top: 6px;
   border-top: 1.5px solid var(--kb-line-4);
@@ -118,9 +123,18 @@ a {
 
 // ── Pestañas de espacios ──
 
+// El «+» va fuera de la lista de pestañas (un `tablist` solo lleva pestañas: revisión de T13, hallazgo 7).
+.plano__pestanas-fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
 .plano__pestanas {
   display: flex;
   gap: 6px;
+  min-width: 0;
   overflow-x: auto;
   padding: 2px 2px 10px;
   scrollbar-width: thin;
@@ -130,7 +144,7 @@ a {
   @include kb-btn-base;
   flex: none;
   gap: 6px;
-  min-height: 38px;
+  min-height: 44px;
   max-width: 150px;
   padding: 0 14px;
   border: 1.5px solid var(--kb-line-5);
@@ -165,7 +179,8 @@ a {
   }
 
   &--mas {
-    width: 38px;
+    width: 44px;
+    margin-top: 2px;
     padding: 0;
     border-style: dashed;
     color: #5f3fe0;
@@ -239,7 +254,7 @@ a {
   font-size: 11.5px;
   font-weight: 600;
   line-height: 1.45;
-  color: var(--kb-muted-2);
+  color: var(--kb-body);
 
   &--bloque {
     margin: 0 0 10px;
@@ -259,7 +274,8 @@ a {
   border-radius: 6px;
   background: var(--kb-chip-2);
   font-size: 11px;
-  color: var(--kb-ink-2);
+  // El `code` global trae `color: … !important` (#7c5cff, 3,9:1 sobre el chip): se gana igual, con la tinta.
+  color: var(--kb-ink-2) !important;
 }
 
 .plano__rotulo {
@@ -287,7 +303,7 @@ a {
   background: #fff;
   font-size: 12px;
   font-weight: 700;
-  color: var(--kb-muted);
+  color: var(--kb-body);
 
   svg {
     display: none;
@@ -347,7 +363,7 @@ a {
   font-weight: 800;
 
   &.is-fuera {
-    background: #8b879f;
+    background: #6b6880;
   }
 }
 
@@ -360,7 +376,7 @@ a {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: var(--kb-muted) !important;
+  color: var(--kb-body) !important;
 }
 
 .plano__foto-acciones {
@@ -396,7 +412,7 @@ a {
 .plano__medida {
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--kb-muted);
+  color: var(--kb-body);
 }
 
 // ── Kit ──
@@ -465,7 +481,7 @@ a {
 .plano__linea-pts {
   font-size: 11px;
   font-weight: 600;
-  color: var(--kb-muted) !important;
+  color: var(--kb-body) !important;
 
   &--sin {
     color: #8a5a12 !important;
@@ -581,7 +597,7 @@ a {
   font-weight: 800;
 
   &.is-fuera {
-    background: #8b879f;
+    background: #6b6880;
   }
 }
 
@@ -602,7 +618,7 @@ a {
 .plano__punto-zona {
   font-size: 11px;
   font-weight: 600;
-  color: var(--kb-muted) !important;
+  color: var(--kb-body) !important;
 }
 
 .plano__avisos {
@@ -665,7 +681,7 @@ a {
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--kb-muted);
+    color: var(--kb-body);
 
     small {
       font-weight: 600;
@@ -676,7 +692,7 @@ a {
 
   svg {
     flex: none;
-    color: var(--kb-muted);
+    color: var(--kb-body);
     transition: transform 0.15s ease;
   }
 
@@ -715,7 +731,7 @@ a {
   font-size: 11.5px;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--kb-muted-2);
+  color: var(--kb-body);
   overflow-wrap: anywhere;
 }
 
@@ -752,4 +768,11 @@ a {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+// Movimiento reducido (revisión de T13, hallazgo 12).
+@media (prefers-reduced-motion: reduce) {
+  .plano__grupo-cab svg {
+    transition: none;
+  }
 }
