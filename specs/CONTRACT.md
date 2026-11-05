@@ -13115,7 +13115,25 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
   - Backend: las 15 de `tests/enVivo` en verde. Se actualizaron tres versionadas: la forma exacta de la proyección y del detalle (`entrega`) y el título del listo sin hora de listo.
   - Caso ALMARA corrido aparte, fuera de git (D-566). Carlos, Rodolfo y Jairo quedan en bodega y sale «6 pedidos de días anteriores siguen como despachados». DAD-014856 dice «está listo y se entrega hoy». El listo que se entrega mañana no aparece.
   - Front: `ng build --configuration production` sin errores. `armarFlota` con el caso de Carlos: en bodega. John queda «en ruta · 2 · 30 min» (salida más reciente) y la transportadora conserva lo de días anteriores.
-- **Estado:** commiteado y en origin (backend `838c3620` en `backend-aws-security`). Falta desplegar y comprobar con la pantalla de ALMARA.
+- **Estado:** EN PROD. Backend desde `a9382963` (lo subió otra sesión el 3-nov; el 4-nov producción quedó en `88f67202`) y front desde 2026.11.03.2 (hoy 2026.11.04.1). Comprobado el 4-nov en la pantalla de ALMARA: CARLOS «En ruta · 6 · 45 min», John «En ruta · 4 · 1 h 3 min», «Despachados 36 · 2 mensajeros en la calle», y la alerta «11 pedidos de días anteriores siguen como despachados». Quedan pendientes: el mapa todavía cuenta los pedidos viejos (CARLOS 8, Jairo 3 y maria 1 sobre la calle, con Jairo «En bodega» en la lista); un mensajero sin registrar sale como transportadora con 143 h («Yulie Osorno»); y el radar dice «lleva 155 h 53 min sin producir» en vez de días.
+
+### 2026-11-04 — D-580 (adenda): el mapa, las transportadoras y las horas largas de «En vivo»
+
+- **Por qué:** al comprobar D-580 en la pantalla de ALMARA quedaban tres cifras infladas. El mapa ponía en la moto los pedidos viejos («CARLOS · 8 pedidos» con 6 en la lista, y Jairo con 3 en la calle estando «En bodega»). «Yulie Osorno», que no está en la flota y por eso cuenta como transportadora, salía «En ruta · 11 · 143 h 49 min». Y el radar decía «lleva 155 h 53 min sin producir». El usuario pidió arreglarlas.
+- **Regla nueva:** un envío con transportadora (cualquier nombre fuera de la flota) sigue en camino hasta **5 días** después de su salida; pasado eso es un pedido que nadie cerró, igual que lo de días anteriores de un mensajero propio. No sale en la flota ni en el mapa y entra al aviso `sin_cerrar`, que dice «Por mensajero o transportadora: …» cuando hay una transportadora y manda su nombre completo para abrir su ficha.
+- **Duraciones:** desde 24 h se escriben en días, en el radar del servidor (`duracionTexto`) y en la pantalla (`duracion`): «1 día y 3 h», «6 días».
+- **Backend:** `services/enVivo/radar.js` (`TRANSITO_MAXIMO_MS`, el bloque 3b y `duracionTexto`).
+- **Front:**
+  - `utilidades/flota.ts`: `sigueEnLaCalle` y `sinPedidosSinCerrar`; `armarFlota` aplica los 5 días a las transportadoras.
+  - `utilidades/formato.ts`.
+  - `ficha/utilidades/mensajero.ts`.
+  - La escena de la operación sube a las motos solo lo que sigue en la calle.
+- **Pruebas:**
+  - Las 15 pruebas versionadas de `tests/enVivo` pasan.
+  - Caso de ALMARA en el scratchpad (sin commitear, D-566): «#DAD-014795 lleva 6 días sin producir» y «14 pedidos de días anteriores siguen como despachados · Por mensajero o transportadora: Yulie Osorno (11), Jairo (2) y CARLOS (1)». Un envío de 4 días sigue en ruta.
+  - Front: `armarFlota` deja a CARLOS «en ruta · 1 · 45 min», a Jairo «en bodega» y a enviame «en ruta · 2 · 4 días», sin Yulie; el mapa queda con los mismos pedidos.
+  - `ng build --configuration production` sin errores.
+- **Estado:** EN PROD el 4-nov: backend `81a36e4c` y front 2026.11.04.2. Comprobado en la pantalla de ALMARA: el radar dice «#DAD-014795 lleva 6 días sin producir», y el mapa muestra «CARLOS · 6 pedidos» y «John · 2 pedidos», igual que la lista, sin Jairo ni maria en la calle. «Yulie Osorno» queda «En ruta · 9 · 4 días»: sus envíos de hace más de 5 días pasaron al aviso. Si es una persona del equipo, el comercio debe registrarla como mensajera.
 
 ### 2026-11-03 — D-581: novedades en la campana y solo de lo que cada uno usa
 - **Pedido de Daniel (3-nov):** «ese modal de novedades, no a todos le interesa y está muy invasivo, muévelo para otro lado, y deberían salir en función de lo que el comercio utiliza o tiene configurado». Aprobó la propuesta («si»).
@@ -13298,3 +13316,10 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Pruebas:** unitarias de cada fase en la copia local (D-566, fuera de git). `companyFeatureFlags.test.js` (versionada) se regeneró con las banderas nuevas. Build del front sin errores tras el merge con `feature/venta-asistida-mejorada` (c5eb21d7) y backend con `backend-aws-security` (e722e2d8).
 - **Notas de versión (D-567):** no se agregaron; van cuando se encienda cada bandera.
 - **Antes de encender:** revisar con Daniel los índices que pidan las consultas nuevas de pagos (`grupoPagoId`) y de cartera; ninguna sesión los crea por su cuenta.
+
+### 2026-11-04 — D-636 y D-637: precios por volumen fase 1 y cambio de cliente protegido del guardado viejo (aws-claude-2)
+
+- **D-636 — Precios por volumen en precio fijo o % (ticket 1407).** Daniel aprobó el 4-nov («aprobado todo») el diseño `precio-volumen-porcentaje` y las 9 respuestas recomendadas: manda el sin IVA y el con IVA se deriva; el sin IVA se redondea a 2 decimales; el escalón base es una escala al 0 %; el cálculo viejo solo cambia para escalones en %, con modo sombra; DIAN y World Office van aparte; la conversión en lote solo toma lo que cuadra al centavo; la escala en % usa la tarifa de IVA del producto; Osmosis y Woo no recalculan en v1; la tienda web no muestra escalas en v1. Fases 1.1 y 1.2 en el back `24ec1edf`: bandera `preciosVolumenPorcentaje` (apagada; apagada, crear/editar/importar rechazan escalas en %) y `utils/preciosVolumen.js` puro, sin conectar al cobro. Siguen la medición (fase 0) y 1.3 en adelante, cada diff con aprobación.
+- **D-637 — Cambio de cliente vs. guardado completo con copia vieja (ticket 1505, bloqueante T-12 de D-670).** Daniel aprobó proteger el guardado genérico. `updateOrderInternal` conserva `cliente`, `clienteId`, `facturacion` y `cambiosDeCliente` del pedido guardado cuando este tiene más entradas en `cambiosDeCliente` que la copia que llega; sin entradas, o con igual o mayor número en la copia, no cambia nada. Sin lecturas nuevas. Back `1732fded`. El guard de `/orders/edit` (T-07) sigue aparte.
+- **Pruebas:** nuevas locales (D-566): guardCambioCliente 5 casos, preciosVolumen 15, bandera 4; versionadas y vecinas en verde (historialPedido, cambioCliente 40/40 y 44/44, companyFeatureFlags con 78 banderas). Revisión adversaria (Sonnet) sin defectos.
+- **Mezcla:** ambos en `backend-aws-security` (`24ec1edf`), sin publicar.

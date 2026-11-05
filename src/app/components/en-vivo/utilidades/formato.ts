@@ -104,11 +104,17 @@ export function horaRelativa(ms: number | null, ahoraMs: number): string {
   return `hace ${Math.floor(minutos / 60)} h`;
 }
 
-/** "45 min" · "1 h 10 min". */
+/** "45 min" · "1 h 10 min"; desde 24 h, en días: "1 día y 3 h" · "6 días" (no "143 h 49 min"). */
 export function duracion(ms: number): string {
   const minutos = Math.max(0, Math.round(ms / 60000));
   if (minutos < 60) return `${minutos} min`;
   const horas = Math.floor(minutos / 60);
+  if (horas >= 24) {
+    const dias = Math.floor(horas / 24);
+    const horasSueltas = horas % 24;
+    if (dias > 1) return `${dias} días`;
+    return horasSueltas ? `1 día y ${horasSueltas} h` : '1 día';
+  }
   const resto = minutos % 60;
   return resto ? `${horas} h ${resto} min` : `${horas} h`;
 }

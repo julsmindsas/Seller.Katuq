@@ -1,6 +1,6 @@
 import { EtapaId, EtapaInfo, EventoEnVivo, MensajeroEnVivo, PedidoEnVivo } from '../../servicios/en-vivo.modelos';
 import { tipoDeTransportador } from '../../servicios/en-vivo-reglas';
-import { armarFlota, salioElMismoDia } from '../../utilidades/flota';
+import { armarFlota, sigueEnLaCalle } from '../../utilidades/flota';
 import { claveDeNombre, diaDeColombia, entero } from '../../utilidades/formato';
 import { CeldaFicha, ContenidoMensajero } from '../ficha.modelos';
 import { filasDePedidos, filasParaPintar, ordenarFilas } from './filas';
@@ -104,11 +104,11 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
   }
 
   // Un mensajero propio lleva lo que salió hoy; lo de días anteriores que sigue "despachado" va
-  // aparte, para que el comercio lo cierre. Una transportadora lleva todo: sus envíos tardan días.
+  // aparte, para que el comercio lo cierre. Una transportadora lleva lo de los últimos 5 días: sus
+  // envíos tardan días, pero no tantos.
   const enCamino = suyos.filter((p) => p.etapa === 'camino');
-  const referencia = esTransportadora ? null : entrada.ahoraMs;
-  const lleva = enCamino.filter((p) => salioElMismoDia(p, referencia));
-  const sinCerrar = enCamino.filter((p) => !salioElMismoDia(p, referencia));
+  const lleva = enCamino.filter((p) => sigueEnLaCalle(p, tipo, entrada.ahoraMs));
+  const sinCerrar = enCamino.filter((p) => !sigueEnLaCalle(p, tipo, entrada.ahoraMs));
   const ultima = ultimaSalida(clave, suyos, entrada.eventos);
   const entregados = entregadosDeHoyPor(suyos, entrada.dia);
 
