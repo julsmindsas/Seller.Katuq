@@ -13453,3 +13453,12 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Backend:** EC2 de `0511c167` a `8e01d051`, sin paquetes ni índices. Ocho commits marcados «Aprobado por Daniel el 5-nov»: Movee con límite de espera, rol «Tesoreria», entorno de Wompi por prefijo de llave, «Limpiar precios» solo para administradores y los pasos 1 a 3 del ticket 1510 (categorías de Cereza como nodo). Los scripts `repair-1572` y `migrar-categorias-lista-1510` solo quedan en el servidor: no se corrieron.
 - **Verificado:** `katuq-api` en línea tras el reinicio; el log solo trae los avisos de arranque de siempre y los flujos de OH MY STORE retomaron.
 - **No verificado:** cada flujo en pantalla (pagos POS, Wompi, Movee, categorías de Cereza); queda a cargo de las sesiones dueñas.
+
+### 2026-11-05 — Publicados el front 2026.11.05.3 y el backend `13f61a4d` con lo de aws-claude-1 de la tarde
+
+- **Por qué:** la publicación anterior (2026.11.05.2 y `8e01d051`) salió de las ramas principales sin mezclar antes `feature/tickets-aws-claude-1`; aws-claude-1 lo señaló (8 cambios del front y 11 del back sin publicar).
+- **Front:** avance directo a `06b50a77`, release `9465e888`, versión 2026.11.05.3. Candado y verify-dist en verde; `version.json` comprobado en sellercenter.katuq.com. Sin novedades en la campana: las del diseño nuevo van retiradas y la de «tienda sin productos» (fecha 17:06 UTC) quedó antes de la publicación de la 2026.11.05.2, así que el script la salta.
+- **Backend:** avance directo a `7ef13534` (D-680 a D-685, detrás de `siteDesignV2`). En el EC2 entró además `13f61a4d` (ticket 1509, «Aprobado por Daniel el 5-nov»), que otra sesión subió durante el despliegue: de `8e01d051` a `13f61a4d`, sin paquetes ni índices.
+- **Pruebas:** sintaxis de los archivos tocados sin errores; `test:sitios-listo` 5, `test:sitios-versiones` 13 y `test:cotizable` 4 en verde; `test:sitios-publicacion` con las mismas 7 fallas de antes de la mezcla.
+- **Verificado:** `katuq-api` en línea; 502 solo durante los 7 s del reinicio (18:59:17-24 UTC) y respuestas normales después. El aviso «[Cron Flows][catchup] expr no parseable» sale en cada arranque desde antes de este despliegue.
+- **No verificado:** las pantallas del diseño nuevo y el flujo de inventario del 1509 en producción.
