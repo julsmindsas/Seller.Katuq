@@ -1,0 +1,61 @@
+<!-- Sección del catálogo en el inicio (diseño nuevo). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
+<section class="cat-inicio" *ngIf="bloque">
+  <h4 class="subgrupo">Sección del catálogo en el inicio <small>(diseño nuevo)</small></h4>
+
+  <ng-container *ngIf="!enPagina">
+    <p class="nota">
+      Hoy el catálogo completo va en el inicio, con sus filtros. Para que el inicio muestre una sección con unos cuantos
+      productos, las categorías y un botón al catálogo completo, enciende «El catálogo va en su propia página».
+    </p>
+    <button type="button" class="agregar" (click)="encenderEnPagina()">Mostrar una sección en el inicio</button>
+  </ng-container>
+
+  <ng-container *ngIf="enPagina">
+    <span class="rotulo" id="cat-inicio-cantidad">Productos en el inicio</span>
+    <div class="segmentos" role="group" aria-labelledby="cat-inicio-cantidad">
+      <button type="button" *ngFor="let n of cantidades" [class.is-activo]="cantidad === n" [attr.aria-pressed]="cantidad === n"
+              (click)="elegirCantidad(n)">{{ n }}</button>
+    </div>
+    <p class="nota">
+      Salen los primeros de tu catálogo, en el mismo orden de la página del catálogo, solo los que se pueden comprar. En
+      computador van en filas de 4; en celular, de 2. Siempre queda una fila completa.
+    </p>
+
+    <div class="mock" aria-hidden="true">
+      <span class="mock__titulo">{{ tituloQueSale }}</span>
+      <span class="mock__chips"><span class="mock__chip"></span><span class="mock__chip"></span><span class="mock__chip"></span><span class="mock__chip"></span></span>
+      <span class="mock__rejilla">
+        <span class="mock__celda" *ngFor="let c of celdas"></span>
+      </span>
+      <span class="mock__boton">Ver los N productos</span>
+    </div>
+
+    <div class="campo">
+      <label for="cat-inicio-titulo">Título de la sección</label>
+      <input id="cat-inicio-titulo" type="text" [maxlength]="topes.titulo" [ngModel]="datos.inicioTitulo"
+             (ngModelChange)="cambiarTexto('inicioTitulo', $event)" [placeholder]="datos.titulo || 'Toda la tienda'" />
+      <small>Si lo dejas vacío sale el título del bloque, arriba.</small>
+    </div>
+    <div class="campo">
+      <label for="cat-inicio-etiqueta">Palabra de arriba (opcional)</label>
+      <input id="cat-inicio-etiqueta" type="text" [maxlength]="topes.etiqueta" [ngModel]="datos.inicioEtiqueta"
+             (ngModelChange)="cambiarTexto('inicioEtiqueta', $event)" placeholder="Catálogo" />
+      <small>Va sobre el título. Sale «Catálogo», salvo que el título ya lo diga.</small>
+    </div>
+    <div class="campo">
+      <label for="cat-inicio-subtitulo">Línea de apoyo (opcional)</label>
+      <input id="cat-inicio-subtitulo" type="text" [maxlength]="topes.subtitulo" [ngModel]="datos.inicioSubtitulo"
+             (ngModelChange)="cambiarTexto('inicioSubtitulo', $event)" placeholder="Equipos originales con garantía" />
+    </div>
+    <p class="aviso" *ngIf="tituloMarcador">Tiene un dato entre corchetes: no se publica. Escribe el texto real.</p>
+
+    <p class="nota">
+      Debajo del título salen las categorías con más productos (hasta 8): tocar una lleva al catálogo ya filtrado. El botón
+      dice «Ver los N productos» y lleva a la página completa; su texto se cambia arriba, en «Texto del botón de la banda».
+    </p>
+    <p class="aviso aviso--info">
+      La vista previa editable no dibuja el diseño nuevo. Cómo se ve la sección, con sus productos reales, está en la Vista fiel.
+      <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+    </p>
+  </ng-container>
+</section>

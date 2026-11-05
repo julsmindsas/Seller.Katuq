@@ -16,6 +16,7 @@ import { UbicarPuntosComponent } from "./plano/ubicar-puntos.component";
 import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
 import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
 import { ContactoPanelComponent } from "./contacto/contacto-panel.component";
+import { CatalogoInicioPanelComponent } from "./catalogo/catalogo-inicio-panel.component";
 import { AnclaSuperficieComponent } from "./seccion/ancla-superficie.component";
 
 /**
@@ -41,6 +42,7 @@ import { AnclaSuperficieComponent } from "./seccion/ancla-superficie.component";
     CategoriasPanelComponent,
     CategoriasBloquePanelComponent,
     ContactoPanelComponent,
+    CatalogoInicioPanelComponent,
     AnclaSuperficieComponent,
   ],
   // PLAN-V2 T14: la tarjeta «solución» es un panel de ELEMENTO (va dentro de cada tarjeta), así que el editor lo usa

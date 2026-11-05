@@ -1,3 +1,5 @@
+import { contraste, esOscuro, mezclar } from "../../../contraste";
+
 /**
  * Datos de Tienda › Nombres de categorías (tanda N2) en el editor: las mismas reglas del módulo `bandas` del servidor
  * (`functions/utils/sitioModulos/bandas.js`). El servidor normaliza al guardar; aquí solo se ayuda y se avisa.
@@ -10,6 +12,10 @@ export interface InfoCategoria {
   /** El nombre curado que se publica (≤40). */
   etiqueta?: string;
   icono?: string;
+  /**
+   * La foto de la categoría: la «foto genérica» de sus productos sin foto y, además, la de su baldosa en «Compra por
+   * categoría». Una URL subida por el editor a la carpeta de sitios.
+   */
   imagen?: string;
   imagen2?: string;
   descripcion?: string;
@@ -89,4 +95,45 @@ export function curaAlgo(c: InfoCategoria | null | undefined): boolean {
     !!String(c.descripcion || "").trim() ||
     (Array.isArray(c.chips) && c.chips.some((x) => !!String(x || "").trim()))
   );
+}
+
+// ── Foto genérica (productos sin foto) ────────────────────────────────────────────────────────────────────────────
+
+/** El ícono por defecto de la placa de un producto sin foto: una caja (el mismo de `functions/utils/siteFotoGenerica.js`). */
+export const TRAZO_PLACA_DEFECTO = "M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9";
+
+/** Los colores con que la página dibuja la placa de un producto sin foto, calculados con los colores de la página. */
+export interface ColoresPlaca {
+  pagina: string;
+  fondo: string;
+  disco: string;
+  icono: string;
+  marca: string;
+  borde: string;
+  texto: string;
+}
+
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/**
+ * La misma cuenta del servidor (`tokensDeSuperficie`): el fondo de la placa es la superficie 2 de la página, el disco es el
+ * acento al 12 % (14 % en oscuro), el ícono es el acento si se lee sobre la página y, si no, la tinta, y la marca va en el
+ * texto 3. Sirve para dibujar «cómo queda» con los colores reales del tema; la página manda.
+ */
+export function coloresDePlaca(tema: any): ColoresPlaca {
+  const color = (v: any, defecto: string) => (HEX.test(String(v || "").trim()) ? String(v).trim() : defecto);
+  const pagina = color(tema && tema.colorSecundario, "#ffffff");
+  const texto = color(tema && tema.colorTexto, "#222222");
+  const primario = color(tema && tema.colorPrimario, "#111111");
+  const oscuro = esOscuro(pagina);
+  const fondo = mezclar(texto, pagina, oscuro ? 0.085 : 0.04) || "#f4f4f5";
+  return {
+    pagina,
+    texto,
+    fondo,
+    disco: mezclar(primario, fondo, oscuro ? 0.14 : 0.12) || fondo,
+    icono: (contraste(primario, pagina) || 0) >= 4.5 ? primario : texto,
+    marca: mezclar(texto, pagina, 0.62) || texto,
+    borde: mezclar(texto, pagina, 0.1) || "#e4e4e7",
+  };
 }

@@ -11,6 +11,7 @@ import { resumenPlano } from "./plano/plano-datos";
 import { CategoriasPanelComponent } from "./categorias/categorias-panel.component";
 import { CategoriasBloquePanelComponent } from "./categorias/categorias-bloque-panel.component";
 import { ContactoPanelComponent } from "./contacto/contacto-panel.component";
+import { CatalogoInicioPanelComponent } from "./catalogo/catalogo-inicio-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -123,6 +124,10 @@ export const PANELES_SITIO: PanelSitio[] = [
   // Módulo `contacto` (5-nov): el formulario de contacto o cotización con su columna de confianza. Extiende el bloque
   // `formulario`: sale debajo de sus campos de siempre (título, descripción, qué se pide, botón y destino).
   { id: "contacto", tipo: "formulario", componente: ContactoPanelComponent },
+  // Módulo `catalogoInicio` (5-nov): la sección del catálogo en el inicio (cuántos productos y su título). Extiende el bloque
+  // `catalogo`: sale debajo de sus campos de siempre. La foto genérica de los productos sin foto va en Tienda › Nombres de
+  // categorías (panel `bandas`).
+  { id: "catalogoInicio", tipo: "catalogo", componente: CatalogoInicioPanelComponent },
 ];
 
 /** El panel que edita un tipo de bloque, si lo hay. */
