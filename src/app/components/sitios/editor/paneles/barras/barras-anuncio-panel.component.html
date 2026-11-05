@@ -1,0 +1,47 @@
+<h4 class="subgrupo">Barra de anuncio <small>(diseño nuevo)</small></h4>
+<div class="segmentos" role="group" aria-label="Cómo se ordena la barra">
+  <button type="button" [class.is-activo]="disposicion === 'barra'" [attr.aria-pressed]="disposicion === 'barra'" (click)="elegirDisposicion('barra')">Mensajes y ayuda</button>
+  <button type="button" [class.is-activo]="disposicion === 'centro'" [attr.aria-pressed]="disposicion === 'centro'" (click)="elegirDisposicion('centro')">Centrada</button>
+</div>
+<p class="nota">
+  La barra queda quieta: no desfila. En computador salen hasta 3 mensajes; en celular, solo el primero. Si un mensaje
+  promete envíos, garantía o tiempos, tendrás que confirmarlo antes de publicar.
+</p>
+
+<div class="repetible" *ngFor="let m of mensajes; let k = index; let primero = first; let ultimo = last; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <span class="numero">Mensaje {{ k + 1 }}{{ primero ? ' · el que se ve en celular' : '' }}</span>
+    <button type="button" class="mini" [disabled]="primero" (click)="moverMensaje(k, -1)" aria-label="Subir mensaje">↑</button>
+    <button type="button" class="mini" [disabled]="ultimo" (click)="moverMensaje(k, 1)" aria-label="Bajar mensaje">↓</button>
+    <button type="button" class="mini mini--quitar" (click)="quitarMensaje(k)">Quitar</button>
+  </div>
+  <input type="text" maxlength="90" placeholder="Factura electrónica en cada compra" aria-label="Texto del mensaje"
+         [ngModel]="m.texto" (ngModelChange)="cambiarMensaje(k, 'texto', $event)" />
+  <div class="icono-fila">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path *ngIf="m.icono && trazos[m.icono]" [attr.d]="trazos[m.icono]" />
+    </svg>
+    <select [ngModel]="m.icono" (ngModelChange)="cambiarMensaje(k, 'icono', $event)" aria-label="Ícono del mensaje">
+      <option value="">Sin ícono</option>
+      <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
+    </select>
+  </div>
+  <input type="text" placeholder="Al tocarlo lleva a (opcional): #seccion, /ruta o https://…" aria-label="Destino del mensaje"
+         [ngModel]="m.url" (ngModelChange)="cambiarMensaje(k, 'url', $event)" />
+</div>
+<button type="button" class="agregar" [disabled]="mensajes.length >= topes.mensajes" (click)="agregarMensaje()">Agregar mensaje</button>
+
+<ng-container *ngIf="disposicion === 'barra'">
+  <h4 class="subgrupo">Enlaces de ayuda <small>(a la derecha, solo en computador)</small></h4>
+  <div class="repetible" *ngFor="let e of enlaces; let k = index; trackBy: porIndice">
+    <div class="repetible__cabeza">
+      <span class="numero">Enlace {{ k + 1 }}</span>
+      <button type="button" class="mini mini--quitar" (click)="quitarEnlace(k)">Quitar</button>
+    </div>
+    <input type="text" maxlength="24" placeholder="Ayuda" aria-label="Nombre del enlace de ayuda"
+           [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
+    <input type="text" placeholder="#preguntas, /ruta o https://…" aria-label="Destino del enlace de ayuda"
+           [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
+  </div>
+  <button type="button" class="agregar" [disabled]="enlaces.length >= topes.enlacesBarra" (click)="agregarEnlace()">Agregar enlace de ayuda</button>
+</ng-container>

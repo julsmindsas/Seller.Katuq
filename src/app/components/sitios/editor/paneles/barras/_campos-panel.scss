@@ -1,0 +1,375 @@
+// Campos de los paneles de las barras (PLAN-V2 T06): los mismos de los paneles del editor (`sitio-editor.component.scss`),
+// que no llegan aquí por el encapsulado de Angular. Regla de diseño Katuq: acento #5F3FE0, sin degradados, ninguna clase
+// con «p-», y todo span con color propio (trampa `span.ng-star-inserted`).
+@import "../../../../../shared/styles/katuq-builder";
+
+:host {
+  @include kb-tokens;
+  display: block;
+  font-family: var(--kb-font);
+  color: var(--kb-ink);
+}
+
+.subgrupo {
+  margin: 18px 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+
+  small {
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--kb-muted);
+  }
+}
+
+.campo {
+  margin-bottom: 14px;
+
+  > label {
+    @include kb-label;
+  }
+
+  input[type="text"],
+  input[type="time"],
+  select {
+    @include kb-input;
+  }
+
+  > small {
+    @include kb-hint;
+  }
+}
+
+.fila-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nota {
+  @include kb-nota;
+  margin: 0 0 14px;
+}
+
+.aviso {
+  margin: 4px 0 14px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: var(--kb-warn-wash);
+  border: 1px solid #f6dfb8;
+  color: #8a5a12;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  &--info {
+    background: var(--kb-accent-wash);
+    border-color: #dcd3fb;
+    color: #3d2a99;
+  }
+
+  button {
+    @include kb-btn-ghost(6px, 10px, 12.5px);
+    margin-top: 8px;
+  }
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  border: 1.5px solid var(--kb-line-4);
+  background: #fff;
+  border-radius: 13px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--kb-font);
+
+  &__texto {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--kb-ink);
+    }
+
+    small {
+      display: block;
+      font-size: 11.5px;
+      color: var(--kb-muted-2);
+      font-weight: 600;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+  }
+
+  &.is-active {
+    border-color: #5f3fe0;
+    background: var(--kb-accent-wash-4);
+
+    .palanca {
+      background: #5f3fe0;
+
+      span {
+        transform: translateX(18px);
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.palanca {
+  width: 42px;
+  height: 24px;
+  flex: none;
+  border-radius: 99px;
+  background: #e4e1f0;
+  padding: 3px;
+  transition: background 0.18s ease;
+
+  span {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 99px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(30, 20, 60, 0.25);
+    transition: transform 0.18s ease;
+  }
+}
+
+.segmentos {
+  @include kb-segmented;
+  margin-bottom: 8px;
+
+  button {
+    flex: 1;
+    min-height: 40px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    font-family: var(--kb-font);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--kb-ink-2);
+    cursor: pointer;
+
+    &.is-activo {
+      background: #fff;
+      color: #5f3fe0;
+      box-shadow: 0 1px 3px rgba(30, 20, 60, 0.12);
+    }
+
+    &:focus-visible {
+      outline: 3px solid #7c5cff !important;
+    }
+  }
+}
+
+.repetible {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: var(--kb-surface-3);
+
+  input[type="text"],
+  select {
+    @include kb-input;
+    background: #fff;
+    padding: 11px 13px;
+  }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .numero {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--kb-muted);
+    }
+  }
+
+  &__aviso {
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #8a5a12;
+  }
+}
+
+.mini {
+  @include kb-btn-icono(30px);
+  font-size: 14px;
+
+  &--quitar {
+    width: auto;
+    padding: 0 10px;
+    color: var(--kb-danger);
+    font-size: 12px;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.hijos {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0 0 12px;
+  border-left: 2px solid var(--kb-line-4);
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 6px;
+    align-items: center;
+  }
+}
+
+.enlace-texto {
+  justify-self: start;
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  font-family: var(--kb-font);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #5f3fe0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.agregar {
+  @include kb-btn-base;
+  width: 100%;
+  margin: 4px 0 6px;
+  border: 1.8px dashed #d6d1ec;
+  background: var(--kb-accent-wash-3);
+  color: #5f3fe0;
+  font-size: 13.5px;
+  padding: 12px;
+  border-radius: 14px;
+
+  &:hover:not(:disabled) {
+    border-color: #5f3fe0;
+  }
+
+  &:disabled {
+    color: var(--kb-disabled);
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.icono-fila {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 8px;
+  align-items: center;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    justify-self: center;
+    color: var(--kb-ink-2);
+  }
+}
+
+.dias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dia {
+  @include kb-btn-base;
+  min-width: 44px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kb-ink-2);
+
+  &.is-activo {
+    border-color: #5f3fe0;
+    background: #f1edff;
+    color: #5f3fe0;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+  }
+}
+
+.muestra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 14px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1.5px solid var(--kb-line-4);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kb-ink-2);
+
+  .boton-muestra {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1.5px solid var(--kb-ink);
+    border-radius: 10px;
+    font-weight: 800;
+    color: var(--kb-ink);
+  }
+
+  .punto {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #9793ac;
+    box-shadow: 0 0 0 2px var(--kb-ink);
+
+    &.is-en-linea {
+      background: #5f3fe0;
+    }
+  }
+
+  .estado {
+    color: var(--kb-ink-2);
+  }
+}

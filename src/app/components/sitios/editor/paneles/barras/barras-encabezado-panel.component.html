@@ -1,0 +1,77 @@
+<h4 class="subgrupo">Menú <small>(diseño nuevo, hasta {{ topes.menu }} enlaces)</small></h4>
+<p class="nota">
+  En computador salen en una fila junto al logo; si no caben, o en celular, van en el botón ☰. Cada enlace puede abrir
+  un submenú. Con el diseño de siempre se ven los 4 primeros.
+</p>
+
+<div class="repetible" *ngFor="let e of menu; let k = index; let primero = first; let ultimo = last; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <span class="numero">Enlace {{ k + 1 }}</span>
+    <button type="button" class="mini" [disabled]="primero" (click)="mover(k, -1)" aria-label="Subir enlace">↑</button>
+    <button type="button" class="mini" [disabled]="ultimo" (click)="mover(k, 1)" aria-label="Bajar enlace">↓</button>
+    <button type="button" class="mini mini--quitar" (click)="quitarEnlace(k)">Quitar</button>
+  </div>
+  <input type="text" maxlength="30" placeholder="Nombre del enlace (Casa, Productos…)" aria-label="Nombre del enlace"
+         [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
+  <input type="text" placeholder="#seccion, /ruta o https://…" aria-label="Destino del enlace"
+         [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
+  <p class="repetible__aviso" *ngIf="sinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará.</p>
+  <button type="button" class="enlace-texto" [attr.aria-expanded]="abierto === k" (click)="alternarSubmenu(k)">
+    {{ abierto === k ? 'Cerrar submenú' : 'Submenú (' + (e.hijos?.length || 0) + ')' }}
+  </button>
+  <div class="hijos" *ngIf="abierto === k">
+    <div class="hijos__fila" *ngFor="let h of e.hijos; let j = index; trackBy: porIndice">
+      <input type="text" maxlength="30" placeholder="Nombre" aria-label="Nombre del enlace del submenú"
+             [ngModel]="h.etiqueta" (ngModelChange)="cambiarHijo(k, j, 'etiqueta', $event)" />
+      <input type="text" placeholder="Destino" aria-label="Destino del enlace del submenú"
+             [ngModel]="h.url" (ngModelChange)="cambiarHijo(k, j, 'url', $event)" />
+      <button type="button" class="mini mini--quitar" (click)="quitarHijo(k, j)">Quitar</button>
+    </div>
+    <button type="button" class="agregar" [disabled]="(e.hijos?.length || 0) >= topes.hijos" (click)="agregarHijo(k)">
+      Agregar al submenú
+    </button>
+  </div>
+</div>
+<button type="button" class="agregar" [disabled]="menu.length >= topes.menu" (click)="agregarEnlace()">Agregar enlace</button>
+
+<h4 class="subgrupo">Categorías en el menú</h4>
+<div class="segmentos" role="group" aria-label="Categorías en el menú">
+  <button type="button" [class.is-activo]="modoCategorias === 'no'" [attr.aria-pressed]="modoCategorias === 'no'" (click)="elegirCategorias('no')">No</button>
+  <button type="button" [class.is-activo]="modoCategorias === 'desplegable'" [attr.aria-pressed]="modoCategorias === 'desplegable'" (click)="elegirCategorias('desplegable')">En un submenú</button>
+  <button type="button" [class.is-activo]="modoCategorias === 'fila'" [attr.aria-pressed]="modoCategorias === 'fila'" (click)="elegirCategorias('fila')">En una fila</button>
+</div>
+<p class="nota" *ngIf="modoCategorias === 'desplegable' && menu.length">
+  Tus categorías reales cuelgan de «{{ enlaceDeCategorias }}», con «Ver todo» al final.
+</p>
+<p class="aviso" *ngIf="modoCategorias !== 'no' && !hayCatalogo">Las categorías necesitan un catálogo en tu sitio para tener a dónde llevar.</p>
+
+<ng-container *ngIf="datos.mostrarBuscador">
+  <div class="campo">
+    <label for="enc-ejemplo">Ejemplo en el buscador</label>
+    <input id="enc-ejemplo" type="text" maxlength="48" [ngModel]="datos.placeholderBuscador || ''"
+           (ngModelChange)="cambiar('placeholderBuscador', $event)" placeholder="Ej.: el WiFi no llega al cuarto" />
+    <small>Una búsqueda que haría tu cliente. Corto: en celular se lee completo hasta unas 30 letras.</small>
+  </div>
+</ng-container>
+
+<h4 class="subgrupo">Botón del asesor</h4>
+<button type="button" class="opcion" [class.is-active]="datos.asesor === 'enlace'" [attr.aria-pressed]="datos.asesor === 'enlace'" (click)="alternarAsesor()">
+  <span class="opcion__texto">
+    <strong>Hablar con un asesor por WhatsApp</strong>
+    <small>El mensaje lleva el enlace de la página que la persona está viendo.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+<ng-container *ngIf="datos.asesor === 'enlace'">
+  <div class="campo">
+    <label for="enc-asesor">Texto del botón</label>
+    <input id="enc-asesor" type="text" maxlength="28" [ngModel]="datos.asesorTexto || ''"
+           (ngModelChange)="cambiar('asesorTexto', $event)" placeholder="Asesor" />
+  </div>
+  <p class="aviso" *ngIf="!hayWhatsapp">
+    No vemos un bloque WhatsApp en tu página: el botón usa el celular de tu empresa y, si no hay, no se muestra.
+  </p>
+  <p class="aviso aviso--info" *ngIf="!conHorario">
+    Sin horario, el botón no dice «En línea». Ponlo en <strong>Tienda › Atención</strong>.
+  </p>
+</ng-container>

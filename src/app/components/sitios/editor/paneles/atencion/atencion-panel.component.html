@@ -1,0 +1,62 @@
+<p class="nota">
+  El botón <strong>Asesor</strong> del encabezado abre WhatsApp con el enlace de la página que la persona está viendo.
+  Usa el número del bloque WhatsApp de tu página o, si no lo hay, el celular de tu empresa.
+</p>
+
+<p class="aviso aviso--info" *ngIf="!asesorEncendido">
+  El botón del asesor está apagado. Lo enciendes en la sección <strong>Encabezado</strong>.
+</p>
+
+<button type="button" class="opcion" [class.is-active]="!!horario" [attr.aria-pressed]="!!horario" (click)="alternarHorario()">
+  <span class="opcion__texto">
+    <strong>Horario de atención</strong>
+    <small>Con horario, el botón dice «En línea» cuando atiendes (hora de Colombia). Sin horario no lo dice.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+
+<ng-container *ngIf="horario as h">
+  <div class="campo">
+    <label>Días</label>
+    <div class="dias">
+      <button type="button" class="dia" *ngFor="let d of dias" [class.is-activo]="h.dias.includes(d.valor)"
+              [attr.aria-pressed]="h.dias.includes(d.valor)" (click)="alternarDia(d.valor)">{{ d.corto }}</button>
+    </div>
+  </div>
+  <div class="fila-campos">
+    <div class="campo">
+      <label for="atencion-desde">Desde</label>
+      <input id="atencion-desde" type="time" [ngModel]="h.desde" (ngModelChange)="cambiarHora('desde', $event)" />
+    </div>
+    <div class="campo">
+      <label for="atencion-hasta">Hasta</label>
+      <input id="atencion-hasta" type="time" [ngModel]="h.hasta" (ngModelChange)="cambiarHora('hasta', $event)" />
+    </div>
+  </div>
+  <p class="aviso" *ngIf="horarioMalo">Elige al menos un día y una hora de cierre después de la de apertura: si no, la página no lo usa.</p>
+  <p class="aviso" *ngIf="horariosDistintos">
+    El bloque WhatsApp de tu página tiene otro horario ({{ horarioDelBloque?.desde }} a {{ horarioDelBloque?.hasta }}). Déjalos iguales para no
+    prometer dos cosas distintas.
+    <br /><button type="button" (click)="usarHorarioDelBloque()">Usar el del bloque WhatsApp</button>
+  </p>
+</ng-container>
+
+<div class="campo">
+  <label for="atencion-tiempo">Tiempo de respuesta</label>
+  <input id="atencion-tiempo" type="text" maxlength="40" [ngModel]="atencion.tiempoRespuesta || ''"
+         (ngModelChange)="cambiarTexto('tiempoRespuesta', $event)" placeholder="Respondemos en menos de 15 minutos" />
+  <small>Solo lo que de verdad cumples: se lee junto a «En línea».</small>
+</div>
+
+<div class="campo">
+  <label for="atencion-fuera">Fuera de horario</label>
+  <input id="atencion-fuera" type="text" maxlength="120" [ngModel]="atencion.fueraDeHorario || ''"
+         (ngModelChange)="cambiarTexto('fueraDeHorario', $event)" placeholder="Te respondemos mañana desde las 8 a. m." />
+  <small>Lo que lee la persona cuando escribe fuera de tu horario.</small>
+</div>
+
+<h4 class="subgrupo">Así se ve ahora <small>(hora de Colombia)</small></h4>
+<div class="muestra" aria-live="polite">
+  <span class="boton-muestra"><span class="punto" *ngIf="horario" [style.background]="colorPunto"></span>Asesor</span>
+  <span class="estado">{{ estadoAhora }}</span>
+</div>
