@@ -354,6 +354,13 @@
     color: var(--kb-muted-2);
     font-weight: 600;
     line-height: 1.35;
+
+    // Lo que le pasa a una sección oculta (el catálogo): en el acento, para que se lea.
+    &--nota {
+      margin-top: 3px;
+      color: var(--kb-accent);
+      font-weight: 700;
+    }
   }
 
   &__acciones {

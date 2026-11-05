@@ -299,7 +299,7 @@
             <div class="avance__barra" [style.width.%]="avancePublicar.pct"></div>
           </div>
           <small class="avance__texto">{{ avancePublicar.hechos }} de {{ avancePublicar.total }} listos</small>
-          <button type="button" class="pendientes__item" *ngFor="let p of pendientes" (click)="irAPendiente(p)"
+          <button type="button" class="pendientes__item" *ngFor="let p of pendientes; trackBy: trackPendiente" (click)="irAPendiente(p)"
                   [class.pendientes__item--critico]="p.critico">
             <span>{{ p.texto }}<em class="pendientes__bloquea" *ngIf="p.critico"> · impide vender</em></span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 18 6-6-6-6"/></svg>
@@ -342,6 +342,7 @@
                   <span class="etiqueta-oculta" *ngIf="b.visible === false">OCULTA</span>
                 </div>
                 <div class="seccion__desc">{{ descripcionDeTipo(b.tipo) }}</div>
+                <div class="seccion__desc seccion__desc--nota" *ngIf="notaDeSeccionOculta(b) as nota">{{ nota }}</div>
               </div>
             </div>
 
@@ -515,7 +516,7 @@
             </div>
             <div class="campo campo--avanzado">
               <label>Destino del botón</label>
-              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
 
             <!-- PLAN-V2 T06: con el diseño nuevo, el menú (hasta 7 enlaces con submenú) se edita en su panel, abajo. -->
@@ -525,9 +526,10 @@
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="30" />
-              <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
               <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el menú.</small>
+              <small class="aviso" *ngIf="paginaInternaSinExistir(e.url)">Esa página no existe en tu sitio: quien toque el enlace verá un error 404.</small>
             </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()"
@@ -550,7 +552,7 @@
             </div>
             <div class="campo">
               <label>Al tocarlo lleva a (opcional)</label>
-              <input type="text" [(ngModel)]="b.datos.url" (ngModelChange)="marcarSucio()"
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.url" (ngModelChange)="marcarSucio()"
                      placeholder="#catalogo o https://…" />
             </div>
             <button class="opcion" [class.is-active]="b.datos.marquesina"
@@ -584,7 +586,7 @@
             </div>
             <div class="campo campo--avanzado">
               <label>Destino del botón</label>
-              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <small>Una sección de la página (#productos, #contacto) o una dirección https.</small>
             </div>
             <ng-container *ngIf="!portadaEspacios(b)">
@@ -771,7 +773,7 @@
                    en que salen en la página. -->
               <div class="elegidos__lista" *ngIf="elegidosDelBloque.length"
                    cdkDropList (cdkDropListDropped)="soltarProducto($event)">
-                <div class="elegido" *ngFor="let p of elegidosDelBloque; let i = index" cdkDrag>
+                <div class="elegido" *ngFor="let p of elegidosDelBloque; let i = index; trackBy: trackElegido" cdkDrag>
                   <span class="elegido__asa" cdkDragHandle title="Arrastra para reordenar">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>
                   </span>
@@ -884,7 +886,7 @@
             </div>
             <div class="campo campo--avanzado campo--doble">
               <div><label>Texto del botón</label><input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" /></div>
-              <div><label>A dónde lleva</label><input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" /></div>
+              <div><label>A dónde lleva</label><input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" /></div>
             </div>
             <div class="campo campo--avanzado">
               <label>Cuántas veces sale</label>
@@ -1152,7 +1154,7 @@
             </div>
             <div class="campo campo--avanzado">
               <label>Destino del botón</label>
-              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#catalogo o https://…" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#catalogo o https://…" />
             </div>
           </ng-container>
 
@@ -1212,7 +1214,7 @@
             </div>
             <div class="campo campo--avanzado">
               <label>Destino del botón</label>
-              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#destacado o #catalogo" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#destacado o #catalogo" />
             </div>
           </ng-container>
 
@@ -1530,9 +1532,10 @@
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
-              <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://…" />
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o #seccion" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
               <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el pie.</small>
+              <small class="aviso" *ngIf="paginaInternaSinExistir(e.url)">Esa página no existe en tu sitio: quien toque el enlace verá un error 404.</small>
             </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()">
@@ -1561,9 +1564,10 @@
                 </div>
                 <div class="repetible" *ngFor="let e of c.enlaces; let ei = index">
                   <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
-                  <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o /ruta" />
+                  <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o /ruta" />
                   <button class="repetible__quitar" (click)="quitarEnlaceDeColumnaPie(c, ei)">Quitar</button>
                   <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará.</small>
+                  <small class="aviso" *ngIf="paginaInternaSinExistir(e.url)">Esa página no existe en tu sitio: quien toque el enlace verá un error 404.</small>
                 </div>
                 <div class="pie-col__acciones">
                   <button class="agregar agregar--sm" *ngIf="(c.enlaces?.length || 0) < 8" (click)="agregarEnlaceAColumnaPie(c)">
@@ -1646,7 +1650,7 @@
               </div>
               <input type="text" [(ngModel)]="c.ctaTexto" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón (opcional)" maxlength="30" />
-              <input type="text" [(ngModel)]="c.ctaUrl" (ngModelChange)="marcarSucio()"
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="c.ctaUrl" (ngModelChange)="marcarSucio()"
                      placeholder="#contacto o https://…" />
               <button class="repetible__quitar" (click)="quitarColumna(i)">Quitar columna</button>
             </div>
@@ -1698,7 +1702,7 @@
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="bt.etiqueta" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón" maxlength="40" />
-              <input type="text" [(ngModel)]="bt.url" (ngModelChange)="marcarSucio()"
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="bt.url" (ngModelChange)="marcarSucio()"
                      placeholder="#productos, https://… o https://wa.me/57…" />
               <select [(ngModel)]="bt.estilo" (ngModelChange)="marcarSucio()">
                 <option value="principal">Relleno</option>
@@ -1763,11 +1767,12 @@
               </div>
               <div class="campo">
                 <label>A dónde lleva</label>
-                <input type="text" [(ngModel)]="b.datos.enlaceUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" />
+                <input type="text" list="kq-destinos-inicio" [(ngModel)]="b.datos.enlaceUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" />
               </div>
             </div>
             <small class="aviso" *ngIf="b.datos.enlaceTexto && !b.datos.enlaceUrl">Sin destino, el enlace no se muestra.</small>
             <small class="aviso" *ngIf="anclaSinDestino(b.datos.enlaceUrl)">Esa sección no existe en tu inicio: el enlace no se mostrará.</small>
+            <small class="aviso" *ngIf="paginaInternaSinExistir(b.datos.enlaceUrl)">Esa página no existe en tu sitio: quien toque el enlace verá un error 404.</small>
             <p class="nota" *ngIf="b.tipo === 'productos' || b.tipo === 'categorias'">Sin enlace propio, «Ver todos» lleva a tu catálogo.</p>
             <p class="aviso aviso--info">Se ve en la página publicada con el diseño nuevo; revísalo con «Ver cómo queda».</p>
           </ng-container>
@@ -1811,7 +1816,7 @@
 
             <!-- Los elementos de esta sección -->
             <div class="elementos" cdkDropList (cdkDropListDropped)="soltarElemento($event, b)">
-              <div class="elemento" *ngFor="let el of b.elementos; let i = index" cdkDrag>
+              <div class="elemento" *ngFor="let el of b.elementos; let i = index; trackBy: trackElemento" cdkDrag>
                 <div class="elemento__cabeza">
                   <span class="elemento__asa" cdkDragHandle title="Arrastra para mover">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01"/></svg>
@@ -1956,7 +1961,7 @@
                 <ng-container *ngIf="el.tipo === 'boton'">
                   <input type="text" [(ngModel)]="el.datos.etiqueta" (ngModelChange)="marcarSucio()"
                          placeholder="Texto del botón" maxlength="40" />
-                  <input type="text" [(ngModel)]="el.datos.url" (ngModelChange)="marcarSucio()"
+                  <input type="text" list="kq-destinos-inicio" [(ngModel)]="el.datos.url" (ngModelChange)="marcarSucio()"
                          placeholder="#productos o https://…" />
                   <select [(ngModel)]="el.datos.estilo" (ngModelChange)="marcarSucio()">
                     <option value="principal">Relleno</option>
@@ -2011,7 +2016,7 @@
                     </select>
                   </div>
 
-                  <div class="tarjeta-edit" *ngFor="let t of el.datos.items; let j = index">
+                  <div class="tarjeta-edit" *ngFor="let t of el.datos.items; let j = index; trackBy: trackPorIndice">
                     <span class="repetible__nombre">Tarjeta {{ j + 1 }}</span>
                     <input type="text" [(ngModel)]="t.titulo" (ngModelChange)="marcarSucio()"
                            placeholder="Título" maxlength="90" />
@@ -2047,7 +2052,7 @@
                            [placeholder]="disenoNuevo && el.datos.variante === 'solucion' ? 'Antetítulo (opcional)' : 'Etiqueta de esquina (opcional)'" maxlength="30" />
                     <input type="text" [(ngModel)]="t.ctaTexto" (ngModelChange)="marcarSucio()"
                            placeholder="Texto del botón (opcional)" maxlength="30" />
-                    <input type="text" [(ngModel)]="t.ctaUrl" (ngModelChange)="marcarSucio()"
+                    <input type="text" list="kq-destinos-inicio" [(ngModel)]="t.ctaUrl" (ngModelChange)="marcarSucio()"
                            placeholder="#contacto" />
                     <!-- PLAN-V2 T14: lo propio de la tarjeta «solución» (piezas o kit con su total, espacio del plano, oscura). -->
                     <app-panel-tarjeta-solucion *ngIf="disenoNuevo && el.datos.variante === 'solucion'" [tarjeta]="t" [indice]="j"
@@ -2163,6 +2168,11 @@
                 Solo afecta a esta sección. Sirve para intercalar franjas de color y que la página no se
                 vea plana.
               </p>
+
+              <!-- Ancla y tono del fondo de CUALQUIER sección (diseño nuevo): el servidor las guarda y las pinta en todo bloque
+                   con raíz de sección; el plano y el formulario traen las suyas en su panel y ahí no se ofrecen. -->
+              <app-ancla-superficie *ngIf="disenoNuevo" [bloque]="b" [contenido]="contenido" [nombreSitio]="sitio?.nombre || ''"
+                                    (cambio)="alCambiarPanel()"></app-ancla-superficie>
 
               <div class="campo">
                 <label>Fondo</label>
@@ -4093,9 +4103,9 @@
         <button class="btn-fantasma btn-fantasma--sm crudos" (click)="mostrandoTiposCrudos = false">
           ← Ver secciones ya armadas
         </button>
-        <ng-container *ngFor="let f of catalogoPorFamilia">
+        <ng-container *ngFor="let f of catalogoPorFamilia; trackBy: trackFamiliaBloque">
         <h4 class="familia">{{ f.nombre }}</h4>
-        <button class="disponible" *ngFor="let c of f.bloques" (click)="agregar(c.tipo)">
+        <button class="disponible" *ngFor="let c of f.bloques; trackBy: trackTipoBloque" (click)="agregar(c.tipo)">
           <span class="disponible__icono">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="c.icono"/></svg>
           </span>
@@ -4146,6 +4156,12 @@
   (confirmar)="aplicarProductos($event)"
   (cerrar)="mostrandoSelector = false">
 </app-selector-productos>
+
+<!-- Las secciones con nombre del inicio (anclas propias e ids fijos): lo ofrecen todos los campos «A dónde lleva» del editor y de
+     los paneles del diseño nuevo (`list="kq-destinos-inicio"`). Nunca `#seccion-N`, que cambia al mover u ocultar. -->
+<datalist id="kq-destinos-inicio" *ngIf="contenido">
+  <option *ngFor="let d of destinosDelInicio; trackBy: trackDestino" [value]="d.valor">{{ d.texto }}</option>
+</datalist>
 
 <div class="estado-pantalla" *ngIf="cargando">Cargando…</div>
 <div class="estado-pantalla" *ngIf="error">

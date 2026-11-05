@@ -16,7 +16,7 @@ import {
   INSTRUCCION_MAX,
   MAX_REFERENCIAS,
   MensajeEditarIA,
-  SUGERENCIAS_EDITAR_IA,
+  sugerenciasEditarIA,
   clasificarArchivo,
   historialParaServidor,
   leerConversacion,
@@ -35,7 +35,7 @@ import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../iconos-sitio";
 import { descuentoVigente } from "../../../shared/utils/precio-por-tipo-cliente";
 // Diseño nuevo (PLAN-V2 T03): paneles de los bloques y piezas nuevas, cada uno en su carpeta de `paneles/`.
 import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelDeTipo, panelesDeTienda } from "./paneles/registro";
-import { anclaSinDestino as anclaSinDestinoEnInicio } from "./anclas-inicio";
+import { DestinoDeInicio, anclaSinDestino as anclaSinDestinoEnInicio, destinosDelInicio, paginaInternaQueNoExiste } from "./anclas-inicio";
 import { clavePromesa } from "./paneles/fichas/fichas-datos";
 import { pestanasListas } from "./paneles/vitrina/vitrina-datos";
 
@@ -926,11 +926,33 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { nombre: "Para que te escriban", tipos: ["whatsapp", "formulario", "suscripcion", "ubicacion", "sucursales", "agenda", "popup"] },
     { nombre: "Estructura", tipos: ["encabezado", "anuncio", "botones", "separador", "footer"] },
   ];
+  /**
+   * La lista de «Prefiero empezar desde cero». Se arma UNA vez por diseño (el de siempre y el nuevo) y devuelve siempre
+   * el mismo arreglo. Antes era un getter que armaba objetos nuevos en cada pasada de Angular y el `ngFor` no tenía
+   * `trackBy`: cada pasada rehacía los botones. Los oyentes de captura de la ventana disparan una pasada ENTRE el
+   * mousedown y el mouseup, así que el botón pulsado ya no existía al soltar y `agregar()` nunca corría.
+   */
   get catalogoPorFamilia(): { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] {
-    const porTipo = new Map(this.catalogoBloques.map((c) => [c.tipo, c]));
+    if (this.disenoNuevo) {
+      if (!this.familiasConV2) this.familiasConV2 = this.armarFamiliasDeBloques(true);
+      return this.familiasConV2;
+    }
+    if (!this.familiasClasico) this.familiasClasico = this.armarFamiliasDeBloques(false);
+    return this.familiasClasico;
+  }
+  private familiasClasico: { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] | null = null;
+  private familiasConV2: { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] | null = null;
+
+  /** `trackBy` de esa lista: el DOM de cada familia y de cada botón se conserva entre pasadas de Angular. */
+  trackFamiliaBloque = (_: number, f: { nombre: string }): string => f.nombre;
+  trackTipoBloque = (_: number, c: { tipo: string }): string => c.tipo;
+
+  private armarFamiliasDeBloques(conV2: boolean): { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] {
+    const disponibles: typeof CATALOGO_BLOQUES = conV2 ? this.catalogoConV2 : CATALOGO_BLOQUES;
+    const porTipo = new Map(disponibles.map((c) => [c.tipo, c]));
     const usados = new Set<string>();
     // PLAN-V2 T03: un tipo nuevo va en la familia que declara su panel (si no, en «Otros»).
-    const nuevos = this.disenoNuevo ? this.catalogoV2 : [];
+    const nuevos = conV2 ? this.catalogoV2 : [];
     const familias = this.FAMILIAS_BLOQUE.map((f) => ({
       nombre: f.nombre,
       bloques: [...f.tipos, ...nuevos.filter((n) => n.familia === f.nombre).map((n) => n.tipo)].map((t) => porTipo.get(t)).filter((c): c is (typeof CATALOGO_BLOQUES)[number] => {
@@ -940,7 +962,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       }),
     }));
     // Un tipo nuevo que nadie clasificó no puede desaparecer del selector.
-    const sueltos = this.catalogoBloques.filter((c) => !usados.has(c.tipo));
+    const sueltos = disponibles.filter((c) => !usados.has(c.tipo));
     if (sueltos.length) familias.push({ nombre: "Otros", bloques: sueltos });
     return familias.filter((f) => f.bloques.length);
   }
@@ -1974,6 +1996,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       this.herramientasAvanzadas = false;
     }
   }
+
+  /**
+   * `pendientes` y `elegidosDelBloque` son getters que arman objetos nuevos en cada pasada: sin `trackBy`, sus botones se
+   * rehacían entre el mousedown y el mouseup y el clic se perdía (el mismo fallo de «Agregar una sección»).
+   */
+  /**
+   * Los elementos de una sección libre y sus tarjetas. Tras cada autoguardado el editor reemplaza el contenido por la copia
+   * que devuelve el servidor (objetos nuevos): sin esto Angular destruía los paneles de cada tarjeta y con ellos lo que
+   * tuvieran abierto (el selector de piezas de una tarjeta «solución» se cerraba solo). Los elementos tienen `id`; las
+   * tarjetas no, así que se siguen por su posición.
+   */
+  trackElemento = (i: number, el: { id?: string }): string | number => (el && el.id) || i;
+  trackPorIndice = (i: number): number => i;
+  trackPendiente = (_: number, p: { texto: string }): string => p.texto;
+  trackElegido = (i: number, p: { productoId?: string }): string | number => (p && p.productoId) || i;
 
   /**
    * Qué le falta al sitio para publicarse con tranquilidad.
@@ -3614,6 +3651,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  /** Una página interna de un solo tramo (`/empresas`) que el sitio no tiene: el enlace se publica y da 404. */
+  paginaInternaSinExistir(url: string): boolean {
+    return paginaInternaQueNoExiste(url, (this.contenido && (this.contenido as any).paginas) || []);
+  }
+
+  /**
+   * Las secciones con nombre del inicio (anclas propias e ids fijos) para el `<datalist>` de los campos de destino. Se
+   * rearma solo cuando cambian los bloques visibles, su ancla, su título o el diseño: la vista recibe el mismo arreglo
+   * mientras tanto (si no, Angular rehacía las opciones en cada pasada).
+   */
+  get destinosDelInicio(): DestinoDeInicio[] {
+    const bloques: any[] = (this.contenido && this.contenido.bloques) || [];
+    const firma = `${this.disenoNuevo ? 2 : 1}|` + bloques.map((b) => (b && b.visible !== false ? `${b.tipo}:${(b.estilo && b.estilo.ancla) || ""}:${(b.datos && (b.datos.titulo || b.datos.etiqueta)) || ""}` : "")).join("|");
+    if (!this.destinosCache || this.destinosCache.firma !== firma) {
+      this.destinosCache = { firma, lista: destinosDelInicio(bloques, { disenoNuevo: this.disenoNuevo, nombreDe: (b: any) => this.nombreDeTipo(b.tipo) }) };
+    }
+    return this.destinosCache.lista;
+  }
+  private destinosCache: { firma: string; lista: DestinoDeInicio[] } | null = null;
+  trackDestino = (_: number, d: DestinoDeInicio): string => d.valor;
+
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
   copiarDns(valor: string): void {
     navigator.clipboard
@@ -3926,6 +3984,38 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     nuevos[i] = { ...nuevos[i], visible: nuevos[i].visible === false };
     this.fijarBloques(nuevos);
     this.marcarSucio();
+    if (nuevos[i].visible === false) this.avisarAlOcultarCatalogo(nuevos[i]);
+  }
+
+  /**
+   * Cerrar el ojo del catálogo no es como cerrar el de cualquier sección: el buscador, las categorías del menú y las
+   * baldosas llevan a él. Se dice qué pasa de verdad. Con el catálogo «en su propia página» solo se oculta la banda
+   * «Explorar la tienda» del inicio y el catálogo sigue; si el bloque ES la rejilla del inicio, ocultarlo quita el
+   * catálogo y esos enlaces dejan de llevar a algo.
+   */
+  avisarAlOcultarCatalogo(b: BloqueSitio | null | undefined): void {
+    if (!b || b.tipo !== "catalogo") return;
+    if (b.datos && b.datos.enPagina === true) {
+      this.toastr.info(
+        "Ocultaste solo la banda «Explorar la tienda» del inicio. El catálogo, las categorías y el buscador siguen funcionando en su propia página.",
+        "Catálogo",
+        { timeOut: 9000 }
+      );
+      return;
+    }
+    this.toastr.warning(
+      "Ocultaste el catálogo completo. El buscador, las categorías del menú y los botones «Ver catálogo» dejan de llevar a una tienda. Muéstralo de nuevo si quieres seguir vendiendo desde él, o activa «El catálogo va en su propia página» para ocultar solo la banda.",
+      "Se apaga el catálogo",
+      { timeOut: 14000 }
+    );
+  }
+
+  /** Línea bajo el nombre de una sección oculta que explica qué pasa con ella (hoy, solo el catálogo). */
+  notaDeSeccionOculta(b: BloqueSitio): string {
+    if (!b || b.visible !== false || b.tipo !== "catalogo") return "";
+    return b.datos && b.datos.enPagina === true
+      ? "Solo se oculta la banda del inicio: el catálogo sigue en su página."
+      : "Con esta sección oculta no hay catálogo: el buscador y las categorías no llevan a nada.";
   }
 
   // ── Campos con forma propia ────────────────────────────────────────────────
@@ -4086,7 +4176,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   mensajeIA = "";
   editandoIA = false;
   textoAvanceIA = "";
-  readonly sugerenciasIA = SUGERENCIAS_EDITAR_IA;
+  /** PLAN-V2 T27: con el diseño nuevo, las ideas hablan de lo que la IA puede cambiar en una página v2. */
+  get sugerenciasIA(): ReadonlyArray<string> {
+    return sugerenciasEditarIA(this.disenoNuevo);
+  }
   readonly instruccionMax = INSTRUCCION_MAX;
   readonly maxReferencias = MAX_REFERENCIAS;
   private pilaDeshacerIA: string[] = [];
