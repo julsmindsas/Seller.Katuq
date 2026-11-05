@@ -1,33 +1,57 @@
 {
-  "version": "2026.11.05.1 - 5 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-05T13:57:34.117Z",
+  "version": "2026.11.05.2 - 5 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-05T18:44:26.292Z",
   "notas": [
     {
-      "fecha": "2026-11-04T20:15:38Z",
+      "fecha": "2026-11-05T15:57:50Z",
       "tipo": "CORRIGE",
-      "texto": "Tu tienda en línea se ve mejor: el pie sale en columnas, los precios quedan alineados, las secciones de productos vacías ya no se publican, el carrusel de la portada se puede pausar y, si tu sitio es de fondo oscuro, las tarjetas, los bordes y los botones se leen bien.",
+      "texto": "Si la transportadora tarda en responder al despachar, ya no te sale un error que te pide intentarlo de nuevo: te avisa que el despacho pudo quedar hecho y actualiza la lista para que lo revises antes de reintentar.",
       "modulos": [
-        "sitios"
+        "despachos"
       ]
     },
     {
-      "fecha": "2026-11-04T20:15:38Z",
+      "fecha": "2026-11-05T16:18:38Z",
       "tipo": "MEJORA",
-      "texto": "El editor de tu tienda te avisa cuando un enlace del menú lleva a una sección que no existe en tu inicio, y ese enlace ya no se muestra en la página.",
+      "texto": "La sección Cartera por vendedor sale contraída con un resumen (cuántos vendedores y cuánto está vencido) y se abre con un clic; tu navegador recuerda si la dejaste abierta.",
       "modulos": [
-        "sitios"
+        "cartera"
       ]
     },
     {
-      "fecha": "2026-11-05T08:04:30Z",
-      "tipo": "MEJORA",
-      "texto": "Al publicar tu página, el aviso de lo que prometes (envíos, garantías, descuentos) revisa también las tarjetas y los textos largos, te dice en qué sección está cada frase y te lleva a ella con «Ver dónde está». Si restauras una versión, lo confirmas ahí mismo, sin publicar antes tus cambios.",
+      "fecha": "2026-11-05T16:18:38Z",
+      "tipo": "CORRIGE",
+      "texto": "En Pedidos POS, «Historial pagos y asentar pagos» ya abre el formulario para registrar el pago, y cambiar el estado de pago o los datos del cliente te lleva a hacerlo desde Ventas › Pedidos, en vez de mostrar una pantalla en blanco.",
       "modulos": [
-        "sitios"
+        "pos/list-ventas"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-05T16:18:38Z",
+      "tipo": "MEJORA",
+      "texto": "La sección Cartera por vendedor sale contraída con un resumen (cuántos vendedores y cuánto está vencido) y se abre con un clic; tu navegador recuerda si la dejaste abierta.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T16:18:38Z",
+      "tipo": "CORRIGE",
+      "texto": "En Pedidos POS, «Historial pagos y asentar pagos» ya abre el formulario para registrar el pago, y cambiar el estado de pago o los datos del cliente te lleva a hacerlo desde Ventas › Pedidos, en vez de mostrar una pantalla en blanco.",
+      "modulos": [
+        "pos/list-ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T15:57:50Z",
+      "tipo": "CORRIGE",
+      "texto": "Si la transportadora tarda en responder al despachar, ya no te sale un error que te pide intentarlo de nuevo: te avisa que el despacho pudo quedar hecho y actualiza la lista para que lo revises antes de reintentar.",
+      "modulos": [
+        "despachos"
+      ]
+    },
     {
       "fecha": "2026-11-05T08:04:30Z",
       "tipo": "MEJORA",
@@ -477,33 +501,8 @@
       "modulos": [
         "en-vivo"
       ]
-    },
-    {
-      "fecha": "2026-10-28T15:10:00Z",
-      "tipo": "MEJORA",
-      "texto": "La pantalla de WooCommerce te da la dirección correcta para conectar tu tienda y te avisa que, sin la clave secreta, los pedidos no llegan.",
-      "modulos": [
-        "integrations"
-      ]
-    },
-    {
-      "fecha": "2026-10-28T15:05:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al reenviar un pedido desde tu tienda en línea ya no se borran las notas que escribiste en él.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-10-28T15:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Con Tesorería activa, si editas un pedido aprobado y el total sube por encima de lo pagado, el pedido pasa a PreAprobado y aparece en Cartera con lo que falta por pagar.",
-      "modulos": [
-        "tesoreria",
-        "cartera"
-      ]
     }
   ],
-  "commit": "412151d4ed6e9c7daa224ce285b3ea1accd39fe5",
+  "commit": "88b518d4189401dba2f26f289c2f6b7a3c262914",
   "cambiosSinCommit": 0
 }
