@@ -324,11 +324,12 @@
   color: var(--kb-muted-2);
 }
 
-// T10: «Suele ir con»: foto, nombre como se lee en la ficha y acciones.
+// T10: «Suele ir con»: foto y nombre como se lee en la ficha en la primera línea; las acciones debajo, a la derecha
+// (en el panel angosto, en una sola fila el nombre quedaba en «Cámara Pan…»).
 .afin {
-  display: grid;
-  grid-template-columns: 40px 1fr auto auto auto;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   align-items: center;
   margin-bottom: 6px;
   padding: 6px 8px;
@@ -336,7 +337,12 @@
   border-radius: 11px;
   background: #fff;
 
+  > button:first-of-type {
+    margin-left: auto;
+  }
+
   &__nombre {
+    flex: 1 1 calc(100% - 56px);
     min-width: 0;
     font-size: 12.5px;
     font-weight: 700;
