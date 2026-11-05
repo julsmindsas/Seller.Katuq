@@ -13474,3 +13474,12 @@ Todo con el sí de Daniel en el chat; cada cambio de pagos, permisos, despachos 
 - **Hallazgos sin arreglo todavía:** pedidos de Shopify creados dos o tres veces en Katuq por carrera de webhooks (#1134, #1135, #1171, #1174; solo #1171 descontó doble); el precio de campaña llega a Cereza rebajado pero sin marcarse como descuento y los cupones no viajan (0 pedidos con cupón desde mayo); productos agotados en Cereza no reciben cambios de campaña (precio y tachado congelados); 1.200 productos de Shopify sin ficha en Katuq.
 - **Sin cambio (decisión del comercio o de producto):** 1447 «Registrar pago» aprueba directo (diseño CA-08), 1490 permisos del historial técnico, 1536 quién ve «Eliminar Base de Datos», 1508 (24 productos ocultos en Shopify: se pidió confirmación a Jefferson). 1511 cerrado sin cambio (la descripción del combo se edita en el maestro).
 - **Pruebas:** locales, fuera de git (D-566), detalladas en cada mensaje de commit.
+
+### 2026-11-05 (noche) — Publicados el front 2026.11.05.4 y el backend `d1f834b1` con lo de aws-claude-1
+
+- **Pedido:** aws-claude-1 dejó lista su rama (back `a44b8ddc`, front `9f1b0334`) y pidió mezclarla y desplegar.
+- **Front:** mezcla `6a577be2` (sin conflictos; la principal solo traía contrato y release), release `7fdc006e`, versión 2026.11.05.4. Candado y verify-dist en verde; `version.json` comprobado. Salen cuatro notas de Sitios: «← Seguir comprando» ya no da 404, «Empezar desde cero» agrega con el mouse, el selector de piezas de «Para tu negocio» no se cierra solo y ocultar «Todo el catálogo» ya no apaga el catálogo. Las del diseño nuevo siguen retiradas.
+- **Backend:** mezcla `d1f834b1` (sin conflictos; la principal traía el script `instalar-stock-sombra-oms` del 1509, que no se corrió). En el EC2 se fijó con `git fetch` + `git merge --ff-only d1f834b1`, para no arrastrar lo que llegara durante el despliegue: de `13f61a4d` a `d1f834b1`, sin paquetes ni índices.
+- **Pruebas:** sintaxis sin errores; `test:sitios-listo` 5, `test:sitios-versiones` 13 y `test:cotizable` 4 en verde; `test:sitios-publicacion` con las mismas 7 fallas de antes.
+- **Verificado:** `katuq-api` en línea; 502 solo durante el reinicio y ninguno después.
+- **No verificado:** las cuatro correcciones en una tienda publicada (hoy no hay tiendas con certificado en el log) ni el editor en el navegador.
