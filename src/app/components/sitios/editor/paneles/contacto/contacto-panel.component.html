@@ -2,8 +2,24 @@
 <h4 class="subgrupo">Contacto y cotización <small>(diseño nuevo)</small></h4>
 <p class="aviso aviso--info">
   La vista previa editable muestra el formulario de siempre. Cómo lo verán tus clientes, con la columna de confianza y la
-  tarjeta del formulario, está en la Vista fiel.
+  tarjeta del formulario (o el cotizador por pasos), está en la Vista fiel.
   <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
+</p>
+
+<h4 class="subgrupo">Cómo se ve</h4>
+<div class="segmentos" role="group" aria-label="Cómo se ve el formulario">
+  <button type="button" [class.is-activo]="!esGuiado" [attr.aria-pressed]="!esGuiado" (click)="elegirModo('plano')">Una sola tarjeta</button>
+  <button type="button" [class.is-activo]="esGuiado" [attr.aria-pressed]="esGuiado" (click)="elegirModo('guiado')">Cotizador por pasos</button>
+</div>
+<p class="nota" *ngIf="!esGuiado">Los puntos a la izquierda y el formulario completo en una tarjeta a la derecha. Sirve para un contacto corto.</p>
+<p class="nota" *ngIf="esGuiado">
+  Una sola consola: a la izquierda, el título grande, tus puntos, la imagen y tus canales; a la derecha, tres pasos con
+  progreso («¿Qué necesitas?», «¿A quién le respondemos?» y «Confirma y envía»). Sin opciones de «¿Qué necesitas?», ese paso no
+  sale. Sin JavaScript, los pasos se ven uno debajo del otro.
+</p>
+<p class="aviso" *ngIf="esGuiado && !conEstructura">
+  Tu tema no tiene color de estructura (Estilo › Diseño nuevo): el lado izquierdo sale con el fondo de la sección, no oscuro, y sin la
+  imagen.
 </p>
 
 <div class="campo">
@@ -17,6 +33,7 @@
 <p class="nota">
   Lo que le das a quien escribe: «Asesoría especializada», «Cotización formal»… Escribe solo lo que cumples. Sin puntos, la
   columna sale sin lista. Si un punto promete envíos, garantía o tiempos, tendrás que confirmarlo antes de publicar.
+  <ng-container *ngIf="esGuiado">En el cotizador por pasos los puntos van con un cuadrito de color y un filete, sin ícono.</ng-container>
 </p>
 <div class="repetible" *ngFor="let p of puntos; let k = index; let primero = first; let ultimo = last; trackBy: porIndice">
   <div class="repetible__cabeza">
@@ -27,7 +44,7 @@
   </div>
   <input type="text" [maxlength]="topes.textoPunto" placeholder="Asesoría especializada para tu proyecto" aria-label="Texto del punto"
          [ngModel]="p.texto" (ngModelChange)="cambiarPunto(k, 'texto', $event)" />
-  <div class="icono-fila">
+  <div class="icono-fila" *ngIf="!esGuiado">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path *ngIf="p.icono && trazos[p.icono]" [attr.d]="trazos[p.icono]" />
     </svg>
@@ -43,15 +60,72 @@
 <p class="nota">
   Opciones que quien escribe puede marcar (una o varias), por ejemplo «Redes y WiFi», «Cámaras y seguridad», «Energía». Lo que
   marque te llega en la nota del prospecto o de la cotización. Sin opciones, la pregunta no sale.
+  <ng-container *ngIf="esGuiado">En el cotizador por pasos cada opción es una baldosa grande: suma una línea de lo que cubre y un ícono (sin ícono, la baldosa sale más baja).</ng-container>
 </p>
-<div class="opciones">
-  <div class="fila-opcion" *ngFor="let o of intereses; let k = index; trackBy: porIndice">
-    <input type="text" [maxlength]="topes.textoInteres" [attr.aria-label]="'Opción ' + (k + 1)" placeholder="Redes y WiFi"
-           [ngModel]="o" (ngModelChange)="cambiarInteres(k, $event)" />
-    <button type="button" class="mini mini--quitar" (click)="quitarInteres(k)" [attr.aria-label]="'Quitar la opción ' + (k + 1)">Quitar</button>
+<div class="repetible" *ngFor="let o of necesidades; let k = index; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <strong class="numero">Opción {{ k + 1 }}</strong>
+    <button type="button" class="mini mini--quitar" (click)="quitarNecesidad(k)" [attr.aria-label]="'Quitar la opción ' + (k + 1)">Quitar</button>
   </div>
+  <input type="text" [maxlength]="topes.textoInteres" [attr.aria-label]="'Nombre de la opción ' + (k + 1)" placeholder="Redes y WiFi"
+         [ngModel]="o.texto" (ngModelChange)="cambiarNecesidad(k, 'texto', $event)" />
+  <ng-container *ngIf="esGuiado">
+    <input type="text" [maxlength]="topes.detalleInteres" [attr.aria-label]="'Lo que cubre la opción ' + (k + 1)" placeholder="Routers, mesh y access points"
+           [ngModel]="o.detalle" (ngModelChange)="cambiarNecesidad(k, 'detalle', $event)" />
+    <div class="icono-fila">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path *ngIf="o.icono && trazos[o.icono]" [attr.d]="trazos[o.icono]" />
+      </svg>
+      <select [ngModel]="o.icono" (ngModelChange)="cambiarNecesidad(k, 'icono', $event)" [attr.aria-label]="'Ícono de la opción ' + (k + 1)">
+        <option value="">Sin ícono</option>
+        <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
+      </select>
+    </div>
+  </ng-container>
 </div>
-<button type="button" class="agregar" [disabled]="intereses.length >= topes.intereses" (click)="agregarInteres()">Agregar opción</button>
+<button type="button" class="agregar" [disabled]="necesidades.length >= topes.intereses" (click)="agregarNecesidad()">Agregar opción</button>
+
+<ng-container *ngIf="esGuiado">
+  <h4 class="subgrupo">Imagen del lado izquierdo <small>(opcional)</small></h4>
+  <p class="nota">
+    Una imagen de ambiente, mejor horizontal y oscura, de al menos {{ anchoMinimo }} px de ancho. Es decorativa: no se describe, y el
+    texto se asienta encima con un velo para que se lea. Sin imagen, el lado izquierdo sale liso. Usa solo material tuyo o con
+    permiso.
+  </p>
+  <div class="imagen-riel" role="group" aria-label="Imagen del lado izquierdo">
+    <img *ngIf="imagen" [src]="imagen" alt="" />
+    <label class="imagen-riel__archivo">
+      {{ subiendo ? 'Subiendo…' : (imagen ? 'Cambiar la imagen' : 'Elegir una imagen') }}
+      <input type="file" accept="image/*" (change)="subirImagen($event)" [disabled]="subiendo" />
+    </label>
+    <button type="button" class="mini mini--quitar" *ngIf="imagen" (click)="quitarImagen()">Quitar</button>
+  </div>
+  <p class="aviso" *ngIf="avisoImagen">{{ avisoImagen }}</p>
+
+  <h4 class="subgrupo">Marcas <small>(de 1 a 8, opcional)</small></h4>
+  <p class="nota">
+    Salen en texto pequeño bajo las opciones. Escribe solo marcas que puedas nombrar como tuyas o con las que trabajes. Sin
+    marcas no sale la fila.
+  </p>
+  <div class="opciones">
+    <div class="fila-opcion" *ngFor="let m of marcas; let k = index; trackBy: porIndice">
+      <input type="text" [maxlength]="topes.textoMarca" [attr.aria-label]="'Marca ' + (k + 1)" placeholder="TP-Link"
+             [ngModel]="m" (ngModelChange)="cambiarMarca(k, $event)" />
+      <button type="button" class="mini mini--quitar" (click)="quitarMarca(k)" [attr.aria-label]="'Quitar la marca ' + (k + 1)">Quitar</button>
+    </div>
+  </div>
+  <button type="button" class="agregar" [disabled]="marcas.length >= topes.marcas" (click)="agregarMarca()">Agregar marca</button>
+
+  <h4 class="subgrupo">Pasos</h4>
+  <button type="button" class="opcion" [class.is-active]="conResumen" [attr.aria-pressed]="conResumen" (click)="alternarResumen()">
+    <span class="opcion__texto">
+      <strong>Resumen antes de enviar</strong>
+      <small *ngIf="conResumen">Tres pasos: opciones, datos y un resumen que la persona confirma. Se siente como un recibo, con un clic más.</small>
+      <small *ngIf="!conResumen">Dos pasos: opciones y datos, y se envía desde ahí. El resumen sale en el mensaje de gracias.</small>
+    </span>
+    <span class="palanca"><span></span></span>
+  </button>
+</ng-container>
 
 <h4 class="subgrupo">Lo que se pide</h4>
 <button type="button" class="opcion" [class.is-active]="pideEmpresa" [attr.aria-pressed]="pideEmpresa" (click)="alternarEmpresa()">

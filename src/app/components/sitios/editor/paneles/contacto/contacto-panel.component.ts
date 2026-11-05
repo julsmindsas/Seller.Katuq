@@ -1,16 +1,24 @@
 import { Component } from "@angular/core";
+import { ToastrService } from "ngx-toastr";
+import { SitiosService } from "../../../sitios.service";
 import { ICONOS_SITIO, TRAZOS_ICONO_SITIO } from "../../../iconos-sitio";
 import { PanelSitioBase } from "../panel-sitio-base";
 import { NOMBRES_ICONO } from "../barras/barras-datos";
 import {
+  ANCHO_MINIMO_IMAGEN,
   CANALES_CONTACTO,
   CanalContacto,
+  ModoContacto,
+  NecesidadContacto,
   PuntoConfianza,
   TOPES_CONTACTO,
   canalesOcultosDe,
+  conNecesidades,
   conPuntos,
   esNumeroDeRelleno,
-  interesesDe,
+  marcasDe,
+  modoDe,
+  necesidadesDe,
   numeroParaLeer,
   puntosDe,
   textoHorarioAtencion,
@@ -22,9 +30,11 @@ import {
  * sale debajo de sus campos de siempre (título, descripción, qué se pide, texto del botón y destino), solo con el diseño
  * nuevo encendido.
  *
- * Escribe en `bloque.datos`: `antetitulo`, `puntos[≤4]{icono, texto}`, `intereses[≤6]`, `respuesta`, `pedirEmpresa` y
- * `canalesOcultos`; y en `bloque.estilo.superficie` el fondo de la sección (Claro, Oscuro o Alterno). Nada se inventa: sin
- * puntos no sale ninguno, y un canal sin dato (WhatsApp, correo, horario) no sale.
+ * Escribe en `bloque.datos`: `antetitulo`, `puntos[≤4]{icono, texto}`, `necesidades[≤6]{texto, detalle, icono}` (antes
+ * `intereses`, que el servidor sigue leyendo), `respuesta`, `pedirEmpresa`, `canalesOcultos`, y los del cotizador por pasos:
+ * `modo` («guiado»), `imagen`, `marcas[≤8]` y `pasos` (2 = sin paso de resumen); y en `bloque.estilo.superficie` el fondo de
+ * la sección (Claro, Oscuro o Alterno). Nada se inventa: sin puntos no sale ninguno, sin marcas ni imagen tampoco, y un canal
+ * sin dato (WhatsApp, correo, horario) no sale.
  */
 @Component({
   selector: "app-panel-contacto",
@@ -33,11 +43,19 @@ import {
 })
 export class ContactoPanelComponent extends PanelSitioBase {
   readonly topes = TOPES_CONTACTO;
+  readonly anchoMinimo = ANCHO_MINIMO_IMAGEN;
   readonly canales = CANALES_CONTACTO;
   readonly iconos = ICONOS_SITIO.map((id) => ({ id, nombre: NOMBRES_ICONO[id] || id }));
   readonly trazos = TRAZOS_ICONO_SITIO;
   /** Para enlazar cada etiqueta con su campo (varios paneles pueden estar abiertos). */
   readonly uid = `cto-${Math.random().toString(36).slice(2, 8)}`;
+  /** Subiendo la imagen del cotizador, y el aviso si se queda corta. */
+  subiendo = false;
+  avisoImagen = "";
+
+  constructor(private service: SitiosService, private toastr: ToastrService) {
+    super();
+  }
 
   get datos(): any {
     return (this.bloque && this.bloque.datos) || {};
@@ -115,34 +133,136 @@ export class ContactoPanelComponent extends PanelSitioBase {
     this.avisar();
   }
 
+  // ── Cómo se ve ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  get modo(): ModoContacto {
+    return modoDe(this.datos);
+  }
+
+  get esGuiado(): boolean {
+    return this.modo === "guiado";
+  }
+
+  elegirModo(modo: ModoContacto): void {
+    if (modo === "guiado") this.datos.modo = "guiado";
+    else delete this.datos.modo;
+    this.avisar();
+  }
+
+  /** Con el resumen (por defecto), el cotizador tiene 3 pasos; sin él, el resumen sale al final, en el éxito. */
+  get conResumen(): boolean {
+    return this.datos.pasos !== 2;
+  }
+
+  alternarResumen(): void {
+    if (this.conResumen) this.datos.pasos = 2;
+    else delete this.datos.pasos;
+    this.avisar();
+  }
+
   // ── ¿Qué necesitas? ───────────────────────────────────────────────────────────────────────────────────────────
 
-  get intereses(): string[] {
-    const fuente = this.datos.intereses;
-    if (!this.cacheIntereses || this.cacheIntereses.fuente !== fuente) this.cacheIntereses = { fuente, lista: interesesDe(this.datos) };
-    return this.cacheIntereses.lista;
+  get necesidades(): NecesidadContacto[] {
+    const fuente = this.datos.necesidades && this.datos.necesidades.length ? this.datos.necesidades : this.datos.intereses;
+    if (!this.cacheNecesidades || this.cacheNecesidades.fuente !== fuente) this.cacheNecesidades = { fuente, lista: necesidadesDe(this.datos) };
+    return this.cacheNecesidades.lista;
   }
-  private cacheIntereses: { fuente: any; lista: string[] } | null = null;
+  private cacheNecesidades: { fuente: any; lista: NecesidadContacto[] } | null = null;
 
-  cambiarInteres(k: number, valor: string): void {
-    const lista = interesesDe(this.datos);
+  cambiarNecesidad(k: number, campo: "texto" | "detalle" | "icono", valor: string): void {
+    const lista = necesidadesDe(this.datos);
+    if (!lista[k]) return;
+    lista[k] = { ...lista[k], [campo]: valor };
+    conNecesidades(this.datos, lista);
+    this.avisar();
+  }
+
+  agregarNecesidad(): void {
+    const lista = necesidadesDe(this.datos);
+    if (lista.length >= TOPES_CONTACTO.intereses) return;
+    conNecesidades(this.datos, [...lista, { texto: "", detalle: "", icono: "" }]);
+    this.avisar();
+  }
+
+  quitarNecesidad(k: number): void {
+    const lista = necesidadesDe(this.datos);
+    lista.splice(k, 1);
+    conNecesidades(this.datos, lista);
+    this.avisar();
+  }
+
+  // ── Imagen del lado izquierdo (cotizador por pasos) ───────────────────────────────────────────────────────────
+
+  get imagen(): string {
+    return String(this.datos.imagen || "");
+  }
+
+  subirImagen(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+    this.subiendo = true;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendo = false;
+        input.value = "";
+        if (!res || !res.success || !res.url) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        this.datos.imagen = res.url;
+        this.avisoImagen = this.avisoDeTamano(Number(res.ancho), Number(res.alto));
+        this.avisar();
+      },
+      error: () => {
+        this.subiendo = false;
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
+  }
+
+  /** Qué decir si la imagen se queda corta para la columna. "" si sirve o si el servidor no mandó las medidas. */
+  avisoDeTamano(ancho: number, alto: number): string {
+    if (!(ancho > 0) || !(alto > 0)) return "";
+    if (ancho >= ANCHO_MINIMO_IMAGEN) return "";
+    return `Esta imagen mide ${ancho}×${alto} px. La columna llega a unos 560 px de ancho: usa una de al menos ${ANCHO_MINIMO_IMAGEN} px para que no se vea borrosa.`;
+  }
+
+  quitarImagen(): void {
+    delete this.datos.imagen;
+    this.avisoImagen = "";
+    this.avisar();
+  }
+
+  // ── Marcas en texto (cotizador por pasos) ─────────────────────────────────────────────────────────────────────
+
+  get marcas(): string[] {
+    const fuente = this.datos.marcas;
+    if (!this.cacheMarcas || this.cacheMarcas.fuente !== fuente) this.cacheMarcas = { fuente, lista: marcasDe(this.datos) };
+    return this.cacheMarcas.lista;
+  }
+  private cacheMarcas: { fuente: any; lista: string[] } | null = null;
+
+  cambiarMarca(k: number, valor: string): void {
+    const lista = marcasDe(this.datos);
     if (lista[k] === undefined) return;
     lista[k] = valor;
-    this.datos.intereses = lista;
+    this.datos.marcas = lista;
     this.avisar();
   }
 
-  agregarInteres(): void {
-    const lista = interesesDe(this.datos);
-    if (lista.length >= TOPES_CONTACTO.intereses) return;
-    this.datos.intereses = [...lista, ""];
+  agregarMarca(): void {
+    const lista = marcasDe(this.datos);
+    if (lista.length >= TOPES_CONTACTO.marcas) return;
+    this.datos.marcas = [...lista, ""];
     this.avisar();
   }
 
-  quitarInteres(k: number): void {
-    const lista = interesesDe(this.datos);
+  quitarMarca(k: number): void {
+    const lista = marcasDe(this.datos);
     lista.splice(k, 1);
-    this.datos.intereses = lista;
+    this.datos.marcas = lista;
     this.avisar();
   }
 

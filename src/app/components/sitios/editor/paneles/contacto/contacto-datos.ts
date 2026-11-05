@@ -9,8 +9,38 @@ export interface PuntoConfianza {
   texto: string;
 }
 
-/** Topes del servidor (`contacto.js`): hasta 4 puntos de 80 letras, 6 opciones de 40, el antetítulo de 40 y la línea de respuesta de 80. */
-export const TOPES_CONTACTO = Object.freeze({ puntos: 4, textoPunto: 80, intereses: 6, textoInteres: 40, antetitulo: 40, respuesta: 80 });
+/** Una opción de «¿Qué necesitas?»: el texto, una línea de lo que cubre y un ícono (estos dos solo los pinta el cotizador por pasos). */
+export interface NecesidadContacto {
+  texto: string;
+  detalle: string;
+  icono: string;
+}
+
+/** Cómo se ve la sección: la tarjeta de siempre («plano») o el cotizador por pasos («guiado»). */
+export type ModoContacto = "plano" | "guiado";
+
+/**
+ * Topes del servidor (`contacto.js`): hasta 4 puntos de 80 letras, 6 opciones de 40 (con su línea de 60), 8 marcas de 24, el
+ * antetítulo de 40 y la línea de respuesta de 80.
+ */
+export const TOPES_CONTACTO = Object.freeze({
+  puntos: 4,
+  textoPunto: 80,
+  intereses: 6,
+  textoInteres: 40,
+  detalleInteres: 60,
+  marcas: 8,
+  textoMarca: 24,
+  antetitulo: 40,
+  respuesta: 80,
+});
+
+/** Lo más angosta que puede ser una imagen del cotizador para no verse borrosa (la columna mide hasta ~560 px en pantallas grandes). */
+export const ANCHO_MINIMO_IMAGEN = 1000;
+
+export function modoDe(datos: any): ModoContacto {
+  return datos && datos.modo === "guiado" ? "guiado" : "plano";
+}
 
 /** Los canales que el comercio puede quitar de la columna izquierda. Salen solos si hay dato real; sin dato no salen. */
 export type CanalContacto = "whatsapp" | "correo" | "horario";
@@ -30,10 +60,38 @@ export function conPuntos(datos: any, lista: PuntoConfianza[]): void {
   datos.puntos = lista.slice(0, TOPES_CONTACTO.puntos).map((p) => (p.icono ? { icono: p.icono, texto: p.texto } : { texto: p.texto }));
 }
 
-/** Las opciones de «¿Qué necesitas?» para editar (texto plano). */
-export function interesesDe(datos: any): string[] {
-  const fuente = Array.isArray(datos && datos.intereses) ? datos.intereses : [];
-  return fuente.map((t: any) => (typeof t === "string" ? t : String((t && t.texto) || "")));
+/**
+ * Las opciones de «¿Qué necesitas?» para editar: las `necesidades` o, si el sitio solo trae los `intereses` de siempre
+ * (solo texto), esos mismos. Siempre una lista nueva.
+ */
+export function necesidadesDe(datos: any): NecesidadContacto[] {
+  const nuevas = Array.isArray(datos && datos.necesidades) ? datos.necesidades : [];
+  const viejas = Array.isArray(datos && datos.intereses) ? datos.intereses : [];
+  const fuente = nuevas.length ? nuevas : viejas;
+  return fuente.map((n: any) =>
+    typeof n === "string"
+      ? { texto: n, detalle: "", icono: "" }
+      : { texto: String((n && n.texto) || ""), detalle: String((n && n.detalle) || ""), icono: String((n && n.icono) || "") }
+  );
+}
+
+/**
+ * Guarda las opciones en `necesidades` y quita los `intereses` viejos (el servidor lee primero las `necesidades`, y así no
+ * quedan dos listas). Las filas a medio llenar (sin texto) se conservan mientras se escribe: el servidor las descarta.
+ */
+export function conNecesidades(datos: any, lista: NecesidadContacto[]): void {
+  datos.necesidades = lista.slice(0, TOPES_CONTACTO.intereses).map((n) => ({
+    texto: n.texto,
+    ...(n.detalle ? { detalle: n.detalle } : {}),
+    ...(n.icono ? { icono: n.icono } : {}),
+  }));
+  delete datos.intereses;
+}
+
+/** Las marcas en texto del cotizador por pasos. */
+export function marcasDe(datos: any): string[] {
+  const fuente = Array.isArray(datos && datos.marcas) ? datos.marcas : [];
+  return fuente.map((m: any) => (typeof m === "string" ? m : String((m && m.texto) || "")));
 }
 
 /** Los canales que el comercio quitó. */

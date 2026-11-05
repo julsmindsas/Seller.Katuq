@@ -20,3 +20,47 @@
     padding: 11px 13px;
   }
 }
+
+// Imagen del lado izquierdo del cotizador por pasos: miniatura, botón de archivo y «Quitar».
+.imagen-riel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  img {
+    width: 84px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--kb-line-3);
+  }
+
+  &__archivo {
+    @include kb-btn-base;
+    position: relative;
+    flex: 1 1 160px;
+    border: 1.5px dashed var(--kb-line-5);
+    background: var(--kb-surface);
+    color: var(--kb-accent-fg);
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--kb-accent);
+      background: var(--kb-accent-wash);
+    }
+
+    input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
