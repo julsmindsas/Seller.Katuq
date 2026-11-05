@@ -1,17 +1,57 @@
 {
-  "version": "2026.11.04.2 - 4 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-04T14:52:31.455Z",
+  "version": "2026.11.05.1 - 5 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-05T13:57:34.117Z",
   "notas": [
     {
-      "fecha": "2026-11-04T14:44:33Z",
+      "fecha": "2026-11-04T20:15:38Z",
       "tipo": "CORRIGE",
-      "texto": "En «En vivo», los tiempos largos se leen en días («lleva 6 días sin producir») y no en horas, el mapa ya no pone en la moto pedidos de días anteriores y una transportadora deja de salir «en ruta» con envíos de hace más de 5 días: esos pedidos aparecen en el aviso para que los marques entregados.",
+      "texto": "Tu tienda en línea se ve mejor: el pie sale en columnas, los precios quedan alineados, las secciones de productos vacías ya no se publican, el carrusel de la portada se puede pausar y, si tu sitio es de fondo oscuro, las tarjetas, los bordes y los botones se leen bien.",
       "modulos": [
-        "en-vivo"
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-04T20:15:38Z",
+      "tipo": "MEJORA",
+      "texto": "El editor de tu tienda te avisa cuando un enlace del menú lleva a una sección que no existe en tu inicio, y ese enlace ya no se muestra en la página.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T08:04:30Z",
+      "tipo": "MEJORA",
+      "texto": "Al publicar tu página, el aviso de lo que prometes (envíos, garantías, descuentos) revisa también las tarjetas y los textos largos, te dice en qué sección está cada frase y te lleva a ella con «Ver dónde está». Si restauras una versión, lo confirmas ahí mismo, sin publicar antes tus cambios.",
+      "modulos": [
+        "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-05T08:04:30Z",
+      "tipo": "MEJORA",
+      "texto": "Al publicar tu página, el aviso de lo que prometes (envíos, garantías, descuentos) revisa también las tarjetas y los textos largos, te dice en qué sección está cada frase y te lleva a ella con «Ver dónde está». Si restauras una versión, lo confirmas ahí mismo, sin publicar antes tus cambios.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-04T20:15:38Z",
+      "tipo": "CORRIGE",
+      "texto": "Tu tienda en línea se ve mejor: el pie sale en columnas, los precios quedan alineados, las secciones de productos vacías ya no se publican, el carrusel de la portada se puede pausar y, si tu sitio es de fondo oscuro, las tarjetas, los bordes y los botones se leen bien.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-04T20:15:38Z",
+      "tipo": "MEJORA",
+      "texto": "El editor de tu tienda te avisa cuando un enlace del menú lleva a una sección que no existe en tu inicio, y ese enlace ya no se muestra en la página.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-04T14:44:33Z",
       "tipo": "CORRIGE",
@@ -462,35 +502,8 @@
         "tesoreria",
         "cartera"
       ]
-    },
-    {
-      "fecha": "2026-10-27T21:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "Un producto puede estar en varias categorías: en la pestaña Categorías elige «Otras categorías» y el producto también aparece al filtrar por ellas en el punto de venta, la venta asistida, el listado de productos y tu tienda. Además, el filtro de categoría del punto de venta ahora sí filtra.",
-      "modulos": [
-        "productos",
-        "categorias"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T21:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "Puedes agregar a tus productos videos de YouTube, TikTok, Instagram o Vimeo pegando el enlace, o subir un video corto (MP4 o WebM). Se ven en la ficha del producto de tu tienda y, al bajar, el video que estás viendo sigue en una ventanita que puedes cerrar. En el punto de venta y la venta asistida, «Ver video» lo abre.",
-      "modulos": [
-        "productos",
-        "ventas/ventas-pos",
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-10-27T20:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "En Productos → Importar → «Importar fotos de productos» subes muchas fotos a la vez y cada una llega a su producto por la referencia del nombre del archivo (ALM-4789.jpg, ALM-4789-1.jpg…). Antes de aplicar ves a qué producto va cada foto y al final puedes descargar el reporte.",
-      "modulos": [
-        "productos"
-      ]
     }
   ],
-  "commit": "0ab1be6736562663236fbe64ebc8b4cf61ff5d89",
+  "commit": "412151d4ed6e9c7daa224ce285b3ea1accd39fe5",
   "cambiosSinCommit": 0
 }
