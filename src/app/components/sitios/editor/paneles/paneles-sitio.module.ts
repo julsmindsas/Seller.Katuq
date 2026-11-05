@@ -8,6 +8,7 @@ import { PanelPortadaComponent } from "./portada/panel-portada.component";
 import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
 import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
+import { FichasPanelComponent } from "./fichas/fichas-panel.component";
 
 /**
  * Paneles del diseño nuevo del editor de sitios (PLAN-V2 T03). Cada panel nuevo se declara aquí (o se importa, si es
@@ -18,7 +19,14 @@ import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel
  */
 @NgModule({
   imports: [CommonModule, FormsModule, SelectorProductosModule, AlBodyModule],
-  declarations: [PanelSitioComponent, AtencionPanelComponent, BarrasEncabezadoPanelComponent, BarrasAnuncioPanelComponent, PanelPortadaComponent],
+  declarations: [
+    PanelSitioComponent,
+    AtencionPanelComponent,
+    BarrasEncabezadoPanelComponent,
+    BarrasAnuncioPanelComponent,
+    PanelPortadaComponent,
+    FichasPanelComponent,
+  ],
   exports: [PanelSitioComponent],
 })
 export class PanelesSitioModule {}

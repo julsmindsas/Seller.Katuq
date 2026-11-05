@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { BaseService } from "../../shared/services/base.service";
 import { BloqueSitio, TemaSitio } from "../sitio-render/sitio-render.component";
+import { AsesorTienda, FichaProducto } from "./editor/paneles/fichas/fichas-datos";
 
 /**
  * Configuración de venta del sitio. Vive aparte de los bloques porque el
@@ -95,6 +96,10 @@ export interface TiendaSitio {
     tiempoRespuesta?: string;
     fueraDeHorario?: string;
   } | null;
+  /** Diseño nuevo (PLAN-V2 T08, Tienda › Fichas de producto): «Ideal para», datos, pasos y preguntas por producto. */
+  fichas?: FichaProducto[];
+  /** Diseño nuevo (PLAN-V2 T08): quién responde las preguntas y «Pregúntale al técnico». */
+  asesores?: AsesorTienda[];
 }
 
 /** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */

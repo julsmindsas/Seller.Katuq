@@ -1735,7 +1735,7 @@
 
           <!-- Diseño nuevo (PLAN-V2 T03): el panel propio del bloque, si su tipo trae uno (paneles/registro.ts). -->
           <app-panel-sitio *ngIf="panelDeBloque(b) as panelPropio" [panel]="panelPropio" [bloque]="b" [contenido]="contenido"
-                           (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-sitio>
+                           [nombreSitio]="sitio?.nombre || ''" (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-sitio>
 
           <!-- Diseño nuevo (PLAN-V2 T02, DISENO §3.1): la cabecera de la sección, igual en los 8 bloques que la usan. -->
           <ng-container *ngIf="conCabeceraV2(b.tipo)">
@@ -3316,7 +3316,8 @@
               (click)="abrirGrupoTienda(p.tienda?.titulo || '')" (keydown.enter)="abrirGrupoTienda(p.tienda?.titulo || '')"
               (keydown.space)="$event.preventDefault(); abrirGrupoTienda(p.tienda?.titulo || '')">{{ p.tienda?.titulo }}</h3>
           <p class="nota" *ngIf="p.tienda?.descripcion">{{ p.tienda?.descripcion }}</p>
-          <app-panel-sitio [panel]="p" [contenido]="contenido" (cambio)="alCambiarPanel()" (verFiel)="verVistaFiel()"></app-panel-sitio>
+          <app-panel-sitio [panel]="p" [contenido]="contenido" [nombreSitio]="sitio?.nombre || ''" (cambio)="alCambiarPanel()"
+                           (verFiel)="verVistaFiel()"></app-panel-sitio>
         </div>
 
       </div>

@@ -17,6 +17,8 @@ export class PanelSitioComponent implements OnChanges, AfterViewInit, OnDestroy 
   @Input() panel: PanelSitio | null = null;
   @Input() bloque: BloqueSitio | null = null;
   @Input() contenido: ContenidoSitio | null = null;
+  /** El nombre del sitio, para los paneles que muestran cómo se lee la página (PLAN-V2 T08). */
+  @Input() nombreSitio = "";
   @Output() cambio = new EventEmitter<void>();
   /** El panel pide ver la Vista fiel (lo que la previa editable no dibuja igual que la página). */
   @Output() verFiel = new EventEmitter<void>();
@@ -51,6 +53,7 @@ export class PanelSitioComponent implements OnChanges, AfterViewInit, OnDestroy 
     if (!this.ref) return;
     this.ref.setInput("bloque", this.bloque);
     this.ref.setInput("contenido", this.contenido);
+    this.ref.setInput("nombreSitio", this.nombreSitio || "");
   }
 
   private montar(): void {

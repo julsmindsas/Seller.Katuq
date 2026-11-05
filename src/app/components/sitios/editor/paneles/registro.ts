@@ -4,6 +4,7 @@ import { PanelPortadaComponent } from "./portada/panel-portada.component";
 import { AtencionPanelComponent } from "./atencion/atencion-panel.component";
 import { BarrasAnuncioPanelComponent } from "./barras/barras-anuncio-panel.component";
 import { BarrasEncabezadoPanelComponent } from "./barras/barras-encabezado-panel.component";
+import { FichasPanelComponent } from "./fichas/fichas-panel.component";
 export { TIPOS_NUEVOS_SITIO, esTipoNuevoSitio } from "./tipos-nuevos";
 // La base vive en su propio archivo (PLAN-V2 T06 y T07): si estuviera aquí, este registro y cada panel se importarían en
 // círculo y el editor fallaría al cargar («Cannot access 'PanelSitioBase' before initialization»). Se re-exporta para
@@ -72,6 +73,16 @@ export const PANELES_SITIO: PanelSitio[] = [
   { id: "barrasAnuncio", tipo: "anuncio", componente: BarrasAnuncioPanelComponent },
   // T07 (módulo `portada`): la portada «Espacios». Extiende el bloque `hero`: sale debajo de sus campos de siempre.
   { id: "portada", componente: PanelPortadaComponent, tipo: "hero" },
+  // T08 (módulo `ficha`): Tienda › Fichas de producto («Ideal para», datos clave, pasos, preguntas respondidas y quién
+  // responde).
+  {
+    id: "ficha",
+    componente: FichasPanelComponent,
+    tienda: {
+      titulo: "Fichas de producto",
+      descripcion: "Para qué sirve cada producto, cómo se instala y las preguntas que ya respondiste. Salen en su tarjeta y en su ficha.",
+    },
+  },
 ];
 
 /** El panel que edita un tipo de bloque, si lo hay. */
