@@ -1596,6 +1596,99 @@
   }
 }
 
+// ── PLAN-V2 T04: Vista fiel ──────────────────────────────────────────────────
+// El HTML real del servidor en un marco: 1440 px reales encogidos con `transform`
+// (el marco conserva sus 1440 px de ancho, así que la página usa sus reglas de
+// computador) o 390 px a tamaño real con borde de teléfono.
+.previa__aviso {
+  .previa__texto-fiel {
+    flex: 1;
+    min-width: 0;
+    color: var(--kb-body);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+
+  .btn-fantasma--sm {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 12.5px;
+  }
+
+  // En un celular, el texto va en su propia fila y los botones debajo.
+  @media (max-width: 575px) {
+    flex-wrap: wrap;
+
+    .previa__texto-fiel {
+      flex-basis: calc(100% - 25px);
+    }
+  }
+
+  // El interruptor «Editable | Vista fiel», más bajo que el de la barra: cabe en la franja.
+  .modo-vista {
+    flex: none;
+    margin: -6px 0;
+    padding: 3px;
+
+    button {
+      padding: 6px 12px;
+      font-size: 12.5px;
+      gap: 6px;
+      white-space: nowrap;
+    }
+  }
+}
+
+.fiel {
+  position: relative;
+  flex: none;
+  align-self: flex-start;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--kb-shadow-frame);
+
+  &--movil {
+    box-sizing: content-box;
+    border-radius: 34px;
+    border: 10px solid #1f1d2b;
+  }
+
+  &__marco {
+    display: block;
+    border: 0;
+    background: #fff;
+    transform-origin: 0 0;
+  }
+
+  &__estado {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    text-align: center;
+    background: #fff;
+  }
+
+  &__titulo {
+    color: var(--kb-ink);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  &__texto {
+    color: var(--kb-muted);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: normal;
+  }
+}
+
 .marco {
   width: 100%;
   max-width: 900px;

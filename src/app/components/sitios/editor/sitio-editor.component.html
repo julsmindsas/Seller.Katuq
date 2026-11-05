@@ -2326,10 +2326,10 @@
               <span class="palanca"><span></span></span>
             </button>
             <ng-container *ngIf="disenoNuevo">
-              <p class="aviso aviso--info">Esta vista previa todavía muestra el diseño de siempre. Antes de publicar, mira
-                cómo queda en la vista fiel: «Ver cómo queda» abre tu borrador guardado tal como lo verán tus clientes.</p>
-              <button type="button" class="enlace-sutil" (click)="compartirVistaPrevia()" [disabled]="armandoVistaPrevia">
-                {{ armandoVistaPrevia ? 'Armando…' : 'Ver cómo queda' }}
+              <p class="aviso aviso--info">La previa «Editable» todavía muestra el diseño de siempre. Antes de publicar, mira
+                cómo queda en la vista fiel: «Ver cómo queda» muestra tu borrador guardado tal como lo verán tus clientes.</p>
+              <button type="button" class="enlace-sutil" (click)="verVistaFiel()" [disabled]="cargandoFiel">
+                {{ cargandoFiel ? 'Cargando…' : 'Ver cómo queda' }}
               </button>
               <h4 class="subgrupo">Color de estructura <small>(opcional)</small></h4>
               <div class="colores">
@@ -3883,13 +3883,52 @@
 
     <!-- ═══ Vista previa ═══════════════════════════════════════════════════ -->
     <main class="previa">
-      <div class="previa__aviso">
+      <!-- PLAN-V2 T04: «Editable» es la previa de siempre (se edita sobre ella); «Vista fiel», el borrador GUARDADO tal
+           como lo arma el servidor. El interruptor va aquí, sobre la previa que cambia, y no en la barra de arriba (que
+           ya no cabe en una fila). Como el resto del diseño nuevo, sale con la bandera siteDesignV2 o si la página ya
+           lo usa. -->
+      <div class="previa__aviso" [class.previa__aviso--fiel]="modoPrevia === 'fiel'">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-        Así se ve tu página. Toca una sección para editarla.
+        <span class="previa__texto-fiel" *ngIf="modoPrevia === 'editable'">Así se ve tu página. Toca una sección para editarla.</span>
+        <span class="previa__texto-fiel" *ngIf="modoPrevia === 'fiel'">Vista fiel: tu borrador guardado, tal como lo verán tus clientes{{ dispositivo === 'movil' ? ' en el celular' : '' }}. Toca una sección para editarla.</span>
+        <button type="button" class="btn-fantasma btn-fantasma--sm" *ngIf="modoPrevia === 'fiel'" (click)="cargarVistaFiel()" [disabled]="cargandoFiel">
+          {{ cargandoFiel ? 'Cargando…' : 'Volver a cargar' }}
+        </button>
+        <div class="dispositivos modo-vista" role="group" aria-label="Cómo ver tu página" *ngIf="puedeDisenoNuevo">
+          <button type="button" [class.is-active]="modoPrevia === 'editable'" [attr.aria-pressed]="modoPrevia === 'editable'"
+                  (click)="verEditable()" title="La previa de siempre: edita tocando la página">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span class="dispositivos__texto">Editable</span>
+          </button>
+          <button type="button" [class.is-active]="modoPrevia === 'fiel'" [attr.aria-pressed]="modoPrevia === 'fiel'"
+                  (click)="verVistaFiel()" title="Tu borrador guardado, tal como lo verán tus clientes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="dispositivos__texto">Vista fiel</span>
+          </button>
+        </div>
       </div>
 
-      <div class="previa__lienzo">
-        <div class="marco" [class.marco--movil]="dispositivo === 'movil'" [class.marco--escritorio]="dispositivo !== 'movil'"
+      <div class="previa__lienzo" [class.previa__lienzo--fiel]="modoPrevia === 'fiel'">
+        <!-- PLAN-V2 T04: el marco no envía formularios, no abre ventanas y no navega el editor (sandbox sin allow-forms,
+             allow-popups ni allow-top-navigation). Solo carga la ruta firmada de nuestro backend (urlDeVistaFiel). -->
+        <div class="fiel" *ngIf="modoPrevia === 'fiel'" [class.fiel--movil]="dispositivo === 'movil'"
+             [style.width.px]="anchoFiel * escalaFiel" [style.height.px]="altoFiel * escalaFiel">
+          <iframe #marcoFiel *ngIf="urlFiel" class="fiel__marco" [src]="urlFiel" title="Vista fiel de tu página"
+                  sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer"
+                  [style.width.px]="anchoFiel" [style.height.px]="altoFiel" [style.transform]="transformFiel"></iframe>
+          <div class="fiel__estado" *ngIf="!urlFiel || errorFiel" role="status" aria-live="polite">
+            <ng-container *ngIf="errorFiel; else fielCargando">
+              <strong class="fiel__titulo">No pudimos abrir la vista fiel</strong>
+              <span class="fiel__texto">{{ errorFiel }}</span>
+              <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="cargarVistaFiel()">Intentar de nuevo</button>
+            </ng-container>
+            <ng-template #fielCargando>
+              <strong class="fiel__titulo">{{ cargandoFiel ? 'Armando tu página…' : 'Tu página, tal como la arma el servidor' }}</strong>
+              <span class="fiel__texto">Se muestra lo último guardado.</span>
+            </ng-template>
+          </div>
+        </div>
+        <div class="marco" *ngIf="modoPrevia === 'editable'" [class.marco--movil]="dispositivo === 'movil'" [class.marco--escritorio]="dispositivo !== 'movil'"
              [style.zoom]="dispositivo === 'movil' ? null : escalaPrevia">
           <div class="marco__barra">
             <span class="marco__punto marco__punto--rojo"></span>

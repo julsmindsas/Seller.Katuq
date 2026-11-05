@@ -850,6 +850,16 @@ export class SitiosService extends BaseService {
   }
 
   /**
+   * PLAN-V2 T04: la ruta firmada de la Vista fiel del borrador guardado (vence en 15 minutos y solo se deja incrustar
+   * en este editor). `pagina` es la ruta de una página propia; vacía, el inicio. La ruta va sin servidor: el editor la
+   * carga del mismo backend al que le habla.
+   */
+  vistaFiel(id: string, pagina = ""): Observable<Respuesta<{ ruta: string; minutos: number }>> {
+    const consulta = pagina ? `?pagina=${encodeURIComponent(pagina)}` : "";
+    return this.get<Respuesta<{ ruta: string; minutos: number }>>(`/v1/sites/${encodeURIComponent(id)}/vista-fiel${consulta}`);
+  }
+
+  /**
    * Genera (o rota, que es la forma de revocar) el link de acceso personal de
    * un cliente a las tiendas publicadas: con él, el cliente ve los precios de
    * SU lista en toda la tienda.

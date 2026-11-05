@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { LimitesPlanService } from "../../../shared/services/limites-plan.service";
@@ -2064,6 +2064,168 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  // ── PLAN-V2 T04 (módulo sensible): Vista fiel ──────────────────────────────
+  // «Editable» es el espejo de siempre (se edita sobre él). «Vista fiel» es el
+  // HTML real del servidor de lo GUARDADO, en un marco: a 1440 escalado o a 390.
+  // El enlace lo firma el servidor por 15 minutos y para este origen; el marco no
+  // envía formularios, no abre ventanas y no navega este editor. Al tocar una
+  // sección del marco, el editor abre su panel.
+
+  modoPrevia: "editable" | "fiel" = "editable";
+  /** La dirección del marco, ya validada (solo el render de sitios de nuestro backend). */
+  urlFiel: SafeResourceUrl | null = null;
+  cargandoFiel = false;
+  errorFiel = "";
+  /** Medidas del lienzo de la previa (las pone `observarLienzo`). */
+  private lienzoAncho = 0;
+  private lienzoAlto = 0;
+  private relojFiel: any = null;
+  /** Último aviso de «no se envía nada» (uno cada 5 segundos, no uno por clic). */
+  private avisoCortadoEn = 0;
+  private marcoFielEl?: ElementRef<HTMLIFrameElement>;
+  @ViewChild("marcoFiel") set marcoFielRef(el: ElementRef<HTMLIFrameElement> | undefined) {
+    this.marcoFielEl = el;
+  }
+  /** Ancho real de la página dentro del marco: 1440 en computador, 390 en celular. */
+  get anchoFiel(): number {
+    return this.dispositivo === "movil" ? 390 : 1440;
+  }
+  /**
+   * La página se encoge a lo que quepa en el lienzo: la de 1440 casi siempre; la de 390 (con su borde de teléfono) solo
+   * en un lienzo angosto, como el del editor abierto en un celular. Si cabe, va a tamaño real.
+   */
+  get escalaFiel(): number {
+    if (!this.lienzoAncho) return 1;
+    const disponible = this.lienzoAncho - 48 - (this.dispositivo === "movil" ? 20 : 0);
+    const ancho = this.anchoFiel;
+    return disponible >= ancho ? 1 : Math.max(0.2, Math.round((disponible / ancho) * 1000) / 1000);
+  }
+  /**
+   * Alto real de la página dentro del marco: en computador llena el lienzo, hasta 1200 (una pantalla de computador alta:
+   * más alto, una portada de «altura completa» se estiraría sin sentido); en celular, 844 (lo que se ve sin bajar).
+   */
+  get altoFiel(): number {
+    if (this.dispositivo === "movil") return 844;
+    const disponible = Math.max(480, (this.lienzoAlto || 900) - 48);
+    return Math.min(1200, Math.round(disponible / this.escalaFiel));
+  }
+  get transformFiel(): string {
+    return this.escalaFiel === 1 ? "none" : `scale(${this.escalaFiel})`;
+  }
+
+  /** El origen del backend que sirve (y firma) la Vista fiel: el mismo al que le habla este editor. */
+  private get baseApi(): string {
+    const base = String(environment.urlApi || "").replace(/\/+$/, "");
+    try {
+      const u = new URL(base);
+      return u.protocol === "https:" || u.protocol === "http:" ? base : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  private get origenFiel(): string {
+    try {
+      return this.baseApi ? new URL(this.baseApi).origin : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  verEditable(): void {
+    this.modoPrevia = "editable";
+  }
+
+  verVistaFiel(): void {
+    this.modoPrevia = "fiel";
+    this.cargarVistaFiel();
+  }
+
+  /** Pide un enlace nuevo (vence en 15 minutos) y carga lo guardado; si hay cambios, primero los guarda. */
+  cargarVistaFiel(): void {
+    if (!this.id || this.cargandoFiel) return;
+    this.conBorradorGuardado("ver la vista fiel", () => {
+      if (this.relojFiel) {
+        clearTimeout(this.relojFiel);
+        this.relojFiel = null;
+      }
+      if (this.cargandoFiel) return;
+      this.cargandoFiel = true;
+      this.errorFiel = "";
+      const pagina = this.paginaEnEdicion ? this.paginaEnEdicion.ruta : "";
+      this.service.vistaFiel(this.id, pagina).subscribe({
+        next: (res) => {
+          this.cargandoFiel = false;
+          const url = this.urlDeVistaFiel(res && res.success && res.data ? res.data.ruta : "");
+          if (!url) {
+            this.errorFiel = (res && res.message) || "No pudimos abrir la vista fiel.";
+            return;
+          }
+          this.urlFiel = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        },
+        error: (err) => {
+          this.cargandoFiel = false;
+          this.errorFiel = err?.error?.message || "No pudimos abrir la vista fiel.";
+        },
+      });
+    });
+  }
+
+  /**
+   * Solo se deja cargar en el marco la ruta del render de sitios que firmó nuestro backend, con su forma exacta. Es
+   * lo único a lo que se le levanta la protección de Angular (`bypassSecurityTrustResourceUrl`).
+   */
+  private urlDeVistaFiel(ruta: string): string {
+    const forma = /^\/v1\/sites\/render\/[a-z0-9-]{1,80}\?vista_previa=[A-Za-z0-9_-]{1,128}&marco=editor&o=[A-Za-z0-9%._-]{1,200}&t=\d{13}\.[A-Za-z0-9_-]{20,100}(&pagina=[a-z0-9-]{1,60})?$/;
+    if (typeof ruta !== "string" || !forma.test(ruta) || !this.baseApi) return "";
+    return this.baseApi + ruta;
+  }
+
+  /** Tras guardar, la Vista fiel vuelve a pedir lo guardado (con una pausa corta para no recargar en cada tecla). */
+  private programarRecargaFiel(): void {
+    if (this.modoPrevia !== "fiel") return;
+    if (this.relojFiel) clearTimeout(this.relojFiel);
+    this.relojFiel = setTimeout(() => {
+      this.relojFiel = null;
+      this.cargarVistaFiel();
+    }, 600);
+  }
+
+  /** Le pide al marco que marque (y, si se pide, muestre) la sección elegida. Solo al origen del backend. */
+  private marcarEnFiel(id: string | null, desplazar: boolean): void {
+    const marco = this.marcoFielEl && this.marcoFielEl.nativeElement;
+    const ventana = marco && marco.contentWindow;
+    if (this.modoPrevia !== "fiel" || !ventana || !this.origenFiel) return;
+    try {
+      ventana.postMessage({ kq: "editor", tipo: "activo", id: id || "", desplazar }, this.origenFiel);
+    } catch (e) {
+      // El marco todavía no cargó: al cargar avisa «listo» y se marca entonces.
+    }
+  }
+
+  /**
+   * Lo que manda el marco. Vale solo si viene de NUESTRO marco (`source`) y del origen de nuestro backend (`origin`):
+   * cualquier otra ventana o pestaña se ignora. Lo único que se acepta es el id de una sección de esta página.
+   */
+  @HostListener("window:message", ["$event"])
+  alMensajeDelMarco(e: MessageEvent): void {
+    if (this.modoPrevia !== "fiel") return;
+    const marco = this.marcoFielEl && this.marcoFielEl.nativeElement;
+    if (!marco || !e || e.source !== marco.contentWindow || e.origin !== this.origenFiel) return;
+    const m = e.data;
+    if (!m || typeof m !== "object" || m.kq !== "marco") return;
+    if (m.tipo === "seleccion") {
+      const id = typeof m.id === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(m.id) ? m.id : "";
+      if (!id || !this.bloques.some((b) => b.id === id)) return;
+      this.seleccionarDesdePrevia(id);
+      this.marcarEnFiel(id, false);
+    } else if (m.tipo === "listo") {
+      this.marcarEnFiel(this.idBloqueActivo, true);
+    } else if (m.tipo === "cortado" && Date.now() - this.avisoCortadoEn > 5000) {
+      this.avisoCortadoEn = Date.now();
+      this.toastr.info("En la vista fiel no se envía nada. Los formularios y la compra funcionan en tu página publicada.");
+    }
+  }
+
   private panelEl?: ElementRef<HTMLElement>;
   @ViewChild("panelEl") set panelRef(el: ElementRef<HTMLElement> | undefined) {
     this.panelEl = el;
@@ -2447,6 +2609,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.seleccionado = -1;
     this.panel = "bloques";
     this.resolverProductosDePrevia();
+    // PLAN-V2 T04: la Vista fiel muestra la página que se edita.
+    if (this.modoPrevia === "fiel") this.cargarVistaFiel();
   }
 
   /** Crea una página en blanco y la abre. */
@@ -2923,6 +3087,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
     // cambiar de sección deja de venir a cuento.
     this.avisoMaqueta = "";
+    // PLAN-V2 T04: en la Vista fiel, la sección elegida se marca y se muestra.
+    this.marcarEnFiel(this.idBloqueActivo, true);
   }
 
   /**
@@ -5514,6 +5680,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   ngOnDestroy(): void {
     if (this.relojAutoguardado) clearTimeout(this.relojAutoguardado);
     if (this.relojAvanceIA) clearInterval(this.relojAvanceIA);
+    if (this.relojFiel) clearTimeout(this.relojFiel);
     document.body.classList.remove("kq-editor-lleno");
     if (this.observadorLienzo) this.observadorLienzo.disconnect();
   }
@@ -5529,6 +5696,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const medir = () => {
       const ancho = lienzo.clientWidth - 48;
       this.escalaPrevia = ancho >= 1280 ? 1 : Math.max(0.4, Math.round((ancho / 1280) * 1000) / 1000);
+      // PLAN-V2 T04: la Vista fiel se encoge con el mismo lienzo.
+      this.lienzoAncho = lienzo.clientWidth;
+      this.lienzoAlto = lienzo.clientHeight;
     };
     medir();
     this.observadorLienzo = new ResizeObserver(medir);
@@ -5760,6 +5930,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           this.aplicarLoGuardado(res.data, enviado, cambioDuranteGuardado);
           this.recalcularSucio();
           this.estadoAutoguardado = "guardado";
+          // PLAN-V2 T04: la Vista fiel muestra lo guardado; se vuelve a pedir.
+          this.programarRecargaFiel();
           if (res.avisos) this.toastr.info(res.avisos);
           if (despues) {
             if (cambioDuranteGuardado) {
