@@ -11,11 +11,14 @@ import { ConfirmationService } from 'primeng/api';
 import { MovimientoInventario } from '../model/movimientoinventario';
 import { Producto } from '../../../shared/models/productos/Producto';
 import { TipoMovimientoInventario } from '../enums/tipos-movimiento.enum';
+import { lastValueFrom } from 'rxjs';
 
 interface ProductoRecepcion {
   id: string;
   producto: Producto;
   cantidad: number;
+  /** Ticket 1522: bodega propia de la línea; vacía = la bodega del ajuste (arriba). */
+  bodega?: any;
 }
 
 @Component({
@@ -183,46 +186,78 @@ export class RecepcionMercanciaComponent implements OnInit {
     return this.productos.reduce((sum, item) => sum + item.cantidad, 0);
   }
 
+  /** Ticket 1522: bodega en la que se registra una línea (la suya o la del ajuste). */
+  bodegaDe(item: ProductoRecepcion): any {
+    return item.bodega || this.productoForm.get('bodegaSeleccionada')?.value || null;
+  }
+
+  /** Líneas agrupadas por bodega, en el orden en que aparecen. */
+  private gruposPorBodega(): { bodega: any; items: ProductoRecepcion[] }[] {
+    const grupos = new Map<string, { bodega: any; items: ProductoRecepcion[] }>();
+    for (const item of this.productos) {
+      const bodega = this.bodegaDe(item);
+      const clave = String(bodega?.idBodega || '');
+      if (!grupos.has(clave)) grupos.set(clave, { bodega, items: [] });
+      grupos.get(clave)!.items.push(item);
+    }
+    return [...grupos.values()];
+  }
+
   // Guardar los datos de recepción de mercancía
-  guardarRecepcion() {
+  async guardarRecepcion() {
     if (this.productoForm.invalid || this.productos.length === 0) {
       this.toastr.error('Por favor selecciona una bodega, tipo de movimiento y añade al menos un producto', 'Error');
       return;
     }
 
     this.guardandoRecepcion = true;
-    const bodegaSeleccionada = this.productoForm.get('bodegaSeleccionada')?.value;
     const tipoMovimiento = this.productoForm.get('tipoMovimiento')?.value;
-    const observaciones = this.productoForm.get('observaciones')?.value; // Obtener valor de observaciones
-    
-    // Preparar los datos para enviar a la API
-    const productosParaEnviar = this.productos.map(item => {
-      return {
+    const observaciones = this.productoForm.get('observaciones')?.value || '';
+    const grupos = this.gruposPorBodega();
+
+    // Ticket 1522: un mismo ajuste puede tocar varias bodegas. Se registra una vez por bodega,
+    // con el mismo tipo de movimiento y la misma nota, y con una referencia común para
+    // encontrarlos juntos. Cada bodega se guarda completa o no se guarda (transacción del
+    // servidor); si una falla se detiene y se informa cuáles ya quedaron.
+    const referencia = grupos.length > 1 ? `AJ-${Date.now().toString(36).toUpperCase()}` : '';
+    const nota = referencia
+      ? `${observaciones ? observaciones + ' · ' : ''}Ajuste en ${grupos.length} bodegas (ref. ${referencia})`
+      : observaciones;
+    const guardadas: string[] = [];
+
+    for (const grupo of grupos) {
+      const productosParaEnviar = grupo.items.map(item => ({
         productoId: item.producto.cd || item.id,
         referencia: item.producto.identificacion?.referencia || '',
         cantidad: item.cantidad,
-      };
-    });
-
-    // Llamar al servicio para guardar los productos ingresados
-    this.inventarioService.ingresarProductos(bodegaSeleccionada.idBodega, productosParaEnviar, tipoMovimiento, observaciones).subscribe({ // Enviar observaciones
-      next: (response) => {
-        this.toastr.success('Recepción de mercancía guardada con éxito', 'Guardado');
-        
-        // Reiniciar formulario y lista de productos
-        this.productoForm.reset({
-          tipoMovimiento: TipoMovimientoInventario.INGRESO_COMPRA,
-          observaciones: '' // Reiniciar observaciones
-        });
-        this.productos = [];
-        this.guardandoRecepcion = false;
-      },
-      error: (error) => {
+      }));
+      try {
+        await lastValueFrom(this.inventarioService.ingresarProductos(grupo.bodega.idBodega, productosParaEnviar, tipoMovimiento, nota));
+        guardadas.push(grupo.bodega.nombre || grupo.bodega.idBodega);
+        // Lo que ya quedó guardado sale de la lista para que un reintento no lo duplique.
+        this.productos = this.productos.filter(p => !grupo.items.includes(p));
+      } catch (error) {
         console.error('Error al guardar recepción:', error);
         this.guardandoRecepcion = false;
+        if (guardadas.length) {
+          this.toastr.warning(`Ya quedó guardado en: ${guardadas.join(', ')}. Falta ${grupo.bodega.nombre || grupo.bodega.idBodega}.`, 'Guardado en parte', { timeOut: 10000 });
+        }
         this.mostrarErrorRecepcion(error);
+        return;
       }
+    }
+
+    this.toastr.success(
+      grupos.length > 1 ? `Ajuste guardado en ${grupos.length} bodegas (ref. ${referencia})` : 'Recepción de mercancía guardada con éxito',
+      'Guardado'
+    );
+    // Reiniciar formulario y lista de productos
+    this.productoForm.reset({
+      tipoMovimiento: TipoMovimientoInventario.INGRESO_COMPRA,
+      observaciones: '' // Reiniciar observaciones
     });
+    this.productos = [];
+    this.guardandoRecepcion = false;
   }
 
   /**
@@ -434,11 +469,16 @@ export class RecepcionMercanciaComponent implements OnInit {
     const tipoLabel = this.getTipoMovimientoLabel();
     const totalProductos = this.productos.length;
     const totalUnidades = this.calcularTotalItems();
+    const escapar = (t: any) => String(t ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } as any)[c]);
+    const grupos = this.gruposPorBodega();
+    const lineaBodegas = grupos.length > 1
+      ? `<p class="mb-2"><strong>Bodegas:</strong> ${grupos.map(g => `${escapar(g.bodega?.nombre)} (${g.items.length})`).join(' · ')}</p>`
+      : `<p class="mb-2"><strong>Bodega:</strong> ${escapar(bodega?.nombre) || 'No especificada'}</p>`;
 
     this.confirmationService.confirm({
       message: `
         <div class="text-start">
-          <p class="mb-2"><strong>Bodega:</strong> ${bodega?.nombre || 'No especificada'}</p>
+          ${lineaBodegas}
           <p class="mb-2"><strong>Tipo:</strong> ${tipoLabel}</p>
           <p class="mb-2"><strong>Productos:</strong> ${totalProductos}</p>
           <p class="mb-0"><strong>Total unidades:</strong> ${totalUnidades}</p>
