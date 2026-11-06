@@ -1,0 +1,192 @@
+// D-700 13.4a — Módulo de plataforma (superadmin): base de Configuración (D-400), plano y sin gradientes.
+// Este componente va sin encapsulación: las piezas `cfg-*` y `pl-*` sirven a todas las pantallas del módulo.
+// Ojo con las trampas globales: ningún nombre de clase lleva «p-», todo texto lleva color propio y el h1 usa !important.
+@import '../../../../shared/styles/config-pagina';
+// Acotado a `.pl-raiz`: sin encapsulación, la base no debe volverse global y pisar otras pantallas con `cfg-*`.
+.pl-raiz { @include config-pagina; }
+
+.pl-raiz {
+  max-width: 1360px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+
+  h2, h3, h4, p, dl, dt, dd, ul, li, td, th, label, small, strong, em, button, a, input, select { letter-spacing: normal; }
+  h2, h3, h4 { color: var(--ds-ink); }
+  strong, em, small, td, th, dd, dt, li, label { color: inherit; }
+  small { font-size: 12px; }
+  .pl-muted { color: var(--ds-muted); }
+  .pl-num { font-variant-numeric: tabular-nums; }
+
+  // Contraste AA de los avisos y las pastillas en claro (los pares base quedan entre 2,6 y 4,3 a 1).
+  .cfg-aviso, .cfg-aviso p, .cfg-aviso div { color: inherit; }
+}
+// Tintas de contraste AA propias del módulo (excepción registrada en tasks.md 13.x): los tokens `--ds-*` de estado
+// quedan entre 2,6 y 4,3 a 1 sobre su fondo suave. Solo en tema claro; el oscuro usa los tokens.
+body:not(.dark-only) .pl-raiz {
+  --pl-tinta-info: #1a5fbf;
+  --pl-tinta-ok: #176b3a;
+  --pl-tinta-warn: #8a4f00;
+  --pl-tinta-error: #b42e2e;
+  .cfg-aviso { color: var(--pl-tinta-info); }
+  .cfg-aviso--ok { color: var(--pl-tinta-ok); }
+  .cfg-aviso--warn { color: var(--pl-tinta-warn); }
+  .cfg-aviso--error { color: var(--pl-tinta-error); }
+  .cfg-pill--ok { color: var(--pl-tinta-ok) !important; }
+  .cfg-pill--warn { color: var(--pl-tinta-warn) !important; }
+  .cfg-pill--error { color: var(--pl-tinta-error) !important; }
+  .cfg-pill--info { color: var(--pl-tinta-info) !important; }
+}
+
+// ── Vista y pestañas ──
+.pl-vista { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.pl-raiz .cfg-btn.pl-activo {
+  background: var(--ds-accent-soft);
+  border-color: var(--ds-accent-ink);
+  color: var(--ds-accent-ink) !important;
+  box-shadow: none;
+}
+.pl-pestanas {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--ds-line);
+  scrollbar-width: thin;
+}
+.pl-raiz .pl-pestana {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-bottom: 3px solid transparent;
+  color: var(--ds-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  &:hover { color: var(--ds-accent-ink); }
+  &.pl-activa { color: var(--ds-accent-ink); border-bottom-color: var(--ds-accent-ink); }
+}
+
+// ── Enlaces tipo botón y avisos ──
+.pl-raiz .pl-enlace {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.pl-aviso__cuerpo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pl-aviso__acciones { display: flex; flex-wrap: wrap; gap: 16px; }
+.pl-definiciones { margin: 4px 0 0; padding-left: 18px; max-height: 260px; overflow: auto; font-size: 12.5px; }
+
+// ── Tarjetas de cifras ──
+.pl-rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.pl-kpi { display: flex; flex-direction: column; gap: 12px; }
+.pl-kpi__cabeza { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pl-kpi__cabeza h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.pl-kpi__rotulo { font-size: 12px; color: var(--ds-muted); }
+.pl-kpi__pie { font-size: 12px; color: var(--ds-muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.pl-cifra { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--ds-surface-2); border: 1px solid var(--ds-line-soft); border-radius: 11px; min-width: 0; }
+.pl-cifra__rotulo { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ds-muted); }
+.pl-cifra__valor { font-size: 18px; font-weight: 800; line-height: 1.2; color: var(--ds-accent-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pl-cifra__valor.pl-nulo { color: var(--ds-muted); }
+.pl-cifra__nota { font-size: 11.5px; color: var(--ds-muted); }
+.pl-info {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 24px; height: 24px;
+  display: inline-grid; place-items: center;
+  border: 1px solid var(--ds-control-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ds-accent-ink);
+  font-size: 12px; font-weight: 800; font-style: italic;
+  cursor: pointer;
+}
+.pl-definicion { padding: 10px 12px; background: var(--ds-accent-soft); border-radius: 11px; font-size: 12.5px; line-height: 1.5; color: var(--ds-ink); }
+.pl-definicion p { margin: 0 0 4px; color: inherit; }
+
+// ── Carga y esqueleto (sin degradados) ──
+.pl-esqueleto { min-height: 160px; border-radius: 16px; background: var(--ds-tile); animation: pl-pulso 1.4s ease-in-out infinite; }
+@keyframes pl-pulso { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pl-esqueleto { animation: none; } }
+.pl-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+
+// ── Gráficos ──
+.pl-graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.pl-grafico__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pl-grafico__cabeza h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.pl-grafico__lienzo { border-radius: 11px; }
+.pl-grafico__lienzo:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+.pl-leyenda { margin: 8px 0 0; font-size: 12px; color: var(--ds-muted); }
+
+// ── Tablas y tarjetas móviles ──
+.pl-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; align-items: end; }
+.pl-filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ds-muted); }
+.pl-filtros input, .pl-filtros select, .pl-pie-tabla select {
+  min-height: 40px; padding: 0 12px; background: var(--ds-chip-bg); color: var(--ds-ink);
+  border: 1px solid var(--ds-control-border); border-radius: 10px; font-size: 13.5px; text-transform: none; letter-spacing: normal; font-weight: 400;
+}
+.pl-tabla-caja { overflow-x: auto; border-radius: 11px; }
+.pl-tabla { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--ds-ink); }
+.pl-tabla th {
+  padding: 12px 14px; background: var(--ds-surface-2); color: var(--ds-muted); text-align: left;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; border-bottom: 1px solid var(--ds-line-soft);
+}
+.pl-tabla th button { appearance: none; background: transparent; border: 0; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+.pl-tabla th.pl-orden, .pl-tabla th.pl-orden button { color: var(--ds-accent-ink); }
+.pl-tabla td { padding: 12px 14px; border-bottom: 1px solid var(--ds-line-soft); vertical-align: top; color: var(--ds-ink); }
+.pl-tabla tbody tr:hover { background: var(--ds-row-hover); }
+.pl-tabla td.pl-der, .pl-tabla th.pl-der { text-align: right; }
+.pl-raiz .pl-vinculo { color: var(--ds-accent-ink); font-weight: 700; text-decoration: none; &:hover { text-decoration: underline; } }
+.pl-tarjetas { display: none; flex-direction: column; gap: 10px; }
+.pl-tarjeta { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: var(--ds-surface-2); border: 1px solid var(--ds-line-soft); border-radius: 11px; }
+.pl-tarjeta__linea { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--ds-ink); }
+.pl-tarjeta__linea b { color: var(--ds-muted); font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+@media (max-width: 767px) {
+  .pl-tabla-caja { display: none; }
+  .pl-tarjetas { display: flex; }
+}
+.pl-pie-tabla { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--ds-body); }
+.pl-paginas { display: inline-flex; align-items: center; gap: 8px; }
+
+// ── Ficha ──
+.pl-ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
+.pl-ficha__ancha { grid-column: 1 / -1; }
+.pl-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px 16px; margin: 0; }
+.pl-datos > div { min-width: 0; }
+.pl-datos dt { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ds-muted); margin: 0 0 2px; }
+.pl-datos dd { margin: 0; font-size: 13.5px; color: var(--ds-ink); overflow-wrap: anywhere; }
+.pl-lista { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.pl-lista li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding-bottom: 8px; border-bottom: 1px solid var(--ds-line-soft); font-size: 13px; color: var(--ds-ink); }
+.pl-subtitulo { margin: 16px 0 8px; font-size: 13px; font-weight: 800; color: var(--ds-ink); }
+.pl-volver { align-self: flex-start; }
+.pl-raiz .pl-cifra__texto { color: inherit; font-size: inherit; }
+// La tabla de «Ver como tabla» de los gráficos se ve también en pantallas angostas.
+@media (max-width: 767px) { .pl-tabla-caja.pl-tabla-siempre { display: block; } }
+
+// ── Contenedores de las pantallas hijas ──
+.pl-raiz app-resumen, .pl-raiz app-tendencias, .pl-raiz app-comercios-tabla, .pl-raiz app-cuentas-excluidas, .pl-raiz app-comercio-ficha,
+.pl-raiz app-ficha-identidad, .pl-raiz app-segmentos, .pl-raiz app-cobros, .pl-raiz app-adopcion, .pl-raiz app-calidad-datos, .pl-raiz app-sugerencias,
+.pl-raiz app-exportar-comercios { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pl-raiz .pl-ficha > * { min-width: 0; }
+.pl-raiz .pl-titulo-ficha { margin: 0; font-size: 20px; font-weight: 800; color: var(--ds-ink); }
+
+// Estado del dato en la lista de comercios (corte, parcial, desactualizada).
+.pl-raiz .pl-meta-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pl-raiz .pl-pastillas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+
+// ── Segmentos, calidad de datos y exportación (D-700 14.6) ──
+.pl-raiz .pl-segmentos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.pl-raiz .pl-segmento { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; height: auto; padding: 12px 14px; text-align: left; white-space: normal; }
+.pl-raiz .pl-segmento__nombre { font-size: 13.5px; font-weight: 800; color: inherit; }
+.pl-raiz .pl-segmento__cuenta { font-size: 12px; font-weight: 400; color: var(--ds-muted); }
+.pl-raiz .cfg-btn.pl-activo .pl-segmento__cuenta { color: var(--ds-accent-ink); }
+.pl-raiz .pl-calidad__item { display: flex; flex-direction: column; gap: 8px; }
+.pl-raiz .pl-calidad__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; width: 100%; }
+.pl-raiz .pl-calidad__acciones { display: flex; align-items: center; gap: 10px; }
+.pl-raiz .pl-calidad__empresas { width: 100%; max-height: 280px; overflow: auto; }
+.pl-raiz .pl-exportar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0; }

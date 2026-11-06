@@ -1,33 +1,81 @@
 {
-  "version": "2026.11.05.2 - 5 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-05T18:44:26.292Z",
+  "version": "2026.11.05.4 - 5 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-05T20:43:28.216Z",
   "notas": [
     {
-      "fecha": "2026-11-05T15:57:50Z",
+      "fecha": "2026-11-05T19:03:18Z",
       "tipo": "CORRIGE",
-      "texto": "Si la transportadora tarda en responder al despachar, ya no te sale un error que te pide intentarlo de nuevo: te avisa que el despacho pudo quedar hecho y actualiza la lista para que lo revises antes de reintentar.",
+      "texto": "En las tiendas publicadas, el enlace «← Seguir comprando» de la ficha de un producto ya te lleva al catálogo o al inicio, en vez de mostrar una página que no existe.",
       "modulos": [
-        "despachos"
+        "sitios"
       ]
     },
     {
-      "fecha": "2026-11-05T16:18:38Z",
-      "tipo": "MEJORA",
-      "texto": "La sección Cartera por vendedor sale contraída con un resumen (cuántos vendedores y cuánto está vencido) y se abre con un clic; tu navegador recuerda si la dejaste abierta.",
+      "fecha": "2026-11-05T19:13:04Z",
+      "tipo": "CORRIGE",
+      "texto": "En el editor de tu sitio, «Agregar una sección» › «Prefiero empezar desde cero» ya agrega la sección que eliges; antes el botón no hacía nada al pulsarlo con el mouse.",
       "modulos": [
-        "cartera"
+        "sitios"
       ]
     },
     {
-      "fecha": "2026-11-05T16:18:38Z",
+      "fecha": "2026-11-05T19:13:04Z",
       "tipo": "CORRIGE",
-      "texto": "En Pedidos POS, «Historial pagos y asentar pagos» ya abre el formulario para registrar el pago, y cambiar el estado de pago o los datos del cliente te lleva a hacerlo desde Ventas › Pedidos, en vez de mostrar una pantalla en blanco.",
+      "texto": "En las tarjetas de «Para tu negocio», el selector de piezas ya no se cierra solo mientras eliges, y si lo cierras sin elegir, la tarjeta conserva lo que tenía.",
       "modulos": [
-        "pos/list-ventas"
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T19:13:04Z",
+      "tipo": "CORRIGE",
+      "texto": "Si ocultas «Todo el catálogo» en el inicio, el catálogo, las categorías y el buscador de tu tienda siguen funcionando en su propia página, y el editor te dice qué pasa al cerrar el ojo de esa sección.",
+      "modulos": [
+        "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-05T19:13:04Z",
+      "tipo": "CORRIGE",
+      "texto": "En el editor de tu sitio, «Agregar una sección» › «Prefiero empezar desde cero» ya agrega la sección que eliges; antes el botón no hacía nada al pulsarlo con el mouse.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T19:13:04Z",
+      "tipo": "CORRIGE",
+      "texto": "En las tarjetas de «Para tu negocio», el selector de piezas ya no se cierra solo mientras eliges, y si lo cierras sin elegir, la tarjeta conserva lo que tenía.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T19:13:04Z",
+      "tipo": "CORRIGE",
+      "texto": "Si ocultas «Todo el catálogo» en el inicio, el catálogo, las categorías y el buscador de tu tienda siguen funcionando en su propia página, y el editor te dice qué pasa al cerrar el ojo de esa sección.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T19:03:18Z",
+      "tipo": "CORRIGE",
+      "texto": "En las tiendas publicadas, el enlace «← Seguir comprando» de la ficha de un producto ya te lleva al catálogo o al inicio, en vez de mostrar una página que no existe.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T17:06:11Z",
+      "tipo": "CORRIGE",
+      "texto": "Al crear una tienda en Mis sitios, el aviso de que va a nacer sin productos ya sale encima del asistente y puedes elegir «Crearla igual» o «Volver».",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-05T16:18:38Z",
       "tipo": "MEJORA",
@@ -464,45 +512,8 @@
       "modulos": [
         "tesoreria"
       ]
-    },
-    {
-      "fecha": "2026-10-29T15:05:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Si Tesorería aprueba el pago mientras tienes el pedido abierto, ya no se devuelve a su estado anterior cuando guardas: te pedimos recargar para ver el cambio.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-10-29T14:24:30Z",
-      "tipo": "MEJORA",
-      "texto": "Al abrir un pedido ves los archivos adjuntos a sus notas, como la orden de compra que manda el comercial, y los abres con un clic.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-10-29T14:24:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Cartera, el número de factura de cada pedido abre su PDF, igual que en el detalle del pedido.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-10-29T14:08:45Z",
-      "tipo": "MEJORA",
-      "texto": "Opttia aplica el tono compartido de tu comercio a los colaboradores autorizados y te ayuda a responder quejas sin ofrecer abonos o gestiones que no se han aprobado."
-    },
-    {
-      "fecha": "2026-10-28T20:10:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si tu rol tiene «En vivo», al entrar a Katuq llegas ahí y ves los pedidos del día moverse en tiempo real. Mientras terminas de configurar tu negocio sigues viendo la bienvenida.",
-      "modulos": [
-        "en-vivo"
-      ]
     }
   ],
-  "commit": "88b518d4189401dba2f26f289c2f6b7a3c262914",
+  "commit": "6a577be209e93cff998d89d49a08a7631c774c63",
   "cambiosSinCommit": 0
 }

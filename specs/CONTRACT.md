@@ -13453,3 +13453,93 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Backend:** EC2 de `0511c167` a `8e01d051`, sin paquetes ni índices. Ocho commits marcados «Aprobado por Daniel el 5-nov»: Movee con límite de espera, rol «Tesoreria», entorno de Wompi por prefijo de llave, «Limpiar precios» solo para administradores y los pasos 1 a 3 del ticket 1510 (categorías de Cereza como nodo). Los scripts `repair-1572` y `migrar-categorias-lista-1510` solo quedan en el servidor: no se corrieron.
 - **Verificado:** `katuq-api` en línea tras el reinicio; el log solo trae los avisos de arranque de siempre y los flujos de OH MY STORE retomaron.
 - **No verificado:** cada flujo en pantalla (pagos POS, Wompi, Movee, categorías de Cereza); queda a cargo de las sesiones dueñas.
+
+### 2026-11-05 — Publicados el front 2026.11.05.3 y el backend `13f61a4d` con lo de aws-claude-1 de la tarde
+
+- **Por qué:** la publicación anterior (2026.11.05.2 y `8e01d051`) salió de las ramas principales sin mezclar antes `feature/tickets-aws-claude-1`; aws-claude-1 lo señaló (8 cambios del front y 11 del back sin publicar).
+- **Front:** avance directo a `06b50a77`, release `9465e888`, versión 2026.11.05.3. Candado y verify-dist en verde; `version.json` comprobado en sellercenter.katuq.com. Sin novedades en la campana: las del diseño nuevo van retiradas y la de «tienda sin productos» (fecha 17:06 UTC) quedó antes de la publicación de la 2026.11.05.2, así que el script la salta.
+- **Backend:** avance directo a `7ef13534` (D-680 a D-685, detrás de `siteDesignV2`). En el EC2 entró además `13f61a4d` (ticket 1509, «Aprobado por Daniel el 5-nov»), que otra sesión subió durante el despliegue: de `8e01d051` a `13f61a4d`, sin paquetes ni índices.
+- **Pruebas:** sintaxis de los archivos tocados sin errores; `test:sitios-listo` 5, `test:sitios-versiones` 13 y `test:cotizable` 4 en verde; `test:sitios-publicacion` con las mismas 7 fallas de antes de la mezcla.
+- **Verificado:** `katuq-api` en línea; 502 solo durante los 7 s del reinicio (18:59:17-24 UTC) y respuestas normales después. El aviso «[Cron Flows][catchup] expr no parseable» sale en cada arranque desde antes de este despliegue.
+- **No verificado:** las pantallas del diseño nuevo y el flujo de inventario del 1509 en producción.
+
+### 2026-11-05 — aws-claude-2: tickets de comercio del 5-nov, OH MY STORE (Shopify/Cereza) y corridas en producción
+
+Todo con el sí de Daniel en el chat; cada cambio de pagos, permisos, despachos o flujos se aprobó por separado. Evidencia y diagnósticos en las notas internas de cada ticket.
+
+- **Publicado (front 2026.11.05.3, back `13f61a4d`) y cerrado:** 1576 Movee sin respuesta (front `f735e249`, back `1222df4c`), 1575 Pedidos POS sin ventana de pagos (`268bcc5b`), 1574 «Cartera por vendedor» contraída (`53d31331`), 1573 rol «Tesoreria» en Tesorería y Cartera (back `a1809b2f`, front `88b518d4`). También publicados: Wompi elige entorno por el prefijo de la llave (`f46523b2`, ticket 1446; falta probar con un pago real de ALMARA) y «Limpiar precios» solo para administradores (`2e664f48`, ticket 1536).
+- **Datos corregidos en producción:** DAD-005270 de ALMARA (ticket 1572, `repair-1572`, total 118.200 → 115.400 y Aprobado) y 726 fichas de OH MY STORE con `categorias` en lista pasadas al nodo `osmosis-*` (ticket 1510, `migrar-categorias-lista-1510`, correlationId `7334fa1b`; quedan 3 listas vacías). Ambos con simulación previa, transacción y `migration_audit`.
+- **Ticket 1510, regla aprobada:** Cereza no pisa una categoría puesta a mano (la que no es lista ni vacía y no tiene id `osmosis-*`). Shopify toma el `product_type` de cualquier forma de `categorias` (`46dad008`) y el flow de Cereza guarda el nodo (`3457acb3`). Pendiente del comercio: qué hacer con Outlet, que llega como campaña.
+- **Ticket 1509 (stock fantasma en Shopify):** medido completo en solo lectura: 1.753 productos de Cereza con stock en Shopify y 0 en Katuq (≈88.500 unidades, política DENY) y 76 no-Cereza que dependen de Fullpi (staging). La cantidad vigente de `inventory` es `cantidad`; `quantity` es alias viejo. Corregido `katuq-inventory-changed` (`13f61a4d`: emite por `main`, solo cambios de las bodegas elegidas, ve el `updatedAt` en texto del barrido, poda su estado, `soloProveedor`, nunca < 0). Creado y encendido el flow `oms-cereza-stock-sombra` (script `instalar-stock-sombra-oms`, `70681928`): un solo nodo, `publicar:false`, BOD-CEREZA-1/1A/1B, solo Cereza; primera corrida 19:47 UTC con éxito (310 filas, 7 en 0). No escribe en Shopify. Publicar de verdad va con aprobación aparte, primero productos de una variante.
+- **Hallazgos sin arreglo todavía:** pedidos de Shopify creados dos o tres veces en Katuq por carrera de webhooks (#1134, #1135, #1171, #1174; solo #1171 descontó doble); el precio de campaña llega a Cereza rebajado pero sin marcarse como descuento y los cupones no viajan (0 pedidos con cupón desde mayo); productos agotados en Cereza no reciben cambios de campaña (precio y tachado congelados); 1.200 productos de Shopify sin ficha en Katuq.
+- **Sin cambio (decisión del comercio o de producto):** 1447 «Registrar pago» aprueba directo (diseño CA-08), 1490 permisos del historial técnico, 1536 quién ve «Eliminar Base de Datos», 1508 (24 productos ocultos en Shopify: se pidió confirmación a Jefferson). 1511 cerrado sin cambio (la descripción del combo se edita en el maestro).
+- **Pruebas:** locales, fuera de git (D-566), detalladas en cada mensaje de commit.
+
+### 2026-11-05 (noche) — Publicados el front 2026.11.05.4 y el backend `d1f834b1` con lo de aws-claude-1
+
+- **Pedido:** aws-claude-1 dejó lista su rama (back `a44b8ddc`, front `9f1b0334`) y pidió mezclarla y desplegar.
+- **Front:** mezcla `6a577be2` (sin conflictos; la principal solo traía contrato y release), release `7fdc006e`, versión 2026.11.05.4. Candado y verify-dist en verde; `version.json` comprobado. Salen cuatro notas de Sitios: «← Seguir comprando» ya no da 404, «Empezar desde cero» agrega con el mouse, el selector de piezas de «Para tu negocio» no se cierra solo y ocultar «Todo el catálogo» ya no apaga el catálogo. Las del diseño nuevo siguen retiradas.
+- **Backend:** mezcla `d1f834b1` (sin conflictos; la principal traía el script `instalar-stock-sombra-oms` del 1509, que no se corrió). En el EC2 se fijó con `git fetch` + `git merge --ff-only d1f834b1`, para no arrastrar lo que llegara durante el despliegue: de `13f61a4d` a `d1f834b1`, sin paquetes ni índices.
+- **Pruebas:** sintaxis sin errores; `test:sitios-listo` 5, `test:sitios-versiones` 13 y `test:cotizable` 4 en verde; `test:sitios-publicacion` con las mismas 7 fallas de antes.
+- **Verificado:** `katuq-api` en línea; 502 solo durante el reinicio y ninguno después.
+- **No verificado:** las cuatro correcciones en una tienda publicada (hoy no hay tiendas con certificado en el log) ni el editor en el navegador.
+
+## D-700 (2026-11-05) — Métricas de plataforma del superadmin: cifras verídicas, ficha 360 del comercio y Opttia de plataforma (openspec/changes/metricas-plataforma-superadmin) — PROPUESTA APROBADA; sigue el diseño
+
+**Disparador.** Daniel pidió métricas «muy verídicas» de los comercios en el superadmin, más fáciles de leer, consultables con Opttia, y una ficha detallada por comercio (suscripción, último pago, último ingreso).
+
+**Análisis (solo lectura).**
+- El «Ingreso del mes» es una estimación, no dinero cobrado.
+- El mes en curso sale subestimado.
+- Hay dos relojes de mes: entrega y creación.
+- Los totales incluyen cortesía, demo y la propia Julsmind.
+- «En riesgo» marca altas de pocos días.
+- «Última factura» no es «último pago».
+
+El detalle con archivo y línea está en `proposal.md`.
+
+**Decisiones de Daniel (2026-11-05).**
+1. El mes oficial va por fecha de creación del pedido, por ahora. La vista por entrega queda como secundaria.
+2. Julsmind, demo, prueba y cortesía no son comercio real. Se agrega `tipoCuenta`.
+3. Se guardan fotos diarias de las métricas.
+4. Sí al historial de sesiones (vía D-634) y al uso por módulo.
+5. Opttia de plataforma queda solo para Daniel, con lista de autorizados en la configuración (D-505).
+6. El cobrado real es Wompi más el pago manual auditado.
+
+**Aprobación (2026-11-05).** Daniel aprobó la propuesta («aprobado») con los valores propuestos para las preguntas abiertas:
+- conservación: 24 meses para fotos y uso, 12 para la auditoría de Opttia y 5 años para pagos;
+- Opttia: 30 preguntas al día; la pregunta de plataforma de «Katuq en vivo» también queda solo para él;
+- la Consola de plataforma exige el rol Super Administrador de la operadora; antes de publicar se confirma con él la lista de operadores;
+- notas internas fuera;
+- un comercio suspendido cuenta en «por cobrar» pero no en «contratado».
+
+**Garantía.** El Opttia de los comercios no cambia: es un requisito con escenarios en `platform-opttia` y un No-goal de la propuesta.
+
+**Siguiente paso.** `design.md`, con su aprobación, y después `tasks.md`. No hay código todavía.
+
+**Diseño aprobado (2026-11-05).** Daniel aprobó `design.md` y sus 9 anexos («aprobado») con los valores propuestos:
+- **Cambios a las specs:** S-1 (Opttia escribe su cupo), S-2 (segunda persona en pagos manuales grandes y en anular un pago propio), S-3 (lista de operadores y asignación del rol «Super Administrador» solo por quien lo es) y S-4 (convivencia temporal de Cobros).
+- **Excepciones:** E-1 y E-4. Se agregan las colecciones `platform_metrics_live`, `platform_metric_runs` y `platform_ai_quota`, y `platform_audit` pasa a F1. También E-8 y E-9.
+- **Operadores:** la lista de operadores de plataforma es corta y la confirma Daniel antes de publicar.
+- **Cambios de código compartido:**
+  - `scope=platform` en `/api/ai/json`, solo aditivo;
+  - inputs opcionales `altura` y `radio` en `VizChart`;
+  - semáforo de 2 streams.
+- **Tamaño:** el diseño pasa de 3 páginas; se acepta como desviación declarada.
+
+**Fases previas al guard.**
+- F1-1b y F1-1c se despliegan antes del guard estricto; detalle en el diseño privado del backend.
+
+**Pendiente, de Daniel por escrito.** Confirmar que existe la revisión privada de seguridad y qué proveedor de IA usa el ADK en producción. Bloquea F2-8 y F2-10 (Opttia de plataforma), no la F1.
+
+### 2026-11-05 — D-700 F1-0 (sección 0 de tasks.md): avance parcial, solo código; sin mediciones en base
+
+- **Qué se hizo (sin tocar ninguna base, sin desplegar):**
+  - **0.1 (parte de código):** script de solo lectura `BE/scripts/listar-roles-plataforma.js` (backend `74c3c5fa`): lista rol, último ingreso y si cada persona de la operadora pasaría el guard estricto; cuenta Super Administradores; correos enmascarados; rechaza `--execute`. Inventario estático de rutas hecho: el detalle del inventario va a la revisión privada de seguridad de D-700 (repo del backend), no a este repositorio.
+  - **0.5 y 0.6 (parte de código):** estados de factura, campo de fecha de `billing_runs`, llamadores de `processWompiTransaction` y origen de `BILLING_CRON_ENABLED` anotados en `tasks.md`. Queda para 10.x.
+  - **0.8:** línea base del Opttia de los comercios guardada fuera de git en `~/.claude/projects/.../plataforma-linea-base/` (15 hashes, arnés y 30 goldens tras corregir el arnés para cubrir `admit` y `authorize-tool` en 200). Hash del conjunto de fuentes: `584e35de57b5d184dbb8ee3959da6143f9c26a88bb6c56d763963fb854a9a405`; hash del golden corregido: `75bafab8d56f279e7e9424cc9d98ba1447f3c4c9967417066d20e5cf37ddd68c` (el primero, `f5d021f2…`, no cubría los caminos de éxito). Repos al medir: backend `70681928`, kai `1f56ba6`, front `7a74370e`.
+- **Pruebas (locales, fuera de git):** script 7/7 (incluye `main` con adaptador simulado); `tests/companies/*` 13/13; `opttia-mcp-security` 2/2, `opttia-access` 15/15, `opttia-burst-limit` 1/1, `opttia-errores-claros` 5/5 y `mcp/audienciaTools` 8/8, todos en verde.
+- **Pendiente: medición en base** (0.1 a: el script no se ha corrido contra `katuq_dev`; f-conteos e i; 0.2; 0.3; 0.4; 0.5 horas de `dueDate`; 0.6 valor de `BILLING_CRON_ENABLED`, NPS, `aiUsage`) y **0.7 / 0.9** (respuesta de Daniel; lista final de rutas y una tarea [S] por cada una). Mientras tanto rigen los valores conservadores anotados en cada tarea.
+- **Desvíos:** (1) el golden de `/api/ai/json` sin `scope` ya es captura real (venv local con Flask); (2) la lista de campos de empresa reservados a plataforma para 1.2/1.3 requiere aprobación de Daniel (detalle en la revisión privada de seguridad de D-700 (repo del backend)).
+- **Avisos para Daniel:** `kai` está en la rama `feat/claude-agent-sdk`: confirmar que es la de producción del ADK (B-9).
+- **Revisión de la sección 0 (5-nov, tarde):** corregido el arnés del golden (admit/authorize-tool ahora cubren 200 y 403 con cupo), capturado el golden de `/api/ai/json`.

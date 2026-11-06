@@ -28,6 +28,8 @@ import { escaparHtml } from '../../../shared/utils/escapar-html';
 import { mensajeErrorInforme, periodoMesAnterior, validarPeriodo } from '../../../shared/utils/informe-ejecutivo';
 
 import { TranslateService } from '@ngx-translate/core';
+import { esPlataformaKatuq } from '../../../modules/marketing/guards/plataforma.guard';
+import { PlataformaService } from '../../plataforma/servicios/plataforma.service';
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
 
@@ -113,6 +115,10 @@ const ESCALONES = [
   styleUrls: ['./consola-plataforma.component.scss'],
 })
 export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
+  /** D-700: el enlace a la nueva consola solo se ofrece a quien puede abrirla (el servidor decide de verdad). */
+  readonly puedeVerNuevaConsola = esPlataformaKatuq();
+  /** Se enciende solo si el servidor dice que la nueva consola ya está habilitada (`consolaNuevaPorDefecto`). */
+  mostrarNuevaConsola = false;
   cargando = false;
   error = '';
 
@@ -290,10 +296,17 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private dataStoreService: DataStoreService,
     private router: Router,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private plataforma: PlataformaService
   ) {}
 
   ngOnInit(): void {
+    if (this.puedeVerNuevaConsola) {
+      this.plataforma.me().pipe(takeUntil(this.destroy$)).subscribe({
+        next: (r) => { this.mostrarNuevaConsola = !!(r && r.datos && r.datos.banderas && r.datos.banderas['consolaNuevaPorDefecto']); },
+        error: () => { this.mostrarNuevaConsola = false; },
+      });
+    }
     this.cargar();
     this.cargarCatalogoEstados();
     this.cargarSoporte();

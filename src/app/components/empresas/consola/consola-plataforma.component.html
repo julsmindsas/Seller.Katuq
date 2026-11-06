@@ -25,6 +25,10 @@
                 [title]="'empresas.consolaPlataforma.sitiosVentasDeLasWebs' | translate">{{ 'empresas.consolaPlataforma.constructorWeb' | translate }}</button>
       </div>
 
+      <a class="btn-refrescar btn-nueva-consola" *ngIf="mostrarNuevaConsola" routerLink="/plataforma">
+        <i class="fa fa-line-chart"></i> {{ 'empresas.consolaPlataforma.nuevaConsola' | translate }}
+      </a>
+
       <button type="button" class="btn-refrescar" (click)="refrescar()" [disabled]="cargando"
               [title]="'empresas.consolaPlataforma.vuelveACalcularLasMetricas' | translate">
         <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
@@ -35,6 +39,12 @@
       </button>
     </div>
   </header>
+
+  <!-- D-700 (E-8): mientras conviven las dos consolas, esta dice que sus cifras no son las oficiales. -->
+  <div class="aviso-no-oficial" role="note" *ngIf="mostrarNuevaConsola">
+    <i class="fa fa-info-circle"></i>
+    <p>{{ 'empresas.consolaPlataforma.cifrasNoOficiales' | translate }}</p>
+  </div>
 
   <!-- Error: se muestra como error, nunca se rellena con datos de ejemplo -->
   <div class="aviso-error" *ngIf="error && !cargando">
@@ -71,7 +81,7 @@
       <button type="button" class="kpi kpi--principal" [class.kpi--activo]="filtroEstado === 'premium'"
               (click)="filtrarPor('premium')"
               [title]="'empresas.consolaPlataforma.sumaDelEscalonDePrecio' | translate">
-        <span class="kpi-label">{{ 'empresas.consolaPlataforma.ingresoDelMes' | translate }}</span>
+        <span class="kpi-label">{{ 'empresas.consolaPlataforma.ingresoDelMesEstimado' | translate }}</span>
         <!-- En PESOS, que es como se razona acá. Los planes están en dólares y
              se convierten con la TRM del día, la misma con la que se factura.
              Si la TRM no se pudo leer se muestran los dólares sin convertir:

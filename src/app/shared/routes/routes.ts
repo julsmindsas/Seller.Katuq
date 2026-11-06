@@ -5,6 +5,7 @@ import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar Su
 import { InicioGuard } from "../guards/inicio.guard";
 import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
 import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.guard";
+import { PlataformaUiGuard } from "../../components/plataforma/servicios/plataforma-ui.guard";
 
 export const content: Routes = [
   {
@@ -79,6 +80,15 @@ export const content: Routes = [
         (m) => m.EmpresasModule,
       ),
     canActivate: [AuthGuard], // Agregar el guard
+  },
+  {
+    // D-700: métricas de plataforma del superadmin. El servidor es quien autoriza; el guard de UI solo ayuda a navegar.
+    path: "plataforma",
+    loadChildren: () =>
+      import("../../components/plataforma/plataforma.module").then(
+        (m) => m.PlataformaModule,
+      ),
+    canActivate: [AuthGuard, PlataformaUiGuard],
   },
   {
     path: "proceso",

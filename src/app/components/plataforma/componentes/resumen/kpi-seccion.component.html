@@ -1,0 +1,48 @@
+<section class="cfg-card pl-kpi" [attr.aria-label]="titulo" [attr.aria-busy]="cargando">
+  <div class="pl-kpi__cabeza">
+    <h2>{{ titulo }}</h2>
+    <small class="pl-kpi__rotulo" *ngIf="rotuloTipo">{{ rotuloTipo }}</small>
+  </div>
+
+  <div class="pl-esqueleto" *ngIf="cargando" role="status" [attr.aria-label]="textos.cargando"></div>
+
+  <div class="pl-error" *ngIf="!cargando && error">
+    <p class="cfg-aviso cfg-aviso--error">{{ error }}</p>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="reintentar.emit()">{{ textos.reintentar }}</button>
+  </div>
+
+  <ng-container *ngIf="!cargando && !error">
+    <div class="cfg-stats" *ngIf="items.length">
+      <div class="pl-cifra" *ngFor="let it of items">
+        <div class="pl-cifra__rotulo">
+          <span class="pl-cifra__texto">{{ it.rotulo }}</span>
+          <button type="button" class="pl-info" *ngIf="it.definicionId" (click)="alternar(it.clave)"
+            [attr.aria-expanded]="abierta === it.clave" [attr.aria-label]="textos.infoDefinicion + ': ' + it.rotulo">i</button>
+        </div>
+        <div class="pl-cifra__valor" [class.pl-nulo]="it.pintada.nulo">{{ it.pintada.texto }}</div>
+        <div *ngIf="it.pintada.insignia"><span class="cfg-pill cfg-pill--neutro">{{ it.pintada.insignia }}</span></div>
+        <small class="pl-cifra__nota" *ngIf="it.nota">{{ it.nota }}</small>
+      </div>
+    </div>
+
+    <div class="pl-definicion" *ngIf="abierta" role="region">
+      <ng-container *ngIf="abiertaDef as d; else sinDef">
+        <p><strong>{{ d.nombre }}</strong></p>
+        <p>{{ d.definicion }}</p>
+        <p class="pl-muted">Fórmula: {{ d.formula }} · {{ d.ventana }}</p>
+      </ng-container>
+      <ng-template #sinDef><p>{{ textos.sinDefinicion }}</p></ng-template>
+    </div>
+
+    <div class="cfg-vacio" *ngIf="!items.length">
+      <h3 class="cfg-vacio__titulo">{{ textos.sinCalcular }}</h3>
+    </div>
+
+    <div class="pl-kpi__pie">
+      <small>{{ textos.universo }}: {{ universo }}</small>
+      <small>{{ textos.corte }}: {{ fechaCalculo }}</small>
+      <small *ngIf="meta?.reglaVersion">{{ textos.version }}: {{ meta?.reglaVersion }}</small>
+      <small *ngIf="overview?.mes">{{ textos.mes }}: {{ mesTexto }}</small>
+    </div>
+  </ng-container>
+</section>

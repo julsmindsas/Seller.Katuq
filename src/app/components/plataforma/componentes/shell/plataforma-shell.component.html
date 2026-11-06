@@ -1,0 +1,32 @@
+<div class="pl-raiz">
+<div class="cfg-pagina">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ textos.eyebrow }}</span>
+      <h1 class="cfg-titulo">{{ textos.titulo }}</h1>
+      <p class="cfg-sub">{{ textos.subtitulo }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <div class="pl-vista" role="group" [attr.aria-label]="textos.vistaRotulo" *ngIf="mostrarVista">
+        <button type="button" class="cfg-btn cfg-btn--sec" [class.pl-activo]="vista === 'creacion'" [attr.aria-pressed]="vista === 'creacion'" (click)="cambiarVista('creacion')">{{ textos.vistaCreacion }}</button>
+        <button type="button" class="cfg-btn cfg-btn--sec" [class.pl-activo]="vista === 'entrega'" [attr.aria-pressed]="vista === 'entrega'" (click)="cambiarVista('entrega')">{{ textos.vistaEntrega }}</button>
+      </div>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ textos.recargar }}</button>
+      <button type="button" class="cfg-btn" *ngIf="esOperador" [disabled]="actualizando" (click)="actualizar()">
+        {{ actualizando ? textos.actualizando : textos.actualizar }}
+      </button>
+    </div>
+  </header>
+
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="mostrarVista && vista === 'entrega'" role="status">{{ textos.vistaEntregaAviso }}</p>
+  <p class="cfg-aviso" [class.cfg-aviso--ok]="m.tipo === 'ok'" [class.cfg-aviso--error]="m.tipo === 'error'" *ngIf="mensaje as m" role="status">{{ m.texto }}</p>
+
+  <app-aviso-definicion [version]="version" [definiciones]="definiciones"></app-aviso-definicion>
+
+  <nav class="pl-pestanas" [attr.aria-label]="textos.titulo">
+    <a *ngFor="let t of pestanas" class="pl-pestana" [routerLink]="['/plataforma', t.ruta]" routerLinkActive="pl-activa">{{ t.rotulo }}</a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>
+</div>

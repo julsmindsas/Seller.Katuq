@@ -35,8 +35,9 @@
           <div class="ifr-texto" *ngIf="fotosEstandarActiva">{{ mensajeEstandarFoto }} No importa si el nombre va en mayúsculas o minúsculas.</div>
           <button type="button" class="ifr-btn ifr-btn--sec" (click)="descargarReferencias()" [disabled]="descargandoReferencias">
             <i class="pi" [class.pi-download]="!descargandoReferencias" [class.pi-spin]="descargandoReferencias" [class.pi-spinner]="descargandoReferencias"></i>
-            Descargar lista de referencias
+            Descargar ejemplo con tus referencias
           </button>
+          <div class="ifr-texto">Un Excel con el nombre exacto de cada foto por producto, y te avisa si alguna referencia no se puede usar en el nombre de un archivo.</div>
         </div>
 
         <div class="ifr-elegir">
