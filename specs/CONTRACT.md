@@ -13543,3 +13543,11 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Desvíos:** (1) el golden de `/api/ai/json` sin `scope` ya es captura real (venv local con Flask); (2) la lista de campos de empresa reservados a plataforma para 1.2/1.3 requiere aprobación de Daniel (detalle en la revisión privada de seguridad de D-700 (repo del backend)).
 - **Avisos para Daniel:** `kai` está en la rama `feat/claude-agent-sdk`: confirmar que es la de producción del ADK (B-9).
 - **Revisión de la sección 0 (5-nov, tarde):** corregido el arnés del golden (admit/authorize-tool ahora cubren 200 y 403 con cupo), capturado el golden de `/api/ai/json`.
+
+### 2026-11-06 — Publicados el front 2026.11.06.1 y el backend `58445833`
+
+- **Pedido:** Daniel pidió «git pull y despliega de nuevo». Llegaron las métricas de plataforma D-700 (front y back) y las ramas de aws-claude-1 (front 6 cambios, back 13) y aws-claude-2 (front 1: ajuste de inventario por bodega, ticket 1522). Daniel eligió publicar todo, incluido el ajuste por bodega (inventario es módulo sensible; revisé el diff: una llamada a `/inventory` por bodega con su código de bodega, se detiene si una falla y saca de la lista lo ya guardado).
+- **Front:** mezcla de aws-claude-1 en avance directo (`b559f189`) y de aws-claude-2 en `aff9b4ac`, con un conflicto en `notas-version.json` resuelto conservando las dos notas. Release `8e7bb045`, versión 2026.11.06.1. El candado y verify-dist pasaron. Salen tres notas: el ejemplo para nombrar fotos en «Importar fotos de productos», el PDF de cotización con cifras separadas y la bodega por producto en Ajustes de inventario. El módulo de plataforma sale sin enlace en el menú.
+- **Backend:** el EC2 ya estaba en `6adf1677` (D-700 lo había publicado otra sesión). Se mezcló aws-claude-1 (`58445833`) y se fijó con `git fetch` + `git merge --ff-only 58445833`: 14 cambios, sin paquetes nuevos. Antes, sintaxis de 55 archivos y 640 `require` relativos sin errores.
+- **Verificado:** `katuq-api` en línea 4 min después del reinicio; `/v1/platform/me` y `/v1/productos/fotos-por-referencia/referencias` responden 401 sin sesión; `version.json` vivo en 2026.11.06.1.
+- **No verificado:** el ajuste por bodega con un ajuste real, el editor de sitios en el navegador y la paginación del catálogo en una tienda publicada.
