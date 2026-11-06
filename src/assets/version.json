@@ -1,41 +1,57 @@
 {
-  "version": "2026.11.05.4 - 5 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-05T20:43:28.216Z",
+  "version": "2026.11.06.1 - 6 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-06T19:45:47.175Z",
   "notas": [
     {
-      "fecha": "2026-11-05T19:03:18Z",
-      "tipo": "CORRIGE",
-      "texto": "En las tiendas publicadas, el enlace «← Seguir comprando» de la ficha de un producto ya te lleva al catálogo o al inicio, en vez de mostrar una página que no existe.",
+      "fecha": "2026-11-05T21:14:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Productos › Importar fotos de productos, «Descargar ejemplo con tus referencias» te da un Excel con el nombre exacto de cada foto de cada producto y te avisa qué referencias no se pueden usar en el nombre de un archivo.",
       "modulos": [
-        "sitios"
+        "productos"
       ]
     },
     {
-      "fecha": "2026-11-05T19:13:04Z",
+      "fecha": "2026-11-06T16:44:36Z",
       "tipo": "CORRIGE",
-      "texto": "En el editor de tu sitio, «Agregar una sección» › «Prefiero empezar desde cero» ya agrega la sección que eliges; antes el botón no hacía nada al pulsarlo con el mouse.",
+      "texto": "En el PDF de la cotización las columnas de valores ya no quedan pegadas: cada cifra tiene su espacio y se lee igual que en la vista previa.",
       "modulos": [
-        "sitios"
+        "cotizaciones"
       ]
     },
     {
-      "fecha": "2026-11-05T19:13:04Z",
-      "tipo": "CORRIGE",
-      "texto": "En las tarjetas de «Para tu negocio», el selector de piezas ya no se cierra solo mientras eliges, y si lo cierras sin elegir, la tarjeta conserva lo que tenía.",
+      "fecha": "2026-11-06T16:47:36Z",
+      "tipo": "NUEVO",
+      "texto": "En Ajustes de inventario puedes elegir la bodega de cada producto: un mismo ajuste, con un solo tipo de movimiento y una sola nota, queda registrado en varias bodegas a la vez y con una referencia común para encontrarlo.",
       "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T19:13:04Z",
-      "tipo": "CORRIGE",
-      "texto": "Si ocultas «Todo el catálogo» en el inicio, el catálogo, las categorías y el buscador de tu tienda siguen funcionando en su propia página, y el editor te dice qué pasa al cerrar el ojo de esa sección.",
-      "modulos": [
-        "sitios"
+        "inventario/recepcion-mercancia"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-06T16:47:36Z",
+      "tipo": "NUEVO",
+      "texto": "En Ajustes de inventario puedes elegir la bodega de cada producto: un mismo ajuste, con un solo tipo de movimiento y una sola nota, queda registrado en varias bodegas a la vez y con una referencia común para encontrarlo.",
+      "modulos": [
+        "inventario/recepcion-mercancia"
+      ]
+    },
+    {
+      "fecha": "2026-11-06T16:44:36Z",
+      "tipo": "CORRIGE",
+      "texto": "En el PDF de la cotización las columnas de valores ya no quedan pegadas: cada cifra tiene su espacio y se lee igual que en la vista previa.",
+      "modulos": [
+        "cotizaciones"
+      ]
+    },
+    {
+      "fecha": "2026-11-05T21:14:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Productos › Importar fotos de productos, «Descargar ejemplo con tus referencias» te da un Excel con el nombre exacto de cada foto de cada producto y te avisa qué referencias no se pueden usar en el nombre de un archivo.",
+      "modulos": [
+        "productos"
+      ]
+    },
     {
       "fecha": "2026-11-05T19:13:04Z",
       "tipo": "CORRIGE",
@@ -486,34 +502,8 @@
       "modulos": [
         "facturacion-electronica"
       ]
-    },
-    {
-      "fecha": "2026-10-30T16:20:00Z",
-      "tipo": "NUEVO",
-      "texto": "Cuando le asignas un pedido a un mensajero, le llega un aviso al celular para que pase a recogerlo.",
-      "modulos": [
-        "despachos",
-        "ventas/pedidos",
-        "en-vivo"
-      ]
-    },
-    {
-      "fecha": "2026-10-30T13:44:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya puedes fijar tus acciones del pedido aunque tu usuario esté creado dos veces en tu empresa, y si una acción no se puede guardar te decimos por qué.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-10-29T16:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En Tesorería → Historial puedes anular un pago aprobado que se aplicó por error: escribes el motivo, el pago queda anulado (no se borra) y el pedido se recalcula solo con los pagos que le quedan.",
-      "modulos": [
-        "tesoreria"
-      ]
     }
   ],
-  "commit": "6a577be209e93cff998d89d49a08a7631c774c63",
+  "commit": "aff9b4acbedd15314a732015bda5d3cecf128644",
   "cambiosSinCommit": 0
 }
