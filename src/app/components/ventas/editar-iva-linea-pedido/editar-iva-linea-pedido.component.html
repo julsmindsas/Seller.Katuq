@@ -1,8 +1,8 @@
 <div class="eiv-container">
-  <p class="eiv-hint" *ngIf="!pedido">Selecciona un pedido para editar el IVA de una línea.</p>
+  <p class="eiv-hint" *ngIf="!pedido">{{ 'ventas.editarIvaLineaPedido.sinPedido' | translate }}</p>
 
   <ng-container *ngIf="pedido">
-    <p class="eiv-hint">Elige la línea del pedido a la que quieres cambiar el IVA.</p>
+    <p class="eiv-hint">{{ 'ventas.editarIvaLineaPedido.eligeLinea' | translate }}</p>
 
     <div class="eiv-lineas">
       <button
@@ -12,32 +12,31 @@
         [class.eiv-linea--activa]="lineaSeleccionadaIndex === i"
         (click)="seleccionarLinea(i)">
         <div class="eiv-linea__info">
-          <span class="eiv-linea__titulo">{{ linea?.producto?.crearProducto?.titulo || 'Producto sin nombre' }}</span>
-          <span class="eiv-linea__ref">Ref. {{ linea?.producto?.identificacion?.referencia || 'N/A' }} · Cant. {{ linea?.cantidad }}</span>
+          <span class="eiv-linea__titulo">{{ linea?.producto?.crearProducto?.titulo || ('ventas.editarIvaLineaPedido.sinNombre' | translate) }}</span>
+          <span class="eiv-linea__ref">{{ 'ventas.editarIvaLineaPedido.refCant' | translate: { ref: linea?.producto?.identificacion?.referencia || ('ventas.editarIvaLineaPedido.na' | translate), cant: linea?.cantidad } }}</span>
         </div>
-        <span class="eiv-chip">{{ ivaActualDeLinea(linea) }}% IVA</span>
+        <span class="eiv-chip">{{ 'ventas.editarIvaLineaPedido.ivaChip' | translate: { iva: ivaActualDeLinea(linea) } }}</span>
       </button>
     </div>
 
     <div class="eiv-edicion" *ngIf="lineaSeleccionadaIndex !== null">
-      <label class="eiv-label">Nuevo IVA para esta línea</label>
+      <label class="eiv-label">{{ 'ventas.editarIvaLineaPedido.nuevoIva' | translate }}</label>
       <select class="eiv-select" [(ngModel)]="nuevoIva">
         <option *ngFor="let iva of ivasPermitidos" [ngValue]="iva">{{ iva }}%</option>
       </select>
     </div>
 
     <div class="eiv-aviso" *ngIf="facturaPorRefacturar">
-      La factura {{ facturaPorRefacturar }} quedó con el IVA anterior. Después de guardar, refactura el pedido
-      y anula la factura anterior en {{ sistemaContable }}. Si el total sube, la diferencia queda por cobrar.
+      {{ 'ventas.editarIvaLineaPedido.avisoRefacturar' | translate: { factura: facturaPorRefacturar, sistema: sistemaContable } }}
     </div>
 
     <div class="eiv-error" *ngIf="error">{{ error }}</div>
 
     <div class="eiv-acciones">
-      <button type="button" class="eiv-btn eiv-btn--ghost" (click)="cancelar()" [disabled]="guardando">Cancelar</button>
+      <button type="button" class="eiv-btn eiv-btn--ghost" (click)="cancelar()" [disabled]="guardando">{{ 'comun.cancelar' | translate }}</button>
       <button type="button" class="eiv-btn eiv-btn--primary" (click)="guardar()" [disabled]="!puedeGuardar()">
         <i class="fa fa-spinner fa-spin me-1" *ngIf="guardando"></i>
-        Guardar IVA
+        {{ 'ventas.editarIvaLineaPedido.guardarIva' | translate }}
       </button>
     </div>
   </ng-container>

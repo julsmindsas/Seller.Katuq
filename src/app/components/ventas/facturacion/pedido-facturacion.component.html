@@ -36,7 +36,7 @@
         <i class="fa fa-check-circle" style="font-size: 1.2rem; color: #1E874B;"></i>
         <div>
           <span class="badge bg-success bg-opacity-25 text-success me-2" style="font-size: 0.8rem;">
-            {{ pedidoGral?.facturacion?.alias || 'Sin referencia' }}
+            {{ pedidoGral?.facturacion?.alias || ('ventas.pedidoFacturacion.sinReferencia' | translate) }}
           </span>
           <span class="fw-semibold">{{ pedidoGral?.facturacion?.nombres }}</span>
           <span class="mx-2 text-muted">|</span>
@@ -67,7 +67,7 @@
       style="background: #fff; border: 1px solid #ececf4; border-radius: 11px; padding: 10px 16px; transition: box-shadow 0.2s;">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <span class="badge" style="background: #efe9ff; color: #5F3FE0; border: 1px solid #ddd3fb; font-size: 0.78rem;">
-          {{ item.alias || 'Sin referencia' }}
+          {{ item.alias || ('ventas.pedidoFacturacion.sinReferencia' | translate) }}
         </span>
         <span class="fw-semibold">{{ item.nombres }}</span>
         <span class="text-muted" style="font-size: 0.9rem;">{{ item.tipoDocumento }}: {{ item.documento }}</span>
@@ -97,7 +97,7 @@
       <i class="fa fa-plus-circle fx-modal-icono"></i>
       {{ 'Nuevos Datos de Facturación' | translate }}
     </h5>
-    <button type="button" class="btn-close" aria-label="Cerrar"
+    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate"
       (click)="modal.dismiss('Cross click')">
     </button>
   </div>
@@ -113,18 +113,18 @@
     <div class="row">
       <div class="col-sm-6 mb-3">
         <label class="form-label" for="alias_facturacion_crear">{{ 'Referencia para guardar datos:' | translate }}</label>
-        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text"
+        <input [placeholder]="'ventas.pedidoFacturacion.phAlias' | translate" class="form-control" type="text"
           id="alias_facturacion_crear" [(ngModel)]="alias_facturacion" />
       </div>
       <div class="col-sm-6 mb-3">
         <label class="form-label" for="razon_social_crear">{{ 'Razón Social / Nombre Completo:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="razon_social_crear" [(ngModel)]="razon_social"
-          placeholder="Como aparece en el RUT (no el nombre del contacto)" />
+          [placeholder]="'ventas.pedidoFacturacion.phRazonSocial' | translate" />
       </div>
       <div class="col-sm-6 mb-3">
         <label class="form-label" for="tipo_documento_facturacion_crear">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion_crear" [(ngModel)]="tipo_documento_facturacion">
-          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ tipo_documento_facturacion }} (anterior)</option>
+          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ 'ventas.pedidoFacturacion.anterior' | translate: { tipo: tipo_documento_facturacion } }}</option>
           <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
         </select>
       </div>
@@ -132,7 +132,7 @@
         <label class="form-label" for="numero_documento_facturacion_crear">{{ 'Documento:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="numero_documento_facturacion_crear"
           [(ngModel)]="numero_documento_facturacion"
-          placeholder="Solo números; NIT con guion y dígito: 901072822-4" />
+          [placeholder]="'ventas.pedidoFacturacion.phDocumento' | translate" />
       </div>
     </div>
     <div class="row">
@@ -227,7 +227,7 @@
       <i class="fa fa-edit fx-modal-icono"></i>
       {{ 'Editar Datos de Facturación' | translate }}
     </h5>
-    <button type="button" class="btn-close" aria-label="Cerrar"
+    <button type="button" class="btn-close" [attr.aria-label]="'comun.cerrar' | translate"
       (click)="modal.dismiss('Cross click')">
     </button>
   </div>
@@ -235,18 +235,18 @@
     <div class="row">
       <div class="col-sm-6">
         <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate }}</label>
-        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
+        <input [placeholder]="'ventas.pedidoFacturacion.phAlias' | translate" class="form-control" type="text" id="razon_social"
           [(ngModel)]="alias_facturacion" />
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social"
-          placeholder="Como aparece en el RUT (no el nombre del contacto)" />
+          [placeholder]="'ventas.pedidoFacturacion.phRazonSocial' | translate" />
       </div>
       <div class="col-sm-6">
         <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
-          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ tipo_documento_facturacion }} (anterior)</option>
+          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ 'ventas.pedidoFacturacion.anterior' | translate: { tipo: tipo_documento_facturacion } }}</option>
           <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
         </select>
       </div>
@@ -254,7 +254,7 @@
         <label class="form-label" for="numero_documento_facturacion">{{ 'Documento:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="numero_documento_facturacion"
           [(ngModel)]="numero_documento_facturacion"
-          placeholder="Solo números; NIT con guion y dígito: 901072822-4" />
+          [placeholder]="'ventas.pedidoFacturacion.phDocumento' | translate" />
       </div>
     </div>
     <div class="row">

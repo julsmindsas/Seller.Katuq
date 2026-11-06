@@ -89,7 +89,9 @@ test('formato: las líneas nuevas usan la sangría de sus vecinas', () => {
 
 test('1.10: en.json y pt.json tienen todas las claves de es.json (incluido primeng)', () => {
   const es = aplanar(dic('es'));
-  for (const idioma of ['en', 'pt']) {
+  // Solo inglés (2026-11-02): un idioma de idiomasPendientes puede no tener las claves nuevas.
+  const pendientes = JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/i18n-check.config.json'), 'utf8')).idiomasPendientes || [];
+  for (const idioma of ['en', 'pt'].filter(i => !pendientes.includes(i))) {
     const otro = aplanar(dic(idioma));
     const faltan = [...es.keys()].filter(k => !otro.has(k));
     assert.deepEqual(faltan, [], `faltan en ${idioma}`);

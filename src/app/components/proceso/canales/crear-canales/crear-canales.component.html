@@ -1,46 +1,46 @@
 <div class="modal-header mo-cabeza">
-  <h5 class="modal-title mo-titulo">{{ mostrarCrear ? 'Crear Canal de Venta' : 'Editar Canal de Venta' }}</h5>
+  <h5 class="modal-title mo-titulo">{{ (mostrarCrear ? 'proceso.crearCanales.tituloCrear' : 'proceso.crearCanales.tituloEditar') | translate }}</h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body cfg-form">
   <div *ngIf="loading" class="text-center my-3">
     <div class="spinner-border mo-cargando" role="status">
-      <span class="visually-hidden">Cargando...</span>
+      <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
     </div>
-    <p class="mt-2 mo-texto">Cargando información...</p>
+    <p class="mt-2 mo-texto">{{ 'proceso.comun.cargandoInformacion' | translate }}</p>
   </div>
 
   <form [formGroup]="canalForm" *ngIf="!loading">
     <!-- Nombre -->
     <div class="mb-4">
-      <label for="name" class="form-label fw-bold">Nombre del Canal</label>
-      <input class="form-control" type="text" id="name" formControlName="name" placeholder="Nombre del canal de venta">
+      <label for="name" class="form-label fw-bold">{{ 'proceso.crearCanales.nombre' | translate }}</label>
+      <input class="form-control" type="text" id="name" formControlName="name" [placeholder]="'proceso.crearCanales.nombrePlaceholder' | translate">
       <div *ngIf="f['name'].invalid && f['name'].touched" class="text-danger small mt-1">
-        <i class="fa fa-exclamation-circle me-1"></i>Este campo es requerido
+        <i class="fa fa-exclamation-circle me-1"></i>{{ 'proceso.comun.campoRequerido' | translate }}
       </div>
     </div>
     
     <!-- Tipo de Canal -->
     <div class="mb-4">
-      <label for="tipo" class="form-label fw-bold">Tipo de Canal</label>
+      <label for="tipo" class="form-label fw-bold">{{ 'proceso.crearCanales.tipo' | translate }}</label>
       <select class="form-select" id="tipo" formControlName="tipo">
-        <option value="">Seleccione un tipo</option>
+        <option value="">{{ 'proceso.crearCanales.seleccioneTipo' | translate }}</option>
         <option *ngFor="let tipo of tiposCanal" [value]="tipo.id">{{tipo.name}}</option>
       </select>
       <div *ngIf="f['tipo'].invalid && f['tipo'].touched" class="text-danger small mt-1">
-        <i class="fa fa-exclamation-circle me-1"></i>Este campo es requerido
+        <i class="fa fa-exclamation-circle me-1"></i>{{ 'proceso.comun.campoRequerido' | translate }}
       </div>
     </div>
     
     <!-- Activo -->
     <div class="mb-3">
-      <label for="activo" class="form-label fw-bold d-block">Estado</label>
+      <label for="activo" class="form-label fw-bold d-block">{{ 'proceso.comun.estado' | translate }}</label>
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="activo" formControlName="activo">
         <label class="form-check-label" for="activo">
-          <span *ngIf="f['activo'].value" class="mo-estado mo-estado--ok">Activo</span>
-          <span *ngIf="!f['activo'].value" class="mo-estado">Inactivo</span>
+          <span *ngIf="f['activo'].value" class="mo-estado mo-estado--ok">{{ 'proceso.comun.activo' | translate }}</span>
+          <span *ngIf="!f['activo'].value" class="mo-estado">{{ 'proceso.comun.inactivo' | translate }}</span>
         </label>
       </div>
     </div>
@@ -48,11 +48,11 @@
 </div>
 
 <div class="modal-footer mo-pie">
-  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="cfg-btn cfg-btn--sec" (click)="activeModal.dismiss()">{{ 'comun.cancelar' | translate }}</button>
   <button type="button" class="cfg-btn" 
           [disabled]="canalForm.invalid || loading" 
           (click)="mostrarCrear ? guardar() : editar()">
     <span *ngIf="loading" class="spinner-border spinner-border-sm me-1 mo-girando" role="status" aria-hidden="true"></span>
-    {{ mostrarCrear ? 'Guardar' : 'Actualizar' }}
+    {{ (mostrarCrear ? 'comun.guardar' : 'proceso.comun.actualizar') | translate }}
   </button>
 </div> 

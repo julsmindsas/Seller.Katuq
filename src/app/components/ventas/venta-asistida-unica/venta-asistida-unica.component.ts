@@ -129,12 +129,12 @@ export class VentaAsistidaUnicaComponent extends CrearVentasComponent {
    */
   vaciarCarrito(): void {
     Swal.fire({
-      title: "¿Vaciar el carrito?",
-      text: "Se quitarán todos los productos agregados.",
+      title: this.translate.instant("ventas.ventaAsistidaUnica.vaciarCarritoTitulo"),
+      text: this.translate.instant("ventas.ventaAsistidaUnica.vaciarCarritoTexto"),
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, vaciar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: this.translate.instant("ventas.ventaAsistidaUnica.siVaciar"),
+      cancelButtonText: this.translate.instant("comun.cancelar"),
       confirmButtonColor: "#6c4ce0",
     }).then((res) => {
       if (res.isConfirmed) {
@@ -203,8 +203,8 @@ export class VentaAsistidaUnicaComponent extends CrearVentasComponent {
     // Gate del "paso 1": debe existir un cliente.
     if (!this.pedidoGral?.cliente) {
       Swal.fire({
-        title: "Advertencia",
-        text: "Debe seleccionar o crear un cliente para continuar",
+        title: this.translate.instant("ventas.ventaAsistidaUnica.advertencia"),
+        text: this.translate.instant("ventas.ventaAsistidaUnica.debeCliente"),
         icon: "warning",
       });
       return;
@@ -220,8 +220,8 @@ export class VentaAsistidaUnicaComponent extends CrearVentasComponent {
     // Gate del "paso 4": datos de envío salvo recoge en tienda.
     if (!this.esRecogeEnTienda && !this.pedidoGral?.envio) {
       Swal.fire({
-        title: "Advertencia",
-        text: "Debe seleccionar o crear datos de envío antes de continuar",
+        title: this.translate.instant("ventas.ventaAsistidaUnica.advertencia"),
+        text: this.translate.instant("ventas.ventaAsistidaUnica.debeEnvio"),
         icon: "warning",
       });
       return;
@@ -230,8 +230,8 @@ export class VentaAsistidaUnicaComponent extends CrearVentasComponent {
     // Gate del "paso 5": datos de facturación.
     if (!this.pedidoGral?.facturacion) {
       Swal.fire({
-        title: "Advertencia",
-        text: "Debe seleccionar o crear datos de facturación antes de continuar",
+        title: this.translate.instant("ventas.ventaAsistidaUnica.advertencia"),
+        text: this.translate.instant("ventas.ventaAsistidaUnica.debeFacturacion"),
         icon: "warning",
       });
       return;

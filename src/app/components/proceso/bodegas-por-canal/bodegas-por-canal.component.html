@@ -1,9 +1,9 @@
 <div class="cfg-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">Configuración</span>
-      <h1 class="cfg-titulo">Bodegas por Canal</h1>
-      <p class="cfg-sub">Permite relacionar canales de venta con las bodegas disponibles.</p>
+      <span class="cfg-eyebrow">{{ 'proceso.bodegasPorCanal.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'proceso.bodegasPorCanal.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'proceso.bodegasPorCanal.subtitulo' | translate }}</p>
     </div>
   </header>
 
@@ -18,17 +18,17 @@
             <div class="row mb-4">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="canal" class="form-label cfg-label">Seleccionar Canal de Venta</label>
+                  <label for="canal" class="form-label cfg-label">{{ 'proceso.bodegasPorCanal.seleccionarCanal' | translate }}</label>
                   <select class="form-select" id="canal" formControlName="canal">
-                    <option value="">Seleccione un canal</option>
+                    <option value="">{{ 'proceso.bodegasPorCanal.seleccioneCanal' | translate }}</option>
                     <option *ngFor="let canal of canales" [value]="canal.id" [disabled]="!canal.activo">
                       {{ canal.name }} ({{ canal.tipo }})
-                      <span *ngIf="!canal.activo"> - Inactivo</span>
+                      <span *ngIf="!canal.activo"> - {{ 'proceso.bodegasPorCanal.inactivo' | translate }}</span>
                     </option>
                   </select>
                   <div *ngIf="seleccionForm.get('canal')?.invalid && seleccionForm.get('canal')?.touched" 
                        class="bxc-error mt-1">
-                    Debe seleccionar un canal de venta
+                    {{ 'proceso.bodegasPorCanal.debeSeleccionarCanal' | translate }}
                   </div>
                 </div>
               </div>
@@ -47,12 +47,12 @@
                               'bg-success': canalSeleccionado.activo,
                               'bg-secondary': !canalSeleccionado.activo
                             }">
-                        {{ canalSeleccionado.activo ? 'ACTIVO' : 'INACTIVO' }}
+                        {{ (canalSeleccionado.activo ? 'proceso.bodegasPorCanal.activoMayus' : 'proceso.bodegasPorCanal.inactivoMayus') | translate }}
                       </span>
                     </div>
                     <div class="flex-grow-1 ms-3">
                       <h5 class="mb-0 bxc-canal__nombre">{{ canalSeleccionado.name }}</h5>
-                      <small class="bxc-tenue">Tipo: {{ canalSeleccionado.tipo }}</small>
+                      <small class="bxc-tenue">{{ 'proceso.bodegasPorCanal.tipo' | translate: { tipo: canalSeleccionado.tipo } }}</small>
                     </div>
                   </div>
                 </div>
@@ -70,22 +70,22 @@
               <div class="bxc-panel h-100">
                 <div class="bxc-panel__cabeza">
                   <h5 class="mb-0 bxc-panel__titulo">
-                    <i class="fa fa-warehouse bxc-icono"></i>Bodegas Disponibles
+                    <i class="fa fa-warehouse bxc-icono"></i>{{ 'proceso.bodegasPorCanal.bodegasDisponibles' | translate }}
                     <span class="cfg-pill cfg-pill--neutro">{{ bodegasDisponibles.length }}</span>
                   </h5>
                 </div>
                 <div class="bxc-panel__cuerpo">
                   <div *ngIf="cargandoBodegas" class="text-center py-4">
                     <div class="spinner-border bxc-girando" role="status">
-                      <span class="visually-hidden">Cargando...</span>
+                      <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                     </div>
-                    <p class="mt-2 bxc-tenue">Cargando bodegas disponibles...</p>
+                    <p class="mt-2 bxc-tenue">{{ 'proceso.bodegasPorCanal.cargandoDisponibles' | translate }}</p>
                   </div>
                   
                   <div *ngIf="!cargandoBodegas && bodegasDisponibles.length === 0" 
                        class="cfg-vacio">
                     <i class="fa fa-info-circle cfg-vacio__icono"></i>
-                    <p class="cfg-vacio__texto">No hay bodegas disponibles para asignar.</p>
+                    <p class="cfg-vacio__texto">{{ 'proceso.bodegasPorCanal.sinDisponibles' | translate }}</p>
                   </div>
                   
                   <div *ngIf="!cargandoBodegas && bodegasDisponibles.length > 0" 
@@ -93,12 +93,12 @@
                     <div *ngFor="let bodega of bodegasDisponibles" 
                          class="bodega-item mb-2"
                          [ngClass]="{'bodega-asignada': bodega.asignada}"
-                         [title]="bodega.asignada ? 'Esta bodega ya está asignada' : ''">
+                         [title]="bodega.asignada ? ('proceso.bodegasPorCanal.yaAsignada' | translate) : ''">
                       <div class="d-flex justify-content-between align-items-center">
                         <div>
                           <h6 class="mb-0 bxc-bodega__nombre">{{ bodega.nombre }}</h6>
                           <small>
-                            <span class="bxc-tenue">Código: {{ bodega.idBodega }}</span>
+                            <span class="bxc-tenue">{{ 'proceso.bodegasPorCanal.codigo' | translate: { codigo: bodega.idBodega } }}</span>
                             <span class="cfg-pill cfg-pill--info">{{ bodega.tipo }}</span>
                           </small>
                         </div>
@@ -106,10 +106,10 @@
                                 class="bxc-accion bxc-accion--agregar" 
                                 (click)="asignarBodega(bodega)"
                                 [disabled]="cargandoBodegas"
-                                title="Asignar bodega al canal">
+                                [title]="'proceso.bodegasPorCanal.asignarBodega' | translate">
                           <i class="fa fa-plus-circle"></i>
                         </button>
-                        <span *ngIf="bodega.asignada" class="cfg-pill cfg-pill--ok">Asignada</span>
+                        <span *ngIf="bodega.asignada" class="cfg-pill cfg-pill--ok">{{ 'proceso.bodegasPorCanal.asignada' | translate }}</span>
                       </div>
                     </div>
                   </div>
@@ -120,22 +120,22 @@
               <div class="bxc-panel h-100">
                 <div class="bxc-panel__cabeza">
                   <h5 class="mb-0 bxc-panel__titulo">
-                    <i class="fa fa-check-circle bxc-icono bxc-icono--ok"></i>Bodegas Asignadas
+                    <i class="fa fa-check-circle bxc-icono bxc-icono--ok"></i>{{ 'proceso.bodegasPorCanal.bodegasAsignadas' | translate }}
                     <span class="cfg-pill">{{ bodegasAsignadas.length }}</span>
                   </h5>
                 </div>
                 <div class="bxc-panel__cuerpo">
                   <div *ngIf="cargandoBodegas" class="text-center py-4">
                     <div class="spinner-border bxc-girando" role="status">
-                      <span class="visually-hidden">Cargando...</span>
+                      <span class="visually-hidden">{{ 'comun.cargando' | translate }}</span>
                     </div>
-                    <p class="mt-2 bxc-tenue">Cargando bodegas asignadas...</p>
+                    <p class="mt-2 bxc-tenue">{{ 'proceso.bodegasPorCanal.cargandoAsignadas' | translate }}</p>
                   </div>
                   
                   <div *ngIf="!cargandoBodegas && bodegasAsignadas.length === 0" 
                        class="cfg-vacio">
                     <i class="fa fa-info-circle cfg-vacio__icono"></i>
-                    <p class="cfg-vacio__texto">No hay bodegas asignadas a este canal.</p>
+                    <p class="cfg-vacio__texto">{{ 'proceso.bodegasPorCanal.sinAsignadas' | translate }}</p>
                   </div>
                   
                   <div *ngIf="!cargandoBodegas && bodegasAsignadas.length > 0" 
@@ -146,13 +146,13 @@
                         <div>
                           <h6 class="mb-0 bxc-bodega__nombre">{{ bodega.nombre }}</h6>
                           <small>
-                            <span class="bxc-tenue">Código: {{ bodega.idBodega }}</span>
+                            <span class="bxc-tenue">{{ 'proceso.bodegasPorCanal.codigo' | translate: { codigo: bodega.idBodega } }}</span>
                             <span class="cfg-pill cfg-pill--info">{{ bodega.tipo }}</span>
                           </small>
                         </div>
                         <button class="bxc-accion bxc-accion--quitar" 
                                 (click)="removerBodega(bodega)"
-                                title="Remover bodega del canal">
+                                [title]="'proceso.bodegasPorCanal.removerBodega' | translate">
                           <i class="fa fa-minus-circle"></i>
                         </button>
                       </div>
@@ -167,8 +167,8 @@
           <div *ngIf="!canalSeleccionado && !cargando" class="cfg-aviso cfg-aviso--warn">
             <i class="fa fa-exclamation-triangle cfg-aviso__icono"></i>
             <div class="cfg-aviso__cuerpo">
-              <strong class="cfg-aviso__titulo">Seleccione un canal de venta</strong>
-              <span class="cfg-aviso__texto">Para gestionar las bodegas asignadas, primero debe seleccionar un canal de venta activo.</span>
+              <strong class="cfg-aviso__titulo">{{ 'proceso.bodegasPorCanal.avisoTitulo' | translate }}</strong>
+              <span class="cfg-aviso__texto">{{ 'proceso.bodegasPorCanal.avisoTexto' | translate }}</span>
             </div>
           </div>
         </div>

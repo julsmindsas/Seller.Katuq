@@ -4,6 +4,7 @@ import { BehaviorSubject, forkJoin, Observable, of, timer } from "rxjs";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { CacheService } from "../../../shared/services/cache/cache.service";
 import Swal from "sweetalert2";
+import { TranslateService } from "@ngx-translate/core";
 import { parse } from "flatted";
 import { Pedido } from "../modelo/pedido";
 import { map, catchError, retry, shareReplay, switchMap, takeUntil, filter, timeout, take } from 'rxjs/operators';
@@ -78,7 +79,8 @@ export class PedidosUtilService {
 
     constructor(
         private maestroService: MaestroService,
-        private cacheService: CacheService
+        private cacheService: CacheService,
+        private translate: TranslateService
     ) {
         this.initializeCart();
         // No cargar automáticamente en constructor - será manejado desde AuthService
@@ -365,10 +367,10 @@ export class PedidosUtilService {
 
     private showErrorNotification(): void {
                 Swal.fire({
-            title: 'Error de Conexión',
-            text: 'No se pudieron cargar los datos maestros. Se reintentará automáticamente.',
+            title: this.translate.instant('ventas.pedidosUtil.errorConexion'),
+            text: this.translate.instant('ventas.pedidosUtil.errorMaestros'),
             icon: 'warning',
-            confirmButtonText: 'Aceptar',
+            confirmButtonText: this.translate.instant('comun.aceptar'),
             timer: 3000,
             timerProgressBar: true
         });

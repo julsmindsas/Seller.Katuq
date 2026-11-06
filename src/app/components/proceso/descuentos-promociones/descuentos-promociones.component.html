@@ -1,21 +1,21 @@
 <div class="cfg-pagina">
   <header class="cfg-cabeza">
     <div class="cfg-cabeza__textos">
-      <span class="cfg-eyebrow">{{ "Configuración" | translate }}</span>
-      <h1 class="cfg-titulo">{{ "Descuentos y Promociones" | translate }}</h1>
-      <p class="cfg-sub">{{ "Gestiona cupones, descuentos por porcentaje y promociones especiales." | translate }}</p>
+      <span class="cfg-eyebrow">{{ 'proceso.comun.configuracion' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'proceso.descuentosPromociones.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'proceso.descuentosPromociones.subtitulo' | translate }}</p>
     </div>
 
     <div class="cfg-acciones">
       <input type="text" class="cfg-buscador"
-        placeholder="{{ 'Buscar nombre o código...' | translate }}" (input)="updateFilter($event)">
+        [placeholder]="'proceso.descuentosPromociones.buscar' | translate" (input)="updateFilter($event)">
       <button class="cfg-btn" type="button" (click)="openCrearModal('codigo')">
-        <i placement="top" ngbTooltip="Nuevo código" class="icofont icofont-plus"></i>
-        <span>{{ "Crear Descuento" | translate }}</span>
+        <i placement="top" [ngbTooltip]="'proceso.descuentosPromociones.nuevoCodigo' | translate" class="icofont icofont-plus"></i>
+        <span>{{ 'proceso.descuentosPromociones.crearDescuento' | translate }}</span>
       </button>
       <button class="cfg-btn cfg-btn--sec" type="button" (click)="openCrearModal('promocion')">
-        <i placement="top" ngbTooltip="Nueva promoción automática" class="icofont icofont-tag"></i>
-        <span>{{ "Crear Promoción" | translate }}</span>
+        <i placement="top" [ngbTooltip]="'proceso.descuentosPromociones.nuevaPromocion' | translate" class="icofont icofont-tag"></i>
+        <span>{{ 'proceso.descuentosPromociones.crearPromocion' | translate }}</span>
       </button>
     </div>
   </header>
@@ -34,23 +34,23 @@
             'codigoPersonalizado',
             'tipo'
         ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
+        [currentPageReportTemplate]="'proceso.tabla.paginacion' | translate">
 
         <ng-template pTemplate="header">
           <tr>
             <th class="text-center" pSortableColumn="nombre">
-              {{ "Nombre" | translate }}
+              {{ 'proceso.tabla.nombre' | translate }}
               <p-sortIcon field="nombre"></p-sortIcon>
             </th>
-            <th class="text-center">{{ "Código" | translate }}</th>
-            <th class="text-center">{{ "Tipo / Valor" | translate }}</th>
-            <th *ngIf="!isMobile" class="text-center">{{ "Monto mínimo" | translate }}</th>
-            <th *ngIf="!isMobile" class="text-center">{{ "Vigencia" | translate }}</th>
-            <th *ngIf="!isMobile" class="text-center">{{ "Usos (actual / global / x cliente)" | translate }}</th>
-            <th *ngIf="!isMobile" class="text-center">{{ "Combinable" | translate }}</th>
-            <th class="text-center">{{ "Estado" | translate }}</th>
-            <th class="text-center">{{ "Historial" | translate }}</th>
-            <th class="text-center">{{ "Acciones" | translate }}</th>
+            <th class="text-center">{{ 'proceso.descuentosPromociones.colCodigo' | translate }}</th>
+            <th class="text-center">{{ 'proceso.descuentosPromociones.colTipoValor' | translate }}</th>
+            <th *ngIf="!isMobile" class="text-center">{{ 'proceso.descuentosPromociones.colMontoMinimo' | translate }}</th>
+            <th *ngIf="!isMobile" class="text-center">{{ 'proceso.descuentosPromociones.colVigencia' | translate }}</th>
+            <th *ngIf="!isMobile" class="text-center">{{ 'proceso.descuentosPromociones.colUsos' | translate }}</th>
+            <th *ngIf="!isMobile" class="text-center">{{ 'proceso.descuentosPromociones.colCombinable' | translate }}</th>
+            <th class="text-center">{{ 'proceso.comun.estado' | translate }}</th>
+            <th class="text-center">{{ 'proceso.descuentosPromociones.colHistorial' | translate }}</th>
+            <th class="text-center">{{ 'proceso.tabla.acciones' | translate }}</th>
           </tr>
         </ng-template>
 
@@ -60,20 +60,18 @@
             <td class="text-center">
               <span *ngIf="row.naturaleza !== 'promocion'" class="badge bg-secondary fw-bold">{{ row.codigoPersonalizado }}</span>
               <span *ngIf="row.naturaleza === 'promocion'" class="badge bg-info text-dark">
-                <i class="icofont icofont-tag"></i>&nbsp;{{ "Promoción automática" | translate }}
+                <i class="icofont icofont-tag"></i>&nbsp;{{ 'proceso.descuentosPromociones.promocionAutomatica' | translate }}
               </span>
             </td>
             <td class="text-center">
               {{ row.tipo === 'porcentaje' ? row.valor + '%' :
                  row.tipo === 'valor_fijo' ? '$' + (row.valor | number) :
-                 'Envío gratis' }}
+                 ('proceso.descuentosPromociones.envioGratis' | translate) }}
             </td>
-            <td *ngIf="!isMobile" class="text-center">{{ row.montoMinimo ? ('$' + (row.montoMinimo | number)) : 'Sin mínimo' }}</td>
+            <td *ngIf="!isMobile" class="text-center">{{ row.montoMinimo ? ('$' + (row.montoMinimo | number)) : ('proceso.descuentosPromociones.sinMinimo' | translate) }}</td>
             <td *ngIf="!isMobile" class="text-center">{{ row.fechaInicio }} → {{ row.fechaFin }}</td>
             <td *ngIf="!isMobile" class="text-center">
-              {{ row.usosActuales || 0 }} /
-              {{ row.limiteUsos || '∞' }} global |
-              {{ row.limiteUsosPorCliente || '∞' }} x cliente
+              {{ 'proceso.descuentosPromociones.usos' | translate: { actual: row.usosActuales || 0, global: row.limiteUsos || '∞', cliente: row.limiteUsosPorCliente || '∞' } }}
             </td>
             <td *ngIf="!isMobile" class="text-center">
               <i [class]="row.combinable
@@ -87,36 +85,36 @@
                 'badge bg-secondary':         getEstado(row) === 'vencido',
                 'badge bg-danger':            getEstado(row) === 'inactivo'
               }">
-                {{ getEstado(row) | titlecase }}
+                {{ estadoClaves[getEstado(row)] | translate }}
               </span>
               <span *ngIf="fueRedimido(row)" class="badge bg-info text-dark d-block mt-1"
-                ngbTooltip="{{ 'Este código ya fue redimido' | translate }}">
-                {{ "Redimido" | translate }} ({{ row.usosActuales }})
+                [ngbTooltip]="'proceso.descuentosPromociones.yaRedimido' | translate">
+                {{ 'proceso.descuentosPromociones.redimido' | translate: { n: row.usosActuales } }}
               </span>
             </td>
             <td class="text-center">
               <button type="button" class="btn btn-sm btn-outline-info"
                 (click)="verHistorial(row)"
-                ngbTooltip="{{ 'Ver historial de redenciones' | translate }}" placement="top">
+                [ngbTooltip]="'proceso.descuentosPromociones.verHistorial' | translate" placement="top">
                 <i class="icofont icofont-history"></i>
                 <span *ngIf="fueRedimido(row)">&nbsp;{{ row.usosActuales }}</span>
               </button>
             </td>
             <td class="text-center">
-              <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+              <i placement="top" [ngbTooltip]="'comun.editar' | translate"
                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
               </i>
-              <i *ngIf="row.activo !== false" placement="top" ngbTooltip="{{ 'Inhabilitar' | translate }}"
+              <i *ngIf="row.activo !== false" placement="top" [ngbTooltip]="'proceso.descuentosPromociones.inhabilitar' | translate"
                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                 class="icofont icofont-trash fc-danger" (click)="eliminar(row)">
               </i>
               <button *ngIf="row.activo === false" type="button"
                 class="btn btn-sm btn-danger"
                 style="margin-left: 10px; padding: 2px 8px;"
-                placement="top" ngbTooltip="{{ 'Eliminar permanentemente' | translate }}"
+                placement="top" [ngbTooltip]="'proceso.descuentosPromociones.eliminarPermanente' | translate"
                 (click)="eliminarPermanente(row)">
-                <i class="fa fa-trash"></i>&nbsp;{{ 'Eliminar' | translate }}
+                <i class="fa fa-trash"></i>&nbsp;{{ 'comun.eliminar' | translate }}
               </button>
             </td>
           </tr>
@@ -124,13 +122,13 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td [attr.colspan]="isMobile ? 6 : 10">{{ "No hay descuentos registrados" | translate }}</td>
+            <td [attr.colspan]="isMobile ? 6 : 10">{{ 'proceso.descuentosPromociones.sinDatos' | translate }}</td>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="summary">
           <div class="flex align-items-center justify-content-between">
-            {{ "Total en esta consulta" | translate }}: {{ rows ? rows.length : 0 }} {{ "registros" | translate }}.
+            {{ 'proceso.tabla.totalConsulta' | translate: { n: rows ? rows.length : 0 } }}
           </div>
         </ng-template>
       </p-table>

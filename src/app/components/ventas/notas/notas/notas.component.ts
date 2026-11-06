@@ -17,6 +17,7 @@ import Swal from "sweetalert2";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: "app-notas",
@@ -66,6 +67,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     private storage: AngularFireStorage,
+    private translate: TranslateService,
   ) { }
 
   ngAfterContentInit(): void {
@@ -626,9 +628,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       console.error("🚨 ABORT GUARDAR: Carrito vacío");
       Swal.fire({
         icon: "error",
-        title: "Error Crítico",
-        text: "El carrito está vacío. No se pueden guardar las notas.",
-        confirmButtonText: "Entendido",
+        title: this.translate.instant('ventas.notas.errorCritico'),
+        text: this.translate.instant('ventas.notas.carritoVacio'),
+        confirmButtonText: this.translate.instant('comun.entendido'),
       });
       return;
     }
@@ -637,9 +639,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!this.notasProduccionForm) {
       Swal.fire({
         icon: "warning",
-        title: "Formulario no inicializado",
-        text: "El formulario de notas no está inicializado.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.formularioNoInicializado'),
+        text: this.translate.instant('ventas.notas.formularioNoInicializadoTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -661,9 +663,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!hayNotasValidas) {
       Swal.fire({
         icon: "info",
-        title: "No hay notas para guardar",
-        text: "No se han escrito notas de producción. Puede continuar sin agregar notas.",
-        confirmButtonText: "Continuar",
+        title: this.translate.instant('ventas.notas.sinNotasParaGuardar'),
+        text: this.translate.instant('ventas.notas.sinNotasProduccionTexto'),
+        confirmButtonText: this.translate.instant('ventas.notas.continuar'),
       });
       // Permitir continuar sin notas
       this.finalizarGuardadoNotas();
@@ -761,9 +763,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       if (!hayNotasValidas) {
         Swal.fire({
           icon: "warning",
-          title: "No hay notas para guardar",
-          text: "Por favor, escriba al menos una nota antes de guardar.",
-          confirmButtonText: "Aceptar",
+          title: this.translate.instant('ventas.notas.sinNotasParaGuardar'),
+          text: this.translate.instant('ventas.notas.escribaAlMenosUna'),
+          confirmButtonText: this.translate.instant('comun.aceptar'),
         });
         return;
       }
@@ -792,13 +794,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso inicial
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress-notas"></div>
           </div>
-          <p>Subiendo ${totalArchivos} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: totalArchivos })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -944,9 +946,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Mostrar mensaje de éxito
     Swal.fire({
       icon: "success",
-      title: "Notas guardadas exitosamente",
-      text: "Las notas han sido guardadas junto con sus archivos adjuntos.",
-      confirmButtonText: "Aceptar",
+      title: this.translate.instant('ventas.notas.notasGuardadas'),
+      text: this.translate.instant('ventas.notas.notasGuardadasTexto'),
+      confirmButtonText: this.translate.instant('comun.aceptar'),
       timer: 2000,
       timerProgressBar: true,
     });
@@ -979,9 +981,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!this.notasDespachoForm || !this.notasDespachoForm.valid) {
       Swal.fire({
         icon: "warning",
-        title: "Formulario incompleto",
-        text: "Por favor, complete todos los campos requeridos.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.formularioIncompleto'),
+        text: this.translate.instant('ventas.notas.formularioIncompletoTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -990,9 +992,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!notaTexto || notaTexto.trim() === "") {
       Swal.fire({
         icon: "warning",
-        title: "Nota vacía",
-        text: "Por favor, escriba una nota antes de guardar.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.notaVacia'),
+        text: this.translate.instant('ventas.notas.notaVaciaTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -1017,13 +1019,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress-despacho"></div>
           </div>
-          <p>Subiendo ${totalArchivos} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: totalArchivos })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -1146,9 +1148,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Mostrar mensaje de éxito
     Swal.fire({
       icon: "success",
-      title: "Nota de despacho guardada",
-      text: "La nota ha sido guardada exitosamente.",
-      confirmButtonText: "Aceptar",
+      title: this.translate.instant('ventas.notas.notaDespachoGuardada'),
+      text: this.translate.instant('ventas.notas.notaGuardadaTexto'),
+      confirmButtonText: this.translate.instant('comun.aceptar'),
       timer: 2000,
       timerProgressBar: true,
     });
@@ -1160,9 +1162,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!this.notasEntregasForm || !this.notasEntregasForm.valid) {
       Swal.fire({
         icon: "warning",
-        title: "Formulario incompleto",
-        text: "Por favor, complete todos los campos requeridos.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.formularioIncompleto'),
+        text: this.translate.instant('ventas.notas.formularioIncompletoTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -1171,9 +1173,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!notaTexto || notaTexto.trim() === "") {
       Swal.fire({
         icon: "warning",
-        title: "Nota vacía",
-        text: "Por favor, escriba una nota antes de guardar.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.notaVacia'),
+        text: this.translate.instant('ventas.notas.notaVaciaTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -1198,13 +1200,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress-entrega"></div>
           </div>
-          <p>Subiendo ${totalArchivos} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: totalArchivos })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -1327,9 +1329,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Mostrar mensaje de éxito
     Swal.fire({
       icon: "success",
-      title: "Nota de entrega guardada",
-      text: "La nota ha sido guardada exitosamente.",
-      confirmButtonText: "Aceptar",
+      title: this.translate.instant('ventas.notas.notaEntregaGuardada'),
+      text: this.translate.instant('ventas.notas.notaGuardadaTexto'),
+      confirmButtonText: this.translate.instant('comun.aceptar'),
       timer: 2000,
       timerProgressBar: true,
     });
@@ -1341,9 +1343,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!this.notasFacturacionPagosForm || !this.notasFacturacionPagosForm.valid) {
       Swal.fire({
         icon: "warning",
-        title: "Formulario incompleto",
-        text: "Por favor, complete todos los campos requeridos.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.formularioIncompleto'),
+        text: this.translate.instant('ventas.notas.formularioIncompletoTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -1352,9 +1354,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!notaTexto || notaTexto.trim() === "") {
       Swal.fire({
         icon: "warning",
-        title: "Nota vacía",
-        text: "Por favor, escriba una nota antes de guardar.",
-        confirmButtonText: "Aceptar",
+        title: this.translate.instant('ventas.notas.notaVacia'),
+        text: this.translate.instant('ventas.notas.notaVaciaTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar'),
       });
       return;
     }
@@ -1379,13 +1381,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress-facturacion"></div>
           </div>
-          <p>Subiendo ${totalArchivos} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: totalArchivos })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -1508,9 +1510,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     // Mostrar mensaje de éxito
     Swal.fire({
       icon: "success",
-      title: "Nota de facturación guardada",
-      text: "La nota ha sido guardada exitosamente.",
-      confirmButtonText: "Aceptar",
+      title: this.translate.instant('ventas.notas.notaFacturacionGuardada'),
+      text: this.translate.instant('ventas.notas.notaGuardadaTexto'),
+      confirmButtonText: this.translate.instant('comun.aceptar'),
       timer: 2000,
       timerProgressBar: true,
     });
@@ -1768,9 +1770,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
   getProductoNombre(nota: any): string {
     if (nota.hasOwnProperty("producto")) {
-      return nota.producto || "General";
+      return nota.producto || this.translate.instant('ventas.notas.general');
     }
-    return "General";
+    return this.translate.instant('ventas.notas.general');
   }
 
   getDescripcionNota(nota: any): string {
@@ -1779,7 +1781,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     } else if (nota.hasOwnProperty("nota")) {
       return nota.nota;
     }
-    return "Sin descripción";
+    return this.translate.instant('ventas.notas.sinDescripcion');
   }
 
   // Método para eliminar una nota existente específica de un producto
@@ -1788,19 +1790,19 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (indiceNota < 0 || indiceNota >= notasDelProducto.length) return;
 
     const notaAEliminar = notasDelProducto[indiceNota];
-    const nombreProducto = this.crearNombreDistintivo(producto, this.pedido.carrito?.findIndex(p => this.sonElMismoProducto(p, producto)) ?? -1) || 'Producto';
+    const nombreProducto = this.crearNombreDistintivo(producto, this.pedido.carrito?.findIndex(p => this.sonElMismoProducto(p, producto)) ?? -1) || this.translate.instant('ventas.notas.colProducto');
     const descripcionNota = this.getDescripcionNota(notaAEliminar);
 
     // Confirmar eliminación con información específica
     Swal.fire({
-      title: "¿Eliminar nota de producción?",
+      title: this.translate.instant('ventas.notas.eliminarNotaProduccion'),
       html: `
         <div class="text-start">
-          <p><strong>Producto:</strong> ${nombreProducto}</p>
-          <p><strong>Nota:</strong> ${descripcionNota}</p>
+          <p><strong>${this.translate.instant('ventas.notas.productoDosPuntos')}</strong> ${nombreProducto}</p>
+          <p><strong>${this.translate.instant('ventas.notas.notaDosPuntos')}</strong> ${descripcionNota}</p>
           <p class="text-warning mt-2">
             <i class="fa fa-exclamation-triangle me-1"></i>
-            Esta acción no se puede deshacer.
+            ${this.translate.instant('ventas.notas.accionIrreversible')}
           </p>
         </div>
       `,
@@ -1808,8 +1810,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
       showCancelButton: true,
       confirmButtonColor: "#D64545",
       cancelButtonColor: "#8f8bab",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: this.translate.instant('ventas.clientes.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
     }).then((result) => {
       if (result.isConfirmed) {
         // Encontrar el índice real en el array completo de notas de producción
@@ -1835,9 +1837,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           // Mostrar mensaje de éxito
           Swal.fire({
             icon: "success",
-            title: "Nota eliminada",
-            text: `La nota de producción para "${nombreProducto}" ha sido eliminada correctamente.`,
-            confirmButtonText: "Aceptar",
+            title: this.translate.instant('ventas.notas.notaEliminada'),
+            text: this.translate.instant('ventas.notas.notaEliminadaTexto', { producto: nombreProducto }),
+            confirmButtonText: this.translate.instant('comun.aceptar'),
             timer: 2000,
             timerProgressBar: true
           });
@@ -1861,9 +1863,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           // Si no se encuentra la nota, mostrar error
           Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "No se pudo encontrar la nota para eliminar.",
-            confirmButtonText: "Aceptar"
+            title: this.translate.instant('comun.error'),
+            text: this.translate.instant('ventas.notas.notaNoEncontrada'),
+            confirmButtonText: this.translate.instant('comun.aceptar')
           });
         }
       }
@@ -1886,9 +1888,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (noImagenes.length > 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Solo se permiten imágenes',
-        html: `Se ignoraron ${noImagenes.length} archivo(s) no válidos.<br/><small>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP, BMP.</small>`,
-        confirmButtonText: 'Entendido'
+        title: this.translate.instant('ventas.notas.soloImagenesPermitidas'),
+        html: `${this.translate.instant('ventas.notas.archivosIgnorados', { n: noImagenes.length })}<br/><small>${this.translate.instant('ventas.notas.formatosPermitidos')}</small>`,
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     }
 
@@ -1912,21 +1914,21 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     const fileNames = imagenes.map(file => file.name).join(', ');
 
     Swal.fire({
-      title: 'Archivos seleccionados',
+      title: this.translate.instant('ventas.notas.archivosSeleccionados'),
       html: `
         <div class="text-start">
-          <p><strong>Archivos:</strong></p>
+          <p><strong>${this.translate.instant('ventas.notas.archivosDosPuntos')}</strong></p>
           <ul class="text-start">
             ${fileArray.map(file => `<li>${file.name} (${this.formatFileSize(file.size)})</li>`).join('')}
           </ul>
           <p class="text-info mt-2">
             <i class="fa fa-info-circle me-1"></i>
-            Los archivos se subirán a Firebase cuando guardes las notas.
+            ${this.translate.instant('ventas.notas.archivosSeSubiran')}
           </p>
         </div>
       `,
       icon: 'info',
-      confirmButtonText: 'Aceptar',
+      confirmButtonText: this.translate.instant('comun.aceptar'),
       showCancelButton: false
     });
 
@@ -1944,9 +1946,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (descartados.length > 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Solo imágenes',
-        html: `Se ignoraron ${descartados.length} archivo(s) no válidos.<br/><small>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP, BMP.</small>`,
-        confirmButtonText: 'Entendido'
+        title: this.translate.instant('ventas.notas.soloImagenes'),
+        html: `${this.translate.instant('ventas.notas.archivosIgnorados', { n: descartados.length })}<br/><small>${this.translate.instant('ventas.notas.formatosPermitidos')}</small>`,
+        confirmButtonText: this.translate.instant('comun.entendido')
       });
     }
     if (imagenes.length === 0) {
@@ -1960,13 +1962,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso inicial
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress"></div>
           </div>
-          <p>Subiendo ${totalFiles} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: totalFiles })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -2019,8 +2021,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
               // Mostrar mensaje de éxito
               Swal.fire({
                 icon: 'success',
-                title: 'Archivos subidos exitosamente',
-                text: `Se subieron ${totalFiles} archivo(s) a Firebase Storage`,
+                title: this.translate.instant('ventas.notas.archivosSubidos'),
+                text: this.translate.instant('ventas.notas.archivosSubidosTexto', { n: totalFiles }),
                 timer: 2000,
                 showConfirmButton: false
               });
@@ -2050,8 +2052,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
       Swal.fire({
         icon: 'success',
-        title: 'Selección limpiada',
-        text: 'Los archivos seleccionados han sido eliminados.',
+        title: this.translate.instant('ventas.notas.seleccionLimpiada'),
+        text: this.translate.instant('ventas.notas.seleccionLimpiadaTexto'),
         timer: 1500,
         timerProgressBar: true,
         showConfirmButton: false
@@ -2199,9 +2201,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (notasConArchivos.length === 0) {
       Swal.fire({
         icon: 'info',
-        title: 'No hay notas con archivos',
-        text: 'Aún no se han guardado notas con archivos adjuntos.',
-        confirmButtonText: 'Aceptar'
+        title: this.translate.instant('ventas.notas.sinNotasConArchivos'),
+        text: this.translate.instant('ventas.notas.sinNotasConArchivosTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar')
       });
       return;
     }
@@ -2210,12 +2212,12 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     notasConArchivos.forEach((nota, index) => {
       htmlContent += `
         <div class="mb-3 p-2 border rounded">
-          <h6 class="text-primary">Nota ${index + 1}</h6>
-          <p><strong>Fecha:</strong> ${new Date(nota.fecha || '').toLocaleString()}</p>
-          <p><strong>Producto:</strong> ${nota.producto || 'N/A'}</p>
-          <p><strong>Nota:</strong> ${nota.nota}</p>
+          <h6 class="text-primary">${this.translate.instant('ventas.notas.notaN', { n: index + 1 })}</h6>
+          <p><strong>${this.translate.instant('ventas.notas.fechaDosPuntos')}</strong> ${new Date(nota.fecha || '').toLocaleString()}</p>
+          <p><strong>${this.translate.instant('ventas.notas.productoDosPuntos')}</strong> ${nota.producto || this.translate.instant('ventas.clientes.na')}</p>
+          <p><strong>${this.translate.instant('ventas.notas.notaDosPuntos')}</strong> ${nota.nota}</p>
           <div class="mt-2">
-            <strong>Archivos adjuntos:</strong>
+            <strong>${this.translate.instant('ventas.notas.archivosAdjuntosDosPuntos')}</strong>
             <ul class="list-unstyled mt-1">
       `;
 
@@ -2241,10 +2243,10 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     htmlContent += '</div>';
 
     Swal.fire({
-      title: 'Notas con archivos adjuntos',
+      title: this.translate.instant('ventas.notas.notasConArchivos'),
       html: htmlContent,
       width: '600px',
-      confirmButtonText: 'Cerrar',
+      confirmButtonText: this.translate.instant('comun.cerrar'),
       showCloseButton: true
     });
   }
@@ -2257,9 +2259,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (archivosSeleccionados.length === 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'No hay archivos para subir',
-        text: 'Por favor, selecciona archivos antes de intentar subirlos.',
-        confirmButtonText: 'Aceptar'
+        title: this.translate.instant('ventas.notas.sinArchivosParaSubir'),
+        text: this.translate.instant('ventas.notas.sinArchivosParaSubirTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar')
       });
       return;
     }
@@ -2268,9 +2270,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
     if (!this.tieneNotaEscrita(tipo, productoIndex, notaIndex)) {
       Swal.fire({
         icon: 'warning',
-        title: 'Nota requerida',
-        text: 'Debes escribir una nota antes de subir archivos adjuntos.',
-        confirmButtonText: 'Aceptar'
+        title: this.translate.instant('ventas.notas.notaRequeridaTitulo'),
+        text: this.translate.instant('ventas.notas.notaRequeridaTexto'),
+        confirmButtonText: this.translate.instant('comun.aceptar')
       });
       return;
     }
@@ -2282,13 +2284,13 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
 
     // Mostrar progreso
     Swal.fire({
-      title: 'Subiendo archivos...',
+      title: this.translate.instant('ventas.notas.subiendoArchivos'),
       html: `
         <div class="text-center">
           <div class="progress mb-3">
             <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress-${tipo}"></div>
           </div>
-          <p>Subiendo ${archivosSeleccionados.length} archivo(s) a Firebase Storage</p>
+          <p>${this.translate.instant('ventas.notas.subiendoN', { n: archivosSeleccionados.length })}</p>
         </div>
       `,
       showConfirmButton: false,
@@ -2351,8 +2353,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
               // Mostrar mensaje de éxito
               Swal.fire({
                 icon: 'success',
-                title: 'Archivos subidos exitosamente',
-                text: `Se subieron ${archivosSubidos} archivo(s) a Firebase Storage`,
+                title: this.translate.instant('ventas.notas.archivosSubidos'),
+                text: this.translate.instant('ventas.notas.archivosSubidosTexto', { n: archivosSubidos }),
                 timer: 2000,
                 showConfirmButton: false
               });

@@ -8,9 +8,9 @@
         <i class="pi" [class.pi-box]="completados >= 0 && completados < 3" [class.pi-truck]="completados === 3"
            [class.pi-check-circle]="completados === 4" [class.pi-times-circle]="completados < 0"></i>
         <span class="p3d__chip-txt">{{ etapa }}</span>
-        <span class="p3d__chip-sub" *ngIf="unidades && completados >= 0 && completados < 3">· {{ unidades }} {{ unidades === 1 ? 'unidad' : 'unidades' }}</span>
+        <span class="p3d__chip-sub" *ngIf="unidades && completados >= 0 && completados < 3">· {{ (unidades === 1 ? 'ventas.pedido3d.unidades.one' : 'ventas.pedido3d.unidades.other') | translate: { n: unidades } }}</span>
     </span>
     <span #destino class="p3d__chip p3d__chip--destino">
-        <i class="pi pi-map-marker"></i><span class="p3d__chip-txt">{{ ciudad || 'Cliente' }}</span>
+        <i class="pi pi-map-marker"></i><span class="p3d__chip-txt">{{ ciudad || ('ventas.pedido3d.cliente' | translate) }}</span>
     </span>
 </div>

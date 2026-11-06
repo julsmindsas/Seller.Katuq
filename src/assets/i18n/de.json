@@ -10551,5 +10551,13 @@
     "productos.exportarEspecificaciones.omitidos": "Das Blatt «Spezifikationen» lässt {{sinReferencia}} Produkte der Kategorie ohne Referenz und {{sinRuta}} exportierte Produkte aus, die im Kategoriebaum nicht zugeordnet werden konnten (ohne Kategorie, ausserhalb des Baums oder mehrdeutig).",
     "productos.exportarEspecificaciones.tiposDistintos": "Diese Attribute haben in Unterkategorien denselben Namen, aber einen anderen Typ; diese Zellen bleiben leer: {{claves}}.",
     "ventas.list.pagoCorto.pospendiente": "Zahlung in Prüfung",
-    "ventas.list.pagoLargo.pospendiente": "Zahlung in Prüfung - Zahlung hochgeladen, wird von der Finanzabteilung geprüft"
+    "ventas.list.pagoLargo.pospendiente": "Zahlung in Prüfung - Zahlung hochgeladen, wird von der Finanzabteilung geprüft",
+    "shell.update.gotIt": "Verstanden",
+    "cartera.carteraAging.corriente": "Laufend",
+    "cartera.carteraAging.1630D": "16-30 T",
+    "cartera.carteraAging.3160D": "31-60 T",
+    "cartera.carteraAging.60D": "60+ T",
+    "cartera.carteraClientes.delTotal15Dias": "% des Totals (> 15 Tage)",
+    "cartera.carteraClientes.dsoPromedio": "Durchschnittliche DSO",
+    "cartera.carteraClientes.dsoD": "DSO {{dso}} T"
 }

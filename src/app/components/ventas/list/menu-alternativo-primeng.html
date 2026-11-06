@@ -6,7 +6,7 @@
     <button class="btn btn-outline-secondary btn-sm" 
             type="button" 
             (click)="toggleMenu($event, pedido, op)"
-            [title]="'Opciones del pedido' | translate">
+            [title]="'ventas.list.opcionesDelPedido' | translate">
         <i class="pi pi-ellipsis-v"></i>
     </button>
     
@@ -19,14 +19,14 @@
                     appendTo="body">
         
         <div class="overlay-header">
-            <h6 class="mb-1">{{ 'Opciones del Pedido' | translate }}</h6>
-            <small class="text-muted">{{ 'Pedido #' | translate }}{{ selectedOrder?.nroPedido }}</small>
+            <h6 class="mb-1">{{ 'ventas.list.opcionesDelPedido' | translate }}</h6>
+            <small class="text-muted">{{ 'ventas.list.pedido2' | translate }}{{ selectedOrder?.nroPedido }}</small>
         </div>
         
         <div class="overlay-content">
             <!-- Opciones principales -->
             <div class="option-section">
-                <h6 class="section-title">{{ 'Acciones Principales' | translate }}</h6>
+                <h6 class="section-title">{{ 'ventas.list.accionesPrincipales' | translate }}</h6>
                 
                 <p-button label="{{ 'Imprimir PDF' | translate }}" 
                           icon="fa fa-file-pdf-o" 
@@ -44,27 +44,27 @@
             
             <!-- Opciones de edición (solo si no es producción) -->
             <div class="option-section" *ngIf="!isFromProduction">
-                <h6 class="section-title">{{ 'Editar Información' | translate }}</h6>
+                <h6 class="section-title">{{ 'ventas.list.editarInformacion' | translate }}</h6>
                 
-                <p-button label="{{ 'Editar Cliente' | translate }}" 
+                <p-button label="{{ 'ventas.list.editarCliente' | translate }}" 
                           icon="fa fa-user" 
                           styleClass="p-button-outlined p-button-sm option-button"
                           (onClick)="editDatosClientes(clientesModal, selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Editar Dirección' | translate }}" 
+                <p-button label="{{ 'ventas.list.editarDireccion' | translate }}" 
                           icon="fa fa-map-marker" 
                           styleClass="p-button-outlined p-button-sm option-button"
                           (onClick)="editDatosEntrega(datosEnregaModal, selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Editar Facturación' | translate }}" 
+                <p-button label="{{ 'ventas.list.editarFacturacion' | translate }}" 
                           icon="fa fa-credit-card" 
                           styleClass="p-button-outlined p-button-sm option-button"
                           (onClick)="editDatosFacturacion(datosFacturacionModal, selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Editar Notas' | translate }}" 
+                <p-button label="{{ 'ventas.list.editarNotas' | translate }}" 
                           icon="fa fa-sticky-note" 
                           styleClass="p-button-outlined p-button-sm option-button"
                           (onClick)="editNotas(notasModal, selectedOrder); op.hide()">
@@ -73,7 +73,7 @@
             
             <!-- Opciones de gestión (solo si no es producción) -->
             <div class="option-section" *ngIf="!isFromProduction">
-                <h6 class="section-title">{{ 'Gestión del Pedido' | translate }}</h6>
+                <h6 class="section-title">{{ 'ventas.list.gestionDelPedido' | translate }}</h6>
                 
                 <p-button label="{{ 'Estado de Pago' | translate }}" 
                           icon="fa fa-credit-card-alt" 
@@ -81,19 +81,19 @@
                           (onClick)="editarEstadoPago(cambioEstadoPagoModal, selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Agregar Productos' | translate }}" 
+                <p-button label="{{ 'ventas.list.agregarProductos' | translate }}" 
                           icon="fa fa-shopping-cart" 
                           styleClass="p-button-outlined p-button-sm option-button p-button-success"
                           (onClick)="addProductToCart(recompraModal, selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Asignar Asesor' | translate }}" 
+                <p-button label="{{ 'ventas.list.asignarAsesor' | translate }}" 
                           icon="fa fa-users" 
                           styleClass="p-button-outlined p-button-sm option-button"
                           (onClick)="editSeller(selectedOrder); op.hide()">
                 </p-button>
                 
-                <p-button label="{{ 'Historial Pagos' | translate }}" 
+                <p-button label="{{ 'ventas.list.historialDePagos' | translate }}" 
                           icon="fa fa-history" 
                           styleClass="p-button-outlined p-button-sm option-button p-button-info"
                           (onClick)="AsentarPago(pagosModal, selectedOrder); op.hide()">
@@ -102,9 +102,9 @@
             
             <!-- Opción peligrosa (solo usuarios autorizados) -->
             <div class="option-section" *ngIf="canDeleteOrder() && !isFromProduction">
-                <h6 class="section-title text-danger">{{ 'Zona Peligrosa' | translate }}</h6>
+                <h6 class="section-title text-danger">{{ 'ventas.list.zonaPeligrosa' | translate }}</h6>
                 
-                <p-button label="{{ 'Eliminar Pedido' | translate }}" 
+                <p-button label="{{ 'ventas.list.eliminarPedido' | translate }}" 
                           icon="fa fa-trash" 
                           styleClass="p-button-outlined p-button-sm option-button p-button-danger"
                           (onClick)="confirmDeleteOrder(selectedOrder); op.hide()">

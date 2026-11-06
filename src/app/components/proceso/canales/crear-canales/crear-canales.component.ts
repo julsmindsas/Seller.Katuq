@@ -3,6 +3,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-crear-canales',
@@ -28,7 +29,8 @@ export class CrearCanalesComponent implements OnInit {
   constructor(
     private fb: FormBuilder, 
     private service: MaestroService,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private translate: TranslateService
   ) {
     this.inicializarFormulario();
   }
@@ -72,7 +74,7 @@ export class CrearCanalesComponent implements OnInit {
   guardar(): void {
     if (this.canalForm.invalid) {
       this.marcarCamposComoTocados();
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
 
@@ -85,10 +87,10 @@ export class CrearCanalesComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         Swal.fire({
-          title: '¡Guardado!',
-          text: 'Canal guardado con éxito',
+          title: this.translate.instant('proceso.comun.guardado'),
+          text: this.translate.instant('proceso.crearCanales.guardadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
@@ -96,7 +98,7 @@ export class CrearCanalesComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         console.error('Error al crear canal:', error);
-        Swal.fire('Error', 'Ocurrió un error al guardar el canal', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.crearCanales.errorGuardar'), 'error');
       }
     });
   }
@@ -104,7 +106,7 @@ export class CrearCanalesComponent implements OnInit {
   editar(): void {
     if (this.canalForm.invalid) {
       this.marcarCamposComoTocados();
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
 
@@ -117,10 +119,10 @@ export class CrearCanalesComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         Swal.fire({
-          title: '¡Actualizado!',
-          text: 'Canal actualizado con éxito',
+          title: this.translate.instant('proceso.comun.actualizado'),
+          text: this.translate.instant('proceso.crearCanales.actualizadoTexto'),
           icon: 'success',
-          confirmButtonText: 'Ok'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         }).then(() => {
           this.activeModal.close('success');
         });
@@ -128,7 +130,7 @@ export class CrearCanalesComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         console.error('Error al actualizar canal:', error);
-        Swal.fire('Error', 'Ocurrió un error al actualizar el canal', 'error');
+        Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.crearCanales.errorActualizar'), 'error');
       }
     });
   }

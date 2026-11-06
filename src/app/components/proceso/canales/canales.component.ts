@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 import { CrearCanalesComponent } from './crear-canales/crear-canales.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -23,7 +24,8 @@ export class CanalesComponent implements OnInit {
 
   constructor(
     private service: MaestroService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService
   ) { }
 
   ngOnInit() {
@@ -44,10 +46,10 @@ export class CanalesComponent implements OnInit {
         
         // Mostrar mensaje de error
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los canales. Por favor, intente nuevamente.',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.canales.errorCargar'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
@@ -90,14 +92,14 @@ export class CanalesComponent implements OnInit {
 
   eliminarCanal(row: any) {
     Swal.fire({
-      title: '¿Está seguro?',
-      text: "¡El canal cambiara de estado a desactivado!",
+      title: this.translate.instant('proceso.comun.estaSeguro'),
+      text: this.translate.instant('proceso.canales.confirmarDesactivar'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: this.translate.instant('proceso.comun.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar')
     }).then((result) => {
       if (result.isConfirmed) {
         this.cargando = true;
@@ -106,8 +108,8 @@ export class CanalesComponent implements OnInit {
           next: () => {
             this.cargarDatos();
             Swal.fire(
-              '¡Eliminado!',
-              'El canal ha sido desactivado correctamente.',
+              this.translate.instant('proceso.comun.eliminado'),
+              this.translate.instant('proceso.canales.desactivado'),
               'success'
             );
           },
@@ -115,8 +117,8 @@ export class CanalesComponent implements OnInit {
             console.error('Error al eliminar canal:', error);
             this.cargando = false;
             Swal.fire(
-              'Error',
-              'Ocurrió un error al eliminar el canal. Por favor, intente nuevamente.',
+              this.translate.instant('comun.error'),
+              this.translate.instant('proceso.canales.errorEliminar'),
               'error'
             );
           }

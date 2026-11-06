@@ -1,5 +1,6 @@
 import { Component, Input, AfterViewInit, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TranslateService } from '@ngx-translate/core';
 
 interface FormaPago {
   nombre: string;
@@ -52,7 +53,8 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
   horaEmision: string = '';
 
   constructor(
-    private modal: NgbModal
+    private modal: NgbModal,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -91,7 +93,7 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
    * Obtiene el NIT formateado de la empresa
    */
   get nitEmpresaFormateado(): string {
-    return this.empresaActual?.nit || 'No disponible';
+    return this.empresaActual?.nit || this.translate.instant('ventas.reporteCierre.noDisponible');
   }
 
   /**
@@ -102,21 +104,21 @@ export class ReporteCierreComponent implements OnInit, AfterViewInit {
     const ciudad = this.empresaActual?.ciudad || '';
     const departamento = this.empresaActual?.departamento || '';
     
-    return [direccion, ciudad, departamento].filter(Boolean).join(', ') || 'No disponible';
+    return [direccion, ciudad, departamento].filter(Boolean).join(', ') || this.translate.instant('ventas.reporteCierre.noDisponible');
   }
 
   /**
    * Obtiene el teléfono de la empresa
    */
   get telefonoEmpresa(): string {
-    return this.empresaActual?.telefono || this.empresaActual?.celular || 'No disponible';
+    return this.empresaActual?.telefono || this.empresaActual?.celular || this.translate.instant('ventas.reporteCierre.noDisponible');
   }
 
   /**
    * Obtiene el email de la empresa
    */
   get emailEmpresa(): string {
-    return this.empresaActual?.email || this.empresaActual?.correo || 'No disponible';
+    return this.empresaActual?.email || this.empresaActual?.correo || this.translate.instant('ventas.reporteCierre.noDisponible');
   }
 
   /**

@@ -20,6 +20,7 @@ import { DireccionEstructuradaComponent } from "./direccion-estructurada/direcci
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
+import { TranslateService } from "@ngx-translate/core";
 
 @Component({
   selector: "pedido-entrega",
@@ -122,7 +123,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     private modalService: NgbModal,
     private service: MaestroService,
     private infoIndicativo: InfoIndicativos,
-    private daneCodesService: DaneCodesService
+    private daneCodesService: DaneCodesService,
+    private translate: TranslateService
   ) {
     this.paises = this.inforPaises.paises.map((x) => {
       return x.Pais;
@@ -287,10 +289,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.service.editClient(this.formulario.value).subscribe((r) => {
           console.log(r);
           Swal.fire({
-            title: "Guardado!",
-            text: "Guardado con exito",
+            title: this.translate.instant('ventas.pedidoEntrega.guardadoTitulo'),
+            text: this.translate.instant('ventas.pedidoEntrega.guardadoTexto'),
             icon: "success",
-            confirmButtonText: "Ok",
+            confirmButtonText: this.translate.instant('comun.ok'),
           });
         });
       });
@@ -312,10 +314,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
   private avisarErrorCliente(err: any): void {
     Swal.fire({
-      title: 'No se pudo guardar la dirección',
-      text: err?.error?.error || 'No logramos encontrar la ficha del cliente. Intenta de nuevo en un momento.',
+      title: this.translate.instant('ventas.pedidoEntrega.noSePudoGuardarDireccion'),
+      text: err?.error?.error || this.translate.instant('ventas.pedidoEntrega.fichaNoEncontrada'),
       icon: 'error',
-      confirmButtonText: 'Ok',
+      confirmButtonText: this.translate.instant('comun.ok'),
     });
   }
 
@@ -325,7 +327,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       direccionEntrega: this.direccion_entrega, ciudad: this.ciudad_municipio_entrega,
       latitud: this.latitud, longitud: this.longitud, coordenadas: this.coordenadas,
     })) {
-      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Ciudad y la Dirección o la ubicación son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
+      Swal.fire({ title: this.translate.instant('ventas.pedidoEntrega.camposObligatorios'), text: this.translate.instant('ventas.pedidoEntrega.camposObligatoriosTexto'), icon: 'warning', confirmButtonText: this.translate.instant('comun.ok') });
       return;
     }
     // Spec 024: mutar en el lugar (no reasignar) — `datosEntregas` es un
@@ -419,10 +421,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             this.modalService.dismissAll();
 
             Swal.fire({
-              title: "Guardado!",
-              text: "Dirección guardada con éxito",
+              title: this.translate.instant('ventas.pedidoEntrega.guardadoTitulo'),
+              text: this.translate.instant('ventas.pedidoEntrega.direccionGuardadaExito'),
               icon: "success",
-              confirmButtonText: "Ok",
+              confirmButtonText: this.translate.instant('comun.ok'),
               timer: 2000,
             });
           });
@@ -463,10 +465,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         error: (err) => {
           console.error("Error al guardar dirección de entrega:", err);
           Swal.fire({
-            title: "Error",
-            text: "No se pudo guardar la dirección. Intente nuevamente.",
+            title: this.translate.instant('ventas.pedidoEntrega.error'),
+            text: this.translate.instant('ventas.pedidoEntrega.errorGuardarDireccion'),
             icon: "error",
-            confirmButtonText: "Ok",
+            confirmButtonText: this.translate.instant('comun.ok'),
           });
         },
       });
@@ -493,10 +495,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.pedidoGral.envio = { ...this.datosEntregas[index] };
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
-      title: "Direccion Seleccionada!",
+      title: this.translate.instant('ventas.pedidoEntrega.direccionSeleccionadaTitulo'),
       text: this.datosEntregas[index].direccionEntrega,
       icon: "success",
-      confirmButtonText: "Ok",
+      confirmButtonText: this.translate.instant('comun.ok'),
     });
 
     if (this.isEdit) {
@@ -513,10 +515,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.pedidoGral.envio = undefined as any;
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
-      title: 'Sin dirección',
-      text: 'No se usará dirección para la entrega y no se cobrará domicilio.',
+      title: this.translate.instant('ventas.pedidoEntrega.sinDireccion'),
+      text: this.translate.instant('ventas.pedidoEntrega.sinDireccionTexto'),
       icon: 'success',
-      confirmButtonText: 'Ok'
+      confirmButtonText: this.translate.instant('comun.ok')
     });
 
     if (this.isEdit) {
@@ -613,12 +615,12 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         const preguntarUso: Promise<any> = esLaDireccionEnUso
           ? Promise.resolve()
           : Swal.fire({
-              title: "Dirección guardada",
-              text: "¿Quieres usar esta dirección actualizada en el pedido?",
+              title: this.translate.instant('ventas.pedidoEntrega.direccionGuardada'),
+              text: this.translate.instant('ventas.pedidoEntrega.usarActualizada'),
               icon: "question",
               showCancelButton: true,
-              confirmButtonText: "Sí, usar en el pedido",
-              cancelButtonText: "No, solo guardarla",
+              confirmButtonText: this.translate.instant('ventas.pedidoEntrega.siUsarEnPedido'),
+              cancelButtonText: this.translate.instant('ventas.pedidoEntrega.noSoloGuardarla'),
               confirmButtonColor: "#5F3FE0",
             }).then((r) => { if (r.isConfirmed) aplicarEnPedido(); });
         preguntarUso.then(() => {
@@ -649,10 +651,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
           });
 
         Swal.fire({
-          title: "Editado!",
-          text: "Editado con éxito",
+          title: this.translate.instant('ventas.pedidoEntrega.editadoTitulo'),
+          text: this.translate.instant('ventas.pedidoEntrega.editadoTexto'),
           icon: "success",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.ok'),
           timer: 2000,
         });
 
@@ -680,10 +682,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       error: (err) => {
         console.error("Error al editar dirección de entrega:", err);
         Swal.fire({
-          title: "Error",
-          text: "No se pudo guardar la dirección. Intente nuevamente.",
+          title: this.translate.instant('ventas.pedidoEntrega.error'),
+          text: this.translate.instant('ventas.pedidoEntrega.errorGuardarDireccion'),
           icon: "error",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.ok'),
         });
       }
     });
@@ -733,10 +735,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.service.editClient(this.formulario.value).subscribe((r) => {
         console.log(r);
         Swal.fire({
-          title: "Eliminado!",
-          text: "Eliminado con exito",
+          title: this.translate.instant('ventas.pedidoEntrega.eliminadoTitulo'),
+          text: this.translate.instant('ventas.pedidoEntrega.eliminadoTexto'),
           icon: "success",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.ok'),
         });
       });
     });
@@ -890,12 +892,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     const km = r.distanciaKm != null ? r.distanciaKm.toFixed(1) : "?";
     Swal.fire({
       icon: "warning",
-      title: "La ubicación no coincide con la zona",
-      html: `El punto del mapa queda a <b>${km} km</b> de <b>${r.area?.nombre}</b>, la zona de cobro elegida. ` +
-        `Si la dirección es de ${r.area?.nombre}, vuelve a ubicarla para que el mensajero no llegue a otro barrio.`,
+      title: this.translate.instant('ventas.pedidoEntrega.ubicacionNoCoincide'),
+      html: this.translate.instant('ventas.pedidoEntrega.ubicacionNoCoincideHtml', { km, zona: r.area?.nombre }),
       showCancelButton: true,
-      confirmButtonText: "Volver a ubicar",
-      cancelButtonText: "Dejar así",
+      confirmButtonText: this.translate.instant('ventas.pedidoEntrega.volverAUbicar'),
+      cancelButtonText: this.translate.instant('ventas.pedidoEntrega.dejarAsi'),
     }).then((res) => {
       if (res.isConfirmed) { this.abrirModalDireccion(); }
     });
@@ -1110,10 +1111,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.service.editClient(this.formulario.value).subscribe((r) => {
         console.log(r);
         Swal.fire({
-          title: "Guardado!",
-          text: "Datos de facturación guardados con éxito",
+          title: this.translate.instant('ventas.pedidoEntrega.guardadoTitulo'),
+          text: this.translate.instant('ventas.pedidoEntrega.facturacionGuardada'),
           icon: "success",
-          confirmButtonText: "Ok",
+          confirmButtonText: this.translate.instant('comun.ok'),
         });
 
         // Limpiar los campos de facturación

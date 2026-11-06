@@ -6,6 +6,7 @@ import { parse as flatedParse } from 'flatted';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map, catchError, tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-crear-descuento-promocion',
@@ -22,15 +23,15 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   form: FormGroup;
 
   tiposDescuento = [
-    { label: 'Porcentaje (%)', value: 'porcentaje' },
-    { label: 'Valor fijo ($)', value: 'valor_fijo' },
-    { label: 'Envío gratis', value: 'envio_gratis' }
+    { label: 'proceso.crearDescuentoPromocion.tipoPorcentaje', value: 'porcentaje' },
+    { label: 'proceso.crearDescuentoPromocion.tipoValorFijo', value: 'valor_fijo' },
+    { label: 'proceso.crearDescuentoPromocion.tipoEnvioGratis', value: 'envio_gratis' }
   ];
 
   aplicaAOpciones = [
-    { label: 'Todos los productos', value: 'todos_los_productos' },
-    { label: 'Categoría específica', value: 'categoria' },
-    { label: 'Producto específico', value: 'producto_especifico' }
+    { label: 'proceso.crearDescuentoPromocion.aplicaTodos', value: 'todos_los_productos' },
+    { label: 'proceso.crearDescuentoPromocion.categoriaEspecifica', value: 'categoria' },
+    { label: 'proceso.crearDescuentoPromocion.productoEspecifico', value: 'producto_especifico' }
   ];
 
   /** true cuando el registro es una promoción automática (sin código). */
@@ -61,7 +62,8 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private service: MaestroService,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private translate: TranslateService
   ) {
     this.form = this.fb.group({
       id: [''],
@@ -274,18 +276,18 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   guardar() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
-    const entidad = this.esPromocion ? 'promoción' : 'descuento';
+    const esPromocion = this.esPromocion;
     this.service.createDescuentoPromocion(this.form.value).subscribe({
       next: () => {
-        Swal.fire('¡Creado!', `La ${entidad} fue creada exitosamente.`, 'success')
+        Swal.fire(this.translate.instant('proceso.crearDescuentoPromocion.creado'), this.translate.instant(esPromocion ? 'proceso.crearDescuentoPromocion.promocionCreada' : 'proceso.crearDescuentoPromocion.descuentoCreado'), 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
-        const msg = err?.error?.message || `No se pudo crear la ${entidad}.`;
-        Swal.fire('Error', msg, 'error');
+        const msg = err?.error?.message || this.translate.instant(esPromocion ? 'proceso.crearDescuentoPromocion.errorCrearPromocion' : 'proceso.crearDescuentoPromocion.errorCrearDescuento');
+        Swal.fire(this.translate.instant('comun.error'), msg, 'error');
       }
     });
   }
@@ -293,17 +295,17 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   editar() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
+      Swal.fire(this.translate.instant('comun.error'), this.translate.instant('proceso.comun.completeCampos'), 'error');
       return;
     }
     this.service.editDescuentoPromocion(this.form.value).subscribe({
       next: () => {
-        Swal.fire('¡Actualizado!', 'El descuento fue actualizado.', 'success')
+        Swal.fire(this.translate.instant('proceso.comun.actualizado'), this.translate.instant('proceso.crearDescuentoPromocion.descuentoActualizado'), 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
-        const msg = err?.error?.message || 'No se pudo actualizar el descuento.';
-        Swal.fire('Error', msg, 'error');
+        const msg = err?.error?.message || this.translate.instant('proceso.crearDescuentoPromocion.errorActualizar');
+        Swal.fire(this.translate.instant('comun.error'), msg, 'error');
       }
     });
   }

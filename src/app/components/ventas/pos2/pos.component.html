@@ -14,8 +14,8 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             </span>
             <div class="pos-brand-text">
-                <div class="pos-brand-title">Ventas POS</div>
-                <div class="pos-brand-sub">Punto de venta</div>
+                <div class="pos-brand-title">{{ 'ventas.pos.ventasPos' | translate }}</div>
+                <div class="pos-brand-sub">{{ 'ventas.pos.puntoDeVenta' | translate }}</div>
             </div>
         </div>
 
@@ -25,23 +25,23 @@
 
         <div class="action-buttons">
             <button class="btn btn-info history-btn" (click)="openCashClosingHistoryModal()">
-                <i class="fa fa-history"></i> Historial
+                <i class="fa fa-history"></i> {{ 'ventas.pos.historial' | translate }}
             </button>
-            <button class="btn pedidos-btn" type="button" (click)="irAPedidos()" title="Ver pedidos">
-                <i class="fa fa-list-alt"></i> Pedidos
+            <button class="btn pedidos-btn" type="button" (click)="irAPedidos()" [title]="'ventas.pos.verPedidos' | translate">
+                <i class="fa fa-list-alt"></i> {{ 'ventas.pos.pedidos' | translate }}
             </button>
             <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
-                <i class="fa fa-money"></i> Cierre de Caja
+                <i class="fa fa-money"></i> {{ 'ventas.pos.cierreDeCaja' | translate }}
             </button>
             <!-- Calculadora -->
             <div class="calc-wrapper">
                 <button class="calc-fab" type="button" (click)="toggleCalculadora()"
-                    [class.calc-fab--active]="calcVisible" title="Calculadora">
+                    [class.calc-fab--active]="calcVisible" [title]="'ventas.pos.calculadora' | translate">
                     <i class="fa" [ngClass]="calcVisible ? 'fa-times' : 'fa-calculator'"></i>
                 </button>
                 <div class="calc-panel" [class.calc-panel--open]="calcVisible">
                     <div class="calc-header">
-                        <span class="calc-title"><i class="fa fa-calculator me-2"></i>Calculadora</span>
+                        <span class="calc-title"><i class="fa fa-calculator me-2"></i>{{ 'ventas.pos.calculadora' | translate }}</span>
                         <button class="calc-close" type="button" (click)="toggleCalculadora()"><i class="fa fa-times"></i></button>
                     </div>
                     <div class="calc-display">
@@ -49,7 +49,7 @@
                         <div class="calc-current">{{ calcDisplay }}</div>
                     </div>
                     <div class="calc-buttons">
-                        <button class="calc-btn calc-btn--fn" type="button" (click)="calcLimpiar()">C</button>
+                        <button class="calc-btn calc-btn--fn" type="button" (click)="calcLimpiar()">{{ 'ventas.pos.calcLimpiar' | translate }}</button>
                         <button class="calc-btn calc-btn--fn" type="button" (click)="calcBorrar()"><i class="fa fa-long-arrow-left"></i></button>
                         <button class="calc-btn calc-btn--fn" type="button" (click)="calcPorcentaje()">%</button>
                         <button class="calc-btn calc-btn--op" type="button" (click)="calcOperar('÷')">÷</button>
@@ -90,11 +90,11 @@
 
             <!-- Encabezado de la hoja (solo móvil) -->
             <div class="pos-sheet-head">
-                <button type="button" class="pos-sheet-back" (click)="cerrarTicket()" aria-label="Volver al catálogo">
+                <button type="button" class="pos-sheet-back" (click)="cerrarTicket()" [attr.aria-label]="'ventas.pos.volverAlCatalogo' | translate">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
-                <span class="pos-sheet-title">Ticket</span>
-                <span class="pos-sheet-count">{{ itemsEnTicket }} {{ itemsEnTicket === 1 ? 'ítem' : 'ítems' }}</span>
+                <span class="pos-sheet-title">{{ 'ventas.pos.ticket' | translate }}</span>
+                <span class="pos-sheet-count">{{ (itemsEnTicket === 1 ? 'ventas.pos.items.one' : 'ventas.pos.items.other') | translate: { n: itemsEnTicket } }}</span>
             </div>
 
             <app-pos-checkout></app-pos-checkout>
@@ -108,16 +108,16 @@
          a un toque de distancia. -->
     <div class="pos-mobilebar">
         <div class="pos-mobilebar-total">
-            <span class="pos-mobilebar-label">{{ itemsEnTicket }} {{ itemsEnTicket === 1 ? 'ítem' : 'ítems' }}</span>
+            <span class="pos-mobilebar-label">{{ (itemsEnTicket === 1 ? 'ventas.pos.items.one' : 'ventas.pos.items.other') | translate: { n: itemsEnTicket } }}</span>
             <span class="pos-mobilebar-amount">${{ totalTicket | number: '1.0-0' }}</span>
         </div>
         <button type="button" class="pos-mobilebar-btn" (click)="abrirTicket()">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            Ver ticket
+            {{ 'ventas.pos.verTicket' | translate }}
         </button>
         <button type="button" class="pos-mobilebar-btn pos-mobilebar-btn--pay" (click)="abrirTicket()">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Cobrar
+            {{ 'ventas.pos.cobrar' | translate }}
         </button>
     </div>
 </div>

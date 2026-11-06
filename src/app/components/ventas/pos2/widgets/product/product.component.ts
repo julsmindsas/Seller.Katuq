@@ -8,6 +8,7 @@ import { ImageOptimizerDirective } from '../../../../../shared/directives/image-
 import { ImageCacheService } from '../../../../../shared/services/image-cache.service';
 import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 /** Máximo de filas del desplegable de autocompletado. */
 const LIMITE_SUGERENCIAS = 8;
@@ -64,7 +65,8 @@ export class ProductComponent implements OnInit, OnDestroy {
     private maestroService: MaestroService,
     private inventarioService: InventarioService,
     private imageCacheService: ImageCacheService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private translate: TranslateService
   ) {
   }
 
@@ -263,18 +265,18 @@ export class ProductComponent implements OnInit, OnDestroy {
   // visible: el cajero creía que el producto había entrado al ticket.
   private avisarSinExistencias(product: any): void {
     // El título lo escribe el comercio: se escapa antes de meterlo en el HTML.
-    const nombre = String(product?.crearProducto?.titulo || 'Este producto')
+    const nombre = String(product?.crearProducto?.titulo || this.translate.instant('ventas.product.esteProducto'))
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const disponible = product?.disponibilidad?.cantidadDisponible ?? 0;
     const agotado = disponible <= 0;
 
     Swal.fire({
       icon: 'warning',
-      title: agotado ? 'Producto no disponible' : 'No hay suficientes unidades',
+      title: agotado ? this.translate.instant('ventas.product.productoNoDisponible') : this.translate.instant('ventas.product.noHaySuficientes'),
       html: agotado
-        ? `<b>${nombre}</b> no tiene existencias en esta bodega, así que no se puede agregar a la venta.`
-        : `De <b>${nombre}</b> solo hay <b>${disponible}</b> ${disponible === 1 ? 'unidad disponible' : 'unidades disponibles'} en esta bodega.`,
-      confirmButtonText: 'Entendido',
+        ? this.translate.instant('ventas.product.agotadoHtml', { nombre })
+        : this.translate.instant(disponible === 1 ? 'ventas.product.pocasUnidadesHtml.one' : 'ventas.product.pocasUnidadesHtml.other', { nombre, n: disponible }),
+      confirmButtonText: this.translate.instant('comun.entendido'),
       confirmButtonColor: '#5F3FE0',
     });
   }
@@ -389,7 +391,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     } else {
       const disponible = producto?.disponibilidad?.cantidadDisponible ?? 0;
       const nombre = producto?.crearProducto?.titulo || 'Producto';
-      this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
+      this.escaneoError = this.translate.instant('ventas.product.sinExistenciasEscaneo', { nombre, n: disponible });
     }
 
     this.searchQuery = '';
@@ -488,7 +490,7 @@ export class ProductComponent implements OnInit, OnDestroy {
           this.ultimoEscaneado = null;
           const disponible = firstMatch.disponibilidad?.cantidadDisponible ?? 0;
           const nombre = firstMatch.crearProducto?.titulo || trimmedQuery;
-          this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
+          this.escaneoError = this.translate.instant('ventas.product.sinExistenciasEscaneo', { nombre, n: disponible });
         }
 
       } else {
@@ -544,7 +546,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   private buscarCodigoEnBackend(codigo: string): void {
     const idBodega = this.obtenerBodegaActiva();
     if (!idBodega) {
-      this.escaneoError = `El código “${codigo}” no está cargado y no hay bodega seleccionada`;
+      this.escaneoError = this.translate.instant('ventas.product.codigoSinBodega', { codigo });
       return;
     }
 
@@ -565,18 +567,18 @@ export class ProductComponent implements OnInit, OnDestroy {
               this.procesarProductoDelBackend(alt[0], codigo, idBodega);
             } else {
               this.buscandoCodigo = false;
-              this.escaneoError = `El código “${codigo}” no existe en el catálogo`;
+              this.escaneoError = this.translate.instant('ventas.product.codigoNoExiste', { codigo });
             }
           },
           error: () => {
             this.buscandoCodigo = false;
-            this.escaneoError = `No se pudo consultar el código “${codigo}”. Revisa la conexión.`;
+            this.escaneoError = this.translate.instant('ventas.product.noSePudoConsultarCodigo', { codigo });
           }
         });
       },
       error: () => {
         this.buscandoCodigo = false;
-        this.escaneoError = `No se pudo consultar el código “${codigo}”. Revisa la conexión.`;
+        this.escaneoError = this.translate.instant('ventas.product.noSePudoConsultarCodigo', { codigo });
       }
     });
   }
@@ -598,7 +600,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     } else {
       this.ultimoEscaneado = null;
       const nombre = producto.crearProducto?.titulo || codigo;
-      this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
+      this.escaneoError = this.translate.instant('ventas.product.sinExistenciasEscaneo', { nombre, n: disponible });
     }
   }
 

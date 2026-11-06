@@ -1,32 +1,32 @@
 <p-tabView>
       <!-- NOTAS PRODUCCIÓN -->
-      <p-tabPanel header="Producción" leftIcon="fa fa-cogs">
+      <p-tabPanel [header]="'ventas.notas.tabProduccion' | translate" leftIcon="fa fa-cogs">
         <div *ngIf="!pedido?.carrito?.length && (!pedido?.notasPedido?.notasProduccion || pedido?.notasPedido?.notasProduccion.length === 0)" class="empty-notes text-center p-4">
           <i class="fa fa-shopping-cart fa-2x mb-3 text-muted"></i>
-          <p class="text-muted mb-2">Agrega productos al carrito</p>
-          <small class="text-muted">Los campos de notas de producción aparecerán automáticamente cuando agregues productos</small>
+          <p class="text-muted mb-2">{{ 'ventas.notas.agregaProductos' | translate }}</p>
+          <small class="text-muted">{{ 'ventas.notas.agregaProductosAyuda' | translate }}</small>
         </div>
 
         <!-- Notas generales de producción -->
         <div *ngIf="pedido?.notasPedido?.notasProduccion && pedido.notasPedido.notasProduccion.length > 0"
           class="notes-list mt-3 mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="list-header mb-0"><i class="fa fa-sticky-note me-1"></i> Notas de Producción Generales</h6>
+            <h6 class="list-header mb-0"><i class="fa fa-sticky-note me-1"></i> {{ 'ventas.notas.notasProduccionGenerales' | translate }}</h6>
             <button type="button" 
                     class="cfg-btn cfg-btn--sec notas-btn"
                     (click)="mostrarNotasGuardadas()"
-                    title="Ver notas guardadas con archivos">
-              <i class="fa fa-eye me-1"></i>Ver archivos
+                    [title]="'ventas.notas.verNotasArchivosTooltip' | translate">
+              <i class="fa fa-eye me-1"></i>{{ 'ventas.notas.verArchivos' | translate }}
             </button>
           </div>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th style="width: 180px">Fecha</th>
-                  <th style="width: 200px">Producto</th>
-                  <th>Nota</th>
-                  <th style="width: 100px">Archivos</th>
+                  <th style="width: 180px">{{ 'ventas.clientes.colFecha' | translate }}</th>
+                  <th style="width: 200px">{{ 'ventas.notas.colProducto' | translate }}</th>
+                  <th>{{ 'ventas.clientes.colNota' | translate }}</th>
+                  <th style="width: 100px">{{ 'ventas.notas.colArchivos' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +53,7 @@
         <!-- Mensaje cuando hay productos pero no hay formulario -->
         <div *ngIf="pedido?.carrito?.length && !notasProduccionForm" class="alert alert-info">
           <i class="fa fa-spinner fa-spin me-2"></i>
-          Preparando campos de notas para los productos...
+          {{ 'ventas.notas.preparando' | translate }}
         </div>
 
         <!-- Formulario de notas de producción -->
@@ -61,15 +61,15 @@
           <!-- Mensaje cuando hay productos en modo edición -->
           <div class="alert alert-warning mb-3" *ngIf="isProductionNotesDisabled">
             <i class="fa fa-lock me-2"></i>
-            <strong>Notas de producción bloqueadas por estado del pedido.</strong>
+            <strong>{{ 'ventas.notas.produccionBloqueada' | translate }}</strong>
           </div>
           <div class="alert alert-info mb-3" *ngIf="!isProductionNotesDisabled && isEdit && notasFormArray?.length > 0">
             <i class="fa fa-edit me-2"></i>
-            <strong>Modo Edición:</strong> Solo puedes agregar nuevas notas. Las notas existentes se muestran abajo.
+            <strong>{{ 'ventas.notas.modoEdicion' | translate }}</strong> {{ 'ventas.notas.modoEdicionTexto' | translate }}
           </div>
           <div class="alert alert-success mb-3" *ngIf="!isProductionNotesDisabled && !isEdit && notasFormArray?.length > 0">
             <i class="fa fa-check-circle me-2"></i>
-            <strong>¡Productos listos para notas!</strong> {{notasFormArray?.length}} producto(s) en tu carrito.
+            <strong>{{ 'ventas.notas.productosListos' | translate }}</strong> {{ 'ventas.notas.productosEnCarrito' | translate: { n: notasFormArray?.length } }}
           </div>
 
           <div formArrayName="productos">
@@ -82,30 +82,30 @@
                     {{ crearNombreDistintivo(pedido.carrito[i], i) }}
                   </span>
                   <span class="badge bg-info ms-2" *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0">
-                    {{obtenerNotasDelProducto(pedido.carrito[i]).length}} nota(s) existente(s)
+                    {{ 'ventas.notas.notasExistentesN' | translate: { n: obtenerNotasDelProducto(pedido.carrito[i]).length } }}
                   </span>
                   <span class="badge bg-success ms-2" *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length === 0">
-                    {{ isEdit ? 'Sin notas previas' : 'Nuevo - Sin notas' }}
+                    {{ (isEdit ? 'ventas.notas.sinNotasPrevias' : 'ventas.notas.nuevoSinNotas') | translate }}
                   </span>
                 </div>
 
                 <!-- Mostrar notas existentes del producto (SOLO LECTURA) -->
                 <div *ngIf="obtenerNotasDelProducto(pedido.carrito[i]).length > 0" class="existing-notes mb-3">
                   <h6 class="existing-notes-title">
-                    <i class="fa fa-history me-1"></i>Notas Existentes
+                    <i class="fa fa-history me-1"></i>{{ 'ventas.notas.notasExistentes' | translate }}
                   </h6>
                   <div class="existing-note-item" *ngFor="let notaExistente of obtenerNotasDelProducto(pedido.carrito[i]); let idx = index">
                     <div class="existing-note-header">
                       <span class="note-date">{{getFechaFormateada(notaExistente) | date:'dd/MM/yyyy HH:mm'}}</span>
                       <span *ngIf="notaExistente?.archivos?.length > 0" 
                             class="badge bg-success ms-2" 
-                            title="Adjuntos subidos">
+                            [title]="'ventas.notas.adjuntosSubidos' | translate">
                         <i class="fa fa-paperclip me-1"></i>{{notaExistente.archivos.length}}
                       </span>
                       <!-- Mostrar botón eliminar siempre -->
                       <button class="btn btn-sm btn-outline-danger ms-2"
                               (click)="eliminarNotaExistente(pedido.carrito[i], idx)"
-                              title="Eliminar nota existente"
+                              [title]="'ventas.notas.eliminarNotaExistente' | translate"
                               [disabled]="isProductionNotesDisabled">
                         <i class="fa fa-trash"></i>
                       </button>
@@ -118,7 +118,7 @@
                 <div formArrayName="notas" *ngIf="notasFormArray.at(i).get('notas')?.controls.length > 0">
                   <h6 class="new-notes-title">
                     <i class="fa fa-plus-circle me-1"></i>
-                    {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Nueva Nota' }}
+                    {{ (obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'ventas.notas.agregarNuevaNota' : 'ventas.notas.nuevaNota') | translate }}
                   </h6>
                   <div *ngFor="let notaCtrl of notasFormArray.at(i).get('notas')?.controls; let j = index" class="mb-3">
                     <div class="note-input-container">
@@ -128,7 +128,7 @@
                         </span>
                         <textarea [formControlName]="j"
                                   class="form-control"
-                                  placeholder="Escribe instrucciones especiales para la producción de este producto..."
+                                  [placeholder]="'ventas.notas.produccionPlaceholder' | translate"
                                   rows="2"
                                   [disabled]="isProductionNotesDisabled"></textarea>
                         <button class="btn btn-outline-danger"
@@ -162,13 +162,13 @@
                         </div>
                         <small class="text-muted">
                           <i class="fa fa-info-circle me-1"></i>
-                          Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                          {{ 'ventas.notas.puedesAdjuntar' | translate }}
                         </small>
                         
                         <!-- Vista previa de archivos -->
                         <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('produccion', i, j).length > 0">
                           <h6 class="preview-title">
-                            <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                            <i class="fa fa-eye me-1"></i>{{ 'ventas.notas.vistaPrevia' | translate }}
                           </h6>
                           <div class="preview-grid">
                             <div *ngFor="let file of getSelectedFiles('produccion', i, j); let fileIndex = index" 
@@ -188,7 +188,7 @@
                                   <span class="file-name">{{file.name}}</span>
                                   <span class="file-size">{{formatFileSize(file.size)}}</span>
                                   <span class="badge bg-info">
-                                    <i class="fa fa-clock me-1"></i>Pendiente
+                                    <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                                   </span>
                                 </div>
                                 <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -203,7 +203,7 @@
                                   <video [src]="getFilePreview(file)" 
                                          class="preview-video" 
                                          controls>
-                                    Tu navegador no soporta el elemento video.
+                                    {{ 'ventas.notas.videoNoSoportado' | translate }}
                                   </video>
                                   <div class="video-overlay">
                                     <span class="file-name">{{file.name}}</span>
@@ -214,7 +214,7 @@
                                   <span class="file-name">{{file.name}}</span>
                                   <span class="file-size">{{formatFileSize(file.size)}}</span>
                                   <span class="badge bg-info">
-                                    <i class="fa fa-clock me-1"></i>Pendiente
+                                    <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                                   </span>
                                 </div>
                                 <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -230,7 +230,7 @@
                   </div>
 
                   <button class="btn btn-sm btn-outline-primary mt-2" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
-                    <i class="fa fa-plus me-1"></i> Agregar Otra Nota
+                    <i class="fa fa-plus me-1"></i> {{ 'ventas.notas.agregarOtraNota' | translate }}
                   </button>
                 </div>
 
@@ -238,7 +238,7 @@
                 <div *ngIf="notasFormArray.at(i).get('notas')?.controls.length === 0" class="add-note-section">
                   <button class="cfg-btn notas-btn" type="button" (click)="agregarNota(i)" [disabled]="isProductionNotesDisabled">
                     <i class="fa fa-plus me-1"></i>
-                    {{ obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'Agregar Nueva Nota' : 'Agregar Primera Nota' }}
+                    {{ (obtenerNotasDelProducto(pedido.carrito[i]).length > 0 ? 'ventas.notas.agregarNuevaNota' : 'ventas.notas.agregarPrimeraNota') | translate }}
                   </button>
                 </div>
               </div>
@@ -250,7 +250,7 @@
             <div class="text-muted">
               <small>
                 <i class="fa fa-info-circle me-1"></i>
-                {{ isEdit ? 'Solo se guardarán las nuevas notas agregadas' : 'Las notas se guardarán junto con el pedido' }}
+                {{ (isEdit ? 'ventas.notas.soloNuevas' : 'ventas.notas.seGuardanConPedido') | translate }}
               </small>
             </div>
             <button class="cfg-btn"
@@ -258,7 +258,7 @@
                     (click)="guardarNotas()"
                     [disabled]="isProductionNotesDisabled || !hayNotasParaGuardar()">
               <i class="fa fa-save me-1"></i>
-              {{ isEdit ? 'Guardar Nuevas Notas' : 'Guardar Todas las Notas' }}
+              {{ (isEdit ? 'ventas.notas.guardarNuevas' : 'ventas.notas.guardarTodas') | translate }}
             </button>
           </div>
         </form>
@@ -266,7 +266,7 @@
 
 
       <!-- NOTAS DESPACHOS -->
-      <p-tabPanel header="Despacho" leftIcon="fa fa-truck">
+      <p-tabPanel [header]="'ventas.notas.tabDespacho' | translate" leftIcon="fa fa-truck">
         <form [formGroup]="notasDespachoForm" (ngSubmit)="onSubmitDespachos()" class="notes-form">
           <div class="row mb-3">
             <div class="col-lg-12">
@@ -276,7 +276,7 @@
                 </div>
                 <div class="input-group mb-2">
                   <textarea id="notaDespacho" class="form-control" formControlName="nota"
-                    placeholder="Escribir nota para despacho" rows="3"></textarea>
+                    [placeholder]="'ventas.notas.despachoPlaceholder' | translate" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasDespachoForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
@@ -302,7 +302,7 @@
                   </div>
                   <small class="text-muted">
                     <i class="fa fa-info-circle me-1"></i>
-                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                    {{ 'ventas.notas.puedesAdjuntar' | translate }}
                   </small>
                 </div>
                 
@@ -313,14 +313,14 @@
         </form>
 
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasDespachos?.length > 0">
-          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
+          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> {{ 'ventas.notas.notasAnteriores' | translate }}</h6>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th style="width: 180px">Fecha</th>
-                  <th>Nota</th>
-                  <th style="width: 60px">Acción</th>
+                  <th style="width: 180px">{{ 'ventas.clientes.colFecha' | translate }}</th>
+                  <th>{{ 'ventas.clientes.colNota' | translate }}</th>
+                  <th style="width: 60px">{{ 'ventas.notas.colAccion' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -348,12 +348,12 @@
 
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasDespachos?.length">
           <i class="fa fa-truck mb-2"></i>
-          <p>No hay notas para despachos</p>
+          <p>{{ 'ventas.notas.sinNotasDespachos' | translate }}</p>
         </div>
       </p-tabPanel>
 
       <!-- NOTAS ENTREGAS -->
-      <p-tabPanel header="Entrega" leftIcon="fa fa-box">
+      <p-tabPanel [header]="'ventas.clientes.tabEntrega' | translate" leftIcon="fa fa-box">
         <form [formGroup]="notasEntregasForm" (ngSubmit)="onSubmitEntregas()" class="notes-form">
           <div class="row mb-3">
             <div class="col-lg-12">
@@ -363,7 +363,7 @@
                 </div>
                 <div class="input-group mb-2">
                   <textarea id="notaEntrega" class="form-control" formControlName="nota"
-                    placeholder="Escribir nota para entrega" rows="3"></textarea>
+                    [placeholder]="'ventas.notas.entregaPlaceholder' | translate" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasEntregasForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
@@ -389,13 +389,13 @@
                   </div>
                   <small class="text-muted">
                     <i class="fa fa-info-circle me-1"></i>
-                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                    {{ 'ventas.notas.puedesAdjuntar' | translate }}
                   </small>
                   
                   <!-- Vista previa de archivos -->
                   <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('entrega').length > 0">
                     <h6 class="preview-title">
-                      <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                      <i class="fa fa-eye me-1"></i>{{ 'ventas.notas.vistaPrevia' | translate }}
                     </h6>
                     <div class="preview-grid">
                       <div *ngFor="let file of getSelectedFiles('entrega'); let fileIndex = index" 
@@ -415,7 +415,7 @@
                             <span class="file-name">{{file.name}}</span>
                             <span class="file-size">{{formatFileSize(file.size)}}</span>
                             <span class="badge bg-warning">
-                              <i class="fa fa-clock me-1"></i>Pendiente
+                              <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                             </span>
                           </div>
                           <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -430,7 +430,7 @@
                             <video [src]="getFilePreview(file)" 
                                    class="preview-video" 
                                    controls>
-                              Tu navegador no soporta el elemento video.
+                              {{ 'ventas.notas.videoNoSoportado' | translate }}
                             </video>
                             <div class="video-overlay">
                               <span class="file-name">{{file.name}}</span>
@@ -441,7 +441,7 @@
                             <span class="file-name">{{file.name}}</span>
                             <span class="file-size">{{formatFileSize(file.size)}}</span>
                             <span class="badge bg-warning">
-                              <i class="fa fa-clock me-1"></i>Pendiente
+                              <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                             </span>
                           </div>
                           <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -473,7 +473,7 @@
                 
                 <div *ngIf="notasEntregasForm.get('nota')?.invalid && notasEntregasForm.get('nota')?.touched"
                   class="text-danger mt-1">
-                  <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
+                  <small><i class="fa fa-exclamation-circle me-1"></i>{{ 'ventas.notas.notaRequerida' | translate }}</small>
                 </div>
               </div>
             </div>
@@ -481,15 +481,15 @@
         </form>
 
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasEntregas?.length > 0">
-          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
+          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> {{ 'ventas.notas.notasAnteriores' | translate }}</h6>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th style="width: 180px">Fecha</th>
-                  <th>Nota</th>
-                  <th style="width: 100px">Archivos</th>
-                  <th style="width: 60px">Acción</th>
+                  <th style="width: 180px">{{ 'ventas.clientes.colFecha' | translate }}</th>
+                  <th>{{ 'ventas.clientes.colNota' | translate }}</th>
+                  <th style="width: 100px">{{ 'ventas.notas.colArchivos' | translate }}</th>
+                  <th style="width: 60px">{{ 'ventas.notas.colAccion' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -517,12 +517,12 @@
 
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasEntregas?.length">
           <i class="fa fa-box mb-2"></i>
-          <p>No hay notas para entregas</p>
+          <p>{{ 'ventas.notas.sinNotasEntregas' | translate }}</p>
         </div>
       </p-tabPanel>
 
       <!-- NOTAS FACTURACIÓN -->
-      <p-tabPanel header="Facturación" leftIcon="fa fa-file-invoice">
+      <p-tabPanel [header]="'ventas.clientes.tabFacturacion' | translate" leftIcon="fa fa-file-invoice">
         <form [formGroup]="notasFacturacionPagosForm" (ngSubmit)="onSubmitFacturacionPagos()" class="notes-form">
           <div class="row mb-3">
             <div class="col-lg-12">
@@ -532,7 +532,7 @@
                 </div>
                 <div class="input-group mb-2">
                   <textarea id="notaFacturacionPagos" class="form-control" formControlName="nota"
-                    placeholder="Escribir nota para facturación o pago" rows="3"></textarea>
+                    [placeholder]="'ventas.notas.facturacionPlaceholder' | translate" rows="3"></textarea>
                   <button class="btn btn-primary" type="submit" [disabled]="notasFacturacionPagosForm.invalid">
                     <i class="fa fa-paper-plane"></i>
                   </button>
@@ -558,13 +558,13 @@
                   </div>
                   <small class="text-muted">
                     <i class="fa fa-info-circle me-1"></i>
-                    Puedes adjuntar imágenes, PDFs, documentos o archivos de texto
+                    {{ 'ventas.notas.puedesAdjuntar' | translate }}
                   </small>
                   
                   <!-- Vista previa de archivos -->
                   <div class="file-preview-container mt-2" *ngIf="getSelectedFiles('facturacion').length > 0">
                     <h6 class="preview-title">
-                      <i class="fa fa-eye me-1"></i>Vista previa de archivos
+                      <i class="fa fa-eye me-1"></i>{{ 'ventas.notas.vistaPrevia' | translate }}
                     </h6>
                     <div class="preview-grid">
                       <div *ngFor="let file of getSelectedFiles('facturacion'); let fileIndex = index" 
@@ -584,7 +584,7 @@
                             <span class="file-name">{{file.name}}</span>
                             <span class="file-size">{{formatFileSize(file.size)}}</span>
                             <span class="badge bg-warning">
-                              <i class="fa fa-clock me-1"></i>Pendiente
+                              <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                             </span>
                           </div>
                           <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -599,7 +599,7 @@
                             <video [src]="getFilePreview(file)" 
                                    class="preview-video" 
                                    controls>
-                              Tu navegador no soporta el elemento video.
+                              {{ 'ventas.notas.videoNoSoportado' | translate }}
                             </video>
                             <div class="video-overlay">
                               <span class="file-name">{{file.name}}</span>
@@ -610,7 +610,7 @@
                             <span class="file-name">{{file.name}}</span>
                             <span class="file-size">{{formatFileSize(file.size)}}</span>
                             <span class="badge bg-warning">
-                              <i class="fa fa-clock me-1"></i>Pendiente
+                              <i class="fa fa-clock me-1"></i>{{ 'ventas.notas.pendiente' | translate }}
                             </span>
                           </div>
                           <button class="btn btn-sm btn-outline-danger remove-file-btn"
@@ -642,7 +642,7 @@
                 
                 <div *ngIf="notasFacturacionPagosForm.get('nota')?.invalid && notasFacturacionPagosForm.get('nota')?.touched"
                   class="text-danger mt-1">
-                  <small><i class="fa fa-exclamation-circle me-1"></i>La nota es requerida</small>
+                  <small><i class="fa fa-exclamation-circle me-1"></i>{{ 'ventas.notas.notaRequerida' | translate }}</small>
                 </div>
               </div>
             </div>
@@ -650,15 +650,15 @@
         </form>
 
         <div class="notes-list mt-4" *ngIf="pedido?.notasPedido?.notasFacturacionPagos?.length > 0">
-          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> Notas Anteriores</h6>
+          <h6 class="list-header mb-3"><i class="fa fa-list me-1"></i> {{ 'ventas.notas.notasAnteriores' | translate }}</h6>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th style="width: 180px">Fecha</th>
-                  <th>Nota</th>
-                  <th style="width: 100px">Archivos</th>
-                  <th style="width: 60px">Acción</th>
+                  <th style="width: 180px">{{ 'ventas.clientes.colFecha' | translate }}</th>
+                  <th>{{ 'ventas.clientes.colNota' | translate }}</th>
+                  <th style="width: 100px">{{ 'ventas.notas.colArchivos' | translate }}</th>
+                  <th style="width: 60px">{{ 'ventas.notas.colAccion' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -686,7 +686,7 @@
 
         <div class="empty-notes" *ngIf="!pedido?.notasPedido?.notasFacturacionPagos?.length">
           <i class="fa fa-file-invoice mb-2"></i>
-          <p>No hay notas para facturación</p>
+          <p>{{ 'ventas.notas.sinNotasFacturacion' | translate }}</p>
         </div>
       </p-tabPanel>
     </p-tabView>

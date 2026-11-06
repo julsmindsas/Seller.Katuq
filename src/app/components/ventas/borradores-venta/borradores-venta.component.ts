@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import Swal from "sweetalert2";
+import { TranslateService } from "@ngx-translate/core";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import {
   BorradorVenta,
@@ -35,7 +36,7 @@ export class BorradoresVentaComponent implements OnInit {
   abierto = false;
   ocupadoId: string | null = null;
 
-  constructor(private drafts: SalesDraftsService, private maestro: MaestroService) {}
+  constructor(private drafts: SalesDraftsService, private maestro: MaestroService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.cargar();
@@ -62,19 +63,19 @@ export class BorradoresVentaComponent implements OnInit {
   }
 
   nombreDe(b: BorradorVenta): string {
-    return b.nombre || b.resumen?.clienteNombre || "Venta sin cliente";
+    return b.nombre || b.resumen?.clienteNombre || this.translate.instant('ventas.borradoresVenta.sinCliente');
   }
 
   async retomar(b: BorradorVenta): Promise<void> {
     if (this.ocupadoId) return;
     if (this.hayVentaEnCurso()) {
       const seguir = await Swal.fire({
-        title: "¿Reemplazar la venta en pantalla?",
-        text: "Hay una venta en curso que no está guardada. Si sigue, se reemplaza por el borrador.",
+        title: this.translate.instant('ventas.borradoresVenta.reemplazarTitulo'),
+        text: this.translate.instant('ventas.borradoresVenta.reemplazarTexto'),
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sí, retomar",
-        cancelButtonText: "Cancelar",
+        confirmButtonText: this.translate.instant('ventas.borradoresVenta.siRetomar'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
         confirmButtonColor: "#5F3FE0",
       });
       if (!seguir.isConfirmed) return;
@@ -101,12 +102,12 @@ export class BorradoresVentaComponent implements OnInit {
       if (avisos.length) {
         const lista = avisos.map((a) => `<li>${this.escape(a)}</li>`).join("");
         const ok = await Swal.fire({
-          title: "Cambios desde que se guardó",
+          title: this.translate.instant('ventas.borradoresVenta.cambiosTitulo'),
           html: `<ul style="text-align:left;margin:0;padding-left:18px;font-size:14px;line-height:1.5">${lista}</ul>`,
           icon: "info",
           showCancelButton: true,
-          confirmButtonText: "Retomar así",
-          cancelButtonText: "Cancelar",
+          confirmButtonText: this.translate.instant('ventas.borradoresVenta.retomarAsi'),
+          cancelButtonText: this.translate.instant('comun.cancelar'),
           confirmButtonColor: "#5F3FE0",
         });
         if (!ok.isConfirmed) {
@@ -140,10 +141,10 @@ export class BorradoresVentaComponent implements OnInit {
       const status = err?.status;
       Swal.fire({
         icon: "error",
-        title: status === 404 ? "Ese borrador ya no existe" : "No se pudo retomar el borrador",
+        title: status === 404 ? this.translate.instant('ventas.borradoresVenta.noExiste') : this.translate.instant('ventas.borradoresVenta.errorRetomar'),
         text: status === 404
-          ? "Venció o alguien lo eliminó."
-          : "Revise su conexión e intente de nuevo.",
+          ? this.translate.instant('ventas.borradoresVenta.noExisteTexto')
+          : this.translate.instant('ventas.borradoresVenta.errorRetomarTexto'),
         confirmButtonColor: "#5F3FE0",
       });
       if (status === 404) this.cargar();
@@ -152,12 +153,12 @@ export class BorradoresVentaComponent implements OnInit {
 
   async eliminar(b: BorradorVenta): Promise<void> {
     const ok = await Swal.fire({
-      title: "¿Eliminar el borrador?",
-      text: `Se borra "${this.nombreDe(b)}". Esto no se puede deshacer.`,
+      title: this.translate.instant('ventas.borradoresVenta.eliminarTitulo'),
+      text: this.translate.instant('ventas.borradoresVenta.eliminarTexto', { nombre: this.nombreDe(b) }),
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: this.translate.instant('ventas.borradoresVenta.siEliminar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
       confirmButtonColor: "#D64545",
     });
     if (!ok.isConfirmed) return;
@@ -173,7 +174,7 @@ export class BorradoresVentaComponent implements OnInit {
           this.borradores = this.borradores.filter((x) => x.id !== b.id);
           return;
         }
-        Swal.fire({ icon: "error", title: "No se pudo eliminar", text: "Intente de nuevo.", confirmButtonColor: "#5F3FE0" });
+        Swal.fire({ icon: "error", title: this.translate.instant('ventas.borradoresVenta.errorEliminar'), text: this.translate.instant('ventas.borradoresVenta.intenteDeNuevo'), confirmButtonColor: "#5F3FE0" });
       },
     });
   }

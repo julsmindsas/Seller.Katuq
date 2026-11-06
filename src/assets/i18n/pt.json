@@ -10719,5 +10719,13 @@
   "productos.exportarEspecificaciones.omitidos": "A planilha \"Especificações\" deixou de fora {{sinReferencia}} produtos da categoria sem referência e {{sinRuta}} produtos exportados que não puderam ser localizados na árvore de categorias (sem categoria, fora da árvore ou ambígua).",
   "productos.exportarEspecificaciones.tiposDistintos": "Estes atributos têm o mesmo nome e tipo diferente em subcategorias, e essas células ficam vazias: {{claves}}.",
   "ventas.list.pagoCorto.pospendiente": "Pagamento em revisão",
-  "ventas.list.pagoLargo.pospendiente": "Pagamento em revisão - Pagamento enviado, em revisão da tesouraria"
+  "ventas.list.pagoLargo.pospendiente": "Pagamento em revisão - Pagamento enviado, em revisão da tesouraria",
+  "shell.update.gotIt": "Entendi",
+  "cartera.carteraAging.corriente": "Em dia",
+  "cartera.carteraAging.1630D": "16-30 d",
+  "cartera.carteraAging.3160D": "31-60 d",
+  "cartera.carteraAging.60D": "60+ d",
+  "cartera.carteraClientes.delTotal15Dias": "% do total (> 15 dias)",
+  "cartera.carteraClientes.dsoPromedio": "DSO médio",
+  "cartera.carteraClientes.dsoD": "DSO {{dso}} d"
 }

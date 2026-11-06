@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 
 /** Columnas de la plantilla: encabezado del Excel → campo que espera el servidor. */
@@ -44,7 +45,7 @@ export class ImportarCombosComponent {
   procesando = false;
   readonly columnas = COLUMNAS;
 
-  constructor(public activeModal: NgbActiveModal, private service: MaestroService) {}
+  constructor(public activeModal: NgbActiveModal, private service: MaestroService, private translate: TranslateService) {}
 
   descargarPlantilla(): void {
     const filas: any[][] = [COLUMNAS.map((c) => c.titulo)];
@@ -79,12 +80,12 @@ export class ImportarCombosComponent {
         const crudas: any[] = XLSX.utils.sheet_to_json(hoja, { defval: '' });
         this.filas = crudas.map((fila) => this.aCampos(fila)).filter((f) => Object.values(f).some((v) => String(v).trim()));
         if (!this.filas.length) {
-          Swal.fire('Archivo vacío', 'El Excel no trae filas de combos. Usa la plantilla.', 'warning');
+          Swal.fire(this.translate.instant('proceso.importarCombos.archivoVacio'), this.translate.instant('proceso.importarCombos.archivoVacioTexto'), 'warning');
           return;
         }
         this.enviar(true);
       } catch (_) {
-        Swal.fire('No se pudo leer', 'Revisa que sea un archivo de Excel (.xlsx) con la plantilla de combos.', 'error');
+        Swal.fire(this.translate.instant('proceso.importarCombos.noSePudoLeer'), this.translate.instant('proceso.importarCombos.noSePudoLeerTexto'), 'error');
       }
     };
     lector.readAsArrayBuffer(archivo);
@@ -117,13 +118,13 @@ export class ImportarCombosComponent {
         this.resultado = res as ResultadoImportacion;
         if (!simular && this.resultado.guardado) {
           const r = this.resultado.resumen;
-          Swal.fire('¡Listo!', `Se crearon ${r.crear} y se actualizaron ${r.actualizar} combos.`, 'success')
+          Swal.fire(this.translate.instant('proceso.importarCombos.listo'), this.translate.instant('proceso.importarCombos.listoTexto', { crear: r.crear, actualizar: r.actualizar }), 'success')
             .then(() => this.activeModal.close('success'));
         }
       },
       error: (err) => {
         this.procesando = false;
-        Swal.fire('Error', err?.error?.message || 'No se pudo revisar el archivo.', 'error');
+        Swal.fire(this.translate.instant('comun.error'), err?.error?.message || this.translate.instant('proceso.importarCombos.errorRevisar'), 'error');
       },
     });
   }

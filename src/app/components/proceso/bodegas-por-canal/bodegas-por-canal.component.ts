@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 interface Canal {
   id: string;
@@ -46,7 +47,8 @@ export class BodegasPorCanalComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private maestroService: MaestroService,
-    private bodegaService: BodegaService
+    private bodegaService: BodegaService,
+    private translate: TranslateService
   ) {
     this.seleccionForm = this.fb.group({
       canal: ['', Validators.required]
@@ -93,10 +95,10 @@ export class BodegasPorCanalComponent implements OnInit {
         console.error('Error al cargar canales activos:', error);
         this.cargando = false;
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron cargar los canales activos',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.bodegasPorCanal.errorCanales'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
@@ -162,8 +164,8 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: '¡Asignada!',
-          text: `Bodega ${bodega.nombre} asignada correctamente al canal ${canalName}`,
+          title: this.translate.instant('proceso.bodegasPorCanal.asignadaTitulo'),
+          text: this.translate.instant('proceso.bodegasPorCanal.asignadaTexto', { bodega: bodega.nombre, canal: canalName }),
           icon: 'success',
           toast: true,
           position: 'top-end',
@@ -176,10 +178,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudo asignar la bodega al canal',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.bodegasPorCanal.errorAsignar'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
@@ -208,8 +210,8 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: '¡Removida!',
-          text: `Bodega ${bodega.nombre} removida correctamente del canal ${canalName}`,
+          title: this.translate.instant('proceso.bodegasPorCanal.removidaTitulo'),
+          text: this.translate.instant('proceso.bodegasPorCanal.removidaTexto', { bodega: bodega.nombre, canal: canalName }),
           icon: 'success',
           toast: true,
           position: 'top-end',
@@ -222,10 +224,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudo remover la bodega del canal',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.bodegasPorCanal.errorRemover'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
@@ -249,10 +251,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: '¡Bodegas Asignadas!',
-          text: `Se asignaron ${bodegasIds.length} bodegas al canal ${canalName}`,
+          title: this.translate.instant('proceso.bodegasPorCanal.variasAsignadasTitulo'),
+          text: this.translate.instant('proceso.bodegasPorCanal.variasAsignadasTexto', { n: bodegasIds.length, canal: canalName }),
           icon: 'success',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       },
       error: (error) => {
@@ -260,10 +262,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron asignar las bodegas al canal',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.bodegasPorCanal.errorAsignarVarias'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
@@ -287,10 +289,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: '¡Bodegas Removidas!',
-          text: `Se removieron ${bodegasIds.length} bodegas del canal ${canalName}`,
+          title: this.translate.instant('proceso.bodegasPorCanal.variasRemovidasTitulo'),
+          text: this.translate.instant('proceso.bodegasPorCanal.variasRemovidasTexto', { n: bodegasIds.length, canal: canalName }),
           icon: 'success',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       },
       error: (error) => {
@@ -298,10 +300,10 @@ export class BodegasPorCanalComponent implements OnInit {
         this.cargandoBodegas = false;
         
         Swal.fire({
-          title: 'Error',
-          text: 'No se pudieron remover las bodegas del canal',
+          title: this.translate.instant('comun.error'),
+          text: this.translate.instant('proceso.bodegasPorCanal.errorRemoverVarias'),
           icon: 'error',
-          confirmButtonText: 'Aceptar'
+          confirmButtonText: this.translate.instant('comun.aceptar')
         });
       }
     });
