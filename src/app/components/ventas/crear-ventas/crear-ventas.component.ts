@@ -3253,6 +3253,24 @@ export class CrearVentasComponent
     });
   }
 
+  /**
+   * Ticket 1588: si no se eligieron datos de facturación, el pedido queda como
+   * Consumidor Final con los mismos datos del botón «Consumidor Final».
+   */
+  protected aplicarConsumidorFinalPorDefecto(): void {
+    this.agregarConsumidorFinal();
+    const cf = this.datosFacturacionElectronica.find(
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final"
+    );
+    if (cf) {
+      this.pedidoGral.facturacion = cf;
+      this.pedidoGral = { ...this.pedidoGral };
+    }
+  }
+
   // Método para agregar un consumidor final a la lista de facturación
   agregarConsumidorFinal(): void {
     // Primero eliminar duplicados si existen
@@ -3297,6 +3315,10 @@ export class CrearVentasComponent
   }
 
   private reviewStepAndExecute(index: number) {
+    // Ticket 1588: al salir del paso envío/facturación sin datos, queda Consumidor Final.
+    if (index == 4 && this.pedidoGral && !this.pedidoGral.facturacion) {
+      this.aplicarConsumidorFinalPorDefecto();
+    }
     if (index == 1) {
       // Paso del cliente - Validar que existe un cliente antes de ir a Productos
       if (!this.pedidoGral.cliente) {
@@ -3410,13 +3432,9 @@ export class CrearVentasComponent
 
     if (index == 5) {
       // Paso de resumen - Validar que existe información de facturación antes de ir a Pago
+      // Ticket 1588: la facturación no es obligatoria; sin datos queda Consumidor Final.
       if (!this.pedidoGral.facturacion) {
-        Swal.fire({
-          title: "Advertencia",
-          text: "Debe seleccionar o crear datos de facturación antes de continuar",
-          icon: "warning",
-        });
-        return;
+        this.aplicarConsumidorFinalPorDefecto();
       }
 
       // Cargar datos del carrito para el resumen
