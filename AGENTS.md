@@ -83,6 +83,32 @@ Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticke
 - **No se borran notas.** `update-version.js` publica solo las de fecha posterior a la última publicación (`publicada` del `src/assets/version.json` en git).
 - **Cambios internos** (refactors, pruebas, documentación) no llevan nota.
 
+## Inglés siempre: todo lo nuevo se entrega traducido (regla del 7-nov-2026)
+
+**Todo lo que desarrollemos de aquí en adelante lleva español e inglés en el mismo cambio. Siempre, sin excepciones.** Un cambio con texto visible para una persona que no trae su inglés no está terminado: no se sube, no se da por cerrado y no se mezcla. El español sigue siendo el idioma base y el de las specs; el inglés es obligatorio en cada pantalla, mensaje o documento nuevo o modificado.
+
+**Qué cuenta como texto visible:** títulos, etiquetas, botones, placeholders, tooltips, `aria-label`, estados vacíos, avisos y errores (toastr, SweetAlert, `alert`), cabeceras de tabla, textos de PDF e impresos (tirilla, orden de venta, cotización), correos y notificaciones que arma el front. Si una persona lo lee, se traduce.
+
+**Cómo se hace:**
+
+- **Diccionarios planos** en `src/assets/i18n/es.json` y `en.json`. Cada texto nuevo es una clave semántica `modulo.pantalla.nombre` con su valor en los dos archivos, en el mismo commit. Nunca usar el texto en español como clave en lo nuevo.
+- **Plantillas:** `{{ 'clave' | translate }}`; en atributos, `[attr.aria-label]="'clave' | translate"`. El módulo del componente debe importar `TranslateModule`.
+- **TypeScript:** `this.translate.instant('clave', { param })` con `{{param}}` en el diccionario. `TranslateService` va como **último** parámetro del constructor del componente. Los servicios, modelos y utilidades no lo inyectan: reciben el traductor (o el texto ya traducido) del componente.
+- **Una clave por frase.** No concatenar fragmentos ni armar plurales pegando palabras; si el singular y el plural difieren, dos claves.
+- **Glosario (D7) en inglés:** despacho = *shipping* / *shipment* (nunca *dispatch*); cliente = *customer* (nunca *client*, salvo `Client ID`/`Client Secret`). En español: `…` y no `...`, y los signos ¡! ¿? pegados al texto.
+- **Valores guardados o comparados** (estados, roles, tipos, nombres de menú) no se traducen: se traduce solo la etiqueta al mostrarla.
+
+**Qué no se traduce:** nombres propios y de producto, siglas y formatos (PDF, NIT, IVA…), URLs, códigos y ejemplos técnicos, datos que escribe el usuario, lo que viaja a la DIAN, prompts y respuestas de la IA, y las palabras que la persona debe teclear para confirmar (`ELIMINAR`, `LIMPIAR`: el texto en inglés lo explica). Quedan fuera de alcance por decisión documentada la política de privacidad (documento legal) y el módulo `components/plataforma` (D-700, en español por diseño). Una excepción nueva se registra en `scripts/i18n-check.config.json` con su razón y el visto bueno de quien aprueba el cambio; **nunca se agrega un texto traducible a `textosIgnorados` o `fueraDeAlcance` para que el verificador pase.**
+
+**Antes de cerrar un cambio con texto visible:**
+
+1. `npm run i18n:check`: 0 errores y ningún texto suelto nuevo en los archivos tocados.
+2. `npm run test:i18n`: no debe fallar nada nuevo.
+3. Ver la pantalla en inglés en el navegador (1440 y 390 px): sin textos en español, sin claves a la vista (`modulo.pantalla.nombre`) y sin desbordes por el largo del inglés.
+4. **Por ahora solo inglés: no se traduce al portugués ni al alemán.** No se agregan claves a `pt.json` ni a `de.json` en los cambios nuevos y no se pierde tiempo en ellos. Su falta sale como aviso (`clavePendiente`) y no bloquea; el inglés sí bloquea. Cuando se decida retomarlos, será un cambio aparte.
+
+**Subagentes y workflows:** el encargo debe incluir esta regla y exigir en la respuesta el resultado de `i18n:check`. El orquestador no da por bueno un diff con texto visible sin su inglés.
+
 ## Subagentes y workflows
 
 Cuando una sesión delega trabajo en subagentes o workflows (Agent, Workflow, Task):
@@ -354,6 +380,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 | Sumar `inventory` sin normalizar `productoId` | Totales inflados por docs con docId y referencia para el mismo producto+bodega |
 | Reusar un flow mixto de producto/precios para ampliar sync de stock | Reejecuta catálogo, imágenes o Price Lists y viola el aislamiento D-134 |
 | Crear/corregir producto desde una operación de inventario | Mezcla dominios y puede pisar maestros o precios de producción |
+| Texto visible nuevo solo en español, o clave sin su valor en `en.json` | Pantalla a medias en inglés: el cambio no está terminado (ver «Inglés siempre») |
 | `setTimeout` para sync parent-child | Race conditions — usar callbacks/flags |
 | Filtrar `active !== false` sin mostrar inactivos | Datos ocultos, confusión de usuario |
 
