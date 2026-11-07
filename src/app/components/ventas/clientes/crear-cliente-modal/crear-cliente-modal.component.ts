@@ -220,6 +220,24 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Ticket 1582: corregir el tipo de documento de un cliente existente (empresas guardadas como CC).
+   * La llave del cliente es su `cd` y su `documento`; el tipo solo no la cambia. Pero con la bandera
+   * `calidadDatosClientes` el servidor, al cambiar el tipo a NIT, reescribe `documento` como «base-dv» (y
+   * pedidos, Siigo y Cartera lo buscan así), por eso con la bandera el campo sigue bloqueado.
+   * Solo Administrador y Super Administrador; el cliente corporativo no entra.
+   */
+  get tipoDocEditable(): boolean {
+    if (!this.isEdit || this.target !== 'client' || !this.persist || !(this.clienteData?.cd || this.clienteData?.id)) return false;
+    if (this.calidadActiva) return false;
+    try {
+      const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
+      return ['Administrador', 'Super Administrador'].includes(rol);
+    } catch {
+      return false;
+    }
+  }
+
   cambiarRelacion(valor: TipoRelacion): void {
     const anterior = this.relationType;
     if (valor === anterior || this.guardandoRelacion) return;
@@ -330,9 +348,11 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     const tipoDoc = this.normalizeTipoDoc(cliente.tipo_documento_comprador);
     this.tipoDocSeleccionado = tipoDoc;
     this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
-    // En edición el tipo de documento no es editable (igual que el número).
-    // El guardado usa getRawValue(), así que el valor se conserva.
-    this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
+    // En edición el tipo de documento queda bloqueado (el guardado usa getRawValue(), así que el valor se conserva).
+    // Ticket 1582: Administrador y Super Administrador lo pueden corregir (p. ej. CC -> NIT) cuando el cambio no
+    // toca la llave del cliente (ver `tipoDocEditable`).
+    if (this.tipoDocEditable) this.formulario.controls['tipo_documento_comprador'].enable({ emitEvent: false });
+    else this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
     this.partirNitGuardado();
 
     // Normalizar indicativos a string (pueden venir como número desde Firestore)
