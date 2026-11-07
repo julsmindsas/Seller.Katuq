@@ -227,9 +227,14 @@ export class VentaAsistidaUnicaComponent extends CrearVentasComponent {
       return;
     }
 
-    // Ticket 1588: la facturación no es obligatoria; sin datos queda Consumidor Final.
+    // Gate del "paso 5": datos de facturación.
     if (!this.pedidoGral?.facturacion) {
-      this.aplicarConsumidorFinalPorDefecto();
+      Swal.fire({
+        title: "Advertencia",
+        text: "Debe seleccionar o crear datos de facturación antes de continuar",
+        icon: "warning",
+      });
+      return;
     }
 
     // Normaliza carrito1 / recoge (parte no-Swal del stepEnter(5)).
