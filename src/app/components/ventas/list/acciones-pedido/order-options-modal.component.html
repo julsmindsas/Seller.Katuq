@@ -106,7 +106,7 @@
 
 <!-- Tarjeta de una acción (fija o resultado de búsqueda) -->
 <ng-template #tarjetaPlantilla let-t>
-  <button type="button" class="opm-tarjeta" [class.opm-tarjeta-bloqueada]="!t.habilitada"
+  <button type="button" class="opm-tarjeta" [attr.data-grupo]="grupoDe(t)" [class.opm-tarjeta-bloqueada]="!t.habilitada"
           [class.opm-tarjeta-resaltada]="t.habilitada && resaltada?.id === t.id"
           [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"
           [attr.aria-haspopup]="t.id === 'discount' && vista?.descuentoConMenu ? 'menu' : null"

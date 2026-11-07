@@ -2,7 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input,
   OnChanges, OnDestroy, Output, ViewChild,
 } from '@angular/core';
-import { AccionPedidoId } from './acciones-pedido.catalogo';
+import { AccionPedidoId, accionPorId } from './acciones-pedido.catalogo';
 import { EstadoAcciones } from './acciones-pedido.estado';
 import { EstadoPin, estadosPin, etiquetaPin } from './acciones-pedido.pines';
 import {
@@ -177,4 +177,7 @@ export class OrderOptionsModalComponent implements OnChanges, AfterViewInit, OnD
 
   trackColumna = (_: number, c: ColumnaVista) => c.id;
   trackTarjeta = (_: number, t: TarjetaVista) => t.id;
+
+  /** Ticket 1585: grupo de color de la tarjeta (el mismo de su columna en el modal). Solo presentación. */
+  grupoDe = (t: { id: AccionPedidoId }): string | null => accionPorId(t.id)?.columna ?? null;
 }
