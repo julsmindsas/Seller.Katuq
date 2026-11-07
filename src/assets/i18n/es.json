@@ -9373,6 +9373,7 @@
   "cartera.carteraClientes.promedioEnCartera": "Promedio en cartera {{dias}} d",
   "cartera.carteraClientes.todas": "Todas",
   "cartera.carteraClientes.masInformacion": "Más información",
+  "cartera.carteraClientes.abrirFichaCliente": "Abrir la ficha del cliente en otra pestaña",
   "cartera.carteraClientes.ayudaTotal": "Todo lo que le deben hoy: el saldo de los pedidos que aún no se pagan por completo, sin contar los anulados ni cancelados. Al hacer clic quita los filtros de riesgo y antigüedad.",
   "cartera.carteraClientes.ayudaVencida": "Saldo de los pedidos que ya pasaron su fecha límite de pago (fecha de entrega más el plazo del cliente), desde el primer día de atraso. Abajo se ve la parte con más de 15 días. Al hacer clic muestra solo los clientes con cartera vencida.",
   "cartera.carteraClientes.ayudaDias": "Días promedio de cartera: cuántos días llevan los pedidos con saldo, contados desde la fecha de entrega (o de creación si no tienen entrega) y ponderados por lo que se debe. Fórmula: suma de (saldo × días) ÷ suma de saldos. No es el DSO financiero. Al hacer clic ordena por el cliente más atrasado.",

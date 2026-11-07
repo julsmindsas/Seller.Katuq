@@ -9373,6 +9373,7 @@
     "cartera.carteraClientes.promedioEnCartera": "Ø in Debitoren {{dias}} T",
     "cartera.carteraClientes.todas": "Alle",
     "cartera.carteraClientes.masInformacion": "Weitere Informationen",
+    "cartera.carteraClientes.abrirFichaCliente": "Kundenakte in neuem Tab öffnen",
     "cartera.carteraClientes.ayudaTotal": "Alles, was Ihnen heute geschuldet wird: der Saldo der noch nicht vollständig bezahlten Bestellungen, ohne stornierte oder abgebrochene. Ein Klick entfernt die Filter für Risiko und Alter.",
     "cartera.carteraClientes.ayudaVencida": "Saldo der Bestellungen, deren Zahlungsfrist (Lieferdatum plus Zahlungsziel des Kunden) abgelaufen ist, ab dem ersten Tag Verzug. Darunter steht der Teil mit mehr als 15 Tagen. Ein Klick zeigt nur Kunden mit überfälligen Debitoren.",
     "cartera.carteraClientes.ayudaDias": "Durchschnittliche Tage in Debitoren: seit wie vielen Tagen Bestellungen mit Saldo offen sind, gezählt ab Lieferdatum (oder Erstellungsdatum, falls es keine Lieferung gibt) und gewichtet nach dem geschuldeten Betrag. Formel: Summe aus (Saldo × Tage) ÷ Summe der Salden. Das ist nicht die finanzielle DSO. Ein Klick sortiert nach dem am längsten überfälligen Kunden.",
