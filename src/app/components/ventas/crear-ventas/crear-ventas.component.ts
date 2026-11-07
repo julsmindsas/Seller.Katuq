@@ -1811,6 +1811,15 @@ export class CrearVentasComponent
     });
   }
 
+  /** Ticket 1589: el lápiz alterna abrir/cerrar; cerrar descarta sin guardar. */
+  alternarFormularioEdicion() {
+    if (this.mostrarFormularioCliente) {
+      this.cancelarEdicionCliente();
+    } else {
+      this.abrirFormularioEdicion();
+    }
+  }
+
   /**
    * Método para abrir el formulario de edición con los datos actuales del cliente
    */
