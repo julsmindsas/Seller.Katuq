@@ -927,8 +927,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!order || !this.puedeOfrecerCambiarCliente(order)) return;
     if (!this.canModifyBasicData(order)) {
       this.toastrService.warning(
-        "No se puede cambiar el cliente de un pedido entregado o cerrado",
-        "Pedido No Modificable",
+        this.translate.instant("ventas.list.noCambiarClienteEntregado"),
+        this.translate.instant("ventas.list.pedidoNoModificable"),
       );
       return;
     }
@@ -956,8 +956,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (datos.facturacion === null) delete fila.facturacion;
           else fila.facturacion = datos.facturacion;
         }
-        const nombre = datos.cliente?.nombres_completos || datos.cliente?.nombre || "el cliente nuevo";
-        this.toastrService.success(`El pedido ${fila.nroPedido || ""} ahora es de ${nombre}`.replace("  ", " "), "Cliente cambiado");
+        const nombre = datos.cliente?.nombres_completos || datos.cliente?.nombre || this.translate.instant("ventas.list.elClienteNuevo");
+        this.toastrService.success(this.translate.instant("ventas.list.pedidoAhoraEsDe", { nro: fila.nroPedido || "", nombre }).replace("  ", " "), this.translate.instant("ventas.list.clienteCambiado"));
         this.changeDetectorRef.markForCheck();
       },
       () => { /* se cerró sin cambiar nada */ },
@@ -1178,10 +1178,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   restablecerAccionesBloque(): void {
     Swal.fire({
-      title: "Restablecer acciones",
+      title: this.translate.instant("ventas.list.restablecerAcciones"),
       text: this.panelV2
-        ? "Tus 5 acciones personales vuelven al orden de siempre. Las de tu administrador no cambian."
-        : "Tus 4 acciones personales vuelven al orden de siempre. Las de tu rol no cambian.",
+        ? this.translate.instant("ventas.list.restablecerTexto5")
+        : this.translate.instant("ventas.list.restablecerTexto4"),
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#5F3FE0",
@@ -1250,8 +1250,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const id of actuales) opciones[id] = accionPorId(id).titulo;
     this.guardandoPines = true;
     Swal.fire({
-      title: this.panelV2 ? "Puedes fijar hasta 5 acciones" : "Ya fijaste 4 acciones",
-      text: `¿Cuál reemplazamos por «${accionPorId(entra).titulo}»?`,
+      title: this.panelV2 ? this.translate.instant("ventas.list.fijarHasta5") : this.translate.instant("ventas.list.yaFijaste4"),
+      text: this.translate.instant("ventas.list.cualReemplazamos", { accion: accionPorId(entra).titulo }),
       input: "radio",
       inputOptions: opciones,
       inputValidator: (valor) => (valor ? null : this.translate.instant("ventas.list.escogeLaAccionQueSale")),
@@ -7224,18 +7224,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const r = await Swal.fire({
       icon: "question",
-      title: "Este cliente no tiene cupo de crédito",
-      text: "Escribe el cupo y lo guardamos en la ficha del cliente. Un cliente con cupo se cuenta como empresarial.",
+      title: this.translate.instant("ventas.list.sinCupoTitulo"),
+      text: this.translate.instant("ventas.list.sinCupoTexto"),
       input: "number",
       inputAttributes: { min: "1", step: "1" },
-      inputPlaceholder: "Ej. 5000000",
+      inputPlaceholder: this.translate.instant("ventas.list.cupoEjemplo"),
       showCancelButton: true,
       showDenyButton: true,
-      confirmButtonText: "Guardar cupo y marcar Crédito",
-      denyButtonText: "Marcar sin cupo",
-      cancelButtonText: "Volver",
+      confirmButtonText: this.translate.instant("ventas.list.guardarCupo"),
+      denyButtonText: this.translate.instant("ventas.list.marcarSinCupo"),
+      cancelButtonText: this.translate.instant("comun.volver"),
       confirmButtonColor: "#5F3FE0",
-      inputValidator: (v) => (!v || Number(v) <= 0 ? "Escribe un valor mayor que cero" : undefined),
+      inputValidator: (v) => (!v || Number(v) <= 0 ? this.translate.instant("ventas.list.cupoMayorCero") : undefined),
     });
     if (r.isConfirmed) return Math.round(Number(r.value));
     if (r.isDenied) return null;
@@ -7246,9 +7246,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const sinFicha = estado === "sin_ficha" || estado === "sin_documento";
     Swal.fire({
       icon: "info",
-      title: "El pedido quedó en Crédito",
-      text: (sinFicha ? "No encontramos la ficha de este cliente, así que no se guardó el cupo. Crea o completa la ficha del cliente." : "El cliente sigue sin cupo de crédito. Pídele a un administrador que lo escriba en la ficha del cliente."),
-      confirmButtonText: "Entendido",
+      title: this.translate.instant("ventas.list.pedidoEnCredito"),
+      text: (sinFicha ? this.translate.instant("ventas.list.sinFichaCliente") : this.translate.instant("ventas.list.clienteSinCupo")),
+      confirmButtonText: this.translate.instant("comun.entendido"),
       confirmButtonColor: "#5F3FE0",
     });
   }
@@ -7256,9 +7256,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private avisarPagosNoCambiados(texto: string) {
     Swal.fire({
       icon: "warning",
-      title: "El pago no se cambió",
+      title: this.translate.instant("ventas.list.pagoNoCambio"),
       text: texto,
-      confirmButtonText: "Entendido",
+      confirmButtonText: this.translate.instant("comun.entendido"),
       confirmButtonColor: "#5F3FE0",
     });
   }
@@ -7782,7 +7782,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const procesoTras = this.tempEstadoProceso || this.originalEstadoProceso;
     let mercanciaVolvio = false;
     if (debePreguntarSiVolvio(this.originalEstadoPago, this.tempEstadoPago, procesoTras)) {
-      const respuesta = await preguntarSiVolvio(procesoTras);
+      const respuesta = await preguntarSiVolvio(procesoTras, this.translate);
       if (respuesta === null) return;
       mercanciaVolvio = respuesta;
     }

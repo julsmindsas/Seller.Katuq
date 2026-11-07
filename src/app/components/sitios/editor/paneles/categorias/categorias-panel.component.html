@@ -1,69 +1,63 @@
 <!-- Tienda › Nombres de categorías (tanda N2). Ninguna clase lleva «p-» (trampa de CSS global de AGENTS.md). -->
 <p class="nota">
-  Si tu catálogo guarda los nombres sin tildes o en MAYÚSCULAS, escribe aquí cómo se deben leer en la página
-  («Cámaras con batería»). Salen en las baldosas de categorías, en el menú, en la fila de categorías del encabezado y en
-  los filtros del catálogo. No cambian la categoría en tu catálogo.
+  {{ 'sitios.categoriasPanel.siTuCatalogoGuardaLos' | translate }}
 </p>
 
 <!-- Foto genérica: lo que se ve donde un producto no tiene foto (solo en la página; el producto no cambia). -->
 <section class="foto-gral">
-  <h4 class="subgrupo">Productos sin foto <small>(foto genérica)</small></h4>
+  <h4 class="subgrupo">{{ 'sitios.categoriasPanel.productosSinFoto' | translate }} <small>{{ 'sitios.categoriasPanel.fotoGenerica' | translate }}</small></h4>
   <p class="nota">
-    Si un producto no tiene foto, la página muestra una imagen de referencia en su lugar: no se cambia el producto. Sin
-    configurar nada sale una placa con el ícono de su categoría y su marca. Puedes subir una foto para toda la tienda y,
-    en cada categoría de abajo, la suya (esa va primero).
+    {{ 'sitios.categoriasPanel.siUnProductoNoTiene' | translate }}
   </p>
   <div class="foto-gral__fila">
     <div class="vista" [style.background]="colores.pagina" [style.borderColor]="colores.borde" role="img"
-         aria-label="Así se ve un producto sin foto en tu página">
+         [attr.aria-label]="'sitios.categoriasPanel.asiSeVeUnProducto' | translate">
       <div class="vista__foto" [style.background]="colores.fondo">
         <img *ngIf="muestraFoto" [src]="muestraFoto" alt="" />
         <span *ngIf="!muestraFoto" class="vista__disco" [style.background]="colores.disco" [style.color]="colores.icono">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="muestraTrazo" /></svg>
         </span>
-        <span *ngIf="!muestraFoto" class="vista__marca" [style.color]="colores.marca">MARCA</span>
-        <span *ngIf="muestraFoto" class="vista__ref">Foto de referencia</span>
+        <span *ngIf="!muestraFoto" class="vista__marca" [style.color]="colores.marca">{{ 'sitios.categoriasPanel.marca' | translate }}</span>
+        <span *ngIf="muestraFoto" class="vista__ref">{{ 'sitios.categoriasPanel.fotoReferencia' | translate }}</span>
       </div>
-      <span class="vista__nombre" [style.color]="colores.texto">Nombre del producto</span>
+      <span class="vista__nombre" [style.color]="colores.texto">{{ 'sitios.categoriasPanel.nombreDelProducto' | translate }}</span>
     </div>
     <div class="foto-gral__acciones">
-      <span class="foto-gral__rotulo">Foto genérica de la tienda</span>
-      <span class="foto-gral__dato" *ngIf="!fotoGenerica">Sin foto: sale la placa con el ícono de la categoría.</span>
-      <span class="foto-gral__dato" *ngIf="fotoGenerica">Sale en los productos sin foto cuya categoría no tiene la suya.</span>
+      <span class="foto-gral__rotulo">{{ 'sitios.categoriasPanel.fotoGenericaDeLaTienda' | translate }}</span>
+      <span class="foto-gral__dato" *ngIf="!fotoGenerica">{{ 'sitios.categoriasPanel.sinFotoSaleLaPlaca' | translate }}</span>
+      <span class="foto-gral__dato" *ngIf="fotoGenerica">{{ 'sitios.categoriasPanel.saleEnLosProductosSin' | translate }}</span>
       <div class="foto-gral__botones">
         <label class="boton-subir">
-          {{ subiendo === 'general' ? 'Subiendo…' : (fotoGenerica ? 'Cambiar la foto' : 'Elegir una foto') }}
+          {{ subiendo === 'general' ? ('sitios.categoriasPanel.subiendo' | translate) : (fotoGenerica ? ('sitios.categoriasPanel.cambiarLaFoto' | translate) : ('sitios.categoriasPanel.elegirUnaFoto' | translate)) }}
           <input type="file" accept="image/*" (change)="subirFotoGeneral($event)" [disabled]="!!subiendo" />
         </label>
-        <button type="button" class="enlace-texto" *ngIf="fotoGenerica" (click)="quitarFotoGeneral()">Quitar foto</button>
+        <button type="button" class="enlace-texto" *ngIf="fotoGenerica" (click)="quitarFotoGeneral()">{{ 'sitios.categoriasPanel.quitarFoto' | translate }}</button>
       </div>
-      <small class="foto-gral__ayuda">Mejor cuadrada y de al menos 600×600 px. La página la rotula «Foto de referencia».</small>
+      <small class="foto-gral__ayuda">{{ 'sitios.categoriasPanel.mejorCuadradaYDeAl' | translate }}</small>
     </div>
   </div>
 </section>
 
 <p class="aviso aviso--info" *ngIf="!cargando && !error && categorias.length && sinNombre">
-  {{ sinNombre }} {{ sinNombre === 1 ? 'categoría visible sale' : 'categorías visibles salen' }} con el nombre del catálogo,
-  con mayúscula inicial.
+  {{ (sinNombre === 1 ? 'sitios.categoriasPanel.sinNombreUna' : 'sitios.categoriasPanel.sinNombreVarias') | translate: { n: sinNombre } }}
 </p>
 <p class="aviso" *ngIf="error">{{ error }}</p>
-<p class="cargando" *ngIf="cargando">Cargando las categorías de tu catálogo…</p>
+<p class="cargando" *ngIf="cargando">{{ 'sitios.categoriasPanel.cargandoLasCategoriasDeTu' | translate }}</p>
 
 <ng-container *ngIf="!cargando && !error">
   <p class="vacio" *ngIf="!categorias.length">
-    <strong class="vacio__titulo">Tu catálogo todavía no tiene categorías</strong>
-    <span class="vacio__texto">Cuando tus productos tengan categoría, aquí podrás darles un nombre para la página.</span>
+    <strong class="vacio__titulo">{{ 'sitios.categoriasPanel.tuCatalogoTodaviaNoTiene' | translate }}</strong>
+    <span class="vacio__texto">{{ 'sitios.categoriasPanel.cuandoTusProductosTenganCategoria' | translate }}</span>
   </p>
 
   <ng-container *ngIf="categorias.length">
     <p class="aviso aviso--info" *ngIf="sinIcono && conIcono">
-      Para que la banda de categorías salga con íconos, cada categoría que se muestra necesita el suyo: si a una le falta,
-      la banda sale con fotos. Faltan {{ sinIcono }} de las {{ visiblesEnTienda }} visibles.
+      {{ 'sitios.categoriasPanel.paraQueLaBandaDe' | translate: { sinIcono: sinIcono, visiblesEnTienda: visiblesEnTienda } }}
     </p>
     <div class="cabeza-lista">
-      <h4 class="subgrupo">Categorías <small>({{ conNombre }} con nombre · tope de {{ topes.entradas }})</small></h4>
+      <h4 class="subgrupo">{{ 'sitios.categoriasPanel.categorias' | translate }} <small>{{ 'sitios.categoriasPanel.conNombreTopeDe' | translate: { conNombre: conNombre, entradas: topes.entradas } }}</small></h4>
       <input *ngIf="categorias.length > 8" type="search" class="filtro" [(ngModel)]="filtro" (ngModelChange)="mostrando = 24"
-             placeholder="Buscar una categoría" aria-label="Buscar una categoría" />
+             [placeholder]="'sitios.categoriasPanel.buscarUnaCategoria' | translate" [attr.aria-label]="'sitios.categoriasPanel.buscarUnaCategoria' | translate" />
     </div>
 
     <div class="fila-cat" *ngFor="let c of visibles; let i = index; trackBy: porClave" [class.fila-cat--oculta]="c.oculta">
@@ -74,18 +68,18 @@
       <div class="fila-cat__campos">
         <label class="fila-cat__rotulo" [attr.for]="'cat-nombre-' + i">
           <span class="fila-cat__maestro">{{ c.nombre }}</span>
-          <span class="fila-cat__dato">{{ c.total }} {{ c.total === 1 ? 'producto' : 'productos' }}<ng-container *ngIf="c.oculta"> · oculta en la tienda</ng-container></span>
+          <span class="fila-cat__dato">{{ c.total }} {{ c.total === 1 ? ('sitios.categoriasPanel.producto' | translate) : ('sitios.categoriasPanel.productos' | translate) }}<ng-container *ngIf="c.oculta"> {{ 'sitios.categoriasPanel.ocultaEnLaTienda' | translate }}</ng-container></span>
         </label>
         <input type="text" [id]="'cat-nombre-' + i" [maxlength]="topes.etiqueta" [ngModel]="etiqueta(c)"
                (ngModelChange)="cambiar(c, $event)" [placeholder]="comoSaleSinNombre(c)" [disabled]="sinCupo(c)" />
-        <small class="fila-cat__lee">Se lee: <strong class="fila-cat__lee-nombre">{{ seLee(c) }}</strong></small>
+        <small class="fila-cat__lee">{{ 'sitios.categoriasPanel.seLee' | translate }} <strong class="fila-cat__lee-nombre">{{ seLee(c) }}</strong></small>
         <p class="aviso aviso--fila" *ngIf="enMayusculas(c)">
-          Va en MAYÚSCULAS. En la página se lee mejor con mayúscula inicial.
-          <br /><button type="button" (click)="pasarAMayusculaInicial(c)">Pasar a mayúscula inicial</button>
+          {{ 'sitios.categoriasPanel.vaEnMayusculasEnLa' | translate }}
+          <br /><button type="button" (click)="pasarAMayusculaInicial(c)">{{ 'sitios.categoriasPanel.pasarAMayusculaInicial' | translate }}</button>
         </p>
-        <p class="aviso aviso--fila" *ngIf="conMarcador(c)">Tiene un dato entre corchetes: no se publica. Escribe el nombre real.</p>
-        <p class="aviso aviso--fila aviso--info" *ngIf="sinCupo(c)">Ya hay {{ topes.entradas }} categorías con nombre: quita uno para nombrar esta.</p>
-        <button type="button" class="enlace-texto" *ngIf="!etiqueta(c) && !sinCupo(c)" (click)="usarDelCatalogo(c)">Empezar con el del catálogo</button>
+        <p class="aviso aviso--fila" *ngIf="conMarcador(c)">{{ 'sitios.categoriasPanel.tieneUnDatoEntreCorchetes' | translate }}</p>
+        <p class="aviso aviso--fila aviso--info" *ngIf="sinCupo(c)">{{ 'sitios.categoriasPanel.yaHayCategoriasConNombre' | translate: { entradas: topes.entradas } }}</p>
+        <button type="button" class="enlace-texto" *ngIf="!etiqueta(c) && !sinCupo(c)" (click)="usarDelCatalogo(c)">{{ 'sitios.categoriasPanel.empezarConElDelCatalogo' | translate }}</button>
         <div class="foto-cat" *ngIf="!sinCupo(c)">
           <div class="foto-cat__vista" [style.background]="colores.fondo" aria-hidden="true">
             <img *ngIf="vistaDe(c).foto" [src]="vistaDe(c).foto" alt="" loading="lazy" />
@@ -94,23 +88,23 @@
             </span>
           </div>
           <div class="foto-cat__acciones">
-            <span class="foto-cat__rotulo">Foto genérica de la categoría</span>
+            <span class="foto-cat__rotulo">{{ 'sitios.categoriasPanel.fotoGenericaDeLaCategoria' | translate }}</span>
             <div class="foto-cat__botones">
               <label class="boton-subir boton-subir--chico">
-                {{ subiendo === c.clave ? 'Subiendo…' : (fotoDe(c) ? 'Cambiar' : 'Elegir una foto') }}
+                {{ subiendo === c.clave ? ('sitios.categoriasPanel.subiendo' | translate) : (fotoDe(c) ? ('sitios.categoriasPanel.cambiar' | translate) : ('sitios.categoriasPanel.elegirUnaFoto' | translate)) }}
                 <input type="file" accept="image/*" (change)="subirFotoCategoria($event, c)" [disabled]="!!subiendo" />
               </label>
-              <button type="button" class="enlace-texto" *ngIf="fotoDe(c)" (click)="quitarFotoCategoria(c)">Quitar</button>
+              <button type="button" class="enlace-texto" *ngIf="fotoDe(c)" (click)="quitarFotoCategoria(c)">{{ 'sitios.categoriasPanel.quitar' | translate }}</button>
             </div>
-            <small class="foto-cat__ayuda" *ngIf="fotoDe(c)">También es la foto de la baldosa de esta categoría.</small>
+            <small class="foto-cat__ayuda" *ngIf="fotoDe(c)">{{ 'sitios.categoriasPanel.tambienEsLaFotoDe' | translate }}</small>
           </div>
         </div>
         <div class="icono-cat" *ngIf="!sinCupo(c)">
           <svg class="icono-cat__muestra" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path *ngIf="iconoDe(c) && trazos[iconoDe(c)]" [attr.d]="trazos[iconoDe(c)]" />
           </svg>
-          <select [ngModel]="iconoDe(c)" (ngModelChange)="cambiarIcono(c, $event)" [attr.aria-label]="'Ícono de ' + seLee(c)">
-            <option value="">Sin ícono</option>
+          <select [ngModel]="iconoDe(c)" (ngModelChange)="cambiarIcono(c, $event)" [attr.aria-label]="'sitios.categoriasPanel.iconoDe' | translate: { nombre: seLee(c) }">
+            <option value="">{{ 'sitios.categoriasPanel.sinIcono' | translate }}</option>
             <option *ngFor="let i of iconos" [value]="i.id">{{ i.nombre }}</option>
           </select>
         </div>
@@ -118,13 +112,12 @@
     </div>
 
     <button type="button" class="mas" *ngIf="filtradas.length > mostrando" (click)="verMas()">
-      Ver más categorías ({{ filtradas.length - mostrando }})
+      {{ 'sitios.categoriasPanel.verMasCategorias' | translate: { filtradas: (filtradas.length - mostrando) } }}
     </button>
 
     <p class="aviso" *ngIf="huerfanas.length">
-      {{ huerfanas.length }} {{ huerfanas.length === 1 ? 'nombre es de una categoría' : 'nombres son de categorías' }} que ya no
-      está{{ huerfanas.length === 1 ? '' : 'n' }} en tu catálogo ({{ huerfanas[0].etiqueta || huerfanas[0].categoria }}{{ huerfanas.length > 1 ? '…' : '' }}).
-      <br /><button type="button" (click)="quitarHuerfanas()">Quitar {{ huerfanas.length === 1 ? 'ese nombre' : 'esos nombres' }}</button>
+      {{ (huerfanas.length === 1 ? 'sitios.categoriasPanel.huerfanasUna' : 'sitios.categoriasPanel.huerfanasVarias') | translate: { n: huerfanas.length, nombre: huerfanas[0].etiqueta || huerfanas[0].categoria } }}
+      <br /><button type="button" (click)="quitarHuerfanas()">{{ (huerfanas.length === 1 ? 'sitios.categoriasPanel.quitarEseNombre' : 'sitios.categoriasPanel.quitarEsosNombres') | translate }}</button>
     </p>
   </ng-container>
 </ng-container>

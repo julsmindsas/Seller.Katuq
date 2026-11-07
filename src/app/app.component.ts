@@ -81,13 +81,13 @@ export class AppComponent implements OnInit, OnDestroy {
     public ngpService: NgpThemeService,
     private idleInterruptService: IdleInterruptService,
     private loader: LoadingBarService,
-    translate: TranslateService,
     // private updates: SwUpdate, // SW desactivado (2026-03-25)
     private cdr: ChangeDetectorRef,
     // D-502: inyectarlo aquí decide el tema al arrancar, antes del primer evento del router
     private themeMode: ThemeModeService,
     // D-540: textos de PrimeNG en el idioma del panel; se arranca una sola vez aquí
-    private primengI18n: PrimengI18nService
+    private primengI18n: PrimengI18nService,
+    private translate: TranslateService
   ) {
     // Initialize loader
     this.loaders = this.loader.progress$.pipe(
@@ -165,8 +165,8 @@ export class AppComponent implements OnInit, OnDestroy {
       
       // Show logout notification
       this.toastrService.error(
-        `Sesión cerrada por inactividad de ${totalMinutes} minutos`, 
-        'Sesión Terminada',
+        this.translate.instant('shell.app.sesionCerrada', { minutos: totalMinutes }), 
+        this.translate.instant('shell.app.sesionTerminada'),
         { timeOut: 10000 }
       );
     });
@@ -184,17 +184,17 @@ export class AppComponent implements OnInit, OnDestroy {
         
         Swal.fire({
           icon: 'warning',
-          title: `¡ Sesión inactiva por ${idleMinutes} minutos, se cerrará en ${remainingMinutes > 0 ? remainingMinutes + ' minutos' : remainingSeconds + ' segundos'} !`,
-          text: 'Mueve el mouse, toca la pantalla o haz clic para mantener la sesión activa',
+          title: this.translate.instant('shell.app.sesionInactivaAviso', { inactivo: idleMinutes, restante: remainingMinutes > 0 ? this.translate.instant(remainingMinutes === 1 ? 'shell.app.minutoUno' : 'shell.app.minutosN', { n: remainingMinutes }) : this.translate.instant('shell.app.segundosN', { n: remainingSeconds }) }),
+          text: this.translate.instant('shell.app.mantenerActivaTexto'),
           showConfirmButton: true,
-          confirmButtonText: 'Mantener sesión activa',
+          confirmButtonText: this.translate.instant('shell.app.mantenerActiva'),
           timer: 30000,
           allowOutsideClick: false,
           allowEscapeKey: false
         }).then((result) => {
           if (result.isConfirmed) {
             this.reset();
-            this.toastrService.success('Sesión extendida exitosamente', 'Sesión Activa');
+            this.toastrService.success(this.translate.instant('shell.app.sesionExtendida'), this.translate.instant('shell.app.sesionActiva'));
           }
         });
       }
@@ -374,7 +374,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Restart idle watching
     this.reset();
     
-    this.toastrService.info(`Perfil de inactividad cambiado a: ${profile}`, 'Configuración');
+    this.toastrService.info(this.translate.instant('shell.app.perfilInactividad', { perfil: profile }), this.translate.instant('shell.app.configuracion'));
   }
 
   /**

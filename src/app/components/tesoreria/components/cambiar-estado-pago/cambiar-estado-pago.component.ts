@@ -94,7 +94,7 @@ export class CambiarEstadoPagoComponent implements OnInit {
     const proceso = this.pedido?.estadoProceso || '';
     let mercanciaVolvio = false;
     if (debePreguntarSiVolvio(this.estadoActual, this.estadoSeleccionado, proceso)) {
-      const respuesta = await preguntarSiVolvio(proceso);
+      const respuesta = await preguntarSiVolvio(proceso, this.translate);
       if (respuesta === null) return;
       mercanciaVolvio = respuesta;
     }

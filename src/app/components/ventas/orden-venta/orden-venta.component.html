@@ -6,7 +6,7 @@
   <div class="doc-head">
     <div class="doc-brand">
       <!-- Ticket 1084: el logo llega como data URL (proxy) para que html2canvas lo capture -->
-      <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Logo" class="doc-logo-img">
+      <img *ngIf="logoDataUrl" [src]="logoDataUrl" [alt]="'ventas.ordenVenta.logo' | translate" class="doc-logo-img">
       <div class="doc-brand-txt">
         <div class="doc-logo">{{ nombreEmpresa }}</div>
         <small class="doc-sub" *ngIf="razonSocialEmpresa && razonSocialEmpresa !== nombreEmpresa">{{ razonSocialEmpresa }}</small>
@@ -16,27 +16,27 @@
       </div>
     </div>
     <div class="doc-meta">
-      <strong>ORDEN DE VENTA</strong>
-      <span class="doc-nro">{{ pedido?.nroPedido || 'Sin número' }}</span>
-      <span>Fecha: {{ (pedido?.fechaCreacion || fechaEmision) | date:'dd/MM/yyyy' }}</span>
-      <span *ngIf="nombreAsesor !== 'No asignado'">Atendido por: {{ nombreAsesor }}</span>
-      <span *ngIf="pedido?.estadoProceso">Estado: {{ pedido?.estadoProceso }}</span>
+      <strong>{{ 'ventas.ordenVenta.titulo' | translate }}</strong>
+      <span class="doc-nro">{{ pedido?.nroPedido || ('ventas.ordenVenta.sinNumero' | translate) }}</span>
+      <span>{{ 'ventas.ordenVenta.fecha' | translate }} {{ (pedido?.fechaCreacion || fechaEmision) | date:'dd/MM/yyyy' }}</span>
+      <span *ngIf="nombreAsesor !== 'No asignado'">{{ 'ventas.ordenVenta.atendidoPor' | translate }} {{ nombreAsesor }}</span>
+      <span *ngIf="pedido?.estadoProceso">{{ 'ventas.ordenVenta.estado' | translate }} {{ pedido?.estadoProceso }}</span>
     </div>
   </div>
 
   <div class="doc-client-grid">
     <div class="doc-client">
-      <small>CLIENTE</small>
+      <small>{{ 'ventas.ordenVenta.cliente' | translate }}</small>
       <strong>{{ nombreCliente }}</strong>
       <span *ngIf="clienteMeta">{{ clienteMeta }}</span>
-      <span *ngIf="direccionEnvio !== 'No especificada'">Entrega: {{ direccionEnvio }}</span>
+      <span *ngIf="direccionEnvio !== 'No especificada'">{{ 'ventas.ordenVenta.entrega' | translate }} {{ direccionEnvio }}</span>
       <span *ngIf="pedido?.envio?.nombres">
-        Recibe: {{ pedido?.envio?.nombres }} {{ pedido?.envio?.apellidos }}<ng-container *ngIf="pedido?.envio?.celular"> · {{ pedido?.envio?.celular }}</ng-container>
+        {{ 'ventas.ordenVenta.recibe' | translate }} {{ pedido?.envio?.nombres }} {{ pedido?.envio?.apellidos }}<ng-container *ngIf="pedido?.envio?.celular"> · {{ pedido?.envio?.celular }}</ng-container>
       </span>
-      <span *ngIf="pedido?.envio?.observaciones">Indicaciones: {{ pedido?.envio?.observaciones }}</span>
+      <span *ngIf="pedido?.envio?.observaciones">{{ 'ventas.ordenVenta.indicaciones' | translate }} {{ pedido?.envio?.observaciones }}</span>
     </div>
     <div class="doc-client" *ngIf="pedido?.facturacion?.nombres">
-      <small>FACTURAR A</small>
+      <small>{{ 'ventas.ordenVenta.facturarA' | translate }}</small>
       <strong>{{ pedido?.facturacion?.nombres }}</strong>
       <span *ngIf="pedido?.facturacion?.documento">{{ pedido?.facturacion?.tipoDocumento }} {{ pedido?.facturacion?.documento }}</span>
       <span *ngIf="direccionFacturacion !== 'No especificada'">{{ direccionFacturacion }}</span>
@@ -47,15 +47,15 @@
   <table class="doc-tbl">
     <thead>
       <tr>
-        <th>Descripción</th>
-        <th>Cant.</th>
-        <th>Valor bruto</th>
-        <th>Descuento</th>
-        <th>P. unit. sin IVA</th>
-        <th>% IVA</th>
-        <th>Valor IVA</th>
-        <th>P. unit. con IVA</th>
-        <th>Subtotal</th>
+        <th>{{ 'ventas.ordenVenta.descripcion' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.cant' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.valorBruto' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.descuento' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.pUnitSinIva' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.pctIva' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.valorIva' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.pUnitConIva' | translate }}</th>
+        <th>{{ 'ventas.ordenVenta.subtotal' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -64,7 +64,7 @@
         <tr *ngIf="esComboFila(fila)">
           <td>
             <span class="doc-prod-txt">
-              {{ fila.combo.nombre }}<span class="doc-ref"> · Combo</span>
+              {{ fila.combo.nombre }}<span class="doc-ref"> · {{ 'ventas.ordenVenta.combo' | translate }}</span>
               <!-- Ticket 1116: la descripción del combo la ve el cliente -->
               <span class="doc-detalle" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
             </span>
@@ -73,7 +73,7 @@
           <td>{{ comboValorBrutoUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
           <td>{{ comboDescPct(fila) > 0 ? (comboDescuentoUnit(fila) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
           <td>{{ comboSinIvaUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
-          <td>{{ comboIvaPct(fila) !== null ? comboIvaPct(fila) + '%' : 'Varios' }}</td>
+          <td>{{ comboIvaPct(fila) !== null ? comboIvaPct(fila) + '%' : ('ventas.ordenVenta.varios' | translate) }}</td>
           <td>{{ comboValorIvaUnit(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
           <td>{{ comboPrecioUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
           <td>{{ comboTotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
@@ -82,7 +82,7 @@
           <td>
             <span class="doc-prod-txt">
               {{ getNombreProducto(item) }}
-              <span class="doc-ref" *ngIf="getReferencia(item) !== '-'"> · Ref: {{ getReferencia(item) }}</span>
+              <span class="doc-ref" *ngIf="getReferencia(item) !== '-'"> · {{ 'ventas.ordenVenta.ref' | translate }} {{ getReferencia(item) }}</span>
             </span>
           </td>
           <td>{{ item.cantidad || 0 }}</td>
@@ -96,27 +96,27 @@
         </tr>
       </ng-container>
       <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">
-        <td colspan="9" class="doc-vacio">No hay productos en esta orden</td>
+        <td colspan="9" class="doc-vacio">{{ 'ventas.ordenVenta.sinProductos' | translate }}</td>
       </tr>
     </tbody>
   </table>
 
   <div class="doc-totals">
-    <div *ngIf="subtotalSinImpuestos > 0"><span>Subtotal</span><span>{{ subtotalSinImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
-    <div *ngIf="totalDescuentos > 0"><span>Descuento</span><span>– {{ totalDescuentos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
-    <div *ngIf="totalImpuestos > 0"><span>IVA</span><span>{{ totalImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
-    <div *ngIf="totalEnvio > 0"><span>Envío</span><span>{{ totalEnvio | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
-    <div class="doc-total"><span>Total a pagar</span><span>{{ totalFinal | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="subtotalSinImpuestos > 0"><span>{{ 'ventas.ordenVenta.subtotal' | translate }}</span><span>{{ subtotalSinImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalDescuentos > 0"><span>{{ 'ventas.ordenVenta.descuento' | translate }}</span><span>– {{ totalDescuentos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalImpuestos > 0"><span>{{ 'ventas.ordenVenta.iva' | translate }}</span><span>{{ totalImpuestos | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div *ngIf="totalEnvio > 0"><span>{{ 'ventas.ordenVenta.envio' | translate }}</span><span>{{ totalEnvio | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+    <div class="doc-total"><span>{{ 'ventas.ordenVenta.totalAPagar' | translate }}</span><span>{{ totalFinal | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
   </div>
 
   <!-- Ticket 1084: la orden viaja con el pedido como remisión: constancia de recibido -->
   <div class="doc-recibido">
-    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Recibido por (nombre)</div>
-    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Firma / C.C.</div>
-    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>Fecha</div>
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>{{ 'ventas.ordenVenta.recibidoPor' | translate }}</div>
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>{{ 'ventas.ordenVenta.firma' | translate }}</div>
+    <div class="doc-recibido-campo"><span class="doc-recibido-linea"></span>{{ 'ventas.ordenVenta.fechaFirma' | translate }}</div>
   </div>
 
-  <div class="doc-footer">Generado con Katuq · {{ fechaEmision | date:'dd/MM/yyyy HH:mm' }}</div>
+  <div class="doc-footer">{{ 'ventas.ordenVenta.generadoCon' | translate }} {{ fechaEmision | date:'dd/MM/yyyy HH:mm' }}</div>
 </div>
 
 <!-- Botones de acción (solo visible en modal, no en PDF) -->

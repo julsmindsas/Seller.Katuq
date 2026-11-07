@@ -2,35 +2,35 @@
   <!-- Encabezado -->
   <div class="cot-head">
     <div class="cot-head-left">
-      <button class="cot-back" (click)="volver()">← Volver</button>
-      <h1>Cotización</h1>
-      <span class="ednum">{{ cotizacion.nroCotizacion ? cotizacion.nroCotizacion : '(nueva)' }}</span>
+      <button class="cot-back" (click)="volver()">← {{ 'comun.volver' | translate }}</button>
+      <h1>{{ 'cotizaciones.editor.titulo' | translate }}</h1>
+      <span class="ednum">{{ cotizacion.nroCotizacion ? cotizacion.nroCotizacion : ('cotizaciones.editor.nueva' | translate) }}</span>
       <button
         type="button"
         class="cot-pedido-chip"
         *ngIf="cotizacion.pedidoGenerado"
         (click)="verPedido()"
-        title="Ver el pedido generado a partir de esta cotización"
+        [title]="'cotizaciones.editor.verPedidoTitle' | translate"
       >
-        🧾 Pedido {{ cotizacion.pedidoGenerado }}
+        🧾 {{ 'cotizaciones.editor.pedido' | translate: { n: cotizacion.pedidoGenerado } }}
         <span class="cot-pedido-chip-go">→</span>
       </button>
     </div>
     <div class="estado-wrap">
-      <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) }}</span>
+      <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) | translate }}</span>
       <select
         #estadoSel
         class="form-select form-select-sm estado-select"
         [ngModel]="estado"
         (ngModelChange)="cambiarEstado($event, estadoSel)"
-        title="Cambiar estado"
+        [title]="'cotizaciones.editor.cambiarEstado' | translate"
       >
-        <option *ngFor="let e of estadosEditables" [ngValue]="e.value">{{ e.label }}</option>
+        <option *ngFor="let e of estadosEditables" [ngValue]="e.value">{{ e.label | translate }}</option>
       </select>
     </div>
   </div>
 
-  <div *ngIf="loading" class="cot-loading">Cargando cotización…</div>
+  <div *ngIf="loading" class="cot-loading">{{ 'cotizaciones.editor.cargando' | translate }}</div>
 
   <div *ngIf="!loading" class="cot-grid">
     <!-- ===================== COLUMNA PRINCIPAL ===================== -->
@@ -42,24 +42,24 @@
             <span class="cc-ic cc-ic-cli">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </span>
-            Cliente
+            {{ 'cotizaciones.editor.cliente' | translate }}
           </h2>
-          <span class="cc-req" *ngIf="!clienteSeleccionado">Requerido</span>
+          <span class="cc-req" *ngIf="!clienteSeleccionado">{{ 'cotizaciones.editor.requerido' | translate }}</span>
         </div>
 
         <ng-container *ngIf="!clienteSeleccionado">
           <div class="cot-field cot-cliente-search">
-            <label>Buscar cliente</label>
+            <label>{{ 'cotizaciones.editor.buscarCliente' | translate }}</label>
             <input
               type="text"
               class="form-control"
-              placeholder="Nombre, documento, correo o teléfono…"
+              [placeholder]="'cotizaciones.editor.phCliente' | translate"
               [value]="clienteTerm"
               (input)="onClienteInput($any($event.target).value)"
               autocomplete="off"
             />
             <div class="cot-suggestions" *ngIf="clienteTerm && clienteTerm.length >= 2">
-              <div class="cot-sugg-loading" *ngIf="buscandoCliente">Buscando…</div>
+              <div class="cot-sugg-loading" *ngIf="buscandoCliente">{{ 'cotizaciones.editor.buscando' | translate }}</div>
               <ng-container *ngIf="!buscandoCliente">
                 <button
                   type="button"
@@ -79,13 +79,13 @@
                   </span>
                 </button>
                 <div class="cot-sugg-empty" *ngIf="clienteSuggestions.length === 0">
-                  Sin resultados.
+                  {{ 'cotizaciones.editor.sinResultados' | translate }}
                 </div>
               </ng-container>
             </div>
             <div class="cot-cliente-actions">
               <button type="button" class="cot-link" (click)="crearCliente()">
-                ＋ Crear cliente nuevo
+                {{ 'cotizaciones.editor.crearCliente' | translate }}
               </button>
             </div>
           </div>
@@ -97,7 +97,7 @@
             <div class="cot-cliente-name">
               {{ clienteNombre(clienteSeleccionado) }}
               <span class="cot-cliente-tag" *ngIf="clienteTipo(clienteSeleccionado)"
-                    title="Tipo de cliente (define precios por segmento)">
+                    [title]="'cotizaciones.editor.tipoClienteTitle' | translate">
                 🏷️ {{ clienteTipo(clienteSeleccionado) }}
               </span>
             </div>
@@ -117,17 +117,17 @@
             </div>
           </div>
           <div class="cot-cliente-card-actions">
-            <button type="button" class="cot-link" (click)="editarCliente()">✎ Editar</button>
-            <button type="button" class="cot-link" (click)="quitarCliente()">⇄ Cambiar</button>
+            <button type="button" class="cot-link" (click)="editarCliente()">{{ 'cotizaciones.editor.editar' | translate }}</button>
+            <button type="button" class="cot-link" (click)="quitarCliente()">{{ 'cotizaciones.editor.cambiar' | translate }}</button>
           </div>
         </div>
 
         <!-- Ticket 1327 (D-537): persona de la empresa a la que va dirigida -->
         <div class="cot-dirigida" *ngIf="clienteSeleccionado && contactosCliente.length">
-          <label class="cot-dirigida-label" for="cot-dirigida">Dirigida a</label>
+          <label class="cot-dirigida-label" for="cot-dirigida">{{ 'cotizaciones.editor.dirigidaA' | translate }}</label>
           <select id="cot-dirigida" class="form-select form-select-sm cot-dirigida-select"
                   [ngModel]="contactoDestinoId" (ngModelChange)="elegirContactoDestino($event)">
-            <option value="">Sin persona (datos del cliente)</option>
+            <option value="">{{ 'cotizaciones.editor.sinPersona' | translate }}</option>
             <option *ngFor="let c of contactosCliente" [value]="c.id">{{ c.nombre }}{{ c.cargo ? ' — ' + c.cargo : '' }}</option>
           </select>
         </div>
@@ -140,12 +140,12 @@
             <span class="cc-ic cc-ic-vig">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
             </span>
-            Vigencia
+            {{ 'cotizaciones.editor.vigencia' | translate }}
           </h2>
         </div>
         <div class="cot-row">
           <div class="cot-field">
-            <label>Fecha de emisión</label>
+            <label>{{ 'cotizaciones.editor.fechaEmision' | translate }}</label>
             <input
               type="date"
               class="form-control"
@@ -154,7 +154,7 @@
             />
           </div>
           <div class="cot-field cot-field-sm">
-            <label>Validez (días)</label>
+            <label>{{ 'cotizaciones.editor.validez' | translate }}</label>
             <input
               type="number"
               min="0"
@@ -164,7 +164,7 @@
             />
           </div>
           <div class="cot-field">
-            <label>Válida hasta</label>
+            <label>{{ 'cotizaciones.editor.validaHasta' | translate }}</label>
             <input
               type="date"
               class="form-control"
@@ -174,7 +174,7 @@
           </div>
         </div>
         <div class="cot-field cot-vendedor">
-          <label>Vendedor</label>
+          <label>{{ 'cotizaciones.editor.vendedor' | translate }}</label>
           <div class="cot-readonly">{{ vendedorLabel }}</div>
         </div>
       </section>
@@ -186,25 +186,25 @@
             <span class="cc-ic cc-ic-prod">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             </span>
-            Productos y servicios
+            {{ 'cotizaciones.editor.productosServicios' | translate }}
           </h2>
           <button type="button" class="cot-link" (click)="agregarItemLibre()">
-            + Ítem libre
+            {{ 'cotizaciones.editor.itemLibre' | translate }}
           </button>
         </div>
 
         <div class="cot-field cot-prod-search">
-          <label>Buscar producto</label>
+          <label>{{ 'cotizaciones.editor.buscarProducto' | translate }}</label>
           <input
             type="text"
             class="form-control"
-            placeholder="Nombre o referencia…"
+            [placeholder]="'cotizaciones.editor.phProducto' | translate"
             [value]="productoTerm"
             (input)="onProductoInput($any($event.target).value)"
             autocomplete="off"
           />
           <div class="cot-suggestions" *ngIf="productoTerm && productoTerm.length >= 2">
-            <div class="cot-sugg-loading" *ngIf="buscandoProducto">Buscando…</div>
+            <div class="cot-sugg-loading" *ngIf="buscandoProducto">{{ 'cotizaciones.editor.buscando' | translate }}</div>
             <ng-container *ngIf="!buscandoProducto">
               <!-- Ticket 1086: combos (colección aparte, D-147). Ticket 1097: entran en una sola línea -->
               <button
@@ -216,8 +216,8 @@
                 <span class="cot-sugg-txt">
                   <span class="cot-sugg-name">{{ c.nombre }}</span>
                   <span class="cot-sugg-sub">
-                    {{ c.productos?.length || 0 }} producto(s) · en una sola línea, con su precio
-                    <span class="cot-sugg-tag">combo</span>
+                    {{ 'cotizaciones.editor.comboSugerencia' | translate: { n: c.productos?.length || 0 } }}
+                    <span class="cot-sugg-tag">{{ 'cotizaciones.editor.combo' | translate }}</span>
                   </span>
                 </span>
               </button>
@@ -239,14 +239,14 @@
                 <span class="cot-sugg-txt">
                   <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
                   <span class="cot-sugg-sub">
-                    <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
+                    <ng-container *ngIf="productoReferencia(p)">{{ 'cotizaciones.editor.ref' | translate: { ref: productoReferencia(p) } }} · </ng-container>
                     {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}
-                    <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
+                    <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">{{ 'cotizaciones.editor.configurable' | translate }}</span>
                   </span>
                 </span>
               </button>
               <div class="cot-sugg-empty" *ngIf="productoSuggestions.length === 0 && comboSuggestions.length === 0">
-                Sin resultados.
+                {{ 'cotizaciones.editor.sinResultados' | translate }}
               </div>
             </ng-container>
           </div>
@@ -256,22 +256,22 @@
           <span class="cot-empty-ic">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
           </span>
-          Aún no hay productos en la cotización
-          <span class="cot-empty-sub">Busca un producto arriba o añade un ítem libre</span>
+          {{ 'cotizaciones.editor.sinProductos' | translate }}
+          <span class="cot-empty-sub">{{ 'cotizaciones.editor.sinProductosSub' | translate }}</span>
         </div>
 
         <div class="cot-lines" *ngIf="cotizacion.items.length > 0">
           <div class="cot-line-row cot-line-head">
-            <span class="cl-prod">Producto</span>
-            <span class="cl-cant">Cant.</span>
-            <span class="cl-precio">Precio / IVA / Desc.</span>
-            <span class="cl-bruto">Valor Bruto</span>
-            <span class="cl-desc-monto">Descuento</span>
-            <span class="cl-sin-iva">Precio Unitario (sin IVA)</span>
-            <span class="cl-pct-iva">Porcentaje IVA</span>
-            <span class="cl-valor-iva">Valor IVA</span>
-            <span class="cl-total-iva">Precio unitario Total(con IVA)</span>
-            <span class="cl-sub">Subtotal</span>
+            <span class="cl-prod">{{ 'cotizaciones.editor.colProducto' | translate }}</span>
+            <span class="cl-cant">{{ 'cotizaciones.editor.colCant' | translate }}</span>
+            <span class="cl-precio">{{ 'cotizaciones.editor.colPrecio' | translate }}</span>
+            <span class="cl-bruto">{{ 'cotizaciones.editor.colBruto' | translate }}</span>
+            <span class="cl-desc-monto">{{ 'cotizaciones.editor.colDescuento' | translate }}</span>
+            <span class="cl-sin-iva">{{ 'cotizaciones.editor.colSinIva' | translate }}</span>
+            <span class="cl-pct-iva">{{ 'cotizaciones.editor.colPctIva' | translate }}</span>
+            <span class="cl-valor-iva">{{ 'cotizaciones.editor.colValorIva' | translate }}</span>
+            <span class="cl-total-iva">{{ 'cotizaciones.editor.colTotalIva' | translate }}</span>
+            <span class="cl-sub">{{ 'cotizaciones.editor.colSubtotal' | translate }}</span>
             <span class="cl-acc"></span>
           </div>
           <ng-container *ngFor="let fila of filas; trackBy: trackFila">
@@ -285,14 +285,14 @@
               <span class="cl-prod-txt">
                 <span class="cl-titulo">{{ fila.combo.nombre }}</span>
                 <span class="cl-ref">
-                  <span class="cl-combo-tag">combo</span>
-                  {{ fila.lineas.length }} producto(s) en una sola línea
+                  <span class="cl-combo-tag">{{ 'cotizaciones.editor.combo' | translate }}</span>
+                  {{ 'cotizaciones.editor.comboLinea' | translate: { n: fila.lineas.length } }}
                 </span>
                 <!-- Ticket 1116: la descripción del combo, igual que la ve el cliente -->
                 <span class="cl-combo-desc" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
                 <button type="button" class="cl-combo-btn" (click)="abrirCombo(fila.combo.grupo)"
-                        title="El cliente verá cada producto del combo por separado">
-                  Abrir combo
+                        [title]="'cotizaciones.editor.comboSeparadoTitle' | translate">
+                  {{ 'cotizaciones.editor.abrirCombo' | translate }}
                 </button>
               </span>
             </span>
@@ -303,18 +303,18 @@
                 class="form-control form-control-sm"
                 [value]="fila.cantidad"
                 (change)="setCantidadCombo(fila, $any($event.target).value)"
-                title="Cantidad de combos"
+                [title]="'cotizaciones.editor.cantCombos' | translate"
               />
             </span>
             <span class="cl-precio">
               <div class="cl-price-edit">
                 <div class="cl-price-row">
                   <span class="cl-price-value">{{ comboPrecio(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
-                  <span class="cl-combo-iva">IVA {{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'varios' }}</span>
+                  <span class="cl-combo-iva">{{ 'cotizaciones.editor.ivaCombo' | translate: { iva: ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : ('cotizaciones.editor.varios' | translate) } }}</span>
                 </div>
               </div>
               <div class="cl-desc-linea">
-                <label>Desc.</label>
+                <label>{{ 'cotizaciones.editor.desc' | translate }}</label>
                 <div class="cl-desc-input">
                   <input
                     type="number"
@@ -324,7 +324,7 @@
                     class="form-control form-control-sm"
                     [ngModel]="descComboPct(fila) || null"
                     (ngModelChange)="onDescComboChange(fila, $event)"
-                    [placeholder]="descComboPct(fila) === null ? 'varios' : '0'"
+                    [placeholder]="descComboPct(fila) === null ? ('cotizaciones.editor.varios' | translate) : '0'"
                   />
                   <span class="cl-desc-pct">%</span>
                 </div>
@@ -335,7 +335,7 @@
               {{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO') : '—' }}
             </span>
             <span class="cl-sin-iva">{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
-            <span class="cl-pct-iva">{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</span>
+            <span class="cl-pct-iva">{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : ('cotizaciones.editor.variosCap' | translate) }}</span>
             <span class="cl-valor-iva">{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-total-iva">{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</span>
             <span class="cl-sub">
@@ -345,7 +345,7 @@
               </s>
             </span>
             <span class="cl-acc">
-              <button type="button" class="cot-del" (click)="eliminarCombo(fila)" title="Quitar el combo">
+              <button type="button" class="cot-del" (click)="eliminarCombo(fila)" [title]="'cotizaciones.editor.quitarCombo' | translate">
                 🗑
               </button>
             </span>
@@ -353,11 +353,11 @@
           <ng-container *ngIf="!esComboFila(fila)">
           <!-- Ticket 1097: combo abierto — encabezado para volver a juntarlo -->
           <div class="cot-combo-head" *ngIf="iniciaComboAbierto(fila.indice)">
-            <span class="cl-combo-tag">combo</span>
+            <span class="cl-combo-tag">{{ 'cotizaciones.editor.combo' | translate }}</span>
             <strong>{{ comboDe(fila.item)?.nombre }}</strong>
-            <span class="cot-combo-head-sub">· {{ productosDelCombo(comboDe(fila.item)?.grupo || '') }} producto(s), el cliente los ve por separado</span>
+            <span class="cot-combo-head-sub">{{ 'cotizaciones.editor.comboAbierto' | translate: { n: productosDelCombo(comboDe(fila.item)?.grupo || '') } }}</span>
             <button type="button" class="cl-combo-btn" (click)="cerrarCombo(comboDe(fila.item)?.grupo || '')">
-              Cerrar combo
+              {{ 'cotizaciones.editor.cerrarCombo' | translate }}
             </button>
           </div>
           <div class="cot-line-row" [class.cot-line-en-combo]="!!comboDe(fila.item)" *ngIf="fila.item as item">
@@ -376,13 +376,13 @@
                 />
                 <span class="cl-prod-txt">
                   <span class="cl-titulo">{{ itemTitulo(item) }}</span>
-                  <span class="cl-ref" *ngIf="itemReferencia(item)">Ref: {{ itemReferencia(item) }}</span>
+                  <span class="cl-ref" *ngIf="itemReferencia(item)">{{ 'cotizaciones.editor.ref' | translate: { ref: itemReferencia(item) } }}</span>
                   <div class="cl-segmentos" *ngIf="preciosSegmento(item).length">
                     <!-- El chip lleva el NOMBRE del tipo y el precio; la descripción
                          (un párrafo) queda en el tooltip. -->
                     <span class="cl-seg-chip" *ngFor="let s of preciosSegmento(item)"
                           [class.cl-seg-aplicado]="s.aplicado"
-                          [title]="(s.aplicado ? 'Precio aplicado a este cliente — ' : '') + (s.descripcion || s.nombre)">
+                          [title]="(s.aplicado ? ('cotizaciones.editor.precioAplicado' | translate) : '') + (s.descripcion || s.nombre)">
                       <span class="cl-seg-nombre">{{ s.nombre }}</span>
                       <span class="cl-seg-precio">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
                     </span>
@@ -393,14 +393,14 @@
                 *ngIf="itemEsLibre(item)"
                 type="text"
                 class="form-control form-control-sm"
-                placeholder="Descripción del ítem"
+                [placeholder]="'cotizaciones.editor.phItem' | translate"
                 [(ngModel)]="item.producto.crearProducto.titulo"
               />
               <!-- Ticket 1095: detalle técnico solo para esta cotización (no edita el producto) -->
               <textarea
                 class="form-control form-control-sm cl-detalle"
                 rows="1"
-                placeholder="Detalle para esta cotización (opcional)"
+                [placeholder]="'cotizaciones.editor.phDetalle' | translate"
                 [(ngModel)]="item.descripcionCotizacion"
                 maxlength="1000"
               ></textarea>
@@ -424,7 +424,7 @@
                       type="number"
                       min="0"
                       step="100"
-                      placeholder="Precio base"
+                      [placeholder]="'cotizaciones.editor.phPrecioBase' | translate"
                       [ngModel]="item._precioManualTemp !== undefined ? item._precioManualTemp : (item._precioManualOverride !== undefined ? item._precioManualOverride : getPrecioSinIva(item))"
                       (ngModelChange)="onPrecioManualInput(item, $event)"
                       (blur)="onPrecioManualConfirm(item)"
@@ -443,7 +443,7 @@
                   </div>
                   <div class="cl-price-orig" *ngIf="mostrarPrecioOriginal(item)">
                     <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo:'es-CO' }}</s>
-                    <span class="cl-price-orig-iva">(IVA {{ itemIvaOriginal(item) }}%)</span>
+                    <span class="cl-price-orig-iva">{{ 'cotizaciones.editor.ivaOriginal' | translate: { n: itemIvaOriginal(item) } }}</span>
                   </div>
                 </div>
               </ng-container>
@@ -469,7 +469,7 @@
                 </div>
               </ng-template>
               <div class="cl-desc-linea">
-                <label>Desc.</label>
+                <label>{{ 'cotizaciones.editor.desc' | translate }}</label>
                 <div class="cl-desc-input">
                   <input
                     type="number"
@@ -500,7 +500,7 @@
               </s>
             </span>
             <span class="cl-acc">
-              <button type="button" class="cot-del" (click)="eliminarItem(fila.indice)" title="Eliminar">
+              <button type="button" class="cot-del" (click)="eliminarItem(fila.indice)" [title]="'comun.eliminar' | translate">
                 🗑
               </button>
             </span>
@@ -517,45 +517,45 @@
             <span class="cc-ic cc-ic-term">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg>
             </span>
-            Términos y condiciones
+            {{ 'cotizaciones.editor.terminos' | translate }}
           </h2>
         </div>
         <div class="cot-field">
           <textarea
             class="form-control cot-notas"
             rows="5"
-            placeholder="Términos y condiciones de la cotización…"
+            [placeholder]="'cotizaciones.editor.phTerminos' | translate"
             [(ngModel)]="cotizacion.terminos"
           ></textarea>
-          <small class="cot-hint">Precargados del default de la empresa. Editables por cotización.</small>
+          <small class="cot-hint">{{ 'cotizaciones.editor.terminosHint' | translate }}</small>
         </div>
 
         <!-- Ticket 1081: documento anexo y condiciones de todas las cotizaciones -->
         <div class="cot-anexo" *ngIf="cotizacion.anexoCondiciones as anexo">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-          <span>Se adjunta: <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }} (PDF)</a></span>
+          <span>{{ 'cotizaciones.editor.seAdjunta' | translate }} <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }} (PDF)</a></span>
         </div>
         <div class="cot-condiciones-acciones" *ngIf="esAdminCotizaciones">
           <button type="button" class="btn btn-link btn-sm p-0"
                   [disabled]="guardandoCondiciones || !(cotizacion.terminos || '').trim()"
                   (click)="guardarCondicionesPredeterminadas()">
-            Usar estos términos en todas las cotizaciones
+            {{ 'cotizaciones.editor.usarTerminos' | translate }}
           </button>
           <span class="cot-sep">·</span>
           <label class="btn btn-link btn-sm p-0 mb-0" [class.disabled]="subiendoAnexo">
-            {{ subiendoAnexo ? 'Subiendo PDF…' : (configCotizacion?.anexo ? 'Cambiar PDF de condiciones' : 'Adjuntar PDF de condiciones') }}
+            {{ (subiendoAnexo ? 'cotizaciones.editor.subiendoPdf' : (configCotizacion?.anexo ? 'cotizaciones.editor.cambiarPdf' : 'cotizaciones.editor.adjuntarPdf')) | translate }}
             <input type="file" accept="application/pdf,.pdf" hidden [disabled]="subiendoAnexo" (change)="onAnexoSeleccionado($event)">
           </label>
           <ng-container *ngIf="configCotizacion?.anexo">
             <span class="cot-sep">·</span>
-            <button type="button" class="btn btn-link btn-sm p-0 text-danger" (click)="quitarAnexo()">Quitar PDF</button>
+            <button type="button" class="btn btn-link btn-sm p-0 text-danger" (click)="quitarAnexo()">{{ 'cotizaciones.editor.quitarPdf' | translate }}</button>
           </ng-container>
           <!-- Ticket 1102: pesos enteros en todas las cotizaciones de la empresa -->
           <span class="cot-sep">·</span>
           <label class="cot-check mb-0" [class.disabled]="guardandoDecimales">
             <input type="checkbox" [checked]="sinDecimales" [disabled]="guardandoDecimales"
                    (change)="cambiarValoresSinDecimales($any($event.target).checked)">
-            Mostrar valores sin decimales
+            {{ 'cotizaciones.editor.sinDecimales' | translate }}
           </label>
         </div>
       </section>
@@ -566,29 +566,29 @@
       <!-- Tickets 1207 y 1208: por qué se perdió y la línea de tiempo de estados. -->
       <!-- Ticket 1202: vistas del cliente en el enlace -->
       <div class="cot-vistas" *ngIf="$any(cotizacion).publicToken">
-        <strong>{{ cotizacion.vistaCliente ? ('Vista ' + (cotizacion.vistasCount || 1) + (cotizacion.vistasCount === 1 ? ' vez' : ' veces')) : 'El cliente no ha abierto el enlace' }}</strong>
-        <small *ngIf="cotizacion.fechaPrimeraVista">Primera: {{ cotizacion.fechaPrimeraVista | date:'dd/MM/yyyy HH:mm' }}</small>
-        <small *ngIf="cotizacion.fechaUltimaVista">Última: {{ cotizacion.fechaUltimaVista | date:'dd/MM/yyyy HH:mm' }}</small>
+        <strong>{{ cotizacion.vistaCliente ? ((cotizacion.vistasCount === 1 ? 'cotizaciones.editor.vistaVez' : 'cotizaciones.editor.vistaVeces') | translate: { n: cotizacion.vistasCount || 1 }) : ('cotizaciones.editor.vistaNo' | translate) }}</strong>
+        <small *ngIf="cotizacion.fechaPrimeraVista">{{ 'cotizaciones.editor.primera' | translate }} {{ cotizacion.fechaPrimeraVista | date:'dd/MM/yyyy HH:mm' }}</small>
+        <small *ngIf="cotizacion.fechaUltimaVista">{{ 'cotizaciones.editor.ultima' | translate }} {{ cotizacion.fechaUltimaVista | date:'dd/MM/yyyy HH:mm' }}</small>
       </div>
 
       <div class="cot-historial" *ngIf="lineaDeTiempo.length || cotizacion.rechazo || cotizacion.motivoRechazoTexto">
         <div class="cot-historial-cabeza">
-          <h3>Historial de estados</h3>
-          <button type="button" class="cot-historial-ajuste" *ngIf="esAdminCotizaciones" (click)="editarMotivosRechazo()" title="Ajustar la lista de motivos de rechazo de la empresa">Motivos de rechazo</button>
+          <h3>{{ 'cotizaciones.editor.historial' | translate }}</h3>
+          <button type="button" class="cot-historial-ajuste" *ngIf="esAdminCotizaciones" (click)="editarMotivosRechazo()" [title]="'cotizaciones.editor.motivosRechazoTitle' | translate">{{ 'cotizaciones.editor.motivosRechazo' | translate }}</button>
         </div>
         <div class="cot-rechazo" *ngIf="estado === 'rechazada' && (cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto)">
-          <strong>Motivo: {{ cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto }}</strong>
+          <strong>{{ 'cotizaciones.editor.motivo' | translate: { motivo: cotizacion.rechazo?.motivo || cotizacion.motivoRechazoTexto } }}</strong>
           <span *ngIf="cotizacion.rechazo?.detalle">{{ cotizacion.rechazo?.detalle }}</span>
-          <span *ngIf="cotizacion.rechazo?.competidor">Competidor: {{ cotizacion.rechazo?.competidor }}</span>
+          <span *ngIf="cotizacion.rechazo?.competidor">{{ 'cotizaciones.editor.competidor' | translate: { nombre: cotizacion.rechazo?.competidor } }}</span>
           <span *ngIf="cotizacion.rechazo?.comentario">{{ cotizacion.rechazo?.comentario }}</span>
         </div>
         <ol class="cot-linea">
           <li *ngFor="let e of lineaDeTiempo" [class.cot-linea-inferido]="e.inferido">
             <span class="cot-linea-punto estado-{{ e.a }}"></span>
             <div class="cot-linea-texto">
-              <strong>{{ etiquetaEvento(e) }}</strong>
+              <strong>{{ etiquetaEvento(e) | translate }}</strong>
               <small>{{ fechaEvento(e.fecha) }}<ng-container *ngIf="e.usuario"> · {{ e.usuario }}</ng-container></small>
-              <small class="cot-linea-origen" *ngIf="e.origen">{{ e.origen }}{{ e.inferido ? ' (deducido)' : '' }}</small>
+              <small class="cot-linea-origen" *ngIf="e.origen">{{ e.origen }}{{ e.inferido ? (' ' + ('cotizaciones.editor.deducido' | translate)) : '' }}</small>
             </div>
           </li>
         </ol>
@@ -596,27 +596,27 @@
 
       <div class="cot-summary">
         <div class="sum-row">
-          <span>Subtotal</span>
+          <span>{{ 'cotizaciones.editor.colSubtotal' | translate }}</span>
           <span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoLineas > 0">
-          <span>Desc. por producto</span>
+          <span>{{ 'cotizaciones.editor.descProducto' | translate }}</span>
           <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoGlobal > 0">
-          <span>Desc. global</span>
+          <span>{{ 'cotizaciones.editor.descGlobal' | translate }}</span>
           <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row">
-          <span>Base gravable</span>
+          <span>{{ 'cotizaciones.editor.baseGravable' | translate }}</span>
           <span>{{ baseGravable | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-row">
-          <span>IVA</span>
+          <span>{{ 'cotizaciones.editor.iva' | translate }}</span>
           <span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div class="sum-global">
-          <span class="muted">Descuento global</span>
+          <span class="muted">{{ 'cotizaciones.editor.descuentoGlobal' | translate }}</span>
           <div class="in-pct">
             <input
               type="number"
@@ -630,20 +630,20 @@
           </div>
         </div>
         <div class="sum-total">
-          <span>Total</span>
+          <span>{{ 'cotizaciones.editor.total' | translate }}</span>
           <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</strong>
         </div>
         <!-- Ticket 1202: margen (solo roles autorizados: el servidor no lo manda a los demás) -->
         <div class="sum-margen" *ngIf="cotizacion.margen as m" [class.sum-margen--bajo]="margenBajo">
-          <span>Margen</span>
+          <span>{{ 'cotizaciones.editor.margen' | translate }}</span>
           <strong *ngIf="m.completo">{{ m.valor | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }} · {{ m.pct }}%</strong>
-          <small *ngIf="!m.completo">Costo de {{ m.lineasConCosto }} de {{ m.lineas }} líneas: margen incompleto</small>
-          <small *ngIf="margenBajo">Por debajo del mínimo de la empresa ({{ margenMinimoEmpresa }}%)</small>
+          <small *ngIf="!m.completo">{{ 'cotizaciones.editor.margenIncompleto' | translate: { a: m.lineasConCosto, b: m.lineas } }}</small>
+          <small *ngIf="margenBajo">{{ 'cotizaciones.editor.margenBajo' | translate: { n: margenMinimoEmpresa } }}</small>
         </div>
         <p class="sum-foot">
           <!-- Ticket 1097: un combo cerrado cuenta como un ítem, como lo ve el cliente -->
-          {{ filas.length }} ítem(s)
-          <ng-container *ngIf="fechaVencimiento"> · válida hasta {{ fechaVencimiento }}</ng-container>
+          {{ 'cotizaciones.editor.items' | translate: { n: filas.length } }}
+          <ng-container *ngIf="fechaVencimiento"> · {{ 'cotizaciones.editor.validaHastaPie' | translate: { fecha: fechaVencimiento } }}</ng-container>
         </p>
       </div>
 
@@ -654,10 +654,10 @@
           (click)="guardar()"
           [disabled]="saving || !puedeGuardar"
         >
-          {{ saving ? "Guardando…" : (cotizacionId ? "✔ Guardar cambios" : "✔ Guardar borrador") }}
+          {{ (saving ? 'cotizaciones.editor.guardando' : (cotizacionId ? 'cotizaciones.editor.guardarCambios' : 'cotizaciones.editor.guardarBorrador')) | translate }}
         </button>
         <button type="button" class="btn-cot ghost" (click)="abrirVistaPrevia()" [disabled]="!puedeGuardar">
-          👁 Vista previa
+          {{ 'cotizaciones.editor.vistaPrevia' | translate }}
         </button>
         <button
           type="button"
@@ -665,10 +665,10 @@
           (click)="descargarPDF()"
           [disabled]="generandoPDF || !puedeGuardar"
         >
-          {{ generandoPDF ? "Generando…" : "⬇ Descargar PDF" }}
+          {{ (generandoPDF ? 'cotizaciones.editor.generando' : 'cotizaciones.editor.descargarPdf') | translate }}
         </button>
         <button type="button" class="btn-cot wa" (click)="enviarWhatsApp()" [disabled]="!puedeGuardar">
-          💬 Enviar por WhatsApp
+          {{ 'cotizaciones.editor.whatsapp' | translate }}
         </button>
         <button
           *ngIf="puedeConvertir"
@@ -676,11 +676,11 @@
           class="btn-cot primary"
           (click)="convertirAPedido()"
         >
-          🛒 Convertir a pedido
+          {{ 'cotizaciones.editor.convertir' | translate }}
         </button>
         <div class="cot-divider"></div>
         <button type="button" class="btn-cot light" (click)="volver()" [disabled]="saving">
-          Cancelar
+          {{ 'comun.cancelar' | translate }}
         </button>
       </div>
     </div>
@@ -692,7 +692,7 @@
       <img
         *ngIf="bannerEncabezado"
         [src]="bannerEncabezado"
-        alt="Encabezado"
+        [alt]="'cotizaciones.editor.doc.encabezado' | translate"
         class="doc-banner doc-banner-top"
         crossorigin="anonymous">
       <div class="doc-head">
@@ -701,25 +701,25 @@
           <small class="doc-sub" *ngIf="empresaMeta">{{ empresaMeta }}</small>
         </div>
         <div class="doc-meta">
-          <strong>COTIZACIÓN</strong>
-          <span>{{ cotizacion.nroCotizacion || '(borrador)' }}</span>
-          <span *ngIf="fechaVencimiento">Válida hasta: {{ fechaVencimiento }}</span>
-          <span *ngIf="vendedorMetaDoc">Atendido por: {{ vendedorMetaDoc }}</span>
-          <span class="doc-pedido" *ngIf="cotizacion.pedidoGenerado">Pedido: {{ cotizacion.pedidoGenerado }}</span>
+          <strong>{{ 'cotizaciones.editor.doc.titulo' | translate }}</strong>
+          <span>{{ cotizacion.nroCotizacion || ('cotizaciones.editor.doc.borrador' | translate) }}</span>
+          <span *ngIf="fechaVencimiento">{{ 'cotizaciones.editor.doc.validaHasta' | translate }} {{ fechaVencimiento }}</span>
+          <span *ngIf="vendedorMetaDoc">{{ 'cotizaciones.editor.doc.atendidoPor' | translate }} {{ vendedorMetaDoc }}</span>
+          <span class="doc-pedido" *ngIf="cotizacion.pedidoGenerado">{{ 'cotizaciones.editor.doc.pedido' | translate }} {{ cotizacion.pedidoGenerado }}</span>
         </div>
       </div>
 
       <div class="doc-client">
-        <small>PARA</small>
-        <strong>{{ clienteNombre(cotizacion.cliente) || '— sin cliente —' }}</strong>
+        <small>{{ 'cotizaciones.editor.doc.para' | translate }}</small>
+        <strong>{{ clienteNombre(cotizacion.cliente) || ('cotizaciones.editor.doc.sinCliente' | translate) }}</strong>
         <!-- Documento · ciudad · celular · correo -->
         <span *ngIf="clienteMetaDoc(cotizacion.cliente)">{{ clienteMetaDoc(cotizacion.cliente) }}</span>
         <!-- Ticket 1327: a quién de la empresa va dirigida -->
-        <span class="doc-client-atencion" *ngIf="atencionDoc">Atención: <strong>{{ atencionDoc }}</strong></span>
+        <span class="doc-client-atencion" *ngIf="atencionDoc">{{ 'cotizaciones.editor.doc.atencion' | translate }} <strong>{{ atencionDoc }}</strong></span>
         <!-- El tipo de cliente va en renglón propio: no es un dato de contacto,
              es el segmento con el que se tarifó la cotización. -->
         <span class="doc-client-tipo" *ngIf="clienteTipo(cotizacion.cliente)">
-          Tipo de cliente: <strong>{{ clienteTipo(cotizacion.cliente) }}</strong>
+          {{ 'cotizaciones.editor.doc.tipoCliente' | translate }} <strong>{{ clienteTipo(cotizacion.cliente) }}</strong>
         </span>
       </div>
 
@@ -728,15 +728,15 @@
           <tr>
             <!-- Rótulos cortos: son 9 columnas en una hoja vertical. "Precio
                  unitario Total(con IVA)" ocupaba más que la cifra que titula. -->
-            <th>Descripción</th>
-            <th>Cant.</th>
-            <th>Valor bruto</th>
-            <th>Descuento</th>
-            <th>P. unit. sin IVA</th>
-            <th>% IVA</th>
-            <th>Valor IVA</th>
-            <th>P. unit. con IVA</th>
-            <th>Subtotal</th>
+            <th>{{ 'cotizaciones.editor.doc.descripcion' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.cant' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.valorBruto' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.descuento' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.pUnitSinIva' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.pctIva' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.valorIva' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.pUnitConIva' | translate }}</th>
+            <th>{{ 'cotizaciones.editor.doc.subtotal' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -747,7 +747,7 @@
               <div class="doc-prod">
                 <span class="doc-prod-txt">
                   {{ fila.combo.nombre }}
-                  <span class="doc-ref"> · Combo</span>
+                  <span class="doc-ref"> · {{ 'cotizaciones.editor.doc.combo' | translate }}</span>
                   <!-- Ticket 1116: la descripción del combo la ve el cliente -->
                   <span class="doc-detalle" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
                 </span>
@@ -757,7 +757,7 @@
             <td>{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
             <td>{{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO') : '—' }}</td>
             <td>{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
-            <td>{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</td>
+            <td>{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : ('cotizaciones.editor.doc.varios' | translate) }}</td>
             <td>{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
             <td>{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
             <td>{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</td>
@@ -776,7 +776,7 @@
                   (error)="ocultarImagenDoc($event)">
                 <span class="doc-prod-txt">
                   {{ itemTitulo(it) }}
-                  <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+                  <span class="doc-ref" *ngIf="itemReferencia(it)"> · {{ 'cotizaciones.editor.doc.ref' | translate }} {{ itemReferencia(it) }}</span>
                   <!-- Ticket 1095: detalle escrito para esta cotización -->
                   <span class="doc-detalle" *ngIf="it.descripcionCotizacion?.trim()">{{ it.descripcionCotizacion.trim() }}</span>
                   <!-- Solo la lista aplicada, con su precio. Las otras tarifas se
@@ -805,17 +805,17 @@
       </table>
 
       <div class="doc-totals">
-        <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
+        <div><span>{{ 'cotizaciones.editor.doc.subtotal' | translate }}</span><span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
         <div *ngIf="totalDescuentoLineas > 0">
-          <span>Descuento por producto</span>
+          <span>{{ 'cotizaciones.editor.doc.descuentoProducto' | translate }}</span>
           <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
         <div *ngIf="descGlobalPct > 0">
-          <span>Descuento global ({{ descGlobalPct }}%)</span>
+          <span>{{ 'cotizaciones.editor.doc.descuentoGlobal' | translate }} ({{ descGlobalPct }}%)</span>
           <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span>
         </div>
-        <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
-        <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
+        <div><span>{{ 'cotizaciones.editor.doc.iva' | translate }}</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
+        <div class="doc-total"><span>{{ 'cotizaciones.editor.doc.total' | translate }}</span><span>{{ total | currency:'COP':'symbol-narrow':digitosValor:'es-CO' }}</span></div>
       </div>
 
       <!-- ANEXO: precios sugeridos por tipo de cliente.
@@ -824,9 +824,9 @@
            producto (la fila de arriba nombra solo la aplicada), para que el
            cliente vea a qué precio quedaría en cada tipo. -->
       <div class="doc-sugeridos" *ngIf="hayPreciosSugeridos">
-        <div class="doc-sug-tit">Precios sugeridos por tipo de cliente</div>
+        <div class="doc-sug-tit">{{ 'cotizaciones.editor.doc.preciosSugeridos' | translate }}</div>
         <div class="doc-sug-nota">
-          Valores unitarios con IVA, de referencia. El precio facturado es el de la tabla anterior.
+          {{ 'cotizaciones.editor.doc.preciosSugeridosNota' | translate }}
         </div>
         <!-- Ticket 1097: sin los productos de un combo cerrado -->
         <ng-container *ngFor="let it of lineasVisibles">
@@ -835,7 +835,7 @@
           <div class="doc-sug-prod" *ngIf="preciosSugeridos(it).length">
             <div class="doc-sug-nom">
               {{ itemTitulo(it) }}
-              <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+              <span class="doc-ref" *ngIf="itemReferencia(it)"> · {{ 'cotizaciones.editor.doc.ref' | translate }} {{ itemReferencia(it) }}</span>
             </div>
             <!-- `inline-block` + margen, no flex con gap: html2canvas rasteriza
                  a partir de la caja ya calculada y el flujo en línea es lo que
@@ -848,7 +848,7 @@
                 [title]="s.descripcion">
                 <span class="doc-sug-tipo">{{ s.nombre }}</span>
                 <span class="doc-sug-val">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
-                <span class="doc-sug-tag" *ngIf="s.aplicado">precio aplicado</span>
+                <span class="doc-sug-tag" *ngIf="s.aplicado">{{ 'cotizaciones.editor.doc.precioAplicado' | translate }}</span>
               </span>
             </div>
           </div>
@@ -857,13 +857,13 @@
 
       <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()" [innerHTML]="cotizacion.terminos | linkify"></div>
       <div class="doc-notes doc-anexo" *ngIf="cotizacion.anexoCondiciones as anexo">
-        Anexo: <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }}</a> — hace parte de esta cotización.
+        {{ 'cotizaciones.editor.doc.anexo' | translate }} <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }}</a> {{ 'cotizaciones.editor.doc.anexoParte' | translate }}
       </div>
 
       <img
         *ngIf="bannerPiePagina"
         [src]="bannerPiePagina"
-        alt="Pie de página"
+        [alt]="'cotizaciones.editor.doc.piePagina' | translate"
         class="doc-banner doc-banner-foot"
         crossorigin="anonymous">
       <img
@@ -874,9 +874,9 @@
         crossorigin="anonymous">
 
       <footer class="doc-footer">
-        Cotización generada por {{ empresaNombre }} · usando
+        {{ 'cotizaciones.editor.doc.generadaPor' | translate:{ empresa: empresaNombre } }}
         <a href="https://katuq.com" target="_blank" rel="noopener">Katuq.com</a>.
-        ¿Quieres generar la tuya? <a href="https://katuq.com" target="_blank" rel="noopener">Contáctanos</a>.
+        {{ 'cotizaciones.editor.doc.quieresLaTuya' | translate }} <a href="https://katuq.com" target="_blank" rel="noopener">{{ 'cotizaciones.editor.doc.contactanos' | translate }}</a>.
       </footer>
     </div>
   </ng-template>
@@ -890,7 +890,7 @@
   <div class="cot-overlay" *ngIf="showPreview" (click)="cerrarVistaPrevia()">
     <div class="cot-doc-modal" (click)="$event.stopPropagation()">
       <div class="doc-bar">
-        <span>Vista previa del cliente</span>
+        <span>{{ 'cotizaciones.editor.vistaPreviaCliente' | translate }}</span>
         <button type="button" class="doc-close" (click)="cerrarVistaPrevia()">✕</button>
       </div>
       <div class="doc-scroll">
