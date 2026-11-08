@@ -13568,3 +13568,29 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Hallazgos aparte (no se corrigen aquí):** el adaptador de Postgres rechaza el `update` de un documento que guarda una referencia (el usuario duplicado de Daniel); una credencial del `.env` de desarrollo está dañada y el backend local no arranca sin rodearla; la copia `katuq_dev` no parece refrescarse cada madrugada.
 - **Despliegue (cuando se decida):** primero sembrar el registro en producción (`--sembrar-desde-lista` en seco y luego `--apply`), después subir el código con la bandera en `off`, luego `sombra` al menos una semana y `estricto` sin falsos negativos.
 - **Estado (8-nov, tarde):** todo pusheado. Backend `58445833..fd04ebde` en `backend-aws-security` (`fd04ebde` = arreglo de la nota del observador, nombre para mostrar y renumerado D-701); `katuq_support` `6a74e5f` y `6c86412` en `main` (el observador solo lee y escribe notas; el responsable se casa por id). Lo desplegado en producción sigue siendo `58445833`. Faltan 7.2-7.5: sembrar el registro en producción, desplegar con la bandera en `off`, `sombra` una semana y `estricto`.
+
+### 2026-11-08 — D-702: Opttia da las ventas de cada asesor (`get_sales_by_period` con `groupBy: "vendedor"`, ticket 1581)
+- **Cambio:** `katuq_admin_back_firebase/openspec/changes/ventas-por-vendedor-opttia/`. Propuesta aprobada por Santiago el 8-nov; alcance elegido: solo `get_sales_by_period`, sin tocar `get_sales_today`.
+- **Problema:** ALMARA le pedía a Opttia «las ventas de cada asesor en el día» y recibía el total. Ninguna tool de ventas desglosaba por asesor; `vendedor` (ticket 1503) filtra uno solo.
+- **Qué decide:**
+  - Parámetro opcional `groupBy` (único valor `"vendedor"`). La respuesta agrega `desglose_por_vendedor`: `{ asesor_nombre, asesor_email, pedidos, ventas, participacion_pct }`, de mayor a menor venta y «Sin asesor» al final. Se suma en el mismo punto que el `resumen`, en los dos caminos (cifras oficiales y anterior): las filas siempre suman el resumen.
+  - El asesor sale de `correoAsesor` (`asesorAsignado`, respaldo `usuarioEmail`), la misma regla de D-349 y Cartera por vendedor.
+  - D-349: con persona OAuth que solo ve lo suyo, solo su fila y `meta.aviso_desglose_vendedor`; si la persona no se puede resolver, falla cerrada (solo su fila). La llave de empresa (Opttia) ve todo.
+  - La `description` le indica a Opttia `period:"today"` + `groupBy:"vendedor"`.
+  - Sin tools, endpoints ni índices nuevos: en cifras oficiales solo se agregan `asesorAsignado` y `usuarioEmail` a la proyección cuando se agrupa.
+- **Verificado:** pruebas offline (14 nuevas, fuera de git; `getSalesByPeriod.oficial` 10/10, `fechasColombia` 12/12, `paridadSuperficies` 4/4) y en `katuq_dev` (solo lectura): ALMARA del 27 al 31-oct, 196 pedidos y $24.076.800,58; las 5 filas suman exacto y el resumen es igual con y sin `groupBy`.
+- **Hallazgo aparte:** el `resumen` global de la tool no aplica D-349 (ya era así); no se cambia aquí.
+- **Despliegue:** solo código del backend (sin índices, datos ni banderas). Probar después con Opttia en ALMARA.
+
+### 2026-11-08 — D-703: «Ventas por asesora» en En vivo, solo para administradores y con la bandera `enVivoPorAsesor` (ticket 1580)
+- **Cambio:** `katuq_admin_back_firebase/openspec/changes/en-vivo-ventas-por-asesora/`. Propuesta aprobada por Santiago el 8-nov, con bandera por empresa.
+- **Problema:** ALMARA pidió que los administradores vean en En vivo cuánto lleva vendido hoy cada asesora. En vivo no tenía nada por asesor.
+- **Qué decide:**
+  - `proyectarPedido` guarda `asesorNombre` (el de `asesorAsignado` o lo de antes de la arroba). Igual que `asesor`, es solo del servidor: la foto y los eventos usan listas blancas y la ficha (`/pedido/:id`) quita los dos.
+  - `cifrasDeHoy` arma `porAsesor` (`{ nombre, pedidos, ventas }`, sin correo, de mayor a menor y «Sin asesor» al final) solo con `conPorAsesor: true` y sin D-349. Lo pide solo el distribuidor de un comercio; la plataforma Katuq no, porque mezclaría asesoras de todos los comercios.
+  - El distribuidor comparte las cifras «todos» entre administradores y asesoras sin D-349, así que el router decide **por conexión**: `verPorAsesor` = familia Administrador del comercio (o Katuq mirándolo con `?empresa=`) **y** `companies.featureFlags.enVivoPorAsesor === true`. A los demás se les quita `porAsesor` en una copia, en la foto y en cada mensaje `cifras`. Tener En vivo en el menú no basta. La bandera se lee al abrir la conexión; un cambio aplica al reconectar.
+  - Opttia no recibe `porAsesor` (`cifrasParaOpttia` descarta arreglos; hay prueba que lo fija).
+  - Front: tarjeta «Ventas por asesora» a todo el ancho en la franja inferior de la página del comercio, montada solo cuando llega `porAsesor`; respeta «ocultar clientes y montos». i18n es/en/pt/de y nota de versión.
+- **Verificado:** suite `tests/enVivo` 16/16 (se actualizaron las listas de campos de `proyeccion` y `detalle`), prueba nueva local de 10 casos (roles, bandera, stream, objeto compartido sin mutar, ficha, Opttia; una mutación del recorte la hace fallar), catálogo de banderas 42/42. En `katuq_dev` (solo lectura) con pedidos reales de ALMARA del 30-oct: 36 pedidos y $2.794.580; las 5 filas suman exacto y sin correos. `tsc` sin errores.
+- **Pendiente:** prueba en Chrome. El backend local no arranca porque la llave de la cuenta de servicio del `katuq-desarrollo.env` está truncada (201 caracteres): hay que regenerar el archivo (Daniel).
+- **Despliegue:** 1) backend con la bandera apagada (sin índices ni datos); 2) front; 3) con el sí de Daniel, `node scripts/set-company-feature.js "ALMARA FELICIDAD" enVivoPorAsesor on` en seco y luego con `--execute`; 4) probar con un administrador y una asesora de ALMARA.
