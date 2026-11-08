@@ -80,6 +80,8 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
   readonly vm$: Observable<VistaPagina>;
   /** Panel de Opttia solo con el interruptor prendido (D-386). */
   readonly opttiaActivo$: Observable<boolean>;
+  /** «Ventas por asesora» solo si el servidor mandó `cifras.porAsesor` (ticket 1580). */
+  readonly conPorAsesor$: Observable<boolean>;
   /** Sesión de Julsmind: puede volver a "Toda Katuq". */
   readonly esJulsmind = sesionEsJulsmind();
   /** "Ampliar": sin paneles flotantes; la lista de eventos vuelve a su columna. */
@@ -148,6 +150,7 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
       })
     );
     this.opttiaActivo$ = estado.estado$.pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged());
+    this.conPorAsesor$ = estado.estado$.pipe(map((e) => Array.isArray(e.cifras?.porAsesor)), distinctUntilChanged());
     this.conEscena$ = combineLatest([interaccion.opcionActiva$, this.sin3d$]).pipe(
       map(([opcion, sin3d]) => !SIN_ESCENA.has(opcion ?? '') && !sin3d)
     );

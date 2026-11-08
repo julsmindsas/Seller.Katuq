@@ -84,6 +84,8 @@
     ></app-en-vivo-opttia>
     <app-en-vivo-tiempos-comercio></app-en-vivo-tiempos-comercio>
     <app-en-vivo-logros-comercio></app-en-vivo-logros-comercio>
+    <!-- Ticket 1580: solo llega a administradores con la bandera enVivoPorAsesor. -->
+    <app-en-vivo-ventas-asesora *ngIf="conPorAsesor$ | async" class="ev-inferior__ancho"></app-en-vivo-ventas-asesora>
     <app-en-vivo-productos-estrella class="ev-inferior__ancho"></app-en-vivo-productos-estrella>
   </div>
 </app-en-vivo>

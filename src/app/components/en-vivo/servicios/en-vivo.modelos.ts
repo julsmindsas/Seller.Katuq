@@ -264,6 +264,13 @@ export interface CifraPorCanal {
   ventas: number;
 }
 
+/** Una asesora en «Ventas por asesora» (ticket 1580). «Sin asesor» agrupa los pedidos sin asesora y va al final. */
+export interface CifraPorAsesor {
+  nombre: string;
+  pedidos: number;
+  ventas: number;
+}
+
 export interface ProductoEstrella {
   nombre: string;
   unidades: number;
@@ -282,6 +289,11 @@ export interface CifrasEnVivo extends ResumenDia {
   porHora: CifraPorHora[];
   porCanal: CifraPorCanal[];
   porEtapa: ConteoPorEtapa;
+  /**
+   * Ventas de hoy por asesora (ticket 1580, D-703). Solo llega a un administrador de una empresa con
+   * la bandera `enVivoPorAsesor`; el servidor se la quita a cualquier otro rol. Sin correos.
+   */
+  porAsesor?: CifraPorAsesor[];
   /**
    * Top 6 de hoy. Solo viaja en la FOTO (el mensaje `cifras` no lo trae); lo que se mantiene al
    * día cada 30 s es `radar.productosEstrella`: usa `productosEstrellaDe(estado)`.
