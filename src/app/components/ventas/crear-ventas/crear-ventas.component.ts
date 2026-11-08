@@ -348,6 +348,14 @@ export class CrearVentasComponent
   private motivoSinProveedor: string | null = null;
   public siigoConfig: any = null;
   public siigoEnabled: boolean = false;
+
+  /**
+   * Ticket 1587: el switch «Generar Factura Electrónica» solo tiene efecto si la empresa
+   * tiene proveedor contable y NO factura sola (encolarFacturacionSiigo). Solo ahí se muestra.
+   */
+  get mostrarSwitchFactura(): boolean {
+    return !!this.proveedorContable && !this.siigoEnabled;
+  }
   public activeAccountingProvider: string = null;
   public accountingProviderName: string = 'Sistema Contable';
 
@@ -1801,6 +1809,15 @@ export class CrearVentasComponent
         });
       }
     });
+  }
+
+  /** Ticket 1589: el lápiz alterna abrir/cerrar; cerrar descarta sin guardar. */
+  alternarFormularioEdicion() {
+    if (this.mostrarFormularioCliente) {
+      this.cancelarEdicionCliente();
+    } else {
+      this.abrirFormularioEdicion();
+    }
   }
 
   /**

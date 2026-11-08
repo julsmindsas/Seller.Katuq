@@ -791,3 +791,13 @@
 .cx-grupo-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .cx-grupo-vencido { color: #b42318; font-weight: 700; }
 .cx-grupo-doc { color: #6b6890; font-size: 12px; font-weight: 400; letter-spacing: normal; }
+
+/* Ticket 1583: nombre y documento abren la ficha en otra pestaña; la tarjeta se expande con el resto de la cabecera. */
+.cx-ficha-link {
+  color: inherit;
+  text-decoration: none;
+  letter-spacing: normal;
+  .pi { font-size: 11px; color: #5F3FE0; margin-left: 2px; }
+  &:hover { color: #5F3FE0; text-decoration: underline; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; border-radius: 4px; }
+}

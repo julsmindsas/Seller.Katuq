@@ -9553,6 +9553,7 @@
   "cartera.carteraClientes.promedioEnCartera": "Average outstanding {{dias}} d",
   "cartera.carteraClientes.todas": "All",
   "cartera.carteraClientes.masInformacion": "More information",
+  "cartera.carteraClientes.abrirFichaCliente": "Open the customer record in a new tab",
   "cartera.carteraClientes.ayudaTotal": "Everything you are owed today: the balance of orders that are not fully paid yet, not counting voided or cancelled ones. Click to clear the risk and age filters.",
   "cartera.carteraClientes.ayudaVencida": "Balance of orders that are past their payment due date (delivery date plus the customer's payment term), from the first day late. The part over 15 days is shown below. Click to show only customers with overdue receivables.",
   "cartera.carteraClientes.ayudaDias": "Average days outstanding: how many days orders with a balance have been open, counted from the delivery date (or the creation date if there is no delivery) and weighted by the amount owed. Formula: sum of (balance × days) ÷ sum of balances. It is not the financial DSO. Click to sort by the most overdue customer.",

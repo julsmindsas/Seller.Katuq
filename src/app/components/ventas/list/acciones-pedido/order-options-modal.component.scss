@@ -7,6 +7,8 @@
 //   - `h1..h6` y `button:focus`: el título lleva !important y el foco se devuelve con :focus-visible.
 //   - `a` y `p` traen letter-spacing: aquí se neutraliza en todo el modal.
 
+@use 'grupos-accion' as ga;
+
 $ink: #211F3A;
 $muted: #8F8BAB;
 $cuerpo: #6B6890;
@@ -192,6 +194,9 @@ $foco: #7C5CFF;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) { background: $hover; border-color: #DDD6F7; }
+
+  // Ticket 1585: color por grupo (menú lateral); las bloqueadas y resaltadas conservan gris y alerta.
+  @include ga.grupos-accion('.opm-icono', '.opm-tarjeta-bloqueada', '.opm-tarjeta-resaltada');
 
   &.opm-tarjeta-bloqueada {
     background: $superficie;

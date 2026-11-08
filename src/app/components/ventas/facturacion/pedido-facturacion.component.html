@@ -12,7 +12,8 @@
         {{ 'Consumidor Final' | translate }}
       </button>
       <!-- Generar Factura toggle -->
-      <div class="form-check form-switch d-inline-flex align-items-center ms-2">
+      <!-- Ticket 1587: solo si la empresa tiene proveedor contable (Siigo, etc.) sin facturación automática -->
+      <div *ngIf="mostrarSwitchFactura" class="form-check form-switch d-inline-flex align-items-center ms-2">
         <input class="form-check-input" type="checkbox" role="switch" id="generarFacturaSwitch"
           [(ngModel)]="generarFactura" (ngModelChange)="onGenerarFacturaChange($event)">
         <label class="form-check-label ms-2" for="generarFacturaSwitch">

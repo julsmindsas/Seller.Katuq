@@ -42,6 +42,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   @Input() formulario: any;
   @Input() isEdit: boolean = false;
   @Input() generarFactura: boolean = false;
+  /** Ticket 1587: el switch de factura electrónica solo se muestra si el padre lo habilita. */
+  @Input() mostrarSwitchFactura: boolean = false;
   @Input() activeIndex: number = 0;
   @Input() direccionFacturacion = "";
   @Input() paisInicial: string = "";

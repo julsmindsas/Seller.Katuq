@@ -2,7 +2,7 @@
 <div class="opa-bloque" *ngIf="vista">
   <div class="opa-grilla" [class.opa-grilla-nueve]="panelV2" role="group" aria-label="Acciones principales">
     <div class="opa-celda" *ngFor="let t of vista.tarjetas; trackBy: trackTarjeta">
-      <button type="button" class="opa-accion"
+      <button type="button" class="opa-accion" [attr.data-grupo]="grupoDe(t)"
               [class.opa-con-pin]="panelV2 && !!t.pin"
               [class.opa-bloqueada]="!t.habilitada" [class.opa-resaltada]="panelV2 ? (!!t.etiqueta && !!t.etiquetaAlerta) : !!t.etiqueta"
               [disabled]="!t.habilitada" [attr.aria-disabled]="!t.habilitada ? 'true' : null"

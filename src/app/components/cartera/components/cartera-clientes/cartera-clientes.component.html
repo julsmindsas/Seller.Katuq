@@ -466,7 +466,10 @@
 
         <div class="cx-client-id">
           <div class="cx-client-name">
-            <span class="cx-client-nombre">{{ c.nombre || '—' }}</span>
+            <a class="cx-client-nombre cx-ficha-link" *ngIf="c.documento; else soloNombre" [href]="urlFicha(c)" target="_blank" rel="noopener"
+               [attr.title]="'cartera.carteraClientes.abrirFichaCliente' | translate"
+               (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()">{{ c.nombre || '—' }} <i class="pi pi-external-link" aria-hidden="true"></i></a>
+            <ng-template #soloNombre><span class="cx-client-nombre">{{ c.nombre || '—' }}</span></ng-template>
             <span class="cx-risk" [ngClass]="riesgo(c).cssClass">{{ riesgo(c).label }}</span>
             <span class="cx-tipo-relacion" *ngIf="esInterno(c)">{{ claveRelacion(c) | translate }}</span>
             <!-- Ticket 1461: «posible interno». Nunca se marca solo: una persona de Tesorería decide -->
@@ -477,7 +480,9 @@
             </button>
           </div>
           <div class="cx-client-meta">
-            <span *ngIf="c.documento"><i class="pi pi-id-card"></i>{{ c.documento }}</span>
+            <a *ngIf="c.documento" class="cx-ficha-link" [href]="urlFicha(c)" target="_blank" rel="noopener"
+               [attr.title]="'cartera.carteraClientes.abrirFichaCliente' | translate"
+               (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()"><i class="pi pi-id-card"></i>{{ c.documento }}</a>
             <span *ngIf="c.vendedor" class="cx-meta-vendedor"><i class="pi pi-user"></i>{{ c.vendedor }}</span>
             <span><i class="pi pi-shopping-cart"></i>{{ c.pedidosActivos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
             <span class="cx-dso" [title]="'cartera.carteraClientes.ayudaDiasCliente' | translate"><i class="pi pi-clock"></i>{{ 'cartera.carteraClientes.promedioEnCartera' | translate:{dias: (c.dso | number:'1.0-0')} }}</span>

@@ -408,8 +408,12 @@
                       {{ tipo.descripcion || tipo.nombre }}
                     </option>
                   </select>
-                  <button class="edit-inline-btn" (click)="abrirFormularioEdicion()">
-                    <i class="fa fa-pencil"></i>
+                  <!-- Ticket 1589: el lápiz abre y cierra el panel «Editar cliente» (cerrar no guarda) -->
+                  <button type="button" class="edit-inline-btn" (click)="alternarFormularioEdicion()"
+                          [attr.aria-expanded]="mostrarFormularioCliente"
+                          [attr.title]="mostrarFormularioCliente ? 'Cerrar sin guardar' : 'Editar cliente'"
+                          [attr.aria-label]="mostrarFormularioCliente ? 'Cerrar sin guardar' : 'Editar cliente'">
+                    <i class="fa" [ngClass]="mostrarFormularioCliente ? 'fa-times' : 'fa-pencil'"></i>
                   </button>
                 </div>
               </div>
@@ -805,6 +809,7 @@
                       [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
                       [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
                       (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
+                      [mostrarSwitchFactura]="mostrarSwitchFactura"
                       (generarFacturaChange)="onGenerarFacturaChange($event)"
                       [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
                     </app-pedido-facturacion>

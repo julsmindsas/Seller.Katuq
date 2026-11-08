@@ -1,0 +1,25 @@
+// Ticket 1585: color por grupo de acciones del pedido (Documentos, Cliente y entrega, Productos y pagos, Seguimiento).
+// Salen de la paleta del menú lateral (shared/components/sidebar: morado, verde, naranja, cian) con el tinte suave
+// plano del menú; el ícono usa una variante un poco más oscura del mismo tono para que tenga contraste sobre el tinte.
+// Uso: dentro de la tarjeta, `@include grupos-accion('.ícono')`. Las tarjetas bloqueadas (gris) y resaltadas (alerta)
+// no entran: la regla excluye sus clases.
+
+$grupos-accion: (
+  'documentos':     (tinte: #EFE9FF, borde: #DDD6F7, icono: #6B4FE0),
+  'clienteEntrega': (tinte: #E8F7EF, borde: #C7E9D5, icono: #15803D),
+  'productosPagos': (tinte: #FFF2E0, borde: #F3D9B0, icono: #B45F06),
+  'seguimiento':    (tinte: #E6F5FB, borde: #BFE2F1, icono: #1B7BA6),
+);
+
+@mixin grupos-accion($icono, $bloqueada, $resaltada) {
+  @each $grupo, $c in $grupos-accion {
+    &[data-grupo='#{$grupo}']:not(#{$bloqueada}):not(#{$resaltada}) {
+      background: map-get($c, tinte);
+      border-color: map-get($c, borde);
+
+      &:hover:not(:disabled) { background: map-get($c, tinte); border-color: map-get($c, icono); }
+
+      #{$icono} { background: #fff; color: map-get($c, icono); }
+    }
+  }
+}

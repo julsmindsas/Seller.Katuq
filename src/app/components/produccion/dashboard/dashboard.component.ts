@@ -267,6 +267,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
    * pedidos con entrega HOY (guardados a las 00:00) quedan por fuera del tablero
    * hasta que el operario filtra a mano.
    */
+  /** Ticket 1577: nombre sin espacios repetidos ni saltos de línea al inicio o al final. */
+  private static nombreLimpio(nombre: any): string {
+    return String(nombre ?? '').replace(/\s+/g, ' ').trim();
+  }
+
   private static inicioDeHoy(): Date {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -1068,7 +1073,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
                 produccion: produccion,
                 centroTrabajo: centrosTrabajo,
                 referenciaProducto: pedido.producto.identificacion.referencia,
-                nombreProducto: pedido.producto.crearProducto.titulo,
+                // Ticket 1577: el mismo producto puede venir con espacios o salto de línea al final; se agrupa por el nombre limpio
+                nombreProducto: DashboardComponent.nombreLimpio(pedido.producto.crearProducto.titulo),
                 cantidadProducto: pedido.cantidad,
                 cantidadTotalProductoEnsamble: pedido.cantidad,
                 orderId: pedido.orderId,
@@ -1744,8 +1750,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
               .filter((order) => {
                 // Filtro condicional según modo de agrupación para búsqueda de órdenes
                 const isProductMatch = this.agruparSoloPorArticulo ?
-                  item.nombreProducto.includes(order.producto.crearProducto.titulo) :
-                  order.producto.crearProducto.titulo === item.nombreProducto;
+                  item.nombreProducto.includes(DashboardComponent.nombreLimpio(order.producto.crearProducto.titulo)) :
+                  DashboardComponent.nombreLimpio(order.producto.crearProducto.titulo) === item.nombreProducto;
 
                 return isProductMatch && order.nroPedido == detallePedido.nroPedido;
               })
@@ -2108,8 +2114,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // Filtro condicional según modo de agrupación para órdenes
               const filteredOrders = this.agruparSoloPorArticulo ?
-                this.orders.filter(p => product.producto.includes(p.producto.crearProducto.titulo)) :
-                this.orders.filter(p => p.producto.crearProducto.titulo === product.producto);
+                this.orders.filter(p => product.producto.includes(DashboardComponent.nombreLimpio(p.producto.crearProducto.titulo))) :
+                this.orders.filter(p => DashboardComponent.nombreLimpio(p.producto.crearProducto.titulo) === product.producto);
 
               filteredOrders.forEach(x => {
                 x.producto.otrosProcesos.modulosVariables.produccion.filter(
@@ -2138,9 +2144,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
                 // Buscar el carrito correspondiente con verificaciones de nulidad y lógica condicional
                 const carritoSelected = this.agruparSoloPorArticulo ?
                   order.carrito.find(x => x && x.producto && x.producto.crearProducto &&
-                    product.producto.includes(x.producto.crearProducto.titulo)) :
+                    product.producto.includes(DashboardComponent.nombreLimpio(x.producto.crearProducto.titulo))) :
                   order.carrito.find(x => x && x.producto && x.producto.crearProducto &&
-                    x.producto.crearProducto.titulo === product.producto);
+                    DashboardComponent.nombreLimpio(x.producto.crearProducto.titulo) === product.producto);
 
                 // Si no se encuentra el carrito, saltar este elemento con logging mejorado
                 if (!carritoSelected) {

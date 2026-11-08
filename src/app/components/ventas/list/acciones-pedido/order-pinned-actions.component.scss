@@ -7,6 +7,8 @@
 //   - `button:focus` quita el outline: se devuelve con :focus-visible.
 //   - `a` y `p` traen letter-spacing: aquí se neutraliza en todo el bloque.
 
+@use 'grupos-accion' as ga;
+
 $ink: #211F3A;
 $cuerpo: #6B6890;
 $acento: #5F3FE0;
@@ -32,15 +34,20 @@ $foco: #7C5CFF;
   button:focus-visible { outline: 3px solid $foco !important; outline-offset: 2px; }
 }
 
-// D14: una columna desde 992 px y dos por debajo (celular de 390 px incluido). El texto baja de línea y nunca hay
-// scroll horizontal.
+// Ticket 1584: grilla de tarjetas. Tres columnas cuando el panel mide 400 px o más y dos cuando es más angosto (el
+// ancho lo decide el del panel); tablet, dos columnas; celular (hasta 575 px), una. Sin scroll horizontal: el texto
+// baja de línea. Con el panel de nueve (opa-grilla-nueve) el celular se queda en dos, como decidió D-635.
 .opa-grilla {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(max(128px, calc((100% - 18px) / 3)), 1fr));
   gap: 9px;
 
-  @media (max-width: 991.98px) {
+  @media (min-width: 576px) and (max-width: 991.98px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 575.98px) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -54,8 +61,9 @@ $foco: #7C5CFF;
 .opa-accion {
   flex: 1 1 auto;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 6px;
   min-width: 0;
   padding: 10px 12px;
   background: #fff;
@@ -67,6 +75,9 @@ $foco: #7C5CFF;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) { background: $hover; border-color: #DDD6F7; }
+
+  // Ticket 1585: color por grupo (menú lateral); las bloqueadas y resaltadas conservan gris y alerta.
+  @include ga.grupos-accion('.opa-icono', '.opa-bloqueada', '.opa-resaltada');
 
   &.opa-bloqueada {
     background: $superficie;
