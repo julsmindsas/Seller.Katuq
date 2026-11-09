@@ -1,4 +1,4 @@
-import { Component, Input, OnInit,Renderer2,ViewChild,ElementRef, SecurityContext } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, Renderer2, SimpleChanges, ViewChild, ElementRef, SecurityContext } from '@angular/core';
 import { Pedido } from '../modelo/pedido';
 import { PaymentService } from '../../../shared/services/ventas/payment.service';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
@@ -10,7 +10,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './confirm.component.html',
   styleUrls: ['./confirm.component.scss']
 })
-export class ConfirmComponent implements OnInit {
+export class ConfirmComponent implements OnInit, OnChanges {
 
   // recibir el pedido mediante input
   @Input() pedido: Pedido;
@@ -21,6 +21,16 @@ export class ConfirmComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.pintar();
+  }
+
+  /** Ticket 1590: al llegar el pedido guardado (con su número real) se vuelve a pintar. */
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['pedido'] && !changes['pedido'].firstChange) this.pintar();
+  }
+
+  private pintar(): void {
+    if (!this.pedido) return;
     this.htmlContent = this.paymentService.getHtmlContent(this.pedido);
     // htmlContent viene envuelto en SafeHtml (bypassSecurityTrustHtml). Si se pasa
     // tal cual a innerHTML, Angular lo convierte a texto y antepone

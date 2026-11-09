@@ -3740,6 +3740,9 @@ export class CrearVentasComponent
                 const orderId = res.order?._id || res.orderId || res.id;
                 // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
                 const nroPedido = res.order?.nroPedido || res.order?.referencia || this.pedidoGral.nroPedido || this.pedidoGral.referencia || '';
+                // Ticket 1590: la pantalla final muestra el consecutivo que asignó el servidor,
+                // no el que se reservó al abrir la venta.
+                if (res.order?.nroPedido) this.pedidoGral = { ...this.pedidoGral, nroPedido: res.order.nroPedido };
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
@@ -4874,6 +4877,8 @@ export class CrearVentasComponent
                   context.registrarAlertaDuplicado(res, orderId);
                   // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
                   const nroPedido = res.order?.nroPedido || res.order?.referencia || context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
+                  // Ticket 1590: el número confirmado por el servidor reemplaza al reservado.
+                  if (res.order?.nroPedido) context.pedidoGral = { ...context.pedidoGral, nroPedido: res.order.nroPedido };
 
                   // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
