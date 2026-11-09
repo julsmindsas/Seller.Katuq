@@ -82,7 +82,7 @@
         <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.contabilizados' | translate }}</span><strong>{{ overview?.journal?.posted || 0 }}</strong><small>{{ 'contabilidad.contabilidad.comprobantesEnElLibro' | translate }}</small></div>
         <span class="ct-kpi__icon"><i class="pi pi-book"></i></span>
       </button>
-      <button type="button" class="ct-kpi ct-kpi--orange" (click)="selectTab('journal')">
+      <button type="button" class="ct-kpi ct-kpi--orange" (click)="verBorradores()">
         <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.porRevisar' | translate }}</span><strong>{{ overview?.journal?.drafts || 0 }}</strong><small>{{ 'contabilidad.contabilidad.borradoresSinAfectarSaldos' | translate }}</small></div>
         <span class="ct-kpi__icon"><i class="pi pi-pencil"></i></span>
       </button>
