@@ -1104,3 +1104,45 @@ $fs-active-border: $pk-accent-border;
     }
 }
 
+
+// ====================================================
+// CELULAR (ticket 1531): cada producto es una tarjeta (foto, título, precio, estado y acciones)
+// ====================================================
+@media (max-width: 767.98px) {
+    .pk-card { overflow-x: hidden; }
+
+    :host ::ng-deep .cfg-card .p-datatable.cfg-tabla-tarjetas.pk-tabla-movil {
+        .p-datatable-scrollable-header,
+        .p-datatable-scrollable-header-box { display: none !important; }
+        .p-datatable-scrollable-body { max-height: none !important; overflow: visible !important; }
+        .p-datatable-scrollable-body > table,
+        .p-datatable-scrollable-table { width: 100% !important; min-width: 0 !important; }
+
+        .p-datatable-tbody > tr {
+            display: grid;
+            grid-template-columns: 44px 64px minmax(0, 1fr);
+            align-items: center;
+            padding: 8px 0 0;
+
+            > td { grid-column: 1 / -1; }
+            > td.pk-td-sel,
+            > td.pk-td-img,
+            > td.pk-td-titulo {
+                grid-column: auto;
+                width: auto !important;
+                border-bottom: 0 !important;
+                padding: 4px 8px;
+            }
+            > td.pk-td-sel { justify-content: center; min-height: 44px; }
+            > td.pk-td-img { justify-content: center; }
+            > td.pk-td-titulo { text-align: left; justify-content: flex-start; }
+            > td.pk-td-sel .form-check-input { width: 20px; height: 20px; }
+            .pk-row-title { white-space: normal; overflow-wrap: anywhere; }
+            > td[data-col="acciones"] { justify-content: flex-end; }
+            .pk-actions-btn { min-width: 44px; min-height: 44px; }
+        }
+
+        .p-paginator { flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .p-paginator .p-paginator-current { width: 100%; text-align: center; }
+    }
+}

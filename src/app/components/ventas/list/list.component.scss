@@ -6746,3 +6746,38 @@ $pd-chip-border: var(--ds-control-border);
   .pedido-row__cliente span,
   .pedido-timeline__next { color: var(--ds-ink); }
 }
+
+// =============================================================================
+// CELULAR (ticket 1531): filtros plegados, lista con el scroll de la página y detalle a pantalla completa
+// =============================================================================
+.filtros-movil__toggle { display: none; }
+.pedido-detail__volver { display: none; }
+
+@media (max-width: 767.98px) {
+  .pedidos-pagina { max-width: 100%; overflow-x: hidden; }
+  .pedidos-viewtoggle { display: none !important; } // la tabla ancha no cabe en celular: se usa el panel de tarjetas
+
+  .filtros-movil__toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; margin: 0 0 8px; border: 1px solid #ECEAF7; border-radius: 11px; background: var(--ds-surface); color: var(--ds-accent-ink); font-size: 14px; font-weight: 700; letter-spacing: normal; }
+  .filtros-movil__toggle span { flex: 1; text-align: left; color: inherit; font-size: 14px; }
+  .filtros-movil__toggle:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  .filtros-movil:not(.is-abierto) ::ng-deep .filters-inline-row > :not(.filter-search):not(.btn-primary) { display: none !important; }
+  .filtros-movil:not(.is-abierto) ::ng-deep .advanced-filters-panel { display: none !important; }
+
+  .pedidos-split { flex-direction: column; }
+  .pedidos-list-pane { position: static !important; max-height: none !important; min-width: 0; }
+  .pedidos-list-scroll { overflow: visible !important; max-height: none !important; }
+  .pedidos-detail-pane:has(.pedidos-detail-empty) { display: none !important; }
+  .pedidos-detail-pane:has(.pedido-detail) {
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1040;
+    min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch;
+    background: var(--ds-surface); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pedido-detail__volver {
+    display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 2;
+    width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-bottom: 1px solid #ECEAF7;
+    background: var(--ds-surface); color: var(--ds-accent-ink); font-size: 14px; font-weight: 700; letter-spacing: normal;
+  }
+  .pedido-detail__volver:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: -3px; }
+  .pedidos-triage__chip, .pedidos-pager__btn { min-height: 44px; }
+  .pedido-row { min-height: 56px; }
+}

@@ -3075,6 +3075,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // ====== Rediseño 1b: vista split (lista + panel de detalle) ======
   // Solo presentación. 'split' = lista + panel (diseño nuevo); 'tabla' = tabla original (fallback).
   modoVista: "split" | "tabla" = "split";
+  /** Ticket 1531: en celular los filtros nacen plegados detrás del botón «Filtros». */
+  filtrosMovilAbiertos = false;
   pedidoDetalle: any = null;
   private readonly avatarPalette = [
     "#7C5CFF", "#1E6FD9", "#1E874B", "#E8820C",

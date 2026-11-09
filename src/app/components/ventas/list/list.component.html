@@ -54,6 +54,14 @@
                                     <!-- IA de pedidos (D-405): los que necesitan atención hoy -->
                                     <app-modulo-ia modulo="pedidos"></app-modulo-ia>
                                     <!-- ====== FILTROS + MÉTRICAS (rediseño 1b: fuera de la tabla, visibles en ambas vistas) ====== -->
+                                        <div class="filtros-movil" [class.is-abierto]="filtrosMovilAbiertos">
+                                        <button type="button" class="filtros-movil__toggle"
+                                                [attr.aria-expanded]="filtrosMovilAbiertos"
+                                                (click)="filtrosMovilAbiertos = !filtrosMovilAbiertos">
+                                            <i class="pi pi-sliders-h"></i>
+                                            <span>{{ 'Filtros' | translate }}</span>
+                                            <i class="pi" [ngClass]="filtrosMovilAbiertos ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                                        </button>
                                         <app-shared-filters
                                             #sharedFilters
                                             [estadosPagoOptions]="estadosPagoOptions"
@@ -89,6 +97,7 @@
                                             (searchComplete)="onSearchComplete($event)"
                                             (searchSelect)="onSearchSelect($event)">
                                         </app-shared-filters>
+                                        </div>
 
                                         <!-- BÚSQUEDA LOCAL ADICIONAL - Compacto -->
                                         <!-- COMENTADO: Búsqueda local oculta temporalmente -->
@@ -400,6 +409,10 @@
 
                                         <!-- ===== Columna detalle: panel del pedido seleccionado ===== -->
                                         <div class="pedidos-detail-pane">
+                                            <button type="button" class="pedido-detail__volver" *ngIf="pedidoDetalle"
+                                                    (click)="pedidoDetalle = null">
+                                                <i class="pi pi-arrow-left"></i> {{ 'Volver a la lista' | translate }}
+                                            </button>
                                             <ng-container *ngIf="pedidoDetalle; else detalleVacio">
                                                 <div class="pedido-detail">
                                                     <!-- header -->

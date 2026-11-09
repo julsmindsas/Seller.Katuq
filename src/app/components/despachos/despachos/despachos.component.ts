@@ -319,6 +319,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   kaiPredicciones: any = null;
   /** Panel de IA de despachos (qué despachar hoy, sin cerrar, avisos). */
   mostrarPanelIA = false;
+  /** Ticket 1531: en celular los filtros nacen plegados detrás del botón «Filtros». */
+  filtrosMovilAbiertos = false;
 
   // Dispatch Rules Config modal
   showDispatchRulesConfig = false;

@@ -64,7 +64,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     };
     private cargaSub?: Subscription;
     private primeraCarga = true;
-    mostrarFiltros: boolean = true;
+    mostrarFiltros: boolean = !(typeof window !== 'undefined' && window.innerWidth < 768); // ticket 1531: en celular los filtros nacen plegados
     viewMode: 'compact' | 'detailed' = 'compact';
     selectedCliente: any | null = null;
 
