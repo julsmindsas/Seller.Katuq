@@ -13667,3 +13667,10 @@ El detalle con archivo y línea está en `proposal.md`.
   - **Sin cambios en pedidos, pagos, inventario ni consecutivos. Sin colecciones nuevas.**
   - **Pruebas (fuera de git, D-566):** X1 270 de 270 páginas iguales; suites de sitios sin fallas nuevas; operación `opttia` 6 de 6; navegador a 1440 y 390 con el modelo real sobre la copia `katuq_dev` (productos, lista de precios, carrito, pago, solicitud simulada, tono de marca, archivos y negativa a entregar documentos internos); panel del editor 11 de 11 a 1440 y 390; `tsc` y build de producción sin errores.
   - **Sigue:** publicar back y front juntos cuando Daniel lo diga.
+
+### 2026-11-09 — El servidor de pruebas y app.katuq.com quedan en la versión de producción, como entrada de pruebas
+
+- **Pedido:** Daniel quería revisar el sitio de pruebas y pidió publicar app.katuq.com. Queda como entrada de pruebas, con lo que se cierra el pendiente «Republicar o apagar app.katuq.com». El detalle técnico está en el repo del backend (`local/aws/objetivo/frontend.md`).
+- **Plantillas de WooCommerce:** el seed corrió en la copia de pruebas: 0 creadas y 3 actualizadas. «Recibir pedidos» pasa de 4 a 3 pasos (D-570) y «Empujar stock» queda en sombra. En producción siguen las del 21 de mayo; correrlo allá espera el sí de Daniel.
+- **Pruebas:** backend en `0ba079f2` y front con el código vivo de producción (`3009ebc8`, 2026.11.09.3). Las dos direcciones de pruebas llaman solo al backend de pruebas y muestran el aviso «KATUQ DE PRUEBAS · los datos se reinician cada noche».
+- **No verificado:** el ingreso con usuario en el navegador. Las tiendas publicadas todavía no se ven con estilos en pruebas.
