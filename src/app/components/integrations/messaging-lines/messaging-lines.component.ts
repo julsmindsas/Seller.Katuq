@@ -239,7 +239,12 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
       .iniciar(datos)
       .then((r) => {
         this.servicio
-          .confirmar(PROVEEDOR_META, { code: r.code, wabaId: r.wabaId, phoneNumberId: r.phoneNumberId, modo })
+          .confirmar(PROVEEDOR_META, {
+            code: r.code,
+            wabaId: r.wabaId,
+            modo,
+            ...(r.phoneNumberId ? { phoneNumberId: r.phoneNumberId } : {}),
+          })
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (linea) => {

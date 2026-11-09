@@ -6,7 +6,8 @@ import { DatosRegistroMeta } from './messaging.models';
 export interface ResultadoRegistroMeta {
   code: string;
   wabaId: string;
-  phoneNumberId: string;
+  /** Al compartir el número del celular, Meta puede no decir cuál fue: el servidor lo busca en la cuenta. */
+  phoneNumberId: string | null;
 }
 
 /** Por qué no terminó la conexión, para decirlo sin jerga. */
@@ -53,7 +54,7 @@ export class MetaEmbeddedSignupService {
   async iniciar(datos: DatosRegistroMeta): Promise<ResultadoRegistroMeta> {
     await this.cargarSdk(datos);
     return new Promise<ResultadoRegistroMeta>((resolver, rechazar) => {
-      let ids: { wabaId: string; phoneNumberId: string } | null = null;
+      let ids: { wabaId: string; phoneNumberId: string | null } | null = null;
       let codigo: string | null = null;
       let terminado = false;
 
@@ -64,7 +65,7 @@ export class MetaEmbeddedSignupService {
         this.zone.run(accion);
       };
       const intentarResolver = () => {
-        if (codigo && ids) cerrar(() => resolver({ code: codigo as string, ...(ids as { wabaId: string; phoneNumberId: string }) }));
+        if (codigo && ids) cerrar(() => resolver({ code: codigo as string, ...(ids as { wabaId: string; phoneNumberId: string | null }) }));
       };
 
       const escucha = (e: MessageEvent) => {
@@ -78,11 +79,12 @@ export class MetaEmbeddedSignupService {
         if (!msg || msg.type !== TIPO_EVENTO) return;
         if (FIN_OK.includes(msg.event)) {
           const d = msg.data || {};
-          if (!d.phone_number_id || !d.waba_id) {
+          const delCelular = msg.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING';
+          if (!d.waba_id || (!d.phone_number_id && !delCelular)) {
             cerrar(() => rechazar(new RegistroMetaError('sin_numero', 'La conexión terminó sin escoger un número.')));
             return;
           }
-          ids = { wabaId: String(d.waba_id), phoneNumberId: String(d.phone_number_id) };
+          ids = { wabaId: String(d.waba_id), phoneNumberId: d.phone_number_id ? String(d.phone_number_id) : null };
           intentarResolver();
         } else if (msg.event === 'FINISH_ONLY_WABA') {
           cerrar(() => rechazar(new RegistroMetaError('sin_numero', 'La conexión terminó sin escoger un número.')));
