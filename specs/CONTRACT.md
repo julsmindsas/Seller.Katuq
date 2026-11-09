@@ -13594,3 +13594,11 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Verificado:** suite `tests/enVivo` 16/16 (se actualizaron las listas de campos de `proyeccion` y `detalle`), prueba nueva local de 10 casos (roles, bandera, stream, objeto compartido sin mutar, ficha, Opttia; una mutación del recorte la hace fallar), catálogo de banderas 42/42. En `katuq_dev` (solo lectura) con pedidos reales de ALMARA del 30-oct: 36 pedidos y $2.794.580; las 5 filas suman exacto y sin correos. `tsc` sin errores.
 - **Pendiente:** prueba en Chrome. El backend local no arranca porque la llave de la cuenta de servicio del `katuq-desarrollo.env` está truncada (201 caracteres): hay que regenerar el archivo (Daniel).
 - **Despliegue:** 1) backend con la bandera apagada (sin índices ni datos); 2) front; 3) con el sí de Daniel, `node scripts/set-company-feature.js "ALMARA FELICIDAD" enVivoPorAsesor on` en seco y luego con `--execute`; 4) probar con un administrador y una asesora de ALMARA.
+
+### 2026-11-09 — Publicados el front 2026.11.09.1 y el backend `0ba079f2`
+
+- **Pedido:** una sesión dejó la lista: el front con 14 cambios (arreglos de ALMARA de aws-claude-2 y «Ventas por asesora» en En vivo) y el backend con 9 (soporte por persona D-701, ventas por asesora D-702/D-703 y scripts sobre Postgres), más `e6c21fd2` de aws-claude-1 (el pedido de la tienda guarda CC o NIT) por mezclar.
+- **Front:** no había ramas por mezclar. Release `93e4f6f8` desde `3c55b488`, versión 2026.11.09.1; el candado y verify-dist pasaron. Salen siete notas: Producción, Cartera, tipo de documento del cliente, acciones del pedido, dos de Venta asistida y En vivo por asesora.
+- **Backend:** mezcla de aws-claude-1 en `0ba079f2` sin conflictos. El EC2 estaba en `58445833`; se fijó con `git fetch` + `git merge --ff-only 0ba079f2` (11 cambios, sin paquetes nuevos). Antes: sintaxis de 319 archivos sin errores, 12 pruebas de soporte en verde; el único `require` roto es viejo y está en un script de semillas que el servidor no carga.
+- **Verificado:** `katuq-api` en línea y sin errores en el registro tras el reinicio; las rutas privadas responden 401 sin sesión; `version.json` vivo en 2026.11.09.1.
+- **No verificado:** las pantallas en el navegador y un pedido de tienda con NIT.
