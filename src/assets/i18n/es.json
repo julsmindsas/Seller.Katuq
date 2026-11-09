@@ -5347,6 +5347,7 @@
   "integrations.messagingLines.metaElegirSub": "Se abre la ventana de Meta: entras con tu cuenta de Facebook y escoges el negocio y el número.",
   "integrations.messagingLines.metaCelularTitulo": "Usar el número de mi celular",
   "integrations.messagingLines.metaCelularTexto": "Sigues contestando desde la app WhatsApp Business y los mensajes de los dos lados se ven aquí. Ten el celular a mano para escanear un código.",
+  "integrations.messagingLines.metaCelularRequisito": "Debe ser WhatsApp Business, no el WhatsApp normal. Si usas el normal, instala WhatsApp Business con el mismo número: es gratis y conserva tus chats.",
   "integrations.messagingLines.metaCelularAviso": "Se desconectan WhatsApp Web y las computadoras, y en la app dejan de funcionar las listas de difusión.",
   "integrations.messagingLines.metaNuevoTitulo": "Un número nuevo para Katuq",
   "integrations.messagingLines.metaNuevoTexto": "Un número que no esté en ninguna app de WhatsApp. Solo se usa desde Katuq.",

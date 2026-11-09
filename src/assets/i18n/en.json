@@ -5527,6 +5527,7 @@
   "integrations.messagingLines.metaElegirSub": "Meta’s window opens: sign in with your Facebook account and choose the business and the number.",
   "integrations.messagingLines.metaCelularTitulo": "Use the number on my phone",
   "integrations.messagingLines.metaCelularTexto": "You keep replying from the WhatsApp Business app, and messages from both sides show up here. Keep your phone at hand to scan a code.",
+  "integrations.messagingLines.metaCelularRequisito": "It must be WhatsApp Business, not regular WhatsApp. If you use the regular one, install WhatsApp Business with the same number: it’s free and keeps your chats.",
   "integrations.messagingLines.metaCelularAviso": "WhatsApp Web and computers get unlinked, and broadcast lists stop working in the app.",
   "integrations.messagingLines.metaNuevoTitulo": "A new number for Katuq",
   "integrations.messagingLines.metaNuevoTexto": "A number that isn’t in any WhatsApp app. It’s only used from Katuq.",
