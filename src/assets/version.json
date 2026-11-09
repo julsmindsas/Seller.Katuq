@@ -1,88 +1,127 @@
 {
-  "version": "2026.11.09.5 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T22:37:22.435Z",
+  "version": "2026.11.09.6 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T22:54:14.297Z",
   "notas": [
     {
-      "fecha": "2026-11-09T22:27:17Z",
+      "fecha": "2026-11-09T22:45:00Z",
       "tipo": "CORRIGE",
-      "texto": "En el cierre de caja, los saldos ya no aceptan centavos y la rueda del mouse no cambia el valor por error. Un cierre que quedó con centavos de diferencia ahora aparece como que cuadra, y ya no dice «Falta $0».",
+      "texto": "Ya puedes usar Pedidos, Clientes, Productos y Envíos desde el celular: las listas se ven como tarjetas, los filtros se abren con un botón y no hace falta desplazarte hacia los lados.",
       "modulos": [
-        "ventas/ventas-pos"
+        "ventas",
+        "ventas/clienteslista",
+        "productos",
+        "despachos"
       ]
     },
     {
-      "fecha": "2026-11-09T22:18:00Z",
+      "fecha": "2026-11-09T22:45:00Z",
       "tipo": "CORRIGE",
-      "texto": "Los valores en pesos se ven igual en todas las pantallas, con punto de miles, y las cifras grandes ya no se cortan ni se parten.",
+      "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Tu catálogo por link ahora muestra el nombre y el logo de tu tienda, y el formulario de pedido se ve más cómodo en el celular.",
       "modulos": [
-        "ventas",
-        "inventario/inventario-catalogo",
-        "tesoreria",
-        "cotizaciones",
-        "despachos",
         "cotizaciones/catalogos"
       ]
     },
     {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no verás términos técnicos: el chat KAI habla de temas como Ventas e Inventario, WhatsApp muestra qué mensaje automático se envió en vez del nombre de la plantilla y los reportes dicen «según tus facturas».",
-      "modulos": [
-        "agent-builder/chat-agui",
-        "notificaciones/whatsapp/inbox",
-        "dashboards"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los nombres del menú y de las pantallas ahora coinciden (Prospectos, Ajustes de inventario) y cada sitio y catálogo explica mejor para qué sirve."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los avisos emergentes ya no tapan el menú de arriba y el nombre de tu empresa ya no sale cortado junto al logo."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ahora puedes cerrar el panel de notificaciones con la tecla Esc, y el botón de borrar todas quedó separado del de marcar como leídas."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En vivo cuenta igual los pedidos entregados hoy en todos sus bloques, la flota ya no se repite y los nombres de los mensajeros salen bien escritos.",
-      "modulos": [
-        "en-vivo"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Las tarjetas Agotados y Stock bajo del inventario ya muestran el número real de productos.",
-      "modulos": [
-        "inventario/inventario-catalogo"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
+      "fecha": "2026-11-09T22:45:00Z",
       "tipo": "MEJORA",
-      "texto": "El resumen de clientes te dice a qué hora se calculó, y al pulsar Actualizar trae la cifra al día.",
+      "texto": "Los indicadores de Producción se leen con palabras completas, Indicadores de inventario ya no abre en la bodega de tránsito y Movimientos siempre llega hasta hoy.",
       "modulos": [
-        "ventas/clienteslista"
+        "produccion/dashboard",
+        "inventario/indicadores",
+        "inventario/historial-movimientos"
       ]
     },
     {
-      "fecha": "2026-11-09T22:18:00Z",
+      "fecha": "2026-11-09T22:45:00Z",
       "tipo": "MEJORA",
-      "texto": "La ayuda de Cartera total y Cartera pendiente explica cómo se calcula cada una y por qué pueden diferir por poco.",
+      "texto": "Los avisos de Qué comprar traen un botón para ir a corregirlos, y los comprobantes por revisar de Contabilidad se abren ya filtrados.",
       "modulos": [
-        "cartera",
-        "tesoreria"
+        "compras/reposicion",
+        "contabilidad"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "La alerta de vencimiento de tu certificado de firma DIAN aparece aunque no hayas guardado la fecha: Katuq la lee del propio certificado.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "El detalle de la factura muestra lo abonado, el saldo por pagar y los días de mora, si tienes permiso de Cartera.",
+      "modulos": [
+        "facturacion-electronica"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya puedes usar Pedidos, Clientes, Productos y Envíos desde el celular: las listas se ven como tarjetas, los filtros se abren con un botón y no hace falta desplazarte hacia los lados.",
+      "modulos": [
+        "ventas",
+        "ventas/clienteslista",
+        "productos",
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "CORRIGE",
+      "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Tu catálogo por link ahora muestra el nombre y el logo de tu tienda, y el formulario de pedido se ve más cómodo en el celular.",
+      "modulos": [
+        "cotizaciones/catalogos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los indicadores de Producción se leen con palabras completas, Indicadores de inventario ya no abre en la bodega de tránsito y Movimientos siempre llega hasta hoy.",
+      "modulos": [
+        "produccion/dashboard",
+        "inventario/indicadores",
+        "inventario/historial-movimientos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los avisos de Qué comprar traen un botón para ir a corregirlos, y los comprobantes por revisar de Contabilidad se abren ya filtrados.",
+      "modulos": [
+        "compras/reposicion",
+        "contabilidad"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "La alerta de vencimiento de tu certificado de firma DIAN aparece aunque no hayas guardado la fecha: Katuq la lee del propio certificado.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "El detalle de la factura muestra lo abonado, el saldo por pagar y los días de mora, si tienes permiso de Cartera.",
+      "modulos": [
+        "facturacion-electronica"
+      ]
+    },
     {
       "fecha": "2026-11-09T22:27:17Z",
       "tipo": "CORRIGE",
@@ -501,64 +540,8 @@
       "fecha": "2026-11-03T20:00:00Z",
       "tipo": "CORRIGE",
       "texto": "Ya no aparece una franja blanca vacía al final de las pantallas."
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Integraciones, el botón «Ver instructivo» de ChatGPT, Claude y Codex vuelve a abrir los pasos para conectar Katuq.",
-      "modulos": [
-        "integrations"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Cartera, un cliente con pedidos vencidos desde el primer día ya no aparece «Al día», y «Cartera vencida» cuenta todo lo que pasó su fecha de pago.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Cartera, los rangos de antigüedad ahora son Sin vencer, 1-15, 16-30, 31-60, 61-90 y Más de 90 días, iguales en la pantalla, el Excel y el PDF.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "NUEVO",
-      "texto": "Ahora puedes filtrar la Cartera por clientes de Contado o de Crédito.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Cartera, las tarjetas de arriba explican qué cuentan y filtran la lista al hacer clic; «DSO promedio» ahora se llama «Días promedio de cartera».",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Tesorería, la pestaña Alertas ya no se corta en 200: muestra el mismo número que la tarjeta.",
-      "modulos": [
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Tesorería, las alertas se agrupan por número de comprobante, muestran el número de pedido y explican en palabras sencillas qué revisar.",
-      "modulos": [
-        "tesoreria"
-      ]
     }
   ],
-  "commit": "0c472cb73e03e6d381b74a62a3b6f776ad737bd8",
+  "commit": "d79ed56548afe5f1d79648d5ae514619fa6161a6",
   "cambiosSinCommit": 0
 }
