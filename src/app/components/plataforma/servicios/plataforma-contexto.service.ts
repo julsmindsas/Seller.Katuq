@@ -44,6 +44,11 @@ export class PlataformaContextoService {
     return this.yo().pipe(map((m) => !!(m && m.esOperador)));
   }
 
+  /** ¿Puede ver la auditoría de pagos por persona? Sin respuesta cuenta como no (el servidor decide de todos modos). */
+  esLectorAuditoria(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.esLectorAuditoria)));
+  }
+
   /** ¿Está encendida la bandera de pagos manuales? (apagada, la ventana deja ver y anular, pero no registrar). */
   pagosManualesActivos(): Observable<boolean> {
     return this.yo().pipe(map((m) => !!(m && m.banderas && m.banderas['manualPaymentsEnabled'] === true)));

@@ -32,6 +32,7 @@ export class PlataformaShellComponent implements OnInit, OnDestroy {
     { ruta: 'adopcion', rotulo: TEXTOS.pestanas.adopcion },
     { ruta: 'calidad', rotulo: TEXTOS.pestanas.calidad },
     { ruta: 'sugerencias', rotulo: TEXTOS.pestanas.sugerencias },
+    { ruta: 'senales', rotulo: TEXTOS.pestanas.senales },
     { ruta: 'excluidas', rotulo: TEXTOS.pestanas.excluidas },
   ];
   esOperador = false;

@@ -4,7 +4,8 @@ import { formatearNumero, textoONulo } from '../../logica/formato';
 
 /**
  * D-700 13.7b / 14.6 — Salud (`salud-v1`): el puntaje de riesgo con cada componente (valor, peso y aporte). Un componente sin dato
- * no aporta y el puntaje se rotula parcial. Solo informa. Todo lo calcula el servidor.
+ * no aporta y el puntaje se rotula parcial. La tendencia (D-700 26.4) compara con el cierre de hace 30 días; sin cierre sale «sin dato».
+ * Solo informa. Todo lo calcula el servidor.
  */
 @Component({
   selector: 'app-ficha-salud',
@@ -32,7 +33,15 @@ import { formatearNumero, textoONulo } from '../../logica/formato';
             </tbody>
           </table>
         </div>
-        <p class="pl-muted">{{ t.tendencia }} {{ t.soloInforma }}</p>
+        <ng-container *ngIf="d.tendencia as tn">
+          <h3 class="pl-subtitulo">{{ t.tendenciaTitulo }}</h3>
+          <p class="cfg-aviso" *ngIf="tn.estado !== 'ok'" role="status">{{ nulo(tn.motivo) }}</p>
+          <dl class="pl-datos" *ngIf="tn.estado === 'ok'">
+            <div><dt>{{ t.direcciones[tn.direccion] || '—' }}</dt><dd class="pl-num">{{ delta(tn.delta) }} <span class="cfg-pill cfg-pill--warn" *ngIf="tn.parcial">{{ textos.comercios.parcial }}</span></dd></div>
+            <div><dt>&nbsp;</dt><dd class="pl-muted">{{ antes(tn) }}</dd></div>
+          </dl>
+        </ng-container>
+        <p class="pl-muted">{{ t.soloInforma }}</p>
       </ng-template>
     </app-ficha-seccion>
   `,
@@ -43,6 +52,14 @@ export class FichaSaludComponent {
   readonly t = TEXTOS.saludFicha;
   nulo = textoONulo;
   numero = formatearNumero;
+
+  delta(d: number | null | undefined): string {
+    return typeof d === 'number' && Number.isFinite(d) ? this.t.tendenciaDelta(d) : '—';
+  }
+
+  antes(tn: { anterior?: { puntaje: number } | null; fecha?: string | null }): string {
+    return tn.anterior && typeof tn.anterior.puntaje === 'number' ? this.t.tendenciaCon(tn.anterior.puntaje, tn.fecha || null) : '—';
+  }
 
   nivel(n: string | null | undefined): string {
     return (n && this.t.niveles[n]) || '—';

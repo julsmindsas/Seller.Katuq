@@ -7,7 +7,7 @@ import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interce
 import { BaseService } from '../../../shared/services/base.service';
 import {
   AperturaSoporte, Calidad, CambioMotivoBaja, CambioTipoCuenta, CuerpoPagoManual, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
-  ListaPagosManuales, MotivoBajaValor, PagoManualAnulado, PagoManualRegistrado, ResumenSegmento, SoporteSubido, SobrePlataforma, Sugerencias, Tendencias, TipoCuentaValor,
+  ListaPagosManuales, MotivoBajaValor, PagosPorPersona, Reclasificadas, Senales, PagoManualAnulado, PagoManualRegistrado, ResumenSegmento, SoporteSubido, SobrePlataforma, Sugerencias, Tendencias, TipoCuentaValor,
 } from '../plataforma.tipos';
 import { paramsDeFiltros, paramsExportacion, queryString } from '../logica/consulta';
 
@@ -64,6 +64,21 @@ export class PlataformaService extends BaseService {
 
   calidad(): Observable<SobrePlataforma<Calidad | null>> {
     return this.getSinLoader('/v1/platform/data-quality');
+  }
+
+  /** Señales avanzadas de la fase 2: adopción usada, módulos de los que más venden, bajas por motivo y tendencia de salud. */
+  senales(): Observable<SobrePlataforma<Senales | null>> {
+    return this.getSinLoader('/v1/platform/signals');
+  }
+
+  /** Cuentas de cortesía, demo o prueba con mora abierta (revisión del dueño). */
+  reclasificadas(): Observable<SobrePlataforma<Reclasificadas | null>> {
+    return this.getSinLoader('/v1/platform/billing/reclassified-with-debt');
+  }
+
+  /** Solo quien lee la auditoría: pagos manuales y anulaciones del mes por persona (`mes` AAAA-MM; sin él, el mes en curso). */
+  pagosPorPersona(mes?: string): Observable<SobrePlataforma<PagosPorPersona>> {
+    return this.getSinLoader(`/v1/platform/audit${queryString({ vista: 'pagos_por_persona', mes })}`);
   }
 
   sugerencias(): Observable<SobrePlataforma<Sugerencias>> {

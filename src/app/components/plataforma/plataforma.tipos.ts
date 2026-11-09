@@ -40,6 +40,8 @@ export interface SobrePlataforma<T> {
 export interface MePlataforma {
   esPlataforma: boolean;
   esOperador: boolean;
+  /** Quién puede ver la vista de auditoría de pagos por persona (el servidor decide; esto solo muestra u oculta). */
+  esLectorAuditoria?: boolean;
   opttia?: { autorizado?: boolean; [k: string]: unknown } | null;
   banderas: Record<string, boolean>;
 }
@@ -320,4 +322,104 @@ export interface CuerpoPagoManual {
   confirmarAtipico?: boolean;
   confirmarDuplicado?: boolean;
   motivoConfirmacion?: string;
+}
+
+/** D-700 26.4 (F2-11) — Señales avanzadas (`GET /v1/platform/signals`). El front solo pinta lo que calcula el servidor. */
+export interface UsoModulo { clave: string; empresas: number; porcentaje: number | null }
+
+export interface AdopcionUsada {
+  estado: EstadoMetrica | string;
+  motivo?: string | null;
+  rotulo: string;
+  ventanaDias: number;
+  activasReales: number;
+  medidas: number;
+  modulos: UsoModulo[];
+}
+
+export interface ModulosTopVentas {
+  estado: EstadoMetrica | string;
+  motivo?: string | null;
+  rotulo: string;
+  criterio: string;
+  grupo: number;
+  medidos: number;
+  modulos: UsoModulo[];
+}
+
+export interface BajasGrupo {
+  total: number;
+  conMotivo: number;
+  sinMotivo: number;
+  porMotivo: Array<{ motivo: string; cantidad: number; porcentaje: number | null }>;
+}
+
+export interface BajasPorMotivo { estado: EstadoMetrica | string; vigentes: BajasGrupo; mes: BajasGrupo }
+
+export interface ResumenTendenciaSalud {
+  estado: EstadoMetrica | string;
+  leido: boolean;
+  fecha: string | null;
+  dias: number;
+  evaluadas: number;
+  comparadas: number;
+  empeoran: number;
+  mejoran: number;
+  estables: number;
+  sinDato: number;
+  parcial: boolean;
+}
+
+export interface Senales {
+  adopcionUsada: AdopcionUsada;
+  modulosDeLosQueMasVenden: ModulosTopVentas;
+  bajas: BajasPorMotivo;
+  saludTendencia: ResumenTendenciaSalud;
+  integracionesSinUso: { disponible: boolean; motivo: string };
+}
+
+/** Tendencia del puntaje de una empresa (sección `salud` de la ficha). */
+export interface TendenciaSalud {
+  estado: 'ok' | 'sin_dato' | string;
+  motivo?: string;
+  fecha?: string | null;
+  delta?: number | null;
+  direccion?: 'empeora' | 'mejora' | 'estable' | null;
+  anterior?: { puntaje: number; nivel: string | null; parcial: boolean } | null;
+  parcial?: boolean;
+}
+
+export interface CuentaReclasificada {
+  docId: string;
+  nomComercial: string | null;
+  tipo: string;
+  origen: string | null;
+  cambioEn: string | null;
+  ciclo: string | null;
+  monto: number;
+  facturas: number;
+  diasAtrasoMax: number;
+  detalle: Array<{ factura: string; saldo: number; vence: string | null; diasAtraso: number }>;
+}
+
+export interface Reclasificadas {
+  cuentas: CuentaReclasificada[];
+  total: { cuentas: number; monto: number; facturas: number };
+  estado: string;
+  criterio: string;
+}
+
+export interface PagosPorPersona {
+  mes: string;
+  desde: string;
+  hasta: string;
+  estado: string;
+  motivo?: string;
+  rotulo: string;
+  personas: Array<{
+    porId: string;
+    pagos: { cantidad: number; montoCOP: number; atipicos: number; duplicadosConfirmados: number };
+    anulaciones: { cantidad: number; montoCOP: number; propias: number };
+  }>;
+  total: { pagos: number; montoCOP: number; atipicos: number; anulaciones: number; montoAnuladoCOP: number; anulacionesPropias: number };
 }
