@@ -116,5 +116,6 @@
   { "fecha": "2026-11-07T21:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios." },
   { "fecha": "2026-11-07T21:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable." },
   { "fecha": "2026-11-09T16:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado." },
-  { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF." }
+  { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF." },
+  { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final." }
 ]
