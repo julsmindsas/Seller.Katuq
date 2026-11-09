@@ -1,65 +1,57 @@
 {
-  "version": "2026.11.09.1 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T15:45:20.026Z",
+  "version": "2026.11.09.2 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T20:11:10.008Z",
   "notas": [
     {
-      "fecha": "2026-11-07T21:00:00Z",
+      "fecha": "2026-11-09T16:00:00Z",
       "tipo": "CORRIGE",
-      "texto": "En Producción, un mismo producto ya no sale dos veces en la lista cuando su nombre quedó guardado con un espacio o un salto de línea de más.",
+      "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado.",
       "modulos": [
-        "produccion/dashboard"
+        "ventas/venta-asistida"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
+      "fecha": "2026-11-09T16:00:00Z",
       "tipo": "MEJORA",
-      "texto": "En Cartera, el nombre y el documento del cliente abren su ficha en otra pestaña, así no pierdes los filtros.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los administradores ya pueden corregir el tipo de documento de un cliente, por ejemplo de CC a NIT.",
-      "modulos": [
-        "ventas/clienteslista"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido.",
+      "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF.",
       "modulos": [
         "ventas"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios.",
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final.",
       "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-08T22:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq.",
-      "modulos": [
-        "en-vivo"
+        "ventas"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF.",
+      "modulos": [
+        "ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final.",
+      "modulos": [
+        "ventas"
+      ]
+    },
     {
       "fecha": "2026-11-08T22:00:00Z",
       "tipo": "NUEVO",
@@ -508,33 +500,8 @@
       "fecha": "2026-11-03T16:26:38Z",
       "tipo": "MEJORA",
       "texto": "Las novedades de cada versión ya no salen en una ventana: las encuentras en la campana, en «Novedades», y solo te mostramos las de las pantallas que usas."
-    },
-    {
-      "fecha": "2026-11-03T15:32:57Z",
-      "tipo": "CORRIGE",
-      "texto": "En «En vivo», un mensajero ya no sale «en ruta» por días: solo cuenta lo que salió hoy, y los pedidos de días anteriores que siguen como despachados aparecen aparte para que los marques entregados.",
-      "modulos": [
-        "en-vivo"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:40Z",
-      "tipo": "MEJORA",
-      "texto": "En Configuración DIAN te avisamos si la dirección del emisor tiene un tramo repetido o le falta el guion, y te sugerimos usar un correo de equipo para enviar las facturas.",
-      "modulos": [
-        "integrations",
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:30Z",
-      "tipo": "MEJORA",
-      "texto": "En Facturación electrónica, la franja de arriba te avisa cuando una factura no le llegó por correo al comprador y te explica en palabras claras por qué.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "3c55b4889c6416e0e338064c17b2fded588736a2",
+  "commit": "0092c06dd23a18a39d6d72f6ca59af7e22437488",
   "cambiosSinCommit": 0
 }
