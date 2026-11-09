@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { TEXTOS } from '../../plataforma.textos';
 import { textoONulo, textoSiNo } from '../../logica/formato';
+import { filasDeSerie, mesesCerradosConDato, puntosDePedidos } from '../../logica/serie-mensual';
 
 /**
- * D-700 13.7b — Uso: ingreso (no uso), pedidos del mes actual y anterior y adopción configurada. La serie mensual de
- * 12 meses llega con 19.7b y las sesiones con D-634 (hasta entonces «—»).
+ * D-700 13.7b y 19.7c — Uso: ingreso (no uso), pedidos del mes actual y anterior, la serie mensual de pedidos de 12 meses por
+ * canal (cierres de mes: reconstruida o hueco, nunca estimada) y adopción configurada. Las sesiones llegan con D-634 (hasta entonces «—»).
  */
 @Component({
   selector: 'app-ficha-uso',
@@ -37,6 +38,30 @@ import { textoONulo, textoSiNo } from '../../logica/formato';
         </ng-container>
         <ng-template #sinPedidos><p class="cfg-aviso">{{ d.pedidos?.motivo }}</p></ng-template>
 
+        <h3 class="pl-subtitulo">{{ textos.ficha.serie.titulo }} <small class="pl-muted">(12 meses)</small></h3>
+        <ng-container *ngIf="d.serieMensual as s; else sinSerie">
+          <p class="cfg-aviso" *ngIf="s.estado === 'no_leido'" role="status">{{ textos.ficha.serie.noLeida }}</p>
+          <p class="cfg-aviso" *ngIf="s.estado === 'sin_dato' || (s.estado === 'ok' && cerrados(s) === 0)" role="status">{{ textos.ficha.serie.sinDatoTodo }}</p>
+          <app-grafico-tendencia clave="pedidos" unidad="n" [puntos]="puntos(s)" [embebido]="true"></app-grafico-tendencia>
+          <h4 class="pl-subtitulo pl-subtitulo--menor">{{ textos.ficha.serie.porCanal }}</h4>
+          <div class="pl-tabla-caja pl-tabla-siempre">
+            <table class="pl-tabla">
+              <thead><tr><th scope="col">Mes</th><th scope="col" class="pl-der">Pedidos</th><th scope="col" class="pl-der">GMV</th><th scope="col">{{ textos.ficha.serie.canal }}</th><th scope="col">Estado</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let f of filas(s)">
+                  <td class="pl-col-mes">{{ f.etiqueta }}</td>
+                  <td class="pl-der pl-num">{{ f.pedidos }}</td>
+                  <td class="pl-der pl-num">{{ f.gmv }}</td>
+                  <td>{{ f.canales }}</td>
+                  <td><span class="cfg-pill cfg-pill--neutro" *ngIf="f.insignia">{{ f.insignia }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="pl-muted">{{ s.nota || textos.ficha.serie.nota }}</p>
+        </ng-container>
+        <ng-template #sinSerie><p class="pl-muted">—</p></ng-template>
+
         <h3 class="pl-subtitulo">Adopción <small class="pl-muted">({{ textos.configurado }})</small></h3>
         <dl class="pl-datos" *ngIf="d.adopcion; else sinAdopcion">
           <div><dt>Integración</dt><dd>{{ si(d.adopcion.integracion) }}</dd></div>
@@ -50,7 +75,6 @@ import { textoONulo, textoSiNo } from '../../logica/formato';
         <dl class="pl-datos">
           <div><dt>Uso por módulo</dt><dd>{{ d.modulosUsados?.motivo || '—' }}</dd></div>
           <div><dt>Sesiones</dt><dd>—</dd></div>
-          <div><dt>Serie de 12 meses</dt><dd>—</dd></div>
         </dl>
         <p class="pl-muted">{{ textos.ficha.sesionesPendientes }}</p>
       </ng-template>
@@ -62,4 +86,7 @@ export class FichaUsoComponent {
   readonly textos = TEXTOS;
   nulo = textoONulo;
   si = textoSiNo;
+  puntos = puntosDePedidos;
+  filas = filasDeSerie;
+  cerrados = mesesCerradosConDato;
 }

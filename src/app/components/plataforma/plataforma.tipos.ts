@@ -26,6 +26,8 @@ export interface MetaPlataforma {
   vista?: string;
   vistaEntregaFaltantes?: number;
   cobroAutomatico?: { estado?: string; advertencia?: string | null; [k: string]: unknown } | null;
+  /** Estado del cierre diario de ayer: `ok`, `parcial`, `falta` o `sin_dato` (historia apagada o aún por correr). */
+  snapshotAyer?: { estado?: string; fecha?: string; motivo?: string | null; fallos?: number } | null;
   [k: string]: unknown;
 }
 
@@ -81,8 +83,27 @@ export interface PuntoTendencia {
 
 export interface Tendencias {
   mesesDisponibles: number;
+  /** `false` si no se pudieron leer los cierres de mes: solo se muestran el mes en curso y el anterior. */
+  historiaLeida?: boolean;
   nota: string;
   series: Record<string, { unidad: string; puntos: PuntoTendencia[] }>;
+}
+
+/** Un mes de la serie de pedidos de una empresa (sección `uso` de la ficha). */
+export interface MesSerie {
+  mes: string;
+  /** `ok`, `parcial`, `en_curso`, `reconstruido` o `sin_dato`. */
+  estado: string;
+  pedidos: number | null;
+  gmv: number | null;
+  canales: Array<{ canal: string; pedidos: number | null; gmv: number | null }>;
+}
+
+export interface SerieMensual {
+  estado: 'ok' | 'sin_dato' | 'no_leido' | string;
+  mesRef?: string;
+  meses: MesSerie[];
+  nota?: string;
 }
 
 export interface FilaComercio {

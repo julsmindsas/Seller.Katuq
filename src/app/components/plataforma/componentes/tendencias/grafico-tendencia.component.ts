@@ -39,6 +39,10 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
   @Input() clave = '';
   @Input() unidad = 'n';
   @Input() puntos: PuntoTendencia[] = [];
+  /** Rótulo propio del gráfico (si no, el de la serie `clave`). */
+  @Input() titulo = '';
+  /** Dentro de otra tarjeta (la ficha): sin marco propio, para no anidar tarjetas. */
+  @Input() embebido = false;
 
   readonly textos = TEXTOS;
   nombre = '';
@@ -50,6 +54,8 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
   ultimoTexto = '';
   ultimoEtiqueta = '';
   hayReconstruido = false;
+  /** Gráfico de barras (conteos): su leyenda habla de barras, no de líneas. */
+  esConteo = false;
   hayIncompleto = false;
   ultimoIncompleto = false;
   sinMovimiento = false;
@@ -67,7 +73,7 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(): void {
-    this.nombre = TEXTOS.tendencias.series[this.clave] || this.clave;
+    this.nombre = this.titulo || TEXTOS.tendencias.series[this.clave] || this.clave;
     this.grafico = armarGrafico(this.nombre, this.unidad, this.puntos, this.colores[0], leerTintas());
     const graficable = this.grafico.hayDatos && !this.grafico.sinMovimiento;
     this.resultado = graficable ? this.grafico.resultado : null;
@@ -80,6 +86,7 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
     this.ultimoTexto = ultimo ? ultimo.texto : '';
     this.ultimoEtiqueta = ultimo ? ultimo.etiqueta : '';
     this.hayReconstruido = this.puntos.some((p) => p.estado === 'reconstruido');
+    this.esConteo = this.unidad !== 'COP';
   }
 
   ngOnDestroy(): void {

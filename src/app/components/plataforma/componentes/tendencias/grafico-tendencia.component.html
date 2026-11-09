@@ -1,4 +1,4 @@
-<section class="cfg-card" [attr.aria-label]="nombre">
+<section [class.cfg-card]="!embebido" [class.pl-grafico--embebido]="embebido" [attr.aria-label]="nombre">
   <div class="pl-grafico__cabeza">
     <h2>{{ nombre }}</h2>
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="alternar()" [attr.aria-pressed]="verTabla">
@@ -36,6 +36,7 @@
       </tbody>
     </table>
   </div>
-  <p class="pl-leyenda" *ngIf="hayIncompleto && !verTabla">{{ textos.tendencias.leyendaIncompleto }}</p>
-  <p class="pl-leyenda" *ngIf="hayReconstruido">{{ textos.tendencias.leyenda }}</p>
+  <p class="pl-leyenda" *ngIf="esConteo && !verTabla && (hayIncompleto || hayReconstruido)">{{ textos.tendencias.leyendaBarras }}</p>
+  <p class="pl-leyenda" *ngIf="!esConteo && hayIncompleto && !verTabla">{{ textos.tendencias.leyendaIncompleto }}</p>
+  <p class="pl-leyenda" *ngIf="!esConteo && hayReconstruido">{{ textos.tendencias.leyenda }}</p>
 </section>

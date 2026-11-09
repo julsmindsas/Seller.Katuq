@@ -6,6 +6,12 @@
   <p class="cfg-aviso cfg-aviso--warn" *ngIf="r.meta.cobroAutomatico?.advertencia" role="status">
     {{ textos.cobroAutomatico }}: {{ r.meta.cobroAutomatico?.advertencia }}
   </p>
+  <p class="cfg-aviso cfg-aviso--warn" *ngIf="r.meta.snapshotAyer?.estado === 'falta'" role="status">
+    {{ textos.cierreDiario }}: {{ textos.cierreDiarioFalta }}
+  </p>
+  <p class="cfg-aviso" *ngIf="r.meta.snapshotAyer?.estado === 'parcial'" role="status">
+    {{ textos.cierreDiario }}: {{ textos.cierreDiarioParcial }}
+  </p>
   <p class="cfg-aviso" *ngIf="r.datos?.rotulo" role="status">{{ r.datos?.rotulo }}</p>
 
   <section class="cfg-card" *ngIf="!r.datos">
