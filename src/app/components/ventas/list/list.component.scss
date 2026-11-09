@@ -5686,6 +5686,30 @@ $pd-chip-border: #e9e7f3;
 }
 
 /* ---- Adjuntos de las notas en detalle (ticket 1432) ---- */
+.pedido-adj-fila {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  > .pedido-adj { flex: 1; min-width: 0; }
+}
+/* Ticket 1591: botón para imprimir o guardar como PDF una imagen adjunta */
+.pedido-adj__pdf {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid #eceaf4;
+  border-radius: 12px;
+  background: var(--ds-surface);
+  color: var(--ds-accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+  &:hover { border-color: #d9cffb; background: var(--ds-row-hover); }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 1px; }
+}
 .pedido-adj {
   display: flex;
   align-items: center;

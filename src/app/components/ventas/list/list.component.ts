@@ -11550,6 +11550,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return adjuntos;
   }
 
+  /**
+   * Ticket 1591: abre la imagen adjunta en una página aparte, ajustada a la hoja, y lanza la
+   * impresión; desde ahí se imprime o se guarda como PDF. Arma la página con el DOM (sin HTML
+   * concatenado) para no inyectar el nombre ni la dirección del archivo.
+   */
+  imprimirAdjunto(adj: { url: string; nombre: string }): void {
+    if (!/^https:\/\//i.test(String(adj?.url || ''))) return;
+    const w = window.open('', '_blank');
+    if (!w) {
+      Swal.fire({ icon: 'info', title: 'Permite las ventanas emergentes', text: 'El navegador bloqueó la ventana para imprimir el adjunto.' });
+      return;
+    }
+    const doc = w.document;
+    doc.title = adj.nombre || 'Adjunto';
+    const estilo = doc.createElement('style');
+    estilo.textContent = '@page{margin:10mm}html,body{margin:0;background:#fff}img{display:block;max-width:100%;max-height:100vh;margin:0 auto;object-fit:contain}';
+    doc.head.appendChild(estilo);
+    const img = doc.createElement('img');
+    img.alt = adj.nombre || 'Adjunto';
+    img.onload = () => { w.focus(); w.print(); };
+    img.onerror = () => { doc.body.textContent = 'No se pudo cargar la imagen adjunta.'; };
+    img.src = adj.url;
+    doc.body.appendChild(img);
+  }
+
   trackByUrl(index: number, item: { url?: string }): string | number {
     return item?.url ?? index;
   }
