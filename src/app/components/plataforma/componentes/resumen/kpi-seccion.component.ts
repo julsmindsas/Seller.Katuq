@@ -44,7 +44,7 @@ export class KpiSeccionComponent implements OnChanges {
           const c = datos[k] as Cifra & { motivo?: string; cohorte?: number; convertidos?: number; mes?: string };
           let nota: string | null = null;
           if (c && c.estado === 'no_disponible' && c.motivo) nota = String(c.motivo);
-          if (k === 'conversionMesAnterior' && c && typeof c.cohorte === 'number') nota = `Cohorte de ${mesLegible(c.mes)}: ${c.convertidos ?? '—'} de ${c.cohorte} pagaron`;
+          if (k === 'conversionMesAnterior' && c && typeof c.cohorte === 'number') nota = `Cohorte de ${mesLegible(c.mes)}: ${c.convertidos ?? '—'} de ${c.cohorte} pagaron${c.estado === 'en_curso' ? ' hasta hoy (cohorte en curso)' : ''}`;
           return { clave: k, rotulo: TEXTOS.cifras[k] || k, pintada: pintarCifra(c), nota, definicionId: TEXTOS.definiciones[k] || null };
         })
       : [];
