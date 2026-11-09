@@ -260,3 +260,43 @@ export interface CambioMotivoBaja {
   bajaMotivo: MotivoBajaValor;
   ciclo: string;
 }
+
+/** D-700 18.8 — Pago manual (F2-3). El servidor nunca devuelve la ruta del archivo ni ids de personas. */
+export type MedioPagoManual = 'transferencia' | 'consignacion' | 'efectivo' | 'otro';
+
+export interface PagoManual {
+  id: string;
+  periodo: { desde: string; hasta: string };
+  fechaEfectiva: string;
+  montoCOP: number;
+  medio: MedioPagoManual;
+  referencia: string | null;
+  registradoEn: string;
+  tieneSoporte: boolean;
+  soporteId: string | null;
+  atipico: boolean;
+  duplicadoConfirmado: boolean;
+  estado: 'vigente' | 'anulado';
+  anuladoEn: string | null;
+  origen: 'manual';
+}
+
+export interface ListaPagosManuales { items: PagoManual[]; truncado: boolean; }
+export interface SoporteSubido { soporteId: string; contentType: string; bytes: number; }
+export interface PagoManualRegistrado { repetido: boolean; pago: PagoManual; vivoActualizado: boolean; }
+export interface PagoManualAnulado { cambio: boolean; yaAnulado: boolean; pagoId: string; anulacionId: string; companyDocId: string; vivoActualizado: boolean; }
+export interface AperturaSoporte { url: string; expiraEnSegundos: number; contentType: string; }
+
+/** Cuerpo de `POST /companies/:docId/manual-payments` (cerrado: el servidor rechaza cualquier otro campo). */
+export interface CuerpoPagoManual {
+  claveIdempotencia: string;
+  periodo: { desde: string; hasta: string };
+  fechaEfectiva: string;
+  montoCOP: number;
+  medio: MedioPagoManual;
+  referencia?: string;
+  soporteId: string;
+  confirmarAtipico?: boolean;
+  confirmarDuplicado?: boolean;
+  motivoConfirmacion?: string;
+}

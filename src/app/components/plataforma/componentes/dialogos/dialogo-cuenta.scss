@@ -40,3 +40,38 @@
   .pl-raiz .pl-modal__caja { padding: 18px 16px; }
   .pl-raiz .pl-modal__acciones .cfg-btn { flex: 1 1 100%; }
 }
+
+// D-700 18.8 — Pagos manuales: campos de texto, fechas y lista dentro de la misma ventana. Ningún nombre de clase lleva «p-».
+.pl-raiz .pl-modal__caja--ancha { width: min(100%, 640px); }
+.pl-raiz .pl-modal__campo input[type="text"], .pl-raiz .pl-modal__campo input[type="date"], .pl-raiz .pl-modal__campo select, .pl-raiz .pl-modal__campo input[type="file"] {
+  min-height: 40px; padding: 8px 12px; font: inherit; font-size: 13.5px; background: var(--ds-chip-bg); color: var(--ds-ink);
+  border: 1px solid var(--ds-control-border); border-radius: 10px; width: 100%; min-width: 0;
+}
+.pl-raiz .pl-modal__campo input[type="file"] { padding: 7px 10px; }
+.pl-raiz .pl-modal__campo input:focus-visible, .pl-raiz .pl-modal__campo select:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+.pl-raiz .pl-modal__fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pl-raiz .pl-modal__fila .pl-modal__campo { min-width: 0; }
+.pl-raiz .pl-modal__ayuda { font-size: 11.5px; color: var(--ds-muted); font-style: normal; overflow-wrap: anywhere; }
+.pl-raiz .pl-modal__error { font-size: 12px; font-weight: 600; color: var(--ds-err); }
+.pl-raiz .pl-modal__aviso { display: flex; flex-direction: column; gap: 8px; }
+.pl-raiz .pl-modal__aviso b { font-size: 13.5px; }
+.pl-raiz .pl-modal__opcion-simple { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--ds-ink); cursor: pointer; }
+.pl-raiz .pl-modal__opcion-simple input { margin-top: 2px; accent-color: #5F3FE0; flex: 0 0 auto; }
+.pl-raiz .pl-modal__codigo { display: block; padding: 8px 10px; font-size: 12px; background: var(--ds-surface-2); color: var(--ds-ink); border: 1px solid var(--ds-line-soft); border-radius: 10px; overflow-wrap: anywhere; user-select: all; }
+.pl-raiz .pl-modal__pagos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pl-raiz .pl-modal__pago { display: flex; flex-direction: column; gap: 6px; padding: 12px; background: var(--ds-surface); border: 1px solid var(--ds-line); border-radius: 11px; }
+.pl-raiz .pl-modal__pago--anulado { background: var(--ds-surface-2); }
+.pl-raiz .pl-modal__pago--anulado .pl-modal__pago-cifra b { text-decoration: line-through; color: var(--ds-muted); }
+.pl-raiz .pl-modal__pago-cifra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pl-raiz .pl-modal__pago-cifra b { font-size: 15px; color: var(--ds-ink); }
+.pl-raiz .pl-modal__pago-dato { font-size: 12px; color: var(--ds-body); overflow-wrap: anywhere; }
+.pl-raiz .pl-modal__pago-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.pl-raiz .pl-modal__etq { display: inline-flex; padding: 2px 9px; font-size: 11.5px; font-style: normal; font-weight: 700; border-radius: 20px; background: var(--ds-surface-2); color: var(--ds-body); border: 1px solid var(--ds-line-soft); }
+.pl-raiz .pl-modal__etq--ok { background: var(--ds-ok-soft); color: var(--ds-ok); border-color: transparent; }
+.pl-raiz .pl-modal__etq--aviso { background: var(--ds-warn-soft); color: var(--ds-warn); border-color: transparent; }
+.pl-raiz .pl-modal__caja a { color: var(--ds-accent-ink); font-weight: 700; }
+.pl-raiz .pl-modal__caja a:focus-visible, .pl-raiz .pl-modal__caja .cfg-btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+@media (max-width: 480px) {
+  .pl-raiz .pl-modal__fila { grid-template-columns: 1fr; }
+  .pl-raiz .pl-modal__pago-acciones .cfg-btn { flex: 1 1 100%; }
+}

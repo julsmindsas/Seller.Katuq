@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
-import { Definiciones } from '../plataforma.tipos';
+import { Definiciones, MePlataforma } from '../plataforma.tipos';
 import { PlataformaService } from './plataforma.service';
 
 /**
@@ -14,7 +14,7 @@ export class PlataformaContextoService {
   readonly recarga$ = new BehaviorSubject<number>(0);
 
   private definicionesCache: Definiciones | null = null;
-  private operador$: Observable<boolean> | null = null;
+  private me$: Observable<MePlataforma | null> | null = null;
 
   constructor(private servicio: PlataformaService) {}
 
@@ -27,16 +27,26 @@ export class PlataformaContextoService {
     );
   }
 
-  /** ¿Puede escribir? (`GET /me`, una sola vez por apertura). Sin respuesta cuenta como no: la autorización real es del servidor. */
-  esOperador(): Observable<boolean> {
-    if (!this.operador$) {
-      this.operador$ = this.servicio.me().pipe(
-        map((r) => !!(r && r.datos && r.datos.esOperador)),
-        catchError(() => of(false)),
+  /** `GET /me` una sola vez por apertura. Sin respuesta es `null`: la autorización real es del servidor. */
+  private yo(): Observable<MePlataforma | null> {
+    if (!this.me$) {
+      this.me$ = this.servicio.me().pipe(
+        map((r) => (r && r.datos) || null),
+        catchError(() => of(null)),
         shareReplay(1),
       );
     }
-    return this.operador$;
+    return this.me$;
+  }
+
+  /** ¿Puede escribir? Sin respuesta cuenta como no. */
+  esOperador(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.esOperador)));
+  }
+
+  /** ¿Está encendida la bandera de pagos manuales? (apagada, la ventana deja ver y anular, pero no registrar). */
+  pagosManualesActivos(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.banderas && m.banderas['manualPaymentsEnabled'] === true)));
   }
 
   cambiarVista(v: 'creacion' | 'entrega'): void {

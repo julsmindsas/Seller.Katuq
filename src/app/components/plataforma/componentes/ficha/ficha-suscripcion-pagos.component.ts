@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
+import { FichaSeccionComponent } from './ficha-seccion.component';
 import { TEXTOS } from '../../plataforma.textos';
 import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
 
-/** D-700 13.7a — Suscripción y pagos: contratado, cobrado, por cobrar, mora, facturas y pagos. */
+/** D-700 13.7a — Suscripción y pagos: contratado, cobrado, por cobrar, mora, facturas y pagos. D-700 18.8: los pagos manuales se rotulan «manual» y el operador abre la ventana de pagos manuales. */
 @Component({
   selector: 'app-ficha-suscripcion-pagos',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: ['.pl-acciones-ficha { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ds-line-soft); }'],
   template: `
     <app-ficha-seccion [docId]="docId" nombre="suscripcion" [titulo]="textos.ficha.secciones.suscripcion">
       <ng-template let-d>
@@ -44,15 +49,47 @@ import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
 
         <h3 class="pl-subtitulo">Pagos aprobados</h3>
         <ul class="pl-lista" *ngIf="d.pagos?.length; else sinPagos">
-          <li *ngFor="let p of d.pagos"><div>{{ p.fecha | fechaCo:false }} · {{ nulo(p.medio) }}</div><div class="pl-num">{{ p.monto | cop }} <small class="pl-muted">{{ nulo(p.transaccion) }}</small></div></li>
+          <li *ngFor="let p of d.pagos"><div>{{ p.fecha | fechaCo:false }} · {{ nulo(p.medio) }} <small class="pl-muted" *ngIf="p.origen === 'manual'">({{ textos.pagoManual.etqManual }})</small></div><div class="pl-num">{{ p.monto | cop }} <small class="pl-muted">{{ nulo(p.transaccion) }}</small></div></li>
         </ul>
         <ng-template #sinPagos><p class="pl-muted">{{ textos.comercios.sinPagos }}</p></ng-template>
+        <div class="pl-acciones-ficha" *ngIf="esOperador">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="dialogo = true">{{ textos.pagoManual.boton }}</button>
+        </div>
       </ng-template>
     </app-ficha-seccion>
+    <app-pago-manual-dialog *ngIf="dialogo" [docId]="docId" [nombre]="nombre || docId" (cerrado)="alCerrar($event)"></app-pago-manual-dialog>
   `,
 })
-export class FichaSuscripcionPagosComponent {
+export class FichaSuscripcionPagosComponent implements OnInit, OnDestroy {
   @Input() docId = '';
+  @Input() nombre = '';
+  /** Se registró o anuló un pago: quien aloja la ficha la vuelve a cargar y muestra el mensaje. */
+  @Output() actualizado = new EventEmitter<string>();
+  @ViewChild(FichaSeccionComponent) seccion?: FichaSeccionComponent;
+  esOperador = false;
+  dialogo = false;
+  private fin$ = new Subject<void>();
+
+  constructor(private ctx: PlataformaContextoService, private cd: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.ctx.esOperador().pipe(takeUntil(this.fin$)).subscribe((v) => { this.esOperador = v; this.cd.markForCheck(); });
+  }
+
+  ngOnDestroy(): void {
+    this.fin$.next();
+    this.fin$.complete();
+  }
+
+  alCerrar(r: { cambio: boolean; mensaje: string | null }): void {
+    this.dialogo = false;
+    this.cd.markForCheck();
+    if (r && r.cambio) {
+      if (this.seccion) this.seccion.reintentar();
+      if (r.mensaje) this.actualizado.emit(r.mensaje);
+    }
+  }
+
   readonly textos = TEXTOS;
   nulo = textoONulo;
   si = textoSiNo;

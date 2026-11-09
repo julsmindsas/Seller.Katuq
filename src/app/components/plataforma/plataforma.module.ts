@@ -30,6 +30,7 @@ import { FichaIntegracionesComponent } from './componentes/ficha/ficha-integraci
 import { FichaInformeComponent } from './componentes/ficha/ficha-informe.component';
 import { TipoCuentaDialogComponent } from './componentes/dialogos/tipo-cuenta-dialog.component';
 import { MotivoBajaDialogComponent } from './componentes/dialogos/motivo-baja-dialog.component';
+import { PagoManualDialogComponent } from './componentes/dialogos/pago-manual-dialog.component';
 
 /**
  * D-700 13.3 — Rutas internas del módulo (la ruta `plataforma` la registra `routes.ts` con `AuthGuard` y
@@ -65,7 +66,7 @@ const rutas: Routes = [
     ComercioFichaComponent, FichaSeccionComponent, FichaIdentidadComponent, FichaSuscripcionPagosComponent,
     FichaUsoComponent, FichaSaludComponent, FichaSoporteComponent, FichaHistorialComponent, CuentasExcluidasComponent,
     SegmentosComponent, CalidadDatosComponent, SugerenciasComponent, CobrosComponent, AdopcionComponent, ExportarComerciosComponent,
-    FichaIntegracionesComponent, FichaInformeComponent, TipoCuentaDialogComponent, MotivoBajaDialogComponent,
+    FichaIntegracionesComponent, FichaInformeComponent, TipoCuentaDialogComponent, MotivoBajaDialogComponent, PagoManualDialogComponent,
   ],
   providers: [PlataformaContextoService],
 })

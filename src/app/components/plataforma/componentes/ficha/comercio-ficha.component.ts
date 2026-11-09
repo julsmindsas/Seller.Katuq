@@ -29,7 +29,7 @@ import { TEXTOS } from '../../plataforma.textos';
       <p class="cfg-aviso cfg-aviso--ok" *ngIf="mensaje" role="status">{{ mensaje }}</p>
       <div class="pl-ficha">
         <app-ficha-identidad class="pl-ficha__ancha" [docId]="docId" [perfil]="p" (actualizado)="alActualizar($event)"></app-ficha-identidad>
-        <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId"></app-ficha-suscripcion-pagos>
+        <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId" [nombre]="p['nomComercial'] || p['nombre'] || docId" (actualizado)="alActualizar($event)"></app-ficha-suscripcion-pagos>
         <app-ficha-uso [docId]="docId"></app-ficha-uso>
         <app-ficha-salud [docId]="docId"></app-ficha-salud>
         <app-ficha-integraciones [docId]="docId"></app-ficha-integraciones>
