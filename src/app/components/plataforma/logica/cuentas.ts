@@ -10,7 +10,7 @@ export const COMENTARIO_BAJA_MAX = 300;
 
 /** Mismo criterio del servidor: sin saltos ni espacios repetidos, recortado. */
 export function limpiarTextoLibre(v: string): string {
-  return (v || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return (v || '').replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export function tipoDeCuentaValido(v: unknown): v is TipoCuentaValor {

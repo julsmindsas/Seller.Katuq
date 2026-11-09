@@ -37,8 +37,9 @@ export class PlataformaService extends BaseService {
     return this.getSinLoader(`/v1/platform/companies${queryString(paramsDeFiltros(f))}`);
   }
 
-  perfil(docId: string): Observable<SobrePlataforma<Record<string, any>>> {
-    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}`);
+  /** `recarga`: el perfil se vuelve a pedir tras guardar un cambio; el servidor no repite el evento de apertura si ya hay una reciente. */
+  perfil(docId: string, recarga = false): Observable<SobrePlataforma<Record<string, any>>> {
+    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}${recarga ? '?recarga=1' : ''}`);
   }
 
   seccion(docId: string, nombre: NombreSeccion): Observable<SobrePlataforma<Record<string, any>>> {

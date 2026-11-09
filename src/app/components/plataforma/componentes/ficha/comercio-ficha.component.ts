@@ -46,6 +46,7 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   estado: EstadoCarga<Record<string, any>> = estadoInicial();
   mensaje: string | null = null;
   private pendiente: string | null = null;
+  private recargando = false;
   private cargar$ = new Subject<void>();
   private fin$ = new Subject<void>();
 
@@ -53,7 +54,7 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargar$.pipe(
-      switchMap(() => conEstado(this.servicio.perfil(this.docId))),
+      switchMap(() => conEstado(this.servicio.perfil(this.docId, this.recargando))),
       takeUntil(this.fin$),
     ).subscribe((e) => {
       this.estado = e.datos ? { ...e, datos: ((e.datos as unknown as { datos: Record<string, any> }).datos) || {} } : e;
@@ -62,6 +63,7 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
     });
     this.ruta.paramMap.pipe(takeUntil(this.fin$)).subscribe((m) => {
       this.docId = m.get('docId') || '';
+      this.recargando = false;
       this.mensaje = null;
       this.pendiente = null;
       this.estado = estadoInicial();
@@ -75,6 +77,7 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   }
 
   reintentar(): void {
+    this.recargando = false;
     this.cargar$.next();
   }
 
@@ -82,6 +85,7 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   alActualizar(mensaje: string): void {
     this.mensaje = null;
     this.pendiente = mensaje;
+    this.recargando = true;
     this.cargar$.next();
   }
 }
