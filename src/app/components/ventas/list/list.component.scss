@@ -3971,6 +3971,7 @@ $filter-border-color: #e0e0e0;
 
   .metric-badge {
     display: inline-flex;
+    white-space: nowrap;
     align-items: center;
     justify-content: center;
     min-width: 24px;

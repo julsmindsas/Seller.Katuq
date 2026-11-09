@@ -37,7 +37,8 @@
   margin-bottom: 0.2rem;
 }
 .cm-value {
-  font-size: 1.15rem;
+  font-size: clamp(.95rem, 4vw, 1.15rem);
+  white-space: nowrap;
   font-weight: 800;
   color: var(--ds-accent-ink);
   line-height: 1.2;

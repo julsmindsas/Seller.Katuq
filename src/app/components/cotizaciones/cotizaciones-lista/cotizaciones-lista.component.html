@@ -37,7 +37,7 @@
       <span class="kpi-bar"></span>
       <div class="kpi-main">
         <div class="kpi-label">Cotizado (este mes)</div>
-        <div class="kpi-value">{{ money(metrics?.cotizadoMes) }}</div>
+        <div class="kpi-value">{{ ((metrics?.cotizadoMes) || 0 | copMoneda) }}</div>
         <div class="kpi-sub">total emitido</div>
       </div>
       <span class="kpi-icon">
@@ -49,9 +49,9 @@
       <span class="kpi-bar"></span>
       <div class="kpi-main">
         <div class="kpi-label">Pipeline abierto</div>
-        <div class="kpi-value">{{ money(metrics?.pipelineAbierto ?? metrics?.pipelineActivo) }}</div>
+        <div class="kpi-value">{{ ((metrics?.pipelineAbierto ?? metrics?.pipelineActivo) || 0 | copMoneda) }}</div>
         <div class="kpi-sub" title="Proyección: pipeline abierto × tasa de conversión">
-          {{ metrics?.pipelineAbiertoCount ?? 0 }} enviadas vigentes · ponderado {{ money(metrics?.pipelinePonderado) }}
+          {{ metrics?.pipelineAbiertoCount ?? 0 }} enviadas vigentes · ponderado {{ ((metrics?.pipelinePonderado) || 0 | copMoneda) }}
         </div>
       </div>
       <span class="kpi-icon">
@@ -71,7 +71,7 @@
       <span class="kpi-main">
         <span class="kpi-label">Aceptadas sin convertir</span>
         <span class="kpi-value">{{ metrics?.aceptadasSinConvertir?.cantidad ?? '—' }}</span>
-        <span class="kpi-sub">{{ money(metrics?.aceptadasSinConvertir?.valor) }} por pasar a pedido</span>
+        <span class="kpi-sub">{{ ((metrics?.aceptadasSinConvertir?.valor) || 0 | copMoneda) }} por pasar a pedido</span>
       </span>
       <span class="kpi-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -239,7 +239,7 @@
   <ng-template #panelCompacto>
     <div class="cotz-card barra-compacta">
       <div class="barra-compacta-cifras" *ngIf="metrics">
-        <span>Pipeline <b>{{ money(metrics.pipelineAbierto ?? metrics.pipelineActivo) }}</b></span>
+        <span>Pipeline <b>{{ ((metrics.pipelineAbierto ?? metrics.pipelineActivo) || 0 | copMoneda) }}</b></span>
         <span>Conversión <b>{{ pct(metrics.winRate ?? metrics.tasaConversion) }}</b></span>
         <span>Sin convertir <b>{{ metrics.aceptadasSinConvertir?.cantidad ?? 0 }}</b></span>
       </div>
@@ -272,12 +272,12 @@
     <div class="indicadores-grid">
       <div class="indicador" title="Cotizaciones emitidas en el período y su valor.">
         <span class="indicador-nombre">Cotizado</span>
-        <strong>{{ money(ind.cotizadoValor) }}</strong>
+        <strong>{{ ((ind.cotizadoValor) || 0 | copMoneda) }}</strong>
         <small>{{ ind.cotizaciones }} cotizaciones <em [class]="claseVariacion('cotizadoValor')">{{ textoVariacion('cotizadoValor') }}</em></small>
       </div>
       <div class="indicador" title="$ cotizado ÷ número de cotizaciones.">
         <span class="indicador-nombre">Ticket promedio</span>
-        <strong>{{ money(ind.ticketPromedio) }}</strong>
+        <strong>{{ ((ind.ticketPromedio) || 0 | copMoneda) }}</strong>
         <small><em [class]="claseVariacion('ticketPromedio')">{{ textoVariacion('ticketPromedio') }}</em></small>
       </div>
       <div class="indicador" title="Convertidas ÷ cerradas (convertidas + rechazadas + vencidas).">
@@ -308,7 +308,7 @@
       <div class="indicador" title="$ convertido en el mes ÷ meta mensual de los comerciales filtrados.">
         <span class="indicador-nombre">Avance vs. meta</span>
         <strong>{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</strong>
-        <small>{{ ind.meta ? money(ind.convertidoMes) + ' de ' + money(ind.meta) : 'Sin meta configurada' }}</small>
+        <small>{{ ind.meta ? ((ind.convertidoMes) || 0 | copMoneda) + ' de ' + ((ind.meta) || 0 | copMoneda) : 'Sin meta configurada' }}</small>
       </div>
     </div>
   </div>
@@ -343,13 +343,13 @@
           <tr *ngFor="let f of filasComparativa">
             <td><button type="button" class="comparativa-asesor" (click)="setVendedor(f.email)" [title]="'Ver solo a ' + f.nombre">{{ f.nombre }}</button></td>
             <td class="num">{{ f.cotizaciones }}</td>
-            <td class="num">{{ money(f.cotizadoValor) }}</td>
+            <td class="num">{{ ((f.cotizadoValor) || 0 | copMoneda) }}</td>
             <td class="num">{{ pct(f.winRate) }} <small>· {{ pct(f.winRateValor) }}</small></td>
-            <td class="num">{{ money(f.ticketPromedio) }}</td>
+            <td class="num">{{ ((f.ticketPromedio) || 0 | copMoneda) }}</td>
             <td class="num">{{ numero(f.cicloCierreDias, ' d') }}</td>
             <td class="num">{{ pct(f.descuentoPromedio) }}</td>
-            <td class="num">{{ money(f.pipelineAbierto) }}</td>
-            <td class="num">{{ money(f.convertidoValor) }}</td>
+            <td class="num">{{ ((f.pipelineAbierto) || 0 | copMoneda) }}</td>
+            <td class="num">{{ ((f.convertidoValor) || 0 | copMoneda) }}</td>
             <td class="num" *ngIf="metrics?.veMargen">{{ f.margenPromedio === null || f.margenPromedio === undefined ? '—' : pct(f.margenPromedio) }}</td>
             <td class="num">{{ f.avanceMeta === null ? '—' : pct(f.avanceMeta) }}</td>
             <td class="num">{{ pct(f.participacion) }}</td>
@@ -357,13 +357,13 @@
           <tr class="comparativa-total" *ngIf="metrics?.indicadores as ind">
             <td>Equipo</td>
             <td class="num">{{ ind.cotizaciones }}</td>
-            <td class="num">{{ money(ind.cotizadoValor) }}</td>
+            <td class="num">{{ ((ind.cotizadoValor) || 0 | copMoneda) }}</td>
             <td class="num">{{ pct(ind.winRate) }} <small>· {{ pct(ind.winRateValor) }}</small></td>
-            <td class="num">{{ money(ind.ticketPromedio) }}</td>
+            <td class="num">{{ ((ind.ticketPromedio) || 0 | copMoneda) }}</td>
             <td class="num">{{ numero(ind.cicloCierreDias, ' d') }}</td>
             <td class="num">{{ pct(ind.descuentoPromedio) }}</td>
-            <td class="num">{{ money(ind.pipelineAbierto) }}</td>
-            <td class="num">{{ money(ind.convertidoValor) }}</td>
+            <td class="num">{{ ((ind.pipelineAbierto) || 0 | copMoneda) }}</td>
+            <td class="num">{{ ((ind.convertidoValor) || 0 | copMoneda) }}</td>
             <td class="num" *ngIf="metrics?.veMargen">{{ ind.margenPromedio === null || ind.margenPromedio === undefined ? '—' : pct(ind.margenPromedio) }}</td>
             <td class="num">{{ ind.avanceMeta === null ? '—' : pct(ind.avanceMeta) }}</td>
             <td class="num">100%</td>
@@ -530,7 +530,7 @@
             <td>
               <span class="valida" [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span>
             </td>
-            <td class="ta-right td-total">{{ money(c.total) }}</td>
+            <td class="ta-right td-total">{{ ((c.total) || 0 | copMoneda) }}</td>
             <td class="ta-center">
               <span class="estado-pill" [attr.data-estado]="c.estadoCotizacion">
                 <span class="dot"></span>{{ estadoLabel(c.estadoCotizacion) }}

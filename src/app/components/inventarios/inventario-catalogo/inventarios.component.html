@@ -412,19 +412,19 @@
                                             <th *ngFor="let tc of tiposClienteActivos"
                                                 style="width: 130px;" class="text-end py-2">
                                                 <span class="fw-bold inv-txt-info">
-                                                    {{ getMetricaValorVentaPorTipo(tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getMetricaValorVentaPorTipo(tc.id) | copMoneda }}
                                                 </span>
                                             </th>
                                             <!-- Columna Valor Total -->
                                             <th style="width: 130px;" class="text-end py-2">
                                                 <span class="fw-bold inv-txt-accent">
-                                                    {{ getMetricaValorTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getMetricaValorTotal() | copMoneda }}
                                                 </span>
                                             </th>
                                             <!-- Columna Valor a Costo -->
                                             <th style="width: 130px;" class="text-end pe-3 py-2">
                                                 <span class="fw-bold inv-txt-warn">
-                                                    {{ getMetricaValorCostoTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getMetricaValorCostoTotal() | copMoneda }}
                                                 </span>
                                             </th>
                                             <!-- Columna Acciones vacía -->
@@ -486,12 +486,12 @@
                                                 <span class="fw-semibold"
                                                       [style.color]="getCostoUnitario(producto) > 0 ? '#f59e0b' : '#9ca3af'"
                                                       style="font-size: 0.9rem;">
-                                                    {{ getCostoUnitario(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getCostoUnitario(producto) | copMoneda }}
                                                 </span>
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-ink" style="font-size: 0.9rem;">{{ precioSinIvaFila(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-ink" style="font-size: 0.9rem;">{{ precioSinIvaFila(producto) | copMoneda }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
                                             </td>
                                             <!-- Valores por Tipo de Cliente (lista de precios) -->
@@ -500,7 +500,7 @@
                                                 <ng-container *ngIf="getPrecioTipoCliente(producto, tc.id) as precioTC; else sinPrecioTC">
                                                     <span *ngIf="precioTC > 0" class="fw-semibold inv-txt-info"
                                                           style="font-size: 0.9rem;">
-                                                        {{ getValorVentaPorTipo(producto, tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                        {{ getValorVentaPorTipo(producto, tc.id) | copMoneda }}
                                                     </span>
                                                     <span *ngIf="precioTC === 0" class="text-muted small">—</span>
                                                 </ng-container>
@@ -508,7 +508,7 @@
                                             </td>
                                             <!-- Valor Total (precio × stock) -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-accent" style="font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold inv-txt-accent" style="font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | copMoneda }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Valor a Costo (costo × stock) — siempre visible -->
@@ -517,7 +517,7 @@
                                                 <span class="fw-semibold"
                                                       [style.color]="getCostoUnitario(producto) > 0 ? '#f59e0b' : '#9ca3af'"
                                                       style="font-size: 0.9rem;">
-                                                    {{ getValorCostoProducto(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getValorCostoProducto(producto) | copMoneda }}
                                                 </span>
                                             </td>
                                             <!-- Acciones -->

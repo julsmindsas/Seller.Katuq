@@ -595,14 +595,14 @@
                     {{ row.validacion ? 'Validado' : 'No validado' }}
                   </span>
                 </td>
-                <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">{{ row.totalPedidoSinDescuento | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('totalDescuento')">{{ row.totalDescuento | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('totalEnvio')">{{ row.totalEnvio | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('subtotal')">{{ row.subtotal | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('totalImpuesto')">{{ row.totalImpuesto | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')">{{ row.totalPedididoConDescuento | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('anticipo')">{{ row.anticipo | currency }}</td>
-                <td *ngIf="isColumnVisibleProduccion('faltaPorPagar')">{{ row.faltaPorPagar | currency }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedidoSinDescuento')">{{ row.totalPedidoSinDescuento | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalDescuento')">{{ row.totalDescuento | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalEnvio')">{{ row.totalEnvio | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('subtotal')">{{ row.subtotal | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalImpuesto')">{{ row.totalImpuesto | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('totalPedididoConDescuento')">{{ row.totalPedididoConDescuento | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('anticipo')">{{ row.anticipo | copMoneda }}</td>
+                <td *ngIf="isColumnVisibleProduccion('faltaPorPagar')">{{ row.faltaPorPagar | copMoneda }}</td>
                 <td *ngIf="isColumnVisibleProduccion('fechaEntrega')">
                   {{ row.fechaEntrega || '-' }}
                 </td>

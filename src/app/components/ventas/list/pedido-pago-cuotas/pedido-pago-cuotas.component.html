@@ -21,7 +21,7 @@
       <span class="cuotas-estado" [ngClass]="'cuotas-estado--' + tono(i.estado)" [attr.title]="detalleEstado(i)">{{ i.estado | translate }}</span>
       <span class="cuotas-intento__fecha" *ngIf="fecha(i) as f">{{ f | date:'dd/MM/yyyy HH:mm' }}</span>
       <span class="cuotas-intento__monto" *ngIf="i.montoAprobado">
-        {{ 'Aprobado por' | translate }} {{ i.montoAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}
+        {{ 'Aprobado por' | translate }} {{ i.montoAprobado | copMoneda }}
       </span>
     </li>
   </ul>

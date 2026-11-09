@@ -245,11 +245,11 @@
                                         
                                         <!-- Valores monetarios - Optimizados -->
                                         <td *ngIf="col.field === 'totalEnvio'" class="text-end text-nowrap col-totalEnvio" [attr.data-label]="col.header | translate" style="padding: 0.5rem; font-weight: 500; font-family: 'Courier New', monospace;">
-                                            {{ pedido.totalEnvio | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                            {{ pedido.totalEnvio | copMoneda }}
                                         </td>
                                         <td *ngIf="col.field === 'faltaPorPagar'" class="text-end text-nowrap col-faltaPorPagar" [attr.data-label]="col.header | translate" style="padding: 0.5rem; font-weight: 500; font-family: 'Courier New', monospace;">
                                             <span [ngClass]="{'text-danger': pedido?.faltaPorPagar > 0, 'text-success': pedido?.faltaPorPagar === 0}">
-                                                {{ pedido?.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                {{ pedido?.faltaPorPagar | copMoneda }}
                                             </span>
                                         </td>
                                         
@@ -474,10 +474,10 @@
                                                                         <td>{{ itemconf.titulo }}</td>
                                                                         <td>{{ itemconf.subtitulo }}</td>
                                                                         <td>{{ itemconf.porcentajeIva }}</td>
-                                                                        <td>{{ itemconf.valorIva | currency }}</td>
-                                                                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                                                                        <td>{{ itemconf.valorIva | copMoneda }}</td>
+                                                                        <td>{{ itemconf.valorUnitarioSinIva | copMoneda }}</td>
                                                                         <td>1</td>
-                                                                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                                                                        <td>{{ itemconf.precioTotalConIva | copMoneda }}</td>
                                                                     </tr>
                                                                 </ng-template>
                                                             </p-table>
@@ -508,10 +508,10 @@
                                                                         <td>{{ itemconf.titulo }}</td>
                                                                         <td>{{ itemconf.subtitulo }}</td>
                                                                         <td>{{ itemconf.porcentajeIva }}</td>
-                                                                        <td>{{ itemconf.valorIva | currency }}</td>
-                                                                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
+                                                                        <td>{{ itemconf.valorIva | copMoneda }}</td>
+                                                                        <td>{{ itemconf.valorUnitarioSinIva | copMoneda }}</td>
                                                                         <td>1</td>
-                                                                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
+                                                                        <td>{{ itemconf.precioTotalConIva | copMoneda }}</td>
                                                                     </tr>
                                                                 </ng-template>
                                                             </p-table>
@@ -542,8 +542,8 @@
                         <ng-template pTemplate="summary">
                             <tr class="summary-row" style="font-size: 0.85em; background-color: #faf9fe; border-top: 2px solid #ddd3fb;" *ngIf="getVisibleColumnsCount() > 0">
                                 <td [attr.colspan]="getVisibleColumnsCount() + 1" class="text-end" style="padding: 1rem; font-weight: bold;">
-                                    <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio(orders) | currency }} | 
-                                    <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar(orders) | currency }}
+                                    <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio(orders) | copMoneda }} | 
+                                    <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar(orders) | copMoneda }}
                                 </td>
                             </tr>
                         </ng-template>
@@ -560,7 +560,7 @@
                                 {{selectedPedidos.length}} pedido{{selectedPedidos.length > 1 ? 's' : ''}} seleccionado{{selectedPedidos.length > 1 ? 's' : ''}}
                             </span>
                             <span style="opacity: 0.7; font-size: 0.85rem;">
-                                Valor: {{getTotalValorSeleccionados() | currency:'COP':'symbol-narrow':'1.0-0'}}
+                                Valor: {{getTotalValorSeleccionados() | copMoneda}}
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px;">

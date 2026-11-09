@@ -87,6 +87,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 
 import { ImagenProductoPipe } from './pipes/imagen-producto.pipe';
+import { CopMonedaPipe } from './pipes/cop-moneda.pipe';
 import { PublicaModule } from './components/publica/publica.module';
 import { IconoTablerComponent } from './icons/icono-tabler.component';
 @NgModule({
@@ -143,6 +144,7 @@ import { IconoTablerComponent } from './icons/icono-tabler.component';
   ],
   imports: [
     ImagenProductoPipe,
+    CopMonedaPipe,
     // D-546: íconos Tabler del menú lateral (standalone).
     IconoTablerComponent,
     CommonModule,
@@ -205,6 +207,7 @@ import { IconoTablerComponent } from './icons/icono-tabler.component';
     // Se reexporta para que cualquier módulo que importe SharedModule pueda
     // resolver las imágenes de producto sin volver a declararlo.
     ImagenProductoPipe,
+    CopMonedaPipe,
     LoaderComponent,
     BreadcrumbComponent,
     FeatherIconsComponent,
