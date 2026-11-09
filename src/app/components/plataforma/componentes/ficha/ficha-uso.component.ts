@@ -13,7 +13,7 @@ import { textoONulo, textoSiNo } from '../../logica/formato';
     <app-ficha-seccion [docId]="docId" nombre="uso" [titulo]="textos.ficha.secciones.uso">
       <ng-template let-d>
         <h3 class="pl-subtitulo">Ingreso a la plataforma <small class="pl-muted">(es ingreso, no uso)</small></h3>
-        <dl class="pl-datos" *ngIf="d.ingreso?.estado !== 'sin_dato'; else sinIngreso">
+        <dl class="pl-datos pl-datos--clave" *ngIf="d.ingreso?.estado !== 'sin_dato'; else sinIngreso">
           <div><dt>Último ingreso</dt><dd>{{ d.ingreso?.ultimoIngreso | fechaCo }}</dd></div>
           <div><dt>Usuarios</dt><dd>{{ nulo(d.ingreso?.usuarios) }}</dd></div>
           <div><dt>Ingresaron en 7 días</dt><dd>{{ si(d.ingreso?.ingreso7d) }}</dd></div>

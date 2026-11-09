@@ -9,19 +9,22 @@ import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
   template: `
     <app-ficha-seccion [docId]="docId" nombre="suscripcion" [titulo]="textos.ficha.secciones.suscripcion">
       <ng-template let-d>
+        <dl class="pl-datos pl-datos--clave">
+          <div><dt>Plan</dt><dd>{{ nulo(d.plan) }}</dd></div>
+          <div><dt>Último pago</dt><dd>{{ ultimoPago(d.ultimoPago) }}</dd></div>
+          <div><dt>Próximo cobro</dt><dd>{{ d.proximoCobro | fechaCo:false }}</dd></div>
+          <div><dt>En mora</dt><dd>{{ d.mora?.monto | cop }}</dd></div>
+        </dl>
         <dl class="pl-datos">
           <div><dt>Modo de cobro</dt><dd>{{ nulo(d.modoCobro) }}</dd></div>
           <div><dt>Periodo</dt><dd>{{ nulo(d.periodo) }}</dd></div>
-          <div><dt>Plan</dt><dd>{{ nulo(d.plan) }}</dd></div>
           <div><dt>Escalón</dt><dd>{{ nulo(d.escalon) }}</dd></div>
           <div><dt>Contratado (estimado, mes)</dt><dd class="pl-num">{{ d.contratado?.copMes | cop }}</dd></div>
-          <div><dt>Próximo cobro</dt><dd>{{ d.proximoCobro | fechaCo:false }}</dd></div>
-          <div><dt>Último pago</dt><dd>{{ ultimoPago(d.ultimoPago) }}</dd></div>
           <div><dt>Última factura</dt><dd>{{ d.ultimaFactura ? d.ultimaFactura.estado + ' · vence ' + (d.ultimaFactura.vencimiento | fechaCo:false) : '—' }}</dd></div>
           <div><dt>Cobrado del mes</dt><dd class="pl-num">{{ d.cobrado?.mes?.total | cop }}</dd></div>
           <div><dt>Cobrado del mes anterior</dt><dd class="pl-num">{{ d.cobrado?.mesAnterior?.total | cop }}</dd></div>
           <div><dt>Por cobrar</dt><dd class="pl-num">{{ d.porCobrar?.monto | cop }}</dd></div>
-          <div><dt>En mora</dt><dd class="pl-num">{{ d.mora?.monto | cop }} <small class="pl-muted" *ngIf="d.mora?.diasAtrasoMax">({{ d.mora.diasAtrasoMax }} días de atraso)</small></dd></div>
+          <div><dt>Días de atraso (máximo)</dt><dd class="pl-num">{{ nulo(d.mora?.diasAtrasoMax) }}</dd></div>
           <div><dt>Por revisar</dt><dd>{{ nulo(d.porRevisar?.cantidad) }}</dd></div>
           <div><dt>TRM usada</dt><dd>{{ d.trm ? (d.trm.valor | number:'1.0-2') + ' (' + (d.trm.fecha | fechaCo:false) + ')' : '—' }}</dd></div>
         </dl>
@@ -32,7 +35,7 @@ import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
             <thead><tr><th scope="col">Factura</th><th scope="col">Estado</th><th scope="col">Vence</th><th scope="col">Pagada</th><th scope="col" class="pl-der">Monto</th><th scope="col">Saldada a mano</th></tr></thead>
             <tbody>
               <tr *ngFor="let f of d.facturas">
-                <td>{{ nulo(f.id) }}</td><td>{{ nulo(f.estado) }}</td><td>{{ f.vence | fechaCo:false }}</td><td>{{ f.pagadaEn | fechaCo:false }}</td>
+                <td class="pl-id" [attr.title]="f.id">{{ nulo(f.id) }}</td><td><span class="pl-estado">{{ nulo(f.estado) }}</span></td><td>{{ f.vence | fechaCo:false }}</td><td>{{ f.pagadaEn | fechaCo:false }}</td>
                 <td class="pl-der pl-num">{{ f.monto | cop }}</td><td>{{ si(f.saldadaManualmente) }}</td>
               </tr>
             </tbody>
