@@ -1,83 +1,167 @@
 {
-  "version": "2026.11.09.4 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T21:44:55.440Z",
+  "version": "2026.11.09.5 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T22:37:22.435Z",
   "notas": [
     {
-      "fecha": "2026-11-09T21:15:00Z",
+      "fecha": "2026-11-09T22:27:17Z",
       "tipo": "CORRIGE",
-      "texto": "Borrar toda la base de productos y «Limpiar precios» ya no aparecen en la barra de trabajo, para que nadie los toque por error.",
+      "texto": "En el cierre de caja, los saldos ya no aceptan centavos y la rueda del mouse no cambia el valor por error. Un cierre que quedó con centavos de diferencia ahora aparece como que cuadra, y ya no dice «Falta $0».",
       "modulos": [
-        "productos"
+        "ventas/ventas-pos"
       ]
     },
     {
-      "fecha": "2026-11-09T21:15:00Z",
+      "fecha": "2026-11-09T22:18:00Z",
       "tipo": "CORRIGE",
-      "texto": "En el celular, el menú lateral ya no deja una franja visible cuando está cerrado."
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, las tablas de Tipos de cliente, Géneros, Ocasiones y Canales se ven como tarjetas, con Activo y Acciones a la vista y sin deslizar de lado.",
-      "modulos": [
-        "proceso/tipos-cliente",
-        "proceso/generos",
-        "proceso/ocasiones",
-        "proceso/canales"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, Venta asistida ya no corta el logo de tu negocio, la franja de TOTAL A PAGAR queda dentro de la tarjeta y el botón de volver arriba no tapa la barra de abajo.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Pedidos, el estado «Sin producir» ya se lee bien, el progreso del pedido te dice cuál es el siguiente paso y los estados salen con su nombre completo, como «Pago en revisión».",
-      "modulos": [
-        "ventas"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
+      "texto": "Los valores en pesos se ven igual en todas las pantallas, con punto de miles, y las cifras grandes ya no se cortan ni se parten.",
       "modulos": [
         "ventas",
-        "tesoreria"
+        "inventario/inventario-catalogo",
+        "tesoreria",
+        "cotizaciones",
+        "despachos",
+        "cotizaciones/catalogos"
       ]
     },
     {
-      "fecha": "2026-11-09T21:15:00Z",
+      "fecha": "2026-11-09T22:18:00Z",
       "tipo": "CORRIGE",
-      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
+      "texto": "Ya no verás términos técnicos: el chat KAI habla de temas como Ventas e Inventario, WhatsApp muestra qué mensaje automático se envió en vez del nombre de la plantilla y los reportes dicen «según tus facturas».",
       "modulos": [
-        "ventas/ventas-pos"
+        "agent-builder/chat-agui",
+        "notificaciones/whatsapp/inbox",
+        "dashboards"
       ]
     },
     {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los nombres del menú y de las pantallas ahora coinciden (Prospectos, Ajustes de inventario) y cada sitio y catálogo explica mejor para qué sirve."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los avisos emergentes ya no tapan el menú de arriba y el nombre de tu empresa ya no sale cortado junto al logo."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ahora puedes cerrar el panel de notificaciones con la tecla Esc, y el botón de borrar todas quedó separado del de marcar como leídas."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En vivo cuenta igual los pedidos entregados hoy en todos sus bloques, la flota ya no se repite y los nombres de los mensajeros salen bien escritos.",
       "modulos": [
-        "ventas/ventas-pos"
+        "en-vivo"
       ]
     },
     {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las tarjetas Agotados y Stock bajo del inventario ya muestran el número real de productos.",
       "modulos": [
-        "lista-precios/lista-precios",
-        "ventas/clientes"
+        "inventario/inventario-catalogo"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "MEJORA",
+      "texto": "El resumen de clientes te dice a qué hora se calculó, y al pulsar Actualizar trae la cifra al día.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "MEJORA",
+      "texto": "La ayuda de Cartera total y Cartera pendiente explica cómo se calcula cada una y por qué pueden diferir por poco.",
+      "modulos": [
+        "cartera",
+        "tesoreria"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-09T22:27:17Z",
+      "tipo": "CORRIGE",
+      "texto": "En el cierre de caja, los saldos ya no aceptan centavos y la rueda del mouse no cambia el valor por error. Un cierre que quedó con centavos de diferencia ahora aparece como que cuadra, y ya no dice «Falta $0».",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los valores en pesos se ven igual en todas las pantallas, con punto de miles, y las cifras grandes ya no se cortan ni se parten.",
+      "modulos": [
+        "ventas",
+        "inventario/inventario-catalogo",
+        "tesoreria",
+        "cotizaciones",
+        "despachos",
+        "cotizaciones/catalogos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya no verás términos técnicos: el chat KAI habla de temas como Ventas e Inventario, WhatsApp muestra qué mensaje automático se envió en vez del nombre de la plantilla y los reportes dicen «según tus facturas».",
+      "modulos": [
+        "agent-builder/chat-agui",
+        "notificaciones/whatsapp/inbox",
+        "dashboards"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los nombres del menú y de las pantallas ahora coinciden (Prospectos, Ajustes de inventario) y cada sitio y catálogo explica mejor para qué sirve."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los avisos emergentes ya no tapan el menú de arriba y el nombre de tu empresa ya no sale cortado junto al logo."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ahora puedes cerrar el panel de notificaciones con la tecla Esc, y el botón de borrar todas quedó separado del de marcar como leídas."
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En vivo cuenta igual los pedidos entregados hoy en todos sus bloques, la flota ya no se repite y los nombres de los mensajeros salen bien escritos.",
+      "modulos": [
+        "en-vivo"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las tarjetas Agotados y Stock bajo del inventario ya muestran el número real de productos.",
+      "modulos": [
+        "inventario/inventario-catalogo"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "MEJORA",
+      "texto": "El resumen de clientes te dice a qué hora se calculó, y al pulsar Actualizar trae la cifra al día.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T22:18:00Z",
+      "tipo": "MEJORA",
+      "texto": "La ayuda de Cartera total y Cartera pendiente explica cómo se calcula cada una y por qué pueden diferir por poco.",
+      "modulos": [
+        "cartera",
+        "tesoreria"
+      ]
+    },
     {
       "fecha": "2026-11-09T21:15:00Z",
       "tipo": "CORRIGE",
@@ -473,88 +557,8 @@
       "modulos": [
         "tesoreria"
       ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Tesorería, los totales de «Sin pago» suman todos los pedidos del filtro, no solo los de la pantalla, y el filtro por forma de pago ya funciona.",
-      "modulos": [
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Tesorería, el Historial muestra el total real de pagos, se filtra por forma de pago y por quién subió el pago, y muestra lo recaudado por forma de pago.",
-      "modulos": [
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Tesorería, cada tarjeta tiene una ayuda que explica qué cuenta y en qué período.",
-      "modulos": [
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "La lista de clientes carga mucho más rápido: trae los clientes por páginas en vez de todos de una vez, y puedes buscar un celular o un documento por sus últimos dígitos.",
-      "modulos": [
-        "ventas/clienteslista"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Cartera ves lo que se vence en los próximos 7 días, cuántos clientes tienen cupo configurado y un resumen por vendedor.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "NUEVO",
-      "texto": "Ahora puedes filtrar la Cartera con varios filtros a la vez, ver y quitar los activos con una X, compartir el enlace de la vista y usar los mismos filtros en Aging.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "MEJORA",
-      "texto": "El Excel de Cartera trae 3 hojas (Resumen, Por cliente y Detalle) con fechas reales, filtros en las tablas y los datos que necesitas para cobrar.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:55:00Z",
-      "tipo": "NUEVO",
-      "texto": "El PDF de Cartera es ahora un informe horizontal con resumen en la primera hoja y detalle agrupado por cliente, en versión Resumen o Completa.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:49:03Z",
-      "tipo": "CORRIGE",
-      "texto": "El cierre de caja ahora toma el día completo, de 12 a. m. a 11:59 p. m. Puedes hacer varios cierres el mismo día: si vendes después de cerrar, haz otro cierre y esa plata cuadra ese mismo día. Si sobra o falta plata, debes explicarlo en Observaciones, y el administrador puede registrar un ajuste desde el Historial.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:31:00Z",
-      "tipo": "MEJORA",
-      "texto": "En el detalle de una factura, el botón «AttachedDocument» ahora se llama «Contenedor DIAN» y te explica qué es.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "06c8c5e0e1dc82cc5bb8b9a6eb3e922640229c21",
+  "commit": "0c472cb73e03e6d381b74a62a3b6f776ad737bd8",
   "cambiosSinCommit": 0
 }
