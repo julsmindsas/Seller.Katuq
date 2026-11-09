@@ -46,14 +46,13 @@ import { filasDeSerie, mesesCerradosConDato, puntosDePedidos } from '../../logic
           <h4 class="pl-subtitulo pl-subtitulo--menor">{{ textos.ficha.serie.porCanal }}</h4>
           <div class="pl-tabla-caja pl-tabla-siempre">
             <table class="pl-tabla">
-              <thead><tr><th scope="col">Mes</th><th scope="col" class="pl-der">Pedidos</th><th scope="col" class="pl-der">GMV</th><th scope="col">{{ textos.ficha.serie.canal }}</th><th scope="col">Estado</th></tr></thead>
+              <thead><tr><th scope="col">Mes</th><th scope="col" class="pl-der">Pedidos</th><th scope="col" class="pl-der">GMV</th><th scope="col">{{ textos.ficha.serie.canal }}</th></tr></thead>
               <tbody>
                 <tr *ngFor="let f of filas(s)">
-                  <td class="pl-col-mes">{{ f.etiqueta }}</td>
+                  <td class="pl-col-mes">{{ f.etiqueta }}<br *ngIf="f.insignia"><span class="cfg-pill cfg-pill--neutro" *ngIf="f.insignia">{{ f.insignia }}</span></td>
                   <td class="pl-der pl-num">{{ f.pedidos }}</td>
                   <td class="pl-der pl-num">{{ f.gmv }}</td>
-                  <td>{{ f.canales }}</td>
-                  <td><span class="cfg-pill cfg-pill--neutro" *ngIf="f.insignia">{{ f.insignia }}</span></td>
+                  <td class="pl-col-canal">{{ f.canales }}</td>
                 </tr>
               </tbody>
             </table>
