@@ -9,6 +9,8 @@ export const TEXTOS = {
   actualizarYa: 'Ya hay un recálculo en curso. Usa «Recargar» en unos minutos.',
   actualizarFallo: 'No se pudo pedir el recálculo.',
   recargar: 'Recargar',
+  consolaAnterior: 'Consola anterior',
+  consolaAnteriorAyuda: 'Abre la consola anterior: editar plan y empresa, cambiar estado, crear empresa, Pauta y Constructor web.',
   reintentar: 'Reintentar',
   cargando: 'Cargando…',
   vistaRotulo: 'Pedidos por',

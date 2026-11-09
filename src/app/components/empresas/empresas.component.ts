@@ -1,5 +1,8 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { esPlataformaKatuq } from '../../modules/marketing/guards/plataforma.guard';
+import { PlataformaService } from '../plataforma/servicios/plataforma.service';
+import { debeIrAConsolaNueva } from '../plataforma/logica/consola-por-defecto';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
@@ -134,7 +137,9 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     private dataStoreService: DataStoreService,
     private messageService: MessageService,
     private pricingMode: PricingModeService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private plataforma: PlataformaService,
+    private ruta: ActivatedRoute
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -162,11 +167,28 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.irAConsolaNuevaSiCorresponde();
     this.armarEstadosActivo();
     this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => this.armarEstadosActivo());
     this.cargarDatos();
     this.puedeEditarModo = this.pricingMode.puedeEditar();
     this.cargarModoPrecio();
+  }
+
+  /**
+   * D-700 15.2 (M3): con `config/plataforma.consolaNuevaPorDefecto` en `true`, quien tiene acceso a la plataforma
+   * pasa a `/plataforma`. Con la bandera apagada, sin acceso o ante cualquier error no cambia nada.
+   */
+  private irAConsolaNuevaSiCorresponde(): void {
+    if (!this.isJulsmind || !esPlataformaKatuq()) return;
+    this.plataforma.me().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r) => {
+        if (debeIrAConsolaNueva(r, this.ruta.snapshot.queryParamMap)) {
+          this.router.navigate(['/plataforma'], { replaceUrl: true });
+        }
+      },
+      error: () => { /* sin respuesta se queda la Consola vieja */ },
+    });
   }
 
   // ── Modo de precios ──

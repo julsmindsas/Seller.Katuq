@@ -260,3 +260,6 @@ body:not(.dark-only) .pl-raiz .pl-estado--info { color: var(--pl-tinta-info); }
 .pl-raiz .pl-calidad__acciones .cfg-btn { min-height: 32px; height: 32px; padding: 0 12px; font-size: 12.5px; }
 .pl-raiz .pl-calidad__empresas { width: 100%; max-height: 280px; overflow: auto; }
 .pl-raiz .pl-exportar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0; }
+
+// D-700 15.2: el enlace a la consola anterior es un <a>; neutraliza el letter-spacing global de `a`.
+.pl-raiz a.pl-consola-anterior { letter-spacing: normal; text-decoration: none; display: inline-flex; align-items: center; }
