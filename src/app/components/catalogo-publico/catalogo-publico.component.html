@@ -33,6 +33,10 @@
   <!-- Vitrina -->
   <ng-container *ngIf="!cargando && !error && !referencia && catalogo">
     <header class="vit__head">
+      <div class="vit__tienda" *ngIf="catalogo.tienda?.nombre || catalogo.tienda?.logo">
+        <img class="vit__tienda-logo" *ngIf="catalogo.tienda?.logo" [src]="catalogo.tienda?.logo" [alt]="catalogo.tienda?.nombre || 'Tienda'" />
+        <span class="vit__tienda-nombre" *ngIf="catalogo.tienda?.nombre">{{ catalogo.tienda?.nombre }}</span>
+      </div>
       <h1 class="vit__titulo">{{ catalogo.nombre }}</h1>
       <p class="vit__desc" *ngIf="catalogo.descripcion">{{ catalogo.descripcion }}</p>
     </header>
@@ -95,7 +99,6 @@
         </div>
 
         <div class="vit__card-body">
-          <p class="vit__ref-prod" *ngIf="p.referencia">{{ p.referencia }}</p>
           <h3 class="vit__nombre">{{ p.titulo }}</h3>
         </div>
 
@@ -168,7 +171,7 @@
 
         <div class="vit__form">
           <label>
-            Tu nombre <span class="vit__req">*</span>
+            <span class="vit__lbl">Tu nombre <span class="vit__req">*</span></span>
             <input type="text" [(ngModel)]="nombre" name="nombre" maxlength="120" autocomplete="name" />
           </label>
           <div class="vit__form-fila">
