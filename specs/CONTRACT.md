@@ -13682,3 +13682,9 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Despliegue:** fijado con `git fetch` + `git merge --ff-only 65ad9854`, `npm install` y `pm2 restart katuq-api`.
 - **Verificado:** `katuq-api` en línea y sin errores en el registro; `/v1/platform/me` y `/v1/messaging/lines` responden 401 sin sesión.
 - **No verificado:** Opttia contestando en una tienda publicada.
+
+### 2026-11-09 — D-706: cierre de caja en pesos enteros; una diferencia de centavos cuenta como que cuadra
+- **Hallazgo (prueba de D-583…D-590 en app.katuq.com, FLORECER):** un saldo final quedó guardado en 95.999,99. Las casillas de saldo eran `type=number step=0.01`, así que la rueda del mouse o las flechas las movían de a 1 centavo sin que se notara. La diferencia real era −1.000,01; tras un ajuste de 1.000 quedó −0,01 y el historial mostraba «Falta $0» en rojo, el cierre seguía contando como descuadre y el botón Registrar ajuste no desaparecía.
+- **Qué (solo front):** Saldo Inicial y Saldo Final van en pesos enteros (`step=1`, `min=0`, se redondean al salir de la casilla y antes de completar el cierre, y la rueda del mouse ya no cambia el valor). En el historial, una diferencia de menos de $1 (al cerrar o después de ajustes) cuenta como «Cuadra»: así se corrigen solos los cierres viejos con centavos. El backend no cambia: sigue pidiendo observación desde 0,01, lo cual no choca porque los saldos ya llegan enteros.
+- **Archivos:** `pos2/widgets/cash-closing/cash-closing.component.{ts,html}`, `pos2/widgets/cash-closing-history/cash-closing-history.component.ts`, nota en `notas-version.json`.
+- **Estado:** aprobado por el usuario el 9-nov. Compila con `ng serve`. Sin commitear; falta probarlo en local.

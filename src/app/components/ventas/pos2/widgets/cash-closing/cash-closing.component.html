@@ -137,7 +137,8 @@
                         <label class="form-label">Saldo Inicial</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
-                          <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="0.01">
+                          <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="1" min="0"
+                            (blur)="efectivoInicial = pesosEnteros(efectivoInicial)" (wheel)="$any($event.target).blur()">
                         </div>
                         <small class="saldo-sugerido" *ngIf="saldoInicialSugerido">
                           Es el saldo final del cierre anterior de hoy (lo que quedó en la caja). Cámbialo si sacaron plata.
@@ -149,7 +150,8 @@
                         <label class="form-label">Saldo Final</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
-                          <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="0.01" required>
+                          <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="1" min="0" required
+                            (blur)="efectivoFinal = pesosEnteros(efectivoFinal)" (wheel)="$any($event.target).blur()">
                         </div>
                       </div>
                     </div>

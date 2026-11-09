@@ -317,8 +317,17 @@ export class CashClosingHistoryComponent implements OnInit {
   diferenciaCierre(item: HistorialItem): number {
     // D-583: la que vio el cajero al cerrar (incluye el efectivo de ventas de días
     // anteriores). Los cierres viejos no la traen: se recalcula como antes.
-    if (typeof item.diferencia === 'number') return item.diferencia;
-    return (item.efectivoFinal || 0) - ((item.efectivoInicial || 0) + this.efectivoDeCierre(item));
+    if (typeof item.diferencia === 'number') return this.sinCentavos(item.diferencia);
+    return this.sinCentavos((item.efectivoFinal || 0) - ((item.efectivoInicial || 0) + this.efectivoDeCierre(item)));
+  }
+
+  /**
+   * D-706: en pesos colombianos no se manejan centavos. Una diferencia de menos de $1
+   * (p. ej. un saldo final de 95.999,99 movido por la rueda del mouse) cuenta como que
+   * cuadra; antes salía "Falta $0" en rojo y el cierre seguía contado como descuadre.
+   */
+  private sinCentavos(d: number): number {
+    return Math.abs(d || 0) < 1 ? 0 : d;
   }
 
   /** Texto corto para la cajera: Cuadra / Sobra $X / Falta $X. */
@@ -333,7 +342,7 @@ export class CashClosingHistoryComponent implements OnInit {
 
   /** D-587: diferencia vigente: después de los ajustes del administrador, si los hay. */
   diferenciaActual(item: HistorialItem): number {
-    return typeof item.diferenciaAjustada === 'number' ? item.diferenciaAjustada : this.diferenciaCierre(item);
+    return typeof item.diferenciaAjustada === 'number' ? this.sinCentavos(item.diferenciaAjustada) : this.diferenciaCierre(item);
   }
 
   /** D-587: suma de los descuadres del periodo (con ajustes). */
