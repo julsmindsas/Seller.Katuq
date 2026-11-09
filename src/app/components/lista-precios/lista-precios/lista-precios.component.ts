@@ -39,6 +39,10 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   private cargaSubject$ = new Subject<number>();
 
   cargando = false;
+  /** Ticket 1536 (P0): «Limpiar precios» solo lo ve el súper administrador de Katuq; el backend exige administrador. */
+  esSuperAdmin = (() => {
+    try { return String((JSON.parse(localStorage.getItem('user') || '{}') || {}).rol || '').trim() === 'Super Administrador'; } catch { return false; }
+  })();
   productosFiltrados: Producto[] = [];
   tiposCliente: any[] = [];
   searchTerm: string = '';
