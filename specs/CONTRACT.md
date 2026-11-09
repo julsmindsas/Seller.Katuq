@@ -13624,7 +13624,24 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Ya firme, no se repite:** la verificación de negocio y de acceso como proveedor de tecnología (25-ago), la revisión anual de uso de datos y la encuesta de tratamiento de datos.
 - **Sin cambios en pedidos, inventario ni consecutivos. Sin colecciones nuevas.**
 - **Abierto:** si el modo celular está disponible en Colombia (tarea 1.4); y si la cuenta y el número de Julsmind quedaron a nombre de Julsmind o de Kapso (tarea 1.1).
-- **Sigue:** aprobar el diseño y las tareas, y después implementar.
+- **Aprobado e implementado (9-nov, Daniel: «ya ok, haz la conexión de lo propuesto»)**, apagado:
+  - backend `69c539db`: provider, webhook, pasos, cobro, plantillas, script de ajustes y bandera;
+  - front `7257961c`: tarjeta de números con los dos modos, «Reintentar» y plantillas.
+- **Desvíos:**
+  - la llave y el PIN van en la subcolección `messaging_lines/{id}/privado/meta`, no en la línea;
+  - las plantillas se crean desde la tarjeta del número; el asistente de campañas sigue con Kapso;
+  - el historial del celular entra solo si es de los últimos 30 días.
+- **Arreglo de paso:** confirmar un número fallaba desde la pantalla, porque el front manda `{provider, params}` y el servidor leía los campos sueltos. Ahora acepta los dos formatos.
+- **Pruebas:**
+  - `test:messaging` 13/13 (golden de Kapso igual), más outbound, bot y plantillas;
+  - nuevas locales (D-566): proveedor 12, salida 3, cobro 4 y webhook 6;
+  - front: tsc sin errores y build de producción OK.
+- **Falta:**
+  - configurar Meta (producto WhatsApp, `config_id` y suscripción del webhook);
+  - `config/meta_whatsapp` con el script;
+  - la bandera en Julsmind y FLORECER;
+  - la prueba con números reales;
+  - los videos y la solicitud.
 
 ### 2026-11-09 — D-705: las propuestas y la documentación nuevas no se suben a git
 - **Pedido:** Daniel, 9-nov: «las propuestas y toda la documentación no se sube, más métela al gitignore». Escogió dejar en git lo ya subido (como D-566) y el contrato en git por ahora.
