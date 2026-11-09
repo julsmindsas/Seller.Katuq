@@ -4303,8 +4303,25 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Se llama al abrir la pestaña: trae lo que se habló antes sobre esta página. */
+  /** «¿Dónde?» del chat: el id de la sección señalada; vacío es toda la página. */
+  lugarIA = "";
+
+  /** Las secciones de la página abierta, para elegir dónde va el pedido. */
+  get lugaresIA(): { id: string; texto: string }[] {
+    return this.bloques
+      .map((b: any, i: number) => {
+        const titulo = String((b.datos && (b.datos.titulo || b.datos.nombre)) || "").replace(/\s+/g, " ").trim();
+        const corto = titulo.length > 34 ? titulo.slice(0, 33) + "…" : titulo;
+        return { id: String(b.id || ""), texto: `${i + 1}. ${this.nombreDeTipo(b.tipo)}${corto ? " · " + corto : ""}${b.visible === false ? " (oculta)" : ""}` };
+      })
+      .filter((l) => l.id);
+  }
+
   abrirChatIA(): void {
     this.panel = "ia";
+    // Si venía trabajando en una sección, el chat arranca apuntando a ella.
+    const marcada = this.seleccionado >= 0 ? (this.bloques[this.seleccionado] as any) : null;
+    this.lugarIA = marcada && marcada.id ? String(marcada.id) : "";
     if (!this.id || this.conversacionCargada === this.id) return;
     this.conversacionCargada = this.id;
     try {
@@ -4473,7 +4490,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
     const historial = historialParaServidor(this.mensajesIA);
-    this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined });
+    // «¿Dónde?»: si la sección ya no está en esta página, el pedido vuelve a ser de toda la página.
+    const lugar = this.lugaresIA.find((l) => l.id === this.lugarIA) || null;
+    if (!lugar) this.lugarIA = "";
+    this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined, lugar: lugar ? lugar.texto : undefined });
     this.mensajeIA = "";
     // Ticket 1248: la pregunta por publicar se contesta con el checklist real, sin gastar IA.
     if (!referencias.length && preguntaPorPublicar(v.instruccion)) {
@@ -4517,6 +4537,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         historial,
         contenido: { bloques: this.bloques, tema: (this.contenido as any).tema, ...(tiendaIA ? { tienda: tiendaIA } : {}) },
         ...(referencias.length ? { referencias } : {}),
+        ...(lugar ? { lugar: lugar.id } : {}),
       })
       .subscribe({
         next: (res) => {

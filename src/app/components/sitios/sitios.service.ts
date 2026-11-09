@@ -806,6 +806,8 @@ export class SitiosService extends BaseService {
     contenido: { bloques: any[]; tema: any; tienda?: any };
     /** Fotos, capturas o páginas de un PDF ya reducidas a JPEG (data URL), hasta 3. */
     referencias?: string[];
+    /** «¿Dónde?» del chat: el id de la sección señalada. Sin él, el pedido es de toda la página. */
+    lugar?: string;
   }): Observable<
     Respuesta<{
       bloques: any[];

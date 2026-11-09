@@ -51,6 +51,8 @@ export interface MensajeEditarIA {
   avisos?: string[];
   /** Diseño nuevo: la propuesta que la persona aplica o descarta. */
   propuesta?: PropuestaIA;
+  /** La sección que la persona señaló en «¿Dónde?» (solo para mostrarla en su mensaje). */
+  lugar?: string;
   /** Cuántas imágenes acompañaron el mensaje (solo para mostrar "📎 2 imágenes"). */
   adjuntos?: number;
   /** Ticket 1248: pendientes del checklist con su botón para corregir (no se guardan en la conversación). */

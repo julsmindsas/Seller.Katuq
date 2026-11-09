@@ -146,6 +146,7 @@
             <ng-container *ngFor="let m of mensajesIAInverso">
               <div class="chat-ia__burbuja" [class.chat-ia__burbuja--yo]="m.rol === 'comercio'" [class.chat-ia__burbuja--error]="m.error">
                 <span class="chat-ia__adjuntos" *ngIf="m.adjuntos">📎 {{ m.adjuntos === 1 ? '1 imagen' : m.adjuntos + ' imágenes' }}</span>
+                <span class="chat-ia__donde" *ngIf="m.lugar">📍 {{ m.lugar }}</span>
                 {{ m.texto }}
                 <!-- Ticket 1248: lo que falta para publicar, con su atajo -->
                 <ul class="chat-ia__cambios" *ngIf="m.pendientes?.length">
@@ -241,10 +242,17 @@
           </div>
 
           <!-- Escribir y enviar -->
+          <div class="campo chat-ia__lugar" *ngIf="propositoAdjuntos !== 'usar' && lugaresIA.length > 1">
+            <label for="chat-ia-lugar">¿Dónde?</label>
+            <select id="chat-ia-lugar" [(ngModel)]="lugarIA" [disabled]="editandoIA">
+              <option value="">Toda la página</option>
+              <option *ngFor="let l of lugaresIA" [value]="l.id">{{ l.texto }}</option>
+            </select>
+          </div>
           <div class="campo chat-ia__entrada" *ngIf="propositoAdjuntos !== 'usar'">
             <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"
                       (keydown.enter)="alEnterChatIA($any($event))" (paste)="alPegarEnChat($any($event))"
-                      [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo'"></textarea>
+                      [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : (lugarIA ? '¿Qué quieres cambiar en esta sección? Ej: ponle fondo oscuro y un título más corto' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo')"></textarea>
           </div>
           <div class="chat-ia__acciones" *ngIf="propositoAdjuntos !== 'usar'">
             <label class="chat-ia__adjuntar" [class.is-disabled]="editandoIA || adjuntosIA.length >= maxReferencias">
