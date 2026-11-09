@@ -148,6 +148,5 @@
   { "fecha": "2026-11-09T23:10:00Z", "tipo": "CORRIGE", "modulos": ["inventario/ordenes-compra", "inventario/recepcion-mercancia", "tesoreria", "cartera", "compras/reposicion", "contabilidad"], "texto": "Los valores en pesos de órdenes de compra, recepción de mercancía, bodegas, pagos y cartera también se ven con punto de miles y sin decimales, por ejemplo $1.528.602." },
   { "fecha": "2026-11-09T23:10:00Z", "tipo": "CORRIGE", "modulos": ["ventas", "despachos"], "texto": "Ya no verás siglas como SP, PP o PD en Pedidos, Producción y Despachos: los indicadores dicen Sin producir, Para despachar, Pendiente de pago, etc." },
   { "fecha": "2026-11-09T23:10:00Z", "tipo": "MEJORA", "modulos": ["productos"], "texto": "En «Importar fotos de productos» puedes descargar una guía de cómo deben ser tus fotos (tamaño, forma cuadrada, peso y nombre del archivo) para imprimirla o guardarla." },
-  { "fecha": "2026-11-09T23:10:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "«Todos los pedidos» abre más rápido: pide las zonas de cobro una sola vez." },
   { "fecha": "2026-11-09T23:10:00Z", "tipo": "MEJORA", "texto": "Los botones de cerrar, borrar y los controles de voz tienen nombre para lectores de pantalla, son más fáciles de tocar y se ven al navegar con el teclado, y los textos pequeños se leen mejor." }
 ]
