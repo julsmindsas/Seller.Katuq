@@ -20,7 +20,7 @@
     <!-- Controles de visualización -->
     <div class="visual-controls">
       <button 
-        class="control-btn audio-btn" 
+        class="control-btn audio-btn" [attr.aria-label]="'asistentes.sphereVisualContainer.activarDesactivarReactividadAlAudio' | translate" 
         [class.active]="isAudioReactive"
         (click)="toggleAudioReactivity(!isAudioReactive)"
         [title]="'asistentes.sphereVisualContainer.activarDesactivarReactividadAlAudio' | translate">
@@ -28,7 +28,7 @@
       </button>
       
       <button 
-        class="control-btn celebration-btn" 
+        class="control-btn celebration-btn" [attr.aria-label]="'asistentes.sphereVisualContainer.activarDesactivarModoCelebracion' | translate" 
         [class.active]="isCelebrationMode"
         (click)="toggleCelebrationMode(!isCelebrationMode)"
         [title]="'asistentes.sphereVisualContainer.activarDesactivarModoCelebracion' | translate">
@@ -36,7 +36,7 @@
       </button>
       
       <button 
-        class="control-btn clear-btn"
+        class="control-btn clear-btn" [attr.aria-label]="'asistentes.sphereVisualContainer.limpiarVisualizacion' | translate"
         (click)="clearVisual()"
         [title]="'asistentes.sphereVisualContainer.limpiarVisualizacion' | translate">
         <i class="fa fa-times"></i>

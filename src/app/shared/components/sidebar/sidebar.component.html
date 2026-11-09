@@ -479,7 +479,7 @@
       </div>
       
       <button (click)="togglePlanCard()" 
-              class="toggle-plan-btn" 
+              class="toggle-plan-btn" [attr.aria-expanded]="!isPlanCardCollapsed" [attr.aria-label]="(isPlanCardCollapsed ? 'comun.mostrar' : 'comun.ocultar') | translate" 
               [class.expanded]="!isPlanCardCollapsed">
         <i class="fa" [ngClass]="isPlanCardCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
       </button>

@@ -215,8 +215,8 @@ $transition-slow: 300ms ease;
   border: none;
   border-left: 1px solid $border-default;
   padding: 0;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,6 +233,8 @@ $transition-slow: 300ms ease;
   &:active {
     background: rgba($color-danger, 0.15);
   }
+
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
   i {
     font-size: $font-sm;
@@ -785,10 +787,16 @@ $transition-slow: 300ms ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
+            position: relative;
             transition: all $transition-fast;
+
+            // Área táctil de 40 px sin agrandar la etiqueta
+            &::after { content: ""; position: absolute; inset: -8px; }
+
+            &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
             &:hover {
               background: rgba($color-danger, 0.1);
@@ -796,7 +804,7 @@ $transition-slow: 300ms ease;
             }
 
             i {
-              font-size: 0.625rem;
+              font-size: 0.75rem;
             }
           }
         }
@@ -1039,7 +1047,7 @@ $transition-slow: 300ms ease;
   .count-badge {
     min-width: 20px;
     height: 20px;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
   }
 
   .advanced-filters-panel {

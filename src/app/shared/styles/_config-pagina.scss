@@ -101,7 +101,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
 
   .cfg-eyebrow {
     align-self: flex-start;
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .7px !important;
     text-transform: uppercase;
@@ -201,7 +201,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
   }
 
   .cfg-label {
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: .6px;
     text-transform: uppercase;
@@ -255,7 +255,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     gap: 6px;
     padding: 3px 10px;
     border-radius: 20px;
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .4px !important;
     text-transform: uppercase;
@@ -289,7 +289,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     &:hover { transform: translateY(-1px); }
   }
   .cfg-stat__label {
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .5px !important;
     text-transform: uppercase;
@@ -305,7 +305,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
   // Formularios: labels UPPERCASE muted e inputs lilas de 40px.
   .cfg-form {
     label, .form-label, .col-form-label {
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -383,7 +383,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     .p-datatable-thead > tr > th {
       background: $cfg-tint !important;
       color: $cfg-muted !important;
-      font-size: 10.5px !important;
+      font-size: 12px !important;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -466,7 +466,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
           content: attr(data-label);
           flex: none;
           color: $cfg-muted;
-          font-size: 10.5px;
+          font-size: 12px;
           font-weight: 800;
           letter-spacing: .5px;
           text-transform: uppercase;

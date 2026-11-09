@@ -70,7 +70,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   color: $ink;
   background: $wash;
@@ -197,7 +197,7 @@
 
 // Label de sección UPPERCASE muted del mockup
 @mixin km-label {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;

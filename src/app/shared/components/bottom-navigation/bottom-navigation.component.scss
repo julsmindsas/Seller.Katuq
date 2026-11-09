@@ -161,7 +161,7 @@
       right: -6px;
       background: #dc3545;
       color: white;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       padding: 2px 5px;
       border-radius: 10px;
@@ -175,7 +175,7 @@
       
       // Larger text for older users (60+)
       @media (min-width: 768px) {
-        font-size: 11px;
+        font-size: 12px;
         padding: 3px 6px;
         min-width: 18px;
         height: 18px;
@@ -196,7 +196,7 @@
   }
   
   .nav-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: #6c757d;
     text-align: center;
@@ -384,7 +384,7 @@
     }
     
     .nav-label {
-      font-size: 10px;
+      font-size: 12px;
     }
   }
 }

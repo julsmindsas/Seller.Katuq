@@ -45,7 +45,7 @@
     </p-autoComplete>
     <button *ngIf="searchQuery"
       type="button"
-      class="btn-clear-search"
+      class="btn-clear-search" [attr.aria-label]="'filters.sharedFilters.limpiarBusqueda' | translate"
       (click)="clearSearch()"
       pTooltip="{{ 'filters.sharedFilters.limpiarBusqueda' | translate }}">
       <i class="pi pi-times"></i>
@@ -207,35 +207,35 @@
         <span class="filter-tag" *ngIf="fechaInicialDate">
           <i class="pi pi-calendar me-1"></i>
           {{ ('filters.sharedFilters.desdeFecha' | translate:{fecha: formatDateForDisplay(fechaInicialDate)}) }}
-          <button class="tag-remove" (click)="clearDateFilter('inicial')">
+          <button type="button" class="tag-remove" [attr.aria-label]="'comun.eliminar' | translate" (click)="clearDateFilter('inicial')">
             <i class="pi pi-times"></i>
           </button>
         </span>
         <span class="filter-tag" *ngIf="fechaFinalDate">
           <i class="pi pi-calendar me-1"></i>
           {{ ('filters.sharedFilters.hastaFecha' | translate:{fecha: formatDateForDisplay(fechaFinalDate)}) }}
-          <button class="tag-remove" (click)="clearDateFilter('final')">
+          <button type="button" class="tag-remove" [attr.aria-label]="'comun.eliminar' | translate" (click)="clearDateFilter('final')">
             <i class="pi pi-times"></i>
           </button>
         </span>
         <span class="filter-tag" *ngIf="searchQuery">
           <i class="pi pi-search me-1"></i>
           {{ searchQuery }}
-          <button class="tag-remove" (click)="clearSearchFilter()">
+          <button type="button" class="tag-remove" [attr.aria-label]="'comun.eliminar' | translate" (click)="clearSearchFilter()">
             <i class="pi pi-times"></i>
           </button>
         </span>
         <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
           <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
           {{ etiquetaEstadoPago(quickFilters.estadoPago) }}
-          <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
+          <button type="button" class="tag-remove" [attr.aria-label]="'comun.eliminar' | translate" (click)="clearQuickFilter('estadoPago')">
             <i class="pi pi-times"></i>
           </button>
         </span>
         <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
           <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoProceso, 'proceso')"></span>
           {{ quickFilters.estadoProceso }}
-          <button class="tag-remove" (click)="clearQuickFilter('estadoProceso')">
+          <button type="button" class="tag-remove" [attr.aria-label]="'comun.eliminar' | translate" (click)="clearQuickFilter('estadoProceso')">
             <i class="pi pi-times"></i>
           </button>
         </span>

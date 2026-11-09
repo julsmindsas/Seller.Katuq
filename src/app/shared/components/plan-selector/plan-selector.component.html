@@ -3,7 +3,7 @@
     <div class="modal-container no-scroll">
       <div class="modal-header">
         <h4>{{ 'shell.planSelector.title' | translate }}</h4>
-        <button class="close-btn" (click)="close()">
+        <button type="button" class="close-btn" [attr.aria-label]="'comun.cerrar' | translate" (click)="close()">
           <i class="fa fa-times"></i>
         </button>
       </div>
