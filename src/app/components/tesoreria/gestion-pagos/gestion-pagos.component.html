@@ -45,7 +45,7 @@
                 [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
                 <span class="visually-hidden" id="tk-ayudaRecaudadoHoy">{{ 'tesoreria.gestionPagos.ayudaRecaudadoHoy' | translate }}</span>
       </div>
-      <div class="tk-value">{{ metrics.recaudadoHoy.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-value">{{ metrics.recaudadoHoy.monto | copMoneda }}</div>
       <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} {{ 'tesoreria.gestionPagos.pagoSAprobadoS' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-orange">
@@ -57,11 +57,11 @@
                 [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
                 <span class="visually-hidden" id="tk-ayudaCarteraPendiente">{{ 'tesoreria.gestionPagos.ayudaCarteraPendiente' | translate }}</span>
       </div>
-      <div class="tk-value">{{ metrics.carteraPendiente.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-value">{{ metrics.carteraPendiente.monto | copMoneda }}</div>
       <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} {{ 'tesoreria.gestionPagos.pedidoSPorCobrar' | translate }}</div>
       <!-- Ticket 1461: lo interno no suma aquí (igual que en Cartera) y se ve aparte -->
       <div class="tk-sub tk-sub-interna" *ngIf="metrics.carteraPendiente.internos?.cantidad">
-        {{ 'tesoreria.gestionPagos.carteraInternaAparte' | translate:{ monto: (metrics.carteraPendiente.internos?.monto | currency:'COP':'symbol-narrow':'1.0-0'), cantidad: (metrics.carteraPendiente.internos?.cantidad | number) } }}
+        {{ 'tesoreria.gestionPagos.carteraInternaAparte' | translate:{ monto: (metrics.carteraPendiente.internos?.monto | copMoneda), cantidad: (metrics.carteraPendiente.internos?.cantidad | number) } }}
       </div>
     </div>
     <div class="tk-card tk-accent-purple">
@@ -73,7 +73,7 @@
                 [attr.aria-label]="'tesoreria.gestionPagos.queCuentaEstaTarjeta' | translate"><i class="pi pi-info-circle"></i></button>
                 <span class="visually-hidden" id="tk-ayudaPorRevisar">{{ 'tesoreria.gestionPagos.ayudaPorRevisar' | translate }}</span>
       </div>
-      <div class="tk-value">{{ metrics.porRevisar.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-value">{{ metrics.porRevisar.monto | copMoneda }}</div>
       <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} {{ 'tesoreria.gestionPagos.comprobanteSEnCola' | translate }}</div>
     </div>
     <div class="tk-card tk-accent-blue">

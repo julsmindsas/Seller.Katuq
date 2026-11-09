@@ -821,8 +821,8 @@ export class NavService implements OnDestroy {
         },
         {
           path: "inventario/recepcion-mercancia",
-          title: "Ajustes",
-          previousTitle: "Ajustes de inventario",
+          title: "Ajustes de inventario",
+          previousTitle: "Ajustes",
           type: "link",
           icon: "edit-3",
         },

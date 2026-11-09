@@ -27,7 +27,7 @@ export const REPORT_PRESETS: ReportPreset[] = [
   {
     id: 'top20-productos-unidades',
     name: 'Los 20 productos que más unidades venden',
-    description: 'Cuántas unidades se vendieron de cada producto, según tus facturas de World Office.',
+    description: 'Cuántas unidades se vendieron de cada producto, según tus facturas.',
     category: 'productos',
     icon: 'fa-trophy',
     requiresIntegration: 'worldoffice',
@@ -126,7 +126,7 @@ export const REPORT_PRESETS: ReportPreset[] = [
   {
     id: 'cartera-cxc-por-vendedor',
     name: 'Cartera por cobrar de cada vendedor',
-    description: 'Cuánto deben los clientes de cada vendedor, según World Office.',
+    description: 'Cuánto deben los clientes de cada vendedor, según tu contabilidad.',
     category: 'cartera',
     icon: 'fa-user',
     requiresIntegration: 'worldoffice',

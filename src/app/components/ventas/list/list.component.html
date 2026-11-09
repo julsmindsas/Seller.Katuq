@@ -234,7 +234,7 @@
                                                 <i class="pi pi-chart-line"></i>
                                                 <span class="metric-label-short">VH</span>
                                                 <span class="metric-label-full">Ventas Hoy</span>
-                                                <span class="metric-badge">{{ getVentasDelDia() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span class="metric-badge">{{ getVentasDelDia() | copMoneda }}</span>
                                             </div>
 
                                             <span class="separator">/</span>
@@ -246,7 +246,7 @@
                                                 <i class="pi pi-calculator"></i>
                                                 <span class="metric-label-short">TP</span>
                                                 <span class="metric-label-full">Ticket Prom.</span>
-                                                <span class="metric-badge">{{ getTicketPromedio() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span class="metric-badge">{{ getTicketPromedio() | copMoneda }}</span>
                                             </div>
 
                                             <span class="separator">/</span>
@@ -372,7 +372,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="pedido-row__right">
-                                                        <div class="pedido-row__valor">{{ pedido.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                                                        <div class="pedido-row__valor">{{ pedido.totalPedididoConDescuento | copMoneda }}</div>
                                                         <div class="pedido-row__fecha">{{ convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) }}</div>
                                                     </div>
                                                 </div>
@@ -430,7 +430,7 @@
                                                         </div>
                                                         <div class="pedido-detail__total">
                                                             <span class="pedido-detail__total-label">{{ 'TOTAL' | translate }}</span>
-                                                            <span class="pedido-detail__total-value">{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                            <span class="pedido-detail__total-value">{{ pedidoDetalle.totalPedididoConDescuento | copMoneda }}</span>
                                                         </div>
                                                     </div>
 
@@ -491,14 +491,14 @@
                                                         <!-- desglose de valores (columnas financieras de la tabla) -->
                                                         <div class="pedido-detail__sectionlabel">{{ 'DESGLOSE' | translate }}</div>
                                                         <div class="pedido-desglose">
-                                                            <div class="pedido-desglose__row"><span>{{ 'Valor bruto' | translate }}</span><b>{{ pedidoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.totalDescuento"><span>{{ 'Descuento' | translate }}</span><b class="is-neg">− {{ pedidoDetalle.totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row"><span>{{ 'Domicilio' | translate }}</span><b>{{ pedidoDetalle.totalEnvio | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row"><span>{{ 'Subtotal' | translate }}</span><b>{{ getSubtotalConDomicilio(pedidoDetalle) | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row"><span>{{ 'IVA' | translate }}</span><b>{{ pedidoDetalle.totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row pedido-desglose__row--total"><span>{{ 'Total' | translate }}</span><b>{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.anticipo"><span>{{ 'Anticipo' | translate }}</span><b>{{ pedidoDetalle.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'Falta por pagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'Valor bruto' | translate }}</span><b>{{ pedidoDetalle.totalPedidoSinDescuento | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.totalDescuento"><span>{{ 'Descuento' | translate }}</span><b class="is-neg">− {{ pedidoDetalle.totalDescuento | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'Domicilio' | translate }}</span><b>{{ pedidoDetalle.totalEnvio | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'Subtotal' | translate }}</span><b>{{ getSubtotalConDomicilio(pedidoDetalle) | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'IVA' | translate }}</span><b>{{ pedidoDetalle.totalImpuesto | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row pedido-desglose__row--total"><span>{{ 'Total' | translate }}</span><b>{{ pedidoDetalle.totalPedididoConDescuento | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.anticipo"><span>{{ 'Anticipo' | translate }}</span><b>{{ pedidoDetalle.anticipo | copMoneda }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'Falta por pagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | copMoneda }}</b></div>
                                                         </div>
 
                                                         <!-- D-517: pedido de tienda pagado a cuotas (Addi o Sistecrédito); no se pinta en los demás -->
@@ -726,14 +726,14 @@
                                         </div>
                                         <div class="pfm-group">
                                             <span class="pfm-group__label">{{ 'VALORES' | translate }}</span>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Bruto' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateValorBruto() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Desc.' | translate }}</span><b class="pfm-item__v pfm-warn">{{ getFilteredCalculateDescuento() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Envío' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateEnvio() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Subtotal' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateSubtotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'IVA' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotalImpuestos() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item pfm-item--total"><span class="pfm-item__k">{{ 'TOTAL' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Anticipo' | translate }}</span><b class="pfm-item__v pfm-info">{{ getFilteredCalculateAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
-                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Pendiente' | translate }}</span><b class="pfm-item__v pfm-danger">{{ getFilteredCalculateFaltaPorPagar() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Bruto' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateValorBruto() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Desc.' | translate }}</span><b class="pfm-item__v pfm-warn">{{ getFilteredCalculateDescuento() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Envío' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateEnvio() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Subtotal' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateSubtotal() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'IVA' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotalImpuestos() | copMoneda }}</b></div>
+                                            <div class="pfm-item pfm-item--total"><span class="pfm-item__k">{{ 'TOTAL' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotal() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Anticipo' | translate }}</span><b class="pfm-item__v pfm-info">{{ getFilteredCalculateAnticipo() | copMoneda }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Pendiente' | translate }}</span><b class="pfm-item__v pfm-danger">{{ getFilteredCalculateFaltaPorPagar() | copMoneda }}</b></div>
                                         </div>
                                     </div>
 
@@ -1356,50 +1356,49 @@
                                             <!-- Columna Valor Bruto (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
                                                 class="td-money text-nowrap money-cell d-none d-lg-table-cell">
-                                                {{ pedido?.totalPedidoSinDescuento | currency }}
+                                                {{ pedido?.totalPedidoSinDescuento | copMoneda }}
                                             </td>
 
                                             <!-- Columna Descuento (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ pedido?.totalDescuento | currency }}
+                                                {{ pedido?.totalDescuento | copMoneda }}
                                             </td>
 
                                             <!-- Columna Domicilio (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ pedido?.totalEnvio | currency }}
+                                                {{ pedido?.totalEnvio | copMoneda }}
                                             </td>
 
                                             <!-- Columna Subtotal (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ getSubtotalConDomicilio(pedido) | currency }}
+                                                {{ getSubtotalConDomicilio(pedido) | copMoneda }}
                                             </td>
 
                                             <!-- Columna IVA (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('iva') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ pedido?.totalImpuesto | currency }}
+                                                {{ pedido?.totalImpuesto | copMoneda }}
                                             </td>
 
                                             <!-- Columna Total -->
                                             <td *ngIf="isColumnVisible('total') && !isFromProduction"
                                                 class="td-money text-nowrap money-cell total-cell">
-                                                <span class="total-amount">{{ pedido.totalPedididoConDescuento |
-                                                    currency }}</span>
+                                                <span class="total-amount">{{ pedido.totalPedididoConDescuento | copMoneda }}</span>
                                             </td>
 
                                             <!-- Columna Anticipo (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ pedido?.anticipo | currency }}
+                                                {{ pedido?.anticipo | copMoneda }}
                                             </td>
 
                                             <!-- Columna Falta por Pagar (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
                                                 class="td-money text-nowrap d-none d-lg-table-cell">
-                                                {{ pedido?.faltaPorPagar | currency }}
+                                                {{ pedido?.faltaPorPagar | copMoneda }}
                                             </td>
 
                                             <!-- Columna Fecha de compra (ocultar en móvil) -->
@@ -1552,7 +1551,7 @@
                                                                                     <img [src]="pref.imagen" class="config-thumb" [alt]="pref.titulo" />
                                                                                     <div class="config-info">
                                                                                         <span class="config-name">{{ pref.titulo }}</span>
-                                                                                        <small class="config-price">{{ pref.precioTotalConIva | currency }}</small>
+                                                                                        <small class="config-price">{{ pref.precioTotalConIva | copMoneda }}</small>
                                                                                     </div>
                                                                                     <!-- Botón de eliminar imagen -->
                                                                                     <div class="config-actions" *ngIf="pref.imagen && pref.imagen !== 'assets/images/other-images/sinimagen.webp'">
@@ -1576,7 +1575,7 @@
                                                                                     <img [src]="addon.imagen" class="config-thumb" [alt]="addon.titulo" />
                                                                                     <div class="config-info">
                                                                                         <span class="config-name">{{ addon.titulo }}</span>
-                                                                                        <small class="config-price">{{ addon.precioTotalConIva | currency }}</small>
+                                                                                        <small class="config-price">{{ addon.precioTotalConIva | copMoneda }}</small>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -1710,8 +1709,7 @@
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Bruto' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() |
-                                            currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -1721,7 +1719,7 @@
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Desc.' | translate }}</div>
                                         <div class="summary-value money-value text-warning">{{
-                                            getFilteredCalculateDescuento() | currency }}</div>
+                                            getFilteredCalculateDescuento() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -1730,7 +1728,7 @@
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Envío' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency
+                                        <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | copMoneda
                                             }}</div>
                                     </div>
                                 </td>
@@ -1740,8 +1738,7 @@
                                     class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Subtotal' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() |
-                                            currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -1750,8 +1747,7 @@
                                     class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total IVA' | translate }}</div>
-                                        <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() |
-                                            currency }}</div>
+                                        <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -1760,7 +1756,7 @@
                                     class="summary-cell summary-money summary-total">
                                     <div class="summary-content total-highlight">
                                         <div class="summary-label">{{ 'TOTAL GENERAL' | translate }}</div>
-                                        <div class="summary-value total-value">{{ getFilteredCalculateTotal() | currency
+                                        <div class="summary-value total-value">{{ getFilteredCalculateTotal() | copMoneda
                                             }}</div>
                                     </div>
                                 </td>
@@ -1771,7 +1767,7 @@
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Anticipo' | translate }}</div>
                                         <div class="summary-value money-value text-info">{{
-                                            getFilteredCalculateAnticipo() | currency }}</div>
+                                            getFilteredCalculateAnticipo() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -1781,7 +1777,7 @@
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Pendiente' | translate }}</div>
                                         <div class="summary-value money-value text-danger">{{
-                                            getFilteredCalculateFaltaPorPagar() | currency }}</div>
+                                            getFilteredCalculateFaltaPorPagar() | copMoneda }}</div>
                                     </div>
                                 </td>
 
@@ -2304,7 +2300,7 @@
                 <p class="mb-1"><strong>{{'Código:' | translate}}</strong> {{descuentoAplicado.codigo}}</p>
                 <p class="mb-1" *ngIf="descuentoAplicado.tipo !== 'envio_gratis' && descuentoAplicado.porcentaje"><strong>{{'Porcentaje:' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
                 <p class="mb-1" *ngIf="descuentoAplicado.tipo === 'envio_gratis'"><strong>{{'Envío gratis' | translate}}</strong></p>
-                <p class="mb-0"><strong>{{'Valor del descuento:' | translate}}</strong> {{descuentoAplicado.valor | currency:'USD':'symbol':'1.0-0'}}</p>
+                <p class="mb-0"><strong>{{'Valor del descuento:' | translate}}</strong> {{descuentoAplicado.valor | copMoneda}}</p>
             </div>
         </div>
     </div>
@@ -2349,7 +2345,7 @@
             <span class="text-muted"> · {{ facturaDestino?.tipoDocumento }} {{ facturaDestino?.documento }}</span></p>
         <p class="text-muted mb-1" *ngIf="facturaPedido.cliente?.documento && facturaDestino?.documento !== facturaPedido.cliente?.documento">
             Cliente del pedido: {{ facturaPedido.cliente?.nombres_completos || 'N/A' }} · {{ facturaPedido.cliente?.documento }}</p>
-        <p class="text-muted">Total: {{ (facturaPedido.totalPedididoConDescuento || facturaPedido.subtotal || 0) | currency:'USD':'symbol':'1.0-0' }}</p>
+        <p class="text-muted">Total: {{ (facturaPedido.totalPedididoConDescuento || facturaPedido.subtotal || 0) | copMoneda }}</p>
         <div class="factura-aviso-cf mb-3" *ngIf="facturaAConsumidorFinalPorError" role="alert">
             <p class="mb-2">
                 <i class="fa fa-exclamation-triangle me-1"></i>
@@ -2514,8 +2510,8 @@
                                     </ng-container>
                                 </div>
                                 <small class="text-muted">
-                                    {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} c/u
-                                    <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>
+                                    {{ l.precioUnitario | copMoneda:'USD':'symbol':'1.0-2' }} c/u
+                                    <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | copMoneda:'USD':'symbol':'1.0-2' }}</span>
                                 </small>
                                 <!-- Ticket 1417: retefuente e IVA de este renglón, distintos a los de la factura
                                      (solo con invoiceItemWithholding; el envío no lleva retefuente). -->
@@ -2535,9 +2531,9 @@
                                 </div>
                             </td>
                             <td class="text-end">{{ l.cantidad }}</td>
-                            <td class="text-end">{{ l.base | currency:'USD':'symbol':'1.0-2' }}</td>
+                            <td class="text-end">{{ l.base | copMoneda:'USD':'symbol':'1.0-2' }}</td>
                             <td class="text-end">
-                                {{ l.iva | currency:'USD':'symbol':'1.0-2' }}
+                                {{ l.iva | copMoneda:'USD':'symbol':'1.0-2' }}
                                 <small class="text-muted d-block">{{ l.tarifaIva }}%</small>
                             </td>
                         </tr>
@@ -2545,15 +2541,15 @@
                 </table>
             </div>
             <dl class="fvp-totales">
-                <div *ngIf="vp.totales.descuento > 0"><dt>Descuentos</dt><dd>−{{ vp.totales.descuento | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div><dt>Subtotal (base)</dt><dd>{{ vp.totales.base | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div><dt>IVA</dt><dd>{{ vp.totales.iva | currency:'USD':'symbol':'1.0-2' }}</dd></div>
-                <div class="fvp-fuerte"><dt>Total factura</dt><dd>{{ vp.totales.totalFactura | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div *ngIf="vp.totales.descuento > 0"><dt>Descuentos</dt><dd>−{{ vp.totales.descuento | copMoneda:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>Subtotal (base)</dt><dd>{{ vp.totales.base | copMoneda:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>IVA</dt><dd>{{ vp.totales.iva | copMoneda:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div class="fvp-fuerte"><dt>Total factura</dt><dd>{{ vp.totales.totalFactura | copMoneda:'USD':'symbol':'1.0-2' }}</dd></div>
                 <div *ngFor="let r of vp.totales.retenciones" [class.fvp-informativa]="r.informativa">
                     <dt>{{ r.nombre }}<small *ngIf="r.informativa"> (la paga tu empresa, no se descuenta)</small></dt>
-                    <dd>{{ r.informativa ? '' : '−' }}{{ r.valor | currency:'USD':'symbol':'1.0-2' }}</dd>
+                    <dd>{{ r.informativa ? '' : '−' }}{{ r.valor | copMoneda:'USD':'symbol':'1.0-2' }}</dd>
                 </div>
-                <div class="fvp-fuerte fvp-pagar"><dt>Valor a pagar</dt><dd>{{ vp.totales.aPagar | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div class="fvp-fuerte fvp-pagar"><dt>Valor a pagar</dt><dd>{{ vp.totales.aPagar | copMoneda:'USD':'symbol':'1.0-2' }}</dd></div>
             </dl>
             <p class="fvp-aviso mb-0" *ngIf="!vp.cuadra">
                 El valor a pagar no coincide con el total menos las retenciones. Revisa antes de facturar.
@@ -2596,7 +2592,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p class="mb-1"><strong>{{'Porcentaje:' | translate}}</strong> {{pedidoDescuentoEditando.porceDescuento}}%</p>
-                        <p class="mb-1"><strong>{{'Valor del descuento:' | translate}}</strong> {{pedidoDescuentoEditando.totalDescuento | currency}}</p>
+                        <p class="mb-1"><strong>{{'Valor del descuento:' | translate}}</strong> {{pedidoDescuentoEditando.totalDescuento | copMoneda}}</p>
                     </div>
                     <div class="col-md-6" *ngIf="pedidoDescuentoEditando.cuponAplicado">
                         <p class="mb-1"><strong>{{'Código de cupón:' | translate}}</strong> {{pedidoDescuentoEditando.cuponAplicado}}</p>
@@ -2634,27 +2630,27 @@
                         <tbody>
                             <tr>
                                 <td><strong>{{'Valor Bruto:' | translate}}</strong></td>
-                                <td class="text-end">{{previewTotales.totalPedidoSinDescuento | currency}}</td>
+                                <td class="text-end">{{previewTotales.totalPedidoSinDescuento | copMoneda}}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{'Descuento:' | translate}}</strong></td>
-                                <td class="text-end text-danger">-{{previewTotales.totalDescuento | currency}}</td>
+                                <td class="text-end text-danger">-{{previewTotales.totalDescuento | copMoneda}}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{'Domicilio:' | translate}}</strong></td>
-                                <td class="text-end">{{previewTotales.totalEnvio | currency}}</td>
+                                <td class="text-end">{{previewTotales.totalEnvio | copMoneda}}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{'Subtotal:' | translate}}</strong></td>
-                                <td class="text-end">{{previewTotales.subtotal | currency}}</td>
+                                <td class="text-end">{{previewTotales.subtotal | copMoneda}}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{'IVA:' | translate}}</strong></td>
-                                <td class="text-end">{{previewTotales.totalImpuesto | currency}}</td>
+                                <td class="text-end">{{previewTotales.totalImpuesto | copMoneda}}</td>
                             </tr>
                             <tr class="table-primary">
                                 <td><strong>{{'Total:' | translate}}</strong></td>
-                                <td class="text-end"><strong>{{previewTotales.totalPedididoConDescuento | currency}}</strong></td>
+                                <td class="text-end"><strong>{{previewTotales.totalPedididoConDescuento | copMoneda}}</strong></td>
                             </tr>
                         </tbody>
                     </table>

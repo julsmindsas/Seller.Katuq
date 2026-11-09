@@ -49,11 +49,11 @@
       </div>
       <div class="gm-card gm-accent-purple">
         <div class="gm-label">{{ 'ventas.globalMetrics.totalFacturado' | translate }}</div>
-        <div class="gm-value">{{ metrics.totalFacturado | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="gm-value">{{ metrics.totalFacturado | copMoneda }}</div>
       </div>
       <div class="gm-card gm-accent-orange">
         <div class="gm-label">{{ 'ventas.customerMetrics.ticketPromedio' | translate }}</div>
-        <div class="gm-value">{{ metrics.ticketPromedioGlobal | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="gm-value">{{ metrics.ticketPromedioGlobal | copMoneda }}</div>
       </div>
       <div class="gm-card gm-accent-cyan">
         <div class="gm-label">{{ 'ventas.globalMetrics.pedidos7dias' | translate }}</div>

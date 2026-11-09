@@ -88,7 +88,8 @@
   margin-bottom: 0.2rem;
 }
 .gm-value {
-  font-size: 1.25rem;
+  font-size: clamp(.95rem, 4vw, 1.25rem);
+  white-space: nowrap;
   font-weight: 800;
   color: var(--ds-accent-ink);
   line-height: 1.2;

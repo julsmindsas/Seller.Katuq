@@ -1050,7 +1050,7 @@
   "shell.account.menu.roles": "Funções",
   "shell.account.logout": "Sair",
   "shell.search.ariaForm": "Pesquisar no aplicativo",
-  "shell.search.placeholder": "Pesquisar produtos, pedidos, clientes…",
+  "shell.search.placeholder": "Pesquisar…",
   "shell.search.ariaInput": "Campo de pesquisa",
   "shell.search.clear": "Limpar pesquisa",
   "shell.search.ariaResults": "Resultados da pesquisa",

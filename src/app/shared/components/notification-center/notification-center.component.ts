@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -48,6 +48,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { static: false }) searchInput!: ElementRef;
   @ViewChild('overlayEl', { static: false }) overlayEl!: ElementRef;
   @ViewChild('panelEl', { static: false }) panelEl!: ElementRef;
+  @ViewChild('campanaEl', { static: false }) campanaEl!: ElementRef;
 
   // Estado del componente
   public notifications: KatuqNotification[] = [];
@@ -293,10 +294,30 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   /**
    * Cierra el panel
    */
-  public closePanel(): void {
+  public closePanel(devolverFoco = false): void {
+    const estabaAbierto = this.isOpen;
     this.isOpen = false;
     this.showPreferences = false;
     this.showClearConfirm = false;
+    // Ticket 1548: al cerrar con Esc el foco vuelve al botón de la campana
+    if (devolverFoco && estabaAbierto) {
+      setTimeout(() => this.campanaEl?.nativeElement?.focus(), 0);
+    }
+  }
+
+  /** Ticket 1548: Esc cierra el panel (primero la confirmación o las preferencias si están abiertas). */
+  @HostListener('document:keydown.escape')
+  public onEscape(): void {
+    if (!this.isOpen) { return; }
+    if (this.showClearConfirm) { this.cancelClearAll(); return; }
+    this.closePanel(true);
+  }
+
+  /** Ticket 1548: no repetir el tipo cuando es igual al título («Pedido despachado» dos veces). */
+  public tipoRepiteTitulo(notification: KatuqNotification): boolean {
+    const norm = (t: string) => (t || '').trim().toLowerCase();
+    const tipo = norm(this.translate.instant(this.getTypeName(notification.type)));
+    return !!tipo && tipo === norm(notification.title);
   }
 
   /**

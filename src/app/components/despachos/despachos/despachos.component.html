@@ -160,7 +160,7 @@
                                     <i class="pi pi-wallet"></i>
                                     <span class="metric-label-short">PC</span>
                                     <span class="metric-label-full">{{ "Por Cobrar" | translate }}</span>
-                                    <span class="metric-badge">{{ metricasLogistica?.porCobrar || calculateFaltaPorPagar() | currency:'USD':'symbol':'1.0-0' }}</span>
+                                    <span class="metric-badge">{{ metricasLogistica?.porCobrar || calculateFaltaPorPagar() | copMoneda }}</span>
                                 </div>
                             </div>
                             <div class="actions-group">

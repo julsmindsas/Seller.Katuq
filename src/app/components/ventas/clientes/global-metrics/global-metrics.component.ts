@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core'; // v1
-import { Subject } from 'rxjs';
+import { Subject, timer } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -56,6 +56,15 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
   }
 
   load(): void {
+    this.cargar(true);
+  }
+
+  /**
+   * Misma llamada de siempre. Si el servidor contesta con la foto vieja (`_stale`) es porque la está
+   * recalculando; se vuelve a pedir una sola vez a los pocos segundos para mostrar la cifra nueva
+   * (sin caché nueva: es la misma ruta).
+   */
+  private cargar(reintentar: boolean): void {
     this.loading = true;
     this.error = false;
     this.ventas
@@ -68,6 +77,9 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.metrics = res;
           this.loading = false;
+          if (reintentar && res?._stale) {
+            timer(6000).pipe(takeUntil(this.destroy$)).subscribe(() => this.cargar(false));
+          }
         },
         error: () => {
           this.error = true;
@@ -89,12 +101,21 @@ export class GlobalMetricsComponent implements OnInit, OnDestroy {
     return (this.metrics?.topCategorias || []).slice(0, 3);
   }
 
-  /** "Actualizado hace X min" — solo se muestra cuando los datos están stale. */
+  /** "Actualizado hace X min (hora)" — solo se muestra cuando los datos están stale. */
   get staleLabel(): string {
     if (!this.metrics?._cachedAt) return '';
     const mins = Math.max(0, Math.round((Date.now() - this.metrics._cachedAt) / 60000));
     if (mins < 1) return this.translate.instant('ventas.globalMetrics.actualizadoHaceMenos');
-    return this.translate.instant('ventas.globalMetrics.actualizadoHace', { n: mins });
+    // Hora exacta del cálculo junto al «hace X min»: el servidor responde con la última foto guardada
+    // y recalcula en segundo plano, así que el comercio ve de cuándo es la cifra.
+    return `${this.translate.instant('ventas.globalMetrics.actualizadoHace', { n: mins })} (${this.horaDelCalculo()})`;
+  }
+
+  /** Hora local del cálculo, p. ej. «3:45 p. m.». */
+  private horaDelCalculo(): string {
+    const ms = this.metrics?._cachedAt;
+    if (!ms) return '';
+    return new Date(ms).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
   }
 
   /** Clave de traducción del segmento RFM (solo para pintarlo; el valor no cambia). */

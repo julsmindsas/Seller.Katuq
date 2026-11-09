@@ -123,6 +123,8 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
    * la página lo pone en false y la lista vuelve a su columna.
    */
   @Input() eventosFlotantes = false;
+  /** La flota ya se ve en el panel flotante de la escena ("Mensajeros ahora"): no se repite en la columna. */
+  @Input() flotaEnPanel = false;
 
   @ViewChild('raiz', { static: true }) raiz!: ElementRef<HTMLElement>;
   @ViewChild(EnVivoCelebracionComponent) celebracion?: EnVivoCelebracionComponent;

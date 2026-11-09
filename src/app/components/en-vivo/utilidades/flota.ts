@@ -1,5 +1,5 @@
 import { MensajeroEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
-import { claveDeNombre, diaDeColombia } from './formato';
+import { claveDeNombre, diaDeColombia, nombrePropio } from './formato';
 
 /** Un mensajero (moto) o una transportadora (camión) con lo que lleva ahora. */
 export interface EntradaFlota {
@@ -109,7 +109,7 @@ export function armarFlota(
     const enRuta = mensajero.enRuta || suyos.length > 0;
     salida.push({
       clave,
-      nombre: mensajero.nombre,
+      nombre: nombrePropio(mensajero.nombre) || mensajero.nombre,
       tipo: 'mensajero',
       enRuta,
       pedidos: suyos.length || (enRuta ? mensajero.pedidos ?? 0 : 0),

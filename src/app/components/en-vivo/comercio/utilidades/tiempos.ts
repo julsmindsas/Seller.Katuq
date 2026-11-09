@@ -29,6 +29,8 @@ export interface VistaTiempos {
   /** "45 min" o "—" mientras no haya entregas con mensajero propio. */
   ciclo: string;
   leyenda: string;
+  /** Qué mide el tiempo (ayuda «¿Cómo se calcula?»): solo entregas con mensajero propio, no todos los pedidos entregados. */
+  ayuda: string;
   tramos: TramoTiempo[];
   /** null si el servidor no mandó comparación (menos de 5 comercios o sin ciclo). */
   comparacion: TextoComparacion | null;
@@ -86,8 +88,11 @@ export function armarTiempos(
   const ciclo = entregas > 0 ? textoDe(tiempos?.ciclo) : SIN_DATO;
   const leyenda =
     entregas > 0
-      ? `de punta a punta con tus mensajeros · ${entregas} ${entregas === 1 ? 'entrega' : 'entregas'} hoy`
+      ? `de punta a punta con tus mensajeros · ${entregas} ${entregas === 1 ? 'entrega' : 'entregas'} de tu flota hoy`
       : 'todavía sin entregas con tus mensajeros hoy';
 
-  return { ciclo, leyenda, tramos, comparacion: comparacion ? textoComparacion(comparacion) : null };
+  const ayuda =
+    'Se mide solo con las entregas de hoy hechas por tus mensajeros propios (de la creación del pedido a la puerta). ' +
+    'No cuenta las entregas de transportadoras ni de otros canales, por eso puede ser menor que «Entregados hoy» del embudo y de la lista de logros.';
+  return { ciclo, leyenda, ayuda, tramos, comparacion: comparacion ? textoComparacion(comparacion) : null };
 }

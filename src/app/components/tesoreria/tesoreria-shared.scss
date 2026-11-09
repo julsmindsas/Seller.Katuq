@@ -60,7 +60,9 @@
 .tk-value {
   font-family: var(--kc-font-head);
   font-weight: 800;
-  font-size: 26px;
+  font-size: clamp(18px, 2.2vw, 26px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   line-height: 1.1;
   margin-top: 6px;
   color: var(--tk-fg, var(--kc-ink));

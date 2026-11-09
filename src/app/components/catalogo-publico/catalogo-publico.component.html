@@ -100,7 +100,7 @@
         </div>
 
         <div class="vit__card-foot">
-          <span class="vit__precio">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="vit__precio">{{ p.precioConIva | copMoneda }}</span>
 
           <button
             type="button"
@@ -124,7 +124,7 @@
       <div class="vit__cta-info">
         <strong>{{ totalItems }}</strong>
         <span class="vit__muted vit__cta-unidad">{{ totalItems === 1 ? 'producto' : 'productos' }}</span>
-        <span class="vit__cta-total">{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <span class="vit__cta-total">{{ totalEstimado | copMoneda }}</span>
       </div>
       <button type="button" class="vit__btn vit__btn--primario" (click)="mostrandoCarrito = true">
         Continuar
@@ -146,7 +146,7 @@
             <div class="vit__lista-info">
               <span class="vit__lista-tit">{{ l.producto.titulo }}</span>
               <span class="vit__muted">
-                {{ l.cantidad }} × {{ l.producto.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+                {{ l.cantidad }} × {{ l.producto.precioConIva | copMoneda }}
               </span>
             </div>
             <div class="vit__qty vit__qty--sm">
@@ -159,7 +159,7 @@
 
         <div class="vit__total">
           <span>Estimado</span>
-          <strong>{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <strong>{{ totalEstimado | copMoneda }}</strong>
         </div>
 
         <p class="vit__aviso">

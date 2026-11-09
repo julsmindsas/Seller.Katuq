@@ -118,7 +118,7 @@
                 [ocultar]="vm.prefs.ocultar"
               ></app-en-vivo-ventas-hora>
               <app-en-vivo-flota
-                *ngIf="vm.vista === 'comercio'"
+                *ngIf="vm.vista === 'comercio' && !flotaEnPanel"
                 [flota]="vm.estado.flota"
                 [pedidos]="vm.estado.pedidos"
                 [actualizadoEn]="vm.estado.actualizadoEn"

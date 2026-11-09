@@ -124,9 +124,18 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
     id: 'opttia',
     icono: 'ia',
     clase: 't-pack',
-    antes: `Opttia ${tercera ? 'le' : 'te'} armó `,
-    destacado: unidad(ia.pedidos, 'pedido', 'pedidos'),
-    despues: ocultar || ia.pedidos === 0 ? ' por WhatsApp' : ` por WhatsApp · ${dinero(ia.ventas)}`,
+    // En cero no se muestra «0 pedidos» (desanima en la pantalla principal): se deja como invitación.
+    ...(ia.pedidos === 0
+      ? {
+          antes: `Opttia puede armar ${tercera ? 'sus' : 'tus'} pedidos por WhatsApp. `,
+          destacado: 'Aún no hay uno hoy',
+          despues: '',
+        }
+      : {
+          antes: `Opttia ${tercera ? 'le' : 'te'} armó `,
+          destacado: unidad(ia.pedidos, 'pedido', 'pedidos'),
+          despues: ocultar ? ' por WhatsApp' : ` por WhatsApp · ${dinero(ia.ventas)}`,
+        }),
   });
 
   const entregados = contarEntregadosHoy(pedidos, cifras?.dia ?? null);

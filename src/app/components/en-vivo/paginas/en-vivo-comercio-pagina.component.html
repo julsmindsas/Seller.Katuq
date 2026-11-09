@@ -2,6 +2,7 @@
   vista="comercio"
   [empresa]="(empresa$ | async) || undefined"
   [eventosFlotantes]="!ampliado && !sinEscena((vm$ | async)?.opcion)"
+  [flotaEnPanel]="!ampliado && (vm$ | async)?.opcion === 'operacion'"
 >
   <!-- Encabezado: botones extra -->
   <ng-container ngProjectAs="[slot=acciones]">
