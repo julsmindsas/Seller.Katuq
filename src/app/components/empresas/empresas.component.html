@@ -11,9 +11,9 @@
      Las dos con el estilo del registro (D-383): pastilla + título grande,
      paneles planos con borde lila, Geometr415 en títulos y botones.
      ══════════════════════════════════════════════════════════════════════ -->
-<app-consola-plataforma *ngIf="isJulsmind"></app-consola-plataforma>
+<app-consola-plataforma *ngIf="isJulsmind && !resolviendoConsola"></app-consola-plataforma>
 
-<div class="em" *ngIf="!isJulsmind">
+<div class="em" *ngIf="!isJulsmind && !resolviendoConsola">
 
   <header class="em-head">
     <span class="em-eyebrow">{{ 'empresas.empresas.miEmpresa' | translate }}</span>
