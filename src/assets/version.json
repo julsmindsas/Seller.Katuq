@@ -1,33 +1,121 @@
 {
-  "version": "2026.11.06.1 - 6 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-06T19:45:47.175Z",
+  "version": "2026.11.09.1 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T15:45:20.026Z",
   "notas": [
     {
-      "fecha": "2026-11-05T21:14:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Productos › Importar fotos de productos, «Descargar ejemplo con tus referencias» te da un Excel con el nombre exacto de cada foto de cada producto y te avisa qué referencias no se pueden usar en el nombre de un archivo.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-11-06T16:44:36Z",
+      "fecha": "2026-11-07T21:00:00Z",
       "tipo": "CORRIGE",
-      "texto": "En el PDF de la cotización las columnas de valores ya no quedan pegadas: cada cifra tiene su espacio y se lee igual que en la vista previa.",
+      "texto": "En Producción, un mismo producto ya no sale dos veces en la lista cuando su nombre quedó guardado con un espacio o un salto de línea de más.",
       "modulos": [
-        "cotizaciones"
+        "produccion/dashboard"
       ]
     },
     {
-      "fecha": "2026-11-06T16:47:36Z",
-      "tipo": "NUEVO",
-      "texto": "En Ajustes de inventario puedes elegir la bodega de cada producto: un mismo ajuste, con un solo tipo de movimiento y una sola nota, queda registrado en varias bodegas a la vez y con una referencia común para encontrarlo.",
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera, el nombre y el documento del cliente abren su ficha en otra pestaña, así no pierdes los filtros.",
       "modulos": [
-        "inventario/recepcion-mercancia"
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los administradores ya pueden corregir el tipo de documento de un cliente, por ejemplo de CC a NIT.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido.",
+      "modulos": [
+        "ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-08T22:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq.",
+      "modulos": [
+        "en-vivo"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-08T22:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq.",
+      "modulos": [
+        "en-vivo"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Producción, un mismo producto ya no sale dos veces en la lista cuando su nombre quedó guardado con un espacio o un salto de línea de más.",
+      "modulos": [
+        "produccion/dashboard"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Cartera, el nombre y el documento del cliente abren su ficha en otra pestaña, así no pierdes los filtros.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los administradores ya pueden corregir el tipo de documento de un cliente, por ejemplo de CC a NIT.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido.",
+      "modulos": [
+        "ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-07T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
     {
       "fecha": "2026-11-06T16:47:36Z",
       "tipo": "NUEVO",
@@ -445,65 +533,8 @@
       "modulos": [
         "facturacion-electronica"
       ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:20Z",
-      "tipo": "CORRIGE",
-      "texto": "Una factura que sus notas crédito dejaron en $0 aparece como «Anulada con nota crédito», ya no te ofrece hacerle otra nota y en su historial ves las notas que la anularon.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:10Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, una nota que la DIAN rechazó ahora dice «Rechazada por DIAN» y no «No enviada».",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, «Desde pedidos» ya no te muestra los pedidos de prueba que se usaron para la habilitación con la DIAN.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-01T14:51:30Z",
-      "tipo": "CORRIGE",
-      "texto": "En Configuración DIAN, el ícono de búsqueda ya no tapa el nombre de la ciudad.",
-      "modulos": [
-        "integrations",
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-01T14:51:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, «Revisar inconvenientes», el botón de ayuda y las tarjetas de arriba te llevan directo a la lista que abren.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-01T14:50:30Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, «Pendiente por facturar» aclara que cuenta los pedidos del período y cuántos más hay de otras fechas, y «Por facturar» te muestra también el valor.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-01T14:50:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, el aviso de documentos por revisar, el filtro «Rechazadas» y la tarjeta de tasa de rechazo cuentan lo mismo. Un documento que ya rehiciste sale como «Reemplazada» y no te pide revisión.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "aff9b4acbedd15314a732015bda5d3cecf128644",
+  "commit": "3c55b4889c6416e0e338064c17b2fded588736a2",
   "cambiosSinCommit": 0
 }
