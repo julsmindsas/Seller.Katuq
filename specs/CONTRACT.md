@@ -13648,3 +13648,7 @@ El detalle con archivo y línea está en `proposal.md`.
   4. Al terminar: subir a git, crear tablas, índices y configuración (todo apagado) con simulación previa, y publicar front y back.
 - **Pendiente fuera de D-700:** el historial de sesiones (F2-6) espera D-634, que sigue en propuesta.
 - **Pedido de hoy:** gráficos, métricas y tablas más sobrios, verificación independiente de las cifras (en especial los comercios con plan) y terminar las fases que faltan.
+- **Cuentas, 9-nov (Daniel):**
+  - **Cliente que paga de verdad:** plan premium y pedidos recientes. Baudio Corporation (en implementación), Punto Verde Vidagas y ALMACEN BOMBAS pagan de verdad; no tienen facturas en la base y su pago se marca a mano.
+  - «Prueba Onboarding Katuq Verificada» y FLORECER son cuentas demo de uso interno: se marcan `tipoCuenta: demo` al publicar F2-2.
+  - Una renovación fallida de un comercio que paga sigue contando como deuda mientras Daniel no diga otra cosa.
