@@ -882,7 +882,7 @@
     "shell.account.menu.roles": "Rollen",
     "shell.account.logout": "Abmelden",
     "shell.search.ariaForm": "In der App suchen",
-    "shell.search.placeholder": "Produkte, Bestellungen, Kunden suchen…",
+    "shell.search.placeholder": "Suchen…",
     "shell.search.ariaInput": "Suchfeld",
     "shell.search.clear": "Suche löschen",
     "shell.search.ariaResults": "Suchergebnisse",

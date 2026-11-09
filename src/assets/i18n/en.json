@@ -1062,7 +1062,7 @@
   "shell.account.menu.roles": "Roles",
   "shell.account.logout": "Log out",
   "shell.search.ariaForm": "Search the app",
-  "shell.search.placeholder": "Search products, orders, customers…",
+  "shell.search.placeholder": "Search…",
   "shell.search.ariaInput": "Search field",
   "shell.search.clear": "Clear search",
   "shell.search.ariaResults": "Search results",

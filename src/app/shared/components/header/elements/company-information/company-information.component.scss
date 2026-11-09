@@ -28,6 +28,11 @@
         flex-shrink: 0;
     }
 
+    // Ticket 1529: con logo el nombre es redundante (y salía truncado); el nombre legal queda en el tooltip.
+    .company-brand-name.company-brand-name--con-logo {
+        display: none;
+    }
+
     .company-brand-name {
         font-family: var(--ktq-font);
         font-size: 18px;
