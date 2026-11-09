@@ -7,6 +7,7 @@ import {
 } from '../../services/version-check.service';
 import { AuthService } from '../../services/firebase/auth.service';
 import { NovedadesVersionService } from '../../services/novedades-version.service';
+import { ModuleUsageService } from '../../services/module-usage.service';
 
 /**
  * Aviso de versión nueva — píldora en la barra superior
@@ -44,6 +45,7 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
     private versionCheck: VersionCheckService,
     public authService: AuthService,
     private novedadesService: NovedadesVersionService,
+    private moduleUsage: ModuleUsageService,
   ) {}
 
   ngOnInit(): void {
@@ -59,6 +61,7 @@ export class AvisoActualizacionComponent implements OnInit, OnDestroy {
     if (this.authService.isLoggedIn) {
       this.versionCheck.iniciar();
       this.novedadesService.iniciar();
+      this.moduleUsage.iniciar();
     }
   }
 
