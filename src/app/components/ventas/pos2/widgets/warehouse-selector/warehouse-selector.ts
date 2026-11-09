@@ -266,4 +266,4 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
         // Notificar el cambio
         this.warehouseChange.emit();
     }
-}
+}
