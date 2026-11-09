@@ -118,5 +118,6 @@
   { "fecha": "2026-11-08T22:00:00Z", "tipo": "NUEVO", "modulos": ["en-vivo"], "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq." },
   { "fecha": "2026-11-09T16:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado." },
   { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF." },
-  { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final." }
+  { "fecha": "2026-11-09T16:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final." },
+  { "fecha": "2026-11-09T20:40:00Z", "tipo": "NUEVO", "modulos": ["sitios"], "texto": "Ahora puedes poner a Opttia a atender en tu sitio web: responde dudas con el tono de tu marca, recomienda tus productos con precio, arma el carrito y lleva al pago. Se enciende por sitio, en el editor, pestaña «Tienda»." }
 ]

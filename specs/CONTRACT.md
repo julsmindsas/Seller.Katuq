@@ -13637,3 +13637,16 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Queda en el historial:** lo que ya se subió sigue visible en el historial de GitHub; no se reescribió.
 - **No aplica todavía** al backend ni a kai.
 
+### 2026-11-09 — D-686: Opttia atiende en el sitio del comercio (aws-claude-1)
+
+- **D-686. Opttia en el sitio** (back 69ed1ba2; front en este commit). Pedido de Daniel: un agente en las webs nuevas que se pueda prender en unos sitios y en otros no, que atienda soporte, abra solicitudes, asesore, dé la lista de precios, arme el carrito con el WebMCP del sitio, cierre la venta y hable con la personalidad de marca de Katuq.
+  - **Se enciende por sitio** en `contenido.tienda.opttia` (`activo`, `nombre`, `saludo`, `puede`, `preguntasFrecuentes`). La llave solo existe si el comercio la configuró. Con Opttia encendido, su chat toma el lugar del asesor KAI. También sale en sitios que no venden: ahí solo atiende dudas.
+  - **Dónde corre:** `POST /v1/sites/public/:slug/opttia`. El ciclo del agente vive en el backend y cada paso es una llamada a `pedirJsonAOpttia` (hasta 5 por mensaje), como manda D-257. No hubo cambios en kai.
+  - **Qué puede:** buscar productos, leer su descripción, dar la lista de precios, buscar en el contenido del sitio, y pedirle a la página que agregue, quite o cambie cantidades del carrito y abra el pago con los datos escritos. La página lo hace por su WebMCP; el servidor no toca carritos ni pedidos.
+  - **Marca:** el tono sale de la personalidad de marca de la empresa, siempre. Los archivos de marca se consultan solo si el comercio lo enciende (`puede.archivos`, apagado de fábrica), porque se subieron para el equipo y pueden traer cosas internas; el agente tiene la orden de no entregar documentos ni procedimientos internos. Solo sirven los archivos ya indexados en Personalidad de marca.
+  - **Solicitudes:** `puede.tickets`, apagado de fábrica. El ticket queda a nombre del comercio del sitio y usa el servicio de soporte que ya existe, con topes por visitante y sin repetir en 5 minutos.
+  - **Editor:** panel «Opttia en tu sitio» en la pestaña Tienda. La operación `opttia` deja prenderlo desde «Editar con IA» y desde `edit_katuq_site`; las preguntas frecuentes se escriben solo en el editor.
+  - **Límites conocidos:** el chat no responde en la vista previa de un borrador (necesita el sitio publicado). Cada mensaje cuesta hasta 5 llamadas al modelo.
+  - **Sin cambios en pedidos, pagos, inventario ni consecutivos. Sin colecciones nuevas.**
+  - **Pruebas (fuera de git, D-566):** X1 270 de 270 páginas iguales; suites de sitios sin fallas nuevas; operación `opttia` 6 de 6; navegador a 1440 y 390 con el modelo real sobre la copia `katuq_dev` (productos, lista de precios, carrito, pago, solicitud simulada, tono de marca, archivos y negativa a entregar documentos internos); panel del editor 11 de 11 a 1440 y 390; `tsc` y build de producción sin errores.
+  - **Sigue:** publicar back y front juntos cuando Daniel lo diga.

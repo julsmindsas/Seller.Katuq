@@ -2795,6 +2795,77 @@
           <span class="palanca"><span></span></span>
         </button>
 
+        <!-- D-686: Opttia en el sitio. Va fuera de «Vender»: también atiende en sitios que no venden. -->
+        <button class="opcion" id="campo-opttia" [class.is-active]="opttiaSitio?.activo === true" (click)="alternarOpttia()">
+          <span class="opcion__texto">
+            <strong>Opttia atiende en tu sitio</strong>
+            <small>Un chat en tu página que habla como tu marca: responde dudas<ng-container *ngIf="contenido.tienda.habilitada">,
+              recomienda tus productos con precio real, da la lista de precios, arma el carrito y lleva al
+              pago</ng-container>. Lo enciendes solo en los sitios que quieras.</small>
+          </span>
+          <span class="palanca"><span></span></span>
+        </button>
+        <ng-container *ngIf="opttiaSitio as o">
+        <div class="grupo grupo--plegable" *ngIf="o.activo" [class.is-abierto]="tiendaAbierto === G_OPTTIA">
+          <h3 class="grupo__plegar" role="button" tabindex="0" [attr.aria-expanded]="tiendaAbierto === G_OPTTIA" (click)="abrirGrupoTienda(G_OPTTIA)" (keydown.enter)="abrirGrupoTienda(G_OPTTIA)" (keydown.space)="$event.preventDefault(); abrirGrupoTienda(G_OPTTIA)">Opttia en tu sitio</h3>
+          <div class="campo">
+            <label>Nombre del asistente</label>
+            <input type="text" maxlength="24" [(ngModel)]="o.nombre" (ngModelChange)="marcarSucio()" placeholder="Opttia" />
+            <small>Así se presenta en el chat. Vacío, se llama Opttia.</small>
+          </div>
+          <div class="campo">
+            <label>Saludo</label>
+            <textarea rows="2" maxlength="240" [(ngModel)]="o.saludo" (ngModelChange)="marcarSucio()"
+                      placeholder="Hola, ¿en qué te ayudo hoy?"></textarea>
+            <small>El tono lo toma de la personalidad de marca que tienes en Katuq.</small>
+          </div>
+          <ng-container *ngIf="contenido.tienda.habilitada">
+            <button class="opcion" [class.is-active]="o.puede.asesorar" (click)="o.puede.asesorar = !o.puede.asesorar; marcarSucio()">
+              <span class="opcion__texto"><strong>Asesorar y vender</strong>
+                <small>Busca en tus productos, lee su descripción, muestra precios y agrega al carrito cuando el cliente lo pide.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" *ngIf="o.puede.asesorar" [class.is-active]="o.puede.cerrarVenta" (click)="o.puede.cerrarVenta = !o.puede.cerrarVenta; marcarSucio()">
+              <span class="opcion__texto"><strong>Cerrar la venta</strong>
+                <small>Pide los datos de entrega y abre el pago con ellos ya escritos. El cliente revisa, elige cómo paga y confirma.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </ng-container>
+          <button class="opcion" [class.is-active]="o.puede.soporte" (click)="o.puede.soporte = !o.puede.soporte; marcarSucio()">
+            <span class="opcion__texto"><strong>Responder dudas</strong>
+              <small>Envíos, garantías, políticas y horarios, con lo que está publicado en tu sitio y las preguntas de abajo.</small></span>
+            <span class="palanca"><span></span></span>
+          </button>
+          <button class="opcion" *ngIf="o.puede.soporte" [class.is-active]="o.puede.archivos" (click)="o.puede.archivos = !o.puede.archivos; marcarSucio()">
+            <span class="opcion__texto"><strong>Consultar los archivos de tu marca</strong>
+              <small>Busca también en los archivos que subiste en Personalidad de marca. No entrega documentos ni procesos
+                internos, pero enciéndelo solo si lo que dicen se le puede contar a un cliente.</small></span>
+            <span class="palanca"><span></span></span>
+          </button>
+          <button class="opcion" [class.is-active]="o.puede.tickets" (click)="o.puede.tickets = !o.puede.tickets; marcarSucio()">
+            <span class="opcion__texto"><strong>Abrir solicitudes</strong>
+              <small>Si no puede resolver algo, o es un reclamo o una cotización, toma el nombre y el contacto y te deja un
+                ticket en Soporte con el número para el cliente.</small></span>
+            <span class="palanca"><span></span></span>
+          </button>
+          <button class="opcion" [class.is-active]="o.puede.whatsapp" (click)="o.puede.whatsapp = !o.puede.whatsapp; marcarSucio()">
+            <span class="opcion__texto"><strong>Ofrecer tu WhatsApp</strong>
+              <small>Cuando conviene seguir con una persona, muestra el botón de WhatsApp de tu comercio.</small></span>
+            <span class="palanca"><span></span></span>
+          </button>
+          <div class="campo">
+            <label>Preguntas frecuentes</label>
+            <small>Lo que más te preguntan y lo que quieres que responda, tal cual.</small>
+          </div>
+          <div class="repetible" *ngFor="let q of o.preguntasFrecuentes; let i = index">
+            <input type="text" maxlength="160" [(ngModel)]="q.p" (ngModelChange)="marcarSucio()" placeholder="Pregunta (¿Hacen envíos a todo el país?)" />
+            <textarea rows="2" maxlength="600" [(ngModel)]="q.r" (ngModelChange)="marcarSucio()" placeholder="Respuesta"></textarea>
+            <button class="enlace-sutil" (click)="quitarPreguntaOpttia(i)">Quitar esta pregunta</button>
+          </div>
+          <button class="boton-secundario" (click)="agregarPreguntaOpttia()" *ngIf="o.preguntasFrecuentes.length < 12">Agregar una pregunta</button>
+        </div>
+        </ng-container>
+
         <ng-container *ngIf="contenido.tienda.habilitada">
           <!-- Ticket 1241: KAI, asesor de compra -->
           <button class="opcion" [class.is-active]="contenido.tienda.asesorKai === true"
@@ -2802,7 +2873,8 @@
             <span class="opcion__texto">
               <strong>KAI, asesor de compra</strong>
               <small>Un botón «Pregúntale a KAI» en tu tienda: recomienda productos tuyos con
-                existencias y precio real, los agrega al carrito conversando y lleva al pago.</small>
+                existencias y precio real, los agrega al carrito conversando y lleva al pago.<ng-container
+                *ngIf="opttiaSitio?.activo"> Con Opttia encendido, el chat de Opttia toma su lugar.</ng-container></small>
             </span>
             <span class="palanca"><span></span></span>
           </button>
