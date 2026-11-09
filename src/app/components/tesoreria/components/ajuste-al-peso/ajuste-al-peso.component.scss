@@ -32,7 +32,7 @@
   padding: 0.55rem 0.8rem;
   border: 1px solid $cfg-chip-border;
   border-radius: 11px;
-  background: #fff;
+  background: var(--kc-surface, #fff);
   cursor: pointer;
   input { margin-top: 0.2rem; width: 1.05rem; height: 1.05rem; accent-color: #5F3FE0; flex: 0 0 auto; }
   input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
