@@ -263,3 +263,31 @@ body:not(.dark-only) .pl-raiz .pl-estado--info { color: var(--pl-tinta-info); }
 
 // D-700 15.2: el enlace a la consola anterior es un <a>; neutraliza el letter-spacing global de `a`.
 .pl-raiz a.pl-consola-anterior { letter-spacing: normal; text-decoration: none; display: inline-flex; align-items: center; }
+
+// ── Opttia de plataforma (23.5, 25.4): texto plano, sin gradientes ──
+.pl-opttia { margin-bottom: 16px; }
+.pl-opttia__cabeza, .pl-ficha__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin-bottom: 8px; }
+.pl-ficha__cabeza { margin-bottom: 12px; }
+.pl-opttia__cabeza .cfg-card__titulo { margin: 0; }
+.pl-opttia__campo { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.pl-opttia__rotulo { margin: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ds-muted); }
+.pl-raiz .pl-opttia__campo textarea {
+  width: 100%; min-height: 84px; padding: 10px 12px; resize: vertical; background: var(--ds-chip-bg); color: var(--ds-ink);
+  border: 1px solid var(--ds-control-border); border-radius: 10px; font-size: 13.5px; line-height: 1.45; font-family: inherit;
+}
+.pl-raiz .pl-opttia__campo textarea:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 1px; }
+.pl-opttia__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 8px; }
+.pl-opttia__pie p { margin: 0; }
+.pl-opttia__respuesta { margin-top: 10px; }
+.pl-raiz .pl-opttia__texto {
+  white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; color: var(--ds-ink);
+  background: var(--ds-chip-bg); border: 1px solid var(--ds-line-soft); border-radius: 11px; padding: 12px 14px; margin: 6px 0 8px;
+}
+.pl-opttia__puntos { margin: 8px 0; }
+.pl-opttia__lista { margin: 6px 0 0; display: grid; gap: 8px; }
+.pl-opttia__lista dt { font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: var(--ds-muted); margin: 0; }
+.pl-opttia__lista dd { margin: 0; font-size: 13.5px; color: var(--ds-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pl-opttia__general { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+@media (max-width: 480px) {
+  .pl-opttia__pie .cfg-acciones, .pl-opttia__pie .cfg-btn { width: 100%; }
+}

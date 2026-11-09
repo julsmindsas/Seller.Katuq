@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, shareReplay, tap } from 'rxjs/operators';
-import { Definiciones, MePlataforma } from '../plataforma.tipos';
+import { Definiciones, EstadoOpttiaPlataforma, MePlataforma } from '../plataforma.tipos';
+import { estadoOpttia } from '../logica/opttia-plataforma';
 import { PlataformaService } from './plataforma.service';
 
 /**
@@ -52,6 +53,11 @@ export class PlataformaContextoService {
   /** ¿Está encendida la bandera de pagos manuales? (apagada, la ventana deja ver y anular, pero no registrar). */
   pagosManualesActivos(): Observable<boolean> {
     return this.yo().pipe(map((m) => !!(m && m.banderas && m.banderas['manualPaymentsEnabled'] === true)));
+  }
+
+  /** Opttia de plataforma según `GET /me`: sin respuesta no se muestra nada (el servidor vuelve a validar en cada pregunta). */
+  opttia(): Observable<EstadoOpttiaPlataforma> {
+    return this.yo().pipe(map((m) => estadoOpttia(m)));
   }
 
   cambiarVista(v: 'creacion' | 'entrega'): void {

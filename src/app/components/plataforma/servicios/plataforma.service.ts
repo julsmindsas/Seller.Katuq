@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { HttpContext, HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interceptor';
 import { BaseService } from '../../../shared/services/base.service';
 import {
-  AperturaSoporte, Calidad, CambioMotivoBaja, CambioTipoCuenta, CuerpoPagoManual, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
+  AperturaSoporte, Calidad, CambioMotivoBaja, CambioTipoCuenta, CuerpoPagoManual, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview, ResumenMensualRespuesta,
   ListaPagosManuales, MotivoBajaValor, PagosPorPersona, Reclasificadas, Senales, PagoManualAnulado, PagoManualRegistrado, ResumenSegmento, SoporteSubido, SobrePlataforma, Sugerencias, Tendencias, TipoCuentaValor,
 } from '../plataforma.tipos';
 import { paramsDeFiltros, paramsExportacion, queryString } from '../logica/consulta';
@@ -168,5 +169,13 @@ export class PlataformaService extends BaseService {
       comentario ? { bajaMotivo, comentario } : { bajaMotivo },
       { context: new HttpContext().set(SKIP_LOADER, true) },
     );
+  }
+
+  /** D-700 25.4 — Resumen del mes en curso redactado por Opttia (solo si `GET /me` dice `opttia.narrativa`). Se corta a los 60 s; sin pantalla de carga global. */
+  resumenMensual(limiteMs = 60000): Observable<ResumenMensualRespuesta> {
+    return this.http.post<ResumenMensualRespuesta>(
+      `${environment.urlApi}/v1/platform/opttia/monthly-summary`, {},
+      { context: new HttpContext().set(SKIP_LOADER, true) },
+    ).pipe(timeout(limiteMs));
   }
 }

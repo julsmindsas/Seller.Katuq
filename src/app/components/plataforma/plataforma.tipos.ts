@@ -42,7 +42,7 @@ export interface MePlataforma {
   esOperador: boolean;
   /** Quién puede ver la vista de auditoría de pagos por persona (el servidor decide; esto solo muestra u oculta). */
   esLectorAuditoria?: boolean;
-  opttia?: { autorizado?: boolean; [k: string]: unknown } | null;
+  opttia?: { activo?: boolean; autorizado?: boolean; narrativa?: boolean; [k: string]: unknown } | null;
   banderas: Record<string, boolean>;
 }
 
@@ -422,4 +422,23 @@ export interface PagosPorPersona {
     anulaciones: { cantidad: number; montoCOP: number; propias: number };
   }>;
   total: { pagos: number; montoCOP: number; atipicos: number; anulaciones: number; montoAnuladoCOP: number; anulacionesPropias: number };
+}
+
+/** D-700 25.4 — Respuesta de `POST /v1/platform/opttia/monthly-summary`. Todo es texto para mostrar tal cual, sin formato. */
+export interface ResumenMensualRespuesta {
+  ok: boolean;
+  resumen: string;
+  puntos?: Array<{ tema: string; frase: string }>;
+  fuente: 'ia' | 'ia_parcial' | 'determinista';
+  proveedor?: string | null;
+  meta: { mes?: string; corte?: string; universo?: string; reglaVersion?: string; desactualizado?: boolean; parcial?: boolean };
+  saneado?: boolean;
+  restantesDia?: number | null;
+}
+
+/** D-700 23.5 — Lo que el panel sabe de Opttia de plataforma según `GET /me`. Sin respuesta, nada (falla cerrado). */
+export interface EstadoOpttiaPlataforma {
+  autorizado: boolean;
+  activo: boolean;
+  narrativa: boolean;
 }

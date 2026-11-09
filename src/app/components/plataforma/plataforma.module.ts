@@ -33,6 +33,8 @@ import { FichaInformeComponent } from './componentes/ficha/ficha-informe.compone
 import { TipoCuentaDialogComponent } from './componentes/dialogos/tipo-cuenta-dialog.component';
 import { MotivoBajaDialogComponent } from './componentes/dialogos/motivo-baja-dialog.component';
 import { PagoManualDialogComponent } from './componentes/dialogos/pago-manual-dialog.component';
+import { OpttiaPlataformaPanelComponent } from './componentes/opttia/opttia-plataforma-panel.component';
+import { ResumenMensualComponent } from './componentes/opttia/resumen-mensual.component';
 
 /**
  * D-700 13.3 — Rutas internas del módulo (la ruta `plataforma` la registra `routes.ts` con `AuthGuard` y
@@ -70,7 +72,7 @@ const rutas: Routes = [
     FichaUsoComponent, FichaSaludComponent, FichaSoporteComponent, FichaHistorialComponent, CuentasExcluidasComponent,
     SegmentosComponent, CalidadDatosComponent, SugerenciasComponent, CobrosComponent, AdopcionComponent, ExportarComerciosComponent,
     FichaIntegracionesComponent, FichaInformeComponent, TipoCuentaDialogComponent, MotivoBajaDialogComponent, PagoManualDialogComponent,
-    SenalesComponent, PagosPersonaComponent,
+    SenalesComponent, PagosPersonaComponent, OpttiaPlataformaPanelComponent, ResumenMensualComponent,
   ],
   providers: [PlataformaContextoService],
 })

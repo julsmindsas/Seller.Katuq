@@ -1,3 +1,9 @@
+<app-resumen-mensual></app-resumen-mensual>
+<div class="pl-opttia__general" *ngIf="opttia?.autorizado && opttia?.activo">
+  <button type="button" class="cfg-btn cfg-btn--sec" [attr.aria-expanded]="preguntando" (click)="preguntando = !preguntando">{{ textos.opttia.botonAbrir }}</button>
+</div>
+<app-opttia-plataforma-panel *ngIf="preguntando && opttia?.autorizado" [cerrable]="true" (cerrado)="preguntando = false"></app-opttia-plataforma-panel>
+
 <ng-container *ngIf="estado.datos as r">
   <p class="cfg-aviso cfg-aviso--warn" *ngIf="r.meta.desactualizado" role="status">
     {{ textos.desactualizado(r.meta.corteColombia || '—') }} ({{ antiguedad(r.meta.antiguedadHoras) }})
