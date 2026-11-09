@@ -113,8 +113,13 @@ export class ModuleUsageService extends BaseService implements OnDestroy {
     }
   }
 
+  /** Día de Colombia (AAAA-MM-DD), el mismo con que el servidor cuenta. */
   private hoy(): string {
-    return new Date().toISOString().slice(0, 10);
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
   }
 
   private llaveAlmacen(): string {
