@@ -241,3 +241,22 @@ export interface Sugerencias {
 }
 
 export type FormatoExportacion = 'csv' | 'pdf';
+
+/** D-700 17.4 — Tipo de cuenta y motivo de baja (escrituras de operador). */
+export type TipoCuentaValor = 'real' | 'demo' | 'prueba' | 'cortesia' | 'interna';
+export type MotivoBajaValor = 'precio' | 'funcionalidad' | 'soporte' | 'competencia' | 'cierre_negocio' | 'mora' | 'sin_uso' | 'otro';
+
+export interface CambioTipoCuenta {
+  docId: string;
+  cambio: boolean;
+  tipoCuenta: { tipo: string; origen: string };
+  tipoAnterior: { tipo: string | null; origen: string };
+  vivoActualizado: boolean;
+}
+
+export interface CambioMotivoBaja {
+  docId: string;
+  cambio: boolean;
+  bajaMotivo: MotivoBajaValor;
+  ciclo: string;
+}

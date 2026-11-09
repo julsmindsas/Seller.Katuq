@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { Definiciones } from '../plataforma.tipos';
 import { PlataformaService } from './plataforma.service';
 
@@ -14,6 +14,7 @@ export class PlataformaContextoService {
   readonly recarga$ = new BehaviorSubject<number>(0);
 
   private definicionesCache: Definiciones | null = null;
+  private operador$: Observable<boolean> | null = null;
 
   constructor(private servicio: PlataformaService) {}
 
@@ -24,6 +25,18 @@ export class PlataformaContextoService {
       map((r) => r.datos),
       tap((d) => { this.definicionesCache = d; }),
     );
+  }
+
+  /** ¿Puede escribir? (`GET /me`, una sola vez por apertura). Sin respuesta cuenta como no: la autorización real es del servidor. */
+  esOperador(): Observable<boolean> {
+    if (!this.operador$) {
+      this.operador$ = this.servicio.me().pipe(
+        map((r) => !!(r && r.datos && r.datos.esOperador)),
+        catchError(() => of(false)),
+        shareReplay(1),
+      );
+    }
+    return this.operador$;
   }
 
   cambiarVista(v: 'creacion' | 'entrega'): void {

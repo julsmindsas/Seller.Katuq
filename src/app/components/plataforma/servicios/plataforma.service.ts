@@ -6,8 +6,8 @@ import { environment } from '../../../../environments/environment';
 import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interceptor';
 import { BaseService } from '../../../shared/services/base.service';
 import {
-  Calidad, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
-  ResumenSegmento, SobrePlataforma, Sugerencias, Tendencias,
+  Calidad, CambioMotivoBaja, CambioTipoCuenta, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
+  MotivoBajaValor, ResumenSegmento, SobrePlataforma, Sugerencias, Tendencias, TipoCuentaValor,
 } from '../plataforma.tipos';
 import { paramsDeFiltros, paramsExportacion, queryString } from '../logica/consulta';
 
@@ -98,5 +98,23 @@ export class PlataformaService extends BaseService {
   /** Solo el operador: relanza el cálculo de la capa viva. El servidor responde 202. */
   recalcular(): Observable<SobrePlataforma<{ estado: string }>> {
     return this.postSinLoader('/v1/platform/recalculate', {});
+  }
+
+  /** Solo el operador: confirma o corrige el tipo de cuenta. El servidor deja el evento de auditoría en la misma transacción. */
+  cambiarTipoCuenta(docId: string, tipoCuenta: TipoCuentaValor, motivo: string): Observable<SobrePlataforma<CambioTipoCuenta>> {
+    return this.http.put<SobrePlataforma<CambioTipoCuenta>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/account-type`,
+      { tipoCuenta, motivo },
+      { context: new HttpContext().set(SKIP_LOADER, true) },
+    );
+  }
+
+  /** Solo el operador: motivo de baja de una empresa pausada, bloqueada, cancelada o eliminada (el comentario es opcional). */
+  registrarMotivoBaja(docId: string, bajaMotivo: MotivoBajaValor, comentario: string): Observable<SobrePlataforma<CambioMotivoBaja>> {
+    return this.http.put<SobrePlataforma<CambioMotivoBaja>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/churn-reason`,
+      comentario ? { bajaMotivo, comentario } : { bajaMotivo },
+      { context: new HttpContext().set(SKIP_LOADER, true) },
+    );
   }
 }

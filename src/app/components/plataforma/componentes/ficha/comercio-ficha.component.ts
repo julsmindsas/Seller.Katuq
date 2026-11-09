@@ -26,8 +26,9 @@ import { TEXTOS } from '../../plataforma.textos';
 
     <ng-container *ngIf="estado.datos as p">
       <h2 class="pl-titulo-ficha">{{ p['nomComercial'] || p['nombre'] || docId }}</h2>
+      <p class="cfg-aviso cfg-aviso--ok" *ngIf="mensaje" role="status">{{ mensaje }}</p>
       <div class="pl-ficha">
-        <app-ficha-identidad class="pl-ficha__ancha" [docId]="docId" [perfil]="p"></app-ficha-identidad>
+        <app-ficha-identidad class="pl-ficha__ancha" [docId]="docId" [perfil]="p" (actualizado)="alActualizar($event)"></app-ficha-identidad>
         <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId"></app-ficha-suscripcion-pagos>
         <app-ficha-uso [docId]="docId"></app-ficha-uso>
         <app-ficha-salud [docId]="docId"></app-ficha-salud>
@@ -43,6 +44,8 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   readonly textos = TEXTOS;
   docId = '';
   estado: EstadoCarga<Record<string, any>> = estadoInicial();
+  mensaje: string | null = null;
+  private pendiente: string | null = null;
   private cargar$ = new Subject<void>();
   private fin$ = new Subject<void>();
 
@@ -54,10 +57,13 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
       takeUntil(this.fin$),
     ).subscribe((e) => {
       this.estado = e.datos ? { ...e, datos: ((e.datos as unknown as { datos: Record<string, any> }).datos) || {} } : e;
+      if (e.datos && this.pendiente) { this.mensaje = this.pendiente; this.pendiente = null; }
       this.cd.markForCheck();
     });
     this.ruta.paramMap.pipe(takeUntil(this.fin$)).subscribe((m) => {
       this.docId = m.get('docId') || '';
+      this.mensaje = null;
+      this.pendiente = null;
       this.estado = estadoInicial();
       this.cargar$.next();
     });
@@ -69,6 +75,13 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   }
 
   reintentar(): void {
+    this.cargar$.next();
+  }
+
+  /** Cambió el tipo de cuenta o el motivo de baja: se vuelve a pedir el perfil y se avisa al terminar. */
+  alActualizar(mensaje: string): void {
+    this.mensaje = null;
+    this.pendiente = mensaje;
     this.cargar$.next();
   }
 }
