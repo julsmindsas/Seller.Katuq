@@ -13637,3 +13637,14 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Queda en el historial:** lo que ya se subió sigue visible en el historial de GitHub; no se reescribió.
 - **No aplica todavía** al backend ni a kai.
 
+
+### 2026-11-09 — D-700: acceso de Daniel a «Plataforma» y decisiones para terminar F2
+
+- **Acceso:** Daniel tenía dos fichas de usuario idénticas en la operadora y la Consola lo devolvía al inicio. Con su sí, la ficha vieja quedó inactiva y con otro correo, sin borrar nada; el correo anterior y su referencia de empresa quedaron guardados en la misma ficha para revertir. La escritura se hizo por el adaptador de Postgres en `katuq-db`, primero en `katuq_dev` y con simulación en producción. `config/plataforma` quedó creado en producción con Daniel como único operador.
+- **Decisiones de Daniel (9-nov):**
+  1. Pago manual: solo Daniel registra y anula. La segunda persona de S-2 no aplica mientras él sea el único operador; los montos atípicos o repetidos piden confirmación y motivo, y todo queda en la auditoría de plataforma.
+  2. Opttia de plataforma: confirmado el proveedor de IA vigente del ADK y la rama del ADK que corre en producción para publicarlo. Nace apagado; el Opttia de los comercios no cambia.
+  3. Autoriza agregar al `.env` de producción los dos valores de infraestructura que necesita Opttia de plataforma.
+  4. Al terminar: subir a git, crear tablas, índices y configuración (todo apagado) con simulación previa, y publicar front y back.
+- **Pendiente fuera de D-700:** el historial de sesiones (F2-6) espera D-634, que sigue en propuesta.
+- **Pedido de hoy:** gráficos, métricas y tablas más sobrios, verificación independiente de las cifras (en especial los comercios con plan) y terminar las fases que faltan.
