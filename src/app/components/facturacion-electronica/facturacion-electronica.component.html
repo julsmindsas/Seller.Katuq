@@ -467,6 +467,14 @@
                 </dd></div>
               </dl>
               <ng-template #pagoNoDisponible><p class="fe-resumen__nota">{{ 'facturacionElectronica.facturacionElectronica.detalleNoDisponible' | translate }}</p></ng-template>
+              <ng-container *ngIf="ex.cartera as car">
+                <h3 class="fe-detalle__titulo">{{ 'facturacionElectronica.facturacionElectronica.detalleCartera' | translate }}</h3>
+                <dl class="fe-totales">
+                  <div><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleAbonado' | translate }}</dt><dd>{{ money(car.abonado) }}</dd></div>
+                  <div><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleSaldoPorPagar' | translate }}</dt><dd>{{ money(car.saldo) }}</dd></div>
+                  <div><dt>{{ 'facturacionElectronica.facturacionElectronica.detalleMora' | translate }}</dt><dd>{{ textoMora(car.diasVencido) }}</dd></div>
+                </dl>
+              </ng-container>
             </ng-container>
           </ng-container>
         </section>

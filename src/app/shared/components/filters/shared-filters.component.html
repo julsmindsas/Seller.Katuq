@@ -166,6 +166,7 @@
     *ngIf="showExportButton"
     type="button"
     class="btn-sm btn-success"
+    [attr.aria-label]="exportButtonTooltip | translate"
     [disabled]="exportDisabled"
     [pTooltip]="exportButtonTooltip | translate"
     (click)="exportData()">
@@ -177,6 +178,7 @@
     *ngIf="showAdvancedButton"
     type="button"
     class="btn-sm btn-secondary"
+    [attr.aria-label]="'filters.sharedFilters.configuracionAvanzada' | translate"
     (click)="toggleAdvancedFilters()"
     pTooltip="{{ 'filters.sharedFilters.configuracionAvanzada' | translate }}">
     <i class="pi pi-cog"></i>
@@ -188,6 +190,7 @@
     <button
       type="button"
       class="btn-sm btn-clear"
+      [attr.aria-label]="'filters.sharedFilters.limpiarTodosLosFiltros' | translate"
       (click)="clearAllFiltersHandler()"
       pTooltip="{{ 'filters.sharedFilters.limpiarTodosLosFiltros' | translate }}">
       <i class="pi pi-times"></i>

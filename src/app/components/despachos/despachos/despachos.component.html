@@ -35,6 +35,14 @@
                         </ng-template>
                         
                         <!-- Filtros compartidos de Katuq -->
+                        <div class="filtros-movil" [class.is-abierto]="filtrosMovilAbiertos">
+                        <button type="button" class="filtros-movil__toggle"
+                                [attr.aria-expanded]="filtrosMovilAbiertos"
+                                (click)="filtrosMovilAbiertos = !filtrosMovilAbiertos">
+                            <i class="pi pi-sliders-h"></i>
+                            <span>{{ 'Filtros' | translate }}</span>
+                            <i class="pi" [ngClass]="filtrosMovilAbiertos ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
                         <app-shared-filters
                           [showDateFilters]="true"
                           [showStatusFilters]="true"
@@ -66,6 +74,7 @@
                           (columnSelectionChange)="onColumnSelectionChange()"
                           (resetColumns)="resetColumnConfig()">
                         </app-shared-filters>
+                        </div>
 
                         <!-- Panel de Métricas + Acciones -->
                         <div class="metrics-actions-bar">

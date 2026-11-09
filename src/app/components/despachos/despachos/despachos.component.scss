@@ -2661,3 +2661,21 @@ $border-radius: 8px;
   .separator,
   .metric-divider { display: none !important; }
 }
+// Celular (ticket 1531): la tarjeta no ensancha la página; las pestañas se desplazan dentro de su propia franja.
+@media (max-width: 767.98px) {
+  .despachos-card { min-width: 0; max-width: 100%; overflow-x: hidden; }
+
+  :host ::ng-deep .despachos-card .p-tabview-nav-container,
+  :host ::ng-deep .despachos-card .p-tabview-nav-content { max-width: 100%; }
+  :host ::ng-deep .despachos-card .p-tabview .p-tabview-nav li .p-tabview-nav-link { min-height: 44px; }
+}
+
+.filtros-movil__toggle { display: none; }
+@media (max-width: 767.98px) {
+
+  .filtros-movil__toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; margin: 0 0 8px; border: 1px solid #ECEAF7; border-radius: 11px; background: var(--ds-surface); color: var(--ds-accent-ink); font-size: 14px; font-weight: 700; letter-spacing: normal; }
+  .filtros-movil__toggle span { flex: 1; text-align: left; color: inherit; font-size: 14px; }
+  .filtros-movil__toggle:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  .filtros-movil:not(.is-abierto) ::ng-deep .filters-inline-row > :not(.filter-search):not(.btn-primary) { display: none !important; }
+  .filtros-movil:not(.is-abierto) ::ng-deep .advanced-filters-panel { display: none !important; }
+}

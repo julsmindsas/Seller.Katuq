@@ -272,3 +272,14 @@
   font-size: 0.8rem;
   color: var(--ds-muted);
 }
+
+// ── Celular (ticket 1531): sin desborde horizontal, las tarjetas caben en 360 px ──
+@media (max-width: 767.98px) {
+  .gm-wrap { padding: 0.6rem 0.75rem 0.8rem; }
+  .gm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .gm-section-grid { grid-template-columns: minmax(0, 1fr); }
+  .gm-card { min-width: 0; padding: 0.6rem 0.7rem; overflow: hidden; }
+  .gm-label, .gm-sub { overflow-wrap: anywhere; }
+  .gm-value { overflow: hidden; text-overflow: ellipsis; }
+  .gm-refresh { min-height: 44px; }
+}

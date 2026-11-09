@@ -99,6 +99,12 @@ export class ContabilidadComponent implements OnInit {
     this.selectTab('balance');
   }
 
+  /** «Por revisar»: abre Comprobantes ya filtrado a los borradores, que es donde se revisan. */
+  verBorradores(): void {
+    this.entryFilter = 'draft';
+    this.selectTab('journal');
+  }
+
   openManualEntry(): void {
     this.selectTab('journal');
     this.showManualEntry = true;

@@ -578,6 +578,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptionService.refresh();
   }
 
+  // Mismo nombre de plan que muestra Precios: viene de /v1/billing/info (currentTierName).
+  private tierNameRequested = false;
+  private loadTierName(isPaid: boolean): void {
+    if (!isPaid) {
+      this.currentPlan.tierName = null;
+      return;
+    }
+    if (this.tierNameRequested) return;
+    this.tierNameRequested = true;
+    this.subscriptionService.getBillingInfo().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (info: any) => { this.currentPlan.tierName = info?.currentTierName || null; this.cdr.markForCheck(); },
+      error: () => { this.tierNameRequested = false; }
+    });
+  }
+
   private loadSubscriptionData(): void {
 
     // Cargar estado de suscripción
@@ -587,6 +602,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (subscription) {
         this.currentPlan.type = subscription.plan === 'premium' ? 'Premium' : 'Freemium';
         this.currentPlan.status = subscription.status;
+        this.loadTierName(subscription.plan === 'premium');
 
         // En Premium la tarjeta dice "Próximo cobro", por lo que debe usar la
         // fecha canónica de facturación. `orders.resetDate` solo corresponde al

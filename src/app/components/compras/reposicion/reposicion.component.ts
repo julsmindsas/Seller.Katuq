@@ -441,6 +441,18 @@ export class ReposicionComponent implements OnInit {
     return (this.sugerencia?.advertencias || []).filter((a) => !cubiertas.test(a));
   }
 
+  /** Ticket 4cXsdN0qnkCoQ6WJQ3p0: cada aviso suelto lleva a la pantalla donde se corrige. */
+  enlaceDeAdvertencia(texto: string): { texto: string; ruta: string } | null {
+    const t = (texto || '').toLowerCase();
+    if (/sin costo/.test(t)) return { texto: 'Agregar el costo en Productos', ruta: '/productos' };
+    if (/negativ/.test(t)) return { texto: 'Corregir con un conteo', ruta: '/inventario/conteos' };
+    if (/por qué salieron|sin motivo/.test(t)) return { texto: 'Ver movimientos', ruta: '/inventario/historial-movimientos' };
+    if (/proveedor/.test(t)) return { texto: 'Ir a Proveedores', ruta: '/compras/proveedores' };
+    if (/no registran salidas|sin salidas|sin venta/.test(t)) return { texto: 'Ver indicadores', ruta: '/inventario/indicadores' };
+    if (/producción|produccion/.test(t)) return { texto: 'Ir a Producción', ruta: '/produccion/dashboard' };
+    return null;
+  }
+
   // ---- costo en la fila ----
 
   async guardarCosto(f: FilaReposicion): Promise<void> {

@@ -60,7 +60,9 @@ export class IndicadoresComponent implements OnInit {
         this.bodegas = (bodegas || []).filter((b: any) => b?.idBodega);
         // Arrancar por una bodega concreta: el informe de todas recorre el
         // catálogo entero y se demora. El usuario elige ampliar.
-        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || this.bodegas[0]?.idBodega || '';
+        // Se evita arrancar en una bodega de tránsito o transferencia, casi siempre vacía.
+        const bodegaDeTrabajo = this.bodegas.find((b: any) => !/tr[aá]nsito|transferencia/i.test(b?.nombre || '')) || this.bodegas[0];
+        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || bodegaDeTrabajo?.idBodega || '';
         this.consultar();
       },
       error: () => {

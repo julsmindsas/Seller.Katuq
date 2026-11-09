@@ -469,7 +469,7 @@
         <div class="plan-badge"
              [class.premium]="currentPlan.type === 'Premium'"
              [class.freemium]="currentPlan.type === 'Freemium'">
-          {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : currentPlan.type }}
+          {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : (currentPlan.tierName || currentPlan.type) }}
         </div>
       </div>
       
@@ -501,7 +501,7 @@
                [class.premium]="currentPlan.type === 'Premium'"
                [class.freemium]="currentPlan.type === 'Freemium'">
             <i class="fa" [ngClass]="currentPlan.type === 'Premium' ? 'fa-crown' : 'fa-star'"></i>
-            {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : currentPlan.type }}
+            {{ currentPlan.type === 'Freemium' ? ('shell.sidebar.plan.free' | translate) : (currentPlan.tierName || currentPlan.type) }}
           </div>
         </div>
 

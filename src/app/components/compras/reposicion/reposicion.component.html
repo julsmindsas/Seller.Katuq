@@ -118,7 +118,7 @@
 
       <!-- Lo que el cálculo no puede garantizar se dice antes de firmar la orden. -->
       <ul class="kc-avisos" *ngIf="!v2 && s.advertencias?.length && !cargando">
-        <li *ngFor="let a of s.advertencias"><i class="pi pi-info-circle"></i> {{ a }}</li>
+        <li *ngFor="let a of s.advertencias"><i class="pi pi-info-circle"></i> {{ a }} <a *ngIf="enlaceDeAdvertencia(a) as e" class="kc-btn kc-btn--ghost kc-btn--mini" [routerLink]="e.ruta">{{ e.texto }}</a></li>
       </ul>
 
       <!-- Compras V2: cada aviso dice cuántos productos son, los muestra y lleva a corregirlos. -->
@@ -146,7 +146,7 @@
           </ul>
         </article>
         <article class="cv2-aviso" *ngFor="let t of advertenciasRestantes">
-          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span></div>
+          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span><a *ngIf="enlaceDeAdvertencia(t) as e" class="kc-btn kc-btn--mini" [routerLink]="e.ruta">{{ e.texto }}</a></div>
         </article>
       </section>
 
@@ -355,7 +355,7 @@
 
       <section class="cv2-avisos" *ngIf="!cargandoProduccion && pr.advertencias?.length">
         <article class="cv2-aviso" *ngFor="let t of pr.advertencias">
-          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span></div>
+          <div class="cv2-aviso__cabeza"><i class="pi pi-info-circle"></i><span class="cv2-aviso__texto">{{ t }}</span><a *ngIf="enlaceDeAdvertencia(t) as e" class="kc-btn kc-btn--mini" [routerLink]="e.ruta">{{ e.texto }}</a></div>
         </article>
       </section>
 
