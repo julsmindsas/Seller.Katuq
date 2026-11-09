@@ -71,6 +71,8 @@ interface DetalleAmpliado {
   motivo: 'pedido-cambio' | 'no-reconstruible' | null;
   impuestos: { tarifa: number; base: number; iva: number }[];
   pago: { disponible: boolean; forma: 'contado' | 'credito' | null; medioCodigo: string | null; vencimiento: string | null } | null;
+  /** Ticket 1513: abonos y mora leídos de Cartera. Ausente sin datos o sin permiso de Cartera: el bloque se oculta. */
+  cartera?: { disponible: boolean; abonado: number; saldo: number; diasVencido: number | null; rango: string | null; vencimiento: string | null } | null;
 }
 
 /** Ticket 1279: línea de la factura para la nota por línea. */
@@ -543,6 +545,7 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
           motivo: d.cuadra === true ? null : (d.motivo === 'no-reconstruible' ? 'no-reconstruible' : 'pedido-cambio'),
           impuestos: Array.isArray(d.impuestos) ? d.impuestos : [],
           pago: d.pago || null,
+          cartera: d.cartera?.disponible === true ? d.cartera : null,
         };
         this.changeDetector.markForCheck();
       },
@@ -584,6 +587,14 @@ export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
     const k = codigo ? claves[codigo] : '';
     return k ? this.translate.instant('facturacionElectronica.facturacionElectronica.' + k)
              : this.translate.instant('facturacionElectronica.facturacionElectronica.detalleNoDisponible');
+  }
+
+  /** Mora en palabras: «Al día» o «N días de mora»; «No disponible» si Cartera no la pudo calcular. */
+  textoMora(dias: number | null | undefined): string {
+    const k = 'facturacionElectronica.facturacionElectronica.';
+    if (dias === null || dias === undefined || !Number.isFinite(Number(dias))) return this.translate.instant(k + 'detalleNoDisponible');
+    if (dias <= 0) return this.translate.instant(k + 'detalleAlDia');
+    return this.translate.instant(dias === 1 ? k + 'detalleMora1' : k + 'detalleMoraN', { dias });
   }
 
   /** ¿Hay algún total emitido para mostrar? Sin él no se pinta el bloque (no se inventa). */
