@@ -38,8 +38,8 @@ import { formatearNumero, textoONulo } from '../../logica/formato';
           <p class="cfg-aviso" *ngIf="tn.estado !== 'ok'" role="status">{{ nulo(tn.motivo) }}</p>
           <dl class="pl-datos" *ngIf="tn.estado === 'ok'">
             <div><dt>{{ t.direcciones[tn.direccion] || '—' }}</dt><dd class="pl-num">{{ delta(tn.delta) }} <span class="cfg-pill cfg-pill--warn" *ngIf="tn.parcial">{{ textos.comercios.parcial }}</span></dd></div>
-            <div><dt>&nbsp;</dt><dd class="pl-muted">{{ antes(tn) }}</dd></div>
           </dl>
+          <p class="pl-muted" *ngIf="tn.estado === 'ok'">{{ antes(tn) }}</p>
         </ng-container>
         <p class="pl-muted">{{ t.soloInforma }}</p>
       </ng-template>

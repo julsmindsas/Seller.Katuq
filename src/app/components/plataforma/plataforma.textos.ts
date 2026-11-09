@@ -416,7 +416,7 @@ export const TEXTOS = {
     sinMora: 'No hay facturas en mora.',
     noDisponible: 'Los cobros no se pudieron leer: no se muestran cifras.',
     saldadaManualmente: 'Saldada manualmente',
-    saldadaManualmenteNota: 'Facturas vencidas que un pago manual vigente sacó de la mora y del por cobrar. Si se anula el pago, vuelven a la mora.',
+    saldadaManualmenteNota: 'Facturas vencidas que un pago manual vigente dejó en cero y sacó de la mora. Un abono parcial no cuenta aquí. El monto es lo abonado a esas facturas. Si se anula el pago, vuelven a la mora.',
     saldadaFacturas: 'facturas',
     reclasificadasTitulo: 'Cuentas excluidas con mora abierta',
     reclasificadasTexto: 'Cortesía, demo o prueba con facturas vencidas. No suman a la mora de los comercios reales: se muestran para que el dueño las revise.',

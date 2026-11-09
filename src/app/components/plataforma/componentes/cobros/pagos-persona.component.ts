@@ -8,8 +8,7 @@ import { conEstado, estadoInicial } from '../../logica/carga';
 import { TEXTOS } from '../../plataforma.textos';
 
 /**
- * D-700 26.4 (F2-11) — Auditoría de pagos manuales del mes por persona. Solo se pide si el servidor dice que esta persona lee la
- * auditoría (`esLectorAuditoria`); el servidor vuelve a decidirlo en cada petición. Ni motivos ni empresas: cantidades y montos.
+ * D-700 26.4 (F2-11) — Auditoría de pagos manuales del mes por persona. Se pide solo cuando la sección está disponible para esta persona. Ni motivos ni empresas: cantidades y montos.
  */
 @Component({
   selector: 'app-pagos-persona',
