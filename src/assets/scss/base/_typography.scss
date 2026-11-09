@@ -392,6 +392,15 @@ fieldset {
 	  width: 20px;
 	}
 }
+
+// Ticket 1539: por debajo de 992 px aparece la barra de navegación inferior
+// (fija, ~72 px); el botón «volver arriba» va por encima y no tapa «Menú».
+@media (max-width: 991.98px) {
+	.tap-top {
+		bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+		right: 16px;
+	}
+}
 .media {
     display: flex;
     align-items: flex-start;
