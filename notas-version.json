@@ -115,5 +115,6 @@
   { "fecha": "2026-11-07T21:00:00Z", "tipo": "MEJORA", "modulos": ["ventas"], "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido." },
   { "fecha": "2026-11-07T21:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios." },
   { "fecha": "2026-11-07T21:00:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable." },
-  { "fecha": "2026-11-08T22:00:00Z", "tipo": "NUEVO", "modulos": ["en-vivo"], "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq." }
+  { "fecha": "2026-11-08T22:00:00Z", "tipo": "NUEVO", "modulos": ["en-vivo"], "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq." },
+  { "fecha": "2026-11-09T17:00:00Z", "tipo": "NUEVO", "modulos": ["sitios"], "texto": "Ahora puedes poner a Opttia a atender en tu sitio web: responde dudas con el tono de tu marca, recomienda tus productos con precio, arma el carrito y lleva al pago. Se enciende por sitio, en el editor, pestaña «Tienda»." }
 ]

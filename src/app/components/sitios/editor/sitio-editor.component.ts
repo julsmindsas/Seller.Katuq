@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, OpttiaDelSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -2344,6 +2344,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   busquedaAjuste = "";
   private static readonly AJUSTES: { texto: string; donde: string; panel: string; claves: string }[] = [
     { texto: "Envío", donde: "Tienda", panel: "tienda", claves: "domicilio zonas costo gratis" },
+    { texto: "Opttia en tu sitio", donde: "Tienda", panel: "tienda", claves: "chat asistente agente asesor ventas soporte tickets solicitudes preguntas frecuentes" },
     { texto: "Entregas", donde: "Tienda", panel: "tienda", claves: "cupo hora corte dias festivos" },
     { texto: "Recoger en tienda", donde: "Tienda", panel: "tienda", claves: "retiro punto local sucursal" },
     { texto: "Cupones de descuento", donde: "Tienda", panel: "tienda", claves: "codigo descuento" },
@@ -2408,6 +2409,56 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       destino.classList.add("ajuste-encontrado");
       setTimeout(() => destino.classList.remove("ajuste-encontrado"), 1800);
     }));
+  }
+
+  // ── D-686: Opttia en el sitio (`tienda.opttia`) ──
+  readonly G_OPTTIA = "Opttia en tu sitio";
+
+  /** La configuración de Opttia de este sitio; null si el comercio nunca lo ha encendido (la llave no se crea sola). */
+  get opttiaSitio(): OpttiaDelSitio | null {
+    const t: any = this.contenido && this.contenido.tienda;
+    const o = t && t.opttia;
+    if (!o || typeof o !== "object") return null;
+    if (!o.puede || typeof o.puede !== "object") o.puede = {};
+    const p = o.puede;
+    // Mismos valores por omisión que el servidor: lo que no escribe nada va encendido; tickets y archivos, apagados.
+    p.asesorar = p.asesorar !== false;
+    p.cerrarVenta = p.cerrarVenta !== false;
+    p.soporte = p.soporte !== false;
+    p.whatsapp = p.whatsapp !== false;
+    p.tickets = p.tickets === true;
+    p.archivos = p.archivos === true;
+    if (!Array.isArray(o.preguntasFrecuentes)) o.preguntasFrecuentes = [];
+    if (typeof o.nombre !== "string") o.nombre = "";
+    if (typeof o.saludo !== "string") o.saludo = "";
+    return o;
+  }
+
+  alternarOpttia(): void {
+    const t: any = this.contenido && this.contenido.tienda;
+    if (!t) return;
+    if (!t.opttia || typeof t.opttia !== "object") {
+      t.opttia = { activo: false, nombre: "", saludo: "", puede: {}, preguntasFrecuentes: [] };
+    }
+    const o = this.opttiaSitio;
+    if (!o) return;
+    o.activo = !o.activo;
+    if (o.activo) this.tiendaAbierto = this.G_OPTTIA;
+    this.marcarSucio();
+  }
+
+  agregarPreguntaOpttia(): void {
+    const o = this.opttiaSitio;
+    if (!o || o.preguntasFrecuentes.length >= 12) return;
+    o.preguntasFrecuentes.push({ p: "", r: "" });
+    this.marcarSucio();
+  }
+
+  quitarPreguntaOpttia(i: number): void {
+    const o = this.opttiaSitio;
+    if (!o) return;
+    o.preguntasFrecuentes.splice(i, 1);
+    this.marcarSucio();
   }
 
   /** Ticket 1242: autonomía de KAI, pausa y reporte semanal (sitios viejos llegan sin esto). */
@@ -2664,7 +2715,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.panel = panel as any;
     if (panel === "tienda") this.cargarBodegas();
     // Ticket 1247: la pestaña Tienda va en acordeón; se abre el grupo del campo.
-    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "KAI administra tu web", "campo-cotizables": "Cómo te pagan" };
+    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "KAI administra tu web", "campo-opttia": "Opttia en tu sitio", "campo-cotizables": "Cómo te pagan" };
     if (panel === "tienda" && grupoDeCampo[campoId]) this.tiendaAbierto = grupoDeCampo[campoId];
     // Espera a que la pestaña se pinte para ubicar el campo.
     requestAnimationFrame(() => requestAnimationFrame(() => {
