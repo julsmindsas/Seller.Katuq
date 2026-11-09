@@ -5,6 +5,7 @@ import { timeout } from 'rxjs/operators';
 import { HttpContext, HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interceptor';
+import { SIN_AVISO_NEGOCIO } from '../../../shared/services/interceptor/sin-aviso-negocio.context';
 import { BaseService } from '../../../shared/services/base.service';
 import {
   AperturaSoporte, Calidad, CambioMotivoBaja, CambioTipoCuenta, CuerpoPagoManual, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview, ResumenMensualRespuesta,
@@ -175,7 +176,7 @@ export class PlataformaService extends BaseService {
   resumenMensual(limiteMs = 60000): Observable<ResumenMensualRespuesta> {
     return this.http.post<ResumenMensualRespuesta>(
       `${environment.urlApi}/v1/platform/opttia/monthly-summary`, {},
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     ).pipe(timeout(limiteMs));
   }
 }

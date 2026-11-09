@@ -17,6 +17,8 @@ export class OpttiaPlataformaService {
     return new Observable<EventoPanel>((obs) => {
       const token = tokenDeSesion(typeof localStorage !== 'undefined' ? localStorage : null);
       if (!token) { obs.next({ tipo: 'error', mensaje: TEXTOS.opttia.errorSesion }); obs.complete(); return undefined; }
+      const cuerpo = cuerpoPregunta(texto, companyDocId);
+      if (!cuerpo) { obs.next({ tipo: 'error', mensaje: TEXTOS.opttia.errorComercio }); obs.complete(); return undefined; }
       const control = new AbortController();
       let vencio = false;
       const reloj = setTimeout(() => { vencio = true; control.abort(); }, ESPERA_PREGUNTA_MS);
@@ -26,7 +28,7 @@ export class OpttiaPlataformaService {
           const resp = await fetch(direccionPlataforma(environment as { opttiaApi?: string; urlApi?: string }), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(cuerpoPregunta(texto, companyDocId)),
+            body: JSON.stringify(cuerpo),
             signal: control.signal,
           });
           if (!resp.ok) { obs.next({ tipo: 'error', mensaje: textoErrorHttp(resp.status) }); obs.complete(); return; }

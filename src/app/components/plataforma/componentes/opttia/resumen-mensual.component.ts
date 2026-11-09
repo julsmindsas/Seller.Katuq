@@ -79,7 +79,7 @@ export class ResumenMensualComponent implements OnInit, OnDestroy {
     this.suscripcion = this.servicio.resumenMensual(ESPERA_RESUMEN_MS).subscribe({
       next: (x) => {
         this.generando = false;
-        if (!x || x.ok !== true || typeof x.resumen !== 'string' || !x.resumen.trim()) { this.error = this.t.errores['RESUMEN_NO_DISPONIBLE']; }
+        if (!x || x.ok !== true || typeof x.resumen !== 'string' || !x.resumen.trim()) { this.error = this.t.errorGeneral; }
         else {
           this.r = x;
           const m = x.meta || {};
@@ -90,7 +90,7 @@ export class ResumenMensualComponent implements OnInit, OnDestroy {
       },
       error: (e) => {
         this.generando = false;
-        this.error = e && e.name === 'TimeoutError' ? this.t.errorTiempo : textoErrorResumen(e && e.error && e.error.code, e && e.status);
+        this.error = e && e.name === 'TimeoutError' ? this.t.errorTiempo : textoErrorResumen(e && e.status);
         this.cd.markForCheck();
       },
     });

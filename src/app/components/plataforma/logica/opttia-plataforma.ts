@@ -13,8 +13,10 @@ export const ESPERA_RESUMEN_MS = 60000;
 /** Lo que dice `GET /me`. Sin respuesta o sin la llave, nada se muestra (falla cerrado). */
 export function estadoOpttia(me: MePlataforma | null | undefined): EstadoOpttiaPlataforma {
   const o = me && me.opttia;
+  // El servidor da `autorizado` solo con Opttia de plataforma encendida (opttiaEstado.js: autorizado implica activo), así que
+  // no hay un estado «apagada» que dibujar: sin autorización no se ve nada.
   const autorizado = !!(o && o.autorizado === true);
-  return { autorizado, activo: autorizado && o!.activo !== false, narrativa: autorizado && o!.narrativa === true };
+  return { autorizado, activo: autorizado, narrativa: autorizado && o!.narrativa === true };
 }
 
 /** Quita espacios de los extremos y recorta al tope. */
@@ -22,10 +24,26 @@ export function limpiarPregunta(texto: unknown): string {
   return typeof texto === 'string' ? texto.replace(/\s+/g, ' ').trim().slice(0, MAX_PREGUNTA) : '';
 }
 
-/** Cuerpo cerrado: solo el último mensaje del usuario y, si hay, el comercio. Nunca `company`. */
-export function cuerpoPregunta(texto: string, companyDocId?: string | null): { messages: Array<{ role: 'user'; content: string }>; companyDocId?: string } {
+/** ¿Hay un comercio al que fijar la pregunta? (cualquier valor que no sea vacío/nulo cuenta como «sí»). */
+export function hayComercio(companyDocId?: string | null): boolean {
+  return companyDocId !== null && companyDocId !== undefined && companyDocId !== '';
+}
+
+/** Forma del id de comercio que acepta el servidor. Solo evita enviar basura; quien decide es el servidor. */
+export function comercioValido(companyDocId: unknown): companyDocId is string {
+  return typeof companyDocId === 'string' && /^[A-Za-z0-9]{10,40}$/.test(companyDocId);
+}
+
+/**
+ * Cuerpo cerrado: solo el último mensaje del usuario y, si hay, el comercio. Nunca `company`.
+ * Si se pidió un comercio y su id no es válido devuelve `null`: NO se degrada a pregunta general de plataforma.
+ */
+export function cuerpoPregunta(texto: string, companyDocId?: string | null): { messages: Array<{ role: 'user'; content: string }>; companyDocId?: string } | null {
   const cuerpo: { messages: Array<{ role: 'user'; content: string }>; companyDocId?: string } = { messages: [{ role: 'user', content: limpiarPregunta(texto) }] };
-  if (typeof companyDocId === 'string' && /^[A-Za-z0-9]{10,40}$/.test(companyDocId)) cuerpo.companyDocId = companyDocId;
+  if (hayComercio(companyDocId)) {
+    if (!comercioValido(companyDocId)) return null;
+    cuerpo.companyDocId = companyDocId;
+  }
   return cuerpo;
 }
 
@@ -53,6 +71,8 @@ export type EventoPanel =
   | { tipo: 'error'; mensaje: string };
 
 const MAX_MENSAJE_ERROR = 300;
+/** Mensajes fijos que el ADK de plataforma puede mandar en `RUN_ERROR` y que ya están escritos en los textos del front. */
+const MENSAJES_CONOCIDOS = new Set<string>([TEXTOS.opttia.errorTiempo, TEXTOS.opttia.errorGeneral, TEXTOS.opttia.errorCupo, TEXTOS.opttia.errorAcceso, TEXTOS.opttia.errorPregunta, TEXTOS.opttia.errorSesion]);
 
 /** Un evento del flujo (ya convertido de JSON) → lo que le importa al panel. Lo desconocido se ignora. */
 export function interpretarEvento(ev: unknown): EventoPanel | null {
@@ -68,8 +88,9 @@ export function interpretarEvento(ev: unknown): EventoPanel | null {
     case 'TEXT_MESSAGE_CONTENT': return typeof e['delta'] === 'string' ? { tipo: 'texto', delta: e['delta'] } : null;
     case 'RUN_FINISHED': return { tipo: 'fin' };
     case 'RUN_ERROR': {
+      // Nunca se pinta el texto del servidor: solo una lista cerrada de mensajes fijos; el resto, el genérico.
       const m = typeof e['message'] === 'string' ? e['message'].trim().slice(0, MAX_MENSAJE_ERROR) : '';
-      return { tipo: 'error', mensaje: m || TEXTOS.opttia.errorGeneral };
+      return { tipo: 'error', mensaje: MENSAJES_CONOCIDOS.has(m) ? m : TEXTOS.opttia.errorGeneral };
     }
     default: return null;
   }
@@ -107,14 +128,20 @@ export function textoErrorHttp(estado: number): string {
   return t.errorGeneral;
 }
 
-/** Código del servidor (resumen mensual) → texto fijo en español. Código desconocido, texto general. */
-export function textoErrorResumen(codigo: unknown, estado?: number): string {
-  const t = TEXTOS.resumenMensual;
-  if (typeof codigo === 'string' && Object.prototype.hasOwnProperty.call(t.errores, codigo)) return t.errores[codigo];
-  if (estado === 409) return t.errores['RESUMEN_EN_CURSO'];
-  if (estado === 429) return t.errores['CUPO_MINUTO'];
-  if (estado === 403) return t.errores['NO_AUTORIZADO'];
-  return t.errorGeneral;
+/**
+ * Error del resumen mensual → texto fijo en español, elegido SOLO por el estado HTTP. Los códigos internos del servidor
+ * no viajan en el front (es público) y el cuerpo de la respuesta nunca se muestra.
+ */
+export function textoErrorResumen(estado?: number): string {
+  const t = TEXTOS.resumenMensual.errores;
+  switch (estado) {
+    case 403: return t.acceso;
+    case 409: return t.enCurso;
+    case 422: return t.solicitud;
+    case 429: return t.cupo;
+    case 503: return t.noDisponible;
+    default: return TEXTOS.resumenMensual.errorGeneral;
+  }
 }
 
 /** Texto del cupo restante o `null` si el servidor no lo dijo. */

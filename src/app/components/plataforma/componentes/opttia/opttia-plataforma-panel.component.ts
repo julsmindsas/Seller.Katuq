@@ -4,7 +4,7 @@ import { takeUntil } from 'rxjs/operators';
 import { OpttiaPlataformaService } from '../../servicios/opttia-plataforma.service';
 import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
 import { EstadoOpttiaPlataforma } from '../../plataforma.tipos';
-import { EventoPanel, limpiarPregunta, MAX_PREGUNTA, textoRestantes } from '../../logica/opttia-plataforma';
+import { comercioValido, EventoPanel, hayComercio, limpiarPregunta, MAX_PREGUNTA, textoRestantes } from '../../logica/opttia-plataforma';
 import { TEXTOS } from '../../plataforma.textos';
 
 /**
@@ -23,9 +23,9 @@ import { TEXTOS } from '../../plataforma.textos';
           <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="cerrable" (click)="cerrar()">{{ t.botonCerrar }}</button>
         </div>
 
-        <p class="cfg-aviso cfg-aviso--warn" *ngIf="!estado.activo" role="status">{{ t.apagada }}</p>
+        <p class="cfg-aviso cfg-aviso--error" *ngIf="comercioInvalido" role="alert">{{ t.errorComercio }}</p>
 
-        <ng-container *ngIf="estado.activo">
+        <ng-container *ngIf="!comercioInvalido">
           <p class="pl-muted">{{ companyDocId ? t.ayudaComercio : t.ayuda }}</p>
           <label class="pl-opttia__campo">
             <span class="pl-opttia__rotulo">{{ t.etiqueta }}</span>
@@ -81,6 +81,11 @@ export class OpttiaPlataformaPanelComponent implements OnInit, OnDestroy {
     return this.companyDocId ? this.t.tituloComercio : this.t.titulo;
   }
 
+  /** Se pidió un comercio y su id no sirve: no se pregunta (no se degrada a pregunta general). */
+  get comercioInvalido(): boolean {
+    return hayComercio(this.companyDocId) && !comercioValido(this.companyDocId);
+  }
+
   get puedeEnviar(): boolean {
     return limpiarPregunta(this.pregunta).length > 0;
   }
@@ -101,7 +106,7 @@ export class OpttiaPlataformaPanelComponent implements OnInit, OnDestroy {
   }
 
   enviar(): void {
-    if (this.enviando || !this.estado || !this.estado.autorizado || !this.estado.activo) return;
+    if (this.enviando || this.comercioInvalido || !this.estado || !this.estado.autorizado) return;
     const texto = limpiarPregunta(this.pregunta);
     if (!texto) return;
     this.enviando = true;
