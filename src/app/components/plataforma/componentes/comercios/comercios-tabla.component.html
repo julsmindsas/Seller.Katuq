@@ -59,8 +59,8 @@
       </div>
 
       <ng-container *ngIf="l.filas.length">
-        <div class="pl-tabla-caja">
-          <table class="pl-tabla">
+        <div class="pl-tabla-caja" [class.pl-pastilla-tenue]="r.meta?.desactualizado">
+          <table class="pl-tabla pl-tabla--fija">
             <thead>
               <tr>
                 <th *ngFor="let c of columnas" scope="col" [class.pl-der]="c.der" [class.pl-orden]="c.orden && filtros.orden === c.orden" [attr.aria-sort]="ariaOrden(c.orden)">
@@ -73,9 +73,9 @@
               <tr *ngFor="let f of l.filas; trackBy: trackFila">
                 <td class="pl-nombre"><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
                   <div><small class="pl-muted" *ngIf="f.tipoCuenta.tipo !== 'real'">{{ f.tipoCuenta.tipo }}</small></div>
-                  <div class="pl-pastillas" *ngIf="f.parcial || (f.desactualizada && !r.meta?.desactualizado)">
+                  <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
                     <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
-                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada && !r.meta?.desactualizado" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
                   </div></td>
                 <td class="pl-nowrap"><span class="pl-estado" [class.pl-estado--ok]="f.ciclo === 'active'">{{ cicloTexto(f.ciclo) }}</span></td>
                 <td class="pl-nowrap">{{ planTexto(f.clasePlan) }}</td>
@@ -93,12 +93,12 @@
           </table>
         </div>
 
-        <div class="pl-tarjetas">
+        <div class="pl-tarjetas" [class.pl-pastilla-tenue]="r.meta?.desactualizado">
           <article class="pl-tarjeta" *ngFor="let f of l.filas; trackBy: trackFila">
             <a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
-            <div class="pl-pastillas" *ngIf="f.parcial || (f.desactualizada && !r.meta?.desactualizado)">
+            <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
               <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
-              <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada && !r.meta?.desactualizado" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+              <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
             </div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('ciclo') }}</b><div>{{ cicloTexto(f.ciclo) }}</div></div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('plan') }}</b><div>{{ planTexto(f.clasePlan) }}</div></div>

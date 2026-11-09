@@ -18,17 +18,16 @@ import { textoONulo } from '../../logica/formato';
           <div><dt>Sugerencias enviadas</dt><dd class="pl-num">{{ nulo(d.sugerencias?.enviadas) }}</dd></div>
           <div><dt>Último ticket</dt><dd>{{ d.ultimo | fechaCo:false }}</dd></div>
         </dl>
-        <div class="pl-tabla-caja pl-tabla-siempre" *ngIf="d.tickets?.length; else sinTickets">
+        <div class="pl-tabla-caja pl-tabla-caja--alta pl-tabla-siempre" *ngIf="d.tickets?.length; else sinTickets">
           <table class="pl-tabla">
             <thead><tr><th scope="col">Ticket</th><th scope="col">Tipo</th><th scope="col">Estado</th><th scope="col">Prioridad</th><th scope="col">Categoría</th><th scope="col">Fecha</th></tr></thead>
             <tbody>
-              <tr *ngFor="let t of (verTodos ? d.tickets : (d.tickets | slice:0:8))">
+              <tr *ngFor="let t of d.tickets">
                 <td>{{ nulo(t.nroTicket) }}</td><td>{{ nulo(t.tipo) }}</td><td><span class="pl-estado">{{ nulo(t.estado) }}</span></td><td>{{ nulo(t.prioridad) }}</td><td>{{ nulo(t.categoria) }}</td><td>{{ t.fecha | fechaCo:false }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <button type="button" class="cfg-btn cfg-btn--sec pl-mas" *ngIf="d.tickets?.length > 8" (click)="verTodos = !verTodos" [attr.aria-expanded]="verTodos">{{ verTodos ? 'Ver menos' : 'Ver los ' + d.tickets.length + ' tickets' }}</button>
         <ng-template #sinTickets><p class="pl-muted">{{ textos.ficha.sinTickets }}</p></ng-template>
         <p class="pl-muted">Calificación: {{ d.calificacion?.motivo || '—' }}</p>
       </ng-template>
@@ -40,5 +39,4 @@ export class FichaSoporteComponent {
   readonly textos = TEXTOS;
   nulo = textoONulo;
   contadores = contadoresSoporte;
-  verTodos = false;
 }

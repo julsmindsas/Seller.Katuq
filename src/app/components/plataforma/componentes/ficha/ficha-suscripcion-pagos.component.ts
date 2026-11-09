@@ -13,7 +13,7 @@ import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
           <div><dt>Plan</dt><dd>{{ nulo(d.plan) }}</dd></div>
           <div><dt>Último pago</dt><dd>{{ ultimoPago(d.ultimoPago) }}</dd></div>
           <div><dt>Próximo cobro</dt><dd>{{ d.proximoCobro | fechaCo:false }}</dd></div>
-          <div><dt>En mora</dt><dd>{{ d.mora?.monto | cop }}</dd></div>
+          <div><dt>En mora</dt><dd class="pl-num">{{ d.mora?.monto | cop }} <small class="pl-muted" *ngIf="d.mora?.diasAtrasoMax">({{ d.mora.diasAtrasoMax }} días de atraso)</small></dd></div>
         </dl>
         <dl class="pl-datos">
           <div><dt>Modo de cobro</dt><dd>{{ nulo(d.modoCobro) }}</dd></div>
@@ -24,7 +24,6 @@ import { fechaCo, textoONulo, textoSiNo } from '../../logica/formato';
           <div><dt>Cobrado del mes</dt><dd class="pl-num">{{ d.cobrado?.mes?.total | cop }}</dd></div>
           <div><dt>Cobrado del mes anterior</dt><dd class="pl-num">{{ d.cobrado?.mesAnterior?.total | cop }}</dd></div>
           <div><dt>Por cobrar</dt><dd class="pl-num">{{ d.porCobrar?.monto | cop }}</dd></div>
-          <div><dt>Días de atraso (máximo)</dt><dd class="pl-num">{{ nulo(d.mora?.diasAtrasoMax) }}</dd></div>
           <div><dt>Por revisar</dt><dd>{{ nulo(d.porRevisar?.cantidad) }}</dd></div>
           <div><dt>TRM usada</dt><dd>{{ d.trm ? (d.trm.valor | number:'1.0-2') + ' (' + (d.trm.fecha | fechaCo:false) + ')' : '—' }}</dd></div>
         </dl>

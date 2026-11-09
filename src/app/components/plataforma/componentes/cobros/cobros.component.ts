@@ -8,6 +8,9 @@ import { conEstado, estadoInicial } from '../../logica/carga';
 import { filtrosIniciales } from '../../logica/consulta';
 import { TEXTOS } from '../../plataforma.textos';
 
+/** Días de atraso desde los que el chip de la lista de mora cambia de ámbar a rojo (ayuda visual, no una regla de negocio). */
+const UMBRAL_ATRASO_ROJO = 30;
+
 interface Tarjeta { rotulo: string; cifra: Cifra | null | undefined; nota?: string }
 
 /**
@@ -56,7 +59,7 @@ interface Tarjeta { rotulo: string; cifra: Cifra | null | undefined; nota?: stri
         <section class="cfg-card" *ngIf="dinero(l)?.mora as m">
           <h2 class="cfg-card__titulo">{{ t.listaMora }}</h2>
           <div class="cfg-vacio" *ngIf="!m.lista?.length"><h3 class="cfg-vacio__titulo">{{ t.sinMora }}</h3></div>
-          <div class="pl-tabla-caja pl-tabla-siempre" *ngIf="m.lista?.length">
+          <div class="pl-tabla-caja pl-tabla-caja--alta pl-tabla-siempre" *ngIf="m.lista?.length">
             <table class="pl-tabla">
               <thead><tr><th scope="col">{{ textos.comercios.columnas['nombre'] }}</th><th scope="col">{{ t.factura }}</th><th scope="col">{{ t.vence }}</th><th scope="col" class="pl-der">{{ t.atraso }}</th><th scope="col" class="pl-der">{{ t.saldo }}</th></tr></thead>
               <tbody>
@@ -64,7 +67,7 @@ interface Tarjeta { rotulo: string; cifra: Cifra | null | undefined; nota?: stri
                   <td><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', x.docId]">{{ x.nomComercial || x.docId }}</a></td>
                   <td class="pl-id" [attr.title]="x.factura">{{ x.factura }}</td>
                   <td>{{ x.vence | fechaCo:false }}</td>
-                  <td class="pl-der pl-num"><span class="pl-estado" [class.pl-estado--error]="x.diasAtraso > 30" [class.pl-estado--warn]="x.diasAtraso <= 30">{{ x.diasAtraso }}</span></td>
+                  <td class="pl-der pl-num"><span class="pl-estado" [class.pl-estado--error]="grave(x.diasAtraso)" [class.pl-estado--warn]="!grave(x.diasAtraso)" [attr.title]="x.diasAtraso + ' días de atraso'" [attr.aria-label]="x.diasAtraso + ' días de atraso'">{{ x.diasAtraso }} d</span></td>
                   <td class="pl-der pl-num">{{ x.saldo | cop }}</td>
                 </tr>
               </tbody>
@@ -114,6 +117,11 @@ export class CobrosComponent implements OnInit, OnDestroy {
       { rotulo: this.t.mora, cifra: d.mora && d.mora.monto },
       { rotulo: this.t.brecha, cifra: d.brecha },
     ];
+  }
+
+  /** Solo señal visual: sobre 30 días el chip va en rojo; el número de días siempre se muestra. */
+  grave(dias: number): boolean {
+    return dias > UMBRAL_ATRASO_ROJO;
   }
 
   trackMora(_: number, x: { docId: string; factura: string }): string {

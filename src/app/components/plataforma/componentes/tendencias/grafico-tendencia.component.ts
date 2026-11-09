@@ -7,6 +7,15 @@ import { TEXTOS } from '../../plataforma.textos';
 
 const ACENTO_POR_DEFECTO = '#5F3FE0';
 
+/** Tintas de los ejes y la rejilla del gráfico, leídas del tema (claro u oscuro). */
+function leerTintas(): { eje: string; rejilla: string; borde: string } {
+  return {
+    eje: leerToken('--ds-body', '#5b5878'),
+    rejilla: leerToken('--ds-line', '#ececf4'),
+    borde: leerToken('--ds-surface', '#ffffff'),
+  };
+}
+
 /** Lee un token `--ds-*` del tema vigente; si no hay, devuelve el valor dado. */
 function leerToken(nombre: string, respaldo: string): string {
   try {
@@ -41,6 +50,9 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
   ultimoTexto = '';
   ultimoEtiqueta = '';
   hayReconstruido = false;
+  hayIncompleto = false;
+  ultimoIncompleto = false;
+  sinMovimiento = false;
   private observador: MutationObserver | null = null;
 
   constructor(private cd: ChangeDetectorRef) {}
@@ -56,9 +68,13 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     this.nombre = TEXTOS.tendencias.series[this.clave] || this.clave;
-    this.grafico = armarGrafico(this.nombre, this.unidad, this.puntos, this.colores[0]);
-    this.resultado = this.grafico.hayDatos ? this.grafico.resultado : null;
-    this.ajustes = this.grafico.hayDatos ? this.grafico.ajustes : null;
+    this.grafico = armarGrafico(this.nombre, this.unidad, this.puntos, this.colores[0], leerTintas());
+    const graficable = this.grafico.hayDatos && !this.grafico.sinMovimiento;
+    this.resultado = graficable ? this.grafico.resultado : null;
+    this.ajustes = graficable ? this.grafico.ajustes : null;
+    this.sinMovimiento = this.grafico.sinMovimiento;
+    this.hayIncompleto = this.grafico.hayIncompleto && graficable;
+    this.ultimoIncompleto = this.grafico.ultimoIncompleto;
     const conDato = this.grafico.filas.filter((f) => f.texto !== '—');
     const ultimo = conDato.length ? conDato[conDato.length - 1] : null;
     this.ultimoTexto = ultimo ? ultimo.texto : '';
