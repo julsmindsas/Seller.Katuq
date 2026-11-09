@@ -56,7 +56,7 @@ export const TEXTOS = {
     altasMes: 'Altas del mes',
     bajasMes: 'Bajas del mes',
     churn: 'Churn',
-    conversionMesAnterior: 'Conversión a pago (mes anterior)',
+    conversionMesAnterior: 'Conversión a pago (última cohorte cerrada)',
     pedidosMes: 'Pedidos del mes',
     gmvMes: 'GMV del mes',
     ticketMes: 'Ticket promedio',
