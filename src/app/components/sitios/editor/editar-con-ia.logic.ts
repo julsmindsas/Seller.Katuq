@@ -123,6 +123,9 @@ export function leerConversacion(texto: string | null | undefined): MensajeEdita
 
 /** Ideas para empezar: tocar una la pone en el cuadro. */
 export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
+  // D-688: pedidos de diseño de toda la página.
+  'Haz que mi página se vea más profesional',
+  'Dale a toda la página un estilo elegante',
   'Haz el título de la portada más llamativo',
   'Cambia los colores a tonos más elegantes',
   'Agrega preguntas frecuentes sobre envíos y pagos',
@@ -139,6 +142,9 @@ export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
  * nuevo en esas páginas (bandera `siteDesignV2`); en las demás, las ideas son las de siempre.
  */
 export const SUGERENCIAS_EDITAR_IA_V2: ReadonlyArray<string> = [
+  // D-688: pedidos de diseño de toda la página.
+  'Haz que mi página se vea más profesional',
+  'Dale a toda la página un estilo moderno y limpio',
   'Pon la portada como carrusel con fotos que ya tengo, cada una con su texto',
   'Arma la vitrina con pestañas: en la casa, en el negocio y para moverte',
   'Ponle un ícono a cada categoría',
