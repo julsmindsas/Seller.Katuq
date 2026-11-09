@@ -4397,7 +4397,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.pageSize = 50;
     }
     const context = this;
-    this.maestroService.getBillingZone().subscribe({
+    this.ventasService.getZonasCobroUnaVez().subscribe({
       next(value: any) {
         context.allBillingZone = value;
         sessionStorage.setItem(
@@ -11192,6 +11192,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.ventasService.limpiarZonasCobro();
     this.destroy$.next();
     this.destroy$.complete();
     if (this.searchRequestSub) {
