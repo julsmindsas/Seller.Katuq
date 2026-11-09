@@ -17,8 +17,10 @@
     <button type="button" class="mini" [disabled]="ultimo" (click)="mover(k, 1)" aria-label="Bajar enlace">↓</button>
     <button type="button" class="mini mini--quitar" (click)="quitarEnlace(k)">Quitar</button>
   </div>
+  <span class="repetible__rotulo">Nombre</span>
   <input type="text" maxlength="30" placeholder="Nombre del enlace (Casa, Productos…)" aria-label="Nombre del enlace"
          [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
+  <span class="repetible__rotulo">A dónde lleva</span>
   <input type="text" list="kq-destinos-inicio" placeholder="#seccion, /ruta o https://…" aria-label="Destino del enlace"
          [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
   <p class="repetible__aviso" *ngIf="avisoDestino(e.url) as aviso">{{ aviso }}</p>

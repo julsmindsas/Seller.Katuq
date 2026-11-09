@@ -3717,8 +3717,23 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   get destinosDelInicio(): DestinoDeInicio[] {
     const bloques: any[] = (this.contenido && this.contenido.bloques) || [];
     const firma = `${this.disenoNuevo ? 2 : 1}|` + bloques.map((b) => (b && b.visible !== false ? `${b.tipo}:${(b.estilo && b.estilo.ancla) || ""}:${(b.datos && (b.datos.titulo || b.datos.etiqueta)) || ""}` : "")).join("|");
-    if (!this.destinosCache || this.destinosCache.firma !== firma) {
-      this.destinosCache = { firma, lista: destinosDelInicio(bloques, { disenoNuevo: this.disenoNuevo, nombreDe: (b: any) => this.nombreDeTipo(b.tipo) }) };
+    // Además de las secciones del inicio, las páginas del sitio (`/ruta`) y la tienda completa: así el destino se elige
+    // de la lista en vez de escribirse de memoria. Escribir a mano sigue valiendo (enlaces externos, `/p/…`).
+    const paginas = ((this.contenido && (this.contenido as any).paginas) || []).filter((p: any) => p && p.ruta);
+    const conTienda = bloques.some((b) => b && b.tipo === "catalogo" && b.visible !== false);
+    const firmaCompleta = `${firma}||${conTienda ? 1 : 0}|` + paginas.map((p: any) => `${p.ruta}:${p.titulo || ""}`).join("|");
+    if (!this.destinosCache || this.destinosCache.firma !== firmaCompleta) {
+      const lista = destinosDelInicio(bloques, { disenoNuevo: this.disenoNuevo, nombreDe: (b: any) => this.nombreDeTipo(b.tipo) });
+      const vistos = new Set(lista.map((d) => d.valor));
+      const poner = (valor: string, texto: string) => {
+        if (vistos.has(valor)) return;
+        vistos.add(valor);
+        lista.push({ valor, texto });
+      };
+      poner("/", "Inicio del sitio");
+      if (conTienda) poner("/?catalogo=1", "Toda la tienda");
+      for (const p of paginas) poner(`/${p.ruta}`, `Página · ${String(p.titulo || p.ruta).slice(0, 40)}`);
+      this.destinosCache = { firma: firmaCompleta, lista };
     }
     return this.destinosCache.lista;
   }
