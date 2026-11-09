@@ -71,23 +71,23 @@
             </thead>
             <tbody>
               <tr *ngFor="let f of l.filas; trackBy: trackFila">
-                <td><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
+                <td class="pl-nombre"><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
                   <div><small class="pl-muted" *ngIf="f.tipoCuenta.tipo !== 'real'">{{ f.tipoCuenta.tipo }}</small></div>
-                  <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
+                  <div class="pl-pastillas" *ngIf="f.parcial || (f.desactualizada && !r.meta?.desactualizado)">
                     <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
-                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+                    <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada && !r.meta?.desactualizado" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
                   </div></td>
-                <td>{{ cicloTexto(f.ciclo) }}</td>
-                <td>{{ planTexto(f.clasePlan) }}</td>
-                <td>{{ f.altaFecha | fechaCo:false }}</td>
+                <td class="pl-nowrap"><span class="pl-estado" [class.pl-estado--ok]="f.ciclo === 'active'">{{ cicloTexto(f.ciclo) }}</span></td>
+                <td class="pl-nowrap">{{ planTexto(f.clasePlan) }}</td>
+                <td class="pl-nowrap">{{ f.altaFecha | fechaCo:false }}</td>
                 <td class="pl-der pl-num">{{ (f.pedidosMes === null ? '—' : f.pedidosMes) }}</td>
-                <td class="pl-der pl-num">{{ f.gmvMes | cop }}</td>
-                <td class="pl-der pl-num">{{ f.contratadoCOP | cop }}</td>
-                <td class="pl-der pl-num">{{ f.cobradoMes | cop }}</td>
-                <td class="pl-der pl-num">{{ f.porCobrar | cop }}</td>
-                <td class="pl-der pl-num">{{ f.mora | cop }}</td>
-                <td>{{ f.ultimoIngreso | fechaCo:false }}</td>
-                <td>{{ ultimoPago(f.ultimoPago) }}</td>
+                <td class="pl-der pl-num" [class.pl-cero]="f.gmvMes === 0 || f.gmvMes === null">{{ f.gmvMes | cop }}</td>
+                <td class="pl-der pl-num" [class.pl-cero]="f.contratadoCOP === 0 || f.contratadoCOP === null">{{ f.contratadoCOP | cop }}</td>
+                <td class="pl-der pl-num" [class.pl-cero]="f.cobradoMes === 0 || f.cobradoMes === null">{{ f.cobradoMes | cop }}</td>
+                <td class="pl-der pl-num" [class.pl-cero]="f.porCobrar === 0 || f.porCobrar === null">{{ f.porCobrar | cop }}</td>
+                <td class="pl-der pl-num" [class.pl-cero]="f.mora === 0 || f.mora === null">{{ f.mora | cop }}</td>
+                <td class="pl-nowrap">{{ f.ultimoIngreso | fechaCo:false }}</td>
+                <td class="pl-nowrap">{{ ultimoPago(f.ultimoPago) }}</td>
               </tr>
             </tbody>
           </table>
@@ -96,9 +96,9 @@
         <div class="pl-tarjetas">
           <article class="pl-tarjeta" *ngFor="let f of l.filas; trackBy: trackFila">
             <a class="pl-vinculo" [routerLink]="['/plataforma/comercios', f.docId]" [attr.aria-label]="t.abrir + ': ' + nombreDe(f)">{{ nombreDe(f) }}</a>
-            <div class="pl-pastillas" *ngIf="f.parcial || f.desactualizada">
+            <div class="pl-pastillas" *ngIf="f.parcial || (f.desactualizada && !r.meta?.desactualizado)">
               <span class="cfg-pill cfg-pill--warn" *ngIf="f.parcial" [attr.title]="t.parcialAyuda">{{ t.parcial }}</span>
-              <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
+              <span class="cfg-pill cfg-pill--warn" *ngIf="f.desactualizada && !r.meta?.desactualizado" [attr.title]="t.desactualizadaAyuda">{{ t.desactualizada }}</span>
             </div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('ciclo') }}</b><div>{{ cicloTexto(f.ciclo) }}</div></div>
             <div class="pl-tarjeta__linea"><b>{{ rotuloColumna('plan') }}</b><div>{{ planTexto(f.clasePlan) }}</div></div>

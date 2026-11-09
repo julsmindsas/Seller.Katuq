@@ -45,7 +45,7 @@ import { TEXTOS } from '../../plataforma.textos';
               <thead><tr><th scope="col">{{ t.proveedor }}</th><th scope="col" class="pl-der">{{ t.comercios }}</th><th scope="col" class="pl-der">{{ t.porcentaje }}</th></tr></thead>
               <tbody>
                 <tr *ngFor="let x of p.lista; trackBy: trackProveedor">
-                  <td>{{ x.id }}</td><td class="pl-der pl-num">{{ x.comercios }}</td><td class="pl-der pl-num">{{ porcentaje(x.porcentaje) }}</td>
+                  <td>{{ x.id }}</td><td class="pl-der pl-num">{{ x.comercios }}</td><td class="pl-der pl-num"><div class="pl-barra"><span class="pl-barra__pista" aria-hidden="true"><span class="pl-barra__relleno" [style.width.%]="ancho(x.porcentaje, p.lista)"></span></span><span>{{ porcentaje(x.porcentaje) }}</span></div></td>
                 </tr>
               </tbody>
             </table>
@@ -79,6 +79,12 @@ export class AdopcionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.fin$.next();
     this.fin$.complete();
+  }
+
+  /** Ancho de la barra (0-100), proporcional al mayor de la lista; solo dibuja, no calcula cifras. */
+  ancho(r: number | null | undefined, lista: Array<{ porcentaje: number | null }>): number {
+    const mayor = Math.max(0, ...lista.map((x) => (typeof x.porcentaje === 'number' && Number.isFinite(x.porcentaje) ? x.porcentaje : 0)));
+    return typeof r === 'number' && Number.isFinite(r) && mayor > 0 ? Math.max(0, Math.min(100, (r / mayor) * 100)) : 0;
   }
 
   trackProveedor(_: number, x: { id: string }): string {

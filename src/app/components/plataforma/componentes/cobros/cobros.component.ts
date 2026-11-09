@@ -43,7 +43,7 @@ interface Tarjeta { rotulo: string; cifra: Cifra | null | undefined; nota?: stri
               <div class="pl-cifra__rotulo"><span class="pl-cifra__texto">{{ c.rotulo }}</span></div>
               <ng-container *ngIf="c.cifra | metrica as p">
                 <div class="pl-cifra__valor" [class.pl-nulo]="p.nulo">{{ p.texto }}</div>
-                <div *ngIf="p.insignia"><span class="cfg-pill cfg-pill--neutro">{{ p.insignia }}</span></div>
+                <div *ngIf="p.insignia"><span class="pl-cifra__estado">{{ p.insignia }}</span></div>
               </ng-container>
             </div>
           </div>
@@ -62,9 +62,9 @@ interface Tarjeta { rotulo: string; cifra: Cifra | null | undefined; nota?: stri
               <tbody>
                 <tr *ngFor="let x of m.lista | slice:0:50; trackBy: trackMora">
                   <td><a class="pl-vinculo" [routerLink]="['/plataforma/comercios', x.docId]">{{ x.nomComercial || x.docId }}</a></td>
-                  <td>{{ x.factura }}</td>
+                  <td class="pl-id" [attr.title]="x.factura">{{ x.factura }}</td>
                   <td>{{ x.vence | fechaCo:false }}</td>
-                  <td class="pl-der pl-num">{{ x.diasAtraso }}</td>
+                  <td class="pl-der pl-num"><span class="pl-estado" [class.pl-estado--error]="x.diasAtraso > 30" [class.pl-estado--warn]="x.diasAtraso <= 30">{{ x.diasAtraso }}</span></td>
                   <td class="pl-der pl-num">{{ x.saldo | cop }}</td>
                 </tr>
               </tbody>

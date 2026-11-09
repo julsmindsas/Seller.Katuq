@@ -20,7 +20,7 @@
             [attr.aria-expanded]="abierta === it.clave" [attr.aria-label]="textos.infoDefinicion + ': ' + it.rotulo">i</button>
         </div>
         <div class="pl-cifra__valor" [class.pl-nulo]="it.pintada.nulo">{{ it.pintada.texto }}</div>
-        <div *ngIf="it.pintada.insignia"><span class="cfg-pill cfg-pill--neutro">{{ it.pintada.insignia }}</span></div>
+        <div *ngIf="it.pintada.insignia"><span class="pl-cifra__estado">{{ it.pintada.insignia }}</span></div>
         <small class="pl-cifra__nota" *ngIf="it.nota">{{ it.nota }}</small>
       </div>
     </div>
