@@ -142,10 +142,65 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
         this.bodegas = (bodegas || []).map(b => ({ ...b, id: b.id || b.cd }));
         this.cargando = false;
 
+        this.preseleccionarUltimaBodega();
+
         // Actualizar la selección después de cargar las bodegas
         setTimeout(() => {
             this.actualizarSeleccionBodega();
         }, 100);
+    }
+
+    // ─── Última bodega elegida (por empresa + usuario) ───────────────────
+    private claveUltimaBodega(): string | null {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const empresa = user?.company;
+            const correo = user?.email;
+            if (!empresa || !correo) { return null; }
+            return `posUltimaBodega:${String(empresa).trim().toLowerCase()}:${String(correo).trim().toLowerCase()}`;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    private guardarUltimaBodega(bodega: any): void {
+        const clave = this.claveUltimaBodega();
+        if (!clave || !bodega) { return; }
+        try {
+            localStorage.setItem(clave, String(bodega.idBodega || bodega.id));
+        } catch (e) { /* sin almacenamiento: se pide elegir como antes */ }
+    }
+
+    /**
+     * Si no hay bodega activa, preselecciona la última que este usuario eligió,
+     * solo si sigue en la lista que el POS ya cargó para él. Si no está, no hace
+     * nada y el POS pide elegir como siempre.
+     */
+    private preseleccionarUltimaBodega(): void {
+        if (this.bodega && (this.bodega.idBodega || this.bodega.id)) { return; }
+        const clave = this.claveUltimaBodega();
+        if (!clave) { return; }
+        let recordada: string | null = null;
+        try {
+            recordada = localStorage.getItem(clave);
+        } catch (e) {
+            return;
+        }
+        if (!recordada) { return; }
+        const encontrada = this.bodegas.find(b => b.idBodega === recordada || b.id === recordada);
+        if (!encontrada) { return; }
+
+        const selected = { ...encontrada };
+        if (!selected.idBodega && selected.id) {
+            selected.idBodega = selected.id;
+        }
+        this.bodega = selected;
+        this.selectedWarehouse = selected.nombre;
+        try {
+            localStorage.setItem('warehousePOS', JSON.stringify(selected));
+        } catch (e) { /* ver arriba */ }
+        this.dataStore.set('warehousePOS', selected);
+        this.warehouseChange.emit();
     }
 
     // Función para manejar la selección de una bodega
@@ -199,6 +254,7 @@ export class WarehouseSelectorComponent implements OnInit, AfterViewInit {
             
             this.dataStore.set('warehousePOS', selected);
             this.bodega = selected;
+            this.guardarUltimaBodega(selected);
         } else {
             console.warn('No se encontró la bodega seleccionada en la lista');
             this.selectedWarehouse = '';
