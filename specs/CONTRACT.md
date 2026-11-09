@@ -13652,3 +13652,17 @@ El detalle con archivo y línea está en `proposal.md`.
   - **Cliente que paga de verdad:** plan premium y pedidos recientes. Baudio Corporation (en implementación), Punto Verde Vidagas y ALMACEN BOMBAS pagan de verdad; no tienen facturas en la base y su pago se marca a mano.
   - «Prueba Onboarding Katuq Verificada» y FLORECER son cuentas demo de uso interno: se marcan `tipoCuenta: demo` al publicar F2-2.
   - Una renovación fallida de un comercio que paga sigue contando como deuda mientras Daniel no diga otra cosa.
+
+### 2026-11-09 — D-700 cierre (sección 27): excepciones, estado de S-1 a S-4 y alcance del login
+
+- **E-7 (Artículo IX, entorno):** el Seller usa Angular 14.3, que no tiene signals ni `@if`. El módulo `plataforma` cumple lo demás (componentes standalone, OnPush, carga diferida, servicios sobre `BaseService`). Se registra como excepción de entorno, no de diseño.
+- **Tamaño de la especificación:** el diseño (`design.md` y sus 9 anexos) y las 10 specs pasan de las 3 páginas que pide `AGENTS.md`. Daniel lo aceptó al aprobar el diseño el 5-nov; sigue siendo una desviación declarada, no un precedente.
+- **Estado de las modificaciones aprobadas a las specs (S-1 a S-4):**
+  - **S-1** (Opttia escribe su cupo en `platform_ai_quota`): el código está hecho y probado; nace apagado y sin desplegar.
+  - **S-2** (segunda persona en pagos manuales): **cambió el 9-nov.** Mientras Daniel sea el único operador, solo él registra y anula pagos; no hay segunda persona ni umbral. Los montos atípicos y los duplicados probables piden confirmación y motivo de al menos 20 caracteres, y anular un pago propio también. Todo queda en la auditoría de plataforma.
+  - **S-3** (lista de operadores; el rol «Super Administrador» lo asigna solo quien ya lo es): código hecho y probado; falta publicarlo.
+  - **S-4** (convivencia temporal de Cobros, máximo 2 semanas entre M3 y M4): no ha empezado. M3 y M4 (tareas 15.3 y 15.4) esperan a Daniel; la bandera de la Consola nueva sigue apagada.
+- **Sincronizar y archivar las specs (27.4)** queda pendiente de Daniel. Antes de archivar se registran como desviaciones aprobadas las de «Sugerencias de clientes» (usa el tema de texto normalizado, no una lista cerrada de etiquetas; aprobado el 9-nov) y la de integraciones sin uso (sin fuente confiable de eventos; el segmento queda «no disponible» con su motivo).
+- **Login y `createToken` no se modifican en D-700.** Comprobado el 9-nov: ni `controllers/login.js`, ni `controllers/authentication.js`, ni `services/index.js` tienen un solo commit desde el 4-nov, es decir, ninguno de D-700. El cambio de sesiones y de la emisión del token es D-634, cambio aparte; mientras no se apruebe, el historial de sesiones (F2-6) sigue bloqueado.
+- **Archivos protegidos (Gate XI):** la revisión privada de seguridad registra el hash base de 0.8 y el vigente del 9-nov de los 15 archivos de Opttia y del ADK; D-700 no modifica ninguno salvo el cambio aditivo de `scope=platform` en el ADK, con golden idéntico. El detalle vive en el repositorio privado.
+- **Reversión de datos:** `scripts/revertir-datos-plataforma.js --prefijo <id>` (backend) borra, por prefijo de id, solo documentos de las cuatro colecciones de métricas nuevas; nunca toca la auditoría, los pagos manuales ni colecciones existentes. Simulación por defecto; ejecutarlo en `katuq-db` exige el sí de Daniel.
