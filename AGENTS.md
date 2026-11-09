@@ -72,6 +72,15 @@ Muchas pruebas llevan contraseñas, tokens o datos reales. Por eso, desde el 202
 - **La evidencia va en el mensaje de commit o en el contrato:** qué pruebas se corrieron y su resultado.
 - **Los subagentes siguen la misma regla:** `git commit -- <archivos>` nunca incluye pruebas nuevas.
 
+## Documentación fuera de git (D-705)
+
+Desde el 2026-11-09 (Daniel), las propuestas y la documentación nuevas no se suben a git, igual que las pruebas:
+
+- **Se quedan en la copia local:** las carpetas nuevas de `openspec/changes/` y `openspec/specs/`, las specs nuevas de `specs/`, todo lo nuevo de `docs/` y los `.md` nuevos de la raíz. El `.gitignore` los bloquea; nunca usar `git add -f` con un documento.
+- **Lo que ya estaba en git se queda** y se puede actualizar.
+- **`specs/CONTRACT.md` y `specs/constitution.md` siguen en git:** son la coordinación entre sesiones (números D-XXX y bitácora). La entrada del contrato resume la decisión. La propuesta completa vive en la copia de quien la escribió, que la comparte por mensaje entre sesiones si otra la necesita.
+- **Las guías de agentes** (`AGENTS.md`, `CLAUDE.md`, `agent.md`, `SPEC-DRIVEN.md`) y `README.md` siguen en git.
+
 ## Notas de versión (D-567, D-581)
 
 Cada versión le explica al comercio, en palabras sencillas, qué mejoró (ticket 1377). Desde D-581 no sale ninguna ventana: las notas se ven en la pestaña «Novedades» de la campana, y a cada usuario solo le salen las de las pantallas que usa. Por eso:

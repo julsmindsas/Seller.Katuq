@@ -13625,3 +13625,15 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Sin cambios en pedidos, inventario ni consecutivos. Sin colecciones nuevas.**
 - **Abierto:** si el modo celular está disponible en Colombia (tarea 1.4); y si la cuenta y el número de Julsmind quedaron a nombre de Julsmind o de Kapso (tarea 1.1).
 - **Sigue:** aprobar el diseño y las tareas, y después implementar.
+
+### 2026-11-09 — D-705: las propuestas y la documentación nuevas no se suben a git
+- **Pedido:** Daniel, 9-nov: «las propuestas y toda la documentación no se sube, más métela al gitignore». Escogió dejar en git lo ya subido (como D-566) y el contrato en git por ahora.
+- **Qué decide:**
+  - el `.gitignore` bloquea lo nuevo de `openspec/changes/`, `openspec/specs/`, `specs/` (menos `CONTRACT.md` y `constitution.md`), `docs/` y los `.md` nuevos de la raíz (menos las guías de agentes y el README);
+  - lo ya versionado sigue en git y se puede actualizar;
+  - nada de `git add -f` con un documento.
+- **Regla en `AGENTS.md`**, sección «Documentación fuera de git».
+- **Aplicado:** se sacó de git la propuesta `openspec/changes/whatsapp-directo-meta/` (D-704), que se había subido en `aec99999`. Sigue en la copia local.
+- **Queda en el historial:** lo que ya se subió sigue visible en el historial de GitHub; no se reescribió.
+- **No aplica todavía** al backend ni a kai.
+
