@@ -143,6 +143,15 @@ export function iniciales(nombre: string | null | undefined): string {
   return letras.toUpperCase();
 }
 
+/** "CARLOS rojas" → "Carlos Rojas": para mostrar nombres de personas sin mezclar MAYÚSCULAS y minúsculas. */
+export function nombrePropio(nombre: string | null | undefined): string {
+  return String(nombre ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('es-CO')
+    .replace(/(^|[\s'-])(\p{L})/gu, (_, sep: string, letra: string) => sep + letra.toLocaleUpperCase('es-CO'));
+}
+
 /** Compara nombres sin tildes ni mayúsculas ("Yeison Pérez" = "yeison perez"). */
 export function claveDeNombre(nombre: string | null | undefined): string {
   return String(nombre ?? '')

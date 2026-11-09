@@ -57,7 +57,9 @@ export function entregadosDeHoy(pedidos: ReadonlyArray<PedidoEnVivo>, dia: strin
   let cuantos = 0;
   for (const pedido of pedidos) {
     if (pedido.etapa !== 'entregado') continue;
-    const ms = pedido.horas.entregado ?? pedido.tC;
+    // Misma hora que usan la columna «Entregados hoy» y los logros (`entregadoHoy`): la que se vio, el atajo `tE`
+    // y, si no, la de creación. Sin `tE`, el embudo contaba 1 mientras «Entregados hoy» decía 15.
+    const ms = pedido.horas?.entregado ?? pedido.tE ?? pedido.tC;
     if (ms !== null && ms !== undefined && diaDeColombia(ms) === dia) cuantos += 1;
   }
   return cuantos;
