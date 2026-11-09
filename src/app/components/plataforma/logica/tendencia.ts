@@ -47,7 +47,7 @@ export function abreviarCop(v: number): string {
   return String(v);
 }
 
-export function armarGrafico(nombre: string, unidad: string, puntos: PuntoTendencia[]): GraficoArmado {
+export function armarGrafico(nombre: string, unidad: string, puntos: PuntoTendencia[], acento = '#5F3FE0'): GraficoArmado {
   const lista = Array.isArray(puntos) ? puntos : [];
   const filas: FilaTablaTendencia[] = lista.map((p) => {
     const v = valorGraficable(p);
@@ -75,22 +75,61 @@ export function armarGrafico(nombre: string, unidad: string, puntos: PuntoTenden
     meta: { totalRows: lista.length, truncated: false, sourceUsed: 'plataforma', durationMs: 0 },
   };
 
-  const formatoEje = (v: number) => (unidad === 'COP' ? abreviarCop(v) : String(v));
+  const formatoEje = (v: number) => (unidad === 'COP' ? abreviarCop(v) : formatearNumero(v));
+  const hayReconstruido = lista.some((p) => p.estado === 'reconstruido' && valorGraficable(p) !== null);
+  const esConteo = unidad !== 'COP';
+  // Ejes y rejilla tenues (tintas que sirven en claro y oscuro); la serie va en el acento y el mes incompleto en su tinte.
+  const TINTA_EJE = '#8A87A6';
+  const REJILLA = 'rgba(138, 135, 166, 0.22)';
+  const tinte = /^#[0-9a-fA-F]{6}$/.test(acento) ? `${acento}66` : acento;
+  const corto = (v: string) => String(v).replace(/ 20(\d\d)$/, ' $1');
+  const base = { connectNulls: false } as const;
+  const series = esConteo
+    ? [
+        {
+          ...base, name: 'Oficial', type: 'bar', barMaxWidth: 26, barGap: '-100%',
+          data: lista.map((p) => {
+            const v = valorGraficable(p);
+            if (v === null || p.estado === 'reconstruido') return null;
+            const incompleto = p.estado === 'parcial' || p.estado === 'en_curso';
+            return { value: v, itemStyle: { color: incompleto ? tinte : acento, borderRadius: [4, 4, 0, 0] } };
+          }) as never,
+        },
+        {
+          ...base, name: 'Reconstruido', type: 'bar', barMaxWidth: 26, barGap: '-100%',
+          data: reconstruido.map((r) => (r ? { value: (r as { value: number }).value } : null)) as never,
+          itemStyle: { color: 'transparent', borderColor: acento, borderType: 'dashed', borderWidth: 1.5, borderRadius: [4, 4, 0, 0] },
+        },
+      ]
+    : [
+        { ...base, name: 'Oficial', type: 'line', data: oficial as never, symbolSize: 8, smooth: false, lineStyle: { type: 'solid', width: 2 }, itemStyle: { borderColor: '#ffffff', borderWidth: 1.5 } },
+        { ...base, name: 'Reconstruido', type: 'line', data: reconstruido as never, symbolSize: 8, smooth: false, lineStyle: { type: 'dashed', width: 2 }, itemStyle: { borderWidth: 2 } },
+      ];
   const ajustes: EChartsOption = {
     tooltip: {
       trigger: 'axis',
+      axisPointer: { type: esConteo ? 'shadow' : 'line', lineStyle: { color: REJILLA } },
       formatter: (params: unknown) => {
         const arr = Array.isArray(params) ? (params as Array<{ dataIndex: number }>) : [];
         const i = arr.length ? arr[0].dataIndex : -1;
         const f = filas[i];
-        return f ? `${f.etiqueta}: ${f.texto}${f.insignia && f.texto !== SIN_VALOR ? ` (${f.insignia})` : ''}` : '';
+        return f ? `${f.etiqueta}: <b>${f.texto}</b>${f.insignia && f.texto !== SIN_VALOR ? ` (${f.insignia})` : ''}` : '';
       },
     },
-    yAxis: { type: 'value', axisLabel: { formatter: formatoEje } },
-    series: [
-      { name: 'Oficial', type: 'line', data: oficial as never, connectNulls: false, symbolSize: 9, smooth: false, lineStyle: { type: 'solid', width: 2 } },
-      { name: 'Reconstruido', type: 'line', data: reconstruido as never, connectNulls: false, symbolSize: 9, smooth: false, lineStyle: { type: 'dashed', width: 2 }, itemStyle: { borderWidth: 2 } },
-    ],
+    legend: { show: hayReconstruido, bottom: 0, left: 'center', itemWidth: 16, itemHeight: 8, textStyle: { color: TINTA_EJE, fontSize: 11 } },
+    grid: { left: 4, right: 12, top: 12, bottom: hayReconstruido ? 32 : 4, containLabel: true },
+    xAxis: {
+      type: 'category', data: etiquetas, boundaryGap: esConteo,
+      axisTick: { show: false }, axisLine: { lineStyle: { color: REJILLA } },
+      axisLabel: { rotate: 0, color: TINTA_EJE, fontSize: 11, hideOverlap: true, formatter: corto },
+    },
+    yAxis: {
+      type: 'value', splitNumber: 4, minInterval: esConteo ? 1 : 0,
+      axisLabel: { formatter: formatoEje, color: TINTA_EJE, fontSize: 11 },
+      axisLine: { show: false }, axisTick: { show: false },
+      splitLine: { lineStyle: { color: REJILLA, type: 'solid' } },
+    },
+    series: series as never,
   };
 
   const conDato = filas.filter((f) => f.texto !== SIN_VALOR);

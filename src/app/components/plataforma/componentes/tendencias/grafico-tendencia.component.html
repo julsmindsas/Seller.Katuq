@@ -7,6 +7,7 @@
   </div>
 
   <ng-container *ngIf="!verTabla">
+    <p class="pl-grafico__valor pl-num" *ngIf="grafico?.hayDatos && ultimoTexto">{{ ultimoTexto }}<small>{{ ultimoEtiqueta }}</small></p>
     <div class="pl-grafico__lienzo" *ngIf="resultado && ajustes" role="img" tabindex="0" [attr.aria-label]="grafico?.resumen">
       <app-viz-chart [result]="resultado" chartType="line" [colors]="colores" [altura]="280" [radio]="11" [ajustes]="ajustes"></app-viz-chart>
     </div>
@@ -30,5 +31,5 @@
       </tbody>
     </table>
   </div>
-  <p class="pl-leyenda">{{ textos.tendencias.leyenda }}</p>
+  <p class="pl-leyenda" *ngIf="hayReconstruido">{{ textos.tendencias.leyenda }}</p>
 </section>

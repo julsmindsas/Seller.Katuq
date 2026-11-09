@@ -38,24 +38,32 @@ export class GraficoTendenciaComponent implements OnInit, OnChanges, OnDestroy {
   ajustes: EChartsOption | null = null;
   colores: string[] = [ACENTO_POR_DEFECTO, ACENTO_POR_DEFECTO];
   verTabla = false;
+  ultimoTexto = '';
+  ultimoEtiqueta = '';
+  hayReconstruido = false;
   private observador: MutationObserver | null = null;
 
   constructor(private cd: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.leerColores();
+    this.leerColores(); this.ngOnChanges();
     try {
       // Cambio de tema (clase `dark-only` en el body): se vuelven a leer los tokens.
-      this.observador = new MutationObserver(() => { this.leerColores(); this.cd.markForCheck(); });
+      this.observador = new MutationObserver(() => { this.leerColores(); this.ngOnChanges(); this.cd.markForCheck(); });
       this.observador.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     } catch { /* sin observador el gráfico conserva los colores del momento */ }
   }
 
   ngOnChanges(): void {
     this.nombre = TEXTOS.tendencias.series[this.clave] || this.clave;
-    this.grafico = armarGrafico(this.nombre, this.unidad, this.puntos);
+    this.grafico = armarGrafico(this.nombre, this.unidad, this.puntos, this.colores[0]);
     this.resultado = this.grafico.hayDatos ? this.grafico.resultado : null;
     this.ajustes = this.grafico.hayDatos ? this.grafico.ajustes : null;
+    const conDato = this.grafico.filas.filter((f) => f.texto !== '—');
+    const ultimo = conDato.length ? conDato[conDato.length - 1] : null;
+    this.ultimoTexto = ultimo ? ultimo.texto : '';
+    this.ultimoEtiqueta = ultimo ? ultimo.etiqueta : '';
+    this.hayReconstruido = this.puntos.some((p) => p.estado === 'reconstruido');
   }
 
   ngOnDestroy(): void {
