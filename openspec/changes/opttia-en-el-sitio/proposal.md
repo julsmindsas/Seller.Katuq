@@ -1,34 +1,61 @@
-# Propuesta: Opttia en el sitio web (D-686, por aprobar)
+# Propuesta: Opttia en el sitio web (D-686, por aprobar) — etapas 3 y 4 de D-469
 
-## Por qué
+## Lo que ya existe (D-469, publicado el 17-oct)
 
-Hoy el cliente que entra a una tienda de Katuq solo tiene dos salidas cuando duda: el botón de WhatsApp o irse. Opttia ya atiende clientes por WhatsApp con el catálogo, el carrito y las cotizaciones de cada comercio (`channels/whatsapp/` del ADK, `whatsappBotDispatcher.js` en el backend). Falta llevar esa misma atención **dentro del sitio**, sin que el cliente salga de la página.
+«Pregúntale a KAI», el asesor de compra de la tienda:
+
+- **Encendido:** el comercio lo prende en cada sitio con el interruptor `tienda.asesorKai`.
+- **Cómo atiende:** el servidor busca por palabras en el catálogo vendible y Opttia elige entre esos productos en **una sola pasada** (`pedirJsonAOpttia`). Los pedidos de carrito pasan por el **puente WebMCP del sitio** (`utils/siteWebMcp.js`).
+- **Límites:** hay freno por visitante y tope diario por tienda.
+
+**Le falta:**
+
+- leer la ficha completa y comparar productos;
+- dar la lista de precios;
+- llevar la venta hasta el final;
+- atender soporte y crear tickets.
+
+Además, no conversa en varios pasos: cada mensaje es una sola respuesta.
 
 ## Qué cambia
 
-1. **Editor del sitio (diseño nuevo):** un interruptor «Opttia en la tienda», con:
-   - el saludo;
-   - lo que puede hacer: responder dudas, armar el carrito, pedir cotización, pasar a WhatsApp;
-   - el nombre que muestra.
-   Opttia (la del Seller) también puede encenderlo cuando el comercio se lo pida («agrega Opttia a mi tienda»).
-2. **Sitio publicado:** una burbuja de chat liviana. Su código se carga solo al tocarla, para que la página no pese más. El cliente pregunta y Opttia responde con los productos **de ese sitio** (precio, foto, enlace a la ficha) y los agrega al **carrito de la tienda**. El pago sigue por el checkout que ya existe.
-3. **Pasar a una persona:** si el cliente lo pide, o Opttia no sabe la respuesta, ofrece seguir por WhatsApp con lo conversado, o dejar los datos como solicitud (el mismo camino del formulario de contacto).
+1. **Opttia de verdad en la tienda.** El asesor pasa de una sola pasada a un agente que, en cada mensaje, usa **las mismas herramientas del web MCP del sitio**:
 
-## Alcance
+   | Herramienta | Para qué |
+   |---|---|
+   | `searchProducts` | Buscar productos |
+   | `getProductFilters` | Ver las categorías y el rango de precios |
+   | `getProductDetails` | Leer la ficha completa: descripción, características, variables y disponibilidad |
+   | `getCartContents`, `addToCart`, `updateCartItem`, `removeFromCart` | Armar el carrito |
+   | `getDeliveryOptions`, `getPaymentMethods` | Ver envío y formas de pago |
+   | `getOrderSummary` | Ver el resumen del pedido |
+   | `beginCheckout` | Abrir el checkout |
 
-- Solo sitios con el diseño nuevo (`sistemaVisual: 2`) y empresas con la bandera nueva `featureFlags.opttiaEnSitio` (D-505). Apagada, el sitio sale **byte por byte igual** (regla X1).
-- Reusa el agente de ventas de WhatsApp como un canal más (`channels/web/`, AGENTS.md: «un canal nuevo es un adaptador de transporte»).
+   Así conversa como un vendedor:
+   - recomienda;
+   - compara dos productos leyendo sus fichas;
+   - da la lista de precios de una categoría o de toda la tienda;
+   - agrega, cambia y quita del carrito.
+2. **Cierra la venta.** Pide en el chat los datos que falten (nombre, celular, dirección, entrega y forma de pago), los deja **puestos en el checkout** y lo abre en el último paso. El cliente solo revisa y paga o confirma. Esto cumple la regla del puente: el pedido siempre lo envía la persona.
+3. **Soporte.**
+   - Responde con las políticas de la tienda: envíos, cambios, garantía, horarios, medios de pago y preguntas frecuentes.
+   - En los sitios de Katuq responde además con el centro de ayuda (`search_help_center`, D-628).
+   - Si no puede resolver, **crea un ticket** para el dueño del sitio, con lo conversado y el contacto del cliente.
+4. **Configurable sitio por sitio.** En el editor, «Opttia en la tienda» reemplaza el interruptor de hoy.
+   - Se enciende y se apaga, y se elige qué hace: **asesorar**, **cerrar ventas**, **soporte**, **crear tickets** y **pasar a WhatsApp**.
+   - También se configuran el nombre, el saludo y las preguntas frecuentes del sitio.
+   - Un sitio con `asesorKai: true` queda con «asesorar» encendido y nada más, como hoy.
+   - La Opttia del Seller también lo configura, como propuesta que se acepta en el editor.
 
 ## No-goals
 
-- Opttia **no crea pedidos, no cobra, no toca inventario ni precios**. Solo agrega al carrito del navegador; el pedido nace en el checkout de siempre, que recalcula precios en el servidor.
-- No hay chat en vivo con asesores dentro del sitio (eso sigue en WhatsApp).
-- No hay colecciones nuevas en `katuq-db`: la conversación es dato propio de Opttia, en sus sesiones (como WhatsApp).
-- Los sitios v1 no cambian.
+- Opttia **no envía el pedido, no cobra y no toca inventario, productos ni precios**: los precios y la disponibilidad salen siempre de las herramientas. Que Opttia cree el pedido sin el clic del cliente, como el `pedidoDirecto` de WhatsApp, iría en otra propuesta con el diff aprobado.
+- Sin precios por cliente: el visitante es anónimo y ve los precios de la vitrina.
+- Sin chat en vivo con asesores dentro del sitio: el paso a una persona es por WhatsApp o por ticket.
 
 ## Riesgos
 
-- **Endpoint público sin login.** Lleva límite por visitante, por IP y un tope diario de turnos por comercio (costo de Bedrock), y responde 404 si el sitio no está publicado o la bandera está apagada.
-- **Inyección de instrucciones.** El agente solo tiene herramientas de lectura del catálogo del sitio y de carrito del navegador. No ve clientes, pedidos ni datos de otros visitantes.
-- **Módulos sensibles.** No se tocan pedidos, pagos, inventario ni consecutivos. Si más adelante se quisiera que Opttia cierre el pedido en el chat, va en otra propuesta, con el diff aprobado.
-- **Peso y CSP.** Hay que medir que la burbuja quede por debajo de 3 KB gz antes del primer toque; el chat solo habla con `back.katuq.com`, que ya está permitido.
+- **Endpoint público.** Se conservan el freno por visitante y el tope por tienda de D-469, más un tope de pasos de herramienta por mensaje (6). Cada paso del agente cuesta, así que hay que medirlo en Baudio antes de abrirlo.
+- **Inyección de instrucciones.** Las herramientas de lectura solo ven el catálogo del sitio. Crear un ticket es la única escritura y va con un límite por visitante. Opttia nunca ve clientes, pedidos ni otros visitantes.
+- **Módulos sensibles.** No se tocan pedidos, pagos, inventario ni consecutivos. Llenar el checkout es solo del navegador: el pedido nace igual que hoy.
+- **Tickets.** Crear tickets desde una página pública abre la puerta al spam. Lleva límite, correo o celular obligatorio y marca de origen «Sitio web».

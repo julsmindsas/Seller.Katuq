@@ -1,34 +1,41 @@
-# Diseño: Opttia en el sitio web
+# Diseño: Opttia en la tienda
 
-## Piezas
+## Cómo corre un mensaje
 
-| Capa | Dónde | Qué |
-|---|---|---|
-| Config | `sites/{id}.tema.opttia` (dato del sitio) + bandera `companies.featureFlags.opttiaEnSitio` | `{ activo, saludo, nombre, puede: { dudas, carrito, cotizacion, whatsapp } }` |
-| Render | `utils/sitioModulos/opttiaBurbuja.js` (nuevo módulo v2) | Burbuja + cargador diferido. Sin config activa no emite nada (X1) |
-| Script del chat | `utils/siteOpttiaChat.js`, servido aparte y cacheable | Panel, historial en `sessionStorage`, visitante anónimo (id aleatorio), llama al endpoint; aplica las acciones con `window.__kqTienda` (carrito existente) |
-| Endpoint | `POST /v1/sites/render/:slug/opttia/turno` (público, junto al render) | Valida sitio publicado + bandera + límites, arma el contexto y llama al ADK servidor a servidor (`X-Bot-Token`) |
-| Límites | `services/sites/opttiaSitioLimites.js` | Por visitante y por IP en memoria del proceso; tope diario por empresa en el contador existente de uso de Opttia |
-| ADK | `kai/adk_agent/channels/web/` + `endpoints/web_bot_endpoint.py` | Reusa el agente de `channels/whatsapp/agent.py` con el juego de herramientas «web»: buscar en el catálogo del sitio, ver ficha, proponer agregar al carrito, pasar a WhatsApp, dejar solicitud. Sin `cerrar_pedido` |
-| Editor | Panel «Opttia en la tienda» en el editor v2 (`sitio-editor`), base `_config-pagina.scss` | Interruptor, saludo, nombre, qué puede hacer; vista previa en el marco |
-| Opttia del Seller | herramienta de edición existente (`edit_katuq_site` / propuestas) | Sabe encender y configurar el bloque como propuesta |
+1. El navegador manda `{ visitante, texto, carrito }` a `POST /v1/sites/public/:slug/opttia` (al lado de `/asesor`).
+2. El backend valida que el sitio esté publicado, que Opttia esté encendido y los límites. Arma el contexto: capacidades del sitio, políticas, tono y preguntas frecuentes. Llama al ADK de servidor a servidor (`X-Bot-Token`, como el bot de WhatsApp).
+3. El ADK (`kai/adk_agent/channels/tienda/`) corre el agente con las herramientas del web MCP según las capacidades encendidas.
+   - **Las de catálogo** (`searchProducts`, `getProductDetails`, `getProductFilters`, `getDeliveryOptions`, `getPaymentMethods`): el ADK se las pide al backend, que responde con las mismas consultas públicas que ya usa el puente (catálogo vendible, ficha JSON).
+   - **Las de carrito y checkout:** se ejecutan **en el navegador**. El turno vuelve con `acciones` y el navegador las corre con el puente (`siteWebMcp.js`). Para eso se le agrega `window.__kqWebMcp.ejecutar(nombre, args)`, que también sirve sin `modelContext`. Después se reanuda el turno con los resultados, hasta 6 pasos.
+   - **Las de soporte:** `getStorePolicies`, `searchHelpCenter` (solo en sitios de Katuq) y `createTicket`. Corren en el backend.
+4. El precio, la foto y el nombre de cada tarjeta salen del backend. Un id que no esté en el sitio se descarta.
 
-## Contrato del turno
+## Configuración
 
-Navegador → back: `{ visitante, texto, carrito:[{cd,cantidad,variables}] }`
-Back → ADK: `{ company, sitioId, catalogoIds, politicas, tono, historialCorto, texto, carrito }`
-ADK → back → navegador: `{ respuesta, tarjetas:[{cd,nombre,precio,foto,url}], acciones:[{tipo:'agregar'|'whatsapp'|'solicitud', ...}] }`
+`sitio.contenido.tienda.opttia = { activo, nombre, saludo, puede: { asesorar, cerrarVenta, soporte, tickets, whatsapp }, preguntasFrecuentes: [{p, r}] }`
 
-El back revisa cada acción contra el catálogo del sitio antes de devolverla: un `cd` que no esté en el sitio se descarta. El precio que se muestra sale del back, nunca del modelo.
+- Se sanea con lista blanca y largos máximos.
+- `asesorKai: true` sin `opttia` se lee como `{ activo: true, puede: { asesorar: true } }`.
+
+## Tickets
+
+Los crea `services/soporte/crearTicket.js`, el único camino que existe, con `origen: "sitio-web"`, `sitioId`, el resumen y el contacto.
+
+- **Sitio de Katuq:** el ticket va a la mesa de Katuq.
+- **Sitio de un comercio:** el ticket es del comercio y lo ve en su mesa de ayuda (D-512). Sigue pendiente la decisión de Daniel: si esto va ahí o en una bandeja aparte.
+
+## Checkout lleno
+
+`beginCheckout` acepta `{ datos: { nombre, celular, correo, direccion, ciudad, entrega, pago } }`. El script de la tienda los pone en el formulario y abre el último paso. No cambia nada del servidor del pedido.
+
+## Widget
+
+- **Base:** el de D-469, con el diseño v2 (color de marca, plano, radios del tema).
+- **Peso:** el código del chat se carga al abrirlo.
+- **Accesibilidad:** foco visible y `aria-live` en las respuestas.
+- **Lugar:** encima de WhatsApp en celular y al lado en escritorio.
 
 ## Write-set
 
-- Ninguna escritura en `orders`, `inventory`, `products`, precios ni consecutivos.
-- Solo la solicitud de contacto, por el flujo de leads del sitio que ya existe, y el contador de uso.
-
-## Diseño visual
-
-- Botón y encabezado con el color de marca del sitio. Es la tienda del comercio, no una pantalla del Seller.
-- Plano, sin degradados.
-- Radios del tema del sitio.
-- Se ubica encima de la burbuja de WhatsApp en celular y al lado en escritorio, sin tapar el carrito.
+- Solo crea tickets y registra la métrica de uso.
+- Nada en `orders`, `inventory`, `products`, precios ni consecutivos.
