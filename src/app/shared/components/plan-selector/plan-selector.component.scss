@@ -64,7 +64,11 @@
     cursor: pointer;
     transition: all 0.2s;
     padding: 5px;
+    min-width: 40px;
+    min-height: 40px;
   }
+
+  .close-btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   
   .close-btn:hover {
     color: #7367F0;

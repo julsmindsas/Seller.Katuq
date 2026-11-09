@@ -2187,7 +2187,7 @@
                 <button type="button" class="dk-order" *ngFor="let order of dianTestOrders" [class.is-selected]="isDianTestOrderSelected(order)" (click)="toggleDianTestOrder(order)" [attr.aria-pressed]="isDianTestOrderSelected(order)">
                   <span class="dk-order__check"><i class="pi" [ngClass]="isDianTestOrderSelected(order) ? 'pi-check' : 'pi-plus'"></i></span>
                   <span class="dk-order__copy"><strong>{{ order.nroPedido || order.referencia || ('integrations.integrations.venta' | translate) }}</strong><small>{{ order.cliente?.nombres_completos || order.facturacion?.nombres || ('integrations.integrations.clienteDePrueba' | translate) }}</small></span>
-                  <b class="dk-amount">{{ (order.totalPedididoConDescuento || order.subtotal || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</b>
+                  <b class="dk-amount">{{ (order.totalPedididoConDescuento || order.subtotal || 0) | copMoneda }}</b>
                 </button>
               </div>
               <div class="dk-empty" *ngIf="!dianOrdersLoading && !dianTestOrders.length"><span class="dk-empty__icon"><i class="pi pi-shopping-bag"></i></span><strong>{{ 'integrations.integrations.noEncontramosVentasDisponibles' | translate }}</strong><span>{{ 'integrations.integrations.creaVentasDePruebaCon' | translate }}</span></div>

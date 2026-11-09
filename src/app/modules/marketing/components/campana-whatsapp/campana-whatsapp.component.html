@@ -329,17 +329,17 @@
       <div class="camp__card camp__cost" *ngIf="!envioTerminado">
         <h2 class="camp__card-title">Lo que te cuesta</h2>
         <div class="camp__cost-line">
-          <span>{{ seleccionados.length | number: '1.0-0' }} mensajes × {{ balance?.priceCOP || 80 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} cada uno</span>
-          <strong>{{ costoEstimado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <span>{{ seleccionados.length | number: '1.0-0' }} mensajes × {{ balance?.priceCOP || 80 | copMoneda }} cada uno</span>
+          <strong>{{ costoEstimado | copMoneda }}</strong>
         </div>
         <div class="camp__cost-line" [class.is-danger]="saldoInsuficiente">
           <span>Tu saldo</span>
-          <strong *ngIf="!loadingBalance">{{ balance ? (balance.balanceCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0') : 'No disponible' }}</strong>
+          <strong *ngIf="!loadingBalance">{{ balance ? (balance.balanceCOP | copMoneda) : 'No disponible' }}</strong>
           <strong *ngIf="loadingBalance"><i class="fa fa-spinner fa-spin"></i></strong>
         </div>
         <div class="camp__cost-line is-total" *ngIf="!saldoInsuficiente && balance">
           <span>Te quedarían</span>
-          <strong>{{ saldoDespues | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong>{{ saldoDespues | copMoneda }}</strong>
         </div>
         <div class="camp__warn" *ngIf="saldoInsuficiente">
           Saldo insuficiente. Recarga en <a routerLink="/notificaciones">Notificaciones → WhatsApp</a> o reduce la audiencia.
@@ -386,12 +386,12 @@
       </div>
       <div class="camp__footer-stat">
         <span class="camp__footer-label">Costo estimado</span>
-        <strong>{{ costoEstimado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        <strong>{{ costoEstimado | copMoneda }}</strong>
       </div>
       <div class="camp__footer-stat">
         <span class="camp__footer-label">Tu saldo</span>
         <strong [class.is-danger]="saldoInsuficiente">
-          {{ balance ? (balance.balanceCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '—' }}
+          {{ balance ? (balance.balanceCOP | copMoneda) : '—' }}
         </strong>
       </div>
     </div>

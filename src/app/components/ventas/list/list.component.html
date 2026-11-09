@@ -187,8 +187,8 @@
                                                  pTooltip="{{ 'Pedidos pendientes de iniciar producción' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-circle"></i>
-                                                <span class="metric-label-short">SP</span>
-                                                <span class="metric-label-full">Sin Prod.</span>
+                                                <span class="metric-label-short">Sin producir</span>
+                                                <span class="metric-label-full">Sin producir</span>
                                                 <span class="metric-badge">{{ getProcesoCount('SinProducir') }}</span>
                                             </div>
 
@@ -200,8 +200,8 @@
                                                  pTooltip="{{ 'Pedidos listos para despachar - Acción inmediata' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-box"></i>
-                                                <span class="metric-label-short">PD</span>
-                                                <span class="metric-label-full">P/ Desp.</span>
+                                                <span class="metric-label-short">Para despachar</span>
+                                                <span class="metric-label-full">Para despachar</span>
                                                 <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
                                             </div>
 
@@ -216,8 +216,8 @@
                                                  pTooltip="{{ 'Pedidos pendientes de pago - Requieren seguimiento' | translate }}"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-dollar"></i>
-                                                <span class="metric-label-short">PP</span>
-                                                <span class="metric-label-full">Pend. Pago</span>
+                                                <span class="metric-label-short">Pendiente de pago</span>
+                                                <span class="metric-label-full">Pendiente de pago</span>
                                                 <span class="metric-badge">{{ getPendientesPagoCount() }}</span>
                                             </div>
 

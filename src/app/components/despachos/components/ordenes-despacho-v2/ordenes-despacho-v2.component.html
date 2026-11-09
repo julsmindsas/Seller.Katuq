@@ -144,7 +144,7 @@
 
           <div class="cell col-total">
             <span class="cell-label">{{ 'Total a Cobrar' | translate }}:</span>
-            <span class="total-amount" [class.total-zero]="getFaltaPorPagarSum(order) <= 0">{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+            <span class="total-amount" [class.total-zero]="getFaltaPorPagarSum(order) <= 0">{{ getFaltaPorPagarSum(order) | copMoneda }}</span>
           </div>
           
           <div class="cell actions-cell">
@@ -223,7 +223,7 @@
                     </td>
                     <td>{{ formatDate(pedido.fechaEntrega) }}</td>
                     <td class="text-end">
-                      <strong class="text-success">{{ valorACobrarEnEntrega(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <strong class="text-success">{{ valorACobrarEnEntrega(pedido) | copMoneda }}</strong>
                       <!-- Ticket 1448: instrucción de cobro que calcula el servidor (solo con la bandera estadoCredito) -->
                       <div class="cobro-entrega" *ngIf="pedido.cobroEnEntrega?.texto" [ngClass]="'cobro-entrega--' + pedido.cobroEnEntrega.accion">{{ pedido.cobroEnEntrega.texto }}</div>
                     </td>
@@ -291,7 +291,7 @@
             </div>
             <div class="order-detail total">
               <i class="pi pi-dollar"></i>
-              <span>{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+              <span>{{ getFaltaPorPagarSum(order) | copMoneda }}</span>
             </div>
             
             <!-- Botón para expandir detalles -->
@@ -332,7 +332,7 @@
                       <small class="text-muted">{{ (pedido.envio?.direccionEntrega || 'N/A') | slice:0:30 }}<span *ngIf="(pedido.envio?.direccionEntrega || '').length > 30">...</span></small>
                     </td>
                     <td class="text-end">
-                      <strong class="text-success" style="font-size: 0.75rem;">{{ valorACobrarEnEntrega(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
+                      <strong class="text-success" style="font-size: 0.75rem;">{{ valorACobrarEnEntrega(pedido) | copMoneda }}</strong>
                       <div class="cobro-entrega" *ngIf="pedido.cobroEnEntrega?.texto" [ngClass]="'cobro-entrega--' + pedido.cobroEnEntrega.accion">{{ pedido.cobroEnEntrega.texto }}</div>
                       <div class="text-muted" style="font-size: 0.7rem;">{{ formatDate(pedido.fechaEntrega) }}</div>
                     </td>

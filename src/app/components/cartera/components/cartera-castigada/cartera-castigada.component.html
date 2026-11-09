@@ -11,7 +11,7 @@
   <ng-container *ngIf="data && !cargando && !error">
     <div class="cc-resumen" *ngIf="data.clientes.length">
       <div class="cc-resumen-etq">{{ 'cartera.castigada.total' | translate }}</div>
-      <div class="cc-resumen-val">{{ data.total | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cc-resumen-val">{{ data.total | copMoneda }}</div>
       <div class="cc-resumen-sub">{{ 'cartera.castigada.resumenPedidos' | translate:{ n: data.pedidos, c: data.clientes.length } }}</div>
     </div>
 
@@ -27,7 +27,7 @@
           <div class="cc-nombre">{{ c.nombre || '—' }}</div>
           <div class="cc-doc">{{ c.documento }}</div>
         </div>
-        <div class="cc-cliente-total">{{ c.total | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="cc-cliente-total">{{ c.total | copMoneda }}</div>
       </div>
       <div class="cc-tabla-caja">
         <table class="cc-tabla">
@@ -44,7 +44,7 @@
           <tbody>
             <tr *ngFor="let p of c.pedidos; trackBy: trackByPedido">
               <td class="cc-fuerte">{{ p.nroPedido || '—' }}</td>
-              <td class="cc-der cc-fuerte">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="cc-der cc-fuerte">{{ p.saldo | copMoneda }}</td>
               <td class="cc-motivo">{{ p.motivo }}</td>
               <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
               <td>{{ p.por }}</td>

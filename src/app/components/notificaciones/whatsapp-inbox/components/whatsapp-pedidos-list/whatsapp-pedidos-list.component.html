@@ -60,7 +60,7 @@
       <div class="wa-pedidos__carrito" *ngIf="s.carrito.length > 0">
         <span class="wa-pedidos__carrito-resumen">
           <i class="fa fa-shopping-cart" aria-hidden="true"></i>
-          {{ 'notificaciones.whatsapp.orders.cartSummary' | translate: { count: s.carrito.length, total: (s.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0") } }}
+          {{ 'notificaciones.whatsapp.orders.cartSummary' | translate: { count: s.carrito.length, total: (s.totalCarrito | copMoneda) } }}
         </span>
         <span class="wa-pedidos__carrito-detalle">
           <ng-container *ngFor="let l of s.carrito.slice(0, 3); let last = last">

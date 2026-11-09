@@ -86,7 +86,7 @@
                   </span> -->
                   {{ textoEstadoPedido(orden?.estadoProceso) }}
                 </td>
-                <td>{{ orden.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td>{{ orden.totalPedididoConDescuento | copMoneda }}</td>
                 <td>
                   <button pButton type="button" icon="pi pi-eye" class="p-button-rounded p-button-info p-button-sm mr-2"
                     (click)="verDetallePedido(orden)" pTooltip="Ver Detalle"></button>

@@ -176,12 +176,12 @@
           <span class="thread-detail__cart-qty">{{ linea.cantidad }}×</span>
           <span class="thread-detail__cart-name">{{ linea.nombre }}</span>
           <span class="thread-detail__cart-price">
-            {{ linea.precioUnitario * linea.cantidad | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            {{ linea.precioUnitario * linea.cantidad | copMoneda }}
           </span>
         </div>
         <div class="thread-detail__cart-total">
           <span>{{ 'notificaciones.whatsapp.detail.total' | translate }}</span>
-          <strong>{{ botState.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+          <strong>{{ botState.totalCarrito | copMoneda }}</strong>
         </div>
         <small class="thread-detail__cart-note" *ngIf="botState.modoSombra">
           {{ 'notificaciones.whatsapp.detail.shadowMode' | translate }}
@@ -217,7 +217,7 @@
         <span class="thread-detail__pedido-texto">
           {{ claveDelPedidoDelBot | translate: {
             numero: botState?.pedidoCreado?.nroPedido,
-            total: (botState?.pedidoCreado?.total | currency: "COP" : "symbol-narrow" : "1.0-0")
+            total: (botState?.pedidoCreado?.total | copMoneda)
           } }}
         </span>
         <a

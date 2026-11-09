@@ -104,12 +104,12 @@
         <ng-container *ngIf="!preview && !loading">
           <ng-container *ngIf="mode === 'manual' && !restored; else summaryEmpty">
             <dl class="summary-lines">
-              <div><dt>{{ 'facturacionElectronica.invoiceComposer.baseNeta' | translate }}</dt><dd>{{ liveTotals.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-              <div *ngIf="liveTotals.discount"><dt>{{ 'facturacionElectronica.invoiceComposer.descuentos' | translate }}</dt><dd class="is-green">− {{ liveTotals.discount | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-              <div><dt>{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</dt><dd>{{ liveTotals.tax | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
+              <div><dt>{{ 'facturacionElectronica.invoiceComposer.baseNeta' | translate }}</dt><dd>{{ liveTotals.subtotal | copMoneda }}</dd></div>
+              <div *ngIf="liveTotals.discount"><dt>{{ 'facturacionElectronica.invoiceComposer.descuentos' | translate }}</dt><dd class="is-green">− {{ liveTotals.discount | copMoneda }}</dd></div>
+              <div><dt>{{ 'facturacionElectronica.invoiceComposer.iva' | translate }}</dt><dd>{{ liveTotals.tax | copMoneda }}</dd></div>
             </dl>
             <div class="summary-total">
-              <div><span>{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</span><strong>{{ liveTotals.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div>
+              <div><span>{{ 'facturacionElectronica.invoiceComposer.total' | translate }}</span><strong>{{ liveTotals.total | copMoneda }}</strong></div>
               <small>{{ liveItemCount }} {{ liveItemCount === 1 ? ('facturacionElectronica.invoiceComposer.concepto' | translate) : ('facturacionElectronica.invoiceComposer.conceptos' | translate) }} {{ 'facturacionElectronica.invoiceComposer.proximoNumero' | translate:{nextNumber: nextNumber} }}</small>
               <small class="summary-total__obs" *ngIf="observations.trim()"><i class="pi pi-comment"></i> {{ 'facturacionElectronica.invoiceComposer.conObservacionesParaElCliente' | translate }}</small>
             </div>

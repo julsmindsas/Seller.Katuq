@@ -38,7 +38,7 @@
             <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
             <td>{{ p.factura || '—' }}</td>
             <td>{{ p.payDueDate ? (p.payDueDate | date:'dd/MM/yyyy') : '—' }}</td>
-            <td class="ca-der ca-fuerte">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der ca-fuerte">{{ p.saldo | copMoneda }}</td>
             <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
           </tr>
         </tbody>
@@ -49,14 +49,14 @@
 
     <ng-container *ngIf="vista && !cargandoVista">
       <div class="ca-totales">
-        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalAdeudado' | translate }}</div><div class="ca-total-val ca-acento">{{ vista.estado.totalAdeudado | currency:'COP':'symbol-narrow':'1.0-0' }}</div></div>
-        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalVencido' | translate }}</div><div class="ca-total-val" [class.ca-rojo]="vista.estado.totalVencido > 0">{{ vista.estado.totalVencido | currency:'COP':'symbol-narrow':'1.0-0' }}</div></div>
+        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalAdeudado' | translate }}</div><div class="ca-total-val ca-acento">{{ vista.estado.totalAdeudado | copMoneda }}</div></div>
+        <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.totalVencido' | translate }}</div><div class="ca-total-val" [class.ca-rojo]="vista.estado.totalVencido > 0">{{ vista.estado.totalVencido | copMoneda }}</div></div>
         <div class="ca-total"><div class="ca-total-etq">{{ 'cartera.acciones.proximoVencimiento' | translate }}</div>
-          <div class="ca-total-val ca-total-chico">{{ vista.estado.proximoVencimiento ? ((vista.estado.proximoVencimiento.saldo | currency:'COP':'symbol-narrow':'1.0-0') + ' · ' + (vista.estado.proximoVencimiento.fecha | date:'dd/MM/yyyy')) : '—' }}</div></div>
+          <div class="ca-total-val ca-total-chico">{{ vista.estado.proximoVencimiento ? ((vista.estado.proximoVencimiento.saldo | copMoneda) + ' · ' + (vista.estado.proximoVencimiento.fecha | date:'dd/MM/yyyy')) : '—' }}</div></div>
       </div>
 
       <div class="ca-aviso ca-aviso-alerta" *ngIf="hayPagoEnRevision">
-        {{ 'cartera.acciones.pagoEnRevision' | translate:{ valor: (vista.estado.totalEnRevision | currency:'COP':'symbol-narrow':'1.0-0') } }}
+        {{ 'cartera.acciones.pagoEnRevision' | translate:{ valor: (vista.estado.totalEnRevision | copMoneda) } }}
       </div>
 
       <div class="ca-aviso ca-aviso-alerta" *ngIf="vista.sinCuentas">
@@ -126,13 +126,13 @@
   <ng-container *ngIf="modo === 'compromiso'">
     <div class="ca-nota">{{ 'cartera.acciones.compromisoAyuda' | translate }}</div>
     <div class="ca-aviso ca-aviso-info" *ngIf="cliente?.cobro?.compromiso as c">
-      {{ 'cartera.acciones.compromisoActual' | translate:{ valor: (c.valor | currency:'COP':'symbol-narrow':'1.0-0'), fecha: (c.fecha | date:'dd/MM/yyyy') } }}
+      {{ 'cartera.acciones.compromisoActual' | translate:{ valor: (c.valor | copMoneda), fecha: (c.fecha | date:'dd/MM/yyyy') } }}
     </div>
     <label class="ca-etiqueta" for="ca-comp-fecha">{{ 'cartera.acciones.compromisoFecha' | translate }}</label>
     <input id="ca-comp-fecha" type="date" class="ca-input" [min]="hoy" [(ngModel)]="compromiso.fecha" name="compFecha">
     <label class="ca-etiqueta ca-mt" for="ca-comp-valor">{{ 'cartera.acciones.compromisoValor' | translate }}</label>
     <input id="ca-comp-valor" type="number" class="ca-input" min="1" [max]="saldoCliente" [(ngModel)]="compromiso.valor" name="compValor">
-    <div class="ca-nota">{{ 'cartera.acciones.saldoDelCliente' | translate:{ saldo: (saldoCliente | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <div class="ca-nota">{{ 'cartera.acciones.saldoDelCliente' | translate:{ saldo: (saldoCliente | copMoneda) } }}</div>
     <label class="ca-etiqueta ca-mt" for="ca-comp-nota">{{ 'cartera.acciones.nota' | translate }}</label>
     <textarea id="ca-comp-nota" class="ca-input" rows="2" maxlength="600" [(ngModel)]="compromiso.nota" name="compNota"></textarea>
   </ng-container>
@@ -181,7 +181,7 @@
           {{ 'cartera.acciones.efectoVencimiento' | translate:{ n: vistaCredito.pedidosCambianVencimiento } }}
           <span *ngIf="vistaCredito.dejanDeVencer" class="ca-efecto-linea">{{ 'cartera.acciones.efectoDejanDeVencer' | translate:{ n: vistaCredito.dejanDeVencer } }}</span>
           <span *ngIf="vistaCredito.empiezanAVencer" class="ca-efecto-linea">{{ 'cartera.acciones.efectoEmpiezanAVencer' | translate:{ n: vistaCredito.empiezanAVencer } }}</span>
-          <span *ngIf="vistaCredito.saldoQueCambiaDeRango" class="ca-efecto-linea">{{ 'cartera.acciones.efectoRango' | translate:{ saldo: (vistaCredito.saldoQueCambiaDeRango | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+          <span *ngIf="vistaCredito.saldoQueCambiaDeRango" class="ca-efecto-linea">{{ 'cartera.acciones.efectoRango' | translate:{ saldo: (vistaCredito.saldoQueCambiaDeRango | copMoneda) } }}</span>
         </div>
         <div *ngIf="vistaCredito.anterior.creditLimit !== vistaCredito.nuevo.creditLimit">
           {{ vistaCredito.cupoUsadoPctDespues === null ? ('cartera.acciones.efectoSinCupo' | translate) : ('cartera.acciones.efectoCupo' | translate:{ pct: vistaCredito.cupoUsadoPctDespues }) }}
@@ -208,13 +208,13 @@
           <tr *ngFor="let p of pedidos; trackBy: trackByOrder">
             <td class="ca-col-check"><input type="checkbox" [checked]="seleccion.has(p.orderId)" (change)="alternarPedido(p.orderId)" [attr.aria-label]="p.nroPedido"></td>
             <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
-            <td class="ca-der ca-fuerte">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der ca-fuerte">{{ p.saldo | copMoneda }}</td>
             <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="ca-nota">{{ 'cartera.acciones.castigoTotal' | translate:{ saldo: (saldoElegido | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <div class="ca-nota">{{ 'cartera.acciones.castigoTotal' | translate:{ saldo: (saldoElegido | copMoneda) } }}</div>
     <label class="ca-etiqueta ca-mt" for="ca-cas-motivo">{{ 'cartera.acciones.castigoMotivo' | translate }} *</label>
     <textarea id="ca-cas-motivo" class="ca-input" rows="3" maxlength="400" [(ngModel)]="motivoCastigo" name="casMotivo" [placeholder]="'cartera.acciones.castigoMotivoEj' | translate" required></textarea>
   </ng-container>
@@ -229,7 +229,7 @@
           <tr *ngFor="let p of pedidos; trackBy: trackByOrder">
             <td class="ca-col-check"><input type="radio" name="pedidoPago" [value]="p.orderId" [checked]="pedidoPago === p.orderId" (change)="elegirPedidoPago(p.orderId)" [attr.aria-label]="p.nroPedido"></td>
             <td class="ca-fuerte">{{ p.nroPedido || '—' }}</td>
-            <td class="ca-der">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="ca-der">{{ p.saldo | copMoneda }}</td>
             <td class="ca-der" [class.ca-rojo]="p.diasVencido > 0">{{ p.diasVencido > 0 ? (p.diasVencido + ' d') : ('cartera.acciones.alDia' | translate) }}</td>
           </tr>
         </tbody>
@@ -237,7 +237,7 @@
     </div>
     <ng-container *ngIf="pedidoPagoActual">
       <div class="ca-aviso ca-aviso-alerta" role="status" *ngIf="pagoEnRevisionActual > 0">
-        {{ 'cartera.acciones.pagoYaEnRevision' | translate:{ valor: (pagoEnRevisionActual | currency:'COP':'symbol-narrow':'1.0-0') } }}
+        {{ 'cartera.acciones.pagoYaEnRevision' | translate:{ valor: (pagoEnRevisionActual | copMoneda) } }}
       </div>
       <div class="ca-dos">
         <div>

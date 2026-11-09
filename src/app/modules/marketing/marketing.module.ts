@@ -1,3 +1,4 @@
+import { CopMonedaPipe } from '../../shared/pipes/cop-moneda.pipe';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -79,7 +80,7 @@ const routes: Routes = [
     SuscriptoresCorreoComponent,
     PautaEmbudoComponent,
   ],
-  imports: [
+  imports: [CopMonedaPipe, 
     CommonModule,
     FormsModule,
     TableModule,

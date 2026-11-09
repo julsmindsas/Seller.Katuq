@@ -177,7 +177,7 @@
                                     <div class="fw-semibold">{{ producto.crearProducto?.titulo }}</div>
                                     <small class="text-muted">
                                         Ref: {{ producto.identificacion?.referencia || 'N/A' }} |
-                                        {{ producto.precio?.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                        {{ producto.precio?.precioUnitarioConIva | copMoneda }}
                                     </small>
                                 </div>
                             </div>
@@ -256,7 +256,7 @@
                             <!-- Precio -->
                             <td class="text-end">
                                 <span class="fw-bold texto-acento">
-                                    {{ item.producto.precio?.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' || 'N/A' }}
+                                    {{ item.producto.precio?.precioUnitarioConIva | copMoneda }}
                                 </span>
                             </td>
                             <!-- Ticket 1522: bodega de la línea; vacía = la del ajuste -->

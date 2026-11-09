@@ -36,7 +36,7 @@
       <div class="mkt__kpi-icon is-accent"><i class="fa fa-usd" aria-hidden="true"></i></div>
       <ng-container *ngIf="!loadingCore && kpis && !errorCore; else kpiEmpty">
         <span class="mkt__kpi-label">Ventas del período</span>
-        <span class="mkt__kpi-value">{{ kpis.ventasTotales | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="mkt__kpi-value">{{ kpis.ventasTotales | copMoneda }}</span>
         <span class="mkt__kpi-delta" [class.is-down]="kpis.crecimientoVentas < 0" [class.is-up]="kpis.crecimientoVentas >= 0">
           <i class="fa" [ngClass]="kpis.crecimientoVentas >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" aria-hidden="true"></i>
           {{ (kpis.crecimientoVentas >= 0 ? kpis.crecimientoVentas : -kpis.crecimientoVentas) }}%
@@ -59,7 +59,7 @@
       <div class="mkt__kpi-icon is-orange"><i class="fa fa-line-chart" aria-hidden="true"></i></div>
       <ng-container *ngIf="!loadingCore && kpis && !errorCore; else kpiEmpty">
         <span class="mkt__kpi-label">Ticket promedio</span>
-        <span class="mkt__kpi-value">{{ kpis.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="mkt__kpi-value">{{ kpis.ticketPromedio | copMoneda }}</span>
         <span class="mkt__kpi-hint">lo que gasta cada cliente</span>
       </ng-container>
     </div>
@@ -100,12 +100,12 @@
         <div class="mkt__canal" *ngFor="let c of canales; let i = index">
           <div class="mkt__canal-top">
             <span class="mkt__canal-name">{{ c.canal }}</span>
-            <span class="mkt__canal-value">{{ c.ventas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+            <span class="mkt__canal-value">{{ c.ventas | copMoneda }}</span>
           </div>
           <div class="mkt__canal-track">
             <div class="mkt__canal-bar" [style.width.%]="canalesPct[i]" [class.is-alt]="i > 0"></div>
           </div>
-          <span class="mkt__canal-meta">{{ c.pedidos }} pedido{{ c.pedidos === 1 ? '' : 's' }} · ticket {{ c.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+          <span class="mkt__canal-meta">{{ c.pedidos }} pedido{{ c.pedidos === 1 ? '' : 's' }} · ticket {{ c.ticketPromedio | copMoneda }}</span>
         </div>
       </div>
     </section>
@@ -159,7 +159,7 @@
             <span class="mkt__cartera-label">Valor del pipeline</span>
             <span class="mkt__cartera-hint">si cierras todo lo abierto</span>
           </div>
-          <strong class="mkt__cartera-value is-accent">{{ crmStats.totalValue | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong class="mkt__cartera-value is-accent">{{ crmStats.totalValue | copMoneda }}</strong>
         </div>
         <div class="mkt__cartera-row">
           <div class="mkt__cartera-info">

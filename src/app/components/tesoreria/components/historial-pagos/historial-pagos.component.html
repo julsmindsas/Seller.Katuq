@@ -42,13 +42,13 @@
        [attr.aria-label]="'tesoreria.historialPagos.recaudadoPorMetodo' | translate">
     <div class="tk-metodos-titulo">
       <strong>{{ 'tesoreria.historialPagos.recaudadoPorMetodo' | translate }}</strong>
-      <span class="tk-metodos-total">{{ resumen.montoAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}
+      <span class="tk-metodos-total">{{ resumen.montoAprobado | copMoneda }}
         · {{ resumen.cantidadAprobada | number }} {{ 'tesoreria.historialPagos.pagosAprobados' | translate }}</span>
     </div>
     <div class="tk-metodos-lista">
       <div class="tk-metodo-item" *ngFor="let m of resumen.porMetodo">
         <span class="tk-metodo-nombre">{{ m.formaPago }}</span>
-        <span class="tk-metodo-monto">{{ m.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <span class="tk-metodo-monto">{{ m.monto | copMoneda }}</span>
         <span class="tk-metodo-cant">{{ m.cantidad | number }} {{ 'tesoreria.historialPagos.pagosAbrev' | translate }}</span>
       </div>
     </div>
@@ -103,7 +103,7 @@
           <small class="tk-hist-marca tk-hist-marca--banco" *ngIf="item?.verificadoEnBanco"
                  [title]="item?.verificadoEnBanco?.por || ''">{{ 'tesoreria.comprobante.verificadoEnBanco' | translate }}</small>
         </td>
-        <td class="text-end tk-money">{{ item?.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        <td class="text-end tk-money">{{ item?.valor | copMoneda }}</td>
         <td class="tk-cell-date">{{ (item?.fechaTransaccion || item?.createdAt) | date:'dd/MM/yyyy' }}</td>
         <td class="text-center">
           <span class="tk-badge" [ngClass]="meta(item?.estadoVerificacion).badgeClass">

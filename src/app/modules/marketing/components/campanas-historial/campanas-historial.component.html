@@ -88,7 +88,7 @@
     <div class="col-6 col-lg-3">
       <div class="stat-card accent-warning">
         <span class="stat-label">Ventas atribuidas</span>
-        <span class="stat-value">{{ totalVentasAtribuidas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="stat-value">{{ totalVentasAtribuidas | copMoneda }}</span>
         <span class="stat-sub">pedidos de contactos alcanzados (30 días)</span>
       </div>
     </div>
@@ -124,12 +124,12 @@
             <td class="ch-tenue">{{ c.templateName || '—' }}</td>
             <td class="text-end">{{ c.destinatarios }}</td>
             <td class="text-end">{{ c.enviados }}<span *ngIf="c.mocks > 0" class="ch-tenue ch-prueba"> ({{ c.mocks }} prueba)</span></td>
-            <td class="text-end">{{ c.costoCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+            <td class="text-end">{{ c.costoCOP | copMoneda }}</td>
             <td class="text-end">{{ c.convertidos }}</td>
             <td class="text-end">
               <span class="badge ch-tasa" [class.bg-success]="c.tasaConversion >= 10" [class.bg-secondary]="c.tasaConversion < 10">{{ c.tasaConversion }}%</span>
             </td>
-            <td class="text-end">{{ c.ventasAtribuidasCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+            <td class="text-end">{{ c.ventasAtribuidasCOP | copMoneda }}</td>
           </tr>
         </tbody>
       </table>

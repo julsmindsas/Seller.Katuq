@@ -36,7 +36,7 @@
           <span class="contact-panel__stat-icon is-green"><i class="fa fa-usd" aria-hidden="true"></i></span>
           <div class="contact-panel__stat-info">
             <span class="contact-panel__stat-label">{{ 'notificaciones.whatsapp.contact.soldTotal' | translate }}</span>
-            <strong>{{ totalVendido | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+            <strong>{{ totalVendido | copMoneda }}</strong>
           </div>
         </div>
         <div class="contact-panel__stat">

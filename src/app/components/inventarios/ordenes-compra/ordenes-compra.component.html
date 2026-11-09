@@ -105,7 +105,7 @@
             <td class="num"><input class="kc-input" type="number" min="1" [(ngModel)]="linea.cantidad" /></td>
             <td class="num"><input class="kc-input" type="number" min="0" [(ngModel)]="linea.costoUnitario" /></td>
             <td class="num"><input class="kc-input kc-input--corto" type="number" min="0" max="100" [(ngModel)]="linea.ivaPct" /></td>
-            <td class="num">{{ (linea.cantidad * linea.costoUnitario) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="num">{{ (linea.cantidad * linea.costoUnitario) | copMoneda }}</td>
             <td class="num">
               <button class="oc-quitar" (click)="quitarLinea(linea.productoId)"><i class="pi pi-times"></i></button>
             </td>
@@ -115,16 +115,16 @@
     </div>
 
     <div class="oc-desglose" *ngIf="lineasNuevas.length > 0">
-      <span>Mercancía <strong>{{ subtotalNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
-      <span *ngIf="ivaNuevo > 0">IVA <strong>{{ ivaNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
-      <span *ngIf="adicionalesNuevos > 0">Flete y otros <strong>{{ adicionalesNuevos | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+      <span>Mercancía <strong>{{ subtotalNuevo | copMoneda }}</strong></span>
+      <span *ngIf="ivaNuevo > 0">IVA <strong>{{ ivaNuevo | copMoneda }}</strong></span>
+      <span *ngIf="adicionalesNuevos > 0">Flete y otros <strong>{{ adicionalesNuevos | copMoneda }}</strong></span>
       <span class="oc-desglose-nota" *ngIf="adicionalesNuevos > 0">
         El flete se reparte entre los productos según su valor y entra al costo. El IVA no: es descontable.
       </span>
     </div>
 
     <div class="oc-acciones">
-      <strong class="oc-total">Total: {{ totalNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <strong class="oc-total">Total: {{ totalNuevo | copMoneda }}</strong>
       <button class="kc-btn" (click)="crearOrden()" [disabled]="guardando">Crear orden</button>
       <button class="kc-btn kc-btn--ghost" (click)="cancelarCreacion()">Cancelar</button>
     </div>
@@ -165,7 +165,7 @@
             <span><i class="pi pi-home"></i> {{ nombreBodega(o.idBodega) }}</span>
             <span>{{ o.lineas?.length || 0 }} productos</span>
             <span *ngIf="o.cuenta?.porPagar">
-              falta pagar {{ o.cuenta?.porPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+              falta pagar {{ o.cuenta?.porPagar | copMoneda }}
             </span>
             <span *ngIf="o.observaciones">{{ o.observaciones }}</span>
           </div>
@@ -174,7 +174,7 @@
         <div class="kc-row__fin">
           <div class="oc-plata">
             <span class="kc-label">Total</span>
-            <span class="kc-row__valor">{{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="kc-row__valor">{{ o.total | copMoneda }}</span>
           </div>
           <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="abrirOrden(o.id); $event.stopPropagation()">
             Abrir
@@ -193,7 +193,7 @@
         </span>
         <div>
           <h2>{{ o.proveedor?.nombre }}</h2>
-          <span class="oc-sub">{{ nombreBodega(o.idBodega) }} · {{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="oc-sub">{{ nombreBodega(o.idBodega) }} · {{ o.total | copMoneda }}</span>
         </div>
       </div>
       <div class="oc-detalle-acciones">

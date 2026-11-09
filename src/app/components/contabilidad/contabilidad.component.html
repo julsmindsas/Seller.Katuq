@@ -87,7 +87,7 @@
         <span class="ct-kpi__icon"><i class="pi pi-pencil"></i></span>
       </button>
       <button type="button" class="ct-kpi" [ngClass]="balanceOk ? 'ct-kpi--green' : 'ct-kpi--red'" (click)="selectTab('balance')">
-        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.cuadreDelPeriodo' | translate }}</span><strong>{{ balanceOk ? ('contabilidad.contabilidad.correcto' | translate) : ((balance?.difference || 0) | currency:'COP':'symbol-narrow':'1.0-0') }}</strong><small>{{ 'contabilidad.contabilidad.debitosYCreditos' | translate:{coinciden: (balanceOk ? ('contabilidad.contabilidad.coinciden' | translate) : ('contabilidad.contabilidad.noCoinciden' | translate))} }}</small></div>
+        <div><span class="ct-kpi__label">{{ 'contabilidad.contabilidad.cuadreDelPeriodo' | translate }}</span><strong>{{ balanceOk ? ('contabilidad.contabilidad.correcto' | translate) : ((balance?.difference || 0) | copMoneda) }}</strong><small>{{ 'contabilidad.contabilidad.debitosYCreditos' | translate:{coinciden: (balanceOk ? ('contabilidad.contabilidad.coinciden' | translate) : ('contabilidad.contabilidad.noCoinciden' | translate))} }}</small></div>
         <span class="ct-kpi__icon"><i class="pi" [ngClass]="balanceOk ? 'pi-check' : 'pi-exclamation-triangle'"></i></span>
       </button>
     </div>
@@ -130,7 +130,7 @@
           <span class="ct-recent__icon" [class.ct-recent__icon--manual]="entry.sourceType === 'manual'"><i class="pi" [ngClass]="entry.sourceType === 'manual' ? 'pi-pencil' : 'pi-file'"></i></span>
           <div class="ct-recent__copy"><strong>{{ entry.description }}</strong><small>{{ entry.date }} · {{ sourceLabel(entry.sourceType) }}</small></div>
           <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'">{{ entry.status === 'posted' ? ('contabilidad.contabilidad.contabilizado' | translate) : ('contabilidad.contabilidad.borrador' | translate) }}</span>
-          <span class="ct-amount">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="ct-amount">{{ entry.totalDebit | copMoneda }}</span>
         </button>
       </article>
     </section>
@@ -179,9 +179,9 @@
         <div class="ct-manual__foot">
           <button type="button" class="ct-btn ct-btn--soft" (click)="addLine()"><i class="pi pi-plus"></i> {{ 'contabilidad.contabilidad.agregarLinea' | translate }}</button>
           <div class="ct-totals">
-            <span><small>{{ 'contabilidad.contabilidad.debitos' | translate }}</small><b>{{ manualTotals.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
-            <span><small>{{ 'contabilidad.contabilidad.creditos' | translate }}</small><b>{{ manualTotals.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
-            <span [class.is-bad]="manualTotals.difference !== 0" [class.is-ok]="manualTotals.difference === 0 && manualTotals.debit > 0"><small>{{ 'contabilidad.contabilidad.diferencia' | translate }}</small><b>{{ manualTotals.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</b></span>
+            <span><small>{{ 'contabilidad.contabilidad.debitos' | translate }}</small><b>{{ manualTotals.debit | copMoneda }}</b></span>
+            <span><small>{{ 'contabilidad.contabilidad.creditos' | translate }}</small><b>{{ manualTotals.credit | copMoneda }}</b></span>
+            <span [class.is-bad]="manualTotals.difference !== 0" [class.is-ok]="manualTotals.difference === 0 && manualTotals.debit > 0"><small>{{ 'contabilidad.contabilidad.diferencia' | translate }}</small><b>{{ manualTotals.difference | copMoneda }}</b></span>
           </div>
           <button type="button" class="ct-btn ct-btn--primary" (click)="saveManualEntry()" [disabled]="saving || manualTotals.difference !== 0 || manualTotals.debit <= 0"><i class="pi pi-check"></i> {{ 'contabilidad.contabilidad.contabilizarComprobante' | translate }}</button>
         </div>
@@ -202,7 +202,7 @@
               <small><span class="ct-mono">{{ entry.number }}</span> · {{ entry.date }} · {{ sourceLabel(entry.sourceType) }}<ng-container *ngIf="entry.documentNumber"> · {{ entry.documentNumber }}</ng-container></small>
             </div>
             <span class="ct-pill" [ngClass]="entry.status === 'draft' ? 'ct-pill--warning' : 'ct-pill--success'"><i class="pi" [ngClass]="entry.status === 'draft' ? 'pi-clock' : 'pi-check'"></i>{{ entry.status === 'posted' ? ('contabilidad.contabilidad.contabilizado' | translate) : ('contabilidad.contabilidad.borrador' | translate) }}</span>
-            <span class="ct-amount">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="ct-amount">{{ entry.totalDebit | copMoneda }}</span>
             <i class="pi pi-chevron-down ct-entry__chev"></i>
           </button>
           <div class="ct-entry__detail" *ngIf="expandedEntryId === entry.id">
@@ -212,11 +212,11 @@
                 <tr *ngFor="let line of entry.lines">
                   <td><span class="ct-mono ct-mono--strong">{{ line.accountCode }}</span> <span class="ct-dim-ink">{{ line.accountName }}</span></td>
                   <td class="ct-dim">{{ line.description || '—' }}</td>
-                  <td class="text-end ct-amount">{{ line.debit ? (line.debit | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
-                  <td class="text-end ct-amount">{{ line.credit ? (line.credit | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
+                  <td class="text-end ct-amount">{{ line.debit ? (line.debit | copMoneda) : '—' }}</td>
+                  <td class="text-end ct-amount">{{ line.credit ? (line.credit | copMoneda) : '—' }}</td>
                 </tr>
               </tbody>
-              <tfoot><tr><td colspan="2">{{ 'contabilidad.contabilidad.total' | translate }}</td><td class="text-end">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ entry.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tfoot>
+              <tfoot><tr><td colspan="2">{{ 'contabilidad.contabilidad.total' | translate }}</td><td class="text-end">{{ entry.totalDebit | copMoneda }}</td><td class="text-end">{{ entry.totalCredit | copMoneda }}</td></tr></tfoot>
             </table>
           </div>
         </article>
@@ -253,17 +253,17 @@
             <tr *ngFor="let row of balance?.rows">
               <td><span class="ct-mono ct-mono--strong">{{ row.accountCode }}</span></td>
               <td class="ct-dim-ink">{{ row.accountName }}</td>
-              <td class="text-end ct-amount ct-amount--soft">{{ row.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="text-end ct-amount ct-amount--soft">{{ row.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="text-end ct-amount">{{ row.balance | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="text-end ct-amount ct-amount--soft">{{ row.debit | copMoneda }}</td>
+              <td class="text-end ct-amount ct-amount--soft">{{ row.credit | copMoneda }}</td>
+              <td class="text-end ct-amount">{{ row.balance | copMoneda }}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr>
               <td colspan="2">{{ 'contabilidad.contabilidad.totales' | translate }}</td>
-              <td class="text-end">{{ balance?.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="text-end">{{ balance?.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-              <td class="text-end" [class.ct-red]="!balanceOk">{{ 'contabilidad.contabilidad.diferencia2' | translate:{difference: (balance?.difference | currency:'COP':'symbol-narrow':'1.0-0')} }}</td>
+              <td class="text-end">{{ balance?.totalDebit | copMoneda }}</td>
+              <td class="text-end">{{ balance?.totalCredit | copMoneda }}</td>
+              <td class="text-end" [class.ct-red]="!balanceOk">{{ 'contabilidad.contabilidad.diferencia2' | translate:{difference: (balance?.difference | copMoneda)} }}</td>
             </tr>
           </tfoot>
         </table>

@@ -78,7 +78,7 @@
         pButton
         type="button"
         icon="pi pi-trash"
-        class="cfg-btn cfg-btn--peligro clear-button"
+        class="cfg-btn cfg-btn--peligro clear-button" [attr.aria-label]="'importador.mobileFileUpload.eliminarArchivo' | translate"
         (click)="clearFile()"
         [disabled]="disabled"
         [pTooltip]="'importador.mobileFileUpload.eliminarArchivo' | translate"

@@ -87,7 +87,7 @@
 .act-badge {
   background: var(--kc-accent-wash);
   color: var(--kc-accent);
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 999px;
@@ -96,7 +96,7 @@
 }
 
 .act-linea2 {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--kc-muted);
   font-weight: 600;
   margin-top: 1px;
@@ -149,8 +149,8 @@
 }
 
 .act-cerrar {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: transparent;
   border: none;
@@ -165,6 +165,8 @@
     background: var(--kc-accent-wash);
     color: var(--kc-accent);
   }
+
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 }
 
 // ------------------------------------------------------------------- notas
@@ -205,7 +207,7 @@
 }
 
 .act-notas-fecha {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--kc-muted2);
   white-space: nowrap;
@@ -218,7 +220,7 @@
 }
 
 .act-tag {
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 800;
   padding: 4px 8px;
   border-radius: 6px;

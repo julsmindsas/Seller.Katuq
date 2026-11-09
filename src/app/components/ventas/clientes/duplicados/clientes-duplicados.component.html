@@ -65,7 +65,7 @@
       <span class="dupl-grupo__clave" *ngIf="g.motivo === 'DOCUMENTO'">{{ g.clave }}</span>
       <span class="dupl-grupo__resumen">
         {{ 'ventas.clientesDuplicados.resumenGrupo' | translate: { fichas: g.totalFichas, pedidos: g.totalPedidos } }}
-        · {{ g.totalSaldo | currency:'COP':'symbol-narrow':'1.0-0' }}
+        · {{ g.totalSaldo | copMoneda }}
       </span>
       <button type="button" class="cfg-btn cfg-btn--sec dupl-unir" *ngIf="g.fichas.length > 1 && !fusionAbiertaEn(g)" (click)="iniciarFusion(g)">
         <i class="pi pi-link" aria-hidden="true"></i>
@@ -97,11 +97,11 @@
       <div class="dupl-previa" *ngIf="f.vista as v">
         <p class="dupl-previa__titulo">{{ 'ventas.clientesDuplicados.fusion.previaTitulo' | translate }}</p>
         <p class="dupl-previa__pedidos">
-          {{ 'ventas.clientesDuplicados.fusion.pedidosQuedan' | translate: { n: v.resumen.pedidos, saldo: (v.resumen.saldo | currency:'COP':'symbol-narrow':'1.0-0') } }}
+          {{ 'ventas.clientesDuplicados.fusion.pedidosQuedan' | translate: { n: v.resumen.pedidos, saldo: (v.resumen.saldo | copMoneda) } }}
           <span class="dupl-previa__parcial" *ngIf="v.pedidosParcial">{{ 'ventas.clientesDuplicados.parcial' | translate }}</span>
         </p>
         <p class="dupl-previa__pedidos" *ngIf="v.resumen.pedidosSinFicha">
-          {{ 'ventas.clientesDuplicados.fusion.pedidosSinFicha' | translate: { n: v.resumen.pedidosSinFicha, saldo: (v.resumen.saldoSinFicha | currency:'COP':'symbol-narrow':'1.0-0') } }}
+          {{ 'ventas.clientesDuplicados.fusion.pedidosSinFicha' | translate: { n: v.resumen.pedidosSinFicha, saldo: (v.resumen.saldoSinFicha | copMoneda) } }}
         </p>
         <ul class="dupl-previa__cifras">
           <li class="dupl-cifra">
@@ -185,7 +185,7 @@
         </div>
         <div class="dupl-ficha__dato">
           <span class="dupl-ficha__etiqueta">{{ 'ventas.clientesDuplicados.colSaldo' | translate }}</span>
-          <span class="dupl-ficha__valor">{{ f.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="dupl-ficha__valor">{{ f.saldo | copMoneda }}</span>
         </div>
         <button type="button" class="cfg-btn cfg-btn--sec dupl-ficha__abrir" (click)="verFicha(f.cd)">
           <i class="pi pi-external-link" aria-hidden="true"></i>

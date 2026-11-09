@@ -15,7 +15,7 @@
     </header>
 
     <dl class="ag-datos">
-      <div><dt>{{ 'agenda.citaForm.servicio' | translate }}</dt><dd>{{ servicios }}<ng-container *ngIf="total > 0"> · {{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container></dd></div>
+      <div><dt>{{ 'agenda.citaForm.servicio' | translate }}</dt><dd>{{ servicios }}<ng-container *ngIf="total > 0"> · {{ total | copMoneda }}</ng-container></dd></div>
       <div><dt>{{ 'agenda.citaPanel.atiende' | translate }}</dt><dd>{{ cita.staffName || ('agenda.citaPanel.sinAsignar' | translate) }}</dd></div>
       <div *ngIf="cita.customer?.phone"><dt>{{ 'agenda.citaForm.celular' | translate }}</dt><dd>{{ cita.customer.phone }}</dd></div>
       <div *ngIf="cita.customer?.email"><dt>{{ 'agenda.citaPanel.correo' | translate }}</dt><dd>{{ cita.customer.email }}</dd></div>

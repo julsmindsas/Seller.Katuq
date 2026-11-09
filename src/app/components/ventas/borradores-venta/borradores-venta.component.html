@@ -55,7 +55,7 @@
           <span class="bv-muted" *ngIf="b.resumen?.documento">Doc. {{ b.resumen.documento }}</span>
         </div>
         <div class="bv-col bv-col--num"><span class="bv-dato">{{ b.resumen?.lineas || 0 }}</span></div>
-        <div class="bv-col bv-col--num"><span class="bv-dato">{{ (b.resumen?.totalEstimado || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+        <div class="bv-col bv-col--num"><span class="bv-dato">{{ (b.resumen?.totalEstimado || 0) | copMoneda }}</span></div>
         <div class="bv-col">
           <span class="bv-dato">{{ b.ownerName || b.ownerEmail }}</span>
           <span class="bv-muted">{{ b.updatedAt | date:'d MMM, h:mm a' }}</span>
