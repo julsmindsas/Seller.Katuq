@@ -3069,7 +3069,7 @@
                 <label class="cupon-campo">
                   <span class="cupon-campo__nombre">Tipo de descuento</span>
                   <select [(ngModel)]="c.tipo" (ngModelChange)="marcarSucio()">
-                    <option value="porcentaje">% de descuento</option>
+                    <option value="porcentaje">Porcentaje</option>
                     <option value="monto">Pesos fijos</option>
                   </select>
                   <small>Porcentaje (hasta 90 %) o pesos.</small>
@@ -3164,6 +3164,7 @@
                 <label class="campo-mini" *ngIf="p.tipo === 'volumen'"><span>Desde (unidades)</span>
                   <input type="number" min="2" max="100" [(ngModel)]="p.desdeUnidades" (ngModelChange)="marcarSucio()" /></label>
               </div>
+              <span class="repetible__rotulo">A qué productos aplica</span>
               <select [(ngModel)]="p.alcance.tipo" (ngModelChange)="cambiarAlcancePromo(p)">
                 <option value="todo">En toda la tienda</option>
                 <option value="categorias">En unas categorías</option>

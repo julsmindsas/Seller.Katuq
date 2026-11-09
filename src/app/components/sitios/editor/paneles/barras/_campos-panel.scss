@@ -55,6 +55,22 @@ input[type="datetime-local"] {
   &::-webkit-calendar-picker-indicator:hover { opacity: 1; background: var(--kb-accent-wash); }
 }
 
+// Desplegables: todos con la caja Katuq y la flecha propia, también los que no viven dentro de `.campo` (cupones,
+// promociones, paneles). La flecha va con `:not(#_)` porque `kb-input` trae `background` abreviado y la borraría.
+select {
+  @include kb-input;
+  cursor: pointer;
+}
+select:not([multiple]):not(#_) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a7a3bd' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+}
+
 // `:not(#_)` sube la especificidad: las reglas de caja de texto de las listas (`.repetible input`) no deben vestir la casilla.
 input[type="checkbox"]:not(#_) {
   appearance: none;
