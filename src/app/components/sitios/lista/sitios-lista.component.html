@@ -4,10 +4,12 @@
     <header class="cabecera">
       <div class="cabecera__texto">
         <h1>{{ soloTipo === 'catalogo' ? 'Catálogos' : soloTipo === 'landing' ? 'Landings' : 'Mis sitios' }}</h1>
-        <p *ngIf="soloTipo !== 'catalogo'">Publica una tienda o una landing con tus productos. Eliges una plantilla y listo — no
+        <p *ngIf="!soloTipo">Publica tu tienda en línea con tus productos. Eliges una plantilla y listo — no
           necesitas saber de diseño.</p>
+        <p *ngIf="soloTipo === 'landing'">Páginas de una sola oferta para captar clientes: eliges una plantilla, publicas
+          y los datos de quien se interesa te llegan a tu bandeja.</p>
         <p *ngIf="soloTipo === 'catalogo'">Catálogos para compartir por WhatsApp: tus productos con precio y disponibilidad,
-          sin carrito. Te piden por mensaje.</p>
+          sin carrito. Tu cliente consulta y te escribe por mensaje.</p>
       </div>
       <div class="cabecera__acciones">
         <button class="btn-fantasma" (click)="mostrandoMarca = true">
