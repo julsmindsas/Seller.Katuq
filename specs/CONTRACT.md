@@ -13674,3 +13674,11 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Plantillas de WooCommerce:** el seed corrió en la copia de pruebas: 0 creadas y 3 actualizadas. «Recibir pedidos» pasa de 4 a 3 pasos (D-570) y «Empujar stock» queda en sombra. En producción siguen las del 21 de mayo; correrlo allá espera el sí de Daniel.
 - **Pruebas:** backend en `0ba079f2` y front con el código vivo de producción (`3009ebc8`, 2026.11.09.3). Las dos direcciones de pruebas llaman solo al backend de pruebas y muestran el aviso «KATUQ DE PRUEBAS · los datos se reinician cada noche».
 - **No verificado:** el ingreso con usuario en el navegador. Las tiendas publicadas todavía no se ven con estilos en pruebas.
+
+### 2026-11-09 (tarde) — Publicado el backend `65ad9854`
+
+- **Pedido:** Daniel pidió publicar el backend. Producción ya estaba en `c256f8a4`, que otra sesión había publicado con DIAN 1515 y D-686. Faltaban 3 cambios: WhatsApp directo con Meta, que sale apagado (D-704, `69c539db`), y la mezcla de `feature/tickets-aws-claude-1` (`7324acbb`): Opttia responde en el sitio con los kits, los planos y las fichas (D-686).
+- **Antes:** mezcla sin conflictos, sin paquetes nuevos, sintaxis de 20 archivos sin errores, y `tests/messaging/lines` y `messagingManager.contract` en verde. El único `require` sin resolver está dentro de un comentario de `cronService.js` y ya estaba en producción.
+- **Despliegue:** fijado con `git fetch` + `git merge --ff-only 65ad9854`, `npm install` y `pm2 restart katuq-api`.
+- **Verificado:** `katuq-api` en línea y sin errores en el registro; `/v1/platform/me` y `/v1/messaging/lines` responden 401 sin sesión.
+- **No verificado:** Opttia contestando en una tienda publicada.
