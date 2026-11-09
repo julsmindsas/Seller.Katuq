@@ -26,6 +26,59 @@
   }
 }
 
+// ── Controles nativos con el formato Katuq ───────────────────────────────────
+// Fecha, hora, correo y contraseña salían con el aspecto crudo del navegador, y las casillas también.
+// Igual que en `sitio-editor.component.scss`; va antes de `.campo` para que lo más específico siga ganando.
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input:not([type]) {
+  @include kb-input;
+  min-width: 0;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  min-height: 46px;
+  color-scheme: light;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    padding: 2px;
+    border-radius: 6px;
+  }
+  &::-webkit-calendar-picker-indicator:hover { opacity: 1; background: var(--kb-accent-wash); }
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 6px;
+  background: #fff center / 12px 12px no-repeat;
+  vertical-align: -4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { border-color: var(--kb-accent); }
+  &:checked {
+    border-color: var(--kb-accent);
+    background-color: var(--kb-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
 .campo {
   margin-bottom: 14px;
 

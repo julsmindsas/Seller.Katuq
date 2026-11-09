@@ -711,6 +711,59 @@
 .favicon-fila { display: flex; align-items: center; gap: 10px; }
 .favicon-muestra { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--kb-line); background: #fff; }
 
+// ── Controles nativos con el formato Katuq ───────────────────────────────────
+// Fecha, hora, correo y contraseña salían con el aspecto crudo del navegador, y las casillas también.
+// Va antes de «Campos» para que cualquier regla más específica de una sección siga ganando.
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input:not([type]) {
+  @include kb-input;
+  min-width: 0;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  min-height: 46px;
+  color-scheme: light;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    padding: 2px;
+    border-radius: 6px;
+  }
+  &::-webkit-calendar-picker-indicator:hover { opacity: 1; background: var(--kb-accent-wash); }
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 6px;
+  background: #fff center / 12px 12px no-repeat;
+  vertical-align: -4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { border-color: var(--kb-accent); }
+  &:checked {
+    border-color: var(--kb-accent);
+    background-color: var(--kb-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
 // ── Campos ───────────────────────────────────────────────────────────────────
 .campo {
   margin-bottom: 16px;
@@ -1360,7 +1413,7 @@
 // ── Parejas de letra ─────────────────────────────────────────────────────────
 .parejas {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 9px;
   margin-bottom: 12px;
 }
@@ -1369,6 +1422,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
   gap: 7px;
   border: 1.5px solid var(--kb-line-4);
   background: #fff;
@@ -1396,6 +1451,8 @@
     align-items: baseline;
     gap: 6px;
     min-height: 26px;
+    width: 100%;
+    min-width: 0;
   }
 
   &__titulo {
@@ -1407,6 +1464,8 @@
   &__cuerpo {
     font-size: 12px;
     color: var(--kb-muted);
+    flex: 1;
+    min-width: 0;
   }
 
   &__nombre {
@@ -2977,7 +3036,7 @@
   cursor: pointer;
 
   input {
-    width: auto;
+    width: 18px;
     margin: 0;
     accent-color: var(--kb-accent);
   }
@@ -3026,6 +3085,7 @@
   // Ticket 1220: un input en una grilla no se encoge por debajo de su ancho
   // natural; era lo que empujaba el panel a lo ancho.
   > *, input, select { min-width: 0; max-width: 100%; }
+  > input[type="text"], > input[type="number"], > select { @include kb-input; }
 }
 
 // Ticket 1253: historial de versiones.
@@ -3144,7 +3204,7 @@
   letter-spacing: normal;
   text-transform: none;
 
-  input { width: auto; margin-top: 2px; }
+  input { width: 18px; margin-top: 2px; }
 }
 
 .dias-agenda {
@@ -3987,7 +4047,7 @@ input.is-error { border-color: #b42318 !important; }
   color: var(--kb-muted);
 }
 
-// Antes y después de la propuesta de KAI.
+// Antes y después de la propuesta de Opttia.
 .ia-decision {
   display: grid;
   gap: 10px;

@@ -13683,3 +13683,11 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Despliegue:** fijado con `git fetch` + `git merge --ff-only 65ad9854`, `npm install` y `pm2 restart katuq-api`.
 - **Verificado:** `katuq-api` en línea y sin errores en el registro; `/v1/platform/me` y `/v1/messaging/lines` responden 401 sin sesión.
 - **No verificado:** Opttia contestando en una tienda publicada.
+
+### 2026-11-09 (noche) — D-687: el constructor de sitios habla de Opttia y sus controles siguen el formato Katuq (aws-claude-1)
+
+- **Pedido de Daniel:** quitar del constructor lo que tenga que ver con KAI y dejar Opttia, y mejorar los controles genéricos (cajas de texto, listas).
+- **D-687. Solo presentación y textos.** En el editor, la lista de sitios y las métricas, «KAI» ahora dice «Opttia» (también en los cuatro idiomas). Se retiró del editor el interruptor «KAI, asesor de compra» (`tienda.asesorKai`, ticket 1241): Opttia en el sitio (D-686) lo reemplaza. Antes de quitarlo se revisó la copia de desarrollo: de 97 sitios, ninguno lo tenía encendido. Los campos guardados no cambian (`tienda.kai`, `tienda.asesorKai`), ni las claves de traducción, ni el backend.
+- **Controles:** fecha, hora, fecha y hora, correo, contraseña y las cajas sin tipo usan `kb-input`, igual que el resto del editor y de los paneles (`_campos-panel.scss`). Las casillas tienen el estilo Katuq (18 px, acento al marcar, foco visible). El buscador de «Productos que se cotizan» ya no sale con el aspecto crudo del navegador.
+- **Pendiente (no hecho):** el asesor viejo sigue en el backend (`POST /public/:slug/asesor`, `services/sites/asesorKai`, `asesorKaiHtml`); retirarlo es un cambio aparte. Las clases `kq-kai*` del widget público las comparte Opttia y se quedan.
+- **Pruebas:** build de producción sin errores; capturas del editor a 1440 y 390 px, antes y después, sin scroll horizontal ni errores de JavaScript; 0 degradados en `components/sitios`.

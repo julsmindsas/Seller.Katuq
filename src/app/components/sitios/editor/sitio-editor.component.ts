@@ -2373,7 +2373,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Encabezado", donde: "Estilo", panel: "diseno", grupo: "encabezado", claves: "logo centro tamaño menu mayusculas" },
     { texto: "Medidas", donde: "Estilo", panel: "diseno", grupo: "medidas", claves: "ancho espacio espaciado tamaño letra titulos" },
     { texto: "Letra", donde: "Estilo", panel: "diseno", grupo: "letra", claves: "fuente tipografia" },
-    { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "kai propuesta diseño" },
+    { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "opttia kai propuesta diseño ia" },
     { texto: "Diseño nuevo", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "sistema visual estructura linea premium nuevo" },
     // Cierre de N1: el control «Títulos de sección» (tema.titulosSeccion) también se encuentra al buscar.
     { texto: "Títulos de sección", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "titulos grandes tamaño seccion premium" },
@@ -2461,7 +2461,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
-  /** Ticket 1242: autonomía de KAI, pausa y reporte semanal (sitios viejos llegan sin esto). */
+  /** Ticket 1242: autonomía de Opttia, pausa y reporte semanal (sitios viejos llegan sin esto). */
   get kaiTienda(): { autonomia: string; pausado: boolean; reporteSemanal: boolean } | null {
     const t: any = this.contenido && this.contenido.tienda;
     if (!t) return null;
@@ -2715,7 +2715,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.panel = panel as any;
     if (panel === "tienda") this.cargarBodegas();
     // Ticket 1247: la pestaña Tienda va en acordeón; se abre el grupo del campo.
-    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "KAI administra tu web", "campo-opttia": "Opttia en tu sitio", "campo-cotizables": "Cómo te pagan" };
+    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "Opttia administra tu web", "campo-opttia": "Opttia en tu sitio", "campo-cotizables": "Cómo te pagan" };
     if (panel === "tienda" && grupoDeCampo[campoId]) this.tiendaAbierto = grupoDeCampo[campoId];
     // Espera a que la pestaña se pinte para ubicar el campo.
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -4610,7 +4610,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private fotoAntesDeIA = "";
 
   /**
-   * Pide a KAI un diseño con los parámetros actuales (marca, sector, objetivo,
+   * Pide a Opttia un diseño con los parámetros actuales (marca, sector, objetivo,
    * secciones, categorías) y lo aplica sobre el contenido. Todo queda en el
    * historial: Ctrl+Z o "Volver a como estaba" lo deshacen.
    */
@@ -4639,7 +4639,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       next: (res) => {
         this.disenandoIA = false;
         if (!res || !res.success || !res.data) {
-          this.toastr.warning((res && (res as any).message) || "KAI no devolvió una propuesta.");
+          this.toastr.warning((res && (res as any).message) || "Opttia no devolvió una propuesta.");
           soltarSiEraLaPrimera();
           return;
         }
@@ -4656,13 +4656,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private aplicarPropuestaIA(p: PropuestaDiseno): void {
     if (!this.contenido) return;
     const c: any = this.contenido;
-    // Revisión 2026-10-18: se anota qué tocó KAI para que «Antes» y «Descartar»
+    // Revisión 2026-10-18: se anota qué tocó Opttia para que «Antes» y «Descartar»
     // reviertan solo eso (y no Tienda, cupones ni otros textos editados después).
     const tocado = this.tocadoPorIA;
     if (p.tema && Object.keys(p.tema).length) {
       c.tema = { ...c.tema, ...p.tema };
       Object.keys(p.tema).forEach((k) => tocado.tema.add(k));
-      // Si KAI prende o apaga «Las secciones aparecen al bajar» y la página ya tiene un nivel de efectos elegido, el
+      // Si Opttia prende o apaga «Las secciones aparecen al bajar» y la página ya tiene un nivel de efectos elegido, el
       // nivel lo sigue (apagar = «Ninguno», prender desde «Ninguno» = «Sutil»), igual que con el interruptor. Queda
       // anotado para que «Volver a como estaba» también lo devuelva.
       const anim = (p.tema as any).animaciones;
@@ -4699,12 +4699,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.seleccionado = -1;
     this.razonesIA = p.razones || [];
     this.marcarSucio();
-    this.toastr.success("KAI propone un diseño: compáralo con el de antes y decide si lo dejas.");
+    this.toastr.success("Opttia propone un diseño: compáralo con el de antes y decide si lo dejas.");
   }
 
   /**
    * «Descartar» (y «Quedarme con como estaba» mirando el antes). Revisión
-   * 2026-10-18: revierte solo lo que tocó KAI; lo editado después en Tienda,
+   * 2026-10-18: revierte solo lo que tocó Opttia; lo editado después en Tienda,
    * cupones u otros bloques se queda.
    */
   volverAntesDeIA(): void {
@@ -4716,11 +4716,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
-  // Ticket 1227: la propuesta de KAI como antes y después.
+  // Ticket 1227: la propuesta de Opttia como antes y después.
   viendoAntesIA = false;
   private fotoPropuestaIA = "";
 
-  // Revisión 2026-10-18: lo que KAI cambió desde la foto del antes (se acumula con «Proponer otro»).
+  // Revisión 2026-10-18: lo que Opttia cambió desde la foto del antes (se acumula con «Proponer otro»).
   private tocadoPorIA = this.nadaTocadoPorIA();
 
   private nadaTocadoPorIA() {
@@ -4737,7 +4737,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /**
-   * Copia de `base` con lo que tocó KAI devuelto a como estaba en la foto del
+   * Copia de `base` con lo que tocó Opttia devuelto a como estaba en la foto del
    * antes: tema, orden y visibilidad de bloques, portada y anuncio.
    */
   private conAntesDeIA(base: any): any {
@@ -4789,13 +4789,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.recalcularPrevia();
   }
 
-  /** Deja el diseño de KAI: desde aquí se guarda como cualquier cambio (y queda en el historial). */
+  /** Deja el diseño de Opttia: desde aquí se guarda como cualquier cambio (y queda en el historial). */
   aceptarPropuestaIA(): void {
     if (!this.fotoAntesDeIA) return;
     if (this.viendoAntesIA) this.alternarAntesIA();
     this.cerrarPropuestaIA();
     this.marcarSucio();
-    this.toastr.success("Listo, quedó el diseño de KAI.");
+    this.toastr.success("Listo, quedó el diseño de Opttia.");
   }
 
   get hayPropuestaIA(): boolean {
@@ -5950,7 +5950,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   marcarSucio(): void {
     // Ticket 1227: editar mientras se mira el «antes» es quedarse con el antes
-    // (y su cambio): la propuesta de KAI se descarta en vez de pisar lo editado.
+    // (y su cambio): la propuesta de Opttia se descarta en vez de pisar lo editado.
     if (this.viendoAntesIA) this.cerrarPropuestaIA();
     this.recalcularSucio();
     this.recalcularPrevia();
