@@ -13624,7 +13624,35 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Ya firme, no se repite:** la verificación de negocio y de acceso como proveedor de tecnología (25-ago), la revisión anual de uso de datos y la encuesta de tratamiento de datos.
 - **Sin cambios en pedidos, inventario ni consecutivos. Sin colecciones nuevas.**
 - **Abierto:** si el modo celular está disponible en Colombia (tarea 1.4); y si la cuenta y el número de Julsmind quedaron a nombre de Julsmind o de Kapso (tarea 1.1).
-- **Sigue:** aprobar el diseño y las tareas, y después implementar.
+- **Aprobado e implementado (9-nov, Daniel: «ya ok, haz la conexión de lo propuesto»)**, apagado:
+  - backend `69c539db`: provider, webhook, pasos, cobro, plantillas, script de ajustes y bandera;
+  - front `7257961c`: tarjeta de números con los dos modos, «Reintentar» y plantillas.
+- **Desvíos:**
+  - la llave y el PIN van en la subcolección `messaging_lines/{id}/privado/meta`, no en la línea;
+  - las plantillas se crean desde la tarjeta del número; el asistente de campañas sigue con Kapso;
+  - el historial del celular entra solo si es de los últimos 30 días.
+- **Arreglo de paso:** confirmar un número fallaba desde la pantalla, porque el front manda `{provider, params}` y el servidor leía los campos sueltos. Ahora acepta los dos formatos.
+- **Pruebas:**
+  - `test:messaging` 13/13 (golden de Kapso igual), más outbound, bot y plantillas;
+  - nuevas locales (D-566): proveedor 12, salida 3, cobro 4 y webhook 6;
+  - front: tsc sin errores y build de producción OK.
+- **Falta:**
+  - configurar Meta (producto WhatsApp, `config_id` y suscripción del webhook);
+  - `config/meta_whatsapp` con el script;
+  - la bandera en Julsmind y FLORECER;
+  - la prueba con números reales;
+  - los videos y la solicitud.
+
+### 2026-11-09 — D-705: las propuestas y la documentación nuevas no se suben a git
+- **Pedido:** Daniel, 9-nov: «las propuestas y toda la documentación no se sube, más métela al gitignore». Escogió dejar en git lo ya subido (como D-566) y el contrato en git por ahora.
+- **Qué decide:**
+  - el `.gitignore` bloquea lo nuevo de `openspec/changes/`, `openspec/specs/`, `specs/` (menos `CONTRACT.md` y `constitution.md`), `docs/` y los `.md` nuevos de la raíz (menos las guías de agentes y el README);
+  - lo ya versionado sigue en git y se puede actualizar;
+  - nada de `git add -f` con un documento.
+- **Regla en `AGENTS.md`**, sección «Documentación fuera de git».
+- **Aplicado:** se sacó de git la propuesta `openspec/changes/whatsapp-directo-meta/` (D-704), que se había subido en `aec99999`. Sigue en la copia local.
+- **Queda en el historial:** lo que ya se subió sigue visible en el historial de GitHub; no se reescribió.
+- **No aplica todavía** al backend ni a kai.
 
 ### 2026-11-09 — D-686: Opttia atiende en el sitio del comercio (aws-claude-1)
 
@@ -13640,3 +13668,18 @@ El detalle con archivo y línea está en `proposal.md`.
   - **Pruebas (fuera de git, D-566):** X1 270 de 270 páginas iguales; suites de sitios sin fallas nuevas; operación `opttia` 6 de 6; navegador a 1440 y 390 con el modelo real sobre la copia `katuq_dev` (productos, lista de precios, carrito, pago, solicitud simulada, tono de marca, archivos y negativa a entregar documentos internos); panel del editor 11 de 11 a 1440 y 390; `tsc` y build de producción sin errores.
   - **Sigue:** publicar back y front juntos cuando Daniel lo diga.
   - **Adenda 9-nov (back 7324acbb): responde con todo lo publicado.** Pedido de Daniel: que conteste sobre los kits y las recomendaciones de los planos. `searchSiteContent` ahora lee también los kits del bloque `plano` (piezas, dónde va cada una y por qué, versiones), las tarjetas de solución con piezas y la ficha curada de cada producto (`tienda.fichas`). Las piezas salen con nombre y precio de vitrina; el total del kit solo si está completo (el kit no se vende incompleto). No se lee lo oculto, los marcadores entre corchetes ni, en un sitio v1, lo que solo pinta el diseño nuevo. La herramienta queda disponible también cuando el agente solo asesora. Solo lectura; sin colecciones ni consultas nuevas sobre colecciones grandes (lee por id hasta 16 productos). Pruebas: 136 suites de sitios igual que antes; conversación real en `katuq_dev` con un sitio de Baudio (total del kit exacto). Sin publicar.
+
+### 2026-11-09 — El servidor de pruebas y app.katuq.com quedan en la versión de producción, como entrada de pruebas
+
+- **Pedido:** Daniel quería revisar el sitio de pruebas y pidió publicar app.katuq.com. Queda como entrada de pruebas, con lo que se cierra el pendiente «Republicar o apagar app.katuq.com». El detalle técnico está en el repo del backend (`local/aws/objetivo/frontend.md`).
+- **Plantillas de WooCommerce:** el seed corrió en la copia de pruebas: 0 creadas y 3 actualizadas. «Recibir pedidos» pasa de 4 a 3 pasos (D-570) y «Empujar stock» queda en sombra. En producción siguen las del 21 de mayo; correrlo allá espera el sí de Daniel.
+- **Pruebas:** backend en `0ba079f2` y front con el código vivo de producción (`3009ebc8`, 2026.11.09.3). Las dos direcciones de pruebas llaman solo al backend de pruebas y muestran el aviso «KATUQ DE PRUEBAS · los datos se reinician cada noche».
+- **No verificado:** el ingreso con usuario en el navegador. Las tiendas publicadas todavía no se ven con estilos en pruebas.
+
+### 2026-11-09 (tarde) — Publicado el backend `65ad9854`
+
+- **Pedido:** Daniel pidió publicar el backend. Producción ya estaba en `c256f8a4`, que otra sesión había publicado con DIAN 1515 y D-686. Faltaban 3 cambios: WhatsApp directo con Meta, que sale apagado (D-704, `69c539db`), y la mezcla de `feature/tickets-aws-claude-1` (`7324acbb`): Opttia responde en el sitio con los kits, los planos y las fichas (D-686).
+- **Antes:** mezcla sin conflictos, sin paquetes nuevos, sintaxis de 20 archivos sin errores, y `tests/messaging/lines` y `messagingManager.contract` en verde. El único `require` sin resolver está dentro de un comentario de `cronService.js` y ya estaba en producción.
+- **Despliegue:** fijado con `git fetch` + `git merge --ff-only 65ad9854`, `npm install` y `pm2 restart katuq-api`.
+- **Verificado:** `katuq-api` en línea y sin errores en el registro; `/v1/platform/me` y `/v1/messaging/lines` responden 401 sin sesión.
+- **No verificado:** Opttia contestando en una tienda publicada.

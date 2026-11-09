@@ -9,7 +9,7 @@
              (keyup.enter)="onPrecioConfirm()"
              aria-label="Precio base sin IVA">
       <ng-template #baseFija>
-        <span class="lin-fijo">{{ resuelta.sinIva | currency:'USD':'symbol':'1.0-0' }}</span>
+        <span class="lin-fijo">${{ resuelta.sinIva | number:'1.0-0':'es-CO' }}</span>
       </ng-template>
     </label>
     <label class="lin-campo lin-iva">
@@ -27,7 +27,7 @@
     </label>
   </div>
   <div class="lin-desglose">
-    <span class="lin-texto">+ {{ resuelta.ivaUnitarioNeto | currency:'USD':'symbol':'1.0-0' }} IVA = {{ resuelta.conIvaUnitarioNeto | currency:'USD':'symbol':'1.0-0' }}</span>
+    <span class="lin-texto">+ ${{ resuelta.ivaUnitarioNeto | number:'1.0-0':'es-CO' }} IVA = ${{ resuelta.conIvaUnitarioNeto | number:'1.0-0':'es-CO' }}</span>
     <button *ngIf="editada" type="button" class="lin-restaurar" (click)="restaurar()">Restaurar</button>
   </div>
 </div>

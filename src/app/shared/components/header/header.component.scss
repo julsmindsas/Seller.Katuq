@@ -65,6 +65,10 @@
 
     @media (max-width: 575.98px) {
       .nav-right .nav-menus { gap: 4px; }
+      // Ticket 1539: en 390 px el logo/nombre del comercio quedaba en «Al…».
+      // No se encoge por debajo de 88 px y el selector de idioma deja solo la bandera.
+      .header-logos-section { flex-shrink: 0 !important; min-width: 88px; max-width: 46%; }
+      .nav-right .nav-menus > li.language-nav ::ng-deep .lang-txt { display: none; }
     }
 
     @media (max-width: 767.98px) {

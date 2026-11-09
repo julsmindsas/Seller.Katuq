@@ -19,7 +19,7 @@
   <!-- Total a cobrar: el número que manda -->
   <div class="cp-total">
     <span class="km-amount-label">Total a cobrar</span>
-    <span class="km-amount-value">${{ totalAmount | number: '1.0-0' }}</span>
+    <span class="km-amount-value">${{ totalAmount | number:'1.0-0':'es-CO' }}</span>
   </div>
 
   <!-- Monto entregado -->
@@ -38,7 +38,7 @@
       Exacto
     </button>
     <button type="button" class="cp-quick-btn" *ngFor="let b of billetes" (click)="establecerRecibido(b)">
-      ${{ b | number: '1.0-0' }}
+      ${{ b | number:'1.0-0':'es-CO' }}
     </button>
   </div>
 
@@ -46,7 +46,7 @@
   <div class="cp-change" [class.is-short]="amountPaid < totalAmount">
     <span class="cp-change-label">{{ amountPaid < totalAmount ? 'Falta' : 'Cambio' }}</span>
     <span class="cp-change-value">
-      ${{ (amountPaid < totalAmount ? (totalAmount - amountPaid) : change) | number: '1.0-0' }}
+      ${{ (amountPaid < totalAmount ? (totalAmount - amountPaid) : change) | number:'1.0-0':'es-CO' }}
     </span>
   </div>
 </div>

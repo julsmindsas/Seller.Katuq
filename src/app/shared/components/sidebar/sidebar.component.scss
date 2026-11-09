@@ -1506,9 +1506,14 @@
     box-shadow: 0 30px 80px -20px rgba(28, 26, 43, .45);
 
     // En móvil "collapsed" = drawer cerrado (fuera de pantalla)
+    // Ticket 1540: a 390 px quedaba una franja de ~16 px a la vista. Además de sacarlo con el transform, se
+    // oculta del todo (visibility tras la animación de salida) y no recibe toques.
     &.collapsed {
       transform: translateX(calc(-100% - 24px));
       margin: 10px 0 10px 10px;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform .3s cubic-bezier(.4, 0, .2, 1), visibility 0s linear .3s;
     }
 
   }

@@ -1,18 +1,18 @@
 // IA de módulos. Tema canónico, plano. Spans con color propio (trampa `span.ng-star-inserted`);
 // ningún nombre de clase contiene "p-" (trampa `[class*="p-"]`).
-$accent: #5F3FE0;
-$ink: #211F3A;
-$muted: #8f8bab;
+$accent: var(--ds-accent-ink);
+$ink: var(--ds-ink);
+$muted: var(--ds-muted);
 
-.mi-ico { background: #efe9ff; color: $accent; }
+.mi-ico { background: var(--ds-accent-soft); color: $accent; }
 
 .mi-barra {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  background: #fff;
-  border: 1px solid #ececf4;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
   border-radius: 16px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -24,8 +24,8 @@ $muted: #8f8bab;
 .mi-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 14px 18px 4px; }
 
 .mi-stat {
-  background: #faf9fe;
-  border: 1px solid #eeecf7;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-line);
   border-radius: 12px;
   padding: 10px 12px;
   display: flex;
@@ -33,9 +33,9 @@ $muted: #8f8bab;
   gap: 2px;
 
   strong { font-size: 17px; font-weight: 800; color: $accent; }
-  strong.is-danger { color: #D64545; }
-  strong.is-warning { color: #D9820A; }
-  strong.is-success { color: #1E874B; }
+  strong.is-danger { color: var(--ds-err); }
+  strong.is-warning { color: var(--ds-warn); }
+  strong.is-success { color: var(--ds-ok); }
 }
 
 .mi-small { font-size: 12px; color: $muted; font-weight: 700; }
@@ -43,7 +43,7 @@ $muted: #8f8bab;
 .mi-opttia {
   margin: 10px 18px 0;
   padding: 10px 12px;
-  border: 1px solid #d9cffb;
+  border: 1px solid var(--ds-line-strong);
   border-radius: 12px;
 
   .mi-texto { color: $ink; font-size: 13.5px; letter-spacing: normal; }
@@ -61,7 +61,7 @@ $muted: #8f8bab;
   flex-direction: column;
   gap: 1px;
   padding: 8px 0;
-  border-bottom: 1px solid #f1f0f7;
+  border-bottom: 1px solid var(--ds-line-soft);
 
   &:last-of-type { border-bottom: 0; }
 }
@@ -69,7 +69,7 @@ $muted: #8f8bab;
 .mi-item__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .mi-item__name { color: $ink; font-size: 13.5px; font-weight: 700; }
 .mi-item__meta { color: $muted; font-size: 12px; letter-spacing: normal; }
-.mi-item__why { color: #4b4868; font-size: 12.5px; letter-spacing: normal; }
+.mi-item__why { color: var(--ds-body); font-size: 12.5px; letter-spacing: normal; }
 .mi-wa { text-decoration: none; border: 0; cursor: pointer; }
 .mi-nowrap { flex-wrap: nowrap; flex-shrink: 0; }
 .mi-cita { font-style: italic; }

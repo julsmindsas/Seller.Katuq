@@ -47,7 +47,7 @@
           <span class="cat-suggest-ref">{{ s?.identificacion?.referencia }}</span>
         </span>
         <span class="cat-suggest-right">
-          <span class="cat-suggest-price">${{ s.precio?.precioUnitarioConIva | number: '1.0-0' }}</span>
+          <span class="cat-suggest-price">${{ s.precio?.precioUnitarioConIva | number:'1.0-0':'es-CO' }}</span>
           <span class="cat-suggest-stock"
                 [class.is-out]="esInventariable(s) && stockSugerencia(s) <= 0"
                 [class.is-low]="esInventariable(s) && stockSugerencia(s) > 0 && stockSugerencia(s) <= 10">
@@ -155,7 +155,7 @@
                lado del stepper). -->
           <div class="cat-card-foot">
             <div class="cat-card-priceline">
-              <span class="cat-card-price">${{ product.precio?.precioUnitarioConIva | number: '1.0-0' }}</span>
+              <span class="cat-card-price">${{ product.precio?.precioUnitarioConIva | number:'1.0-0':'es-CO' }}</span>
               <div class="cat-qty">
                 <button type="button" class="cat-qty-btn" (click)="updateQuantity(-1, product)" aria-label="Quitar uno">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -246,7 +246,7 @@
         <div class="scan-last-ref">{{ ultimoEscaneado?.identificacion?.referencia }}</div>
       </div>
       <div class="scan-last-right">
-        <div class="scan-last-price">${{ ultimoEscaneado.precio?.precioUnitarioConIva | number: '1.0-0' }}</div>
+        <div class="scan-last-price">${{ ultimoEscaneado.precio?.precioUnitarioConIva | number:'1.0-0':'es-CO' }}</div>
         <div class="scan-last-qty">× {{ ultimoEscaneadoCantidad }}</div>
       </div>
     </div>
@@ -279,7 +279,7 @@
               <td class="scan-td-ref">{{ item?.identificacion?.referencia }}</td>
               <td class="scan-td-name">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</td>
               <td class="scan-td-num"><span class="scan-qty">×{{ item.cantidad }}</span></td>
-              <td class="scan-td-num scan-td-total">${{ totalLinea(item) | number: '1.0-0' }}</td>
+              <td class="scan-td-num scan-td-total">${{ totalLinea(item) | number:'1.0-0':'es-CO' }}</td>
             </tr>
           </tbody>
         </table>

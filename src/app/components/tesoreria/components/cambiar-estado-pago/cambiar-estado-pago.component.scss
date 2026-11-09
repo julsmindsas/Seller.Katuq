@@ -39,7 +39,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.75rem 0.5rem;
-  background: #fff;
+  background: var(--kc-surface, #fff);
   border: 1px solid $cfg-chip-border;
   border-radius: 11px;
   cursor: pointer;

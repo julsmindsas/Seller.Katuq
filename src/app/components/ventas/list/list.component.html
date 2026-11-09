@@ -471,6 +471,7 @@
                                                         <!-- línea de progreso -->
                                                         <div class="pedido-timeline" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) >= 0">
                                                             <div class="pedido-timeline__label">{{ 'PROGRESO DEL PEDIDO' | translate }}</div>
+                                                            <div class="pedido-timeline__next" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) < 4">{{ 'Siguiente' | translate }}: {{ ['Producir','Empacar','Despachar','Entregar'][getProgresoCompletados(pedidoDetalle?.estadoProceso)] | translate }}</div>
                                                             <div class="pedido-timeline__track">
                                                                 <div class="pedido-timeline__step"
                                                                      *ngFor="let paso of ['Producido','Empacado','Despachado','Entregado']; let i = index"
@@ -574,7 +575,8 @@
                                                             <ng-container *ngIf="adjuntos.length">
                                                                 <div class="pedido-detail__sectionlabel">{{ 'ADJUNTOS' | translate }} · {{ adjuntos.length }}</div>
                                                                 <div class="pedido-detail__productos">
-                                                                    <a *ngFor="let adj of adjuntos; trackBy: trackByUrl" class="pedido-adj"
+                                                                    <div *ngFor="let adj of adjuntos; trackBy: trackByUrl" class="pedido-adj-fila">
+                                                                    <a class="pedido-adj"
                                                                        [href]="adj.url" target="_blank" rel="noopener" [title]="'Abrir ' + adj.nombre">
                                                                         <img *ngIf="adj.esImagen" class="pedido-adj__img" [src]="adj.url" [alt]="adj.nombre" loading="lazy" />
                                                                         <i *ngIf="!adj.esImagen" class="pedido-adj__ico fa fa-file-o" aria-hidden="true"></i>
@@ -584,6 +586,13 @@
                                                                         </div>
                                                                         <i class="pedido-adj__abrir pi pi-external-link" aria-hidden="true"></i>
                                                                     </a>
+                                                                    <!-- Ticket 1591: la imagen adjunta, lista para imprimir o guardar como PDF -->
+                                                                    <button *ngIf="adj.esImagen" type="button" class="pedido-adj__pdf"
+                                                                            (click)="imprimirAdjunto(adj)" [title]="'Imprimir o guardar como PDF: ' + adj.nombre"
+                                                                            [attr.aria-label]="'Imprimir o guardar como PDF: ' + adj.nombre">
+                                                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF
+                                                                    </button>
+                                                                    </div>
                                                                 </div>
                                                             </ng-container>
                                                         </ng-container>

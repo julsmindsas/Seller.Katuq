@@ -211,3 +211,20 @@ graphify-out/
 test_*.py
 *_test.py
 *.env
+
+# Documentación fuera de git (D-705, Daniel 9-nov-2026): propuestas OpenSpec, specs y
+# documentos nuevos se quedan en la copia local. Lo ya versionado sigue en git y se puede
+# actualizar (el .gitignore no lo saca). specs/CONTRACT.md y la constitución siguen en git.
+# Nunca usar git add -f con un documento.
+openspec/changes/
+openspec/specs/
+specs/*
+!specs/CONTRACT.md
+!specs/constitution.md
+docs/
+/*.md
+!/README.md
+!/AGENTS.md
+!/CLAUDE.md
+!/agent.md
+!/SPEC-DRIVEN.md

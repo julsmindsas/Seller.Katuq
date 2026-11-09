@@ -1,65 +1,189 @@
 {
-  "version": "2026.11.09.1 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T15:45:20.026Z",
+  "version": "2026.11.09.4 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T21:44:55.440Z",
   "notas": [
     {
-      "fecha": "2026-11-07T21:00:00Z",
+      "fecha": "2026-11-09T21:15:00Z",
       "tipo": "CORRIGE",
-      "texto": "En Producción, un mismo producto ya no sale dos veces en la lista cuando su nombre quedó guardado con un espacio o un salto de línea de más.",
+      "texto": "Borrar toda la base de productos y «Limpiar precios» ya no aparecen en la barra de trabajo, para que nadie los toque por error.",
       "modulos": [
-        "produccion/dashboard"
+        "productos"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Cartera, el nombre y el documento del cliente abren su ficha en otra pestaña, así no pierdes los filtros.",
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, el menú lateral ya no deja una franja visible cuando está cerrado."
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, las tablas de Tipos de cliente, Géneros, Ocasiones y Canales se ven como tarjetas, con Activo y Acciones a la vista y sin deslizar de lado.",
       "modulos": [
-        "cartera"
+        "proceso/tipos-cliente",
+        "proceso/generos",
+        "proceso/ocasiones",
+        "proceso/canales"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los administradores ya pueden corregir el tipo de documento de un cliente, por ejemplo de CC a NIT.",
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, Venta asistida ya no corta el logo de tu negocio, la franja de TOTAL A PAGAR queda dentro de la tarjeta y el botón de volver arriba no tapa la barra de abajo.",
       "modulos": [
-        "ventas/clienteslista"
+        "ventas/venta-asistida"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido.",
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Pedidos, el estado «Sin producir» ya se lee bien, el progreso del pedido te dice cuál es el siguiente paso y los estados salen con su nombre completo, como «Pago en revisión».",
       "modulos": [
         "ventas"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
+      "fecha": "2026-11-09T21:15:00Z",
       "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios.",
+      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
       "modulos": [
-        "ventas/venta-asistida"
+        "ventas",
+        "tesoreria"
       ]
     },
     {
-      "fecha": "2026-11-07T21:00:00Z",
+      "fecha": "2026-11-09T21:15:00Z",
       "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable.",
+      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
       "modulos": [
-        "ventas/venta-asistida"
+        "ventas/ventas-pos"
       ]
     },
     {
-      "fecha": "2026-11-08T22:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq.",
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "MEJORA",
+      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
       "modulos": [
-        "en-vivo"
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "MEJORA",
+      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
+      "modulos": [
+        "lista-precios/lista-precios",
+        "ventas/clientes"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Borrar toda la base de productos y «Limpiar precios» ya no aparecen en la barra de trabajo, para que nadie los toque por error.",
+      "modulos": [
+        "productos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, el menú lateral ya no deja una franja visible cuando está cerrado."
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, las tablas de Tipos de cliente, Géneros, Ocasiones y Canales se ven como tarjetas, con Activo y Acciones a la vista y sin deslizar de lado.",
+      "modulos": [
+        "proceso/tipos-cliente",
+        "proceso/generos",
+        "proceso/ocasiones",
+        "proceso/canales"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, Venta asistida ya no corta el logo de tu negocio, la franja de TOTAL A PAGAR queda dentro de la tarjeta y el botón de volver arriba no tapa la barra de abajo.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Pedidos, el estado «Sin producir» ya se lee bien, el progreso del pedido te dice cuál es el siguiente paso y los estados salen con su nombre completo, como «Pago en revisión».",
+      "modulos": [
+        "ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
+      "modulos": [
+        "ventas",
+        "tesoreria"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "MEJORA",
+      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T21:15:00Z",
+      "tipo": "MEJORA",
+      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
+      "modulos": [
+        "lista-precios/lista-precios",
+        "ventas/clientes"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T20:40:00Z",
+      "tipo": "NUEVO",
+      "texto": "Ahora puedes poner a Opttia a atender en tu sitio web: responde dudas con el tono de tu marca, recomienda tus productos con precio, arma el carrito y lleva al pago. Se enciende por sitio, en el editor, pestaña «Tienda».",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF.",
+      "modulos": [
+        "ventas"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T16:00:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final.",
+      "modulos": [
+        "ventas"
+      ]
+    },
     {
       "fecha": "2026-11-08T22:00:00Z",
       "tipo": "NUEVO",
@@ -429,112 +553,8 @@
       "modulos": [
         "facturacion-electronica"
       ]
-    },
-    {
-      "fecha": "2026-11-03T19:30:30Z",
-      "tipo": "MEJORA",
-      "texto": "En Facturación electrónica, lo facturado en el mes se compara con los mismos días del mes anterior, y además del porcentaje ves la diferencia en pesos.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:30:00Z",
-      "tipo": "MEJORA",
-      "texto": "Facturación electrónica se ve más limpia: todas las fechas van en el mismo formato (día/mes/año), quitamos las tarjetas y botones que se repetían y las fechas grises se leen mejor.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T19:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, el historial técnico muestra cada envío a la DIAN y cada correo de tus facturas y notas, del más reciente al más antiguo, y no solo las pruebas de habilitación.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T18:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En la guía de Facturación electrónica, el paso «Revisa y emite» se marca en amarillo mientras tengas documentos por revisar, y te lleva a ellos con un clic.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T18:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, las notas crédito y débito muestran el nombre y el NIT del cliente, y la columna «Origen» te dice de qué pedido o de qué factura viene cada documento.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T17:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica → Desde pedidos, ya puedes facturar a consumidor final aunque no tenga correo. Y si a un cliente le falta el correo, el aviso te lleva a su ficha para completarlo.",
-      "modulos": [
-        "facturacion-electronica",
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T17:00:20Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, la fecha de emisión de tus facturas y notas muestra la hora real en que se emitieron, y ya no 12:00 en todas.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T17:00:10Z",
-      "tipo": "MEJORA",
-      "texto": "Antes de emitir una factura te avisamos si ya le facturaste a ese cliente el mismo valor esta semana, para que no la emitas dos veces. Y si la DIAN dice que un documento ya lo tenía, te explicamos qué hacer en vez de reenviarlo.",
-      "modulos": [
-        "facturacion-electronica",
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T17:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Facturación electrónica, los botones de cada documento y el total de cada concepto de «Nueva factura» se quedan a la vista aunque la pantalla sea angosta.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T16:26:38Z",
-      "tipo": "MEJORA",
-      "texto": "Las novedades de cada versión ya no salen en una ventana: las encuentras en la campana, en «Novedades», y solo te mostramos las de las pantallas que usas."
-    },
-    {
-      "fecha": "2026-11-03T15:32:57Z",
-      "tipo": "CORRIGE",
-      "texto": "En «En vivo», un mensajero ya no sale «en ruta» por días: solo cuenta lo que salió hoy, y los pedidos de días anteriores que siguen como despachados aparecen aparte para que los marques entregados.",
-      "modulos": [
-        "en-vivo"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:40Z",
-      "tipo": "MEJORA",
-      "texto": "En Configuración DIAN te avisamos si la dirección del emisor tiene un tramo repetido o le falta el guion, y te sugerimos usar un correo de equipo para enviar las facturas.",
-      "modulos": [
-        "integrations",
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T14:50:30Z",
-      "tipo": "MEJORA",
-      "texto": "En Facturación electrónica, la franja de arriba te avisa cuando una factura no le llegó por correo al comprador y te explica en palabras claras por qué.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "3c55b4889c6416e0e338064c17b2fded588736a2",
+  "commit": "06c8c5e0e1dc82cc5bb8b9a6eb3e922640229c21",
   "cambiosSinCommit": 0
 }

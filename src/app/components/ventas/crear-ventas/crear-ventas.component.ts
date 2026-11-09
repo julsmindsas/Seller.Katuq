@@ -3262,6 +3262,24 @@ export class CrearVentasComponent
     });
   }
 
+  /**
+   * Ticket 1588: si no se eligieron datos de facturación, el pedido queda como
+   * Consumidor Final con los mismos datos del botón «Consumidor Final».
+   */
+  protected aplicarConsumidorFinalPorDefecto(): void {
+    this.agregarConsumidorFinal();
+    const cf = this.datosFacturacionElectronica.find(
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final"
+    );
+    if (cf) {
+      this.pedidoGral.facturacion = cf;
+      this.pedidoGral = { ...this.pedidoGral };
+    }
+  }
+
   // Método para agregar un consumidor final a la lista de facturación
   agregarConsumidorFinal(): void {
     // Primero eliminar duplicados si existen
@@ -3306,6 +3324,10 @@ export class CrearVentasComponent
   }
 
   private reviewStepAndExecute(index: number) {
+    // Ticket 1588: al salir del paso envío/facturación sin datos, queda Consumidor Final.
+    if (index == 4 && this.pedidoGral && !this.pedidoGral.facturacion) {
+      this.aplicarConsumidorFinalPorDefecto();
+    }
     if (index == 1) {
       // Paso del cliente - Validar que existe un cliente antes de ir a Productos
       if (!this.pedidoGral.cliente) {
@@ -3419,13 +3441,9 @@ export class CrearVentasComponent
 
     if (index == 5) {
       // Paso de resumen - Validar que existe información de facturación antes de ir a Pago
+      // Ticket 1588: la facturación no es obligatoria; sin datos queda Consumidor Final.
       if (!this.pedidoGral.facturacion) {
-        Swal.fire({
-          title: "Advertencia",
-          text: "Debe seleccionar o crear datos de facturación antes de continuar",
-          icon: "warning",
-        });
-        return;
+        this.aplicarConsumidorFinalPorDefecto();
       }
 
       // Cargar datos del carrito para el resumen
@@ -3740,6 +3758,9 @@ export class CrearVentasComponent
                 const orderId = res.order?._id || res.orderId || res.id;
                 // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
                 const nroPedido = res.order?.nroPedido || res.order?.referencia || this.pedidoGral.nroPedido || this.pedidoGral.referencia || '';
+                // Ticket 1590: la pantalla final muestra el consecutivo que asignó el servidor,
+                // no el que se reservó al abrir la venta.
+                if (res.order?.nroPedido) this.pedidoGral = { ...this.pedidoGral, nroPedido: res.order.nroPedido };
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
@@ -4874,6 +4895,8 @@ export class CrearVentasComponent
                   context.registrarAlertaDuplicado(res, orderId);
                   // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
                   const nroPedido = res.order?.nroPedido || res.order?.referencia || context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
+                  // Ticket 1590: el número confirmado por el servidor reemplaza al reservado.
+                  if (res.order?.nroPedido) context.pedidoGral = { ...context.pedidoGral, nroPedido: res.order.nroPedido };
 
                   // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {

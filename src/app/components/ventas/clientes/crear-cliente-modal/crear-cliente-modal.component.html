@@ -102,7 +102,9 @@
                     <ng-container *ngIf="clientTypes.length === 0">
                       <input pInputText type="text" class="w-100" disabled
                         placeholder="{{ 'ventas.crearClienteModal.sinTiposActivos' | translate }}">
-                      <small class="text-muted d-block mt-1">{{ 'ventas.crearClienteModal.sinTiposActivosAyuda' | translate }}</small>
+                      <small class="text-muted d-block mt-1">
+                        <a routerLink="/proceso/tipos-cliente" (click)="cerrarParaTiposCliente()">{{ 'ventas.crearClienteModal.sinTiposActivosAyuda' | translate }}</a>
+                      </small>
                     </ng-container>
                   </div>
                   <div class="col-12 col-sm-6">

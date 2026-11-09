@@ -28,7 +28,7 @@
             pTooltip="Exportar todos los productos con precios actuales" tooltipPosition="bottom">
             <i class="icofont icofont-file-excel"></i> Exportar Excel
           </button>
-          <button class="cfg-btn cfg-btn--peligro" (click)="limpiarPreciosTipoCliente()" *ngIf="activeTab === 0"
+          <button class="cfg-btn cfg-btn--peligro" (click)="limpiarPreciosTipoCliente()" *ngIf="activeTab === 0 && esSuperAdmin"
             pTooltip="Eliminar todos los precios por tipo de cliente" tooltipPosition="bottom">
             <i class="pi pi-trash"></i> Limpiar precios
           </button>
@@ -45,6 +45,13 @@
           </label>
         </div>
       </header>
+
+      <!-- Modo por tipo de cliente sin tipos activos: sin esto todos los precios salen «Sin configurar». -->
+      <div class="cfg-aviso cfg-aviso--warn lp-aviso-tipos" *ngIf="faltanTiposCliente">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span class="lp-aviso-tipos__texto">Tu empresa cobra por tipo de cliente, pero todavía no hay tipos de cliente activos. Por eso los precios salen «Sin configurar».</span>
+        <button type="button" class="cfg-btn" (click)="irATiposCliente()">Crear tipos de cliente</button>
+      </div>
 
       <!-- Tabs -->
       <section class="cfg-card">

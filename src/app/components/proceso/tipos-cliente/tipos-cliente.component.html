@@ -26,7 +26,7 @@
         <div class="custom-datatable" *ngIf="!cargando">
             <p-table #dt [value]="rows" [paginator]="true" [rows]="10"
                 [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
-                styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
+                styleClass="p-datatable-gridlines p-datatable-striped cfg-tabla-tarjetas" [rowsPerPageOptions]="[10, 20, 50]"
                 [sortField]="'nombre'" [sortOrder]="1" [globalFilterFields]="[
                     'nombre',
                     'descripcion',
@@ -48,7 +48,7 @@
                             {{ "Precio base" | translate }}
                             <p-sortIcon field="esPrecioBase"></p-sortIcon>
                         </th>
-                        <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
+                        <th class="text-center" pSortableColumn="activo">
                             {{ "Activo" | translate }}
                             <p-sortIcon field="activo"></p-sortIcon>
                         </th>
@@ -60,16 +60,16 @@
 
                 <ng-template pTemplate="body" let-row>
                     <tr>
-                        <td>{{ row.nombre }}</td>
+                        <td data-label="{{ 'Nombre' | translate }}">{{ row.nombre }}</td>
                         <!-- Estas descripciones son párrafos ("Lista B - Aquel cliente que
                              asume la propiedad de los productos para..."). Sin tope se van
                              en una sola línea y estiran la tabla hasta salirse de pantalla,
                              así que se envuelven y se recortan a 3 renglones. El texto
                              completo queda en el tooltip. -->
-                        <td class="col-descripcion">
+                        <td class="col-descripcion" data-label="{{ 'Descripción' | translate }}">
                             <span class="descripcion-recortada" [title]="row.descripcion">{{ row.descripcion }}</span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="{{ 'Precio base' | translate }}">
                             <!-- Marca excluyente: el precio de este tipo también es el
                                  precio base del producto. Se cambia en Editar. -->
                             <span class="badge-precio-base" *ngIf="row.esPrecioBase">
@@ -77,7 +77,7 @@
                             </span>
                             <span class="texto-vacio" *ngIf="!row.esPrecioBase">—</span>
                         </td>
-                        <td *ngIf="!isMobile" class="text-center">
+                        <td class="text-center" data-label="{{ 'Activo' | translate }}">
                             <!-- Apagarlo lo saca de circulación sin borrar los precios que
                                  los productos tengan cargados a su nombre. Es la alternativa
                                  reversible a la papelera, que sí borra. -->
@@ -90,7 +90,7 @@
                                 <span class="switch-state"></span>
                             </label>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="{{ 'Acciones' | translate }}">
                             <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
@@ -105,7 +105,7 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td [attr.colspan]="isMobile ? 4 : 5">{{ "No hay datos disponibles" | translate }}</td>
+                        <td [attr.colspan]="5">{{ "No hay datos disponibles" | translate }}</td>
                     </tr>
                 </ng-template>
 

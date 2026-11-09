@@ -15,9 +15,16 @@ import Swal from 'sweetalert2';
 import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { MessagingLinesService } from '../../../shared/services/messaging/messaging-lines.service';
 import {
+  MetaEmbeddedSignupService,
+  RegistroMetaError,
+} from '../../../shared/services/messaging/meta-embedded-signup.service';
+import {
   CambiosLinea,
+  DatosRegistroMeta,
   MessagingLine,
   MiembroEquipo,
+  ModoConexionMeta,
+  PlantillaLinea,
 } from '../../../shared/services/messaging/messaging.models';
 import {
   MENSAJE_CONEXION,
@@ -33,7 +40,19 @@ interface EdicionLinea {
   vendedores: string[];
 }
 
+/** Plantillas de una línea directa con Meta (D-704). */
+interface PanelPlantillas {
+  abierto: boolean;
+  cargando: boolean;
+  error: string | null;
+  lista: PlantillaLinea[];
+  titulo: string;
+  cuerpo: string;
+  creando: boolean;
+}
+
 const PROVEEDOR = 'kapso';
+const PROVEEDOR_META = 'meta';
 /** Clave del código de un solo uso de la conexión en curso. */
 const CLAVE_ESTADO_CONEXION = 'katuq_conexion_kapso';
 
@@ -47,6 +66,10 @@ const CLAVE_ESTADO_CONEXION = 'katuq_conexion_kapso';
  * Conectar: se abre una ventana emergente con el enlace del proveedor; al volver,
  * `IntegrationConnectReturnComponent` avisa por `postMessage` y aquí se confirma
  * con el servidor, que verifica el número con el proveedor.
+ *
+ * Con la conexión directa con Meta encendida (D-704), «Conectar número» ofrece
+ * dos formas: compartir el número del celular o uno nuevo. Se abre la ventana
+ * oficial de Meta y el código que devuelve (vence en 30 s) va de una al servidor.
  */
 @Component({
   selector: 'app-messaging-lines',
@@ -64,6 +87,10 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
   puedeAdministrar = false;
   lineas: MessagingLine[] = [];
   equipo: MiembroEquipo[] = [];
+  /** Conexión directa con Meta (D-704). */
+  metaDirecto = { habilitada: false, modoCelular: false };
+  eligiendoModo = false;
+  panelesPlantillas: Record<string, PanelPlantillas> = {};
 
   conectando = false;
   /** Línea con una operación en curso (guardar, bot o desconectar). */
@@ -83,6 +110,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly toastr: ToastrService,
     private translate: TranslateService,
+    private readonly registroMeta: MetaEmbeddedSignupService,
   ) {
     this.habilitada = features.isEnabled('whatsappMultiNumero');
   }
@@ -112,6 +140,7 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
           this.puedeAdministrar = res.puedeAdministrar;
           this.lineas = res.lines;
           this.equipo = res.equipo;
+          this.metaDirecto = res.metaDirecto;
           this.ediciones = {};
           for (const l of res.lines) this.ediciones[l.id] = this.edicionDe(l);
           this.cargando = false;
@@ -130,6 +159,12 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
   conectar(): void {
     if (this.conectando || !this.puedeAdministrar) return;
     this.aviso = null;
+    // D-704: con la conexión directa, primero se escoge cómo conectar.
+    if (this.metaDirecto.habilitada) {
+      this.eligiendoModo = true;
+      this.cdr.markForCheck();
+      return;
+    }
     // La ventana se abre en el clic: abrirla después de la respuesta del
     // servidor la bloquean los navegadores.
     this.ventana = window.open('', 'katuq_conectar_numero', 'width=600,height=740');
@@ -145,8 +180,10 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
       .conectar(PROVEEDOR, this.nuevoEstadoConexion())
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ url }) => {
-          if (!this.ventana || this.ventana.closed) {
+        next: (conexion) => {
+          const url = 'url' in conexion ? conexion.url : '';
+          if (!this.ventana || this.ventana.closed || !url) {
+            this.ventana?.close();
             this.terminarConexion();
             return;
           }
@@ -161,6 +198,192 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
           });
         },
       });
+  }
+
+  cancelarModo(): void {
+    this.eligiendoModo = false;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Conexión directa con Meta (D-704): pide al servidor los datos del registro
+   * insertado, abre la ventana de Meta y confirma de una con el código.
+   */
+  conectarConMeta(modo: ModoConexionMeta): void {
+    if (this.conectando || !this.puedeAdministrar) return;
+    if (modo === 'celular' && !this.metaDirecto.modoCelular) return;
+    this.aviso = null;
+    this.conectando = true;
+    this.cdr.markForCheck();
+    this.servicio
+      .conectar(PROVEEDOR_META, this.estadoAleatorio(), modo)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (datos) => {
+          if (!datos || (datos as DatosRegistroMeta).kind !== 'embedded_signup') {
+            this.terminarConexion({ tipo: 'error', texto: this.translate.instant('integrations.messagingLines.metaErrorMeta') });
+            return;
+          }
+          this.abrirRegistroMeta(datos as DatosRegistroMeta, modo);
+        },
+        error: (err) =>
+          this.terminarConexion({
+            tipo: 'error',
+            texto: this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaErrorMeta')),
+          }),
+      });
+  }
+
+  private abrirRegistroMeta(datos: DatosRegistroMeta, modo: ModoConexionMeta): void {
+    this.registroMeta
+      .iniciar(datos)
+      .then((r) => {
+        this.servicio
+          .confirmar(PROVEEDOR_META, { code: r.code, wabaId: r.wabaId, phoneNumberId: r.phoneNumberId, modo })
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (linea) => {
+              this.ponerLinea(linea);
+              this.eligiendoModo = false;
+              const nombre = linea.displayName || linea.displayPhone;
+              this.terminarConexion(
+                linea.setup && linea.setup !== 'completo'
+                  ? {
+                      tipo: 'error',
+                      texto: this.translate.instant('integrations.messagingLines.metaPorTerminar', {
+                        linea: nombre,
+                        causa: linea.setupError || '',
+                      }),
+                    }
+                  : { tipo: 'ok', texto: this.translate.instant('integrations.messagingLines.metaConectado', { linea: nombre }) },
+              );
+            },
+            error: (err) =>
+              this.terminarConexion({
+                tipo: 'error',
+                texto: this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaNoConfirmado')),
+              }),
+          });
+      })
+      .catch((e) => {
+        const clave =
+          e instanceof RegistroMetaError
+            ? {
+                cancelado: 'metaCancelado',
+                sin_codigo: 'metaCancelado',
+                sin_numero: 'metaSinNumero',
+                error_meta: 'metaErrorMeta',
+                sdk: 'metaSdk',
+              }[e.motivo]
+            : 'metaErrorMeta';
+        this.terminarConexion({ tipo: 'error', texto: this.translate.instant(`integrations.messagingLines.${clave}`) });
+      });
+  }
+
+  /** Código de un solo uso que el servidor exige al pedir la conexión (anti-CSRF). */
+  private estadoAleatorio(): string {
+    const bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /** Corre solo los pasos que le faltan a una línea «por terminar» (D-704). */
+  reintentar(linea: MessagingLine): void {
+    if (this.ocupada) return;
+    this.ocupada = linea.id;
+    this.cdr.markForCheck();
+    this.servicio
+      .reintentar(linea.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (nueva) => {
+          this.ocupada = null;
+          this.ponerLinea(nueva);
+          if (nueva.setup && nueva.setup !== 'completo') {
+            this.toastr.warning(
+              this.translate.instant('integrations.messagingLines.reintentarFallo', { causa: nueva.setupError || '' }),
+            );
+          } else {
+            this.toastr.success(this.translate.instant('integrations.messagingLines.reintentarOk'));
+          }
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.ocupada = null;
+          this.toastr.error(this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaErrorMeta')));
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  // ─── Plantillas de una línea directa (D-704) ───────────────────────────
+
+  panel(linea: MessagingLine): PanelPlantillas {
+    if (!this.panelesPlantillas[linea.id]) {
+      this.panelesPlantillas[linea.id] = { abierto: false, cargando: false, error: null, lista: [], titulo: '', cuerpo: '', creando: false };
+    }
+    return this.panelesPlantillas[linea.id];
+  }
+
+  alternarPlantillas(linea: MessagingLine): void {
+    const p = this.panel(linea);
+    p.abierto = !p.abierto;
+    if (p.abierto) this.cargarPlantillas(linea);
+    this.cdr.markForCheck();
+  }
+
+  private cargarPlantillas(linea: MessagingLine): void {
+    const p = this.panel(linea);
+    p.cargando = true;
+    p.error = null;
+    this.servicio
+      .plantillas(linea.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (lista) => {
+          p.lista = lista;
+          p.cargando = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          p.cargando = false;
+          p.error = this.mensajeDe(err, this.translate.instant('integrations.messagingLines.plantillasError'));
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  plantillaLista(linea: MessagingLine): boolean {
+    const p = this.panel(linea);
+    return p.titulo.trim().length >= 3 && p.cuerpo.trim().length >= 10 && !p.creando;
+  }
+
+  crearPlantilla(linea: MessagingLine): void {
+    const p = this.panel(linea);
+    if (!this.plantillaLista(linea)) return;
+    p.creando = true;
+    this.cdr.markForCheck();
+    this.servicio
+      .crearPlantilla(linea.id, { titulo: p.titulo.trim(), cuerpo: p.cuerpo.trim() })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          p.creando = false;
+          p.titulo = '';
+          p.cuerpo = '';
+          this.toastr.success(this.translate.instant('integrations.messagingLines.plantillaCreada'));
+          this.cargarPlantillas(linea);
+        },
+        error: (err) => {
+          p.creando = false;
+          this.toastr.error(this.mensajeDe(err, this.translate.instant('integrations.messagingLines.plantillaError')));
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  esDirectaMeta(linea: MessagingLine): boolean {
+    return linea.provider === PROVEEDOR_META;
   }
 
   /** Si la persona cierra la ventana sin terminar, el botón vuelve a quedar libre. */
