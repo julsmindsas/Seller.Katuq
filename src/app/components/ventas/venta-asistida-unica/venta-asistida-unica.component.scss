@@ -3819,3 +3819,16 @@
     }
   }
 }
+
+// -----------------------------------------------------------------------------
+// Ticket 1539 · banda "TOTAL A PAGAR" dentro de la tarjeta Resumen y Pago.
+// El estilo global `.order-box .sub-total li { width: 100% }` fijaba el ancho de
+// la fila al de la tarjeta; con los márgenes negativos (-18px) la banda se
+// corría 18px a la izquierda y quedaba 18px corta a la derecha. Con ancho
+// automático los dos márgenes negativos la estiran de borde a borde.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout .sub-total > li:last-child {
+  width: auto !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}

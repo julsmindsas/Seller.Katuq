@@ -10,6 +10,11 @@ import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash
 import { CartService } from '../../../shared/services/cart.service';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 import { Router } from '@angular/router';
+import { registerLocaleData } from '@angular/common';
+import localeEsCo from '@angular/common/locales/es-CO';
+
+// Montos del POS con formato colombiano ($79.500): los pipes pasan 'es-CO' explícito.
+registerLocaleData(localeEsCo, 'es-CO');
 
 @Component({
   selector: 'app-pos',

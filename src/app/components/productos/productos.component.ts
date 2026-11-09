@@ -564,7 +564,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     }
     const texto = String(this.empresaActual?.nomComercial ?? "");
     this.ultimasLetras = texto.substring(texto.length - 3);
-    this.puedeEliminarBaseDatos = this.esRolAdministrador();
+    // Ticket 1536 (P0): borrar toda la base de productos queda solo para el súper administrador de
+    // Katuq, mientras se define la zona de peligro. El backend sigue validando su rol.
+    this.puedeEliminarBaseDatos = this.esSuperAdministrador();
     this.puedeEdicionRapida = this.calcularPuedeEdicionRapida();
 
     // Cargar opciones de tipo/tiempo de entrega y categorías para filtros
@@ -2323,6 +2325,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
    * minúsculas) y se busca "administrador" como palabra, así entran tanto
    * "Administrador" como "Super Administrador".
    */
+  private esSuperAdministrador(): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('user') || '{}') || {};
+      return String(usuario.rol || '').trim() === 'Super Administrador';
+    } catch {
+      return false;
+    }
+  }
+
   private esRolAdministrador(): boolean {
     try {
       const userString = localStorage.getItem('user');

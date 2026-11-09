@@ -24,19 +24,19 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn btn-info history-btn" (click)="openCashClosingHistoryModal()">
+            <button class="btn btn-info history-btn" type="button" (click)="openCashClosingHistoryModal()" title="Historial de cierres" aria-label="Historial de cierres">
                 <i class="fa fa-history"></i> Historial
             </button>
-            <button class="btn pedidos-btn" type="button" (click)="irAPedidos()" title="Ver pedidos">
+            <button class="btn pedidos-btn" type="button" (click)="irAPedidos()" title="Ver pedidos" aria-label="Ver pedidos">
                 <i class="fa fa-list-alt"></i> Pedidos
             </button>
-            <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
+            <button class="btn btn-primary cash-closing-btn" type="button" (click)="openCashClosingModal()" title="Cierre de caja" aria-label="Cierre de caja">
                 <i class="fa fa-money"></i> Cierre de Caja
             </button>
             <!-- Calculadora -->
             <div class="calc-wrapper">
                 <button class="calc-fab" type="button" (click)="toggleCalculadora()"
-                    [class.calc-fab--active]="calcVisible" title="Calculadora">
+                    [class.calc-fab--active]="calcVisible" title="Calculadora" aria-label="Calculadora">
                     <i class="fa" [ngClass]="calcVisible ? 'fa-times' : 'fa-calculator'"></i>
                 </button>
                 <div class="calc-panel" [class.calc-panel--open]="calcVisible">
@@ -109,7 +109,7 @@
     <div class="pos-mobilebar">
         <div class="pos-mobilebar-total">
             <span class="pos-mobilebar-label">{{ itemsEnTicket }} {{ itemsEnTicket === 1 ? 'ítem' : 'ítems' }}</span>
-            <span class="pos-mobilebar-amount">${{ totalTicket | number: '1.0-0' }}</span>
+            <span class="pos-mobilebar-amount">${{ totalTicket | number:'1.0-0':'es-CO' }}</span>
         </div>
         <button type="button" class="pos-mobilebar-btn" (click)="abrirTicket()">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>

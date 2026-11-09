@@ -28,8 +28,8 @@
                     <span class="fila-marca" *ngIf="lineaEditada(item)">Editado</span>
                   </div>
                   <div class="last-order-detail">
-                    <span class="fila-subtotal">${{ subtotalLinea(item) | number:'1.2-2' }}</span>
-                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.2-2' }} <span class="fila-cu">c/u</span>
+                    <span class="fila-subtotal">${{ subtotalLinea(item) | number:'1.0-2':'es-CO' }}</span>
+                    <h6 class="txt-primary">${{ precioUnitario(item) | number:'1.0-2':'es-CO' }} <span class="fila-cu">c/u</span>
                       <span *ngIf="lineaEditada(item)" class="marca-editado">Editado</span>
                     </h6>
                     <a href="javascript:void(0)" (click)="cartService.posRemoveCartItem(item)" title="Quitar" aria-label="Quitar producto">
@@ -94,30 +94,30 @@
       </div>
       <div class="item-number" [class.fila-cero]="descuentoTicket === 0">
         <span class="text-gray">{{ 'Descuento' | translate }}</span>
-        <span>${{ descuentoTicket | number:'1.2-2' }}</span>
+        <span>${{ descuentoTicket | number:'1.0-2':'es-CO' }}</span>
       </div>
       <div class="item-number" [class.fila-cero]="cuponTicket === 0">
         <span class="text-gray">{{ 'Cupón de descuento' | translate }}</span>
-        <span>${{ cuponTicket | number:'1.2-2' }}</span>
+        <span>${{ cuponTicket | number:'1.0-2':'es-CO' }}</span>
       </div>
       <div class="item-number" [class.border-bottom]="ivaTicket === 0" [class.fila-cero]="subtotalTicket === 0 || subtotalTicket === totalNumerico">
         <span class="text-gray">Subtotal</span>
-        <span>${{ subtotalTicket | number:'1.2-2' }}</span>
+        <span>${{ subtotalTicket | number:'1.0-2':'es-CO' }}</span>
       </div>
       <!-- Ticket 1360: los impuestos por separado (base sin IVA + IVA = Total) -->
       <ng-container *ngIf="ivaTicket > 0">
         <div class="item-number">
           <span class="text-gray">{{ 'Subtotal sin IVA' | translate }}</span>
-          <span>${{ baseSinIvaTicket | number:'1.2-2' }}</span>
+          <span>${{ baseSinIvaTicket | number:'1.0-2':'es-CO' }}</span>
         </div>
         <div class="item-number border-bottom">
           <span class="text-gray">IVA</span>
-          <span>${{ ivaTicket | number:'1.2-2' }}</span>
+          <span>${{ ivaTicket | number:'1.0-2':'es-CO' }}</span>
         </div>
       </ng-container>
       <div class="item-number pt-3 pb-0">
         <span class="f-w-600">Total</span>
-        <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.2-2' }}</h6>
+        <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.0-2':'es-CO' }}</h6>
         <!-- D-540: el cupón queda plegado (solo escritorio); el campo y applyCoupon() no cambian. -->
         <button type="button" class="cupon-agregar" (click)="alternarCupon()"
                 [attr.aria-expanded]="cuponAbierto">{{ 'Agregar cupón' | translate }}</button>

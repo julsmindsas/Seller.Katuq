@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subject, firstValueFrom, of } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError } from 'rxjs/operators';
@@ -39,8 +40,14 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   private cargaSubject$ = new Subject<number>();
 
   cargando = false;
+  /** Ticket 1536 (P0): «Limpiar precios» solo lo ve el súper administrador de Katuq; el backend exige administrador. */
+  esSuperAdmin = (() => {
+    try { return String((JSON.parse(localStorage.getItem('user') || '{}') || {}).rol || '').trim() === 'Super Administrador'; } catch { return false; }
+  })();
   productosFiltrados: Producto[] = [];
   tiposCliente: any[] = [];
+  /** true cuando ya respondió la consulta de tipos (evita parpadear el aviso al cargar). */
+  tiposClienteCargados = false;
   searchTerm: string = '';
   /**
    * Pestaña activa en índice LÓGICO (0 tipo cliente, 1 unitario, 2 volumen,
@@ -100,7 +107,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     private service: MaestroService,
     private modalService: NgbModal,
     private pricingMode: PricingModeService,
-    public features: CompanyFeaturesService
+    public features: CompanyFeaturesService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -149,6 +157,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
           }));
           // Entre los tipos viene la marca `esPrecioBase`, que decide si la
           // pestaña "Precio unitario" se muestra.
+          this.tiposClienteCargados = true;
           this.recalcularTabsVisibles();
         },
         error: () => {
@@ -157,6 +166,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (dataActivos: any) => {
                 this.tiposCliente = Array.isArray(dataActivos) ? dataActivos : [];
+                this.tiposClienteCargados = true;
                 this.recalcularTabsVisibles();
               }
             });
@@ -200,6 +210,16 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     if (!this.tabsVisibles.includes(this.activeTab)) {
       this.activeTab = this.tabsVisibles[0];
     }
+  }
+
+  /** Modo «por tipo de cliente» sin ningún tipo activo: todos los precios saldrían «Sin configurar». */
+  get faltanTiposCliente(): boolean {
+    return this.modoPrecio === 'tipoCliente' && this.tiposClienteCargados
+      && !this.tiposCliente.some(t => t?.active !== false);
+  }
+
+  irATiposCliente(): void {
+    this.router.navigate(['/proceso/tipos-cliente']);
   }
 
   /** ¿Algún tipo de cliente activo define el precio base del producto? */
