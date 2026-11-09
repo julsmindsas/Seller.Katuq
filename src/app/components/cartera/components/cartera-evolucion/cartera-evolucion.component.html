@@ -63,8 +63,8 @@
     <tbody>
       <tr *ngFor="let p of puntos">
         <th scope="row">{{ nombreMes(p.periodo) }}</th>
-        <td>{{ p.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-        <td>{{ p.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        <td>{{ p.carteraTotal | copMoneda }}</td>
+        <td>{{ p.carteraVencida | copMoneda }}</td>
         <td>{{ p.pctVencido | number:'1.0-1' }}%</td>
       </tr>
     </tbody>

@@ -16,7 +16,7 @@
         </button>
       </div>
       <span id="cx-ayuda-total" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaTotal' | translate }}</span>
-      <div class="cx-value">{{ k.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-value">{{ k.carteraTotal.monto | copMoneda }}</div>
       <div class="cx-sub">{{ k.carteraTotal.clientes | number }} {{ 'cartera.carteraClientes.clienteSConSaldo' | translate }}</div>
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'total'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaTotal' | translate }}</div>
     </div>
@@ -35,9 +35,9 @@
         </button>
       </div>
       <span id="cx-ayuda-vencida" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</span>
-      <div class="cx-value">{{ k.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-value">{{ k.carteraVencida.monto | copMoneda }}</div>
       <div class="cx-sub">{{ k.carteraVencida.pct | number:'1.0-0' }}{{ 'cartera.carteraClientes.delTotalDesde1Dia' | translate }}</div>
-      <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">{{ 'cartera.carteraClientes.masDe15Dias' | translate:{monto: (m.monto | currency:'COP':'symbol-narrow':'1.0-0')} }}</div>
+      <div class="cx-sub cx-sub-second" *ngIf="k.carteraVencida.mas15 as m">{{ 'cartera.carteraClientes.masDe15Dias' | translate:{monto: (m.monto | copMoneda)} }}</div>
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'vencida'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaVencida' | translate }}</div>
     </div>
 
@@ -56,7 +56,7 @@
         </button>
       </div>
       <span id="cx-ayuda-porvencer" class="cx-sr-only">{{ 'cartera.carteraClientes.ayudaPorVencer' | translate }}</span>
-      <div class="cx-value">{{ pv.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-value">{{ pv.monto | copMoneda }}</div>
       <div class="cx-sub">{{ pv.clientes | number }} {{ 'cartera.carteraClientes.clienteSPorVencer' | translate }}</div>
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === 'porVencer'" aria-hidden="true" (click)="$event.stopPropagation()">{{ 'cartera.carteraClientes.ayudaPorVencer' | translate }}</div>
     </div>
@@ -126,7 +126,7 @@
     <div class="cx-interna-tipos">
       <div class="cx-interna-tipo" *ngFor="let t of resumenPorTipo">
         <div class="cx-interna-tipo-nombre">{{ t.claveKey | translate }}</div>
-        <div class="cx-interna-tipo-monto">{{ t.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="cx-interna-tipo-monto">{{ t.monto | copMoneda }}</div>
         <div class="cx-interna-tipo-sub">{{ t.clientes | number }} {{ 'cartera.carteraClientes.clienteS' | translate }}</div>
       </div>
     </div>
@@ -137,7 +137,7 @@
        [attr.aria-label]="'cartera.interna.titulo' | translate">
     <span class="cx-interna-icono" aria-hidden="true"><i class="pi pi-users"></i></span>
     <div class="cx-interna-resumen-texto">
-      <strong class="cx-interna-resumen-titulo">{{ 'cartera.interna.resumen' | translate:{ monto: (i.monto | currency:'COP':'symbol-narrow':'1.0-0'), clientes: (i.clientes | number) } }}</strong>
+      <strong class="cx-interna-resumen-titulo">{{ 'cartera.interna.resumen' | translate:{ monto: (i.monto | copMoneda), clientes: (i.clientes | number) } }}</strong>
       <div class="cx-interna-resumen-sub">{{ (filtros.incluirInternos ? 'cartera.interna.incluidosAviso' : 'cartera.interna.apartadosAviso') | translate }}</div>
     </div>
     <label class="cx-interruptor cx-interna-interruptor" for="cx-internos">
@@ -307,7 +307,7 @@
   <div class="cx-resultbar" *ngIf="clientes.length > 0">
     <div class="cx-result-text">
       <strong>{{ filtered.length | number }}</strong> {{ 'cartera.carteraClientes.clienteS' | translate }}
-      <strong>{{ totalVisible | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <strong>{{ totalVisible | copMoneda }}</strong>
       {{ vista.recortaPedidos ? ('cartera.filtros.deSaldoFiltrado' | translate) : ('cartera.carteraClientes.deSaldo' | translate) }}
     </div>
     <div class="cx-result-actions">
@@ -345,7 +345,7 @@
   <!-- Ticket 1463: clientes con una promesa de pago vencida -->
   <div class="cx-promesas-aviso" *ngIf="accionesActivas && promesasVencidas as pv" role="status">
     <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
-    <div class="cx-promesas-texto">{{ 'cartera.acciones.promesasVencidasAviso' | translate:{ n: pv.clientes, monto: (pv.monto | currency:'COP':'symbol-narrow':'1.0-0') } }}</div>
+    <div class="cx-promesas-texto">{{ 'cartera.acciones.promesasVencidasAviso' | translate:{ n: pv.clientes, monto: (pv.monto | copMoneda) } }}</div>
     <button type="button" class="cx-promesas-ver" (click)="verPromesasVencidas()">{{ 'cartera.acciones.promesasVencidasVer' | translate }}</button>
   </div>
 
@@ -388,7 +388,7 @@
       <span>{{ 'cartera.recordatorio.seleccionarVisibles' | translate:{ n: filtered.length } }}</span>
     </label>
     <ng-container *ngIf="hayClientesEscogidos">
-      <span class="cx-seleccion-cuenta" aria-live="polite">{{ 'cartera.recordatorio.seleccionados' | translate:{ n: seleccionClientes.size, saldo: (saldoEscogido | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+      <span class="cx-seleccion-cuenta" aria-live="polite">{{ 'cartera.recordatorio.seleccionados' | translate:{ n: seleccionClientes.size, saldo: (saldoEscogido | copMoneda) } }}</span>
       <button type="button" class="cx-seleccion-boton" [disabled]="seleccionPasaDelTope" (click)="recordarSeleccion()">
         <i class="pi pi-send" aria-hidden="true"></i> {{ 'cartera.recordatorio.recordarSeleccion' | translate }}
       </button>
@@ -409,11 +409,11 @@
           <div class="cx-client-meta">
             <span><i class="pi pi-users"></i>{{ g.filas.length | number }} {{ 'cartera.carteraClientes.clienteS' | translate }}</span>
             <span><i class="pi pi-shopping-cart"></i>{{ g.pedidos | number }} {{ 'cartera.carteraClientes.pedidoS' | translate }}</span>
-            <span class="cx-grupo-vencido" *ngIf="g.vencido > 0"><i class="pi pi-exclamation-circle"></i>{{ 'cartera.agrupar.vencido' | translate:{ valor: (g.vencido | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+            <span class="cx-grupo-vencido" *ngIf="g.vencido > 0"><i class="pi pi-exclamation-circle"></i>{{ 'cartera.agrupar.vencido' | translate:{ valor: (g.vencido | copMoneda) } }}</span>
           </div>
         </div>
         <div class="cx-client-saldo">
-          <div class="cx-saldo-value">{{ g.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cx-saldo-value">{{ g.saldo | copMoneda }}</div>
           <div class="cx-saldo-label">{{ 'cartera.carteraClientes.saldoPendiente' | translate }}</div>
         </div>
         <span class="cx-chevron"><i class="pi" [ngClass]="grupoAbierto === g.vendedor ? 'pi-chevron-up' : 'pi-chevron-down'"></i></span>
@@ -437,8 +437,8 @@
               <tr *ngFor="let f of g.filas; trackBy: trackPorFilaGrupo">
                 <td class="cx-cell-strong">{{ f.cliente.nombre || '—' }} <span class="cx-grupo-doc">{{ f.cliente.documento }}</span></td>
                 <td class="text-end">{{ f.pedidos.length | number }}</td>
-                <td class="text-end cx-cell-strong">{{ f.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-end">{{ f.vencido | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-end cx-cell-strong">{{ f.saldo | copMoneda }}</td>
+                <td class="text-end">{{ f.vencido | copMoneda }}</td>
               </tr>
             </tbody>
           </table>
@@ -506,7 +506,7 @@
         </div>
 
         <div class="cx-client-saldo">
-          <div class="cx-saldo-value">{{ saldoVisible(c) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cx-saldo-value">{{ saldoVisible(c) | copMoneda }}</div>
           <div class="cx-saldo-label">{{ vista.recortaPedidos ? ('cartera.filtros.saldoFiltrado' | translate) : ('cartera.carteraClientes.saldoPendiente' | translate) }}</div>
         </div>
 
@@ -536,8 +536,8 @@
               <div class="cx-cupo-fill" [ngClass]="cupoClass(c)" [style.width.%]="cupoWidth(c)"></div>
             </div>
             <div class="cx-bar-foot">
-              {{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}
-              {{ 'cartera.carteraClientes.de' | translate:{creditLimit: (c.creditLimit | currency:'COP':'symbol-narrow':'1.0-0')} }}
+              {{ c.saldoPendiente | copMoneda }}
+              {{ 'cartera.carteraClientes.de' | translate:{creditLimit: (c.creditLimit | copMoneda)} }}
             </div>
             <div class="cx-bar-nota" *ngIf="vista.recortaPedidos">{{ 'cartera.filtros.cupoSaldoTotal' | translate }}</div>
           </ng-container>
@@ -560,13 +560,13 @@
           <div class="cx-aging-mini">
             <div class="cx-aging-seg" *ngFor="let s of agingSegments(c)" [ngClass]="s.cssClass"
                  [style.width.%]="s.pct"
-                 [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0')"></div>
+                 [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | copMoneda)"></div>
           </div>
           <div class="cx-aging-legend">
             <span class="cx-aging-legend-item" *ngFor="let l of agingLegend(c)" [class.is-zero]="l.monto === 0">
               <span class="cx-dot" [ngClass]="l.cssClass"></span>
               {{ l.shortKey | translate }}
-              <strong>{{ l.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+              <strong>{{ l.monto | copMoneda }}</strong>
             </span>
           </div>
         </div>
@@ -635,9 +635,9 @@
                 <td>{{ p.fechaCompra ? (p.fechaCompra | date:'dd/MM/yyyy') : '—' }}</td>
                 <td>{{ p.fechaEntrega ? (p.fechaEntrega | date:'dd/MM/yyyy') : '—' }}</td>
                 <td>{{ p.payDueDate ? (p.payDueDate | date:'dd/MM/yyyy') : '—' }}</td>
-                <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-end">{{ p.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-end cx-cell-strong">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-end">{{ p.total | copMoneda }}</td>
+                <td class="text-end">{{ p.pagado | copMoneda }}</td>
+                <td class="text-end cx-cell-strong">{{ p.saldo | copMoneda }}</td>
                 <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 0" [class.cx-dias-leve]="p.diasVencido > 0 && p.diasVencido <= 15"
                     [class.cx-dias-al-dia]="p.diasVencido <= 0">
                   {{ textoVencimiento(p) }}

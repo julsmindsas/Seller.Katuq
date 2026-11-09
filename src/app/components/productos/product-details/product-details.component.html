@@ -63,10 +63,10 @@
         <div class="preview-price-box rounded p-3 text-center mb-3"
              style="background:#F4F1FE; border:1px solid #E4DDFB;">
           <div class="fw-bold text-primary" style="font-size:1.5rem;">
-            {{ (producto?.precio?.precioUnitarioConIva || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ (producto?.precio?.precioUnitarioConIva || 0) | copMoneda }}
           </div>
           <small class="text-muted" *ngIf="producto?.precio?.precioUnitarioSinIva">
-            Sin IVA: {{ producto?.precio?.precioUnitarioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+            Sin IVA: {{ producto?.precio?.precioUnitarioSinIva | copMoneda }}
             <span *ngIf="producto?.precio?.precioUnitarioIva"> · IVA {{ producto?.precio?.precioUnitarioIva }}%</span>
           </small>
         </div>
@@ -197,7 +197,7 @@
         <div class="product-page-details mt-3">
           <h3 class="mb-1">{{ producto?.crearProducto?.titulo }}</h3>
           <div class="pd-precio-destacado">
-            {{ (producto?.precio?.precioUnitarioConIva || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ (producto?.precio?.precioUnitarioConIva || 0) | copMoneda }}
           </div>
           <div class="text-muted small" *ngIf="producto?.identificacion?.referencia">
             Ref. {{ producto?.identificacion?.referencia }}
@@ -281,11 +281,11 @@
                   <dl class="pd-dl">
                     <div class="pd-item">
                       <dt>Precio unitario con IVA</dt>
-                      <dd class="fw-semibold">{{ producto?.precio?.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd class="fw-semibold">{{ producto?.precio?.precioUnitarioConIva | copMoneda }}</dd>
                     </div>
                     <div class="pd-item">
                       <dt>Precio unitario sin IVA</dt>
-                      <dd>{{ producto?.precio?.precioUnitarioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd>{{ producto?.precio?.precioUnitarioSinIva | copMoneda }}</dd>
                     </div>
                     <!-- Antes: esta fila mostraba `precioIvaPorVolumen`, el mismo campo
                          que "precio por volumen con IVA". El % de IVA unitario es
@@ -296,21 +296,21 @@
                     </div>
                     <div class="pd-item">
                       <dt>Valor del IVA</dt>
-                      <dd>{{ producto?.precio?.valorIva | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd>{{ producto?.precio?.valorIva | copMoneda }}</dd>
                     </div>
                     <div class="pd-item">
                       <dt>Precio por volumen con IVA</dt>
-                      <dd>{{ producto?.precio?.precioIvaPorVolumen | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd>{{ producto?.precio?.precioIvaPorVolumen | copMoneda }}</dd>
                     </div>
                     <!-- Antes este valor quedaba DENTRO del <div> de la etiqueta y la
                          celda de al lado repetía `precioIvaPorVolumen`. -->
                     <div class="pd-item">
                       <dt>Precio por volumen sin IVA</dt>
-                      <dd>{{ producto?.precio?.precioPorVolumenSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd>{{ producto?.precio?.precioPorVolumenSinIva | copMoneda }}</dd>
                     </div>
                     <div class="pd-item">
                       <dt>Precio total volumen con IVA</dt>
-                      <dd>{{ producto?.precio?.precioTotalVolumenConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+                      <dd>{{ producto?.precio?.precioTotalVolumenConIva | copMoneda }}</dd>
                     </div>
                   </dl>
 
@@ -334,10 +334,10 @@
                         <tr *ngFor="let item of producto?.precio?.preciosVolumen">
                           <td>{{ item.numeroUnidadesInicial }}</td>
                           <td>{{ item.numeroUnidadesLimite }}</td>
-                          <td class="text-end">{{ item.valorUnitarioPorVolumenSinIVA | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                          <td class="text-end">{{ item.valorUnitarioPorVolumenIva | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                          <td class="text-end">{{ item.valorUnitarioPorVolumenConIVA | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                          <td class="text-end">{{ item.valorIVAPorVolumen | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                          <td class="text-end">{{ item.valorUnitarioPorVolumenSinIVA | copMoneda }}</td>
+                          <td class="text-end">{{ item.valorUnitarioPorVolumenIva | copMoneda }}</td>
+                          <td class="text-end">{{ item.valorUnitarioPorVolumenConIVA | copMoneda }}</td>
+                          <td class="text-end">{{ item.valorIVAPorVolumen | copMoneda }}</td>
                         </tr>
                       </tbody>
                     </table>

@@ -27,8 +27,8 @@
               <small class="tax-suggested" *ngIf="taxSuggested(item)">{{ 'facturacionElectronica.manualInvoiceForm.ivaSugerido' | translate }}</small></td>
             <td data-label="Desc. %"><input class="form-control discount-input" type="number" min="0" max="99.99" step="0.01" formControlName="discountPercent" [class.is-invalid]="invalid('items.' + i + '.discountPercent')" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.descuentoPorcentualDelConcepto' | translate:{numero: i + 1}">
               <small class="field-error" *ngIf="invalid('items.' + i + '.discountPercent')">{{ 'facturacionElectronica.manualInvoiceForm.de0A9999' | translate }}</small></td>
-            <td class="text-end total-cell" data-label="Total"><span class="line-amount" [class.is-empty]="!lineTotal(i)">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-              <small class="discount-amount" *ngIf="lineDiscount(i)">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</small></td>
+            <td class="text-end total-cell" data-label="Total"><span class="line-amount" [class.is-empty]="!lineTotal(i)">{{ lineTotal(i) | copMoneda }}</span>
+              <small class="discount-amount" *ngIf="lineDiscount(i)">− {{ lineDiscount(i) | copMoneda }}</small></td>
             <td class="acciones-cell"><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'facturacionElectronica.manualInvoiceForm.quitarConcepto' | translate:{numero: i + 1}" [title]="'facturacionElectronica.manualInvoiceForm.quitar' | translate"><i class="pi pi-trash"></i></button></td>
           </tr></tbody>
         </table>

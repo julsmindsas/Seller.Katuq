@@ -41,7 +41,7 @@
     </article>
     <article class="kc-stat" [class.kc-stat--alerta]="totalPorFacturar > 0">
       <span class="kc-label">Recibido sin facturar</span>
-      <strong>{{ totalPorFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <strong>{{ totalPorFacturar | copMoneda }}</strong>
       <small>Llegó y su factura no</small>
     </article>
   </section>
@@ -141,11 +141,11 @@
         <div class="kc-row__fin">
           <div class="prv-plata" *ngIf="saldoDe(proveedor) as saldo; else sinCompras">
             <span class="kc-label">Falta pagar</span>
-            <span class="kc-row__valor">{{ (saldo.porPagar || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="kc-row__valor">{{ (saldo.porPagar || 0) | copMoneda }}</span>
             <span class="prv-plata__pie">
               {{ saldo.ordenes }} compra(s)
               <ng-container *ngIf="saldo.porFacturar">
-                · {{ saldo.porFacturar | currency:'COP':'symbol-narrow':'1.0-0' }} sin facturar
+                · {{ saldo.porFacturar | copMoneda }} sin facturar
               </ng-container>
             </span>
             <span class="kc-pill kc-pill--danger" *ngIf="saldo.conExceso > 0">

@@ -96,8 +96,8 @@
                                      pTooltip="{{ 'Filtrar pedidos en producción' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-cog"></i>
-                                    <span class="metric-label-short">EP</span>
-                                    <span class="metric-label-full">{{ "En Prod." | translate }}</span>
+                                    <span class="metric-label-short">En producción</span>
+                                    <span class="metric-label-full">{{ "En producción" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.enProduccion || contarPedidosPorEstado('EnProduccion') }}</span>
                                 </div>
 
@@ -108,7 +108,7 @@
                                      pTooltip="{{ 'Filtrar pedidos empacados' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-inbox"></i>
-                                    <span class="metric-label-short">EMP</span>
+                                    <span class="metric-label-short">Empacados</span>
                                     <span class="metric-label-full">{{ "Empacados" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.empacados || contarPedidosPorEstado('Empacado') }}</span>
                                 </div>
@@ -120,8 +120,8 @@
                                      pTooltip="{{ 'Filtrar pedidos listos para despachar' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-box"></i>
-                                    <span class="metric-label-short">PD</span>
-                                    <span class="metric-label-full">{{ "Para Desp." | translate }}</span>
+                                    <span class="metric-label-short">Para despachar</span>
+                                    <span class="metric-label-full">{{ "Para despachar" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.paraDespachar || metricasLogistica?.pedidosDespacho || 0 }}</span>
                                 </div>
 

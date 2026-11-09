@@ -57,7 +57,7 @@
             <!-- Valor Total -->
             <div class="cfg-stat stat-card">
               <span class="cfg-stat__label">{{ 'Valor Total' | translate }}</span>
-              <span class="cfg-stat__valor">{{ totales.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+              <span class="cfg-stat__valor">{{ totales.valorTotal | copMoneda }}</span>
               <i class="pi pi-dollar stat-icono"></i>
             </div>
             <!-- Agotados -->
@@ -144,7 +144,7 @@
                   </span>
                 </td>
                 <td class="text-end">
-                  <span *ngIf="producto.precioUnitario > 0">{{ producto.precioUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                  <span *ngIf="producto.precioUnitario > 0">{{ producto.precioUnitario | copMoneda }}</span>
                   <span *ngIf="!producto.precioUnitario || producto.precioUnitario === 0" class="text-muted fst-italic small">Sin precio</span>
                 </td>
                 <td class="text-end">
@@ -156,7 +156,7 @@
                   <span *ngIf="!producto.preciosPorTipoCliente?.length" class="text-muted small">—</span>
                 </td>
                 <td class="text-end fw-semibold">
-                  <span *ngIf="producto.valorTotal > 0">{{ producto.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                  <span *ngIf="producto.valorTotal > 0">{{ producto.valorTotal | copMoneda }}</span>
                   <span *ngIf="!producto.valorTotal || producto.valorTotal === 0" class="text-muted">—</span>
                 </td>
               </tr>
@@ -183,9 +183,9 @@
                           <tbody>
                             <tr *ngFor="let p of producto.preciosPorTipoCliente">
                               <td>{{ p.tipoClienteNombre }}</td>
-                              <td class="text-end">{{ p.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                              <td class="text-end fw-semibold">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                              <td class="text-end fw-bold texto-acento">{{ p.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                              <td class="text-end">{{ p.precio | copMoneda }}</td>
+                              <td class="text-end fw-semibold">{{ p.precioConIva | copMoneda }}</td>
+                              <td class="text-end fw-bold texto-acento">{{ p.valorTotal | copMoneda }}</td>
                             </tr>
                           </tbody>
                         </table>

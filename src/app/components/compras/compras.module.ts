@@ -1,3 +1,4 @@
+import { CopMonedaPipe } from '../../shared/pipes/cop-moneda.pipe';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,6 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [ProveedoresComponent, ReposicionComponent],
-  imports: [CommonModule, FormsModule, RouterModule.forChild(routes), ImagenProductoPipe],
+  imports: [CopMonedaPipe, CommonModule, FormsModule, RouterModule.forChild(routes), ImagenProductoPipe],
 })
 export class ComprasModule {}

@@ -212,9 +212,9 @@
                                             </div>
 
                                             <div class="goe-card__meta">
-                                                <span class="goe-valor-pedido">{{ valorPedido(pedido) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span class="goe-valor-pedido">{{ valorPedido(pedido) | copMoneda }}</span>
                                                 <span class="goe-valor" *ngIf="tieneSaldoPorCobrar(pedido)">
-                                                    Cobrar {{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    Cobrar {{ pedido.faltaPorPagar | copMoneda }}
                                                 </span>
                                                 <span class="goe-pill goe-pill--pagado" *ngIf="!tieneSaldoPorCobrar(pedido)">Pagado</span>
                                                 <span class="goe-meta" [class.is-urgente]="esEntregaUrgente(pedido)">
@@ -357,7 +357,7 @@
                                             <td *ngIf="col.field !== 'accion' && col.field !== 'opciones'">
                                                 <ng-container [ngSwitch]="col.field">
                                                     <ng-container *ngSwitchCase="'faltaPorPagar'">
-                                                        {{ getNestedProperty(pedido, col.field) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                        {{ getNestedProperty(pedido, col.field) | copMoneda }}
                                                     </ng-container>
                                                     <ng-container *ngSwitchCase="'estadoPago'">
                                                         <span class="badge" [ngClass]="getEstadoPagoClass(pedido.estadoPago)">
@@ -466,9 +466,9 @@
                                             <i class="pi pi-clock"></i>
                                             {{ pedido.horarioEntrega || 'No especificado' }}
                                         </span>
-                                        <span class="goe-valor-pedido">{{ valorPedido(pedido) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                        <span class="goe-valor-pedido">{{ valorPedido(pedido) | copMoneda }}</span>
                                         <span class="goe-valor" *ngIf="tieneSaldoPorCobrar(pedido)">
-                                            Cobrar {{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                            Cobrar {{ pedido.faltaPorPagar | copMoneda }}
                                         </span>
                                         <span class="goe-pill goe-pill--pagado" *ngIf="!tieneSaldoPorCobrar(pedido)">Pagado</span>
                                     </div>
@@ -498,11 +498,11 @@
                             </div>
                             <div class="goe-resumen__row">
                                 <span>Valor despachado</span>
-                                <strong>{{ totalDespachado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                                <strong>{{ totalDespachado | copMoneda }}</strong>
                             </div>
                             <div class="goe-resumen__total">
                                 <span>Total a cobrar</span>
-                                <strong>{{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                                <strong>{{ pedidosSeleccionados | totalValorACobrar | copMoneda }}</strong>
                             </div>
                         </div>
 
@@ -527,7 +527,7 @@
             <div class="goe-footer-total">
                 <span class="goe-footer-total__label">Total a cobrar</span>
                 <span class="goe-footer-total__value">
-                    {{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                    {{ pedidosSeleccionados | totalValorACobrar | copMoneda }}
                     <small>{{ pedidosSeleccionados.length }} pedido(s)</small>
                 </span>
             </div>
@@ -818,10 +818,10 @@
                                                             <span class="cfg-pill">{{ item.cantidad }}</span>
                                                         </td>
                                                         <td class="border-0 text-end">
-                                                            {{ getProductPrice(item) | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ getProductPrice(item) | copMoneda }}
                                                         </td>
                                                         <td class="border-0 text-end fw-semibold">
-                                                            {{ getProductSubtotal(item) | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ getProductSubtotal(item) | copMoneda }}
                                                         </td>
                                                     </tr>
                                                 </tbody>
@@ -829,7 +829,7 @@
                                                     <tr>
                                                         <td colspan="3" class="text-end border-0 fw-bold">{{ "Total Productos:" | translate }}</td>
                                                         <td class="text-end border-0 fw-bold go-acento">
-                                                            {{ getProductsTotalValue() | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ getProductsTotalValue() | copMoneda }}
                                                         </td>
                                                     </tr>
                                                 </tfoot>
@@ -938,7 +938,7 @@
                                                 </div>
                                                 <div class="delivery-content">
                                                     <div class="delivery-label">{{ "Costo de Envío" | translate }}</div>
-                                                    <div class="delivery-value">{{ pedidoSeleccionadoDetalle.totalEnvio | currency:'COP':'symbol':'1.0-0' }}</div>
+                                                    <div class="delivery-value">{{ pedidoSeleccionadoDetalle.totalEnvio | copMoneda }}</div>
                                                 </div>
                                             </div>
 
@@ -975,7 +975,7 @@
                                                     <div class="payment-item">
                                                         <div class="payment-label">{{ "Subtotal Productos" | translate }}</div>
                                                         <div class="payment-value">
-                                                            {{ pedidoSeleccionadoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ pedidoSeleccionadoDetalle.totalPedidoSinDescuento | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -983,7 +983,7 @@
                                                     <div class="payment-item">
                                                         <div class="payment-label">{{ "Descuentos" | translate }}</div>
                                                         <div class="payment-value text-success">
-                                                            -{{ pedidoSeleccionadoDetalle.totalDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                            -{{ pedidoSeleccionadoDetalle.totalDescuento | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -991,7 +991,7 @@
                                                     <div class="payment-item">
                                                         <div class="payment-label">{{ "Costo de Envío" | translate }}</div>
                                                         <div class="payment-value">
-                                                            {{ pedidoSeleccionadoDetalle.totalEnvio | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ pedidoSeleccionadoDetalle.totalEnvio | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -999,7 +999,7 @@
                                                     <div class="payment-item">
                                                         <div class="payment-label">{{ "Impuestos" | translate }}</div>
                                                         <div class="payment-value">
-                                                            {{ pedidoSeleccionadoDetalle.totalImpuesto | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ pedidoSeleccionadoDetalle.totalImpuesto | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1012,7 +1012,7 @@
                                                     <div class="payment-item-total">
                                                         <div class="payment-label">{{ "Total del Pedido" | translate }}</div>
                                                         <div class="payment-value-total">
-                                                            {{ pedidoSeleccionadoDetalle.totalPedididoConDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ pedidoSeleccionadoDetalle.totalPedididoConDescuento | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1020,7 +1020,7 @@
                                                     <div class="payment-item-total">
                                                         <div class="payment-label">{{ "Anticipo Pagado" | translate }}</div>
                                                         <div class="payment-value-total text-success">
-                                                            {{ pedidoSeleccionadoDetalle.anticipo | currency:'COP':'symbol':'1.0-0' }}
+                                                            {{ pedidoSeleccionadoDetalle.anticipo | copMoneda }}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1037,7 +1037,7 @@
                                             <i class="pi pi-wallet display-4 text-warning mb-3"></i>
                                             <h5 class="go-pendiente__titulo">{{ "Falta por Pagar" | translate }}</h5>
                                             <div class="pending-amount">
-                                                {{ pedidoSeleccionadoDetalle.faltaPorPagar | currency:'COP':'symbol':'1.0-0' }}
+                                                {{ pedidoSeleccionadoDetalle.faltaPorPagar | copMoneda }}
                                             </div>
                                             <div class="mt-3">
                                                 <span class="badge" [ngClass]="pedidoSeleccionadoDetalle.faltaPorPagar > 0 ? 'bg-warning text-dark' : 'bg-success'">

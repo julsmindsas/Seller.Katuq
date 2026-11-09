@@ -26,11 +26,11 @@
 
     <div class="wa-balance">
       <div class="wa-balance__amount">
-        {{ balance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+        {{ balance.balanceCOP | copMoneda }}
       </div>
       <div class="wa-balance__sub">
         {{ 'notificaciones.billing.pricePerMessage' | translate }}
-        <strong>{{ balance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <strong>{{ balance.priceCOP | copMoneda }}</strong>
         {{ 'notificaciones.billing.equivalentMessages' | translate: { count: (equivalentMessages | number:'1.0-0') } }}
       </div>
     </div>
@@ -49,15 +49,15 @@
       </div>
       <div class="wa-kpi">
         <div class="wa-kpi__label">{{ 'notificaciones.billing.costMonth' | translate }}</div>
-        <div class="wa-kpi__value">{{ balance.costMonthCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="wa-kpi__value">{{ balance.costMonthCOP | copMoneda }}</div>
       </div>
       <div class="wa-kpi">
         <div class="wa-kpi__label">{{ 'notificaciones.billing.totalToppedUp' | translate }}</div>
-        <div class="wa-kpi__value">{{ balance.totalToppedUpCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="wa-kpi__value">{{ balance.totalToppedUpCOP | copMoneda }}</div>
       </div>
       <div class="wa-kpi">
         <div class="wa-kpi__label">{{ 'notificaciones.billing.totalConsumed' | translate }}</div>
-        <div class="wa-kpi__value">{{ balance.totalConsumedCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="wa-kpi__value">{{ balance.totalConsumedCOP | copMoneda }}</div>
       </div>
     </div>
 
@@ -90,11 +90,11 @@
 
     <div class="wa-balance">
       <div class="wa-balance__amount">
-        {{ smsBalance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+        {{ smsBalance.balanceCOP | copMoneda }}
       </div>
       <div class="wa-balance__sub">
         {{ 'notificaciones.billing.pricePerSms' | translate }}
-        <strong>{{ smsBalance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <strong>{{ smsBalance.priceCOP | copMoneda }}</strong>
         {{ 'notificaciones.billing.equivalentSms' | translate: { count: (smsEquivalentMessages | number:'1.0-0') } }}
       </div>
     </div>
@@ -146,7 +146,7 @@
           {{ 'comun.cancelar' | translate }}
         </button>
         <button type="button" class="cfg-btn" (click)="confirmTopup()" [disabled]="isToppingUp">
-          <span *ngIf="!isToppingUp">{{ 'notificaciones.billing.payWithWompi' | translate: { amount: (topupAmount | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+          <span *ngIf="!isToppingUp">{{ 'notificaciones.billing.payWithWompi' | translate: { amount: (topupAmount | copMoneda) } }}</span>
           <span *ngIf="isToppingUp">{{ 'notificaciones.billing.processing' | translate }}</span>
         </button>
       </div>

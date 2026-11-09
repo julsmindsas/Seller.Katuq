@@ -23,7 +23,7 @@
         </button>
       </div>
       <div class="cx-ayuda-texto" *ngIf="ayudaAbierta === (k.isTotal ? 'total' : k.cssClass)">{{ (k.isTotal ? ('cartera.carteraAging.ayudaTotal' | translate) : ('cartera.carteraAging.ayudaRango' | translate:{rango: (k.labelKey | translate)})) }}</div>
-      <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-value">{{ k.monto | copMoneda }}</div>
       <div class="cx-sub">{{ k.pct | number:'1.0-0' }}{{ 'cartera.carteraAging.delTotal' | translate }}</div>
     </div>
   </div>
@@ -44,8 +44,8 @@
       <div class="cx-agingbar">
         <div class="cx-agingbar-seg" *ngFor="let s of segments" [ngClass]="s.cssClass"
              [style.width.%]="s.pct"
-             [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
-          <span class="cx-agingbar-label" *ngIf="s.showText">{{ s.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+             [attr.title]="(s.labelKey | translate) + ': ' + (s.monto | copMoneda) + ' (' + (s.pct | number:'1.0-0') + '%)'">
+          <span class="cx-agingbar-label" *ngIf="s.showText">{{ s.monto | copMoneda }}</span>
         </div>
       </div>
       <div class="cx-legend">
@@ -74,8 +74,8 @@
           <tr>
             <td class="cx-cell-strong">{{ c.nombre || '—' }}</td>
             <td class="cx-cell-doc">{{ c.documento || '—' }}</td>
-            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ c.aging[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-num cx-num-total">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ c.aging[b.key] | copMoneda }}</td>
+            <td class="text-end cx-num cx-num-total">{{ c.saldoPendiente | copMoneda }}</td>
           </tr>
         </ng-template>
 
@@ -83,8 +83,8 @@
           <tr class="cx-foot">
             <td class="cx-cell-strong">{{ 'cartera.carteraAging.totales' | translate }}</td>
             <td>{{ rows.length | number }} {{ 'cartera.carteraAging.clienteS' | translate }}</td>
-            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ totals[b.key] | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td class="text-end cx-num cx-foot-total">{{ totals.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td *ngFor="let b of agingBuckets" class="text-end cx-num" [ngClass]="colClass(b.cssClass)">{{ totals[b.key] | copMoneda }}</td>
+            <td class="text-end cx-num cx-foot-total">{{ totals.total | copMoneda }}</td>
           </tr>
         </ng-template>
 

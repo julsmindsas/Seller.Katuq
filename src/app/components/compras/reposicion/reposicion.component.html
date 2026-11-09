@@ -95,13 +95,13 @@
         <article class="kc-stat" *ngIf="!v2">
           <!-- Ticket 1470: con productos sin costo el valor es parcial; si ninguno tiene costo no se muestra $0. -->
           <span class="kc-label">{{ s.resumen.sinCosto ? 'Valor parcial' : 'Valor estimado' }}</span>
-          <strong>{{ (s.resumen.sinCosto && !s.resumen.valorEstimado) ? 'Sin costos' : (s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+          <strong>{{ (s.resumen.sinCosto && !s.resumen.valorEstimado) ? 'Sin costos' : (s.resumen.valorEstimado | copMoneda) }}</strong>
           <small *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
         </article>
         <article class="kc-stat" *ngIf="v2">
           <!-- V2: sigue el costo que se escribe en la fila y el proveedor elegido. -->
           <span class="kc-label">{{ sinCostoActual ? 'Valor parcial' : 'Valor estimado' }}</span>
-          <strong>{{ (sinCostoActual && !valorActual) ? 'Sin costos' : (valorActual | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+          <strong>{{ (sinCostoActual && !valorActual) ? 'Sin costos' : (valorActual | copMoneda) }}</strong>
           <small *ngIf="sinCostoActual">{{ sinCostoActual | number }} de {{ s.resumen.sugeridos | number }} productos no tienen costo y no suman</small>
         </article>
         <article class="kc-stat" *ngIf="s.resumen.seProducen">
@@ -231,7 +231,7 @@
                 </ng-container>
                 <span class="rp-sincosto" *ngIf="!v2 && f.sinCosto">sin costo conocido</span>
                 <span class="cv2-costo" *ngIf="v2 && vistas[clave(f)] && !vistas[clave(f)].sinCosto">
-                  costo {{ vistas[clave(f)].costo | currency:'COP':'symbol-narrow':'1.0-0' }}
+                  costo {{ vistas[clave(f)].costo | copMoneda }}
                 </span>
               </div>
 
@@ -282,7 +282,7 @@
                   <option value="">— Escoger —</option>
                   <optgroup label="Proveedores de este producto" *ngIf="opcionesDe(f).length">
                     <option *ngFor="let o of opcionesDe(f)" [value]="o.proveedorId">
-                      {{ o.nombre }}{{ o.esPrincipal ? ' (principal)' : '' }}{{ o.costoCompra ? ' · ' + (o.costoCompra | currency:'COP':'symbol-narrow':'1.0-0') : '' }}
+                      {{ o.nombre }}{{ o.esPrincipal ? ' (principal)' : '' }}{{ o.costoCompra ? ' · ' + (o.costoCompra | copMoneda) : '' }}
                     </option>
                   </optgroup>
                   <optgroup label="Otros proveedores">
@@ -298,7 +298,7 @@
         <footer class="rp-pie" *ngIf="!v2 && filas.length > 0">
           <strong class="rp-total">
             {{ seleccionadas.length | number }} seleccionados ·
-            {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ valorSeleccionado | copMoneda }}
           </strong>
           <button class="kc-btn" (click)="crearOrdenes()" [disabled]="creando || seleccionadas.length === 0">
             <i class="pi pi-file-edit"></i> Crear órdenes de compra
@@ -314,7 +314,7 @@
           <div class="cv2-barra__cifras">
             <strong>{{ seleccionadas.length | number }} productos seleccionados</strong>
             <span class="cv2-barra__valor">
-              {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
+              {{ valorSeleccionado | copMoneda }}
               <ng-container *ngIf="sinCostoSeleccionados">· {{ sinCostoSeleccionados | number }} sin costo no suman</ng-container>
             </span>
           </div>

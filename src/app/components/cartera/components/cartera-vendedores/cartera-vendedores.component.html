@@ -6,7 +6,7 @@
       <span class="cx-vend-textos">
         <span class="cx-vend-titulo">{{ 'cartera.carteraVendedores.titulo' | translate }}</span>
         <span class="cx-vend-sub" *ngIf="mostrarTabla">{{ 'cartera.carteraVendedores.subtitulo' | translate }}</span>
-        <span class="cx-vend-sub" *ngIf="!mostrarTabla">{{ 'cartera.carteraVendedores.resumen' | translate:{ n: filas.length, vencida: (totales.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+        <span class="cx-vend-sub" *ngIf="!mostrarTabla">{{ 'cartera.carteraVendedores.resumen' | translate:{ n: filas.length, vencida: (totales.carteraVencida | copMoneda) } }}</span>
       </span>
     </button>
     <button type="button" class="cx-info" [attr.title]="'cartera.carteraVendedores.ayuda' | translate"
@@ -37,10 +37,10 @@
             <span class="cx-vend-barra" aria-hidden="true"><span class="cx-vend-barra-lleno" [style.width.%]="f.pctDelTotal"></span></span>
           </th>
           <td class="text-end">
-            <span class="cx-cell-strong">{{ f.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cx-cell-strong">{{ f.carteraTotal | copMoneda }}</span>
             <span class="cx-vend-parte">{{ f.pctDelTotal | number:'1.0-1' }}{{ 'cartera.carteraVendedores.delTotal' | translate }}</span>
           </td>
-          <td class="text-end cx-vend-venc">{{ f.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-vend-venc">{{ f.carteraVencida | copMoneda }}</td>
           <td class="text-end">{{ f.pctVencido | number:'1.0-1' }}%</td>
           <td class="text-end">{{ f.clientes | number }}</td>
         </tr>
@@ -48,8 +48,8 @@
       <tfoot>
         <tr>
           <th scope="row">{{ 'cartera.carteraVendedores.total' | translate }}</th>
-          <td class="text-end cx-cell-strong">{{ totales.carteraTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-          <td class="text-end cx-vend-venc">{{ totales.carteraVencida | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-cell-strong">{{ totales.carteraTotal | copMoneda }}</td>
+          <td class="text-end cx-vend-venc">{{ totales.carteraVencida | copMoneda }}</td>
           <td class="text-end">{{ totales.pctVencido | number:'1.0-1' }}%</td>
           <td class="text-end">{{ totales.clientes | number }}</td>
         </tr>

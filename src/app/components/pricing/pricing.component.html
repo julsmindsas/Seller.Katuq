@@ -148,7 +148,7 @@
     </div>
     <div class="receipt-detail">
       <span [class]="'receipt-status status-' + invoice.status">{{ invoiceStatusLabel(invoice.status) }}</span>
-      <strong>{{ invoice.amountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <strong>{{ invoice.amountCOP | copMoneda }}</strong>
       <small *ngIf="invoice.testMode || invoice.simulation">{{ 'pricing.receipt.sandbox' | translate }}</small>
       <small *ngIf="(invoice.status === 'pending_manual' || invoice.status === 'overdue') && invoiceGraceDeadline(invoice) as graceDeadline">
         {{ (invoice.status === 'overdue' ? 'pricing.receipt.overdueOn' : 'pricing.receipt.payBefore') | translate }} {{ graceDeadline | date:'d MMM y, h:mm a' }}
@@ -204,7 +204,7 @@
     <div class="period-summary">
       <span>{{ 'pricing.period.nextScheme' | translate }}</span>
       <strong>{{ billingPeriodChoiceLabel }}</strong>
-      <small>{{ 'pricing.period.approx' | translate: { amount: (selectedPeriodAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</small>
+      <small>{{ 'pricing.period.approx' | translate: { amount: (selectedPeriodAmountCOP | copMoneda) } }}</small>
       <button type="button" class="primary-action" (click)="saveBillingPeriod()"
               [disabled]="billingPeriodSaving || (billingPeriodChoice === (currentSubscription?.billingPeriod || 'monthly') && !currentSubscription?.pendingBillingPeriod)">
         <i class="pi" [class.pi-spin]="billingPeriodSaving" [class.pi-spinner]="billingPeriodSaving" [class.pi-calendar]="!billingPeriodSaving"></i>

@@ -2094,7 +2094,7 @@
 														<span class="badge bg-light text-dark border small">{{ pedido.estadoProceso }}</span>
 													</td>
 													<td class="text-end fw-semibold">
-														{{ (pedido.totalPedididoConDescuento || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+														{{ (pedido.totalPedididoConDescuento || 0) | copMoneda }}
 													</td>
 												</tr>
 											</tbody>

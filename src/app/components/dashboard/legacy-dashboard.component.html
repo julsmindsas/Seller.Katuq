@@ -86,7 +86,7 @@
                                 </span>
                             </div>
                             <div class="kpi-value">
-                                {{ totalVentas | currency:'COP':'symbol':'1.0-0' }}
+                                {{ totalVentas | copMoneda }}
                             </div>
                             <div class="kpi-footer">{{ 'dashboard.legacy.vsPrevious' | translate }}</div>
                         </div>
@@ -106,7 +106,7 @@
                                 <span class="kpi-label">{{ 'dashboard.legacy.kpiAvgTicket' | translate }}</span>
                             </div>
                             <div class="kpi-value">
-                                {{ promedioTicket | currency:'COP':'symbol':'1.0-0' }}
+                                {{ promedioTicket | copMoneda }}
                             </div>
                             <div class="kpi-footer">{{ 'dashboard.legacy.perApprovedOrder' | translate }}</div>
                         </div>
