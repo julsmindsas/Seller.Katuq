@@ -46,6 +46,13 @@
         </div>
       </header>
 
+      <!-- Modo por tipo de cliente sin tipos activos: sin esto todos los precios salen «Sin configurar». -->
+      <div class="cfg-aviso cfg-aviso--warn lp-aviso-tipos" *ngIf="faltanTiposCliente">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span class="lp-aviso-tipos__texto">Tu empresa cobra por tipo de cliente, pero todavía no hay tipos de cliente activos. Por eso los precios salen «Sin configurar».</span>
+        <button type="button" class="cfg-btn" (click)="irATiposCliente()">Crear tipos de cliente</button>
+      </div>
+
       <!-- Tabs -->
       <section class="cfg-card">
         <!-- [activeIndex] va con el índice RENDERIZADO: con una pestaña oculta por

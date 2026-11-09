@@ -1209,6 +1209,13 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
   }
 
   /** Botón Cancelar / cerrar: cierra el modal o avisa a la pantalla. */
+  /** El enlace a «Tipos de cliente» navega por routerLink; aquí solo se cierra el modal para no dejarlo encima. */
+  cerrarParaTiposCliente(): void {
+    if (this.modo === 'modal' && this.activeModal) {
+      this.activeModal.dismiss();
+    }
+  }
+
   cerrar(): void {
     if (this.modo === 'modal' && this.activeModal) {
       this.activeModal.dismiss();

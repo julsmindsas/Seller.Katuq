@@ -535,3 +535,6 @@
   letter-spacing: normal;
   word-break: break-all;
 }
+
+:host .lp-aviso-tipos { align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+:host .lp-aviso-tipos__texto { flex: 1 1 240px; color: inherit; font-size: 13.5px; }
