@@ -1,68 +1,79 @@
 {
-  "version": "2026.11.09.7 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T22:58:37.285Z",
+  "version": "2026.11.09.8 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-09T23:14:10.737Z",
   "notas": [
     {
-      "fecha": "2026-11-09T22:45:00Z",
+      "fecha": "2026-11-09T23:10:00Z",
       "tipo": "CORRIGE",
-      "texto": "Ya puedes usar Pedidos, Clientes, Productos y Envíos desde el celular: las listas se ven como tarjetas, los filtros se abren con un botón y no hace falta desplazarte hacia los lados.",
+      "texto": "Los valores en pesos de órdenes de compra, recepción de mercancía, bodegas, pagos y cartera también se ven con punto de miles y sin decimales, por ejemplo $1.528.602.",
       "modulos": [
-        "ventas",
-        "ventas/clienteslista",
-        "productos",
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "CORRIGE",
-      "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Tu catálogo por link ahora muestra el nombre y el logo de tu tienda, y el formulario de pedido se ve más cómodo en el celular.",
-      "modulos": [
-        "cotizaciones/catalogos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los indicadores de Producción se leen con palabras completas, Indicadores de inventario ya no abre en la bodega de tránsito y Movimientos siempre llega hasta hoy.",
-      "modulos": [
-        "produccion/dashboard",
-        "inventario/indicadores",
-        "inventario/historial-movimientos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los avisos de Qué comprar traen un botón para ir a corregirlos, y los comprobantes por revisar de Contabilidad se abren ya filtrados.",
-      "modulos": [
+        "inventario/ordenes-compra",
+        "inventario/recepcion-mercancia",
+        "tesoreria",
+        "cartera",
         "compras/reposicion",
         "contabilidad"
       ]
     },
     {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "La alerta de vencimiento de tu certificado de firma DIAN aparece aunque no hayas guardado la fecha: Katuq la lee del propio certificado.",
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya no verás siglas como SP, PP o PD en Pedidos, Producción y Despachos: los indicadores dicen Sin producir, Para despachar, Pendiente de pago, etc.",
       "modulos": [
-        "facturacion-electronica"
+        "ventas",
+        "despachos"
       ]
     },
     {
-      "fecha": "2026-11-09T22:45:00Z",
+      "fecha": "2026-11-09T23:10:00Z",
       "tipo": "MEJORA",
-      "texto": "El detalle de la factura muestra lo abonado, el saldo por pagar y los días de mora, si tienes permiso de Cartera.",
+      "texto": "En «Importar fotos de productos» puedes descargar una guía de cómo deben ser tus fotos (tamaño, forma cuadrada, peso y nombre del archivo) para imprimirla o guardarla.",
       "modulos": [
-        "facturacion-electronica"
+        "productos"
       ]
+    },
+    {
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los botones de cerrar, borrar y los controles de voz tienen nombre para lectores de pantalla, son más fáciles de tocar y se ven al navegar con el teclado, y los textos pequeños se leen mejor."
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Los valores en pesos de órdenes de compra, recepción de mercancía, bodegas, pagos y cartera también se ven con punto de miles y sin decimales, por ejemplo $1.528.602.",
+      "modulos": [
+        "inventario/ordenes-compra",
+        "inventario/recepcion-mercancia",
+        "tesoreria",
+        "cartera",
+        "compras/reposicion",
+        "contabilidad"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Ya no verás siglas como SP, PP o PD en Pedidos, Producción y Despachos: los indicadores dicen Sin producir, Para despachar, Pendiente de pago, etc.",
+      "modulos": [
+        "ventas",
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "MEJORA",
+      "texto": "En «Importar fotos de productos» puedes descargar una guía de cómo deben ser tus fotos (tamaño, forma cuadrada, peso y nombre del archivo) para imprimirla o guardarla.",
+      "modulos": [
+        "productos"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:10:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los botones de cerrar, borrar y los controles de voz tienen nombre para lectores de pantalla, son más fáciles de tocar y se ven al navegar con el teclado, y los textos pequeños se leen mejor."
+    },
     {
       "fecha": "2026-11-09T22:45:00Z",
       "tipo": "CORRIGE",
@@ -514,34 +525,8 @@
       "modulos": [
         "compras/reposicion"
       ]
-    },
-    {
-      "fecha": "2026-11-03T20:38:01Z",
-      "tipo": "CORRIGE",
-      "texto": "En Órdenes de compra, el filtro de bodega arranca en «Todas las bodegas» y recuerda la última que elegiste, así no se esconden órdenes.",
-      "modulos": [
-        "inventario/ordenes-compra"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T20:37:32Z",
-      "tipo": "CORRIGE",
-      "texto": "Facturación electrónica ya no deja la pantalla bloqueada mientras carga: cada parte muestra su avance y puedes empezar a trabajar de una.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T20:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Mis Ideas, el botón «Nueva idea» ya abre el formulario, los contadores y el filtro muestran en qué va cada idea, y cada idea tiene su número como los tickets."
-    },
-    {
-      "fecha": "2026-11-03T20:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no aparece una franja blanca vacía al final de las pantallas."
     }
   ],
-  "commit": "65cab79ee0fe9212b851590383069e55289a2c82",
+  "commit": "f0d75b4a32cafda86f5643906f7d112854d1c1b4",
   "cambiosSinCommit": 0
 }
