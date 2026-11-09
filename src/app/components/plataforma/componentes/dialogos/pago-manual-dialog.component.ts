@@ -8,7 +8,7 @@ import { TEXTOS } from '../../plataforma.textos';
 import { limpiarTextoLibre } from '../../logica/cuentas';
 import { formatearCop } from '../../logica/formato';
 import {
-  DetalleErrorPago, ErroresPago, FormularioPago, MEDIOS_CON_REFERENCIA, MEDIOS_PAGO, MOTIVO_PAGO_MAX, MOTIVO_PAGO_MIN, REFERENCIA_MAX,
+  DetalleErrorPago, ErroresPago, FormularioPago, MEDIOS_CON_REFERENCIA, MEDIOS_PAGO, MOTIVO_PAGO_MAX, REFERENCIA_MAX,
   claveNueva, detalleErrorPago, hoyColombia, montoDeTexto, motivoConfirmacionValido, textoAnular, validarPago,
 } from '../../logica/pago-manual';
 
@@ -231,7 +231,7 @@ export class PagoManualDialogComponent implements OnInit, AfterViewInit, OnDestr
   get largoAnular(): number { return limpiarTextoLibre(this.motivoAnular).length; }
   get textoConfirmar(): string { return this.seleccion ? textoAnular(this.seleccion.id) : ''; }
   get anulacionLista(): boolean {
-    return !!this.seleccion && this.largoAnular >= MOTIVO_PAGO_MIN && this.largoAnular <= MOTIVO_PAGO_MAX && this.confirmacion.trim() === this.textoConfirmar;
+    return !!this.seleccion && motivoConfirmacionValido(this.motivoAnular) && this.confirmacion.trim() === this.textoConfirmar;
   }
   /** Lo que falta confirmar tras un aviso del servidor: la casilla de cada aviso y el motivo. */
   get confirmacionLista(): boolean {

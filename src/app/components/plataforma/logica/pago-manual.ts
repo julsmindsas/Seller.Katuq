@@ -76,8 +76,9 @@ export function validarPago(f: FormularioPago, archivo: { size: number; name: st
 }
 
 export function motivoConfirmacionValido(v: string): boolean {
-  const n = limpiarTextoLibre(v).length;
-  return n >= MOTIVO_PAGO_MIN && n <= MOTIVO_PAGO_MAX;
+  const t = limpiarTextoLibre(v);
+  if (t.includes('@') || referenciaConNumeroLargo(t)) return false;
+  return t.length >= MOTIVO_PAGO_MIN && t.length <= MOTIVO_PAGO_MAX;
 }
 
 /** Clave de idempotencia de un intento: identifica la acción de la persona, no el contenido. */
