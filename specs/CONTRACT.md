@@ -13602,3 +13602,26 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Backend:** mezcla de aws-claude-1 en `0ba079f2` sin conflictos. El EC2 estaba en `58445833`; se fijó con `git fetch` + `git merge --ff-only 0ba079f2` (11 cambios, sin paquetes nuevos). Antes: sintaxis de 319 archivos sin errores, 12 pruebas de soporte en verde; el único `require` roto es viejo y está en un script de semillas que el servidor no carga.
 - **Verificado:** `katuq-api` en línea y sin errores en el registro tras el reinicio; las rutas privadas responden 401 sin sesión; `version.json` vivo en 2026.11.09.1.
 - **No verificado:** las pantallas en el navegador y un pedido de tienda con NIT.
+
+### 2026-11-09 — D-704: WhatsApp directo con Meta, sin Kapso, y una sola solicitud de revisión para WhatsApp, Messenger e Instagram — PROPUESTA (openspec/changes/whatsapp-directo-meta)
+- **Pedido:** Daniel, 9-nov: «necesito integrar bien meta, whatsapp directamente sin kapso». Después de ver el análisis: «todo aprobado, da la opción de número compartido o uno nuevo, además de los permisos para IG y FB».
+- **Qué decide:**
+  - **Provider `metaWhatsappProvider`** en el dominio Mensajería (D-437), al lado de Kapso. El buzón, el bot, las campañas y el dueño del chat no cambian.
+  - **Conexión con el registro insertado de Meta** (versión 4 o superior; la 2 y la 3 se retiraron el 15-oct), con dos modos:
+    - compartir el número del celular: sigue en la app WhatsApp Business, y se sincronizan contactos e historial antes de 24 horas;
+    - un número nuevo, solo para Katuq.
+  - **Confirmación del lado del servidor:** el código se cambia por la llave de la empresa y se comprueba que el número esté en la cuenta compartida. La llave se guarda cifrada en la línea.
+  - **Webhook de WhatsApp de Meta en `/v1/messaging/webhook/meta`**, firmado con `X-Hub-Signature-256` y que falla cerrado. El de Instagram y Facebook no se toca.
+  - **Cobro:** en una línea directa, Meta le cobra al comercio en su tarjeta y Katuq registra costo 0, sin validar saldo.
+    - **Modifica D-437** (allá Katuq le pagaba a Meta): eso queda solo para las líneas de Kapso.
+    - **Razón:** un proveedor de tecnología no puede compartir línea de crédito.
+  - **Interruptores (D-505):** el global en `config/meta_whatsapp`, apagado por omisión, y por comercio `companies.featureFlags.whatsappMetaDirecto`. Nada nuevo en el `.env`.
+  - **Kapso sigue en paralelo** hasta el piloto. Su apagado y la migración del número compartido de Julsmind van aparte.
+  - **Solicitud de revisión en un solo envío,** con cuatro permisos:
+    - `whatsapp_business_messaging` y `whatsapp_business_management`, nuevos;
+    - `pages_messaging` e `instagram_manage_messages`, reenviados. Los rechazaron en D-249 porque el video no mostraba el mensaje llegando.
+    - El guion de los cuatro videos, las descripciones en inglés y las instrucciones para el revisor están en `revision-meta.md` del cambio.
+- **Ya firme, no se repite:** la verificación de negocio y de acceso como proveedor de tecnología (25-ago), la revisión anual de uso de datos y la encuesta de tratamiento de datos.
+- **Sin cambios en pedidos, inventario ni consecutivos. Sin colecciones nuevas.**
+- **Abierto:** si el modo celular está disponible en Colombia (tarea 1.4); y si la cuenta y el número de Julsmind quedaron a nombre de Julsmind o de Kapso (tarea 1.1).
+- **Sigue:** aprobar el diseño y las tareas, y después implementar.
