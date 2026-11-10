@@ -4,10 +4,12 @@
     <header class="cabecera">
       <div class="cabecera__texto">
         <h1>{{ soloTipo === 'catalogo' ? 'Catálogos' : soloTipo === 'landing' ? 'Landings' : 'Mis sitios' }}</h1>
-        <p *ngIf="soloTipo !== 'catalogo'">Publica una tienda o una landing con tus productos. Eliges una plantilla y listo — no
+        <p *ngIf="!soloTipo">Publica tu tienda en línea con tus productos. Eliges una plantilla y listo — no
           necesitas saber de diseño.</p>
+        <p *ngIf="soloTipo === 'landing'">Páginas de una sola oferta para captar clientes: eliges una plantilla, publicas
+          y los datos de quien se interesa te llegan a tu bandeja.</p>
         <p *ngIf="soloTipo === 'catalogo'">Catálogos para compartir por WhatsApp: tus productos con precio y disponibilidad,
-          sin carrito. Te piden por mensaje.</p>
+          sin carrito. Tu cliente consulta y te escribe por mensaje.</p>
       </div>
       <div class="cabecera__acciones">
         <button class="btn-fantasma" (click)="mostrandoMarca = true">
@@ -204,7 +206,7 @@
                 (click)="abrirDescribe()">
           <span class="opcion-grande__texto">
             <strong>Descríbelo y lo armamos con IA</strong>
-            <small>Cuéntanos tu negocio con tus palabras y KAI crea el sitio: diseño, textos y secciones.</small>
+            <small>Cuéntanos tu negocio con tus palabras y Opttia crea el sitio: diseño, textos y secciones.</small>
           </span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
         </button>
@@ -251,7 +253,7 @@
         <div class="caja__titulo">
           <div>
             <h2>Cuéntanos de tu negocio</h2>
-            <p>Escribe como se lo contarías a un amigo. KAI arma el sitio y tú lo ajustas en el editor.</p>
+            <p>Escribe como se lo contarías a un amigo. Opttia arma el sitio y tú lo ajustas en el editor.</p>
           </div>
           <button class="cerrar" (click)="cerrarAsistente()" [disabled]="creandoConIA" aria-label="Cerrar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -284,11 +286,11 @@
         <div class="campo">
           <label for="nombre-ia">Nombre del sitio <span class="opcional">(opcional)</span></label>
           <input id="nombre-ia" type="text" [(ngModel)]="nombreIA" [maxlength]="nombreMax" [disabled]="creandoConIA"
-                 placeholder="Si lo dejas vacío, KAI lo propone" />
+                 placeholder="Si lo dejas vacío, Opttia lo propone" />
         </div>
 
         <div class="nota-ia" *ngIf="creandoConIA" role="status" aria-live="polite">
-          <strong>KAI está armando tu sitio…</strong>
+          <strong>Opttia está armando tu sitio…</strong>
           <span>Tarda unos segundos. No cierres esta ventana.</span>
         </div>
       </div>

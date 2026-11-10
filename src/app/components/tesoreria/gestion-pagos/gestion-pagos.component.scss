@@ -78,14 +78,14 @@
     font-size: 11px;
     font-weight: 800;
     border-radius: 999px;
-    background: #f1f2f5;
+    background: var(--kc-chip, #f1f2f5);
     color: var(--kc-muted);
 
     &.tk-tab-badge-danger { background: var(--kc-red-wash); color: var(--kc-red); }
   }
 
   li.p-highlight .tk-tab-badge {
-    background: #fff;
+    background: var(--kc-surface, #fff);
     color: var(--kc-accent);
 
     &.tk-tab-badge-danger { background: var(--kc-red-wash); color: var(--kc-red); }

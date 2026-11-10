@@ -17,16 +17,16 @@
     <div class="cm-grid">
       <div class="cm-card cm-accent-1">
         <div class="cm-label">{{ 'ventas.customerMetrics.ticketPromedio' | translate }}</div>
-        <div class="cm-value">{{ summary.metricas.ticketPromedio | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="cm-value">{{ summary.metricas.ticketPromedio | copMoneda }}</div>
       </div>
       <div class="cm-card cm-accent-2">
         <div class="cm-label">{{ 'ventas.customerMetrics.valorTotal' | translate }}</div>
-        <div class="cm-value">{{ summary.metricas.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="cm-value">{{ summary.metricas.valorTotal | copMoneda }}</div>
       </div>
       <div class="cm-card cm-accent-3">
         <div class="cm-label">{{ 'ventas.customerMetrics.ultimaCompra' | translate }}</div>
         <ng-container *ngIf="summary.metricas.ultimaCompra; else sinUltima">
-          <div class="cm-value">{{ summary.metricas.ultimaCompra.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cm-value">{{ summary.metricas.ultimaCompra.valor | copMoneda }}</div>
           <div class="cm-sub" *ngIf="summary.metricas.ultimaCompra.fecha">
             {{ summary.metricas.ultimaCompra.fecha | date:'mediumDate' }}
           </div>
@@ -95,7 +95,7 @@
           <div class="cm-detail-item">
             <span class="cm-detail-label">{{ 'ventas.customerMetrics.clv' | translate }}</span>
             <span class="cm-detail-value">
-              {{ summary.metricas.clv != null ? (summary.metricas.clv | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+              {{ summary.metricas.clv != null ? (summary.metricas.clv | copMoneda) : '—' }}
             </span>
           </div>
           <div class="cm-detail-item">
@@ -189,7 +189,7 @@
               <td>{{ p.fechaCreacion ? (p.fechaCreacion | date:'short') : '—' }}</td>
               <td>{{ p.estadoProceso || '—' }}</td>
               <td>{{ p.estadoPago || '—' }}</td>
-              <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+              <td class="text-end">{{ p.total | copMoneda }}</td>
             </tr>
           </tbody>
         </table>

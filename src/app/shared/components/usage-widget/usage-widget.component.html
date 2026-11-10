@@ -2,7 +2,7 @@
   <ng-template pTemplate="header">
     <div class="card-header-content">
       <h4>{{ 'shell.usage.freeTitle' | translate }}</h4>
-      <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="refresh()" [loading]="loading"></button>
+      <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm" aria-label="Actualizar" (click)="refresh()" [loading]="loading"></button>
     </div>
   </ng-template>
 

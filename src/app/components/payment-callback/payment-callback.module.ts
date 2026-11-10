@@ -1,3 +1,4 @@
+import { CopMonedaPipe } from '../../shared/pipes/cop-moneda.pipe';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PaymentCallbackComponent } from './payment-callback.component';
@@ -15,7 +16,7 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [PaymentCallbackComponent],
-  imports: [
+  imports: [CopMonedaPipe, 
     CommonModule,
     PublicaModule,
     TranslateModule,

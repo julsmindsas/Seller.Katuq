@@ -6,6 +6,7 @@ import { ImagenService } from '../../../shared/utils/image.service';
 import { FotosPorReferenciaService } from '../../../shared/services/productos/fotos-por-referencia.service';
 import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { MENSAJE_ESTANDAR_FOTO, mensajeDeAviso, mensajeDeRechazo } from '../../../shared/services/productos/photo-quality';
+import { abrirGuiaFotos } from './guia-fotos';
 import { evaluarArchivoEstandar } from '../../../shared/services/productos/photo-quality-canvas';
 
 /** Estados que devuelve el backend por archivo (services/productos/fotosPorReferencia.js). */
@@ -96,6 +97,13 @@ export class ImportarFotosReferenciaComponent {
 
   /** Con la bandera apagada la pantalla es la de siempre (5 MB, sin avisos por foto). */
   get fotosEstandarActiva(): boolean { return this.features.isEnabled('fotosEstandar'); }
+
+  /** Ticket 1516: guía imprimible del estándar de fotos (solo con fotosEstandar). */
+  descargarGuia(): void {
+    let empresa = '';
+    try { empresa = JSON.parse(localStorage.getItem('currentCompany') || '{}')?.nomComercial || ''; } catch { /* sin nombre */ }
+    abrirGuiaFotos(empresa);
+  }
 
   get asignadas(): Fila[] { return this.filas.filter((f) => f.estado === 'asignada'); }
   /** Sin producto o con nombre dudoso. Con fotosEstandar las rechazadas se cuentan aparte, no aquí. */

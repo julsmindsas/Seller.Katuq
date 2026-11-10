@@ -484,7 +484,7 @@
                         [rows]="pageSize"
                         [first]="first"
                         [totalRecords]="totalItems"
-                        styleClass="pk-table p-datatable-sm"
+                        styleClass="pk-table p-datatable-sm cfg-tabla-tarjetas pk-tabla-movil"
                         (onLazyLoad)="onPageChange($event)"
                         [lazy]="true"
                         [tableStyle]="{ 'min-width': '10rem' }"
@@ -614,7 +614,7 @@
                         <ng-template pTemplate="body" let-row>
                             <tr>
                                 <!-- Checkbox selección -->
-                                <td class="text-center">
+                                <td class="text-center pk-td-sel">
                                     <input type="checkbox"
                                         class="form-check-input"
                                         [checked]="isSelected(row)"
@@ -627,7 +627,7 @@
                                      "sin imagen" apuntaba a `assets/img/placeholder.png`, que
                                      NO existe: el navegador dibujaba la imagen rota con el
                                      texto alternativo al lado. -->
-                                <td class="text-center">
+                                <td class="text-center pk-td-img">
                                     <img
                                         [src]="
                                             row.crearProducto
@@ -645,7 +645,7 @@
                                 </td>
 
                                 <!-- Título + Indicador completitud -->
-                                <td>
+                                <td class="pk-td-titulo">
                                     <div class="d-flex align-items-center gap-2">
                                         <ng-container *ngIf="getProductCompleteness(row) as c">
                                             <span class="completeness-dot"
@@ -660,14 +660,14 @@
                                 </td>
 
                                 <!-- Referencia (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('referencia')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('referencia')" class="text-center" [attr.data-label]="'Referencia' | translate">
                                     <span class="pk-ref">{{
                                         row.identificacion?.referencia || "N/A"
                                     }}</span>
                                 </td>
 
                                 <!-- Categoría (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('categoria')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('categoria')" class="text-center" [attr.data-label]="'Categoría' | translate">
                                     <span *ngIf="row.categorias?.label || row._categoriaVista?.label" class="pk-chip-neutral">
                                         {{ row.categorias?.label || row._categoriaVista?.label }}
                                     </span>
@@ -675,7 +675,7 @@
                                 </td>
 
                                 <!-- Canales de venta (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('canales')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('canales')" class="text-center" [attr.data-label]="'Canales' | translate">
                                     <div class="d-flex flex-wrap gap-1 justify-content-center">
                                         <span *ngIf="row.exposicion?.soloPos"
                                             class="pk-pill pk-pill-warning"
@@ -698,7 +698,7 @@
                                 </td>
 
                                 <!-- Estado Activo (solo en desktop) — toggle inline -->
-                                <td *ngIf="!isMobile && isColVisible('estado')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('estado')" class="text-center" [attr.data-label]="'Estado' | translate">
                                     <span *ngIf="row._guardandoEstado" class="pk-pill pk-pill-muted">
                                         <i class="fa fa-spinner fa-spin"></i>Guardando…
                                     </span>
@@ -716,7 +716,7 @@
                                 </td>
 
                                 <!-- Disponibilidad (solo en desktop) — toggle inline -->
-                                <td *ngIf="!isMobile && isColVisible('disponibilidad')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('disponibilidad')" class="text-center" [attr.data-label]="'Disponibilidad' | translate">
                                     <span *ngIf="row._guardandoDisp" class="pk-pill pk-pill-muted">
                                         <i class="fa fa-spinner fa-spin"></i>Guardando…
                                     </span>
@@ -734,7 +734,7 @@
                                 </td>
 
                                 <!-- Se produce (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('produccion')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('produccion')" class="text-center" [attr.data-label]="'Producción' | translate">
                                     <span
                                         *ngIf="
                                             row.crearProducto?.paraProduccion
@@ -754,7 +754,7 @@
                                 </td>
 
                                 <!-- Precio unitario con IVA (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('precio')" class="text-end">
+                                <td *ngIf="!isMobile && isColVisible('precio')" class="text-end" [attr.data-label]="'Precio (c/IVA)' | translate">
                                     <!-- Feature B: si el producto/categoría está en promoción vigente, precio tachado + promo + badge -->
                                     <ng-container *ngIf="row.precioPromocional && row.precioPromocional < (row.precio?.precioUnitarioConIva || 0); else precioNormal">
                                         <div class="d-flex flex-column align-items-end">
@@ -781,7 +781,7 @@
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->
-                                <td *ngIf="!isMobile && isColVisible('ultimaEdicion')" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('ultimaEdicion')" class="text-center" [attr.data-label]="'Última Edición' | translate">
                                     <!-- D-548 (6.1): con la bandera productHistoryLog, hora de Colombia y quién editó; sin ella, la fecha de siempre. -->
                                     <ng-container *ngIf="historialNuevo; else fechaDeSiempre">
                                         <small class="pk-date">{{ fechaEdicion(row) }}</small>
@@ -810,7 +810,7 @@
                                 </td> -->
 
                                 <!-- Acciones — menú kebab -->
-                                <td class="text-center">
+                                <td class="text-center" [attr.data-label]="'Acciones' | translate" data-col="acciones">
                                     <div class="pk-actions" ngbDropdown container="body" placement="bottom-right top-right" display="dynamic">
                                         <button
                                             type="button"

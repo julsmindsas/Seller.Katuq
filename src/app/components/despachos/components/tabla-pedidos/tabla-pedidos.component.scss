@@ -2001,3 +2001,29 @@ $border-radius: 6px;
 
   i { color: inherit; }
 }
+
+// =====================================
+// CELULAR (ticket 1531): sin scroll anidado ni ancho fijo; las tarjetas usan el scroll de la página
+// =====================================
+@media (max-width: 767.98px) {
+  .tabla-pedidos-container { max-width: 100%; min-width: 0; overflow-x: hidden; }
+
+  :host ::ng-deep .p-datatable {
+    .p-datatable-scrollable-header,
+    .p-datatable-scrollable-header-box { display: none !important; }
+    .p-datatable-scrollable-body { max-height: none !important; overflow: visible !important; }
+    .p-datatable-scrollable-body > table,
+    .p-datatable-scrollable-table { width: 100% !important; min-width: 0 !important; }
+
+    .p-datatable-tbody > tr > td {
+      min-height: 44px;
+      min-width: 0;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+    }
+    .p-datatable-tbody > tr > td.text-nowrap { white-space: normal !important; }
+
+    .p-paginator { flex-wrap: wrap; justify-content: center; gap: 4px; }
+    .p-paginator .p-paginator-current { width: 100%; text-align: center; }
+  }
+}

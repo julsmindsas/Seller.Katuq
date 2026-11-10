@@ -92,7 +92,7 @@
   <!-- @deprecated K.A.I. Live Audio conservado solo para compatibilidad. -->
   <div *ngIf="legacyKaiEnabled && selectedMode === 'live-audio'" class="live-audio-container">
     <app-live-audio></app-live-audio>
-    <button class="close-live-audio-btn" (click)="stopLiveAudioMode($event)" [title]="'asistentes.floatingButton.cerrarLiveAudio' | translate">
+    <button class="close-live-audio-btn" [attr.aria-label]="'asistentes.floatingButton.cerrarLiveAudio' | translate" (click)="stopLiveAudioMode($event)" [title]="'asistentes.floatingButton.cerrarLiveAudio' | translate">
       <i class="fa fa-times"></i>
     </button>
   </div>

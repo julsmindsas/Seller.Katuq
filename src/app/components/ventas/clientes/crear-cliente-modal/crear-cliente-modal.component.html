@@ -102,7 +102,9 @@
                     <ng-container *ngIf="clientTypes.length === 0">
                       <input pInputText type="text" class="w-100" disabled
                         placeholder="{{ 'ventas.crearClienteModal.sinTiposActivos' | translate }}">
-                      <small class="text-muted d-block mt-1">{{ 'ventas.crearClienteModal.sinTiposActivosAyuda' | translate }}</small>
+                      <small class="text-muted d-block mt-1">
+                        <a routerLink="/proceso/tipos-cliente" (click)="cerrarParaTiposCliente()">{{ 'ventas.crearClienteModal.sinTiposActivosAyuda' | translate }}</a>
+                      </small>
                     </ng-container>
                   </div>
                   <div class="col-12 col-sm-6">
@@ -530,7 +532,7 @@
                     (ngModelChange)="onZonaCobroChange()">
                     <option value="">{{ 'ventas.crearClienteModal.sinZona' | translate }}</option>
                     <option *ngFor="let z of zonasParaCiudad" [value]="z.nombreZonaCobro">
-                      {{ z.nombreZonaCobro }}<ng-container *ngIf="z.valorZonaCobro"> · {{ z.valorZonaCobro | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container>
+                      {{ z.nombreZonaCobro }}<ng-container *ngIf="z.valorZonaCobro"> · {{ z.valorZonaCobro | copMoneda }}</ng-container>
                     </option>
                   </select>
                 </div>

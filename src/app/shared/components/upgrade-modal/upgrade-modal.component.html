@@ -51,15 +51,15 @@
       <i class="pi pi-wrench"></i>
       <div>
         <strong>{{ 'shell.upgrade.sandbox.title' | translate }}</strong>
-        <span>{{ 'shell.upgrade.sandbox.text' | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+        <span>{{ 'shell.upgrade.sandbox.text' | translate: { amount: (initialAmountCOP | copMoneda) } }}</span>
       </div>
     </div>
     <div *ngIf="!isReplacementMode && paymentEnvironment === 'production'" class="payment-notice payment-notice-production mb-3">
       <i class="pi pi-credit-card"></i>
       <div>
         <strong>{{ (productionTestCharge ? 'shell.upgrade.production.testTitle' : 'shell.upgrade.production.title') | translate }}</strong>
-        <span *ngIf="productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.testTextYearly' : 'shell.upgrade.production.testTextMonthly') | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
-        <span *ngIf="!productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.textYearly' : 'shell.upgrade.production.textMonthly') | translate: { amount: (initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0') } }}</span>
+        <span *ngIf="productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.testTextYearly' : 'shell.upgrade.production.testTextMonthly') | translate: { amount: (initialAmountCOP | copMoneda) } }}</span>
+        <span *ngIf="!productionTestCharge">{{ (billingPeriod === 'yearly' ? 'shell.upgrade.production.textYearly' : 'shell.upgrade.production.textMonthly') | translate: { amount: (initialAmountCOP | copMoneda) } }}</span>
       </div>
     </div>
     <div *ngIf="isReplacementMode" class="payment-notice payment-notice-production mb-3">
@@ -120,7 +120,7 @@
   <div *ngIf="step === 'card'" class="p-3">
     <div class="payment-summary mb-3" [class.payment-summary-real]="paymentEnvironment === 'production'">
       <span>{{ (isReplacementMode ? 'shell.upgrade.summary.replace' : (paymentEnvironment === 'production' ? (productionTestCharge ? 'shell.upgrade.summary.realTest' : 'shell.upgrade.summary.realCharge') : 'shell.upgrade.summary.testCharge')) | translate }}</span>
-      <strong *ngIf="!isReplacementMode">{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong><!-- i18n-ignorar: código de moneda -->
+      <strong *ngIf="!isReplacementMode">{{ initialAmountCOP | copMoneda }} COP</strong><!-- i18n-ignorar: código de moneda -->
       <strong *ngIf="isReplacementMode">{{ 'shell.upgrade.summary.zeroNow' | translate }}</strong>
       <small>{{ (isReplacementMode ? 'shell.upgrade.summary.nextCharge' : (billingPeriod === 'yearly' ? 'shell.upgrade.summary.planYearly' : 'shell.upgrade.summary.planMonthly')) | translate: { tier: tierName } }}</small>
     </div>

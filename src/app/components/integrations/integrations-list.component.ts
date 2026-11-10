@@ -34,6 +34,7 @@ import {
   WhatsappIntegrationConfigService,
 } from "../../shared/services/notifications/whatsapp-integration-config.service";
 import { MetaInboxService } from "../notificaciones/meta-inbox/meta-inbox.service";
+import { MessagingLinesService } from "../../shared/services/messaging/messaging-lines.service";
 import { MetaConexiones } from "../notificaciones/meta-inbox/models/meta-thread.model";
 import { PARAM_CONEXION_PENDIENTE, getConnectorConfig } from "./connectors/connector-registry";
 import { MCP_GUIDES } from "./mcp-guides";
@@ -111,6 +112,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private features: CompanyFeaturesService,
     private facturacionIntegracion: FacturacionIntegracionService,
     private translate: TranslateService,
+    private messagingLines: MessagingLinesService,
   ) {}
 
   ngOnInit(): void {
@@ -913,6 +915,8 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   /** undefined = cargando; null = no se pudo saber. */
   resumenWhatsapp: ResumenWhatsapp | null | undefined = undefined;
   conexionesMeta: MetaConexiones | null | undefined = undefined;
+  /** D-704: números de WhatsApp conectados del comercio (líneas por Kapso o directo con Meta). */
+  numerosWhatsapp: string[] = [];
   /** D-500: estado de la tarjeta de facturación. undefined = cargando; null = no se pudo saber. */
   resumenFacturacion: ResumenFacturacion | null | undefined = undefined;
 
@@ -935,6 +939,21 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe((r) => (this.resumenWhatsapp = r));
+    // D-704: un número conectado en «Números de WhatsApp del comercio» también cuenta como
+    // WhatsApp conectado. Sin la bandera la ruta responde 403: ni se pregunta.
+    if (this.features.isEnabled("whatsappMultiNumero")) {
+      this.messagingLines
+        .listar()
+        .pipe(
+          catchError(() => of(null)),
+          takeUntil(this.destroy$),
+        )
+        .subscribe((r) => {
+          this.numerosWhatsapp = (r?.lines || [])
+            .filter((l) => l.status === "connected")
+            .map((l) => l.displayPhone || l.displayName || "");
+        });
+    }
     this.metaInbox
       .obtenerConexiones()
       .pipe(takeUntil(this.destroy$))
@@ -969,6 +988,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
         // El listado solo trae las activas: si aparece, está conectada.
         return this.conexionDe(entrada) ? "ok" : "sin";
       case "whatsapp":
+        if (this.numerosWhatsapp.length > 0) return "ok";
         if (!this.resumenWhatsapp) return "desconocido";
         return this.resumenWhatsapp.activo ? "ok" : "sin";
       case "whatsapp_bot": {
@@ -1021,6 +1041,11 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       return `Con ${this.resumenFacturacion.providerName}`;
     }
     const wa = this.resumenWhatsapp;
+    if (entrada.fuente === "whatsapp" && estado === "ok" && !wa?.activo && this.numerosWhatsapp.length > 0) {
+      return this.numerosWhatsapp.length === 1
+        ? `Con tu número ${this.numerosWhatsapp[0]}`
+        : `Con ${this.numerosWhatsapp.length} números`;
+    }
     if (entrada.fuente === "whatsapp" && estado === "ok" && wa) {
       return wa.numeroPropio ? `Con tu número ${wa.numeroPropio}` : "Con el número de Katuq";
     }

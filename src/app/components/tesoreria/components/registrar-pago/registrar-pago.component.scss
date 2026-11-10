@@ -10,7 +10,7 @@
   gap: 1.5rem;
   padding: 0.75rem 0.9rem;
   background: $cfg-tint;
-  border: 1px solid #eeecf7;
+  border: 1px solid var(--kc-line, #eeecf7);
   border-radius: 11px;
   > div { display: flex; flex-direction: column; gap: 0.1rem; }
 }
@@ -30,7 +30,7 @@
 
 .tk-file-drop {
   position: relative;
-  border: 2px dashed #d9cffb;
+  border: 2px dashed var(--kc-line-strong, #d9cffb);
   border-radius: 11px;
   background: $cfg-tint;
   padding: 1.1rem;
@@ -109,7 +109,7 @@
   padding: 0.65rem 0.8rem;
   border: 1px solid $cfg-chip-border;
   border-radius: 11px;
-  background: #fff;
+  background: var(--kc-surface, #fff);
   cursor: pointer;
   input { margin-top: 0.2rem; width: 1.05rem; height: 1.05rem; accent-color: #5F3FE0; flex: 0 0 auto; }
   input:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }

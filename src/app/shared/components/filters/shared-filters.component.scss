@@ -9,29 +9,29 @@
 // ===========================================
 $color-primary: #5F3FE0;        // acento Katuq (D-131)
 $color-primary-hover: #4a2fc0;  // hover del acento
-$color-primary-light: #efe9ff;  // fondo suave del acento
-$color-primary-50: #faf9fe;     // superficie lila
+$color-primary-light: var(--ds-accent-soft);  // fondo suave del acento
+$color-primary-50: var(--ds-surface-2);     // superficie lila
 
-$color-success: #1E874B;        // éxito del canon
+$color-success: var(--ds-ok);        // éxito del canon
 $color-success-hover: #17703d;  // hover del éxito
-$color-warning: #D9820A;        // alerta del canon
-$color-danger: #D64545;         // error del canon
+$color-warning: var(--ds-warn);        // alerta del canon
+$color-danger: var(--ds-err);         // error del canon
 $color-danger-hover: #b83a3a;   // hover del error
 
 // Neutrals (Zinc palette for consistency)
-$text-primary: #211F3A;         // tinta del canon
-$text-secondary: #5b5878;       // cuerpo del canon
-$text-muted: #8f8bab;           // muted del canon
-$text-placeholder: #8f8bab;     // muted del canon
+$text-primary: var(--ds-ink);         // tinta del canon
+$text-secondary: var(--ds-body);       // cuerpo del canon
+$text-muted: var(--ds-muted);           // muted del canon
+$text-placeholder: var(--ds-muted);     // muted del canon
 
-$border-default: #e9e7f3;       // borde lila del canon
-$border-hover: #d9d4ee;         // borde lila hover
+$border-default: var(--ds-control-border);       // borde lila del canon
+$border-hover: var(--ds-line-strong);         // borde lila hover
 $border-focus: $color-primary;
 
-$bg-white: #ffffff;
-$bg-subtle: #faf9fe;            // superficie lila
-$bg-hover: #f5f4fa;             // lila suave
-$bg-active: #efe9ff;            // acento suave
+$bg-white: var(--ds-surface);
+$bg-subtle: var(--ds-surface-2);            // superficie lila
+$bg-hover: var(--ds-chip-bg);             // lila suave
+$bg-active: var(--ds-accent-soft);            // acento suave
 
 // ===========================================
 // SPACING SCALE - More generous spacing
@@ -198,13 +198,13 @@ $transition-slow: 300ms ease;
 
       &.pi-spin {
         animation: spin 1s linear infinite;
-        color: $color-primary;
+        color: var(--ds-accent-ink);
       }
     }
   }
 
   &:focus-within .p-inputgroup-addon {
-    color: $color-primary;
+    color: var(--ds-accent-ink);
     background: $color-primary-50;
     border-color: $color-primary-light;
   }
@@ -215,8 +215,8 @@ $transition-slow: 300ms ease;
   border: none;
   border-left: 1px solid $border-default;
   padding: 0;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,6 +233,8 @@ $transition-slow: 300ms ease;
   &:active {
     background: rgba($color-danger, 0.15);
   }
+
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
   i {
     font-size: $font-sm;
@@ -333,7 +335,7 @@ $transition-slow: 300ms ease;
     }
 
     i {
-      color: $color-primary;
+      color: var(--ds-accent-ink);
     }
   }
 
@@ -432,7 +434,7 @@ $transition-slow: 300ms ease;
 
       .p-autocomplete-loader {
         right: $space-3;
-        color: $color-primary;
+        color: var(--ds-accent-ink);
       }
     }
 
@@ -476,7 +478,7 @@ $transition-slow: 300ms ease;
 
         &:hover {
           background: $bg-hover;
-          color: $color-primary;
+          color: var(--ds-accent-ink);
         }
 
         &:focus {
@@ -537,7 +539,7 @@ $transition-slow: 300ms ease;
         box-shadow: $shadow-focus;
 
         .p-dropdown-trigger {
-          color: $color-primary;
+          color: var(--ds-accent-ink);
         }
       }
     }
@@ -579,7 +581,7 @@ $transition-slow: 300ms ease;
           color: $text-primary;
 
           &:hover {
-            color: $color-primary;
+            color: var(--ds-accent-ink);
           }
         }
       }
@@ -591,7 +593,7 @@ $transition-slow: 300ms ease;
 
         &:hover {
           background: $bg-hover;
-          color: $color-primary;
+          color: var(--ds-accent-ink);
         }
       }
     }
@@ -626,7 +628,7 @@ $transition-slow: 300ms ease;
 
         &.p-datepicker-today > span:not(.p-highlight) {
           background: $color-primary-light;
-          color: $color-primary;
+          color: var(--ds-accent-ink);
           font-weight: $font-weight-semibold;
         }
       }
@@ -676,7 +678,7 @@ $transition-slow: 300ms ease;
 
         &.p-highlight {
           background: $color-primary-light;
-          color: $color-primary;
+          color: var(--ds-accent-ink);
           font-weight: $font-weight-medium;
         }
       }
@@ -746,7 +748,7 @@ $transition-slow: 300ms ease;
           align-items: center;
           gap: $space-2;
           padding: $space-2 $space-3;
-          background: white;
+          background: var(--ds-surface);
           border: 1px solid $border-default;
           border-radius: $radius-full;
           font-size: $font-sm;
@@ -785,10 +787,16 @@ $transition-slow: 300ms ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
+            position: relative;
             transition: all $transition-fast;
+
+            // Área táctil de 40 px sin agrandar la etiqueta
+            &::after { content: ""; position: absolute; inset: -8px; }
+
+            &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
             &:hover {
               background: rgba($color-danger, 0.1);
@@ -796,7 +804,7 @@ $transition-slow: 300ms ease;
             }
 
             i {
-              font-size: 0.625rem;
+              font-size: 0.75rem;
             }
           }
         }
@@ -804,7 +812,7 @@ $transition-slow: 300ms ease;
     }
 
     .config-section {
-      background: white;
+      background: var(--ds-surface);
       border-radius: $radius-md;
       padding: $space-5;
       border: 1px solid $border-default;
@@ -818,7 +826,7 @@ $transition-slow: 300ms ease;
         font-size: $font-base;
 
         i {
-          color: $color-primary;
+          color: var(--ds-accent-ink);
           margin-right: $space-2;
         }
       }
@@ -872,7 +880,7 @@ $transition-slow: 300ms ease;
     font-size: $font-base;
 
     i {
-      color: $color-primary;
+      color: var(--ds-accent-ink);
     }
 
     strong {
@@ -1039,7 +1047,7 @@ $transition-slow: 300ms ease;
   .count-badge {
     min-width: 20px;
     height: 20px;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
   }
 
   .advanced-filters-panel {

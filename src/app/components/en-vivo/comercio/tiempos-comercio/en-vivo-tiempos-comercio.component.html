@@ -7,7 +7,8 @@
   </header>
   <div class="card__body">
     <div class="ciclo">
-      <div class="ciclo__big">{{ vista.ciclo }}<small>{{ vista.leyenda }}</small></div>
+      <div class="ciclo__big" [attr.title]="vista.ayuda">{{ vista.ciclo }}<small>{{ vista.leyenda }}</small></div>
+      <span class="visually-hidden">{{ vista.ayuda }}</span>
       <div class="ciclo__bar" aria-hidden="true">
         <i *ngFor="let t of vista.tramos; trackBy: porTramo" [style.flex-grow]="t.crecer" [style.background]="t.color"></i>
       </div>

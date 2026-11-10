@@ -6,7 +6,7 @@ import { Pedido, EstadoPago, EstadoProceso } from '../../../components/ventas/mo
 import { CustomerSummary } from '../../../components/ventas/modelo/customer-summary';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { Observable, throwError, of } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { tap, catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriptionService } from '../subscription.service';
@@ -62,6 +62,30 @@ export interface CoberturaListasPrecio {
   providedIn: 'root'
 })
 export class VentasService extends BaseService {
+  /** Zonas de cobro de la sesión de la pantalla: una sola petición, las demás reciben la misma respuesta. */
+  private zonasCobro$: Observable<any> | null = null;
+
+  /**
+   * Zonas de cobro pedidas una sola vez. Quien la use al abrir una pantalla debe llamar
+   * a limpiarZonasCobro() al salir, para que la próxima visita vuelva a leerlas.
+   */
+  getZonasCobroUnaVez(): Observable<any> {
+    if (!this.zonasCobro$) {
+      this.zonasCobro$ = this.get<any>('/v1/zonascobro/all').pipe(
+        catchError((err) => {
+          this.zonasCobro$ = null; // un error no se queda guardado
+          return throwError(() => err);
+        }),
+        shareReplay(1)
+      );
+    }
+    return this.zonasCobro$;
+  }
+
+  limpiarZonasCobro(): void {
+    this.zonasCobro$ = null;
+  }
+
   getOrdersPOSByFilter(filter: any) {
     return this.post<POSPedido[]>('/v1/orders/pos/all/filter', filter);
   }

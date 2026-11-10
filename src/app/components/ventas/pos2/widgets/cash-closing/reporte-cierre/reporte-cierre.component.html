@@ -60,19 +60,19 @@
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 8px; font-weight: bold;">Efectivo inicial:</td>
-            <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoInicial | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoInicial | copMoneda }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 8px; font-weight: bold;">Ventas en efectivo:</td>
-            <td style="padding: 8px; text-align: right;">{{ totalEfectivo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ totalEfectivo | copMoneda }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;" *ngIf="efectivoAnteriores">
             <td style="padding: 8px; font-weight: bold;">Efectivo de ventas sin cerrar del {{ fechasEfectivoAnteriores }}:</td>
-            <td style="padding: 8px; text-align: right;">{{ efectivoAnteriores | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ efectivoAnteriores | copMoneda }}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 8px; font-weight: bold;">Efectivo esperado:</td>
-            <td style="padding: 8px; text-align: right;">{{ (datosCierre?.efectivoInicial + totalEfectivo + efectivoAnteriores) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ (datosCierre?.efectivoInicial + totalEfectivo + efectivoAnteriores) | copMoneda }}</td>
           </tr>
         </table>
       </div>
@@ -81,13 +81,13 @@
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 8px; font-weight: bold;">Efectivo final:</td>
-            <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoFinal | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td style="padding: 8px; text-align: right;">{{ datosCierre?.efectivoFinal | copMoneda }}</td>
           </tr>
           <tr style="border-bottom: 2px solid #333; background-color: #f8f9fa;">
             <td style="padding: 8px; font-weight: bold;">Diferencia:</td>
             <td style="padding: 8px; text-align: right; font-weight: bold;" 
                 [style.color]="esDiferenciaPositiva ? '#28a745' : '#dc3545'">
-              {{ diferenciaCaja | currency:'COP':'symbol-narrow':'1.0-0' }}
+              {{ diferenciaCaja | copMoneda }}
             </td>
           </tr>
         </table>
@@ -119,7 +119,7 @@
         <tr *ngFor="let formaPago of datosCierre?.formasPago" style="border-bottom: 1px solid #ddd;">
           <td style="border: 1px solid #333; padding: 8px;">{{ formaPago.nombre }}</td>
           <td style="border: 1px solid #333; padding: 8px; text-align: right;">
-            {{ formaPago.total | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ formaPago.total | copMoneda }}
           </td>
           <td style="border: 1px solid #333; padding: 8px; text-align: right;">
             {{ ((formaPago.total / datosCierre?.informe?.totalVentas) * 100) | number:'1.1-1' }}%
@@ -130,7 +130,7 @@
         <tr style="background-color: #e9ecef; font-weight: bold;">
           <td style="border: 1px solid #333; padding: 10px;">TOTAL VENTAS</td>
           <td style="border: 1px solid #333; padding: 10px; text-align: right;">
-            {{ datosCierre?.informe?.totalVentas | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ datosCierre?.informe?.totalVentas | copMoneda }}
           </td>
           <td style="border: 1px solid #333; padding: 10px; text-align: right;">100%</td>
         </tr>
@@ -161,13 +161,13 @@
           <td style="border: 1px solid #333; padding: 6px;">{{ venta.nroPedido }}</td>
           <td style="border: 1px solid #333; padding: 6px;">{{ horaVenta(venta.fechaCreacion) }}</td>
           <td style="border: 1px solid #333; padding: 6px;">{{ venta.formaDePago }}</td>
-          <td style="border: 1px solid #333; padding: 6px; text-align: right;">{{ venta.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td style="border: 1px solid #333; padding: 6px; text-align: right;">{{ venta.total | copMoneda }}</td>
         </tr>
       </tbody>
       <tfoot>
         <tr style="background-color: #e9ecef; font-weight: bold;">
           <td colspan="3" style="border: 1px solid #333; padding: 8px;">TOTAL DÍAS ANTERIORES</td>
-          <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ datosCierre?.totalAnteriores | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ datosCierre?.totalAnteriores | copMoneda }}</td>
         </tr>
       </tfoot>
     </table>
@@ -194,10 +194,10 @@
           <td style="border: 1px solid #333; padding: 6px;">{{ producto.nombre }}</td>
           <td style="border: 1px solid #333; padding: 6px; text-align: center;">{{ producto.cantidad }}</td>
           <td style="border: 1px solid #333; padding: 6px; text-align: right;">
-            {{ producto.precioUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ producto.precioUnitario | copMoneda }}
           </td>
           <td style="border: 1px solid #333; padding: 6px; text-align: right;">
-            {{ producto.total | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ producto.total | copMoneda }}
           </td>
           <td style="border: 1px solid #333; padding: 6px; text-align: center; font-size: 10px;">
             {{ producto.numeroPedido }}
@@ -212,7 +212,7 @@
           </td>
           <td style="border: 1px solid #333; padding: 8px;"></td>
           <td style="border: 1px solid #333; padding: 8px; text-align: right;">
-            {{ datosCierre?.informe?.totalVentas | currency:'COP':'symbol-narrow':'1.0-0' }}
+            {{ datosCierre?.informe?.totalVentas | copMoneda }}
           </td>
           <td style="border: 1px solid #333; padding: 8px;"></td>
         </tr>

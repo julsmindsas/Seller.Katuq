@@ -31,7 +31,7 @@
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.registrarPago.formaDePago' | translate }}</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.referencia' | translate }}</span><span class="tk-pago-value">{{ pago?.numeroComprobante || '—' }}</span></div>
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.fecha' | translate }}</span><span class="tk-pago-value">{{ (pago?.fecha || pago?.fechaTransaccion) | date:'dd/MM/yyyy' }}</span></div>
-    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.revisarPago.valorDeEstePago' | translate }}</span><span class="tk-pago-value tk-money">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.revisarPago.valorDeEstePago' | translate }}</span><span class="tk-pago-value tk-money">{{ estePago | copMoneda }}</span></div>
     <div class="tk-pago-item"><span class="tk-pago-label">{{ 'tesoreria.historialPagos.subidoPor' | translate }}</span><span class="tk-pago-value">{{ pago?.usuarioRegistro || '—' }}</span></div>
     <div class="tk-pago-item tk-pago-file">
       <span class="tk-pago-label">{{ 'tesoreria.revisarPago.comprobante' | translate }}</span>
@@ -66,25 +66,25 @@
 
   <!-- Resumen de saldo -->
   <div class="tk-resumen mb-3">
-    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.totalDelPedido' | translate }}</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.yaAprobado' | translate }}</span><span class="tk-resumen-num">{{ yaAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.estePago' | translate }}</span><span class="tk-resumen-num">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col" *ngIf="!excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.quedariaFaltando' | translate }}</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
-    <div class="tk-resumen-col" *ngIf="excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.excedeElTotal' | translate }}</span><span class="tk-resumen-num text-danger">{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.totalDelPedido' | translate }}</span><span class="tk-resumen-num">{{ total | copMoneda }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.yaAprobado' | translate }}</span><span class="tk-resumen-num">{{ yaAprobado | copMoneda }}</span></div>
+    <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.estePago' | translate }}</span><span class="tk-resumen-num">{{ estePago | copMoneda }}</span></div>
+    <div class="tk-resumen-col" *ngIf="!excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.quedariaFaltando' | translate }}</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | copMoneda }}</span></div>
+    <div class="tk-resumen-col" *ngIf="excedente"><span class="tk-resumen-label">{{ 'tesoreria.revisarPago.excedeElTotal' | translate }}</span><span class="tk-resumen-num text-danger">{{ excedente | copMoneda }}</span></div>
   </div>
 
   <!-- Ticket 1218: este pago deja el pedido pagado por encima de su total -->
   <div class="tk-alert-warning mb-3" *ngIf="excedente">
     <i class="pi pi-exclamation-triangle me-1"></i>
-    {{ 'tesoreria.revisarPago.conEstePagoElPedido' | translate }} <strong>{{ (yaAprobado + estePago) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>,
-    <strong>{{ excedente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong> {{ 'tesoreria.revisarPago.masQueSuTotalRevisa' | translate }}
+    {{ 'tesoreria.revisarPago.conEstePagoElPedido' | translate }} <strong>{{ (yaAprobado + estePago) | copMoneda }}</strong>,
+    <strong>{{ excedente | copMoneda }}</strong> {{ 'tesoreria.revisarPago.masQueSuTotalRevisa' | translate }}
   </div>
 
   <!-- Aviso de pago parcial -->
   <div class="tk-alert-warning mb-3" *ngIf="esParcial">
     <i class="pi pi-info-circle me-1"></i>
     {{ 'tesoreria.revisarPago.siApruebasElPedidoQuedara' | translate }} <strong>{{ 'tesoreria.revisarPago.preAprobado' | translate }}</strong> {{ 'tesoreria.revisarPago.conUnSaldoPendienteDe' | translate }}
-    <strong>{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>.
+    <strong>{{ quedariaFaltando | copMoneda }}</strong>.
   </div>
 
   <!-- Nota fija anti-fraude -->

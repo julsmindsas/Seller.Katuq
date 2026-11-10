@@ -323,7 +323,13 @@ Por favor asigna el transportador y actualiza el estado de estos pedidos a "Desp
     }
 
     getSpeakerName(message: AgUiMessage): string {
-        return message.speaker?.displayName || message.speaker?.name || 'Asistente';
+        // Ticket 1528: al comercio se le muestra el tema, no un nombre de persona.
+        const temas: Record<string, string> = {
+            carlos: 'Gerencia', maria: 'Ventas', 'maría': 'Ventas',
+            pedro: 'Inventario', ana: 'Logística'
+        };
+        const nombre = message.speaker?.displayName || message.speaker?.name || 'Asistente';
+        return temas[nombre.trim().toLowerCase()] || nombre;
     }
 
     getSpeakerColor(message: AgUiMessage): string {

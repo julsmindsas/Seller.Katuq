@@ -18,6 +18,10 @@ export interface VendedorLinea {
 
 export type TipoConexionLinea = 'coexistence' | 'dedicated';
 export type EstadoLinea = 'connected' | 'disconnected';
+/** ¿La línea quedó operativa? (D-704) `por_terminar`: falta un paso; `por_reconectar`: el proveedor ya no la reconoce. */
+export type SetupLinea = 'completo' | 'por_terminar' | 'por_reconectar';
+/** Cómo conectar un número directo con Meta (D-704). */
+export type ModoConexionMeta = 'celular' | 'nuevo';
 
 /** Línea registrada del comercio (`messaging_lines`). */
 export interface MessagingLine {
@@ -34,6 +38,9 @@ export interface MessagingLine {
   botEnabled: boolean;
   /** ISO, epoch o Timestamp serializado de Firestore: se muestra solo si se puede leer. */
   connectedAt?: unknown;
+  setup?: SetupLinea;
+  /** Causa en palabras sencillas cuando `setup` no es `completo`. */
+  setupError?: string | null;
 }
 
 /** `GET /v1/messaging/lines`. */
@@ -42,6 +49,34 @@ export interface MessagingLinesResponse {
   puedeAdministrar: boolean;
   lines: MessagingLine[];
   equipo: MiembroEquipo[];
+  /** Conexión directa con Meta (D-704): si se ofrece y si se puede compartir el número del celular. */
+  metaDirecto: { habilitada: boolean; modoCelular: boolean };
+}
+
+/** Lo que devuelve conectar en Meta directo: los datos para abrir el registro insertado (D-704). */
+export interface DatosRegistroMeta {
+  kind: 'embedded_signup';
+  appId: string;
+  configId: string;
+  graphVersion: string;
+  versionRegistro: number;
+  featureType: string | null;
+  modo: ModoConexionMeta;
+}
+
+/** Respuesta de `POST /lines/connect`: un enlace (Kapso) o el registro insertado (Meta). */
+export type ConexionProveedor = { url: string; expiresAt?: string } | DatosRegistroMeta;
+
+/** Plantilla de la cuenta de WhatsApp de una línea. */
+export interface PlantillaLinea {
+  id: string | null;
+  name: string;
+  language: string | null;
+  category: string | null;
+  status: string | null;
+  estadoHumano: string;
+  motivoRechazo: string | null;
+  bodyText: string;
 }
 
 /** Cambios permitidos en `PATCH /v1/messaging/lines/:lineId` (vendedores por email). */

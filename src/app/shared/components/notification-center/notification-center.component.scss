@@ -231,6 +231,18 @@
   color: #211F3A;
 }
 
+// Ticket 1548: la papelera no queda pegada a «marcar como leídas»
+.btn-icon.btn-clear-all {
+  margin-left: 8px;
+  &:hover { background-color: rgba(220, 38, 38, 0.1); color: #D64545; }
+}
+
+.notification-bell:focus-visible,
+.btn-icon:focus-visible {
+  outline: 3px solid #7C5CFF !important;
+  outline-offset: 2px;
+}
+
 .btn-icon.btn-close {
   color: #8f8bab;
 }

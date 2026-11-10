@@ -63,7 +63,7 @@
               <p><strong>Fecha de Creación:</strong> {{ order.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</p>
             </div>
             <div class="col-md-4">
-              <p><strong>Total:</strong> {{ order.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+              <p><strong>Total:</strong> {{ order.totalPedididoConDescuento | copMoneda }}</p>
             </div>
           </div>
 

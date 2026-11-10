@@ -20,6 +20,7 @@ import {
   LineaResumen,
   MessagingLine,
 } from "../../../../../shared/services/messaging/messaging.models";
+import { textoHumanoDePlantilla } from "./plantillas-humanas";
 
 /** Etiqueta de estado de un hilo en la lista (mockup Marketing y WhatsApp). */
 interface ThreadTag {
@@ -259,6 +260,7 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     if (!snippet) {
       return "";
     }
+    snippet = textoHumanoDePlantilla(snippet);
     return snippet.length > 60 ? snippet.slice(0, 60) + "…" : snippet;
   }
 

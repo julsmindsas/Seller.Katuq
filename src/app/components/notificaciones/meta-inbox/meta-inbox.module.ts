@@ -1,3 +1,4 @@
+import { CopMonedaPipe } from '../../../shared/pipes/cop-moneda.pipe';
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -16,6 +17,6 @@ import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-
  */
 @NgModule({
   declarations: [MetaInboxShellComponent, MetaContactPanelComponent],
-  imports: [CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule, TranslateModule],
+  imports: [CopMonedaPipe, CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule, TranslateModule],
 })
 export class MetaInboxModule {}

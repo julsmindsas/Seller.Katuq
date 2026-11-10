@@ -41,6 +41,8 @@ export interface TiendaSitio {
   modoConversion?: boolean;
   /** Ticket 1241: KAI, asesor de compra en la tienda. */
   asesorKai?: boolean;
+  /** D-686: Opttia en el sitio. La llave solo existe si el comercio lo configuró. */
+  opttia?: OpttiaDelSitio;
   /** Ticket 1225: cupo de pedidos por día, hora de corte (HH:mm) y días sin entregas (YYYY-MM-DD). */
   entregas?: { cupoDiario: number; horaCorte: string; diasBloqueados: string[] };
   /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
@@ -114,6 +116,15 @@ export interface TiendaSitio {
 }
 
 /** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */
+/** D-686: Opttia en el sitio (`tienda.opttia`). El servidor normaliza y recorta todo. */
+export interface OpttiaDelSitio {
+  activo: boolean;
+  nombre: string;
+  saludo: string;
+  puede: { asesorar: boolean; cerrarVenta: boolean; soporte: boolean; tickets: boolean; whatsapp: boolean; archivos: boolean };
+  preguntasFrecuentes: { p: string; r: string }[];
+}
+
 export interface CorreoMomento {
   activo: boolean;
   asunto: string;
@@ -795,6 +806,8 @@ export class SitiosService extends BaseService {
     contenido: { bloques: any[]; tema: any; tienda?: any };
     /** Fotos, capturas o páginas de un PDF ya reducidas a JPEG (data URL), hasta 3. */
     referencias?: string[];
+    /** «¿Dónde?» del chat: el id de la sección señalada. Sin él, el pedido es de toda la página. */
+    lugar?: string;
   }): Observable<
     Respuesta<{
       bloques: any[];

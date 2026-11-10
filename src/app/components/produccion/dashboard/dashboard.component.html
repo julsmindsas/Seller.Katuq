@@ -537,7 +537,7 @@
                                          pTooltip="{{ 'Filtrar ensambles sin producir' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-circle"></i>
-                                        <span class="metric-label-short">PEND</span>
+                                        <span class="metric-label-short">Pendientes</span>
                                         <span class="metric-label-full">Pendientes</span>
                                         <span class="metric-badge">{{ ensamblesPendientes || 0 }}</span>
                                     </div>
@@ -550,7 +550,7 @@
                                          pTooltip="{{ 'Filtrar ensambles en proceso' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-sync"></i>
-                                        <span class="metric-label-short">EP</span>
+                                        <span class="metric-label-short">En proceso</span>
                                         <span class="metric-label-full">En Proceso</span>
                                         <span class="metric-badge">{{ ensamblesProceso || 0 }}</span>
                                     </div>
@@ -563,7 +563,7 @@
                                          pTooltip="{{ 'Filtrar ensambles completados' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-check-circle"></i>
-                                        <span class="metric-label-short">COMP</span>
+                                        <span class="metric-label-short">Completados</span>
                                         <span class="metric-label-full">Completados</span>
                                         <span class="metric-badge">{{ ensamblesCompletados || 0 }}</span>
                                     </div>
@@ -577,7 +577,7 @@
                                          pTooltip="{{ 'Filtrar ensambles urgentes (entrega en 2 días o menos)' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-exclamation-triangle"></i>
-                                        <span class="metric-label-short">URG</span>
+                                        <span class="metric-label-short">Urgentes</span>
                                         <span class="metric-label-full">Urgentes</span>
                                         <span class="metric-badge">{{ pedidosUrgentes?.length || 0 }}</span>
                                     </div>
@@ -588,7 +588,7 @@
                                          pTooltip="{{ 'Filtrar ensambles en riesgo (entrega en 3-5 días)' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-clock"></i>
-                                        <span class="metric-label-short">RIESGO</span>
+                                        <span class="metric-label-short">En riesgo</span>
                                         <span class="metric-label-full">En Riesgo</span>
                                         <span class="metric-badge">{{ pedidosEnRiesgo?.length || 0 }}</span>
                                     </div>
@@ -598,7 +598,7 @@
                                          pTooltip="{{ 'Capacidad utilizada en producción' | translate }}"
                                          tooltipPosition="top">
                                         <i class="pi pi-chart-bar"></i>
-                                        <span class="metric-label-short">CAP</span>
+                                        <span class="metric-label-short">Capacidad</span>
                                         <span class="metric-label-full">Capacidad</span>
                                         <span class="metric-badge">{{ capacidadUtilizada || 0 }}%</span>
                                     </div>

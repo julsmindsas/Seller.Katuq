@@ -1653,3 +1653,28 @@ $border-radius: 11px;
         word-break: break-word;
     }
 }
+
+// ===================================
+// CELULAR (ticket 1531): lista en tarjetas, sin scroll horizontal ni anidado
+// ===================================
+@media (max-width: 767.98px) {
+    .cli-lista { max-width: 100%; overflow-x: hidden; }
+    .cli-lista__card { min-width: 0; }
+    .table-container { overflow-x: visible; padding: 0 10px 10px; }
+
+    :host ::ng-deep .cli-tabla-movil {
+        .p-datatable-scrollable-header,
+        .p-datatable-scrollable-header-box { display: none !important; }
+        .p-datatable-scrollable-body { max-height: none !important; overflow: visible !important; }
+        .p-datatable-scrollable-body > table,
+        .p-datatable-scrollable-table { width: 100% !important; min-width: 0 !important; }
+        .p-datatable-tbody > tr > td { overflow-wrap: anywhere; }
+        .p-datatable-tbody > tr > td .text-truncate { max-width: 100% !important; }
+        .p-datatable-tbody > tr > td:first-child:not([data-label]) { justify-content: flex-end; }
+        .btn-options { min-width: 44px; min-height: 44px; }
+        .p-paginator { flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .p-paginator .p-paginator-current { width: 100%; text-align: center; }
+    }
+
+    .cli-filtros-cabeza { min-height: 44px; }
+}

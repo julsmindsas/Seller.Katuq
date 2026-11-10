@@ -53,7 +53,7 @@
       </div>
       <div class="cc__kpi is-destacado">
         <span class="cc__kpi-label">Ventas que trajo</span>
-        <span class="cc__kpi-valor">{{ m.ventasAtribuidas.valor | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="cc__kpi-valor">{{ m.ventasAtribuidas.valor | copMoneda }}</span>
         <span class="cc__kpi-sub">{{ m.ventasAtribuidas.pedidos }} pedido(s) por el correo o hasta 7 días después del clic</span>
       </div>
       <div class="cc__kpi">

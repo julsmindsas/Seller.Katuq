@@ -101,7 +101,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
 
   .cfg-eyebrow {
     align-self: flex-start;
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .7px !important;
     text-transform: uppercase;
@@ -201,7 +201,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
   }
 
   .cfg-label {
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: .6px;
     text-transform: uppercase;
@@ -255,7 +255,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     gap: 6px;
     padding: 3px 10px;
     border-radius: 20px;
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .4px !important;
     text-transform: uppercase;
@@ -289,7 +289,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     &:hover { transform: translateY(-1px); }
   }
   .cfg-stat__label {
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     font-weight: 800;
     letter-spacing: .5px !important;
     text-transform: uppercase;
@@ -305,7 +305,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
   // Formularios: labels UPPERCASE muted e inputs lilas de 40px.
   .cfg-form {
     label, .form-label, .col-form-label {
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -383,7 +383,7 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
     .p-datatable-thead > tr > th {
       background: $cfg-tint !important;
       color: $cfg-muted !important;
-      font-size: 10.5px !important;
+      font-size: 12px !important;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -428,4 +428,51 @@ $cfg-shadow-btn: var(--ds-shadow-btn);
   }
 
   :host ::ng-deep .cfg-card .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider { background: $cfg-accent !important; }
+
+  // ── Tabla en tarjetas en celular (tickets 1537 y 1540) ──
+  // Opt-in: `styleClass="... cfg-tabla-tarjetas"` y `data-label` en cada `td`. Por debajo de 768 px cada fila es una
+  // tarjeta (etiqueta a la izquierda, valor a la derecha) sin scroll horizontal; Activo y Acciones quedan a la vista.
+  @media (max-width: 767.98px) {
+    :host ::ng-deep .cfg-card .p-datatable.cfg-tabla-tarjetas {
+      .p-datatable-wrapper { overflow: visible !important; height: auto !important; max-height: none !important; }
+      table { display: block; width: 100% !important; min-width: 0 !important; table-layout: auto; }
+      .p-datatable-thead { display: none; }
+      .p-datatable-tbody { display: block; }
+
+      .p-datatable-tbody > tr {
+        display: block;
+        margin: 0 0 10px;
+        border: 1px solid $cfg-line-soft;
+        border-radius: 11px;
+        overflow: hidden;
+        background: var(--ds-surface);
+
+        > td {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          width: 100% !important;
+          min-width: 0 !important;
+          border: 0 !important;
+          border-bottom: 1px solid $cfg-line-soft !important;
+          padding: 10px 14px;
+          text-align: right;
+          white-space: normal !important;
+        }
+        > td:last-child { border-bottom: 0 !important; }
+
+        > td[data-label]::before {
+          content: attr(data-label);
+          flex: none;
+          color: $cfg-muted;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: .5px;
+          text-transform: uppercase;
+          text-align: left;
+        }
+      }
+    }
+  }
 }

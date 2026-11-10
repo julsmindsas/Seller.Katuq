@@ -27,6 +27,15 @@ $aviso-estados: (
 }
 
 // ---------------------------------------------------------------- ngx-toastr
+// Ticket 1529: los avisos anclados arriba empiezan debajo del encabezado para no tapar
+// Opttia, las notificaciones ni el perfil (igual que p-toast en styles.scss).
+#toast-container.toast-top-right,
+#toast-container.toast-top-left,
+#toast-container.toast-top-center,
+#toast-container.toast-top-full-width {
+  top: calc(74px + env(safe-area-inset-top, 0px)) !important;
+}
+
 #toast-container > .ngx-toastr {
   position: relative;
   width: 340px;

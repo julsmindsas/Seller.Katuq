@@ -536,6 +536,30 @@ $vt-canvas: #f5f4fa;
     }
 
     &__req { color: $pub-err; font-size: inherit; }
+    &__lbl { display: block; font-size: inherit; color: inherit; }
+
+    // Identidad de la tienda sobre el nombre del catálogo.
+    &__tienda {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    &__tienda-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      object-fit: cover;
+      background: #fff;
+      border: 1px solid $pub-line;
+    }
+    &__tienda-nombre {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      color: $pub-muted;
+    }
 
     &__hint { margin: -4px 0 0; font-size: 12px; color: $pub-muted; }
 
@@ -586,7 +610,7 @@ $vt-canvas: #f5f4fa;
     .vit__hoja-asa { display: none; }
   }
 
-  @media (max-width: 380px) {
+  @media (max-width: 480px) {
     .vit__form-fila { flex-direction: column; }
   }
 

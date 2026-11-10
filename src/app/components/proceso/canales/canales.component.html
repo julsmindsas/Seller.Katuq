@@ -30,7 +30,7 @@
         <div class="custom-datatable" *ngIf="!cargando">
             <p-table #dt [columns]="selectedColumns" [value]="rows" [paginator]="true" [rows]="10"
                 [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
-                styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
+                styleClass="p-datatable-gridlines p-datatable-striped cfg-tabla-tarjetas" [rowsPerPageOptions]="[10, 20, 50]"
                 [sortField]="'name'" [sortOrder]="1" [globalFilterFields]="[
                     'name',
                     'tipo',
@@ -48,7 +48,7 @@
                             {{ "Tipo" | translate }}
                             <p-sortIcon field="tipo"></p-sortIcon>
                         </th>
-                        <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
+                        <th class="text-center" pSortableColumn="activo">
                             {{ "Activo" | translate }}
                             <p-sortIcon field="activo"></p-sortIcon>
                         </th>
@@ -60,15 +60,15 @@
 
                 <ng-template pTemplate="body" let-row>
                     <tr>
-                        <td>{{ row.name }}</td>
-                        <td>{{ row.tipo }}</td>
-                        <td *ngIf="!isMobile" class="text-center">
+                        <td data-label="{{ 'Nombre' | translate }}">{{ row.name }}</td>
+                        <td data-label="{{ 'Tipo' | translate }}">{{ row.tipo }}</td>
+                        <td class="text-center" data-label="{{ 'Activo' | translate }}">
                             <label class="switch">
                                 <input class="toggle" type="checkbox" [checked]="row.activo" disabled />
                                 <span class="switch-state"></span>
                             </label>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="{{ 'Acciones' | translate }}">
                             <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
                                 style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                                 class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
@@ -83,7 +83,7 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td [attr.colspan]="isMobile ? 3 : 4">{{ "No hay datos disponibles" | translate }}</td>
+                        <td [attr.colspan]="isMobile ? 4 : 4">{{ "No hay datos disponibles" | translate }}</td>
                     </tr>
                 </ng-template>
 

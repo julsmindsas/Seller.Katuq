@@ -33,6 +33,10 @@
   <!-- Vitrina -->
   <ng-container *ngIf="!cargando && !error && !referencia && catalogo">
     <header class="vit__head">
+      <div class="vit__tienda" *ngIf="catalogo.tienda?.nombre || catalogo.tienda?.logo">
+        <img class="vit__tienda-logo" *ngIf="catalogo.tienda?.logo" [src]="catalogo.tienda?.logo" [alt]="catalogo.tienda?.nombre || 'Tienda'" />
+        <span class="vit__tienda-nombre" *ngIf="catalogo.tienda?.nombre">{{ catalogo.tienda?.nombre }}</span>
+      </div>
       <h1 class="vit__titulo">{{ catalogo.nombre }}</h1>
       <p class="vit__desc" *ngIf="catalogo.descripcion">{{ catalogo.descripcion }}</p>
     </header>
@@ -95,12 +99,11 @@
         </div>
 
         <div class="vit__card-body">
-          <p class="vit__ref-prod" *ngIf="p.referencia">{{ p.referencia }}</p>
           <h3 class="vit__nombre">{{ p.titulo }}</h3>
         </div>
 
         <div class="vit__card-foot">
-          <span class="vit__precio">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="vit__precio">{{ p.precioConIva | copMoneda }}</span>
 
           <button
             type="button"
@@ -124,7 +127,7 @@
       <div class="vit__cta-info">
         <strong>{{ totalItems }}</strong>
         <span class="vit__muted vit__cta-unidad">{{ totalItems === 1 ? 'producto' : 'productos' }}</span>
-        <span class="vit__cta-total">{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <span class="vit__cta-total">{{ totalEstimado | copMoneda }}</span>
       </div>
       <button type="button" class="vit__btn vit__btn--primario" (click)="mostrandoCarrito = true">
         Continuar
@@ -146,7 +149,7 @@
             <div class="vit__lista-info">
               <span class="vit__lista-tit">{{ l.producto.titulo }}</span>
               <span class="vit__muted">
-                {{ l.cantidad }} × {{ l.producto.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+                {{ l.cantidad }} × {{ l.producto.precioConIva | copMoneda }}
               </span>
             </div>
             <div class="vit__qty vit__qty--sm">
@@ -159,7 +162,7 @@
 
         <div class="vit__total">
           <span>Estimado</span>
-          <strong>{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <strong>{{ totalEstimado | copMoneda }}</strong>
         </div>
 
         <p class="vit__aviso">
@@ -168,7 +171,7 @@
 
         <div class="vit__form">
           <label>
-            Tu nombre <span class="vit__req">*</span>
+            <span class="vit__lbl">Tu nombre <span class="vit__req">*</span></span>
             <input type="text" [(ngModel)]="nombre" name="nombre" maxlength="120" autocomplete="name" />
           </label>
           <div class="vit__form-fila">

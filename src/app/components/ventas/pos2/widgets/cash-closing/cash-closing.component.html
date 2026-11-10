@@ -100,11 +100,11 @@
                   <div class="card-divider"></div>
                   <div class="informe-item" *ngFor="let formaPago of formasPago">
                     <span>{{formaPago.nombre}}:</span>
-                    <strong>${{formaPago.total | number:'1.2-2'}}</strong>
+                    <strong>${{formaPago.total | number:'1.0-2':'es-CO' }}</strong>
                   </div>
                   <div class="informe-item total">
                     <span>Total Ventas:</span>
-                    <strong>${{informe.totalVentas | number:'1.2-2'}}</strong>
+                    <strong>${{informe.totalVentas | number:'1.0-2':'es-CO' }}</strong>
                   </div>
 
                   <!-- D-583: ventas de días anteriores sin cerrar, aparte -->
@@ -118,11 +118,11 @@
                     </span>
                     <div class="informe-item" *ngFor="let formaPago of formasPagoAnteriores">
                       <span>{{formaPago.nombre}}:</span>
-                      <strong>${{formaPago.total | number:'1.2-2'}}</strong>
+                      <strong>${{formaPago.total | number:'1.0-2':'es-CO' }}</strong>
                     </div>
                     <div class="informe-item total">
                       <span>Total días anteriores:</span>
-                      <strong>${{totalAnteriores | number:'1.2-2'}}</strong>
+                      <strong>${{totalAnteriores | number:'1.0-2':'es-CO' }}</strong>
                     </div>
                   </div>
                 </div>
@@ -137,7 +137,8 @@
                         <label class="form-label">Saldo Inicial</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
-                          <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="0.01">
+                          <input type="number" class="form-control" [(ngModel)]="efectivoInicial" name="efectivoInicial" step="1" min="0"
+                            (blur)="efectivoInicial = pesosEnteros(efectivoInicial)" (wheel)="$any($event.target).blur()">
                         </div>
                         <small class="saldo-sugerido" *ngIf="saldoInicialSugerido">
                           Es el saldo final del cierre anterior de hoy (lo que quedó en la caja). Cámbialo si sacaron plata.
@@ -149,7 +150,8 @@
                         <label class="form-label">Saldo Final</label>
                         <div class="input-group">
                           <span class="input-group-text">$</span>
-                          <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="0.01" required>
+                          <input type="number" class="form-control" [(ngModel)]="efectivoFinal" name="efectivoFinal" step="1" min="0" required
+                            (blur)="efectivoFinal = pesosEnteros(efectivoFinal)" (wheel)="$any($event.target).blur()">
                         </div>
                       </div>
                     </div>
@@ -162,7 +164,7 @@
                   </div>
                   <div class="informe-item diferencia" [ngClass]="{'positivo': informe.diferencia >= 0, 'negativo': informe.diferencia < 0}" *ngIf="efectivoFinal">
                     <span>Diferencia en Efectivo:</span>
-                    <strong>${{calcularDiferencia() | number:'1.2-2'}}</strong>
+                    <strong>${{calcularDiferencia() | number:'1.0-2':'es-CO' }}</strong>
                   </div>
                 </div>
               </div>
@@ -186,8 +188,8 @@
                     <tr *ngFor="let producto of productosVendidos">
                       <td>{{producto.nombre}}</td>
                       <td class="text-center">{{producto.cantidad}}</td>
-                      <td class="text-end">${{producto.precioUnitario | number:'1.2-2'}}</td>
-                      <td class="text-end">${{producto.total | number:'1.2-2'}}</td>
+                      <td class="text-end">${{producto.precioUnitario | number:'1.0-2':'es-CO' }}</td>
+                      <td class="text-end">${{producto.total | number:'1.0-2':'es-CO' }}</td>
                       <td>{{producto.numeroPedido}}</td>
                     </tr>
                   </tbody>
@@ -196,7 +198,7 @@
                       <td colspan="1"><strong>Total Productos:</strong></td>
                       <td class="text-center"><strong>{{informe.totalProductos}}</strong></td>
                       <td colspan="1"></td>
-                      <td class="text-end"><strong>${{calcularTotalProductos() | number:'1.2-2'}}</strong></td>
+                      <td class="text-end"><strong>${{calcularTotalProductos() | number:'1.0-2':'es-CO' }}</strong></td>
                       <td></td>
                     </tr>
                   </tfoot>

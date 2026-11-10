@@ -165,6 +165,17 @@ export class CashClosingComponent {
     );
   }
 
+  /**
+   * D-706: la plata de la caja se cuenta en pesos enteros. La casilla aceptaba centavos y la
+   * rueda del mouse o las flechas la movían de a 1 centavo (96.000 → 95.999,99) sin que se notara.
+   */
+  pesosEnteros(valor: any): any {
+    // Casilla vacía: se deja vacía (no se vuelve 0) para que siga pidiendo el dato.
+    if (valor === null || valor === undefined || valor === '') return valor;
+    const n = Number(valor);
+    return Number.isFinite(n) ? Math.round(n) : 0;
+  }
+
   /** D-586: sobra o falta plata (diferencia distinta de $0). */
   get hayDescuadre(): boolean {
     return Math.abs(this.efectivoFinal - (this.efectivoInicial + this.totalEfectivo + this.efectivoAnteriores)) >= 0.01;
@@ -350,6 +361,10 @@ export class CashClosingComponent {
       });
       return;
     }
+
+    // D-706: los saldos se cuentan en pesos enteros (sin centavos).
+    this.efectivoInicial = this.pesosEnteros(this.efectivoInicial);
+    this.efectivoFinal = this.pesosEnteros(this.efectivoFinal);
 
     // Calcular diferencia
     const diferencia = this.calcularDiferencia();

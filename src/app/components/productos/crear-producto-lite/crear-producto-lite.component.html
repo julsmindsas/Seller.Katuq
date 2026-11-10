@@ -296,12 +296,12 @@
               <div class="lite-fila">
                 <div class="lite-field">
                   <label class="lite-label">Valor IVA</label>
-                  <div class="lite-monto">{{ valorIva | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                  <div class="lite-monto">{{ valorIva | copMoneda }}</div>
                 </div>
 
                 <div class="lite-field">
                   <label class="lite-label">Precio unitario total (con IVA)</label>
-                  <div class="lite-monto lite-monto--total">{{ precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                  <div class="lite-monto lite-monto--total">{{ precioConIva | copMoneda }}</div>
                   <span class="lite-ayuda">Es lo que paga el cliente por una unidad.</span>
                 </div>
               </div>

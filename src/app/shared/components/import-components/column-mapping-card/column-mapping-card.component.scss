@@ -64,7 +64,7 @@
 
         .required-icon {
           color: $cfg-warn;
-          font-size: 11px;
+          font-size: 12px;
           flex-shrink: 0;
         }
 
@@ -87,7 +87,7 @@
       gap: 6px;
       padding: 4px 10px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
 
       i { font-size: 13px; }
@@ -99,7 +99,7 @@
       .confidence-text {
         font-weight: 800;
         color: inherit;
-        font-size: 11px;
+        font-size: 12px;
       }
     }
   }
@@ -113,7 +113,7 @@
 
     .dropdown-label {
       display: block;
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -162,7 +162,7 @@
     border-radius: 11px;
 
     .confidence-label {
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: .5px;
       text-transform: uppercase;
@@ -170,7 +170,7 @@
     }
 
     .confidence-level {
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: .4px;
       text-transform: uppercase;
@@ -274,7 +274,7 @@
     height: auto;
 
     .p-chip-icon {
-      font-size: 11px;
+      font-size: 12px;
       margin-right: 4px;
       color: $cfg-accent;
     }

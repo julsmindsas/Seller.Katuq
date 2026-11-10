@@ -240,7 +240,7 @@
                   <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
                   <span class="cot-sugg-sub">
                     <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
-                    {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}
+                    {{ productoPrecio(p) | copMoneda }}
                     <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
                   </span>
                 </span>
@@ -384,7 +384,7 @@
                           [class.cl-seg-aplicado]="s.aplicado"
                           [title]="(s.aplicado ? 'Precio aplicado a este cliente — ' : '') + (s.descripcion || s.nombre)">
                       <span class="cl-seg-nombre">{{ s.nombre }}</span>
-                      <span class="cl-seg-precio">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
+                      <span class="cl-seg-precio">{{ s.precio | copMoneda }}</span>
                     </span>
                   </div>
                 </span>
@@ -636,7 +636,7 @@
         <!-- Ticket 1202: margen (solo roles autorizados: el servidor no lo manda a los demás) -->
         <div class="sum-margen" *ngIf="cotizacion.margen as m" [class.sum-margen--bajo]="margenBajo">
           <span>Margen</span>
-          <strong *ngIf="m.completo">{{ m.valor | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }} · {{ m.pct }}%</strong>
+          <strong *ngIf="m.completo">{{ m.valor | copMoneda }} · {{ m.pct }}%</strong>
           <small *ngIf="!m.completo">Costo de {{ m.lineasConCosto }} de {{ m.lineas }} líneas: margen incompleto</small>
           <small *ngIf="margenBajo">Por debajo del mínimo de la empresa ({{ margenMinimoEmpresa }}%)</small>
         </div>
@@ -783,7 +783,7 @@
                        quedan en el editor: este documento lo recibe el cliente y
                        listarlas le mostraría al mayorista lo que paga público general. -->
                   <span class="doc-lista" *ngIf="segmentoAplicado(it)">
-                    {{ segmentoAplicado(it) }}<ng-container *ngIf="segmentoAplicadoPrecio(it) > 0">: {{ segmentoAplicadoPrecio(it) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</ng-container>
+                    {{ segmentoAplicado(it) }}<ng-container *ngIf="segmentoAplicadoPrecio(it) > 0">: {{ segmentoAplicadoPrecio(it) | copMoneda }}</ng-container>
                   </span>
                 </span>
               </div>
@@ -847,7 +847,7 @@
                 *ngFor="let s of preciosSugeridos(it)"
                 [title]="s.descripcion">
                 <span class="doc-sug-tipo">{{ s.nombre }}</span>
-                <span class="doc-sug-val">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</span>
+                <span class="doc-sug-val">{{ s.precio | copMoneda }}</span>
                 <span class="doc-sug-tag" *ngIf="s.aplicado">precio aplicado</span>
               </span>
             </div>

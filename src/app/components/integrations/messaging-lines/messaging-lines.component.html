@@ -15,6 +15,42 @@
     </div>
   </header>
 
+  <!-- D-704: cómo conectar el número directo con Meta -->
+  <div class="lineas__modos" *ngIf="eligiendoModo && puedeAdministrar" role="group" [attr.aria-label]="'integrations.messagingLines.metaElegirTitulo' | translate">
+    <div class="lineas__modos-cabeza">
+      <h5 class="lineas__modos-titulo">{{ 'integrations.messagingLines.metaElegirTitulo' | translate }}</h5>
+      <p class="lineas__modos-sub">{{ 'integrations.messagingLines.metaElegirSub' | translate }}</p>
+    </div>
+    <div class="lineas__modos-opciones">
+      <button type="button" class="lineas__modo" *ngIf="metaDirecto.modoCelular"
+              (click)="conectarConMeta('celular')" [disabled]="conectando">
+        <span class="lineas__modo-icono" aria-hidden="true"><i class="fa fa-mobile"></i></span>
+        <span class="lineas__modo-titulo">{{ 'integrations.messagingLines.metaCelularTitulo' | translate }}</span>
+        <span class="lineas__modo-texto">{{ 'integrations.messagingLines.metaCelularTexto' | translate }}</span>
+        <span class="lineas__modo-requisito">{{ 'integrations.messagingLines.metaCelularRequisito' | translate }}</span>
+        <span class="lineas__modo-nota">{{ 'integrations.messagingLines.metaCelularAviso' | translate }}</span>
+      </button>
+      <button type="button" class="lineas__modo" (click)="conectarConMeta('nuevo')" [disabled]="conectando">
+        <span class="lineas__modo-icono" aria-hidden="true"><i class="fa fa-plus-circle"></i></span>
+        <span class="lineas__modo-titulo">{{ 'integrations.messagingLines.metaNuevoTitulo' | translate }}</span>
+        <span class="lineas__modo-texto">{{ 'integrations.messagingLines.metaNuevoTexto' | translate }}</span>
+      </button>
+    </div>
+    <p class="lineas__modos-cobro">
+      <i class="fa fa-credit-card" aria-hidden="true"></i>
+      <span class="lineas__modos-cobro-texto">{{ 'integrations.messagingLines.metaCobro' | translate }}</span>
+    </p>
+    <div class="lineas__modos-pie">
+      <span class="lineas__modos-espera" *ngIf="conectando">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <span class="lineas__modos-espera-texto">{{ 'integrations.messagingLines.metaAbriendo' | translate }}</span>
+      </span>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cancelarModo()" [disabled]="conectando">
+        {{ 'comun.cancelar' | translate }}
+      </button>
+    </div>
+  </div>
+
   <p class="cfg-aviso" *ngIf="aviso" role="status"
      [class.cfg-aviso--ok]="aviso.tipo === 'ok'" [class.cfg-aviso--error]="aviso.tipo === 'error'">
     <i class="fa" [ngClass]="aviso.tipo === 'ok' ? 'fa-check-circle' : 'fa-exclamation-circle'" aria-hidden="true"></i>
@@ -58,12 +94,31 @@
         </div>
         <div class="lineas__marcas">
           <span class="lineas__estado"
+                *ngIf="linea.status !== 'connected' || !linea.setup || linea.setup === 'completo'"
                 [class.lineas__estado--ok]="linea.status === 'connected'"
                 [class.lineas__estado--off]="linea.status !== 'connected'">
             {{ linea.status === 'connected' ? ('integrations.integrationsList.conectado2' | translate) : ('integrations.messagingLines.desconectado' | translate) }}
           </span>
+          <span class="lineas__estado lineas__estado--pendiente"
+                *ngIf="linea.status === 'connected' && linea.setup && linea.setup !== 'completo'">
+            {{ (linea.setup === 'por_reconectar' ? 'integrations.messagingLines.estadoPorReconectar' : 'integrations.messagingLines.estadoPorTerminar') | translate }}
+          </span>
           <span class="lineas__marca">{{ tipoConexion(linea) }}</span>
+          <span class="lineas__marca" *ngIf="metaDirecto.habilitada || esDirectaMeta(linea)">
+            {{ (esDirectaMeta(linea) ? 'integrations.messagingLines.marcaMeta' : 'integrations.messagingLines.marcaKapso') | translate }}
+          </span>
         </div>
+      </div>
+
+      <div class="cfg-aviso cfg-aviso--error lineas__pendiente"
+           *ngIf="linea.status === 'connected' && linea.setup && linea.setup !== 'completo'">
+        <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+        <span class="lineas__aviso-texto">{{ linea.setupError || ('integrations.messagingLines.metaErrorMeta' | translate) }}</span>
+        <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="puedeAdministrar && linea.setup === 'por_terminar'"
+                (click)="reintentar(linea)" [disabled]="ocupada === linea.id">
+          <i class="fa" [ngClass]="ocupada === linea.id ? 'fa-spinner fa-spin' : 'fa-refresh'" aria-hidden="true"></i>
+          <span class="lineas__btn-texto">{{ 'integrations.messagingLines.reintentar' | translate }}</span>
+        </button>
       </div>
 
       <p class="lineas__dato" *ngIf="fechaConexion(linea)">
@@ -129,9 +184,62 @@
               <span class="lineas__btn-texto">{{ 'integrations.integrations.guardarCambios' | translate }}</span>
             </button>
           </ng-container>
+          <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="esDirectaMeta(linea)"
+                  (click)="alternarPlantillas(linea)" [attr.aria-expanded]="panel(linea).abierto">
+            <i class="fa fa-file-text-o" aria-hidden="true"></i>
+            <span class="lineas__btn-texto">{{ (panel(linea).abierto ? 'integrations.messagingLines.ocultarPlantillas' : 'integrations.messagingLines.verPlantillas') | translate }}</span>
+          </button>
           <button type="button" class="cfg-btn cfg-btn--peligro" (click)="desconectar(linea)" [disabled]="ocupada === linea.id">
             {{ 'integrations.messagingLines.desconectar' | translate }}
           </button>
+        </div>
+      </div>
+
+      <!-- D-704: plantillas de la cuenta de WhatsApp de esta línea -->
+      <div class="lineas__plantillas" *ngIf="esDirectaMeta(linea) && panel(linea).abierto">
+        <h6 class="lineas__plantillas-titulo">{{ 'integrations.messagingLines.plantillasTitulo' | translate }}</h6>
+
+        <div class="lineas__cargando" *ngIf="panel(linea).cargando">
+          <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+          <span class="lineas__cargando-texto">{{ 'integrations.messagingLines.plantillasCargando' | translate }}</span>
+        </div>
+        <p class="cfg-aviso cfg-aviso--error" *ngIf="panel(linea).error">
+          <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+          <span class="lineas__aviso-texto">{{ panel(linea).error }}</span>
+        </p>
+        <p class="lineas__valor" *ngIf="!panel(linea).cargando && !panel(linea).error && panel(linea).lista.length === 0">
+          {{ 'integrations.messagingLines.plantillasVacio' | translate }}
+        </p>
+        <ul class="lineas__plantillas-lista" *ngIf="!panel(linea).cargando && panel(linea).lista.length > 0">
+          <li class="lineas__plantilla" *ngFor="let t of panel(linea).lista">
+            <div class="lineas__plantilla-fila">
+              <span class="lineas__plantilla-nombre">{{ t.name }}</span>
+              <span class="lineas__estado"
+                    [class.lineas__estado--ok]="t.status === 'APPROVED'"
+                    [class.lineas__estado--pendiente]="t.status !== 'APPROVED'">{{ t.estadoHumano }}</span>
+            </div>
+            <span class="lineas__plantilla-texto">{{ t.bodyText }}</span>
+          </li>
+        </ul>
+
+        <div class="lineas__plantilla-nueva" *ngIf="puedeAdministrar">
+          <label class="lineas__campo">
+            <span class="cfg-label">{{ 'integrations.messagingLines.plantillaTituloLabel' | translate }}</span>
+            <input type="text" class="lineas__input" maxlength="60" [(ngModel)]="panel(linea).titulo"
+                   [disabled]="panel(linea).creando" [placeholder]="'integrations.messagingLines.plantillaTituloPlaceholder' | translate" />
+          </label>
+          <label class="lineas__campo">
+            <span class="cfg-label">{{ 'integrations.messagingLines.plantillaMensajeLabel' | translate }}</span>
+            <textarea class="lineas__input lineas__textarea" rows="3" maxlength="1024" [(ngModel)]="panel(linea).cuerpo"
+                      [disabled]="panel(linea).creando"></textarea>
+            <span class="lineas__ayuda">{{ 'integrations.messagingLines.plantillaMensajeAyuda' | translate }}</span>
+          </label>
+          <div class="lineas__acciones">
+            <button type="button" class="cfg-btn" (click)="crearPlantilla(linea)" [disabled]="!plantillaLista(linea)">
+              <i class="fa" [ngClass]="panel(linea).creando ? 'fa-spinner fa-spin' : 'fa-paper-plane'" aria-hidden="true"></i>
+              <span class="lineas__btn-texto">{{ 'integrations.messagingLines.plantillaCrear' | translate }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </li>

@@ -36,6 +36,36 @@
   --kc-font-body: "Nunito", "Inter", system-ui, -apple-system, sans-serif;
 }
 
+// Tokens del modo oscuro (body.dark-only): mismos nombres --kc-*, valores del canon --ds-*.
+// Se incluye dentro de :host-context(body.dark-only) { ... } en el componente; el claro no cambia.
+@mixin kc-tokens-oscuro {
+  --kc-accent-ink: var(--ds-accent-ink);
+  --kc-accent-wash: var(--ds-accent-soft);
+  --kc-ink: var(--ds-ink);
+  --kc-ink2: var(--ds-ink-2);
+  --kc-muted: var(--ds-muted);
+  --kc-muted2: var(--ds-muted);
+  --kc-line: var(--ds-line);
+  --kc-line2: var(--ds-line-soft);
+  --kc-canvas: var(--ds-surface-2);
+  --kc-surface: var(--ds-surface);
+  --kc-green: var(--ds-ok);
+  --kc-green-wash: var(--ds-ok-soft);
+  --kc-blue: var(--ds-info);
+  --kc-blue-wash: var(--ds-info-soft);
+  --kc-orange: var(--ds-warn);
+  --kc-orange-wash: var(--ds-warn-soft);
+  --kc-red: var(--ds-err);
+  --kc-red-wash: var(--ds-err-soft);
+  --kc-line-strong: var(--ds-line-strong);
+  --kc-hover: var(--ds-row-hover);
+  --kc-tint: var(--ds-surface-2);
+  --kc-chip: var(--ds-chip-bg);
+  --kc-faint: var(--ds-muted);
+  --kc-line-accent: var(--ds-line-strong);
+  --kc-overlay: rgba(var(--ds-canvas-rgb), 0.65);
+}
+
 // Tarjeta base
 @mixin kc-card {
   background: var(--kc-surface);
@@ -97,7 +127,7 @@
     outline: none;
     border-color: var(--kc-accent);
     box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
-    background: #fff;
+    background: var(--kc-surface, #fff);
   }
 }
 
@@ -131,7 +161,7 @@
 @mixin kc-btn-ghost {
   @include kc-btn-base;
   background: var(--kc-surface);
-  border-color: #e4e5ee;
+  border-color: var(--kc-line-strong, #e4e5ee);
   color: var(--kc-ink2);
 
   &:hover:not(:disabled) { background: var(--kc-canvas); }
@@ -156,7 +186,7 @@
 @mixin kc-th {
   padding: 15px 12px;
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.5px;
   color: var(--kc-muted2);
@@ -183,9 +213,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #fff;
+  background: var(--kc-surface, #fff);
   color: var(--kc-ink2);
-  border: 1px solid #e4e5ee;
+  border: 1px solid var(--kc-line-strong, #e4e5ee);
   border-radius: 999px;
   padding: 9px 16px;
   font-weight: 800;
@@ -198,7 +228,7 @@
 // Banda de Total (tinte plano lila, sin gradiente)
 @mixin kc-total-band {
   background: var(--kc-accent-wash);
-  border-top: 1px solid #e2d9fb;
+  border-top: 1px solid var(--kc-line-accent, #e2d9fb);
 
   .kc-total-value,
   strong {
@@ -219,9 +249,9 @@
   font-weight: 700;
   padding: 40px 20px;
   text-align: center;
-  border: 2px dashed #e4e5ee;
+  border: 2px dashed var(--kc-line-strong, #e4e5ee);
   border-radius: 16px;
-  background: #fbfcfe;
+  background: var(--kc-tint, #fbfcfe);
 }
 
 // Ícono grande centrado para el estado vacío (52x52)
@@ -229,8 +259,8 @@
   width: 52px;
   height: 52px;
   border-radius: 15px;
-  background: #f1f2f5;
-  color: #b7bccb;
+  background: var(--kc-chip, #f1f2f5);
+  color: var(--kc-faint, #b7bccb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,7 +300,7 @@
       font-size: 13.5px;
       vertical-align: middle;
     }
-    &:hover { background: #fbfbfe; }
+    &:hover { background: var(--kc-hover, #fbfbfe); }
   }
 
   .p-datatable-emptymessage > td { border-top: 1px solid var(--kc-line2); }
@@ -295,16 +325,16 @@
       min-width: 34px;
       height: 34px;
       margin: 0 3px;
-      border: 1px solid #e4e5ee;
+      border: 1px solid var(--kc-line-strong, #e4e5ee);
       border-radius: 9px;
-      background: #fff;
+      background: var(--kc-surface, #fff);
       color: var(--kc-ink2);
       font-weight: 700;
       font-size: 13.5px;
 
       &:not(.p-disabled):not(.p-highlight):hover {
         background: var(--kc-canvas);
-        border-color: #d9dbe6;
+        border-color: var(--kc-line-strong, #d9dbe6);
         color: var(--kc-accent);
       }
       &.p-highlight {
@@ -333,7 +363,7 @@
     }
   }
 
-  .p-datatable-loading-overlay { background: rgba(255, 255, 255, 0.65); }
+  .p-datatable-loading-overlay { background: var(--kc-overlay, rgba(255, 255, 255, 0.65)); }
 }
 
 // Píldora de estado plana con punto de color. Pasar el par color/fondo.

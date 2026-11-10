@@ -690,6 +690,19 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
         if (filters.fechaFin) {
           filters.fechaFin = new Date(filters.fechaFin);
         }
+        // Un rango guardado que ya no llega a hoy se corre para terminar hoy, conservando su duración.
+        const inicioHoy = new Date();
+        inicioHoy.setHours(0, 0, 0, 0);
+        if (filters.fechaFin instanceof Date && !isNaN(filters.fechaFin.getTime()) && filters.fechaFin < inicioHoy) {
+          const dias = filters.fechaInicio instanceof Date && !isNaN(filters.fechaInicio.getTime())
+            ? Math.round((filters.fechaFin.getTime() - filters.fechaInicio.getTime()) / 86400000)
+            : 7;
+          const hoy = new Date();
+          const inicio = new Date();
+          inicio.setDate(hoy.getDate() - Math.max(dias, 0));
+          filters.fechaInicio = inicio;
+          filters.fechaFin = hoy;
+        }
         return filters;
       }
     } catch (error) {

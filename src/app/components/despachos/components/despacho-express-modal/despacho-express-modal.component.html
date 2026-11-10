@@ -25,7 +25,7 @@
     </div>
     <div class="dx-dato dx-dato--warn">
       <div class="dx-dato__label">Valor total</div>
-      <div class="dx-dato__valor">{{totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}</div>
+      <div class="dx-dato__valor">{{totalValor | copMoneda}}</div>
     </div>
   </div>
 
@@ -54,7 +54,7 @@
         </span>
       </div>
       <span class="dx-grupo__valor">
-        {{grupo.totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}
+        {{grupo.totalValor | copMoneda}}
       </span>
     </div>
 
@@ -124,7 +124,7 @@
             <tr *ngFor="let p of grupo.pedidos" class="dx-tabla__fila">
               <td style="padding: 4px 8px;">{{p.nroPedido}}</td>
               <td style="padding: 4px 8px;">{{p.cliente?.nombres_completos || p.clienteNombre || '-'}}</td>
-              <td style="padding: 4px 8px; text-align: right;">{{(p.faltaPorPagar || p.totalPedidoConDescuento || 0) | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
+              <td style="padding: 4px 8px; text-align: right;">{{(p.faltaPorPagar || p.totalPedidoConDescuento || 0) | copMoneda}}</td>
               <td style="padding: 4px 8px;">{{p.estadoProceso}}</td>
             </tr>
           </tbody>

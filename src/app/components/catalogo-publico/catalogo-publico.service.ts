@@ -17,6 +17,8 @@ export interface CatalogoPublicoProducto {
 export interface CatalogoPublicoView {
   nombre: string;
   descripcion: string;
+  /** Identidad del comercio; opcional hasta que el servidor la envíe. */
+  tienda?: { nombre?: string; logo?: string | null };
   productos: CatalogoPublicoProducto[];
 }
 

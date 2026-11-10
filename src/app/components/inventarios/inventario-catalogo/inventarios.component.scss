@@ -1424,7 +1424,8 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 .inv-stat-value {
   font-family: var(--kc-font-head);
   font-weight: 800;
-  font-size: 20px;
+  font-size: clamp(16px, 2vw, 20px);
+  white-space: nowrap;
   line-height: 1.1;
   color: var(--inv-fg, var(--kc-ink));
   font-variant-numeric: tabular-nums;

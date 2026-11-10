@@ -315,6 +315,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     totalSKUsCatalogo: number;
     productosSinStock: number;
     productosBajoStock: number;
+    /** El servidor manda el conteo global dentro de `stockAlerts` (no como `productosSinStock` suelto). */
+    stockAlerts?: { productosSinStock?: number; productosBajoStock?: number };
   } = {
     valorTotal: 0,
     valorCostoTotal: 0,
@@ -1195,11 +1197,18 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   }
 
   getMetricaProductosBajoStock(): number {
-    return this._totalesFiltrados?.productosBajoStock ?? this.totalesGlobales.productosBajoStock ?? 0;
+    // Sin filtros, el conteo global viene en `stockAlerts` (misma regla del filtro «Stock bajo»: 1 a 5 unidades).
+    return this._totalesFiltrados?.productosBajoStock
+      ?? this.totalesGlobales.stockAlerts?.productosBajoStock
+      ?? this.totalesGlobales.productosBajoStock ?? 0;
   }
 
   getMetricaProductosSinStock(): number {
-    return this._totalesFiltrados?.productosSinStock ?? this.totalesGlobales.productosSinStock ?? 0;
+    // Sin filtros, el conteo global viene en `stockAlerts` (misma regla del filtro «Agotados»: tiene registro y suma 0).
+    // Antes se leía `totalesGlobales.productosSinStock`, que el servidor no manda, y la tarjeta quedaba siempre en 0.
+    return this._totalesFiltrados?.productosSinStock
+      ?? this.totalesGlobales.stockAlerts?.productosSinStock
+      ?? this.totalesGlobales.productosSinStock ?? 0;
   }
 
   getMetricaTotalProductos(): number {

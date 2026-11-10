@@ -3075,6 +3075,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // ====== Rediseño 1b: vista split (lista + panel de detalle) ======
   // Solo presentación. 'split' = lista + panel (diseño nuevo); 'tabla' = tabla original (fallback).
   modoVista: "split" | "tabla" = "split";
+  /** Ticket 1531: en celular los filtros nacen plegados detrás del botón «Filtros». */
+  filtrosMovilAbiertos = false;
   pedidoDetalle: any = null;
   private readonly avatarPalette = [
     "#7C5CFF", "#1E6FD9", "#1E874B", "#E8820C",
@@ -4395,7 +4397,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.pageSize = 50;
     }
     const context = this;
-    this.maestroService.getBillingZone().subscribe({
+    this.ventasService.getZonasCobroUnaVez().subscribe({
       next(value: any) {
         context.allBillingZone = value;
         sessionStorage.setItem(
@@ -5578,11 +5580,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Utilizado para optimizar el espacio visual en la tabla
    */
   private static readonly PROCESO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
-    ProducidoTotalmente: { short: "Prod. Total", full: "Producido Totalmente - Producción completada al 100%" },
-    ProducidoParcialmente: { short: "Prod. Parcial", full: "Producido Parcialmente - Producción en progreso parcial" },
-    SinProducir: { short: "Sin Producir", full: "Sin Producir - Pendiente de iniciar producción" },
-    EnProduccion: { short: "En Prod.", full: "En Producción - Actualmente en fabricación" },
-    ParaDespachar: { short: "P. Despachar", full: "Para Despachar - Listo para envío" },
+    ProducidoTotalmente: { short: "Producido total", full: "Producido Totalmente - Producción completada al 100%" },
+    ProducidoParcialmente: { short: "Producido parcial", full: "Producido Parcialmente - Producción en progreso parcial" },
+    SinProducir: { short: "Sin producir", full: "Sin Producir - Pendiente de iniciar producción" },
+    EnProduccion: { short: "En producción", full: "En Producción - Actualmente en fabricación" },
+    ParaDespachar: { short: "Para despachar", full: "Para Despachar - Listo para envío" },
     Despachado: { short: "Despachado", full: "Despachado - Enviado al cliente" },
     Entregado: { short: "Entregado", full: "Entregado - Entregado al cliente" },
     Empacado: { short: "Empacado", full: "Empacado - Empacado y listo" },
@@ -5600,14 +5602,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // distinguir un Pospendiente (pago subido, en revisión de tesorería) de
     // un Pendiente real — reportado por Almara: "asenté el pago y sigue
     // Pendiente" cuando el server SÍ estaba en Pospendiente.
-    Pospendiente: { short: "Pospendiente", full: "Pospendiente - Pago subido, en revisión de tesorería" },
+    Pospendiente: { short: "Pago en revisión", full: "Pospendiente - Pago subido, en revisión de tesorería" },
     Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
-    PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
+    PreAprobado: { short: "Preaprobado", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
     Credito: { short: "Crédito", full: "Crédito - Se cobra después, no en la entrega" },
     Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },
     Rechazado: { short: "Rechazado", full: "Rechazado - Pago rechazado por la entidad" },
     Cancelado: { short: "Cancelado", full: "Cancelado - Pedido cancelado manualmente" },
-    Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado - En proceso de cancelación" },
+    Precancelado: { short: "Precancelado", full: "Pre-Cancelado - En proceso de cancelación" },
   };
 
   /** Ticket 1448: nombre en pantalla del estado de pago (el valor guardado no cambia). */
@@ -11190,6 +11192,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.ventasService.limpiarZonasCobro();
     this.destroy$.next();
     this.destroy$.complete();
     if (this.searchRequestSub) {

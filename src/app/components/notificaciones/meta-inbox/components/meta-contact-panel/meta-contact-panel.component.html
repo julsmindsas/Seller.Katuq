@@ -81,7 +81,7 @@
         >
           <span class="mp__pedido-nro">{{ p.nroPedido }}</span>
           <span class="mp__pedido-estado" *ngIf="p.estado">{{ p.estado }}</span>
-          <span class="mp__pedido-total">{{ p.total | currency: 'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="mp__pedido-total">{{ p.total | copMoneda }}</span>
         </a>
       </div>
     </ng-container>

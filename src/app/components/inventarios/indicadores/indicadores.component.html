@@ -71,7 +71,7 @@
     <section class="kpi-tarjetas">
       <article class="kpi-tarjeta">
         <span class="kpi-etiqueta">Valor a costo</span>
-        <strong class="kpi-numero">{{ inf.total.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <strong class="kpi-numero">{{ inf.total.valorCosto | copMoneda }}</strong>
         <span class="kpi-pie" *ngIf="inf.total.skusSinCosto > 0">
           {{ inf.total.skusSinCosto }} productos sin costo quedan por fuera
         </span>
@@ -94,7 +94,7 @@
       <article class="kpi-tarjeta kpi-tarjeta--accionable" (click)="cambiarFoco('quietos')"
                [class.kpi-tarjeta--activa]="foco === 'quietos'">
         <span class="kpi-etiqueta">Plata quieta</span>
-        <strong class="kpi-numero">{{ inf.total.valorInmovilizado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <strong class="kpi-numero">{{ inf.total.valorInmovilizado | copMoneda }}</strong>
         <span class="kpi-pie">{{ inf.total.inmovilizados | number }} productos sin una sola venta</span>
       </article>
     </section>
@@ -118,7 +118,7 @@
         </div>
         <div class="kpi-bodega-datos">
           <span><b>{{ bodega.resumen.unidades | number }}</b> unidades</span>
-          <span><b>{{ bodega.resumen.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</b> a costo</span>
+          <span><b>{{ bodega.resumen.valorCosto | copMoneda }}</b> a costo</span>
           <span>Cobertura <b>{{ textoCobertura(bodega.resumen.coberturaDiasBodega, bodega.resumen.coberturaTopeada) }}</b></span>
           <span>Rotación <b>{{ textoRotacion(bodega.resumen.rotacionAnualBodega) }}</b></span>
         </div>
@@ -154,7 +154,7 @@
               </td>
               <td class="num">{{ textoRotacion(fila.rotacionAnual) }}</td>
               <td class="num">
-                <span *ngIf="!fila.sinCosto">{{ fila.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                <span *ngIf="!fila.sinCosto">{{ fila.valorCosto | copMoneda }}</span>
                 <span class="kpi-sin-costo" *ngIf="fila.sinCosto">Sin costo</span>
               </td>
             </tr>

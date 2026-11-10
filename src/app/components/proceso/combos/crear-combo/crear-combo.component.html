@@ -66,8 +66,8 @@
                 <span class="cbm-ref">{{ item.referencia }}</span>
               </span>
               <span class="cbm-price" *ngIf="item.precio">
-                {{ item.precioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <small class="cbm-price-iva">con IVA {{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
+                {{ item.precioSinIva | copMoneda }}
+                <small class="cbm-price-iva">con IVA {{ item.precio | copMoneda }}</small>
               </span>
             </div>
           </ng-template>
@@ -94,8 +94,8 @@
             <!-- Ticket 1131: sin IVA, que es la referencia del comercio; con IVA debajo -->
             <span class="cbm-price">
               <ng-container *ngIf="item.precio">
-                {{ item.precioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <small class="cbm-price-iva">con IVA {{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
+                {{ item.precioSinIva | copMoneda }}
+                <small class="cbm-price-iva">con IVA {{ item.precio | copMoneda }}</small>
               </ng-container>
             </span>
             <button type="button" class="cbm-remove" (click)="quitarProducto(item)" [attr.aria-label]="'Quitar ' + item.titulo + ' del combo'" title="Quitar del combo">
@@ -105,11 +105,11 @@
           <ng-container *ngIf="todosConPrecio">
             <div class="cbm-list-foot">
               <span>Precio general de hoy sin IVA, suma de los {{ productosSeleccionados.length }}</span>
-              <strong>{{ totalSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+              <strong>{{ totalSinIva | copMoneda }}</strong>
             </div>
             <div class="cbm-list-foot cbm-list-foot-iva">
               <span>Con IVA</span>
-              <b>{{ totalGeneral | currency:'COP':'symbol-narrow':'1.0-0' }}</b>
+              <b>{{ totalGeneral | copMoneda }}</b>
             </div>
           </ng-container>
         </div>
@@ -156,20 +156,20 @@
           <span class="cbm-doc-desc" *ngIf="descripcionPreview">{{ descripcionPreview }}</span>
         </span>
         <span class="cbm-center">1</span>
-        <span class="cbm-right cbm-doc-money">{{ todosConPrecio ? (totalGeneral | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</span>
+        <span class="cbm-right cbm-doc-money">{{ todosConPrecio ? (totalGeneral | copMoneda) : '—' }}</span>
       </div>
       <!-- Ticket 1131: el mismo resumen de la cotización (base gravable, IVA, total) -->
       <div class="cbm-doc-sum">
         <span>Base gravable</span>
-        <b>{{ todosConPrecio ? (totalSinIva | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</b>
+        <b>{{ todosConPrecio ? (totalSinIva | copMoneda) : '—' }}</b>
       </div>
       <div class="cbm-doc-sum">
         <span>IVA</span>
-        <b>{{ todosConPrecio ? (totalIva | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</b>
+        <b>{{ todosConPrecio ? (totalIva | copMoneda) : '—' }}</b>
       </div>
       <div class="cbm-doc-total">
         <span>Total</span>
-        <strong>{{ todosConPrecio ? (totalGeneral | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</strong>
+        <strong>{{ todosConPrecio ? (totalGeneral | copMoneda) : '—' }}</strong>
       </div>
     </div>
 

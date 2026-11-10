@@ -108,13 +108,13 @@
             </div>
             <div class="tk-progress-label">
               <span class="tk-progress-paid" [ngClass]="pagadoClase(pedido)">
-                {{ pedido?.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}
+                {{ pedido?.anticipo | copMoneda }}
               </span>
-              / {{ pedido?.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}
+              / {{ pedido?.totalPedididoConDescuento | copMoneda }}
             </div>
             <!-- Ticket 1217: el pago subido que todavía no se aprueba -->
             <div class="tk-progress-label text-muted" *ngIf="montoEnRevision(pedido) as enRevision">
-              {{ 'tesoreria.tablaPagosPedidos.enRevision' | translate:{enRevision: (enRevision | currency:'COP':'symbol-narrow':'1.0-0')} }}
+              {{ 'tesoreria.tablaPagosPedidos.enRevision' | translate:{enRevision: (enRevision | copMoneda)} }}
             </div>
           </div>
         </td>
@@ -221,7 +221,7 @@
   <!-- Totales de la página -->
   <div class="tk-summary" *ngIf="orders.length > 0">
     <span><strong>{{ (totalesDelFiltro ? 'tesoreria.tablaPagosPedidos.pedidosDelFiltro' : 'tesoreria.tablaPagosPedidos.pedidosEnPantalla') | translate }}</strong> {{ totalPedidos() | number }}</span>
-    <span><strong>{{ 'tesoreria.tablaPagosPedidos.anticipos' | translate }}</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
-    <span><strong>{{ 'tesoreria.tablaPagosPedidos.faltaPorPagar' | translate }}</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
+    <span><strong>{{ 'tesoreria.tablaPagosPedidos.anticipos' | translate }}</strong> <span class="tk-summary-value">{{ totalAnticipo() | copMoneda }}</span></span>
+    <span><strong>{{ 'tesoreria.tablaPagosPedidos.faltaPorPagar' | translate }}</strong> <span class="tk-summary-value">{{ totalFalta() | copMoneda }}</span></span>
   </div>
 </div>

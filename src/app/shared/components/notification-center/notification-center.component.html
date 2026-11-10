@@ -1,5 +1,7 @@
 <!-- Bell Icon with Badge -->
-<div class="notification-bell" (click)="togglePanel()">
+<div #campanaEl class="notification-bell" (click)="togglePanel()" role="button" tabindex="0"
+     aria-haspopup="dialog" [attr.aria-expanded]="isOpen" [attr.aria-label]="'shell.header.notifications' | translate"
+     (keydown.enter)="togglePanel()" (keydown.space)="$event.preventDefault(); togglePanel()">
   <i class="fa fa-bell" [class.has-notifications]="unreadCount > 0"></i>
   <span class="notification-badge" *ngIf="unreadCount > 0" [@fadeIn]>
     {{ unreadCount > 99 ? '99+' : unreadCount }}
@@ -52,7 +54,8 @@
               [title]="(unreadCount > 0 ? 'shell.notificationCenter.markAllRead' : 'shell.notificationCenter.noUnread') | translate">
         <i class="fa fa-check-square-o"></i>
       </button>
-      <button class="btn-icon" (click)="showClearAllConfirm()" [title]="'shell.notificationCenter.clearAll' | translate">
+      <!-- Ticket 1548: separada de «marcar como leídas»; ya pide confirmación antes de borrar -->
+      <button class="btn-icon btn-clear-all" (click)="showClearAllConfirm()" [title]="'shell.notificationCenter.clearAll' | translate">
         <i class="fa fa-trash"></i>
       </button>
       </ng-container>
@@ -231,7 +234,7 @@
             <h5 class="notification-title">{{ notification.title }}</h5>
             <div class="notification-meta">
               <span class="notification-time">{{ getRelativeTime(notification.createdAt) }}</span>
-              <span class="notification-type">{{ getTypeName(notification.type) | translate }}</span>
+              <span class="notification-type" *ngIf="!tipoRepiteTitulo(notification)">{{ getTypeName(notification.type) | translate }}</span>
             </div>
           </div>
           

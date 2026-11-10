@@ -13624,7 +13624,47 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Ya firme, no se repite:** la verificación de negocio y de acceso como proveedor de tecnología (25-ago), la revisión anual de uso de datos y la encuesta de tratamiento de datos.
 - **Sin cambios en pedidos, inventario ni consecutivos. Sin colecciones nuevas.**
 - **Abierto:** si el modo celular está disponible en Colombia (tarea 1.4); y si la cuenta y el número de Julsmind quedaron a nombre de Julsmind o de Kapso (tarea 1.1).
-- **Sigue:** aprobar el diseño y las tareas, y después implementar.
+- **Aprobado e implementado (9-nov, Daniel: «ya ok, haz la conexión de lo propuesto»)**, apagado:
+  - backend `69c539db`: provider, webhook, pasos, cobro, plantillas, script de ajustes y bandera;
+  - front `7257961c`: tarjeta de números con los dos modos, «Reintentar» y plantillas.
+- **Desvíos:**
+  - la llave y el PIN van en la subcolección `messaging_lines/{id}/privado/meta`, no en la línea;
+  - las plantillas se crean desde la tarjeta del número; el asistente de campañas sigue con Kapso;
+  - el historial del celular entra solo si es de los últimos 30 días.
+- **Arreglo de paso:** confirmar un número fallaba desde la pantalla, porque el front manda `{provider, params}` y el servidor leía los campos sueltos. Ahora acepta los dos formatos.
+- **Pruebas:**
+  - `test:messaging` 13/13 (golden de Kapso igual), más outbound, bot y plantillas;
+  - nuevas locales (D-566): proveedor 12, salida 3, cobro 4 y webhook 6;
+  - front: tsc sin errores y build de producción OK.
+- **Falta:**
+  - configurar Meta (producto WhatsApp, `config_id` y suscripción del webhook);
+  - `config/meta_whatsapp` con el script;
+  - la bandera en Julsmind y FLORECER;
+  - la prueba con números reales;
+  - los videos y la solicitud.
+- **Probado en pruebas el 9-nov (FLORECER, con Daniel), ida y vuelta sin Kapso:**
+  - número de prueba: Opttia, +1 555-471-9699, del portafolio de Opttia;
+  - el «Hola» de Daniel entró al buzón por el webhook;
+  - la respuesta salió desde el buzón por la Graph API (Meta devolvió wamid) y llegó al celular;
+  - sin descontar saldo de Katuq.
+- **Configuración de Meta (app `katuq`):**
+  - inicio de sesión de WhatsApp: `config_id` 1151767800838721, solo WhatsApp, con llave que no vence;
+  - la configuración «con todo el marketing» (2639511196511238) no ofrece compartir el número del celular. Queda para una conexión aparte de anuncios, catálogos y píxeles;
+  - webhook de WhatsApp verificado y apuntando a pruebas, con `messages`, `history`, `smb_message_echoes`, `smb_app_state_sync`, `account_update` y `message_template_status_update`;
+  - dominios del SDK: sellercenter, app.katuq.com y el servidor de pruebas.
+- **Bloqueo confirmado en la documentación de Meta:** sin acceso avanzado a `whatsapp_business_messaging` y `whatsapp_business_management` no se registran números nuevos ni se comparte el del celular de terceros. Error «La app de socio no tiene los permisos avanzados…» con la SIM de prueba. Antes de la aprobación solo se pueden conectar números de portafolios donde Daniel es administrador.
+- **Arreglos salidos de la prueba:**
+  - `af6d4031`/`c522fa3e`: en modo celular, la ventana de Meta puede terminar sin `phone_number_id`;
+  - `d7dea88e`: la línea mira el estado real del número en Meta (`is_on_biz_app`, `platform_type`);
+  - `fb52a4c2`: una línea directa envía de verdad aunque `ENABLE_WHATSAPP_NOTIFICATIONS` esté apagado, porque ese interruptor es de Kapso;
+  - `f9475ff2`: aviso de «debe ser WhatsApp Business»;
+  - `a7d93997`: la tarjeta de Integraciones dice «Conectado» con un número directo.
+- **Pendiente:**
+  - grabar los videos con Opttia y enviar la solicitud de revisión;
+  - la tarjeta de pago en la cuenta de WhatsApp de Opttia (Daniel: «eso después»);
+  - con la aprobación, probar la SIM con el número del celular;
+  - cambiar la clave secreta de la app, que quedó a la vista en la sesión;
+  - mientras el webhook apunte a pruebas, producción no recibe avisos de WhatsApp por Meta directo. Kapso no se afecta.
 
 ### 2026-11-09 — D-705: las propuestas y la documentación nuevas no se suben a git
 - **Pedido:** Daniel, 9-nov: «las propuestas y toda la documentación no se sube, más métela al gitignore». Escogió dejar en git lo ya subido (como D-566) y el contrato en git por ahora.
@@ -13666,3 +13706,59 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Login y `createToken` no se modifican en D-700.** Comprobado el 9-nov: ni `controllers/login.js`, ni `controllers/authentication.js`, ni `services/index.js` tienen un solo commit desde el 4-nov, es decir, ninguno de D-700. El cambio de sesiones y de la emisión del token es D-634, cambio aparte; mientras no se apruebe, el historial de sesiones (F2-6) sigue bloqueado.
 - **Archivos protegidos (Gate XI):** la revisión privada de seguridad registra el hash base de 0.8 y el vigente del 9-nov de los 15 archivos de Opttia y del ADK; D-700 no modifica ninguno salvo el cambio aditivo de `scope=platform` en el ADK, con golden idéntico. El detalle vive en el repositorio privado.
 - **Reversión de datos:** `scripts/revertir-datos-plataforma.js --prefijo <id>` (backend) borra, por prefijo de id, solo documentos de las cuatro colecciones de métricas nuevas; nunca toca la auditoría, los pagos manuales ni colecciones existentes. Simulación por defecto; ejecutarlo en `katuq-db` exige el sí de Daniel.
+
+### 2026-11-09 — D-686: Opttia atiende en el sitio del comercio (aws-claude-1)
+
+- **D-686. Opttia en el sitio** (back 69ed1ba2; front en este commit). Pedido de Daniel: un agente en las webs nuevas que se pueda prender en unos sitios y en otros no, que atienda soporte, abra solicitudes, asesore, dé la lista de precios, arme el carrito con el WebMCP del sitio, cierre la venta y hable con la personalidad de marca de Katuq.
+  - **Se enciende por sitio** en `contenido.tienda.opttia` (`activo`, `nombre`, `saludo`, `puede`, `preguntasFrecuentes`). La llave solo existe si el comercio la configuró. Con Opttia encendido, su chat toma el lugar del asesor KAI. También sale en sitios que no venden: ahí solo atiende dudas.
+  - **Dónde corre:** `POST /v1/sites/public/:slug/opttia`. El ciclo del agente vive en el backend y cada paso es una llamada a `pedirJsonAOpttia` (hasta 5 por mensaje), como manda D-257. No hubo cambios en kai.
+  - **Qué puede:** buscar productos, leer su descripción, dar la lista de precios, buscar en el contenido del sitio, y pedirle a la página que agregue, quite o cambie cantidades del carrito y abra el pago con los datos escritos. La página lo hace por su WebMCP; el servidor no toca carritos ni pedidos.
+  - **Marca:** el tono sale de la personalidad de marca de la empresa, siempre. Los archivos de marca se consultan solo si el comercio lo enciende (`puede.archivos`, apagado de fábrica), porque se subieron para el equipo y pueden traer cosas internas; el agente tiene la orden de no entregar documentos ni procedimientos internos. Solo sirven los archivos ya indexados en Personalidad de marca.
+  - **Solicitudes:** `puede.tickets`, apagado de fábrica. El ticket queda a nombre del comercio del sitio y usa el servicio de soporte que ya existe, con topes por visitante y sin repetir en 5 minutos.
+  - **Editor:** panel «Opttia en tu sitio» en la pestaña Tienda. La operación `opttia` deja prenderlo desde «Editar con IA» y desde `edit_katuq_site`; las preguntas frecuentes se escriben solo en el editor.
+  - **Límites conocidos:** el chat no responde en la vista previa de un borrador (necesita el sitio publicado). Cada mensaje cuesta hasta 5 llamadas al modelo.
+  - **Sin cambios en pedidos, pagos, inventario ni consecutivos. Sin colecciones nuevas.**
+  - **Pruebas (fuera de git, D-566):** X1 270 de 270 páginas iguales; suites de sitios sin fallas nuevas; operación `opttia` 6 de 6; navegador a 1440 y 390 con el modelo real sobre la copia `katuq_dev` (productos, lista de precios, carrito, pago, solicitud simulada, tono de marca, archivos y negativa a entregar documentos internos); panel del editor 11 de 11 a 1440 y 390; `tsc` y build de producción sin errores.
+  - **Sigue:** publicar back y front juntos cuando Daniel lo diga.
+  - **Adenda 9-nov (back 7324acbb): responde con todo lo publicado.** Pedido de Daniel: que conteste sobre los kits y las recomendaciones de los planos. `searchSiteContent` ahora lee también los kits del bloque `plano` (piezas, dónde va cada una y por qué, versiones), las tarjetas de solución con piezas y la ficha curada de cada producto (`tienda.fichas`). Las piezas salen con nombre y precio de vitrina; el total del kit solo si está completo (el kit no se vende incompleto). No se lee lo oculto, los marcadores entre corchetes ni, en un sitio v1, lo que solo pinta el diseño nuevo. La herramienta queda disponible también cuando el agente solo asesora. Solo lectura; sin colecciones ni consultas nuevas sobre colecciones grandes (lee por id hasta 16 productos). Pruebas: 136 suites de sitios igual que antes; conversación real en `katuq_dev` con un sitio de Baudio (total del kit exacto). Sin publicar.
+
+### 2026-11-09 — El servidor de pruebas y app.katuq.com quedan en la versión de producción, como entrada de pruebas
+
+- **Pedido:** Daniel quería revisar el sitio de pruebas y pidió publicar app.katuq.com. Queda como entrada de pruebas, con lo que se cierra el pendiente «Republicar o apagar app.katuq.com». El detalle técnico está en el repo del backend (`local/aws/objetivo/frontend.md`).
+- **Plantillas de WooCommerce:** el seed corrió en la copia de pruebas: 0 creadas y 3 actualizadas. «Recibir pedidos» pasa de 4 a 3 pasos (D-570) y «Empujar stock» queda en sombra. En producción siguen las del 21 de mayo; correrlo allá espera el sí de Daniel.
+- **Pruebas:** backend en `0ba079f2` y front con el código vivo de producción (`3009ebc8`, 2026.11.09.3). Las dos direcciones de pruebas llaman solo al backend de pruebas y muestran el aviso «KATUQ DE PRUEBAS · los datos se reinician cada noche».
+- **No verificado:** el ingreso con usuario en el navegador. Las tiendas publicadas todavía no se ven con estilos en pruebas.
+
+### 2026-11-09 (tarde) — Publicado el backend `65ad9854`
+
+- **Pedido:** Daniel pidió publicar el backend. Producción ya estaba en `c256f8a4`, que otra sesión había publicado con DIAN 1515 y D-686. Faltaban 3 cambios: WhatsApp directo con Meta, que sale apagado (D-704, `69c539db`), y la mezcla de `feature/tickets-aws-claude-1` (`7324acbb`): Opttia responde en el sitio con los kits, los planos y las fichas (D-686).
+- **Antes:** mezcla sin conflictos, sin paquetes nuevos, sintaxis de 20 archivos sin errores, y `tests/messaging/lines` y `messagingManager.contract` en verde. El único `require` sin resolver está dentro de un comentario de `cronService.js` y ya estaba en producción.
+- **Despliegue:** fijado con `git fetch` + `git merge --ff-only 65ad9854`, `npm install` y `pm2 restart katuq-api`.
+- **Verificado:** `katuq-api` en línea y sin errores en el registro; `/v1/platform/me` y `/v1/messaging/lines` responden 401 sin sesión.
+- **No verificado:** Opttia contestando en una tienda publicada.
+
+### 2026-11-09 — D-706: cierre de caja en pesos enteros; una diferencia de centavos cuenta como que cuadra
+- **Hallazgo (prueba de D-583…D-590 en app.katuq.com, FLORECER):** un saldo final quedó guardado en 95.999,99. Las casillas de saldo eran `type=number step=0.01`, así que la rueda del mouse o las flechas las movían de a 1 centavo sin que se notara. La diferencia real era −1.000,01; tras un ajuste de 1.000 quedó −0,01 y el historial mostraba «Falta $0» en rojo, el cierre seguía contando como descuadre y el botón Registrar ajuste no desaparecía.
+- **Qué (solo front):** Saldo Inicial y Saldo Final van en pesos enteros (`step=1`, `min=0`, se redondean al salir de la casilla y antes de completar el cierre, y la rueda del mouse ya no cambia el valor). En el historial, una diferencia de menos de $1 (al cerrar o después de ajustes) cuenta como «Cuadra»: así se corrigen solos los cierres viejos con centavos. El backend no cambia: sigue pidiendo observación desde 0,01, lo cual no choca porque los saldos ya llegan enteros.
+- **Archivos:** `pos2/widgets/cash-closing/cash-closing.component.{ts,html}`, `pos2/widgets/cash-closing-history/cash-closing-history.component.ts`, nota en `notas-version.json`.
+- **Estado:** aprobado por el usuario el 9-nov y probado por ella en localhost:4200 contra katuq_dev (el cierre 2 de FLORECER ahora dice «Cuadra»). Commiteado y pusheado en `2eff206c` (solo front). FALTA DESPLEGAR: primero app.katuq.com y luego producción.
+### 2026-11-09 (noche) — D-687: el constructor de sitios habla de Opttia y sus controles siguen el formato Katuq (aws-claude-1)
+- **Pedido de Daniel:** quitar del constructor lo que tenga que ver con KAI y dejar Opttia, y mejorar los controles genéricos (cajas de texto, listas).
+- **D-687. Solo presentación y textos.** En el editor, la lista de sitios y las métricas, «KAI» ahora dice «Opttia» (también en los cuatro idiomas). Se retiró del editor el interruptor «KAI, asesor de compra» (`tienda.asesorKai`, ticket 1241): Opttia en el sitio (D-686) lo reemplaza. Antes de quitarlo se revisó la copia de desarrollo: de 97 sitios, ninguno lo tenía encendido. Los campos guardados no cambian (`tienda.kai`, `tienda.asesorKai`), ni las claves de traducción, ni el backend.
+- **Controles:** fecha, hora, fecha y hora, correo, contraseña y las cajas sin tipo usan `kb-input`, igual que el resto del editor y de los paneles (`_campos-panel.scss`). Las casillas tienen el estilo Katuq (18 px, acento al marcar, foco visible). El buscador de «Productos que se cotizan» ya no sale con el aspecto crudo del navegador.
+- **Pendiente (no hecho):** el asesor viejo sigue en el backend (`POST /public/:slug/asesor`, `services/sites/asesorKai`, `asesorKaiHtml`); retirarlo es un cambio aparte. Las clases `kq-kai*` del widget público las comparte Opttia y se quedan.
+- **Pruebas:** build de producción sin errores; capturas del editor a 1440 y 390 px, antes y después, sin scroll horizontal ni errores de JavaScript; 0 degradados en `components/sitios`.
+- **Adenda D-687 (misma noche, con el sí de Daniel): rótulos y destinos.** En las listas repetibles del editor (enlaces del menú, del pie y de la barra de anuncios, banners, preguntas, sedes, testimonios, columnas, botones, puntos de retiro, promociones) cada caja lleva su rótulo encima (`repetible__rotulo`): antes solo tenía el texto de ejemplo, que desaparece al escribir. La lista de sugerencias de «A dónde lleva» (`kq-destinos-inicio`) ahora ofrece, además de las secciones del inicio, «Inicio del sitio» (`/`), «Toda la tienda» (`/?catalogo=1`, si el catálogo está visible) y las páginas del sitio (`/ruta`); el enlace del banner también la usa. Se sigue pudiendo escribir a mano. No cambian los campos guardados.
+- **Correcciones de la adenda:** las casillas dentro de una lista (cupones, promociones) heredaban el relleno de caja de texto de `.repetible input` y perdían el chulo; la regla de casilla sube su especificidad (`:not(#_)`). El aviso `<small class="aviso">` del pie se montaba sobre el campo siguiente; ahora es de bloque.
+- **Pruebas de la adenda:** build de producción sin errores; en el navegador, cupón nuevo con casillas de 18 px sin relleno y chulo visible al marcar; capturas de las secciones a 1440 y 390 px sin scroll horizontal ni errores de JavaScript; 0 degradados en `components/sitios`.
+- **Adenda D-687, desplegables (pedido de Daniel: «listados tipo descuento está horrible»):** todos los `<select>` del editor y de los paneles llevan la caja Katuq y la flecha propia, también los que no viven dentro de `.campo` (cupones, promociones, puntos de retiro). En media columna los desplegables y las fechas usan menos relleno para que el texto quepa. En el cupón, la opción «% de descuento» pasa a decir «Porcentaje» (cabe en la media columna; el valor guardado no cambia). El alcance de la promoción lleva el rótulo «A qué productos aplica». Pruebas: build de producción sin errores; cupón y promoción nuevos a 1440 y 390 px sin texto cortado, sin scroll horizontal ni errores de JavaScript; 0 degradados.
+### 2026-11-09 (noche) — D-688: la edición con IA del constructor rediseña con criterio de diseñador (aws-claude-1)
+- **D-688. Pedido de Daniel:** «mejora la asistencia de crear o cambiar diseño con IA (Opttia) del landing builder, que se pueda hacer cambios profesionales». Antes, «más profesional» daba cambios sueltos (secciones angostas, fondos al azar, el color de fábrica en vez del de la marca) y en el diseño nuevo proponía tarjetas, kits y mensajes que los validadores rechazaban.
+- **Qué cambia (backend, `services/sites/criterioDisenoIA.js` nuevo):** cuando el pedido es de diseño de toda la página («más profesional», «elegante», «moderna», «rediseña»), el prompt lleva un criterio de diseñador: una sola dirección (siete recetas con pareja de letras, estilo, fondo y aire), el color de la marca (`companies.brandKit`) como único acento, el mismo aire en todas las secciones y fondos sobrios. Un pedido sobre una pieza («un título más llamativo») sigue igual que antes, con el mismo prompt.
+- **Pasada del servidor (páginas de siempre):** si se tocaron tres o más secciones, se empareja el aire, se quitan los parches de color fuerte y las cajas angostas donde no van. Solo toca `estilo`; nunca textos, productos ni datos del negocio. El acento no cambia si la persona no habla de colores (sí puede pasar al color de la marca) y no se cambia dónde se ve cada sección (celular o computador) si no lo pide.
+- **Diseño nuevo:** el criterio dice que en un pedido de diseño no se crean tarjetas, kits, mensajes ni enlaces. `promptOperaciones` tiene un nivel más de recorte de listas: una página larga pasaba de los 20 000 caracteres que acepta Opttia y respondía «la IA no respondió».
+- **Front:** dos ideas de diseño al inicio de las sugerencias del chat «Con IA» y nota de versión. Los mensajes «KAI no respondió» del panel viejo dicen «Opttia».
+- **No cambia:** qué se guarda (la edición sigue sin guardar; la persona aplica o deshace), las reglas de no inventar, los endpoints ni el modelo (Opttia/ADK, D-257).
+- **Pruebas:** `editarPaginaConIA` 18, `opttiaEditaOperaciones` 18, `opttiaDisenoNuevoT27` 16 y `opttiaDisenoNuevoGanchoT27` en verde; prueba local nueva de `criterioDisenoIA` (6 escenarios, fuera de git por D-566); front `editar-con-ia` en verde y build de producción sin errores. En la copia de desarrollo, «más profesional» y «de lujo» sobre una tienda de siempre y una del diseño nuevo: dirección pareja, amarillo de la marca conservado, 0 rechazos; capturas a 1440 y 390 px. Sin publicar.
+- **Adenda D-688 (9-nov, noche): el chat deja señalar el lugar.** Daniel: «el chat del landing builder, donde uno chatea, que uno pueda especificar el lugar». El chat «Con IA» del editor tiene un selector «¿Dónde?» con «Toda la página» y las secciones de la página abierta (arranca en la sección que la persona tenía seleccionada). El front manda `lugar` (id de la sección) y el servidor lo hace cumplir: en el prompt va el lugar señalado y, al aplicar, los cambios de otra sección o del tema no entran (cuentan como ignorados; en el diseño nuevo sale un aviso) y lo que se agrega queda justo después de esa sección. Con lugar el pedido no se trata como rediseño de toda la página. Sin lugar, el prompt y el resultado son los de antes. No cambia qué se guarda ni los endpoints. Pruebas: las cuatro de sitios en verde, la local `criterioDisenoIA` con 8 escenarios; en la copia de desarrollo, tres pedidos con lugar (tienda de siempre y diseño nuevo) tocaron solo la sección señalada. Build de producción sin errores. Sin publicar.
+- **Adenda D-688, segunda pasada (9-nov, noche).** Daniel: «seguro? siento que hacen falta más cosas». Al revisar salieron cuatro fallas y se corrigieron: (1) con el chat abierto, tocar una sección en la vista previa sacaba del chat; ahora la vuelve el lugar, la marca y el chat sigue abierto; (2) el selector perdía la opción marcada al repintar (faltaba `trackBy`); (3) en el diseño nuevo, con el encabezado, la barra, el pie, el plano o las categorías señalados, se botaban sus operaciones propias (`menu`, `barra`, `pie`, `kit`, `categorias`), que ahora entran, y lo agregado queda pegado al lugar; en la tienda de siempre un «orden» solo vale si mueve la sección señalada; (4) cuando el servidor descarta algo fuera del lugar, el mensaje ya no repite el texto de la IA (que contaba lo no hecho) sino lo que quedó, y el prompt le pide no ocultar ni mover otras secciones para hacer espacio. Con lugar elegido, las ideas del chat son de esa sección. Pruebas: las cuatro de sitios en verde, local `criterioDisenoIA` 10 escenarios; editor real compilado con la API simulada y el pedido atendido por el servicio real (copia de desarrollo + Opttia): 7 recorridos (tienda de siempre y diseño nuevo, 1440 y 390 px) con 9/9 cada uno, sin scroll horizontal ni errores de JavaScript. Build de producción sin errores. Sin publicar.

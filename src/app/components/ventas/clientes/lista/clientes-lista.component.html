@@ -314,7 +314,7 @@
                              [rowsPerPageOptions]="[10,25,50]"
                              [showCurrentPageReport]="true"
                              currentPageReportTemplate="{{ 'ventas.clientesLista.paginacion' | translate }}"
-                             styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+                             styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped cfg-tabla-tarjetas cli-tabla-movil"
                              [scrollable]="true"
                              scrollHeight="600px">
 
@@ -369,7 +369,7 @@
                                 </td>
 
                                 <!-- Cliente -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientesLista.cliente' | translate">
                                     <span class="text-truncate" style="max-width: 160px"
                                           [pTooltip]="cliente.nombres_completos">
                                         {{cliente.nombres_completos || ('ventas.clientesLista.sinNombre' | translate)}}
@@ -382,12 +382,12 @@
                                 </td>
 
                                 <!-- Documento -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientes.colDocumento' | translate">
                                     {{cliente.documento || ('ventas.clientes.na' | translate)}}
                                 </td>
 
                                 <!-- Email -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientes.colEmail' | translate">
                                     <span class="text-truncate" style="max-width: 160px"
                                           [pTooltip]="cliente.correo_electronico_comprador">
                                         {{cliente.correo_electronico_comprador || ('ventas.clientes.na' | translate)}}
@@ -395,17 +395,17 @@
                                 </td>
 
                                 <!-- Celular -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientesLista.celular' | translate">
                                     {{cliente.numero_celular_comprador || ('ventas.clientes.na' | translate)}}
                                 </td>
 
                                 <!-- Estado -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientesLista.estado' | translate">
                                     {{ cliente.estado === 'activo' ? ('ventas.clientes.activo' | translate) : cliente.estado === 'bloqueado' ? ('ventas.clientes.bloqueado' | translate) : (cliente.estado | titlecase) }}
                                 </td>
 
                                 <!-- Tipo de Cliente -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientesLista.tipoCliente' | translate">
                                     <span *ngIf="cliente.categoria?.nombre || cliente.tipoCliente; else sinTipo"
                                           class="badge cli-tipo-chip">
                                         {{ cliente.categoria?.nombre || cliente.tipoCliente }}
@@ -414,7 +414,7 @@
                                 </td>
 
                                 <!-- Etiquetas -->
-                                <td>
+                                <td [attr.data-label]="'ventas.clientes.etiquetas' | translate">
                                     <div *ngIf="cliente.etiquetas && cliente.etiquetas.length > 0; else sinEtiquetas"
                                          class="d-flex align-items-center gap-1 flex-wrap">
                                         <span *ngFor="let tagName of cliente.etiquetas.slice(0, 2)"
@@ -434,7 +434,7 @@
                                 </td>
 
                                 <!-- Acciones -->
-                                <td class="text-center">
+                                <td class="text-center" [attr.data-label]="'ventas.clientesLista.acciones' | translate">
                                     <button type="button"
                                             class="btn-options"
                                             pTooltip="{{ 'ventas.clientesLista.acciones' | translate }}"

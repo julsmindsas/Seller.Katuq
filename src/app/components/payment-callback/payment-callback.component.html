@@ -55,7 +55,7 @@
           </div>
           <div class="res-fila" *ngIf="!error && aprobada && transactionDetails?.amount_in_cents">
             <dt class="pub-label">{{ 'publica.payment.amountPaid' | translate }}</dt>
-            <dd class="res-valor">{{ (transactionDetails?.amount_in_cents / 100) | currency:'COP':'symbol':'1.0-0' }}</dd>
+            <dd class="res-valor">{{ (transactionDetails?.amount_in_cents / 100) | copMoneda }}</dd>
           </div>
           <div class="res-fila" *ngIf="!error && !aprobada && transactionDetails?.created_at">
             <dt class="pub-label">{{ 'publica.payment.date' | translate }}</dt>

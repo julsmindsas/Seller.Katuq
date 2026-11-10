@@ -77,7 +77,7 @@
       <div class="col-md-6 mb-3">
         <label class="form-label">Precio de venta</label>
         <div class="form-control bg-light text-end">
-          <strong *ngIf="hayPrecioVenta">{{ precioVenta | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <strong *ngIf="hayPrecioVenta">{{ precioVenta | copMoneda }}</strong>
           <span *ngIf="!hayPrecioVenta" class="text-muted">Sin precio cargado</span>
         </div>
         <small class="text-muted">Se edita en la pestaña Precio unitario.</small>
@@ -91,7 +91,7 @@
         <label class="form-label">Margen por unidad</label>
         <div class="form-control text-end"
              [ngClass]="!hayPrecioVenta ? 'bg-light' : (margenEnRojo ? 'bg-danger text-white' : 'bg-primary text-white')">
-          <strong *ngIf="hayPrecioVenta">{{ margen | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <strong *ngIf="hayPrecioVenta">{{ margen | copMoneda }}</strong>
           <span *ngIf="!hayPrecioVenta" class="text-muted">—</span>
         </div>
         <small class="text-muted">Lo que queda por cada unidad vendida.</small>

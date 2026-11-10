@@ -12,6 +12,10 @@
   @include kc-tokens;
   font-family: var(--kc-font-body);
 }
+// Modo oscuro (body.dark-only, ticket de modo oscuro): los --kc-* pasan a los --ds-* del canon.
+:host-context(body.dark-only) {
+  @include kc-tokens-oscuro;
+}
 
 // ── Grid de KPI cards ─────────────────────────────────────────────────────
 .tk-grid {
@@ -33,7 +37,7 @@
   flex-direction: column;
   justify-content: center;
   border-radius: 16px;
-  border-color: #ececf4;
+  border-color: var(--kc-line);
   transition: transform .15s ease;
 
   &:hover { transform: translateY(-1px); }
@@ -44,7 +48,7 @@
 .tk-accent-purple { --tk-bar: var(--kc-accent); --tk-fg: var(--kc-accent); }
 .tk-accent-blue   { --tk-bar: var(--kc-blue);   --tk-fg: var(--kc-blue); }
 .tk-accent-red    { --tk-bar: var(--kc-red);    --tk-fg: var(--kc-red); }
-.tk-accent-gray   { --tk-bar: #8f8bab;          --tk-fg: #211F3A; }
+.tk-accent-gray   { --tk-bar: var(--kc-muted);  --tk-fg: var(--kc-ink); }
 
 .tk-label {
   font-size: 10.5px;
@@ -56,7 +60,9 @@
 .tk-value {
   font-family: var(--kc-font-head);
   font-weight: 800;
-  font-size: 26px;
+  font-size: clamp(18px, 2.2vw, 26px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   line-height: 1.1;
   margin-top: 6px;
   color: var(--tk-fg, var(--kc-ink));
@@ -93,7 +99,7 @@
 .tk-badge-preaprobado  { color: var(--kc-accent); background: var(--kc-accent-wash); }
 .tk-badge-aprobado     { color: var(--kc-green);  background: var(--kc-green-wash); }
 .tk-badge-rechazado    { color: var(--kc-red);    background: var(--kc-red-wash); }
-.tk-badge-cancelado    { color: var(--kc-muted);  background: #f1f2f5; }
+.tk-badge-cancelado    { color: var(--kc-muted);  background: var(--kc-chip, #f1f2f5); }
 
 .tk-badge-clickable {
   cursor: pointer;
@@ -138,7 +144,7 @@
 
 // ── Banners de alerta y notas ─────────────────────────────────────────────
 .tk-alert-danger {
-  border: 1px solid #f7d4d2;
+  border: 1px solid var(--kc-red-wash);
   background: var(--kc-red-wash);
   color: var(--kc-red);
   border-radius: 14px;
@@ -147,7 +153,7 @@
   font-weight: 600;
 }
 .tk-alert-warning {
-  border: 1px solid #f6e2c0;
+  border: 1px solid var(--kc-orange-wash);
   background: var(--kc-orange-wash);
   color: var(--kc-orange);
   border-radius: 14px;
@@ -160,7 +166,7 @@
   font-weight: 600;
   color: var(--kc-ink2);
   background: var(--kc-canvas);
-  border: 1px dashed #e4e5ee;
+  border: 1px dashed var(--kc-line-strong, #e4e5ee);
   border-radius: 12px;
   padding: 11px 14px;
 }
@@ -319,11 +325,11 @@
 
   i {
     font-size: 26px;
-    color: #b7bccb;
+    color: var(--kc-faint, #b7bccb);
   }
 }
 .tk-error {
-  border: 1px solid #f6e2c0;
+  border: 1px solid var(--kc-orange-wash);
   background: var(--kc-orange-wash);
   color: var(--kc-orange);
   border-radius: 14px;
@@ -359,14 +365,14 @@
     &:hover:not(:disabled) { background: var(--kc-accent-ink); border-color: var(--kc-accent-ink); }
   }
   &.btn-outline-primary {
-    background: #fff;
-    border-color: #e2d9fb;
+    background: var(--kc-surface);
+    border-color: var(--kc-line-accent, #e2d9fb);
     color: var(--kc-accent);
     &:hover:not(:disabled) { background: var(--kc-accent-wash); }
   }
   &.btn-outline-secondary {
-    background: #fff;
-    border-color: #cbebd8;
+    background: var(--kc-surface);
+    border-color: var(--kc-line-strong, #cbebd8);
     color: var(--kc-green);
     &:hover:not(:disabled) { background: var(--kc-green-wash); }
   }
@@ -382,7 +388,7 @@
     align-items: center;
     gap: 12px;
     padding: 16px 20px;
-    background: #fff;
+    background: var(--ds-surface, #fff);
     border-bottom: 1px solid $cfg-line;
   }
   .modal-title {
@@ -431,7 +437,7 @@
       box-shadow: none;
 
       &:focus {
-        background-color: #fff;
+        background-color: var(--ds-surface, #fff);
         border-color: $cfg-accent-2;
         box-shadow: 0 0 0 3px rgba(124, 92, 255, .15);
       }
@@ -448,7 +454,7 @@
   .modal-footer {
     gap: 8px;
     padding: 14px 20px;
-    background: #fff;
+    background: var(--ds-surface, #fff);
     border-top: 1px solid $cfg-line-soft;
 
     > * { margin: 0; }

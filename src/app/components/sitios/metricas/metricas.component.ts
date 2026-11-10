@@ -44,7 +44,7 @@ export class MetricasComponent implements OnInit {
     return !!this.datos && this.datos.diasPermitidos === 1;
   }
 
-  /** Bloque «KAI»: carga y falla aparte, para no tumbar el resto de la ventana. */
+  /** Bloque «Opttia»: carga y falla aparte, para no tumbar el resto de la ventana. */
   kai: MetricasKai | null = null;
   kaiCargando = true;
   kaiError = false;
