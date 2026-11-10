@@ -13642,6 +13642,29 @@ El detalle con archivo y línea está en `proposal.md`.
   - la bandera en Julsmind y FLORECER;
   - la prueba con números reales;
   - los videos y la solicitud.
+- **Probado en pruebas el 9-nov (FLORECER, con Daniel), ida y vuelta sin Kapso:**
+  - número de prueba: Opttia, +1 555-471-9699, del portafolio de Opttia;
+  - el «Hola» de Daniel entró al buzón por el webhook;
+  - la respuesta salió desde el buzón por la Graph API (Meta devolvió wamid) y llegó al celular;
+  - sin descontar saldo de Katuq.
+- **Configuración de Meta (app `katuq`):**
+  - inicio de sesión de WhatsApp: `config_id` 1151767800838721, solo WhatsApp, con llave que no vence;
+  - la configuración «con todo el marketing» (2639511196511238) no ofrece compartir el número del celular. Queda para una conexión aparte de anuncios, catálogos y píxeles;
+  - webhook de WhatsApp verificado y apuntando a pruebas, con `messages`, `history`, `smb_message_echoes`, `smb_app_state_sync`, `account_update` y `message_template_status_update`;
+  - dominios del SDK: sellercenter, app.katuq.com y el servidor de pruebas.
+- **Bloqueo confirmado en la documentación de Meta:** sin acceso avanzado a `whatsapp_business_messaging` y `whatsapp_business_management` no se registran números nuevos ni se comparte el del celular de terceros. Error «La app de socio no tiene los permisos avanzados…» con la SIM de prueba. Antes de la aprobación solo se pueden conectar números de portafolios donde Daniel es administrador.
+- **Arreglos salidos de la prueba:**
+  - `af6d4031`/`c522fa3e`: en modo celular, la ventana de Meta puede terminar sin `phone_number_id`;
+  - `d7dea88e`: la línea mira el estado real del número en Meta (`is_on_biz_app`, `platform_type`);
+  - `fb52a4c2`: una línea directa envía de verdad aunque `ENABLE_WHATSAPP_NOTIFICATIONS` esté apagado, porque ese interruptor es de Kapso;
+  - `f9475ff2`: aviso de «debe ser WhatsApp Business»;
+  - `a7d93997`: la tarjeta de Integraciones dice «Conectado» con un número directo.
+- **Pendiente:**
+  - grabar los videos con Opttia y enviar la solicitud de revisión;
+  - la tarjeta de pago en la cuenta de WhatsApp de Opttia (Daniel: «eso después»);
+  - con la aprobación, probar la SIM con el número del celular;
+  - cambiar la clave secreta de la app, que quedó a la vista en la sesión;
+  - mientras el webhook apunte a pruebas, producción no recibe avisos de WhatsApp por Meta directo. Kapso no se afecta.
 
 ### 2026-11-09 — D-705: las propuestas y la documentación nuevas no se suben a git
 - **Pedido:** Daniel, 9-nov: «las propuestas y toda la documentación no se sube, más métela al gitignore». Escogió dejar en git lo ya subido (como D-566) y el contrato en git por ahora.
