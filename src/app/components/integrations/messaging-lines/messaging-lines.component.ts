@@ -15,15 +15,9 @@ import Swal from 'sweetalert2';
 import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import { MessagingLinesService } from '../../../shared/services/messaging/messaging-lines.service';
 import {
-  MetaEmbeddedSignupService,
-  RegistroMetaError,
-} from '../../../shared/services/messaging/meta-embedded-signup.service';
-import {
   CambiosLinea,
-  DatosRegistroMeta,
   MessagingLine,
   MiembroEquipo,
-  ModoConexionMeta,
   PlantillaLinea,
 } from '../../../shared/services/messaging/messaging.models';
 import {
@@ -34,6 +28,7 @@ import {
 } from '../connectors/connector-registry';
 
 import { TranslateService } from '@ngx-translate/core';
+
 /** Lo que el administrador está editando en una línea antes de guardar. */
 interface EdicionLinea {
   nombre: string;
@@ -67,9 +62,9 @@ const CLAVE_ESTADO_CONEXION = 'katuq_conexion_kapso';
  * `IntegrationConnectReturnComponent` avisa por `postMessage` y aquí se confirma
  * con el servidor, que verifica el número con el proveedor.
  *
- * Con la conexión directa con Meta encendida (D-704), «Conectar número» ofrece
- * dos formas: compartir el número del celular o uno nuevo. Se abre la ventana
- * oficial de Meta y el código que devuelve (vence en 30 s) va de una al servidor.
+ * Con la conexión directa con Meta encendida (D-704), «Conectar número» abre el asistente de
+ * tres pasos (`app-asistente-conectar`, D-707): cómo conectar, la ventana oficial de Meta y quién
+ * atiende el número. El código que devuelve Meta (vence en 30 s) va de una al servidor.
  */
 @Component({
   selector: 'app-messaging-lines',
@@ -89,7 +84,8 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
   equipo: MiembroEquipo[] = [];
   /** Conexión directa con Meta (D-704). */
   metaDirecto = { habilitada: false, modoCelular: false };
-  eligiendoModo = false;
+  /** Asistente de conexión directa con Meta abierto (D-704, D-707). */
+  asistenteAbierto = false;
   panelesPlantillas: Record<string, PanelPlantillas> = {};
 
   conectando = false;
@@ -110,7 +106,6 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly toastr: ToastrService,
     private translate: TranslateService,
-    private readonly registroMeta: MetaEmbeddedSignupService,
   ) {
     this.habilitada = features.isEnabled('whatsappMultiNumero');
   }
@@ -159,9 +154,9 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
   conectar(): void {
     if (this.conectando || !this.puedeAdministrar) return;
     this.aviso = null;
-    // D-704: con la conexión directa, primero se escoge cómo conectar.
+    // D-704: con la conexión directa se abre el asistente de tres pasos.
     if (this.metaDirecto.habilitada) {
-      this.eligiendoModo = true;
+      this.asistenteAbierto = true;
       this.cdr.markForCheck();
       return;
     }
@@ -200,96 +195,30 @@ export class MessagingLinesComponent implements OnInit, OnDestroy {
       });
   }
 
-  cancelarModo(): void {
-    this.eligiendoModo = false;
+  /** El asistente confirmó el número con Meta: ya existe y se ve en la lista. */
+  alCrearseLinea(linea: MessagingLine): void {
+    this.ponerLinea(linea);
     this.cdr.markForCheck();
   }
 
-  /**
-   * Conexión directa con Meta (D-704): pide al servidor los datos del registro
-   * insertado, abre la ventana de Meta y confirma de una con el código.
-   */
-  conectarConMeta(modo: ModoConexionMeta): void {
-    if (this.conectando || !this.puedeAdministrar) return;
-    if (modo === 'celular' && !this.metaDirecto.modoCelular) return;
-    this.aviso = null;
-    this.conectando = true;
-    this.cdr.markForCheck();
-    this.servicio
-      .conectar(PROVEEDOR_META, this.estadoAleatorio(), modo)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (datos) => {
-          if (!datos || (datos as DatosRegistroMeta).kind !== 'embedded_signup') {
-            this.terminarConexion({ tipo: 'error', texto: this.translate.instant('integrations.messagingLines.metaErrorMeta') });
-            return;
-          }
-          this.abrirRegistroMeta(datos as DatosRegistroMeta, modo);
-        },
-        error: (err) =>
-          this.terminarConexion({
-            tipo: 'error',
-            texto: this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaErrorMeta')),
-          }),
-      });
-  }
-
-  private abrirRegistroMeta(datos: DatosRegistroMeta, modo: ModoConexionMeta): void {
-    this.registroMeta
-      .iniciar(datos)
-      .then((r) => {
-        this.servicio
-          .confirmar(PROVEEDOR_META, {
-            code: r.code,
-            wabaId: r.wabaId,
-            modo,
-            ...(r.phoneNumberId ? { phoneNumberId: r.phoneNumberId } : {}),
-          })
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (linea) => {
-              this.ponerLinea(linea);
-              this.eligiendoModo = false;
-              const nombre = linea.displayName || linea.displayPhone;
-              this.terminarConexion(
-                linea.setup && linea.setup !== 'completo'
-                  ? {
-                      tipo: 'error',
-                      texto: this.translate.instant('integrations.messagingLines.metaPorTerminar', {
-                        linea: nombre,
-                        causa: linea.setupError || '',
-                      }),
-                    }
-                  : { tipo: 'ok', texto: this.translate.instant('integrations.messagingLines.metaConectado', { linea: nombre }) },
-              );
-            },
-            error: (err) =>
-              this.terminarConexion({
-                tipo: 'error',
-                texto: this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaNoConfirmado')),
+  /** El asistente terminó (con la línea) o se cerró sin conectar (`null`). */
+  alTerminarAsistente(linea: MessagingLine | null): void {
+    this.asistenteAbierto = false;
+    if (linea) {
+      this.ponerLinea(linea);
+      const nombre = linea.displayName || linea.displayPhone;
+      this.aviso =
+        linea.setup && linea.setup !== 'completo'
+          ? {
+              tipo: 'error',
+              texto: this.translate.instant('integrations.messagingLines.metaPorTerminar', {
+                linea: nombre,
+                causa: linea.setupError || '',
               }),
-          });
-      })
-      .catch((e) => {
-        const clave =
-          e instanceof RegistroMetaError
-            ? {
-                cancelado: 'metaCancelado',
-                sin_codigo: 'metaCancelado',
-                sin_numero: 'metaSinNumero',
-                error_meta: 'metaErrorMeta',
-                sdk: 'metaSdk',
-              }[e.motivo]
-            : 'metaErrorMeta';
-        this.terminarConexion({ tipo: 'error', texto: this.translate.instant(`integrations.messagingLines.${clave}`) });
-      });
-  }
-
-  /** Código de un solo uso que el servidor exige al pedir la conexión (anti-CSRF). */
-  private estadoAleatorio(): string {
-    const bytes = new Uint8Array(16);
-    window.crypto.getRandomValues(bytes);
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+            }
+          : { tipo: 'ok', texto: this.translate.instant('asistenteConectar.conectado', { linea: nombre }) };
+    }
+    this.cdr.markForCheck();
   }
 
   /** Corre solo los pasos que le faltan a una línea «por terminar» (D-704). */

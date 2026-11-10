@@ -1,0 +1,124 @@
+<section class="asist" role="group" [attr.aria-label]="'asistenteConectar.titulo' | translate">
+  <header class="asist__cabeza">
+    <div class="asist__textos">
+      <h4 class="asist__titulo">{{ 'asistenteConectar.titulo' | translate }}</h4>
+      <p class="asist__sub">{{ 'asistenteConectar.subtitulo' | translate }}</p>
+    </div>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar()" [disabled]="trabajando || guardando">
+      {{ 'comun.cerrar' | translate }}
+    </button>
+  </header>
+
+  <ol class="asist__pasos" [attr.aria-label]="'asistenteConectar.pasosAria' | translate">
+    <li class="asist__paso" [class.is-activo]="paso === 1" [class.is-hecho]="paso > 1">
+      <span class="asist__paso-num">{{ paso > 1 ? '✓' : '1' }}</span>
+      <span class="asist__paso-texto">{{ 'asistenteConectar.paso1' | translate }}</span>
+    </li>
+    <li class="asist__paso" [class.is-activo]="paso === 2" [class.is-hecho]="paso > 2">
+      <span class="asist__paso-num">{{ paso > 2 ? '✓' : '2' }}</span>
+      <span class="asist__paso-texto">{{ 'asistenteConectar.paso2' | translate }}</span>
+    </li>
+    <li class="asist__paso" [class.is-activo]="paso === 3">
+      <span class="asist__paso-num">3</span>
+      <span class="asist__paso-texto">{{ 'asistenteConectar.paso3' | translate }}</span>
+    </li>
+  </ol>
+
+  <!-- Paso 1: cómo conectar -->
+  <div class="asist__cuerpo" *ngIf="paso === 1">
+    <div class="asist__modos" role="radiogroup" [attr.aria-label]="'integrations.messagingLines.metaElegirTitulo' | translate">
+      <button type="button" role="radio" class="asist__modo" *ngIf="modoCelular"
+              [class.is-elegido]="modo === 'celular'" [attr.aria-checked]="modo === 'celular'"
+              (click)="elegir('celular')">
+        <span class="asist__modo-icono" aria-hidden="true"><i class="fa fa-mobile"></i></span>
+        <span class="asist__modo-titulo">{{ 'integrations.messagingLines.metaCelularTitulo' | translate }}</span>
+        <span class="asist__modo-texto">{{ 'integrations.messagingLines.metaCelularTexto' | translate }}</span>
+        <span class="asist__modo-nota">{{ 'integrations.messagingLines.metaCelularRequisito' | translate }}</span>
+        <span class="asist__modo-nota">{{ 'integrations.messagingLines.metaCelularAviso' | translate }}</span>
+      </button>
+      <button type="button" role="radio" class="asist__modo"
+              [class.is-elegido]="modo === 'nuevo'" [attr.aria-checked]="modo === 'nuevo'"
+              (click)="elegir('nuevo')">
+        <span class="asist__modo-icono" aria-hidden="true"><i class="fa fa-plus-circle"></i></span>
+        <span class="asist__modo-titulo">{{ 'integrations.messagingLines.metaNuevoTitulo' | translate }}</span>
+        <span class="asist__modo-texto">{{ 'integrations.messagingLines.metaNuevoTexto' | translate }}</span>
+      </button>
+    </div>
+    <p class="cfg-aviso">
+      <i class="fa fa-credit-card" aria-hidden="true"></i>
+      <span class="asist__aviso-texto">{{ 'integrations.messagingLines.metaCobro' | translate }}</span>
+    </p>
+    <div class="asist__pie">
+      <button type="button" class="cfg-btn" (click)="continuar()" [disabled]="!modo">
+        {{ 'asistenteConectar.continuar' | translate }}
+        <i class="fa fa-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Paso 2: ventana de Meta -->
+  <div class="asist__cuerpo" *ngIf="paso === 2">
+    <div class="asist__espera" *ngIf="trabajando" role="status">
+      <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+      <span class="asist__espera-texto">{{ 'integrations.messagingLines.metaAbriendo' | translate }}</span>
+    </div>
+    <p class="asist__nota" *ngIf="trabajando">{{ 'asistenteConectar.pasoVentana' | translate }}</p>
+
+    <div class="cfg-aviso cfg-aviso--error" *ngIf="error && !trabajando" role="alert">
+      <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+      <span class="asist__aviso-texto">{{ error }}</span>
+    </div>
+    <p class="asist__nota" *ngIf="error && !trabajando">{{ 'asistenteConectar.nadaCreado' | translate }}</p>
+
+    <div class="asist__pie" *ngIf="error && !trabajando">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="volverAlPaso1()">
+        <i class="fa fa-arrow-left" aria-hidden="true"></i>
+        {{ 'comun.volver' | translate }}
+      </button>
+      <button type="button" class="cfg-btn" (click)="conectar()">
+        <i class="fa fa-refresh" aria-hidden="true"></i>
+        {{ 'asistenteConectar.reintentar' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Paso 3: quién lo atiende -->
+  <div class="asist__cuerpo" *ngIf="paso === 3 && linea">
+    <p class="cfg-aviso cfg-aviso--ok" role="status" *ngIf="!linea.setup || linea.setup === 'completo'">
+      <i class="fa fa-check-circle" aria-hidden="true"></i>
+      <span class="asist__aviso-texto">{{ 'asistenteConectar.conectado' | translate:{ linea: nombreLinea() } }}</span>
+    </p>
+    <p class="cfg-aviso cfg-aviso--warn" role="status" *ngIf="linea.setup && linea.setup !== 'completo'">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="asist__aviso-texto">{{ 'integrations.messagingLines.metaPorTerminar' | translate:{ linea: nombreLinea(), causa: linea.setupError || '' } }}</span>
+    </p>
+
+    <div class="asist__campo">
+      <span class="cfg-label">{{ 'asistenteConectar.quienLoAtiende' | translate }}</span>
+      <app-selector-equipo
+        [equipo]="equipo"
+        [multiple]="true"
+        [emails]="asignados"
+        (emailsChange)="asignados = $event"
+        [disabled]="guardando"
+        [placeholder]="'integrations.messagingLines.eligeLosVendedores' | translate"
+      ></app-selector-equipo>
+      <span class="asist__nota">{{ 'asistenteConectar.quienLoAtiendeAyuda' | translate }}</span>
+    </div>
+
+    <p class="cfg-aviso cfg-aviso--error" *ngIf="errorAsignar" role="alert">
+      <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+      <span class="asist__aviso-texto">{{ errorAsignar }}</span>
+    </p>
+
+    <div class="asist__pie">
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="omitirEquipo()" [disabled]="guardando">
+        {{ 'asistenteConectar.despues' | translate }}
+      </button>
+      <button type="button" class="cfg-btn" (click)="guardarEquipo()" [disabled]="guardando">
+        <i class="fa" [ngClass]="guardando ? 'fa-spinner fa-spin' : 'fa-check'" aria-hidden="true"></i>
+        {{ 'asistenteConectar.terminar' | translate }}
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,173 @@
+// Asistente para conectar un número directo con Meta (D-704, D-707). Plano, tema canónico (config-pagina).
+// Ninguna clase lleva "p-" (trampa [class*="p-"] del CSS global) y cada span tiene color y tamaño
+// propios (trampa span.ng-star-inserted).
+@import '../../styles/config-pagina';
+
+@include config-pagina;
+
+:host {
+  display: block;
+}
+
+.asist {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+  color: $cfg-ink;
+
+  p, a, li, label, span, button { letter-spacing: normal; }
+  span { color: inherit; font-size: inherit; }
+  button:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+.asist__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.asist__textos { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.asist__titulo {
+  margin: 0;
+  font-size: 15px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.asist__sub {
+  margin: 0;
+  font-size: 13px;
+  color: $cfg-muted;
+}
+
+.asist__pasos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.asist__paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-muted;
+
+  &.is-activo { border-color: $cfg-accent-ink; color: $cfg-accent-ink; background: $cfg-accent-soft; }
+  &.is-hecho { color: $cfg-ok; background: $cfg-ok-soft; border-color: transparent; }
+}
+
+.asist__paso-num {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: $cfg-chip-bg;
+  font-size: 12px !important;
+  font-weight: 800;
+  color: inherit !important;
+
+  .is-activo > & { background: $cfg-accent; color: var(--ds-on-accent) !important; }
+  .is-hecho > & { background: $cfg-ok; color: var(--ds-on-accent) !important; }
+}
+
+.asist__paso-texto {
+  min-width: 0;
+  font-size: 12.5px !important;
+  font-weight: 700;
+  color: inherit !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 560px) { display: none; }
+}
+
+.asist__cuerpo { display: flex; flex-direction: column; gap: 12px; }
+
+.asist__modos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+
+.asist__modo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+
+  &:hover { border-color: $cfg-accent-ink; box-shadow: $cfg-shadow-panel; }
+  &.is-elegido { border-color: $cfg-accent-ink; background: $cfg-accent-soft; box-shadow: 0 0 0 3px $cfg-accent-soft; }
+}
+
+.asist__modo-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent-ink !important;
+  font-size: 18px !important;
+}
+
+.asist__modo-titulo { font-size: 14px !important; font-weight: 800; color: $cfg-ink !important; }
+.asist__modo-texto { font-size: 13px !important; line-height: 1.45; color: $cfg-body !important; }
+.asist__modo-nota { font-size: 12px !important; line-height: 1.4; color: $cfg-muted !important; }
+
+.asist__aviso-texto { font-size: inherit !important; color: inherit !important; }
+
+.asist__espera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: $cfg-accent-ink;
+
+  i { color: $cfg-accent-ink; }
+}
+
+.asist__espera-texto { font-size: 13.5px !important; font-weight: 700; color: $cfg-ink !important; }
+
+.asist__nota { margin: 0; font-size: 12.5px !important; line-height: 1.45; color: $cfg-muted !important; }
+
+.asist__campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.asist__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .asist__pie .cfg-btn { flex: 1 1 auto; }
+}

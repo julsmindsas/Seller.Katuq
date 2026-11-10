@@ -55,6 +55,7 @@ import { MetaOauthReturnComponent } from './meta-channels/meta-oauth-return.comp
 import { MessagingLinesComponent } from './messaging-lines/messaging-lines.component';
 import { IntegrationConnectReturnComponent } from './connectors/integration-connect-return.component';
 import { SelectorEquipoModule } from '../../shared/components/selector-equipo/selector-equipo.module';
+import { AsistenteConectarModule } from '../../shared/components/asistente-conectar/asistente-conectar.module';
 
 const routes: Routes = [
   // Vista principal de listado
@@ -145,7 +146,8 @@ const routes: Routes = [
     RouterModule.forChild(routes),
     NgbModule,
     SharedModule,
-    SelectorEquipoModule
+    SelectorEquipoModule,
+    AsistenteConectarModule
   ],
   providers: [
     IntegrationStateService,
