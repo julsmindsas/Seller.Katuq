@@ -22,6 +22,13 @@
         <div class="pl-cifra__valor" [class.pl-nulo]="it.pintada.nulo">{{ it.pintada.texto }}</div>
         <div *ngIf="it.pintada.insignia"><span class="pl-cifra__estado">{{ it.pintada.insignia }}</span></div>
         <small class="pl-cifra__nota" *ngIf="it.nota">{{ it.nota }}</small>
+        <ul class="pl-desglose" *ngIf="it.desglose.length" [attr.aria-label]="it.rotulo">
+          <li class="pl-desglose__linea" *ngFor="let l of it.desglose">
+            <span class="pl-desglose__rotulo">{{ l.rotulo }}</span>
+            <span class="pl-desglose__valor" [class.pl-nulo]="l.pintada.nulo">{{ l.pintada.texto }}</span>
+          </li>
+        </ul>
+        <small class="pl-cifra__nota" *ngIf="it.notaDesglose">{{ it.notaDesglose }}</small>
       </div>
     </div>
 

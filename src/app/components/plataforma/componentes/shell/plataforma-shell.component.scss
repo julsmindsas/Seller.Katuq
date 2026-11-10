@@ -107,6 +107,10 @@ body:not(.dark-only) .pl-raiz {
 .pl-cifra__valor.pl-nulo { color: var(--ds-muted); font-weight: 600; }
 .pl-cifra__estado { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--ds-muted); }
 .pl-cifra__estado::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ds-line-strong); }
+.pl-raiz .pl-desglose { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--ds-line-soft); display: grid; gap: 4px; }
+.pl-raiz .pl-desglose__linea { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 12.5px; line-height: 1.35; color: var(--ds-ink); }
+.pl-raiz .pl-desglose__rotulo { color: var(--ds-muted); flex: 0 0 auto; white-space: nowrap; }
+.pl-raiz .pl-desglose__valor { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 .pl-raiz .pl-cifra__nota { font-size: 11.5px; color: var(--ds-muted); line-height: 1.35; }
 @media (max-width: 480px) {
   .pl-raiz .pl-kpi .cfg-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }

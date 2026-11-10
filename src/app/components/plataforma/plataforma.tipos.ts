@@ -370,7 +370,20 @@ export interface ResumenTendenciaSalud {
   parcial: boolean;
 }
 
+/** D-700 28: comercios de pago activos sin ningún pedido en 30 días (el servidor decide y limita la lista). */
+export interface PagoSinPedidos {
+  estado: 'ok' | 'parcial' | 'sin_dato' | string;
+  ventanaDias: number;
+  criterio: string;
+  activasDePago: number;
+  cantidad: number | null;
+  sinDato: number;
+  filas: Array<{ docId: string; nomComercial: string | null; ultimoPedido: string | null; ultimoIngreso: string | null }>;
+  truncado: boolean;
+}
+
 export interface Senales {
+  pagoSinPedidos?: PagoSinPedidos;
   adopcionUsada: AdopcionUsada;
   modulosDeLosQueMasVenden: ModulosTopVentas;
   bajas: BajasPorMotivo;
