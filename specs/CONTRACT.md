@@ -13825,3 +13825,11 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Queda roto a la vista:** siete enlaces del menú y del pie dan 404 porque esas páginas no existen todavía: `/empresas`, `/evora`, `/envios`, `/soporte`, `/devoluciones`, `/terminos` y `/datos`. Esperan los textos de Baudio.
 - **Pendiente, depende de Baudio:** aprobar los textos (los escribió Katuq) y entregar sus fotos. El combo de «Tienda o local» no existe en producción. El pie muestra el NIT sin dígito de verificación.
 - **Corrección a la entrada anterior:** el WhatsApp 322 952 0836 sí tiene respaldo: es el que trae el manual de marca. El 314 411 7438 es el del registro de la empresa.
+
+### 2026-11-10 — D-707: consola de WhatsApp («mini Kapso») en Comunicaciones › WhatsApp — APROBADA (propuesta, diseño, specs y tareas)
+- **Pedido de Daniel (9-nov):** «una versión mini de Kapso en el módulo de Katuq Comunicaciones para WhatsApp»: números y su salud, conectar fácil y asignar el equipo, plantillas completas, envíos masivos con métricas, registro de mensajes y webhooks, y una configuración de Integraciones menos tosca. Aprobó propuesta, diseño (con sus dos respuestas) y tareas: «aprobado todo».
+- **Decisión:** una pestaña «Consola» dentro de Comunicaciones › WhatsApp (Números, Plantillas, Envíos, Registro), detrás de la bandera `whatsappConsola` por comercio. Reutiliza `messaging_lines` (D-437/D-704), la asignación de `sellers`, `whatsappTemplateBuilder`, `whatsapp_usage` y `integrationRawEvents`; el envío sigue por el camino único de `kapsoService`.
+- **Datos:** colección nueva `whatsapp_campaigns` (aprobada por Daniel) para el estado de cada envío masivo de líneas directas; los mensajes siguen en `whatsapp_usage` con `providerMessageId` y estados reales de Meta. Índices en `katuq-db` para `whatsapp_usage (company, campaignId)` y `(providerMessageId)` antes del código. Ritmo y precios en `config/meta_whatsapp` (D-505).
+- **Respuestas de Daniel:** listas para envíos solo de segmentos/filtros existentes (sin CSV en la primera versión); sin tope diario propio, solo el de Meta.
+- **Fuera:** bot, saldo y recargas de Kapso, flujos automáticos, quitar Kapso, pedidos e inventario, permisos nuevos de Meta.
+- **Artefactos:** `openspec/changes/consola-whatsapp/` (solo en la copia local, D-705).
