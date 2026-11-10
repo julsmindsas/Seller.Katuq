@@ -251,7 +251,9 @@ export class CotizacionConvertService {
     // Contexto para que crear-ventas cargue el carrito, setee bodega/ciudad y salte
     // al paso del carrito. (newPedido NO borra estas claves de sessionStorage.)
     try {
-      sessionStorage.setItem("cotizacionVentaCtx", JSON.stringify({ bodega, ciudad, ciudadDane, items: itemsCtx }));
+      // Ticket 1597: el descuento global de la cotización también viaja al pedido.
+      const descGlobal = Math.min(100, Math.max(0, Number(cot.descGlobal) || 0));
+      sessionStorage.setItem("cotizacionVentaCtx", JSON.stringify({ bodega, ciudad, ciudadDane, items: itemsCtx, descGlobal }));
     } catch { /* noop */ }
 
     // Marcador para sellar la cotización cuando el pedido se cree.
