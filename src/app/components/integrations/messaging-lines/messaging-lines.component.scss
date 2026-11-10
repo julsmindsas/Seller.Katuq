@@ -280,6 +280,122 @@
 
 .lineas__estado--pendiente { background: $cfg-warn-soft; color: $cfg-warn !important; }
 
+.lineas__modos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+}
+
+.lineas__modos-cabeza { display: flex; flex-direction: column; gap: 4px; }
+
+.lineas__modos-titulo {
+  margin: 0;
+  font-size: 15px !important;
+  font-weight: 800;
+  color: $cfg-ink;
+}
+
+.lineas__modos-sub {
+  margin: 0;
+  font-size: 13px !important;
+  color: $cfg-muted;
+}
+
+.lineas__modos-opciones {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (min-width: 768px) { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+
+.lineas__modo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) { border-color: $cfg-accent-ink; box-shadow: $cfg-shadow-panel; }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.lineas__modo-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent-ink !important;
+  font-size: 18px !important;
+}
+
+.lineas__modo-titulo {
+  font-size: 14px !important;
+  font-weight: 800;
+  color: $cfg-ink !important;
+}
+
+.lineas__modo-texto {
+  font-size: 13px !important;
+  line-height: 1.45;
+  color: $cfg-body !important;
+}
+
+.lineas__modo-requisito {
+  font-size: 12.5px !important;
+  line-height: 1.4;
+  font-weight: 700;
+  color: $cfg-ink !important;
+}
+
+.lineas__modo-nota {
+  font-size: 12px !important;
+  line-height: 1.4;
+  color: $cfg-muted !important;
+}
+
+.lineas__modos-cobro {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: $cfg-info;
+}
+
+.lineas__modos-cobro-texto {
+  font-size: 12.5px !important;
+  color: $cfg-body !important;
+}
+
+.lineas__modos-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.lineas__modos-espera { display: inline-flex; align-items: center; gap: 8px; color: $cfg-muted; }
+
+.lineas__modos-espera-texto {
+  font-size: 13px !important;
+  color: $cfg-muted !important;
+}
+
 .lineas__pendiente {
   flex-wrap: wrap;
 

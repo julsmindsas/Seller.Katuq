@@ -15,13 +15,41 @@
     </div>
   </header>
 
-  <!-- D-704, D-707: asistente de tres pasos para conectar el número directo con Meta -->
-  <app-asistente-conectar *ngIf="asistenteAbierto && puedeAdministrar"
-    [modoCelular]="metaDirecto.modoCelular"
-    [equipo]="equipo"
-    (lineaCreada)="alCrearseLinea($event)"
-    (terminado)="alTerminarAsistente($event)"
-  ></app-asistente-conectar>
+  <!-- D-704: cómo conectar el número directo con Meta -->
+  <div class="lineas__modos" *ngIf="eligiendoModo && puedeAdministrar" role="group" [attr.aria-label]="'integrations.messagingLines.metaElegirTitulo' | translate">
+    <div class="lineas__modos-cabeza">
+      <h5 class="lineas__modos-titulo">{{ 'integrations.messagingLines.metaElegirTitulo' | translate }}</h5>
+      <p class="lineas__modos-sub">{{ 'integrations.messagingLines.metaElegirSub' | translate }}</p>
+    </div>
+    <div class="lineas__modos-opciones">
+      <button type="button" class="lineas__modo" *ngIf="metaDirecto.modoCelular"
+              (click)="conectarConMeta('celular')" [disabled]="conectando">
+        <span class="lineas__modo-icono" aria-hidden="true"><i class="fa fa-mobile"></i></span>
+        <span class="lineas__modo-titulo">{{ 'integrations.messagingLines.metaCelularTitulo' | translate }}</span>
+        <span class="lineas__modo-texto">{{ 'integrations.messagingLines.metaCelularTexto' | translate }}</span>
+        <span class="lineas__modo-requisito">{{ 'integrations.messagingLines.metaCelularRequisito' | translate }}</span>
+        <span class="lineas__modo-nota">{{ 'integrations.messagingLines.metaCelularAviso' | translate }}</span>
+      </button>
+      <button type="button" class="lineas__modo" (click)="conectarConMeta('nuevo')" [disabled]="conectando">
+        <span class="lineas__modo-icono" aria-hidden="true"><i class="fa fa-plus-circle"></i></span>
+        <span class="lineas__modo-titulo">{{ 'integrations.messagingLines.metaNuevoTitulo' | translate }}</span>
+        <span class="lineas__modo-texto">{{ 'integrations.messagingLines.metaNuevoTexto' | translate }}</span>
+      </button>
+    </div>
+    <p class="lineas__modos-cobro">
+      <i class="fa fa-credit-card" aria-hidden="true"></i>
+      <span class="lineas__modos-cobro-texto">{{ 'integrations.messagingLines.metaCobro' | translate }}</span>
+    </p>
+    <div class="lineas__modos-pie">
+      <span class="lineas__modos-espera" *ngIf="conectando">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <span class="lineas__modos-espera-texto">{{ 'integrations.messagingLines.metaAbriendo' | translate }}</span>
+      </span>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="cancelarModo()" [disabled]="conectando">
+        {{ 'comun.cancelar' | translate }}
+      </button>
+    </div>
+  </div>
 
   <p class="cfg-aviso" *ngIf="aviso" role="status"
      [class.cfg-aviso--ok]="aviso.tipo === 'ok'" [class.cfg-aviso--error]="aviso.tipo === 'error'">
