@@ -1,44 +1,73 @@
 {
-  "version": "2026.11.09.8 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-09T23:14:10.737Z",
+  "version": "2026.11.09.9 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-10T00:43:47.724Z",
   "notas": [
     {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los valores en pesos de órdenes de compra, recepción de mercancía, bodegas, pagos y cartera también se ven con punto de miles y sin decimales, por ejemplo $1.528.602.",
-      "modulos": [
-        "inventario/ordenes-compra",
-        "inventario/recepcion-mercancia",
-        "tesoreria",
-        "cartera",
-        "compras/reposicion",
-        "contabilidad"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no verás siglas como SP, PP o PD en Pedidos, Producción y Despachos: los indicadores dicen Sin producir, Para despachar, Pendiente de pago, etc.",
-      "modulos": [
-        "ventas",
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
+      "fecha": "2026-11-10T00:42:00Z",
       "tipo": "MEJORA",
-      "texto": "En «Importar fotos de productos» puedes descargar una guía de cómo deben ser tus fotos (tamaño, forma cuadrada, peso y nombre del archivo) para imprimirla o guardarla.",
+      "texto": "En el editor de tu sitio, los campos de fecha, hora, contraseña y las casillas ahora se ven igual que el resto de Katuq, y el asistente de tu web se llama Opttia en todas partes.",
       "modulos": [
-        "productos"
+        "sitios"
       ]
     },
     {
-      "fecha": "2026-11-09T23:10:00Z",
+      "fecha": "2026-11-10T00:42:00Z",
       "tipo": "MEJORA",
-      "texto": "Los botones de cerrar, borrar y los controles de voz tienen nombre para lectores de pantalla, son más fáciles de tocar y se ven al navegar con el teclado, y los textos pequeños se leen mejor."
+      "texto": "En el editor de tu sitio, cada campo de los enlaces, preguntas, sedes y botones ahora dice qué va ahí, y en «A dónde lleva» puedes elegir tus páginas y tu tienda de una lista en vez de escribirlas.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el editor de tu sitio, cuando le pides a Opttia que tu página se vea más profesional, elegante o moderna, ahora cambia toda la página con un mismo estilo y conserva el color de tu marca.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:36:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, al chatear con Opttia ahora puedes elegir la sección que quieres cambiar en «¿Dónde?» o tocándola en la vista previa, y solo cambia esa.",
+      "modulos": [
+        "sitios"
+      ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-10T00:42:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el editor de tu sitio, los campos de fecha, hora, contraseña y las casillas ahora se ven igual que el resto de Katuq, y el asistente de tu web se llama Opttia en todas partes.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T00:42:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el editor de tu sitio, cada campo de los enlaces, preguntas, sedes y botones ahora dice qué va ahí, y en «A dónde lleva» puedes elegir tus páginas y tu tienda de una lista en vez de escribirlas.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:36:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, al chatear con Opttia ahora puedes elegir la sección que quieres cambiar en «¿Dónde?» o tocándola en la vista previa, y solo cambia esa.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-09T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el editor de tu sitio, cuando le pides a Opttia que tu página se vea más profesional, elegante o moderna, ahora cambia toda la página con un mismo estilo y conserva el color de tu marca.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-09T23:10:00Z",
       "tipo": "CORRIGE",
@@ -493,40 +522,8 @@
       "modulos": [
         "en-vivo"
       ]
-    },
-    {
-      "fecha": "2026-11-04T13:00:35Z",
-      "tipo": "CORRIGE",
-      "texto": "En Productos, la columna «Categoría» ya muestra la categoría de los productos que llegan desde tu tienda en línea, aunque vengan con varias categorías.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-11-04T13:00:35Z",
-      "tipo": "MEJORA",
-      "texto": "En el editor de tu tienda, la vista previa «Celular» muestra el botón Menú y el panel lateral tal como los verán tus clientes en el teléfono.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T22:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Facturación electrónica abre más rápido: la franja de estado, las facturas y los pedidos aparecen a medida que están listos, sin bloquear la pantalla.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
-    },
-    {
-      "fecha": "2026-11-03T20:38:01Z",
-      "tipo": "CORRIGE",
-      "texto": "En Compras → Qué comprar, los productos sin existencia dicen «Agotado», las cifras para pedir se entienden mejor, el valor avisa cuando faltan costos y los decimales van con coma.",
-      "modulos": [
-        "compras/reposicion"
-      ]
     }
   ],
-  "commit": "f0d75b4a32cafda86f5643906f7d112854d1c1b4",
+  "commit": "1994a588585162f8df411f77d7666259263215de",
   "cambiosSinCommit": 0
 }
