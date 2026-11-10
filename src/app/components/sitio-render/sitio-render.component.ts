@@ -71,6 +71,7 @@ const FAMILIAS: { [id: string]: string } = {
   jakarta: '"Plus Jakarta Sans", system-ui, sans-serif',
   inter: '"Inter", system-ui, sans-serif',
   archivo: '"Archivo", system-ui, sans-serif',
+  montserrat: '"Montserrat", Arial, sans-serif',
 };
 
 /** Espejo de `ESTILOS` en siteHtml.js. Mismos valores, mismas claves. */
@@ -740,6 +741,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
     jakarta: "Plus+Jakarta+Sans:wght@300;400;500;600;700;800",
     inter: "Inter:wght@300;400;500;600;700",
     archivo: "Archivo:wght@400;500;600;700;800",
+    montserrat: "Montserrat:wght@300;400;600;700",
   };
 
   /** Ids ya pedidos, para no repetir el <link> en cada cambio del tema. */

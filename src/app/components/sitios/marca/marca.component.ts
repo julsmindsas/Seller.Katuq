@@ -3,6 +3,7 @@ import { ToastrService } from "ngx-toastr";
 import { KitDeMarca, SitiosService } from "../sitios.service";
 import Swal from "sweetalert2";
 import { avisoContraste, combinacionUsable } from "../contraste";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 
 /** Paletas de arranque, por si el logo no da colores utilizables. */
 const PALETAS_BASE = [
@@ -10,6 +11,17 @@ const PALETAS_BASE = [
   { nombre: "Rosa", colorPrimario: "#e8478f", colorSecundario: "#fff8fb", colorTexto: "#2b1a24" },
   { nombre: "Verde", colorPrimario: "#1f9d68", colorSecundario: "#f7fbf8", colorTexto: "#12261c" },
   { nombre: "Negro", colorPrimario: "#211d33", colorSecundario: "#faf9f7", colorTexto: "#211d33" },
+];
+
+/**
+ * D-689: versiones opcionales del logo, para marcas con manual. Vacías, las páginas usan el logo principal.
+ * `oscuro` pinta la muestra sobre un fondo oscuro, que es donde se va a ver.
+ */
+type ClaveVariante = "logoOscuro" | "logoPie" | "icono";
+const VARIANTES: { clave: ClaveVariante; nombre: string; pista: string; oscuro: boolean; soloDisenoNuevo: boolean }[] = [
+  { clave: "logoOscuro", nombre: "Para fondos oscuros", pista: "Sale cuando el encabezado o una sección tiene fondo oscuro.", oscuro: true, soloDisenoNuevo: true },
+  { clave: "logoPie", nombre: "Para el pie de página", pista: "Por ejemplo, el que trae tu frase. Va abajo en todas tus páginas.", oscuro: true, soloDisenoNuevo: true },
+  { clave: "icono", nombre: "Ícono de la pestaña", pista: "El símbolo solo, cuadrado. Se ve en la pestaña del navegador.", oscuro: false, soloDisenoNuevo: false },
 ];
 
 const SECTORES = [
@@ -58,6 +70,14 @@ export class MarcaComponent implements OnInit {
   cargando = true;
   guardando = false;
   subiendo = false;
+  /** D-689: qué versión del logo se está subiendo ("" = ninguna). */
+  subiendoVariante: ClaveVariante | "" = "";
+  /**
+   * El logo de fondo oscuro y el del pie solo los usa el diseño nuevo de las páginas (bandera `siteDesignV2`).
+   * Sin ella no se ofrecen, para no prometer algo que la página no hace. El ícono de la pestaña sirve en todas.
+   */
+  variantes = VARIANTES;
+  soloIcono = false;
 
   kit: KitDeMarca = {
     logo: "",
@@ -80,7 +100,11 @@ export class MarcaComponent implements OnInit {
   /** Ticket 1216: combinación que el comercio aceptó guardar con poco contraste. */
   private contrasteAceptado = "";
 
-  constructor(private service: SitiosService, private toastr: ToastrService) {}
+  constructor(private service: SitiosService, private toastr: ToastrService, private features: CompanyFeaturesService) {
+    const disenoNuevo = this.features.isEnabled("siteDesignV2");
+    this.variantes = VARIANTES.filter((v) => disenoNuevo || !v.soloDisenoNuevo);
+    this.soloIcono = this.variantes.length === 1;
+  }
 
   /** Ticket 1216: aviso si el texto no se lee sobre el fondo, o "". */
   get avisoContraste(): string {
@@ -143,6 +167,40 @@ export class MarcaComponent implements OnInit {
   quitarLogo(): void {
     this.kit.logo = "";
     this.sugeridos = [];
+  }
+
+  /** D-689: ¿hay alguna versión extra guardada? Abre la sección sola. */
+  get tieneVariantes(): boolean {
+    return this.variantes.some((v) => !!this.kit[v.clave]);
+  }
+
+  /** D-689: sube una versión del logo (fondo oscuro, pie o ícono). No toca los colores sugeridos. */
+  subirVariante(evento: Event, clave: ClaveVariante): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo || this.subiendoVariante) return;
+
+    this.subiendoVariante = clave;
+    this.service.subirImagen(archivo, "Marca").subscribe({
+      next: (res) => {
+        this.subiendoVariante = "";
+        input.value = "";
+        if (!res || !res.success || !res.url) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        this.kit[clave] = res.url;
+      },
+      error: (e) => {
+        this.subiendoVariante = "";
+        input.value = "";
+        this.toastr.error((e && e.error && e.error.error) || "No pudimos subir la imagen.");
+      },
+    });
+  }
+
+  quitarVariante(clave: ClaveVariante): void {
+    this.kit[clave] = "";
   }
 
   /**

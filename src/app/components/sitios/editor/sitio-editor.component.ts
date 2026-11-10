@@ -288,6 +288,7 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
   { id: "sora", nombre: "Sora", pista: "Técnica y clara", familia: '"Sora", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "inter", nombre: "Inter", pista: "La más legible en pantalla", familia: '"Inter", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "archivo", nombre: "Archivo", pista: "Firme, de tecnología", familia: '"Archivo", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "montserrat", nombre: "Montserrat", pista: "Geométrica y moderna", familia: '"Montserrat", Arial, sans-serif', grupo: "cuerpo" },
   // Las de siempre, sin descarga.
   { id: "sistema", nombre: "Del sistema", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif", grupo: "cuerpo" },
   { id: "serif", nombre: "Serif clásica", pista: "Georgia, sin descargar nada", familia: 'Georgia, "Times New Roman", serif', grupo: "titulo" },
