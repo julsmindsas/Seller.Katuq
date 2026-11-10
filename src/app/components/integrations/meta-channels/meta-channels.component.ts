@@ -1,9 +1,13 @@
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
-import { Subject } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { Subject, Subscription, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 import { environment } from 'src/environments/environment';
+import { CompanyFeaturesService } from 'src/app/shared/services/company-features.service';
 import { MetaInboxService } from '../../notificaciones/meta-inbox/meta-inbox.service';
+import { CANAL_RETORNO_OAUTH } from './meta-oauth-return.component';
 import {
   MetaCanal,
   MetaConexion,
@@ -17,6 +21,10 @@ import {
  * cero campos donde pegar tokens o identificadores. El diálogo de Meta se abre
  * en una ventana emergente y lo único que vuelve es un código de autorización
  * que el backend cambia por el token — el token nunca pasa por el navegador.
+ *
+ * TikTok (D-709) es el tercer canal, detrás de la bandera `tiktokMensajes`. Se conecta igual, pero la
+ * dirección de autorización la arma el servidor (no el front) y una cuenta que no sea de empresa
+ * verificada se rechaza con un mensaje que se muestra tal cual en su tarjeta.
  */
 @Component({
   selector: 'app-meta-channels',
@@ -28,10 +36,18 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   cargando = true;
   ocupado: MetaCanal | null = null;
   aviso: string | null = null;
+  /** Rechazo del servidor al conectar una cuenta (p. ej. TikTok que no es de empresa), dentro de su tarjeta. */
+  avisoTarjeta: { canal: MetaCanal; texto: string } | null = null;
 
   private destroy$ = new Subject<void>();
   private ventana: Window | null = null;
   private escucha?: (e: MessageEvent) => void;
+  /** Vigila que la ventana de TikTok no se cierre sin autorizar. */
+  private vigilaCierre?: Subscription;
+  /** El código ya volvió de la ventana: lo que sigue es hablar con el servidor, no una cancelación. */
+  private recibioRetorno = false;
+  /** Camino alterno del retorno de TikTok cuando su página corta el vínculo con la ventana (`window.opener`). */
+  private canalRetorno?: BroadcastChannel;
 
   readonly canales: { id: MetaCanal; nombre: string; ayuda: string }[] = [
     {
@@ -51,7 +67,19 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   constructor(
     private servicio: MetaInboxService,
     private zone: NgZone,
-  ) {}
+    private features: CompanyFeaturesService,
+    private translate: TranslateService,
+  ) {
+    // TikTok (D-709): solo con la bandera de la empresa. Sin ella, las dos tarjetas de siempre.
+    if (this.tiktokActivo) {
+      this.canales.push({ id: 'tiktok', nombre: 'TikTok', ayuda: '' });
+    }
+  }
+
+  /** ¿La empresa tiene encendido el canal de TikTok? */
+  get tiktokActivo(): boolean {
+    return this.features.isEnabled('tiktokMensajes');
+  }
 
   ngOnInit(): void {
     this.cargar();
@@ -61,6 +89,8 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     if (this.escucha) window.removeEventListener('message', this.escucha);
+    this.vigilaCierre?.unsubscribe();
+    this.canalRetorno?.close();
   }
 
   private cargar(): void {
@@ -75,24 +105,36 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   }
 
   estadoDe(canal: MetaCanal): MetaConexion | null {
-    return this.conexiones ? this.conexiones[canal] : null;
+    return this.conexiones ? this.conexiones[canal] || null : null;
   }
 
   /** Etiqueta visible del estado. Un solo lugar donde se nombran. */
   etiqueta(canal: MetaCanal): string {
     switch (this.estadoDe(canal)?.estado) {
       case 'conectado':
-        return 'Conectado';
+        return this.translate.instant('integrations.metaChannels.estadoConectado');
       case 'reconectar':
-        return 'Hay que reconectar';
+        return this.translate.instant('integrations.metaChannels.estadoReconectar');
       default:
-        return 'Sin conectar';
+        return this.translate.instant('integrations.metaChannels.estadoSinConectar');
     }
   }
 
   /** Explicación de qué significa el estado y qué debe hacer el usuario. */
   explicacion(canal: MetaCanal): string {
     const c = this.estadoDe(canal);
+    if (canal === 'tiktok') {
+      switch (c?.estado) {
+        case 'conectado':
+          return this.translate.instant('integrations.metaChannels.tiktokConectada', {
+            cuenta: c.cuentaNombre || this.translate.instant('integrations.metaChannels.tuCuenta'),
+          });
+        case 'reconectar':
+          return this.translate.instant('integrations.metaChannels.tiktokReconectar');
+        default:
+          return this.translate.instant('integrations.metaChannels.tiktokAyuda');
+      }
+    }
     switch (c?.estado) {
       case 'conectado':
         return `Estás recibiendo los mensajes de ${c.cuentaNombre || 'tu cuenta'}.`;
@@ -120,7 +162,16 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   }
 
   textoBoton(canal: MetaCanal): string {
-    return this.estadoDe(canal)?.estado === 'reconectar' ? 'Reconectar' : 'Conectar';
+    return this.translate.instant(
+      this.estadoDe(canal)?.estado === 'reconectar' ? 'notificaciones.meta.reconnect' : 'notificaciones.meta.connect',
+    );
+  }
+
+  /** Lo que dice el botón de conectar mientras la ventana está abierta. */
+  textoOcupado(canal: MetaCanal): string {
+    return this.translate.instant(
+      canal === 'tiktok' ? 'integrations.metaChannels.abriendoTiktok' : 'integrations.metaChannels.abriendoMeta',
+    );
   }
 
   /**
@@ -130,6 +181,12 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   conectar(canal: MetaCanal): void {
     if (this.ocupado) return;
     this.aviso = null;
+    this.avisoTarjeta = null;
+
+    if (canal === 'tiktok') {
+      this.conectarTiktok();
+      return;
+    }
 
     const appId = (environment as any).metaAppId;
     if (!appId) {
@@ -169,18 +226,90 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * TikTok (D-709). La ventana se abre en el mismo clic, en blanco, y recién después se le pide al
+   * servidor la dirección de autorización: abrirla cuando la respuesta llega sería una ventana que la
+   * persona no pidió, y el navegador la bloquearía.
+   */
+  private conectarTiktok(): void {
+    const redirectUri = `${window.location.origin}/integrations/meta/retorno`;
+
+    this.ocupado = 'tiktok';
+    this.recibioRetorno = false;
+    this.ventana = window.open('', 'tiktok_login', 'width=600,height=740');
+
+    if (!this.ventana) {
+      this.ocupado = null;
+      this.aviso = this.translate.instant('integrations.metaChannels.tiktokBloqueo');
+      return;
+    }
+
+    this.escuchaRetorno('tiktok', redirectUri);
+
+    this.servicio
+      .autorizarTiktok(redirectUri)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((url) => {
+        // La persona pudo cerrar la ventana mientras el servidor respondía: no hay nada que abrir.
+        if (!this.ventana || this.ventana.closed) {
+          this.ocupado = null;
+          return;
+        }
+        if (!url) {
+          this.ventana.close();
+          this.ocupado = null;
+          this.aviso = this.translate.instant('integrations.metaChannels.tiktokSinAutorizacion');
+          return;
+        }
+        this.ventana.location.href = url;
+        this.vigilarCierreDeVentana();
+      });
+  }
+
+  /**
+   * Si la ventana de TikTok se cierra sin que haya vuelto ningún código, la persona canceló: se libera el
+   * botón para intentar de nuevo. Con el código ya recibido no se toca nada (la ventana se cierra sola
+   * después de entregarlo). No se muestra error: cuando la página de TikTok corta el vínculo con la
+   * ventana, el navegador la da por cerrada aunque la persona siga autorizando, y el código llegaría
+   * después por el canal alterno.
+   */
+  private vigilarCierreDeVentana(): void {
+    this.vigilaCierre?.unsubscribe();
+    this.vigilaCierre = interval(500)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.ventana && !this.ventana.closed) return;
+        this.vigilaCierre?.unsubscribe();
+        if (this.recibioRetorno) return;
+        this.ocupado = null;
+      });
+  }
+
   private escuchaRetorno(canal: MetaCanal, redirectUri: string): void {
     if (this.escucha) window.removeEventListener('message', this.escucha);
+    this.canalRetorno?.close();
+    this.canalRetorno = undefined;
 
-    this.escucha = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin) return;
-      if (!e.data || e.data.tipo !== 'meta_oauth') return;
+    const alRecibir = (datos: any) => {
+      if (!datos || datos.tipo !== 'meta_oauth') return;
+      // El regreso de TikTok viaja con `state=tiktok`: uno de otra conexión no es para esta tarjeta.
+      if (canal === 'tiktok' && datos.state && !String(datos.state).startsWith('tiktok')) return;
+      // El código se usa una sola vez: si llega por los dos caminos, el segundo se ignora.
+      if (canal === 'tiktok' && this.recibioRetorno) return;
 
       this.zone.run(() => {
-        const code = e.data.code;
+        const code = datos.code;
+        this.recibioRetorno = true;
         if (!code) {
           this.ocupado = null;
-          this.aviso = 'No se completó la conexión con Meta. Puedes intentarlo de nuevo.';
+          this.aviso =
+            canal === 'tiktok'
+              ? this.translate.instant('integrations.metaChannels.tiktokNoCompletada')
+              : 'No se completó la conexión con Meta. Puedes intentarlo de nuevo.';
+          return;
+        }
+        if (canal === 'tiktok') {
+          this.completarTiktok(code, redirectUri);
           return;
         }
         this.servicio
@@ -198,20 +327,92 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
       });
     };
 
+    this.escucha = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      alRecibir(e.data);
+    };
     window.addEventListener('message', this.escucha);
+
+    if (canal === 'tiktok' && typeof BroadcastChannel !== 'undefined') {
+      this.canalRetorno = new BroadcastChannel(CANAL_RETORNO_OAUTH);
+      this.canalRetorno.onmessage = (e: MessageEvent) => alRecibir(e.data);
+    }
   }
 
-  desconectar(canal: MetaCanal): void {
+  /** Cambia el código de TikTok por la conexión. Una cuenta no apta vuelve con su mensaje, que se muestra tal cual. */
+  private completarTiktok(code: string, redirectUri: string): void {
+    this.ocupado = 'tiktok';
+    this.aviso = null;
+    this.servicio
+      .conectarTiktok(code, redirectUri)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        if (r.conexiones) {
+          this.ocupado = null;
+          this.conexiones = r.conexiones;
+          return;
+        }
+        if (r.ok) {
+          // Conectó, pero la respuesta no trajo el estado: se vuelve a pedir.
+          this.recargarEnSilencio(() => (this.ocupado = null));
+          return;
+        }
+        this.ocupado = null;
+        this.avisoTarjeta = {
+          canal: 'tiktok',
+          texto: r.error?.message || this.translate.instant('integrations.metaChannels.tiktokErrorGenerico'),
+        };
+      });
+  }
+
+  /** Vuelve a leer las conexiones sin esconder las tarjetas. */
+  private recargarEnSilencio(alTerminar?: () => void): void {
+    this.servicio
+      .obtenerConexiones()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((c) => {
+        if (c) this.conexiones = c;
+        if (alTerminar) alTerminar();
+      });
+  }
+
+  async desconectar(canal: MetaCanal): Promise<void> {
     if (this.ocupado) return;
+
+    // TikTok pide confirmar: desconectar borra el acceso guardado y corta el envío y la recepción.
+    if (canal === 'tiktok') {
+      const cuenta =
+        this.estadoDe('tiktok')?.cuentaNombre || this.translate.instant('integrations.metaChannels.tuCuenta');
+      const r = await Swal.fire({
+        title: this.translate.instant('integrations.metaChannels.desconectarTiktokTitulo'),
+        text: this.translate.instant('integrations.metaChannels.desconectarTiktokTexto', { cuenta }),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('integrations.metaChannels.desconectarTiktokConfirmar'),
+        cancelButtonText: this.translate.instant('comun.cancelar'),
+        confirmButtonColor: '#D64545',
+        reverseButtons: true,
+      });
+      if (!r.isConfirmed) return;
+    }
+
     this.ocupado = canal;
     this.aviso = null;
+    this.avisoTarjeta = null;
 
     this.servicio
       .desconectar(canal)
       .pipe(takeUntil(this.destroy$))
       .subscribe((c) => {
         this.ocupado = null;
-        if (c) this.conexiones = c;
+        if (c) {
+          this.conexiones = c;
+          return;
+        }
+        if (canal === 'tiktok') {
+          this.aviso = this.translate.instant('integrations.metaChannels.desconectarTiktokError');
+          this.recargarEnSilencio();
+        }
       });
   }
 }

@@ -2,7 +2,7 @@
   <header class="mc__head cfg-cabeza">
     <div class="cfg-cabeza__textos">
       <span class="cfg-eyebrow">{{ 'integrations.facturacionHub.integraciones' | translate }}</span>
-      <h1 class="mc__titulo cfg-titulo">{{ 'integrations.metaChannels.mensajesDeInstagramYFacebook' | translate }}</h1>
+      <h1 class="mc__titulo cfg-titulo">{{ (tiktokActivo ? 'integrations.metaChannels.mensajesDeRedes' : 'integrations.metaChannels.mensajesDeInstagramYFacebook') | translate }}</h1>
       <p class="mc__sub cfg-sub">
         {{ 'integrations.metaChannels.conectaLasCuentasDeTu' | translate }}
       </p>
@@ -28,6 +28,9 @@
 
       <p class="mc__explicacion">{{ explicacion(c.id) }}</p>
 
+      <!-- TikTok (D-709): lo que TikTok permite, dicho una vez en la tarjeta -->
+      <p class="mc__nota" *ngIf="c.id === 'tiktok'">{{ 'integrations.metaChannels.tiktokNota' | translate }}</p>
+
       <!--
         La cuenta se muestra solo si el canal está vivo. El backend conserva el
         nombre después de desconectar (sirve para reconectar sin volver a
@@ -40,6 +43,12 @@
         <span class="mc__cuenta-nombre">{{ estadoDe(c.id)?.cuentaNombre }}</span>
       </div>
 
+      <!-- Rechazo del servidor al conectar (p. ej. cuenta de TikTok que no es de empresa verificada), tal cual -->
+      <div class="mc__alerta" role="alert" *ngIf="avisoTarjeta && avisoTarjeta.canal === c.id">
+        <p class="mc__alerta-titulo">{{ 'integrations.metaChannels.tiktokNoConectada' | translate }}</p>
+        <p class="mc__alerta-texto">{{ avisoTarjeta.texto }}</p>
+      </div>
+
       <div class="mc__acciones">
         <button
           type="button"
@@ -48,7 +57,7 @@
           [disabled]="ocupado === c.id"
           (click)="conectar(c.id)"
         >
-          {{ ocupado === c.id ? ('integrations.metaChannels.abriendoMeta' | translate) : textoBoton(c.id) }}
+          {{ ocupado === c.id ? textoOcupado(c.id) : textoBoton(c.id) }}
         </button>
 
         <button

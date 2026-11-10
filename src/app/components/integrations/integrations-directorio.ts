@@ -22,7 +22,7 @@ export type EstadoDirectorio = 'conectable' | 'pronto' | 'guia';
  * De dónde se sabe si está conectada:
  * - 'config': listado de /v1/integration/config (solo trae las activas).
  * - 'whatsapp' / 'whatsapp_bot': configuración de WhatsApp del comercio.
- * - 'meta': conexiones de Instagram y Facebook.
+ * - 'meta': conexiones de Instagram, Facebook y, con la bandera `tiktokMensajes`, TikTok (D-709).
  * - 'facturacion': resumen del servidor de la facturación electrónica (D-500).
  * - 'ninguna': no hay forma de saberlo desde aquí; no se muestra estado.
  */
@@ -160,6 +160,8 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
     entradas: [
       { id: 'whatsapp_kapso', nombre: 'WhatsApp Business', queHace: 'Avisa a tus clientes por WhatsApp cuando su pedido avanza.', estado: 'conectable', categoria: C.MARKETING, fuente: 'whatsapp' },
       { id: 'meta', nombre: 'Instagram y Messenger', queHace: 'Responde desde Katuq los mensajes que te llegan por redes.', estado: 'conectable', categoria: C.MARKETING, fuente: 'meta', ruta: '/integrations/meta' },
+      // D-709: con TikTok encendido la tarjeta pasa a «Mensajes de redes» (la misma pantalla) y el «Próximamente» de TikTok se esconde.
+      { id: 'meta_redes', nombre: 'Mensajes de redes', queHace: 'Responde desde Katuq los mensajes que te llegan por Instagram, Messenger y TikTok.', estado: 'conectable', categoria: C.MARKETING, fuente: 'meta', ruta: '/integrations/meta', bandera: 'tiktokMensajes', reemplaza: ['meta', 'tiktok_messages'] },
       ...FUTURE_MESSAGE_CHANNELS.map(channel => ({
         id: channel.id,
         nombre: channel.title,

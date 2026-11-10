@@ -69,6 +69,38 @@ $error-bg: #fdecec;
 
   &__explicacion { font-size: 12.5px; line-height: 1.5; color: #6b6786; margin: 0 0 14px; }
 
+  /* TikTok: lo que permite la plataforma. Párrafo con color y tamaño propios (trampas del CSS global). */
+  &__nota {
+    font-size: 12px;
+    line-height: 1.5;
+    color: $muted;
+    letter-spacing: normal;
+    margin: -6px 0 14px;
+  }
+
+  /* Rechazo al conectar: par fuerte / fondo suave de alerta, plano. */
+  &__alerta {
+    background: $alerta-bg;
+    border: 1px solid rgba(217, 130, 10, 0.25);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  &__alerta-titulo {
+    margin: 0 0 2px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #7a5307;
+    letter-spacing: normal;
+  }
+  &__alerta-texto {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: $ink;
+    letter-spacing: normal;
+  }
+
   &__cuenta {
     background: #faf9fe;
     border: 1px solid $chip-borde;

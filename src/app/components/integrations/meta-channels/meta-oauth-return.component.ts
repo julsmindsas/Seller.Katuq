@@ -1,12 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
+/** Canal del mismo origen por el que la página de retorno avisa a la pestaña de Katuq cuando no tiene ventana de origen. */
+export const CANAL_RETORNO_OAUTH = 'katuq_meta_oauth';
+
 /**
- * Página de retorno del diálogo de Meta.
+ * Página de retorno del diálogo de Meta (y, con `state=tiktok`, de TikTok, D-709).
  *
  * Vive en una ventana emergente: toma el código de autorización de la URL, se
  * lo pasa a la ventana que la abrió y se cierra. El token NUNCA se maneja aquí
  * — el intercambio lo hace el backend.
+ *
+ * TikTok devuelve el código como `auth_code` o como `code` según el producto; se aceptan los dos. Además, la
+ * página de TikTok puede cortar el vínculo con la ventana que la abrió (su política de apertura): sin
+ * `window.opener`, el código le llega a la pestaña de Katuq por un canal del mismo origen.
  */
 @Component({
   selector: 'app-meta-oauth-return',
@@ -31,12 +38,16 @@ export class MetaOauthReturnComponent implements OnInit {
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    const code = this.route.snapshot.queryParamMap.get('code');
-    const error = this.route.snapshot.queryParamMap.get('error');
+    const parametros = this.route.snapshot.queryParamMap;
+    const state = parametros.get('state');
+    const code = parametros.get('code') || parametros.get('auth_code');
+    const error = parametros.get('error');
+    const red = state && state.startsWith('tiktok') ? 'TikTok' : 'Meta';
+    this.mensaje = `Conectando con ${red}…`;
 
     if (window.opener) {
       window.opener.postMessage(
-        { tipo: 'meta_oauth', code: code || null, error: error || null },
+        { tipo: 'meta_oauth', code: code || null, error: error || null, state: state || null },
         window.location.origin,
       );
       this.mensaje = code
@@ -46,8 +57,28 @@ export class MetaOauthReturnComponent implements OnInit {
       return;
     }
 
+    // Sin ventana de origen: solo TikTok tiene aquí un camino alterno (la pestaña de Katuq escucha el canal).
+    if (red === 'TikTok' && code && this.entregarPorCanal({ tipo: 'meta_oauth', code, error: error || null, state })) {
+      this.mensaje = 'Listo. Puedes cerrar esta ventana.';
+      setTimeout(() => window.close(), 800);
+      return;
+    }
+
     this.mensaje = code
       ? 'Conexión autorizada. Vuelve a la pestaña de Katuq.'
-      : 'No se completó la conexión con Meta.';
+      : `No se completó la conexión con ${red}.`;
+  }
+
+  /** Entrega el resultado a la pestaña de Katuq por un canal del mismo origen. Falso si el navegador no lo permite. */
+  private entregarPorCanal(datos: unknown): boolean {
+    try {
+      if (typeof BroadcastChannel === 'undefined') return false;
+      const canal = new BroadcastChannel(CANAL_RETORNO_OAUTH);
+      canal.postMessage(datos);
+      canal.close();
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

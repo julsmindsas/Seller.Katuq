@@ -1008,7 +1008,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       case "meta": {
         const c = this.conexionesMeta;
         if (!c) return "desconocido";
+        // TikTok (D-709) cuenta solo con su bandera encendida.
         const estados = [c.instagram?.estado, c.facebook?.estado];
+        if (this.features.isEnabled("tiktokMensajes")) estados.push(c.tiktok?.estado);
         if (estados.includes("conectado")) return "ok";
         if (estados.includes("reconectar")) return "atencion";
         return "sin";
