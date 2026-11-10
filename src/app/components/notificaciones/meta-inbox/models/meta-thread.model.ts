@@ -119,7 +119,10 @@ export interface MetaConexiones {
   tiktok?: MetaConexion;
 }
 
-/** Imagen que se adjunta a una respuesta de TikTok: va en el cuerpo, en base64. */
+/**
+ * Imagen que se adjunta a una respuesta de TikTok: viaja en el cuerpo (JSON), en base64. Si va con texto,
+ * el servidor los envía como dos mensajes (la imagen primero) y cada uno gasta cupo de la ventana.
+ */
 export interface MetaImagenAdjunta {
   base64: string;
   mime: string;
@@ -132,6 +135,8 @@ export interface MetaImagenAdjunta {
 export interface MetaErrorServidor {
   code?: string;
   message?: string;
+  /** TikTok: salió la imagen pero no el texto; la imagen no se reintenta. */
+  parcial?: boolean;
 }
 
 /** Etiquetas de canal para la UI. Un solo lugar donde se nombran. */

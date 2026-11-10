@@ -87,8 +87,18 @@
           >
             <span class="mb-msg__burbuja">
               <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
-              <span class="mb-msg__adjunto" *ngIf="!m.body && m.mediaUrl">
-                <i class="pi pi-paperclip"></i> {{ 'notificaciones.meta.attachment' | translate }}
+              <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
+              <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" />
+              <!-- TikTok: publicación compartida; su enlace es público -->
+              <a
+                class="mb-msg__enlace"
+                *ngIf="esPublicacion(m)"
+                [href]="m.mediaUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{ 'notificaciones.meta.tiktokVerPublicacion' | translate }}</a>
+              <span class="mb-msg__adjunto" *ngIf="textoAdjunto(m) as texto">
+                <i class="pi pi-paperclip"></i> {{ texto }}
               </span>
               <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
                 {{ 'notificaciones.meta.notSent' | translate }}

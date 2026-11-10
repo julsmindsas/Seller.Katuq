@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import { environment } from 'src/environments/environment';
 import { CompanyFeaturesService } from 'src/app/shared/services/company-features.service';
 import { MetaInboxService } from '../../notificaciones/meta-inbox/meta-inbox.service';
-import { CANAL_RETORNO_OAUTH } from './meta-oauth-return.component';
+import { CANAL_RETORNO_OAUTH, CLAVE_STATE_TIKTOK } from './meta-oauth-return.component';
 import {
   MetaCanal,
   MetaConexion,
@@ -46,6 +46,8 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   private vigilaCierre?: Subscription;
   /** El código ya volvió de la ventana: lo que sigue es hablar con el servidor, no una cancelación. */
   private recibioRetorno = false;
+  /** El `state` firmado que devolvió el servidor para el intento de conexión de TikTok en curso. */
+  private stateTiktok: string | null = null;
   /** Camino alterno del retorno de TikTok cuando su página corta el vínculo con la ventana (`window.opener`). */
   private canalRetorno?: BroadcastChannel;
 
@@ -91,6 +93,22 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     if (this.escucha) window.removeEventListener('message', this.escucha);
     this.vigilaCierre?.unsubscribe();
     this.canalRetorno?.close();
+    this.olvidarStateTiktok();
+  }
+
+  /** Guarda el `state` del intento (también para la página de retorno) o lo borra. Sin almacenamiento, sigue en memoria. */
+  private guardarStateTiktok(state: string | null): void {
+    this.stateTiktok = state;
+    try {
+      if (state) localStorage.setItem(CLAVE_STATE_TIKTOK, state);
+      else localStorage.removeItem(CLAVE_STATE_TIKTOK);
+    } catch {
+      // almacenamiento bloqueado: el retorno igual se reconoce por el `state` de la URL
+    }
+  }
+
+  private olvidarStateTiktok(): void {
+    this.guardarStateTiktok(null);
   }
 
   private cargar(): void {
@@ -245,6 +263,7 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
 
     this.ocupado = 'tiktok';
     this.recibioRetorno = false;
+    this.olvidarStateTiktok();
     this.ventana = window.open('', 'tiktok_login', 'width=600,height=740');
 
     if (!this.ventana) {
@@ -258,19 +277,21 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     this.servicio
       .autorizarTiktok(redirectUri)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((url) => {
+      .subscribe((autorizacion) => {
         // La persona pudo cerrar la ventana mientras el servidor respondía: no hay nada que abrir.
         if (!this.ventana || this.ventana.closed) {
           this.ocupado = null;
           return;
         }
-        if (!url) {
+        if (!autorizacion.url) {
           this.ventana.close();
           this.ocupado = null;
-          this.aviso = this.translate.instant('integrations.metaChannels.tiktokSinAutorizacion');
+          this.aviso =
+            autorizacion.error?.message || this.translate.instant('integrations.metaChannels.tiktokSinAutorizacion');
           return;
         }
-        this.ventana.location.href = url;
+        this.guardarStateTiktok(autorizacion.state);
+        this.ventana.location.href = autorizacion.url;
         this.vigilarCierreDeVentana();
       });
   }
@@ -301,8 +322,9 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
 
     const alRecibir = (datos: any) => {
       if (!datos || datos.tipo !== 'meta_oauth') return;
-      // El regreso de TikTok viaja con `state=tiktok`: uno de otra conexión no es para esta tarjeta.
-      if (canal === 'tiktok' && datos.state && !String(datos.state).startsWith('tiktok')) return;
+      // El regreso de TikTok trae el `state` que firmó el servidor: uno distinto es de otra conexión y no es
+      // para esta tarjeta.
+      if (canal === 'tiktok' && datos.state && this.stateTiktok && datos.state !== this.stateTiktok) return;
       // El código se usa una sola vez: si llega por los dos caminos, el segundo se ignora.
       if (canal === 'tiktok' && this.recibioRetorno) return;
 
@@ -353,9 +375,10 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     this.ocupado = 'tiktok';
     this.aviso = null;
     this.servicio
-      .conectarTiktok(code, redirectUri)
+      .conectarTiktok(code, redirectUri, this.stateTiktok)
       .pipe(takeUntil(this.destroy$))
       .subscribe((r) => {
+        this.olvidarStateTiktok();
         if (r.conexiones) {
           this.ocupado = null;
           this.conexiones = r.conexiones;

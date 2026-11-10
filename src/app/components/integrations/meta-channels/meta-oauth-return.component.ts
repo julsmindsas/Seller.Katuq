@@ -5,6 +5,13 @@ import { ActivatedRoute } from '@angular/router';
 export const CANAL_RETORNO_OAUTH = 'katuq_meta_oauth';
 
 /**
+ * El `state` que el servidor firmó para el intento de conexión de TikTok. La pestaña de Katuq lo guarda aquí
+ * antes de abrir la ventana: así la página de retorno (mismo origen) reconoce que el regreso es de TikTok,
+ * porque ese `state` no lleva ningún prefijo que lo diga.
+ */
+export const CLAVE_STATE_TIKTOK = 'katuq_tiktok_state';
+
+/**
  * Página de retorno del diálogo de Meta (y, con `state=tiktok`, de TikTok, D-709).
  *
  * Vive en una ventana emergente: toma el código de autorización de la URL, se
@@ -42,7 +49,7 @@ export class MetaOauthReturnComponent implements OnInit {
     const state = parametros.get('state');
     const code = parametros.get('code') || parametros.get('auth_code');
     const error = parametros.get('error');
-    const red = state && state.startsWith('tiktok') ? 'TikTok' : 'Meta';
+    const red = this.esRetornoDeTiktok(state, parametros.has('auth_code')) ? 'TikTok' : 'Meta';
     this.mensaje = `Conectando con ${red}…`;
 
     if (window.opener) {
@@ -67,6 +74,21 @@ export class MetaOauthReturnComponent implements OnInit {
     this.mensaje = code
       ? 'Conexión autorizada. Vuelve a la pestaña de Katuq.'
       : `No se completó la conexión con ${red}.`;
+  }
+
+  /**
+   * ¿El regreso es del intento de TikTok? Sí si su `state` es el que la pestaña de Katuq guardó, si viene
+   * con el prefijo `tiktok` o si el código llega como `auth_code` (así lo llama TikTok).
+   */
+  private esRetornoDeTiktok(state: string | null, traeAuthCode: boolean): boolean {
+    if (traeAuthCode) return true;
+    if (!state) return false;
+    if (state.startsWith('tiktok')) return true;
+    try {
+      return state === localStorage.getItem(CLAVE_STATE_TIKTOK);
+    } catch {
+      return false;
+    }
   }
 
   /** Entrega el resultado a la pestaña de Katuq por un canal del mismo origen. Falso si el navegador no lo permite. */

@@ -246,6 +246,21 @@ $error-bg: #fdecec;
   }
   &__texto { color: $ink; }
   &__adjunto { color: $muted; }
+  /* TikTok: imagen del cliente y publicación compartida. */
+  &__imagen {
+    display: block;
+    max-width: 100%;
+    max-height: 260px;
+    border-radius: 11px;
+    border: 1px solid $linea;
+  }
+  &__enlace {
+    color: $acento;
+    font-weight: 700;
+    letter-spacing: normal;
+    text-decoration: underline;
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+  }
   &__fallido {
     display: flex;
     align-items: center;

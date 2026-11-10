@@ -19,7 +19,7 @@ import {
 
 /** Imágenes que se pueden adjuntar a una respuesta de TikTok (D-709). */
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png'];
-const MAX_IMAGEN_MB = 5;
+const MAX_IMAGEN_MB = 3;
 
 /**
  * Buzón de Meta — una sola implementación para Instagram, Messenger y TikTok (D-709).
@@ -60,6 +60,16 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   errorImagen: string | null = null;
   /** TikTok: el servidor dice si el país del cliente deja mandar imágenes en esta conversación. */
   permiteImagen = false;
+
+  /**
+   * TikTok: imágenes que escribió el cliente, ya descargadas (id del mensaje → dirección `blob:`). El
+   * servidor las entrega por una ruta que pide la sesión, así que no se pueden mostrar con un `<img src>`
+   * directo. `generacionImagenes` descarta respuestas que llegan después de cambiar de conversación.
+   */
+  private imagenesEntrantes = new Map<string, string>();
+  private imagenesEnCurso = new Set<string>();
+  private imagenesFallidas = new Set<string>();
+  private generacionImagenes = 0;
 
   private destroy$ = new Subject<void>();
 
@@ -135,6 +145,8 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.loader.releaseGlobalLoader();
     this.destroy$.next();
     this.destroy$.complete();
+    this.soltarImagenAdjunta();
+    this.soltarImagenesEntrantes();
   }
 
   /**
@@ -274,6 +286,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         this.mensajes = r.items;
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
+        this.cargarImagenesEntrantes(r.items);
       });
   }
 
@@ -284,9 +297,10 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.ventana = null;
     this.borrador = '';
     this.avisoEnvio = null;
-    this.imagen = null;
+    this.soltarImagenAdjunta();
     this.errorImagen = null;
     this.permiteImagen = false;
+    this.soltarImagenesEntrantes();
   }
 
   private cargarConexion(): void {
@@ -320,10 +334,12 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   abrirHilo(hilo: MetaHilo): void {
+    // Otra conversación: lo que se descargó de la anterior ya no sirve.
+    if (this.hiloActivo?.identidadHash !== hilo.identidadHash) this.soltarImagenesEntrantes();
     this.hiloActivo = hilo;
     this.avisoEnvio = null;
     this.borrador = '';
-    this.imagen = null;
+    this.soltarImagenAdjunta();
     this.errorImagen = null;
     this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
@@ -335,6 +351,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         this.mensajes = r.items;
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
+        this.cargarImagenesEntrantes(r.items);
         this.cargandoMensajes = false;
       });
   }
@@ -348,9 +365,75 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     const permite = typeof desdeConversacion === 'boolean' ? desdeConversacion : hilo.permiteImagen === true;
     this.permiteImagen = this.esTiktok && permite;
     if (!this.permiteImagen) {
-      this.imagen = null;
+      this.soltarImagenAdjunta();
       this.errorImagen = null;
     }
+  }
+
+  // ─── Imágenes que escribió el cliente (TikTok) ─────────────────────────
+
+  /**
+   * Trae las imágenes del cliente que todavía no están: son rutas del propio servidor (`/v1/meta/...`)
+   * que piden la sesión, así que se descargan como blob y se muestran con una dirección local. Un mensaje
+   * ya descargado, en curso o fallido no se vuelve a pedir en cada refresco.
+   */
+  private cargarImagenesEntrantes(items: MetaMensaje[]): void {
+    if (!this.esTiktok) return;
+    const generacion = this.generacionImagenes;
+
+    for (const m of items) {
+      const ruta = m.mediaUrl;
+      if (m.tipo !== 'image' || !ruta || !ruta.startsWith('/')) continue;
+      if (this.imagenesEntrantes.has(m.id) || this.imagenesEnCurso.has(m.id) || this.imagenesFallidas.has(m.id)) continue;
+
+      this.imagenesEnCurso.add(m.id);
+      this.servicio
+        .imagenEntrante(ruta)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((blob) => {
+          if (generacion !== this.generacionImagenes) return;
+          this.imagenesEnCurso.delete(m.id);
+          if (blob) this.imagenesEntrantes.set(m.id, URL.createObjectURL(blob));
+          else this.imagenesFallidas.add(m.id);
+        });
+    }
+  }
+
+  private soltarImagenesEntrantes(): void {
+    this.imagenesEntrantes.forEach((url) => URL.revokeObjectURL(url));
+    this.imagenesEntrantes.clear();
+    this.imagenesEnCurso.clear();
+    this.imagenesFallidas.clear();
+    this.generacionImagenes += 1;
+  }
+
+  /** La imagen del cliente ya descargada, lista para el `<img>`; null mientras llega o si no se pudo. */
+  imagenDe(m: MetaMensaje): string | null {
+    return this.esTiktok ? this.imagenesEntrantes.get(m.id) || null : null;
+  }
+
+  /** TikTok: publicación que el cliente compartió. `mediaUrl` es su enlace público. */
+  esPublicacion(m: MetaMensaje): boolean {
+    return this.esTiktok && m.tipo === 'share_post' && /^https?:\/\//i.test(m.mediaUrl || '');
+  }
+
+  /**
+   * Lo que se dice de un adjunto cuando no hay texto ni imagen que mostrar. En Instagram y Facebook es
+   * siempre «Archivo adjunto», como antes; en TikTok distingue sticker, mensaje no soportado y la imagen
+   * que está llegando o no llegó.
+   */
+  textoAdjunto(m: MetaMensaje): string | null {
+    if (!this.esTiktok) {
+      return !m.body && m.mediaUrl ? this.translate.instant('notificaciones.meta.attachment') : null;
+    }
+    if (this.imagenDe(m) || this.esPublicacion(m)) return null;
+    if (m.tipo === 'sticker') return this.translate.instant('notificaciones.meta.tiktokSticker');
+    if (m.tipo === 'unsupported') return this.translate.instant('notificaciones.meta.tiktokNoSoportado');
+    if (m.tipo === 'image') {
+      if (this.imagenesFallidas.has(m.id)) return this.translate.instant('notificaciones.meta.tiktokImagenNoCargo');
+      if (m.mediaUrl && m.mediaUrl.startsWith('/')) return this.translate.instant('notificaciones.meta.tiktokCargandoImagen');
+    }
+    return !m.body && m.mediaUrl ? this.translate.instant('notificaciones.meta.attachment') : null;
   }
 
   irAConexion(): void {
@@ -463,7 +546,10 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   // ─── Imagen adjunta (TikTok) ───────────────────────────────────────────
 
-  /** Lee la imagen elegida a base64, que es como viaja en la respuesta. Valida tipo y peso antes. */
+  /**
+   * Lee la imagen elegida a base64, que es como viaja en la respuesta. Valida tipo y peso antes: 3 MB como
+   * máximo, por seguridad (el servidor acepta más, pero TikTok podría rechazarla).
+   */
   alElegirImagen(evento: Event): void {
     const campo = evento.target as HTMLInputElement;
     const archivo = campo.files && campo.files[0];
@@ -503,15 +589,19 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   quitarImagen(): void {
-    this.imagen = null;
+    this.soltarImagenAdjunta();
     this.errorImagen = null;
+  }
+
+  private soltarImagenAdjunta(): void {
+    this.imagen = null;
   }
 
   enviar(): void {
     if (!this.puedeEnviar || !this.hiloActivo) return;
 
-    const texto = this.borrador.trim();
     const imagen = this.esTiktok ? this.imagen : null;
+    const texto = this.borrador.trim();
     this.enviando = true;
     this.avisoEnvio = null;
 
@@ -526,6 +616,12 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
           return;
         }
         this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
+        // TikTok mandó la imagen y no el texto: la imagen ya salió (no se reintenta), el texto se conserva
+        // para volver a enviarlo y la conversación se refresca para que la imagen aparezca.
+        if (r.parcial) {
+          this.soltarImagenAdjunta();
+          this.refrescarMensajesEnSilencio();
+        }
       });
   }
 

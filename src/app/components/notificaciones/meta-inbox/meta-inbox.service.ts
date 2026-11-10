@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
+import { environment } from 'src/environments/environment';
 import { BaseService } from 'src/app/shared/services/base.service';
 import {
   MetaCanal,
@@ -76,6 +77,7 @@ function errorDelServidor(err: any): MetaErrorServidor {
   return {
     code: typeof fuente.code === 'string' ? fuente.code : undefined,
     message: typeof fuente.message === 'string' && fuente.message.trim() ? fuente.message : undefined,
+    parcial: fuente.parcial === true ? true : undefined,
   };
 }
 
@@ -97,7 +99,8 @@ function errorDelServidor(err: any): MetaErrorServidor {
  *   POST   /v1/meta/conversations/:canal/:hash/reply
  *
  * TikTok (D-709), detrás de la bandera `tiktokMensajes`, usa los mismos y además:
- *   GET    /v1/meta/connections/tiktok/autorizar?redirectUri=   → {url} de la autorización de TikTok
+ *   GET    /v1/meta/connections/tiktok/autorizar?redirectUri=   → {url, state} de la autorización de TikTok
+ *   GET    {mediaUrl}   imagen que escribió el cliente: ruta del propio servidor que pide la sesión (blob)
  */
 @Injectable({ providedIn: 'root' })
 export class MetaInboxService extends BaseService {
@@ -138,30 +141,41 @@ export class MetaInboxService extends BaseService {
 
   /**
    * TikTok (D-709): el servidor arma la dirección de autorización (la app y sus llaves son suyas) y el
-   * front solo abre esa dirección en la ventana emergente. Null si no la pudo dar.
+   * front solo abre esa dirección en la ventana emergente. Devuelve también el `state` firmado: hay que
+   * guardarlo y mandarlo de vuelta al conectar, que es como el servidor sabe que el código es de esta
+   * empresa y de este intento. Sin `url`, trae en `error` el motivo del servidor (p. ej. TikTok sin
+   * configurar, `503`) para mostrarlo tal cual.
    */
-  autorizarTiktok(redirectUri: string): Observable<string | null> {
+  autorizarTiktok(
+    redirectUri: string,
+  ): Observable<{ url: string | null; state: string | null; error?: MetaErrorServidor }> {
     return this.get<any>(
       `/v1/meta/connections/tiktok/autorizar?redirectUri=${encodeURIComponent(redirectUri)}`,
     ).pipe(
       map((r) => {
-        const url = r && r.data && r.data.url ? r.data.url : r && r.url;
-        return typeof url === 'string' && url ? url : null;
+        const datos = r && r.data ? r.data : r;
+        const url = datos && datos.url;
+        if (typeof url !== 'string' || !url) return { url: null, state: null };
+        return { url, state: typeof datos.state === 'string' && datos.state ? datos.state : null };
       }),
-      catchError(() => of(null)),
+      catchError((err) => of({ url: null, state: null, error: errorDelServidor(err) })),
     );
   }
 
   /**
-   * TikTok (D-709): completa la conexión con el código de la autorización. Si el servidor rechaza la
-   * cuenta (`400 TIKTOK_CUENTA_NO_APTA` con su `message` en palabras sencillas) el mensaje vuelve en
-   * `error` para mostrarlo tal cual. Sin `conexiones` pero con `ok`, hay que volver a pedir el estado.
+   * TikTok (D-709): completa la conexión con el código de la autorización (y el `state` que devolvió
+   * `autorizarTiktok`). Si el servidor rechaza la cuenta (`400 TIKTOK_CUENTA_NO_APTA` con su `message` en
+   * palabras sencillas) el mensaje vuelve en `error` para mostrarlo tal cual. Sin `conexiones` pero con
+   * `ok`, hay que volver a pedir el estado.
    */
   conectarTiktok(
     code: string,
     redirectUri: string,
+    state?: string | null,
   ): Observable<{ ok: boolean; conexiones: MetaConexiones | null; error?: MetaErrorServidor }> {
-    return this.post<any>('/v1/meta/connections/tiktok', { code, redirectUri }).pipe(
+    const cuerpo: { code: string; redirectUri: string; state?: string } = { code, redirectUri };
+    if (state) cuerpo.state = state;
+    return this.post<any>('/v1/meta/connections/tiktok', cuerpo).pipe(
       map((r) => ({
         ok: Boolean(r) && r.success !== false,
         conexiones: r && r.data ? normalizarConexiones(r.data) : null,
@@ -205,6 +219,18 @@ export class MetaInboxService extends BaseService {
           ventana: { ...VENTANA_SIN_DATOS },
         }),
       ),
+    );
+  }
+
+  /**
+   * Imagen que escribió un cliente de TikTok. `mediaUrl` es una ruta relativa del propio servidor, no una
+   * dirección pública: se pide con la sesión (el interceptor adjunta la autorización) y llega como blob;
+   * un `<img src>` directo daría 401. Null si no se pudo traer.
+   */
+  imagenEntrante(ruta: string): Observable<Blob | null> {
+    return this.http.get(`${environment.urlApi}${ruta}`, { responseType: 'blob' }).pipe(
+      map((blob) => blob || null),
+      catchError(() => of(null)),
     );
   }
 
@@ -255,17 +281,21 @@ export class MetaInboxService extends BaseService {
    * que un `success:false` con motivo `ventana_cerrada` es una respuesta
    * normal, no un error de red.
    *
-   * TikTok (D-709) puede llevar una imagen (`imagen`, en base64) y rechaza con un HTTP 4xx cuyo
-   * `message` ya viene en palabras sencillas: `TIKTOK_VENTANA_CERRADA` es la ventana cerrada y
-   * cualquier otro `TIKTOK_*` es un rechazo de TikTok; en los dos el mensaje vuelve en `mensaje`.
+   * TikTok (D-709): el cuerpo es JSON, `{texto?, imagen?: {base64, mime, nombre}}`, con al menos uno de los
+   * dos. Con los dos, el servidor manda dos mensajes (la imagen primero). Rechaza con un HTTP 4xx o 5xx
+   * `{code, message}` cuyo `message` ya viene en palabras sencillas: `TIKTOK_VENTANA_CERRADA` es la
+   * ventana cerrada y cualquier otro `TIKTOK_*` es un rechazo (cuenta que hay que reconectar, cupo que no
+   * alcanza para los dos mensajes, TikTok que no aceptó…); en todos el mensaje vuelve en `mensaje`.
+   * `parcial` avisa que la imagen salió y el texto no.
    */
   responder(
     canal: MetaCanal,
     identidadHash: string,
     texto: string,
     imagen?: MetaImagenAdjunta | null,
-  ): Observable<{ enviado: boolean; motivo?: string; mensaje?: string }> {
-    const cuerpo: { texto: string; imagen?: { base64: string; mime: string; nombre: string } } = { texto };
+  ): Observable<{ enviado: boolean; motivo?: string; mensaje?: string; parcial?: boolean }> {
+    const cuerpo: { texto?: string; imagen?: { base64: string; mime: string; nombre: string } } = {};
+    if (texto) cuerpo.texto = texto;
     if (imagen) cuerpo.imagen = { base64: imagen.base64, mime: imagen.mime, nombre: imagen.nombre };
 
     return this.post<any>(
@@ -277,12 +307,12 @@ export class MetaInboxService extends BaseService {
         motivo: r && r.motivo ? r.motivo : undefined,
       })),
       catchError((err) => {
-        const { code, message } = errorDelServidor(err);
+        const { code, message, parcial } = errorDelServidor(err);
         if (code === 'TIKTOK_VENTANA_CERRADA') {
           return of({ enviado: false, motivo: 'ventana_cerrada', mensaje: message });
         }
         if (code && code.startsWith('TIKTOK_')) {
-          return of({ enviado: false, motivo: 'rechazado_por_meta', mensaje: message });
+          return of({ enviado: false, motivo: 'rechazado_por_meta', mensaje: message, parcial });
         }
         return of({ enviado: false, motivo: 'error_red' });
       }),
