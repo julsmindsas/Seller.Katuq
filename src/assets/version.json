@@ -1,16 +1,7 @@
 {
-  "version": "2026.11.10.3 - 10 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-10T16:52:38.305Z",
-  "notas": [
-    {
-      "fecha": "2026-11-10T14:33:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al terminar un pedido en Venta asistida, la pantalla final vuelve a mostrar los productos y el total correcto; antes salía con subtotal en cero aunque el pedido quedaba bien guardado.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    }
-  ],
+  "version": "2026.11.10.4 - 10 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-10T17:29:57.791Z",
+  "notas": [],
   "recientes": [
     {
       "fecha": "2026-11-10T14:33:00Z",
@@ -500,6 +491,6 @@
       ]
     }
   ],
-  "commit": "e3326e813e611769e46da52d0a3798d568bb0fef",
+  "commit": "0fe87d30872fac2bd0e5b1693e6581021fd188d8",
   "cambiosSinCommit": 0
 }
