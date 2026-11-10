@@ -13833,3 +13833,14 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Respuestas de Daniel:** listas para envíos solo de segmentos/filtros existentes (sin CSV en la primera versión); sin tope diario propio, solo el de Meta.
 - **Fuera:** bot, saldo y recargas de Kapso, flujos automáticos, quitar Kapso, pedidos e inventario, permisos nuevos de Meta.
 - **Artefactos:** `openspec/changes/consola-whatsapp/` (solo en la copia local, D-705).
+
+### 2026-11-10 (madrugada, hora UTC) — D-689: enlaces rotos fuera, chat de IA del sitio y arreglos de Lighthouse (aws-claude-1)
+
+- **Pedido:** Daniel aprobó quitar los enlaces rotos de la propuesta 3 («si aprobado») y pidió mejorar el chat de IA del sitio («sale medio apeñuzcado»). Después corrió Lighthouse sobre `baudio-v3-marca.katuq.com` y pasó el informe.
+- **Enlaces rotos (hecho en producción, 04:50 UTC):** se quitaron del menú y del pie con los controladores reales (`sites.edit` y `sites.publish`). Revisados 52 enlaces internos: ninguno falla. Los botones de kit que apuntaban a una página que no existe abren el WhatsApp de Baudio con un mensaje listo.
+- **Cambio que hizo la cuenta de Baudio:** entre las 04:39 y las 04:41 UTC la cuenta dueña del comercio republicó el sitio con siete páginas legales, dos promesas confirmadas y el chat público «BaudIA» encendido. Se conservó tal cual; lo anterior se aplicó encima.
+- **Chat de IA del sitio (backend `9d277fd7`, sin publicar):** panel más ancho y alto en computador, hoja casi a pantalla completa en celular, burbujas con más aire, nombre del producto en dos líneas y la lista queda en la pregunta del visitante al llegar la respuesta. Aplica a todos los sitios con chat de Opttia o de KAI. Además, el tope de la respuesta sube de 900 a 1600: las listas largas de precios llegaban cortadas y el visitante veía «Ahora no puedo responderte con detalle».
+- **Lighthouse (backend `e3e3cdc9`, sin publicar):** rendimiento 94, accesibilidad 99, buenas prácticas 100, SEO 100. Arreglado: el nombre del carrito para lector de pantalla lleva la cantidad, las entradas del plano dejan de declararse botón (marcan la elegida con `aria-current`) y el logo del pie declara su tamaño.
+- **Lighthouse, sin tocar:** la página no tiene una zona «principal» (`<main>`): agregarla cambia la estructura de todos los sitios y pide su propia revisión visual. Fotos de producto más grandes que su casilla y CSS sin usar: mejora de rendimiento para otro cambio.
+- **Pruebas:** las del chat, 32 corridas y 30 pasan; las 2 que fallan son fotos de HTML que ya estaban viejas (no se actualizaron, falta el OK de Daniel). Las de plano, carrito y tienda, 91 de 91. En navegador, 16 de 17 casos del plano; el que falla mide un tiempo de animación ajeno a este cambio.
+- **Pendiente:** publicar el backend cuando Daniel diga «publica». El nombre público del sitio sigue siendo «Baudio · propuesta 3 (manual de marca)» y sale en los textos de WhatsApp y en los títulos legales.
