@@ -321,6 +321,26 @@ const COLORES_EXTRA: { clave: string; nombre: string; pista: string; respaldo: s
 ];
 
 /** Ticket 1227: opciones del panel Estilo. `""` = lo que trae el estilo de página. */
+/**
+ * D-689 — Reglas que suelen fijar los manuales de marca. Cada una es un ajuste del tema del diseño nuevo
+ * (el servidor las valida en `siteBlocks.AJUSTES_MANUAL`); apagada, la página sale como siempre.
+ */
+const AJUSTES_MANUAL_MARCA: { clave: string; nombre: string; no: string; si: string; valor: string; nota: string }[] = [
+  { clave: "titulosAlineacion", nombre: "Títulos de sección", no: "A la izquierda", si: "Centrados", valor: "centro", nota: "El título, su antetítulo y lo que cuelga de él (pestañas, categorías) van al centro." },
+  { clave: "titulosAdorno", nombre: "Adorno del título", no: "Punto", si: "Línea de acento", valor: "linea", nota: "Una línea corta con el color de acento debajo del título y antes del antetítulo." },
+  { clave: "botonHover", nombre: "Botón al pasar el cursor", no: "Más oscuro", si: "Invertido", valor: "invertido", nota: "El botón toma el color del texto y el texto el de acento; sobre fondo oscuro queda claro." },
+  { clave: "trazos", nombre: "Bordes y foco", no: "Finos", si: "Gruesos", valor: "grueso", nota: "Botones secundarios con borde de 2 px y anillo de foco de 3 px." },
+  { clave: "chips", nombre: "Etiquetas y pestañas", no: "Neutras", si: "Con el acento", valor: "acento", nota: "Los datos del producto y la pestaña activa van con el color de acento, en mayúsculas pequeñas." },
+  { clave: "tintaAcento", nombre: "Texto sobre el acento", no: "Automático", si: "Color del texto", valor: "texto", nota: "El texto de los botones usa el color de texto de la marca, si se lee bien sobre el acento." },
+  { clave: "letra", nombre: "Letra", no: "Normal", si: "Estricta", valor: "estricta", nota: "Ningún texto baja de 13 px y solo se usan tres grosores: normal, seminegrita y negrita." },
+  { clave: "menuPosicion", nombre: "Menú del encabezado", no: "Junto al logo", si: "Centrado", valor: "centro", nota: "" },
+  { clave: "accionesTexto", nombre: "Cuenta, favoritos y carrito", no: "Solo ícono", si: "Ícono y palabra", valor: "si", nota: "La palabra se ve en pantallas anchas; en celular quedan los íconos." },
+  { clave: "pieDatos", nombre: "Datos del pie", no: "En texto", si: "Con íconos", valor: "iconos", nota: "Teléfono, horario, correo y dirección, cada uno con su ícono." },
+  { clave: "pieLogo", nombre: "Logo del pie", no: "Normal", si: "Grande", valor: "grande", nota: "240 px de ancho: lo que necesita un logo con eslogan para leerse." },
+  { clave: "estados", nombre: "Colores de estado", no: "Verde y rojo", si: "Los de la marca", valor: "marca", nota: "Confirmaciones y errores con el color de texto; los distingue el ícono y el texto." },
+  { clave: "emojis", nombre: "Emojis en la tienda", no: "Sí", si: "No", valor: "no", nota: "El carrito y el asistente llevan íconos de línea o solo texto." },
+];
+
 const OPCIONES_ESTILO = {
   botonForma: [
     { id: "", nombre: "Del estilo" },
@@ -397,6 +417,7 @@ const OPCIONES_ESTILO = {
   // 50 px, en 800 si la letra lo trae). Solo existe con el diseño nuevo; es otro campo que «Títulos» de Medidas.
   titulosSeccion: [
     { id: "", nombre: "Normales" },
+    { id: "moderado", nombre: "Moderados" },
     { id: "grande", nombre: "Grandes" },
   ],
   // Diseño nuevo (EFECTOS.md): tema.efectos. «Ninguno» deja la página quieta; «Sutil» y «Expresivo» la mueven. Va
@@ -3229,6 +3250,19 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   estiloAbierto = "colores";
   readonly coloresExtra = COLORES_EXTRA;
   readonly opcionesEstilo = OPCIONES_ESTILO;
+  /** D-689: reglas de manual de marca del diseño nuevo (tema.*). Vacío = como siempre. */
+  readonly ajustesManual = AJUSTES_MANUAL_MARCA;
+
+  /** Cuántas reglas de manual de marca tiene encendidas la página. */
+  get manualEncendidas(): number {
+    const tema: any = (this.contenido && this.contenido.tema) || {};
+    return AJUSTES_MANUAL_MARCA.filter((a) => !!tema[a.clave]).length + (tema.logoAlt ? 1 : 0);
+  }
+
+  /** Texto alternativo del logo (tema.logoAlt): vacío vuelve al nombre del negocio. */
+  cambiarLogoAlt(valor: string): void {
+    this.cambiarAjuste("logoAlt", String(valor || "").replace(/[<>]/g, "").slice(0, 80));
+  }
 
   /** Ticket 1247 (TX-32): grupo abierto de la pestaña Tienda (acordeón; "" = todos plegados). */
   tiendaAbierto = "";

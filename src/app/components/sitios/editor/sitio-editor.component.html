@@ -2434,7 +2434,7 @@
                   <button type="button" *ngFor="let o of opcionesEstilo.titulosSeccion" [class.is-active]="($any(contenido.tema).titulosSeccion || '') === o.id"
                           [attr.aria-pressed]="($any(contenido.tema).titulosSeccion || '') === o.id" (click)="cambiarAjuste('titulosSeccion', o.id)">{{ o.nombre }}</button>
                 </div>
-                <small class="nota-estilo">«Grandes» pone el título de cada sección más grande y con más peso, como en una tienda premium. Ya trae su tamaño: no se suma al de «Títulos» en Medidas.</small>
+                <small class="nota-estilo">«Grandes» pone el título de cada sección más grande y con más peso, como en una tienda premium. «Moderados» usa la escala de un manual corporativo (portada de 48 a 56 px, sección de 32 a 40). Ya traen su tamaño: no se suman al de «Títulos» en Medidas.</small>
               </div>
               <h4 class="subgrupo">Color de estructura <small>(opcional)</small></h4>
               <div class="colores">
@@ -2456,6 +2456,39 @@
                 </div>
               </div>
             </ng-container>
+          </div>
+        </div>
+
+        <!-- ── Manual de marca (D-689) ──
+             Reglas que suelen fijar los manuales corporativos. Cada una es un ajuste del tema del diseño nuevo;
+             apagada, la página sale como siempre. La vista «Editable» no las muestra: se ven en «Ver cómo queda». -->
+        <div class="grupo acordeon" *ngIf="puedeDisenoNuevo && disenoNuevo" [class.is-abierto]="estiloAbierto === 'manualMarca'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('manualMarca')" [attr.aria-expanded]="estiloAbierto === 'manualMarca'">
+            <span class="acordeon__titulo">Manual de marca</span>
+            <span class="acordeon__resumen">{{ manualEncendidas ? manualEncendidas + ' reglas encendidas' : 'Reglas de un manual corporativo' }}</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'manualMarca'">
+            <p class="aviso aviso--info">Enciende solo lo que pida el manual de tu marca. Se ve en la vista fiel: «Ver cómo queda».</p>
+            <button type="button" class="enlace-sutil" (click)="verVistaFiel()" [disabled]="cargandoFiel">
+              {{ cargandoFiel ? 'Cargando…' : 'Ver cómo queda' }}
+            </button>
+            <div class="campo" *ngFor="let a of ajustesManual">
+              <label [id]="'lbl-manual-' + a.clave">{{ a.nombre }}</label>
+              <div class="segmentos" role="group" [attr.aria-labelledby]="'lbl-manual-' + a.clave">
+                <button type="button" [class.is-active]="!$any(contenido.tema)[a.clave]" [attr.aria-pressed]="!$any(contenido.tema)[a.clave]"
+                        (click)="cambiarAjuste(a.clave, '')">{{ a.no }}</button>
+                <button type="button" [class.is-active]="$any(contenido.tema)[a.clave] === a.valor" [attr.aria-pressed]="$any(contenido.tema)[a.clave] === a.valor"
+                        (click)="cambiarAjuste(a.clave, a.valor)">{{ a.si }}</button>
+              </div>
+              <small class="nota-estilo" *ngIf="a.nota">{{ a.nota }}</small>
+            </div>
+            <div class="campo">
+              <label for="manual-logo-alt">Texto alternativo del logo</label>
+              <input id="manual-logo-alt" type="text" maxlength="80" placeholder="El nombre de tu negocio"
+                     [ngModel]="$any(contenido.tema).logoAlt || ''" (ngModelChange)="cambiarLogoAlt($event)" />
+              <small class="nota-estilo">Lo que leen los lectores de pantalla en el logo. Vacío: el nombre de tu negocio.</small>
+            </div>
           </div>
         </div>
 
