@@ -94,8 +94,9 @@
           <td [attr.data-label]="'consolaWhatsapp.registro.col.mensaje' | translate">
             <div class="regi__mensaje">
               <span class="regi__texto" *ngIf="i.texto">{{ i.texto }}</span>
-              <span class="regi__error-texto" *ngIf="i.error">{{ i.error }}</span>
-              <span class="regi__texto" *ngIf="!i.texto && !i.error">—</span>
+              <span class="regi__error-texto" *ngIf="mensajeError(i)">{{ mensajeError(i) }}</span>
+              <span class="regi__codigo" *ngIf="codigoError(i)">{{ 'consolaWhatsapp.registro.codigoSoporte' | translate:{ codigo: codigoError(i) } }}</span>
+              <span class="regi__texto" *ngIf="!i.texto && !mensajeError(i)">—</span>
             </div>
           </td>
         </tr>

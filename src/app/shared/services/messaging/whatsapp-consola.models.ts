@@ -10,8 +10,10 @@ export type ProveedorLinea = 'meta' | 'kapso';
 /** Lo que Meta dice de un número (`GET lines/:lineId/salud`). */
 export interface SaludNumero {
   calidad: CalidadNumero | null;
-  /** Conversaciones por día: número, o el nivel de Meta (`TIER_1K`, `TIER_UNLIMITED`). */
+  /** Conversaciones por día: el nivel crudo de Meta (`TIER_1K`, `TIER_UNLIMITED`). */
   limiteDiario: number | string | null;
+  /** Tope numérico del nivel (en un número directo con Meta, `null` = sin tope). */
+  limiteDiarioNumero?: number | null;
   nombreVisible: string | null;
   /** Estado de aprobación del nombre visible (`APPROVED`, `PENDING_REVIEW`, `DECLINED`…). */
   estadoNombre: string | null;
@@ -160,7 +162,8 @@ export interface ItemRegistro {
   estado: string | null;
   telefono: string | null;
   texto: string | null;
-  error: string | null;
+  /** `{ codigo, mensaje }`: el mensaje va en palabras del comercio y el código es para soporte (antes podía llegar un texto). */
+  error: string | { codigo?: string | null; mensaje?: string | null } | null;
   /** Solo para administradores; sin llaves ni tokens. */
   detalle?: unknown;
 }

@@ -221,27 +221,51 @@ export class RegistroComponent implements OnInit, OnDestroy {
   /** Clave de traducción del tipo de mensaje; `null` si no se conoce (se muestra tal cual llega). */
   private claveTipo(valor: string): string | null {
     switch (valor) {
+      case 'texto':
       case 'text':
         return 'consolaWhatsapp.registro.tipo.texto';
+      case 'plantilla':
       case 'template':
         return 'consolaWhatsapp.registro.tipo.plantilla';
+      case 'imagen':
       case 'image':
         return 'consolaWhatsapp.registro.tipo.imagen';
+      case 'documento':
       case 'document':
         return 'consolaWhatsapp.registro.tipo.documento';
       case 'audio':
         return 'consolaWhatsapp.registro.tipo.audio';
       case 'video':
         return 'consolaWhatsapp.registro.tipo.video';
+      case 'interactivo':
       case 'interactive':
         return 'consolaWhatsapp.registro.tipo.interactivo';
+      case 'boton':
+      case 'botón':
       case 'button':
         return 'consolaWhatsapp.registro.tipo.boton';
+      case 'estado':
       case 'status':
         return 'consolaWhatsapp.registro.tipo.estado';
       default:
         return null;
     }
+  }
+
+  /** El error de Meta en palabras del comercio (el servidor manda `{ codigo, mensaje }`; se acepta también un texto). */
+  mensajeError(i: ItemRegistro): string | null {
+    const e = i.error;
+    if (!e) return null;
+    if (typeof e === 'string') return e.trim() || null;
+    const m = typeof e.mensaje === 'string' ? e.mensaje.trim() : '';
+    return m || (e.codigo ? String(e.codigo) : null);
+  }
+
+  /** Código de Meta para soporte; solo si hay un mensaje aparte. */
+  codigoError(i: ItemRegistro): string | null {
+    const e = i.error;
+    if (!e || typeof e === 'string') return null;
+    return e.codigo && e.mensaje ? String(e.codigo) : null;
   }
 
   hora(i: ItemRegistro): string {
