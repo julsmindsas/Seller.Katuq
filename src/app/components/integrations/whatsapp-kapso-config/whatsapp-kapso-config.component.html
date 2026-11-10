@@ -18,7 +18,7 @@
   </div>
 
   <!-- Card principal -->
-  <div class="wa-kapso__card" *ngIf="!loading && !loadError && form">
+  <div class="wa-kapso__card" *ngIf="!consola && !loading && !loadError && form">
     <!-- Header -->
     <div class="wa-kapso__card-header">
       <div class="wa-kapso__title">
@@ -33,6 +33,113 @@
       <span [class]="statusClass">{{ statusLabel }}</span>
     </div>
 
+    <ng-container *ngTemplateOutlet="formularioKapso"></ng-container>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- [D-707] Pantalla nueva (bandera whatsappConsola): solo presentación; -->
+  <!-- los mismos servicios, eventos y validaciones que la vista de siempre. -->
+  <!-- ============================================================ -->
+  <div class="cfg-pagina wa-int" *ngIf="consola && !loading && !loadError && form">
+    <header class="cfg-cabeza">
+      <div class="cfg-cabeza__textos">
+        <span class="cfg-eyebrow">{{ 'integrations.whatsappConsola.eyebrow' | translate }}</span>
+        <h1 class="cfg-titulo">{{ 'integrations.whatsappKapsoConfig.whatsappBusiness' | translate }}</h1>
+        <p class="cfg-sub">{{ 'integrations.whatsappConsola.subtitulo' | translate }}</p>
+      </div>
+      <div class="cfg-acciones">
+        <span class="cfg-pill" [ngClass]="'cfg-pill--' + estadoPill.variante">{{ estadoPill.clave | translate }}</span>
+        <button type="button" class="cfg-btn" (click)="abrirConsola()">
+          <i class="fa fa-sliders" aria-hidden="true"></i>
+          {{ 'integrations.whatsappConsola.abrirConsola' | translate }}
+        </button>
+      </div>
+    </header>
+
+    <!-- Resumen de números -->
+    <section class="cfg-card wa-int__numeros">
+      <header class="wa-int__fila">
+        <div class="wa-int__textos">
+          <h2 class="wa-int__titulo">{{ 'integrations.whatsappConsola.numerosTitulo' | translate }}</h2>
+          <p class="cfg-sub">{{ 'integrations.whatsappConsola.numerosSub' | translate }}</p>
+        </div>
+        <div class="cfg-acciones" *ngIf="puedeAdministrar && metaDirecto.habilitada">
+          <button type="button" class="cfg-btn cfg-btn--sec" (click)="conectarNumero()" [disabled]="asistenteAbierto">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+            {{ 'integrations.messagingLines.conectarNumero' | translate }}
+          </button>
+        </div>
+      </header>
+
+      <app-asistente-conectar *ngIf="asistenteAbierto && puedeAdministrar"
+        [modoCelular]="metaDirecto.modoCelular"
+        [equipo]="equipo"
+        (lineaCreada)="alCrearseLinea($event)"
+        (terminado)="alTerminarAsistente($event)"
+      ></app-asistente-conectar>
+
+      <div class="wa-int__cargando" *ngIf="cargandoLineas" role="status">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <span class="wa-int__cargando-texto">{{ 'integrations.messagingLines.cargandoNumeros' | translate }}</span>
+      </div>
+
+      <div class="cfg-aviso cfg-aviso--warn" *ngIf="errorLineas && !cargandoLineas" role="status">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        <span class="wa-int__aviso-texto">{{ 'integrations.whatsappConsola.numerosError' | translate }}</span>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="cargarLineas()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
+      </div>
+
+      <div class="cfg-vacio" *ngIf="!cargandoLineas && !errorLineas && lineas.length === 0">
+        <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+        <h3 class="cfg-vacio__titulo">{{ 'integrations.messagingLines.aunNoHayNumerosConectados' | translate }}</h3>
+        <p class="cfg-vacio__texto">{{ 'integrations.whatsappConsola.numerosVacio' | translate }}</p>
+      </div>
+
+      <ul class="wa-int__lista" *ngIf="!cargandoLineas && lineas.length > 0">
+        <li class="wa-int__numero" *ngFor="let l of lineas">
+          <div class="wa-int__identidad">
+            <strong class="wa-int__nombre">{{ l.displayName || l.verifiedName || ('integrations.messagingLines.numeroSinNombre' | translate) }}</strong>
+            <span class="wa-int__tel">{{ l.displayPhone }}</span>
+          </div>
+          <div class="wa-int__marcas">
+            <span class="cfg-pill" [ngClass]="l.status === 'connected' ? 'cfg-pill--ok' : 'cfg-pill--error'">
+              {{ (l.status === 'connected' ? 'integrations.integrationsList.conectado2' : 'integrations.messagingLines.desconectado') | translate }}
+            </span>
+            <span class="cfg-pill cfg-pill--neutro">
+              {{ (esDirectaMeta(l) ? 'integrations.messagingLines.marcaMeta' : 'integrations.messagingLines.marcaKapso') | translate }}
+            </span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Bot de pedidos: sin cambios de comportamiento -->
+    <app-whatsapp-bot-config></app-whatsapp-bot-config>
+
+    <!-- Avanzado: la conexión por Kapso con los campos de siempre -->
+    <section class="cfg-card wa-int__avanzado">
+      <button type="button" class="wa-int__avanzado-boton" (click)="toggleAvanzado()"
+              [attr.aria-expanded]="avanzadoAbierto" aria-controls="wa-int-avanzado">
+        <span class="wa-int__avanzado-textos">
+          <span class="wa-int__titulo">{{ 'integrations.whatsappConsola.avanzadoTitulo' | translate }}</span>
+          <span class="wa-int__avanzado-sub">{{ 'integrations.whatsappConsola.avanzadoSub' | translate }}</span>
+        </span>
+        <i class="fa" [ngClass]="avanzadoAbierto ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+      </button>
+      <div id="wa-int-avanzado" class="wa-int__avanzado-cuerpo" *ngIf="avanzadoAbierto">
+        <ng-container *ngTemplateOutlet="formularioKapso"></ng-container>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bot de pedidos: tarjeta independiente con su propia carga/guardado -->
+  <app-whatsapp-bot-config *ngIf="!consola && !loading"></app-whatsapp-bot-config>
+
+  <!-- Varios números del comercio (D-437): solo se pinta con la bandera whatsappMultiNumero -->
+  <app-messaging-lines *ngIf="!consola && !loading"></app-messaging-lines>
+
+  <!-- El formulario de siempre (los mismos campos, servicios y validaciones), usado por la vista actual y por «Avanzado» -->
+  <ng-template #formularioKapso>
     <form [formGroup]="form" (ngSubmit)="saveConfig()" class="wa-kapso__form">
       <!-- ============================================================ -->
       <!-- Sección: Estado                                              -->
@@ -311,11 +418,5 @@
         </button>
       </div>
     </form>
-  </div>
-
-  <!-- Bot de pedidos: tarjeta independiente con su propia carga/guardado -->
-  <app-whatsapp-bot-config *ngIf="!loading"></app-whatsapp-bot-config>
-
-  <!-- Varios números del comercio (D-437): solo se pinta con la bandera whatsappMultiNumero -->
-  <app-messaging-lines *ngIf="!loading"></app-messaging-lines>
+  </ng-template>
 </div>

@@ -1,5 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -10,6 +12,13 @@ import {
   WhatsappNotificationType,
 } from '../../../shared/services/notifications/whatsapp-integration-config.service';
 import { SecurityService } from '../../../shared/services/security/security.service';
+import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
+import { MessagingLinesService } from '../../../shared/services/messaging/messaging-lines.service';
+import { MessagingLine, MiembroEquipo } from '../../../shared/services/messaging/messaging.models';
+import {
+  consolaWhatsappActiva,
+  puedeAdministrarNumeros,
+} from '../../../shared/services/messaging/consola-whatsapp-acceso';
 
 import { TranslateService } from '@ngx-translate/core';
 interface NotificationTypeOption {
@@ -39,6 +48,19 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
 
   showAdvancedCredentials = false;
   hasStoredApiKey = false;
+
+  // ── [D-707] Pantalla nueva de WhatsApp (solo con la bandera `whatsappConsola`) ──
+  /** Con la bandera, la tarjeta se ve como pantalla `cfg-pagina`; sin ella, la vista de siempre. */
+  readonly consola: boolean;
+  /** Sección plegada «Avanzado: conexión por Kapso» (los mismos campos y el mismo formulario de siempre). */
+  avanzadoAbierto = false;
+  puedeAdministrar = false;
+  lineas: MessagingLine[] = [];
+  equipo: MiembroEquipo[] = [];
+  metaDirecto = { habilitada: false, modoCelular: false };
+  cargandoLineas = false;
+  errorLineas = false;
+  asistenteAbierto = false;
 
   readonly notificationTypeOptions: NotificationTypeOption[] = [
     {
@@ -80,18 +102,100 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
     private configService: WhatsappIntegrationConfigService,
     private toastr: ToastrService,
     private security: SecurityService,
-    private translate: TranslateService
-  ) {}
+    private translate: TranslateService,
+    features: CompanyFeaturesService,
+    private lineasService: MessagingLinesService,
+    private router: Router,
+    private modal: NgbModal
+  ) {
+    this.consola = consolaWhatsappActiva(features);
+    this.puedeAdministrar = puedeAdministrarNumeros();
+  }
 
   ngOnInit(): void {
     this.resolveCurrentCompanyName();
     this.buildForm();
     this.loadConfig();
+    if (this.consola) this.cargarLineas();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ============================================================
+  // [D-707] Resumen de números y entrada a la consola (solo presentación)
+  // ============================================================
+
+  /** Números del comercio para el resumen. Si falla, el resumen lo dice y el resto de la pantalla sigue igual. */
+  cargarLineas(): void {
+    this.cargandoLineas = true;
+    this.errorLineas = false;
+    this.lineasService
+      .listar()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.cargandoLineas = false))
+      )
+      .subscribe({
+        next: (res) => {
+          this.puedeAdministrar = res.puedeAdministrar;
+          this.lineas = res.lines;
+          this.equipo = res.equipo;
+          this.metaDirecto = res.metaDirecto;
+        },
+        error: () => {
+          this.errorLineas = true;
+        },
+      });
+  }
+
+  get lineasConectadas(): MessagingLine[] {
+    return this.lineas.filter((l) => l.status === 'connected');
+  }
+
+  esDirectaMeta(linea: MessagingLine): boolean {
+    return linea.provider === 'meta';
+  }
+
+  conectarNumero(): void {
+    if (!this.puedeAdministrar || !this.metaDirecto.habilitada) return;
+    this.asistenteAbierto = true;
+  }
+
+  alCrearseLinea(linea: MessagingLine): void {
+    this.ponerLinea(linea);
+  }
+
+  alTerminarAsistente(linea: MessagingLine | null): void {
+    this.asistenteAbierto = false;
+    if (linea) this.ponerLinea(linea);
+  }
+
+  private ponerLinea(linea: MessagingLine): void {
+    if (!linea || !linea.id) return;
+    this.lineas = this.lineas.some((l) => l.id === linea.id)
+      ? this.lineas.map((l) => (l.id === linea.id ? linea : l))
+      : [...this.lineas, linea];
+  }
+
+  /** «Abrir consola de WhatsApp»: cierra la ventana de Integraciones y va a Comunicaciones › WhatsApp › Consola. */
+  abrirConsola(): void {
+    this.modal.dismissAll();
+    this.router.navigate(['/notificaciones/whatsapp/consola/numeros']);
+  }
+
+  toggleAvanzado(): void {
+    this.avanzadoAbierto = !this.avanzadoAbierto;
+  }
+
+  /** Estado del canal para la pantalla nueva, con clave de traducción y color. */
+  get estadoPill(): { clave: string; variante: 'ok' | 'warn' | 'neutro' } {
+    if (!this.optInAccepted) return { clave: 'integrations.whatsappConsola.estado.pendiente', variante: 'warn' };
+    return this.form?.get('enabled')?.value
+      ? { clave: 'integrations.whatsappConsola.estado.activo', variante: 'ok' }
+      : { clave: 'integrations.whatsappConsola.estado.inactivo', variante: 'neutro' };
   }
 
   // ============================================================
