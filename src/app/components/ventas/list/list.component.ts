@@ -8095,8 +8095,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 "✅ Actualizando producto en índice:",
                 this.indiceProductoSeleccionado,
               );
-              order.carrito[this.indiceProductoSeleccionado] =
-                configuracionResult;
+              // Ticket 1597: el modal solo devuelve {producto, configuracion, cantidad}; se conservan los
+              // campos de la línea que no edita (descuento de línea, precio/IVA manual, cartItemId, combo).
+              order.carrito[this.indiceProductoSeleccionado] = {
+                ...order.carrito[this.indiceProductoSeleccionado],
+                ...configuracionResult,
+              };
             } else {
               console.error(
                 "❌ Índice de producto inválido:",

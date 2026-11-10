@@ -502,6 +502,13 @@ export class CrearVentasComponent
       console.error("Conversión cotización: error cargando el carrito", e);
     }
 
+    // Ticket 1597: el descuento global de la cotización (porcentaje) pasa al pedido; el checkout y el
+    // backend lo componen con el descuento de cada línea: (1 - línea) × (1 - global).
+    const descGlobal = Number(ctx.descGlobal) || 0;
+    if (descGlobal > 0 && descGlobal <= 100 && this.pedidoGral) {
+      this.pedidoGral.porceDescuento = descGlobal;
+    }
+
     // Setear bodega y ciudad vía los métodos privados (NO onWarehouseChange/onSelectCity,
     // que limpian el carrito). Estos actualizan pedidoGral.bodegaId / envio.ciudad.
     try {
