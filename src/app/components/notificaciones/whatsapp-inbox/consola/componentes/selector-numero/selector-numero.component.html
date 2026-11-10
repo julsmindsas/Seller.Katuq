@@ -4,7 +4,7 @@
           [ngModel]="e.lineaId" (ngModelChange)="elegir($event)"
           [disabled]="e.lineas.length === 0">
     <option *ngFor="let l of e.lineas; trackBy: trackLinea" [ngValue]="l.id">
-      {{ l.displayName || l.displayPhone }} · {{ l.displayPhone }} ·
+      <ng-container *ngIf="l.displayName">{{ l.displayName }} · </ng-container>{{ l.displayPhone }} ·
       {{ (esMeta(l) ? 'consolaWhatsapp.selector.directo' : 'consolaWhatsapp.selector.compartido') | translate }}
     </option>
   </select>
