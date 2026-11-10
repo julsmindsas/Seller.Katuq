@@ -515,6 +515,10 @@ export interface ContactoSitio {
 
 export interface KitDeMarca {
   logo: string;
+  /** D-689: versiones opcionales del logo. Vacías, todo usa `logo`. */
+  logoOscuro?: string;
+  logoPie?: string;
+  icono?: string;
   colorPrimario: string;
   colorSecundario: string;
   colorTexto: string;

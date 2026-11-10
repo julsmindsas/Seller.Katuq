@@ -41,6 +41,33 @@
               </button>
             </div>
           </div>
+
+          <!-- D-689: versiones del logo para marcas con manual. Opcionales. -->
+          <details class="variantes" [open]="tieneVariantes">
+            <summary class="variantes__titulo">{{ soloIcono ? 'Ícono de la pestaña (opcional)' : 'Más versiones de tu logo (opcional)' }}</summary>
+            <p class="grupo__pista variantes__pista" *ngIf="!soloIcono">
+              Si tu manual de marca trae varias versiones, súbelas aquí y cada una sale donde corresponde. Si no, tu logo principal va en todas partes.
+            </p>
+            <div class="variante" *ngFor="let v of variantes">
+              <div class="logo__marco variante__marco" [class.logo__marco--vacio]="!kit[v.clave]" [class.variante__marco--oscuro]="v.oscuro && kit[v.clave]">
+                <img *ngIf="kit[v.clave]" [src]="kit[v.clave]" [alt]="v.nombre" />
+                <span class="variante__vacio" *ngIf="!kit[v.clave]">Sin imagen</span>
+              </div>
+              <div class="variante__texto">
+                <strong class="variante__nombre">{{ v.nombre }}</strong>
+                <small class="variante__detalle">{{ v.pista }}</small>
+                <div class="logo__acciones">
+                  <label class="btn-fantasma">
+                    {{ subiendoVariante === v.clave ? 'Subiendo…' : (kit[v.clave] ? 'Cambiar' : 'Subir') }}
+                    <input type="file" accept="image/*" hidden (change)="subirVariante($event, v.clave)" [disabled]="!!subiendoVariante" />
+                  </label>
+                  <button class="btn-fantasma btn-fantasma--peligro" *ngIf="kit[v.clave]" (click)="quitarVariante(v.clave)">
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
         </section>
 
         <!-- Colores -->

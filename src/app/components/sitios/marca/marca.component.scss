@@ -125,6 +125,82 @@
   }
 }
 
+// ── Versiones del logo (D-689) ───────────────────────────────────────────────
+.variantes {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--kb-line-3);
+
+  &__titulo {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    color: #5f3fe0;
+    letter-spacing: normal;
+
+    &:focus-visible {
+      outline: 3px solid #7c5cff !important;
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+  }
+
+  &__pista {
+    margin-top: 8px;
+  }
+}
+
+.variante {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+
+  & + & {
+    border-top: 1px dashed var(--kb-line-3);
+  }
+
+  &__marco {
+    width: 132px;
+    height: 64px;
+    flex: none;
+
+    &--oscuro {
+      background: #211f3a;
+      border-color: #211f3a;
+    }
+  }
+
+  &__vacio {
+    color: var(--kb-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 220px;
+  }
+
+  &__nombre {
+    font-size: 13px;
+    font-weight: 800;
+    color: #211f3a;
+  }
+
+  &__detalle {
+    margin-bottom: 4px;
+    color: var(--kb-muted-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+}
+
 // ── Colores ──────────────────────────────────────────────────────────────────
 .sugeridos {
   margin-bottom: 14px;
