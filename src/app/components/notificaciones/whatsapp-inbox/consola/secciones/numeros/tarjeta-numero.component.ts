@@ -151,7 +151,7 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
 
   /** `null` = sin dato; `'ilimitado'` = Meta no pone tope. */
   get limite(): number | 'ilimitado' | null {
-    return limiteDiarioNumero(this.salud?.limiteDiario);
+    return limiteDiarioNumero(this.salud?.limiteDiario, this.salud?.limiteDiarioNumero);
   }
 
   get actualizadaEn(): Date | null {

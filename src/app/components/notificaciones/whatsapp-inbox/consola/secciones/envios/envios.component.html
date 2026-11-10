@@ -5,7 +5,7 @@
       <p class="cfg-sub">{{ 'consolaWhatsapp.envios.subtitulo' | translate }}</p>
     </div>
     <div class="cfg-acciones" *ngIf="puedeAdministrar && esMeta && conectada">
-      <button type="button" class="cfg-btn" (click)="nuevo()" [disabled]="asistenteAbierto">
+      <button type="button" class="cfg-btn" (click)="nuevo()" [disabled]="asistenteAbierto || hayEnCurso">
         <i class="fa fa-paper-plane" aria-hidden="true"></i>
         {{ 'consolaWhatsapp.envios.nuevo' | translate }}
       </button>
@@ -35,6 +35,11 @@
     <p class="cfg-aviso cfg-aviso--warn" *ngIf="esMeta && !conectada" role="status">
       <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
       <span class="envs__aviso-texto">{{ 'consolaWhatsapp.numeroDesconectado' | translate }}</span>
+    </p>
+
+    <p class="cfg-aviso" *ngIf="hayEnCurso && esMeta && conectada && !asistenteAbierto" role="status">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <span class="envs__aviso-texto">{{ 'consolaWhatsapp.envios.yaHayEnCurso' | translate }}</span>
     </p>
 
     <app-asistente-envio *ngIf="asistenteAbierto && puedeAdministrar && esMeta"

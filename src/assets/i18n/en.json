@@ -11066,5 +11066,7 @@
   "integrations.whatsappConsola.avanzadoSub": "The Kapso key, identifier and service address, and the automatic order notices.",
   "notificaciones.whatsapp.shell.tabConsole": "Console",
   "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp numbers, templates, broadcasts and log",
-  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "The button link is fixed: it can’t contain variables."
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "The button link is fixed: it can’t contain variables.",
+  "consolaWhatsapp.registro.codigoSoporte": "Support code: {{codigo}}",
+  "consolaWhatsapp.envios.yaHayEnCurso": "There is already a broadcast in progress on this number. Once it finishes, or if you pause it, you can make another one."
 }

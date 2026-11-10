@@ -10886,5 +10886,7 @@
   "integrations.whatsappConsola.avanzadoSub": "La clave, el identificador y la dirección del servicio de Kapso, y los avisos automáticos de pedidos.",
   "notificaciones.whatsapp.shell.tabConsole": "Consola",
   "notificaciones.whatsapp.shell.consolaTitle": "Números, plantillas, envíos y registro de WhatsApp",
-  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "El enlace del botón es fijo: no puede llevar variables."
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "El enlace del botón es fijo: no puede llevar variables.",
+  "consolaWhatsapp.registro.codigoSoporte": "Código para soporte: {{codigo}}",
+  "consolaWhatsapp.envios.yaHayEnCurso": "Ya hay un envío en curso en este número. Cuando termine, o si lo pausas, podrás hacer otro."
 }

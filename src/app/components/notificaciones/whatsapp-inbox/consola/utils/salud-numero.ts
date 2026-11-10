@@ -41,11 +41,14 @@ export function etiquetaEstadoNombre(estado: string | null | undefined): Etiquet
 }
 
 /**
- * Conversaciones por día que permite Meta. Puede llegar un número o el nivel de Meta
- * (`TIER_1K`, `TIER_10K`, `TIER_100K`, `TIER_UNLIMITED`). Devuelve `null` si no se sabe y
- * `'ilimitado'` si Meta no pone tope.
+ * Conversaciones por día que permite Meta. El servidor manda el nivel crudo (`TIER_1K`, `TIER_UNLIMITED`…)
+ * y su tope numérico (`null` = sin tope). Devuelve `null` si no se sabe y `'ilimitado'` si Meta no pone tope.
  */
-export function limiteDiarioNumero(limite: number | string | null | undefined): number | 'ilimitado' | null {
+export function limiteDiarioNumero(
+  limite: number | string | null | undefined,
+  tope?: number | null,
+): number | 'ilimitado' | null {
+  if (typeof tope === 'number' && Number.isFinite(tope) && tope > 0) return tope;
   if (limite === null || limite === undefined || limite === '') return null;
   if (typeof limite === 'number') return Number.isFinite(limite) && limite > 0 ? limite : null;
   const texto = String(limite).toUpperCase();
@@ -53,7 +56,9 @@ export function limiteDiarioNumero(limite: number | string | null | undefined): 
   const tier = /TIER_(\d+)(K?)/.exec(texto);
   if (tier) return Number(tier[1]) * (tier[2] ? 1000 : 1);
   const n = Number(texto.replace(/[^\d]/g, ''));
-  return Number.isFinite(n) && n > 0 ? n : null;
+  if (Number.isFinite(n) && n > 0) return n;
+  // Hay un nivel que no se sabe leer y el servidor dice que no tiene tope numérico.
+  return tope === null ? 'ilimitado' : null;
 }
 
 /** Fecha en que se leyó la salud, o `null` si no se puede leer. */

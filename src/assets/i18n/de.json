@@ -10886,5 +10886,7 @@
     "integrations.whatsappConsola.avanzadoSub": "Schlüssel, Kennung und Dienstadresse von Kapso sowie die automatischen Bestellhinweise.",
     "notificaciones.whatsapp.shell.tabConsole": "Konsole",
     "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp-Nummern, Vorlagen, Versände und Protokoll",
-    "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "Der Link der Schaltfläche ist fest: Er darf keine Variablen enthalten."
+    "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "Der Link der Schaltfläche ist fest: Er darf keine Variablen enthalten.",
+    "consolaWhatsapp.registro.codigoSoporte": "Code für den Support: {{codigo}}",
+    "consolaWhatsapp.envios.yaHayEnCurso": "Auf dieser Nummer läuft bereits ein Versand. Sobald er abgeschlossen ist oder Sie ihn pausieren, können Sie einen weiteren durchführen."
 }

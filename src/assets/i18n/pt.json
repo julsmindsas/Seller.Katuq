@@ -11054,5 +11054,7 @@
   "integrations.whatsappConsola.avanzadoSub": "A chave, o identificador e o endereço do serviço da Kapso, e os avisos automáticos de pedidos.",
   "notificaciones.whatsapp.shell.tabConsole": "Console",
   "notificaciones.whatsapp.shell.consolaTitle": "Números, modelos, envios e registro do WhatsApp",
-  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "O link do botão é fixo: não pode ter variáveis."
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "O link do botão é fixo: não pode ter variáveis.",
+  "consolaWhatsapp.registro.codigoSoporte": "Código para o suporte: {{codigo}}",
+  "consolaWhatsapp.envios.yaHayEnCurso": "Já há um envio em andamento neste número. Quando terminar, ou se você pausá-lo, poderá fazer outro."
 }
