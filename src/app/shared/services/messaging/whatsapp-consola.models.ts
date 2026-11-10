@@ -86,10 +86,11 @@ export interface DestinatarioSegmento {
   phone: string;
 }
 
-/** Lo que recibe el servidor de cada persona marcada: igual que `recipients` de campaigns/broadcast. */
+/** Lo que recibe el servidor de cada persona marcada: igual que `recipients` de campaigns/broadcast; `leadId` de más no estorba. */
 export interface DestinatarioEnvio {
   phone: string;
   nombre?: string;
+  leadId?: string;
 }
 
 /**
