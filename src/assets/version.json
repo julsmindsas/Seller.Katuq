@@ -1,16 +1,7 @@
 {
-  "version": "2026.11.09.12 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-10T03:10:17.677Z",
-  "notas": [
-    {
-      "fecha": "2026-11-10T02:58:00Z",
-      "tipo": "NUEVO",
-      "texto": "En «Mi marca» ahora puedes subir el ícono de tu marca para que salga en la pestaña del navegador, y en el editor de tu sitio hay una letra nueva: Montserrat.",
-      "modulos": [
-        "sitios"
-      ]
-    }
-  ],
+  "version": "2026.11.10.1 - 10 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-10T12:44:17.971Z",
+  "notas": [],
   "recientes": [
     {
       "fecha": "2026-11-10T02:58:00Z",
@@ -500,6 +491,6 @@
       ]
     }
   ],
-  "commit": "dad3162c5c8507a9f49a108bfb8ba734df0dc3e8",
+  "commit": "12d82720746b090c53d6bbce5af2d47203e38242",
   "cambiosSinCommit": 0
 }
