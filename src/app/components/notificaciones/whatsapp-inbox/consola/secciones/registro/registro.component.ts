@@ -48,17 +48,16 @@ export class RegistroComponent implements OnInit, OnDestroy {
 
   readonly direcciones: Array<{ valor: DireccionRegistro | ''; clave: string }> = [
     { valor: '', clave: 'consolaWhatsapp.registro.filtro.todas' },
-    { valor: 'entrada', clave: 'consolaWhatsapp.registro.direccion.entrada' },
-    { valor: 'salida', clave: 'consolaWhatsapp.registro.direccion.salida' },
+    { valor: 'entrante', clave: 'consolaWhatsapp.registro.direccion.entrada' },
+    { valor: 'saliente', clave: 'consolaWhatsapp.registro.direccion.salida' },
   ];
 
   readonly estados: Array<{ valor: EstadoRegistro | ''; clave: string }> = [
     { valor: '', clave: 'consolaWhatsapp.registro.filtro.todos' },
-    { valor: 'sent', clave: 'consolaWhatsapp.registro.estado.sent' },
-    { valor: 'delivered', clave: 'consolaWhatsapp.registro.estado.delivered' },
-    { valor: 'read', clave: 'consolaWhatsapp.registro.estado.read' },
-    { valor: 'failed', clave: 'consolaWhatsapp.registro.estado.failed' },
-    { valor: 'received', clave: 'consolaWhatsapp.registro.estado.received' },
+    { valor: 'enviado', clave: 'consolaWhatsapp.registro.estado.sent' },
+    { valor: 'entregado', clave: 'consolaWhatsapp.registro.estado.delivered' },
+    { valor: 'leido', clave: 'consolaWhatsapp.registro.estado.read' },
+    { valor: 'fallido', clave: 'consolaWhatsapp.registro.estado.failed' },
   ];
 
   /** Filas expandidas por id (detalle técnico). */
@@ -183,22 +182,30 @@ export class RegistroComponent implements OnInit, OnDestroy {
   // ─── Presentación ─────────────────────────────────────────────────────
 
   entro(i: ItemRegistro): boolean {
-    return /^(entrada|in|inbound|entrante)$/i.test(String(i.direccion || ''));
+    return /^(entrante|entrada|in|inbound)$/i.test(String(i.direccion || ''));
   }
 
   etiquetaEstado(i: ItemRegistro): { clave: string | null; texto: string; variante: VarianteColor } {
+    // El contrato usa `enviado|entregado|leido|fallido`; se aceptan también los nombres en inglés de `whatsapp_usage`.
     const valor = String(i.estado || '').toLowerCase();
     switch (valor) {
+      case 'enviado':
       case 'sent':
         return { clave: 'consolaWhatsapp.registro.estado.sent', texto: '', variante: 'info' };
+      case 'entregado':
       case 'delivered':
         return { clave: 'consolaWhatsapp.registro.estado.delivered', texto: '', variante: 'ok' };
+      case 'leido':
+      case 'leído':
       case 'read':
         return { clave: 'consolaWhatsapp.registro.estado.read', texto: '', variante: 'ok' };
+      case 'fallido':
       case 'failed':
         return { clave: 'consolaWhatsapp.registro.estado.failed', texto: '', variante: 'error' };
+      case 'recibido':
       case 'received':
         return { clave: 'consolaWhatsapp.registro.estado.received', texto: '', variante: 'neutro' };
+      case 'omitido':
       case 'skipped':
         return { clave: 'consolaWhatsapp.registro.estado.skipped', texto: '', variante: 'warn' };
       default:

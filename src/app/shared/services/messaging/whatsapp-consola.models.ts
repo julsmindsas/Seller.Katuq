@@ -147,8 +147,9 @@ export const CODIGO_USAR_CAMPANAS_KAPSO = 'USE_KAPSO_CAMPAIGNS';
 
 // ─── Registro ───────────────────────────────────────────────────────────
 
-export type DireccionRegistro = 'entrada' | 'salida';
-export type EstadoRegistro = 'sent' | 'delivered' | 'read' | 'failed' | 'received';
+/** Valores del contrato de `GET lines/:lineId/registro` (filtros y campos de cada movimiento). */
+export type DireccionRegistro = 'entrante' | 'saliente';
+export type EstadoRegistro = 'enviado' | 'entregado' | 'leido' | 'fallido';
 
 export interface ItemRegistro {
   id: string;
