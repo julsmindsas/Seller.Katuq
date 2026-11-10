@@ -4,6 +4,7 @@ import { VentasService } from '../../../../../shared/services/ventas/ventas.serv
 import Swal from 'sweetalert2';
 import { Pedido } from '../../../modelo/pedido';
 import { ReporteCierreComponent } from './reporte-cierre/reporte-cierre.component';
+import { precioAntesDescuentoLineaPedido, precioNetoLineaPedido, sanearDescuento } from '../../../../../shared/utils/pos-linea-precio';
 
 interface CierreData {
   efectivoInicial: number;
@@ -19,7 +20,12 @@ interface FormaPago {
 interface ProductoVenta {
   nombre: string;
   cantidad: number;
+  /** D-710: precio con IVA antes del descuento de la línea (incluye precio manual). */
   precioUnitario: number;
+  /** D-710: % de descuento de la línea (0 si no tiene) y valor descontado. */
+  descuentoPct: number;
+  descuentoValor: number;
+  /** D-710: lo cobrado (neto). */
   total: number;
   numeroPedido: string;
 }
@@ -124,11 +130,16 @@ export class CashClosingComponent {
             if (pedido.carrito) {
               pedido.carrito.forEach(item => {
                 if (item.producto && item.cantidad) {
+                  // D-710: lo COBRADO (precio manual y descuento de línea), no el precio de lista.
+                  const antes = precioAntesDescuentoLineaPedido(item);
+                  const neto = precioNetoLineaPedido(item);
                   acc.push({
                     nombre: item.producto.crearProducto?.titulo || 'Producto sin nombre',
                     cantidad: item.cantidad,
-                    precioUnitario: (item.producto.precio?.precioUnitarioConIva || 0),
-                    total: (item.producto.precio?.precioUnitarioConIva || 0) * item.cantidad,
+                    precioUnitario: antes,
+                    descuentoPct: sanearDescuento((item as any).descuentoLinea),
+                    descuentoValor: (antes - neto) * item.cantidad,
+                    total: neto * item.cantidad,
                     numeroPedido: pedido.nroPedido || 'Sin número'
                   });
                 }
@@ -233,6 +244,11 @@ export class CashClosingComponent {
 
   calcularTotalProductos(): number {
     return this.productosVendidos.reduce((sum, p) => sum + p.total, 0);
+  }
+
+  /** D-710: suma de los descuentos de línea de los productos vendidos. */
+  get totalDescuentoProductos(): number {
+    return this.productosVendidos.reduce((sum, p) => sum + (p.descuentoValor || 0), 0);
   }
 
   /**

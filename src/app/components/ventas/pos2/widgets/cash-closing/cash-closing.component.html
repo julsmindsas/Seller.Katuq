@@ -180,6 +180,7 @@
                       <th>Producto</th>
                       <th class="text-center">Cantidad</th>
                       <th class="text-end">Precio Unit.</th>
+                      <th class="text-end">Desc.</th>
                       <th class="text-end">Total</th>
                       <th>Pedido</th>
                     </tr>
@@ -188,8 +189,12 @@
                     <tr *ngFor="let producto of productosVendidos">
                       <td>{{producto.nombre}}</td>
                       <td class="text-center">{{producto.cantidad}}</td>
-                      <td class="text-end">${{producto.precioUnitario | number:'1.0-2':'es-CO' }}</td>
-                      <td class="text-end">${{producto.total | number:'1.0-2':'es-CO' }}</td>
+                      <td class="text-end">${{producto.precioUnitario | number:'1.0-0':'es-CO' }}</td>
+                      <td class="text-end">
+                        <ng-container *ngIf="producto.descuentoPct > 0; else sinDesc">{{ producto.descuentoPct | number:'1.0-2':'es-CO' }}% (-${{ producto.descuentoValor | number:'1.0-0':'es-CO' }})</ng-container>
+                        <ng-template #sinDesc>—</ng-template>
+                      </td>
+                      <td class="text-end">${{producto.total | number:'1.0-0':'es-CO' }}</td>
                       <td>{{producto.numeroPedido}}</td>
                     </tr>
                   </tbody>
@@ -198,6 +203,7 @@
                       <td colspan="1"><strong>Total Productos:</strong></td>
                       <td class="text-center"><strong>{{informe.totalProductos}}</strong></td>
                       <td colspan="1"></td>
+                      <td class="text-end"><strong *ngIf="totalDescuentoProductos > 0">-${{ totalDescuentoProductos | number:'1.0-0':'es-CO' }}</strong></td>
                       <td class="text-end"><strong>${{calcularTotalProductos() | number:'1.0-2':'es-CO' }}</strong></td>
                       <td></td>
                     </tr>

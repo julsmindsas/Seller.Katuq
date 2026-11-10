@@ -3,7 +3,7 @@ import { POSPedido } from '../pos-modelo/pedido';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../shared/services/cart.service';
-import { lineaDesdePedido, resolverLineaPos, sanearDescuento, tieneCambios } from '../../../shared/utils/pos-linea-precio';
+import { precioAntesDescuentoLineaPedido, precioNetoLineaPedido, sanearDescuento } from '../../../shared/utils/pos-linea-precio';
 
 @Component({
   selector: 'app-factura-tirilla',
@@ -236,19 +236,58 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
     return (item.cantidad || 0) * this.precioUnitarioLinea(item);
   }
 
+  /** D-710: % de descuento de la línea (0 si no tiene). */
+  porcentajeDescuentoLinea(item: any): number {
+    return sanearDescuento(item?.descuentoLinea);
+  }
+
+  /**
+   * D-710: precio unitario con IVA ANTES del descuento de la línea. La columna
+   * P.UNIT lo muestra para que el descuento se vea restado una sola vez; el
+   * TOTAL de la línea sigue siendo el neto (lo cobrado).
+   */
+  precioUnitarioAntesDescuento(item: any): number {
+    return precioAntesDescuentoLineaPedido(item);
+  }
+
+  /** D-710: valor (con IVA) que se descontó en la línea. */
+  valorDescuentoLinea(item: any): number {
+    return (item?.cantidad || 0) * (this.precioUnitarioAntesDescuento(item) - this.precioUnitarioLinea(item));
+  }
+
+  /**
+   * D-710: subtotal ANTES de descuentos. `pedido.subtotal` ya trae el
+   * descuento restado (motor canónico: subtotal = sinDescuento − descuento
+   * + envío), por eso el recibo mostraba Subtotal = Total y el descuento
+   * parecía no aplicarse. Valores sin IVA, como el resto del bloque.
+   */
+  get subtotalAntesDescuento(): number {
+    return (this.pedido?.subtotal || 0) + (this.tieneDescuentos ? (this.pedido?.totalDescuento || 0) : 0);
+  }
+
+  /**
+   * D-710: % para el renglón de totales, solo si TODAS las líneas tienen el
+   * mismo descuento (si no, el % va en cada producto y abajo solo el valor).
+   */
+  get porcentajeDescuentoGeneral(): number | null {
+    const carrito = this.pedido?.carrito || [];
+    if (!carrito.length) return null;
+    const pcts = carrito.map((i: any) => this.porcentajeDescuentoLinea(i));
+    return pcts[0] > 0 && pcts.every((p: number) => p === pcts[0]) ? pcts[0] : null;
+  }
+
+  /** D-710: "5" o "12,5" para el recibo. */
+  formatoPorcentaje(p: number): string {
+    return (Math.round(p * 100) / 100).toString().replace('.', ',');
+  }
+
   /**
    * D-536: precio unitario con IVA de la línea. Con precio, IVA o descuento
    * editado sale del mismo cálculo del ticket; si el servidor dejó los campos
    * resueltos (motor canónico), se prefieren. Sin cambios, el de siempre.
    */
   precioUnitarioLinea(item: any): number {
-    const linea = lineaDesdePedido(item);
-    if (!tieneCambios(linea)) return item?.producto?.precio?.precioUnitarioConIva || 0;
-    if (item?.precioSinIvaResuelto != null && item?.tarifaEfectiva != null) {
-      const desc = sanearDescuento(item.descuentoLinea) / 100;
-      return Number(item.precioSinIvaResuelto) * (1 + Number(item.tarifaEfectiva) / 100) * (1 - desc);
-    }
-    return resolverLineaPos(linea).conIvaUnitarioNeto;
+    return precioNetoLineaPedido(item);
   }
 
   /**

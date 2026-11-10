@@ -104,11 +104,16 @@
           {{ item.cantidad || 0 }}
         </div>
         <div style="width: 20%; text-align: right;">
-          {{ precioUnitarioLinea(item) | copMoneda }}
+          {{ precioUnitarioAntesDescuento(item) | copMoneda }}
         </div>
         <div style="width: 25%; text-align: right; font-weight: bold;">
           {{ calcularTotalProducto(item) | copMoneda }}
         </div>
+      </div>
+      <!-- D-710: descuento de la línea con su % y su valor -->
+      <div *ngIf="porcentajeDescuentoLinea(item) > 0" style="display: flex; justify-content: space-between; padding-left: 10px; font-size: 10px;">
+        <span>Descuento {{ formatoPorcentaje(porcentajeDescuentoLinea(item)) }}%</span>
+        <span>-{{ valorDescuentoLinea(item) | copMoneda }}</span>
       </div>
     </div>
   </div>
@@ -121,18 +126,19 @@
   <!-- TOTALES -->
   <div class="totales" style="border-top: 2px solid #000; padding-top: 8px; margin-bottom: 15px;">
     <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px;">
-      <span>Subtotal:</span>
-      <span>{{ subtotalSinImpuestos | copMoneda }}</span>
+      <span>Subtotal{{ tieneImpuestos ? ' (sin IVA)' : '' }}:</span>
+      <span>{{ subtotalAntesDescuento | copMoneda }}</span>
     </div>
-    
+
+    <!-- D-710: el descuento va ANTES del IVA (se calcula sobre la base sin IVA) -->
+    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px;" *ngIf="tieneDescuentos">
+      <span>{{ porcentajeDescuentoGeneral ? 'Descuento (' + formatoPorcentaje(porcentajeDescuentoGeneral) + '%)' : 'Descuentos' }}{{ tieneImpuestos ? ' sin IVA' : '' }}:</span>
+      <span>-{{ pedido.totalDescuento | copMoneda }}</span>
+    </div>
+
     <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px;" *ngIf="tieneImpuestos">
       <span>IVA:</span>
       <span>{{ totalImpuestos | copMoneda }}</span>
-    </div>
-
-    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px;" *ngIf="tieneDescuentos">
-      <span>Descuentos:</span>
-      <span>-{{ pedido.totalDescuento | copMoneda }}</span>
     </div>
 
     <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; border-top: 1px solid #000; padding-top: 5px; margin-top: 5px;">

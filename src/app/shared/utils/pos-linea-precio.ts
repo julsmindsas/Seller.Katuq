@@ -167,3 +167,31 @@ export function lineaPedidoPos(item: any): { producto: any; cantidad: number; _p
   if (desc > 0) out.descuentoLinea = desc;
   return out;
 }
+
+/**
+ * D-710: precio unitario con IVA COBRADO en una línea de pedido POS guardado
+ * (neto de descuento de línea). Mismo cálculo que la tirilla (D-536): si el
+ * servidor dejó los campos resueltos (motor canónico), se prefieren.
+ */
+export function precioNetoLineaPedido(item: any): number {
+  const linea = lineaDesdePedido(item);
+  if (!tieneCambios(linea)) return item?.producto?.precio?.precioUnitarioConIva || 0;
+  if (item?.precioSinIvaResuelto != null && item?.tarifaEfectiva != null) {
+    const desc = sanearDescuento(item.descuentoLinea) / 100;
+    return Number(item.precioSinIvaResuelto) * (1 + Number(item.tarifaEfectiva) / 100) * (1 - desc);
+  }
+  return resolverLineaPos(linea).conIvaUnitarioNeto;
+}
+
+/** D-710: precio unitario con IVA ANTES del descuento de la línea (incluye precio manual). */
+export function precioAntesDescuentoLineaPedido(item: any): number {
+  const neto = precioNetoLineaPedido(item);
+  const desc = sanearDescuento(item?.descuentoLinea) / 100;
+  if (desc <= 0) return neto;
+  if (desc < 1) return neto / (1 - desc);
+  // 100 %: el neto es 0, se recalcula sin descuento
+  if (item?.precioSinIvaResuelto != null && item?.tarifaEfectiva != null) {
+    return Number(item.precioSinIvaResuelto) * (1 + Number(item.tarifaEfectiva) / 100);
+  }
+  return resolverLineaPos({ ...lineaDesdePedido(item), descuentoLinea: 0 }).conIvaUnitarioNeto;
+}
