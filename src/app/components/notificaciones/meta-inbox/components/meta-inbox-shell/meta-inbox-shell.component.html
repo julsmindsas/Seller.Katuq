@@ -18,7 +18,7 @@
         {{ 'notificaciones.meta.notConnected' | translate: { canal: canalLabel } }}
       </span>
       <span class="mb-aviso__detalle" *ngIf="necesitaReconectar">
-        {{ 'notificaciones.meta.expiredDetail' | translate }}
+        {{ (esTiktok ? 'notificaciones.meta.tiktokExpiredDetail' : 'notificaciones.meta.expiredDetail') | translate }}
       </span>
       <span class="mb-aviso__detalle" *ngIf="!necesitaReconectar">
         {{ 'notificaciones.meta.notConnectedDetail' | translate }}
@@ -59,7 +59,7 @@
           <span class="mb-hilo__nombre">{{ h.contactoNombre || ('notificaciones.meta.contactOf' | translate: { canal: canalLabel }) }}</span>
           <span class="mb-hilo__snippet">{{ h.ultimoMensajeResumen }}</span>
         </span>
-        <span class="mb-hilo__cerrada" *ngIf="!h.ventana.abierta" [title]="'notificaciones.meta.outside24h' | translate">
+        <span class="mb-hilo__cerrada" *ngIf="!h.ventana.abierta" [title]="(esTiktok ? 'notificaciones.meta.tiktokOutsideWindow' : 'notificaciones.meta.outside24h') | translate">
           <i class="pi pi-clock"></i>
         </span>
       </button>
@@ -86,7 +86,7 @@
             [class.mb-msg--mio]="m.direccion === 'outbound'"
           >
             <span class="mb-msg__burbuja">
-              <span *ngIf="m.body">{{ m.body }}</span>
+              <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
               <span class="mb-msg__adjunto" *ngIf="!m.body && m.mediaUrl">
                 <i class="pi pi-paperclip"></i> {{ 'notificaciones.meta.attachment' | translate }}
               </span>
@@ -105,7 +105,7 @@
           </div>
         </div>
 
-        <!-- La ventana de 24 h: se explica siempre, no solo cuando falla -->
+        <!-- La ventana (24 h en Meta; en TikTok, cuántos mensajes quedan): se explica siempre, no solo cuando falla -->
         <div class="mb-ventana" [class.mb-ventana--cerrada]="!ventana?.abierta" *ngIf="ventana">
           <i class="pi" [ngClass]="ventana.abierta ? 'pi-clock' : 'pi-lock'"></i>
           <span>{{ textoVentana }}</span>
@@ -115,18 +115,50 @@
           <span class="mb-aviso__detalle">{{ avisoEnvio }}</span>
         </div>
 
+        <!-- TikTok: imagen elegida, antes de enviarla -->
+        <div class="mb-adjunta" *ngIf="imagen">
+          <img class="mb-adjunta__miniatura" [src]="imagen.vistaPrevia" alt="" />
+          <span class="mb-adjunta__nombre">{{ imagen.nombre }}</span>
+          <button
+            type="button"
+            class="mb-adjunta__quitar"
+            [disabled]="enviando"
+            [attr.aria-label]="'notificaciones.meta.tiktokQuitarImagen' | translate"
+            (click)="quitarImagen()"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+        <p class="mb-adjunta__error" *ngIf="errorImagen" role="alert">{{ errorImagen }}</p>
+
         <form class="mb-responder" (ngSubmit)="enviar()">
+          <!-- TikTok: solo si el país del cliente deja mandar imágenes -->
+          <button
+            type="button"
+            class="mb-btn mb-btn--ghost mb-btn--icono"
+            *ngIf="permiteImagen"
+            [disabled]="!puedeEscribir"
+            [title]="'notificaciones.meta.tiktokAdjuntarImagen' | translate"
+            [attr.aria-label]="'notificaciones.meta.tiktokAdjuntarImagen' | translate"
+            (click)="selectorImagen.click()"
+          >
+            <i class="pi pi-image"></i>
+          </button>
+          <input
+            #selectorImagen
+            type="file"
+            class="mb-responder__archivo"
+            accept="image/jpeg,image/png"
+            tabindex="-1"
+            (change)="alElegirImagen($event)"
+          />
           <textarea
             class="mb-responder__campo"
             [(ngModel)]="borrador"
             name="borrador"
             rows="2"
-            [disabled]="!ventana?.abierta || enviando"
-            [placeholder]="
-              (ventana?.abierta
-                ? 'notificaciones.meta.replyPlaceholder'
-                : 'notificaciones.meta.replyClosed') | translate
-            "
+            [disabled]="!puedeEscribir"
+            [placeholder]="claveMarcador | translate"
           ></textarea>
           <button
             type="submit"

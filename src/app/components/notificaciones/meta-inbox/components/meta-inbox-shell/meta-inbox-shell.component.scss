@@ -78,6 +78,25 @@ $error-bg: #fdecec;
     &:hover:not(:disabled) { background: var(--ds-accent-hover); }
     &:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
   }
+
+  /* Secundario: blanco con borde (adjuntar imagen en TikTok). */
+  &--ghost {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    &:hover:not(:disabled) { border-color: $acento; color: $acento; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+    &:disabled { opacity: 0.45; cursor: not-allowed; }
+  }
+  &--icono {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    font-size: 16px;
+  }
 }
 
 .mb-cols {
@@ -225,6 +244,7 @@ $error-bg: #fdecec;
     background: var(--ds-accent-soft);
     border-color: #d9cffb;
   }
+  &__texto { color: $ink; }
   &__adjunto { color: $muted; }
   &__fallido {
     display: flex;
@@ -288,6 +308,58 @@ $error-bg: #fdecec;
 
     &:disabled { opacity: 0.6; cursor: not-allowed; }
     &:focus { outline: none; border-color: $acento-2; }
+  }
+
+  /* El selector de archivos real queda oculto: lo abre el botón de imagen. */
+  &__archivo { display: none; }
+}
+
+/* TikTok: imagen elegida antes de enviar. */
+.mb-adjunta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 18px 0;
+  padding: 8px 12px;
+  background: $superficie;
+  border: 1px solid $chip-borde;
+  border-radius: 11px;
+
+  &__miniatura {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 9px;
+    border: 1px solid $linea;
+    flex: 0 0 auto;
+  }
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $ink;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__quitar {
+    background: transparent;
+    border: none;
+    color: $muted;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    &:hover:not(:disabled) { background: $chip-bg; color: $ink; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+  &__error {
+    margin: 6px 18px 0;
+    font-size: 12px;
+    color: $error;
+    letter-spacing: normal;
   }
 }
 

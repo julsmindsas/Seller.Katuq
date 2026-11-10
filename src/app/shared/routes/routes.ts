@@ -7,6 +7,7 @@ import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
 import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.guard";
 import { PlataformaUiGuard } from "../../components/plataforma/servicios/plataforma-ui.guard";
 import { ConsolaWhatsappGuard } from "../services/messaging/consola-whatsapp-acceso";
+import { TiktokMensajesGuard } from "../../components/notificaciones/meta-inbox/tiktok-mensajes.guard";
 
 export const content: Routes = [
   {
@@ -474,6 +475,17 @@ export const content: Routes = [
       ).then((m) => m.MetaInboxModule),
     canActivate: [AuthGuard],
     data: { title: "Conversaciones Facebook" },
+  },
+  // Buzón de TikTok (D-709): mensajes directos con la ventana de 48 horas. Solo con la bandera
+  // `tiktokMensajes`; sin ella vuelve al buzón de WhatsApp.
+  {
+    path: "notificaciones/tiktok/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/meta-inbox/meta-inbox.module"
+      ).then((m) => m.MetaInboxModule),
+    canActivate: [AuthGuard, TiktokMensajesGuard],
+    data: { title: "Conversaciones TikTok" },
   },
   {
     path: "notificaciones",

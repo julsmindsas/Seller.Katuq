@@ -12,15 +12,24 @@ import {
   MetaCanal,
   MetaConexion,
   MetaHilo,
+  MetaImagenAdjunta,
   MetaMensaje,
   MetaVentana,
 } from '../../models/meta-thread.model';
 
+/** Imágenes que se pueden adjuntar a una respuesta de TikTok (D-709). */
+const TIPOS_IMAGEN = ['image/jpeg', 'image/png'];
+const MAX_IMAGEN_MB = 5;
+
 /**
- * Buzón de Meta — una sola implementación para Instagram y Messenger.
+ * Buzón de Meta — una sola implementación para Instagram, Messenger y TikTok (D-709).
  *
- * Las dos entradas de menú montan este mismo componente y el canal se deriva de
- * la URL. Para el usuario son dos buzones distintos; para el código es uno solo.
+ * Las entradas de menú montan este mismo componente y el canal se deriva de
+ * la URL. Para el usuario son buzones distintos; para el código es uno solo.
+ *
+ * TikTok se diferencia en tres cosas: la ventana cuenta mensajes (10 al inicio, sin límite mientras el
+ * cliente responde, 3 si pasan 48 horas), solo se contesta a quien ya escribió (no hay forma de iniciar
+ * una conversación) y la imagen se ofrece únicamente si el país del cliente la permite.
  */
 @Component({
   selector: 'app-meta-inbox-shell',
@@ -45,6 +54,12 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   borrador = '';
   enviando = false;
   avisoEnvio: string | null = null;
+
+  /** TikTok: imagen elegida para la próxima respuesta y su error de validación. */
+  imagen: MetaImagenAdjunta | null = null;
+  errorImagen: string | null = null;
+  /** TikTok: el servidor dice si el país del cliente deja mandar imágenes en esta conversación. */
+  permiteImagen = false;
 
   private destroy$ = new Subject<void>();
 
@@ -95,9 +110,12 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
    * config aparte: así no puede quedar desincronizado con el menú.
    */
   private aplicarCanalDeLaUrl(): void {
-    const canal: MetaCanal = this.router.url.includes('/facebook/')
-      ? 'facebook'
-      : 'instagram';
+    const url = this.router.url;
+    const canal: MetaCanal = url.includes('/tiktok/')
+      ? 'tiktok'
+      : url.includes('/facebook/')
+        ? 'facebook'
+        : 'instagram';
 
     if (canal === this.canal && this.canalLabel) return;
 
@@ -146,7 +164,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         tick += 1;
         if (this.enviando) return;
-        if ((this.borrador || '').trim().length > 0) return;
+        if ((this.borrador || '').trim().length > 0 || this.imagen) return;
 
         if (document.hidden) {
           if (tick % 4 !== 0) return;
@@ -255,6 +273,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         if (this.hiloActivo?.identidadHash !== hilo.identidadHash) return;
         this.mensajes = r.items;
         this.ventana = r.ventana;
+        this.fijarPermiteImagen(hilo, r.permiteImagen);
       });
   }
 
@@ -265,6 +284,9 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.ventana = null;
     this.borrador = '';
     this.avisoEnvio = null;
+    this.imagen = null;
+    this.errorImagen = null;
+    this.permiteImagen = false;
   }
 
   private cargarConexion(): void {
@@ -301,6 +323,9 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.hiloActivo = hilo;
     this.avisoEnvio = null;
     this.borrador = '';
+    this.imagen = null;
+    this.errorImagen = null;
+    this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
 
     this.servicio
@@ -309,12 +334,39 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
       .subscribe((r) => {
         this.mensajes = r.items;
         this.ventana = r.ventana;
+        this.fijarPermiteImagen(hilo, r.permiteImagen);
         this.cargandoMensajes = false;
       });
   }
 
+  /**
+   * ¿Se ofrece adjuntar imagen? Solo en TikTok y solo si el servidor lo permite para este cliente. Sin
+   * dato (o con `false`) no se ofrece: es lo seguro, porque TikTok rechaza la imagen donde no se puede.
+   * El dato de la conversación abierta manda sobre el del listado.
+   */
+  private fijarPermiteImagen(hilo: MetaHilo, desdeConversacion: boolean | undefined): void {
+    const permite = typeof desdeConversacion === 'boolean' ? desdeConversacion : hilo.permiteImagen === true;
+    this.permiteImagen = this.esTiktok && permite;
+    if (!this.permiteImagen) {
+      this.imagen = null;
+      this.errorImagen = null;
+    }
+  }
+
   irAConexion(): void {
     this.router.navigate(['/integrations/meta']);
+  }
+
+  get esTiktok(): boolean {
+    return this.canal === 'tiktok';
+  }
+
+  /**
+   * TikTok no deja enviar con la cuenta desconectada o vencida: se escribiría a un canal que no responde.
+   * (Las conversaciones anteriores se conservan y se pueden leer.)
+   */
+  get sinConexionParaEnviar(): boolean {
+    return this.esTiktok && !this.conectado;
   }
 
   /**
@@ -323,6 +375,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
    */
   get textoVentana(): string {
     if (!this.ventana) return '';
+    if (this.esTiktok) return this.textoVentanaTiktok(this.ventana);
     if (!this.ventana.abierta) {
       return this.translate.instant('notificaciones.meta.windowClosed', { nombre: this.nombreContacto });
     }
@@ -332,27 +385,138 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     return this.translate.instant('notificaciones.meta.windowMinutes', { min });
   }
 
+  /**
+   * La ventana de TikTok (D-709), con sus tres casos: te quedan N mensajes, puedes responder sin límite
+   * mientras el cliente siga contestando, o hay que esperar a que escriba de nuevo.
+   */
+  private textoVentanaTiktok(v: MetaVentana): string {
+    if (this.sinConexionParaEnviar) {
+      return this.translate.instant('notificaciones.meta.tiktokVentanaSinConexion');
+    }
+    if (!v.abierta) return this.translate.instant('notificaciones.meta.tiktokVentanaCerrada');
+
+    const hasta = this.fechaCorta(v.venceEn);
+
+    if (v.estado === 'abierta') {
+      return hasta
+        ? this.translate.instant('notificaciones.meta.tiktokVentanaSinLimite', { hasta })
+        : this.translate.instant('notificaciones.meta.tiktokVentanaSinLimiteSinFecha');
+    }
+
+    const n = v.restantes;
+    if (typeof n !== 'number') return this.translate.instant('notificaciones.meta.tiktokVentanaPuedes');
+    if (hasta) {
+      return this.translate.instant(
+        n === 1 ? 'notificaciones.meta.tiktokVentanaUnMensaje' : 'notificaciones.meta.tiktokVentanaMensajes',
+        { n, hasta },
+      );
+    }
+    return this.translate.instant(
+      n === 1
+        ? 'notificaciones.meta.tiktokVentanaUnMensajeSinFecha'
+        : 'notificaciones.meta.tiktokVentanaMensajesSinFecha',
+      { n },
+    );
+  }
+
+  /** «10 nov, 3:45 p. m.», en el idioma de la pantalla. Vacío si no hay fecha válida. */
+  private fechaCorta(iso: string | null | undefined): string {
+    if (!iso) return '';
+    const fecha = new Date(iso);
+    if (isNaN(fecha.getTime())) return '';
+    try {
+      return fecha.toLocaleString(this.translate.currentLang || 'es', {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    } catch {
+      return fecha.toLocaleString();
+    }
+  }
+
+  /** Con la ventana abierta y, en TikTok, la cuenta conectada. */
+  get puedeEscribir(): boolean {
+    return Boolean(this.ventana?.abierta) && !this.sinConexionParaEnviar && !this.enviando;
+  }
+
+  /** Clave del texto de ayuda del campo de respuesta. */
+  get claveMarcador(): string {
+    if (this.sinConexionParaEnviar) return 'notificaciones.meta.tiktokReplyReconnect';
+    return this.ventana?.abierta ? 'notificaciones.meta.replyPlaceholder' : 'notificaciones.meta.replyClosed';
+  }
+
   get nombreContacto(): string {
     return this.hiloActivo?.contactoNombre || this.translate.instant('notificaciones.meta.theContact');
   }
 
   get puedeEnviar(): boolean {
+    const hayQueEnviar = this.borrador.trim().length > 0 || (this.esTiktok && Boolean(this.imagen));
     return (
       Boolean(this.ventana?.abierta) &&
-      this.borrador.trim().length > 0 &&
+      !this.sinConexionParaEnviar &&
+      hayQueEnviar &&
       !this.enviando
     );
+  }
+
+  // ─── Imagen adjunta (TikTok) ───────────────────────────────────────────
+
+  /** Lee la imagen elegida a base64, que es como viaja en la respuesta. Valida tipo y peso antes. */
+  alElegirImagen(evento: Event): void {
+    const campo = evento.target as HTMLInputElement;
+    const archivo = campo.files && campo.files[0];
+    // Se vacía para poder elegir la misma imagen otra vez después de quitarla.
+    campo.value = '';
+    if (!archivo) return;
+
+    this.errorImagen = null;
+    if (!TIPOS_IMAGEN.includes(archivo.type)) {
+      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenTipo');
+      return;
+    }
+    if (archivo.size > MAX_IMAGEN_MB * 1024 * 1024) {
+      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenPeso', { mb: MAX_IMAGEN_MB });
+      return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const url = typeof lector.result === 'string' ? lector.result : '';
+      const coma = url.indexOf(',');
+      if (coma < 0) {
+        this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenLectura');
+        return;
+      }
+      this.imagen = {
+        base64: url.slice(coma + 1),
+        mime: archivo.type,
+        nombre: archivo.name,
+        vistaPrevia: url,
+      };
+    };
+    lector.onerror = () => {
+      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenLectura');
+    };
+    lector.readAsDataURL(archivo);
+  }
+
+  quitarImagen(): void {
+    this.imagen = null;
+    this.errorImagen = null;
   }
 
   enviar(): void {
     if (!this.puedeEnviar || !this.hiloActivo) return;
 
     const texto = this.borrador.trim();
+    const imagen = this.esTiktok ? this.imagen : null;
     this.enviando = true;
     this.avisoEnvio = null;
 
     this.servicio
-      .responder(this.canal, this.hiloActivo.identidadHash, texto)
+      .responder(this.canal, this.hiloActivo.identidadHash, texto, imagen)
       .pipe(takeUntil(this.destroy$))
       .subscribe((r) => {
         this.enviando = false;
@@ -361,7 +525,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
           this.abrirHilo(this.hiloActivo!);
           return;
         }
-        this.avisoEnvio = this.explicarFallo(r.motivo);
+        this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
       });
   }
 
@@ -385,15 +549,22 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
           this.abrirHilo(this.hiloActivo!);
           return;
         }
-        this.avisoEnvio = this.explicarFallo(r.motivo);
+        this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
       });
   }
 
-  /** Traduce el motivo técnico a algo que el operador entienda y pueda actuar. */
-  private explicarFallo(motivo?: string): string {
+  /**
+   * Traduce el motivo técnico a algo que el operador entienda y pueda actuar. En TikTok el servidor
+   * manda su propio mensaje (ya en palabras sencillas, con el motivo de TikTok si fue quien rechazó):
+   * se muestra tal cual.
+   */
+  private explicarFallo(motivo?: string, mensajeServidor?: string): string {
+    if (this.esTiktok && mensajeServidor) return mensajeServidor;
     switch (motivo) {
       case 'ventana_cerrada':
-        return this.translate.instant('notificaciones.meta.failWindowClosed', { nombre: this.nombreContacto });
+        return this.esTiktok
+          ? this.translate.instant('notificaciones.meta.tiktokFailWindowClosed')
+          : this.translate.instant('notificaciones.meta.failWindowClosed', { nombre: this.nombreContacto });
       case 'sin_conexion':
         return this.translate.instant('notificaciones.meta.failNotConnected', { canal: this.canalLabel });
       case 'contacto_desconocido':
