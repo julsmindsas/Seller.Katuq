@@ -13850,3 +13850,9 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Autorizado:** Daniel: «publica».
 - **Salió:** solo backend. Merge `30048c9f` en `backend-aws-security` con `9d277fd7` (chat de IA del sitio y tope de respuesta) y `e3e3cdc9` (accesibilidad según Lighthouse). Cuatro archivos: `controllers/sites.js`, `utils/siteHtml.js`, `utils/siteTienda.js` y `utils/sitioModulos/plano.js`. En el servidor: `git pull`, HEAD confirmado y `pm2 restart katuq-api`. Sin índices, datos, configuración ni `.env`.
 - **Verificado en producción:** `katuq-api` en línea; `baudio-v3-marca` y `baudio-premium` responden 200 con el código nuevo (estilos del chat, logo del pie con tamaño). En celular, BaudIA respondió «Muéstrame las cámaras que tienes con precio» con la lista de 40 y sus precios (antes fallaba); fue una sola pregunta de prueba.
+
+### 2026-11-10 (hora UTC) — D-689: el sitio de Baudio se llama «Baudio» (aws-claude-1)
+
+- **Autorizado:** Daniel: «si dejalo solo baudio».
+- **Qué cambió:** el nombre del sitio `baudio-v3-marca` pasó de «Baudio · propuesta 3 (manual de marca)» a «Baudio». Es un dato del sitio en producción, guardado con el controlador real `sites.edit` (primero en simulación). No se tocó el contenido ni se volvió a publicar: borrador y publicado quedaron idénticos. El nombre viejo no aparecía dentro del contenido.
+- **Verificado en producción:** la portada y las páginas internas (categorías, marcas, legales) muestran «… · Baudio» en el título y `og:site_name` es «Baudio». Los otros sitios de Baudio no se tocaron.
