@@ -13844,3 +13844,9 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Lighthouse, sin tocar:** la página no tiene una zona «principal» (`<main>`): agregarla cambia la estructura de todos los sitios y pide su propia revisión visual. Fotos de producto más grandes que su casilla y CSS sin usar: mejora de rendimiento para otro cambio.
 - **Pruebas:** las del chat, 32 corridas y 30 pasan; las 2 que fallan son fotos de HTML que ya estaban viejas (no se actualizaron, falta el OK de Daniel). Las de plano, carrito y tienda, 91 de 91. En navegador, 16 de 17 casos del plano; el que falla mide un tiempo de animación ajeno a este cambio.
 - **Pendiente:** publicar el backend cuando Daniel diga «publica». El nombre público del sitio sigue siendo «Baudio · propuesta 3 (manual de marca)» y sale en los textos de WhatsApp y en los títulos legales.
+
+### 2026-11-10 (hora UTC) — D-689 publicado: chat de IA del sitio y accesibilidad, backend `30048c9f` (aws-claude-1)
+
+- **Autorizado:** Daniel: «publica».
+- **Salió:** solo backend. Merge `30048c9f` en `backend-aws-security` con `9d277fd7` (chat de IA del sitio y tope de respuesta) y `e3e3cdc9` (accesibilidad según Lighthouse). Cuatro archivos: `controllers/sites.js`, `utils/siteHtml.js`, `utils/siteTienda.js` y `utils/sitioModulos/plano.js`. En el servidor: `git pull`, HEAD confirmado y `pm2 restart katuq-api`. Sin índices, datos, configuración ni `.env`.
+- **Verificado en producción:** `katuq-api` en línea; `baudio-v3-marca` y `baudio-premium` responden 200 con el código nuevo (estilos del chat, logo del pie con tamaño). En celular, BaudIA respondió «Muéstrame las cámaras que tienes con precio» con la lista de 40 y sus precios (antes fallaba); fue una sola pregunta de prueba.
