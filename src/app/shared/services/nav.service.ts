@@ -5,12 +5,12 @@ import { Router } from "@angular/router";
 import { ENLACE_PLATAFORMA_ACTIVO } from "../../components/plataforma/plataforma.enlace";
 import { CartSingletonService } from "./ventas/cart.singleton.service";
 import { UtilsService } from "./utils.service";
-import { CompanyFeaturesService } from "./company-features.service";
+import { CompanyFeatureFlag, CompanyFeaturesService } from "./company-features.service";
 import { SecurityService } from "./security/security.service";
 import { dropshippingHabilitadoEnLaSesion } from "./dropshipping-settings.service";
 import { npsDisponible } from "./nps/nps.service";
 import { esFamiliaAdministrador, esSuperAdministrador } from "../utils/roles";
-import { FUTURE_MESSAGE_CHANNELS } from "../data/future-message-channels";
+import { canalesFuturosVisibles } from "../data/future-message-channels";
 
 // Menu
 export interface Menu {
@@ -131,6 +131,18 @@ export class NavService implements OnDestroy {
   private npsPrendido: boolean = false;
   // Leads de landing (D-633): bandera `landingsV2`. Último valor con el que se filtró el menú.
   private landingsV2Prendido = false;
+  // Buzón de TikTok (D-709): bandera `tiktokMensajes`. Último valor con el que se filtró el menú.
+  private tiktokPrendido = false;
+  /** D-709: quien ve esta ruta («Instagram») ve también el buzón de TikTok. */
+  private static readonly RUTA_BASE_TIKTOK = "/notificaciones/instagram/inbox";
+  /** D-709: la entrada del buzón de TikTok en Comunicaciones; solo se ofrece con la bandera `tiktokMensajes`. */
+  private static readonly ENTRADA_TIKTOK: Menu = {
+    path: "/notificaciones/tiktok/inbox",
+    title: "TikTok",
+    menuIcon: "brand-tiktok",
+    type: "link",
+    icon: "message-circle",
+  };
 
   constructor(
     private router: Router,
@@ -209,6 +221,15 @@ export class NavService implements OnDestroy {
       .pipe(takeUntil(this.unsubscriber))
       .subscribe((prendida) => {
         if (prendida !== this.landingsV2Prendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
+
+    this.features
+      .isEnabled$("tiktokMensajes")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.tiktokPrendido) {
           this.filterMenuItemsByAuthorization();
         }
       });
@@ -353,6 +374,8 @@ export class NavService implements OnDestroy {
     this.ayudaPrendida = this.features.isEnabled("centroDeAyuda");
     // Leads de landing (D-633): igual, con su bandera.
     this.landingsV2Prendido = this.features.isEnabled("landingsV2");
+    // Buzón de TikTok (D-709): igual, con su bandera.
+    this.tiktokPrendido = this.features.isEnabled("tiktokMensajes");
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -442,8 +465,14 @@ export class NavService implements OnDestroy {
         // Los futuros canales son información dentro de un grupo ya autorizado.
         // No entran al catálogo de permisos ni pueden mantener visible Mensajes solos.
         // D-546: el grupo se reconoce por su `id`, no por el nombre (que cambia).
+        // D-709: el buzón de TikTok se agrega aquí, igual que los canales futuros, y no en el menú fijo: no es un
+        // permiso propio (no entra al editor de roles), lo ve quien ve «Instagram» y solo con la bandera
+        // `tiktokMensajes`. Sin la bandera, TikTok sigue como «Próximamente».
+        const tiktok: Menu[] = this.tiktokPrendido && authorizedPaths.includes(NavService.RUTA_BASE_TIKTOK)
+          ? [{ ...NavService.ENTRADA_TIKTOK }]
+          : [];
         const children: Menu[] = item.id === "mensajes"
-          ? [...filteredChildren, ...FUTURE_MESSAGE_CHANNELS.map(channel => ({
+          ? [...filteredChildren, ...tiktok, ...canalesFuturosVisibles(flag => this.features.isEnabled(flag as CompanyFeatureFlag)).map(channel => ({
               title: channel.title, icon: channel.icon, menuIcon: channel.menuIcon, type: "info", badgeValue: "Próximamente",
             }))]
           : filteredChildren;
