@@ -108,9 +108,18 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     return this.conexiones ? this.conexiones[canal] || null : null;
   }
 
-  /** Etiqueta visible del estado. Un solo lugar donde se nombran. */
+  /**
+   * Etiqueta visible del estado. Un solo lugar donde se nombran. Con la bandera de TikTok apagada, los
+   * textos son los de siempre (D-709: sin la bandera, la tarjeta queda idéntica); con ella, traducidos.
+   */
   etiqueta(canal: MetaCanal): string {
-    switch (this.estadoDe(canal)?.estado) {
+    const estado = this.estadoDe(canal)?.estado;
+    if (!this.tiktokActivo) {
+      if (estado === 'conectado') return 'Conectado';
+      if (estado === 'reconectar') return 'Hay que reconectar';
+      return 'Sin conectar';
+    }
+    switch (estado) {
       case 'conectado':
         return this.translate.instant('integrations.metaChannels.estadoConectado');
       case 'reconectar':
@@ -162,9 +171,9 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   }
 
   textoBoton(canal: MetaCanal): string {
-    return this.translate.instant(
-      this.estadoDe(canal)?.estado === 'reconectar' ? 'notificaciones.meta.reconnect' : 'notificaciones.meta.connect',
-    );
+    const reconectar = this.estadoDe(canal)?.estado === 'reconectar';
+    if (!this.tiktokActivo) return reconectar ? 'Reconectar' : 'Conectar';
+    return this.translate.instant(reconectar ? 'notificaciones.meta.reconnect' : 'notificaciones.meta.connect');
   }
 
   /** Lo que dice el botón de conectar mientras la ventana está abierta. */
