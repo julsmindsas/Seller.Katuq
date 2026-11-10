@@ -682,6 +682,9 @@
   }
   &__destinos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
+  &__lugar { margin: 0 0 8px; select { font-size: 13.5px; } }
+  &__ayuda { display: block; margin-top: 4px; font-size: 11.5px; color: var(--kb-muted-2, #6f6a85); letter-spacing: normal; }
+  &__donde { display: block; font-size: 11.5px; font-weight: 700; color: inherit; opacity: 0.8; margin-bottom: 3px; letter-spacing: normal; }
   &__entrada { margin: 0 0 10px; textarea { min-height: 76px; font-size: 13.5px; } }
   &__acciones { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
   &__adjuntar {
@@ -710,6 +713,79 @@
 .ia-razones { margin: 10px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--kb-body); li { margin: 3px 0; } }
 .favicon-fila { display: flex; align-items: center; gap: 10px; }
 .favicon-muestra { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--kb-line); background: #fff; }
+
+// ── Controles nativos con el formato Katuq ───────────────────────────────────
+// Fecha, hora, correo y contraseña salían con el aspecto crudo del navegador, y las casillas también.
+// Va antes de «Campos» para que cualquier regla más específica de una sección siga ganando.
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input:not([type]) {
+  @include kb-input;
+  min-width: 0;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  min-height: 46px;
+  color-scheme: light;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+    padding: 2px;
+    border-radius: 6px;
+  }
+  &::-webkit-calendar-picker-indicator:hover { opacity: 1; background: var(--kb-accent-wash); }
+}
+
+// Desplegables: todos con la caja Katuq y la flecha propia, también los que no viven dentro de `.campo` (cupones,
+// promociones, paneles). La flecha va con `:not(#_)` porque `kb-input` trae `background` abreviado y la borraría.
+select {
+  @include kb-input;
+  cursor: pointer;
+}
+select:not([multiple]):not(#_) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a7a3bd' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+}
+
+// `:not(#_)` sube la especificidad: las reglas de caja de texto de las listas (`.repetible input`) no deben vestir la casilla.
+input[type="checkbox"]:not(#_) {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  box-shadow: none;
+  margin: 0;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 6px;
+  background: #fff center / 12px 12px no-repeat;
+  vertical-align: -4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { border-color: var(--kb-accent); }
+  &:checked {
+    border-color: var(--kb-accent);
+    background-color: var(--kb-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
 
 // ── Campos ───────────────────────────────────────────────────────────────────
 .campo {
@@ -915,6 +991,9 @@
   line-height: 1.4;
 }
 /* Ticket 1250: informativo, la página lo corrige sola. */
+// Un aviso escrito como `<small>` es de línea: su relleno se montaba sobre el campo siguiente.
+small.aviso { display: block; }
+
 .aviso--info {
   background: var(--kb-accent-wash);
   border-color: #dcd3fb;
@@ -1360,7 +1439,7 @@
 // ── Parejas de letra ─────────────────────────────────────────────────────────
 .parejas {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 9px;
   margin-bottom: 12px;
 }
@@ -1369,6 +1448,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
   gap: 7px;
   border: 1.5px solid var(--kb-line-4);
   background: #fff;
@@ -1396,6 +1477,8 @@
     align-items: baseline;
     gap: 6px;
     min-height: 26px;
+    width: 100%;
+    min-width: 0;
   }
 
   &__titulo {
@@ -1407,6 +1490,8 @@
   &__cuerpo {
     font-size: 12px;
     color: var(--kb-muted);
+    flex: 1;
+    min-width: 0;
   }
 
   &__nombre {
@@ -2025,6 +2110,17 @@
     border-radius: 8px;
     border: 1px solid var(--kb-line-3);
   }
+}
+
+// Rótulo corto sobre cada caja de una lista repetible: el placeholder desaparece al escribir y no se sabía cuál era cuál.
+.repetible__rotulo {
+  display: block;
+  margin: 2px 0 -3px;
+  font-family: var(--kb-font);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--kb-ink-2);
 }
 
 .repetible__nombre {
@@ -2977,7 +3073,7 @@
   cursor: pointer;
 
   input {
-    width: auto;
+    width: 18px;
     margin: 0;
     accent-color: var(--kb-accent);
   }
@@ -3026,6 +3122,11 @@
   // Ticket 1220: un input en una grilla no se encoge por debajo de su ancho
   // natural; era lo que empujaba el panel a lo ancho.
   > *, input, select { min-width: 0; max-width: 100%; }
+  > input[type="text"], > input[type="number"], > select { @include kb-input; }
+
+  // En media columna el texto no cabía («% de de…», «mm/dd/yyy»): menos relleno y letra un punto menor.
+  select:not(#_) { padding-left: 11px; padding-right: 26px; background-position: right 8px center; font-size: 13px; }
+  input[type="date"], input[type="time"], input[type="datetime-local"] { padding-left: 10px; padding-right: 8px; font-size: 13px; }
 }
 
 // Ticket 1253: historial de versiones.
@@ -3144,7 +3245,7 @@
   letter-spacing: normal;
   text-transform: none;
 
-  input { width: auto; margin-top: 2px; }
+  input { width: 18px; margin-top: 2px; }
 }
 
 .dias-agenda {
@@ -3987,7 +4088,7 @@ input.is-error { border-color: #b42318 !important; }
   color: var(--kb-muted);
 }
 
-// Antes y después de la propuesta de KAI.
+// Antes y después de la propuesta de Opttia.
 .ia-decision {
   display: grid;
   gap: 10px;

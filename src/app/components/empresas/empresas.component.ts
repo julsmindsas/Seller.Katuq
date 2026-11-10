@@ -1,5 +1,8 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { esPlataformaKatuq } from '../../modules/marketing/guards/plataforma.guard';
+import { PlataformaService } from '../plataforma/servicios/plataforma.service';
+import { consolaViejaRecordada, debeIrAConsolaNueva, recordarConsolaVieja } from '../plataforma/logica/consola-por-defecto';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
@@ -81,6 +84,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   // Estados y configuraciones
   isMobile = false;
   isJulsmind = false;
+  /** Mientras se decide si va a la consola nueva no se pinta la vieja (evita parpadeo y carga inútil). */
+  resolviendoConsola = false;
 
   // Filtros
   filtros: FiltrosAvanzados = {
@@ -134,7 +139,9 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     private dataStoreService: DataStoreService,
     private messageService: MessageService,
     private pricingMode: PricingModeService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private plataforma: PlataformaService,
+    private ruta: ActivatedRoute
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -164,9 +171,37 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.armarEstadosActivo();
     this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => this.armarEstadosActivo());
-    this.cargarDatos();
     this.puedeEditarModo = this.pricingMode.puedeEditar();
+    this.decidirConsola();
+  }
+
+  /** Carga de la pantalla (lista pesada de empresas y modo de precios). Solo corre una vez decidida la consola. */
+  private cargarPantalla(): void {
+    this.resolviendoConsola = false;
+    this.cargarDatos();
     this.cargarModoPrecio();
+  }
+
+  /**
+   * D-700 15.2 (M3): con `config/plataforma.consolaNuevaPorDefecto` en `true`, quien tiene acceso a la plataforma
+   * pasa a `/plataforma`. Con la bandera apagada, sin acceso, con la salida `?vieja=1` (recordada en la pestaña) o ante
+   * cualquier error no cambia nada. No se carga ni se pinta la Consola vieja hasta saber la decisión. El criterio es
+   * `esPlataformaKatuq()` más lo que dice el servidor (`esPlataforma`); no depende del nombre comercial.
+   */
+  private decidirConsola(): void {
+    if (this.ruta.snapshot.queryParamMap.get('vieja') === '1') recordarConsolaVieja();
+    if (!esPlataformaKatuq() || consolaViejaRecordada()) { this.cargarPantalla(); return; }
+    this.resolviendoConsola = true;
+    this.plataforma.me().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r) => {
+        if (debeIrAConsolaNueva(r, this.ruta.snapshot.queryParamMap, consolaViejaRecordada())) {
+          this.router.navigate(['/plataforma'], { replaceUrl: true });
+        } else {
+          this.cargarPantalla();
+        }
+      },
+      error: () => this.cargarPantalla(), // sin respuesta se queda la Consola vieja
+    });
   }
 
   // ── Modo de precios ──

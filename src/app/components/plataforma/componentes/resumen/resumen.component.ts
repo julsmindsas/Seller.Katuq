@@ -3,7 +3,7 @@ import { combineLatest, Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { PlataformaService } from '../../servicios/plataforma.service';
 import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
-import { Definicion, EstadoCarga, Overview, SobrePlataforma } from '../../plataforma.tipos';
+import { Definicion, EstadoCarga, EstadoOpttiaPlataforma, Overview, SobrePlataforma } from '../../plataforma.tipos';
 import { conEstado, estadoInicial } from '../../logica/carga';
 import { textoAntiguedad } from '../../logica/formato';
 import { TEXTOS } from '../../plataforma.textos';
@@ -19,6 +19,8 @@ export class ResumenComponent implements OnInit, OnDestroy {
   readonly secciones = ['ingresos', 'base', 'actividad', 'adopcion', 'salud', 'soporte'];
   estado: EstadoCarga<SobrePlataforma<Overview | null>> = estadoInicial();
   definiciones: Definicion[] | null = null;
+  opttia: EstadoOpttiaPlataforma | null = null;
+  preguntando = false;
   private fin$ = new Subject<void>();
 
   constructor(private servicio: PlataformaService, private ctx: PlataformaContextoService, private cd: ChangeDetectorRef) {}
@@ -28,6 +30,7 @@ export class ResumenComponent implements OnInit, OnDestroy {
       switchMap(([vista]) => conEstado(this.servicio.overview(vista))),
       takeUntil(this.fin$),
     ).subscribe((e) => { this.estado = e; this.cd.markForCheck(); });
+    this.ctx.opttia().pipe(takeUntil(this.fin$)).subscribe((o) => { this.opttia = o; this.cd.markForCheck(); });
     this.ctx.definiciones().pipe(takeUntil(this.fin$)).subscribe({
       next: (d) => { this.definiciones = d.metricas; this.cd.markForCheck(); },
       error: () => { /* el (i) dice que no hay definición publicada */ },

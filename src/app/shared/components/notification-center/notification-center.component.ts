@@ -8,6 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
 import { NotificationPreferencesService } from '../../services/notifications/notification-preferences.service';
 import { NovedadesVersionService } from '../../services/novedades-version.service';
+import { ModuleUsageService } from '../../services/module-usage.service';
 import { NotaVersion } from '../../services/version-check.service';
 import {
   KatuqNotification, 
@@ -99,7 +100,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     private renderer: Renderer2,
     private router: Router,
     private translate: TranslateService,
-    private novedadesService: NovedadesVersionService
+    private novedadesService: NovedadesVersionService,
+    private moduleUsage: ModuleUsageService
   ) {
     this.setupSearchDebouncing();
   }
@@ -146,6 +148,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
 
     // D-581: novedades que le aplican a este usuario y si hay alguna sin ver
     this.novedadesService.iniciar();
+    this.moduleUsage.iniciar();
     this.novedadesService.novedades$
       .pipe(takeUntil(this.destroy$))
       .subscribe(novedades => {

@@ -44,8 +44,10 @@
       <span class="numero">Enlace {{ k + 1 }}</span>
       <button type="button" class="mini mini--quitar" (click)="quitarEnlace(k)">Quitar</button>
     </div>
+    <span class="repetible__rotulo">Nombre</span>
     <input type="text" maxlength="24" placeholder="Ayuda" aria-label="Nombre del enlace de ayuda"
            [ngModel]="e.etiqueta" (ngModelChange)="cambiarEnlace(k, 'etiqueta', $event)" />
+    <span class="repetible__rotulo">A dónde lleva</span>
     <input type="text" list="kq-destinos-inicio" placeholder="#preguntas, /ruta o https://…" aria-label="Destino del enlace de ayuda"
            [ngModel]="e.url" (ngModelChange)="cambiarEnlace(k, 'url', $event)" />
     <p class="repetible__aviso" *ngIf="avisoDestino(e.url) as aviso">{{ aviso }}</p>

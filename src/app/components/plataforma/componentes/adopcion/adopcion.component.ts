@@ -3,14 +3,15 @@ import { combineLatest, Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { PlataformaService } from '../../servicios/plataforma.service';
 import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
-import { Definicion, EstadoCarga, Overview, SobrePlataforma } from '../../plataforma.tipos';
+import { Definicion, EstadoCarga, Overview, Senales, SobrePlataforma } from '../../plataforma.tipos';
 import { conEstado, estadoInicial } from '../../logica/carga';
 import { formatearRatio } from '../../logica/formato';
 import { TEXTOS } from '../../plataforma.textos';
 
 /**
  * D-700 14.6 — Adopción: lo que tienen configurado los comercios activos y el panel de integraciones por proveedor.
- * Todo es «configurado», no «usado»: la adopción por uso de módulos (que manda el navegador) se rotulará «indicativa».
+ * El panel de arriba es «configurado», no «usado». D-700 26.4: el uso por módulo (que manda el navegador de cada comercio) se
+ * muestra aparte y rotulado «indicativo»; sin medición encendida o sin lectura sale «sin dato», nunca 0.
  */
 @Component({
   selector: 'app-adopcion',
@@ -45,7 +46,7 @@ import { TEXTOS } from '../../plataforma.textos';
               <thead><tr><th scope="col">{{ t.proveedor }}</th><th scope="col" class="pl-der">{{ t.comercios }}</th><th scope="col" class="pl-der">{{ t.porcentaje }}</th></tr></thead>
               <tbody>
                 <tr *ngFor="let x of p.lista; trackBy: trackProveedor">
-                  <td>{{ x.id }}</td><td class="pl-der pl-num">{{ x.comercios }}</td><td class="pl-der pl-num">{{ porcentaje(x.porcentaje) }}</td>
+                  <td>{{ x.id }}</td><td class="pl-der pl-num">{{ x.comercios }}</td><td class="pl-der pl-num"><div class="pl-barra"><span class="pl-barra__pista" aria-hidden="true"><span class="pl-barra__relleno" [style.width.%]="ancho(x.porcentaje)"></span></span><span>{{ porcentaje(x.porcentaje) }}</span></div></td>
                 </tr>
               </tbody>
             </table>
@@ -53,12 +54,53 @@ import { TEXTOS } from '../../plataforma.textos';
         </section>
       </ng-container>
     </ng-container>
+
+    <ng-container *ngIf="senales.datos?.datos as g">
+      <section class="cfg-card">
+        <h2 class="cfg-card__titulo">{{ t.usadaTitulo }} <span class="cfg-pill cfg-pill--warn" [attr.title]="textos.indicativa">{{ t.indicativo }}</span></h2>
+        <p class="pl-muted">{{ t.usadaTexto(g.adopcionUsada.ventanaDias) }}</p>
+        <p class="pl-muted" *ngIf="g.adopcionUsada.estado !== 'sin_dato'">{{ t.usadaMedidas(g.adopcionUsada.medidas, g.adopcionUsada.activasReales) }}</p>
+        <p class="cfg-aviso" *ngIf="g.adopcionUsada.estado === 'sin_dato'" role="status">{{ g.adopcionUsada.motivo }}</p>
+        <p class="cfg-aviso" *ngIf="g.adopcionUsada.estado === 'parcial'" role="status">{{ g.adopcionUsada.motivo || textos.parcial }}</p>
+        <div class="cfg-vacio" *ngIf="g.adopcionUsada.estado !== 'sin_dato' && !g.adopcionUsada.modulos.length">
+          <h3 class="cfg-vacio__titulo">{{ t.usadaVacio }}</h3>
+        </div>
+        <ng-container *ngTemplateOutlet="tablaModulos; context: { $implicit: g.adopcionUsada.modulos }"></ng-container>
+      </section>
+
+      <section class="cfg-card">
+        <h2 class="cfg-card__titulo">{{ t.topVentasTitulo }} <span class="cfg-pill cfg-pill--warn" [attr.title]="textos.indicativa">{{ t.indicativo }}</span></h2>
+        <p class="pl-muted" *ngIf="g.modulosDeLosQueMasVenden.estado !== 'sin_dato'">{{ t.topVentasTexto(g.modulosDeLosQueMasVenden.grupo, g.modulosDeLosQueMasVenden.medidos) }}</p>
+        <p class="cfg-aviso" *ngIf="g.modulosDeLosQueMasVenden.estado === 'sin_dato'" role="status">{{ g.modulosDeLosQueMasVenden.motivo }}</p>
+        <ng-container *ngTemplateOutlet="tablaModulos; context: { $implicit: g.modulosDeLosQueMasVenden.modulos }"></ng-container>
+      </section>
+
+      <p class="cfg-aviso" role="note" *ngIf="!g.integracionesSinUso.disponible">{{ t.integracionesSinUso }}</p>
+    </ng-container>
+    <section class="cfg-card pl-error" *ngIf="!senales.cargando && senales.error">
+      <p class="cfg-aviso cfg-aviso--error">{{ senales.error }}</p>
+    </section>
+
+    <ng-template #tablaModulos let-modulos>
+      <div class="pl-tabla-caja pl-tabla-siempre" *ngIf="modulos.length">
+        <table class="pl-tabla">
+          <thead><tr><th scope="col">{{ t.modulo }}</th><th scope="col" class="pl-der">{{ t.empresas }}</th><th scope="col" class="pl-der">{{ t.porcentaje }}</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let m of modulos | slice:0:30; trackBy: trackProveedor">
+              <td>{{ m.clave }}</td><td class="pl-der pl-num">{{ m.empresas }}</td>
+              <td class="pl-der pl-num"><div class="pl-barra"><span class="pl-barra__pista" aria-hidden="true"><span class="pl-barra__relleno" [style.width.%]="ancho(m.porcentaje)"></span></span><span>{{ porcentaje(m.porcentaje) }}</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-template>
   `,
 })
 export class AdopcionComponent implements OnInit, OnDestroy {
   readonly textos = TEXTOS;
   readonly t = TEXTOS.adopcion;
   estado: EstadoCarga<SobrePlataforma<Overview | null>> = estadoInicial();
+  senales: EstadoCarga<SobrePlataforma<Senales | null>> = estadoInicial();
   definiciones: Definicion[] | null = null;
   porcentaje = formatearRatio;
   private fin$ = new Subject<void>();
@@ -70,6 +112,10 @@ export class AdopcionComponent implements OnInit, OnDestroy {
       switchMap(([vista]) => conEstado(this.servicio.overview(vista))),
       takeUntil(this.fin$),
     ).subscribe((e) => { this.estado = e; this.cd.markForCheck(); });
+    this.ctx.recarga$.pipe(
+      switchMap(() => conEstado(this.servicio.senales())),
+      takeUntil(this.fin$),
+    ).subscribe((e) => { this.senales = e; this.cd.markForCheck(); });
     this.ctx.definiciones().pipe(takeUntil(this.fin$)).subscribe({
       next: (d) => { this.definiciones = d.metricas; this.cd.markForCheck(); },
       error: () => { /* el (i) dice que no hay definición publicada */ },
@@ -81,7 +127,12 @@ export class AdopcionComponent implements OnInit, OnDestroy {
     this.fin$.complete();
   }
 
-  trackProveedor(_: number, x: { id: string }): string {
-    return x.id;
+  /** Ancho de la barra (0-100) sobre el 100 % de los comercios con censo; solo dibuja, no calcula cifras. */
+  ancho(r: number | null | undefined): number {
+    return typeof r === 'number' && Number.isFinite(r) ? Math.max(0, Math.min(100, r * 100)) : 0;
+  }
+
+  trackProveedor(_: number, x: { id?: string; clave?: string }): string {
+    return (x.id || x.clave) as string;
   }
 }

@@ -7,7 +7,7 @@ import { EstadoCarga, SobrePlataforma, Tendencias } from '../../plataforma.tipos
 import { conEstado, estadoInicial } from '../../logica/carga';
 import { TEXTOS } from '../../plataforma.textos';
 
-/** D-700 13.5 — Contratado vs cobrado, altas y bajas, y GMV (en F1, mes en curso y anterior). */
+/** D-700 13.5 y 19.7c — Contratado vs cobrado, altas y bajas, y GMV a 12 meses: el mes en curso es vivo y cada mes cerrado sale de su cierre (reconstruido o hueco si no hay). */
 @Component({
   selector: 'app-tendencias',
   changeDetection: ChangeDetectionStrategy.OnPush,

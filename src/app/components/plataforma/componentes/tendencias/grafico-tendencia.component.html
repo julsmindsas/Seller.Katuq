@@ -1,4 +1,4 @@
-<section class="cfg-card" [attr.aria-label]="nombre">
+<section [class.cfg-card]="!embebido" [class.pl-grafico--embebido]="embebido" [attr.aria-label]="nombre">
   <div class="pl-grafico__cabeza">
     <h2>{{ nombre }}</h2>
     <button type="button" class="cfg-btn cfg-btn--sec" (click)="alternar()" [attr.aria-pressed]="verTabla">
@@ -7,13 +7,19 @@
   </div>
 
   <ng-container *ngIf="!verTabla">
+    <p class="pl-grafico__valor pl-num" *ngIf="grafico?.hayDatos && ultimoTexto">{{ ultimoTexto }}<small>{{ ultimoEtiqueta }}<ng-container *ngIf="ultimoIncompleto"> · {{ textos.tendencias.mesIncompleto }}</ng-container></small></p>
     <div class="pl-grafico__lienzo" *ngIf="resultado && ajustes" role="img" tabindex="0" [attr.aria-label]="grafico?.resumen">
       <app-viz-chart [result]="resultado" chartType="line" [colors]="colores" [altura]="280" [radio]="11" [ajustes]="ajustes"></app-viz-chart>
     </div>
-    <div class="cfg-vacio" *ngIf="!resultado">
+    <div class="cfg-vacio" *ngIf="!resultado && !sinMovimiento">
       <div class="cfg-vacio__icono"><i class="pi pi-chart-line" aria-hidden="true"></i></div>
       <h3 class="cfg-vacio__titulo">{{ textos.tendencias.sinDato }}</h3>
       <p class="cfg-vacio__texto">{{ textos.tendencias.sinDatoTexto }}</p>
+    </div>
+    <div class="cfg-vacio" *ngIf="sinMovimiento">
+      <div class="cfg-vacio__icono"><i class="pi pi-chart-line" aria-hidden="true"></i></div>
+      <h3 class="cfg-vacio__titulo">{{ textos.tendencias.sinMovimiento }}</h3>
+      <p class="cfg-vacio__texto">{{ textos.tendencias.sinMovimientoTexto }}</p>
     </div>
   </ng-container>
 
@@ -30,5 +36,7 @@
       </tbody>
     </table>
   </div>
-  <p class="pl-leyenda">{{ textos.tendencias.leyenda }}</p>
+  <p class="pl-leyenda" *ngIf="esConteo && !verTabla && (hayIncompleto || hayReconstruido)">{{ textos.tendencias.leyendaBarras }}</p>
+  <p class="pl-leyenda" *ngIf="!esConteo && hayIncompleto && !verTabla">{{ textos.tendencias.leyendaIncompleto }}</p>
+  <p class="pl-leyenda" *ngIf="!esConteo && hayReconstruido">{{ textos.tendencias.leyenda }}</p>
 </section>

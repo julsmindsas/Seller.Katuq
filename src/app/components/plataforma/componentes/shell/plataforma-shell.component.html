@@ -11,6 +11,7 @@
         <button type="button" class="cfg-btn cfg-btn--sec" [class.pl-activo]="vista === 'creacion'" [attr.aria-pressed]="vista === 'creacion'" (click)="cambiarVista('creacion')">{{ textos.vistaCreacion }}</button>
         <button type="button" class="cfg-btn cfg-btn--sec" [class.pl-activo]="vista === 'entrega'" [attr.aria-pressed]="vista === 'entrega'" (click)="cambiarVista('entrega')">{{ textos.vistaEntrega }}</button>
       </div>
+      <a class="cfg-btn cfg-btn--sec pl-consola-anterior" routerLink="/empresas" [queryParams]="{ vieja: 1 }" [attr.title]="textos.consolaAnteriorAyuda">{{ textos.consolaAnterior }}</a>
       <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ textos.recargar }}</button>
       <button type="button" class="cfg-btn" *ngIf="esOperador" [disabled]="actualizando" (click)="actualizar()">
         {{ actualizando ? textos.actualizando : textos.actualizar }}

@@ -3,8 +3,15 @@ import { Cifra, Definicion, MetaPlataforma, Overview } from '../../plataforma.ti
 import { TEXTOS } from '../../plataforma.textos';
 import { fechaCo, mesLegible, pintarCifra, CifraPintada } from '../../logica/formato';
 
+interface LineaDesglose {
+  rotulo: string;
+  pintada: CifraPintada;
+}
+
 interface ItemCifra {
   clave: string;
+  desglose: LineaDesglose[];
+  notaDesglose: string | null;
   rotulo: string;
   pintada: CifraPintada;
   nota: string | null;
@@ -44,8 +51,9 @@ export class KpiSeccionComponent implements OnChanges {
           const c = datos[k] as Cifra & { motivo?: string; cohorte?: number; convertidos?: number; mes?: string };
           let nota: string | null = null;
           if (c && c.estado === 'no_disponible' && c.motivo) nota = String(c.motivo);
-          if (k === 'conversionMesAnterior' && c && typeof c.cohorte === 'number') nota = `Cohorte de ${mesLegible(c.mes)}: ${c.convertidos ?? '—'} de ${c.cohorte} pagaron`;
-          return { clave: k, rotulo: TEXTOS.cifras[k] || k, pintada: pintarCifra(c), nota, definicionId: TEXTOS.definiciones[k] || null };
+          if (k === 'conversionMesAnterior' && c && typeof c.cohorte === 'number') nota = `Cohorte de ${mesLegible(c.mes)}: ${c.convertidos ?? '—'} de ${c.cohorte} pagaron${c.estado === 'en_curso' ? ' hasta hoy (cohorte en curso)' : ''}`;
+          const d = this.desgloseDe(k, datos);
+          return { clave: k, desglose: d.lineas, notaDesglose: d.nota, rotulo: TEXTOS.cifras[k] || k, pintada: pintarCifra(c), nota, definicionId: TEXTOS.definiciones[k] || null };
         })
       : [];
     // La adopción por «uso» la manda el navegador de cada comercio: se rotula indicativa. La «configurada» se dice como tal.
@@ -55,6 +63,31 @@ export class KpiSeccionComponent implements OnChanges {
       this.rotuloTipo = null;
     }
     this.abierta = null;
+  }
+
+  /**
+   * D-700 28: De pago / Gratis dentro de Comercios, Pedidos y GMV. El servidor manda cada cifra (suman el total); aquí solo se pintan.
+   */
+  private desgloseDe(clave: string, datos: Record<string, unknown>): { lineas: LineaDesglose[]; nota: string | null } {
+    const vacio = { lineas: [] as LineaDesglose[], nota: null };
+    const T = TEXTOS.desglosePlan;
+    const porPlan = datos['porPlan'] as Record<string, unknown> | undefined;
+    if (!porPlan) return vacio;
+    const linea = (rotulo: string, c: unknown): LineaDesglose => ({ rotulo, pintada: pintarCifra(c as Cifra) });
+    if (clave === 'comercios') {
+      const det = (porPlan['detalle'] || {}) as Record<string, number>;
+      const des = typeof det['planDesconocido'] === 'number' ? det['planDesconocido'] : 0;
+      return {
+        lineas: [linea(T.dePago, porPlan['dePago']), linea(T.gratisUsan, porPlan['gratisUsan']), linea(T.gratisSinUso, porPlan['gratisSinUso'])],
+        nota: [T.ayuda, des > 0 ? T.nota(des) : ''].filter(Boolean).join(' '),
+      };
+    }
+    if (clave === 'pedidosMes' || clave === 'gmvMes') {
+      const pago = (porPlan['pago'] || {}) as Record<string, unknown>;
+      const gratis = (porPlan['gratis'] || {}) as Record<string, unknown>;
+      return { lineas: [linea(T.pago, pago[clave]), linea(T.gratis, gratis[clave])], nota: null };
+    }
+    return vacio;
   }
 
   alternar(clave: string): void {

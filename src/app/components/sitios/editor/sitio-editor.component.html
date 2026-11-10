@@ -146,6 +146,7 @@
             <ng-container *ngFor="let m of mensajesIAInverso">
               <div class="chat-ia__burbuja" [class.chat-ia__burbuja--yo]="m.rol === 'comercio'" [class.chat-ia__burbuja--error]="m.error">
                 <span class="chat-ia__adjuntos" *ngIf="m.adjuntos">📎 {{ m.adjuntos === 1 ? '1 imagen' : m.adjuntos + ' imágenes' }}</span>
+                <span class="chat-ia__donde" *ngIf="m.lugar">📍 {{ m.lugar }}</span>
                 {{ m.texto }}
                 <!-- Ticket 1248: lo que falta para publicar, con su atajo -->
                 <ul class="chat-ia__cambios" *ngIf="m.pendientes?.length">
@@ -204,8 +205,8 @@
 
           <!-- Ideas para empezar -->
           <div class="chat-ia__sugerencias" *ngIf="!mensajesIA.length && !adjuntosIA.length">
-            <span class="chat-ia__etiqueta">Ideas para empezar (toca una):</span>
-            <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
+            <span class="chat-ia__etiqueta">{{ lugarIA ? 'Ideas para esta sección (toca una):' : 'Ideas para empezar (toca una):' }}</span>
+            <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasLugarIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
           </div>
 
           <!-- Lo que adjuntó, y para qué es -->
@@ -241,10 +242,18 @@
           </div>
 
           <!-- Escribir y enviar -->
+          <div class="campo chat-ia__lugar" *ngIf="propositoAdjuntos !== 'usar' && lugaresIA.length > 1">
+            <label for="chat-ia-lugar">¿Dónde?</label>
+            <select id="chat-ia-lugar" [ngModel]="lugarIA" (ngModelChange)="elegirLugarIA($event)" [disabled]="editandoIA">
+              <option value="">Toda la página</option>
+              <option *ngFor="let l of lugaresIA; trackBy: porIdLugar" [value]="l.id" [selected]="l.id === lugarIA">{{ l.texto }}</option>
+            </select>
+            <small class="chat-ia__ayuda">También puedes tocar la sección en la vista previa.</small>
+          </div>
           <div class="campo chat-ia__entrada" *ngIf="propositoAdjuntos !== 'usar'">
             <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"
                       (keydown.enter)="alEnterChatIA($any($event))" (paste)="alPegarEnChat($any($event))"
-                      [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo'"></textarea>
+                      [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : (lugarIA ? '¿Qué quieres cambiar en esta sección? Ej: ponle fondo oscuro y un título más corto' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo')"></textarea>
           </div>
           <div class="chat-ia__acciones" *ngIf="propositoAdjuntos !== 'usar'">
             <label class="chat-ia__adjuntar" [class.is-disabled]="editandoIA || adjuntosIA.length >= maxReferencias">
@@ -555,7 +564,9 @@
             <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Nombre del enlace</span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="30" />
+              <span class="repetible__rotulo">A dónde lleva</span>
               <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
               <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el menú.</small>
@@ -944,7 +955,9 @@
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <img [src]="bn.url" alt="" class="repetible__foto" />
-              <input type="text" [(ngModel)]="bn.enlace" (ngModelChange)="marcarSucio()" placeholder="Enlace al tocar (opcional)" />
+              <span class="repetible__rotulo">Enlace al tocar (opcional)</span>
+              <input type="text" list="kq-destinos-inicio" [(ngModel)]="bn.enlace" (ngModelChange)="marcarSucio()" placeholder="Enlace al tocar (opcional)" />
+              <span class="repetible__rotulo">Qué muestra la imagen</span>
               <input type="text" [(ngModel)]="bn.alt" (ngModelChange)="marcarSucio()" placeholder="Qué muestra (para accesibilidad)" maxlength="120" />
               <div class="repetible__acciones">
                 <button type="button" class="repetible__quitar" (click)="quitarBanner(b, i)">Quitar</button>
@@ -1059,7 +1072,9 @@
             <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Pregunta</span>
               <input type="text" [(ngModel)]="p.pregunta" (ngModelChange)="marcarSucio()" placeholder="Pregunta" maxlength="200" />
+              <span class="repetible__rotulo">Respuesta</span>
               <textarea rows="2" [(ngModel)]="p.respuesta" (ngModelChange)="marcarSucio()" placeholder="Respuesta" maxlength="2000"></textarea>
               <button class="repetible__quitar" (click)="quitarPregunta(i)">Quitar</button>
             </div>
@@ -1351,7 +1366,9 @@
               <span class="palanca"><span></span></span>
             </button>
             <div class="repetible" *ngFor="let s of b.datos.sedes; let i = index">
+              <span class="repetible__rotulo">Nombre de la sede</span>
               <input type="text" maxlength="80" [(ngModel)]="s.nombre" (ngModelChange)="marcarSucio()" placeholder="Nombre de la sede (Experience Center)" />
+              <span class="repetible__rotulo">Dirección</span>
               <input type="text" maxlength="200" [(ngModel)]="s.direccion" (ngModelChange)="marcarSucio()" placeholder="Dirección" />
               <div class="campo-doble">
                 <input type="text" maxlength="80" [(ngModel)]="s.ciudad" (ngModelChange)="marcarSucio()" placeholder="Ciudad" />
@@ -1483,8 +1500,10 @@
             <div class="repetible" *ngFor="let r of b.datos.items; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Lo que dijo tu cliente</span>
               <textarea rows="2" [(ngModel)]="r.texto" (ngModelChange)="marcarSucio()"
                         placeholder="Lo que dijo tu cliente" maxlength="400"></textarea>
+              <span class="repetible__rotulo">Nombre (opcional)</span>
               <input type="text" [(ngModel)]="r.autor" (ngModelChange)="marcarSucio()"
                      placeholder="Nombre (opcional)" maxlength="60" />
               <div class="estrellas-editor">
@@ -1561,7 +1580,9 @@
             <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Nombre del enlace</span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
+              <span class="repetible__rotulo">A dónde lleva</span>
               <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o #seccion" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
               <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará en el pie.</small>
@@ -1593,7 +1614,9 @@
                   <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()" maxlength="40" placeholder="Ej.: Ayuda" />
                 </div>
                 <div class="repetible" *ngFor="let e of c.enlaces; let ei = index">
+                  <span class="repetible__rotulo">Nombre del enlace</span>
                   <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
+                  <span class="repetible__rotulo">A dónde lleva</span>
                   <input type="text" list="kq-destinos-inicio" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://… o /ruta" />
                   <button class="repetible__quitar" (click)="quitarEnlaceDeColumnaPie(c, ei)">Quitar</button>
                   <small class="aviso" *ngIf="anclaSinDestino(e.url)">Esa sección no existe en tu inicio: este enlace no se mostrará.</small>
@@ -1666,8 +1689,10 @@
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <span class="repetible__nombre">Columna {{ i + 1 }}</span>
+              <span class="repetible__rotulo">Título</span>
               <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()"
                      placeholder="Título" maxlength="90" />
+              <span class="repetible__rotulo">Texto</span>
               <textarea rows="3" [(ngModel)]="c.cuerpo" (ngModelChange)="marcarSucio()"
                         placeholder="Texto (admite *negrita* y listas con -)" maxlength="600"></textarea>
               <div class="mini-imagen">
@@ -1678,8 +1703,10 @@
                 </label>
                 <button class="repetible__quitar" *ngIf="c.imagen" (click)="c.imagen = ''; marcarSucio()">Quitar foto</button>
               </div>
+              <span class="repetible__rotulo">Texto del botón (opcional)</span>
               <input type="text" [(ngModel)]="c.ctaTexto" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón (opcional)" maxlength="30" />
+              <span class="repetible__rotulo">A dónde lleva el botón</span>
               <input type="text" list="kq-destinos-inicio" [(ngModel)]="c.ctaUrl" (ngModelChange)="marcarSucio()"
                      placeholder="#contacto o https://…" />
               <button class="repetible__quitar" (click)="quitarColumna(i)">Quitar columna</button>
@@ -1730,10 +1757,13 @@
             <div class="repetible" *ngFor="let bt of b.datos.botones; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Texto del botón</span>
               <input type="text" [(ngModel)]="bt.etiqueta" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón" maxlength="40" />
+              <span class="repetible__rotulo">A dónde lleva</span>
               <input type="text" list="kq-destinos-inicio" [(ngModel)]="bt.url" (ngModelChange)="marcarSucio()"
                      placeholder="#productos, https://… o https://wa.me/57…" />
+              <span class="repetible__rotulo">Estilo</span>
               <select [(ngModel)]="bt.estilo" (ngModelChange)="marcarSucio()">
                 <option value="principal">Relleno</option>
                 <option value="secundario">Solo borde</option>
@@ -2323,7 +2353,7 @@
       <!-- ── Estilo ── -->
       <div class="panel__contenido" *ngIf="panel === 'diseno'">
 
-        <!-- ── Diseñar con IA ── KAI propone estilo, colores, letra, orden y
+        <!-- ── Diseñar con IA ── Opttia propone estilo, colores, letra, orden y
              portada a partir de la marca, el sector, el objetivo, las
              secciones y las categorías reales. Se aplica sobre lo que hay y se
              puede deshacer. -->
@@ -2333,11 +2363,11 @@
           <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('ia')"
                   [attr.aria-expanded]="estiloAbierto === 'ia' || hayPropuestaIA">
             <span class="acordeon__titulo">Diseñar con IA</span>
-            <span class="acordeon__resumen">{{ hayPropuestaIA ? 'Propuesta por decidir' : 'KAI propone un diseño' }}</span>
+            <span class="acordeon__resumen">{{ hayPropuestaIA ? 'Propuesta por decidir' : 'Opttia propone un diseño' }}</span>
             <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
           </button>
           <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'ia' || hayPropuestaIA">
-            <p>KAI mira tu marca, tu sector, para qué es el sitio, tus secciones y tus categorías, y propone estilo, colores, letra, orden y portada.</p>
+            <p>Opttia mira tu marca, tu sector, para qué es el sitio, tus secciones y tus categorías, y propone estilo, colores, letra, orden y portada.</p>
             <div class="campo">
               <label>Indicaciones (opcional)</label>
               <textarea rows="2" [(ngModel)]="indicacionesIA" maxlength="400"
@@ -2354,7 +2384,7 @@
             <div class="ia-decision" *ngIf="hayPropuestaIA">
               <div class="ia-decision__vista" role="group" aria-label="Comparar">
                 <button type="button" [class.is-active]="viendoAntesIA" (click)="!viendoAntesIA && alternarAntesIA()" [disabled]="disenandoIA">Antes</button>
-                <button type="button" [class.is-active]="!viendoAntesIA" (click)="viendoAntesIA && alternarAntesIA()" [disabled]="disenandoIA">Propuesta de KAI</button>
+                <button type="button" [class.is-active]="!viendoAntesIA" (click)="viendoAntesIA && alternarAntesIA()" [disabled]="disenandoIA">Propuesta de Opttia</button>
               </div>
               <div class="ia-decision__acciones">
                 <!-- Revisión 2026-10-18: el botón deja lo que se está viendo; mirando el antes,
@@ -2858,7 +2888,9 @@
             <small>Lo que más te preguntan y lo que quieres que responda, tal cual.</small>
           </div>
           <div class="repetible" *ngFor="let q of o.preguntasFrecuentes; let i = index">
+            <span class="repetible__rotulo">Pregunta</span>
             <input type="text" maxlength="160" [(ngModel)]="q.p" (ngModelChange)="marcarSucio()" placeholder="Pregunta (¿Hacen envíos a todo el país?)" />
+            <span class="repetible__rotulo">Respuesta</span>
             <textarea rows="2" maxlength="600" [(ngModel)]="q.r" (ngModelChange)="marcarSucio()" placeholder="Respuesta"></textarea>
             <button class="enlace-sutil" (click)="quitarPreguntaOpttia(i)">Quitar esta pregunta</button>
           </div>
@@ -2867,20 +2899,9 @@
         </ng-container>
 
         <ng-container *ngIf="contenido.tienda.habilitada">
-          <!-- Ticket 1241: KAI, asesor de compra -->
-          <button class="opcion" [class.is-active]="contenido.tienda.asesorKai === true"
-                  (click)="contenido.tienda.asesorKai = !contenido.tienda.asesorKai; marcarSucio()">
-            <span class="opcion__texto">
-              <strong>KAI, asesor de compra</strong>
-              <small>Un botón «Pregúntale a KAI» en tu tienda: recomienda productos tuyos con
-                existencias y precio real, los agrega al carrito conversando y lleva al pago.<ng-container
-                *ngIf="opttiaSitio?.activo"> Con Opttia encendido, el chat de Opttia toma su lugar.</ng-container></small>
-            </span>
-            <span class="palanca"><span></span></span>
-          </button>
-          <!-- Ticket 1242: cuánto se encarga KAI de la web -->
-          <div class="grupo grupo--plegable" id="campo-kai" *ngIf="kaiTienda as k" [class.is-abierto]="tiendaAbierto === 'KAI administra tu web'">
-            <h3 class="grupo__plegar" role="button" tabindex="0" [attr.aria-expanded]="tiendaAbierto === 'KAI administra tu web'" (click)="abrirGrupoTienda('KAI administra tu web')" (keydown.enter)="abrirGrupoTienda('KAI administra tu web')" (keydown.space)="$event.preventDefault(); abrirGrupoTienda('KAI administra tu web')">KAI administra tu web</h3>
+          <!-- Ticket 1242: cuánto se encarga Opttia de la web -->
+          <div class="grupo grupo--plegable" id="campo-kai" *ngIf="kaiTienda as k" [class.is-abierto]="tiendaAbierto === 'Opttia administra tu web'">
+            <h3 class="grupo__plegar" role="button" tabindex="0" [attr.aria-expanded]="tiendaAbierto === 'Opttia administra tu web'" (click)="abrirGrupoTienda('Opttia administra tu web')" (keydown.enter)="abrirGrupoTienda('Opttia administra tu web')" (keydown.space)="$event.preventDefault(); abrirGrupoTienda('Opttia administra tu web')">Opttia administra tu web</h3>
             <div class="campo">
               <label>Qué tanto hace solo</label>
               <select [(ngModel)]="k.autonomia" (ngModelChange)="marcarSucio()">
@@ -2889,10 +2910,10 @@
                 <option value="automatico">Automático en lo de bajo riesgo</option>
               </select>
               <small *ngIf="k.autonomia === 'automatico'">Tu vitrina deja de mostrar productos agotados apenas se agotan.
-                Las temporadas y ofertas vencidas ya salen solas. KAI nunca cambia precios, descuentos ni condiciones.</small>
+                Las temporadas y ofertas vencidas ya salen solas. Opttia nunca cambia precios, descuentos ni condiciones.</small>
             </div>
             <button class="opcion" [class.is-active]="k.pausado" (click)="k.pausado = !k.pausado; marcarSucio()">
-              <span class="opcion__texto"><strong>Pausar a KAI</strong><small>Detiene todo lo automático hasta que lo vuelvas a encender.</small></span>
+              <span class="opcion__texto"><strong>Pausar lo automático</strong><small>Detiene todo lo automático hasta que lo vuelvas a encender.</small></span>
               <span class="palanca"><span></span></span>
             </button>
             <button class="opcion" [class.is-active]="k.reporteSemanal" (click)="k.reporteSemanal = !k.reporteSemanal; marcarSucio()">
@@ -2998,8 +3019,10 @@
               <div class="repetible" *ngFor="let p of r.puntos; let i = index" cdkDrag>
                 <div class="repetible__hueco" *cdkDragPlaceholder></div>
                 <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+                <span class="repetible__rotulo">Nombre del punto</span>
                 <input type="text" maxlength="80" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
                        placeholder="Nombre del punto (Local Centro)" />
+                <span class="repetible__rotulo">Dirección</span>
                 <input type="text" maxlength="200" [(ngModel)]="p.direccion" (ngModelChange)="marcarSucio()"
                        placeholder="Dirección (Cra 50 #52-10)" />
                 <div class="campo-doble">
@@ -3008,8 +3031,10 @@
                   <input type="text" maxlength="30" [(ngModel)]="p.telefono" (ngModelChange)="marcarSucio()"
                          placeholder="Teléfono" />
                 </div>
+                <span class="repetible__rotulo">Horario</span>
                 <input type="text" maxlength="160" [(ngModel)]="p.horario" (ngModelChange)="marcarSucio()"
                        placeholder="Horario (Lunes a viernes 9am a 6pm)" />
+                <span class="repetible__rotulo">Bodega que despacha</span>
                 <select [(ngModel)]="p.bodegaId" (ngModelChange)="marcarSucio()">
                   <option value="">Despacha de la bodega de la tienda</option>
                   <option *ngFor="let b of bodegas" [value]="b.codigo">{{ b.nombre }}</option>
@@ -3053,7 +3078,7 @@
                 <label class="cupon-campo">
                   <span class="cupon-campo__nombre">Tipo de descuento</span>
                   <select [(ngModel)]="c.tipo" (ngModelChange)="marcarSucio()">
-                    <option value="porcentaje">% de descuento</option>
+                    <option value="porcentaje">Porcentaje</option>
                     <option value="monto">Pesos fijos</option>
                   </select>
                   <small>Porcentaje (hasta 90 %) o pesos.</small>
@@ -3127,8 +3152,10 @@
             <div class="repetible" *ngFor="let p of promociones; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <span class="repetible__rotulo">Nombre de la promoción</span>
               <input type="text" maxlength="60" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
                      placeholder="Nombre que ve el comprador: 2x1 en chocolates" />
+              <span class="repetible__rotulo">Tipo de promoción</span>
               <select [(ngModel)]="p.tipo" (ngModelChange)="marcarSucio()">
                 <option value="nxm">Lleva N y paga M (2x1, 3x2)</option>
                 <option value="porcentaje">% de descuento</option>
@@ -3146,6 +3173,7 @@
                 <label class="campo-mini" *ngIf="p.tipo === 'volumen'"><span>Desde (unidades)</span>
                   <input type="number" min="2" max="100" [(ngModel)]="p.desdeUnidades" (ngModelChange)="marcarSucio()" /></label>
               </div>
+              <span class="repetible__rotulo">A qué productos aplica</span>
               <select [(ngModel)]="p.alcance.tipo" (ngModelChange)="cambiarAlcancePromo(p)">
                 <option value="todo">En toda la tienda</option>
                 <option value="categorias">En unas categorías</option>

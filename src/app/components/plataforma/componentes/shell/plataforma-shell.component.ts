@@ -6,6 +6,7 @@ import { PlataformaService } from '../../servicios/plataforma.service';
 import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
 import { Definicion } from '../../plataforma.tipos';
 import { TEXTOS } from '../../plataforma.textos';
+import { olvidarConsolaVieja } from '../../logica/consola-por-defecto';
 
 type Mensaje = { tipo: 'ok' | 'warn' | 'error'; texto: string } | null;
 
@@ -32,6 +33,7 @@ export class PlataformaShellComponent implements OnInit, OnDestroy {
     { ruta: 'adopcion', rotulo: TEXTOS.pestanas.adopcion },
     { ruta: 'calidad', rotulo: TEXTOS.pestanas.calidad },
     { ruta: 'sugerencias', rotulo: TEXTOS.pestanas.sugerencias },
+    { ruta: 'senales', rotulo: TEXTOS.pestanas.senales },
     { ruta: 'excluidas', rotulo: TEXTOS.pestanas.excluidas },
   ];
   esOperador = false;
@@ -51,6 +53,7 @@ export class PlataformaShellComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    olvidarConsolaVieja(); // volver a la consola nueva borra la salida recordada de la vieja
     this.servicio.me().pipe(takeUntil(this.fin$)).subscribe({
       next: (r) => { this.esOperador = !!(r && r.datos && r.datos.esOperador); this.cd.markForCheck(); },
       error: () => { this.esOperador = false; },

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { Definiciones } from '../plataforma.tipos';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
+import { Definiciones, EstadoOpttiaPlataforma, MePlataforma } from '../plataforma.tipos';
+import { estadoOpttia } from '../logica/opttia-plataforma';
 import { PlataformaService } from './plataforma.service';
 
 /**
@@ -14,6 +15,7 @@ export class PlataformaContextoService {
   readonly recarga$ = new BehaviorSubject<number>(0);
 
   private definicionesCache: Definiciones | null = null;
+  private me$: Observable<MePlataforma | null> | null = null;
 
   constructor(private servicio: PlataformaService) {}
 
@@ -24,6 +26,38 @@ export class PlataformaContextoService {
       map((r) => r.datos),
       tap((d) => { this.definicionesCache = d; }),
     );
+  }
+
+  /** `GET /me` una sola vez por apertura. Sin respuesta es `null`: la autorización real es del servidor. */
+  private yo(): Observable<MePlataforma | null> {
+    if (!this.me$) {
+      this.me$ = this.servicio.me().pipe(
+        map((r) => (r && r.datos) || null),
+        catchError(() => of(null)),
+        shareReplay(1),
+      );
+    }
+    return this.me$;
+  }
+
+  /** ¿Puede escribir? Sin respuesta cuenta como no. */
+  esOperador(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.esOperador)));
+  }
+
+  /** ¿Puede ver la auditoría de pagos por persona? Sin respuesta cuenta como no (el servidor decide de todos modos). */
+  esLectorAuditoria(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.esLectorAuditoria)));
+  }
+
+  /** ¿Está encendida la bandera de pagos manuales? (apagada, la ventana deja ver y anular, pero no registrar). */
+  pagosManualesActivos(): Observable<boolean> {
+    return this.yo().pipe(map((m) => !!(m && m.banderas && m.banderas['manualPaymentsEnabled'] === true)));
+  }
+
+  /** Opttia de plataforma según `GET /me`: sin respuesta no se muestra nada (el servidor vuelve a validar en cada pregunta). */
+  opttia(): Observable<EstadoOpttiaPlataforma> {
+    return this.yo().pipe(map((m) => estadoOpttia(m)));
   }
 
   cambiarVista(v: 'creacion' | 'entrega'): void {

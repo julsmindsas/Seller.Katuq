@@ -10,6 +10,7 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../firebase/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import * as Sentry from '@sentry/angular';
+import { SIN_AVISO_NEGOCIO } from './sin-aviso-negocio.context';
 import { isOpttiaMcpEndpoint, OPTTIA_MCP_TRANSPORT } from './opttia-mcp.context';
 
 @Injectable()
@@ -66,7 +67,8 @@ export class HttpInterceptor2 implements HttpInterceptor {
           // suspendido lo deja sin poder ver su información ni pagar para
           // reactivarse. Acá no se cierra nada: se explica y se sigue.
           if (err.status === 423 && err.error?.code === 'TENANT_SOLO_LECTURA') {
-            this.avisarSoloLectura(err.error?.message);
+            // Las llamadas de fondo (sin acción de la persona) marcan SIN_AVISO_NEGOCIO y no muestran el aviso.
+            if (!request.context.get(SIN_AVISO_NEGOCIO)) this.avisarSoloLectura(err.error?.message);
             return throwError(err);
           }
 
@@ -90,7 +92,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
               // salía «Suscripción» con los nombres de los roles permitidos.
               const sinPermiso = ['ROLE_NOT_ALLOWED', 'PERMISSION_DENIED', 'ROLE_NOT_FOUND', 'INSUFFICIENT_ROLE'].includes(err.error?.code);
               const mensajeBackend = err.error?.message || err.error?.error;
-              this.toastr.warning(
+              if (!request.context.get(SIN_AVISO_NEGOCIO)) this.toastr.warning(
                 sinPermiso
                   ? 'No tienes permiso para hacer esto. Pídele a un administrador de tu empresa que lo haga o que te dé el permiso.'
                   : mensajeBackend || 'Límite de suscripción alcanzado',

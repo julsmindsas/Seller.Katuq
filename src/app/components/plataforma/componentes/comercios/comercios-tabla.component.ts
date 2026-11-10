@@ -19,7 +19,7 @@ const TIPOS: Array<[string, string]> = [
 const SEGMENTOS: Array<[string, string]> = [
   ['nuevos_sin_primer_pedido', 'Nuevos sin primer pedido'], ['pagan_sin_medio_de_pago', 'Pagan sin medio de pago'],
   ['premium_ventas_en_caida', 'Premium con ventas en caída'], ['gratuitos_cerca_limite', 'Gratuitos en el límite de integraciones'],
-  ['plan_vencido_o_por_vencer', 'Plan vencido o por vencer'],
+  ['plan_vencido_o_por_vencer', 'Plan vencido o por vencer'], ['gratis_que_usan_la_app', 'Gratis que usan la app'],
 ];
 const COLUMNAS: Array<{ orden: string | null; clave: string; der?: boolean }> = [
   { orden: 'nombre', clave: 'nombre' }, { orden: null, clave: 'ciclo' }, { orden: null, clave: 'plan' }, { orden: 'alta', clave: 'alta' },

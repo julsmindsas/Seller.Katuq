@@ -3,7 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { PlataformaService } from '../../servicios/plataforma.service';
-import { EstadoCarga } from '../../plataforma.tipos';
+import { PlataformaContextoService } from '../../servicios/plataforma-contexto.service';
+import { EstadoCarga, EstadoOpttiaPlataforma } from '../../plataforma.tipos';
 import { conEstado, estadoInicial } from '../../logica/carga';
 import { TEXTOS } from '../../plataforma.textos';
 
@@ -25,10 +26,15 @@ import { TEXTOS } from '../../plataforma.textos';
     </section>
 
     <ng-container *ngIf="estado.datos as p">
-      <h2 class="pl-titulo-ficha">{{ p['nomComercial'] || p['nombre'] || docId }}</h2>
+      <div class="pl-ficha__cabeza">
+        <h2 class="pl-titulo-ficha">{{ p['nomComercial'] || p['nombre'] || docId }}</h2>
+        <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="opttia?.autorizado && opttia?.activo" [attr.aria-expanded]="preguntando" (click)="preguntando = !preguntando">{{ textos.opttia.botonComercio }}</button>
+      </div>
+      <app-opttia-plataforma-panel *ngIf="preguntando && opttia?.autorizado" [companyDocId]="docId" [cerrable]="true" (cerrado)="preguntando = false"></app-opttia-plataforma-panel>
+      <p class="cfg-aviso cfg-aviso--ok" *ngIf="mensaje" role="status">{{ mensaje }}</p>
       <div class="pl-ficha">
-        <app-ficha-identidad class="pl-ficha__ancha" [docId]="docId" [perfil]="p"></app-ficha-identidad>
-        <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId"></app-ficha-suscripcion-pagos>
+        <app-ficha-identidad class="pl-ficha__ancha" [docId]="docId" [perfil]="p" (actualizado)="alActualizar($event)"></app-ficha-identidad>
+        <app-ficha-suscripcion-pagos class="pl-ficha__ancha" [docId]="docId" [nombre]="p['nomComercial'] || p['nombre'] || docId" (actualizado)="alActualizar($event)"></app-ficha-suscripcion-pagos>
         <app-ficha-uso [docId]="docId"></app-ficha-uso>
         <app-ficha-salud [docId]="docId"></app-ficha-salud>
         <app-ficha-integraciones [docId]="docId"></app-ficha-integraciones>
@@ -43,21 +49,32 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   readonly textos = TEXTOS;
   docId = '';
   estado: EstadoCarga<Record<string, any>> = estadoInicial();
+  mensaje: string | null = null;
+  opttia: EstadoOpttiaPlataforma | null = null;
+  preguntando = false;
+  private pendiente: string | null = null;
+  private recargando = false;
   private cargar$ = new Subject<void>();
   private fin$ = new Subject<void>();
 
-  constructor(private ruta: ActivatedRoute, private servicio: PlataformaService, private cd: ChangeDetectorRef) {}
+  constructor(private ruta: ActivatedRoute, private servicio: PlataformaService, private ctx: PlataformaContextoService, private cd: ChangeDetectorRef) {}
 
   ngOnInit(): void {
+    this.ctx.opttia().pipe(takeUntil(this.fin$)).subscribe((o) => { this.opttia = o; this.cd.markForCheck(); });
     this.cargar$.pipe(
-      switchMap(() => conEstado(this.servicio.perfil(this.docId))),
+      switchMap(() => conEstado(this.servicio.perfil(this.docId, this.recargando))),
       takeUntil(this.fin$),
     ).subscribe((e) => {
       this.estado = e.datos ? { ...e, datos: ((e.datos as unknown as { datos: Record<string, any> }).datos) || {} } : e;
+      if (e.datos && this.pendiente) { this.mensaje = this.pendiente; this.pendiente = null; }
       this.cd.markForCheck();
     });
     this.ruta.paramMap.pipe(takeUntil(this.fin$)).subscribe((m) => {
       this.docId = m.get('docId') || '';
+      this.preguntando = false;
+      this.recargando = false;
+      this.mensaje = null;
+      this.pendiente = null;
       this.estado = estadoInicial();
       this.cargar$.next();
     });
@@ -69,6 +86,15 @@ export class ComercioFichaComponent implements OnInit, OnDestroy {
   }
 
   reintentar(): void {
+    this.recargando = false;
+    this.cargar$.next();
+  }
+
+  /** Cambió el tipo de cuenta o el motivo de baja: se vuelve a pedir el perfil y se avisa al terminar. */
+  alActualizar(mensaje: string): void {
+    this.mensaje = null;
+    this.pendiente = mensaje;
+    this.recargando = true;
     this.cargar$.next();
   }
 }

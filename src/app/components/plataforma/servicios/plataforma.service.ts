@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { HttpContext, HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { SKIP_LOADER } from '../../../shared/services/interceptor/loader.interceptor';
+import { SIN_AVISO_NEGOCIO } from '../../../shared/services/interceptor/sin-aviso-negocio.context';
 import { BaseService } from '../../../shared/services/base.service';
 import {
-  Calidad, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview,
-  ResumenSegmento, SobrePlataforma, Sugerencias, Tendencias,
+  AperturaSoporte, Calidad, CambioMotivoBaja, CambioTipoCuenta, CuerpoPagoManual, Definiciones, Excluidas, FiltrosTabla, FormatoExportacion, ListaSegmento, Listado, MePlataforma, NombreSeccion, Overview, ResumenMensualRespuesta,
+  ListaPagosManuales, MotivoBajaValor, PagosPorPersona, Reclasificadas, Senales, PagoManualAnulado, PagoManualRegistrado, ResumenSegmento, SoporteSubido, SobrePlataforma, Sugerencias, Tendencias, TipoCuentaValor,
 } from '../plataforma.tipos';
 import { paramsDeFiltros, paramsExportacion, queryString } from '../logica/consulta';
 
@@ -37,8 +39,9 @@ export class PlataformaService extends BaseService {
     return this.getSinLoader(`/v1/platform/companies${queryString(paramsDeFiltros(f))}`);
   }
 
-  perfil(docId: string): Observable<SobrePlataforma<Record<string, any>>> {
-    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}`);
+  /** `recarga`: el perfil se vuelve a pedir tras guardar un cambio; el servidor no repite el evento de apertura si ya hay una reciente. */
+  perfil(docId: string, recarga = false): Observable<SobrePlataforma<Record<string, any>>> {
+    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}${recarga ? '?recarga=1' : ''}`);
   }
 
   seccion(docId: string, nombre: NombreSeccion): Observable<SobrePlataforma<Record<string, any>>> {
@@ -63,6 +66,21 @@ export class PlataformaService extends BaseService {
 
   calidad(): Observable<SobrePlataforma<Calidad | null>> {
     return this.getSinLoader('/v1/platform/data-quality');
+  }
+
+  /** Señales avanzadas de la fase 2: adopción usada, módulos de los que más venden, bajas por motivo y tendencia de salud. */
+  senales(): Observable<SobrePlataforma<Senales | null>> {
+    return this.getSinLoader('/v1/platform/signals');
+  }
+
+  /** Cuentas de cortesía, demo o prueba con mora abierta (revisión del dueño). */
+  reclasificadas(): Observable<SobrePlataforma<Reclasificadas | null>> {
+    return this.getSinLoader('/v1/platform/billing/reclassified-with-debt');
+  }
+
+  /** Solo quien lee la auditoría: pagos manuales y anulaciones del mes por persona (`mes` AAAA-MM; sin él, el mes en curso). */
+  pagosPorPersona(mes?: string): Observable<SobrePlataforma<PagosPorPersona>> {
+    return this.getSinLoader(`/v1/platform/audit${queryString({ vista: 'pagos_por_persona', mes })}`);
   }
 
   sugerencias(): Observable<SobrePlataforma<Sugerencias>> {
@@ -98,5 +116,70 @@ export class PlataformaService extends BaseService {
   /** Solo el operador: relanza el cálculo de la capa viva. El servidor responde 202. */
   recalcular(): Observable<SobrePlataforma<{ estado: string }>> {
     return this.postSinLoader('/v1/platform/recalculate', {});
+  }
+
+  /** Solo el operador: confirma o corrige el tipo de cuenta. El servidor deja el evento de auditoría en la misma transacción. */
+  cambiarTipoCuenta(docId: string, tipoCuenta: TipoCuentaValor, motivo: string): Observable<SobrePlataforma<CambioTipoCuenta>> {
+    return this.http.put<SobrePlataforma<CambioTipoCuenta>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/account-type`,
+      { tipoCuenta, motivo },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** Solo el operador: pagos manuales de una empresa (vigentes y anulados). */
+  pagosManuales(docId: string): Observable<SobrePlataforma<ListaPagosManuales>> {
+    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments`);
+  }
+
+  /** Solo el operador: sube el comprobante (PDF, PNG o JPG de hasta 5 MB). El servidor decide el tipo por los bytes; el nombre del archivo no se usa. */
+  subirSoportePago(docId: string, archivo: File): Observable<SobrePlataforma<SoporteSubido>> {
+    const f = new FormData();
+    f.append('archivo', archivo);
+    return this.http.post<SobrePlataforma<SoporteSubido>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments/support`, f,
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** Solo el operador: registra el pago. Con la misma `claveIdempotencia` y el mismo contenido, un reintento devuelve el mismo registro. */
+  registrarPagoManual(docId: string, cuerpo: CuerpoPagoManual): Observable<SobrePlataforma<PagoManualRegistrado>> {
+    return this.http.post<SobrePlataforma<PagoManualRegistrado>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments`, cuerpo,
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** Solo el operador: anula un pago (motivo de 20 a 200 caracteres y la confirmación `ANULAR {id}`). */
+  anularPagoManual(pagoId: string, motivo: string, confirmacion: string): Observable<SobrePlataforma<PagoManualAnulado>> {
+    return this.http.post<SobrePlataforma<PagoManualAnulado>>(
+      `${environment.urlApi}/v1/platform/manual-payments/${encodeURIComponent(pagoId)}/void`, { motivo, confirmacion },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** Solo el operador: enlace firmado de 5 minutos al soporte; cada enlace queda en la bitácora. */
+  abrirSoportePago(docId: string, soporteId: string): Observable<SobrePlataforma<AperturaSoporte>> {
+    return this.http.get<SobrePlataforma<AperturaSoporte>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments/support/${encodeURIComponent(soporteId)}`,
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** Solo el operador: motivo de baja de una empresa pausada, bloqueada, cancelada o eliminada (el comentario es opcional). */
+  registrarMotivoBaja(docId: string, bajaMotivo: MotivoBajaValor, comentario: string): Observable<SobrePlataforma<CambioMotivoBaja>> {
+    return this.http.put<SobrePlataforma<CambioMotivoBaja>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/churn-reason`,
+      comentario ? { bajaMotivo, comentario } : { bajaMotivo },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
+  /** D-700 25.4 — Resumen del mes en curso redactado por Opttia (solo si `GET /me` dice `opttia.narrativa`). Se corta a los 60 s; sin pantalla de carga global. */
+  resumenMensual(limiteMs = 60000): Observable<ResumenMensualRespuesta> {
+    return this.http.post<ResumenMensualRespuesta>(
+      `${environment.urlApi}/v1/platform/opttia/monthly-summary`, {},
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    ).pipe(timeout(limiteMs));
   }
 }

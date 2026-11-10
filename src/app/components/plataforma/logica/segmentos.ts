@@ -1,4 +1,5 @@
-import { formatearCop, formatearRatio, SIN_VALOR } from './formato';
+import { fechaCo, formatearCop, formatearRatio, SIN_VALOR } from './formato';
+import { TEXTOS } from '../plataforma.textos';
 
 /**
  * D-700 14.6 — Lo que se dice de cada comercio dentro de un segmento. El servidor manda las cifras; aquí solo se
@@ -23,6 +24,8 @@ export function detalleSegmento(clave: string, datos: Record<string, unknown> | 
       if (datos['estado'] === 'vencido') return d === null ? 'Vencido' : `Vencido hace ${Math.abs(d)} días`;
       return d === null ? 'Por vencer' : d === 0 ? 'Vence hoy' : `Vence en ${d} días`;
     }
+    case 'gratis_que_usan_la_app':
+      return TEXTOS.segmentos.gratisDetalle(n('pedidos30d'), fechaCo(typeof datos['ultimoIngreso'] === 'string' ? (datos['ultimoIngreso'] as string) : null, false));
     default:
       return SIN_VALOR;
   }

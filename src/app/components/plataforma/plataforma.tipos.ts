@@ -26,6 +26,8 @@ export interface MetaPlataforma {
   vista?: string;
   vistaEntregaFaltantes?: number;
   cobroAutomatico?: { estado?: string; advertencia?: string | null; [k: string]: unknown } | null;
+  /** Estado del cierre diario de ayer: `ok`, `parcial`, `falta` o `sin_dato` (historia apagada o aún por correr). */
+  snapshotAyer?: { estado?: string; fecha?: string; motivo?: string | null; fallos?: number } | null;
   [k: string]: unknown;
 }
 
@@ -38,7 +40,9 @@ export interface SobrePlataforma<T> {
 export interface MePlataforma {
   esPlataforma: boolean;
   esOperador: boolean;
-  opttia?: { autorizado?: boolean; [k: string]: unknown } | null;
+  /** Quién puede ver la vista de auditoría de pagos por persona (el servidor decide; esto solo muestra u oculta). */
+  esLectorAuditoria?: boolean;
+  opttia?: { activo?: boolean; autorizado?: boolean; narrativa?: boolean; [k: string]: unknown } | null;
   banderas: Record<string, boolean>;
 }
 
@@ -81,8 +85,27 @@ export interface PuntoTendencia {
 
 export interface Tendencias {
   mesesDisponibles: number;
+  /** `false` si no se pudieron leer los cierres de mes: solo se muestran el mes en curso y el anterior. */
+  historiaLeida?: boolean;
   nota: string;
   series: Record<string, { unidad: string; puntos: PuntoTendencia[] }>;
+}
+
+/** Un mes de la serie de pedidos de una empresa (sección `uso` de la ficha). */
+export interface MesSerie {
+  mes: string;
+  /** `ok`, `parcial`, `en_curso`, `reconstruido` o `sin_dato`. */
+  estado: string;
+  pedidos: number | null;
+  gmv: number | null;
+  canales: Array<{ canal: string; pedidos: number | null; gmv: number | null }>;
+}
+
+export interface SerieMensual {
+  estado: 'ok' | 'sin_dato' | 'no_leido' | string;
+  mesRef?: string;
+  meses: MesSerie[];
+  nota?: string;
 }
 
 export interface FilaComercio {
@@ -241,3 +264,194 @@ export interface Sugerencias {
 }
 
 export type FormatoExportacion = 'csv' | 'pdf';
+
+/** D-700 17.4 — Tipo de cuenta y motivo de baja (escrituras de operador). */
+export type TipoCuentaValor = 'real' | 'demo' | 'prueba' | 'cortesia' | 'interna';
+export type MotivoBajaValor = 'precio' | 'funcionalidad' | 'soporte' | 'competencia' | 'cierre_negocio' | 'mora' | 'sin_uso' | 'otro';
+
+export interface CambioTipoCuenta {
+  docId: string;
+  cambio: boolean;
+  tipoCuenta: { tipo: string; origen: string };
+  tipoAnterior: { tipo: string | null; origen: string };
+  vivoActualizado: boolean;
+}
+
+export interface CambioMotivoBaja {
+  docId: string;
+  cambio: boolean;
+  bajaMotivo: MotivoBajaValor;
+  ciclo: string;
+}
+
+/** D-700 18.8 — Pago manual (F2-3). El servidor nunca devuelve la ruta del archivo ni ids de personas. */
+export type MedioPagoManual = 'transferencia' | 'consignacion' | 'efectivo' | 'otro';
+
+export interface PagoManual {
+  id: string;
+  periodo: { desde: string; hasta: string };
+  fechaEfectiva: string;
+  montoCOP: number;
+  medio: MedioPagoManual;
+  referencia: string | null;
+  registradoEn: string;
+  tieneSoporte: boolean;
+  soporteId: string | null;
+  atipico: boolean;
+  duplicadoConfirmado: boolean;
+  estado: 'vigente' | 'anulado';
+  anuladoEn: string | null;
+  origen: 'manual';
+}
+
+export interface ListaPagosManuales { items: PagoManual[]; truncado: boolean; }
+export interface SoporteSubido { soporteId: string; contentType: string; bytes: number; }
+export interface PagoManualRegistrado { repetido: boolean; pago: PagoManual; vivoActualizado: boolean; }
+export interface PagoManualAnulado { cambio: boolean; yaAnulado: boolean; pagoId: string; anulacionId: string; companyDocId: string; vivoActualizado: boolean; }
+export interface AperturaSoporte { url: string; expiraEnSegundos: number; contentType: string; }
+
+/** Cuerpo de `POST /companies/:docId/manual-payments` (cerrado: el servidor rechaza cualquier otro campo). */
+export interface CuerpoPagoManual {
+  claveIdempotencia: string;
+  periodo: { desde: string; hasta: string };
+  fechaEfectiva: string;
+  montoCOP: number;
+  medio: MedioPagoManual;
+  referencia?: string;
+  soporteId: string;
+  confirmarAtipico?: boolean;
+  confirmarDuplicado?: boolean;
+  motivoConfirmacion?: string;
+}
+
+/** D-700 26.4 (F2-11) — Señales avanzadas (`GET /v1/platform/signals`). El front solo pinta lo que calcula el servidor. */
+export interface UsoModulo { clave: string; empresas: number; porcentaje: number | null }
+
+export interface AdopcionUsada {
+  estado: EstadoMetrica | string;
+  motivo?: string | null;
+  rotulo: string;
+  ventanaDias: number;
+  activasReales: number;
+  medidas: number;
+  modulos: UsoModulo[];
+}
+
+export interface ModulosTopVentas {
+  estado: EstadoMetrica | string;
+  motivo?: string | null;
+  rotulo: string;
+  criterio: string;
+  grupo: number;
+  medidos: number;
+  modulos: UsoModulo[];
+}
+
+export interface BajasGrupo {
+  total: number;
+  conMotivo: number;
+  sinMotivo: number;
+  porMotivo: Array<{ motivo: string; cantidad: number; porcentaje: number | null }>;
+}
+
+export interface BajasPorMotivo { estado: EstadoMetrica | string; vigentes: BajasGrupo; mes: BajasGrupo }
+
+export interface ResumenTendenciaSalud {
+  estado: EstadoMetrica | string;
+  leido: boolean;
+  fecha: string | null;
+  dias: number;
+  evaluadas: number;
+  comparadas: number;
+  empeoran: number;
+  mejoran: number;
+  estables: number;
+  sinDato: number;
+  parcial: boolean;
+}
+
+/** D-700 28: comercios de pago activos sin ningún pedido en 30 días (el servidor decide y limita la lista). */
+export interface PagoSinPedidos {
+  estado: 'ok' | 'parcial' | 'sin_dato' | string;
+  ventanaDias: number;
+  criterio: string;
+  activasDePago: number;
+  cantidad: number | null;
+  sinDato: number;
+  filas: Array<{ docId: string; nomComercial: string | null; ultimoPedido: string | null; ultimoIngreso: string | null }>;
+  truncado: boolean;
+}
+
+export interface Senales {
+  pagoSinPedidos?: PagoSinPedidos;
+  adopcionUsada: AdopcionUsada;
+  modulosDeLosQueMasVenden: ModulosTopVentas;
+  bajas: BajasPorMotivo;
+  saludTendencia: ResumenTendenciaSalud;
+  integracionesSinUso: { disponible: boolean; motivo: string };
+}
+
+/** Tendencia del puntaje de una empresa (sección `salud` de la ficha). */
+export interface TendenciaSalud {
+  estado: 'ok' | 'sin_dato' | string;
+  motivo?: string;
+  fecha?: string | null;
+  delta?: number | null;
+  direccion?: 'empeora' | 'mejora' | 'estable' | null;
+  anterior?: { puntaje: number; nivel: string | null; parcial: boolean } | null;
+  parcial?: boolean;
+}
+
+export interface CuentaReclasificada {
+  docId: string;
+  nomComercial: string | null;
+  tipo: string;
+  origen: string | null;
+  cambioEn: string | null;
+  ciclo: string | null;
+  monto: number;
+  facturas: number;
+  diasAtrasoMax: number;
+  detalle: Array<{ factura: string; saldo: number; vence: string | null; diasAtraso: number }>;
+}
+
+export interface Reclasificadas {
+  cuentas: CuentaReclasificada[];
+  total: { cuentas: number; monto: number; facturas: number };
+  estado: string;
+  criterio: string;
+}
+
+export interface PagosPorPersona {
+  mes: string;
+  desde: string;
+  hasta: string;
+  estado: string;
+  motivo?: string;
+  rotulo: string;
+  personas: Array<{
+    porId: string;
+    pagos: { cantidad: number; montoCOP: number; atipicos: number; duplicadosConfirmados: number };
+    anulaciones: { cantidad: number; montoCOP: number; propias: number };
+  }>;
+  total: { pagos: number; montoCOP: number; atipicos: number; anulaciones: number; montoAnuladoCOP: number; anulacionesPropias: number };
+}
+
+/** D-700 25.4 — Respuesta de `POST /v1/platform/opttia/monthly-summary`. Todo es texto para mostrar tal cual, sin formato. */
+export interface ResumenMensualRespuesta {
+  ok: boolean;
+  resumen: string;
+  puntos?: Array<{ tema: string; frase: string }>;
+  fuente: 'ia' | 'ia_parcial' | 'determinista';
+  proveedor?: string | null;
+  meta: { mes?: string; corte?: string; universo?: string; reglaVersion?: string; desactualizado?: boolean; parcial?: boolean };
+  saneado?: boolean;
+  restantesDia?: number | null;
+}
+
+/** D-700 23.5 — Lo que el panel sabe de Opttia de plataforma según `GET /me`. Sin respuesta, nada (falla cerrado). */
+export interface EstadoOpttiaPlataforma {
+  autorizado: boolean;
+  activo: boolean;
+  narrativa: boolean;
+}

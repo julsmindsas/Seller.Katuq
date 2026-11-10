@@ -18,12 +18,12 @@ import { textoONulo } from '../../logica/formato';
           <div><dt>Sugerencias enviadas</dt><dd class="pl-num">{{ nulo(d.sugerencias?.enviadas) }}</dd></div>
           <div><dt>Último ticket</dt><dd>{{ d.ultimo | fechaCo:false }}</dd></div>
         </dl>
-        <div class="pl-tabla-caja pl-tabla-siempre" *ngIf="d.tickets?.length; else sinTickets">
+        <div class="pl-tabla-caja pl-tabla-caja--alta pl-tabla-siempre" *ngIf="d.tickets?.length; else sinTickets">
           <table class="pl-tabla">
             <thead><tr><th scope="col">Ticket</th><th scope="col">Tipo</th><th scope="col">Estado</th><th scope="col">Prioridad</th><th scope="col">Categoría</th><th scope="col">Fecha</th></tr></thead>
             <tbody>
               <tr *ngFor="let t of d.tickets">
-                <td>{{ nulo(t.nroTicket) }}</td><td>{{ nulo(t.tipo) }}</td><td>{{ nulo(t.estado) }}</td><td>{{ nulo(t.prioridad) }}</td><td>{{ nulo(t.categoria) }}</td><td>{{ t.fecha | fechaCo:false }}</td>
+                <td>{{ nulo(t.nroTicket) }}</td><td>{{ nulo(t.tipo) }}</td><td><span class="pl-estado">{{ nulo(t.estado) }}</span></td><td>{{ nulo(t.prioridad) }}</td><td>{{ nulo(t.categoria) }}</td><td>{{ t.fecha | fechaCo:false }}</td>
               </tr>
             </tbody>
           </table>

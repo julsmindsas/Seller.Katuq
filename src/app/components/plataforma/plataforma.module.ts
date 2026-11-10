@@ -8,6 +8,8 @@ import { PlataformaShellComponent } from './componentes/shell/plataforma-shell.c
 import { AvisoDefinicionComponent } from './componentes/aviso-definicion/aviso-definicion.component';
 import { ResumenComponent } from './componentes/resumen/resumen.component';
 import { KpiSeccionComponent } from './componentes/resumen/kpi-seccion.component';
+import { SenalesComponent } from './componentes/senales/senales.component';
+import { PagosPersonaComponent } from './componentes/cobros/pagos-persona.component';
 import { TendenciasComponent } from './componentes/tendencias/tendencias.component';
 import { GraficoTendenciaComponent } from './componentes/tendencias/grafico-tendencia.component';
 import { ComerciosTablaComponent } from './componentes/comercios/comercios-tabla.component';
@@ -28,6 +30,11 @@ import { AdopcionComponent } from './componentes/adopcion/adopcion.component';
 import { ExportarComerciosComponent } from './componentes/exportar/exportar-comercios.component';
 import { FichaIntegracionesComponent } from './componentes/ficha/ficha-integraciones.component';
 import { FichaInformeComponent } from './componentes/ficha/ficha-informe.component';
+import { TipoCuentaDialogComponent } from './componentes/dialogos/tipo-cuenta-dialog.component';
+import { MotivoBajaDialogComponent } from './componentes/dialogos/motivo-baja-dialog.component';
+import { PagoManualDialogComponent } from './componentes/dialogos/pago-manual-dialog.component';
+import { OpttiaPlataformaPanelComponent } from './componentes/opttia/opttia-plataforma-panel.component';
+import { ResumenMensualComponent } from './componentes/opttia/resumen-mensual.component';
 
 /**
  * D-700 13.3 — Rutas internas del módulo (la ruta `plataforma` la registra `routes.ts` con `AuthGuard` y
@@ -48,6 +55,7 @@ const rutas: Routes = [
       { path: 'adopcion', component: AdopcionComponent },
       { path: 'calidad', component: CalidadDatosComponent },
       { path: 'sugerencias', component: SugerenciasComponent },
+      { path: 'senales', component: SenalesComponent },
       { path: 'excluidas', component: CuentasExcluidasComponent },
       { path: '**', redirectTo: 'resumen' },
     ],
@@ -63,7 +71,8 @@ const rutas: Routes = [
     ComercioFichaComponent, FichaSeccionComponent, FichaIdentidadComponent, FichaSuscripcionPagosComponent,
     FichaUsoComponent, FichaSaludComponent, FichaSoporteComponent, FichaHistorialComponent, CuentasExcluidasComponent,
     SegmentosComponent, CalidadDatosComponent, SugerenciasComponent, CobrosComponent, AdopcionComponent, ExportarComerciosComponent,
-    FichaIntegracionesComponent, FichaInformeComponent,
+    FichaIntegracionesComponent, FichaInformeComponent, TipoCuentaDialogComponent, MotivoBajaDialogComponent, PagoManualDialogComponent,
+    SenalesComponent, PagosPersonaComponent, OpttiaPlataformaPanelComponent, ResumenMensualComponent,
   ],
   providers: [PlataformaContextoService],
 })

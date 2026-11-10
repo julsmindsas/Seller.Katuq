@@ -288,6 +288,7 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
   { id: "sora", nombre: "Sora", pista: "Técnica y clara", familia: '"Sora", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "inter", nombre: "Inter", pista: "La más legible en pantalla", familia: '"Inter", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "archivo", nombre: "Archivo", pista: "Firme, de tecnología", familia: '"Archivo", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "montserrat", nombre: "Montserrat", pista: "Geométrica y moderna", familia: '"Montserrat", Arial, sans-serif', grupo: "cuerpo" },
   // Las de siempre, sin descarga.
   { id: "sistema", nombre: "Del sistema", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif", grupo: "cuerpo" },
   { id: "serif", nombre: "Serif clásica", pista: "Georgia, sin descargar nada", familia: 'Georgia, "Times New Roman", serif', grupo: "titulo" },
@@ -2373,7 +2374,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     { texto: "Encabezado", donde: "Estilo", panel: "diseno", grupo: "encabezado", claves: "logo centro tamaño menu mayusculas" },
     { texto: "Medidas", donde: "Estilo", panel: "diseno", grupo: "medidas", claves: "ancho espacio espaciado tamaño letra titulos" },
     { texto: "Letra", donde: "Estilo", panel: "diseno", grupo: "letra", claves: "fuente tipografia" },
-    { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "kai propuesta diseño" },
+    { texto: "Diseñar con IA", donde: "Estilo", panel: "diseno", grupo: "ia", claves: "opttia kai propuesta diseño ia" },
     { texto: "Diseño nuevo", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "sistema visual estructura linea premium nuevo" },
     // Cierre de N1: el control «Títulos de sección» (tema.titulosSeccion) también se encuentra al buscar.
     { texto: "Títulos de sección", donde: "Estilo", panel: "diseno", grupo: "disenoNuevo", claves: "titulos grandes tamaño seccion premium" },
@@ -2461,7 +2462,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
-  /** Ticket 1242: autonomía de KAI, pausa y reporte semanal (sitios viejos llegan sin esto). */
+  /** Ticket 1242: autonomía de Opttia, pausa y reporte semanal (sitios viejos llegan sin esto). */
   get kaiTienda(): { autonomia: string; pausado: boolean; reporteSemanal: boolean } | null {
     const t: any = this.contenido && this.contenido.tienda;
     if (!t) return null;
@@ -2715,7 +2716,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.panel = panel as any;
     if (panel === "tienda") this.cargarBodegas();
     // Ticket 1247: la pestaña Tienda va en acordeón; se abre el grupo del campo.
-    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "KAI administra tu web", "campo-opttia": "Opttia en tu sitio", "campo-cotizables": "Cómo te pagan" };
+    const grupoDeCampo: { [id: string]: string } = { "campo-envio": "Envío", "campo-pagos": "Cómo te pagan", "campo-entregas": "Entregas", "campo-kai": "Opttia administra tu web", "campo-opttia": "Opttia en tu sitio", "campo-cotizables": "Cómo te pagan" };
     if (panel === "tienda" && grupoDeCampo[campoId]) this.tiendaAbierto = grupoDeCampo[campoId];
     // Espera a que la pestaña se pinte para ubicar el campo.
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -3415,6 +3416,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * campo visual.
    */
   seleccionarDesdePrevia(bloqueId: string): void {
+    // Con el chat de Opttia abierto, tocar una sección la vuelve el lugar del pedido y el chat sigue abierto.
+    if (this.panel === "ia") {
+      if (!this.editandoIA) this.elegirLugarIA(bloqueId, false);
+      return;
+    }
     this.panel = "bloques";
     this.seleccionarPorId(bloqueId);
     this.subirPanel();
@@ -3717,8 +3723,23 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   get destinosDelInicio(): DestinoDeInicio[] {
     const bloques: any[] = (this.contenido && this.contenido.bloques) || [];
     const firma = `${this.disenoNuevo ? 2 : 1}|` + bloques.map((b) => (b && b.visible !== false ? `${b.tipo}:${(b.estilo && b.estilo.ancla) || ""}:${(b.datos && (b.datos.titulo || b.datos.etiqueta)) || ""}` : "")).join("|");
-    if (!this.destinosCache || this.destinosCache.firma !== firma) {
-      this.destinosCache = { firma, lista: destinosDelInicio(bloques, { disenoNuevo: this.disenoNuevo, nombreDe: (b: any) => this.nombreDeTipo(b.tipo) }) };
+    // Además de las secciones del inicio, las páginas del sitio (`/ruta`) y la tienda completa: así el destino se elige
+    // de la lista en vez de escribirse de memoria. Escribir a mano sigue valiendo (enlaces externos, `/p/…`).
+    const paginas = ((this.contenido && (this.contenido as any).paginas) || []).filter((p: any) => p && p.ruta);
+    const conTienda = bloques.some((b) => b && b.tipo === "catalogo" && b.visible !== false);
+    const firmaCompleta = `${firma}||${conTienda ? 1 : 0}|` + paginas.map((p: any) => `${p.ruta}:${p.titulo || ""}`).join("|");
+    if (!this.destinosCache || this.destinosCache.firma !== firmaCompleta) {
+      const lista = destinosDelInicio(bloques, { disenoNuevo: this.disenoNuevo, nombreDe: (b: any) => this.nombreDeTipo(b.tipo) });
+      const vistos = new Set(lista.map((d) => d.valor));
+      const poner = (valor: string, texto: string) => {
+        if (vistos.has(valor)) return;
+        vistos.add(valor);
+        lista.push({ valor, texto });
+      };
+      poner("/", "Inicio del sitio");
+      if (conTienda) poner("/?catalogo=1", "Toda la tienda");
+      for (const p of paginas) poner(`/${p.ruta}`, `Página · ${String(p.titulo || p.ruta).slice(0, 40)}`);
+      this.destinosCache = { firma: firmaCompleta, lista };
     }
     return this.destinosCache.lista;
   }
@@ -4288,8 +4309,44 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Se llama al abrir la pestaña: trae lo que se habló antes sobre esta página. */
+  /** «¿Dónde?» del chat: el id de la sección señalada; vacío es toda la página. */
+  lugarIA = "";
+
+  /** Las secciones de la página abierta, para elegir dónde va el pedido. */
+  get lugaresIA(): { id: string; texto: string }[] {
+    return this.bloques
+      .map((b: any, i: number) => {
+        const titulo = String((b.datos && (b.datos.titulo || b.datos.nombre)) || "").replace(/\s+/g, " ").trim();
+        const corto = titulo.length > 34 ? titulo.slice(0, 33) + "…" : titulo;
+        return { id: String(b.id || ""), texto: `${i + 1}. ${this.nombreDeTipo(b.tipo)}${corto ? " · " + corto : ""}${b.visible === false ? " (oculta)" : ""}` };
+      })
+      .filter((l) => l.id);
+  }
+
+  /** Las opciones de «¿Dónde?» se rearman en cada repintado: sin esto el selector pierde la opción marcada. */
+  porIdLugar(_: number, l: { id: string }): string {
+    return l.id;
+  }
+
+  /** Elige la sección del pedido («¿Dónde?») y la marca en la vista previa; vacío es toda la página. */
+  elegirLugarIA(id: string, desplazar = true): void {
+    const i = id ? this.bloques.findIndex((b) => b.id === id) : -1;
+    this.lugarIA = i >= 0 ? id : "";
+    this.seleccionado = i;
+    this.marcarEnFiel(i >= 0 ? id : null, desplazar);
+  }
+
+  /** Ideas para la sección señalada (o las de toda la página). */
+  get sugerenciasLugarIA(): ReadonlyArray<string> {
+    if (!this.lugarIA) return this.sugerenciasIA;
+    return ["Hazla más profesional", "Ponle fondo oscuro y letra clara", "Haz el título más corto y directo", "Súbela un puesto"];
+  }
+
   abrirChatIA(): void {
     this.panel = "ia";
+    // Si venía trabajando en una sección, el chat arranca apuntando a ella.
+    const marcada = this.seleccionado >= 0 ? (this.bloques[this.seleccionado] as any) : null;
+    this.lugarIA = marcada && marcada.id ? String(marcada.id) : "";
     if (!this.id || this.conversacionCargada === this.id) return;
     this.conversacionCargada = this.id;
     try {
@@ -4458,7 +4515,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
     const historial = historialParaServidor(this.mensajesIA);
-    this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined });
+    // «¿Dónde?»: si la sección ya no está en esta página, el pedido vuelve a ser de toda la página.
+    const lugar = this.lugaresIA.find((l) => l.id === this.lugarIA) || null;
+    if (!lugar) this.lugarIA = "";
+    this.decirIA({ rol: "comercio", texto: v.instruccion, adjuntos: referencias.length || undefined, lugar: lugar ? lugar.texto : undefined });
     this.mensajeIA = "";
     // Ticket 1248: la pregunta por publicar se contesta con el checklist real, sin gastar IA.
     if (!referencias.length && preguntaPorPublicar(v.instruccion)) {
@@ -4502,6 +4562,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         historial,
         contenido: { bloques: this.bloques, tema: (this.contenido as any).tema, ...(tiendaIA ? { tienda: tiendaIA } : {}) },
         ...(referencias.length ? { referencias } : {}),
+        ...(lugar ? { lugar: lugar.id } : {}),
       })
       .subscribe({
         next: (res) => {
@@ -4610,7 +4671,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private fotoAntesDeIA = "";
 
   /**
-   * Pide a KAI un diseño con los parámetros actuales (marca, sector, objetivo,
+   * Pide a Opttia un diseño con los parámetros actuales (marca, sector, objetivo,
    * secciones, categorías) y lo aplica sobre el contenido. Todo queda en el
    * historial: Ctrl+Z o "Volver a como estaba" lo deshacen.
    */
@@ -4639,7 +4700,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       next: (res) => {
         this.disenandoIA = false;
         if (!res || !res.success || !res.data) {
-          this.toastr.warning((res && (res as any).message) || "KAI no devolvió una propuesta.");
+          this.toastr.warning((res && (res as any).message) || "Opttia no devolvió una propuesta.");
           soltarSiEraLaPrimera();
           return;
         }
@@ -4656,13 +4717,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private aplicarPropuestaIA(p: PropuestaDiseno): void {
     if (!this.contenido) return;
     const c: any = this.contenido;
-    // Revisión 2026-10-18: se anota qué tocó KAI para que «Antes» y «Descartar»
+    // Revisión 2026-10-18: se anota qué tocó Opttia para que «Antes» y «Descartar»
     // reviertan solo eso (y no Tienda, cupones ni otros textos editados después).
     const tocado = this.tocadoPorIA;
     if (p.tema && Object.keys(p.tema).length) {
       c.tema = { ...c.tema, ...p.tema };
       Object.keys(p.tema).forEach((k) => tocado.tema.add(k));
-      // Si KAI prende o apaga «Las secciones aparecen al bajar» y la página ya tiene un nivel de efectos elegido, el
+      // Si Opttia prende o apaga «Las secciones aparecen al bajar» y la página ya tiene un nivel de efectos elegido, el
       // nivel lo sigue (apagar = «Ninguno», prender desde «Ninguno» = «Sutil»), igual que con el interruptor. Queda
       // anotado para que «Volver a como estaba» también lo devuelva.
       const anim = (p.tema as any).animaciones;
@@ -4699,12 +4760,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.seleccionado = -1;
     this.razonesIA = p.razones || [];
     this.marcarSucio();
-    this.toastr.success("KAI propone un diseño: compáralo con el de antes y decide si lo dejas.");
+    this.toastr.success("Opttia propone un diseño: compáralo con el de antes y decide si lo dejas.");
   }
 
   /**
    * «Descartar» (y «Quedarme con como estaba» mirando el antes). Revisión
-   * 2026-10-18: revierte solo lo que tocó KAI; lo editado después en Tienda,
+   * 2026-10-18: revierte solo lo que tocó Opttia; lo editado después en Tienda,
    * cupones u otros bloques se queda.
    */
   volverAntesDeIA(): void {
@@ -4716,11 +4777,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
-  // Ticket 1227: la propuesta de KAI como antes y después.
+  // Ticket 1227: la propuesta de Opttia como antes y después.
   viendoAntesIA = false;
   private fotoPropuestaIA = "";
 
-  // Revisión 2026-10-18: lo que KAI cambió desde la foto del antes (se acumula con «Proponer otro»).
+  // Revisión 2026-10-18: lo que Opttia cambió desde la foto del antes (se acumula con «Proponer otro»).
   private tocadoPorIA = this.nadaTocadoPorIA();
 
   private nadaTocadoPorIA() {
@@ -4737,7 +4798,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /**
-   * Copia de `base` con lo que tocó KAI devuelto a como estaba en la foto del
+   * Copia de `base` con lo que tocó Opttia devuelto a como estaba en la foto del
    * antes: tema, orden y visibilidad de bloques, portada y anuncio.
    */
   private conAntesDeIA(base: any): any {
@@ -4789,13 +4850,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.recalcularPrevia();
   }
 
-  /** Deja el diseño de KAI: desde aquí se guarda como cualquier cambio (y queda en el historial). */
+  /** Deja el diseño de Opttia: desde aquí se guarda como cualquier cambio (y queda en el historial). */
   aceptarPropuestaIA(): void {
     if (!this.fotoAntesDeIA) return;
     if (this.viendoAntesIA) this.alternarAntesIA();
     this.cerrarPropuestaIA();
     this.marcarSucio();
-    this.toastr.success("Listo, quedó el diseño de KAI.");
+    this.toastr.success("Listo, quedó el diseño de Opttia.");
   }
 
   get hayPropuestaIA(): boolean {
@@ -5950,7 +6011,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   marcarSucio(): void {
     // Ticket 1227: editar mientras se mira el «antes» es quedarse con el antes
-    // (y su cambio): la propuesta de KAI se descarta en vez de pisar lo editado.
+    // (y su cambio): la propuesta de Opttia se descarta en vez de pisar lo editado.
     if (this.viendoAntesIA) this.cerrarPropuestaIA();
     this.recalcularSucio();
     this.recalcularPrevia();
