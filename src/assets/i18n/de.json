@@ -10765,7 +10765,7 @@
     "consolaWhatsapp.envios.sinAprobadasTexto": "Erstellen Sie eine Vorlage und warten Sie auf die Genehmigung durch Meta, um sie zu versenden.",
     "consolaWhatsapp.envios.sinAprobadasRevision": "{{cantidad}} befinden sich in der Meta-Prüfung. Nach der Genehmigung können Sie sie versenden.",
     "consolaWhatsapp.envios.irAPlantillas": "Zu den Vorlagen",
-    "consolaWhatsapp.envios.variablesNoSoportadas": "Diese Vorlage enthält mehr Angaben als den Kundennamen und kann derzeit nicht von hier versendet werden.",
+    "consolaWhatsapp.envios.variablesNoSoportadas": "Diese Vorlage hat mehr als eine Variable",
     "consolaWhatsapp.envios.verResumen": "Zusammenfassung ansehen",
     "consolaWhatsapp.envios.errorResumen": "Die Zusammenfassung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "consolaWhatsapp.envios.errorEnvio": "Der Versand konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
@@ -10885,5 +10885,6 @@
     "integrations.whatsappConsola.avanzadoTitulo": "Erweitert: Verbindung über Kapso",
     "integrations.whatsappConsola.avanzadoSub": "Schlüssel, Kennung und Dienstadresse von Kapso sowie die automatischen Bestellhinweise.",
     "notificaciones.whatsapp.shell.tabConsole": "Konsole",
-    "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp-Nummern, Vorlagen, Versände und Protokoll"
+    "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp-Nummern, Vorlagen, Versände und Protokoll",
+    "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "Der Link der Schaltfläche ist fest: Er darf keine Variablen enthalten."
 }

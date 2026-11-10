@@ -10933,7 +10933,7 @@
   "consolaWhatsapp.envios.sinAprobadasTexto": "Crie um modelo e espere a Meta aprová-lo para poder enviá-lo.",
   "consolaWhatsapp.envios.sinAprobadasRevision": "Você tem {{cantidad}} em análise da Meta. Quando forem aprovados, você poderá enviá-los.",
   "consolaWhatsapp.envios.irAPlantillas": "Ir para Modelos",
-  "consolaWhatsapp.envios.variablesNoSoportadas": "Este modelo tem mais campos do que o nome do cliente e por enquanto não pode ser enviado daqui.",
+  "consolaWhatsapp.envios.variablesNoSoportadas": "Este modelo tem mais de uma variável",
   "consolaWhatsapp.envios.verResumen": "Ver resumo",
   "consolaWhatsapp.envios.errorResumen": "Não conseguimos preparar o resumo. Tente de novo.",
   "consolaWhatsapp.envios.errorEnvio": "Não conseguimos criar o envio. Tente de novo.",
@@ -11053,5 +11053,6 @@
   "integrations.whatsappConsola.avanzadoTitulo": "Avançado: conexão pela Kapso",
   "integrations.whatsappConsola.avanzadoSub": "A chave, o identificador e o endereço do serviço da Kapso, e os avisos automáticos de pedidos.",
   "notificaciones.whatsapp.shell.tabConsole": "Console",
-  "notificaciones.whatsapp.shell.consolaTitle": "Números, modelos, envios e registro do WhatsApp"
+  "notificaciones.whatsapp.shell.consolaTitle": "Números, modelos, envios e registro do WhatsApp",
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "O link do botão é fixo: não pode ter variáveis."
 }

@@ -81,6 +81,8 @@ export function problemasFormulario(f: PlantillaFormulario): string[] {
     if (!texto) p.push('consolaWhatsapp.plantillas.errores.botonSinTexto');
     else if (texto.length > LIMITES_PLANTILLA.textoBoton) p.push('consolaWhatsapp.plantillas.errores.botonTextoLargo');
     if (b.tipo === 'URL' && !/^https?:\/\/\S+\.\S+/i.test((b.url || '').trim())) p.push('consolaWhatsapp.plantillas.errores.botonEnlace');
+    // El enlace del botón es fijo: Meta lo acepta con variable, pero la consola no la ofrece.
+    if (b.tipo === 'URL' && /\{/.test(b.url || '')) p.push('consolaWhatsapp.plantillas.errores.botonEnlaceVariable');
     if (b.tipo === 'PHONE_NUMBER' && (b.telefono || '').replace(/\D/g, '').length < 7) p.push('consolaWhatsapp.plantillas.errores.botonTelefono');
   });
   return Array.from(new Set(p));

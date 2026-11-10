@@ -10945,7 +10945,7 @@
   "consolaWhatsapp.envios.sinAprobadasTexto": "Create a template and wait for Meta to approve it so you can send it.",
   "consolaWhatsapp.envios.sinAprobadasRevision": "You have {{cantidad}} under Meta review. Once approved you can send them.",
   "consolaWhatsapp.envios.irAPlantillas": "Go to Templates",
-  "consolaWhatsapp.envios.variablesNoSoportadas": "This template has more fields than the customer’s name and can’t be sent from here yet.",
+  "consolaWhatsapp.envios.variablesNoSoportadas": "This template has more than one variable",
   "consolaWhatsapp.envios.verResumen": "View summary",
   "consolaWhatsapp.envios.errorResumen": "We couldn’t prepare the summary. Please try again.",
   "consolaWhatsapp.envios.errorEnvio": "We couldn’t create the broadcast. Please try again.",
@@ -11065,5 +11065,6 @@
   "integrations.whatsappConsola.avanzadoTitulo": "Advanced: Kapso connection",
   "integrations.whatsappConsola.avanzadoSub": "The Kapso key, identifier and service address, and the automatic order notices.",
   "notificaciones.whatsapp.shell.tabConsole": "Console",
-  "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp numbers, templates, broadcasts and log"
+  "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp numbers, templates, broadcasts and log",
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "The button link is fixed: it can’t contain variables."
 }

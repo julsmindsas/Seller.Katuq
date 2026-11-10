@@ -78,7 +78,7 @@ export interface PlantillaConsola {
 
 // ─── Envíos masivos ─────────────────────────────────────────────────────
 
-/** Persona de la lista de clientes a la que se le escribe (mismo formato del asistente de campañas de Marketing). */
+/** Persona de la lista de clientes que se muestra en pantalla (mismos datos del asistente de campañas de Marketing). */
 export interface DestinatarioSegmento {
   leadId: string;
   nombre: string;
@@ -86,11 +86,24 @@ export interface DestinatarioSegmento {
   phone: string;
 }
 
+/** Lo que recibe el servidor de cada persona marcada: igual que `recipients` de campaigns/broadcast. */
+export interface DestinatarioEnvio {
+  phone: string;
+  nombre?: string;
+}
+
+/**
+ * A quién se le envía. `destinatarios` (la selección ya marcada en pantalla) manda sobre `fuente`;
+ * sin ellos, el servidor arma la lista con los clientes del comercio o los leads CRM de esa etapa.
+ */
 export interface Segmento {
   fuente: 'clientes' | 'crm';
   etapa?: string;
-  destinatarios: DestinatarioSegmento[];
+  destinatarios?: DestinatarioEnvio[];
 }
+
+/** El servidor responde 400 con este código cuando la plantilla tiene más de una variable. */
+export const CODIGO_PLANTILLA_NO_SOPORTADA = 'TEMPLATE_NOT_SUPPORTED';
 
 export interface ResumenEnvio {
   total: number;

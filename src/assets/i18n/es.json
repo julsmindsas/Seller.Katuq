@@ -10765,7 +10765,7 @@
   "consolaWhatsapp.envios.sinAprobadasTexto": "Crea una plantilla y espera a que Meta la apruebe para poder enviarla.",
   "consolaWhatsapp.envios.sinAprobadasRevision": "Tienes {{cantidad}} en revisión de Meta. Cuando las aprueben podrás enviarlas.",
   "consolaWhatsapp.envios.irAPlantillas": "Ir a Plantillas",
-  "consolaWhatsapp.envios.variablesNoSoportadas": "Esta plantilla lleva más datos que el nombre del cliente y por ahora no se puede enviar desde aquí.",
+  "consolaWhatsapp.envios.variablesNoSoportadas": "Esta plantilla tiene más de una variable",
   "consolaWhatsapp.envios.verResumen": "Ver resumen",
   "consolaWhatsapp.envios.errorResumen": "No pudimos preparar el resumen. Intenta de nuevo.",
   "consolaWhatsapp.envios.errorEnvio": "No pudimos crear el envío. Intenta de nuevo.",
@@ -10885,5 +10885,6 @@
   "integrations.whatsappConsola.avanzadoTitulo": "Avanzado: conexión por Kapso",
   "integrations.whatsappConsola.avanzadoSub": "La clave, el identificador y la dirección del servicio de Kapso, y los avisos automáticos de pedidos.",
   "notificaciones.whatsapp.shell.tabConsole": "Consola",
-  "notificaciones.whatsapp.shell.consolaTitle": "Números, plantillas, envíos y registro de WhatsApp"
+  "notificaciones.whatsapp.shell.consolaTitle": "Números, plantillas, envíos y registro de WhatsApp",
+  "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "El enlace del botón es fijo: no puede llevar variables."
 }

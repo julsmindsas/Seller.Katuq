@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 
 import { MessagingLine } from '../../../../../../shared/services/messaging/messaging.models';
 import {
+  CODIGO_PLANTILLA_NO_SOPORTADA,
   CODIGO_USAR_CAMPANAS_KAPSO,
   PlantillaConsola,
   ResumenEnvio,
@@ -276,6 +277,11 @@ export class AsistenteEnvioComponent implements OnInit, OnDestroy {
     if (err?.status === 409 && err?.error?.code === CODIGO_USAR_CAMPANAS_KAPSO) {
       this.usarCampanasKapso = true;
       this.paso = 1;
+    } else if (err?.status === 400 && err?.error?.code === CODIGO_PLANTILLA_NO_SOPORTADA) {
+      // Con más de una variable el servidor no la envía: se vuelve a escoger plantilla.
+      this.plantillaElegida = null;
+      this.paso = 2;
+      this.errorResumen = this.translate.instant('consolaWhatsapp.envios.variablesNoSoportadas');
     } else {
       this.errorResumen = this.mensajeDe(err, this.translate.instant(claveGeneral));
     }

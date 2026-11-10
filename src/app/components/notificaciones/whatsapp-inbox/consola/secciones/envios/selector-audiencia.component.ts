@@ -158,7 +158,7 @@ export class SelectorAudienciaComponent implements OnDestroy {
     this.segmentoChange.emit({
       fuente: this.grupo as 'clientes' | 'crm',
       ...(this.grupo === 'crm' && this.etapa ? { etapa: this.etapa } : {}),
-      destinatarios: elegidos,
+      destinatarios: elegidos.map((d) => ({ phone: d.phone, ...(d.nombre ? { nombre: d.nombre } : {}) })),
     });
   }
 
