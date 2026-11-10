@@ -205,8 +205,8 @@
 
           <!-- Ideas para empezar -->
           <div class="chat-ia__sugerencias" *ngIf="!mensajesIA.length && !adjuntosIA.length">
-            <span class="chat-ia__etiqueta">Ideas para empezar (toca una):</span>
-            <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
+            <span class="chat-ia__etiqueta">{{ lugarIA ? 'Ideas para esta sección (toca una):' : 'Ideas para empezar (toca una):' }}</span>
+            <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasLugarIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
           </div>
 
           <!-- Lo que adjuntó, y para qué es -->
@@ -244,10 +244,11 @@
           <!-- Escribir y enviar -->
           <div class="campo chat-ia__lugar" *ngIf="propositoAdjuntos !== 'usar' && lugaresIA.length > 1">
             <label for="chat-ia-lugar">¿Dónde?</label>
-            <select id="chat-ia-lugar" [(ngModel)]="lugarIA" [disabled]="editandoIA">
+            <select id="chat-ia-lugar" [ngModel]="lugarIA" (ngModelChange)="elegirLugarIA($event)" [disabled]="editandoIA">
               <option value="">Toda la página</option>
-              <option *ngFor="let l of lugaresIA" [value]="l.id">{{ l.texto }}</option>
+              <option *ngFor="let l of lugaresIA; trackBy: porIdLugar" [value]="l.id" [selected]="l.id === lugarIA">{{ l.texto }}</option>
             </select>
+            <small class="chat-ia__ayuda">También puedes tocar la sección en la vista previa.</small>
           </div>
           <div class="campo chat-ia__entrada" *ngIf="propositoAdjuntos !== 'usar'">
             <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"

@@ -3415,6 +3415,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * campo visual.
    */
   seleccionarDesdePrevia(bloqueId: string): void {
+    // Con el chat de Opttia abierto, tocar una sección la vuelve el lugar del pedido y el chat sigue abierto.
+    if (this.panel === "ia") {
+      if (!this.editandoIA) this.elegirLugarIA(bloqueId, false);
+      return;
+    }
     this.panel = "bloques";
     this.seleccionarPorId(bloqueId);
     this.subirPanel();
@@ -4315,6 +4320,25 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         return { id: String(b.id || ""), texto: `${i + 1}. ${this.nombreDeTipo(b.tipo)}${corto ? " · " + corto : ""}${b.visible === false ? " (oculta)" : ""}` };
       })
       .filter((l) => l.id);
+  }
+
+  /** Las opciones de «¿Dónde?» se rearman en cada repintado: sin esto el selector pierde la opción marcada. */
+  porIdLugar(_: number, l: { id: string }): string {
+    return l.id;
+  }
+
+  /** Elige la sección del pedido («¿Dónde?») y la marca en la vista previa; vacío es toda la página. */
+  elegirLugarIA(id: string, desplazar = true): void {
+    const i = id ? this.bloques.findIndex((b) => b.id === id) : -1;
+    this.lugarIA = i >= 0 ? id : "";
+    this.seleccionado = i;
+    this.marcarEnFiel(i >= 0 ? id : null, desplazar);
+  }
+
+  /** Ideas para la sección señalada (o las de toda la página). */
+  get sugerenciasLugarIA(): ReadonlyArray<string> {
+    if (!this.lugarIA) return this.sugerenciasIA;
+    return ["Hazla más profesional", "Ponle fondo oscuro y letra clara", "Haz el título más corto y directo", "Súbela un puesto"];
   }
 
   abrirChatIA(): void {

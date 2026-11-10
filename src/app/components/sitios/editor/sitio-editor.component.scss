@@ -683,6 +683,7 @@
   &__destinos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
   &__lugar { margin: 0 0 8px; select { font-size: 13.5px; } }
+  &__ayuda { display: block; margin-top: 4px; font-size: 11.5px; color: var(--kb-muted-2, #6f6a85); letter-spacing: normal; }
   &__donde { display: block; font-size: 11.5px; font-weight: 700; color: inherit; opacity: 0.8; margin-bottom: 3px; letter-spacing: normal; }
   &__entrada { margin: 0 0 10px; textarea { min-height: 76px; font-size: 13.5px; } }
   &__acciones { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
