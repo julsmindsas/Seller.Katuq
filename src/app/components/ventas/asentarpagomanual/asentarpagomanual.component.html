@@ -178,11 +178,15 @@
                        [class.is-invalid]="(transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors) || valorExcedido"
                        placeholder="0.00"
                        step="0.01"
-                       min="0">
+                       min="1">
               </div>
               <div class="invalid-feedback" 
                    *ngIf="transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors?.['required']">
                 {{ 'El valor es requerido' | translate }}
+              </div>
+              <div class="invalid-feedback"
+                   *ngIf="transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors?.['min']">
+                {{ 'El valor del pago debe ser de al menos $1' | translate }}
               </div>
               <div class="cfg-aviso cfg-aviso--warn pago-aviso mt-2" *ngIf="valorExcedido">
                 <i class="pi pi-exclamation-triangle"></i>

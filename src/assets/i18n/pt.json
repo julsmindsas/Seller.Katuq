@@ -139,6 +139,7 @@
   "La forma de pago es requerida": "A forma de pagamento é obrigatória",
   "Valor": "Valor",
   "El valor es requerido": "O valor é obrigatório",
+  "El valor del pago debe ser de al menos $1": "O valor do pagamento deve ser de pelo menos $1",
   "El valor ingresado es mayor que el valor que falta por pagar que es": "O valor inserido é maior que o valor restante a ser pago, que é",
   "Número de comprobante": "Número do comprovante",
   "El número de comprobante es requerido": "O número do comprovante é obrigatório",

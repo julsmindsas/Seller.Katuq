@@ -586,6 +586,7 @@
   "La forma de pago es requerida": "La forma de pago es requerida",
   "Valor": "Valor",
   "El valor es requerido": "El valor es requerido",
+  "El valor del pago debe ser de al menos $1": "El valor del pago debe ser de al menos $1",
   "El valor ingresado es mayor que el valor que falta por pagar que es": "El valor ingresado es mayor que el valor que falta por pagar que es",
   "Número de comprobante": "Número de comprobante",
   "El número de comprobante es requerido": "El número de comprobante es requerido",

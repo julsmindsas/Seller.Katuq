@@ -138,6 +138,7 @@
   "La forma de pago es requerida": "The payment method is required",
   "Valor": "Value",
   "El valor es requerido": "The value is required",
+  "El valor del pago debe ser de al menos $1": "The payment amount must be at least $1",
   "El valor ingresado es mayor que el valor que falta por pagar que es": "The entered value is greater than the remaining amount to be paid, which is",
   "Número de comprobante": "Receipt Number",
   "El número de comprobante es requerido": "The receipt number is required",

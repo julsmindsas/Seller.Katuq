@@ -71,7 +71,8 @@ export class AsentarpagomanualComponent implements OnInit {
     this.transaccionForm = new FormGroup({
       fecha: new FormControl("", Validators.required),
       formaPago: new FormControl("", Validators.required),
-      valor: new FormControl("", [Validators.required]),
+      // Ticket 1593: un pago por menos de $1 (p. ej. 0 o 0,01 de prueba) no se puede registrar.
+      valor: new FormControl("", [Validators.required, Validators.min(1)]),
       numeroComprobante: new FormControl("", Validators.required),
       archivo: new FormControl(""),
       notas: new FormControl(""),
