@@ -26,12 +26,20 @@ export class ConfirmComponent implements OnInit, OnChanges {
 
   /** Ticket 1590: al llegar el pedido guardado (con su número real) se vuelve a pintar. */
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['pedido'] && !changes['pedido'].firstChange) this.pintar();
+    const cambio = changes['pedido'];
+    if (!cambio || cambio.firstChange) return;
+    // Tickets 1594 y 1595: al guardar, Venta asistida vacía el carrito (clearCart) y
+    // el pedido que llega ya no trae productos; la pantalla final salía con subtotal 0.
+    // Se pinta con los productos del pedido anterior, sin tocar el pedido de la venta.
+    const previo = cambio.previousValue as Pedido | undefined;
+    const sinProductos = !this.pedido?.carrito?.length;
+    this.pintar(sinProductos && previo?.carrito?.length ? { ...this.pedido, carrito: previo.carrito } as Pedido : undefined);
   }
 
-  private pintar(): void {
-    if (!this.pedido) return;
-    this.htmlContent = this.paymentService.getHtmlContent(this.pedido);
+  private pintar(pedidoAPintar?: Pedido): void {
+    const pedido = pedidoAPintar ?? this.pedido;
+    if (!pedido) return;
+    this.htmlContent = this.paymentService.getHtmlContent(pedido);
     // htmlContent viene envuelto en SafeHtml (bypassSecurityTrustHtml). Si se pasa
     // tal cual a innerHTML, Angular lo convierte a texto y antepone
     // "SafeValue must use [property]=binding:" al contenido. sanitize() sobre un
@@ -40,7 +48,7 @@ export class ConfirmComponent implements OnInit, OnChanges {
     this.renderer.setProperty(this.contentToPrint.nativeElement, 'innerHTML', html);
     // Ticket 1053: si los maestros aún no cargaban, pintar el pedido cuando lleguen.
     if (this.paymentService.esHtmlDeEspera(this.htmlContent)) {
-      this.paymentService.getHtmlContentAsync(this.pedido).then((h) => {
+      this.paymentService.getHtmlContentAsync(pedido).then((h) => {
         if (!h) return;
         this.htmlContent = h;
         this.renderer.setProperty(this.contentToPrint.nativeElement, 'innerHTML',
