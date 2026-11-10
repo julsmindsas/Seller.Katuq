@@ -1,8 +1,25 @@
 {
-  "version": "2026.11.09.11 - 9 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-10T02:20:21.253Z",
-  "notas": [],
+  "version": "2026.11.09.12 - 9 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-10T03:10:17.677Z",
+  "notas": [
+    {
+      "fecha": "2026-11-10T02:58:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Mi marca» ahora puedes subir el ícono de tu marca para que salga en la pestaña del navegador, y en el editor de tu sitio hay una letra nueva: Montserrat.",
+      "modulos": [
+        "sitios"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-10T02:58:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Mi marca» ahora puedes subir el ícono de tu marca para que salga en la pestaña del navegador, y en el editor de tu sitio hay una letra nueva: Montserrat.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-10T00:42:00Z",
       "tipo": "MEJORA",
@@ -481,16 +498,8 @@
       "modulos": [
         "sitios"
       ]
-    },
-    {
-      "fecha": "2026-11-04T14:44:33Z",
-      "tipo": "CORRIGE",
-      "texto": "En «En vivo», los tiempos largos se leen en días («lleva 6 días sin producir») y no en horas, el mapa ya no pone en la moto pedidos de días anteriores y una transportadora deja de salir «en ruta» con envíos de hace más de 5 días: esos pedidos aparecen en el aviso para que los marques entregados.",
-      "modulos": [
-        "en-vivo"
-      ]
     }
   ],
-  "commit": "b940d9f664a57c4d3ab96c2349f7a7cf29257761",
+  "commit": "dad3162c5c8507a9f49a108bfb8ba734df0dc3e8",
   "cambiosSinCommit": 0
 }
