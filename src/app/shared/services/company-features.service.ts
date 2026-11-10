@@ -30,6 +30,11 @@ export const COMPANY_FEATURE_FLAGS = [
   // Varios números de WhatsApp por comercio, asignados a vendedores, y dueño del chat (D-437).
   // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
   'whatsappMultiNumero',
+  // Consola de WhatsApp (D-707): Números con su salud, Plantillas completas, Envíos masivos y Registro en
+  // Comunicaciones › WhatsApp, y la pantalla nueva de Integraciones › WhatsApp. Mismo nombre que el backend.
+  // Se usa junto con `whatsappMultiNumero` (las líneas). Dueño: Daniel. Se retira 30 días después de tenerla
+  // encendida para todos.
+  'whatsappConsola',
   // Agenda de servicios (D-491): citas, horario y personas que atienden. Dueño: Daniel.
   // Se retira el 2027-03-31: encendida para todos o eliminada.
   'serviceAgenda',
