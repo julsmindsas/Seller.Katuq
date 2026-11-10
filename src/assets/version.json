@@ -1,8 +1,25 @@
 {
-  "version": "2026.11.10.1 - 10 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-10T12:44:17.971Z",
-  "notas": [],
+  "version": "2026.11.10.3 - 10 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-10T16:52:38.305Z",
+  "notas": [
+    {
+      "fecha": "2026-11-10T14:33:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al terminar un pedido en Venta asistida, la pantalla final vuelve a mostrar los productos y el total correcto; antes salía con subtotal en cero aunque el pedido quedaba bien guardado.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-10T14:33:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al terminar un pedido en Venta asistida, la pantalla final vuelve a mostrar los productos y el total correcto; antes salía con subtotal en cero aunque el pedido quedaba bien guardado.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
     {
       "fecha": "2026-11-10T02:58:00Z",
       "tipo": "NUEVO",
@@ -481,16 +498,8 @@
       "modulos": [
         "sitios"
       ]
-    },
-    {
-      "fecha": "2026-11-04T20:15:38Z",
-      "tipo": "MEJORA",
-      "texto": "El editor de tu tienda te avisa cuando un enlace del menú lleva a una sección que no existe en tu inicio, y ese enlace ya no se muestra en la página.",
-      "modulos": [
-        "sitios"
-      ]
     }
   ],
-  "commit": "12d82720746b090c53d6bbce5af2d47203e38242",
+  "commit": "e3326e813e611769e46da52d0a3798d568bb0fef",
   "cambiosSinCommit": 0
 }
