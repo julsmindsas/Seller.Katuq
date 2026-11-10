@@ -10666,7 +10666,7 @@
     "consolaWhatsapp.numeros.calidadBajaTitulo": "Die Qualität dieser Nummer ist gesunken",
     "consolaWhatsapp.numeros.calidadBajaTexto": "Meta hat viele Meldungen oder Blockierungen Ihrer Kunden erhalten. Wenn das so bleibt, kann die Nummer eingeschränkt oder gesperrt werden. Bis dahin sind die Massenversände dieser Nummer pausiert.",
     "consolaWhatsapp.numeros.calidadBajaQueHacer": "Was zu tun ist: Versenden Sie vorerst keine Massennachrichten mehr, beantworten Sie offene Chats und schreiben Sie nur Kunden, die Ihnen die Erlaubnis gegeben haben. Die Qualität steigt in einigen Tagen von selbst wieder.",
-    "consolaWhatsapp.numeros.compartidoSinDatos": "Dies ist die gemeinsame Nummer: Meta meldet weder Qualität noch Tageslimit. Um diese Angaben zu sehen, verbinden Sie eine eigene Nummer.",
+    "consolaWhatsapp.numeros.compartidoSinDatos": "Gemeinsame Nummer, keine Meta-Daten: Meta meldet weder Qualität noch Tageslimit. Um diese Angaben zu sehen, verbinden Sie eine eigene Nummer.",
     "consolaWhatsapp.numeros.equipo": "Wer im Team es betreut",
     "consolaWhatsapp.numeros.sinEquipo": "Keine Personen zugewiesen",
     "consolaWhatsapp.numeros.equipoGuardado": "Team gespeichert.",

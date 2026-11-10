@@ -10666,7 +10666,7 @@
   "consolaWhatsapp.numeros.calidadBajaTitulo": "La calidad de este número bajó",
   "consolaWhatsapp.numeros.calidadBajaTexto": "Meta recibió muchos reportes o bloqueos de tus clientes. Si sigue así, puede limitar o bloquear el número. Mientras tanto, los envíos masivos de este número quedan en pausa.",
   "consolaWhatsapp.numeros.calidadBajaQueHacer": "Qué hacer: no envíes más mensajes masivos por ahora, responde los chats pendientes y escríbele solo a clientes que te dieron permiso. La calidad vuelve a subir sola en unos días.",
-  "consolaWhatsapp.numeros.compartidoSinDatos": "Es el número compartido: Meta no informa su calidad ni su límite por día. Para ver esos datos, conecta un número propio.",
+  "consolaWhatsapp.numeros.compartidoSinDatos": "Número compartido, sin datos de Meta: Meta no informa su calidad ni su límite por día. Para ver esos datos, conecta un número propio.",
   "consolaWhatsapp.numeros.equipo": "Quién del equipo lo atiende",
   "consolaWhatsapp.numeros.sinEquipo": "Sin personas asignadas",
   "consolaWhatsapp.numeros.equipoGuardado": "Equipo guardado.",

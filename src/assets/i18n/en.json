@@ -10846,7 +10846,7 @@
   "consolaWhatsapp.numeros.calidadBajaTitulo": "This number’s quality dropped",
   "consolaWhatsapp.numeros.calidadBajaTexto": "Meta received many reports or blocks from your customers. If this continues, it may limit or block the number. Meanwhile, broadcasts from this number are paused.",
   "consolaWhatsapp.numeros.calidadBajaQueHacer": "What to do: don’t send more broadcasts for now, answer pending chats and only message customers who gave you permission. Quality recovers on its own in a few days.",
-  "consolaWhatsapp.numeros.compartidoSinDatos": "This is the shared number: Meta doesn’t report its quality or daily limit. To see that data, connect your own number.",
+  "consolaWhatsapp.numeros.compartidoSinDatos": "Shared number, no Meta data: Meta doesn’t report its quality or daily limit. To see that data, connect your own number.",
   "consolaWhatsapp.numeros.equipo": "Who on the team handles it",
   "consolaWhatsapp.numeros.sinEquipo": "No people assigned",
   "consolaWhatsapp.numeros.equipoGuardado": "Team saved.",

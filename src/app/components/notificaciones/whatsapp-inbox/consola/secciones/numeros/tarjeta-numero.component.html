@@ -12,7 +12,7 @@
         {{ (linea.setup === 'por_reconectar' ? 'integrations.messagingLines.estadoPorReconectar' : 'integrations.messagingLines.estadoPorTerminar') | translate }}
       </span>
       <span class="cfg-pill cfg-pill--neutro">
-        {{ (esMeta ? 'consolaWhatsapp.numeros.directoMeta' : 'consolaWhatsapp.numeros.compartido') | translate }}
+        {{ (compartido ? 'consolaWhatsapp.numeros.compartido' : 'consolaWhatsapp.numeros.directoMeta') | translate }}
       </span>
     </div>
   </header>
@@ -39,7 +39,7 @@
   </div>
 
   <!-- Salud que reporta Meta -->
-  <section class="tarjeta__salud" *ngIf="esMeta && conectada" [attr.aria-label]="'consolaWhatsapp.numeros.saludAria' | translate">
+  <section class="tarjeta__salud" *ngIf="esMeta && conectada && !compartido" [attr.aria-label]="'consolaWhatsapp.numeros.saludAria' | translate">
     <div class="tarjeta__cargando" *ngIf="cargandoSalud && !salud" role="status">
       <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
       <span class="tarjeta__nota">{{ 'consolaWhatsapp.numeros.leyendoSalud' | translate }}</span>
@@ -90,7 +90,7 @@
   </section>
 
   <!-- Número compartido de Kapso: sin datos de calidad de Meta, sin error -->
-  <p class="cfg-aviso tarjeta__aviso" *ngIf="!esMeta && conectada">
+  <p class="cfg-aviso tarjeta__aviso" *ngIf="compartido && conectada">
     <i class="fa fa-info-circle" aria-hidden="true"></i>
     <span class="tarjeta__aviso-texto">{{ 'consolaWhatsapp.numeros.compartidoSinDatos' | translate }}</span>
   </p>

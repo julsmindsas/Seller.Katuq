@@ -247,8 +247,10 @@ export class EnviosComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     const llamada = accion === 'pausar' ? this.consola.pausarEnvio(linea.id, e.id) : this.consola.reanudarEnvio(linea.id, e.id);
     llamada.pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
+      next: (actualizado) => {
         this.ocupado = null;
+        // El servidor responde el envío ya cambiado: se ve de una, y la lista se confirma enseguida.
+        if (actualizado) this.envios = this.envios.map((x) => (x.id === actualizado.id ? actualizado : x));
         this.toastr.success(this.translate.instant(accion === 'pausar' ? 'consolaWhatsapp.envios.pausado' : 'consolaWhatsapp.envios.reanudado'));
         this.pedir$.next(false);
         this.cdr.markForCheck();

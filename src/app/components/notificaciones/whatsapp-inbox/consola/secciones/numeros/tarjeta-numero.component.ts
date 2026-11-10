@@ -54,6 +54,8 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
   @Output() abrir = new EventEmitter<SeccionDestino>();
 
   salud: SaludNumero | null = null;
+  /** Proveedor que dijo el servidor al leer la salud: un número compartido de Kapso responde `salud` con todo en null. */
+  proveedorLeido: 'meta' | 'kapso' | null = null;
   cargandoSalud = false;
   errorSalud = false;
 
@@ -100,10 +102,16 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
     return this.linea?.status === 'connected';
   }
 
+  /** Número compartido de Kapso: lo dice la línea o el propio servidor al leer la salud. Se muestra «sin datos de Meta». */
+  get compartido(): boolean {
+    return !this.esMeta || this.proveedorLeido === 'kapso';
+  }
+
   /** Solo un número directo con Meta y conectado tiene salud que leer. */
   private iniciarLectura(): void {
     this.lectura?.unsubscribe();
     this.salud = null;
+    this.proveedorLeido = null;
     this.errorSalud = false;
     if (!this.esMeta || !this.conectada) {
       this.cargandoSalud = false;
@@ -118,6 +126,7 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
       .subscribe({
         next: (res) => {
           this.salud = res.salud;
+          this.proveedorLeido = res.proveedor;
           this.errorSalud = false;
           this.cargandoSalud = false;
           this.cdr.markForCheck();

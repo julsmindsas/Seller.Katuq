@@ -117,12 +117,22 @@ export class WhatsappConsolaService extends BaseService {
     );
   }
 
-  pausarEnvio(lineId: string, envioId: string): Observable<unknown> {
-    return this.post<unknown>(`${this.linea(lineId)}/envios/${encodeURIComponent(envioId)}/pausar`, {});
+  /** Responde el envío plano ya actualizado (o `null` si el servidor no lo manda: se recarga la lista). */
+  pausarEnvio(lineId: string, envioId: string): Observable<EnvioMasivo | null> {
+    return this.post<any>(`${this.linea(lineId)}/envios/${encodeURIComponent(envioId)}/pausar`, {}).pipe(
+      map((res) => this.envioOpcional(res)),
+    );
   }
 
-  reanudarEnvio(lineId: string, envioId: string): Observable<unknown> {
-    return this.post<unknown>(`${this.linea(lineId)}/envios/${encodeURIComponent(envioId)}/reanudar`, {});
+  reanudarEnvio(lineId: string, envioId: string): Observable<EnvioMasivo | null> {
+    return this.post<any>(`${this.linea(lineId)}/envios/${encodeURIComponent(envioId)}/reanudar`, {}).pipe(
+      map((res) => this.envioOpcional(res)),
+    );
+  }
+
+  private envioOpcional(res: any): EnvioMasivo | null {
+    const base = res?.envio || res;
+    return base && base.id ? this.envio(base) : null;
   }
 
   private resumen(r: any): ResumenEnvio {
