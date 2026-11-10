@@ -123,7 +123,7 @@ export class PlataformaService extends BaseService {
     return this.http.put<SobrePlataforma<CambioTipoCuenta>>(
       `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/account-type`,
       { tipoCuenta, motivo },
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     );
   }
 
@@ -138,7 +138,7 @@ export class PlataformaService extends BaseService {
     f.append('archivo', archivo);
     return this.http.post<SobrePlataforma<SoporteSubido>>(
       `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments/support`, f,
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     );
   }
 
@@ -146,7 +146,7 @@ export class PlataformaService extends BaseService {
   registrarPagoManual(docId: string, cuerpo: CuerpoPagoManual): Observable<SobrePlataforma<PagoManualRegistrado>> {
     return this.http.post<SobrePlataforma<PagoManualRegistrado>>(
       `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments`, cuerpo,
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     );
   }
 
@@ -154,13 +154,16 @@ export class PlataformaService extends BaseService {
   anularPagoManual(pagoId: string, motivo: string, confirmacion: string): Observable<SobrePlataforma<PagoManualAnulado>> {
     return this.http.post<SobrePlataforma<PagoManualAnulado>>(
       `${environment.urlApi}/v1/platform/manual-payments/${encodeURIComponent(pagoId)}/void`, { motivo, confirmacion },
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     );
   }
 
   /** Solo el operador: enlace firmado de 5 minutos al soporte; cada enlace queda en la bitácora. */
   abrirSoportePago(docId: string, soporteId: string): Observable<SobrePlataforma<AperturaSoporte>> {
-    return this.getSinLoader(`/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments/support/${encodeURIComponent(soporteId)}`);
+    return this.http.get<SobrePlataforma<AperturaSoporte>>(
+      `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/manual-payments/support/${encodeURIComponent(soporteId)}`,
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
+    );
   }
 
   /** Solo el operador: motivo de baja de una empresa pausada, bloqueada, cancelada o eliminada (el comentario es opcional). */
@@ -168,7 +171,7 @@ export class PlataformaService extends BaseService {
     return this.http.put<SobrePlataforma<CambioMotivoBaja>>(
       `${environment.urlApi}/v1/platform/companies/${encodeURIComponent(docId)}/churn-reason`,
       comentario ? { bajaMotivo, comentario } : { bajaMotivo },
-      { context: new HttpContext().set(SKIP_LOADER, true) },
+      { context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true) },
     );
   }
 

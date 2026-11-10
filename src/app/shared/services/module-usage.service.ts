@@ -1,5 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
+import { SIN_AVISO_NEGOCIO } from './interceptor/sin-aviso-negocio.context';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -56,7 +57,7 @@ export class ModuleUsageService extends BaseService implements OnDestroy {
     if (this.yaEnviado(clave)) return;
     this.marcarEnviado(clave);
 
-    this.postSinLoader<{ activo?: boolean } | null>('/v1/module-usage/open', { modulo }).subscribe({
+    this.postSinLoader<{ activo?: boolean } | null>('/v1/module-usage/open', { modulo }, { context: new HttpContext().set(SIN_AVISO_NEGOCIO, true) }).subscribe({
       next: (respuesta) => {
         if (respuesta && respuesta.activo === false) this.apagado = true;
       },

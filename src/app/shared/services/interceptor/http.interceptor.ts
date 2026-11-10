@@ -67,7 +67,8 @@ export class HttpInterceptor2 implements HttpInterceptor {
           // suspendido lo deja sin poder ver su información ni pagar para
           // reactivarse. Acá no se cierra nada: se explica y se sigue.
           if (err.status === 423 && err.error?.code === 'TENANT_SOLO_LECTURA') {
-            this.avisarSoloLectura(err.error?.message);
+            // Las llamadas de fondo (sin acción de la persona) marcan SIN_AVISO_NEGOCIO y no muestran el aviso.
+            if (!request.context.get(SIN_AVISO_NEGOCIO)) this.avisarSoloLectura(err.error?.message);
             return throwError(err);
           }
 
