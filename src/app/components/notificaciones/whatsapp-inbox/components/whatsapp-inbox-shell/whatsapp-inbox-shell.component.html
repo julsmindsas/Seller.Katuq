@@ -31,6 +31,17 @@
       >
         <i class="fa fa-shopping-basket" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.shell.tabOrders' | translate }}
       </button>
+      <!-- D-707: la consola (Números, Plantillas, Envíos y Registro) es otra pantalla; el buzón no cambia -->
+      <a
+        *ngIf="consolaVisible"
+        class="wa-shell__tab wa-shell__tab--consola"
+        role="tab"
+        aria-selected="false"
+        routerLink="/notificaciones/whatsapp/consola/numeros"
+        [title]="'notificaciones.whatsapp.shell.consolaTitle' | translate"
+      >
+        <i class="fa fa-sliders" aria-hidden="true"></i> {{ 'notificaciones.whatsapp.shell.tabConsole' | translate }}
+      </a>
     </nav>
 
     <a

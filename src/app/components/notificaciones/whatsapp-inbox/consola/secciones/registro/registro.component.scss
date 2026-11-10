@@ -1,0 +1,105 @@
+// Sección «Registro» de la consola (D-707). Plano, tema canónico (config-pagina).
+// Ninguna clase lleva "p-" (trampa [class*="p-"] del CSS global) y cada span lleva color y tamaño propios.
+@import '../../../../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+:host { display: block; }
+
+.regi {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $cfg-ink;
+
+  p, a, li, label, span, button { letter-spacing: normal; }
+  span { color: inherit; font-size: inherit; }
+  button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  .cfg-aviso { flex-wrap: wrap; align-items: center; }
+}
+
+.regi__cabeza { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+.regi__textos { display: flex; flex-direction: column; gap: 6px; min-width: 0; max-width: 620px; }
+
+.regi__titulo { margin: 0; font-size: 16px !important; line-height: 1.3; font-weight: 800; color: $cfg-ink; }
+
+.regi__aviso-texto { font-size: inherit !important; color: inherit !important; }
+
+.regi__cargando { display: flex; align-items: center; gap: 10px; padding: 12px 0; color: $cfg-accent-ink; }
+.regi__cargando-texto { font-size: 13px !important; color: $cfg-muted !important; }
+
+.regi__error .cfg-btn { margin-left: auto; min-height: 34px; }
+
+.regi__filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+
+.regi__filtro { display: flex; flex-direction: column; gap: 6px; margin: 0; min-width: 160px; }
+
+.regi__entrada {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  background: $cfg-chip-bg;
+  color: $cfg-ink;
+  font-size: 13.5px;
+
+  &:focus { border-color: $cfg-accent-2; background: var(--ds-surface); box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); outline: none; }
+}
+
+.regi__chico { min-height: 40px; }
+
+.regi__col-flecha { width: 44px; }
+
+.regi__flecha {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: $cfg-accent-ink;
+  cursor: pointer;
+
+  &:hover { background: $cfg-accent-soft; }
+}
+
+.regi__hora { font-size: 12.5px !important; color: $cfg-body !important; white-space: nowrap; }
+
+.regi__texto { font-size: 13px !important; color: $cfg-ink !important; overflow-wrap: anywhere; }
+
+.regi__tel { font-size: 12.5px !important; color: $cfg-body !important; white-space: nowrap; }
+
+.regi__mensaje { display: flex; flex-direction: column; gap: 2px; min-width: 0; max-width: 360px; }
+
+.regi__error-texto { font-size: 12.5px !important; font-weight: 700; color: $cfg-err !important; overflow-wrap: anywhere; }
+
+.regi__expansion { background: $cfg-tint; }
+
+.regi__detalle {
+  max-height: 260px;
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: $cfg-ink;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.regi__paginas { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+
+.regi__rango { font-size: 12.5px !important; color: $cfg-muted !important; }
+
+.regi__botones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 480px) {
+  .regi__botones { width: 100%; }
+  .regi__botones .cfg-btn { flex: 1 1 auto; }
+}

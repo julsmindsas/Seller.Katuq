@@ -1,0 +1,144 @@
+<section class="cfg-card envs">
+  <header class="envs__cabeza">
+    <div class="envs__textos">
+      <h2 class="envs__titulo">{{ 'consolaWhatsapp.envios.titulo' | translate }}</h2>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.envios.subtitulo' | translate }}</p>
+    </div>
+    <div class="cfg-acciones" *ngIf="puedeAdministrar && esMeta && conectada">
+      <button type="button" class="cfg-btn" (click)="nuevo()" [disabled]="asistenteAbierto">
+        <i class="fa fa-paper-plane" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.envios.nuevo' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <app-selector-numero *ngIf="!asistenteAbierto"></app-selector-numero>
+
+  <div class="cfg-vacio" *ngIf="!linea">
+    <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+    <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.sinNumero.titulo' | translate }}</h3>
+    <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.sinNumero.texto' | translate }}</p>
+    <a class="cfg-btn" routerLink="../numeros">{{ 'consolaWhatsapp.sinNumero.irANumeros' | translate }}</a>
+  </div>
+
+  <ng-container *ngIf="linea">
+    <!-- Número compartido de Kapso: el envío sigue por el asistente de campañas de Marketing -->
+    <div class="cfg-aviso" *ngIf="!esMeta" role="status">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <span class="envs__aviso-texto">{{ 'consolaWhatsapp.envios.compartidoAviso' | translate }}</span>
+      <a class="cfg-btn envs__enlace" [routerLink]="rutaCampanas">
+        <i class="fa fa-bullhorn" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.envios.irACampanas' | translate }}
+      </a>
+    </div>
+
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="esMeta && !conectada" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="envs__aviso-texto">{{ 'consolaWhatsapp.numeroDesconectado' | translate }}</span>
+    </p>
+
+    <app-asistente-envio *ngIf="asistenteAbierto && puedeAdministrar && esMeta"
+      (creado)="alCrearse()" (cerrar)="asistenteAbierto = false"
+    ></app-asistente-envio>
+
+    <ng-container *ngIf="esMeta && conectada">
+      <div class="envs__cargando" *ngIf="cargando" role="status">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <span class="envs__cargando-texto">{{ 'consolaWhatsapp.envios.cargando' | translate }}</span>
+      </div>
+
+      <div class="cfg-aviso cfg-aviso--error envs__error" *ngIf="error !== null && !cargando" role="alert">
+        <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+        <span class="envs__aviso-texto">{{ error || ('consolaWhatsapp.envios.errorCarga' | translate) }}</span>
+        <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
+      </div>
+
+      <div class="cfg-vacio" *ngIf="!cargando && error === null && envios.length === 0 && !asistenteAbierto">
+        <span class="cfg-vacio__icono"><i class="fa fa-paper-plane" aria-hidden="true"></i></span>
+        <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.envios.vacioTitulo' | translate }}</h3>
+        <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.envios.vacioTexto' | translate }}</p>
+      </div>
+
+      <ul class="envs__lista" *ngIf="envios.length > 0">
+        <li class="envs__item" *ngFor="let e of envios; trackBy: trackEnvio">
+          <div class="envs__fila">
+            <div class="envs__identidad">
+              <h3 class="envs__nombre">{{ nombre(e) }}</h3>
+              <span class="envs__fecha" *ngIf="fecha(e.creadoEn)">{{ fecha(e.creadoEn) }}</span>
+            </div>
+            <span class="cfg-pill" [ngClass]="'cfg-pill--' + estado(e).variante">{{ estado(e).clave | translate }}</span>
+          </div>
+
+          <div class="envs__avance" role="progressbar" [attr.aria-valuenow]="avance(e)" aria-valuemin="0" aria-valuemax="100"
+               [attr.aria-label]="'consolaWhatsapp.envios.avanceAria' | translate">
+            <div class="envs__avance-relleno" [style.width.%]="avance(e)"></div>
+          </div>
+          <span class="envs__avance-texto">{{ 'consolaWhatsapp.envios.avance' | translate:{ enviados: (e.metricas.enviados | number:'1.0-0'), total: (e.total | number:'1.0-0') } }}</span>
+
+          <div class="cfg-stats envs__metricas">
+            <div class="cfg-stat">
+              <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.metrica.enviados' | translate }}</span>
+              <span class="cfg-stat__valor">{{ e.metricas.enviados | number:'1.0-0' }}</span>
+            </div>
+            <div class="cfg-stat">
+              <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.metrica.entregados' | translate }}</span>
+              <span class="cfg-stat__valor">{{ e.metricas.entregados | number:'1.0-0' }}</span>
+            </div>
+            <div class="cfg-stat">
+              <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.metrica.leidos' | translate }}</span>
+              <span class="cfg-stat__valor">{{ e.metricas.leidos | number:'1.0-0' }}</span>
+            </div>
+            <div class="cfg-stat">
+              <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.metrica.respondidos' | translate }}</span>
+              <span class="cfg-stat__valor">{{ e.metricas.respondidos | number:'1.0-0' }}</span>
+            </div>
+            <div class="cfg-stat" [class.envs__stat--falla]="e.metricas.fallidos > 0">
+              <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.metrica.fallidos' | translate }}</span>
+              <span class="cfg-stat__valor">{{ e.metricas.fallidos | number:'1.0-0' }}</span>
+            </div>
+          </div>
+
+          <p class="cfg-aviso cfg-aviso--warn" *ngIf="e.estado === 'pausado'" role="status">
+            <i class="fa fa-pause-circle" aria-hidden="true"></i>
+            <span class="envs__aviso-texto">{{ 'consolaWhatsapp.envios.pausadoPor' | translate:{ motivo: motivoPausa(e) } }}</span>
+          </p>
+
+          <div class="envs__acciones">
+            <button type="button" class="cfg-btn cfg-btn--sec envs__chico" (click)="alternarDetalle(e)" [attr.aria-expanded]="abierto === e.id">
+              <i class="fa" [ngClass]="abierto === e.id ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+              {{ (abierto === e.id ? 'consolaWhatsapp.envios.ocultarDetalle' : 'consolaWhatsapp.envios.verDetalle') | translate }}
+            </button>
+            <ng-container *ngIf="puedeAdministrar">
+              <button type="button" class="cfg-btn cfg-btn--sec envs__chico" *ngIf="e.estado === 'enviando'" (click)="pausar(e)" [disabled]="!!ocupado">
+                <i class="fa" [ngClass]="ocupado === e.id ? 'fa-spinner fa-spin' : 'fa-pause'" aria-hidden="true"></i>
+                {{ 'consolaWhatsapp.envios.pausar' | translate }}
+              </button>
+              <button type="button" class="cfg-btn envs__chico" *ngIf="e.estado === 'pausado'" (click)="reanudar(e)" [disabled]="!!ocupado">
+                <i class="fa" [ngClass]="ocupado === e.id ? 'fa-spinner fa-spin' : 'fa-play'" aria-hidden="true"></i>
+                {{ 'consolaWhatsapp.envios.reanudar' | translate }}
+              </button>
+            </ng-container>
+          </div>
+
+          <!-- Detalle: por qué fallaron -->
+          <div class="envs__detalle" *ngIf="abierto === e.id">
+            <div class="envs__cargando" *ngIf="cargandoDetalle && !detalle" role="status">
+              <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+              <span class="envs__cargando-texto">{{ 'consolaWhatsapp.envios.cargando' | translate }}</span>
+            </div>
+            <ng-container *ngIf="detalle">
+              <span class="cfg-label">{{ 'consolaWhatsapp.envios.porQueFallaron' | translate }}</span>
+              <p class="envs__nota" *ngIf="detalle.fallidosPorMotivo.length === 0">{{ 'consolaWhatsapp.envios.sinFallidos' | translate }}</p>
+              <ul class="envs__motivos" *ngIf="detalle.fallidosPorMotivo.length > 0">
+                <li class="envs__motivo" *ngFor="let f of detalle.fallidosPorMotivo">
+                  <span class="envs__motivo-cantidad">{{ f.cantidad | number:'1.0-0' }}</span>
+                  <span class="envs__motivo-texto">{{ f.motivo }}</span>
+                </li>
+              </ul>
+            </ng-container>
+          </div>
+        </li>
+      </ul>
+    </ng-container>
+  </ng-container>
+</section>

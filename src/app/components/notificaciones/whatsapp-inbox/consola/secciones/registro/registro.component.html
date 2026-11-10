@@ -1,0 +1,131 @@
+<section class="cfg-card regi">
+  <header class="regi__cabeza">
+    <div class="regi__textos">
+      <h2 class="regi__titulo">{{ 'consolaWhatsapp.registro.titulo' | translate }}</h2>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.registro.subtitulo' | translate }}</p>
+    </div>
+  </header>
+
+  <app-selector-numero></app-selector-numero>
+
+  <div class="cfg-vacio" *ngIf="!linea">
+    <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+    <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.sinNumero.titulo' | translate }}</h3>
+    <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.sinNumero.texto' | translate }}</p>
+    <a class="cfg-btn" routerLink="../numeros">{{ 'consolaWhatsapp.sinNumero.irANumeros' | translate }}</a>
+  </div>
+
+  <ng-container *ngIf="linea">
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="linea.status !== 'connected'" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="regi__aviso-texto">{{ 'consolaWhatsapp.numeroDesconectado' | translate }}</span>
+    </p>
+
+    <div class="regi__filtros" *ngIf="linea.status === 'connected'">
+      <label class="regi__filtro">
+        <span class="cfg-label">{{ 'consolaWhatsapp.registro.direccion.titulo' | translate }}</span>
+        <select class="regi__entrada" [ngModel]="direccion" (ngModelChange)="cambiarDireccion($event)">
+          <option *ngFor="let d of direcciones" [ngValue]="d.valor">{{ d.clave | translate }}</option>
+        </select>
+      </label>
+      <label class="regi__filtro">
+        <span class="cfg-label">{{ 'consolaWhatsapp.registro.estado.titulo' | translate }}</span>
+        <select class="regi__entrada" [ngModel]="estado" (ngModelChange)="cambiarEstado($event)">
+          <option *ngFor="let s of estados" [ngValue]="s.valor">{{ s.clave | translate }}</option>
+        </select>
+      </label>
+      <button type="button" class="cfg-btn cfg-btn--sec regi__chico" (click)="recargar()" [disabled]="cargando">
+        <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.numeros.actualizar' | translate }}
+      </button>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--error regi__error" *ngIf="error !== null && !cargando" role="alert">
+      <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+      <span class="regi__aviso-texto">{{ error || ('consolaWhatsapp.registro.errorCarga' | translate) }}</span>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
+    </div>
+
+    <div class="regi__cargando" *ngIf="cargando && items.length === 0" role="status">
+      <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+      <span class="regi__cargando-texto">{{ 'consolaWhatsapp.registro.cargando' | translate }}</span>
+    </div>
+
+    <div class="cfg-vacio" *ngIf="!cargando && error === null && items.length === 0 && linea.status === 'connected'">
+      <span class="cfg-vacio__icono"><i class="fa fa-list-alt" aria-hidden="true"></i></span>
+      <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.registro.vacioTitulo' | translate }}</h3>
+      <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.registro.vacioTexto' | translate }}</p>
+    </div>
+
+    <p-table *ngIf="items.length > 0" [value]="items" dataKey="id" [expandedRowKeys]="expandidas" [rowTrackBy]="trackItem"
+             styleClass="regi__tabla cfg-tabla-tarjetas" [attr.aria-busy]="cargando">
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col" class="regi__col-flecha"></th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.hora' | translate }}</th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.direccion' | translate }}</th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.tipo' | translate }}</th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.estado' | translate }}</th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.telefono' | translate }}</th>
+          <th scope="col">{{ 'consolaWhatsapp.registro.col.mensaje' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-i let-expanded="expanded">
+        <tr>
+          <td class="regi__col-flecha">
+            <button type="button" class="regi__flecha" (click)="alternarFila(i)" [attr.aria-expanded]="!!expandidas[i.id]"
+                    [attr.aria-label]="'consolaWhatsapp.registro.verDetalle' | translate">
+              <i class="fa" [ngClass]="expandidas[i.id] ? 'fa-chevron-down' : 'fa-chevron-right'" aria-hidden="true"></i>
+            </button>
+          </td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.hora' | translate"><span class="regi__hora">{{ hora(i) }}</span></td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.direccion' | translate">
+            <span class="cfg-pill" [ngClass]="entro(i) ? 'cfg-pill--info' : 'cfg-pill--neutro'">
+              {{ (entro(i) ? 'consolaWhatsapp.registro.direccion.entro' : 'consolaWhatsapp.registro.direccion.salio') | translate }}
+            </span>
+          </td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.tipo' | translate"><span class="regi__texto">{{ tipo(i) }}</span></td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.estado' | translate">
+            <span class="cfg-pill" [ngClass]="'cfg-pill--' + etiquetaEstado(i).variante">
+              {{ etiquetaEstado(i).clave ? (etiquetaEstado(i).clave! | translate) : etiquetaEstado(i).texto }}
+            </span>
+          </td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.telefono' | translate"><span class="regi__tel">{{ i.telefono || '—' }}</span></td>
+          <td [attr.data-label]="'consolaWhatsapp.registro.col.mensaje' | translate">
+            <div class="regi__mensaje">
+              <span class="regi__texto" *ngIf="i.texto">{{ i.texto }}</span>
+              <span class="regi__error-texto" *ngIf="i.error">{{ i.error }}</span>
+              <span class="regi__texto" *ngIf="!i.texto && !i.error">—</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="rowexpansion" let-i>
+        <tr>
+          <td colspan="7" class="regi__expansion">
+            <span class="cfg-label">{{ 'consolaWhatsapp.registro.detalleTitulo' | translate }}</span>
+            <pre class="regi__detalle" *ngIf="detalle(i) as d; else sinDetalle">{{ d }}</pre>
+            <ng-template #sinDetalle>
+              <span class="regi__texto">{{ 'consolaWhatsapp.registro.sinDetalle' | translate }}</span>
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Paginación por cursor, de a 50 -->
+    <div class="regi__paginas" *ngIf="items.length > 0 || hayAnterior">
+      <span class="regi__rango">{{ 'consolaWhatsapp.registro.rango' | translate:{ desde: desde, hasta: hasta } }}</span>
+      <div class="regi__botones">
+        <button type="button" class="cfg-btn cfg-btn--sec regi__chico" (click)="masRecientes()" [disabled]="!hayAnterior || cargando">
+          <i class="fa fa-arrow-left" aria-hidden="true"></i>
+          {{ 'consolaWhatsapp.registro.masRecientes' | translate }}
+        </button>
+        <button type="button" class="cfg-btn cfg-btn--sec regi__chico" (click)="masAntiguos()" [disabled]="!siguiente || cargando">
+          {{ 'consolaWhatsapp.registro.masAntiguos' | translate }}
+          <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</section>

@@ -1,0 +1,61 @@
+<section class="cfg-card numeros" *ngIf="estado$ | async as e">
+  <header class="numeros__cabeza">
+    <div class="numeros__textos">
+      <h2 class="numeros__titulo">{{ 'consolaWhatsapp.numeros.titulo' | translate }}</h2>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.numeros.subtitulo' | translate }}</p>
+    </div>
+    <div class="cfg-acciones" *ngIf="e.puedeAdministrar">
+      <button type="button" class="cfg-btn" (click)="conectar()" [disabled]="e.cargando || asistenteAbierto">
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ 'integrations.messagingLines.conectarNumero' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Conectar un número en tres pasos -->
+  <app-asistente-conectar *ngIf="asistenteAbierto && e.puedeAdministrar"
+    [modoCelular]="e.metaDirecto.modoCelular"
+    [equipo]="e.equipo"
+    (lineaCreada)="alCrearseLinea($event)"
+    (terminado)="alTerminarAsistente($event)"
+  ></app-asistente-conectar>
+
+  <p class="cfg-aviso" *ngIf="sinConexionDirecta && !asistenteAbierto" role="status">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="numeros__aviso-texto">{{ 'consolaWhatsapp.numeros.sinConexionDirecta' | translate }}</span>
+    <a class="cfg-btn cfg-btn--sec numeros__enlace" routerLink="/integrations">{{ 'consolaWhatsapp.numeros.irAIntegraciones' | translate }}</a>
+  </p>
+
+  <p class="cfg-aviso" *ngIf="!e.cargando && e.error === null && !e.puedeAdministrar && e.lineas.length > 0">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="numeros__aviso-texto">{{ 'integrations.messagingLines.soloUnAdministradorPuedeConectar' | translate }}</span>
+  </p>
+
+  <div class="numeros__cargando" *ngIf="e.cargando" role="status">
+    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+    <span class="numeros__cargando-texto">{{ 'integrations.messagingLines.cargandoNumeros' | translate }}</span>
+  </div>
+
+  <div class="cfg-aviso cfg-aviso--error numeros__error" *ngIf="e.error !== null && !e.cargando" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="numeros__aviso-texto">{{ e.error || ('consolaWhatsapp.numeros.errorCarga' | translate) }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
+  </div>
+
+  <div class="cfg-vacio" *ngIf="!e.cargando && e.error === null && e.lineas.length === 0">
+    <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+    <h3 class="cfg-vacio__titulo">{{ 'integrations.messagingLines.aunNoHayNumerosConectados' | translate }}</h3>
+    <p class="cfg-vacio__texto" *ngIf="e.puedeAdministrar">{{ 'integrations.messagingLines.pulsaConectarNumeroEInicia' | translate }}</p>
+    <p class="cfg-vacio__texto" *ngIf="!e.puedeAdministrar">{{ 'integrations.messagingLines.cuandoUnAdministradorConecteUn' | translate }}</p>
+  </div>
+
+  <div class="numeros__lista" *ngIf="e.lineas.length > 0">
+    <app-tarjeta-numero *ngFor="let l of e.lineas; trackBy: trackLinea"
+      [linea]="l"
+      [equipo]="e.equipo"
+      [puedeAdministrar]="e.puedeAdministrar"
+      (lineaActualizada)="alActualizarseLinea($event)"
+      (abrir)="abrir($event, l)"
+    ></app-tarjeta-numero>
+  </div>
+</section>

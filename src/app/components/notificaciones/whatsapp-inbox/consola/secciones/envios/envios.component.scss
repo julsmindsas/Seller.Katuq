@@ -1,0 +1,99 @@
+// Sección «Envíos» de la consola (D-707). Plano, tema canónico (config-pagina).
+// Ninguna clase lleva "p-" (trampa [class*="p-"] del CSS global) y cada span lleva color y tamaño propios.
+@import '../../../../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+:host { display: block; }
+
+.envs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $cfg-ink;
+
+  p, a, li, label, span, button { letter-spacing: normal; }
+  span { color: inherit; font-size: inherit; }
+  button:focus-visible, a:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+  .cfg-aviso { flex-wrap: wrap; align-items: center; }
+}
+
+.envs__cabeza { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+.envs__textos { display: flex; flex-direction: column; gap: 6px; min-width: 0; max-width: 620px; }
+
+.envs__titulo { margin: 0; font-size: 16px !important; line-height: 1.3; font-weight: 800; color: $cfg-ink; }
+
+.envs__aviso-texto { font-size: inherit !important; color: inherit !important; }
+
+.envs__enlace { margin-left: auto; min-height: 34px; }
+
+.envs__cargando { display: flex; align-items: center; gap: 10px; padding: 12px 0; color: $cfg-accent-ink; }
+.envs__cargando-texto { font-size: 13px !important; color: $cfg-muted !important; }
+
+.envs__error .cfg-btn { margin-left: auto; min-height: 34px; }
+
+.envs__lista { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+
+.envs__item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: $cfg-tint;
+}
+
+.envs__fila { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
+
+.envs__identidad { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.envs__nombre { margin: 0; font-size: 14.5px !important; font-weight: 800; color: $cfg-ink; overflow-wrap: anywhere; }
+
+.envs__fecha { font-size: 12px !important; color: $cfg-muted !important; }
+
+// Barra de avance plana (sin gradientes): pista lila y relleno del acento.
+.envs__avance { height: 8px; border-radius: 20px; background: $cfg-chip-bg; overflow: hidden; }
+
+.envs__avance-relleno { height: 100%; border-radius: 20px; background: $cfg-accent; transition: width .3s ease; }
+
+.envs__avance-texto { font-size: 12.5px !important; color: $cfg-muted !important; }
+
+.envs__metricas { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+
+.envs__stat--falla .cfg-stat__valor { color: $cfg-err !important; }
+
+.envs__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.envs__chico { min-height: 36px; }
+
+.envs__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid $cfg-line-soft;
+}
+
+.envs__nota { margin: 0; font-size: 13px; color: $cfg-muted; }
+
+.envs__motivos { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.envs__motivo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+}
+
+.envs__motivo-cantidad { flex: 0 0 auto; min-width: 32px; font-size: 13px !important; font-weight: 800; color: $cfg-err !important; }
+
+.envs__motivo-texto { min-width: 0; font-size: 13px !important; color: $cfg-ink !important; overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .envs__acciones .cfg-btn { flex: 1 1 auto; }
+}

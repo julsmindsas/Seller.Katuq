@@ -1,0 +1,11 @@
+<div class="selnum" *ngIf="estado$ | async as e">
+  <label class="selnum__etiqueta" for="consola-numero-activo">{{ 'consolaWhatsapp.selector.numero' | translate }}</label>
+  <select id="consola-numero-activo" class="selnum__campo"
+          [ngModel]="e.lineaId" (ngModelChange)="elegir($event)"
+          [disabled]="e.lineas.length === 0">
+    <option *ngFor="let l of e.lineas; trackBy: trackLinea" [ngValue]="l.id">
+      {{ l.displayName || l.displayPhone }} · {{ l.displayPhone }} ·
+      {{ (esMeta(l) ? 'consolaWhatsapp.selector.directo' : 'consolaWhatsapp.selector.compartido') | translate }}
+    </option>
+  </select>
+</div>

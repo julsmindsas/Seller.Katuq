@@ -1,0 +1,36 @@
+// Selector del número activo de la consola (D-707). Plano, tema canónico.
+:host { display: block; min-width: 0; }
+
+.selnum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.selnum__etiqueta {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .6px !important;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+
+.selnum__campo {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 460px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--ds-control-border);
+  border-radius: 10px;
+  background: var(--ds-chip-bg);
+  color: var(--ds-ink);
+  font-size: 13.5px;
+
+  &:focus { border-color: var(--ds-focus); box-shadow: 0 0 0 3px rgba(124, 92, 255, .15); outline: none; }
+  &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}

@@ -1,0 +1,139 @@
+<article class="tarjeta" [class.tarjeta--baja]="calidadBaja" [class.is-off]="!conectada">
+  <header class="tarjeta__fila">
+    <div class="tarjeta__identidad">
+      <h3 class="tarjeta__nombre">{{ linea.displayName || linea.verifiedName || ('integrations.messagingLines.numeroSinNombre' | translate) }}</h3>
+      <span class="tarjeta__tel">{{ linea.displayPhone }}</span>
+    </div>
+    <div class="tarjeta__marcas">
+      <span class="cfg-pill" [class.cfg-pill--ok]="conectada" [class.cfg-pill--error]="!conectada">
+        {{ (conectada ? 'integrations.integrationsList.conectado2' : 'integrations.messagingLines.desconectado') | translate }}
+      </span>
+      <span class="cfg-pill cfg-pill--warn" *ngIf="conectada && linea.setup && linea.setup !== 'completo'">
+        {{ (linea.setup === 'por_reconectar' ? 'integrations.messagingLines.estadoPorReconectar' : 'integrations.messagingLines.estadoPorTerminar') | translate }}
+      </span>
+      <span class="cfg-pill cfg-pill--neutro">
+        {{ (esMeta ? 'consolaWhatsapp.numeros.directoMeta' : 'consolaWhatsapp.numeros.compartido') | translate }}
+      </span>
+    </div>
+  </header>
+
+  <!-- Pasos que faltan para que el número quede funcionando -->
+  <div class="cfg-aviso cfg-aviso--warn tarjeta__aviso" *ngIf="conectada && linea.setup && linea.setup !== 'completo'" role="status">
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+    <span class="tarjeta__aviso-texto">{{ linea.setupError || ('integrations.messagingLines.metaErrorMeta' | translate) }}</span>
+    <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="puedeAdministrar && linea.setup === 'por_terminar'"
+            (click)="reintentar()" [disabled]="reintentando">
+      <i class="fa" [ngClass]="reintentando ? 'fa-spinner fa-spin' : 'fa-refresh'" aria-hidden="true"></i>
+      {{ 'integrations.messagingLines.reintentar' | translate }}
+    </button>
+  </div>
+
+  <!-- Calidad baja: qué significa y qué hacer, en palabras sencillas -->
+  <div class="cfg-aviso cfg-aviso--error tarjeta__aviso" *ngIf="calidadBaja" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <div class="tarjeta__aviso-cuerpo">
+      <strong class="tarjeta__aviso-titulo">{{ 'consolaWhatsapp.numeros.calidadBajaTitulo' | translate }}</strong>
+      <span class="tarjeta__aviso-texto">{{ 'consolaWhatsapp.numeros.calidadBajaTexto' | translate }}</span>
+      <span class="tarjeta__aviso-texto">{{ 'consolaWhatsapp.numeros.calidadBajaQueHacer' | translate }}</span>
+    </div>
+  </div>
+
+  <!-- Salud que reporta Meta -->
+  <section class="tarjeta__salud" *ngIf="esMeta && conectada" [attr.aria-label]="'consolaWhatsapp.numeros.saludAria' | translate">
+    <div class="tarjeta__cargando" *ngIf="cargandoSalud && !salud" role="status">
+      <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+      <span class="tarjeta__nota">{{ 'consolaWhatsapp.numeros.leyendoSalud' | translate }}</span>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--warn tarjeta__aviso" *ngIf="errorSalud && !salud" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="tarjeta__aviso-texto">{{ 'consolaWhatsapp.numeros.saludError' | translate }}</span>
+    </div>
+
+    <dl class="tarjeta__datos" *ngIf="salud">
+      <div class="tarjeta__dato">
+        <dt class="tarjeta__etiqueta">{{ 'consolaWhatsapp.numeros.calidad' | translate }}</dt>
+        <dd class="tarjeta__valor">
+          <span class="cfg-pill" [ngClass]="'cfg-pill--' + calidad.variante">{{ calidad.clave | translate }}</span>
+        </dd>
+      </div>
+      <div class="tarjeta__dato">
+        <dt class="tarjeta__etiqueta">{{ 'consolaWhatsapp.numeros.limite' | translate }}</dt>
+        <dd class="tarjeta__valor">
+          <span class="tarjeta__valor-texto" *ngIf="limite === null">{{ 'consolaWhatsapp.numeros.sinDato' | translate }}</span>
+          <span class="tarjeta__valor-texto" *ngIf="limite === 'ilimitado'">{{ 'consolaWhatsapp.numeros.sinTope' | translate }}</span>
+          <span class="tarjeta__valor-texto" *ngIf="limite !== null && limite !== 'ilimitado'">{{ 'consolaWhatsapp.numeros.limiteValor' | translate:{ cantidad: (limite | number:'1.0-0') } }}</span>
+        </dd>
+      </div>
+      <div class="tarjeta__dato">
+        <dt class="tarjeta__etiqueta">{{ 'consolaWhatsapp.numeros.nombreVisible' | translate }}</dt>
+        <dd class="tarjeta__valor">
+          <span class="tarjeta__valor-texto">{{ salud.nombreVisible || linea.verifiedName || ('consolaWhatsapp.numeros.sinDato' | translate) }}</span>
+          <span class="cfg-pill" *ngIf="estadoNombre" [ngClass]="'cfg-pill--' + estadoNombre.variante">{{ estadoNombre.clave | translate }}</span>
+        </dd>
+      </div>
+      <div class="tarjeta__dato" *ngIf="dondeEsta">
+        <dt class="tarjeta__etiqueta">{{ 'consolaWhatsapp.numeros.dondeEsta' | translate }}</dt>
+        <dd class="tarjeta__valor">
+          <span class="tarjeta__valor-texto">{{ dondeEsta | translate }}</span>
+        </dd>
+      </div>
+    </dl>
+
+    <div class="tarjeta__pie-salud" *ngIf="salud || errorSalud">
+      <span class="tarjeta__nota" *ngIf="actualizadaEn">{{ 'consolaWhatsapp.numeros.actualizadaEl' | translate:{ fecha: fechaCorta(actualizadaEn) } }}</span>
+      <button type="button" class="cfg-btn cfg-btn--sec tarjeta__chico" (click)="actualizarSalud()" [disabled]="cargandoSalud">
+        <i class="fa" [ngClass]="cargandoSalud ? 'fa-spinner fa-spin' : 'fa-refresh'" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.numeros.actualizar' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <!-- Número compartido de Kapso: sin datos de calidad de Meta, sin error -->
+  <p class="cfg-aviso tarjeta__aviso" *ngIf="!esMeta && conectada">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="tarjeta__aviso-texto">{{ 'consolaWhatsapp.numeros.compartidoSinDatos' | translate }}</span>
+  </p>
+
+  <!-- Equipo que lo atiende -->
+  <div class="tarjeta__equipo">
+    <span class="cfg-label">{{ 'consolaWhatsapp.numeros.equipo' | translate }}</span>
+    <ng-container *ngIf="puedeAdministrar && conectada; else equipoLectura">
+      <app-selector-equipo
+        [equipo]="equipo"
+        [multiple]="true"
+        [emails]="seleccion"
+        (emailsChange)="seleccion = $event"
+        [disabled]="guardando"
+        [placeholder]="'integrations.messagingLines.eligeLosVendedores' | translate"
+      ></app-selector-equipo>
+      <div class="tarjeta__acciones" *ngIf="hayCambios">
+        <button type="button" class="cfg-btn cfg-btn--sec tarjeta__chico" (click)="descartar()" [disabled]="guardando">
+          {{ 'integrations.messagingLines.descartar' | translate }}
+        </button>
+        <button type="button" class="cfg-btn tarjeta__chico" (click)="guardarEquipo()" [disabled]="guardando">
+          <i class="fa" [ngClass]="guardando ? 'fa-spinner fa-spin' : 'fa-check'" aria-hidden="true"></i>
+          {{ 'comun.guardar' | translate }}
+        </button>
+      </div>
+    </ng-container>
+    <ng-template #equipoLectura>
+      <span class="tarjeta__valor-texto">{{ nombresEquipo() }}</span>
+    </ng-template>
+  </div>
+
+  <footer class="tarjeta__enlaces" *ngIf="conectada">
+    <button type="button" class="cfg-btn cfg-btn--sec tarjeta__chico" (click)="abrir.emit('plantillas')">
+      <i class="fa fa-file-text-o" aria-hidden="true"></i>
+      {{ 'consolaWhatsapp.secciones.plantillas' | translate }}
+    </button>
+    <button type="button" class="cfg-btn cfg-btn--sec tarjeta__chico" (click)="abrir.emit('envios')">
+      <i class="fa fa-paper-plane" aria-hidden="true"></i>
+      {{ 'consolaWhatsapp.secciones.envios' | translate }}
+    </button>
+    <button type="button" class="cfg-btn cfg-btn--sec tarjeta__chico" (click)="abrir.emit('registro')">
+      <i class="fa fa-list-alt" aria-hidden="true"></i>
+      {{ 'consolaWhatsapp.secciones.registro' | translate }}
+    </button>
+  </footer>
+</article>

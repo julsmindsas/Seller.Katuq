@@ -1,0 +1,113 @@
+// Vista previa estilo burbuja de WhatsApp (D-707). Plano: sin gradientes; lienzo lila y burbuja blanca.
+// Ninguna clase lleva "p-" y cada span lleva color y tamaño propios.
+:host { display: block; }
+
+.vista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 340px;
+  padding: 16px;
+  border: 1px solid var(--ds-line);
+  border-radius: 16px;
+  background: var(--ds-tile);
+  color: var(--ds-ink);
+
+  p, span, strong, em { letter-spacing: normal; }
+}
+
+.vista__burbuja {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 22px;
+  border: 1px solid var(--ds-line);
+  border-radius: 4px 12px 12px 12px;
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-panel);
+  min-width: 0;
+}
+
+.vista__imagen {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.vista__imagen-vacia {
+  display: grid;
+  place-items: center;
+  height: 120px;
+  border-radius: 8px;
+  background: var(--ds-chip-bg);
+  color: var(--ds-muted);
+  font-size: 32px;
+}
+
+.vista__encabezado {
+  margin: 0;
+  font-size: 14px !important;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ds-ink);
+  overflow-wrap: anywhere;
+}
+
+.vista__cuerpo {
+  margin: 0;
+  font-size: 13.5px !important;
+  line-height: 1.45;
+  color: var(--ds-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  strong, em { color: inherit; font-size: inherit; }
+}
+
+.vista__cuerpo--vacio { color: var(--ds-muted); font-style: italic; }
+
+.vista__pie {
+  margin: 0;
+  font-size: 12px !important;
+  line-height: 1.35;
+  color: var(--ds-muted);
+  overflow-wrap: anywhere;
+}
+
+.vista__hora {
+  position: absolute;
+  right: 10px;
+  bottom: 5px;
+  font-size: 11px !important;
+  color: var(--ds-muted) !important;
+}
+
+.vista__botones { display: flex; flex-direction: column; gap: 4px; }
+
+.vista__boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  background: var(--ds-surface);
+  color: var(--ds-accent-ink);
+  font-weight: 700;
+
+  i { color: var(--ds-accent-ink); font-size: 13px; }
+}
+
+.vista__boton-texto {
+  min-width: 0;
+  font-size: 13px !important;
+  color: var(--ds-accent-ink) !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

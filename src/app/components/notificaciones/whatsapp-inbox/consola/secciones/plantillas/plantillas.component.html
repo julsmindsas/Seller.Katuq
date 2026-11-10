@@ -1,0 +1,98 @@
+<section class="cfg-card plant">
+  <header class="plant__cabeza">
+    <div class="plant__textos">
+      <h2 class="plant__titulo">{{ 'consolaWhatsapp.plantillas.titulo' | translate }}</h2>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.plantillas.subtitulo' | translate }}</p>
+    </div>
+    <div class="cfg-acciones" *ngIf="puedeEditar">
+      <button type="button" class="cfg-btn" (click)="nueva()" [disabled]="formularioAbierto">
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.plantillas.nueva' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <app-selector-numero></app-selector-numero>
+
+  <div class="cfg-vacio" *ngIf="!linea">
+    <span class="cfg-vacio__icono"><i class="fa fa-whatsapp" aria-hidden="true"></i></span>
+    <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.sinNumero.titulo' | translate }}</h3>
+    <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.sinNumero.texto' | translate }}</p>
+    <a class="cfg-btn" routerLink="../numeros">{{ 'consolaWhatsapp.sinNumero.irANumeros' | translate }}</a>
+  </div>
+
+  <ng-container *ngIf="linea">
+    <p class="cfg-aviso" *ngIf="!esMeta" role="status">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <span class="plant__aviso-texto">{{ 'consolaWhatsapp.plantillas.compartidoAviso' | translate }}</span>
+    </p>
+
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="!conectada" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="plant__aviso-texto">{{ 'consolaWhatsapp.numeroDesconectado' | translate }}</span>
+    </p>
+
+    <!-- Formulario con vista previa -->
+    <app-plantilla-form *ngIf="formularioAbierto && puedeEditar"
+      [lineId]="linea.id" [inicial]="inicial"
+      (creada)="alCrearse()" (cancelar)="cerrarFormulario()"
+    ></app-plantilla-form>
+
+    <div class="plant__filtros" role="group" [attr.aria-label]="'consolaWhatsapp.plantillas.filtro.aria' | translate" *ngIf="lista.length > 0">
+      <button type="button" class="plant__filtro" *ngFor="let f of filtros"
+              [class.is-activo]="filtro === f.valor" [attr.aria-pressed]="filtro === f.valor" (click)="filtro = f.valor">
+        {{ f.clave | translate }}
+        <span class="plant__conteo">{{ cuenta(f.valor) }}</span>
+      </button>
+    </div>
+
+    <div class="plant__cargando" *ngIf="cargando" role="status">
+      <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+      <span class="plant__cargando-texto">{{ 'integrations.messagingLines.plantillasCargando' | translate }}</span>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--error plant__error" *ngIf="error !== null && !cargando" role="alert">
+      <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+      <span class="plant__aviso-texto">{{ error || ('integrations.messagingLines.plantillasError' | translate) }}</span>
+      <button type="button" class="cfg-btn cfg-btn--sec" (click)="recargar()">{{ 'integrations.facturacionHub.reintentar' | translate }}</button>
+    </div>
+
+    <div class="cfg-vacio" *ngIf="!cargando && error === null && conectada && lista.length === 0">
+      <span class="cfg-vacio__icono"><i class="fa fa-file-text-o" aria-hidden="true"></i></span>
+      <h3 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.plantillas.vacioTitulo' | translate }}</h3>
+      <p class="cfg-vacio__texto">{{ (puedeEditar ? 'consolaWhatsapp.plantillas.vacioTexto' : 'integrations.messagingLines.plantillasVacio') | translate }}</p>
+    </div>
+
+    <p class="plant__nota" *ngIf="!cargando && lista.length > 0 && visibles.length === 0">{{ 'consolaWhatsapp.plantillas.filtroVacio' | translate }}</p>
+
+    <ul class="plant__lista" *ngIf="visibles.length > 0">
+      <li class="plant__item" *ngFor="let p of visibles; trackBy: trackPlantilla" [class.plant__item--rechazada]="rechazada(p)">
+        <div class="plant__fila">
+          <div class="plant__identidad">
+            <h3 class="plant__nombre">{{ nombre(p) }}</h3>
+            <span class="plant__meta">{{ p.name }}<ng-container *ngIf="p.language"> · {{ p.language }}</ng-container><ng-container *ngIf="p.category"> · {{ p.category }}</ng-container></span>
+          </div>
+          <span class="cfg-pill" [ngClass]="'cfg-pill--' + estado(p).variante">{{ estado(p).clave | translate }}</span>
+        </div>
+
+        <p class="plant__texto">{{ p.bodyText }}</p>
+
+        <div class="cfg-aviso cfg-aviso--error" *ngIf="rechazada(p) && p.motivoHumano" role="note">
+          <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+          <span class="plant__aviso-texto">{{ p.motivoHumano }}</span>
+        </div>
+
+        <div class="plant__acciones" *ngIf="puedeEditar">
+          <button type="button" class="cfg-btn cfg-btn--sec plant__chico" (click)="duplicar(p)" [disabled]="!!borrando">
+            <i class="fa fa-clone" aria-hidden="true"></i>
+            {{ (rechazada(p) ? 'consolaWhatsapp.plantillas.duplicarCorregir' : 'consolaWhatsapp.plantillas.duplicar') | translate }}
+          </button>
+          <button type="button" class="cfg-btn cfg-btn--peligro plant__chico" (click)="borrar(p)" [disabled]="!!borrando">
+            <i class="fa" [ngClass]="borrando === p.name ? 'fa-spinner fa-spin' : 'fa-trash-o'" aria-hidden="true"></i>
+            {{ 'consolaWhatsapp.plantillas.borrar' | translate }}
+          </button>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+</section>

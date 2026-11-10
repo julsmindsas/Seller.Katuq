@@ -1,0 +1,70 @@
+<div class="aud">
+  <div class="aud__grupos" role="radiogroup" [attr.aria-label]="'consolaWhatsapp.envios.audiencia.aria' | translate">
+    <button type="button" role="radio" class="aud__grupo" [class.is-elegido]="grupo === 'clientes'" [attr.aria-checked]="grupo === 'clientes'"
+            (click)="elegir('clientes')" [disabled]="cargando">
+      <span class="aud__grupo-icono" aria-hidden="true"><i class="fa fa-users"></i></span>
+      <span class="aud__grupo-titulo">{{ 'consolaWhatsapp.envios.audiencia.clientes' | translate }}</span>
+      <span class="aud__grupo-texto">{{ 'consolaWhatsapp.envios.audiencia.clientesTexto' | translate }}</span>
+    </button>
+    <button type="button" role="radio" class="aud__grupo" [class.is-elegido]="grupo === 'crm'" [attr.aria-checked]="grupo === 'crm'"
+            (click)="elegir('crm')" [disabled]="cargando">
+      <span class="aud__grupo-icono" aria-hidden="true"><i class="fa fa-filter"></i></span>
+      <span class="aud__grupo-titulo">{{ 'consolaWhatsapp.envios.audiencia.crm' | translate }}</span>
+      <span class="aud__grupo-texto">{{ 'consolaWhatsapp.envios.audiencia.crmTexto' | translate }}</span>
+    </button>
+  </div>
+
+  <label class="aud__etapa" *ngIf="grupo === 'crm'">
+    <span class="cfg-label">{{ 'consolaWhatsapp.envios.audiencia.etapa' | translate }}</span>
+    <select class="aud__entrada" [(ngModel)]="etapa" (ngModelChange)="cambiarEtapa()" [disabled]="cargando">
+      <option value="">{{ 'consolaWhatsapp.envios.audiencia.todasEtapas' | translate }}</option>
+      <option *ngFor="let s of etapas" [value]="s.key">{{ s.label }}</option>
+    </select>
+  </label>
+
+  <div class="aud__cargando" *ngIf="cargando" role="status">
+    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+    <span class="aud__cargando-texto">{{ 'consolaWhatsapp.envios.audiencia.cargando' | translate }}</span>
+  </div>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="error && !cargando" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="aud__aviso-texto">{{ 'consolaWhatsapp.envios.audiencia.error' | translate }}</span>
+  </div>
+
+  <div class="cfg-vacio aud__vacio" *ngIf="grupo && !cargando && !error && destinatarios.length === 0">
+    <span class="cfg-vacio__icono"><i class="fa fa-users" aria-hidden="true"></i></span>
+    <h4 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.envios.audiencia.vacioTitulo' | translate }}</h4>
+    <p class="cfg-vacio__texto">{{ 'consolaWhatsapp.envios.audiencia.vacioTexto' | translate }}</p>
+  </div>
+
+  <ng-container *ngIf="grupo && !cargando && !error && destinatarios.length > 0">
+    <div class="aud__resumen">
+      <span class="aud__resumen-texto">{{ 'consolaWhatsapp.envios.audiencia.seleccionados' | translate:{ cantidad: (seleccionados | number:'1.0-0'), total: (destinatarios.length | number:'1.0-0') } }}</span>
+      <button type="button" class="cfg-btn cfg-btn--sec aud__chico" (click)="seleccionarTodos(!todosSeleccionados)">
+        {{ (todosSeleccionados ? 'consolaWhatsapp.envios.audiencia.ninguno' : 'consolaWhatsapp.envios.audiencia.todos') | translate }}
+      </button>
+    </div>
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="excedeTope" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="aud__aviso-texto">{{ 'consolaWhatsapp.envios.audiencia.tope' | translate:{ max: (max | number:'1.0-0') } }}</span>
+    </p>
+    <p class="aud__nota" *ngIf="sinTelefono > 0">{{ 'consolaWhatsapp.envios.audiencia.sinTelefono' | translate:{ cantidad: sinTelefono } }}</p>
+
+    <input type="search" class="aud__entrada" [(ngModel)]="buscar" [attr.aria-label]="'comun.buscar' | translate"
+           [placeholder]="'consolaWhatsapp.envios.audiencia.buscar' | translate" />
+
+    <ul class="aud__lista">
+      <li class="aud__fila" *ngFor="let d of filas; trackBy: trackDestinatario">
+        <label class="aud__persona">
+          <input type="checkbox" [checked]="estaSeleccionado(d)" (change)="alternar(d)" />
+          <span class="aud__persona-nombre">{{ d.nombre || ('consolaWhatsapp.envios.audiencia.sinNombre' | translate) }}</span>
+          <span class="aud__persona-tel">+{{ d.phone }}</span>
+        </label>
+      </li>
+    </ul>
+    <p class="aud__nota" *ngIf="visibles.length > filas.length">
+      {{ 'consolaWhatsapp.envios.audiencia.yMas' | translate:{ cantidad: ((visibles.length - filas.length) | number:'1.0-0') } }}
+    </p>
+  </ng-container>
+</div>

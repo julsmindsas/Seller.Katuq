@@ -1,0 +1,142 @@
+<section class="asenv" role="group" [attr.aria-label]="'consolaWhatsapp.envios.nuevo' | translate">
+  <header class="asenv__cabeza">
+    <div class="asenv__textos">
+      <h3 class="asenv__titulo">{{ 'consolaWhatsapp.envios.nuevo' | translate }}</h3>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.envios.nuevoSub' | translate }}</p>
+    </div>
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cerrar.emit()" [disabled]="enviando || preparando">
+      {{ 'comun.cerrar' | translate }}
+    </button>
+  </header>
+
+  <ol class="asenv__pasos" [attr.aria-label]="'consolaWhatsapp.envios.pasosAria' | translate">
+    <li class="asenv__paso" [class.is-activo]="paso === 1" [class.is-hecho]="paso > 1">
+      <span class="asenv__paso-num">{{ paso > 1 ? '✓' : '1' }}</span>
+      <span class="asenv__paso-texto">{{ 'consolaWhatsapp.envios.paso1' | translate }}</span>
+    </li>
+    <li class="asenv__paso" [class.is-activo]="paso === 2" [class.is-hecho]="paso > 2">
+      <span class="asenv__paso-num">{{ paso > 2 ? '✓' : '2' }}</span>
+      <span class="asenv__paso-texto">{{ 'consolaWhatsapp.envios.paso2' | translate }}</span>
+    </li>
+    <li class="asenv__paso" [class.is-activo]="paso === 3" [class.is-hecho]="paso > 3">
+      <span class="asenv__paso-num">{{ paso > 3 ? '✓' : '3' }}</span>
+      <span class="asenv__paso-texto">{{ 'consolaWhatsapp.envios.paso3' | translate }}</span>
+    </li>
+    <li class="asenv__paso" [class.is-activo]="paso === 4">
+      <span class="asenv__paso-num">4</span>
+      <span class="asenv__paso-texto">{{ 'consolaWhatsapp.envios.paso4' | translate }}</span>
+    </li>
+  </ol>
+
+  <!-- Paso 1: número -->
+  <div class="asenv__cuerpo" *ngIf="paso === 1">
+    <app-selector-numero></app-selector-numero>
+
+    <div class="cfg-aviso" *ngIf="linea && (!esMeta || usarCampanasKapso)" role="status">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ 'consolaWhatsapp.envios.compartidoAviso' | translate }}</span>
+      <a class="cfg-btn asenv__enlace" [routerLink]="rutaCampanas">
+        <i class="fa fa-bullhorn" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.envios.irACampanas' | translate }}
+      </a>
+    </div>
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="linea && esMeta && linea.status !== 'connected'" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ 'consolaWhatsapp.numeroDesconectado' | translate }}</span>
+    </p>
+    <p class="cfg-aviso cfg-aviso--ok" *ngIf="linea && esMeta && linea.status === 'connected'" role="status">
+      <i class="fa fa-check-circle" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ 'consolaWhatsapp.envios.numeroListo' | translate:{ numero: (linea.displayName || linea.displayPhone) } }}</span>
+    </p>
+  </div>
+
+  <!-- Paso 2: plantilla aprobada -->
+  <div class="asenv__cuerpo" *ngIf="paso === 2">
+    <p class="asenv__nota">{{ 'consolaWhatsapp.envios.soloAprobadas' | translate }}</p>
+
+    <div class="asenv__cargando" *ngIf="cargandoPlantillas" role="status">
+      <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+      <span class="asenv__cargando-texto">{{ 'integrations.messagingLines.plantillasCargando' | translate }}</span>
+    </div>
+
+    <div class="cfg-aviso cfg-aviso--error" *ngIf="errorPlantillas" role="alert">
+      <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ errorPlantillas }}</span>
+    </div>
+
+    <div class="cfg-vacio asenv__vacio" *ngIf="!cargandoPlantillas && !errorPlantillas && plantillas.length === 0">
+      <span class="cfg-vacio__icono"><i class="fa fa-file-text-o" aria-hidden="true"></i></span>
+      <h4 class="cfg-vacio__titulo">{{ 'consolaWhatsapp.envios.sinAprobadasTitulo' | translate }}</h4>
+      <p class="cfg-vacio__texto">{{ (enRevision > 0 ? 'consolaWhatsapp.envios.sinAprobadasRevision' : 'consolaWhatsapp.envios.sinAprobadasTexto') | translate:{ cantidad: enRevision } }}</p>
+      <a class="cfg-btn cfg-btn--sec" routerLink="../plantillas" queryParamsHandling="preserve">{{ 'consolaWhatsapp.envios.irAPlantillas' | translate }}</a>
+    </div>
+
+    <div class="asenv__plantillas" role="radiogroup" [attr.aria-label]="'consolaWhatsapp.envios.paso2' | translate" *ngIf="plantillas.length > 0">
+      <button type="button" role="radio" class="asenv__plantilla" *ngFor="let p of plantillas; trackBy: trackPlantilla"
+              [class.is-elegida]="plantillaElegida === p" [attr.aria-checked]="plantillaElegida === p"
+              [disabled]="!usable(p)" (click)="elegirPlantilla(p)">
+        <span class="asenv__plantilla-nombre">{{ nombre(p) }}</span>
+        <span class="asenv__plantilla-texto">{{ textoPrevio(p) }}</span>
+        <span class="asenv__plantilla-nota" *ngIf="!usable(p)">{{ 'consolaWhatsapp.envios.variablesNoSoportadas' | translate }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Paso 3: a quién (se mantiene vivo al volver del resumen) -->
+  <div class="asenv__cuerpo" *ngIf="visitoAudiencia" [hidden]="paso !== 3">
+    <app-selector-audiencia (segmentoChange)="alCambiarSegmento($event)"></app-selector-audiencia>
+  </div>
+
+  <!-- Paso 4: resumen y confirmar -->
+  <div class="asenv__cuerpo" *ngIf="paso === 4 && resumen">
+    <div class="cfg-stats">
+      <div class="cfg-stat">
+        <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.resumen.elegidos' | translate }}</span>
+        <span class="cfg-stat__valor">{{ resumen.total | number:'1.0-0' }}</span>
+      </div>
+      <div class="cfg-stat">
+        <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.resumen.aEnviar' | translate }}</span>
+        <span class="cfg-stat__valor">{{ resumen.aEnviar | number:'1.0-0' }}</span>
+      </div>
+      <div class="cfg-stat">
+        <span class="cfg-stat__label">{{ 'consolaWhatsapp.envios.resumen.costo' | translate }}</span>
+        <span class="cfg-stat__valor">{{ resumen.costoEstimadoCOP | copMoneda }}</span>
+      </div>
+    </div>
+
+    <ul class="asenv__excluidos" *ngIf="totalExcluidos > 0" [attr.aria-label]="'consolaWhatsapp.envios.resumen.excluidosAria' | translate">
+      <li class="asenv__excluido" *ngIf="resumen.excluidos.noQuieren > 0">{{ 'consolaWhatsapp.envios.resumen.noQuieren' | translate:{ cantidad: resumen.excluidos.noQuieren } }}</li>
+      <li class="asenv__excluido" *ngIf="resumen.excluidos.sinTelefono > 0">{{ 'consolaWhatsapp.envios.resumen.sinTelefono' | translate:{ cantidad: resumen.excluidos.sinTelefono } }}</li>
+      <li class="asenv__excluido" *ngIf="resumen.excluidos.repetidos > 0">{{ 'consolaWhatsapp.envios.resumen.repetidos' | translate:{ cantidad: resumen.excluidos.repetidos } }}</li>
+    </ul>
+
+    <p class="cfg-aviso" role="note">
+      <i class="fa fa-credit-card" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ 'consolaWhatsapp.envios.resumen.costoAviso' | translate }}</span>
+    </p>
+    <p class="cfg-aviso cfg-aviso--warn" *ngIf="resumen.aEnviar < 1" role="status">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span class="asenv__aviso-texto">{{ 'consolaWhatsapp.envios.resumen.nadie' | translate }}</span>
+    </p>
+  </div>
+
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="errorResumen" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="asenv__aviso-texto">{{ errorResumen }}</span>
+  </div>
+
+  <div class="asenv__pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" *ngIf="paso > 1" (click)="volver()" [disabled]="enviando || preparando">
+      <i class="fa fa-arrow-left" aria-hidden="true"></i>
+      {{ 'comun.volver' | translate }}
+    </button>
+    <button type="button" class="cfg-btn" *ngIf="paso < 4" (click)="avanzar()" [disabled]="!puedeAvanzar">
+      <i class="fa" [ngClass]="preparando ? 'fa-spinner fa-spin' : 'fa-arrow-right'" aria-hidden="true"></i>
+      {{ (paso === 3 ? 'consolaWhatsapp.envios.verResumen' : 'asistenteConectar.continuar') | translate }}
+    </button>
+    <button type="button" class="cfg-btn" *ngIf="paso === 4 && resumen" (click)="confirmar()" [disabled]="enviando || resumen.aEnviar < 1">
+      <i class="fa" [ngClass]="enviando ? 'fa-spinner fa-spin' : 'fa-paper-plane'" aria-hidden="true"></i>
+      {{ 'consolaWhatsapp.envios.enviarA' | translate:{ cantidad: (resumen.aEnviar | number:'1.0-0') } }}
+    </button>
+  </div>
+</section>

@@ -142,6 +142,20 @@
   }
 }
 
+// Pestaña «Consola» (D-707): es un enlace a otra pantalla, con el mismo aspecto que las demás.
+a.wa-shell__tab {
+  text-decoration: none;
+
+  &:hover {
+    color: var(--km-accent);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7C5CFF;
+    outline-offset: 2px;
+  }
+}
+
 // Botón "Nueva campaña" del encabezado (mockup).
 .wa-shell__campaign {
   @include km-btn-primary;

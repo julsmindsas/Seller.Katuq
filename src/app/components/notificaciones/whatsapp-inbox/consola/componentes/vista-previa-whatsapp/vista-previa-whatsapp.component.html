@@ -1,0 +1,25 @@
+<div class="vista" role="img" [attr.aria-label]="'consolaWhatsapp.vistaPrevia.aria' | translate">
+  <div class="vista__burbuja">
+    <img class="vista__imagen" *ngIf="encabezadoTipo === 'IMAGE' && imagenUrl" [src]="imagenUrl" alt="" />
+    <div class="vista__imagen-vacia" *ngIf="encabezadoTipo === 'IMAGE' && !imagenUrl">
+      <i class="fa fa-picture-o" aria-hidden="true"></i>
+    </div>
+
+    <p class="vista__encabezado" *ngIf="encabezadoTipo === 'TEXT' && textoEncabezado">{{ textoEncabezado }}</p>
+
+    <p class="vista__cuerpo" *ngIf="hayCuerpo; else sinCuerpo"><ng-container *ngFor="let t of trozosCuerpo"><strong *ngIf="t.negrilla">{{ t.texto }}</strong><em *ngIf="t.cursiva">{{ t.texto }}</em><ng-container *ngIf="!t.negrilla && !t.cursiva">{{ t.texto }}</ng-container></ng-container></p>
+    <ng-template #sinCuerpo>
+      <p class="vista__cuerpo vista__cuerpo--vacio">{{ 'consolaWhatsapp.vistaPrevia.vacio' | translate }}</p>
+    </ng-template>
+
+    <p class="vista__pie" *ngIf="textoPie">{{ textoPie }}</p>
+    <span class="vista__hora">{{ hora }}</span>
+  </div>
+
+  <div class="vista__botones" *ngIf="botonesConTexto.length > 0">
+    <div class="vista__boton" *ngFor="let b of botonesConTexto">
+      <i class="fa" [ngClass]="iconoBoton(b.tipo)" aria-hidden="true"></i>
+      <span class="vista__boton-texto">{{ b.texto }}</span>
+    </div>
+  </div>
+</div>

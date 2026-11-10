@@ -1,0 +1,165 @@
+<section class="pform" [attr.aria-label]="'consolaWhatsapp.plantillas.formulario.titulo' | translate">
+  <header class="pform__cabeza">
+    <div class="pform__textos">
+      <h3 class="pform__titulo">{{ (inicial ? 'consolaWhatsapp.plantillas.formulario.tituloDuplicar' : 'consolaWhatsapp.plantillas.formulario.titulo') | translate }}</h3>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.plantillas.formulario.subtitulo' | translate }}</p>
+    </div>
+  </header>
+
+  <div class="pform__cuerpo">
+    <div class="pform__campos">
+      <!-- Título y categoría -->
+      <div class="pform__grupo">
+        <label class="pform__campo">
+          <span class="cfg-label">{{ 'integrations.messagingLines.plantillaTituloLabel' | translate }}</span>
+          <input type="text" class="pform__entrada" [maxlength]="limites.titulo.max" [(ngModel)]="f.titulo"
+                 [disabled]="enviando" [placeholder]="'integrations.messagingLines.plantillaTituloPlaceholder' | translate" />
+        </label>
+        <label class="pform__campo">
+          <span class="cfg-label">{{ 'consolaWhatsapp.plantillas.formulario.categoria' | translate }}</span>
+          <select class="pform__entrada" [(ngModel)]="f.categoria" [disabled]="enviando">
+            <option value="MARKETING">{{ 'consolaWhatsapp.plantillas.categoria.marketing' | translate }}</option>
+            <option value="UTILITY">{{ 'consolaWhatsapp.plantillas.categoria.utilidad' | translate }}</option>
+          </select>
+          <span class="pform__ayuda">{{ (f.categoria === 'UTILITY' ? 'consolaWhatsapp.plantillas.categoria.utilidadAyuda' : 'consolaWhatsapp.plantillas.categoria.marketingAyuda') | translate }}</span>
+        </label>
+      </div>
+
+      <!-- Encabezado -->
+      <div class="pform__campo">
+        <span class="cfg-label">{{ 'consolaWhatsapp.plantillas.formulario.encabezado' | translate }}</span>
+        <div class="pform__segmentos" role="radiogroup" [attr.aria-label]="'consolaWhatsapp.plantillas.formulario.encabezado' | translate">
+          <button type="button" role="radio" class="pform__segmento" [class.is-activo]="f.encabezadoTipo === ''" [attr.aria-checked]="f.encabezadoTipo === ''" (click)="cambiarEncabezado('')" [disabled]="enviando">
+            {{ 'consolaWhatsapp.plantillas.encabezado.ninguno' | translate }}
+          </button>
+          <button type="button" role="radio" class="pform__segmento" [class.is-activo]="f.encabezadoTipo === 'TEXT'" [attr.aria-checked]="f.encabezadoTipo === 'TEXT'" (click)="cambiarEncabezado('TEXT')" [disabled]="enviando">
+            {{ 'consolaWhatsapp.plantillas.encabezado.texto' | translate }}
+          </button>
+          <button type="button" role="radio" class="pform__segmento" [class.is-activo]="f.encabezadoTipo === 'IMAGE'" [attr.aria-checked]="f.encabezadoTipo === 'IMAGE'" (click)="cambiarEncabezado('IMAGE')" [disabled]="enviando">
+            {{ 'consolaWhatsapp.plantillas.encabezado.imagen' | translate }}
+          </button>
+        </div>
+
+        <ng-container *ngIf="f.encabezadoTipo === 'TEXT'">
+          <input type="text" class="pform__entrada" [maxlength]="limites.encabezadoTexto" [(ngModel)]="f.encabezadoTexto" [disabled]="enviando"
+                 [attr.aria-label]="'consolaWhatsapp.plantillas.encabezado.texto' | translate"
+                 [placeholder]="'consolaWhatsapp.plantillas.encabezado.textoPlaceholder' | translate" />
+          <span class="pform__ayuda">{{ f.encabezadoTexto.length }} / {{ limites.encabezadoTexto }}</span>
+        </ng-container>
+
+        <ng-container *ngIf="f.encabezadoTipo === 'IMAGE'">
+          <div class="pform__imagen" *ngIf="f.imagen as img">
+            <img class="pform__miniatura" [src]="img.vistaPrevia" alt="" />
+            <span class="pform__imagen-nombre">{{ img.nombre }}</span>
+            <button type="button" class="cfg-btn cfg-btn--sec pform__chico" (click)="quitarImagen()" [disabled]="enviando">
+              {{ 'consolaWhatsapp.plantillas.encabezado.quitarImagen' | translate }}
+            </button>
+          </div>
+          <label class="cfg-btn cfg-btn--sec pform__subir" *ngIf="!f.imagen">
+            <i class="fa fa-upload" aria-hidden="true"></i>
+            {{ 'consolaWhatsapp.plantillas.encabezado.subirImagen' | translate }}
+            <input type="file" class="pform__archivo" accept="image/jpeg,image/png" (change)="elegirImagen($event)" [disabled]="enviando" />
+          </label>
+          <span class="pform__ayuda">{{ 'consolaWhatsapp.plantillas.encabezado.imagenAyuda' | translate }}</span>
+          <p class="cfg-aviso cfg-aviso--error" *ngIf="errorImagen" role="alert">
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+            <span class="pform__aviso-texto">{{ errorImagen }}</span>
+          </p>
+        </ng-container>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="pform__campo">
+        <div class="pform__fila-etiqueta">
+          <label class="cfg-label" for="plantilla-cuerpo">{{ 'integrations.messagingLines.plantillaMensajeLabel' | translate }}</label>
+          <button type="button" class="cfg-btn cfg-btn--sec pform__chico" (click)="insertarNombre()" [disabled]="enviando">
+            <i class="fa fa-user-o" aria-hidden="true"></i>
+            {{ 'consolaWhatsapp.plantillas.formulario.insertarNombre' | translate }}
+          </button>
+        </div>
+        <textarea #cuerpoCampo id="plantilla-cuerpo" class="pform__entrada pform__area" rows="5" [maxlength]="limites.cuerpo.max"
+                  [(ngModel)]="f.cuerpo" [disabled]="enviando"></textarea>
+        <span class="pform__ayuda">{{ 'integrations.messagingLines.plantillaMensajeAyuda' | translate }} {{ f.cuerpo.length }} / {{ limites.cuerpo.max }}</span>
+      </div>
+
+      <!-- Pie -->
+      <label class="pform__campo">
+        <span class="cfg-label">{{ 'consolaWhatsapp.plantillas.formulario.pie' | translate }}</span>
+        <input type="text" class="pform__entrada" [maxlength]="limites.pie" [(ngModel)]="f.pie" [disabled]="enviando"
+               [placeholder]="'consolaWhatsapp.plantillas.formulario.piePlaceholder' | translate" />
+      </label>
+
+      <!-- Botones -->
+      <div class="pform__campo">
+        <span class="cfg-label">{{ 'consolaWhatsapp.plantillas.formulario.botones' | translate:{ max: limites.botones } }}</span>
+        <div class="pform__boton" *ngFor="let b of f.botones; let i = index">
+          <div class="pform__boton-cabeza">
+            <span class="cfg-pill cfg-pill--neutro">{{ claveTipoBoton(b.tipo) | translate }}</span>
+            <button type="button" class="cfg-btn cfg-btn--peligro pform__chico" (click)="quitarBoton(i)" [disabled]="enviando"
+                    [attr.aria-label]="'consolaWhatsapp.plantillas.boton.quitar' | translate">
+              <i class="fa fa-trash-o" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="pform__grupo">
+            <input type="text" class="pform__entrada" [maxlength]="limites.textoBoton" [ngModel]="b.texto"
+                   (ngModelChange)="cambiarBoton(i, 'texto', $event)" [disabled]="enviando"
+                   [attr.aria-label]="'consolaWhatsapp.plantillas.boton.texto' | translate"
+                   [placeholder]="'consolaWhatsapp.plantillas.boton.textoPlaceholder' | translate" />
+            <input type="url" class="pform__entrada" *ngIf="b.tipo === 'URL'" [ngModel]="b.url"
+                   (ngModelChange)="cambiarBoton(i, 'url', $event)" [disabled]="enviando"
+                   [attr.aria-label]="'consolaWhatsapp.plantillas.boton.enlace' | translate"
+                   [placeholder]="'consolaWhatsapp.plantillas.boton.enlacePlaceholder' | translate" />
+            <input type="tel" class="pform__entrada" *ngIf="b.tipo === 'PHONE_NUMBER'" [ngModel]="b.telefono"
+                   (ngModelChange)="cambiarBoton(i, 'telefono', $event)" [disabled]="enviando"
+                   [attr.aria-label]="'consolaWhatsapp.plantillas.boton.llamar' | translate"
+                   [placeholder]="'consolaWhatsapp.plantillas.boton.telefonoPlaceholder' | translate" />
+          </div>
+        </div>
+        <div class="pform__agregar" *ngIf="puedeAgregarBoton">
+          <button type="button" class="cfg-btn cfg-btn--sec pform__chico" *ngFor="let t of tiposBoton" (click)="agregarBoton(t)" [disabled]="enviando">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+            {{ claveTipoBoton(t) | translate }}
+          </button>
+        </div>
+        <span class="pform__ayuda" *ngIf="!puedeAgregarBoton">{{ 'consolaWhatsapp.plantillas.boton.maximo' | translate:{ max: limites.botones } }}</span>
+      </div>
+    </div>
+
+    <!-- Vista previa en vivo -->
+    <aside class="pform__lateral">
+      <span class="cfg-label">{{ 'consolaWhatsapp.vistaPrevia.titulo' | translate }}</span>
+      <app-vista-previa-whatsapp
+        [encabezadoTipo]="f.encabezadoTipo"
+        [encabezadoTexto]="f.encabezadoTexto"
+        [imagenUrl]="f.imagen ? f.imagen.vistaPrevia : null"
+        [cuerpo]="f.cuerpo"
+        [pie]="f.pie"
+        [botones]="f.botones"
+      ></app-vista-previa-whatsapp>
+      <span class="pform__ayuda">{{ 'consolaWhatsapp.vistaPrevia.nombreEjemplo' | translate }}</span>
+    </aside>
+  </div>
+
+  <!-- Qué corregir -->
+  <div class="cfg-aviso cfg-aviso--warn pform__problemas" *ngIf="intento && problemas.length > 0" role="alert">
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+    <div class="pform__problemas-cuerpo">
+      <strong class="pform__problemas-titulo">{{ 'consolaWhatsapp.plantillas.errores.titulo2' | translate }}</strong>
+      <ul class="pform__problemas-lista">
+        <li *ngFor="let clave of problemas">{{ clave | translate }}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cfg-aviso cfg-aviso--error" *ngIf="errorServidor" role="alert">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <span class="pform__aviso-texto">{{ errorServidor }}</span>
+  </div>
+
+  <div class="pform__pie">
+    <button type="button" class="cfg-btn cfg-btn--sec" (click)="cancelar.emit()" [disabled]="enviando">{{ 'comun.cancelar' | translate }}</button>
+    <button type="button" class="cfg-btn" (click)="enviar()" [disabled]="enviando">
+      <i class="fa" [ngClass]="enviando ? 'fa-spinner fa-spin' : 'fa-paper-plane'" aria-hidden="true"></i>
+      {{ 'integrations.messagingLines.plantillaCrear' | translate }}
+    </button>
+  </div>
+</section>

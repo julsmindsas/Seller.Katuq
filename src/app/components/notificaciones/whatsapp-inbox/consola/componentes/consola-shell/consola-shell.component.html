@@ -1,0 +1,25 @@
+<div class="cfg-pagina cons">
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'consolaWhatsapp.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'consolaWhatsapp.titulo' | translate }}</h1>
+      <p class="cfg-sub">{{ 'consolaWhatsapp.subtitulo' | translate }}</p>
+    </div>
+    <div class="cfg-acciones">
+      <a class="cfg-btn cfg-btn--sec" routerLink="/notificaciones/whatsapp/inbox">
+        <i class="fa fa-comments-o" aria-hidden="true"></i>
+        {{ 'consolaWhatsapp.volverAlBuzon' | translate }}
+      </a>
+    </div>
+  </header>
+
+  <nav class="cons__pestanas" [attr.aria-label]="'consolaWhatsapp.seccionesAria' | translate">
+    <a class="cons__pestana" *ngFor="let s of secciones; trackBy: trackSeccion"
+       [routerLink]="s.ruta" queryParamsHandling="preserve" routerLinkActive="is-activa">
+      <i class="fa" [ngClass]="s.icono" aria-hidden="true"></i>
+      <span class="cons__pestana-texto">{{ s.clave | translate }}</span>
+    </a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>

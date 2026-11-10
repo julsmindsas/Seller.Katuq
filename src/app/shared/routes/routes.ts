@@ -6,6 +6,7 @@ import { InicioGuard } from "../guards/inicio.guard";
 import { KuvoGuard } from "../../components/kuvo/kuvo.guard";
 import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.guard";
 import { PlataformaUiGuard } from "../../components/plataforma/servicios/plataforma-ui.guard";
+import { ConsolaWhatsappGuard } from "../services/messaging/consola-whatsapp-acceso";
 
 export const content: Routes = [
   {
@@ -444,6 +445,17 @@ export const content: Routes = [
       ).then((m) => m.WhatsappInboxModule),
     canActivate: [AuthGuard],
     data: { title: "Conversaciones WhatsApp" },
+  },
+  // Consola de WhatsApp (D-707): Números, Plantillas, Envíos y Registro. Con la bandera `whatsappConsola`
+  // y solo para la familia Administrador (ConsolaWhatsappGuard); sin ella vuelve al buzón.
+  {
+    path: "notificaciones/whatsapp/consola",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/whatsapp-inbox/consola/whatsapp-consola.module"
+      ).then((m) => m.WhatsappConsolaModule),
+    canActivate: [AuthGuard, ConsolaWhatsappGuard],
+    data: { title: "Consola de WhatsApp" },
   },
   {
     path: "notificaciones/instagram/inbox",

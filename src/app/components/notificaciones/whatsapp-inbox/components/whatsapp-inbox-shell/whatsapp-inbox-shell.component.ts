@@ -11,6 +11,10 @@ import { CompanyFeaturesService } from "../../../../../shared/services/company-f
 import { LoaderService } from "../../../../../shared/services/loader.service";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
+  consolaWhatsappActiva,
+  puedeAdministrarNumeros,
+} from "../../../../../shared/services/messaging/consola-whatsapp-acceso";
+import {
   DuenoChat,
   MessagingLine,
   MiembroEquipo,
@@ -57,6 +61,8 @@ export class WhatsappInboxShellComponent
   readonly multiNumero: boolean;
   readonly esAdministrador: boolean;
   readonly miEmail: string;
+  /** [D-707] Pestaña «Consola»: con la bandera `whatsappConsola` y solo para quien administra los números. */
+  readonly consolaVisible: boolean;
   lineas: MessagingLine[] = [];
   equipo: MiembroEquipo[] = [];
 
@@ -80,6 +86,7 @@ export class WhatsappInboxShellComponent
     features: CompanyFeaturesService,
   ) {
     this.multiNumero = features.isEnabled("whatsappMultiNumero");
+    this.consolaVisible = consolaWhatsappActiva(features) && puedeAdministrarNumeros();
     const usuario = this.leerUsuario();
     this.esAdministrador = esFamiliaAdministrador(usuario["rol"]);
     this.miEmail = String(usuario["email"] || "");

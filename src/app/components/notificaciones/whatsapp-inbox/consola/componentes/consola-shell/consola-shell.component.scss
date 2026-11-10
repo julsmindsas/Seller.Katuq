@@ -1,0 +1,58 @@
+// Marco de la consola de WhatsApp (D-707). Plano, tema canónico (config-pagina).
+// Ninguna clase lleva "p-" (trampa [class*="p-"] del CSS global) y cada span tiene color y tamaño propios.
+@import '../../../../../../shared/styles/config-pagina';
+
+@include config-pagina;
+
+:host {
+  display: block;
+}
+
+.cons {
+  color: $cfg-ink;
+
+  span { color: inherit; font-size: inherit; }
+  a:focus-visible { outline: 3px solid $cfg-accent-2 !important; outline-offset: 2px; }
+}
+
+// Pestañas de las secciones: segmented control (contenedor lila, activa = pastilla blanca con acento).
+.cons__pestanas {
+  display: flex;
+  align-self: flex-start;
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px;
+  overflow-x: auto;
+  background: $cfg-chip-bg;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+}
+
+.cons__pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .12s ease, color .12s ease;
+
+  &:hover { color: $cfg-accent-ink; }
+  &.is-activa {
+    background: var(--ds-surface);
+    color: $cfg-accent-ink;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, .08);
+  }
+}
+
+.cons__pestana-texto {
+  font-size: 13px !important;
+  font-weight: inherit;
+  color: inherit !important;
+}
