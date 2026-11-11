@@ -1,8 +1,25 @@
 {
-  "version": "2026.11.11.4 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T17:09:54.656Z",
-  "notas": [],
+  "version": "2026.11.11.5 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T17:31:30.862Z",
+  "notas": [
+    {
+      "fecha": "2026-11-11T17:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al asentar un pago, ya puedes registrar exactamente lo que falta por pagar; antes, si el saldo tenía centavos, Katuq decía que el valor era mayor y no dejaba guardarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-11T17:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al asentar un pago, ya puedes registrar exactamente lo que falta por pagar; antes, si el saldo tenía centavos, Katuq decía que el valor era mayor y no dejaba guardarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-11T14:40:00Z",
       "tipo": "CORRIGE",
@@ -482,16 +499,8 @@
       "modulos": [
         "productos"
       ]
-    },
-    {
-      "fecha": "2026-11-05T19:13:04Z",
-      "tipo": "CORRIGE",
-      "texto": "En el editor de tu sitio, «Agregar una sección» › «Prefiero empezar desde cero» ya agrega la sección que eliges; antes el botón no hacía nada al pulsarlo con el mouse.",
-      "modulos": [
-        "sitios"
-      ]
     }
   ],
-  "commit": "c0aecaff805bbbba273aca54089cd9a40aa34f1a",
+  "commit": "bc2e3c73e2e9a0affa4aa1f277dc84e3acdbb285",
   "cambiosSinCommit": 0
 }
