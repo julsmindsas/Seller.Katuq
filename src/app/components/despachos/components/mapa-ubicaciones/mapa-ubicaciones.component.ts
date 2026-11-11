@@ -1,8 +1,8 @@
 import {
-  Component, Input, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef
+  Component, Input, Output, EventEmitter, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef
 } from '@angular/core';
 import { leerFranja, ParadaRutero, Punto, RutaRutero } from '../../rutero/rutero.algoritmo';
-import { DibujoRutero, RuteroPanelComponent } from '../rutero-panel/rutero-panel.component';
+import { DibujoRutero, MensajeroRutero, PedidoOrdenRuta, RuteroPanelComponent } from '../rutero-panel/rutero-panel.component';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
@@ -29,6 +29,8 @@ interface UbicacionPedido {
   tiempoEstimado?: number;
   porCobrar?: number;
   zona?: string;
+  /** Ya está en una orden de envío: no entra al rutero. */
+  enOrden?: boolean;
 }
 
 /** Estados que ya pueden salir a la calle: son los que entran al rutero. */
@@ -168,6 +170,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() verMensajeros: boolean = true;
   /** Rutero (openspec rutero-envios): lo enciende la bandera `ruteroEnvios` de la empresa. */
   @Input() ruteroDisponible: boolean = false;
+  @Input() mensajerosRutero: MensajeroRutero[] = [];
+  /** Fase 2: Envíos crea la orden de envío de una ruta por su camino de siempre. */
+  @Output() crearOrdenRuta = new EventEmitter<PedidoOrdenRuta>();
   @ViewChild(RuteroPanelComponent) ruteroPanel?: RuteroPanelComponent;
   public modoRutas = false;
   public eligiendoSalida = false;
@@ -318,7 +323,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   private actualizarParadasRutero(): void {
     const nuevas = (this.configuracion?.ubicaciones || [])
-      .filter(u => u.latitud && u.longitud && ESTADOS_LISTOS_RUTERO.includes(u.estado))
+      .filter(u => u.latitud && u.longitud && !u.enOrden && ESTADOS_LISTOS_RUTERO.includes(u.estado))
       .map(u => ({
         id: u.nroPedido,
         lat: u.latitud!,

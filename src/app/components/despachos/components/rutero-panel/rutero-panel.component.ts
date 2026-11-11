@@ -11,6 +11,28 @@ export interface DibujoRutero {
   salida: Punto | null;
 }
 
+export interface MensajeroRutero {
+  nombre: string;
+  enLinea: boolean;
+}
+
+/** Lo que el rutero le pide a Envíos para crear la orden de envío de una ruta (fase 2). */
+export interface PedidoOrdenRuta {
+  mensajero: string;
+  nroPedidos: string[];
+  /** Plan de la ruta que se guarda con la orden: secuencia y estimados, para comparar luego con lo real. */
+  rutero: {
+    secuencia: Array<{ nroPedido: string; orden: number; llegadaMin: number; franja: string | null }>;
+    kmEstimados: number;
+    minutosEstimados: number;
+    horaSalidaMin: number;
+    salida: Punto;
+    regresa: boolean;
+  };
+  /** Envíos avisa cómo terminó: el número de la orden creada, o null si no se creó. */
+  listo: (nroOrden: string | number | null) => void;
+}
+
 type Ajustes = Omit<OpcionesRutero, 'salida'>;
 
 /**
@@ -30,10 +52,18 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   @Input() ubicacionUsuario: Punto | null = null;
   @Input() empresa = '';
   @Input() eligiendoSalida = false;
+  /** Mensajeros propios del comercio (fase 2). */
+  @Input() mensajeros: MensajeroRutero[] = [];
 
   @Output() dibujar = new EventEmitter<DibujoRutero>();
   @Output() elegirSalida = new EventEmitter<boolean>();
   @Output() verParada = new EventEmitter<ParadaRutero>();
+  @Output() crearOrden = new EventEmitter<PedidoOrdenRuta>();
+
+  /** Mensajero elegido por ruta, orden ya creada por ruta y ruta que se está guardando. */
+  mensajeroDe: Record<string, string> = {};
+  ordenDe: Record<string, string> = {};
+  creando: string | null = null;
 
   ajustes: Ajustes = { ...OPCIONES_POR_DEFECTO };
   salida: Punto | null = null;
@@ -70,7 +100,8 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     if (cambios['paradas'] && !cambios['paradas'].firstChange && this.armado) {
       const vivos = new Set(this.paradas.map(p => p.id));
       const antes = this.totalParadas;
-      this.rutas = this.rutas.map(r => ({ ...r, paradas: r.paradas.filter(p => vivos.has(p.id)) }));
+      // Una ruta que ya es orden de envío se queda como está: sus pedidos salieron de la lista por eso mismo
+      this.rutas = this.rutas.map(r => this.ordenDe[r.id] ? r : ({ ...r, paradas: r.paradas.filter(p => vivos.has(p.id)) }));
       if (this.totalParadas !== antes) this.remedir();
     }
   }
@@ -135,6 +166,8 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     const nombres = this.rutas.map(x => x.nombre);
     this.rutas = r.rutas.map((x, i) => ({ ...x, nombre: nombres[i] && !/^Ruta \d+$/.test(nombres[i]) ? nombres[i] : x.nombre }));
     this.sinRuta = r.sinRuta;
+    this.mensajeroDe = {};
+    this.ordenDe = {};
     this.kmSinOrdenar = this.rutas.reduce((s, x) => s + kmDeOrden(opciones.salida, entran.filter(p => x.paradas.some(q => q.id === p.id)), opciones), 0);
     this.armado = true;
     this.abierta = this.rutas.length === 1 ? this.rutas[0].id : null;
@@ -228,6 +261,44 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   }
 
   alternar(ruta: RutaRutero): void { this.abierta = this.abierta === ruta.id ? null : ruta.id; }
+
+  // ---------- Fase 2: la ruta se vuelve orden de envío ----------
+  /** Un mensajero lleva una sola ruta: los que ya se eligieron en otra no se ofrecen. */
+  mensajerosPara(ruta: RutaRutero): MensajeroRutero[] {
+    const ocupados = new Set(Object.entries(this.mensajeroDe).filter(([id, n]) => id !== ruta.id && n).map(([, n]) => n));
+    return this.mensajeros.filter(m => !ocupados.has(m.nombre));
+  }
+
+  pedirOrden(ruta: RutaRutero): void {
+    const mensajero = this.mensajeroDe[ruta.id];
+    if (!mensajero || !this.salida || !ruta.paradas.length || this.creando || this.ordenDe[ruta.id]) return;
+    this.creando = ruta.id;
+    this.crearOrden.emit({
+      mensajero,
+      nroPedidos: ruta.paradas.map(p => p.id),
+      rutero: {
+        secuencia: ruta.paradas.map((p, i) => ({
+          nroPedido: p.id,
+          orden: i + 1,
+          llegadaMin: Math.round(p.llegadaMin),
+          franja: p.franja.inicioMin != null || p.franja.urgente ? p.franja.etiqueta : null,
+        })),
+        kmEstimados: Math.round(ruta.km * 10) / 10,
+        minutosEstimados: Math.round(ruta.minutos),
+        horaSalidaMin: this.ajustes.horaSalidaMin,
+        salida: this.salida,
+        regresa: !!this.ajustes.regresa,
+      },
+      listo: (nro) => {
+        this.creando = null;
+        if (nro != null) {
+          this.ordenDe[ruta.id] = String(nro);
+          if (/^Ruta \d+$/.test(ruta.nombre)) ruta.nombre = mensajero;
+        }
+        this.cd.markForCheck();
+      },
+    });
+  }
 
   // ---------- Salidas útiles sin guardar nada ----------
   /** Google Maps acepta hasta 9 puntos intermedios: con más paradas el enlace no se ofrece. */

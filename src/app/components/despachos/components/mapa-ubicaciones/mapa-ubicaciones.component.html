@@ -162,6 +162,8 @@
       [ubicacionUsuario]="ubicacionDeQuienMira"
       [empresa]="nombreEmpresa"
       [eligiendoSalida]="eligiendoSalida"
+      [mensajeros]="mensajerosRutero"
+      (crearOrden)="crearOrdenRuta.emit($event)"
       (dibujar)="alDibujarRutas($event)"
       (elegirSalida)="alElegirSalida($event)"
       (verParada)="verParadaEnMapa($event)"></app-rutero-panel>

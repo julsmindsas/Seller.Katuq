@@ -122,17 +122,34 @@
               </div>
               <div class="rtr-ruta__meta" *ngIf="ruta.porCobrar > 0">{{ 'Por cobrar' | translate }} {{ ruta.porCobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
               <div class="rtr-ruta__frase" *ngIf="fraseDe(ruta, r) as frase">{{ frase }}</div>
+              <div class="rtr-ruta__orden" *ngIf="ordenDe[ruta.id]">{{ 'Orden de envío' | translate }} #{{ ordenDe[ruta.id] }} · {{ mensajeroDe[ruta.id] }}</div>
             </div>
             <b class="rtr-ruta__flecha" [class.rtr-ruta__flecha--abierta]="abierta === ruta.id">›</b>
           </div>
 
           <div class="rtr-ruta__cuerpo" *ngIf="abierta === ruta.id">
+            <!-- Fase 2: la ruta se vuelve orden de envío -->
+            <div class="rtr-ruta__crear" *ngIf="!ordenDe[ruta.id]">
+              <select class="rtr__campo" [(ngModel)]="mensajeroDe[ruta.id]" [disabled]="creando === ruta.id"
+                [attr.aria-label]="'Mensajero de la ruta' | translate">
+                <option [ngValue]="undefined">{{ 'Elige el mensajero' | translate }}</option>
+                <option *ngFor="let m of mensajerosPara(ruta)" [ngValue]="m.nombre" [disabled]="!m.enLinea">
+                  {{ m.nombre }}{{ m.enLinea ? '' : (' · ' + ('sin conexión' | translate)) }}
+                </option>
+              </select>
+              <button type="button" class="rtr__btn" (click)="pedirOrden(ruta)" [disabled]="!mensajeroDe[ruta.id] || creando !== null">
+                {{ (creando === ruta.id ? 'Creando…' : 'Crear orden') | translate }}
+              </button>
+            </div>
+            <div class="rtr__pie" *ngIf="!ordenDe[ruta.id] && mensajeros.length === 0">{{ 'No hay mensajeros creados. Créalos en Envíos › Transportadores.' | translate }}</div>
+            <div class="rtr__pie" *ngIf="ordenDe[ruta.id]">{{ 'Esta ruta ya es una orden de envío. Despáchala desde «Órdenes generadas».' | translate }}</div>
             <div class="rtr-ruta__barra">
-              <button type="button" class="rtr__enlace" (click)="reordenar(ruta)">{{ 'Ordenar por cercanía' | translate }}</button>
+              <button type="button" class="rtr__enlace" *ngIf="!ordenDe[ruta.id]" (click)="reordenar(ruta)">{{ 'Ordenar por cercanía' | translate }}</button>
               <button type="button" class="rtr__enlace" (click)="imprimir(ruta)">{{ 'Hoja de ruta' | translate }}</button>
               <a class="rtr__enlace" *ngIf="enlaceMaps(ruta) as enlace" [href]="enlace" target="_blank" rel="noopener">{{ 'Google Maps' | translate }}</a>
             </div>
-            <div class="rtr-ruta__lista" cdkDropList [id]="'rt-' + ruta.id" [cdkDropListData]="ruta.paradas" (cdkDropListDropped)="soltar($event)">
+            <div class="rtr-ruta__lista" cdkDropList [id]="'rt-' + ruta.id" [cdkDropListData]="ruta.paradas" (cdkDropListDropped)="soltar($event)"
+              [cdkDropListDisabled]="!!ordenDe[ruta.id]">
               <div class="rtr-parada" *ngFor="let p of ruta.paradas; let i = index; trackBy: porId" cdkDrag [class.rtr-parada--tarde]="p.tarde">
                 <b class="rtr-parada__num" cdkDragHandle title="{{ 'Arrastra para cambiar el orden' | translate }}">{{ i + 1 }}</b>
                 <div class="rtr-parada__info" role="button" tabindex="0" (click)="verParada.emit(p)" (keydown.enter)="verParada.emit(p)">
@@ -144,7 +161,7 @@
                     <em class="rtr__alerta" *ngIf="p.tarde">· {{ 'tarde' | translate }}</em>
                   </div>
                 </div>
-                <div class="rtr-parada__acciones">
+                <div class="rtr-parada__acciones" *ngIf="!ordenDe[ruta.id]">
                   <button type="button" class="rtr-mini" (click)="mover(ruta, i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir' | translate">↑</button>
                   <button type="button" class="rtr-mini" (click)="mover(ruta, i, 1)" [disabled]="i === ruta.paradas.length - 1" [attr.aria-label]="'Bajar' | translate">↓</button>
                   <select class="rtr-mini rtr-mini--sel" *ngIf="rutas.length > 1" (change)="pasarA(ruta, i, $any($event.target).value)"

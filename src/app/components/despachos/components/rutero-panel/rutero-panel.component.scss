@@ -91,6 +91,8 @@ $naranja: #D9820A;
   }
   &__meta { font-size: 12px; color: $muted; font-weight: 600; margin-top: 2px; }
   &__frase { font-size: 12px; color: $tinta; margin-top: 6px; background: $acc-suave; border-radius: 11px; padding: 6px 8px; }
+  &__orden { font-size: 12px; font-weight: 800; color: $verde; margin-top: 4px; }
+  &__crear { display: flex; gap: 6px; padding: 2px 2px 8px; }
   &__flecha { color: $muted; font-size: 18px; line-height: 1; transition: transform .15s; &--abierta { transform: rotate(90deg); } }
   &__cuerpo { border-top: 1px solid $linea; padding: 8px 10px 10px; }
   &__barra { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 2px 2px 8px; }

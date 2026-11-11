@@ -151,6 +151,7 @@ interface UbicacionPedido {
   tiempoEstimado?: number; // en minutos
   porCobrar?: number;
   zona?: string;
+  enOrden?: boolean;
 }
 
 @Component({
@@ -218,6 +219,67 @@ export class DespachosComponent implements OnInit, OnDestroy {
   /** Rutero en el mapa (openspec rutero-envios): solo con la bandera `ruteroEnvios` de la empresa. */
   get ruteroDisponible(): boolean {
     return this.companyFeaturesCredito.isEnabled('ruteroEnvios');
+  }
+  mensajerosRutero: Array<{ nombre: string; enLinea: boolean }> = [];
+
+  /**
+   * Rutero, fase 2 (D-638): una ruta armada en el mapa se guarda como orden de envío por el mismo servicio
+   * que usa «Generar orden» (`createShippingOrder`), con el mismo cuerpo. Solo cambia que los pedidos van en
+   * el orden de la ruta y que la orden lleva `rutero` (secuencia y estimados). No despacha: eso sigue en
+   * «Órdenes generadas». El backend valida mensajero en línea y pedidos que ya están en otra orden.
+   */
+  crearOrdenDesdeRuta(pedido: { mensajero: string; nroPedidos: string[]; rutero: any; listo: (nro: string | number | null) => void }): void {
+    const pedidos = pedido.nroPedidos.map(nro => this.orders.find(o => o.nroPedido === nro));
+    const faltan = pedido.nroPedidos.filter((_, i) => !pedidos[i]);
+    const enOrden = pedidos.filter(p => p && ((p as any).shippingOrder || (p as any).nroShippingOrder));
+    if (faltan.length || enOrden.length) {
+      pedido.listo(null);
+      Swal.fire(
+        "No se creó la orden",
+        faltan.length
+          ? `Estos pedidos ya no están en la lista: ${faltan.join(", ")}. Vuelve a armar las rutas.`
+          : `Estos pedidos ya están en una orden de envío: ${enOrden.map(p => p!.nroPedido).join(", ")}. Vuelve a armar las rutas.`,
+        "warning",
+      );
+      return;
+    }
+    Swal.fire({
+      title: "Crear orden de envío",
+      text: `${pedido.mensajero} sale con ${pedidos.length} ${pedidos.length === 1 ? "pedido" : "pedidos"}, en el orden de la ruta. La orden queda creada; se despacha desde «Órdenes generadas».`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Crear orden",
+      cancelButtonText: "Cancelar",
+    }).then((respuesta) => {
+      if (!respuesta.isConfirmed) { pedido.listo(null); return; }
+      const currentCompanyStr = localStorage.getItem("currentCompany");
+      const orden = {
+        id: "",
+        nroShippingOrder: "",
+        fecha: new Date().toISOString(),
+        metodoEnvio: "mensajeroPropio",
+        transportador: normalizeTransportadorName(pedido.mensajero),
+        company: currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : "",
+        pedidos,
+        pedidosMovidos: [],
+        rutero: { ...pedido.rutero, creadaEn: new Date().toISOString() },
+      };
+      this.logisticaService.createShippingOrder(orden)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            const nro = response?.nroShippingOrder ?? null;
+            pedido.listo(nro);
+            Swal.fire({ title: "Orden creada", text: `Orden de envío ${nro || ""} para ${pedido.mensajero}`, icon: "success", timer: 2200, showConfirmButton: false });
+            this.refrescarDatos();
+            if (this.ordenesDespachoV2Component) this.ordenesDespachoV2Component.loadInitialOrders();
+          },
+          error: (error) => {
+            pedido.listo(null);
+            Swal.fire("Error", "No se pudo crear la orden de envío: " + this.mensajeErrorOrdenEnvio(error), "error");
+          },
+        });
+    });
   }
   ciudadSeleccionada: string;
   ESTADOPAGO: any[];
@@ -703,6 +765,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         this.vendors = data || [];
+        this.mensajerosRutero = (this.vendors as any[])
+          .filter(v => v && v.nombre)
+          .map(v => ({ nombre: String(v.nombre), enLinea: v.estadoDisponibilidad === 'online' }))
+          .sort((a, b) => Number(b.enLinea) - Number(a.enLinea) || a.nombre.localeCompare(b.nombre));
       });
   }
 
@@ -6597,6 +6663,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       // Rutero (openspec rutero-envios): valor por cobrar y zona de cada parada
       porCobrar: Number((pedido as any).faltaPorPagar) || 0,
       zona: pedido.envio?.zonaCobro || '',
+      enOrden: !!((pedido as any).shippingOrder || (pedido as any).nroShippingOrder),
       distanciaRestante: undefined, // Se puede calcular más tarde
       tiempoEstimado: undefined // Se puede calcular más tarde
       };
