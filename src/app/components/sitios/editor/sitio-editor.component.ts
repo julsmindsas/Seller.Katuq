@@ -337,7 +337,8 @@ const AJUSTES_MANUAL_MARCA: { clave: string; nombre: string; no: string; si: str
   { clave: "accionesTexto", nombre: "Cuenta, favoritos y carrito", no: "Solo ícono", si: "Ícono y palabra", valor: "si", nota: "La palabra se ve en pantallas anchas; en celular quedan los íconos." },
   { clave: "pieDatos", nombre: "Datos del pie", no: "En texto", si: "Con íconos", valor: "iconos", nota: "Teléfono, horario, correo y dirección, cada uno con su ícono." },
   { clave: "pieLogo", nombre: "Logo del pie", no: "Normal", si: "Grande", valor: "grande", nota: "240 px de ancho: lo que necesita un logo con eslogan para leerse." },
-  { clave: "estados", nombre: "Colores de estado", no: "Verde y rojo", si: "Los de la marca", valor: "marca", nota: "Confirmaciones y errores con el color de texto; los distingue el ícono y el texto." },
+  { clave: "estados", nombre: "Colores de estado", no: "Verde y rojo", si: "Los de la marca", valor: "marca", nota: "Confirmaciones, errores y la etiqueta de descuento sin verde ni rojo; los distinguen el ícono, el texto y el borde." },
+  { clave: "panelCompra", nombre: "Carrito y pago", no: "Colores de Katuq", si: "Los de la marca", valor: "marca", nota: "El carrito, el pago, la ventana de la cuenta y los avisos usan el color de texto de la marca y grises neutros." },
   { clave: "emojis", nombre: "Emojis en la tienda", no: "Sí", si: "No", valor: "no", nota: "El carrito y el asistente llevan íconos de línea o solo texto." },
 ];
 
