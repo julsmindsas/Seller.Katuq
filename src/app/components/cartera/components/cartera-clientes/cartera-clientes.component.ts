@@ -943,9 +943,9 @@ export class CarteraClientesComponent implements OnChanges {
     return `${dd}/${mm}/${d.getFullYear()}`;
   }
 
-  /** Ticket 1583: dirección de la lista de clientes filtrada por el documento (se abre en otra pestaña para no perder los filtros). */
+  /** Tickets 1583 y 1600: abre en otra pestaña la ficha del cliente (la lista busca solo ese documento, sin filtros guardados, y abre su ficha). */
   urlFicha(cliente: CarteraCliente): string {
-    return this.router.serializeUrl(this.router.createUrlTree(['/ventas/clienteslista'], { queryParams: { buscar: cliente.documento } }));
+    return this.router.serializeUrl(this.router.createUrlTree(['/ventas/clienteslista'], { queryParams: { buscar: cliente.documento, ficha: '1' } }));
   }
 
   toggleExpand(cliente: CarteraCliente): void {

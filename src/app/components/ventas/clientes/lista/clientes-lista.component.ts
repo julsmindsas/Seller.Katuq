@@ -64,6 +64,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     };
     private cargaSub?: Subscription;
     private primeraCarga = true;
+    /** Ticket 1600: documento cuya ficha se abre apenas llegue la lista (entrada desde Cartera con ?ficha=1). */
+    private fichaPendiente: string | null = null;
     mostrarFiltros: boolean = !(typeof window !== 'undefined' && window.innerWidth < 768); // ticket 1531: en celular los filtros nacen plegados
     viewMode: 'compact' | 'detailed' = 'compact';
     selectedCliente: any | null = null;
@@ -135,9 +137,11 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.route.queryParams.subscribe(params => {
             const buscar = (params['invoiceCustomer'] || params['buscar'] || '').toString().trim();
             if (buscar) {
-                if (params['invoiceCustomer']) {
+                // Ticket 1600: desde Cartera (?ficha=1) se busca solo ese documento, sin los filtros guardados de otra búsqueda.
+                if (params['invoiceCustomer'] || params['ficha'] === '1') {
                     this.formFiltros.reset(); this.selectedTagNames = []; this.selectedEstadoFilter = 'todos';
                 }
+                this.fichaPendiente = params['ficha'] === '1' ? buscar : null;
                 this.globalFilterValue = buscar;
                 this.primeraCarga = false;
                 this.cargarClientes({ reiniciar: true, aplicar: true });
@@ -266,6 +270,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 }
                 this.cargando = false;
                 if (opciones.notificar) { this.avisarResultado(); }
+                this.abrirFichaPendiente();
             },
             error: (error) => {
                 console.error(error);
@@ -564,6 +569,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     // ── Panel de detalles ────────────────────────────────────────────
     showDetallePanel: boolean = false;
     clienteDetalle: any = null;
+
+    /** Ticket 1600: si la lista se abrió para ver un cliente, abre su ficha cuando hay uno solo con ese documento. */
+    private abrirFichaPendiente(): void {
+        const doc = this.fichaPendiente;
+        if (!doc) return;
+        this.fichaPendiente = null;
+        const limpio = (v: any) => String(v ?? '').replace(/[^0-9a-z]/gi, '').toLowerCase();
+        const iguales = this.clientes.filter(c => limpio(c?.documento) === limpio(doc));
+        if (iguales.length === 1) { this.verDetalles(iguales[0]); }
+    }
 
     verDetalles(cliente: any): void {
         this.selectedCliente = null;
