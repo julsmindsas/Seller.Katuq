@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
@@ -64,9 +65,11 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   /**
    * TikTok: imágenes que escribió el cliente, ya descargadas (id del mensaje → dirección `blob:`). El
    * servidor las entrega por una ruta que pide la sesión, así que no se pueden mostrar con un `<img src>`
-   * directo. `generacionImagenes` descarta respuestas que llegan después de cambiar de conversación.
+   * directo. De cada una se guarda la dirección cruda (para revocarla) y la marcada como segura (para el
+   * `<img>`): Angular 14 no deja pasar `blob:` en `[src]` y lo dejaría como `unsafe:blob:…`.
+   * `generacionImagenes` descarta respuestas que llegan después de cambiar de conversación.
    */
-  private imagenesEntrantes = new Map<string, string>();
+  private imagenesEntrantes = new Map<string, { crudo: string; seguro: SafeUrl }>();
   private imagenesEnCurso = new Set<string>();
   private imagenesFallidas = new Set<string>();
   private generacionImagenes = 0;
@@ -88,6 +91,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     private servicio: MetaInboxService,
     private loader: LoaderService,
     private translate: TranslateService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -393,14 +397,20 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         .subscribe((blob) => {
           if (generacion !== this.generacionImagenes) return;
           this.imagenesEnCurso.delete(m.id);
-          if (blob) this.imagenesEntrantes.set(m.id, URL.createObjectURL(blob));
-          else this.imagenesFallidas.add(m.id);
+          if (blob) {
+            // Solo se marca como segura la dirección que acaba de crear este mismo navegador con la
+            // imagen que entregó nuestro servidor: nunca una dirección que venga en un mensaje.
+            const crudo = URL.createObjectURL(blob);
+            this.imagenesEntrantes.set(m.id, { crudo, seguro: this.sanitizer.bypassSecurityTrustUrl(crudo) });
+          } else {
+            this.imagenesFallidas.add(m.id);
+          }
         });
     }
   }
 
   private soltarImagenesEntrantes(): void {
-    this.imagenesEntrantes.forEach((url) => URL.revokeObjectURL(url));
+    this.imagenesEntrantes.forEach((imagen) => URL.revokeObjectURL(imagen.crudo));
     this.imagenesEntrantes.clear();
     this.imagenesEnCurso.clear();
     this.imagenesFallidas.clear();
@@ -408,8 +418,8 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   /** La imagen del cliente ya descargada, lista para el `<img>`; null mientras llega o si no se pudo. */
-  imagenDe(m: MetaMensaje): string | null {
-    return this.esTiktok ? this.imagenesEntrantes.get(m.id) || null : null;
+  imagenDe(m: MetaMensaje): SafeUrl | null {
+    return this.esTiktok ? this.imagenesEntrantes.get(m.id)?.seguro || null : null;
   }
 
   /** TikTok: publicación que el cliente compartió. `mediaUrl` es su enlace público. */
