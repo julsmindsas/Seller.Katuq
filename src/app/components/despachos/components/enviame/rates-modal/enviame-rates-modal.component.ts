@@ -285,7 +285,7 @@ export class EnviameRatesModalComponent implements OnInit {
         recipientEmail: ['', [Validators.email]],
 
         // Paquete
-        weight: [1, [Validators.required, Validators.min(0.1), Validators.max(50)]],
+        weight: [1, [Validators.required, Validators.min(0.1)]],
         nPackages: [1, [Validators.required, Validators.min(1)]],  // Número de bultos
         length: [30, [Validators.min(1)]],  // Opcional
         width: [20, [Validators.min(1)]],    // Opcional

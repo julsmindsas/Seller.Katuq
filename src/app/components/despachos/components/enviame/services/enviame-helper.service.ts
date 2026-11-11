@@ -198,10 +198,6 @@ export class EnviameHelperService {
       errors.push('El peso debe ser mayor a 0');
     }
 
-    if (pkg.weight > 50) {
-      errors.push('El peso no puede ser mayor a 50 kg');
-    }
-
     if (!pkg.dimensions) {
       errors.push('Las dimensiones son obligatorias');
     } else {
