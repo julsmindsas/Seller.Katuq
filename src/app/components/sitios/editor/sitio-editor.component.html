@@ -3110,6 +3110,55 @@
             </ng-container>
           </div>
 
+          <!-- ── Cuenta de clientes (D-691) ──
+               El comprador crea su cuenta en la tienda y puede pedir un tipo de cliente (mayorista…). El tipo solo
+               se asigna aquí, al aprobar: mientras tanto compra a precio de público. -->
+          <div class="grupo grupo--plegable" *ngIf="cuentaTienda as ct" [class.is-abierto]="tiendaAbierto === 'Cuenta de clientes'">
+            <h3 class="grupo__plegar" role="button" tabindex="0" [attr.aria-expanded]="tiendaAbierto === 'Cuenta de clientes'" (click)="abrirGrupoTienda('Cuenta de clientes')" (keydown.enter)="abrirGrupoTienda('Cuenta de clientes')" (keydown.space)="$event.preventDefault(); abrirGrupoTienda('Cuenta de clientes')">Cuenta de clientes</h3>
+            <button class="opcion" [class.is-active]="ct.registro" (click)="ct.registro = !ct.registro; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Dejar que creen su cuenta</strong>
+                <small>Con su nombre, correo y celular. Entran con un código que les llega al correo, sin clave, y ven sus pedidos.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="ct.solicitud" (click)="ct.solicitud = !ct.solicitud; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Dejar que pidan cuenta de mayorista</strong>
+                <small>Piden un tipo de cliente con su NIT. Tú apruebas aquí; mientras tanto compran al precio de la tienda.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <ng-container *ngIf="ct.solicitud">
+              <div class="campo">
+                <label id="lbl-cuenta-tipos">Tipos de cliente que pueden pedir</label>
+                <p class="aviso aviso--info" *ngIf="!cargandoTiposCliente && !tiposCliente.length">Todavía no tienes tipos de cliente. Créalos en Configuración → Tipos de cliente y ponles precio a tus productos.</p>
+                <div class="segmentos" role="group" aria-labelledby="lbl-cuenta-tipos" *ngIf="tiposCliente.length">
+                  <button type="button" *ngFor="let t of tiposCliente" [class.is-active]="tipoCuentaElegido(t.id)" [attr.aria-pressed]="tipoCuentaElegido(t.id)"
+                          (click)="alternarTipoCuenta(t)">{{ t.nombre }}</button>
+                </div>
+                <small class="nota-estilo">Hasta 6. Sin ninguno elegido, la tienda no ofrece la solicitud.</small>
+              </div>
+            </ng-container>
+
+            <div class="campo">
+              <label>Solicitudes por revisar</label>
+              <p class="nota-estilo" *ngIf="cargandoSolicitudes">Buscando…</p>
+              <p class="nota-estilo" *ngIf="!cargandoSolicitudes && !solicitudesTipo.length">No hay solicitudes pendientes.</p>
+              <div class="repetible" *ngFor="let s of solicitudesTipo">
+                <strong>{{ s.razonSocial }} · {{ s.tipoNombre }}</strong>
+                <small class="nota-estilo">{{ s.nombre }} · {{ s.tipoDocumento }} {{ s.documento }}</small>
+                <small class="nota-estilo">{{ s.email }} · {{ s.telefono }}</small>
+                <small class="nota-estilo" *ngIf="s.mensaje">«{{ s.mensaje }}»</small>
+                <div class="campo-doble">
+                  <button type="button" class="boton-secundario" [disabled]="resolviendoSolicitud === s.clienteCd" (click)="resolverSolicitud(s, 'aprobar')">Aprobar</button>
+                  <button type="button" class="enlace-sutil" [disabled]="resolviendoSolicitud === s.clienteCd" (click)="resolverSolicitud(s, 'rechazar')">Rechazar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- ── Cupones ── -->
           <div class="grupo grupo--plegable" [class.is-abierto]="tiendaAbierto === 'Cupones de descuento'">
             <h3 class="grupo__plegar" role="button" tabindex="0" [attr.aria-expanded]="tiendaAbierto === 'Cupones de descuento'" (click)="abrirGrupoTienda('Cupones de descuento')" (keydown.enter)="abrirGrupoTienda('Cupones de descuento')" (keydown.space)="$event.preventDefault(); abrirGrupoTienda('Cupones de descuento')">Cupones de descuento</h3>

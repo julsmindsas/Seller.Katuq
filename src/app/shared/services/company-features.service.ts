@@ -12,6 +12,7 @@ export const COMPANY_FEATURE_FLAGS = [
   'productFromPhoto',
   'productImportPhotos',
   'buyNowCod',
+  'precioListaConSesion',
   'whatsappCartRecovery',
   'whatsappOrderConfirmation',
   'enviameCodGuide',

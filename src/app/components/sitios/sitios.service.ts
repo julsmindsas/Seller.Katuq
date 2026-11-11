@@ -66,6 +66,8 @@ export interface TiendaSitio {
    * Recoger en tienda: puntos donde el comprador puede pasar por su pedido.
    * Sin puntos, el checkout ni siquiera muestra la opción.
    */
+  /** D-691: cuenta del comprador — crear cuenta y pedir un tipo de cliente. Apagada si falta. */
+  cuenta?: { registro: boolean; solicitud: boolean; tipos: { id: string; nombre: string }[] };
   retiroEnTienda?: {
     activo: boolean;
     texto: string;
@@ -584,6 +586,21 @@ export interface RespuestaProductos {
  * (`shared/services/interceptor/http.interceptor.ts`), así que aquí no se
  * arma ninguno a mano.
  */
+/** D-691: una solicitud de tipo de cliente pendiente. */
+export interface SolicitudTipoCliente {
+  clienteCd: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  tipoId: string;
+  tipoNombre: string;
+  tipoDocumento: string;
+  documento: string;
+  razonSocial: string;
+  mensaje: string;
+  creado: string;
+}
+
 @Injectable({ providedIn: "root" })
 export class SitiosService extends BaseService {
   constructor(http: HttpClient) {
@@ -925,6 +942,20 @@ export class SitiosService extends BaseService {
     }>
   > {
     return this.post<any>("/v1/sites/acceso-cliente", { clienteCd });
+  }
+
+  /** D-691: tipos de cliente de la empresa (los mismos de los precios por tipo). */
+  tiposDeCliente(): Observable<{ id: string; nombre: string; activo?: boolean }[]> {
+    return this.get<any>("/v1/tipos-precios/active");
+  }
+
+  /** D-691: solicitudes de tipo de cliente que llegaron desde la tienda y están por revisar. */
+  solicitudesDeTipo(): Observable<Respuesta<SolicitudTipoCliente[]>> {
+    return this.get<any>("/v1/sites/solicitudes-tipo");
+  }
+
+  resolverSolicitudDeTipo(clienteCd: string, accion: "aprobar" | "rechazar"): Observable<Respuesta<unknown>> {
+    return this.post<any>(`/v1/sites/solicitudes-tipo/${encodeURIComponent(clienteCd)}`, { accion });
   }
 
   kitDeMarca(): Observable<Respuesta<KitDeMarca>> {
