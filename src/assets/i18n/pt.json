@@ -10184,7 +10184,7 @@
   "ventas.clientesLista.linkCopiado": "Link copiado",
   "ventas.clientesLista.linkCopiadoTexto": "Compartilhe-o com <strong>{{nombre}}</strong>{{categoria}} por WhatsApp. Ao abri-lo, verá os preços da sua lista em toda a loja.",
   "ventas.clientesLista.tuCliente": "seu cliente",
-  "ventas.clientesLista.linkRevoca": "Gerá-lo novamente revoga o link anterior.",
+  "ventas.clientesLista.linkRevoca": "O link funciona uma única vez se o cliente tiver e-mail: depois ele entra com um código enviado ao e-mail. Gerá-lo novamente revoga o link anterior e encerra as sessões dele.",
   "ventas.clientesLista.listo": "Pronto",
   "ventas.clientesLista.posiblesDuplicados": "Possíveis duplicados",
   "ventas.clientesLista.posiblesDuplicadosTooltip": "Revise clientes que parecem repetidos",

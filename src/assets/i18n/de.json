@@ -10016,7 +10016,7 @@
     "ventas.clientesLista.linkCopiado": "Link kopiert",
     "ventas.clientesLista.linkCopiadoTexto": "Teilen Sie ihn per WhatsApp mit <strong>{{nombre}}</strong>{{categoria}}. Beim Öffnen sieht er die Preise seiner Liste im ganzen Shop.",
     "ventas.clientesLista.tuCliente": "Ihrem Kunden",
-    "ventas.clientesLista.linkRevoca": "Wenn Sie ihn erneut erstellen, wird der vorherige Link widerrufen.",
+    "ventas.clientesLista.linkRevoca": "Der Link funktioniert nur einmal, wenn der Kunde eine E-Mail-Adresse hat: Danach meldet er sich mit einem Code an, der an seine E-Mail gesendet wird. Wenn Sie ihn erneut erstellen, wird der vorherige Link widerrufen und seine Sitzungen werden geschlossen.",
     "ventas.clientesLista.listo": "Fertig",
     "ventas.clientesLista.posiblesDuplicados": "Mögliche Duplikate",
     "ventas.clientesLista.posiblesDuplicadosTooltip": "Prüfen Sie Kunden, die doppelt erfasst scheinen",
