@@ -32,6 +32,8 @@ interface UbicacionPedido {
   /** Ya está en una orden de envío: no entra al rutero. */
   enOrden?: boolean;
   telefono?: string;
+  /** El pago del pedido permite despacharlo (mismo criterio de «Generar orden»). */
+  pagoApto?: boolean;
 }
 
 /** Estados que ya pueden salir a la calle: son los que entran al rutero. */
@@ -179,6 +181,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   public eligiendoSalida = false;
   public paradasRutero: ParadaRutero[] = [];
   private capaRutas: any = null;
+  private relojRutas: any = null;
   private dibujoRutero: DibujoRutero = { rutas: [], salida: null };
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
@@ -281,11 +284,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       if (antes !== this.configuracion?.ubicaciones) {
         const sinPinesAntes = !antes?.some(u => u.latitud && u.longitud);
         this.agregarMarcadores();
-        if (this.modoRutas) {
-          this.actualizarParadasRutero();
-          // Los pines recién creados entran escalonados: se vuelven a esconder los que ya son parada
-          setTimeout(() => this.pintarRutas(), 1300);
-        }
+        if (this.modoRutas) this.actualizarParadasRutero();
         // Encuadrar solo con los primeros pines: después, no mover el mapa mientras alguien lo usa
         if (sinPinesAntes) this.ajustarVistaAMarcadores();
       }
@@ -312,7 +311,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   /** Entra y sale del modo Rutas: el panel lateral pasa a ser el rutero y los pines, paradas numeradas. */
   public alternarRutas(): void {
     this.modoRutas = !this.modoRutas;
-    this.eligiendoSalida = false;
+    this.alElegirSalida(false);
     if (this.modoRutas) {
       this.actualizarParadasRutero();
     } else {
@@ -324,7 +323,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
   private actualizarParadasRutero(): void {
     const nuevas = (this.configuracion?.ubicaciones || [])
-      .filter(u => u.latitud && u.longitud && !u.enOrden && ESTADOS_LISTOS_RUTERO.includes(u.estado))
+      .filter(u => u.latitud && u.longitud && !u.enOrden && u.pagoApto !== false && ESTADOS_LISTOS_RUTERO.includes(u.estado))
       .map(u => ({
         id: u.nroPedido,
         lat: u.latitud!,
@@ -424,6 +423,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       clearInterval(this.intervalTimer);
     }
     clearTimeout(this.ocultarAvanceTimer);
+    clearTimeout(this.relojRutas);
     if (this.mapa) {
       this.mapa.remove();
       this.mapa = null;
@@ -871,6 +871,13 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     
     // Actualizar contador de ubicaciones procesadas
     this.ultimosLocationsProcesados = this.configuracion.ubicaciones.length;
+
+    // Rutero: los pines recién creados entran escalonados; al terminar se vuelven a pintar las rutas y a
+    // esconder los pines que ya son parada numerada (también tras reinicializar o refrescar el mapa)
+    if (this.modoRutas) {
+      clearTimeout(this.relojRutas);
+      this.relojRutas = setTimeout(() => this.pintarRutas(), 1300);
+    }
   }
 
   /**

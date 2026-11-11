@@ -1,4 +1,6 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import {
   armarRutas, COLORES_RUTA, etiquetaHora, kmDeOrden, medirRuta, OPCIONES_POR_DEFECTO, OpcionesRutero, ordenarParadas,
@@ -20,6 +22,7 @@ export interface MensajeroRutero {
 
 /** Lo que el rutero le pide a Envíos para crear la orden de envío de una ruta (fase 2). */
 export interface PedidoOrdenRuta {
+  /** Mensajero sugerido para la ruta; puede ir vacío. Se asigna de verdad al despachar la orden. */
   mensajero: string;
   nroPedidos: string[];
   /** Plan de la ruta que se guarda con la orden: secuencia y estimados, para comparar luego con lo real. */
@@ -46,7 +49,8 @@ type Ajustes = Omit<OpcionesRutero, 'salida'>;
   templateUrl: './rutero-panel.component.html',
   styleUrls: ['./rutero-panel.component.scss']
 })
-export class RuteroPanelComponent implements OnInit, OnChanges {
+export class RuteroPanelComponent implements OnInit, OnChanges, OnDestroy {
+  private readonly destruir$ = new Subject<void>();
   /** Pedidos listos para salir que tienen punto en el mapa. */
   @Input() paradas: ParadaRutero[] = [];
   @Input() sinUbicar = 0;
@@ -108,15 +112,16 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(cambios: SimpleChanges): void {
-    if (cambios['ubicacionUsuario'] || cambios['paradas']) this.resolverSalida();
-    // Si un pedido ya no está listo (se despachó en otra pestaña), sale de las rutas armadas
-    if (cambios['paradas'] && !cambios['paradas'].firstChange && this.armado) {
-      const vivos = new Set(this.paradas.map(p => p.id));
-      const antes = this.totalParadas;
-      // Una ruta que ya es orden de envío se queda como está: sus pedidos salieron de la lista por eso mismo
-      this.rutas = this.rutas.map(r => this.ordenDe[r.id] ? r : ({ ...r, paradas: r.paradas.filter(p => vivos.has(p.id)) }));
-      if (this.totalParadas !== antes) this.remedir();
-    }
+    // Con rutas armadas la salida sugerida no se mueve: las horas y los km ya se calcularon con ella.
+    // Tampoco se desarman las rutas si la lista de Envíos cambia de página o de filtro: al crear la orden,
+    // Envíos avisa si algún pedido ya no está a la vista.
+    if ((cambios['ubicacionUsuario'] || cambios['paradas']) && !this.armado) this.resolverSalida();
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.relojCalles);
+    this.destruir$.next();
+    this.destruir$.complete();
   }
 
   // ---------- Datos derivados ----------
@@ -170,14 +175,12 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
 
   // ---------- Armar ----------
   armar(): void {
-    if (!this.salida || !this.paradas.length) return;
+    if (!this.salida || !this.paradas.length || this.creando) return;
     const fuera = new Set(this.fuera.map(p => p.id));
     const entran = this.paradas.filter(p => !fuera.has(p.id));
     const opciones = this.opciones();
     const r = armarRutas(entran, opciones);
-    // Los nombres que la persona ya puso se conservan por posición
-    const nombres = this.rutas.map(x => x.nombre);
-    this.rutas = r.rutas.map((x, i) => ({ ...x, nombre: nombres[i] && !/^Ruta \d+$/.test(nombres[i]) ? nombres[i] : x.nombre }));
+    this.rutas = r.rutas;
     this.sinRuta = r.sinRuta;
     this.mensajeroDe = {};
     this.ordenDe = {};
@@ -192,6 +195,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   }
 
   limpiar(): void {
+    if (this.creando) return;
     this.rutas = [];
     this.sinRuta = [];
     this.fuera = [];
@@ -217,7 +221,9 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
 
   private remedir(): void {
     const opciones = this.opciones();
-    this.rutas = this.rutas.filter(r => r.paradas.length).map(r => medirRuta(r, opciones, this.kmDeCalles(r)));
+    this.rutas = this.rutas.filter(r => r.paradas.length || this.ordenDe[r.id]).map(r => medirRuta(r, opciones, this.kmDeCalles(r)));
+    const vivas = new Set(this.rutas.map(r => r.id));
+    Object.keys(this.mensajeroDe).forEach(id => { if (!vivas.has(id)) delete this.mensajeroDe[id]; });
     this.opinion = null;
     this.emitir();
     this.programarCalles();
@@ -267,7 +273,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
       salida,
       regresa: !!this.ajustes.regresa,
       rutas: pendientes.map(r => ({ id: r.id, paradas: r.paradas.map(p => ({ lat: p.lat, lng: p.lng })) })),
-    }).subscribe({
+    }).pipe(takeUntil(this.destruir$)).subscribe({
       next: (respuesta) => {
         this.porCalles = !!respuesta?.disponible;
         if (!respuesta?.disponible || turno !== this.turnoCalles) { this.cd.markForCheck(); return; }
@@ -307,7 +313,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     this.verCumplimiento = !this.verCumplimiento;
     if (!this.verCumplimiento || this.cargandoCumplimiento) return;
     this.cargandoCumplimiento = true;
-    this.rutero.cumplimiento().subscribe({
+    this.rutero.cumplimiento().pipe(takeUntil(this.destruir$)).subscribe({
       next: (c) => { this.cumplimiento = c; this.cargandoCumplimiento = false; this.cd.markForCheck(); },
       error: () => { this.cumplimiento = null; this.cargandoCumplimiento = false; this.cd.markForCheck(); },
     });
@@ -329,6 +335,9 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   get hayRutaAbierta(): boolean { return this.rutas.some(r => !this.ordenDe[r.id]); }
 
   // ---------- Ajuste a mano ----------
+  /** Una ruta que ya es orden de envío no recibe paradas (`cdkDropListDisabled` solo impide sacarlas). */
+  puedeRecibir = (ruta: RutaRutero) => () => !this.ordenDe[ruta.id];
+
   soltar(evento: CdkDragDrop<any[]>): void {
     if (evento.previousContainer === evento.container) {
       moveItemInArray(evento.container.data, evento.previousIndex, evento.currentIndex);
@@ -347,7 +356,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
 
   pasarA(ruta: RutaRutero, i: number, destinoId: string): void {
     const destino = this.rutas.find(r => r.id === destinoId);
-    if (!destino || destino === ruta) return;
+    if (!destino || destino === ruta || this.ordenDe[destino.id] || this.ordenDe[ruta.id]) return;
     destino.paradas.push(ruta.paradas.splice(i, 1)[0]);
     destino.paradas = ordenarParadas(this.salida!, destino.paradas) as any;
     this.remedir();
@@ -387,8 +396,8 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   }
 
   pedirOrden(ruta: RutaRutero): void {
-    const mensajero = this.mensajeroDe[ruta.id];
-    if (!mensajero || !this.salida || !ruta.paradas.length || this.creando || this.ordenDe[ruta.id]) return;
+    const mensajero = this.mensajeroDe[ruta.id] || '';
+    if (!this.salida || !ruta.paradas.length || this.creando || this.ordenDe[ruta.id]) return;
     this.creando = ruta.id;
     this.crearOrden.emit({
       mensajero,
@@ -410,7 +419,9 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
         this.creando = null;
         if (nro != null) {
           this.ordenDe[ruta.id] = String(nro);
-          if (/^Ruta \d+$/.test(ruta.nombre)) ruta.nombre = mensajero;
+          // La ruta pudo volverse a medir mientras se guardaba: se busca la vigente por su id
+          const vigente = this.rutas.find(r => r.id === ruta.id);
+          if (vigente && mensajero && /^Ruta \d+$/.test(vigente.nombre)) vigente.nombre = mensajero;
         }
         this.cd.markForCheck();
       },
@@ -456,7 +467,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     if (!texto || this.pensando) return;
     this.pensando = true;
     this.avisoOpttia = '';
-    this.rutero.instruccion({ texto, paradas: this.paradas.length, actuales: { ...this.ajustes } }).subscribe({
+    this.rutero.instruccion({ texto, paradas: this.paradas.length, actuales: { ...this.ajustes } }).pipe(takeUntil(this.destruir$)).subscribe({
       next: ({ ajustes }) => {
         this.pensando = false;
         if (!ajustes) { this.avisoOpttia = 'Opttia no entendió la instrucción. Ajusta los valores a mano.'; this.cd.markForCheck(); return; }
@@ -483,7 +494,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
       conFranja: r.paradas.filter(p => p.franja.inicioMin != null).length,
       urgentes: r.paradas.filter(p => p.franja.urgente).length,
     }));
-    this.rutero.opinion({ rutas, sinRuta: this.sinRuta.length + this.fuera.length, sinUbicar: this.sinUbicar, horaSalidaMin: this.ajustes.horaSalidaMin }).subscribe({
+    this.rutero.opinion({ rutas, sinRuta: this.sinRuta.length + this.fuera.length, sinUbicar: this.sinUbicar, horaSalidaMin: this.ajustes.horaSalidaMin }).pipe(takeUntil(this.destruir$)).subscribe({
       next: ({ opinion }) => {
         this.opinando = false;
         this.opinion = opinion;

@@ -153,6 +153,7 @@ interface UbicacionPedido {
   zona?: string;
   enOrden?: boolean;
   telefono?: string;
+  pagoApto?: boolean;
 }
 
 @Component({
@@ -225,9 +226,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
   /**
    * Rutero, fase 2 (D-638): una ruta armada en el mapa se guarda como orden de envío por el mismo servicio
-   * que usa «Generar orden» (`createShippingOrder`), con el mismo cuerpo. Solo cambia que los pedidos van en
-   * el orden de la ruta y que la orden lleva `rutero` (secuencia y estimados). No despacha: eso sigue en
-   * «Órdenes generadas». El backend valida mensajero en línea y pedidos que ya están en otra orden.
+   * que usa «Generar orden» (`createShippingOrder`), con el mismo cuerpo que esa pantalla manda para
+   * mensajero propio: SIN `transportador`. Con transportador el backend asigna el mensajero a cada pedido al
+   * crear la orden; aquí, como en «Generar orden», el mensajero se asigna al despachar en «Órdenes generadas».
+   * Solo cambia que los pedidos van en el orden de la ruta y que la orden lleva `rutero` (secuencia,
+   * estimados y mensajero sugerido). El backend rechaza los pedidos que ya están en otra orden.
    */
   crearOrdenDesdeRuta(pedido: { mensajero: string; nroPedidos: string[]; rutero: any; listo: (nro: string | number | null) => void }): void {
     const pedidos = pedido.nroPedidos.map(nro => this.orders.find(o => o.nroPedido === nro));
@@ -238,7 +241,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       Swal.fire(
         "No se creó la orden",
         faltan.length
-          ? `Estos pedidos ya no están en la lista: ${faltan.join(", ")}. Vuelve a armar las rutas.`
+          ? `Estos pedidos no están en la lista de Envíos que tienes a la vista (cambió la página o un filtro): ${faltan.join(", ")}. Vuelve a esa lista o arma las rutas de nuevo.`
           : `Estos pedidos ya están en una orden de envío: ${enOrden.map(p => p!.nroPedido).join(", ")}. Vuelve a armar las rutas.`,
         "warning",
       );
@@ -246,7 +249,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
     Swal.fire({
       title: "Crear orden de envío",
-      text: `${pedido.mensajero} sale con ${pedidos.length} ${pedidos.length === 1 ? "pedido" : "pedidos"}, en el orden de la ruta. La orden queda creada; se despacha desde «Órdenes generadas».`,
+      text: `Se crea una orden con ${pedidos.length} ${pedidos.length === 1 ? "pedido" : "pedidos"}, en el orden de la ruta${pedido.mensajero ? ` (sugerido: ${pedido.mensajero})` : ""}. El mensajero se asigna al despacharla desde «Órdenes generadas».`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Crear orden",
@@ -259,11 +262,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
         nroShippingOrder: "",
         fecha: new Date().toISOString(),
         metodoEnvio: "mensajeroPropio",
-        transportador: normalizeTransportadorName(pedido.mensajero),
+        transportador: "",
         company: currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : "",
         pedidos,
         pedidosMovidos: [],
-        rutero: { ...pedido.rutero, creadaEn: new Date().toISOString() },
+        rutero: { ...pedido.rutero, mensajeroSugerido: pedido.mensajero || null, creadaEn: new Date().toISOString() },
       };
       this.logisticaService.createShippingOrder(orden)
         .pipe(takeUntil(this.destroy$))
@@ -271,7 +274,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
           next: (response) => {
             const nro = response?.nroShippingOrder ?? null;
             pedido.listo(nro);
-            Swal.fire({ title: "Orden creada", text: `Orden de envío ${nro || ""} para ${pedido.mensajero}`, icon: "success", timer: 2200, showConfirmButton: false });
+            Swal.fire({ title: "Orden creada", text: `Orden de envío ${nro || ""} lista para despachar`, icon: "success", timer: 2200, showConfirmButton: false });
             this.refrescarDatos();
             if (this.ordenesDespachoV2Component) this.ordenesDespachoV2Component.loadInitialOrders();
           },
@@ -6666,6 +6669,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       zona: pedido.envio?.zonaCobro || '',
       enOrden: !!((pedido as any).shippingOrder || (pedido as any).nroShippingOrder),
       telefono: String((pedido as any).envio?.celular || (pedido as any).cliente?.numero_celular_comprador || ''),
+      pagoApto: ['pendiente', 'pospendiente', 'preaprobado', 'aprobado', 'credito'].includes(String((pedido as any).estadoPago || '').toLowerCase()),
       distanciaRestante: undefined, // Se puede calcular más tarde
       tiempoEstimado: undefined // Se puede calcular más tarde
       };
