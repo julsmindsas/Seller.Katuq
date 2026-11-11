@@ -1,8 +1,41 @@
 {
-  "version": "2026.11.11.6 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T17:41:09.228Z",
-  "notas": [],
+  "version": "2026.11.11.7 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T19:21:39.016Z",
+  "notas": [
+    {
+      "fecha": "2026-11-11T17:44:04Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, en Tienda → «Cuenta de clientes», ahora puedes dejar que tus compradores creen su cuenta y pidan una cuenta de mayorista; tú la apruebas ahí mismo y desde entonces ven sus precios al entrar.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T19:22:00Z",
+      "tipo": "MEJORA",
+      "texto": "El link de acceso a la tienda que le envías a un cliente ahora sirve una sola vez: al abrirlo queda con su sesión en ese dispositivo, y si alguien más recibe el link ya no puede usarlo.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-11T19:22:00Z",
+      "tipo": "MEJORA",
+      "texto": "El link de acceso a la tienda que le envías a un cliente ahora sirve una sola vez: al abrirlo queda con su sesión en ese dispositivo, y si alguien más recibe el link ya no puede usarlo.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T17:44:04Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, en Tienda → «Cuenta de clientes», ahora puedes dejar que tus compradores creen su cuenta y pidan una cuenta de mayorista; tú la apruebas ahí mismo y desde entonces ven sus precios al entrar.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-11T17:31:00Z",
       "tipo": "CORRIGE",
@@ -474,24 +507,8 @@
       "modulos": [
         "inventario/recepcion-mercancia"
       ]
-    },
-    {
-      "fecha": "2026-11-06T16:44:36Z",
-      "tipo": "CORRIGE",
-      "texto": "En el PDF de la cotización las columnas de valores ya no quedan pegadas: cada cifra tiene su espacio y se lee igual que en la vista previa.",
-      "modulos": [
-        "cotizaciones"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T21:14:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Productos › Importar fotos de productos, «Descargar ejemplo con tus referencias» te da un Excel con el nombre exacto de cada foto de cada producto y te avisa qué referencias no se pueden usar en el nombre de un archivo.",
-      "modulos": [
-        "productos"
-      ]
     }
   ],
-  "commit": "b83a7d20b5034172afededb8d77e30c0edc79470",
-  "cambiosSinCommit": 0
+  "commit": "a0ffa341ddf3c7090b34b3358fea9daeedc00040",
+  "cambiosSinCommit": 1
 }
