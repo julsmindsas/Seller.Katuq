@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, timeout } from 'rxjs/operators';
 import { BaseService } from '../../../shared/services/base.service';
-import { InvoiceConcept, InvoiceCustomer, InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, InvoiceDraftSummary } from './invoice-composer.models';
+import { InvoiceConcept, InvoiceCustomer, InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, InvoiceDraftSummary, MembresiaPendiente, MembresiaCambios } from './invoice-composer.models';
 
 @Injectable({ providedIn: 'root' })
 export class DianInvoiceService extends BaseService {
@@ -37,6 +37,15 @@ export class DianInvoiceService extends BaseService {
   drafts() {
     return this.get<{success: boolean; data: {items: InvoiceDraftSummary[]; limit: number}}>('/v1/accounting/dian/invoice-drafts')
       .pipe(timeout(45000), this.unwrap<{items: InvoiceDraftSummary[]; limit: number}>());
+  }
+  /** D-711: membresías de Katuq por enviar a la DIAN (el servidor exige Super Administrador de Julsmind). */
+  membresiasPendientes() {
+    return this.get<{success: boolean; data: {items: MembresiaPendiente[]}}>('/v1/accounting/dian/membresias/pendientes')
+      .pipe(timeout(45000), this.unwrap<{items: MembresiaPendiente[]}>());
+  }
+  editarMembresia(cuentaId: string, cambios: MembresiaCambios) {
+    return this.put<{success: boolean; data: {requestId: string}}>('/v1/accounting/dian/membresias/' + encodeURIComponent(cuentaId) + '/factura', cambios)
+      .pipe(timeout(45000), this.unwrap<{requestId: string}>());
   }
   saveDraft(requestId: string, invoice: ManualInvoice, version: number, observations?: string) {
     return this.put<{success: boolean; data: InvoiceRequest}>('/v1/accounting/dian/invoice-drafts/' + encodeURIComponent(requestId),

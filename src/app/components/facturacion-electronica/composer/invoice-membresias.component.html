@@ -1,0 +1,44 @@
+<section class="invoice-panel" *ngIf="isSuperAdmin && (items.length || error || message || editing)" [attr.aria-label]="'facturacionElectronica.membresias.titulo' | translate">
+  <div class="invoice-panel__heading"><div><h3>{{ 'facturacionElectronica.membresias.titulo' | translate }}</h3><p>{{ 'facturacionElectronica.membresias.descripcion' | translate }}</p></div>
+    <button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading || saving || disabled">{{ 'facturacionElectronica.invoiceDrafts.actualizar' | translate }}</button></div>
+  <p *ngIf="error" role="alert">{{ error }}</p>
+  <p *ngIf="message" role="status">{{ message }}</p>
+  <div class="composer-message" *ngFor="let item of items">
+    <strong>{{ item.comercio }}</strong>
+    <p>{{ 'facturacionElectronica.membresias.periodo' | translate }}: {{ item.periodoVentas.desde | date:'dd/MM/yyyy' }} – {{ item.periodoVentas.hasta | date:'dd/MM/yyyy' }}
+      · {{ 'facturacionElectronica.membresias.valor' | translate }}: {{ item.montoCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+      · {{ 'facturacionElectronica.membresias.forma' | translate }}: {{ (item.formaPago === 'contado' ? 'facturacionElectronica.membresias.contado' : 'facturacionElectronica.membresias.credito') | translate }}<span *ngIf="item.formaPago === 'contado' && item.medioPago"> ({{ methodLabel(item.medioPago) }})</span><span *ngIf="item.formaPago === 'credito' && item.vencimiento"> · {{ 'facturacionElectronica.membresias.vencimiento' | translate }}: {{ item.vencimiento | date:'dd/MM/yyyy' }}</span>
+      <span *ngIf="item.editada"> · {{ 'facturacionElectronica.membresias.editada' | translate }}</span></p>
+    <div class="memb-acciones">
+      <button class="btn btn-outline-primary" type="button" (click)="edit(item)" [disabled]="loading || saving || disabled">{{ 'facturacionElectronica.membresias.editar' | translate }}</button>
+      <button class="btn btn-primary" type="button" (click)="send(item)" [disabled]="loading || saving || disabled || !item.requestId">{{ 'facturacionElectronica.membresias.enviar' | translate }}</button>
+    </div>
+    <form class="memb-edicion" *ngIf="editing?.cuentaId === item.cuentaId" (ngSubmit)="save()" autocomplete="off">
+      <label class="field-label" for="memb-forma">{{ 'facturacionElectronica.membresias.forma' | translate }}</label>
+      <select id="memb-forma" class="form-select" name="formaPago" [(ngModel)]="form.formaPago" [disabled]="saving">
+        <option value="credito">{{ 'facturacionElectronica.membresias.credito' | translate }}</option>
+        <option value="contado">{{ 'facturacionElectronica.membresias.contado' | translate }}</option>
+      </select>
+      <ng-container *ngIf="form.formaPago === 'contado'">
+        <label class="field-label" for="memb-medio">{{ 'facturacionElectronica.membresias.medio' | translate }}</label>
+        <select id="memb-medio" class="form-select" name="medioPago" [(ngModel)]="form.medioPago" [disabled]="saving">
+          <option *ngFor="let m of methods" [value]="m.code">{{ m.code }} · {{ m.label }}</option>
+        </select>
+      </ng-container>
+      <ng-container *ngIf="form.formaPago === 'credito'">
+        <label class="field-label" for="memb-vence">{{ 'facturacionElectronica.membresias.vencimiento' | translate }}</label>
+        <input id="memb-vence" class="form-control" type="date" name="vencimiento" [(ngModel)]="form.vencimiento" [min]="today" [disabled]="saving">
+      </ng-container>
+      <label class="field-label" for="memb-desc">{{ 'facturacionElectronica.membresias.descripcionConcepto' | translate }}</label>
+      <input id="memb-desc" class="form-control" type="text" name="descripcion" maxlength="200" [(ngModel)]="form.descripcion" [disabled]="saving">
+      <label class="field-label" for="memb-obs">{{ 'facturacionElectronica.membresias.observaciones' | translate }}</label>
+      <textarea id="memb-obs" class="form-control" rows="2" name="observaciones" maxlength="1000" [(ngModel)]="form.observaciones" [disabled]="saving"></textarea>
+      <p class="memb-nota">{{ 'facturacionElectronica.membresias.valorNoEditable' | translate }} ({{ item.montoCOP | currency:'COP':'symbol-narrow':'1.0-0' }})</p>
+      <p *ngIf="invalidForm" role="alert">{{ invalidForm }}</p>
+      <div class="memb-acciones">
+        <button class="btn btn-primary" type="submit" [disabled]="saving || !!invalidForm">{{ 'facturacionElectronica.membresias.guardar' | translate }}</button>
+        <button class="btn btn-outline-primary" type="button" (click)="cancel()" [disabled]="saving">{{ 'comun.cancelar' | translate }}</button>
+      </div>
+    </form>
+  </div>
+</section>

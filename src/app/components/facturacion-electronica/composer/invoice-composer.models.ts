@@ -152,3 +152,29 @@ export function splitObservations(composed: string | null | undefined): { purcha
   if (!match || purchaseOrderProblem(match[1])) return { purchaseOrder: '', observations: text };
   return { purchaseOrder: match[1].trim(), observations: match[2] ?? '' };
 }
+
+/** D-711: factura de membresía de Katuq pendiente de enviar a la DIAN (solo la ve un Super Administrador de Julsmind). */
+export interface MembresiaPendiente {
+  cuentaId: string;
+  orderId: string | null;
+  nroPedido: string | null;
+  comercio: string | null;
+  requestId: string | null;
+  periodoVentas: { desde: string | null; hasta: string | null };
+  corte: string | null;
+  montoCOP: number;
+  formaPago: 'contado' | 'credito' | null;
+  medioPago: string | null;
+  vencimiento: string | null;
+  descripcion: string | null;
+  observaciones: string | null;
+  editada: boolean;
+}
+
+export interface MembresiaCambios {
+  formaPago?: 'contado' | 'credito';
+  medioPago?: string;
+  vencimiento?: string | null;
+  descripcion?: string;
+  observaciones?: string;
+}

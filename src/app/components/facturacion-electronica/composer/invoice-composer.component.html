@@ -17,6 +17,7 @@
         </div>
       </section>
 
+      <app-invoice-membresias [companyId]="companyId" [disabled]="loading || pending || companyChanged" (opened)="openDraft($event)"></app-invoice-membresias>
       <app-invoice-drafts *ngIf="showDrafts" [companyId]="companyId" [disabled]="loading || pending || companyChanged" (opened)="openDraft($event)"></app-invoice-drafts>
       <p class="composer-message" role="status" *ngIf="draftMessage">{{ draftMessage }}</p>
       <div class="composer-message composer-message--error" role="alert" *ngIf="companyChanged">{{ 'facturacionElectronica.invoiceComposer.cambiasteDeComercioVuelveA' | translate }}</div>

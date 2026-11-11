@@ -12,9 +12,10 @@ import { InvoiceCustomerPickerComponent } from './composer/invoice-customer-pick
 import { ClientesSharedModule } from '../ventas/clientes/clientes-shared.module';
 import { InvoiceConceptPickerComponent } from './composer/invoice-concept-picker.component';
 import { InvoiceDraftsComponent } from './composer/invoice-drafts.component';
+import { InvoiceMembresiasComponent } from './composer/invoice-membresias.component';
 
 @NgModule({
-  declarations: [FacturacionElectronicaComponent, InvoiceComposerComponent, ManualInvoiceFormComponent, InvoiceOrderPickerComponent, InvoiceCustomerPickerComponent, InvoiceConceptPickerComponent, InvoiceDraftsComponent],
+  declarations: [FacturacionElectronicaComponent, InvoiceComposerComponent, ManualInvoiceFormComponent, InvoiceOrderPickerComponent, InvoiceCustomerPickerComponent, InvoiceConceptPickerComponent, InvoiceDraftsComponent, InvoiceMembresiasComponent],
   imports: [
     CommonModule,
     FormsModule,
