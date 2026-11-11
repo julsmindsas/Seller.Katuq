@@ -5,7 +5,7 @@
     <div class="rtr__titulo" *ngIf="armado">{{ rutas.length }} {{ (rutas.length === 1 ? 'ruta' : 'rutas') | translate }} · {{ totalParadas }} {{ 'paradas' | translate }}</div>
     <div class="rtr__sub" *ngIf="armado">
       {{ totalKm | number:'1.0-1' }} km
-      <b class="rtr__ok" *ngIf="ahorro >= 5">· {{ ahorro }}% {{ 'menos recorrido' | translate }}</b>
+      <b class="rtr__ok" *ngIf="ahorro >= 5">· {{ ahorro }}% {{ 'menos recorrido' | translate }} </b>
       <b class="rtr__alerta" *ngIf="totalTarde > 0">· {{ totalTarde }} {{ 'fuera de franja' | translate }}</b>
     </div>
     <div class="rtr__sub" *ngIf="!armado && sinUbicar > 0">{{ sinUbicar }} {{ 'sin ubicar no entran a las rutas' | translate }}</div>
@@ -134,7 +134,7 @@
             <div class="rtr-ruta__crear" *ngIf="!ordenDe[ruta.id]">
               <select class="rtr__campo" [(ngModel)]="mensajeroDe[ruta.id]" [disabled]="creando === ruta.id"
                 [attr.aria-label]="'Mensajero de la ruta' | translate">
-                <option [ngValue]="undefined">{{ 'Mensajero sugerido (opcional)' | translate }}</option>
+                <option [ngValue]="undefined">{{ 'Mensajero (opcional)' | translate }}</option>
                 <option *ngFor="let m of mensajerosPara(ruta)" [ngValue]="m.nombre">
                   {{ m.nombre }}{{ m.enLinea ? '' : (' · ' + ('sin conexión' | translate)) }}
                 </option>

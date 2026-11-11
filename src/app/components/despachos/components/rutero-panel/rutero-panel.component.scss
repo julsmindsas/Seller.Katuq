@@ -141,6 +141,11 @@ $naranja: #D9820A;
   &__fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 12.5px; color: $tinta; b { font-weight: 800; } }
 }
 
+// En celular el panel no tiene alto fijo: su cuerpo no hace scroll propio
+@media (max-width: 992px) {
+  .rtr__cuerpo { overflow-y: visible; }
+}
+
 .cdk-drag-preview { background: #fff; border-radius: 11px; box-shadow: 0 8px 24px rgba(95, 63, 224, .18); padding: 8px; display: flex; gap: 8px; font-size: 12.5px; }
 .cdk-drag-placeholder { opacity: .35; }
 .cdk-drop-list-dragging .rtr-parada:not(.cdk-drag-placeholder) { transition: transform .18s ease; }

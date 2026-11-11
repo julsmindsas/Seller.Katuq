@@ -305,7 +305,7 @@ export class RuteroPanelComponent implements OnInit, OnChanges, OnDestroy {
     const desde = Math.max(0, Math.floor((p.llegadaMin - 20) / 10) * 10);
     const hasta = Math.ceil((p.llegadaMin + 40) / 10) * 10;
     const texto = `Hola${nombre ? ' ' + nombre : ''}, tu pedido #${p.id}${this.empresa ? ' de ' + this.empresa : ''} va en ruta. `
-      + `Llegada estimada entre ${this.hora(desde)} y ${this.hora(hasta)}.`;
+      + `Llegada estimada entre ${this.hora(desde)} y ${this.hora(hasta)}`;
     return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
   }
 

@@ -1249,12 +1249,13 @@ $danger-color:  $em-red;
     // El panel de mensajeros pasa debajo del mapa
     .mapa-cuerpo--con-panel { grid-template-columns: minmax(0, 1fr); }
     .mapa-cuerpo--rutas.mapa-cuerpo--con-panel { grid-template-columns: minmax(0, 1fr); }
-    .mapa-panel--rutas { height: auto !important; max-height: 75vh; }
-
     .mapa-panel {
       height: auto !important;
       max-height: 340px;
     }
+
+    // El rutero no cabe en 340 px: en celular crece con su contenido y la página es la que se desplaza
+    .mapa-panel.mapa-panel--rutas { max-height: none; overflow: visible; }
   }
 }
 
