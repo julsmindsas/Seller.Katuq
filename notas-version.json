@@ -166,5 +166,6 @@
   { "fecha": "2026-11-11T14:40:00Z", "tipo": "CORRIGE", "modulos": ["despachos"], "texto": "Al cotizar un envío con Enviame.io ya puedes poner paquetes de más de 50 kg; el límite lo pone cada transportadora al cotizar." },
   { "fecha": "2026-11-11T14:40:00Z", "tipo": "CORRIGE", "modulos": ["ventas/venta-asistida"], "texto": "Si un producto pide dos imágenes, el pedido ahora guarda las dos; antes solo quedaba la última." },
   { "fecha": "2026-11-11T14:40:00Z", "tipo": "CORRIGE", "modulos": ["cartera"], "texto": "En Cartera, el clic en el nombre o el documento del cliente abre su ficha, sin cruzarse con los filtros de una búsqueda anterior." },
-  { "fecha": "2026-11-10T14:30:00Z", "tipo": "NUEVO", "retirada": true, "modulos": ["notificaciones/tiktok/inbox"], "texto": "Ya puedes atender desde Katuq los mensajes directos de tu TikTok: ves cada conversación, respondes con texto o imagen y sabes cuántos mensajes te quedan para contestarle a cada cliente." }
+  { "fecha": "2026-11-10T14:30:00Z", "tipo": "NUEVO", "retirada": true, "modulos": ["notificaciones/tiktok/inbox"], "texto": "Ya puedes atender desde Katuq los mensajes directos de tu TikTok: ves cada conversación, respondes con texto o imagen y sabes cuántos mensajes te quedan para contestarle a cada cliente." },
+  { "fecha": "2026-11-11T17:31:00Z", "tipo": "CORRIGE", "modulos": ["ventas/pedidos"], "texto": "Al asentar un pago, ya puedes registrar exactamente lo que falta por pagar; antes, si el saldo tenía centavos, Katuq decía que el valor era mayor y no dejaba guardarlo." }
 ]
