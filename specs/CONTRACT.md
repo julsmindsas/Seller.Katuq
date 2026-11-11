@@ -13375,14 +13375,6 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Siguiente:** Daniel publica. Con su sí del 5-nov, se enciende `siteDesignV2` solo para Baudio y su tienda se arma como borrador desde el editor de sellercenter.
 
 
-### 2026-11-03 — Inventario y diagrama del ecosistema de apps
-
-- **Solicitud:** Daniel pidió revisar las carpetas relacionadas y diagramar el ecosistema completo.
-- **Revisión local:** fuentes, manifiestos y contratos de Seller, Gestión iOS/Android, Delivery y sus clientes anteriores, Support, Kuvo, superficies públicas de Sites/catálogos/cotizaciones, landing comercial, Opttia web/ADK y Katuq Asistant. Se distinguieron la reescritura Angular 21, KatuqFlow, PuestoFácil y Genkit retirado; los worktrees y las copias anteriores de Marketplace no se contaron como productos distintos.
-- **Datos:** el mapa refleja D-579: PostgreSQL productivo para Katuq; Firebase conserva Realtime Database, Storage, FCM y Hosting. Opttia es un producto independiente conectado por API/MCP y mantiene sus datos propios aparte. Asistant Release opera localmente.
-- **Entrega:** PNG, fuente Mermaid e inventario de 19 entradas con carpetas y referencias, conservados como artefactos locales fuera del repositorio público. Se comprobó que las 19 carpetas existen y se revisó visualmente el diagrama.
-- **Límites:** inventario de código, no certificación de publicación en tiendas ni de activación de todas las integraciones. Sin consultas a datos de producción, cambios de código, build ni despliegue.
-
 ### 2026-11-05 — Publicados el editor de tiendas (front 2026.11.05.1) y su backend (`0511c167`)
 
 - **Solicitud:** Daniel pidió «git pull y publiquemos». La rama no traía código nuevo frente a producción; eligió mezclar `feature/tickets-aws-claude-1` y publicar.
@@ -13873,109 +13865,42 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Publicado (Daniel: «has git pull y publica»):** backend `01877f92` en `backend-aws-security` (commit `a2ac97a6`; `git pull`, HEAD confirmado, `pm2 restart katuq-api`; sin índices, datos de configuración ni `.env`).
 - **Baudio (Daniel: «dale»):** en `baudio-v3-marca` se encendieron los 13 ajustes, `titulosSeccion: "moderado"` y `logoAlt: "Logotipo oficial de Baudio"`, con los controladores reales `sites.edit` y `sites.publish` después de una simulación limpia: 15 campos del tema; secciones, tienda, páginas, colores y letra idénticos. Publicado 2026-11-10T13:43:13Z. Verificado en vivo a 1440 y 390 px: título principal 55/32 px, sección 36/24, ningún texto bajo 13 px, tres grosores, sin scroll horizontal ni errores. Los otros dos sitios de Baudio no cambiaron.
 - **Pendiente:** el editor del Seller con el grupo «Manual de marca» (`fcd2c016`, compilado como 2026.11.10.2) no se desplegó: el inicio de sesión de Firebase en claude-dev venció y lo debe renovar Daniel. Del manual quedan fuera del diseño: NIT con «-1» (dato de la empresa), proporción 60/30/10 (el plano va en oscuro), rojos fijos del carrito y del pago, áreas de toque de los nombres del kit, y lo que entrega Baudio (imágenes, textos, logos de marcas aliadas, redes).
+- **Editor publicado (10-nov, 17:29 UTC):** renovado el inicio de sesión de Firebase, el grupo «Manual de marca» del editor de sitios salió en el Seller 2026.11.10.4 (merge `0fe87d30` sobre `cabfdc58`; candado de publicación en verde). Solo lo ven los comercios con `siteDesignV2`; sin nota de versión.
 - **Pruebas (locales, D-566):** `tests/sitios/manualDeMarca.test.js` 6/6; `barrasV2` 17/17; `criterioDisenoIA`, `editarPaginaConIA` y `opttiaEditaOperaciones` en verde. De las 139 de `tests/sitios` fallan las cuatro que ya fallaban (instantáneas viejas por el hash de la hoja y el aviso de dotenv).
 
-### 2026-11-09 — D-708: campañas de los comercios en Kuvo (renumerada de D-707: ese número quedó en origin para la consola de WhatsApp)
-- **Pedido de Daniel:** administrador de banners desde Kuvo, con información de producto y comercio de Katuq, y seis campañas con imágenes IA. Corrigió la selección: identificar los comercios por sus pedidos reales y volver a leer las guías.
-- **Comercios verificados, en lectura de PostgreSQL:** Almara, OH MY STORE, Del Rancho Green, Café Escobar, Punto Verde Vidagas y Almacén Bombas; son los seis con mayor cantidad de pedidos. No se usan demos por aparecer en el directorio.
-- **Administrador web:** sesión existente de Katuq, tenant firmado y rol Administrador. Selección de comercio/producto, imagen de producto, plantilla propia o carga autenticada; texto, CTA, espacio, fechas Colombia, vista previa, borrador, programación, publicación y pausa.
-- **Datos:** `companyConfig.kuvoCampaigns` y auditoría en `site_events`, mediante el adaptador PostgreSQL; sin colecciones nuevas. Revisión optimista, idempotencia y validación de propiedad de imágenes/productos. El feed público vuelve a comprobar disponibilidad y publicación.
-- **Creatividades iniciales:** seis ambientaciones IA identificadas, con CTA a comercio y vigencia del 9-nov al 10-dic. No inventan ofertas, stock ni productos. Vidagas no tenía productos disponibles para Kuvo; Almacén Bombas tenía seis servicios publicados.
-- **Verificación local:** 55 pruebas backend, 34 web y build Angular de producción; navegador con cuenta y almacenamiento ficticios para guardar, publicar y pausar; escritorio y móvil. Ningún pedido, pago o inventario productivo se modificó en QA.
-- **Alcance:** administrador web; las apps nativas no cambian. Sin cobro de publicidad ni métricas de conversión.
-- **Publicado (9-nov):** backend `1618069b` en `backend-aws-security`, desplegado por fast-forward y reinicio de `katuq-api` como ubuntu; Kuvo Sites versión 10, fuente `c2b150e4`. Feed público 200 con las seis campañas, seis imágenes 200, acceso privado 401 sin sesión y preflight CORS correcto. Resolución de productos comprobada en solo lectura para los cinco comercios con disponibles. Portada publicada verificada en navegador.
+### 2026-11-10 — D-701: siembra del registro de agentes y despliegue, para la máquina principal
+- **Para qué:** desde `fd04ebde` la lista de agentes de soporte no está en el código sino en `users.{id}.soporte`. Si el código llega a producción con ese campo vacío, aunque la bandera esté en `off`, el selector de responsable, `GET /v1/support/agentes`, `list_support_agents`, las menciones `@Nombre` y el aviso de ticket nuevo al equipo se quedan sin agentes. Por eso la siembra va **antes** del `pm2 restart`.
+- **Dónde:** en el EC2 de producción, como `ubuntu`, desde `functions/` y con el `.env` de producción (acceso y comandos en `functions/CLAUDE.md`). No hace falta `psql` ni entrar a `katuq-db`: el script usa el adaptador de Postgres con la conexión del `.env`.
+- **Qué se necesita:** el JSON de siembra, que está en la máquina de Santiago en `~/.katuq-local/soporte-agentes-semilla.json` (fuera de git porque trae correos; se pasa por `scp`, nunca por chat ni commits), y el sí de Daniel para el paso 4.
+- **Pasos:**
+  1. `git pull origin backend-aws-security` en `/home/ubuntu/katuq_admin_back_firebase` (trae `fd04ebde`). Sin reiniciar: `katuq-api` sigue con el código viejo hasta el paso 6.
+  2. Copiar el JSON a `/home/ubuntu/.katuq-local/` y `chmod 600`.
+  3. En `functions/`, verificar que apunta a producción y mirar el registro (solo lectura): `grep -c '^DATOS_MOTOR=postgres$' .env` y `grep -c '^PGDATABASE=katuq_fsdb$' .env` deben dar 1; `node scripts/soporte-agentes.js --listar` debe imprimir `Base: katuq_fsdb` y los usuarios de Julsmind `(sin registro)`. Si imprime otra base o se detiene por el adaptador, no se sigue.
+  4. Simulación: `node scripts/soporte-agentes.js --sembrar-desde-lista=/home/ubuntu/.katuq-local/soporte-agentes-semilla.json`. Lo esperado: seis líneas `· sembrar id N como <rol>` (Daniel y Santiago `lider`, los otros cuatro `agente`, ids históricos 5 a 10), el aviso de que Daniel está en 2 documentos de `users`, y ninguna línea de «no hay usuario de Julsmind con ese correo». Esta salida la revisa Daniel.
+  5. Aplicar, con su sí: el mismo comando con `--apply --por=<correo de quien lo corre>`. Lo esperado: seis `✔` y un `✖` en el segundo documento de Daniel con el error de claves `__fs` reservadas (el adaptador no actualiza ese documento porque guarda una referencia; con uno registrado basta). Verificar con `--listar`: seis `activo` con rol, id y nombre para mostrar. Borrar el JSON del servidor.
+  6. Despliegue del backend como siempre: `npm install --no-audit --no-fund`, `pm2 restart katuq-api`, `pm2 logs katuq-api --lines 30`. Luego `katuq_support` (`main` en `6c86412`). La bandera `soporteAgentesPorPersona` no existe en `config/feature_flags`: arranca en `off` y producción se comporta como antes, salvo que los agentes ya salen del registro.
+  7. `sombra`, con el sí de Daniel: `node scripts/platform-flags.js soporteAgentesPorPersona sombra --execute`; revisar `audit_log_access` (tipo `soporte_agente_sombra`) a diario durante al menos una semana. Cada registro es alguien a quien `estricto` le negaría el acceso: si es un agente real que falta, se le da de alta; si es una API key de Julsmind usada para soporte, se migra a OAuth o se acepta.
+  8. `estricto`, con el sí de Daniel y sin falsos negativos pendientes: el mismo comando con `estricto`; probar el tablero con un `lider`, un `agente` y un `observador`, y mirar `pm2 logs katuq-api`.
+- **Vuelta atrás:** `node scripts/platform-flags.js soporteAgentesPorPersona off --execute`; el servidor lo toma en 30 s sin reiniciar. El campo `soporte` en `users` no estorba aunque se quede.
+- **Bitácora 10-nov:** el backend `01877f92` (con D-701) ya estaba publicado desde el 10-nov **sin sembrar**: el registro estuvo vacío en producción (selector de la app nueva, `/agentes`, MCP, menciones y aviso de ticket nuevo sin agentes; la app vieja, aún publicada, seguía asignando con su lista fija). Santiago sembró el registro ese mismo día desde el EC2 con el sí de Daniel: 6 ✔ (ids 5-10; Daniel y Santiago `lider`), verificado por `list_support_agents` de producción. Después, el mismo 10-nov: `katuq_support` desplegado en producción desde `6c86412` (hosting `katuq-tickets`, `main.6f1990de0f44ca63.js`; verificado que el bundle publicado trae `verificacion` y `support/sesion`), y la bandera puesta en **`sombra`** desde el EC2 por pedido de Santiago (vía otra sesión; simulación primero). Desde ese momento, revisar a diario `audit_log_access` tipo `soporte_agente_sombra` durante al menos una semana; `estricto` solo con el sí de Daniel y sin agentes reales negados.
+- **Después:** altas, bajas y cambios de rol con el mismo script (`--alta=<correo> --como=<rol> --nombre="…"`, `--baja=<correo>`, `--rol=<correo> --como=<rol>`), siempre simulando primero. No correr scripts viejos de `functions/scripts/` en producción sin la guarda del adaptador.
 
-### 2026-11-09 — Adenda D-415. Compra y pago únicos para varias tiendas de Kuvo
+### 2026-11-10 — D-709: canal de TikTok (mensajes directos) en Comunicaciones — APROBADA (propuesta, diseño, specs y tareas)
+- **Pedido de Daniel (10-nov):** «ahora quiero conectar a TikTok, investiga cómo» y, tras la investigación, «dale, arranca». Aprobó propuesta, diseño y tareas.
+- **Investigación (documentación oficial de TikTok API for Business):** la Business Messaging API sirve para cuentas de Colombia y el resto de Latinoamérica después de la revisión de seguridad y privacidad de datos (DSPR); no para EEE, Suiza ni Reino Unido, y Estados Unidos pide otra revisión (USDS) que no se solicita. Solo cuentas de empresa verificadas o con acceso avanzado. Reglas: prohibido iniciar conversaciones; 10 mensajes en las primeras 48 h, ilimitados 48 h después de cada respuesta del cliente, 3 más si pasan 48 h. TikTok Shop no está abierto en Colombia: queda en «Próximamente».
+- **Decisión:** TikTok es un tercer canal del buzón de redes de D-170 (Instagram y Messenger): conexión cifrada en `integration_configs`, mensajes en `meta_messages` con `canal: "tiktok"`, rutas en `/v1/meta`, código aislado en `services/social/tiktok/`. Sin colecciones nuevas. Llaves `TIKTOK_APP_ID`/`TIKTOK_APP_SECRET` en `.env` (solo secretos); bandera `tiktokMensajes` por comercio. Respuestas automáticas fuera de esta versión; el grupo de Integraciones pasa a «Mensajes de redes».
+- **Trámite pendiente (Daniel):** app de desarrollador de Julsmind, producto Business Messaging API y DSPR sin Estados Unidos.
+- **Artefactos:** `openspec/changes/canal-tiktok-mensajes/` (solo en la copia local, D-705).
 
-Daniel eligió «Un solo checkout y un solo pago para varias tiendas». La revisión
-compartida conserva un pedido por tienda con las partes por bodega que necesite.
-El total se cotiza en el servidor y el recaudo previsto conserva la comisión
-piloto de cero y el corte semanal.
-
-Daniel aprobó S-01. El diff exacto de cotización firmada y reserva atómica
-quedó aplicado en la copia de trabajo `codex/kuvo-checkout-unico`, sobre
-`1f70ac7b`. Pasaron 27 pruebas locales. Una falta de stock en la segunda
-tienda preserva inventario y consecutivos de la primera.
-
-Daniel aprobó S-02. El diff de captura y reparto quedó aplicado en
-`codex/kuvo-checkout-unico` y pasaron 104 pruebas en la copia de trabajo.
-Una transacción simulada de $102.000 dejó dos asignaciones de $60.000 y
-$42.000. El reintento no duplica asientos y un segundo cobro o un pago tardío
-se registra para devolución.
-
-Daniel aprobó S-03a y el diff de cancelación y vencimiento quedó aplicado
-en `codex/kuvo-checkout-unico`. Pasaron 109 pruebas locales. El comprador
-autenticado puede cancelar la reserva en conjunto y el barrido devuelve las
-existencias de las tiendas una sola vez al vencer. Una captura previa preserva
-las reservas.
-
-Daniel aprobó S-03b y el diff de devoluciones quedó aplicado en
-`codex/kuvo-checkout-unico`. El reembolso de un comercio afecta su
-asignación y el pago original. Kuvo asume los cobros tardíos y duplicados.
-Se conserva el comprobante verificado para recuperar el asiento sin otro
-envío. Pasaron 116 pruebas tras aplicar y 9 en el emulador del candidato.
-
-El enlace de dos comercios ficticios abrió Wompi en modo de pruebas.
-Wompi Sandbox aprobó el pago de $102.000 por Nequi y por tarjeta en
-compras separadas y declinó el escenario de rechazo. La consulta
-autenticada registró un cobro y dos asignaciones por compra. El rechazo
-liberó ambas reservas al vencer y el cobro tardío de otra compra quedó
-a cargo de Kuvo, con cero saldo para las tiendas. La base fue en memoria.
-
-Wompi respondió HTTP 201 y PENDING a los reembolsos de prueba. Luego
-la consulta autenticada de cada transacción mostró el importe
-reembolsado como aprobado, sin identificador ni referencia de
-reembolso. El libro conservó cada reserva y la repetición no envió
-otro POST. Quedan pendientes la conciliación con identidad verificable,
-las rutas de compra, el retorno de los clientes y la entrega del webhook.
-
-
-### 2026-11-10 — S-04 del checkout conjunto en Sandbox
-
-S-04a conserva el acuse autenticado de los reembolsos pendientes. Solo en
-Sandbox, coteja la transacción, el importe y la fecha exacta del acuse
-con una coincidencia única en la consulta autenticada de Wompi. La
-identidad de evidencia evita aplicar el mismo resultado dos veces. Se
-conciliaron una devolución parcial de $12.000 y una completa de $102.000,
-con un único envío por caso. Los intentos sin acuse siguen pendientes.
-
-S-04b conecta la pantalla de retorno y una ruta que verifica el comprador
-y el pago. Wompi aceptó la URL HTTPS de prueba. La navegación al retorno
-se simuló con los IDs de dos transacciones reales de Sandbox. El webhook
-de QA se firmó localmente y se entregó por HTTPS. Tanto el retorno
-primero como el webhook primero registraron dos pedidos y una captura.
-Sin acceso al panel de Sandbox, queda pendiente un evento enviado
-directamente por Wompi.
-
-Daniel aprobó integrar S-04a primero y S-04b después. Se aplicaron ambos
-diffs en `codex/kuvo-checkout-unico` y pasaron 119 pruebas de backend,
-31 web y la compilación Angular. La base de los ensayos fue local y se
-cerró el túnel temporal después de las pruebas.
-
-### 2026-11-10 — S-05 del checkout conjunto en Sandbox
-
-Se preparó el diff aislado de la bolsa común, la cotización, la reserva
-y el recibo privado accesible desde el historial del comprador. El pago
-conjunto requiere la bandera `multiShopCheckoutEnabled`, apagada por
-defecto, y Wompi Sandbox. Los productos de distintas tiendas permanecen
-en la bolsa cuando la compra conjunta está deshabilitada.
-
-Una prueba por HTTP con dos tiendas ficticias y datos en memoria verificó
-un pago de COP 102.000 en Wompi Sandbox, dos pedidos y una captura. El
-reintento recuperó la misma reserva, la cancelación repuso las existencias
-de ambas tiendas y el historial enlazó el recibo al comprador autenticado.
-El evento de prueba fue firmado localmente. Pasaron 125 pruebas de backend,
-31 web y la compilación Angular. En Chromium móvil con API simulada,
-la bolsa sobrevivió al cambio de disponibilidad, el reintento mantuvo la
-misma solicitud y el retorno mostró ambos pedidos y limpió la bolsa pagada.
-Daniel aprobó el diff de S-05. Se aplicó con el mismo hash en
-`codex/kuvo-checkout-unico`. Pasaron nuevamente las 125 pruebas de backend,
-31 web y la compilación Angular.
-
-Sites respondió 404 en `/pago/retorno` y 200 en la portada con `?id=…`.
-Se cambió el destino HTTPS de Wompi a la portada; Angular reconoce el ID
-y verifica el pago por backend. En Chromium, el checkout alojado de Wompi
-Sandbox aprobó una compra Nequi de COP 102.000 y su enlace llevó a la
-compilación aislada de Kuvo. Se verificó una captura, dos pedidos y la
-limpieza de la bolsa. La base fue en memoria y queda por probar la entrega
-automática del webhook desde el panel.
+### 2026-11-10 — D-710: el recibo POS muestra el % y el valor del descuento, y el subtotal antes del descuento
+- **Problema (pantallazo del usuario, POS-000005 de FLORECER):** el recibo decía Subtotal $32.300, Descuentos −$1.700 y TOTAL A PAGAR $32.300. Parecía que el descuento no se había aplicado, porque `pedido.subtotal` ya trae el descuento restado (motor canónico: subtotal = sin descuento − descuento + envío) y P.UNIT también era el precio neto. El cobro estaba bien ($34.000 − 5 %). Tampoco se veía el porcentaje.
+- **Decisión (aprobada por el usuario en el chat):** solo presentación de la tirilla (`components/pos/factura-tirilla`).
+  - P.UNIT muestra el precio con IVA ANTES del descuento de la línea; el TOTAL de la línea sigue siendo el neto cobrado.
+  - Debajo de cada producto con descuento: «Descuento 5 %  −$1.700» (valor con IVA de la línea).
+  - Totales: Subtotal = `subtotal + totalDescuento` (antes del descuento), luego Descuento, luego IVA, luego Total. El descuento va antes del IVA porque se calcula sobre la base sin IVA; con IVA, los renglones dicen «(sin IVA)».
+  - El % sale en el renglón de totales solo si todas las líneas tienen el mismo descuento; si no, dice «Descuentos» y el % va en cada producto.
+- **Adenda (mismo día, aprobada): la tabla «Productos vendidos» del cierre de caja (pantalla y reporte impreso).** Tomaba el precio de LISTA del producto (`precio.precioUnitarioConIva`): con descuento o precio manual, las filas no sumaban el renglón TOTALES (en katuq_dev: $18.000 + $30.000 vs. $46.500). Ahora P.UNIT es el precio antes del descuento de línea (con precio manual), hay columna DESC. («5 % (−$1.500)» o «—») con su total, y TOTAL es lo cobrado. El cálculo de la línea pasa a `shared/utils/pos-linea-precio.ts` (`precioNetoLineaPedido`, `precioAntesDescuentoLineaPedido`), compartido con la tirilla. También: espacio tras «Observaciones:» en el reporte.
+- **No cambia:** lo cobrado, el total, el pedido guardado, el efectivo esperado, la diferencia, los totales por forma de pago, el cierre guardado ni el backend.
+- **Pruebas:** el front compila (`ng serve`). Probado por el usuario en localhost:4200 contra katuq_dev (FLORECER): recibo POS-000012 (5 %: Subtotal $30.000, Descuento (5 %) −$1.500, Total $28.500) y reporte del cierre con POS-000014 (P.UNIT $67.000, DESC. 5 % (−$3.350), TOTAL $63.650 = Total Ventas).
+- **Estado:** commiteado y pusheado (solo front). FALTA DESPLEGAR: primero app.katuq.com y luego producción.
+- **Servidor de pruebas (10-nov):** el usuario tiene permiso y aprobó publicarlo desde su equipo, pero el grupo de seguridad abre el puerto 22 solo a la IP de Daniel (comprobado: la conexión no pasa) y la llave `katuq-pruebas.pem` está en el equipo de Daniel. Queda pendiente que Daniel agregue la IP del usuario y le pase la llave. Para publicar solo el front basta `servidor.sh seller` en el servidor (compila `feature/venta-asistida-mejorada`); `desplegar.sh` también reinicia el backend.
