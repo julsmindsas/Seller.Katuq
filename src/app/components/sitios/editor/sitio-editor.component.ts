@@ -342,6 +342,13 @@ const AJUSTES_MANUAL_MARCA: { clave: string; nombre: string; no: string; si: str
   { clave: "emojis", nombre: "Emojis en la tienda", no: "Sí", si: "No", valor: "no", nota: "El carrito y el asistente llevan íconos de línea o solo texto." },
 ];
 
+/** D-689: dónde se abre «Entrega y pago» en la tienda del diseño nuevo (tema.pagoVista). Vacío = ventana al centro. */
+const VISTAS_PAGO: { id: string; nombre: string; nota: string }[] = [
+  { id: "", nombre: "Ventana", nota: "El pago se abre en una ventana al centro, sobre la página." },
+  { id: "pagina", nombre: "Página completa", nota: "El pago ocupa toda la pantalla: el formulario a un lado y el resumen del pedido al otro." },
+  { id: "lateral", nombre: "Panel lateral", nota: "El pago se queda en el mismo panel del carrito, a la derecha, sin tapar la página." },
+];
+
 const OPCIONES_ESTILO = {
   botonForma: [
     { id: "", nombre: "Del estilo" },
@@ -3253,6 +3260,20 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   readonly opcionesEstilo = OPCIONES_ESTILO;
   /** D-689: reglas de manual de marca del diseño nuevo (tema.*). Vacío = como siempre. */
   readonly ajustesManual = AJUSTES_MANUAL_MARCA;
+
+  /** D-689: vistas del pago del diseño nuevo (tema.pagoVista). */
+  readonly vistasPago = VISTAS_PAGO;
+
+  private get vistaPago(): { id: string; nombre: string; nota: string } {
+    const v = String(((this.contenido && this.contenido.tema) as any)?.pagoVista || "");
+    return VISTAS_PAGO.find((x) => x.id === v) || VISTAS_PAGO[0];
+  }
+  get vistaPagoNombre(): string {
+    return this.vistaPago.nombre;
+  }
+  get vistaPagoNota(): string {
+    return this.vistaPago.nota;
+  }
 
   /** Cuántas reglas de manual de marca tiene encendidas la página. */
   get manualEncendidas(): number {
