@@ -1,32 +1,7 @@
 {
-  "version": "2026.11.11.3 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T16:04:34.433Z",
-  "notas": [
-    {
-      "fecha": "2026-11-11T14:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al cotizar un envío con Enviame.io ya puedes poner paquetes de más de 50 kg; el límite lo pone cada transportadora al cotizar.",
-      "modulos": [
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-11T14:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Si un producto pide dos imágenes, el pedido ahora guarda las dos; antes solo quedaba la última.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-11T14:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Cartera, el clic en el nombre o el documento del cliente abre su ficha, sin cruzarse con los filtros de una búsqueda anterior.",
-      "modulos": [
-        "cartera"
-      ]
-    }
-  ],
+  "version": "2026.11.11.4 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T17:09:54.656Z",
+  "notas": [],
   "recientes": [
     {
       "fecha": "2026-11-11T14:40:00Z",
@@ -517,6 +492,6 @@
       ]
     }
   ],
-  "commit": "f3a68c0afcdbec9032cd63f687d231b4a672c691",
+  "commit": "c0aecaff805bbbba273aca54089cd9a40aa34f1a",
   "cambiosSinCommit": 0
 }
