@@ -13930,3 +13930,17 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Arreglo (front `bc2e3c73`, aprobado por Daniel):** `validateMaxValue` de `ventas/asentarpagomanual` compara contra el saldo subido al peso siguiente (`Math.ceil` del saldo a dos decimales). El saldo queda en cero, nunca negativo: `Math.max` en el camino legacy y `saldoPendiente` en Tesorería. El POS (`pos-asentarpagomanual`) tiene la misma comparación, pero muestra el saldo con centavos; no se tocó.
 - **Pruebas:** `tsc -p tsconfig.app.json` sin errores; simulación de la regla con los valores del ticket (45.241 contra 45.240,6 y 45.240,4 se deja; 45.242 contra 45.240,6 se bloquea).
 - **Publicado:** front 2026.11.11.5 (solo este cambio sobre 2026.11.11.4); el arreglo está en el chunk servido. No se probó en pantalla con un pedido real con centavos: lo confirma el comercio al asentar la retención.
+
+### 2026-11-11 — D-691: cuenta del comprador en las tiendas — crear cuenta y solicitud de tipo de cliente (aws-claude-1)
+
+- **Pedido (Daniel, 11-nov):** que el comprador pueda iniciar sesión y la tienda sepa si es mayorista, para aplicarle los precios de su tipo de cliente. Propuesta, diseño y tareas aprobados; viven en la copia local de aws-claude-1 (D-705), cambio `cuenta-cliente-y-mayorista`. El detalle técnico está en los commits del backend (repositorio privado).
+- **Etapa 1 (publicada):**
+  - `tienda.cuenta = { registro, solicitud, tipos[] }` en el contenido del sitio, apagada de fábrica (la llave solo existe si el comercio encendió algo).
+  - Crear cuenta desde la tienda: el cliente nace sin tipo (precio de público) y entra con el código al correo de siempre.
+  - Solicitud de tipo de cliente (con sesión): queda pendiente en la ficha del cliente y le avisa al comercio. El tipo solo lo asigna el comercio al aprobar, tomado de `tiposPrecios`.
+  - Seller: grupo «Cuenta de clientes» en el editor del sitio, pestaña Tienda (interruptores, tipos que se pueden pedir y solicitudes por revisar).
+  - Bandera por empresa `precioListaConSesion` (apagada de fábrica): la lista de precios del cliente se cobra con su sesión abierta. Único cambio en pedidos.
+  - Sin colecciones nuevas ni índices.
+- **Publicado (Daniel: «dale»):** backend `1e7d542d`; Seller 2026.11.11.6 (17:41 UTC, commit `b83a7d20`; candado en verde). Piloto en Baudio: cuenta encendida en `baudio-v3-marca` (17:42 UTC, por `sites.edit`/`sites.publish`, con simulación) y la bandera con `scripts/set-company-feature.js` (simulación antes).
+- **Pruebas (locales, D-566):** flujo completo en katuq_dev con los controladores reales y el correo capturado, 24/24; pantallas de la tienda a 1440 y 390 px; un sitio sin `tienda.cuenta` no lleva el código nuevo; en vivo se ve «Crear cuenta» en Baudio. No se probó: la regla del pedido creando un pedido, un registro real en producción, ni el grupo del Seller en el navegador.
+- **Pendiente:** etapa 2 de la propuesta (sesión del comprador).

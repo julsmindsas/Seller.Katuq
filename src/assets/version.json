@@ -1,16 +1,7 @@
 {
-  "version": "2026.11.11.5 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T17:31:30.862Z",
-  "notas": [
-    {
-      "fecha": "2026-11-11T17:31:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al asentar un pago, ya puedes registrar exactamente lo que falta por pagar; antes, si el saldo tenía centavos, Katuq decía que el valor era mayor y no dejaba guardarlo.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    }
-  ],
+  "version": "2026.11.11.6 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T17:41:09.228Z",
+  "notas": [],
   "recientes": [
     {
       "fecha": "2026-11-11T17:31:00Z",
@@ -501,6 +492,6 @@
       ]
     }
   ],
-  "commit": "bc2e3c73e2e9a0affa4aa1f277dc84e3acdbb285",
+  "commit": "b83a7d20b5034172afededb8d77e30c0edc79470",
   "cambiosSinCommit": 0
 }
