@@ -1,56 +1,7 @@
 {
-  "version": "2026.11.11.2 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T14:27:53.659Z",
+  "version": "2026.11.11.3 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T16:04:34.433Z",
   "notas": [
-    {
-      "fecha": "2026-11-10T17:32:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el detalle de un pedido viejo, el domicilio y el total ya no salen en cero cuando su zona de envío ya no existe: se muestra el valor que se cobró.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-10T18:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "El PDF de una cotización larga ya no sale con la tabla descuadrada ni con las descripciones partidas letra por letra.",
-      "modulos": [
-        "cotizaciones"
-      ]
-    },
-    {
-      "fecha": "2026-11-10T18:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al convertir una cotización en pedido, el descuento global de la cotización ahora pasa al pedido junto con el de cada producto.",
-      "modulos": [
-        "cotizaciones",
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-10T18:40:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al editar un producto de un pedido con el engranaje, ya no se pierde su descuento ni su precio especial.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-10T20:40:00Z",
-      "tipo": "MEJORA",
-      "texto": "En el recibo del punto de venta, el descuento ahora muestra su porcentaje y su valor debajo de cada producto, y el subtotal es el de antes del descuento, para que la resta se entienda.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-10T21:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el cierre de caja, la tabla de productos vendidos ahora muestra lo que se cobró de verdad, con el descuento de cada producto, y ya suma igual que el total.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
     {
       "fecha": "2026-11-11T14:40:00Z",
       "tipo": "CORRIGE",
@@ -566,6 +517,6 @@
       ]
     }
   ],
-  "commit": "509733aa7782274ea83736c3ad11492cf17ee539",
+  "commit": "f3a68c0afcdbec9032cd63f687d231b4a672c691",
   "cambiosSinCommit": 0
 }
