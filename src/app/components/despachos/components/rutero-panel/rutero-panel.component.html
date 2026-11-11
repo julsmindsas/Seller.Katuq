@@ -1,0 +1,179 @@
+<div class="rtr">
+  <div class="rtr__cabeza">
+    <div class="rtr__eyebrow">{{ 'Rutas' | translate }}</div>
+    <div class="rtr__titulo" *ngIf="!armado">{{ paradas.length }} {{ (paradas.length === 1 ? 'pedido listo para salir' : 'pedidos listos para salir') | translate }}</div>
+    <div class="rtr__titulo" *ngIf="armado">{{ rutas.length }} {{ (rutas.length === 1 ? 'ruta' : 'rutas') | translate }} · {{ totalParadas }} {{ 'paradas' | translate }}</div>
+    <div class="rtr__sub" *ngIf="armado">
+      {{ totalKm | number:'1.0-1' }} km
+      <b class="rtr__ok" *ngIf="ahorro >= 5">· {{ ahorro }}% {{ 'menos recorrido' | translate }}</b>
+      <b class="rtr__alerta" *ngIf="totalTarde > 0">· {{ totalTarde }} {{ 'fuera de franja' | translate }}</b>
+    </div>
+    <div class="rtr__sub" *ngIf="!armado && sinUbicar > 0">{{ sinUbicar }} {{ 'sin ubicar no entran a las rutas' | translate }}</div>
+  </div>
+
+  <div class="rtr__cuerpo">
+    <!-- Estado vacío -->
+    <div class="rtr__vacio" *ngIf="paradas.length === 0">
+      <div class="rtr__vacio-titulo">{{ 'No hay pedidos listos en el mapa' | translate }}</div>
+      <div class="rtr__vacio-texto">{{ 'Entran los pedidos Empacado, Para despachar y Producido que ya tienen punto en el mapa.' | translate }}</div>
+    </div>
+
+    <ng-container *ngIf="paradas.length > 0">
+      <!-- Opttia: instrucción escrita -->
+      <div class="rtr__ia">
+        <div class="rtr__ia-titulo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg>
+          {{ 'Dile a Opttia cómo quieres salir' | translate }}
+        </div>
+        <div class="rtr__ia-fila">
+          <input type="text" class="rtr__campo" [(ngModel)]="instruccion" maxlength="200" [disabled]="pensando"
+            (keydown.enter)="aplicarInstruccion()"
+            [attr.aria-label]="'Instrucción para Opttia' | translate"
+            placeholder="{{ 'Ej.: 3 mensajeros, salen a las 8, máximo 12 paradas' | translate }}">
+          <button type="button" class="rtr__btn rtr__btn--sec" (click)="aplicarInstruccion()" [disabled]="pensando || !instruccion.trim()">
+            {{ (pensando ? 'Pensando…' : 'Aplicar') | translate }}
+          </button>
+        </div>
+        <div class="rtr__nota" *ngIf="notaOpttia">{{ notaOpttia }}</div>
+        <div class="rtr__aviso" *ngIf="avisoOpttia">{{ avisoOpttia | translate }}</div>
+      </div>
+
+      <!-- Ajustes -->
+      <div class="rtr__ajustes">
+        <div class="rtr__par">
+          <label class="rtr__label" for="rtrRutas">{{ 'Mensajeros' | translate }}</label>
+          <input id="rtrRutas" type="number" min="1" max="10" class="rtr__campo rtr__campo--num" [(ngModel)]="ajustes.rutas">
+        </div>
+        <div class="rtr__par">
+          <label class="rtr__label" for="rtrHora">{{ 'Salen a las' | translate }}</label>
+          <input id="rtrHora" type="time" class="rtr__campo rtr__campo--num" [(ngModel)]="horaSalida">
+        </div>
+        <button type="button" class="rtr__enlace" (click)="verAjustes = !verAjustes" [attr.aria-expanded]="verAjustes">
+          {{ (verAjustes ? 'Menos ajustes' : 'Más ajustes') | translate }}
+        </button>
+        <ng-container *ngIf="verAjustes">
+          <div class="rtr__par">
+            <label class="rtr__label" for="rtrMax">{{ 'Máximo de paradas' | translate }}</label>
+            <input id="rtrMax" type="number" min="0" max="200" class="rtr__campo rtr__campo--num" [(ngModel)]="ajustes.maxParadas" placeholder="0">
+          </div>
+          <div class="rtr__par">
+            <label class="rtr__label" for="rtrVel">{{ 'Velocidad (km/h)' | translate }}</label>
+            <input id="rtrVel" type="number" min="5" max="80" class="rtr__campo rtr__campo--num" [(ngModel)]="ajustes.velocidadKmh">
+          </div>
+          <div class="rtr__par">
+            <label class="rtr__label" for="rtrMin">{{ 'Minutos por parada' | translate }}</label>
+            <input id="rtrMin" type="number" min="0" max="60" class="rtr__campo rtr__campo--num" [(ngModel)]="ajustes.minutosPorParada">
+          </div>
+          <label class="rtr__check">
+            <input type="checkbox" [(ngModel)]="ajustes.regresa"> {{ 'Regresan al punto de salida' | translate }}
+          </label>
+        </ng-container>
+
+        <div class="rtr__salida">
+          <div>
+            <div class="rtr__label">{{ 'Punto de salida' | translate }}</div>
+            <div class="rtr__salida-texto" *ngIf="eligiendoSalida">{{ 'Toca el mapa donde salen los mensajeros' | translate }}</div>
+            <div class="rtr__salida-texto" *ngIf="!eligiendoSalida && salidaEsSugerida">{{ (ubicacionUsuario ? 'Tu ubicación (sugerido)' : 'Centro de los pedidos (sugerido)') | translate }}</div>
+            <div class="rtr__salida-texto" *ngIf="!eligiendoSalida && !salidaEsSugerida">{{ 'Marcado en el mapa' | translate }}</div>
+          </div>
+          <button type="button" class="rtr__btn rtr__btn--sec" (click)="pedirSalida()">
+            {{ (eligiendoSalida ? 'Cancelar' : 'Marcar') | translate }}
+          </button>
+        </div>
+
+        <div class="rtr__acciones">
+          <button type="button" class="rtr__btn" (click)="armar()" [disabled]="!salida">
+            {{ (armado ? 'Volver a armar' : 'Armar rutas') | translate }}
+          </button>
+          <button type="button" class="rtr__btn rtr__btn--sec" *ngIf="armado" (click)="limpiar()">{{ 'Quitar' | translate }}</button>
+        </div>
+        <div class="rtr__pie">{{ 'Distancias en línea recta y tiempos estimados: no tienen en cuenta calles ni tráfico. Nada se guarda en los pedidos.' | translate }}</div>
+      </div>
+
+      <!-- Opttia: lectura de las rutas -->
+      <div class="rtr__ia" *ngIf="armado && rutas.length > 0">
+        <button type="button" class="rtr__btn rtr__btn--sec rtr__btn--ancho" (click)="pedirOpinion()" [disabled]="opinando" *ngIf="!opinion">
+          {{ (opinando ? 'Opttia está revisando…' : 'Que Opttia revise las rutas') | translate }}
+        </button>
+        <ng-container *ngIf="opinion">
+          <div class="rtr__ia-titulo">{{ 'Opttia' | translate }}</div>
+          <div class="rtr__ia-titular" *ngIf="opinion.titular">{{ opinion.titular }}</div>
+          <ul class="rtr__ia-lista" *ngIf="opinion.puntos.length">
+            <li *ngFor="let punto of opinion.puntos">{{ punto }}</li>
+          </ul>
+        </ng-container>
+      </div>
+
+      <!-- Rutas -->
+      <div cdkDropListGroup>
+        <div class="rtr-ruta" *ngFor="let ruta of rutas; let r = index; trackBy: porId" [style.--ruta]="ruta.color">
+          <div class="rtr-ruta__cabeza" role="button" tabindex="0" [attr.aria-expanded]="abierta === ruta.id"
+            (click)="alternar(ruta)" (keydown.enter)="alternar(ruta)">
+            <i class="rtr-ruta__color"></i>
+            <div class="rtr-ruta__info">
+              <input class="rtr-ruta__nombre" [(ngModel)]="ruta.nombre" maxlength="30" (click)="$event.stopPropagation()"
+                [attr.aria-label]="'Nombre de la ruta' | translate">
+              <div class="rtr-ruta__meta">
+                {{ ruta.paradas.length }} {{ 'paradas' | translate }} · {{ ruta.km | number:'1.0-1' }} km · {{ duracion(ruta.minutos) }}
+              </div>
+              <div class="rtr-ruta__meta">
+                {{ 'Termina hacia' | translate }} {{ hora(ruta.finMin) }}
+                <b class="rtr__alerta" *ngIf="ruta.tarde > 0">· {{ ruta.tarde }} {{ 'fuera de franja' | translate }}</b>
+              </div>
+              <div class="rtr-ruta__meta" *ngIf="ruta.porCobrar > 0">{{ 'Por cobrar' | translate }} {{ ruta.porCobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+              <div class="rtr-ruta__frase" *ngIf="fraseDe(ruta, r) as frase">{{ frase }}</div>
+            </div>
+            <b class="rtr-ruta__flecha" [class.rtr-ruta__flecha--abierta]="abierta === ruta.id">›</b>
+          </div>
+
+          <div class="rtr-ruta__cuerpo" *ngIf="abierta === ruta.id">
+            <div class="rtr-ruta__barra">
+              <button type="button" class="rtr__enlace" (click)="reordenar(ruta)">{{ 'Ordenar por cercanía' | translate }}</button>
+              <button type="button" class="rtr__enlace" (click)="imprimir(ruta)">{{ 'Hoja de ruta' | translate }}</button>
+              <a class="rtr__enlace" *ngIf="enlaceMaps(ruta) as enlace" [href]="enlace" target="_blank" rel="noopener">{{ 'Google Maps' | translate }}</a>
+            </div>
+            <div class="rtr-ruta__lista" cdkDropList [id]="'rt-' + ruta.id" [cdkDropListData]="ruta.paradas" (cdkDropListDropped)="soltar($event)">
+              <div class="rtr-parada" *ngFor="let p of ruta.paradas; let i = index; trackBy: porId" cdkDrag [class.rtr-parada--tarde]="p.tarde">
+                <b class="rtr-parada__num" cdkDragHandle title="{{ 'Arrastra para cambiar el orden' | translate }}">{{ i + 1 }}</b>
+                <div class="rtr-parada__info" role="button" tabindex="0" (click)="verParada.emit(p)" (keydown.enter)="verParada.emit(p)">
+                  <div class="rtr-parada__arriba"><b>#{{ p.id }}</b> {{ p.cliente }}</div>
+                  <div class="rtr-parada__dir">{{ p.direccion }}</div>
+                  <div class="rtr-parada__hora">
+                    {{ 'Llega' | translate }} {{ hora(p.llegadaMin) }}
+                    <em *ngIf="p.franja.inicioMin !== null || p.franja.urgente">· {{ p.franja.etiqueta }}</em>
+                    <em class="rtr__alerta" *ngIf="p.tarde">· {{ 'tarde' | translate }}</em>
+                  </div>
+                </div>
+                <div class="rtr-parada__acciones">
+                  <button type="button" class="rtr-mini" (click)="mover(ruta, i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir' | translate">↑</button>
+                  <button type="button" class="rtr-mini" (click)="mover(ruta, i, 1)" [disabled]="i === ruta.paradas.length - 1" [attr.aria-label]="'Bajar' | translate">↓</button>
+                  <select class="rtr-mini rtr-mini--sel" *ngIf="rutas.length > 1" (change)="pasarA(ruta, i, $any($event.target).value)"
+                    [attr.aria-label]="'Pasar a otra ruta' | translate">
+                    <option value="">⇄</option>
+                    <ng-container *ngFor="let otra of rutas">
+                      <option *ngIf="otra.id !== ruta.id" [value]="otra.id">{{ otra.nombre }}</option>
+                    </ng-container>
+                  </select>
+                  <button type="button" class="rtr-mini" (click)="sacar(ruta, i)" [attr.aria-label]="'Sacar de la ruta' | translate">×</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Por fuera de las rutas -->
+      <div class="rtr-fuera" *ngIf="armado && (sinRuta.length > 0 || fuera.length > 0)">
+        <div class="rtr__label">{{ 'Por fuera de las rutas' | translate }} · {{ sinRuta.length + fuera.length }}</div>
+        <div class="rtr-fuera__fila" *ngFor="let p of sinRuta; trackBy: porId">
+          <div><b>#{{ p.id }}</b> {{ p.cliente }}<div class="rtr-parada__dir">{{ 'No cupo por el máximo de paradas' | translate }}</div></div>
+          <button type="button" class="rtr__enlace" (click)="devolver(p, 'sinRuta')">{{ 'Agregar' | translate }}</button>
+        </div>
+        <div class="rtr-fuera__fila" *ngFor="let p of fuera; trackBy: porId">
+          <div><b>#{{ p.id }}</b> {{ p.cliente }}<div class="rtr-parada__dir">{{ 'Lo sacaste de la ruta' | translate }}</div></div>
+          <button type="button" class="rtr__enlace" (click)="devolver(p, 'fuera')">{{ 'Agregar' | translate }}</button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

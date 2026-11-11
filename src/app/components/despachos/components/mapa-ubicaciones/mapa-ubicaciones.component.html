@@ -22,6 +22,18 @@
         <i class="mapa-pill__dot"></i>{{ 'Tiempo Real' | translate }}
       </div>
 
+      <!-- Rutero (openspec rutero-envios) -->
+      <button type="button" class="mapa-rutas-btn" [class.mapa-rutas-btn--on]="modoRutas" *ngIf="ruteroDisponible"
+        [attr.aria-pressed]="modoRutas" (click)="alternarRutas()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="19" r="3"></circle>
+          <circle cx="18" cy="5" r="3"></circle>
+          <path d="M9 19h6a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6"></path>
+        </svg>
+        {{ (modoRutas ? 'Salir de Rutas' : 'Rutas') | translate }}
+      </button>
+
       <!-- Toggle para mensajeros -->
       <label class="mapa-toggle" [class.mapa-toggle--on]="mostrarMensajeros"
         title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
@@ -89,7 +101,7 @@
     </div>
   </div>
 
-  <div class="mapa-cuerpo" [class.mapa-cuerpo--con-panel]="mostrarPanel">
+  <div class="mapa-cuerpo" [class.mapa-cuerpo--con-panel]="mostrarPanel" [class.mapa-cuerpo--rutas]="modoRutas">
   <!-- Contenedor del mapa -->
   <div class="mapa-wrapper">
     <div #mapaContainer
@@ -143,8 +155,17 @@
   </div>
 
   <!-- Panel de mensajeros: quién está en la calle, hace cuánto llegó su punto, Ver y Seguir -->
-  <aside class="mapa-panel" *ngIf="mostrarPanel" [style.height]="altura">
-    <ng-container *ngIf="mostrarMensajeros">
+  <aside class="mapa-panel" [class.mapa-panel--rutas]="modoRutas" *ngIf="mostrarPanel" [style.height]="altura">
+    <app-rutero-panel *ngIf="modoRutas"
+      [paradas]="paradasRutero"
+      [sinUbicar]="pedidosSinUbicar.length"
+      [ubicacionUsuario]="ubicacionDeQuienMira"
+      [empresa]="nombreEmpresa"
+      [eligiendoSalida]="eligiendoSalida"
+      (dibujar)="alDibujarRutas($event)"
+      (elegirSalida)="alElegirSalida($event)"
+      (verParada)="verParadaEnMapa($event)"></app-rutero-panel>
+    <ng-container *ngIf="mostrarMensajeros && !modoRutas">
     <div class="mapa-panel__cabeza">
       <div class="mapa-panel__eyebrow">{{ 'Mensajeros' | translate }}</div>
       <div class="mapa-panel__titulo">
@@ -199,7 +220,7 @@
     </ng-container>
 
     <!-- Pedidos que no se pudieron ubicar: nunca se pintan en un punto aproximado -->
-    <div class="sinubicar" *ngIf="pedidosSinUbicar.length > 0">
+    <div class="sinubicar" *ngIf="pedidosSinUbicar.length > 0 && !modoRutas">
       <div class="sinubicar__cabeza">
         <div class="mapa-panel__eyebrow">{{ 'Sin ubicar' | translate }}</div>
         <div class="sinubicar__titulo">

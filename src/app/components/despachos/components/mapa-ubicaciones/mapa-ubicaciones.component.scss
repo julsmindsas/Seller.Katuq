@@ -298,6 +298,34 @@ $danger-color:  $em-red;
     &--con-panel {
       grid-template-columns: minmax(0, 1fr) 300px;
     }
+
+    // Rutero: el panel necesita más ancho para la lista de paradas
+    &--rutas.mapa-cuerpo--con-panel {
+      grid-template-columns: minmax(0, 1fr) 380px;
+    }
+  }
+
+  // ---------- Rutero (openspec rutero-envios) ----------
+  .mapa-rutas-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #d6cdf7;
+    background: #fff;
+    color: $em-accent;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 11px;
+    padding: 7px 12px;
+    cursor: pointer;
+
+    &--on {
+      background: $em-accent;
+      border-color: $em-accent;
+      color: #fff;
+    }
+
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
   }
 
   .mapa-panel {
@@ -841,6 +869,33 @@ $danger-color:  $em-red;
 // Estilos de Leaflet (marcadores y popups viven dentro del contenedor del mapa)
 // ==========================================
 :host ::ng-deep {
+  // ---------- Rutero: paradas numeradas y punto de salida ----------
+  .rtr-pin {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ruta);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(33, 31, 58, .35);
+
+    &--tarde { box-shadow: 0 0 0 3px $em-red; }
+  }
+
+  .rtr-salida {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #211F3A;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(33, 31, 58, .45);
+  }
+
   .leaflet-container {
     background: #EEEDF3;
     font-family: inherit;
@@ -1193,6 +1248,8 @@ $danger-color:  $em-red;
 
     // El panel de mensajeros pasa debajo del mapa
     .mapa-cuerpo--con-panel { grid-template-columns: minmax(0, 1fr); }
+    .mapa-cuerpo--rutas.mapa-cuerpo--con-panel { grid-template-columns: minmax(0, 1fr); }
+    .mapa-panel--rutas { height: auto !important; max-height: 75vh; }
 
     .mapa-panel {
       height: auto !important;

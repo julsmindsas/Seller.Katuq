@@ -1,0 +1,330 @@
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import {
+  armarRutas, COLORES_RUTA, etiquetaHora, kmDeOrden, medirRuta, OPCIONES_POR_DEFECTO, OpcionesRutero, ordenarParadas,
+  ParadaRutero, Punto, RutaRutero
+} from '../../rutero/rutero.algoritmo';
+import { OpinionOpttia, RuteroService } from '../../rutero/rutero.service';
+
+export interface DibujoRutero {
+  rutas: RutaRutero[];
+  salida: Punto | null;
+}
+
+type Ajustes = Omit<OpcionesRutero, 'salida'>;
+
+/**
+ * Rutero de Envíos (openspec `rutero-envios`): arma rutas por cercanía con los pedidos listos que el
+ * mapa ya ubicó, las deja ajustar a mano y le pide a Opttia una lectura. No guarda nada en el pedido.
+ */
+@Component({
+  selector: 'app-rutero-panel',
+  templateUrl: './rutero-panel.component.html',
+  styleUrls: ['./rutero-panel.component.scss']
+})
+export class RuteroPanelComponent implements OnInit, OnChanges {
+  /** Pedidos listos para salir que tienen punto en el mapa. */
+  @Input() paradas: ParadaRutero[] = [];
+  @Input() sinUbicar = 0;
+  /** Punto de partida sugerido (ubicación de quien usa el mapa), si lo hay. */
+  @Input() ubicacionUsuario: Punto | null = null;
+  @Input() empresa = '';
+  @Input() eligiendoSalida = false;
+
+  @Output() dibujar = new EventEmitter<DibujoRutero>();
+  @Output() elegirSalida = new EventEmitter<boolean>();
+  @Output() verParada = new EventEmitter<ParadaRutero>();
+
+  ajustes: Ajustes = { ...OPCIONES_POR_DEFECTO };
+  salida: Punto | null = null;
+  salidaEsSugerida = false;
+  rutas: RutaRutero[] = [];
+  sinRuta: ParadaRutero[] = [];
+  /** Pedidos que la persona sacó de las rutas. */
+  fuera: ParadaRutero[] = [];
+  armado = false;
+  verAjustes = false;
+  abierta: string | null = null;
+  /** Kilómetros si se saliera en el orden en que están los pedidos, para mostrar cuánto se ahorra. */
+  kmSinOrdenar = 0;
+
+  instruccion = '';
+  pensando = false;
+  opinando = false;
+  opinion: OpinionOpttia | null = null;
+  notaOpttia = '';
+  avisoOpttia = '';
+
+  constructor(private rutero: RuteroService, private cd: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.leerGuardado();
+    this.resolverSalida();
+    // El punto de salida se ve en el mapa desde que se abre el modo Rutas
+    Promise.resolve().then(() => this.emitir());
+  }
+
+  ngOnChanges(cambios: SimpleChanges): void {
+    if (cambios['ubicacionUsuario'] || cambios['paradas']) this.resolverSalida();
+    // Si un pedido ya no está listo (se despachó en otra pestaña), sale de las rutas armadas
+    if (cambios['paradas'] && !cambios['paradas'].firstChange && this.armado) {
+      const vivos = new Set(this.paradas.map(p => p.id));
+      const antes = this.totalParadas;
+      this.rutas = this.rutas.map(r => ({ ...r, paradas: r.paradas.filter(p => vivos.has(p.id)) }));
+      if (this.totalParadas !== antes) this.remedir();
+    }
+  }
+
+  // ---------- Datos derivados ----------
+  get horaSalida(): string {
+    const m = this.ajustes.horaSalidaMin;
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  }
+  set horaSalida(valor: string) {
+    const [h, m] = String(valor || '').split(':').map(Number);
+    if (Number.isFinite(h) && Number.isFinite(m)) this.ajustes.horaSalidaMin = h * 60 + m;
+  }
+  get totalParadas(): number { return this.rutas.reduce((s, r) => s + r.paradas.length, 0); }
+  get totalKm(): number { return this.rutas.reduce((s, r) => s + r.km, 0); }
+  get totalTarde(): number { return this.rutas.reduce((s, r) => s + r.tarde, 0); }
+  get totalPorCobrar(): number { return this.rutas.reduce((s, r) => s + r.porCobrar, 0); }
+  get ahorro(): number {
+    return this.kmSinOrdenar > 0 && this.totalKm < this.kmSinOrdenar ? Math.round((1 - this.totalKm / this.kmSinOrdenar) * 100) : 0;
+  }
+  get listas(): string[] { return this.rutas.map(r => 'rt-' + r.id); }
+
+  hora(min: number): string { return etiquetaHora(min); }
+  duracion(min: number): string {
+    const t = Math.round(min);
+    return t < 60 ? `${t} min` : `${Math.floor(t / 60)} h ${String(t % 60).padStart(2, '0')} min`;
+  }
+  porId(_: number, x: { id: string }): string { return x.id; }
+
+  // ---------- Punto de salida ----------
+  private resolverSalida(): void {
+    if (this.salida && !this.salidaEsSugerida) return;
+    if (this.ubicacionUsuario) {
+      this.salida = this.ubicacionUsuario;
+    } else if (this.paradas.length) {
+      this.salida = {
+        lat: this.paradas.reduce((s, p) => s + p.lat, 0) / this.paradas.length,
+        lng: this.paradas.reduce((s, p) => s + p.lng, 0) / this.paradas.length,
+      };
+    }
+    this.salidaEsSugerida = true;
+  }
+
+  /** El mapa avisa dónde hizo clic la persona. */
+  fijarSalida(punto: Punto): void {
+    this.salida = punto;
+    this.salidaEsSugerida = false;
+    this.guardar();
+    if (this.armado) this.remedir(); else this.emitir();
+  }
+
+  pedirSalida(): void { this.elegirSalida.emit(!this.eligiendoSalida); }
+
+  // ---------- Armar ----------
+  armar(): void {
+    if (!this.salida || !this.paradas.length) return;
+    const fuera = new Set(this.fuera.map(p => p.id));
+    const entran = this.paradas.filter(p => !fuera.has(p.id));
+    const opciones = this.opciones();
+    const r = armarRutas(entran, opciones);
+    // Los nombres que la persona ya puso se conservan por posición
+    const nombres = this.rutas.map(x => x.nombre);
+    this.rutas = r.rutas.map((x, i) => ({ ...x, nombre: nombres[i] && !/^Ruta \d+$/.test(nombres[i]) ? nombres[i] : x.nombre }));
+    this.sinRuta = r.sinRuta;
+    this.kmSinOrdenar = this.rutas.reduce((s, x) => s + kmDeOrden(opciones.salida, entran.filter(p => x.paradas.some(q => q.id === p.id)), opciones), 0);
+    this.armado = true;
+    this.abierta = this.rutas.length === 1 ? this.rutas[0].id : null;
+    this.opinion = null;
+    this.guardar();
+    this.emitir();
+  }
+
+  limpiar(): void {
+    this.rutas = [];
+    this.sinRuta = [];
+    this.fuera = [];
+    this.armado = false;
+    this.opinion = null;
+    this.notaOpttia = '';
+    this.emitir();
+  }
+
+  private opciones(): OpcionesRutero {
+    const a = this.ajustes;
+    return {
+      salida: this.salida!,
+      rutas: Math.max(1, Math.min(10, Math.round(Number(a.rutas) || 1))),
+      maxParadas: Math.max(0, Math.round(Number(a.maxParadas) || 0)),
+      velocidadKmh: Math.max(5, Math.min(80, Number(a.velocidadKmh) || OPCIONES_POR_DEFECTO.velocidadKmh)),
+      minutosPorParada: Math.max(0, Math.min(60, Number(a.minutosPorParada) || 0)),
+      factorUrbano: OPCIONES_POR_DEFECTO.factorUrbano,
+      horaSalidaMin: a.horaSalidaMin,
+      regresa: !!a.regresa,
+    };
+  }
+
+  private remedir(): void {
+    const opciones = this.opciones();
+    this.rutas = this.rutas.filter(r => r.paradas.length).map(r => medirRuta(r, opciones));
+    this.opinion = null;
+    this.emitir();
+  }
+
+  private emitir(): void {
+    this.dibujar.emit({ rutas: this.rutas, salida: this.salida });
+    this.cd.markForCheck();
+  }
+
+  // ---------- Ajuste a mano ----------
+  soltar(evento: CdkDragDrop<any[]>): void {
+    if (evento.previousContainer === evento.container) {
+      moveItemInArray(evento.container.data, evento.previousIndex, evento.currentIndex);
+    } else {
+      transferArrayItem(evento.previousContainer.data, evento.container.data, evento.previousIndex, evento.currentIndex);
+    }
+    this.remedir();
+  }
+
+  mover(ruta: RutaRutero, i: number, paso: number): void {
+    const j = i + paso;
+    if (j < 0 || j >= ruta.paradas.length) return;
+    moveItemInArray(ruta.paradas, i, j);
+    this.remedir();
+  }
+
+  pasarA(ruta: RutaRutero, i: number, destinoId: string): void {
+    const destino = this.rutas.find(r => r.id === destinoId);
+    if (!destino || destino === ruta) return;
+    destino.paradas.push(ruta.paradas.splice(i, 1)[0]);
+    destino.paradas = ordenarParadas(this.salida!, destino.paradas) as any;
+    this.remedir();
+  }
+
+  sacar(ruta: RutaRutero, i: number): void {
+    this.fuera = [...this.fuera, ruta.paradas.splice(i, 1)[0]];
+    this.remedir();
+  }
+
+  /** Devuelve un pedido a la ruta que le queda más cerca. */
+  devolver(parada: ParadaRutero, lista: 'fuera' | 'sinRuta'): void {
+    if (!this.rutas.length) return;
+    const destino = this.rutas.slice().sort((a, b) => this.cercania(a, parada) - this.cercania(b, parada))[0];
+    this[lista] = this[lista].filter(p => p.id !== parada.id);
+    destino.paradas = ordenarParadas(this.salida!, [...destino.paradas, parada]) as any;
+    this.remedir();
+  }
+
+  private cercania(ruta: RutaRutero, p: Punto): number {
+    return Math.min(...ruta.paradas.map(q => (q.lat - p.lat) ** 2 + (q.lng - p.lng) ** 2));
+  }
+
+  reordenar(ruta: RutaRutero): void {
+    ruta.paradas = ordenarParadas(this.salida!, ruta.paradas) as any;
+    this.remedir();
+  }
+
+  alternar(ruta: RutaRutero): void { this.abierta = this.abierta === ruta.id ? null : ruta.id; }
+
+  // ---------- Salidas útiles sin guardar nada ----------
+  /** Google Maps acepta hasta 9 puntos intermedios: con más paradas el enlace no se ofrece. */
+  enlaceMaps(ruta: RutaRutero): string | null {
+    if (!this.salida || !ruta.paradas.length || ruta.paradas.length > 10) return null;
+    const p = (x: Punto) => `${x.lat.toFixed(6)},${x.lng.toFixed(6)}`;
+    const puntos = ruta.paradas.map(p);
+    const destino = this.ajustes.regresa ? p(this.salida) : puntos.pop()!;
+    const medio = puntos.length ? `&waypoints=${encodeURIComponent(puntos.join('|'))}` : '';
+    return `https://www.google.com/maps/dir/?api=1&origin=${p(this.salida)}&destination=${destino}${medio}&travelmode=driving`;
+  }
+
+  imprimir(ruta: RutaRutero): void {
+    const esc = (t: any) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+    const filas = ruta.paradas.map((p, i) => `<tr><td>${i + 1}</td><td>#${esc(p.id)}</td><td>${esc(p.cliente)}</td><td>${esc(p.direccion)}</td>`
+      + `<td>${esc(p.franja.inicioMin != null || p.franja.urgente ? p.franja.etiqueta : '')}</td><td>${esc(this.hora(p.llegadaMin))}</td>`
+      + `<td style="text-align:right">${p.porCobrar ? '$' + Math.round(p.porCobrar).toLocaleString('es-CO') : ''}</td><td></td></tr>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(ruta.nombre)}</title><style>
+      body{font-family:Arial,sans-serif;color:#211F3A;margin:24px}h1{font-size:20px;margin:0 0 4px}p{margin:0 0 14px;color:#555;font-size:13px}
+      table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}
+      th{background:#f4f1ff;text-transform:uppercase;font-size:10px;letter-spacing:.5px}</style></head><body>
+      <h1>${esc(ruta.nombre)}${this.empresa ? ' · ' + esc(this.empresa) : ''}</h1>
+      <p>${ruta.paradas.length} paradas · ${ruta.km.toFixed(1)} km estimados · sale ${esc(this.hora(this.ajustes.horaSalidaMin))} · termina hacia ${esc(this.hora(ruta.finMin))}${ruta.porCobrar ? ' · por cobrar $' + Math.round(ruta.porCobrar).toLocaleString('es-CO') : ''}</p>
+      <table><thead><tr><th>#</th><th>Pedido</th><th>Cliente</th><th>Dirección</th><th>Franja</th><th>Llegada estimada</th><th>Por cobrar</th><th>Recibido</th></tr></thead><tbody>${filas}</tbody></table>
+      </body></html>`;
+    const ventana = window.open('', '_blank');
+    if (!ventana) return;
+    ventana.document.write(html);
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
+  }
+
+  // ---------- Opttia ----------
+  /** Opttia entiende la instrucción y devuelve ajustes; las rutas las arma el código. */
+  aplicarInstruccion(): void {
+    const texto = this.instruccion.trim();
+    if (!texto || this.pensando) return;
+    this.pensando = true;
+    this.avisoOpttia = '';
+    this.rutero.instruccion({ texto, paradas: this.paradas.length, actuales: { ...this.ajustes } }).subscribe({
+      next: ({ ajustes }) => {
+        this.pensando = false;
+        if (!ajustes) { this.avisoOpttia = 'Opttia no entendió la instrucción. Ajusta los valores a mano.'; this.cd.markForCheck(); return; }
+        const { nota, ...valores } = ajustes;
+        this.ajustes = { ...this.ajustes, ...valores };
+        this.notaOpttia = nota || '';
+        this.instruccion = '';
+        this.armar();
+      },
+      error: () => { this.pensando = false; this.avisoOpttia = 'Opttia no respondió. Ajusta los valores a mano.'; this.cd.markForCheck(); },
+    });
+  }
+
+  pedirOpinion(): void {
+    if (!this.rutas.length || this.opinando) return;
+    this.opinando = true;
+    this.avisoOpttia = '';
+    const rutas = this.rutas.map(r => ({
+      paradas: r.paradas.length,
+      km: Math.round(r.km * 10) / 10,
+      minutos: Math.round(r.minutos),
+      porCobrar: Math.round(r.porCobrar),
+      tarde: r.tarde,
+      conFranja: r.paradas.filter(p => p.franja.inicioMin != null).length,
+      urgentes: r.paradas.filter(p => p.franja.urgente).length,
+    }));
+    this.rutero.opinion({ rutas, sinRuta: this.sinRuta.length + this.fuera.length, sinUbicar: this.sinUbicar, horaSalidaMin: this.ajustes.horaSalidaMin }).subscribe({
+      next: ({ opinion }) => {
+        this.opinando = false;
+        this.opinion = opinion;
+        if (!opinion) this.avisoOpttia = 'Opttia no respondió esta vez. Las cifras de las rutas siguen siendo las del cálculo.';
+        this.cd.markForCheck();
+      },
+      error: () => { this.opinando = false; this.avisoOpttia = 'Opttia no respondió esta vez. Las cifras de las rutas siguen siendo las del cálculo.'; this.cd.markForCheck(); },
+    });
+  }
+
+  fraseDe(ruta: RutaRutero, i: number): string { return this.opinion?.rutas?.[`r${i + 1}`] || ''; }
+
+  // ---------- Preferencias de esta persona (solo comodidad; nada de esto es dato del comercio) ----------
+  private get clave(): string { return `rutero_envios_${this.empresa || 'x'}`; }
+
+  private leerGuardado(): void {
+    try {
+      const g = JSON.parse(localStorage.getItem(this.clave) || 'null');
+      if (!g) return;
+      if (g.ajustes) this.ajustes = { ...OPCIONES_POR_DEFECTO, ...g.ajustes };
+      if (g.salida && Number.isFinite(g.salida.lat) && Number.isFinite(g.salida.lng)) { this.salida = g.salida; this.salidaEsSugerida = false; }
+    } catch { /* sin almacenamiento: se usan los valores por defecto */ }
+  }
+
+  private guardar(): void {
+    try {
+      localStorage.setItem(this.clave, JSON.stringify({ ajustes: this.ajustes, salida: this.salidaEsSugerida ? null : this.salida }));
+    } catch { /* sin almacenamiento */ }
+  }
+
+  colorDe(i: number): string { return COLORES_RUTA[i % COLORES_RUTA.length]; }
+}

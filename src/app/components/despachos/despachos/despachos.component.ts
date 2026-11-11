@@ -149,6 +149,8 @@ interface UbicacionPedido {
   horaEstimada?: string;
   distanciaRestante?: number; // en km
   tiempoEstimado?: number; // en minutos
+  porCobrar?: number;
+  zona?: string;
 }
 
 @Component({
@@ -213,6 +215,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
   estadosPago = Object.values(EstadoPago);
   // Ticket 1448: con inject() para no cambiar el constructor.
   private companyFeaturesCredito = inject(CompanyFeaturesService);
+  /** Rutero en el mapa (openspec rutero-envios): solo con la bandera `ruteroEnvios` de la empresa. */
+  get ruteroDisponible(): boolean {
+    return this.companyFeaturesCredito.isEnabled('ruteroEnvios');
+  }
   ciudadSeleccionada: string;
   ESTADOPAGO: any[];
   configuracionCarritoSeleccionado: Carrito;
@@ -6588,6 +6594,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
       transportador: pedido.transportador?.nombre || '',
       fechaEntrega: pedido.fechaEntrega || '',
       horaEstimada: pedido.horarioEntrega || '',
+      // Rutero (openspec rutero-envios): valor por cobrar y zona de cada parada
+      porCobrar: Number((pedido as any).faltaPorPagar) || 0,
+      zona: pedido.envio?.zonaCobro || '',
       distanciaRestante: undefined, // Se puede calcular más tarde
       tiempoEstimado: undefined // Se puede calcular más tarde
       };

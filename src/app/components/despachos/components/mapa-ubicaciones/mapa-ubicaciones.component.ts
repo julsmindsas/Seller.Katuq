@@ -1,6 +1,8 @@
 import {
   Component, Input, OnInit, AfterViewInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, ChangeDetectorRef
 } from '@angular/core';
+import { leerFranja, ParadaRutero, Punto, RutaRutero } from '../../rutero/rutero.algoritmo';
+import { DibujoRutero, RuteroPanelComponent } from '../rutero-panel/rutero-panel.component';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
@@ -25,7 +27,12 @@ interface UbicacionPedido {
   horaEstimada?: string;
   distanciaRestante?: number;
   tiempoEstimado?: number;
+  porCobrar?: number;
+  zona?: string;
 }
+
+/** Estados que ya pueden salir a la calle: son los que entran al rutero. */
+const ESTADOS_LISTOS_RUTERO = ['Empacado', 'ParaDespachar', 'ProducidoTotalmente'];
 
 interface UbicacionMensajero {
   id: string;
@@ -159,6 +166,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   /** Pedidos que no se pudieron ubicar con confianza: van en el panel, nunca en un punto aproximado. */
   @Input() pedidosSinUbicar: PedidoSinUbicar[] = [];
   @Input() verMensajeros: boolean = true;
+  /** Rutero (openspec rutero-envios): lo enciende la bandera `ruteroEnvios` de la empresa. */
+  @Input() ruteroDisponible: boolean = false;
+  @ViewChild(RuteroPanelComponent) ruteroPanel?: RuteroPanelComponent;
+  public modoRutas = false;
+  public eligiendoSalida = false;
+  public paradasRutero: ParadaRutero[] = [];
+  private capaRutas: any = null;
+  private dibujoRutero: DibujoRutero = { rutas: [], salida: null };
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
     mostrarZonas: true,
@@ -260,6 +275,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       if (antes !== this.configuracion?.ubicaciones) {
         const sinPinesAntes = !antes?.some(u => u.latitud && u.longitud);
         this.agregarMarcadores();
+        if (this.modoRutas) {
+          this.actualizarParadasRutero();
+          // Los pines recién creados entran escalonados: se vuelven a esconder los que ya son parada
+          setTimeout(() => this.pintarRutas(), 1300);
+        }
         // Encuadrar solo con los primeros pines: después, no mover el mapa mientras alguien lo usa
         if (sinPinesAntes) this.ajustarVistaAMarcadores();
       }
@@ -276,7 +296,103 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   get mostrarPanel(): boolean {
-    return this.mostrarControles && (this.mostrarMensajeros || this.pedidosSinUbicar.length > 0);
+    return this.mostrarControles && (this.modoRutas || this.mostrarMensajeros || this.pedidosSinUbicar.length > 0);
+  }
+
+  get ubicacionDeQuienMira(): Punto | null { return this.ubicacionUsuario; }
+  get nombreEmpresa(): string { return this.companyName || ''; }
+
+  // ---------- Rutero (openspec rutero-envios) ----------
+  /** Entra y sale del modo Rutas: el panel lateral pasa a ser el rutero y los pines, paradas numeradas. */
+  public alternarRutas(): void {
+    this.modoRutas = !this.modoRutas;
+    this.eligiendoSalida = false;
+    if (this.modoRutas) {
+      this.actualizarParadasRutero();
+    } else {
+      this.dibujoRutero = { rutas: [], salida: null };
+    }
+    this.pintarRutas();
+    requestAnimationFrame(() => this.mapa?.invalidateSize());
+  }
+
+  private actualizarParadasRutero(): void {
+    const nuevas = (this.configuracion?.ubicaciones || [])
+      .filter(u => u.latitud && u.longitud && ESTADOS_LISTOS_RUTERO.includes(u.estado))
+      .map(u => ({
+        id: u.nroPedido,
+        lat: u.latitud!,
+        lng: u.longitud!,
+        cliente: u.cliente,
+        direccion: u.direccion,
+        estado: u.estado,
+        franja: leerFranja(u.horaEstimada),
+        porCobrar: u.porCobrar || 0,
+        zona: u.zona,
+      }));
+    // Misma lista, misma referencia: el panel no se recalcula en cada detección de cambios
+    const firma = (l: ParadaRutero[]) => l.map(p => `${p.id}|${p.lat}|${p.lng}|${p.franja.clave}|${p.porCobrar}`).join(';');
+    if (firma(nuevas) !== firma(this.paradasRutero)) this.paradasRutero = nuevas;
+  }
+
+  public alDibujarRutas(dibujo: DibujoRutero): void {
+    this.dibujoRutero = dibujo;
+    this.pintarRutas();
+  }
+
+  public alElegirSalida(activo: boolean): void {
+    this.eligiendoSalida = activo;
+    if (this.mapa) this.mapa.getContainer().style.cursor = activo ? 'crosshair' : '';
+  }
+
+  public verParadaEnMapa(parada: ParadaRutero): void {
+    if (!this.mapa) return;
+    this.mapa.flyTo([parada.lat, parada.lng], Math.max(this.mapa.getZoom(), 15), { duration: 0.6 });
+  }
+
+  /** Líneas de color por ruta, paradas numeradas y punto de salida. En modo Rutas reemplazan a los pines. */
+  private pintarRutas(): void {
+    if (!this.mapa || !this.leafletCargado) return;
+    const L = (window as any).L;
+    if (!this.capaRutas) this.capaRutas = L.layerGroup().addTo(this.mapa);
+    this.capaRutas.clearLayers();
+
+    const { rutas, salida } = this.dibujoRutero;
+    const enRuta = new Set<string>();
+    const hayRutas = this.modoRutas && rutas.length > 0;
+
+    if (this.modoRutas && salida) {
+      L.marker([salida.lat, salida.lng], {
+        icon: L.divIcon({ className: 'custom-marker', html: '<div class="rtr-salida" title="Punto de salida"></div>', iconSize: [26, 26], iconAnchor: [13, 13] }),
+        zIndexOffset: 900,
+      }).bindPopup('<b>Punto de salida</b>').addTo(this.capaRutas);
+    }
+    if (hayRutas && salida) {
+      rutas.forEach((ruta: RutaRutero) => {
+        const puntos: Array<[number, number]> = [[salida.lat, salida.lng], ...ruta.paradas.map(p => [p.lat, p.lng] as [number, number])];
+        L.polyline(puntos, { color: ruta.color, weight: 4, opacity: 0.85, lineJoin: 'round' }).addTo(this.capaRutas);
+        ruta.paradas.forEach((p, i) => {
+          enRuta.add(p.id);
+          const icono = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="rtr-pin${p.tarde ? ' rtr-pin--tarde' : ''}" style="--ruta: ${ruta.color}">${i + 1}</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+            popupAnchor: [0, -14],
+          });
+          const franja = p.franja.inicioMin != null || p.franja.urgente ? `<br>${escaparHtml(p.franja.etiqueta)}` : '';
+          L.marker([p.lat, p.lng], { icon: icono, zIndexOffset: 800 })
+            .bindPopup(`<b>${escaparHtml(ruta.nombre)} · parada ${i + 1}</b><br>#${escaparHtml(p.id)} ${escaparHtml(p.cliente)}<br>${escaparHtml(p.direccion)}${franja}`)
+            .addTo(this.capaRutas);
+        });
+      });
+    }
+    // Los pines de los pedidos que ya son parada numerada se esconden; al salir del modo vuelven
+    this.marcadores.forEach((marcador: any) => {
+      const oculto = hayRutas && enRuta.has(marcador.__nroPedido);
+      if (oculto && this.mapa.hasLayer(marcador)) this.mapa.removeLayer(marcador);
+      if (!oculto && !this.mapa.hasLayer(marcador)) marcador.addTo(this.mapa);
+    });
   }
 
   public porNroPedido(_: number, p: PedidoSinUbicar): string {
@@ -339,6 +455,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     // Limpiar capas
     this.capaMensajeros = null;
     this.capaZonasEntrega = null;
+    this.capaRutas = null;
     this.limpiarCapaMensajeros();
 
     // Reinicializar si Leaflet está disponible
@@ -650,8 +767,17 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         }
       });
 
+      // Rutero: con "Marcar" activo, el clic en el mapa fija el punto de salida
+      this.mapa.on('click', (evento: any) => {
+        if (!this.eligiendoSalida || !this.ruteroPanel) return;
+        this.alElegirSalida(false);
+        this.ruteroPanel.fijarSalida({ lat: evento.latlng.lat, lng: evento.latlng.lng });
+        this.cd.detectChanges();
+      });
+
       this.capaMensajeros = L.layerGroup().addTo(this.mapa);
       this.capaZonasEntrega = L.layerGroup().addTo(this.mapa);
+      this.capaRutas = L.layerGroup().addTo(this.mapa);
 
       // Agregar marcadores y zonas
       this.agregarMarcadores();
@@ -709,6 +835,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
         // Crear marcador
         const marcador = L.marker([ubicacion.latitud, ubicacion.longitud], { icon: icono });
+        marcador.__nroPedido = ubicacion.nroPedido;
 
         // Crear popup con información del pedido
         const popupContent = this.crearContenidoPopup(ubicacion);

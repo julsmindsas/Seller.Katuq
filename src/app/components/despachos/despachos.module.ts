@@ -53,6 +53,8 @@ import { OrdenesDespachoV2Component } from "./components/ordenes-despacho-v2/ord
 import { ImprimirPdfComponent } from "./components/imprimir-pdf/imprimir-pdf.component";
 import { ObservacionesDetalleComponent } from "./components/observaciones-detalle/observaciones-detalle.component";
 import { MapaUbicacionesComponent } from "./components/mapa-ubicaciones/mapa-ubicaciones.component";
+import { RuteroPanelComponent } from "./components/rutero-panel/rutero-panel.component";
+import { DragDropModule } from "@angular/cdk/drag-drop";
 import { PdfTemplateComponent } from "./components/pdf-template/pdf-template.component";
 import { SeguimientoModalComponent } from "./components/seguimiento-modal/seguimiento-modal.component";
 import { AnalisisDespachosComponent } from "./components/analisis-despachos/analisis-despachos.component";
@@ -84,6 +86,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     VisorImagenModule,
     CommonModule,
     ReactiveFormsModule,
+    DragDropModule,
     SharedModule,
     DespachosRoutingModule,
     NgSelectModule,
@@ -141,6 +144,7 @@ import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-im
     ImprimirPdfComponent,
     ObservacionesDetalleComponent,
     MapaUbicacionesComponent,
+    RuteroPanelComponent,
     PdfTemplateComponent,
     TotalValorACobrarPipe,
     SeguimientoModalComponent,

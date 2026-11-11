@@ -21,6 +21,10 @@ export const COMPANY_FEATURE_FLAGS = [
   'pickingAlistamiento',
   // Opttia organiza los despachos y una persona aprueba, en En vivo (D-410).
   'despachosOpttia',
+  // Rutero en el mapa de Envíos (openspec rutero-envios): armar rutas por cercanía, ajustarlas a mano y
+  // lectura de Opttia. Mismo nombre que el backend. Nace apagada. Dueño: Daniel. Se retira el 2027-04-30:
+  // encendida para todos o eliminada.
+  'ruteroEnvios',
   // Opttia propone en la escena, fase 2 (D-422): pasar a En producción con aprobación de una persona.
   'opttiaProduccion',
   // Opttia propone en la escena, fase 2 (D-422): "Abrir WhatsApp" en la señal de cobro (no envía nada).
