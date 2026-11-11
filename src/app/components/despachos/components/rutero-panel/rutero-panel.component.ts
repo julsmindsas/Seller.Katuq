@@ -4,11 +4,13 @@ import {
   armarRutas, COLORES_RUTA, etiquetaHora, kmDeOrden, medirRuta, OPCIONES_POR_DEFECTO, OpcionesRutero, ordenarParadas,
   ParadaRutero, Punto, RutaRutero
 } from '../../rutero/rutero.algoritmo';
-import { OpinionOpttia, RuteroService } from '../../rutero/rutero.service';
+import { CumplimientoRutas, OpinionOpttia, RuteroService } from '../../rutero/rutero.service';
 
 export interface DibujoRutero {
   rutas: RutaRutero[];
   salida: Punto | null;
+  /** Fase 3: trazado por calles reales de cada ruta (por id), cuando el motor lo midió. */
+  trazados?: Record<string, Array<[number, number]>>;
 }
 
 export interface MensajeroRutero {
@@ -59,6 +61,17 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
   @Output() elegirSalida = new EventEmitter<boolean>();
   @Output() verParada = new EventEmitter<ParadaRutero>();
   @Output() crearOrden = new EventEmitter<PedidoOrdenRuta>();
+
+  /** Fase 3: recorrido por calles de cada ruta, guardado con la firma del orden con que se midió. */
+  private calles: Record<string, { firma: string; km: number[]; trazado: Array<[number, number]> }> = {};
+  /** null = aún no se sabe si hay motor de calles; false = no hay y no se vuelve a preguntar. */
+  porCalles: boolean | null = null;
+  private relojCalles: any = null;
+  private turnoCalles = 0;
+
+  cumplimiento: CumplimientoRutas | null = null;
+  cargandoCumplimiento = false;
+  verCumplimiento = false;
 
   /** Mensajero elegido por ruta, orden ya creada por ruta y ruta que se está guardando. */
   mensajeroDe: Record<string, string> = {};
@@ -168,12 +181,14 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     this.sinRuta = r.sinRuta;
     this.mensajeroDe = {};
     this.ordenDe = {};
+    this.calles = {};
     this.kmSinOrdenar = this.rutas.reduce((s, x) => s + kmDeOrden(opciones.salida, entran.filter(p => x.paradas.some(q => q.id === p.id)), opciones), 0);
     this.armado = true;
     this.abierta = this.rutas.length === 1 ? this.rutas[0].id : null;
     this.opinion = null;
     this.guardar();
     this.emitir();
+    this.programarCalles();
   }
 
   limpiar(): void {
@@ -202,15 +217,116 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
 
   private remedir(): void {
     const opciones = this.opciones();
-    this.rutas = this.rutas.filter(r => r.paradas.length).map(r => medirRuta(r, opciones));
+    this.rutas = this.rutas.filter(r => r.paradas.length).map(r => medirRuta(r, opciones, this.kmDeCalles(r)));
     this.opinion = null;
     this.emitir();
+    this.programarCalles();
   }
 
   private emitir(): void {
-    this.dibujar.emit({ rutas: this.rutas, salida: this.salida });
+    const trazados: Record<string, Array<[number, number]>> = {};
+    for (const r of this.rutas) {
+      const c = this.calles[r.id];
+      if (c && c.firma === this.firmaDe(r) && c.trazado.length > 1) trazados[r.id] = c.trazado;
+    }
+    this.dibujar.emit({ rutas: this.rutas, salida: this.salida, trazados });
     this.cd.markForCheck();
   }
+
+  // ---------- Fase 3: calles reales ----------
+  private firmaDe(ruta: { paradas: ParadaRutero[] }): string {
+    const s = this.salida;
+    return `${s?.lat},${s?.lng}|${this.ajustes.regresa ? 1 : 0}|${ruta.paradas.map(p => p.id).join(',')}`;
+  }
+
+  /** Kilómetros por calles de una ruta, solo si se midieron con este mismo orden. */
+  private kmDeCalles(ruta: { id: string; paradas: ParadaRutero[] }): number[] | null {
+    const c = this.calles[ruta.id];
+    return c && c.firma === this.firmaDe(ruta) ? c.km : null;
+  }
+
+  /** Las rutas medidas por calles son todas las que hay. */
+  get todoPorCalles(): boolean {
+    return this.rutas.length > 0 && this.rutas.every(r => !!this.kmDeCalles(r));
+  }
+
+  /** Tras cada cambio se espera un momento y se miden por calles solo las rutas cuyo orden cambió. */
+  private programarCalles(): void {
+    clearTimeout(this.relojCalles);
+    if (this.porCalles === false || !this.salida || !this.rutas.length) return;
+    this.relojCalles = setTimeout(() => this.medirPorCalles(), 700);
+  }
+
+  private medirPorCalles(): void {
+    const salida = this.salida;
+    const pendientes = this.rutas.filter(r => !this.kmDeCalles(r));
+    if (!salida || !pendientes.length) return;
+    const turno = ++this.turnoCalles;
+    const firmas = new Map(pendientes.map(r => [r.id, this.firmaDe(r)]));
+    this.rutero.calles({
+      salida,
+      regresa: !!this.ajustes.regresa,
+      rutas: pendientes.map(r => ({ id: r.id, paradas: r.paradas.map(p => ({ lat: p.lat, lng: p.lng })) })),
+    }).subscribe({
+      next: (respuesta) => {
+        this.porCalles = !!respuesta?.disponible;
+        if (!respuesta?.disponible || turno !== this.turnoCalles) { this.cd.markForCheck(); return; }
+        let cambio = false;
+        for (const medida of respuesta.rutas || []) {
+          const firma = firmas.get(medida.id);
+          if (!firma || !medida.tramos || !medida.tramos.length) continue;
+          this.calles[medida.id] = { firma, km: medida.tramos.map(t => t.km), trazado: medida.trazado || [] };
+          cambio = true;
+        }
+        if (cambio) {
+          const opciones = this.opciones();
+          this.rutas = this.rutas.map(r => medirRuta(r, opciones, this.kmDeCalles(r)));
+          this.emitir();
+        }
+      },
+      // Un error no apaga el motor: se vuelve a intentar con el siguiente cambio
+      error: () => this.cd.markForCheck(),
+    });
+  }
+
+  // ---------- Fase 3: avisar al cliente y planeado contra real ----------
+  /** Enlace de WhatsApp con el aviso ya escrito; lo envía la persona, Katuq no manda nada. */
+  enlaceAviso(p: { id: string; cliente: string; telefono?: string; llegadaMin: number }): string | null {
+    let numero = String(p.telefono || '').replace(/\D/g, '');
+    if (numero.length === 10 && numero.startsWith('3')) numero = '57' + numero;
+    if (numero.length < 11 || numero.length > 13) return null;
+    const nombre = String(p.cliente || '').trim().split(/\s+/)[0] || '';
+    const desde = Math.max(0, Math.floor((p.llegadaMin - 20) / 10) * 10);
+    const hasta = Math.ceil((p.llegadaMin + 40) / 10) * 10;
+    const texto = `Hola${nombre ? ' ' + nombre : ''}, tu pedido #${p.id}${this.empresa ? ' de ' + this.empresa : ''} va en ruta. `
+      + `Llegada estimada entre ${this.hora(desde)} y ${this.hora(hasta)}.`;
+    return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+  }
+
+  alternarCumplimiento(): void {
+    this.verCumplimiento = !this.verCumplimiento;
+    if (!this.verCumplimiento || this.cargandoCumplimiento) return;
+    this.cargandoCumplimiento = true;
+    this.rutero.cumplimiento().subscribe({
+      next: (c) => { this.cumplimiento = c; this.cargandoCumplimiento = false; this.cd.markForCheck(); },
+      error: () => { this.cumplimiento = null; this.cargandoCumplimiento = false; this.cd.markForCheck(); },
+    });
+  }
+
+  diaCorto(dia: string): string {
+    const [, m, d] = String(dia || '').split('-');
+    return d && m ? `${Number(d)}/${Number(m)}` : dia;
+  }
+
+  /** Pedidos listos que llegaron después de armar las rutas: se pueden sumar a la ruta más cercana. */
+  get nuevos(): ParadaRutero[] {
+    if (!this.armado) return [];
+    const vistos = new Set<string>([...this.sinRuta, ...this.fuera].map(p => p.id));
+    this.rutas.forEach(r => r.paradas.forEach(p => vistos.add(p.id)));
+    return this.paradas.filter(p => !vistos.has(p.id));
+  }
+
+  get hayRutaAbierta(): boolean { return this.rutas.some(r => !this.ordenDe[r.id]); }
 
   // ---------- Ajuste a mano ----------
   soltar(evento: CdkDragDrop<any[]>): void {
@@ -242,11 +358,12 @@ export class RuteroPanelComponent implements OnInit, OnChanges {
     this.remedir();
   }
 
-  /** Devuelve un pedido a la ruta que le queda más cerca. */
-  devolver(parada: ParadaRutero, lista: 'fuera' | 'sinRuta'): void {
-    if (!this.rutas.length) return;
-    const destino = this.rutas.slice().sort((a, b) => this.cercania(a, parada) - this.cercania(b, parada))[0];
-    this[lista] = this[lista].filter(p => p.id !== parada.id);
+  /** Suma un pedido a la ruta que le queda más cerca (entre las que aún no son orden de envío). */
+  devolver(parada: ParadaRutero, lista: 'fuera' | 'sinRuta' | 'nuevos'): void {
+    const abiertas = this.rutas.filter(r => !this.ordenDe[r.id]);
+    if (!abiertas.length) return;
+    const destino = abiertas.sort((a, b) => this.cercania(a, parada) - this.cercania(b, parada))[0];
+    if (lista !== 'nuevos') this[lista] = this[lista].filter(p => p.id !== parada.id);
     destino.paradas = ordenarParadas(this.salida!, [...destino.paradas, parada]) as any;
     this.remedir();
   }

@@ -31,6 +31,7 @@ interface UbicacionPedido {
   zona?: string;
   /** Ya está en una orden de envío: no entra al rutero. */
   enOrden?: boolean;
+  telefono?: string;
 }
 
 /** Estados que ya pueden salir a la calle: son los que entran al rutero. */
@@ -334,6 +335,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         franja: leerFranja(u.horaEstimada),
         porCobrar: u.porCobrar || 0,
         zona: u.zona,
+        telefono: u.telefono,
       }));
     // Misma lista, misma referencia: el panel no se recalcula en cada detección de cambios
     const firma = (l: ParadaRutero[]) => l.map(p => `${p.id}|${p.lat}|${p.lng}|${p.franja.clave}|${p.porCobrar}`).join(';');
@@ -362,7 +364,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (!this.capaRutas) this.capaRutas = L.layerGroup().addTo(this.mapa);
     this.capaRutas.clearLayers();
 
-    const { rutas, salida } = this.dibujoRutero;
+    const { rutas, salida, trazados } = this.dibujoRutero;
     const enRuta = new Set<string>();
     const hayRutas = this.modoRutas && rutas.length > 0;
 
@@ -374,7 +376,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     }
     if (hayRutas && salida) {
       rutas.forEach((ruta: RutaRutero) => {
-        const puntos: Array<[number, number]> = [[salida.lat, salida.lng], ...ruta.paradas.map(p => [p.lat, p.lng] as [number, number])];
+        // Fase 3: si el motor midió la ruta por calles, la línea sigue las calles; si no, va recta
+        const porCalles = trazados && trazados[ruta.id];
+        const puntos: Array<[number, number]> = porCalles && porCalles.length > 1
+          ? porCalles
+          : [[salida.lat, salida.lng], ...ruta.paradas.map(p => [p.lat, p.lng] as [number, number])];
         L.polyline(puntos, { color: ruta.color, weight: 4, opacity: 0.85, lineJoin: 'round' }).addTo(this.capaRutas);
         ruta.paradas.forEach((p, i) => {
           enRuta.add(p.id);

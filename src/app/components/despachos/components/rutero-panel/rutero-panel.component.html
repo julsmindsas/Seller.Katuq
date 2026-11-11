@@ -87,7 +87,8 @@
           </button>
           <button type="button" class="rtr__btn rtr__btn--sec" *ngIf="armado" (click)="limpiar()">{{ 'Quitar' | translate }}</button>
         </div>
-        <div class="rtr__pie">{{ 'Distancias en línea recta y tiempos estimados: no tienen en cuenta calles ni tráfico. Nada se guarda en los pedidos.' | translate }}</div>
+        <div class="rtr__pie" *ngIf="!todoPorCalles">{{ 'Distancias en línea recta y tiempos estimados: no tienen en cuenta calles ni tráfico.' | translate }}</div>
+        <div class="rtr__pie" *ngIf="todoPorCalles">{{ 'Distancias por calles reales. Los tiempos son estimados con la velocidad que elegiste: no tienen en cuenta el tráfico.' | translate }}</div>
       </div>
 
       <!-- Opttia: lectura de las rutas -->
@@ -161,6 +162,10 @@
                     <em class="rtr__alerta" *ngIf="p.tarde">· {{ 'tarde' | translate }}</em>
                   </div>
                 </div>
+                <a class="rtr-mini rtr-mini--aviso" *ngIf="enlaceAviso(p) as aviso" [href]="aviso" target="_blank" rel="noopener"
+                  title="{{ 'Avisar al cliente por WhatsApp' | translate }}" [attr.aria-label]="'Avisar al cliente por WhatsApp' | translate">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z"></path></svg>
+                </a>
                 <div class="rtr-parada__acciones" *ngIf="!ordenDe[ruta.id]">
                   <button type="button" class="rtr-mini" (click)="mover(ruta, i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir' | translate">↑</button>
                   <button type="button" class="rtr-mini" (click)="mover(ruta, i, 1)" [disabled]="i === ruta.paradas.length - 1" [attr.aria-label]="'Bajar' | translate">↓</button>
@@ -180,8 +185,12 @@
       </div>
 
       <!-- Por fuera de las rutas -->
-      <div class="rtr-fuera" *ngIf="armado && (sinRuta.length > 0 || fuera.length > 0)">
-        <div class="rtr__label">{{ 'Por fuera de las rutas' | translate }} · {{ sinRuta.length + fuera.length }}</div>
+      <div class="rtr-fuera" *ngIf="armado && (sinRuta.length > 0 || fuera.length > 0 || nuevos.length > 0)">
+        <div class="rtr__label">{{ 'Por fuera de las rutas' | translate }} · {{ sinRuta.length + fuera.length + nuevos.length }}</div>
+        <div class="rtr-fuera__fila" *ngFor="let p of nuevos; trackBy: porId">
+          <div><b>#{{ p.id }}</b> {{ p.cliente }}<div class="rtr-parada__dir">{{ 'Quedó listo después de armar las rutas' | translate }}</div></div>
+          <button type="button" class="rtr__enlace" *ngIf="hayRutaAbierta" (click)="devolver(p, 'nuevos')">{{ 'Agregar' | translate }}</button>
+        </div>
         <div class="rtr-fuera__fila" *ngFor="let p of sinRuta; trackBy: porId">
           <div><b>#{{ p.id }}</b> {{ p.cliente }}<div class="rtr-parada__dir">{{ 'No cupo por el máximo de paradas' | translate }}</div></div>
           <button type="button" class="rtr__enlace" (click)="devolver(p, 'sinRuta')">{{ 'Agregar' | translate }}</button>
@@ -192,5 +201,34 @@
         </div>
       </div>
     </ng-container>
+
+    <!-- Fase 3: lo planeado contra lo real -->
+    <div class="rtr-cumple">
+      <button type="button" class="rtr__enlace" (click)="alternarCumplimiento()" [attr.aria-expanded]="verCumplimiento">
+        {{ (verCumplimiento ? 'Ocultar cómo salieron las rutas' : 'Ver cómo salieron las rutas') | translate }}
+      </button>
+      <ng-container *ngIf="verCumplimiento">
+        <div class="rtr__pie" *ngIf="cargandoCumplimiento">{{ 'Cargando…' | translate }}</div>
+        <div class="rtr__pie" *ngIf="!cargandoCumplimiento && (!cumplimiento || cumplimiento.rutas.length === 0)">
+          {{ 'Todavía no hay rutas guardadas como orden de envío para comparar.' | translate }}
+        </div>
+        <ng-container *ngIf="!cargandoCumplimiento && cumplimiento && cumplimiento.rutas.length > 0">
+          <div class="rtr-cumple__resumen">
+            <div><b>{{ cumplimiento.resumen.entregadas }}/{{ cumplimiento.resumen.paradas }}</b><em>{{ 'entregadas' | translate }}</em></div>
+            <div><b>{{ cumplimiento.resumen.porcentajeATiempo !== null ? cumplimiento.resumen.porcentajeATiempo + '%' : '—' }}</b><em>{{ 'a tiempo' | translate }}</em></div>
+            <div><b>{{ cumplimiento.resumen.siguioOrden !== null ? cumplimiento.resumen.siguioOrden + '%' : '—' }}</b><em>{{ 'siguió el orden' | translate }}</em></div>
+          </div>
+          <div class="rtr-cumple__fila" *ngFor="let c of cumplimiento.rutas">
+            <div class="rtr-cumple__quien"><b>#{{ c.nroOrden }}</b> {{ c.mensajero }} · {{ diaCorto(c.dia) }}</div>
+            <div class="rtr-parada__dir">
+              {{ c.entregadas }}/{{ c.paradas }} {{ 'entregadas' | translate }}
+              <ng-container *ngIf="c.medidas > 0"> · {{ c.aTiempo }}/{{ c.medidas }} {{ 'a tiempo' | translate }}</ng-container>
+              <ng-container *ngIf="c.diferenciaMin !== null"> · {{ c.diferenciaMin > 0 ? '+' : '' }}{{ c.diferenciaMin }} min</ng-container>
+            </div>
+          </div>
+          <div class="rtr__pie">{{ 'Compara la hora estimada con la hora en que el mensajero marcó la entrega, solo en entregas del mismo día de la ruta.' | translate }}</div>
+        </ng-container>
+      </ng-container>
+    </div>
   </div>
 </div>

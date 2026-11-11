@@ -30,6 +30,8 @@ export interface ParadaRutero extends Punto {
   franja: FranjaRutero;
   porCobrar: number;
   zona?: string;
+  /** Celular de quien recibe; solo para el enlace «Avisar» del navegador. Nunca va a Opttia. */
+  telefono?: string;
 }
 
 export interface OpcionesRutero {
@@ -295,15 +297,21 @@ export function repartir(paradas: ParadaRutero[], opciones: OpcionesRutero): { g
   return { grupos, sinRuta };
 }
 
-/** Recalcula kilómetros, horas de llegada y totales de una ruta con el orden que tenga. */
-export function medirRuta(ruta: { id: string; nombre: string; color: string; paradas: ParadaRutero[] }, opciones: OpcionesRutero): RutaRutero {
+/**
+ * Recalcula kilómetros, horas de llegada y totales de una ruta con el orden que tenga.
+ * `tramosKm` (fase 3) son los kilómetros por calles reales de cada tramo, uno por parada y, si la ruta
+ * regresa, uno más de vuelta. Sin ellos se usa la línea recta por el factor urbano.
+ */
+export function medirRuta(ruta: { id: string; nombre: string; color: string; paradas: ParadaRutero[] }, opciones: OpcionesRutero, tramosKm?: number[] | null): RutaRutero {
+  const esperados = ruta.paradas.length + (opciones.regresa && ruta.paradas.length ? 1 : 0);
+  const reales = tramosKm && tramosKm.length === esperados && tramosKm.every(k => Number.isFinite(k) && k >= 0) ? tramosKm : null;
   const minPorKm = 60 / Math.max(1, opciones.velocidadKmh);
   let reloj = opciones.horaSalidaMin;
   let km = 0;
   let previo: Punto = opciones.salida;
   let tarde = 0;
-  const paradas: ParadaEnRuta[] = ruta.paradas.map(p => {
-    const tramo = kmEntre(previo, p) * opciones.factorUrbano;
+  const paradas: ParadaEnRuta[] = ruta.paradas.map((p, i) => {
+    const tramo = reales ? reales[i] : kmEntre(previo, p) * opciones.factorUrbano;
     km += tramo;
     reloj += tramo * minPorKm;
     const llegadaMin = reloj;
@@ -315,7 +323,7 @@ export function medirRuta(ruta: { id: string; nombre: string; color: string; par
     return { ...p, llegadaMin, tarde: esTarde, esperaMin, kmDesdeAnterior: tramo };
   });
   if (opciones.regresa && paradas.length) {
-    const vuelta = kmEntre(previo, opciones.salida) * opciones.factorUrbano;
+    const vuelta = reales ? reales[reales.length - 1] : kmEntre(previo, opciones.salida) * opciones.factorUrbano;
     km += vuelta;
     reloj += vuelta * minPorKm;
   }

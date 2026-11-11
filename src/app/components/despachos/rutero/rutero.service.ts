@@ -31,6 +31,32 @@ export interface AjustesOpttia {
   nota?: string | null;
 }
 
+/** Fase 3: recorrido por calles reales de una ruta; null si el motor no pudo medirla. */
+export interface CallesDeRuta {
+  id: string;
+  tramos: Array<{ km: number; min: number }> | null;
+  trazado: Array<[number, number]> | null;
+}
+
+/** Fase 3: lo planeado contra lo real de una ruta que se volvió orden de envío. */
+export interface CumplimientoRuta {
+  nroOrden: number;
+  mensajero: string;
+  dia: string;
+  paradas: number;
+  entregadas: number;
+  medidas: number;
+  aTiempo: number;
+  diferenciaMin: number | null;
+  siguioOrden: number | null;
+  kmEstimados: number | null;
+}
+
+export interface CumplimientoRutas {
+  rutas: CumplimientoRuta[];
+  resumen: { rutas: number; paradas: number; entregadas: number; medidas: number; aTiempo: number; porcentajeATiempo: number | null; siguioOrden: number | null };
+}
+
 @Injectable({ providedIn: 'root' })
 export class RuteroService {
   private readonly url = `${environment.urlApi}/v1/logistica/rutero`;
@@ -43,5 +69,14 @@ export class RuteroService {
 
   instruccion(datos: { texto: string; paradas: number; actuales: AjustesOpttia }): Observable<{ ajustes: AjustesOpttia | null }> {
     return this.http.post<{ ajustes: AjustesOpttia | null }>(`${this.url}/instruccion`, datos);
+  }
+
+  /** Solo viajan coordenadas: ni pedidos ni clientes. */
+  calles(datos: { salida: { lat: number; lng: number }; regresa: boolean; rutas: Array<{ id: string; paradas: Array<{ lat: number; lng: number }> }> }): Observable<{ disponible: boolean; rutas: CallesDeRuta[] }> {
+    return this.http.post<{ disponible: boolean; rutas: CallesDeRuta[] }>(`${this.url}/calles`, datos);
+  }
+
+  cumplimiento(): Observable<CumplimientoRutas> {
+    return this.http.get<CumplimientoRutas>(`${this.url}/cumplimiento`);
   }
 }

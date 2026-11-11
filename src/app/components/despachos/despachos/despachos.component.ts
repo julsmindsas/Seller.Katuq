@@ -152,6 +152,7 @@ interface UbicacionPedido {
   porCobrar?: number;
   zona?: string;
   enOrden?: boolean;
+  telefono?: string;
 }
 
 @Component({
@@ -6664,6 +6665,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       porCobrar: Number((pedido as any).faltaPorPagar) || 0,
       zona: pedido.envio?.zonaCobro || '',
       enOrden: !!((pedido as any).shippingOrder || (pedido as any).nroShippingOrder),
+      telefono: String((pedido as any).envio?.celular || (pedido as any).cliente?.numero_celular_comprador || ''),
       distanciaRestante: undefined, // Se puede calcular más tarde
       tiempoEstimado: undefined // Se puede calcular más tarde
       };
