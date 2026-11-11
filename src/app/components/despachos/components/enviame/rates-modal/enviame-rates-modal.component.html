@@ -537,7 +537,6 @@
                                    formControlName="weight"
                                    step="0.1"
                                    min="0.1"
-                                   max="50"
                                    placeholder=" "
                                    class="enhanced-input"
                                    [class.has-value]="quoteForm.get('weight')?.value">
@@ -548,11 +547,11 @@
                           </div>
                           <div class="field-helper">
                             <i class="pi pi-info-circle"></i>
-                            <span>Máximo permitido: 50 kg</span>
+                            <span>Peso total del envío. El límite lo pone cada transportadora al cotizar.</span>
                           </div>
                           <div class="field-progress">
                             <div class="progress-bar"
-                                 [style.width.%]="(quoteForm.get('weight')?.value || 0) * 2">
+                                 [style.width.%]="((quoteForm.get('weight')?.value || 0) * 2) > 100 ? 100 : (quoteForm.get('weight')?.value || 0) * 2">
                             </div>
                           </div>
                         </div>

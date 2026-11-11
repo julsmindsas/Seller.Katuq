@@ -1463,7 +1463,7 @@ export class ConfProductToCartComponent
           // Buscar el grupo de la variable por título (trimear ambos lados para evitar diferencias de espacios)
           const idxVar = variablesArray.controls.findIndex((ctrl: any) => {
             const data = ctrl.get('data')?.value;
-            return data && (data.titulo || '').trim() === (tituloVariable || '').trim();
+            return data && this.tituloPreferenciaDe(ctrl) === (tituloVariable || '').trim();
           });
 
           if (idxVar === -1) {
@@ -1538,7 +1538,7 @@ export class ConfProductToCartComponent
 
           // Antes de actualizar, eliminar entradas existentes con cualquiera de los dos
           // posibles títulos (el guardado y el del grupo) para evitar duplicados
-          const grupoTitulo = dataGrupo?.titulo || '';
+          const grupoTitulo = this.tituloPreferenciaDe(grupo);
           this.productPreference = this.productPreference.filter(
             p => p.tipo !== 'preferencia' || (p.titulo !== tituloVariable && p.titulo !== grupoTitulo)
           );
@@ -2266,7 +2266,7 @@ export class ConfProductToCartComponent
       finalize(() => {
         fileRef.getDownloadURL().subscribe({
           next: (url) => {
-            const grupoTituloImg = item.value?.data?.titulo || '';
+            const grupoTituloImg = this.tituloPreferenciaDe(item);
 
             // Eliminar entradas previas para evitar duplicados al subir imagen
             this.productPreference = this.productPreference.filter(p => {
@@ -2314,9 +2314,27 @@ export class ConfProductToCartComponent
     });
   }
 
+  /**
+   * Ticket 1599: título con el que se guarda la preferencia de una variable. Si el producto tiene
+   * varias variables con el mismo título (p. ej. dos «Imagen»), la segunda se guarda como «Imagen 2»
+   * y la tercera como «Imagen 3», para que una no reemplace a la otra. La primera conserva su título.
+   */
+  private tituloPreferenciaDe(item: AbstractControl | null | undefined): string {
+    const base = (item?.value?.data?.titulo || '').trim();
+    const variablesArray = this.formulario?.get('variables') as FormArray;
+    if (!base || !variablesArray || !item) return base;
+    let orden = 0;
+    for (const ctrl of variablesArray.controls) {
+      if (((ctrl as any)?.value?.data?.titulo || '').trim() !== base) continue;
+      orden++;
+      if (ctrl === item) break;
+    }
+    return orden > 1 ? `${base} ${orden}` : base;
+  }
+
   private updateProductPreference(item: FormControl, selectedValue: any) {
     const preference = {
-      titulo: (item.value.data.titulo || '').trim(),
+      titulo: this.tituloPreferenciaDe(item),
       subtitulo: selectedValue?.data?.titulo || selectedValue?.data?.subtitulo || "",
       valorUnitarioSinIva: selectedValue?.data?.valorUnitarioSinIva || 0,
       valorIva: selectedValue?.data?.valorIva || 0,
@@ -2351,7 +2369,7 @@ export class ConfProductToCartComponent
 
     variablesArray.controls.forEach((item: AbstractControl) => {
       const tipoImagen = item.get('data')?.get('tipoImagen')?.value;
-      const tituloVariable = (item.get('data')?.get('titulo')?.value || '').trim();
+      const tituloVariable = this.tituloPreferenciaDe(item);
       if (!tituloVariable) return;
 
       // Caso 1: Preferencia con hijos seleccionados (ng-select)

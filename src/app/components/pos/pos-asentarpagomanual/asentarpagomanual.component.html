@@ -84,6 +84,7 @@
                 <div *ngIf="transaccionForm.get('valor').touched && transaccionForm.get('valor').errors"
                     class="alert alert-danger">
                     <div *ngIf="transaccionForm.get('valor').errors.required">El valor es requerido.</div>
+                    <div *ngIf="transaccionForm.get('valor').errors.min">{{ 'El valor del pago debe ser de al menos $1' | translate }}</div>
                 </div>
                 <div *ngIf="valorExcedido" class="alert alert-danger">
                     El valor ingresado es mayor que el valor que falta por pagar que es: {{ pedido.faltaPorPagar | currency }}.

@@ -209,6 +209,12 @@ export class CrearVentasComponent
   idenxFacturacion: any;
   idenxEntrega: any;
   @Input() pedidoGral: Pedido;
+  /**
+   * Tickets 1594 y 1595: foto del pedido recién guardado (número del servidor y su carrito) para la
+   * pantalla final. `pedidoGral.carrito` se vacía al limpiar el carrito después de guardar, y desde
+   * el ticket 1590 la pantalla final se repinta al cambiar el pedido: sin esta foto salía sin productos.
+   */
+  pedidoConfirmado: Pedido | null = null;
   pedidoPrm: string;
   showPedidoConfirm: boolean = false;
   showSteper: boolean = true;
@@ -500,6 +506,13 @@ export class CrearVentasComponent
       }
     } catch (e) {
       console.error("Conversión cotización: error cargando el carrito", e);
+    }
+
+    // Ticket 1597: el descuento global de la cotización (porcentaje) pasa al pedido; el checkout y el
+    // backend lo componen con el descuento de cada línea: (1 - línea) × (1 - global).
+    const descGlobal = Number(ctx.descGlobal) || 0;
+    if (descGlobal > 0 && descGlobal <= 100 && this.pedidoGral) {
+      this.pedidoGral.porceDescuento = descGlobal;
     }
 
     // Setear bodega y ciudad vía los métodos privados (NO onWarehouseChange/onSelectCity,
@@ -3610,6 +3623,7 @@ export class CrearVentasComponent
       return;
     }
     this.creandoPedido = true;
+    this.pedidoConfirmado = null;
 
     // Verificar la forma de pago
     const formaPago = this.pedidoGral.formaDePago?.toLowerCase() || "";
@@ -3761,6 +3775,8 @@ export class CrearVentasComponent
                 // Ticket 1590: la pantalla final muestra el consecutivo que asignó el servidor,
                 // no el que se reservó al abrir la venta.
                 if (res.order?.nroPedido) this.pedidoGral = { ...this.pedidoGral, nroPedido: res.order.nroPedido };
+                // Tickets 1594 y 1595: la foto se toma ANTES de vaciar el carrito.
+                this.fijarPedidoConfirmado();
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
@@ -4831,6 +4847,12 @@ export class CrearVentasComponent
     });
   }
 
+  /** Tickets 1594 y 1595: copia del pedido guardado, con su propio arreglo de carrito, para la pantalla final. */
+  private fijarPedidoConfirmado(): void {
+    if (!this.pedidoGral) return;
+    this.pedidoConfirmado = { ...this.pedidoGral, carrito: [...(this.pedidoGral.carrito || [])] };
+  }
+
   // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
   /** Ticket 1053: igual que la creación normal, espera los maestros antes del correo. */
   private async guardarPedidoParaWompi(): Promise<boolean> {
@@ -4897,6 +4919,7 @@ export class CrearVentasComponent
                   const nroPedido = res.order?.nroPedido || res.order?.referencia || context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
                   // Ticket 1590: el número confirmado por el servidor reemplaza al reservado.
                   if (res.order?.nroPedido) context.pedidoGral = { ...context.pedidoGral, nroPedido: res.order.nroPedido };
+                  context.fijarPedidoConfirmado();
 
                   // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {

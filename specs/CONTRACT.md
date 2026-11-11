@@ -13375,6 +13375,14 @@ Daniel respondió «si, autorizado, sigue solo» a esta propuesta:
 - **Siguiente:** Daniel publica. Con su sí del 5-nov, se enciende `siteDesignV2` solo para Baudio y su tienda se arma como borrador desde el editor de sellercenter.
 
 
+### 2026-11-03 — Inventario y diagrama del ecosistema de apps
+
+- **Solicitud:** Daniel pidió revisar las carpetas relacionadas y diagramar el ecosistema completo.
+- **Revisión local:** fuentes, manifiestos y contratos de Seller, Gestión iOS/Android, Delivery y sus clientes anteriores, Support, Kuvo, superficies públicas de Sites/catálogos/cotizaciones, landing comercial, Opttia web/ADK y Katuq Asistant. Se distinguieron la reescritura Angular 21, KatuqFlow, PuestoFácil y Genkit retirado; los worktrees y las copias anteriores de Marketplace no se contaron como productos distintos.
+- **Datos:** el mapa refleja D-579: PostgreSQL productivo para Katuq; Firebase conserva Realtime Database, Storage, FCM y Hosting. Opttia es un producto independiente conectado por API/MCP y mantiene sus datos propios aparte. Asistant Release opera localmente.
+- **Entrega:** PNG, fuente Mermaid e inventario de 19 entradas con carpetas y referencias, conservados como artefactos locales fuera del repositorio público. Se comprobó que las 19 carpetas existen y se revisó visualmente el diagrama.
+- **Límites:** inventario de código, no certificación de publicación en tiendas ni de activación de todas las integraciones. Sin consultas a datos de producción, cambios de código, build ni despliegue.
+
 ### 2026-11-05 — Publicados el editor de tiendas (front 2026.11.05.1) y su backend (`0511c167`)
 
 - **Solicitud:** Daniel pidió «git pull y publiquemos». La rama no traía código nuevo frente a producción; eligió mezclar `feature/tickets-aws-claude-1` y publicar.
@@ -13866,3 +13874,108 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Baudio (Daniel: «dale»):** en `baudio-v3-marca` se encendieron los 13 ajustes, `titulosSeccion: "moderado"` y `logoAlt: "Logotipo oficial de Baudio"`, con los controladores reales `sites.edit` y `sites.publish` después de una simulación limpia: 15 campos del tema; secciones, tienda, páginas, colores y letra idénticos. Publicado 2026-11-10T13:43:13Z. Verificado en vivo a 1440 y 390 px: título principal 55/32 px, sección 36/24, ningún texto bajo 13 px, tres grosores, sin scroll horizontal ni errores. Los otros dos sitios de Baudio no cambiaron.
 - **Pendiente:** el editor del Seller con el grupo «Manual de marca» (`fcd2c016`, compilado como 2026.11.10.2) no se desplegó: el inicio de sesión de Firebase en claude-dev venció y lo debe renovar Daniel. Del manual quedan fuera del diseño: NIT con «-1» (dato de la empresa), proporción 60/30/10 (el plano va en oscuro), rojos fijos del carrito y del pago, áreas de toque de los nombres del kit, y lo que entrega Baudio (imágenes, textos, logos de marcas aliadas, redes).
 - **Pruebas (locales, D-566):** `tests/sitios/manualDeMarca.test.js` 6/6; `barrasV2` 17/17; `criterioDisenoIA`, `editarPaginaConIA` y `opttiaEditaOperaciones` en verde. De las 139 de `tests/sitios` fallan las cuatro que ya fallaban (instantáneas viejas por el hash de la hoja y el aviso de dotenv).
+
+### 2026-11-09 — D-708: campañas de los comercios en Kuvo (renumerada de D-707: ese número quedó en origin para la consola de WhatsApp)
+- **Pedido de Daniel:** administrador de banners desde Kuvo, con información de producto y comercio de Katuq, y seis campañas con imágenes IA. Corrigió la selección: identificar los comercios por sus pedidos reales y volver a leer las guías.
+- **Comercios verificados, en lectura de PostgreSQL:** Almara, OH MY STORE, Del Rancho Green, Café Escobar, Punto Verde Vidagas y Almacén Bombas; son los seis con mayor cantidad de pedidos. No se usan demos por aparecer en el directorio.
+- **Administrador web:** sesión existente de Katuq, tenant firmado y rol Administrador. Selección de comercio/producto, imagen de producto, plantilla propia o carga autenticada; texto, CTA, espacio, fechas Colombia, vista previa, borrador, programación, publicación y pausa.
+- **Datos:** `companyConfig.kuvoCampaigns` y auditoría en `site_events`, mediante el adaptador PostgreSQL; sin colecciones nuevas. Revisión optimista, idempotencia y validación de propiedad de imágenes/productos. El feed público vuelve a comprobar disponibilidad y publicación.
+- **Creatividades iniciales:** seis ambientaciones IA identificadas, con CTA a comercio y vigencia del 9-nov al 10-dic. No inventan ofertas, stock ni productos. Vidagas no tenía productos disponibles para Kuvo; Almacén Bombas tenía seis servicios publicados.
+- **Verificación local:** 55 pruebas backend, 34 web y build Angular de producción; navegador con cuenta y almacenamiento ficticios para guardar, publicar y pausar; escritorio y móvil. Ningún pedido, pago o inventario productivo se modificó en QA.
+- **Alcance:** administrador web; las apps nativas no cambian. Sin cobro de publicidad ni métricas de conversión.
+- **Publicado (9-nov):** backend `1618069b` en `backend-aws-security`, desplegado por fast-forward y reinicio de `katuq-api` como ubuntu; Kuvo Sites versión 10, fuente `c2b150e4`. Feed público 200 con las seis campañas, seis imágenes 200, acceso privado 401 sin sesión y preflight CORS correcto. Resolución de productos comprobada en solo lectura para los cinco comercios con disponibles. Portada publicada verificada en navegador.
+
+### 2026-11-09 — Adenda D-415. Compra y pago únicos para varias tiendas de Kuvo
+
+Daniel eligió «Un solo checkout y un solo pago para varias tiendas». La revisión
+compartida conserva un pedido por tienda con las partes por bodega que necesite.
+El total se cotiza en el servidor y el recaudo previsto conserva la comisión
+piloto de cero y el corte semanal.
+
+Daniel aprobó S-01. El diff exacto de cotización firmada y reserva atómica
+quedó aplicado en la copia de trabajo `codex/kuvo-checkout-unico`, sobre
+`1f70ac7b`. Pasaron 27 pruebas locales. Una falta de stock en la segunda
+tienda preserva inventario y consecutivos de la primera.
+
+Daniel aprobó S-02. El diff de captura y reparto quedó aplicado en
+`codex/kuvo-checkout-unico` y pasaron 104 pruebas en la copia de trabajo.
+Una transacción simulada de $102.000 dejó dos asignaciones de $60.000 y
+$42.000. El reintento no duplica asientos y un segundo cobro o un pago tardío
+se registra para devolución.
+
+Daniel aprobó S-03a y el diff de cancelación y vencimiento quedó aplicado
+en `codex/kuvo-checkout-unico`. Pasaron 109 pruebas locales. El comprador
+autenticado puede cancelar la reserva en conjunto y el barrido devuelve las
+existencias de las tiendas una sola vez al vencer. Una captura previa preserva
+las reservas.
+
+Daniel aprobó S-03b y el diff de devoluciones quedó aplicado en
+`codex/kuvo-checkout-unico`. El reembolso de un comercio afecta su
+asignación y el pago original. Kuvo asume los cobros tardíos y duplicados.
+Se conserva el comprobante verificado para recuperar el asiento sin otro
+envío. Pasaron 116 pruebas tras aplicar y 9 en el emulador del candidato.
+
+El enlace de dos comercios ficticios abrió Wompi en modo de pruebas.
+Wompi Sandbox aprobó el pago de $102.000 por Nequi y por tarjeta en
+compras separadas y declinó el escenario de rechazo. La consulta
+autenticada registró un cobro y dos asignaciones por compra. El rechazo
+liberó ambas reservas al vencer y el cobro tardío de otra compra quedó
+a cargo de Kuvo, con cero saldo para las tiendas. La base fue en memoria.
+
+Wompi respondió HTTP 201 y PENDING a los reembolsos de prueba. Luego
+la consulta autenticada de cada transacción mostró el importe
+reembolsado como aprobado, sin identificador ni referencia de
+reembolso. El libro conservó cada reserva y la repetición no envió
+otro POST. Quedan pendientes la conciliación con identidad verificable,
+las rutas de compra, el retorno de los clientes y la entrega del webhook.
+
+
+### 2026-11-10 — S-04 del checkout conjunto en Sandbox
+
+S-04a conserva el acuse autenticado de los reembolsos pendientes. Solo en
+Sandbox, coteja la transacción, el importe y la fecha exacta del acuse
+con una coincidencia única en la consulta autenticada de Wompi. La
+identidad de evidencia evita aplicar el mismo resultado dos veces. Se
+conciliaron una devolución parcial de $12.000 y una completa de $102.000,
+con un único envío por caso. Los intentos sin acuse siguen pendientes.
+
+S-04b conecta la pantalla de retorno y una ruta que verifica el comprador
+y el pago. Wompi aceptó la URL HTTPS de prueba. La navegación al retorno
+se simuló con los IDs de dos transacciones reales de Sandbox. El webhook
+de QA se firmó localmente y se entregó por HTTPS. Tanto el retorno
+primero como el webhook primero registraron dos pedidos y una captura.
+Sin acceso al panel de Sandbox, queda pendiente un evento enviado
+directamente por Wompi.
+
+Daniel aprobó integrar S-04a primero y S-04b después. Se aplicaron ambos
+diffs en `codex/kuvo-checkout-unico` y pasaron 119 pruebas de backend,
+31 web y la compilación Angular. La base de los ensayos fue local y se
+cerró el túnel temporal después de las pruebas.
+
+### 2026-11-10 — S-05 del checkout conjunto en Sandbox
+
+Se preparó el diff aislado de la bolsa común, la cotización, la reserva
+y el recibo privado accesible desde el historial del comprador. El pago
+conjunto requiere la bandera `multiShopCheckoutEnabled`, apagada por
+defecto, y Wompi Sandbox. Los productos de distintas tiendas permanecen
+en la bolsa cuando la compra conjunta está deshabilitada.
+
+Una prueba por HTTP con dos tiendas ficticias y datos en memoria verificó
+un pago de COP 102.000 en Wompi Sandbox, dos pedidos y una captura. El
+reintento recuperó la misma reserva, la cancelación repuso las existencias
+de ambas tiendas y el historial enlazó el recibo al comprador autenticado.
+El evento de prueba fue firmado localmente. Pasaron 125 pruebas de backend,
+31 web y la compilación Angular. En Chromium móvil con API simulada,
+la bolsa sobrevivió al cambio de disponibilidad, el reintento mantuvo la
+misma solicitud y el retorno mostró ambos pedidos y limpió la bolsa pagada.
+Daniel aprobó el diff de S-05. Se aplicó con el mismo hash en
+`codex/kuvo-checkout-unico`. Pasaron nuevamente las 125 pruebas de backend,
+31 web y la compilación Angular.
+
+Sites respondió 404 en `/pago/retorno` y 200 en la portada con `?id=…`.
+Se cambió el destino HTTPS de Wompi a la portada; Angular reconoce el ID
+y verifica el pago por backend. En Chromium, el checkout alojado de Wompi
+Sandbox aprobó una compra Nequi de COP 102.000 y su enlace llevó a la
+compilación aislada de Kuvo. Se verificó una captura, dos pedidos y la
+limpieza de la bolsa. La base fue en memoria y queda por probar la entrega
+automática del webhook desde el panel.

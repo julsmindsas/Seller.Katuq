@@ -917,7 +917,7 @@
                 </div>
                 <div class="section-content">
                   <!-- Componente de confirmación que muestra el HTML del pedido -->
-                  <app-confirm #confirmacion [pedido]="pedidoGral" *ngIf="pedidoGral"></app-confirm>
+                  <app-confirm #confirmacion [pedido]="pedidoConfirmado || pedidoGral" *ngIf="pedidoGral"></app-confirm>
                 </div>
               </div>
 

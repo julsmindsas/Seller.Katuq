@@ -6786,6 +6786,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         costoEnvioNuevo = Number(
           this.pedidoUtilService.getShippingCost(billingZones),
         );
+        // Ticket 1593: si la zona del pedido ya no está en la tabla de zonas (pedidos viejos), el
+        // cálculo da 0; se respeta el envío guardado en vez de borrarlo en pantalla y en los totales.
+        if (!(costoEnvioNuevo > 0) && Number(costoEnvioAnterior) > 0) {
+          costoEnvioNuevo = Number(costoEnvioAnterior);
+        }
         order.totalEnvio = costoEnvioNuevo;
 
         console.log("🚚 RECÁLCULO ENVÍO - Envío domicilio detectado:", {
@@ -8090,8 +8095,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 "✅ Actualizando producto en índice:",
                 this.indiceProductoSeleccionado,
               );
-              order.carrito[this.indiceProductoSeleccionado] =
-                configuracionResult;
+              // Ticket 1597: el modal solo devuelve {producto, configuracion, cantidad}; se conservan los
+              // campos de la línea que no edita (descuento de línea, precio/IVA manual, cartItemId, combo).
+              order.carrito[this.indiceProductoSeleccionado] = {
+                ...order.carrito[this.indiceProductoSeleccionado],
+                ...configuracionResult,
+              };
             } else {
               console.error(
                 "❌ Índice de producto inválido:",

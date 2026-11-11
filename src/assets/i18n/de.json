@@ -586,6 +586,7 @@
     "La forma de pago es requerida": "Die Zahlungsart ist erforderlich",
     "Valor": "Betrag",
     "El valor es requerido": "Der Betrag ist erforderlich",
+    "El valor del pago debe ser de al menos $1": "Der Zahlungsbetrag muss mindestens 1 $ betragen",
     "El valor ingresado es mayor que el valor que falta por pagar que es": "Der eingegebene Betrag ist höher als der noch offene Betrag",
     "Número de comprobante": "Belegnummer",
     "El número de comprobante es requerido": "Die Belegnummer ist erforderlich",

@@ -2372,7 +2372,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+        // Ticket 1596: 'avoid-all' metía un relleno antes de CUALQUIER elemento que cruzara la página,
+        // también de th/td, y eso descuadraba las columnas de la tabla. Solo se evita cortar filas y el encabezado.
+        pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".doc-head"] },
       };
 
       await html2pdf().from(element).set(options).save();

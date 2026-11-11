@@ -10,6 +10,9 @@ interface ProductoVenta {
   nombre: string;
   cantidad: number;
   precioUnitario: number;
+  /** D-710 */
+  descuentoPct?: number;
+  descuentoValor?: number;
   total: number;
   numeroPedido: string;
 }
@@ -43,6 +46,11 @@ interface DatosCierre {
 })
 export class ReporteCierreComponent implements OnInit, AfterViewInit {
   @Input() datosCierre: DatosCierre;
+
+  /** D-710: suma de los descuentos de línea de los productos vendidos. */
+  get totalDescuentoProductos(): number {
+    return (this.datosCierre?.productosVendidos || []).reduce((sum, p) => sum + (p.descuentoValor || 0), 0);
+  }
   
   // Datos de la empresa
   empresaActual: any = {};
