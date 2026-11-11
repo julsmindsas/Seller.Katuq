@@ -1,8 +1,155 @@
 {
-  "version": "2026.11.10.4 - 10 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-10T17:29:57.791Z",
-  "notas": [],
+  "version": "2026.11.11.2 - 11 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-11T14:27:53.659Z",
+  "notas": [
+    {
+      "fecha": "2026-11-10T17:32:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el detalle de un pedido viejo, el domicilio y el total ya no salen en cero cuando su zona de envío ya no existe: se muestra el valor que se cobró.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "El PDF de una cotización larga ya no sale con la tabla descuadrada ni con las descripciones partidas letra por letra.",
+      "modulos": [
+        "cotizaciones"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al convertir una cotización en pedido, el descuento global de la cotización ahora pasa al pedido junto con el de cada producto.",
+      "modulos": [
+        "cotizaciones",
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al editar un producto de un pedido con el engranaje, ya no se pierde su descuento ni su precio especial.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T20:40:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el recibo del punto de venta, el descuento ahora muestra su porcentaje y su valor debajo de cada producto, y el subtotal es el de antes del descuento, para que la resta se entienda.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el cierre de caja, la tabla de productos vendidos ahora muestra lo que se cobró de verdad, con el descuento de cada producto, y ya suma igual que el total.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al cotizar un envío con Enviame.io ya puedes poner paquetes de más de 50 kg; el límite lo pone cada transportadora al cotizar.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Si un producto pide dos imágenes, el pedido ahora guarda las dos; antes solo quedaba la última.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Cartera, el clic en el nombre o el documento del cliente abre su ficha, sin cruzarse con los filtros de una búsqueda anterior.",
+      "modulos": [
+        "cartera"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al cotizar un envío con Enviame.io ya puedes poner paquetes de más de 50 kg; el límite lo pone cada transportadora al cotizar.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Si un producto pide dos imágenes, el pedido ahora guarda las dos; antes solo quedaba la última.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T14:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Cartera, el clic en el nombre o el documento del cliente abre su ficha, sin cruzarse con los filtros de una búsqueda anterior.",
+      "modulos": [
+        "cartera"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T21:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el cierre de caja, la tabla de productos vendidos ahora muestra lo que se cobró de verdad, con el descuento de cada producto, y ya suma igual que el total.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T20:40:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el recibo del punto de venta, el descuento ahora muestra su porcentaje y su valor debajo de cada producto, y el subtotal es el de antes del descuento, para que la resta se entienda.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "El PDF de una cotización larga ya no sale con la tabla descuadrada ni con las descripciones partidas letra por letra.",
+      "modulos": [
+        "cotizaciones"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al convertir una cotización en pedido, el descuento global de la cotización ahora pasa al pedido junto con el de cada producto.",
+      "modulos": [
+        "cotizaciones",
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T18:40:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al editar un producto de un pedido con el engranaje, ya no se pierde su descuento ni su precio especial.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-10T17:32:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el detalle de un pedido viejo, el domicilio y el total ya no salen en cero cuando su zona de envío ya no existe: se muestra el valor que se cobró.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-10T14:33:00Z",
       "tipo": "CORRIGE",
@@ -417,80 +564,8 @@
       "modulos": [
         "sitios"
       ]
-    },
-    {
-      "fecha": "2026-11-05T19:13:04Z",
-      "tipo": "CORRIGE",
-      "texto": "En las tarjetas de «Para tu negocio», el selector de piezas ya no se cierra solo mientras eliges, y si lo cierras sin elegir, la tarjeta conserva lo que tenía.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T19:13:04Z",
-      "tipo": "CORRIGE",
-      "texto": "Si ocultas «Todo el catálogo» en el inicio, el catálogo, las categorías y el buscador de tu tienda siguen funcionando en su propia página, y el editor te dice qué pasa al cerrar el ojo de esa sección.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T19:03:18Z",
-      "tipo": "CORRIGE",
-      "texto": "En las tiendas publicadas, el enlace «← Seguir comprando» de la ficha de un producto ya te lleva al catálogo o al inicio, en vez de mostrar una página que no existe.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T17:06:11Z",
-      "tipo": "CORRIGE",
-      "texto": "Al crear una tienda en Mis sitios, el aviso de que va a nacer sin productos ya sale encima del asistente y puedes elegir «Crearla igual» o «Volver».",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T16:18:38Z",
-      "tipo": "MEJORA",
-      "texto": "La sección Cartera por vendedor sale contraída con un resumen (cuántos vendedores y cuánto está vencido) y se abre con un clic; tu navegador recuerda si la dejaste abierta.",
-      "modulos": [
-        "cartera"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T16:18:38Z",
-      "tipo": "CORRIGE",
-      "texto": "En Pedidos POS, «Historial pagos y asentar pagos» ya abre el formulario para registrar el pago, y cambiar el estado de pago o los datos del cliente te lleva a hacerlo desde Ventas › Pedidos, en vez de mostrar una pantalla en blanco.",
-      "modulos": [
-        "pos/list-ventas"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T15:57:50Z",
-      "tipo": "CORRIGE",
-      "texto": "Si la transportadora tarda en responder al despachar, ya no te sale un error que te pide intentarlo de nuevo: te avisa que el despacho pudo quedar hecho y actualiza la lista para que lo revises antes de reintentar.",
-      "modulos": [
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-05T08:04:30Z",
-      "tipo": "MEJORA",
-      "texto": "Al publicar tu página, el aviso de lo que prometes (envíos, garantías, descuentos) revisa también las tarjetas y los textos largos, te dice en qué sección está cada frase y te lleva a ella con «Ver dónde está». Si restauras una versión, lo confirmas ahí mismo, sin publicar antes tus cambios.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-04T20:15:38Z",
-      "tipo": "CORRIGE",
-      "texto": "Tu tienda en línea se ve mejor: el pie sale en columnas, los precios quedan alineados, las secciones de productos vacías ya no se publican, el carrusel de la portada se puede pausar y, si tu sitio es de fondo oscuro, las tarjetas, los bordes y los botones se leen bien.",
-      "modulos": [
-        "sitios"
-      ]
     }
   ],
-  "commit": "0fe87d30872fac2bd0e5b1693e6581021fd188d8",
+  "commit": "509733aa7782274ea83736c3ad11492cf17ee539",
   "cambiosSinCommit": 0
 }
