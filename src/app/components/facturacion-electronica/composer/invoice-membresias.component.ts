@@ -49,6 +49,13 @@ export class InvoiceMembresiasComponent implements OnInit, OnDestroy {
     };
   }
   cancel(): void { this.editing = null; }
+  /** Solo aviso (no bloquea): la forma de pago elegida no cuadra con el estado de la cuenta. */
+  get warning(): string {
+    const paid = this.editing?.estadoCuenta === 'paid';
+    if (this.form.formaPago === 'contado' && !paid) return this.translate.instant('facturacionElectronica.membresias.avisoContadoSinPago');
+    if (this.form.formaPago === 'credito' && paid) return this.translate.instant('facturacionElectronica.membresias.avisoCreditoPagada');
+    return '';
+  }
   get invalidForm(): string {
     if (this.form.formaPago === 'credito' && (!this.form.vencimiento || this.form.vencimiento < this.today)) return this.translate.instant('facturacionElectronica.membresias.vencimientoNoPasado');
     if (this.form.descripcion.trim().length < 3) return this.translate.instant('facturacionElectronica.membresias.descripcionCorta');

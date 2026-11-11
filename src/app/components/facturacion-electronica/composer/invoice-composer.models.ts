@@ -163,6 +163,7 @@ export interface MembresiaPendiente {
   periodoVentas: { desde: string | null; hasta: string | null };
   corte: string | null;
   montoCOP: number;
+  estadoCuenta?: string;
   formaPago: 'contado' | 'credito' | null;
   medioPago: string | null;
   vencimiento: string | null;

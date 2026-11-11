@@ -34,6 +34,7 @@
       <label class="field-label" for="memb-obs">{{ 'facturacionElectronica.membresias.observaciones' | translate }}</label>
       <textarea id="memb-obs" class="form-control" rows="2" name="observaciones" maxlength="1000" [(ngModel)]="form.observaciones" [disabled]="saving"></textarea>
       <p class="memb-nota">{{ 'facturacionElectronica.membresias.valorNoEditable' | translate }} ({{ item.montoCOP | currency:'COP':'symbol-narrow':'1.0-0' }})</p>
+      <p class="memb-nota" *ngIf="warning" role="status">{{ warning }}</p>
       <p *ngIf="invalidForm" role="alert">{{ invalidForm }}</p>
       <div class="memb-acciones">
         <button class="btn btn-primary" type="submit" [disabled]="saving || !!invalidForm">{{ 'facturacionElectronica.membresias.guardar' | translate }}</button>
