@@ -2021,15 +2021,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       }
       if (totalBatches > 1) detail += ` (${totalBatches} lotes)`;
 
+      // Si NO se escribió nada, no es un éxito: el usuario tiene que enterarse de que su archivo no cambió nada.
+      // Ticket 1607: también cuando todas las filas fallan (p. ej. bodega no encontrada); antes salía en verde
+      // como «completada» y el modal se cerraba, así que parecía que no había pasado nada.
+      const nadaEscrito = (totalCreated + totalUpdated) === 0;
+      const todoFallo = nadaEscrito && totalFailed > 0;
+      if (todoFallo && allErrors.length) {
+        detail += `. ${allErrors.slice(0, 2).join(' · ')}${allErrors.length > 2 ? ' …' : ''}`;
+      }
       this.messageService.add({
-        // Si NO se escribió nada y todo quedó omitido, no es un éxito: el
-        // usuario tiene que enterarse de que su archivo no cambió nada.
-        severity: (totalCreated + totalUpdated) === 0 && totalOmitted > 0 ? 'warn' : 'success',
-        summary: (totalCreated + totalUpdated) === 0 && totalOmitted > 0
+        severity: todoFallo ? 'error' : nadaEscrito && totalOmitted > 0 ? 'warn' : 'success',
+        summary: nadaEscrito && (totalOmitted > 0 || totalFailed > 0)
           ? this.translate.instant('importador.importModal.noSeImportoNada')
           : this.translate.instant('importador.importModal.importacionCompletada'),
         detail,
-        life: totalOmitted > 0 ? 10000 : 5000
+        life: todoFallo ? 15000 : totalOmitted > 0 ? 10000 : 5000
       });
 
       if (this.resumenEspecificaciones) {
