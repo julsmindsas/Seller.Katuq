@@ -5,7 +5,7 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { TranslateService } from '@ngx-translate/core';
 import { MetaInboxService } from '../../meta-inbox.service';
-import { MetaCanal, MetaPerfilContacto } from '../../models/meta-thread.model';
+import { META_CANAL_LABEL, MetaCanal, MetaPerfilContacto } from '../../models/meta-thread.model';
 
 /**
  * Panel de contacto de un hilo de Meta.
@@ -29,6 +29,11 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
   @Input() nombrePerfil: string | null = null;
 
   perfil: MetaPerfilContacto | null = null;
+
+  /** Nombre de la red para mostrar (marca, no se traduce). */
+  get nombreCanal(): string {
+    return META_CANAL_LABEL[this.canal];
+  }
   cargando = false;
 
   buscando = false;

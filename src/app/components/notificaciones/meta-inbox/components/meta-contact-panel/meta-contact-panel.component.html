@@ -7,7 +7,7 @@
       <span class="mp__avatar">{{ (perfil.perfilNombre || nombrePerfil || '?').charAt(0) }}</span>
       <div class="mp__ident">
         <span class="mp__nombre">{{ perfil.perfilNombre || nombrePerfil || ('notificaciones.meta.contact' | translate) }}</span>
-        <span class="mp__canal">{{ canal === 'instagram' ? 'Instagram' : 'Facebook' }}</span><!-- i18n-ignorar: nombre de la red -->
+        <span class="mp__canal">{{ nombreCanal }}</span><!-- i18n-ignorar: nombre de la red -->
       </div>
     </div>
 
@@ -16,7 +16,7 @@
       <div class="mp__bloque mp__bloque--pendiente">
         <span class="mp__etiqueta">{{ 'notificaciones.meta.customer' | translate }}</span>
         <p class="mp__ayuda">
-          {{ 'notificaciones.meta.notLinked' | translate: { canal: canal === 'instagram' ? 'Instagram' : 'Facebook' } }}
+          {{ 'notificaciones.meta.notLinked' | translate: { canal: nombreCanal } }}
         </p>
 
         <input
