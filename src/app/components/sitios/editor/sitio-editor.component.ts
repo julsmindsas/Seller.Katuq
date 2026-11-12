@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, OpttiaDelSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { BorradorGuardado, CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, EstadoProveedorCuotas, OpttiaDelSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ProveedorCuotas, PermisosSitio, ProgramacionFallida, ProveedorReglasCuotas, ReglasCuotasRespuesta, ResenaSitio, Sitio, SitiosService, SolicitudTipoCliente, TemporadaComercial, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
@@ -3291,6 +3291,93 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   abrirGrupoTienda(titulo: string): void {
     this.tiendaAbierto = this.tiendaAbierto === titulo ? "" : titulo;
+    if (this.tiendaAbierto === "Cuenta de clientes") this.cargarCuentaClientes();
+  }
+
+  // ── D-691: cuenta de clientes (crear cuenta y solicitud de tipo de cliente) ──
+  tiposCliente: { id: string; nombre: string }[] = [];
+  cargandoTiposCliente = false;
+  solicitudesTipo: SolicitudTipoCliente[] = [];
+  cargandoSolicitudes = false;
+  resolviendoSolicitud = "";
+
+  /** La configuración de la cuenta del sitio; un sitio que nunca la tuvo la recibe apagada. */
+  get cuentaTienda(): NonNullable<TiendaSitio["cuenta"]> | null {
+    if (!this.contenido || !this.contenido.tienda) return null;
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!t.cuenta) t.cuenta = { registro: false, solicitud: false, tipos: [] };
+    if (!Array.isArray(t.cuenta.tipos)) t.cuenta.tipos = [];
+    return t.cuenta;
+  }
+
+  tipoCuentaElegido(id: string): boolean {
+    const c = this.cuentaTienda;
+    return !!c && c.tipos.some((t) => t.id === id);
+  }
+
+  alternarTipoCuenta(tipo: { id: string; nombre: string }): void {
+    const c = this.cuentaTienda;
+    if (!c) return;
+    if (this.tipoCuentaElegido(tipo.id)) c.tipos = c.tipos.filter((t) => t.id !== tipo.id);
+    else if (c.tipos.length < 6) c.tipos = [...c.tipos, { id: tipo.id, nombre: tipo.nombre }];
+    else {
+      this.toastr.info("Puedes ofrecer hasta 6 tipos de cliente.");
+      return;
+    }
+    this.marcarSucio();
+  }
+
+  /** Trae los tipos de cliente de la empresa y las solicitudes pendientes, al abrir el grupo. */
+  cargarCuentaClientes(): void {
+    if (!this.tiposCliente.length && !this.cargandoTiposCliente) {
+      this.cargandoTiposCliente = true;
+      this.service.tiposDeCliente().subscribe({
+        next: (lista) => {
+          this.cargandoTiposCliente = false;
+          this.tiposCliente = (Array.isArray(lista) ? lista : [])
+            .filter((t) => t && t.id && t.nombre)
+            .map((t) => ({ id: String(t.id), nombre: String(t.nombre) }));
+        },
+        error: () => {
+          this.cargandoTiposCliente = false;
+          this.toastr.error("No pudimos traer tus tipos de cliente.");
+        },
+      });
+    }
+    this.cargarSolicitudesTipo();
+  }
+
+  cargarSolicitudesTipo(): void {
+    if (this.cargandoSolicitudes) return;
+    this.cargandoSolicitudes = true;
+    this.service.solicitudesDeTipo().subscribe({
+      next: (r) => {
+        this.cargandoSolicitudes = false;
+        this.solicitudesTipo = (r && r.success && Array.isArray(r.data) ? r.data : []) as SolicitudTipoCliente[];
+      },
+      error: () => {
+        this.cargandoSolicitudes = false;
+        this.toastr.error("No pudimos traer las solicitudes.");
+      },
+    });
+  }
+
+  resolverSolicitud(s: SolicitudTipoCliente, accion: "aprobar" | "rechazar"): void {
+    if (this.resolviendoSolicitud) return;
+    this.resolviendoSolicitud = s.clienteCd;
+    this.service.resolverSolicitudDeTipo(s.clienteCd, accion).subscribe({
+      next: (r) => {
+        this.resolviendoSolicitud = "";
+        if (r && r.success) {
+          this.solicitudesTipo = this.solicitudesTipo.filter((x) => x.clienteCd !== s.clienteCd);
+          this.toastr.success(accion === "aprobar" ? `${s.razonSocial} ya compra como ${s.tipoNombre}.` : "Solicitud rechazada. Le avisamos por correo.");
+        } else this.toastr.error((r && (r as any).message) || "No pudimos guardar la decisión.");
+      },
+      error: (e) => {
+        this.resolviendoSolicitud = "";
+        this.toastr.error((e && e.error && e.error.message) || "No pudimos guardar la decisión.");
+      },
+    });
   }
 
   abrirGrupoEstilo(id: string): void {

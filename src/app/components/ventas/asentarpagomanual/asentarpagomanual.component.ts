@@ -98,7 +98,11 @@ export class AsentarpagomanualComponent implements OnInit {
   validateMaxValue(value: number) {
     const pagoIngresado = Number(value) || 0;
     const faltaPorPagar = Number(this.pedido?.faltaPorPagar) || 0;
-    this.valorExcedido = faltaPorPagar > 0 && pagoIngresado > faltaPorPagar;
+    // Ticket 1604: lo que falta puede traer centavos (p. ej. 45.240,60) y la pantalla lo muestra
+    // redondeado al peso ($45.241). Pagar ese valor no es un exceso: el tope es lo que falta
+    // subido al peso siguiente; el saldo queda en cero, nunca negativo.
+    const tope = Math.ceil(Math.round(faltaPorPagar * 100) / 100);
+    this.valorExcedido = faltaPorPagar > 0 && pagoIngresado > tope;
   }
 
   onFileChange(event) {
