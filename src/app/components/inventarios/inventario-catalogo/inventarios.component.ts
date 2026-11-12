@@ -472,20 +472,22 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   private onboardingLoaderSuppressed = false;
 
   async onImportComplete(result: any): Promise<void> {
+    // Ticket 1607: si no se importó nada o alguna fila falló, el modal queda abierto con su pantalla de
+    // resultados (errores por fila y descarga de las rechazadas). Antes se cerraba siempre y se llevaba
+    // también su aviso, así que el comercio no veía por qué no cargó.
+    if (result?.success > 0) this.recargarInventarioConsolidado();
+    if (!(result?.success > 0) || result?.failed > 0) return;
     this.showImportModal = false;
-    if (result.success > 0) {
-      this.recargarInventarioConsolidado();
-      const dialog = await Swal.fire({
-        title: 'Existencias importadas',
-        text: `${result.success} registros de inventario se actualizaron correctamente`,
-        icon: 'success',
-        showCancelButton: !!this.onboardingReturnUrl,
-        confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
-        cancelButtonText: 'Seguir en inventario'
-      });
-      if (dialog.isConfirmed && this.onboardingReturnUrl) {
-        await this.returnToOnboarding();
-      }
+    const dialog = await Swal.fire({
+      title: 'Existencias importadas',
+      text: `${result.success} registros de inventario se actualizaron correctamente`,
+      icon: 'success',
+      showCancelButton: !!this.onboardingReturnUrl,
+      confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
+      cancelButtonText: 'Seguir en inventario'
+    });
+    if (dialog.isConfirmed && this.onboardingReturnUrl) {
+      await this.returnToOnboarding();
     }
   }
 

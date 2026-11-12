@@ -2031,28 +2031,21 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   async onImportComplete(result: ImportResult): Promise<void> {
+    // Ticket 1607: si no se importó nada o alguna fila falló, el modal queda abierto con su pantalla de
+    // resultados (errores por fila y descarga de las rechazadas); antes se cerraba y se perdía el detalle.
+    if (result.success > 0) this.cargarDatos();
+    if (!(result.success > 0) || result.failed > 0) return;
     this.showImportModal = false;
-    if (result.success > 0) {
-      const dialog = await Swal.fire({
-        title: 'Importación Exitosa',
-        text: `${result.success} productos importados correctamente`,
-        icon: 'success',
-        showCancelButton: !!this.onboardingReturnUrl,
-        confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
-        cancelButtonText: 'Seguir en productos'
-      });
-      // Recargar lista de productos
-      this.cargarDatos();
-      if (dialog.isConfirmed && this.onboardingReturnUrl) {
-        await this.returnToOnboarding();
-      }
-    }
-    if (result.failed > 0) {
-      Swal.fire({
-        title: 'Importación con errores',
-        text: `${result.failed} productos no pudieron ser importados`,
-        icon: 'warning'
-      });
+    const dialog = await Swal.fire({
+      title: 'Importación Exitosa',
+      text: `${result.success} productos importados correctamente`,
+      icon: 'success',
+      showCancelButton: !!this.onboardingReturnUrl,
+      confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
+      cancelButtonText: 'Seguir en productos'
+    });
+    if (dialog.isConfirmed && this.onboardingReturnUrl) {
+      await this.returnToOnboarding();
     }
   }
 

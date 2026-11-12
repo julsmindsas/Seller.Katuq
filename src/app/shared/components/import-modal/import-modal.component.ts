@@ -2613,6 +2613,22 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   /**
    * Convierte el valor según el tipo de campo esperado
    */
+  /**
+   * Ticket 1607: cantidad de una celda de inventario. Un número pasa tal cual; un texto se lee con la
+   * convención colombiana: «1.000» y «12.500» son miles (1000, 12500), «2,5» es decimal (2.5). Lo ambiguo
+   * («1,000», «1.5.0») se manda sin tocar para que el servidor lo rechace con su mensaje, en vez de adivinar.
+   */
+  static cantidadDeCelda(value: any): any {
+    if (typeof value === 'number') return value;
+    if (typeof value !== 'string') return value;
+    const t = value.trim().replace(/\s+/g, '');
+    if (/^\d+$/.test(t)) return Number(t);
+    if (/^\d{1,3}(\.\d{3})+$/.test(t)) return Number(t.replace(/\./g, ''));
+    if (/^\d+,\d{1,2}$/.test(t)) return Number(t.replace(',', '.'));
+    if (/^\d+\.\d{1,2}$/.test(t)) return Number(t);
+    return value;
+  }
+
   private convertFieldValue(katuqField: string, value: any): any {
     // Fotos por enlace: el texto de la celda viaja tal cual (con un tope por si
     // alguien pega media hoja en una celda). Lo valida y lo convierte el servidor.
@@ -2625,6 +2641,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const t = String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       if (!t) return undefined;
       return t.startsWith('serv') ? 'service' : 'product';
+    }
+
+    // Ticket 1607: la cantidad del inventario con la convención colombiana. No usa el limpiador de
+    // `numericFields` de abajo, que borra todas las comas («5,0» → 50) y deja en 0 lo que no entiende.
+    if (this.type === 'inventory' && katuqField === 'cantidad') {
+      return ImportModalComponent.cantidadDeCelda(value);
     }
 
     if (ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField)) {
