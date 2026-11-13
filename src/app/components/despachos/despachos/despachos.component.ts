@@ -770,8 +770,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         this.vendors = data || [];
         this.mensajerosRutero = (this.vendors as any[])
-          .filter(v => v && v.nombre)
-          .map(v => ({ nombre: String(v.nombre), enLinea: v.estadoDisponibilidad === 'online' }))
+          .map(v => ({
+            // La ficha del transportador guarda `nombres` y `apellidos`; `nombre` solo en registros viejos.
+            nombre: normalizeTransportadorName(v?.nombre || `${v?.nombres || ''} ${v?.apellidos || ''}`),
+            enLinea: v?.estadoDisponibilidad === 'online',
+          }))
+          .filter(v => v.nombre)
           .sort((a, b) => Number(b.enLinea) - Number(a.enLinea) || a.nombre.localeCompare(b.nombre));
       });
   }
@@ -3020,8 +3024,34 @@ export class DespachosComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Ticket 1608: el detalle de entrega abierto desde Envíos no traía el celular
+   * del mensajero, porque recibía el pedido sin cruzarlo con la ficha del
+   * transportador (en «Todos los pedidos» sí se cruza). Aquí se empareja el
+   * nombre guardado en el pedido con la ficha ya cargada en `vendors`.
+   */
+  private conDatosDelMensajero(pedido: any): any {
+    if (!pedido) return pedido;
+    const clave = (t: any) => normalizeTransportadorName(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const crudo = pedido.transportador;
+    const nombrePedido = clave(typeof crudo === 'string' ? crudo : crudo?.nombre || crudo?.nombres || '');
+    const ficha = !nombrePedido ? null : (this.vendors || []).find((t: any) => {
+      const completo = clave(`${t?.nombres || ''} ${t?.apellidos || ''}`);
+      const solo = clave(t?.nombres || '');
+      return completo === nombrePedido || (solo && solo === nombrePedido);
+    }) || null;
+    if (!ficha) return pedido;
+    const telefono = ficha.telefono ? String(ficha.telefono) : '';
+    return {
+      ...pedido,
+      mensajeroNombre: `${ficha.nombres || ''} ${ficha.apellidos || ''}`.trim(),
+      mensajeroTelefono: telefono,
+      mensajeroWhatsapp: ficha.whatsapp ? String(ficha.whatsapp) : telefono,
+    };
+  }
+
   openModalDetalleEntrega(content, pedido) {
-    this.detallePedidoEntregado = pedido;
+    this.detallePedidoEntregado = this.conDatosDelMensajero(pedido);
     this.modalRef = this.modalService.open(content, {
       size: "xl",
       fullscreen: false,
@@ -3029,7 +3059,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   openDetalleEntrega(pedido: Pedido) {
-    this.detallePedidoEntregado = pedido;
+    this.detallePedidoEntregado = this.conDatosDelMensajero(pedido);
     this.modalService.open(this.detalleEntregaModal, {
       size: "xl",
       fullscreen: false,

@@ -222,14 +222,13 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
 
   /**
    * Ticket 1582: corregir el tipo de documento de un cliente existente (empresas guardadas como CC).
-   * La llave del cliente es su `cd` y su `documento`; el tipo solo no la cambia. Pero con la bandera
-   * `calidadDatosClientes` el servidor, al cambiar el tipo a NIT, reescribe `documento` como «base-dv» (y
-   * pedidos, Siigo y Cartera lo buscan así), por eso con la bandera el campo sigue bloqueado.
+   * La llave del cliente es su `cd` y su `documento`; el tipo solo no la cambia. Ticket 1606: también con la
+   * bandera `calidadDatosClientes`, porque el servidor ya no reescribe el número cuando solo cambia el tipo
+   * (antes lo pasaba a «base-dv» y por eso el campo quedaba bloqueado con la bandera).
    * Solo Administrador y Super Administrador; el cliente corporativo no entra.
    */
   get tipoDocEditable(): boolean {
     if (!this.isEdit || this.target !== 'client' || !this.persist || !(this.clienteData?.cd || this.clienteData?.id)) return false;
-    if (this.calidadActiva) return false;
     try {
       const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
       return ['Administrador', 'Super Administrador'].includes(rol);

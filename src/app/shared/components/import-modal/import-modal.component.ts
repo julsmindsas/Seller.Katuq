@@ -2021,15 +2021,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       }
       if (totalBatches > 1) detail += ` (${totalBatches} lotes)`;
 
+      // Si NO se escribió nada, no es un éxito: el usuario tiene que enterarse de que su archivo no cambió nada.
+      // Ticket 1607: también cuando todas las filas fallan (p. ej. bodega no encontrada); antes salía en verde
+      // como «completada» y el modal se cerraba, así que parecía que no había pasado nada.
+      const nadaEscrito = (totalCreated + totalUpdated) === 0;
+      const todoFallo = nadaEscrito && totalFailed > 0;
+      if (todoFallo && allErrors.length) {
+        detail += `. ${allErrors.slice(0, 2).join(' · ')}${allErrors.length > 2 ? ' …' : ''}`;
+      }
       this.messageService.add({
-        // Si NO se escribió nada y todo quedó omitido, no es un éxito: el
-        // usuario tiene que enterarse de que su archivo no cambió nada.
-        severity: (totalCreated + totalUpdated) === 0 && totalOmitted > 0 ? 'warn' : 'success',
-        summary: (totalCreated + totalUpdated) === 0 && totalOmitted > 0
+        severity: todoFallo ? 'error' : nadaEscrito && totalOmitted > 0 ? 'warn' : 'success',
+        summary: nadaEscrito && (totalOmitted > 0 || totalFailed > 0)
           ? this.translate.instant('importador.importModal.noSeImportoNada')
           : this.translate.instant('importador.importModal.importacionCompletada'),
         detail,
-        life: totalOmitted > 0 ? 10000 : 5000
+        life: todoFallo ? 15000 : totalOmitted > 0 ? 10000 : 5000
       });
 
       if (this.resumenEspecificaciones) {
@@ -2607,6 +2613,22 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   /**
    * Convierte el valor según el tipo de campo esperado
    */
+  /**
+   * Ticket 1607: cantidad de una celda de inventario. Un número pasa tal cual; un texto se lee con la
+   * convención colombiana: «1.000» y «12.500» son miles (1000, 12500), «2,5» es decimal (2.5). Lo ambiguo
+   * («1,000», «1.5.0») se manda sin tocar para que el servidor lo rechace con su mensaje, en vez de adivinar.
+   */
+  static cantidadDeCelda(value: any): any {
+    if (typeof value === 'number') return value;
+    if (typeof value !== 'string') return value;
+    const t = value.trim().replace(/\s+/g, '');
+    if (/^\d+$/.test(t)) return Number(t);
+    if (/^\d{1,3}(\.\d{3})+$/.test(t)) return Number(t.replace(/\./g, ''));
+    if (/^\d+,\d{1,2}$/.test(t)) return Number(t.replace(',', '.'));
+    if (/^\d+\.\d{1,2}$/.test(t)) return Number(t);
+    return value;
+  }
+
   private convertFieldValue(katuqField: string, value: any): any {
     // Fotos por enlace: el texto de la celda viaja tal cual (con un tope por si
     // alguien pega media hoja en una celda). Lo valida y lo convierte el servidor.
@@ -2619,6 +2641,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const t = String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       if (!t) return undefined;
       return t.startsWith('serv') ? 'service' : 'product';
+    }
+
+    // Ticket 1607: la cantidad del inventario con la convención colombiana. No usa el limpiador de
+    // `numericFields` de abajo, que borra todas las comas («5,0» → 50) y deja en 0 lo que no entiende.
+    if (this.type === 'inventory' && katuqField === 'cantidad') {
+      return ImportModalComponent.cantidadDeCelda(value);
     }
 
     if (ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField)) {
