@@ -677,7 +677,8 @@
                 Manda sobre la imagen de fondo.</small>
               <div class="miniaturas" *ngIf="b.datos.imagenes?.length">
                 <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
-                  <img [src]="img" alt="" />
+                  <!-- Cada foto es su dirección o, con descripción, { url, alt }. -->
+                  <img [src]="$any(img)?.url || img" [alt]="$any(img)?.alt || ''" />
                   <button (click)="quitarFotoCarrusel(b, i)" title="Quitar">×</button>
                 </div>
               </div>

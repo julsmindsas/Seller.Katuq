@@ -148,6 +148,18 @@
 // Ticket 1219: el estado del guardado automático; en rojo si no se pudo guardar.
 .guardado-estado--error { color: #b42318 !important; }
 
+// En computador la barra va en una sola línea: con «Guardado hace un momento» el botón Publicar se caía a una segunda
+// fila. El nombre del sitio es lo que cede (se corta con puntos suspensivos).
+@media (min-width: 1200px) {
+  .barra {
+    flex-wrap: nowrap;
+
+    &__titulo { flex: 0 1 auto; overflow: hidden; }
+    &__nombre { min-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .guardado-estado, .btn-primario, .btn-fantasma { flex: none; white-space: nowrap; }
+  }
+}
+
 // Ticket 1213: Publicar con un pendiente crítico se ve apagado y explica por qué al tocarlo.
 .btn-primario.is-bloqueado { opacity: 0.55; }
 

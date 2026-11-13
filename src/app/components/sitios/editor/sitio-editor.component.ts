@@ -1114,6 +1114,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         this.cargarMarca();
         this.iniciarHistorial();
         this.fijarComoGuardado();
+        // Una página del diseño nuevo abre en la Vista fiel: es la página tal como la verá el cliente (la vista
+        // editable la aproxima con el diseño de siempre). Si la vista fiel no se puede abrir, queda la editable.
+        if (this.disenoNuevo && this.modoPrevia === "editable") {
+          this.fielAlAbrir = true;
+          this.verVistaFiel();
+        }
         setTimeout(() => this.observarLienzo());
         this.service.categorias(this.id).subscribe({
           next: (r) => { this.categorias = (r && r.success && r.data) || []; },
@@ -2164,6 +2170,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   // sección del marco, el editor abre su panel.
 
   modoPrevia: "editable" | "fiel" = "editable";
+  /** La vista fiel se abrió sola al cargar el sitio (diseño nuevo): si falla, se vuelve a la editable sin aviso. */
+  private fielAlAbrir = false;
   /** La dirección del marco, ya validada (solo el render de sitios de nuestro backend). */
   urlFiel: SafeResourceUrl | null = null;
   cargandoFiel = false;
@@ -2229,7 +2237,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   verEditable(): void {
+    this.fielAlAbrir = false;
     this.modoPrevia = "editable";
+  }
+
+  /** Si la vista fiel se abrió sola al cargar y no se pudo mostrar, se queda la editable (sin mensaje de error). */
+  private volverAEditableSiSeAbrioSola(): boolean {
+    if (!this.fielAlAbrir) return false;
+    this.fielAlAbrir = false;
+    this.modoPrevia = "editable";
+    this.errorFiel = "";
+    return true;
   }
 
   verVistaFiel(): void {
@@ -2254,13 +2272,16 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           this.cargandoFiel = false;
           const url = this.urlDeVistaFiel(res && res.success && res.data ? res.data.ruta : "");
           if (!url) {
+            if (this.volverAEditableSiSeAbrioSola()) return;
             this.errorFiel = (res && res.message) || "No pudimos abrir la vista fiel.";
             return;
           }
+          this.fielAlAbrir = false;
           this.urlFiel = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         },
         error: (err) => {
           this.cargandoFiel = false;
+          if (this.volverAEditableSiSeAbrioSola()) return;
           this.errorFiel = err?.error?.message || "No pudimos abrir la vista fiel.";
         },
       });
