@@ -88,7 +88,7 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
   {
     tipo: "columnas",
     nombre: "Columnas",
-    descripcion: "Dos o tres ideas lado a lado",
+    descripcion: "Beneficios o ideas lado a lado, con ícono o foto",
     icono: "M4 5h5v14H4zM15 5h5v14h-5z",
   },
   {
