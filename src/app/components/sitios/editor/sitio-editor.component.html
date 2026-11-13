@@ -3542,6 +3542,19 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <button class="opcion" [class.is-active]="contenido.tienda.configuracionObligatoria === true"
+                    (click)="contenido.tienda.configuracionObligatoria = contenido.tienda.configuracionObligatoria !== true; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Pedir la configuración antes de agregar</strong>
+                <small>Para productos que se personalizan (opciones, fecha de entrega, ocasión, tarjeta).
+                  Encendido, el botón de la tarjeta dice «Personalizar» y abre la página del producto, y allí
+                  no se puede agregar sin elegir las opciones, la fecha de entrega, la ocasión y para quién es.
+                  La fecha elegida llega ya puesta al momento de pagar. Los productos sin nada que elegir se
+                  agregan como siempre.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
 
             <ng-container *ngIf="ventaConfig && formasPagoWeb.length">
               <div class="campo">
