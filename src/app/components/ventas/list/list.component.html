@@ -2334,6 +2334,14 @@
         </button>
     </div>
     <div class="modal-body" *ngIf="facturaPedido">
+        <!-- Ticket 1474 (D-625): factura de un pedido que aún no tiene pago registrado -->
+        <div class="factura-aviso-cf mb-3" *ngIf="facturaPedido.estadoPago === 'Pendiente' && !facturaReemplazo" role="alert">
+            <p class="mb-0">
+                <i class="fa fa-exclamation-triangle me-1"></i>
+                <strong>Este pedido aún no tiene pago registrado.</strong>
+                La factura sale igual y el pedido sigue en Pendiente hasta que registres el pago.
+            </p>
+        </div>
         <!-- REFACTURAR: qué factura se reemplaza; el número abre la factura en SIIGO -->
         <div class="factura-aviso-cf mb-3" *ngIf="facturaReemplazo && facturaReemplazo.pedidoId === facturaPedido._id" role="alert">
             <p class="mb-1">

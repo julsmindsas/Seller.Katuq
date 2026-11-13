@@ -34,7 +34,7 @@ import { Table } from "primeng/table";
 import { PaymentService } from "../../../shared/services/ventas/payment.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { jsPDF } from "jspdf";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 // import * as jsPDF from 'jspdf';
 import html2canvas from "html2canvas";
 import Swal from "sweetalert2";
@@ -182,6 +182,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private proveedorPorTipo: { orderInvoice: ProveedorResuelto; posInvoice: ProveedorResuelto } | null = null;
   // Con inject() para no cambiar el constructor.
   private companyFeatures = inject(CompanyFeaturesService);
+  // D-624 (ticket 1473): solo para «Despacho rápido», que abre Envíos con el pedido cargado.
+  private routerDespacho = inject(Router);
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
   // D-547 (F2): acciones fijadas por rol y por usuario. Solo se usa con la bandera orderPinnedActions encendida.
   private orderActions = inject(OrderActionsService);
@@ -843,6 +845,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   entradaEstadoAcciones(pedido: Pedido): EntradaEstadoAcciones {
     const p: any = pedido;
     const ofreceCambiarCliente = this.puedeOfrecerCambiarCliente(pedido);
+    const ofreceDespachoRapido = !this.isFromProduction && this.companyFeatures.isEnabled("despachoRapidoPedido");
     return {
       produccion: !!this.isFromProduction,
       puedeDireccion: this.canEditDeliveryAddressByDeliveryType(pedido),
@@ -867,7 +870,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cambiarClienteMotivo: ofreceCambiarCliente && !this.canModifyBasicData(pedido)
         ? `Congelado · ${String(p?.estadoProceso ?? "")}`.trim()
         : "",
+      // D-624 (ticket 1473): sin la bandera `despachoRapidoPedido` valen `false` y `""`, y el modal no cambia.
+      despachoRapido: ofreceDespachoRapido,
+      despachoRapidoMotivo: ofreceDespachoRapido ? this.motivoSinDespachoRapido(pedido) : "",
     };
+  }
+
+  /**
+   * D-624 (ticket 1473): por qué este pedido no entra a «Generar orden de envío». Son las mismas reglas con las que esa
+   * ventana lista los pedidos (`generar-orden.component.ts`): ni en producción, ni recogida en tienda, ni ya en una orden.
+   */
+  private motivoSinDespachoRapido(pedido: Pedido): string {
+    const p = pedido as any;
+    if (p?.shippingOrder || p?.nroShippingOrder) return `Ya está en la orden de envío ${p.shippingOrder || p.nroShippingOrder}`;
+    if (p?.estadoProceso === "EnProduccion" || p?.estadoProceso === "SinProducir") return "Aún está en producción";
+    const forma = String(p?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega || "").toLocaleUpperCase();
+    const esRecogida = forma.includes("RECOG") || forma.includes("PICKUP") || forma.includes("RETIR");
+    if (forma ? esRecogida : !p?.envio?.direccionEntrega) return "Solo domicilios";
+    return "";
+  }
+
+  /** D-624 (ticket 1473): abre Envíos con la ventana «Generar orden de envío» y este pedido ya cargado. */
+  abrirDespachoRapido(pedido: Pedido): void {
+    if (!pedido || !this.companyFeatures.isEnabled("despachoRapidoPedido")) return;
+    this.modalService.dismissAll();
+    this.routerDespacho.navigate(["/despachos"], { state: { despachoRapido: pedido } });
   }
 
   // ── D-670 (ticket 1505): Cambiar cliente de un pedido creado ───────────────────────────────────
@@ -1558,8 +1585,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.hasInvoicingIntegration) {
       return false;
     }
-    // Solo pedidos con pago aprobado o pre-aprobado
+    // Solo pedidos con pago aprobado o pre-aprobado. Con la bandera `facturarDesdePendiente` (ticket 1474, D-625)
+    // también Pendiente: la factura sale sin mover el estado de pago, igual que desde Facturación electrónica.
     const estadosPermitidos = [EstadoPago.Aprobado, EstadoPago.PreAprobado];
+    if (this.companyFeatures.isEnabled("facturarDesdePendiente")) estadosPermitidos.push(EstadoPago.Pendiente);
     if (!estadosPermitidos.includes(pedido?.estadoPago as EstadoPago)) {
       return false;
     }
