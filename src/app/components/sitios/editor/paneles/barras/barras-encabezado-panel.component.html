@@ -51,6 +51,13 @@
 <p class="nota" *ngIf="modoCategorias === 'desplegable' && menu.length">
   Tus categorías reales cuelgan de «{{ enlaceDeCategorias }}», con «Ver todo» al final.
 </p>
+<ng-container *ngIf="modoCategorias === 'fila'">
+  <div class="segmentos" role="group" aria-label="Cómo se ve la fila de categorías">
+    <button type="button" [class.is-activo]="datos.catsEstilo !== 'banda'" [attr.aria-pressed]="datos.catsEstilo !== 'banda'" (click)="elegirEstiloFila('')">Sobre el encabezado</button>
+    <button type="button" [class.is-activo]="datos.catsEstilo === 'banda'" [attr.aria-pressed]="datos.catsEstilo === 'banda'" (click)="elegirEstiloFila('banda')">En una banda de color</button>
+  </div>
+  <p class="nota" *ngIf="datos.catsEstilo === 'banda'">La banda va de lado a lado con el «Fondo alterno» de tu tema, debajo del menú.</p>
+</ng-container>
 <p class="aviso" *ngIf="modoCategorias !== 'no' && !hayCatalogo">Las categorías necesitan un catálogo en tu sitio para tener a dónde llevar.</p>
 <p class="nota" *ngIf="modoCategorias !== 'no'">
   Salen con el nombre que tienen en tus productos, con mayúscula en cada palabra, igual que en tu catálogo. Si alguna
@@ -65,6 +72,15 @@
     <small>Una búsqueda que haría tu cliente. Corto: en celular se lee completo hasta unas 30 letras.</small>
   </div>
 </ng-container>
+
+<h4 class="subgrupo">Redes sociales</h4>
+<button type="button" class="opcion" [class.is-active]="datos.mostrarRedes === true" [attr.aria-pressed]="datos.mostrarRedes === true" (click)="alternarRedes()">
+  <span class="opcion__texto">
+    <strong>Mostrar mis redes junto al buscador</strong>
+    <small>Los íconos de las redes de tu empresa (las mismas del pie). Se ven en computador; en celular quedan en el pie.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
 
 <h4 class="subgrupo">Botón del asesor</h4>
 <button type="button" class="opcion" [class.is-active]="datos.asesor === 'enlace'" [attr.aria-pressed]="datos.asesor === 'enlace'" (click)="alternarAsesor()">

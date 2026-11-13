@@ -687,6 +687,17 @@
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'heroCarrusel')" [disabled]="subiendo" />
               </label>
             </div>
+            <div class="campo campo--avanzado" *ngIf="disenoNuevo && (b.datos.imagenes?.length || 0) >= 2">
+                <label>Forma del carrusel</label>
+                <div class="segmentado">
+                  <button [class.is-active]="b.datos.carruselForma !== 'partido'"
+                          (click)="b.datos.carruselForma = ''; marcarSucio()">Foto a todo el ancho</button>
+                  <button [class.is-active]="b.datos.carruselForma === 'partido'"
+                          (click)="b.datos.carruselForma = 'partido'; marcarSucio()">Texto y foto</button>
+                </div>
+                <small>«Texto y foto» pone el texto a un lado y la foto completa al otro, sin recortarla: es la que va
+                  con fotos de producto. «A todo el ancho» es para fotos de ambiente o de tu local.</small>
+            </div>
 
             <div class="campo campo--avanzado">
               <label>Alto de la portada</label>
@@ -1703,6 +1714,20 @@
                 </label>
                 <button class="repetible__quitar" *ngIf="c.imagen" (click)="c.imagen = ''; marcarSucio()">Quitar foto</button>
               </div>
+              <!-- Beneficios: una columna sin foto puede llevar un ícono (solo el diseño nuevo lo pinta). -->
+              <ng-container *ngIf="disenoNuevo && !c.imagen">
+                <span class="repetible__rotulo">Ícono (opcional)</span>
+                <div class="iconos">
+                  <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
+                          [class.is-active]="c.icono === ic" [attr.aria-pressed]="c.icono === ic"
+                          (click)="c.icono = c.icono === ic ? '' : ic; marcarSucio()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path [attr.d]="trazoIcono(ic)" />
+                    </svg>
+                  </button>
+                </div>
+              </ng-container>
               <span class="repetible__rotulo">Texto del botón (opcional)</span>
               <input type="text" [(ngModel)]="c.ctaTexto" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón (opcional)" maxlength="30" />
