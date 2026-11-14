@@ -45,6 +45,10 @@ import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { ClienteFactura, clienteDeFactura, facturaPorErrorAConsumidorFinal } from "../../../shared/utils/cliente-factura";
 import { escaparHtml } from "../../../shared/utils/escapar-html";
+// Ticket 1618 (openspec descuento-linea-edicion-pedido): mismo saneo 0-100 que usa el carrito
+// de Venta asistida (`carrito.component.ts::onDescLineaChange`) y el POS.
+import { sanearDescuento } from "../../../shared/utils/pos-linea-precio";
+import { TranslateService } from "@ngx-translate/core";
 import {
   aplicarResultadoCodigo,
   clienteIdParaCodigo,
@@ -187,6 +191,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private orderActions = inject(OrderActionsService);
   // D-670 (ticket 1505): solo se consulta con la bandera `cambiarClientePedido` encendida.
   private cambiarClienteServicio = inject(CambiarClientePedidoService);
+  // Ticket 1618 (openspec descuento-linea-edicion-pedido): textos nuevos del Swal de «Desc. %».
+  private translate = inject(TranslateService);
 
   // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
   @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
@@ -1347,6 +1353,58 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   canModifyProducts(order: Pedido): boolean {
     return !this.isPedidoCongelado(order);
+  }
+
+  /**
+   * Ticket 1618 (openspec descuento-linea-edicion-pedido): ¿se puede poner o cambiar el
+   * «Desc. %» de línea de este pedido desde el engranaje o «Editar productos»? Bandera de
+   * empresa `descuentoLineaEdicion` + mismos estados que ya bloquean editar productos
+   * (congelado) + sin factura electrónica emitida (mismo criterio que el backend:
+   * `nroFactura || pdfUrlInvoice`, el mismo de `editLineaIva`).
+   */
+  puedeDescuentoLinea(order: Pedido): boolean {
+    return (
+      this.companyFeatures.isEnabled("descuentoLineaEdicion") &&
+      this.canModifyProducts(order) &&
+      !(order?.nroFactura || order?.pdfUrlInvoice)
+    );
+  }
+
+  /**
+   * Ticket 1618: Swal «Desc. %» (0-100, admite decimales) para una línea del carrito — mismo
+   * patrón que el precio/IVA manual de `addProductToCart`. Normaliza con `sanearDescuento`
+   * (mismo saneo que `carrito.component.ts::onDescLineaChange`). Vacío o 0 = sin descuento.
+   * Resuelve siempre, incluso si se cancela (no deja el guardado a medias).
+   */
+  private pedirDescuentoLinea(linea: Carrito): Promise<void> {
+    const actual = sanearDescuento(linea?.descuentoLinea);
+    const tituloProducto = escaparHtml(
+      linea?.producto?.crearProducto?.titulo ||
+        linea?.producto?.identificacion?.referencia ||
+        "",
+    );
+    return Swal.fire({
+      title: this.translate.instant("Descuento del producto"),
+      html: `<p style="margin-bottom:0.75rem;">${this.translate.instant("Desc. % del producto")} <b>${tituloProducto}</b>. ${this.translate.instant("De 0 a 100, admite decimales.")}</p>
+             <input id="swal-desc-linea" type="number" class="swal2-input" placeholder="Ej: 10" min="0" max="100" step="0.01" value="${actual || ""}" style="margin:0;width:100%;">`,
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant("Aplicar"),
+      cancelButtonText: this.translate.instant("Sin descuento"),
+      confirmButtonColor: "#5F3FE0",
+      focusConfirm: false,
+      preConfirm: () => {
+        const input = (document.getElementById("swal-desc-linea") as HTMLInputElement)?.value;
+        if (input && (isNaN(Number(input)) || Number(input) < 0 || Number(input) > 100)) {
+          Swal.showValidationMessage(this.translate.instant("El descuento debe estar entre 0 y 100"));
+          return false;
+        }
+        return input;
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        linea.descuentoLinea = sanearDescuento(result.value);
+      }
+    });
   }
 
   /**
@@ -4184,8 +4242,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // flujo y los guardados siguientes de la sesión ya no salían, sin ningún aviso.
       switchMap(order => this.ventasService.editOrder(order, { exigirVersion: true }).pipe(
         catchError((e) => {
-          Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
-                      text: e?.isStaleWrite ? e.message : 'No se pudieron guardar los cambios. Intenta nuevamente.' });
+          // Ticket 1618 (openspec descuento-linea-edicion-pedido): 400 LINE_OVERRIDES_INVALID
+          // (mismo que `create`, body `{msg}`) no pasa por el catchError de 409 del servicio, así
+          // que llega aquí intacto. 409 DESCUENTO_LINEA_BLOQUEADO ya llega con `isStaleWrite` y su
+          // mensaje real (el servicio reescribe TODO 409 con `err.error.error`); solo se le pone un
+          // título más claro que el genérico de conflicto de versión.
+          let titulo = "Error al actualizar el pedido";
+          let texto = e?.isStaleWrite ? e.message : "No se pudieron guardar los cambios. Intenta nuevamente.";
+          if (e?.status === 400 && e?.error?.msg) {
+            // El 400 de la edición no trae código: se muestra el mensaje del servidor con el título genérico.
+            texto = e.error.msg;
+          } else if (e?.error?.code === "DESCUENTO_LINEA_BLOQUEADO") {
+            titulo = this.translate.instant("Pedido bloqueado para el descuento");
+          }
+          Swal.fire({ icon: 'error', title: titulo, text: texto });
           return of(null);
         })
       )),
@@ -8081,6 +8151,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
           }
           // Solo actualizar el carrito si se configuró correctamente el producto
+          let lineaEditada: Carrito | null = null;
           if (
             order.carrito &&
             configuracionResult?.producto &&
@@ -8101,6 +8172,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 ...order.carrito[this.indiceProductoSeleccionado],
                 ...configuracionResult,
               };
+              lineaEditada = order.carrito[this.indiceProductoSeleccionado];
             } else {
               console.error(
                 "❌ Índice de producto inválido:",
@@ -8108,57 +8180,76 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               );
             }
           }
-          const tieneDomicilio = (order.carrito ?? []).some((car) => {
-            const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
-            return forma.toLowerCase().includes("domicilio");
-          });
-          // ===== NUEVO: Recalcular valor de envío (domicilio) =====
-          // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
-          // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
-          if (tieneDomicilio) {
-            // Utilizar el servicio utilitario para obtener el costo de envío según la zona
-            this.pedidoUtilService.pedido = order;
-            try {
-              order.totalEnvio = Number(
-                this.pedidoUtilService.getShippingCost(this.allBillingZone),
-              );
-            } catch (e) {
-              // Fallback si las zonas no están aún en memoria
-              const zonas =
-                this.allBillingZone ||
-                JSON.parse(sessionStorage.getItem("allBillingZone") || "[]");
-              order.totalEnvio = Number(
-                this.pedidoUtilService.getShippingCost(zonas),
-              );
-            }
-          } else {
-            // Forma de entrega tipo "recoge"  →  sin costos de domicilio
-            order.totalEnvio = 0;
+
+          // Ticket 1618 (openspec descuento-linea-edicion-pedido): con la bandera, pedido
+          // editable y sin factura electrónica, pedir «Desc. %» para la línea recién configurada.
+          if (lineaEditada && this.puedeDescuentoLinea(order)) {
+            this.pedirDescuentoLinea(lineaEditada).then(() => {
+              this.finalizarConfiguracionProducto(order);
+            });
+            return;
           }
 
-          // Sincronizar forma de entrega antes de actualizar valores
-          console.log("🔄 CONFIGURACIÓN - Antes de sincronizar:", {
-            nroPedido: order.nroPedido,
-            formaEntregaPedido: order.formaEntrega,
-            formaEntregaCarrito:
-              order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
-          });
-
-          this.sincronizarFormaEntrega(order);
-
-          console.log("🔄 CONFIGURACIÓN - Después de sincronizar:", {
-            nroPedido: order.nroPedido,
-            formaEntregaPedido: order.formaEntrega,
-            formaEntregaCarrito:
-              order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
-          });
-
-          // Recalcular totales dependientes del valor de envío, descuentos, etc.
-          order = this.actualizarValoresPedido(order);
-
-          this.editOrder(order);
+          this.finalizarConfiguracionProducto(order);
         },
       );
+  }
+
+  /**
+   * Ticket 1618: cola común de `confProductToCart` tras configurar la línea (y, si aplica, poner
+   * su descuento): recalcula envío, sincroniza forma de entrega, recalcula totales y guarda.
+   * Antes vivía inline al final de `confProductToCart`.
+   */
+  private finalizarConfiguracionProducto(order: Pedido): void {
+    const tieneDomicilio = (order.carrito ?? []).some((car) => {
+      const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
+      return forma.toLowerCase().includes("domicilio");
+    });
+    // ===== NUEVO: Recalcular valor de envío (domicilio) =====
+    // Si alguna línea del carrito tiene una forma de entrega que incluya la palabra "domicilio",
+    // se calcula el envío con base en la zona de cobro; de lo contrario se pone en 0 (recoge en tienda).
+    if (tieneDomicilio) {
+      // Utilizar el servicio utilitario para obtener el costo de envío según la zona
+      this.pedidoUtilService.pedido = order;
+      try {
+        order.totalEnvio = Number(
+          this.pedidoUtilService.getShippingCost(this.allBillingZone),
+        );
+      } catch (e) {
+        // Fallback si las zonas no están aún en memoria
+        const zonas =
+          this.allBillingZone ||
+          JSON.parse(sessionStorage.getItem("allBillingZone") || "[]");
+        order.totalEnvio = Number(
+          this.pedidoUtilService.getShippingCost(zonas),
+        );
+      }
+    } else {
+      // Forma de entrega tipo "recoge"  →  sin costos de domicilio
+      order.totalEnvio = 0;
+    }
+
+    // Sincronizar forma de entrega antes de actualizar valores
+    console.log("🔄 CONFIGURACIÓN - Antes de sincronizar:", {
+      nroPedido: order.nroPedido,
+      formaEntregaPedido: order.formaEntrega,
+      formaEntregaCarrito:
+        order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
+    });
+
+    this.sincronizarFormaEntrega(order);
+
+    console.log("🔄 CONFIGURACIÓN - Después de sincronizar:", {
+      nroPedido: order.nroPedido,
+      formaEntregaPedido: order.formaEntrega,
+      formaEntregaCarrito:
+        order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
+    });
+
+    // Recalcular totales dependientes del valor de envío, descuentos, etc.
+    order = this.actualizarValoresPedido(order);
+
+    this.editOrder(order);
   }
 
   addProductToCart(content: any, order: Pedido) {
@@ -8274,9 +8365,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                       console.log('💰 Precio manual asignado:', configuracionResult._precioManualOverride, 'IVA:', configuracionResult._ivaManualOverride + '%');
                     }
                   }
-                  this.sincronizarFormaEntrega(order);
-                  order = this.actualizarValoresPedido(order);
-                  this.editOrder(order);
+                  this.continuarTrasAgregarProducto(order, configuracionResult);
                 });
                 return;
               } else {
@@ -8304,9 +8393,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   if (result.isConfirmed && result.value !== undefined) {
                     configuracionResult._ivaManualOverride = Number(result.value);
                   }
-                  this.sincronizarFormaEntrega(order);
-                  order = this.actualizarValoresPedido(order);
-                  this.editOrder(order);
+                  this.continuarTrasAgregarProducto(order, configuracionResult);
                 });
                 return;
               }
@@ -8325,6 +8412,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(order);
         },
       );
+  }
+
+  /**
+   * Ticket 1618 (openspec descuento-linea-edicion-pedido): tras precio/IVA manual (o directo, sin
+   * ninguno de los dos), con la bandera, pedido editable y sin factura electrónica, pide «Desc. %»
+   * para la línea que se acaba de agregar con «Editar productos» antes de guardar.
+   */
+  private continuarTrasAgregarProducto(order: Pedido, lineaNueva: Carrito): void {
+    if (this.puedeDescuentoLinea(order)) {
+      this.pedirDescuentoLinea(lineaNueva).then(() => {
+        this.finalizarAgregarProducto(order);
+      });
+      return;
+    }
+    this.finalizarAgregarProducto(order);
+  }
+
+  /** Cola común tras agregar un producto con «Editar productos» (y, si aplica, su descuento). */
+  private finalizarAgregarProducto(order: Pedido): void {
+    this.sincronizarFormaEntrega(order);
+    order = this.actualizarValoresPedido(order);
+    this.editOrder(order);
   }
 
   /**
