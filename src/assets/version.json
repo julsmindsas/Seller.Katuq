@@ -1,27 +1,91 @@
 {
-  "version": "2026.11.11.7 - 11 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-11T19:21:39.016Z",
+  "version": "2026.11.13.1 - 13 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-13T16:09:43.402Z",
   "notas": [
     {
-      "fecha": "2026-11-11T17:44:04Z",
+      "fecha": "2026-11-12T13:00:00Z",
       "tipo": "NUEVO",
-      "texto": "En el editor de tu sitio, en Tienda → «Cuenta de clientes», ahora puedes dejar que tus compradores creen su cuenta y pidan una cuenta de mayorista; tú la apruebas ahí mismo y desde entonces ven sus precios al entrar.",
+      "texto": "En el mapa de Envíos ahora puedes armar las rutas del día: Katuq agrupa los pedidos listos por cercanía, tú ajustas el orden y creas la orden de envío de cada mensajero.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-12T17:50:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Envíos, el detalle de la entrega ya muestra el celular y el WhatsApp del mensajero que lleva el pedido.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, Opttia ahora puede agregar las secciones que le pidas: beneficios con ícono, galería, buscador de regalos, opiniones que tú le dictas, video, marcas, cuenta regresiva y producto destacado.",
       "modulos": [
         "sitios"
       ]
     },
     {
-      "fecha": "2026-11-11T19:22:00Z",
-      "tipo": "MEJORA",
-      "texto": "El link de acceso a la tienda que le envías a un cliente ahora sirve una sola vez: al abrirlo queda con su sesión en ese dispositivo, y si alguien más recibe el link ya no puede usarlo.",
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio ahora puedes poner las categorías del encabezado en una banda de color, mostrar tus redes junto al buscador, elegir un carrusel con el texto a un lado y la foto completa al otro, y ponerle un ícono a cada columna.",
       "modulos": [
-        "ventas/clienteslista"
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "MEJORA",
+      "texto": "Si le muestras a Opttia una captura de una página que te gusta, ahora también arma un encabezado y una portada parecidos, no solo los colores; y el editor abre mostrando tu página tal como la verán tus clientes.",
+      "modulos": [
+        "sitios"
       ]
     }
   ],
   "recientes": [
     {
-      "fecha": "2026-11-11T19:22:00Z",
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio, Opttia ahora puede agregar las secciones que le pidas: beneficios con ícono, galería, buscador de regalos, opiniones que tú le dictas, video, marcas, cuenta regresiva y producto destacado.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio ahora puedes poner las categorías del encabezado en una banda de color, mostrar tus redes junto al buscador, elegir un carrusel con el texto a un lado y la foto completa al otro, y ponerle un ícono a cada columna.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-13T16:09:00Z",
+      "tipo": "MEJORA",
+      "texto": "Si le muestras a Opttia una captura de una página que te gusta, ahora también arma un encabezado y una portada parecidos, no solo los colores; y el editor abre mostrando tu página tal como la verán tus clientes.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-12T17:50:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En Envíos, el detalle de la entrega ya muestra el celular y el WhatsApp del mensajero que lleva el pedido.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-12T13:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el mapa de Envíos ahora puedes armar las rutas del día: Katuq agrupa los pedidos listos por cercanía, tú ajustas el orden y creas la orden de envío de cada mensajero.",
+      "modulos": [
+        "despachos"
+      ]
+    },
+    {
+      "fecha": "2026-11-11T19:21:00Z",
       "tipo": "MEJORA",
       "texto": "El link de acceso a la tienda que le envías a un cliente ahora sirve una sola vez: al abrirlo queda con su sesión en ese dispositivo, y si alguien más recibe el link ya no puede usarlo.",
       "modulos": [
@@ -467,48 +531,8 @@
       "modulos": [
         "cartera"
       ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los administradores ya pueden corregir el tipo de documento de un cliente, por ejemplo de CC a NIT.",
-      "modulos": [
-        "ventas/clienteslista"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Las acciones del pedido se ven en columnas y con un color por grupo, para encontrarlas más rápido.",
-      "modulos": [
-        "ventas"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el lápiz de «Editar cliente» ahora también cierra el panel sin guardar cambios.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-07T21:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Venta asistida, el interruptor «Generar factura electrónica» solo sale si tu empresa tiene conectado un sistema contable.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-06T16:47:36Z",
-      "tipo": "NUEVO",
-      "texto": "En Ajustes de inventario puedes elegir la bodega de cada producto: un mismo ajuste, con un solo tipo de movimiento y una sola nota, queda registrado en varias bodegas a la vez y con una referencia común para encontrarlo.",
-      "modulos": [
-        "inventario/recepcion-mercancia"
-      ]
     }
   ],
-  "commit": "a0ffa341ddf3c7090b34b3358fea9daeedc00040",
-  "cambiosSinCommit": 1
+  "commit": "15275abc305ab053ef4829b6c6aa1f4246f9ea61",
+  "cambiosSinCommit": 0
 }

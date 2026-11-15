@@ -11122,5 +11122,11 @@
   "notificaciones.whatsapp.shell.consolaTitle": "Números, modelos, envios e registro do WhatsApp",
   "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "O link do botão é fixo: não pode ter variáveis.",
   "consolaWhatsapp.registro.codigoSoporte": "Código para o suporte: {{codigo}}",
-  "consolaWhatsapp.envios.yaHayEnCurso": "Já há um envio em andamento neste número. Quando terminar, ou se você pausá-lo, poderá fazer outro."
+  "consolaWhatsapp.envios.yaHayEnCurso": "Já há um envio em andamento neste número. Quando terminar, ou se você pausá-lo, poderá fazer outro.",
+  "Descuento del producto": "Desconto do produto",
+  "Desc. % del producto": "Desconto % do produto",
+  "De 0 a 100, admite decimales.": "De 0 a 100, aceita decimais.",
+  "Sin descuento": "Sem desconto",
+  "El descuento debe estar entre 0 y 100": "O desconto deve estar entre 0 e 100",
+  "Pedido bloqueado para el descuento": "Pedido bloqueado para o desconto"
 }
