@@ -1,7 +1,7 @@
 /**
  * Estado de una idea (D-627, tickets 1442 y 1443) — parte PURA, sin Angular ni DOM.
  *
- * Una idea es un ticket con `motivo: 'idea'`. El ticket conserva sus cuatro estados de Support
+ * Una idea es un ticket con Tipo Idea (D-713, ver `esIdea`). El ticket conserva sus cuatro estados de Support
  * (Pendiente, Haciendo, Resuelto, Archivado); la idea suma `ideaEstado`, con seis valores que
  * solo escribe el equipo. Mientras no exista, el estado se DERIVA del `status`, así la pantalla
  * funciona antes y después de migrar. La tabla es la misma del servidor
@@ -62,9 +62,21 @@ export function normalizarIdeaEstado(valor: unknown): IdeaEstadoKey | null {
   return (IDEA_ESTADO_KEYS as readonly string[]).includes(limpio) ? (limpio as IdeaEstadoKey) : null;
 }
 
-/** ¿El ticket es una idea? Mismas señales que el servidor. */
+/**
+ * ¿El ticket es una idea? Misma regla que el servidor (functions/services/soporte/tipoTicket.js,
+ * D-713): manda lo que eligió el comercio (`tipoSolicitud`), salvo que el equipo haya cambiado
+ * después el motivo y los dos se contradigan; entonces manda el motivo. Sin `tipoSolicitud`,
+ * decide el motivo.
+ */
 export function esIdea(ticket: any): boolean {
-  return texto(ticket?.motivo).toLowerCase() === 'idea' || texto(ticket?.tipoSolicitud).toLowerCase() === 'idea';
+  const motivo = texto(ticket?.motivo).toLowerCase();
+  const tipo = texto(ticket?.tipoSolicitud).toLowerCase();
+  if (motivo === 'idea' || motivo === 'soporte') {
+    // Con motivo reconocido decide el motivo: o coincide con el tipo elegido, o lo
+    // contradice porque el equipo lo cambió después (última clasificación).
+    return motivo === 'idea';
+  }
+  return tipo === 'idea';
 }
 
 /** Estado propio si lo tiene; si no, el derivado del estado del ticket. */

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { ServiciosService } from '../../../shared/services/servicios.service';
 import { finalize } from 'rxjs/operators';
+import { esIdea } from './idea-estado';
 import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
 import type { CompanyFeatureFlag } from '../../../shared/services/company-features.service';
 
@@ -56,7 +57,7 @@ export class MisIdeasComponent implements OnInit {
           .filter((task: any) => {
             return (
               task.tienda === currentCompany.nomComercial &&
-              task.motivo === 'idea' // Filter only ideas
+              esIdea(task) // solo ideas, con la misma regla del servidor (D-713)
             );
           })
           .sort((a: any, b: any) => 
