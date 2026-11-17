@@ -59,6 +59,12 @@
     <small *ngIf="fuente === 'nada'">Admite negrita con asteriscos: *Lleva cableado:* te lo cotiza un asesor.</small>
   </div>
 
+  <div class="campo" *ngIf="fuente === 'piezas'">
+    <label [attr.for]="uid + '-rotulo'">Rótulo sobre las piezas (opcional)</label>
+    <input [id]="uid + '-rotulo'" type="text" maxlength="24" [(ngModel)]="t.rotulo" (ngModelChange)="cambiar()" placeholder="Lo resuelve" />
+    <small>La palabra que va antes de la lista: «Lo resuelve», «Incluye», «Lleva»…</small>
+  </div>
+
   <!-- A dónde lleva -->
   <h5 class="subgrupo">A dónde lleva</h5>
   <div class="campo">

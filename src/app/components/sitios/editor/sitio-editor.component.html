@@ -677,7 +677,8 @@
                 Manda sobre la imagen de fondo.</small>
               <div class="miniaturas" *ngIf="b.datos.imagenes?.length">
                 <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
-                  <img [src]="img" alt="" />
+                  <!-- Cada foto es su dirección o, con descripción, { url, alt }. -->
+                  <img [src]="$any(img)?.url || img" [alt]="$any(img)?.alt || ''" />
                   <button (click)="quitarFotoCarrusel(b, i)" title="Quitar">×</button>
                 </div>
               </div>
@@ -686,6 +687,17 @@
                 {{ subiendo ? 'Subiendo…' : 'Agregar foto al carrusel' }}
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'heroCarrusel')" [disabled]="subiendo" />
               </label>
+            </div>
+            <div class="campo campo--avanzado" *ngIf="disenoNuevo && (b.datos.imagenes?.length || 0) >= 2">
+                <label>Forma del carrusel</label>
+                <div class="segmentado">
+                  <button [class.is-active]="b.datos.carruselForma !== 'partido'"
+                          (click)="b.datos.carruselForma = ''; marcarSucio()">Foto a todo el ancho</button>
+                  <button [class.is-active]="b.datos.carruselForma === 'partido'"
+                          (click)="b.datos.carruselForma = 'partido'; marcarSucio()">Texto y foto</button>
+                </div>
+                <small>«Texto y foto» pone el texto a un lado y la foto completa al otro, sin recortarla: es la que va
+                  con fotos de producto. «A todo el ancho» es para fotos de ambiente o de tu local.</small>
             </div>
 
             <div class="campo campo--avanzado">
@@ -1703,6 +1715,20 @@
                 </label>
                 <button class="repetible__quitar" *ngIf="c.imagen" (click)="c.imagen = ''; marcarSucio()">Quitar foto</button>
               </div>
+              <!-- Beneficios: una columna sin foto puede llevar un ícono (solo el diseño nuevo lo pinta). -->
+              <ng-container *ngIf="disenoNuevo && !c.imagen">
+                <span class="repetible__rotulo">Ícono (opcional)</span>
+                <div class="iconos">
+                  <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
+                          [class.is-active]="c.icono === ic" [attr.aria-pressed]="c.icono === ic"
+                          (click)="c.icono = c.icono === ic ? '' : ic; marcarSucio()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path [attr.d]="trazoIcono(ic)" />
+                    </svg>
+                  </button>
+                </div>
+              </ng-container>
               <span class="repetible__rotulo">Texto del botón (opcional)</span>
               <input type="text" [(ngModel)]="c.ctaTexto" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón (opcional)" maxlength="30" />
@@ -3512,6 +3538,19 @@
                 <small>Apagado, el botón confirma «Agregado ✓», el contador rebota y sale un aviso
                   con «Ver carrito» sin sacar al comprador de la vitrina. Encendido, el cajón se abre
                   con cada producto.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <button class="opcion" [class.is-active]="contenido.tienda.configuracionObligatoria === true"
+                    (click)="contenido.tienda.configuracionObligatoria = contenido.tienda.configuracionObligatoria !== true; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Pedir la configuración antes de agregar</strong>
+                <small>Para productos que se personalizan (opciones, fecha de entrega, ocasión, tarjeta).
+                  Encendido, el botón de la tarjeta dice «Personalizar» y abre la página del producto, y allí
+                  no se puede agregar sin elegir las opciones, la fecha de entrega, la ocasión y para quién es.
+                  La fecha elegida llega ya puesta al momento de pagar. Los productos sin nada que elegir se
+                  agregan como siempre.</small>
               </span>
               <span class="palanca"><span></span></span>
             </button>

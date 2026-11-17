@@ -10954,5 +10954,11 @@
   "notificaciones.whatsapp.shell.consolaTitle": "Números, plantillas, envíos y registro de WhatsApp",
   "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "El enlace del botón es fijo: no puede llevar variables.",
   "consolaWhatsapp.registro.codigoSoporte": "Código para soporte: {{codigo}}",
-  "consolaWhatsapp.envios.yaHayEnCurso": "Ya hay un envío en curso en este número. Cuando termine, o si lo pausas, podrás hacer otro."
+  "consolaWhatsapp.envios.yaHayEnCurso": "Ya hay un envío en curso en este número. Cuando termine, o si lo pausas, podrás hacer otro.",
+  "Descuento del producto": "Descuento del producto",
+  "Desc. % del producto": "Desc. % del producto",
+  "De 0 a 100, admite decimales.": "De 0 a 100, admite decimales.",
+  "Sin descuento": "Sin descuento",
+  "El descuento debe estar entre 0 y 100": "El descuento debe estar entre 0 y 100",
+  "Pedido bloqueado para el descuento": "Pedido bloqueado para el descuento"
 }

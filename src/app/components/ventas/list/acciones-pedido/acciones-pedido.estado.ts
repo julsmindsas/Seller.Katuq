@@ -61,6 +61,10 @@ export interface EntradaEstadoAcciones {
   cambiarCliente?: boolean;
   /** Si el pedido ya no admite el cambio (entregado, cerrado…), por qué: la acción se ve deshabilitada con este motivo. */
   cambiarClienteMotivo?: string;
+  /** D-624 (ticket 1473): `true` solo con la bandera `despachoRapidoPedido`. Ausente o `false`, la acción no existe. */
+  despachoRapido?: boolean;
+  /** Por qué este pedido no se puede despachar todavía (en producción, recogida en tienda, ya está en una orden…). */
+  despachoRapidoMotivo?: string;
 }
 
 export interface EstadoAccion {
@@ -132,6 +136,11 @@ export function estadoAcciones(e: EntradaEstadoAcciones): EstadoAcciones {
   // D-670: Cambiar cliente. Solo con la bandera, fuera de Producción y de los pedidos POS (el servidor tampoco los admite).
   if (e.cambiarCliente === true && !e.produccion && !e.esPOS) {
     r.changeCustomer = e.cambiarClienteMotivo ? bloqueada(e.cambiarClienteMotivo) : ok();
+  }
+
+  // D-624: Despacho rápido. Solo con la bandera, fuera de Producción y de POS, y mientras el pedido no esté despachado.
+  if (e.despachoRapido === true && !e.produccion && !e.esPOS && !e.despachadoOEntregado) {
+    r.quickDispatch = e.despachoRapidoMotivo ? bloqueada(e.despachoRapidoMotivo) : ok();
   }
 
   // ── Pie ───────────────────────────────────────────────────────────────────

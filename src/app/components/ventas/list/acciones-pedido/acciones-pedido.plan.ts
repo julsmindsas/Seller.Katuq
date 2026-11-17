@@ -66,6 +66,8 @@ export const PLAN_ACCIONES: Record<AccionEjecutable, PasoAccion> = {
   production:         { metodo: 'produceOrder',                plantilla: null,                    cerrar: true },
   // D-670 (ticket 1505): abre la ventana «Cambiar cliente». Solo existe con la bandera `cambiarClientePedido`.
   changeCustomer:     { metodo: 'abrirCambiarCliente',         plantilla: null,                    cerrar: true },
+  // D-624 (ticket 1473): lleva a Envíos con la ventana «Generar orden de envío» abierta y este pedido cargado.
+  quickDispatch:      { metodo: 'abrirDespachoRapido',         plantilla: null,                    cerrar: true },
   // El ternario de hoy (`revisadoParaProduccion ? quitarRevision : marcarComoRevisado`) envuelto en un método.
   reviewMark:         { metodo: 'marcarOQuitarRevision',       plantilla: null,                    cerrar: true,
                         envuelve: ['marcarComoRevisado', 'quitarRevision'] },

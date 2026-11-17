@@ -18,7 +18,7 @@ const { PLAN_ACCIONES } = require('../../src/app/components/ventas/list/acciones
 const antes = require('./acciones-pedido-antes.json');
 
 /** Acciones que se sumaron DESPUÉS de la plantilla de hoy (no están en `acciones-pedido-antes.json`): D-670, ticket 1505. */
-const ACCIONES_NUEVAS = ['changeCustomer'];
+const ACCIONES_NUEVAS = ['changeCustomer', 'quickDispatch']; // D-624 (ticket 1473)
 
 /** Diferencias entre un plan y la tabla de hoy. Vacío = el plan copia lo de hoy. */
 function diferencias(plan, hoy) {

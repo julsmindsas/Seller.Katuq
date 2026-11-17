@@ -23,7 +23,7 @@ export type AccionPedidoId =
   // Seguimiento
   | 'changeStatus' | 'history' | 'notes' | 'cleanNotes'
   // Contexto
-  | 'electronicInvoice' | 'delivery' | 'correctPrice' | 'changePriceList' | 'changeCustomer' | 'production' | 'reviewMark'
+  | 'electronicInvoice' | 'delivery' | 'correctPrice' | 'changePriceList' | 'changeCustomer' | 'quickDispatch' | 'production' | 'reviewMark'
   // Subacciones
   | 'invoice' | 'reinvoice' | 'releaseInvoice' | 'dianStatus' | 'dianPdf' | 'creditNote' | 'dianAdjustment'
   | 'editDiscount'
@@ -140,6 +140,11 @@ export const ACCIONES_PEDIDO: AccionPedido[] = [
   { id: 'changeCustomer', titulo: 'Cambiar cliente', resena: 'Pasa el pedido a otro cliente',
     nombresAnteriores: [],
     icono: 'users', tipo: 'contexto' },
+  // D-624 (ticket 1473): «Despacho rápido» abre en Envíos la misma ventana «Generar orden de envío» con este pedido ya
+  // cargado. Solo con la bandera `despachoRapidoPedido`; comparte lugar con «Ver despacho y entrega» (nunca se ven las dos).
+  { id: 'quickDispatch', titulo: 'Despacho rápido', resena: 'Crea la orden de envío de este pedido',
+    nombresAnteriores: [],
+    icono: 'send', tipo: 'contexto' },
   { id: 'production', titulo: 'Producción', resena: 'Gestiona el proceso productivo',
     nombresAnteriores: [],
     icono: 'building-factory-2', tipo: 'contexto' },

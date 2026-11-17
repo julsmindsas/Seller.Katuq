@@ -27,6 +27,8 @@ export interface TarjetaSolucion {
   cta2Url?: string;
   /** El nombre corto de lo que la resuelve («Deco X50, paquete de 3»). */
   nota?: string;
+  /** Rótulo sobre las piezas («Lo resuelve» si va vacío). */
+  rotulo?: string;
   /** Descripción de la ilustración. */
   alt?: string;
 }

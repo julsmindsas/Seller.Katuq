@@ -152,6 +152,20 @@ export class BarrasEncabezadoPanelComponent extends PanelSitioBase {
     this.avisar();
   }
 
+  /** La fila de categorías sobre el encabezado ("") o en una banda del fondo alterno ("banda"). */
+  elegirEstiloFila(estilo: "" | "banda"): void {
+    if (estilo) this.datos.catsEstilo = estilo;
+    else delete this.datos.catsEstilo;
+    this.avisar();
+  }
+
+  /** Las redes de la empresa como íconos junto al buscador. */
+  alternarRedes(): void {
+    if (this.datos.mostrarRedes === true) delete this.datos.mostrarRedes;
+    else this.datos.mostrarRedes = true;
+    this.avisar();
+  }
+
   alternarAsesor(): void {
     this.datos.asesor = this.datos.asesor === "enlace" ? "" : "enlace";
     this.avisar();

@@ -187,6 +187,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
   transportadoresModal: TemplateRef<any>;
   @ViewChild("generarOrdenComponent", { static: false })
   generarOrdenComponent: any;
+  // D-624 (ticket 1473): la plantilla de «Generar orden de envío», para abrirla con un pedido que llega desde su detalle.
+  @ViewChild("generarOrdenEnvioModal", { static: false })
+  generarOrdenEnvioModalRef: TemplateRef<any>;
   @ViewChild("editarOrdenComponent", { static: false })
   editarOrdenComponent: any;
 
@@ -632,6 +635,24 @@ export class DespachosComponent implements OnInit, OnDestroy {
         command: () => this.reiniciarControlAlertas()
       }
     ];
+  }
+
+  /**
+   * D-624 (ticket 1473): «Despacho rápido» del pedido navega a Envíos con el pedido en el estado de la navegación.
+   * Aquí se abre la ventana «Generar orden de envío» de siempre con ese pedido ya agregado: el método de envío, la
+   * transportadora, las validaciones y el guardado son los de esa ventana. Solo con la bandera `despachoRapidoPedido`,
+   * y una sola vez (el estado se limpia para que recargar o volver atrás no la reabra).
+   */
+  ngAfterViewInit(): void {
+    const pedido = (history.state || {}).despachoRapido;
+    if (!pedido || !this.companyFeaturesCredito.isEnabled('despachoRapidoPedido')) return;
+    try { history.replaceState({ ...history.state, despachoRapido: null }, ''); } catch { /* sin historial: no pasa nada */ }
+    if (!pedido.nroPedido || pedido.shippingOrder || pedido.nroShippingOrder || !this.generarOrdenEnvioModalRef) return;
+    setTimeout(() => {
+      this.openModal(this.generarOrdenEnvioModalRef);
+      this.pedidosSeleccionados.push(pedido);
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {

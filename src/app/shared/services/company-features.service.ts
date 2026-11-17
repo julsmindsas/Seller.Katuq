@@ -108,6 +108,12 @@ export const COMPANY_FEATURE_FLAGS = [
   // opciones y dentro de «Editar cliente», con vista previa y motivo. Además exige la acción `cambiar_cliente` en el rol
   // (la revisa el servidor). Mismo nombre que el backend. Dueño: Daniel. Se retira el 2027-05-31.
   'cambiarClientePedido',
+  // Facturar un pedido con el pago en Pendiente (ticket 1474, D-625): «Facturar» también aparece en Pendiente y la ventana
+  // avisa que el pedido aún no tiene pago. No cambia el estado de pago ni el inventario. Dueño: Daniel. Se retira el 2027-05-31.
+  'facturarDesdePendiente',
+  // Despacho rápido desde el pedido (ticket 1473, D-624): «Despacho rápido» en «Para este pedido» abre en Envíos la ventana
+  // «Generar orden de envío» con el pedido ya cargado; las validaciones y el servidor son los de Envíos. Dueño: Daniel. Se retira el 2027-05-31.
+  'despachoRapidoPedido',
   // Motivo de rechazo con lista y registro de cambios de pagos (ticket 1455): el servidor decide; la pantalla lo lee de /treasury/config. Dueño: Daniel. Se retira el 2027-05-31.
   'motivoRechazoPago',
   // Estado de pago Crédito (ticket 1448, D-660): marcar Crédito, cupo en la ficha del cliente e instrucción de cobro
@@ -194,6 +200,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // no se ofrece (si la página ya lo usa, se puede apagar). El servidor tampoco deja encenderlo sin ella. Mismo nombre
   // que el backend. Dueño: Daniel. Se retira el 2027-06-30: encendida para todos o eliminada.
   'siteDesignV2',
+  // Descuento por producto en un pedido ya creado (ticket 1618, openspec descuento-linea-edicion-pedido):
+  // campo «Desc. %» en el engranaje del ítem y en «Editar productos». Mismo nombre que el backend. Primero
+  // ALMACEN BOMBAS. Dueño: Daniel. Se retira el 2027-05-31: encendida para todos o eliminada.
+  'descuentoLineaEdicion',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];
