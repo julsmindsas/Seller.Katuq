@@ -11202,6 +11202,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Limpiar campos de facturación electrónica
       (cloned as any).pdfUrlInvoice = "";
       (cloned as any).generarFacturaElectronica = undefined;
+      // Ticket 1626: la factura emitida vive en facturacionElectronica (y su candado, las
+      // anuladas y la marca de refacturar). Sin borrarlos, la copia nacía «facturada» con la
+      // factura del original: mostraba «Liberar factura» y no dejaba facturarla.
+      delete (cloned as any).facturacionElectronica;
+      delete (cloned as any).facturacionEnProceso;
+      delete (cloned as any).facturasAnuladas;
+      delete (cloned as any).pendienteRefacturar;
 
       // Reiniciar estados y datos de seguimiento/logística
       cloned.estadoPago = EstadoPago.Pendiente;
