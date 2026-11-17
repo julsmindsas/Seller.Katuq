@@ -1,25 +1,27 @@
 {
-  "version": "2026.11.17.1 - 17 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-17T14:40:59.321Z",
+  "version": "2026.11.17.2 - 17 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-17T14:55:18.389Z",
   "notas": [
     {
-      "fecha": "2026-11-13T20:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En un pedido ya creado, si tu empresa tiene esta función activa, puedes poner o cambiar el descuento de cada producto desde el engranaje del producto o al agregarlo con «Editar productos».",
+      "fecha": "2026-11-17T14:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las ventas del POS ya no desaparecen del listado de ventas después de hacer el cierre de caja: siguen ahí, marcadas como cerradas.",
       "modulos": [
+        "ventas/ventas-pos",
         "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-13T22:53:00Z",
-      "tipo": "NUEVO",
-      "texto": "En la tienda de tu sitio ahora puedes pedir la configuración antes de agregar al carrito: el comprador elige en la página del producto las opciones, la fecha de entrega, la ocasión y para quién es, y la fecha llega ya puesta al momento de pagar. Se enciende en el editor, en los ajustes de la tienda.",
-      "modulos": [
-        "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-17T14:55:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las ventas del POS ya no desaparecen del listado de ventas después de hacer el cierre de caja: siguen ahí, marcadas como cerradas.",
+      "modulos": [
+        "ventas/ventas-pos",
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-13T22:53:00Z",
       "tipo": "NUEVO",
@@ -499,16 +501,8 @@
       "modulos": [
         "ventas"
       ]
-    },
-    {
-      "fecha": "2026-11-08T22:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En En vivo, los administradores pueden ver cuánto lleva vendido hoy cada asesora, con sus pedidos y su valor. Se activa por empresa: pídeselo a Katuq.",
-      "modulos": [
-        "en-vivo"
-      ]
     }
   ],
-  "commit": "db8652454eabbc73340c14e11f29112784fdf959",
+  "commit": "3e5295c6b09edc161d789367aec0178cb1225e55",
   "cambiosSinCommit": 0
 }
