@@ -88,7 +88,7 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
   {
     tipo: "columnas",
     nombre: "Columnas",
-    descripcion: "Dos o tres ideas lado a lado",
+    descripcion: "Beneficios o ideas lado a lado, con ícono o foto",
     icono: "M4 5h5v14H4zM15 5h5v14h-5z",
   },
   {
@@ -336,6 +336,7 @@ const AJUSTES_MANUAL_MARCA: { clave: string; nombre: string; no: string; si: str
   { clave: "menuPosicion", nombre: "Menú del encabezado", no: "Junto al logo", si: "Centrado", valor: "centro", nota: "" },
   { clave: "accionesTexto", nombre: "Cuenta, favoritos y carrito", no: "Solo ícono", si: "Ícono y palabra", valor: "si", nota: "La palabra se ve en pantallas anchas; en celular quedan los íconos." },
   { clave: "pieDatos", nombre: "Datos del pie", no: "En texto", si: "Con íconos", valor: "iconos", nota: "Teléfono, horario, correo y dirección, cada uno con su ícono." },
+  { clave: "logoEnOscuro", nombre: "Logo sobre fondos oscuros", no: "Como es", si: "En blanco", valor: "blanco", nota: "Si no subiste un logo para fondo oscuro en «Mi marca», el logo se pinta en blanco sobre el encabezado y el pie oscuros. Sirve con logos de un solo color." },
   { clave: "pieLogo", nombre: "Logo del pie", no: "Normal", si: "Grande", valor: "grande", nota: "240 px de ancho: lo que necesita un logo con eslogan para leerse." },
   { clave: "estados", nombre: "Colores de estado", no: "Verde y rojo", si: "Los de la marca", valor: "marca", nota: "Confirmaciones, errores y la etiqueta de descuento sin verde ni rojo; los distinguen el ícono, el texto y el borde." },
   { clave: "panelCompra", nombre: "Carrito y pago", no: "Colores de Katuq", si: "Los de la marca", valor: "marca", nota: "El carrito, el pago, la ventana de la cuenta y los avisos usan el color de texto de la marca y grises neutros." },
@@ -1113,6 +1114,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         this.cargarMarca();
         this.iniciarHistorial();
         this.fijarComoGuardado();
+        // Una página del diseño nuevo abre en la Vista fiel: es la página tal como la verá el cliente (la vista
+        // editable la aproxima con el diseño de siempre). Si la vista fiel no se puede abrir, queda la editable.
+        if (this.disenoNuevo && this.modoPrevia === "editable") {
+          this.fielAlAbrir = true;
+          this.verVistaFiel();
+        }
         setTimeout(() => this.observarLienzo());
         this.service.categorias(this.id).subscribe({
           next: (r) => { this.categorias = (r && r.success && r.data) || []; },
@@ -2163,6 +2170,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   // sección del marco, el editor abre su panel.
 
   modoPrevia: "editable" | "fiel" = "editable";
+  /** La vista fiel se abrió sola al cargar el sitio (diseño nuevo): si falla, se vuelve a la editable sin aviso. */
+  private fielAlAbrir = false;
   /** La dirección del marco, ya validada (solo el render de sitios de nuestro backend). */
   urlFiel: SafeResourceUrl | null = null;
   cargandoFiel = false;
@@ -2228,7 +2237,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   verEditable(): void {
+    this.fielAlAbrir = false;
     this.modoPrevia = "editable";
+  }
+
+  /** Si la vista fiel se abrió sola al cargar y no se pudo mostrar, se queda la editable (sin mensaje de error). */
+  private volverAEditableSiSeAbrioSola(): boolean {
+    if (!this.fielAlAbrir) return false;
+    this.fielAlAbrir = false;
+    this.modoPrevia = "editable";
+    this.errorFiel = "";
+    return true;
   }
 
   verVistaFiel(): void {
@@ -2253,13 +2272,16 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           this.cargandoFiel = false;
           const url = this.urlDeVistaFiel(res && res.success && res.data ? res.data.ruta : "");
           if (!url) {
+            if (this.volverAEditableSiSeAbrioSola()) return;
             this.errorFiel = (res && res.message) || "No pudimos abrir la vista fiel.";
             return;
           }
+          this.fielAlAbrir = false;
           this.urlFiel = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         },
         error: (err) => {
           this.cargandoFiel = false;
+          if (this.volverAEditableSiSeAbrioSola()) return;
           this.errorFiel = err?.error?.message || "No pudimos abrir la vista fiel.";
         },
       });

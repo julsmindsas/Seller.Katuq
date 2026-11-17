@@ -37,6 +37,8 @@ export interface TiendaSitio {
   feedCategoriasExcluidas?: string[];
   /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
   abrirCarritoAlAgregar?: boolean;
+  /** Pedir la configuración (opciones, fecha de entrega, ocasión) antes de agregar al carrito. Apagado por defecto. */
+  configuracionObligatoria?: boolean;
   /** Ticket 1254: landing sin menú ni pie completo, un solo objetivo. */
   modoConversion?: boolean;
   /** Ticket 1241: KAI, asesor de compra en la tienda. */

@@ -200,6 +200,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // no se ofrece (si la página ya lo usa, se puede apagar). El servidor tampoco deja encenderlo sin ella. Mismo nombre
   // que el backend. Dueño: Daniel. Se retira el 2027-06-30: encendida para todos o eliminada.
   'siteDesignV2',
+  // Descuento por producto en un pedido ya creado (ticket 1618, openspec descuento-linea-edicion-pedido):
+  // campo «Desc. %» en el engranaje del ítem y en «Editar productos». Mismo nombre que el backend. Primero
+  // ALMACEN BOMBAS. Dueño: Daniel. Se retira el 2027-05-31: encendida para todos o eliminada.
+  'descuentoLineaEdicion',
 ] as const;
 
 export type CompanyFeatureFlag = typeof COMPANY_FEATURE_FLAGS[number];

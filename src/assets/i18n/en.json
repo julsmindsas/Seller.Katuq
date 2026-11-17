@@ -11134,5 +11134,11 @@
   "notificaciones.whatsapp.shell.consolaTitle": "WhatsApp numbers, templates, broadcasts and log",
   "consolaWhatsapp.plantillas.errores.botonEnlaceVariable": "The button link is fixed: it can’t contain variables.",
   "consolaWhatsapp.registro.codigoSoporte": "Support code: {{codigo}}",
-  "consolaWhatsapp.envios.yaHayEnCurso": "There is already a broadcast in progress on this number. Once it finishes, or if you pause it, you can make another one."
+  "consolaWhatsapp.envios.yaHayEnCurso": "There is already a broadcast in progress on this number. Once it finishes, or if you pause it, you can make another one.",
+  "Descuento del producto": "Product discount",
+  "Desc. % del producto": "Discount % of the product",
+  "De 0 a 100, admite decimales.": "From 0 to 100, decimals allowed.",
+  "Sin descuento": "No discount",
+  "El descuento debe estar entre 0 y 100": "The discount must be between 0 and 100",
+  "Pedido bloqueado para el descuento": "Order locked for discount changes"
 }
