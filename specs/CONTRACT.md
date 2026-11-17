@@ -14065,3 +14065,10 @@ El detalle con archivo y línea está en `proposal.md`.
   - Sin campos ni colecciones nuevos; `katuq_support` no cambia (sigue mandando `autor`, que para un usuario honesto es la misma persona).
 - **Código:** backend `2e225055`. Pruebas fuera de git (D-566): `tests/support/autoriaSoporte.test.js` (10), `autoriaControlador.test.js` (7) y `autoriaMcp.test.js` (5). Probado en `katuq_dev`: un `PUT` hecho a mano con autor ajeno queda firmado con la sesión, y los flujos de la app sobre un ticket de prueba conservan los autores viejos.
 - **Publicación (máquina principal):** sale con el mismo `git pull` + `pm2 restart katuq-api` de D-715. Verificar: un comentario desde la app queda con el autor de la sesión; `pm2 logs katuq-api`. Vuelta atrás: volver al commit anterior.
+
+### 2026-11-17 — D-717: la nota al cliente de WooCommerce lee la guía de Envíame
+- **Problema (pendiente 18 de las pruebas Woo del 12-nov):** `notaAlCliente` en `services/woocommerce/estadoAWoo.js` buscaba la guía solo en `numeroGuia`, `guia`, `trackingNumber` y `shippingOrder`. Envíame (y las demás transportadoras que pasan por `services/logistics/pedidoConEnvio.js`) la guardan en `shippment.trackingNumber`, y «crear envío» de logística en `envio.trackingNumber`. Esos pedidos recibían la nota de despacho/entrega sin guía.
+- **Decisión:** la guía se busca también en `shippment.trackingNumber` y luego en `envio.trackingNumber`, después de los campos de antes (que siguen ganando). Si el pedido no tiene `transportador`, se usa `shippment.carrier`.
+- **No cambia:** cuándo se manda la nota, el texto base, línea base, interruptores, sombra, reintentos. CAFÉ ESCOBAR (partners_logistics, sin guía) sigue igual.
+- **Pruebas (locales, D-566):** `tests/integrations/woocommerceEstadoAWoo.test.js` 21/21, con 1 caso nuevo (Envíame, `envio`, prioridad de la guía suelta, sin guía).
+- **Estado:** back SIN COMMITEAR. Solo back; no requiere front.
