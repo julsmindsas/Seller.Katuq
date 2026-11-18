@@ -1,16 +1,28 @@
-import { Component, Input, AfterViewInit, OnInit } from '@angular/core';
+import { Component, Input, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { POSPedido } from '../pos-modelo/pedido';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../shared/services/cart.service';
 import { precioAntesDescuentoLineaPedido, precioNetoLineaPedido, sanearDescuento } from '../../../shared/utils/pos-linea-precio';
+
+/**
+ * Ticket 1633: cómo se abre la factura POS. Ventana centrada con scroll propio (pantalla completa
+ * en el celular), que cierra con la X, con Esc y con clic afuera. Antes era de pantalla completa y
+ * el contenido se salía por debajo: los botones quedaban sobre el POS y no se podía cerrar.
+ */
+export const FACTURA_TIRILLA_MODAL: NgbModalOptions = {
+  centered: true,
+  scrollable: true,
+  fullscreen: 'sm',
+  windowClass: 'factura-pos-ventana',
+};
 
 @Component({
   selector: 'app-factura-tirilla',
   templateUrl: './factura-tirilla.component.html',
   styleUrls: ['./factura-tirilla.component.scss']
 })
-export class FacturaTirillaComponent implements OnInit, AfterViewInit {
+export class FacturaTirillaComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() pedido: POSPedido;
 
   /**
@@ -42,6 +54,9 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
   // Fecha y hora actuales
   fechaEmision: Date = new Date();
   horaEmision: string = '';
+
+  /** Ticket 1633: el POS ya quedó limpio (para no limpiarlo dos veces al cerrar). */
+  private posLimpio = false;
 
   constructor(
     private modal: NgbModal,
@@ -199,11 +214,22 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
    * Método para regresar y cerrar el modal limpiando todos los datos
    */
   goBack(): void {
+    this.posLimpio = true;
     // Limpiar todos los datos del POS para una nueva venta
     this.limpiarDatosPOS();
     
     // Cerrar el modal
     this.modal.dismissAll();
+  }
+
+  /**
+   * Ticket 1633: cerrar con Esc o con clic afuera deja el POS igual que «Nueva venta»,
+   * listo para la siguiente.
+   */
+  ngOnDestroy(): void {
+    if (this.posLimpio) return;
+    this.posLimpio = true;
+    this.limpiarDatosPOS();
   }
 
   /**

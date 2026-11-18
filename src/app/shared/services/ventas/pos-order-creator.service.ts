@@ -9,7 +9,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { FacturacionAutomaticaService } from '../facturacion/facturacion-automatica.service';
 import { camposPedido, FacturacionPos } from '../../utils/facturacion-pos';
-import { FacturaTirillaComponent } from '../../../components/pos/factura-tirilla/factura-tirilla.component';
+import { FACTURA_TIRILLA_MODAL, FacturaTirillaComponent } from '../../../components/pos/factura-tirilla/factura-tirilla.component';
 import Swal from 'sweetalert2';
 import { lineaPedidoPos, sinClavesDeEdicion } from '../../utils/pos-linea-precio';
 
@@ -284,7 +284,7 @@ export class PosOrderCreatorService {
     this.clearCustomerData();
     
     // Mostrar la factura/tirilla
-    this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = order;
+    this.modal.open(FacturaTirillaComponent, FACTURA_TIRILLA_MODAL).componentInstance.pedido = order;
     
     // Mostrar mensaje de éxito
     this.showSuccessAlert('Pedido creado con éxito');

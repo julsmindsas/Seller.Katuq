@@ -24,6 +24,16 @@
   }
 </style>
 
+<!-- Ticket 1633: la tirilla va dentro de una ventana con encabezado, cuerpo con scroll y pie fijo,
+     para que los botones siempre queden a la vista y la ventana se pueda cerrar. -->
+<div class="no-print ft-cabeza">
+  <span class="ft-cabeza__titulo">Factura de venta POS</span>
+  <button type="button" class="ft-cerrar" aria-label="Cerrar" title="Cerrar" (click)="goBack()">
+    <i class="fa fa-times" aria-hidden="true"></i>
+  </button>
+</div>
+
+<div class="ft-cuerpo">
 <div class="factura-tirilla">
   <!-- ENCABEZADO DE LA EMPRESA -->
   <div class="header-empresa company-info" style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
@@ -195,17 +205,15 @@
   </div>
 </div>
 
+</div>
+
 <!-- BOTONES DE ACCIÓN (solo en pantalla) -->
-<div class="no-print" style="text-align: center; margin-top: 20px; padding: 20px;">
-  <button 
-    class="btn btn-primary me-3 ft-btn" 
-    (click)="print()">
-    <i class="fa fa-print"></i> Imprimir Factura
+<div class="no-print ft-pie">
+  <button type="button" class="btn btn-primary ft-btn" (click)="print()">
+    <i class="fa fa-print" aria-hidden="true"></i> Imprimir factura
   </button>
-  
-  <button 
-    class="btn ft-btn ft-btn--sec" 
-    (click)="goBack()">
-    <i class="fa fa-plus"></i> Nueva Venta
+
+  <button type="button" class="btn ft-btn ft-btn--sec" (click)="goBack()">
+    <i class="fa fa-plus" aria-hidden="true"></i> Nueva venta
   </button>
 </div>
