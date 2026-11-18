@@ -10073,6 +10073,7 @@
     "ventas.crearClienteModal.faltanDatos": "Angaben fehlen",
     "ventas.crearClienteModal.infoBasica": "Grundinformationen",
     "ventas.crearClienteModal.campoObligatorio": "Pflichtfeld",
+    "ventas.crearClienteModal.tipoDocSoloAdministrador": "Nur ein Administrator Ihres Unternehmens kann den Dokumenttyp ändern.",
     "ventas.crearClienteModal.numeroDocumento": "Dokumentnummer",
     "ventas.crearClienteModal.razonSocial": "Firmenname",
     "ventas.crearClienteModal.nombresCompletos": "Vollständige Vornamen",

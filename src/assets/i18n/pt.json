@@ -10241,6 +10241,7 @@
   "ventas.crearClienteModal.faltanDatos": "Faltam dados",
   "ventas.crearClienteModal.infoBasica": "Informações básicas",
   "ventas.crearClienteModal.campoObligatorio": "Campo obrigatório",
+  "ventas.crearClienteModal.tipoDocSoloAdministrador": "Somente um administrador da sua empresa pode alterar o tipo de documento.",
   "ventas.crearClienteModal.numeroDocumento": "Número do documento",
   "ventas.crearClienteModal.razonSocial": "Razão social",
   "ventas.crearClienteModal.nombresCompletos": "Nomes completos",

@@ -10253,6 +10253,7 @@
   "ventas.crearClienteModal.faltanDatos": "Missing information",
   "ventas.crearClienteModal.infoBasica": "Basic information",
   "ventas.crearClienteModal.campoObligatorio": "Required field",
+  "ventas.crearClienteModal.tipoDocSoloAdministrador": "Only an administrator of your company can change the document type.",
   "ventas.crearClienteModal.numeroDocumento": "Document number",
   "ventas.crearClienteModal.razonSocial": "Company name",
   "ventas.crearClienteModal.nombresCompletos": "First names",
