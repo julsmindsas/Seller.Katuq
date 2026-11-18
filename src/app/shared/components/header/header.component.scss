@@ -41,10 +41,13 @@
     // Buscador central (como el diseño): nombre a la izquierda, búsqueda al
     // centro, acciones a la derecha. El orden flex reubica el app-search que
     // en el template va de primero.
+    // Parte de su ancho mínimo y crece con lo que sobre (ticket 1634): así el buscador es el
+    // primero en ceder. Con `auto` reclamaba su ancho completo y la fila le quitaba espacio al
+    // nombre del comercio aunque el buscador siguiera ancho («FLOR…»).
     app-search {
       display: block;
       order: 2;
-      flex: 1 1 auto;
+      flex: 1 1 140px;
       max-width: 430px;
       min-width: 140px;
       margin: 0 auto;
@@ -57,9 +60,8 @@
     .nav-right { order: 3; flex: 1 0 0% !important; max-width: none !important; }
 
     // El nombre del comercio cede espacio a las acciones en cualquier ancho (sin scroll lateral):
-    // primero se encoge el buscador (shrink 6) y luego el nombre, con «…». Con el menú de 264 px
+    // cuando el buscador ya está en su mínimo, se recorta el nombre con «…». Con el menú de 264 px
     // (D-546) y un nombre largo, a 1147 px el perfil se salía 38 px.
-    app-search { flex-shrink: 6; }
     .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
     .company-logo { overflow: hidden; }
 
