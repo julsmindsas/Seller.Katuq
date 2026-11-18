@@ -1,18 +1,51 @@
 {
-  "version": "2026.11.17.2 - 17 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-17T14:55:18.389Z",
+  "version": "2026.11.18.1 - 18 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-18T16:14:04.597Z",
   "notas": [
     {
-      "fecha": "2026-11-17T14:55:00Z",
+      "fecha": "2026-11-18T15:09:00Z",
       "tipo": "CORRIGE",
-      "texto": "Las ventas del POS ya no desaparecen del listado de ventas después de hacer el cierre de caja: siguen ahí, marcadas como cerradas.",
+      "texto": "En el POS, la factura de la venta ahora abre en una ventana con los botones siempre a la vista: imprimes, cierras con la X o con Esc y sigues con la siguiente venta.",
       "modulos": [
-        "ventas/ventas-pos",
-        "ventas/pedidos"
+        "ventas/ventas-pos"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "En la barra superior, el nombre de tu comercio vuelve a verse al lado del logo en pantallas anchas, completo y sin cortarse cuando hay espacio."
+    },
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al editar un cliente, si no puedes cambiar el tipo de documento ahora la ficha te dice por qué: solo lo cambia un administrador de tu empresa.",
+      "modulos": [
+        "ventas/clienteslista"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "En la barra superior, el nombre de tu comercio vuelve a verse al lado del logo en pantallas anchas, completo y sin cortarse cuando hay espacio."
+    },
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al editar un cliente, si no puedes cambiar el tipo de documento ahora la ficha te dice por qué: solo lo cambia un administrador de tu empresa.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T15:09:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el POS, la factura de la venta ahora abre en una ventana con los botones siempre a la vista: imprimes, cierras con la X o con Esc y sigues con la siguiente venta.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
     {
       "fecha": "2026-11-17T14:55:00Z",
       "tipo": "CORRIGE",
@@ -477,32 +510,8 @@
       "modulos": [
         "sitios"
       ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF.",
-      "modulos": [
-        "ventas"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final.",
-      "modulos": [
-        "ventas"
-      ]
     }
   ],
-  "commit": "3e5295c6b09edc161d789367aec0178cb1225e55",
+  "commit": "721799dc5dec7ee451c7e428d4ec5ab839cd563b",
   "cambiosSinCommit": 0
 }
