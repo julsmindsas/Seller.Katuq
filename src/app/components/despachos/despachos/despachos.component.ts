@@ -640,12 +640,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
   /**
    * D-624 (ticket 1473): «Despacho rápido» del pedido navega a Envíos con el pedido en el estado de la navegación.
    * Aquí se abre la ventana «Generar orden de envío» de siempre con ese pedido ya agregado: el método de envío, la
-   * transportadora, las validaciones y el guardado son los de esa ventana. Solo con la bandera `despachoRapidoPedido`,
+   * transportadora, las validaciones y el guardado son los de esa ventana. Para todos los comercios (ticket 1631),
    * y una sola vez (el estado se limpia para que recargar o volver atrás no la reabra).
    */
   ngAfterViewInit(): void {
     const pedido = (history.state || {}).despachoRapido;
-    if (!pedido || !this.companyFeaturesCredito.isEnabled('despachoRapidoPedido')) return;
+    if (!pedido) return;
     try { history.replaceState({ ...history.state, despachoRapido: null }, ''); } catch { /* sin historial: no pasa nada */ }
     if (!pedido.nroPedido || pedido.shippingOrder || pedido.nroShippingOrder || !this.generarOrdenEnvioModalRef) return;
     setTimeout(() => {

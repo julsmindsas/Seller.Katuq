@@ -851,7 +851,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   entradaEstadoAcciones(pedido: Pedido): EntradaEstadoAcciones {
     const p: any = pedido;
     const ofreceCambiarCliente = this.puedeOfrecerCambiarCliente(pedido);
-    const ofreceDespachoRapido = !this.isFromProduction && this.companyFeatures.isEnabled("despachoRapidoPedido");
+    // Ticket 1631: «Despacho rápido» es de todos los comercios; ya no depende de una bandera.
+    const ofreceDespachoRapido = !this.isFromProduction;
     return {
       produccion: !!this.isFromProduction,
       puedeDireccion: this.canEditDeliveryAddressByDeliveryType(pedido),
@@ -876,7 +877,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cambiarClienteMotivo: ofreceCambiarCliente && !this.canModifyBasicData(pedido)
         ? `Congelado · ${String(p?.estadoProceso ?? "")}`.trim()
         : "",
-      // D-624 (ticket 1473): sin la bandera `despachoRapidoPedido` valen `false` y `""`, y el modal no cambia.
+      // D-624 (ticket 1473): en la vista de Producción valen `false` y `""`, y el modal no cambia.
       despachoRapido: ofreceDespachoRapido,
       despachoRapidoMotivo: ofreceDespachoRapido ? this.motivoSinDespachoRapido(pedido) : "",
     };
@@ -898,7 +899,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** D-624 (ticket 1473): abre Envíos con la ventana «Generar orden de envío» y este pedido ya cargado. */
   abrirDespachoRapido(pedido: Pedido): void {
-    if (!pedido || !this.companyFeatures.isEnabled("despachoRapidoPedido")) return;
+    if (!pedido) return;
     this.modalService.dismissAll();
     this.routerDespacho.navigate(["/despachos"], { state: { despachoRapido: pedido } });
   }

@@ -61,7 +61,7 @@ export interface EntradaEstadoAcciones {
   cambiarCliente?: boolean;
   /** Si el pedido ya no admite el cambio (entregado, cerrado…), por qué: la acción se ve deshabilitada con este motivo. */
   cambiarClienteMotivo?: string;
-  /** D-624 (ticket 1473): `true` solo con la bandera `despachoRapidoPedido`. Ausente o `false`, la acción no existe. */
+  /** D-624 (ticket 1473): `true` en la lista de pedidos de cualquier comercio (ticket 1631). Ausente o `false`, la acción no existe. */
   despachoRapido?: boolean;
   /** Por qué este pedido no se puede despachar todavía (en producción, recogida en tienda, ya está en una orden…). */
   despachoRapidoMotivo?: string;
