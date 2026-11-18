@@ -1,19 +1,23 @@
-import { Component, Input, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, Input, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { POSPedido } from '../pos-modelo/pedido';
-import { NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
 import { CartService } from '../../../shared/services/cart.service';
 import { precioAntesDescuentoLineaPedido, precioNetoLineaPedido, sanearDescuento } from '../../../shared/utils/pos-linea-precio';
 
 /**
- * Ticket 1633: cómo se abre la factura POS. Ventana centrada con scroll propio (pantalla completa
- * en el celular), que cierra con la X, con Esc y con clic afuera. Antes era de pantalla completa y
- * el contenido se salía por debajo: los botones quedaban sobre el POS y no se podía cerrar.
+ * Ticket 1633: la ventana de la factura POS. Centrada y con scroll propio (pantalla completa en el
+ * celular); cierra con la X, con Esc y con clic afuera. Antes era de pantalla completa y el contenido
+ * se salía por debajo: los botones quedaban sobre el POS y no se podía cerrar.
+ * - `factura-pos-ventana` tiene sus reglas en `styles.scss`, porque la ventana se crea fuera del componente.
+ * - `keyboard: false`: Esc lo atiende el componente (`cerrarConEsc`), porque ng-bootstrap solo lo oye
+ *   con el foco dentro de la ventana y el aviso «Pedido creado» lo deja afuera.
  */
-export const FACTURA_TIRILLA_MODAL: NgbModalOptions = {
+const VENTANA_FACTURA_POS: NgbModalOptions = {
   centered: true,
   scrollable: true,
   fullscreen: 'sm',
+  keyboard: false,
   windowClass: 'factura-pos-ventana',
 };
 
@@ -55,8 +59,18 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit, OnDestroy
   fechaEmision: Date = new Date();
   horaEmision: string = '';
 
-  /** Ticket 1633: el POS ya quedó limpio (para no limpiarlo dos veces al cerrar). */
+  /** El POS ya quedó limpio: evita limpiarlo dos veces cuando se cierra con «Nueva venta» o con la X. */
   private posLimpio = false;
+
+  /**
+   * Abre la factura POS de un pedido. Es la única forma de abrirla, para que la ventana
+   * sea la misma en todo el POS.
+   */
+  static abrir(modal: NgbModal, pedido: POSPedido): NgbModalRef {
+    const ventana = modal.open(FacturaTirillaComponent, VENTANA_FACTURA_POS);
+    ventana.componentInstance.pedido = pedido;
+    return ventana;
+  }
 
   constructor(
     private modal: NgbModal,
@@ -222,9 +236,16 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit, OnDestroy
     this.modal.dismissAll();
   }
 
+  /** Esc cierra la factura esté donde esté el foco. Si hay un aviso encima, Esc es de ese aviso. */
+  @HostListener('document:keydown.escape')
+  cerrarConEsc(): void {
+    if (document.querySelector('.swal2-container')) return;
+    this.goBack();
+  }
+
   /**
-   * Ticket 1633: cerrar con Esc o con clic afuera deja el POS igual que «Nueva venta»,
-   * listo para la siguiente.
+   * Cerrar con clic afuera no pasa por `goBack()`: aquí se deja el POS igual que con
+   * «Nueva venta», listo para la siguiente (ticket 1633).
    */
   ngOnDestroy(): void {
     if (this.posLimpio) return;

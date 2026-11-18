@@ -22,7 +22,7 @@ import { UtilsService } from "../../../shared/services/utils.service";
 import { FacturacionIntegracionService } from "../../../shared/services/integraciones/facturas/facturacion.service";
 import { EstadoPago, EstadoProceso } from "../../ventas/modelo/pedido";
 import { POSPedidoFacturacionComponent } from "../pos-facturacion/pos-pedido-facturacion.component";
-import { FACTURA_TIRILLA_MODAL, FacturaTirillaComponent } from '../factura-tirilla/factura-tirilla.component';
+import { FacturaTirillaComponent } from '../factura-tirilla/factura-tirilla.component';
 
 @Component({
   selector: "app-pedido",
@@ -1334,7 +1334,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
                       console.log(p)
                     );
                     // Abrir el modal de tirilla (factura) para que se imprima la factura
-                    this.modalService.open(FacturaTirillaComponent, FACTURA_TIRILLA_MODAL).componentInstance.pedido = this.pedidoGral;
+                    FacturaTirillaComponent.abrir(this.modalService, this.pedidoGral);
 
                   }
                   else {
@@ -1362,7 +1362,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
               this.showPedidoConfirm = true;
               this.showSteper = false;
               // Usar el pedido con la referencia actualizada
-              this.modalService.open(FacturaTirillaComponent, FACTURA_TIRILLA_MODAL).componentInstance.pedido = orderFromResponse;
+              FacturaTirillaComponent.abrir(this.modalService, orderFromResponse);
 
               Swal.fire({
                 title: "Pedido creado!",

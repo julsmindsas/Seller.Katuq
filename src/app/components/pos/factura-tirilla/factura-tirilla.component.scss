@@ -372,12 +372,20 @@
     border-top: 1px solid #e4e2ef;
     flex: 0 0 auto;
 
+    // Cada botón parte del ancho de su texto y nunca se corta; si no caben los dos, bajan a otra fila.
     .ft-btn {
-      flex: 1 1 140px;
+      flex: 1 1 auto;
       max-width: 240px;
       padding-left: 12px;
       padding-right: 12px;
       white-space: nowrap;
     }
+  }
+}
+
+// En el celular la letra baja un punto para que los dos botones quepan en una fila (desde 390 px).
+@media screen and (max-width: 575.98px) {
+  .ft-pie .ft-btn {
+    font-size: 14px;
   }
 }
