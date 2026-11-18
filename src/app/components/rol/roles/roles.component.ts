@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { NavService, Menu } from '../../../shared/services/nav.service';
 import { Role } from '../../../shared/models/roles/roles';
+import { esFamiliaAdministrador, esSuperAdministrador } from '../../../shared/utils/roles';
 import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { CompanyFeaturesService } from '../../../shared/services/company-features.service';
@@ -52,6 +53,15 @@ export class RolesComponent implements OnInit {
   // Al elegir una plantilla, se pre-llenan: nombre + menús del pickList + permissions.
   public plantillasDisponibles: RoleTemplate[] = ROLE_TEMPLATES;
   public showTemplateModal: boolean = false;
+
+  /**
+   * El rol que se está editando es de la familia Administrador: en el menú ve todas las pantallas
+   * (ticket 1177), así que la lista de menús asignados no lo limita y la ficha lo dice (ticket 1636).
+   */
+  get esRolAdministrador(): boolean {
+    const rol = this.roleForm?.get('rol')?.value;
+    return esFamiliaAdministrador(rol) && !esSuperAdministrador(rol);
+  }
 
   constructor(private fb: FormBuilder,
     private router: Router,

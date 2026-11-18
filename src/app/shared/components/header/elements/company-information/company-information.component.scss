@@ -28,11 +28,6 @@
         flex-shrink: 0;
     }
 
-    // Ticket 1529: con logo el nombre es redundante (y salía truncado); el nombre legal queda en el tooltip.
-    .company-brand-name.company-brand-name--con-logo {
-        display: none;
-    }
-
     .company-brand-name {
         font-family: var(--ktq-font);
         font-size: 18px;
@@ -46,6 +41,18 @@
         max-width: 320px;
         padding-right: 4px;
         text-transform: capitalize;
+    }
+
+    // Tickets 1529 y 1634: con logo, el nombre va al lado solo donde cabe sin cortarse a medias
+    // (desde 1200 px), recortado con «…» si es largo. En pantallas más angostas va solo el logo;
+    // el nombre legal queda siempre en el tooltip.
+    .company-brand-name--con-logo {
+        display: none;
+
+        @media (min-width: 1200px) {
+            display: block;
+            max-width: 220px;
+        }
     }
 }
 
@@ -68,11 +75,6 @@
     .company-brand .company-brand-name {
         font-size: 16px;
         max-width: 110px;
-    }
-
-    // En teléfono no cabe logo + nombre + acciones: si hay logo, va solo el logo.
-    .company-brand .company-brand-logo + .company-brand-name {
-        display: none;
     }
 }
 

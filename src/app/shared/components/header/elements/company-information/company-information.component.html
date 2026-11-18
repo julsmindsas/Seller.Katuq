@@ -1,4 +1,4 @@
-<!-- Nombre del comercio en cursiva (rediseño 2026 "Almara") + logo pequeño si existe -->
+<!-- Logo del comercio (si existe) y su nombre. Con logo, el nombre se ve desde 1200 px (ticket 1634). -->
 <div class="company-brand" *ngIf="companyInformation"
      [attr.title]="companyInformation?.razonSocial || companyInformation?.nomComercial">
     <img *ngIf="companyInformation?.imgUrlLogo"

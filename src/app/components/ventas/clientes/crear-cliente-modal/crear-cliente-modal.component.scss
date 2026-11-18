@@ -173,6 +173,15 @@ $input-border: #e9e7f3;
   margin-top: 0.25rem;
 }
 
+// Ticket 1635: por qué el tipo de documento está bloqueado para quien no es administrador.
+.tipo-doc-ayuda {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #6b6887;
+}
+
 // ── Inputs PrimeNG ───────────────────────────────────────────────
 :host ::ng-deep {
   .p-inputtext {
