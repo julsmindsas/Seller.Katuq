@@ -5,13 +5,18 @@
 // `fixtures/menu-rutas-antes-f3.json` es la foto de las rutas que veía cada rol con el menú de ANTES de F3
 // (administrador, comodín, super administrador, administrador de Julsmind, contador, un rol sin rutas, y cada
 // una de las 91 rutas del menú sola; todos con las banderas de la empresa apagadas y encendidas). Cada escenario
-// se repite aquí con el menú nuevo. La única diferencia permitida: `sitios/landings`, que ve quien ve `sitios`.
+// se repite aquí con el menú nuevo. Diferencias permitidas:
+//  - `sitios/landings`, que ve quien ve `sitios`;
+//  - ticket 1636: las pantallas internas de Katuq («Katuq en vivo», D-386, y «Monitor A2A») las ven solo el
+//    Administrador y el Super Administrador de Julsmind. Antes las veía el Administrador de cualquier comercio.
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const foto = require('./fixtures/menu-rutas-antes-f3.json');
 const { visibles } = require('./fixtures/generar-menu-rutas');
 
 const LANDINGS = 'sitios/landings';
+const INTERNAS_DE_KATUQ = ['agent-builder/monitor', 'en-vivo/katuq'];
+const esAdministradorDeKatuq = user => user.company === 'Julsmind' && ['Administrador', 'Super Administrador'].includes(user.rol);
 
 test('la foto de antes de F3 está completa', () => {
   assert.equal(foto.generadoAntesDeF3, true);
@@ -25,6 +30,9 @@ test('ningún rol gana ni pierde una pantalla: las rutas visibles son las mismas
   for (const escenario of foto.escenarios) {
     const esperadas = new Set(escenario.visibles);
     if (esperadas.has('sitios')) esperadas.add(LANDINGS);
+    for (const interna of INTERNAS_DE_KATUQ) {
+      if (esAdministradorDeKatuq(escenario.user)) esperadas.add(interna); else esperadas.delete(interna);
+    }
     const obtenidas = new Set(visibles(escenario));
     const sobran = [...obtenidas].filter(r => !esperadas.has(r));
     const faltan = [...esperadas].filter(r => !obtenidas.has(r));

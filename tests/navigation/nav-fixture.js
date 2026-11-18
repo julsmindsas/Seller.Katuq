@@ -35,6 +35,8 @@ function fixture(width, options = {}) {
   const context = {
     exports: {}, ...rxjs, ...operators,
     ...pureModule('src/app/shared/utils/roles.ts'),
+    // D-700: el menú lee de aquí si el enlace de Plataforma está encendido.
+    ...pureModule('src/app/components/plataforma/plataforma.enlace.ts'),
     ...(fs.existsSync(path.join(root, futureFile)) ? pureModule(futureFile) : {}),
     Injectable: () => target => target,
     window: viewport,

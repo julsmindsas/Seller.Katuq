@@ -54,6 +54,11 @@ export interface Menu {
   isOnlySuperAdministrador?: boolean;
   isOnlyAdmin?: boolean;
   /**
+   * Pantalla interna de Katuq (ticket 1636): la ven solo el Administrador y el Super Administrador de
+   * Julsmind, tenga el rol lo que tenga guardado, y no se ofrece en el editor de Roles.
+   */
+  soloKatuq?: boolean;
+  /**
    * D-400: ruta vieja del permiso. Si el rol se guardó con ella, el ítem se sigue mostrando
    * aunque `path` haya cambiado (los roles guardan rutas, no ítems).
    */
@@ -265,18 +270,28 @@ export class NavService implements OnDestroy {
     return this.MENUITEMS;
   }
 
+  /**
+   * El menú que ofrece el editor de Roles: todo lo que un comercio puede asignar. Lo que es solo de
+   * Katuq no entra, ni como grupo ni como hijo (ticket 1636: «Campañas de registro», «Katuq en vivo» y
+   * «Monitor A2A» salían en Crear rol).
+   */
   getMenuOriginal(): Menu[] {
     return this.ALLMENUITEMS.map((item) => {
-      if (item.isOnlySuperAdministrador || item.isOnlyAdmin) {
+      if (NavService.esSoloDeKatuq(item)) {
         return null;
       }
       // Centro de ayuda (D-628): con la bandera `centroDeAyuda` apagada, el selector de Roles no ofrece «Ayuda».
       if (item.id === "ayuda" && !this.features.isEnabled("centroDeAyuda")) {
         return null;
       }
-
-      return item;
+      if (!item.children) return item;
+      return { ...item, children: item.children.filter((hijo) => !NavService.esSoloDeKatuq(hijo)) };
     }).filter((item) => item !== null) as Menu[];
+  }
+
+  /** Entradas del menú que un comercio no ve ni puede asignar a sus roles. */
+  private static esSoloDeKatuq(item: Menu): boolean {
+    return !!item.isOnlySuperAdministrador || !!item.isOnlyAdmin || !!item.soloKatuq;
   }
 
   /**
@@ -328,7 +343,7 @@ export class NavService implements OnDestroy {
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
       user.rol === "Administrador" && user.company === "Julsmind";
-    const isAdminKatuqEnVivo =
+    const esAdministradorDeKatuq =
       user.company === "Julsmind" &&
       (user.rol === "Administrador" || user.rol === "Super Administrador");
     // Ticket 1177: el rol Administrador de cualquier comercio ve todo el menú
@@ -379,10 +394,11 @@ export class NavService implements OnDestroy {
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
-      // Omitir item si es solo para superadmin/admin y el usuario no lo es
+      // Omitir item si es solo para superadmin/admin o interno de Katuq y el usuario no lo es
       if (
         (item.isOnlySuperAdministrador && !isSuperAdmin) ||
-        (item.isOnlyAdmin && !isJulsmindAdmin)
+        (item.isOnlyAdmin && !isJulsmindAdmin) ||
+        (item.soloKatuq && !esAdministradorDeKatuq)
       ) {
         return null;
       }
@@ -398,6 +414,9 @@ export class NavService implements OnDestroy {
           // La adhesión/cuenta Kuvo usa el rol administrador existente; no aparece
           // para un rol operativo aunque tenga el comodín de rutas.
           if (child.path === "kuvo" && !isCompanyAdmin && !isSuperAdmin) return false;
+          // Las pantallas internas de Katuq no dependen del menú del rol. Sin esta línea las veía el
+          // Administrador de cualquier comercio, que ve todo el menú (ticket 1636).
+          if (child.soloKatuq) return esAdministradorDeKatuq;
           // NPS (D-490): con la bandera `npsModulo` de la empresa (Julsmind siempre). Resultados y
           // Encuestas son de la familia Administrador (el servidor responde 403 a los demás);
           // Seguimiento, de quien tenga la ruta.
@@ -445,9 +464,6 @@ export class NavService implements OnDestroy {
             (authorizedPaths.includes(child.path) ||
               (!!child.permisoPrevio && authorizedPaths.includes(child.permisoPrevio)) ||
               (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
-              // D-386: "Katuq en vivo" no depende del menú del rol; basta ser Administrador o
-              // Super Administrador de Julsmind (los mismos roles que acepta el backend).
-              (child.path === "en-vivo/katuq" && isAdminKatuqEnVivo) ||
               (child.path === "contabilidad" && canUseBookkeepingWorkspace) ||
               // D-546: Landings no tiene permiso propio; la ve quien ve «Mis sitios».
               (!!child.inheritsPermissionFrom && authorizedPaths.includes(child.inheritsPermissionFrom)))
@@ -796,7 +812,8 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "en-vivo", title: "En vivo", type: "link", icon: "activity" },
-        { path: "en-vivo/katuq", title: "Katuq en vivo", type: "link", icon: "globe" },
+        // D-386: la operación de todos los comercios; el backend solo se la entrega a Julsmind.
+        { path: "en-vivo/katuq", title: "Katuq en vivo", type: "link", icon: "globe", soloKatuq: true },
       ],
     },
 
@@ -997,6 +1014,7 @@ export class NavService implements OnDestroy {
           icon: "file-text",
           badgeType: "primary",
           badgeValue: "NUEVO",
+          badgeUntil: "2026-11-22",
         },
         { path: "tesoreria", title: "Tesorería", menuIcon: "building-bank", type: "link", icon: "check-square" },
         {
@@ -1008,6 +1026,7 @@ export class NavService implements OnDestroy {
           icon: "credit-card",
           badgeType: "primary",
           badgeValue: "NUEVO",
+          badgeUntil: "2026-11-22",
         },
         {
           path: "contabilidad",
@@ -1017,6 +1036,7 @@ export class NavService implements OnDestroy {
           icon: "book-open",
           badgeType: "primary",
           badgeValue: "NUEVO",
+          badgeUntil: "2026-11-22",
         },
       ],
     },
@@ -1130,7 +1150,8 @@ export class NavService implements OnDestroy {
         { path: "agent-builder/general-chat", title: "Chat básico", previousTitle: "Chat Básico", type: "link", icon: "message-square" },
         { path: "agent-builder/library", title: "Mis agentes", previousTitle: "Mis Agentes IA", type: "link", icon: "cpu" },
         { path: "agent-builder/wizard", title: "Nuevo agente", previousTitle: "Crear Agente", type: "link", icon: "plus" },
-        { path: "agent-builder/monitor", title: "Monitor A2A", type: "link", icon: "activity" },
+        // Herramienta interna: a un comercio le fallaba con error 500 (ticket 1636).
+        { path: "agent-builder/monitor", title: "Monitor A2A", type: "link", icon: "activity", soloKatuq: true },
       ],
     },
 
