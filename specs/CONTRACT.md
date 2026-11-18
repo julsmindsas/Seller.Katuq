@@ -14119,3 +14119,16 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Pruebas (locales, D-566):** Seller compilado en producción contra un servidor local de solo lectura sobre la copia de desarrollo; la venta POS la responde el navegador de prueba, ningún servidor la recibe. Factura a 1366×650, 390, 360 y 320 px; encabezado con y sin logo de 1024 a 1440 px; ficha de cliente como Vendedor y como Administrador. Sin errores de consola ni scroll lateral nuevo.
 - **Tickets:** los tres quedaron Resueltos con su nota de cierre y el correo al comercio. Se cerraron escribiendo en la base, por indicación de Daniel, porque esta sesión no tiene el conector de soporte.
 - **Pendiente:** en 390 px el encabezado se sale 22 px desde antes de este cambio (logo más acciones); el cliente del 1635 lo corrige un administrador del comercio.
+
+### 2026-11-18 — Seller 2026.11.18.2: pantallas internas de Katuq fuera del menú de los comercios y aviso del rol Administrador (ticket 1636; aws-claude-1)
+
+- **Qué decía el ticket y qué pasaba:** que el Administrador de un comercio nuevo no veía todo el menú. Desde el ticket 1177 (11-oct) la familia Administrador ve todas las pantallas, tenga el rol lo que tenga guardado; se comprobó entrando como Administrador de Dulces Mafe (73 pantallas con 53 guardadas). Lo que no ve depende de una bandera del comercio o es de Katuq.
+- **Lo que se corrigió:**
+  - `Menu.soloKatuq`: «Katuq en vivo» (D-386) y «Monitor A2A» salen solo en el menú del Administrador y del Super Administrador de Julsmind. Al Administrador de un comercio le salían y no le cargaban.
+  - El editor de Roles ya no ofrece lo que es solo de Katuq cuando es hijo de un grupo («Campañas de registro», «Katuq en vivo», «Monitor A2A»).
+  - Al editar un rol de la familia Administrador, la ficha avisa que ve todo el menú.
+  - Facturación, Cartera y Contabilidad: NUEVO con `badgeUntil` 2026-11-22.
+  - El chat básico saluda con el nombre de la sesión.
+- **Sin banderas ni campos nuevos en la base.** Commits `c69b8f57` y `cd41d8c0`.
+- **Pruebas:** `tests/navigation` 80 de 87 antes y después; `nav-fixture.js` volvió a cargar el menú (faltaba `ENLACE_PLATAFORMA_ACTIVO`, D-700) y `menu-permisos-f3` anota la excepción del 1636. Las 7 que fallan ya fallaban: una por `/plataforma` (D-700) y seis ajenas a este cambio. En el Seller compilado, contra la copia de desarrollo en solo lectura: Dulces Mafe pasa de 73 a 71 pantallas; Julsmind sigue viendo las dos internas.
+- **Tickets:** 1636 Resuelto con su nota. Lo que quedó fuera (permisos por rol, pantallas por decidir y mejoras del menú) sigue en el **1637**; el detalle está en ese ticket.

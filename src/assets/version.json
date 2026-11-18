@@ -1,30 +1,19 @@
 {
-  "version": "2026.11.18.1 - 18 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-18T16:14:04.597Z",
+  "version": "2026.11.18.2 - 18 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-18T16:53:20.337Z",
   "notas": [
     {
-      "fecha": "2026-11-18T15:09:00Z",
+      "fecha": "2026-11-18T16:41:00Z",
       "tipo": "CORRIGE",
-      "texto": "En el POS, la factura de la venta ahora abre en una ventana con los botones siempre a la vista: imprimes, cierras con la X o con Esc y sigues con la siguiente venta.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-18T15:47:00Z",
-      "tipo": "MEJORA",
-      "texto": "En la barra superior, el nombre de tu comercio vuelve a verse al lado del logo en pantallas anchas, completo y sin cortarse cuando hay espacio."
-    },
-    {
-      "fecha": "2026-11-18T15:47:00Z",
-      "tipo": "MEJORA",
-      "texto": "Al editar un cliente, si no puedes cambiar el tipo de documento ahora la ficha te dice por qué: solo lo cambia un administrador de tu empresa.",
-      "modulos": [
-        "ventas/clienteslista"
-      ]
+      "texto": "Quitamos del menú dos pantallas internas de Katuq que a los comercios no les cargaban («Katuq en vivo» y «Monitor A2A»), y la etiqueta NUEVO ahora desaparece sola a los 30 días."
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-18T16:41:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Quitamos del menú dos pantallas internas de Katuq que a los comercios no les cargaban («Katuq en vivo» y «Monitor A2A»), y la etiqueta NUEVO ahora desaparece sola a los 30 días."
+    },
     {
       "fecha": "2026-11-18T15:47:00Z",
       "tipo": "MEJORA",
@@ -502,16 +491,8 @@
         "lista-precios/lista-precios",
         "ventas/clientes"
       ]
-    },
-    {
-      "fecha": "2026-11-09T20:40:00Z",
-      "tipo": "NUEVO",
-      "texto": "Ahora puedes poner a Opttia a atender en tu sitio web: responde dudas con el tono de tu marca, recomienda tus productos con precio, arma el carrito y lleva al pago. Se enciende por sitio, en el editor, pestaña «Tienda».",
-      "modulos": [
-        "sitios"
-      ]
     }
   ],
-  "commit": "721799dc5dec7ee451c7e428d4ec5ab839cd563b",
+  "commit": "cd41d8c085d457f7caecf987f80dc351c1ace4c3",
   "cambiosSinCommit": 0
 }
