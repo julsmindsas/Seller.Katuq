@@ -8332,6 +8332,7 @@
     "rol.roles.configuraciones": "Einstellungen",
     "rol.roles.facturacionPrefijosYMasOpciones": "Fakturierung, Präfixe und weitere Optionen der Rolle",
     "rol.roles.menusYPermisos": "Menüs und Berechtigungen",
+    "rol.roles.administradorVeTodo": "Die Rolle Administrator sieht alle Bildschirme im Menü, auch wenn sie hier nicht zugewiesen sind. Diese Liste gilt nur für die anderen Rollen.",
     "rol.roles.seleccioneAlMenosUnMenu": "Wählen Sie mindestens ein Menü für diese Rolle aus.",
     "rol.roles.configuracionesDelRol": "Einstellungen der Rolle",
     "rol.roles.facturacionElectronica": "E-Rechnung",

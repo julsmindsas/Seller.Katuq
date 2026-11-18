@@ -8332,6 +8332,7 @@
   "rol.roles.configuraciones": "Configuraciones",
   "rol.roles.facturacionPrefijosYMasOpciones": "Facturación, prefijos y más opciones del rol",
   "rol.roles.menusYPermisos": "Menús y Permisos",
+  "rol.roles.administradorVeTodo": "El rol Administrador ve todas las pantallas del menú, aunque aquí no estén asignadas. Esta lista solo cuenta para los demás roles.",
   "rol.roles.seleccioneAlMenosUnMenu": "Seleccione al menos un menú para este rol.",
   "rol.roles.configuracionesDelRol": "Configuraciones del Rol",
   "rol.roles.facturacionElectronica": "Facturación Electrónica",

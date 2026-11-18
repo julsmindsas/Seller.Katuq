@@ -8500,6 +8500,7 @@
   "rol.roles.configuraciones": "Configurações",
   "rol.roles.facturacionPrefijosYMasOpciones": "Faturamento, prefixos e mais opções do perfil",
   "rol.roles.menusYPermisos": "Menus e permissões",
+  "rol.roles.administradorVeTodo": "O papel Administrador vê todas as telas do menu, mesmo que não estejam atribuídas aqui. Esta lista só vale para os demais papéis.",
   "rol.roles.seleccioneAlMenosUnMenu": "Selecione pelo menos um menu para este perfil.",
   "rol.roles.configuracionesDelRol": "Configurações do perfil",
   "rol.roles.facturacionElectronica": "Faturamento eletrônico",

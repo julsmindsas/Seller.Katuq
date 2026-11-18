@@ -8512,6 +8512,7 @@
   "rol.roles.configuraciones": "Settings",
   "rol.roles.facturacionPrefijosYMasOpciones": "Invoicing, prefixes and more role options",
   "rol.roles.menusYPermisos": "Menus and permissions",
+  "rol.roles.administradorVeTodo": "The Administrator role sees every screen in the menu, even if it is not assigned here. This list only applies to other roles.",
   "rol.roles.seleccioneAlMenosUnMenu": "Select at least one menu for this role.",
   "rol.roles.configuracionesDelRol": "Role settings",
   "rol.roles.facturacionElectronica": "Electronic invoicing",
