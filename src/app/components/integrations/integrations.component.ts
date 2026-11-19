@@ -3305,7 +3305,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             type: 'string',
             placeholder: 'BOD-DISTRISEX-1',
             icon: 'fa-warehouse',
-            tooltip: 'Código de la bodega Katuq de DistriSex (los pedidos pagados de esta bodega viajan a DistriSex)'
+            tooltip: 'Código de la bodega Katuq de DistriSex (los pedidos de esta bodega viajan a DistriSex)'
           }
         ];
       default:

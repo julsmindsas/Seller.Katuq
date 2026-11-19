@@ -120,7 +120,7 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
       { id: 'partners_logistics', nombre: 'Partners Logística', queHace: 'Despacha tus pedidos con tu operador logístico aliado.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config', logo: L + 'partners-logistics.svg' },
       { id: 'prindel', nombre: 'Prindel', queHace: 'Envía tus pedidos con Prindel.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config', logo: L + 'prindel.png' },
       { id: 'fullpi', nombre: 'Fullpi', queHace: 'Tu bodega en Fullpi alista y despacha tus pedidos.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config', logo: L + 'fullpi.svg' },
-      { id: 'distrisex', nombre: 'DistriSex', queHace: 'Vende el catálogo de DistriSex: ellos despachan tus pedidos pagados a tu cliente.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config', logo: L + 'distrisex.svg' },
+      { id: 'distrisex', nombre: 'DistriSex', queHace: 'Vende el catálogo de DistriSex: ellos despachan tus pedidos a tu cliente.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config', logo: L + 'distrisex.svg' },
       { id: 'aliaddo_fulfillment', nombre: 'Aliaddo', queHace: 'Sincroniza tu inventario y tus despachos con Aliaddo.', estado: 'conectable', categoria: C.LOGISTICS, fuente: 'config' },
       { id: 'servientrega', nombre: 'Servientrega', queHace: 'Guías y contra entrega con Servientrega.', estado: 'pronto', categoria: C.LOGISTICS, fuente: 'ninguna', logo: L + 'servientrega.svg' },
       { id: 'coordinadora', nombre: 'Coordinadora', queHace: 'Guías y contra entrega con Coordinadora.', estado: 'pronto', categoria: C.LOGISTICS, fuente: 'ninguna', logo: L + 'coordinadora.svg' },

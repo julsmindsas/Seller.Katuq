@@ -856,7 +856,7 @@ export class IntegrationsService {
       case "prindel":
       case "osmosis": // Cereza/Guía Cereza opera como proveedor logístico (despacha desde sus bodegas)
       case "fullpi": // WMS Fullpi (spec 017): despacha pedidos desde su bodega y reporta stock
-      case "distrisex": // Proveedor DistriSex: despacha al cliente final los pedidos pagados
+      case "distrisex": // Proveedor DistriSex: despacha al cliente final los pedidos de su bodega
         return IntegrationCategory.LOGISTICS;
       case "mailchimp":
       case "hubspot":
