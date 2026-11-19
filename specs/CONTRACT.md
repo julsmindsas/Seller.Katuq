@@ -14150,3 +14150,19 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Pendiente:** quitar las dos banderas del panel del código (rutas, servicio, pruebas de contrato y Seller) en la limpieza de banderas. Sin banderas ni campos nuevos.
 - **Pruebas:** backend `funcionesFeriaEmpresaNueva` 10/10, `companyFeatureFlags` 42, `storeMobileFlags` 17 y las cinco de `tests/orderActions`. Build de producción del Seller sin errores.
 - **Tickets:** 1631 y 1632 Resueltos con su nota.
+
+### 2026-11-19 — D-718: integración con DistriSex (API de Aliados) para OH MY STORE, por /flows y apagada hasta prender sus flows
+
+- **Decisión (Daniel, 18 y 19-nov):** integrar a DistriSex como proveedor con catálogo propio que despacha al cliente final, igual que Guía Cereza y orquestado desde `/flows`; «termina el codigo de distrisex». Sin banderas nuevas: el interruptor es la integración activa más cada flow encendido.
+- **Origen:** el código base apareció sin commit el 18-nov en las carpetas de aws-claude-1, y ninguna sesión lo reconoce. Se copió a la rama `feature/integracion-distrisex` (backend y Seller) y se terminó ahí.
+- **Qué hace:**
+  - **Catálogo:** un producto de Katuq por SKU. Nace apagado, con el precio sugerido de DistriSex como punto de partida. A los que ya vinieron de DistriSex solo se les actualizan sus datos de proveedor; nombre, fotos, precio de venta y si está prendido son del comercio. Una referencia que ya es de otro producto (Cereza, Aliaddo o creado a mano) no se toca.
+  - **Existencias:** van a la bodega `BOD-DISTRISEX-1` y solo de productos que vinieron de DistriSex.
+  - **Pedidos:** viajan los pagados de esa bodega (Pagado o Aprobado; Crédito y PreAprobado no) y solo si todos sus productos son de DistriSex. Los estados y cancelaciones se traen por aviso, con un barrido de respaldo. `completed` no mueve `estadoProceso`. Un aprobado que se cancela en Katuq queda marcado para el asesor comercial.
+  - **Arranque:** un script deja la bodega y 5 flows en borrador, con prueba en seco por omisión. Las credenciales se cargan en Integraciones.
+- **Revisión:** adversarial independiente, con 5 hallazgos importantes y 8 menores; se corrigieron los que cambian el comportamiento. Las consultas nuevas sobre `orders` usan índices existentes (EXPLAIN en la copia), así que no hay índice nuevo. El acceso a datos pasa por un repositorio, y el trinquete no sube por estos archivos.
+- **Estado:** backend `a9790b71` y `4c0c1e9e`, Seller `1ef8e643`, sin publicar. Pruebas locales (D-566) del cliente, pedido, servicio, catálogo, existencias, flows y avisos en verde; `tests/flows` 23/23.
+- **Pendiente:**
+  - **Credenciales:** las de pruebas que entregó DistriSex no se han podido validar. Hay que revisarlas con ellos y hacer la prueba de conexión.
+  - **Comercio:** responder catálogo completo o selección, precio de venta, qué proveedor manda si un producto está en Cereza y en DistriSex, y si salen los contraentrega y los pedidos a crédito.
+  - **Publicar y arrancar:** publicar con «publica», correr el script de arranque con el sí de Daniel y prender los flows.
