@@ -14114,7 +14114,10 @@ El detalle con archivo y línea está en `proposal.md`.
   - **Flow:** `oms-cereza-stock-sombra` reinstalado a las 16:44 UTC con `--publicar --ocultar` (`ocultarAgotados: true`, canal Online Store). Nueve corridas seguidas en `success`, sin errores.
   - **Medición final (solo lectura, 18:20 UTC):** 6.121 productos de Cereza con ficha en Shopify; 2.009 publicados, 2.007 con existencia. Agotados y aún publicados: 2 (GCL235R y GCTT8729, de los 7 omitidos: no pasan el seguro de cantidad y por eso no se tocan).
   - **Ticket 1509:** sigue en Resuelto; respuesta a Jefferson, resolución al día y retirada la tarea de activar Shopify Flow (ya no hace falta y chocaría con la etiqueta).
-- **Abierto:** los ocultos siguen listados en el canal «Ohmystore.Shop Headless»; solo se retira Online Store. Decide Daniel si también se retira.
+- **Canal Headless (Daniel: «dale» y «publica», 19-nov):** el canal «Ohmystore.Shop Headless» no es copia de la tienda: 1.517 productos fuera de Online Store seguían publicados ahí y 201 al revés. Por eso cada canal se decide por separado y con su etiqueta (`katuq-agotado-headless`); al volver la existencia se publica solo donde Katuq lo retiró. `params.otrosCanales: [{ publicationId, etiqueta }]` en `shopify-inventory-adjust`; `--headless` en los dos scripts. Sin campos nuevos en `products` ni en `orders`.
+  - Backend `b3a19ce1` (mezcla `9f3b4cb2`) en producción, reinicio 19:39 UTC. Pruebas locales: `shopifyStockPorVariante` 32/32, `shopifyStockDesdeKatuq` 12/12 y los tres contratos de inventario.
+  - Flow reinstalado a las 19:46 UTC con `--publicar --ocultar --headless`.
+  - Siembra: simulación y canario de 15; después 4.018 agotados publicados en Headless, en tandas de 300 fuera de las ventanas del barrido (`~/siembra-1509-20261119-headless.sh` y `.log` en producción).
 
 ### 2026-11-18 — Seller 2026.11.18.1: factura POS en ventana, nombre junto al logo y aviso del tipo de documento (tickets 1633, 1634 y 1635; aws-claude-1)
 
