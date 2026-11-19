@@ -37,6 +37,7 @@ const SISTEMAS: { [prefijo: string]: SistemaVisible } = {
   siigo: { clave: 'siigo', nombre: 'SIIGO', color: '#0B6FB8', integracion: 'siigo' },
   worldoffice: { clave: 'worldoffice', nombre: 'World Office', color: '#E30613', integracion: 'world_office' },
   fullpi: { clave: 'fullpi', nombre: 'Fullpi', color: '#0F9D8A', integracion: 'fullpi' },
+  distrisex: { clave: 'distrisex', nombre: 'DistriSex', color: '#C2185B', integracion: 'distrisex' },
   aliaddo: { clave: 'aliaddo', nombre: 'Aliaddo', color: '#FF6600', integracion: 'aliaddo_fulfillment' },
   enviame: { clave: 'enviame', nombre: 'Envíame', color: '#00A3E0', integracion: 'enviame' },
   wompi: { clave: 'wompi', nombre: 'Wompi', color: '#1B1B6B', integracion: 'wompi' },

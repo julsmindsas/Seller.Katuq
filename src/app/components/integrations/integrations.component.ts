@@ -40,6 +40,7 @@ const CLAVES_GUARDADAS: { [proveedor: string]: string[] } = {
   multiop: ['apiKey'],
   osmosis: ['clientId', 'clientSecret'],
   fullpi: ['secret'],
+  distrisex: ['apiSecret', 'webhookSecret'],
 };
 
 // Nombres que entiende el comercio para los campos que nombran los mensajes del backend.
@@ -844,6 +845,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'fullpi':
         this.integrationForm = this.createFullpiForm();
         break;
+      case 'distrisex':
+        this.integrationForm = this.createDistrisexForm();
+        break;
       case 'whatsapp_kapso':
         // WhatsApp Business (Kapso) usa el componente dedicado
         // <app-whatsapp-kapso-config>. Creamos un FormGroup minimal para
@@ -962,6 +966,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'fullpi':
         this.integrationForm = this.createFullpiForm();
+        break;
+      case 'distrisex':
+        this.integrationForm = this.createDistrisexForm();
         break;
       case 'whatsapp_kapso':
         // WhatsApp Business (Kapso) usa el componente dedicado
@@ -1875,6 +1882,21 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  createDistrisexForm(): FormGroup {
+    // DistriSex (API de Aliados). Los dos secretos los encripta el backend
+    // (PROVIDER_SCHEMAS.distrisex.sensitive). La dirección del servicio sale
+    // del ambiente: DistriSex solo tiene dos (pruebas y producción).
+    return this.fb.group({
+      name: ['DistriSex', Validators.required],
+      enabled: [true],
+      environment: ['staging'],
+      keyId: ['', [Validators.required, Validators.pattern(/^dsx_(test|live)_[A-Za-z0-9]+$/)]],
+      apiSecret: ['', Validators.required],
+      webhookSecret: ['', Validators.required],
+      bodegaCode: ['BOD-DISTRISEX-1', Validators.required]
+    });
+  }
+
   createWorldOfficeForm(): FormGroup {
     return this.fb.group({
       name: ['World Office', Validators.required],
@@ -2521,6 +2543,18 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         if (formData.codigoBodegaWms) {
           credentials.codigoBodegaWms = formData.codigoBodegaWms;
         }
+        break;
+      case 'distrisex':
+        credentials = {
+          apiUrl: formData.environment === 'production'
+            ? 'https://distrisexcolombia.com/wp-json/dsx-partner/v1'
+            : 'https://desarrollo.distrisex.com/wp-json/dsx-partner/v1',
+          keyId:         formData.keyId,
+          apiSecret:     formData.apiSecret,
+          webhookSecret: formData.webhookSecret,
+          bodegaCode:    formData.bodegaCode || 'BOD-DISTRISEX-1',
+          environment:   formData.environment || 'staging'
+        };
         break;
       case 'world_office':
         credentials = {
@@ -3237,6 +3271,41 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             placeholder: 'ECF1',
             icon: 'fa-boxes',
             tooltip: 'Código que Fullpi asigna a tu bodega (llega en el correo de credenciales)'
+          }
+        ];
+      case 'distrisex':
+        return [
+          {
+            id: 'keyId',
+            label: 'Key ID',
+            type: 'string',
+            placeholder: 'dsx_test_…',
+            icon: 'fa-id-badge',
+            tooltip: 'Identifica a tu comercio ante DistriSex. Empieza por dsx_test_ en pruebas y dsx_live_ en producción'
+          },
+          {
+            id: 'apiSecret',
+            label: 'Secreto API',
+            type: 'password',
+            placeholder: 'Secreto de 43 caracteres',
+            icon: 'fa-key',
+            tooltip: 'Firma cada petición. Katuq lo guarda encriptado y nunca lo envía'
+          },
+          {
+            id: 'webhookSecret',
+            label: 'Secreto de avisos',
+            type: 'password',
+            placeholder: 'Secreto de webhook',
+            icon: 'fa-shield-alt',
+            tooltip: 'Comprueba que los avisos de cambio de estado vienen de DistriSex'
+          },
+          {
+            id: 'bodegaCode',
+            label: 'Bodega Katuq',
+            type: 'string',
+            placeholder: 'BOD-DISTRISEX-1',
+            icon: 'fa-warehouse',
+            tooltip: 'Código de la bodega Katuq de DistriSex (los pedidos de esta bodega viajan a DistriSex)'
           }
         ];
       default:
