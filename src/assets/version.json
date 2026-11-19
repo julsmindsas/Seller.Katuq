@@ -1,17 +1,35 @@
 {
-  "version": "2026.11.19.1 - 19 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-19T20:10:51.012Z",
+  "version": "2026.11.19.2 - 19 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-19T21:37:34.109Z",
   "notas": [
     {
-      "fecha": "2026-11-18T17:08:00Z",
-      "tipo": "NUEVO",
-      "texto": "«Despacho rápido» ya está en las opciones del pedido para todos los comercios: crea la orden de envío de ese pedido sin ir a Envíos a buscarlo.",
+      "fecha": "2026-11-19T21:08:00Z",
+      "tipo": "CORRIGE",
+      "texto": "La venta asistida ya no se pone lenta cuando el pedido lleva muchos productos: agregar productos y subir sus imágenes vuelve a ser rápido.",
       "modulos": [
-        "ventas/pedidos"
+        "ventas/venta-asistida"
       ]
+    },
+    {
+      "fecha": "2026-11-19T21:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-19T21:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."
+    },
+    {
+      "fecha": "2026-11-19T21:08:00Z",
+      "tipo": "CORRIGE",
+      "texto": "La venta asistida ya no se pone lenta cuando el pedido lleva muchos productos: agregar productos y subir sus imágenes vuelve a ser rápido.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
     {
       "fecha": "2026-11-18T17:08:00Z",
       "tipo": "NUEVO",
@@ -477,24 +495,8 @@
         "ventas",
         "tesoreria"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
     }
   ],
-  "commit": "863ac1a061dc8674259b1e6e6544dc2c4a7ab0f0",
+  "commit": "a9702c53ecdd7dd2fe032aa19d0366364dd78dd1",
   "cambiosSinCommit": 0
 }

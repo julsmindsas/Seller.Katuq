@@ -14166,3 +14166,10 @@ El detalle con archivo y línea está en `proposal.md`.
   - **Credenciales:** las de pruebas que entregó DistriSex no se han podido validar. Hay que revisarlas con ellos y hacer la prueba de conexión.
   - **Comercio:** responder catálogo completo o selección, precio de venta, qué proveedor manda si un producto está en Cereza y en DistriSex, y si salen los contraentrega y los pedidos a crédito.
   - **Publicar y arrancar:** publicar con «publica», correr el script de arranque con el sí de Daniel y prender los flows.
+
+### 2026-11-19 — Seller 2026.11.19.2: venta asistida sin frenos con muchos productos y encabezado en celular (tickets 1638 y 1639; aws-claude-1)
+
+- **1638 (ALMARA):** con más de cinco productos la venta asistida se ponía lenta y las imágenes tardaban minutos en subir. `getProductPriceWithScale` del carrito corre en cada refresco por cada producto y escribía registros de consola con el producto completo. Se quitaron; el cálculo no cambia. En el Seller compilado, con 14 productos, cada clic pasó de 361 ms a 15 ms. Commit `4f06f507`.
+- **Encabezado en celular:** a 390 y 360 px las acciones de la derecha ya no se salen de la pantalla (relleno de los botones, margen de la fila y logo del comercio hasta 80 px bajo 400 px). Escritorio igual que en el ticket 1634. Commit `756e1dd3`.
+- **1639 (ALMACEN BOMBAS):** el comercio usó «Liberar factura» por error en BAS-000096 y BAS-000098. Las dos facturas seguían vigentes en SIIGO (aceptadas, saldo completo). Con el sí de Daniel se devolvió cada factura a su pedido con un script por el adaptador (simulación antes, verificación en SIIGO, relectura después) y quedó el evento `invoice_release_reverted` en `accounting_invoice_errors`. Sin cambio de código. Queda como idea un «deshacer liberación» en la pantalla.
+- **Sin banderas ni campos nuevos.**
