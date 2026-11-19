@@ -14164,8 +14164,14 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Estado:** backend `a9790b71` y `4c0c1e9e`, Seller `1ef8e643`, sin publicar. Pruebas locales (D-566) del cliente, pedido, servicio, catálogo, existencias, flows y avisos en verde; `tests/flows` 23/23.
 - **Pendiente:**
   - **Credenciales:** las de pruebas que entregó DistriSex no se han podido validar. Hay que revisarlas con ellos y hacer la prueba de conexión.
-  - **Comercio:** responder catálogo completo o selección, precio de venta, qué proveedor manda si un producto está en Cereza y en DistriSex, y si salen los contraentrega y los pedidos a crédito.
   - **Publicar y arrancar:** publicar con «publica», correr el script de arranque con el sí de Daniel y prender los flows.
+- **Respuestas del comercio (19-nov, vía Daniel) y cómo quedaron:**
+  - **Catálogo:** va todo y se publica en Shopify. El producto nuevo nace encendido y lo sube el flow que ya existe «Katuq (no-Cereza) → Shopify». Las existencias se publican por un sexto flow por el camino solo-stock del ticket 1509 (`katuq-inventory-changed` con el parámetro nuevo `excluirProveedores`).
+  - **Precio:** público = sugerido de DistriSex; tipo «Mayoristas» = mayorista de DistriSex. Se mantienen al día; un precio o una fila manual o desactivada no se toca.
+  - **Referencia en los dos proveedores:** manda Guía Cereza. El producto de Cereza solo recibe `integrations.distrisex` como respaldo. La asignación de bodega tiene una regla 8: si ninguna bodega de Cereza tiene las unidades y la de DistriSex sí, la línea sale de DistriSex.
+  - **Pedidos de Shopify:** los que quedan enteros en DistriSex se crean en su bodega (`warehouseAllocation.mode = routed`). Cereza los salta, y una entrega repetida solo aplica la cancelación. Los mezclados se reparten como D-361. Los que no tocan DistriSex no cambian.
+  - **Pago:** salen todos los pedidos («para ellos todo son pagados») menos los cancelados, los de pago rechazado o devuelto y las reservas de Kuvo sin pagar.
+- **Estado de las respuestas del comercio:** backend `457bcefa` y `8942a75a` (con revisión independiente; corregidos 6 hallazgos), Seller `b7217300` (solo textos), sin publicar. Tocan pedidos e inventario, así que esperan la aprobación del diff por Daniel. Opcional, con su sí: sumar la bodega de DistriSex al flow de existencias de Cereza para que Shopify muestre las unidades de respaldo.
 
 ### 2026-11-19 — Seller 2026.11.19.2: venta asistida sin frenos con muchos productos y encabezado en celular (tickets 1638 y 1639; aws-claude-1)
 
