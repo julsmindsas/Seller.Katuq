@@ -14141,3 +14141,12 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Sin banderas ni campos nuevos en la base.** Commits `c69b8f57` y `cd41d8c0`.
 - **Pruebas:** `tests/navigation` 80 de 87 antes y después; `nav-fixture.js` volvió a cargar el menú (faltaba `ENLACE_PLATAFORMA_ACTIVO`, D-700) y `menu-permisos-f3` anota la excepción del 1636. Las 7 que fallan ya fallaban: una por `/plataforma` (D-700) y seis ajenas a este cambio. En el Seller compilado, contra la copia de desarrollo en solo lectura: Dulces Mafe pasa de 73 a 71 pantallas; Julsmind sigue viendo las dos internas.
 - **Tickets:** 1636 Resuelto con su nota. Lo que quedó fuera (permisos por rol, pantallas por decidir y mejoras del menú) sigue en el **1637**; el detalle está en ese ticket.
+
+### 2026-11-19 — Seller 2026.11.19.1: «Despacho rápido» y el panel ACCIONES del pedido quedan para todos los comercios (tickets 1631 y 1632; aws-claude-1)
+
+- **Qué decían los tickets:** que «Despacho rápido» y el menú ACCIONES del pedido se veían distintos entre comercios. La causa eran banderas de piloto que solo tenían tres comercios.
+- **1631:** «Despacho rápido» sale para todos, sin bandera. `despachoRapidoPedido` salió del Seller (commit `b9ed60b6`); sigue en el catálogo del backend hasta la limpieza de banderas.
+- **1632:** `orderPinnedActions` y `panelAccionesV2` se encendieron en los 137 comercios el 19-nov (270 escrituras con la regla de `set-company-feature`, simulación antes y relectura después) y nacen encendidas en los comercios nuevos (backend `f2092323`, `banderasEmpresaNueva`). Sin cambio de código en el panel.
+- **Pendiente:** quitar las dos banderas del panel del código (rutas, servicio, pruebas de contrato y Seller) en la limpieza de banderas. Sin banderas ni campos nuevos.
+- **Pruebas:** backend `funcionesFeriaEmpresaNueva` 10/10, `companyFeatureFlags` 42, `storeMobileFlags` 17 y las cinco de `tests/orderActions`. Build de producción del Seller sin errores.
+- **Tickets:** 1631 y 1632 Resueltos con su nota.

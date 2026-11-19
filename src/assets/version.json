@@ -1,14 +1,25 @@
 {
-  "version": "2026.11.18.2 - 18 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-18T16:53:20.337Z",
+  "version": "2026.11.19.1 - 19 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-19T20:10:51.012Z",
   "notas": [
     {
-      "fecha": "2026-11-18T16:41:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Quitamos del menú dos pantallas internas de Katuq que a los comercios no les cargaban («Katuq en vivo» y «Monitor A2A»), y la etiqueta NUEVO ahora desaparece sola a los 30 días."
+      "fecha": "2026-11-18T17:08:00Z",
+      "tipo": "NUEVO",
+      "texto": "«Despacho rápido» ya está en las opciones del pedido para todos los comercios: crea la orden de envío de ese pedido sin ir a Envíos a buscarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-18T17:08:00Z",
+      "tipo": "NUEVO",
+      "texto": "«Despacho rápido» ya está en las opciones del pedido para todos los comercios: crea la orden de envío de ese pedido sin ir a Envíos a buscarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-18T16:41:00Z",
       "tipo": "CORRIGE",
@@ -482,17 +493,8 @@
       "modulos": [
         "ventas/ventas-pos"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
-      "modulos": [
-        "lista-precios/lista-precios",
-        "ventas/clientes"
-      ]
     }
   ],
-  "commit": "cd41d8c085d457f7caecf987f80dc351c1ace4c3",
+  "commit": "863ac1a061dc8674259b1e6e6544dc2c4a7ab0f0",
   "cambiosSinCommit": 0
 }
