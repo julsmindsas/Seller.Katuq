@@ -1,22 +1,25 @@
 {
-  "version": "2026.11.19.2 - 19 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-19T21:37:34.109Z",
+  "version": "2026.11.19.3 - 19 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-19T23:00:14.227Z",
   "notas": [
     {
-      "fecha": "2026-11-19T21:08:00Z",
-      "tipo": "CORRIGE",
-      "texto": "La venta asistida ya no se pone lenta cuando el pedido lleva muchos productos: agregar productos y subir sus imágenes vuelve a ser rápido.",
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
       "modulos": [
-        "ventas/venta-asistida"
+        "integrations"
       ]
-    },
-    {
-      "fecha": "2026-11-19T21:31:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
+      "modulos": [
+        "integrations"
+      ]
+    },
     {
       "fecha": "2026-11-19T21:31:00Z",
       "tipo": "CORRIGE",
@@ -486,17 +489,8 @@
       "modulos": [
         "ventas"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
-      "modulos": [
-        "ventas",
-        "tesoreria"
-      ]
     }
   ],
-  "commit": "a9702c53ecdd7dd2fe032aa19d0366364dd78dd1",
+  "commit": "cc6c8725301833736daa805d0c27a53019fe1c61",
   "cambiosSinCommit": 0
 }
