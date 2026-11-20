@@ -14143,3 +14143,42 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Sin banderas ni campos nuevos en la base.** Commits `c69b8f57` y `cd41d8c0`.
 - **Pruebas:** `tests/navigation` 80 de 87 antes y después; `nav-fixture.js` volvió a cargar el menú (faltaba `ENLACE_PLATAFORMA_ACTIVO`, D-700) y `menu-permisos-f3` anota la excepción del 1636. Las 7 que fallan ya fallaban: una por `/plataforma` (D-700) y seis ajenas a este cambio. En el Seller compilado, contra la copia de desarrollo en solo lectura: Dulces Mafe pasa de 73 a 71 pantallas; Julsmind sigue viendo las dos internas.
 - **Tickets:** 1636 Resuelto con su nota. Lo que quedó fuera (permisos por rol, pantallas por decidir y mejoras del menú) sigue en el **1637**; el detalle está en ese ticket.
+
+### 2026-11-19 — Seller 2026.11.19.1: «Despacho rápido» y el panel ACCIONES del pedido quedan para todos los comercios (tickets 1631 y 1632; aws-claude-1)
+
+- **Qué decían los tickets:** que «Despacho rápido» y el menú ACCIONES del pedido se veían distintos entre comercios. La causa eran banderas de piloto que solo tenían tres comercios.
+- **1631:** «Despacho rápido» sale para todos, sin bandera. `despachoRapidoPedido` salió del Seller (commit `b9ed60b6`); sigue en el catálogo del backend hasta la limpieza de banderas.
+- **1632:** `orderPinnedActions` y `panelAccionesV2` se encendieron en los 137 comercios el 19-nov (270 escrituras con la regla de `set-company-feature`, simulación antes y relectura después) y nacen encendidas en los comercios nuevos (backend `f2092323`, `banderasEmpresaNueva`). Sin cambio de código en el panel.
+- **Pendiente:** quitar las dos banderas del panel del código (rutas, servicio, pruebas de contrato y Seller) en la limpieza de banderas. Sin banderas ni campos nuevos.
+- **Pruebas:** backend `funcionesFeriaEmpresaNueva` 10/10, `companyFeatureFlags` 42, `storeMobileFlags` 17 y las cinco de `tests/orderActions`. Build de producción del Seller sin errores.
+- **Tickets:** 1631 y 1632 Resueltos con su nota.
+
+### 2026-11-19 — D-718: integración con DistriSex (API de Aliados) para OH MY STORE, por /flows y apagada hasta prender sus flows
+
+- **Decisión (Daniel, 18 y 19-nov):** integrar a DistriSex como proveedor con catálogo propio que despacha al cliente final, igual que Guía Cereza y orquestado desde `/flows`; «termina el codigo de distrisex». Sin banderas nuevas: el interruptor es la integración activa más cada flow encendido.
+- **Origen:** el código base apareció sin commit el 18-nov en las carpetas de aws-claude-1, y ninguna sesión lo reconoce. Se copió a la rama `feature/integracion-distrisex` (backend y Seller) y se terminó ahí.
+- **Qué hace:**
+  - **Catálogo:** un producto de Katuq por SKU. Nace apagado, con el precio sugerido de DistriSex como punto de partida. A los que ya vinieron de DistriSex solo se les actualizan sus datos de proveedor; nombre, fotos, precio de venta y si está prendido son del comercio. Una referencia que ya es de otro producto (Cereza, Aliaddo o creado a mano) no se toca.
+  - **Existencias:** van a la bodega `BOD-DISTRISEX-1` y solo de productos que vinieron de DistriSex.
+  - **Pedidos:** viajan los pagados de esa bodega (Pagado o Aprobado; Crédito y PreAprobado no) y solo si todos sus productos son de DistriSex. Los estados y cancelaciones se traen por aviso, con un barrido de respaldo. `completed` no mueve `estadoProceso`. Un aprobado que se cancela en Katuq queda marcado para el asesor comercial.
+  - **Arranque:** un script deja la bodega y 5 flows en borrador, con prueba en seco por omisión. Las credenciales se cargan en Integraciones.
+- **Revisión:** adversarial independiente, con 5 hallazgos importantes y 8 menores; se corrigieron los que cambian el comportamiento. Las consultas nuevas sobre `orders` usan índices existentes (EXPLAIN en la copia), así que no hay índice nuevo. El acceso a datos pasa por un repositorio, y el trinquete no sube por estos archivos.
+- **Estado:** backend `a9790b71` y `4c0c1e9e`, Seller `1ef8e643`, sin publicar. Pruebas locales (D-566) del cliente, pedido, servicio, catálogo, existencias, flows y avisos en verde; `tests/flows` 23/23.
+- **Pendiente:**
+  - **Credenciales:** las de pruebas que entregó DistriSex no se han podido validar. Hay que revisarlas con ellos y hacer la prueba de conexión.
+  - **Publicar y arrancar:** publicar con «publica», correr el script de arranque con el sí de Daniel y prender los flows.
+- **Respuestas del comercio (19-nov, vía Daniel) y cómo quedaron:**
+  - **Catálogo:** va todo y se publica en Shopify. El producto nuevo nace encendido y lo sube el flow que ya existe «Katuq (no-Cereza) → Shopify». Las existencias se publican por un sexto flow por el camino solo-stock del ticket 1509 (`katuq-inventory-changed` con el parámetro nuevo `excluirProveedores`).
+  - **Precio:** público = sugerido de DistriSex; tipo «Mayoristas» = mayorista de DistriSex. Se mantienen al día; un precio o una fila manual o desactivada no se toca.
+  - **Referencia en los dos proveedores:** manda Guía Cereza. El producto de Cereza solo recibe `integrations.distrisex` como respaldo. La asignación de bodega tiene una regla 8: si ninguna bodega de Cereza tiene las unidades y la de DistriSex sí, la línea sale de DistriSex.
+  - **Pedidos de Shopify:** los que quedan enteros en DistriSex se crean en su bodega (`warehouseAllocation.mode = routed`). Cereza los salta, y una entrega repetida solo aplica la cancelación. Los mezclados se reparten como D-361. Los que no tocan DistriSex no cambian.
+  - **Pago:** salen todos los pedidos («para ellos todo son pagados») menos los cancelados, los de pago rechazado o devuelto y las reservas de Kuvo sin pagar.
+- **Estado de las respuestas del comercio:** backend `457bcefa` y `8942a75a` (con revisión independiente; corregidos 6 hallazgos), Seller `b7217300` (solo textos), sin publicar en ese momento. Opcional, con su sí: sumar la bodega de DistriSex al flow de existencias de Cereza para que Shopify muestre las unidades de respaldo.
+- **Publicado el 19-nov (Daniel: «publica»):** backend `a0e42068` en producción (rama `backend-aws-security`). Ese commit corrige la regla de Kuvo: solo frena el pago en línea que espera el pago; la contraentrega de Kuvo sale. Seller 2026.11.19.3 (merge `88e236c0`, nota en Conexiones). Sin efecto para ningún comercio hasta correr `seed-distrisex-oms.js` y prender los flows. Falta: credenciales de DistriSex que funcionen (401), el seed con el sí de Daniel, confirmar el margen mayorista con OH MY STORE y decidir el respaldo visible en Shopify.
+
+### 2026-11-19 — Seller 2026.11.19.2: venta asistida sin frenos con muchos productos y encabezado en celular (tickets 1638 y 1639; aws-claude-1)
+
+- **1638 (ALMARA):** con más de cinco productos la venta asistida se ponía lenta y las imágenes tardaban minutos en subir. `getProductPriceWithScale` del carrito corre en cada refresco por cada producto y escribía registros de consola con el producto completo. Se quitaron; el cálculo no cambia. En el Seller compilado, con 14 productos, cada clic pasó de 361 ms a 15 ms. Commit `4f06f507`.
+- **Encabezado en celular:** a 390 y 360 px las acciones de la derecha ya no se salen de la pantalla (relleno de los botones, margen de la fila y logo del comercio hasta 80 px bajo 400 px). Escritorio igual que en el ticket 1634. Commit `756e1dd3`.
+- **1639 (ALMACEN BOMBAS):** el comercio usó «Liberar factura» por error en BAS-000096 y BAS-000098. Las dos facturas seguían vigentes en SIIGO (aceptadas, saldo completo). Con el sí de Daniel se devolvió cada factura a su pedido con un script por el adaptador (simulación antes, verificación en SIIGO, relectura después) y quedó el evento `invoice_release_reverted` en `accounting_invoice_errors`. Sin cambio de código. Queda como idea un «deshacer liberación» en la pantalla.
+- **Sin banderas ni campos nuevos.**

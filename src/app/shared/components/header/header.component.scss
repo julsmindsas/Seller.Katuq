@@ -71,6 +71,18 @@
       // No se encoge por debajo de 88 px y el selector de idioma deja solo la bandera.
       .header-logos-section { flex-shrink: 0 !important; min-width: 88px; max-width: 46%; }
       .nav-right .nav-menus > li.language-nav ::ng-deep .lang-txt { display: none; }
+      // Los botones ya miden 44 px; el relleno extra del `li` sacaba el perfil de la pantalla
+      // (22 px a 390 px de ancho).
+      .nav-right .nav-menus > li { padding: 0 !important; }
+    }
+
+    // Celulares angostos (360 px): menos margen y un logo del comercio de hasta 80 px,
+    // para que las cinco acciones sigan dentro de la pantalla.
+    @media (max-width: 400px) {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      .header-logos-section { padding-left: 4px !important; padding-right: 4px !important; }
+      .header-logos-section ::ng-deep .company-brand-logo { max-width: 80px; }
     }
 
     @media (max-width: 767.98px) {

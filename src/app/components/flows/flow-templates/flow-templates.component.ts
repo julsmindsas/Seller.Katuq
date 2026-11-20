@@ -23,6 +23,7 @@ const PROVIDER_LABELS: { [k: string]: string } = {
   woocommerce: 'WooCommerce',
   siigo: 'SIIGO',
   fullpi: 'Fullpi',
+  distrisex: 'DistriSex',
   aliaddo_fulfillment: 'Aliaddo',
   world_office: 'World Office',
   worldoffice: 'World Office',

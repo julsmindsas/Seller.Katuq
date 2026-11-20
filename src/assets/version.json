@@ -1,14 +1,46 @@
 {
-  "version": "2026.11.18.2 - 18 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-18T16:53:20.337Z",
+  "version": "2026.11.19.3 - 19 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-19T23:00:14.227Z",
   "notas": [
     {
-      "fecha": "2026-11-18T16:41:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Quitamos del menú dos pantallas internas de Katuq que a los comercios no les cargaban («Katuq en vivo» y «Monitor A2A»), y la etiqueta NUEVO ahora desaparece sola a los 30 días."
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
+      "modulos": [
+        "integrations"
+      ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
+      "modulos": [
+        "integrations"
+      ]
+    },
+    {
+      "fecha": "2026-11-19T21:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."
+    },
+    {
+      "fecha": "2026-11-19T21:08:00Z",
+      "tipo": "CORRIGE",
+      "texto": "La venta asistida ya no se pone lenta cuando el pedido lleva muchos productos: agregar productos y subir sus imágenes vuelve a ser rápido.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T17:08:00Z",
+      "tipo": "NUEVO",
+      "texto": "«Despacho rápido» ya está en las opciones del pedido para todos los comercios: crea la orden de envío de ese pedido sin ir a Envíos a buscarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-18T16:41:00Z",
       "tipo": "CORRIGE",
@@ -457,42 +489,8 @@
       "modulos": [
         "ventas"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
-      "modulos": [
-        "ventas",
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
-      "modulos": [
-        "lista-precios/lista-precios",
-        "ventas/clientes"
-      ]
     }
   ],
-  "commit": "cd41d8c085d457f7caecf987f80dc351c1ace4c3",
+  "commit": "cc6c8725301833736daa805d0c27a53019fe1c61",
   "cambiosSinCommit": 0
 }

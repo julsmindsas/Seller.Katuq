@@ -349,10 +349,7 @@ export class CarritoComponent implements OnInit {
   }
 
   getProductPriceWithScale(producto: any): number {
-    if (!producto?.producto?.precio) {
-      console.log('⚠️ CARRITO: Producto sin precio', producto);
-      return 0;
-    }
+    if (!producto?.producto?.precio) return 0;
 
     // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
     if (producto?.producto?._precioAplicadoPorCategoria) {
@@ -362,19 +359,8 @@ export class CarritoComponent implements OnInit {
 
     const preciosVolumen = producto?.producto?.precio?.preciosVolumen ?? [];
     const precioUnitarioConIvaBase = Number(producto?.producto?.precio?.precioUnitarioConIva) || 0;
-    
-    console.log('💰 CARRITO - Calculando precio por cantidad:', {
-      titulo: producto?.producto?.crearProducto?.titulo,
-      cantidad: producto?.cantidad,
-      precioBase: precioUnitarioConIvaBase,
-      tienePreciosVolumen: preciosVolumen.length > 0,
-      preciosVolumen: preciosVolumen
-    });
-    
-    if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) {
-      console.log('⚠️ CARRITO: Sin precios por volumen, usando precio base:', precioUnitarioConIvaBase);
-      return precioUnitarioConIvaBase;
-    }
+
+    if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) return precioUnitarioConIvaBase;
 
     const cantidad = Number(producto?.cantidad) || 0;
     
@@ -387,34 +373,20 @@ export class CarritoComponent implements OnInit {
       return tieneMinimo && tieneMaximo;
     });
 
-    console.log('🔍 CARRITO - Rangos válidos filtrados:', rangosValidos.length, 'de', preciosVolumen.length);
-
     // Buscar el rango donde la cantidad esté dentro de los límites
     const rangoActual = rangosValidos.find((x: any) => {
       const min = Number(x.numeroUnidadesInicial) || 0;
       const max = Number(x.numeroUnidadesLimite) || Infinity;
-      const dentroDelRango = cantidad >= min && cantidad <= max;
-      
-      console.log(`   Evaluando rango [${min} - ${max}]: cantidad ${cantidad} → ${dentroDelRango ? '✓ MATCH' : '✗ no match'}`);
-      
-      return dentroDelRango;
+      return cantidad >= min && cantidad <= max;
     });
-
-    console.log('🎯 CARRITO - Rango encontrado para cantidad', cantidad, ':', rangoActual);
 
     // Intentar ambos nombres de campo por si hay inconsistencia
     const precioVolumenConIva = Number(rangoActual?.valorUnitarioPorVolumenConIVA) || 
                                 Number(rangoActual?.valorUnitarioPorVolumenIva) || 0;
     
-    const precioFinal = precioVolumenConIva > 0 ? precioVolumenConIva : precioUnitarioConIvaBase;
-    
-    console.log('✅ CARRITO - Precio final calculado:', {
-      precioVolumenEncontrado: precioVolumenConIva,
-      precioFinal: precioFinal,
-      usandoPrecioBase: precioVolumenConIva <= 0
-    });
-    
-    return precioFinal;
+    // Este cálculo corre en cada refresco de la pantalla por cada producto del carrito:
+    // no lleva registros de consola (con muchos productos frenaban toda la venta, ticket 1638).
+    return precioVolumenConIva > 0 ? precioVolumenConIva : precioUnitarioConIvaBase;
   }
 
   getTotalProductPriceInCart(): number {
