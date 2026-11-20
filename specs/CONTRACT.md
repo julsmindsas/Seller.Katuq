@@ -14118,6 +14118,8 @@ El detalle con archivo y línea está en `proposal.md`.
   - Backend `b3a19ce1` (mezcla `9f3b4cb2`) en producción, reinicio 19:39 UTC. Pruebas locales: `shopifyStockPorVariante` 32/32, `shopifyStockDesdeKatuq` 12/12 y los tres contratos de inventario.
   - Flow reinstalado a las 19:46 UTC con `--publicar --ocultar --headless`.
   - Siembra: simulación y canario de 15; después 4.018 agotados publicados en Headless, en tandas de 300 fuera de las ventanas del barrido (`~/siembra-1509-20261119-headless.sh` y `.log` en producción).
+  - Resultado (terminó el 19-nov a las 22:05 UTC, sin errores): 4.008 retirados de Headless; 10 omitidos por datos (7 `sku_no_coincide`, 1 `variantes_repetidas_en_katuq`). Recuento del 20-nov 14:42 UTC: Headless 1.808 productos de Cereza, 1.801 con existencia; Online Store 2.003, 2.001 con existencia; ninguno con existencia quedó oculto en ningún canal; flujo con 103 corridas `success` desde la reinstalación. Siguen visibles agotados solo los siete de datos ya avisados al comercio (GCL235R, GCTT8729 y cinco GCLZ de Pleaser).
+  - Fuera de alcance, medido en Shopify el 20-nov: 72 productos de otros proveedores visibles en cero en Online Store, 71 configurados para vender sin existencia. D-640 solo cubre Cereza; extenderlo espera decisión de Daniel.
 
 ### 2026-11-18 — Seller 2026.11.18.1: factura POS en ventana, nombre junto al logo y aviso del tipo de documento (tickets 1633, 1634 y 1635; aws-claude-1)
 
