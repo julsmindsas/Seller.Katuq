@@ -14185,3 +14185,16 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Encabezado en celular:** a 390 y 360 px las acciones de la derecha ya no se salen de la pantalla (relleno de los botones, margen de la fila y logo del comercio hasta 80 px bajo 400 px). Escritorio igual que en el ticket 1634. Commit `756e1dd3`.
 - **1639 (ALMACEN BOMBAS):** el comercio usó «Liberar factura» por error en BAS-000096 y BAS-000098. Las dos facturas seguían vigentes en SIIGO (aceptadas, saldo completo). Con el sí de Daniel se devolvió cada factura a su pedido con un script por el adaptador (simulación antes, verificación en SIIGO, relectura después) y quedó el evento `invoice_release_reverted` en `accounting_invoice_errors`. Sin cambio de código. Queda como idea un «deshacer liberación» en la pantalla.
 - **Sin banderas ni campos nuevos.**
+
+### 2026-11-21 — D-719: crear un pedido responde sin esperar los correos (ticket 1621, lentitud en Pedidos)
+
+- **Pedido:** Daniel pidió un plan para la lentitud que reporta el ticket 1621 y aprobó este primer cambio con su diff («sí, aprobado, pruébalo en el servidor de pruebas»).
+- **Medición previa (412 pedidos de producción, 11 al 17-nov):** crear un pedido tardaba 2,0 s en la mitad de los casos y 4,8 s en el 10 % más lento. De eso, 1,8 s y 3,2 s eran esperar el envío de los correos, con el pedido ya guardado.
+- **D-719:** `POST /v1/orders/create` responde cuando el pedido quedó guardado y el inventario procesado. El correo al cliente y la copia al comercio salen después, desde `services/orders/correosPedidoCreado.js`. Las reglas de a quién se le envía no cambian.
+  - **Respuesta:** conserva `emailStatus: []` y deja de traer `emailError`. Ningún cliente lo leía (Seller, iOS, Android, Support, Opttia). El resultado de cada correo queda en el registro del servidor.
+  - **Error latente corregido:** si el correo fallaba, el pedido no se avisaba al vendedor ni se enviaba a las integraciones. Ahora los avisos y las integraciones no dependen del correo.
+  - **Privacidad:** se quitaron del registro las líneas que escribían el correo del cliente.
+  - **En un despliegue:** un correo que esté saliendo tiene 5 s para terminar antes de que el proceso se apague, igual que los SMS y WhatsApp.
+- **Pruebas:** 9 nuevas del módulo de correos (locales, D-566) y las 29 versionadas del controlador de pedidos, iguales antes y después. En el servidor de pruebas, con un pedido falso de FLORECER y el correo sin salida: el código anterior respondió a los 35,0 s y sin avisos; el nuevo a los 0,5 s, con avisos e integraciones, y el fallo del correo quedó registrado 35 s después sin tumbar nada. La prueba llamó a la creación de pedido directamente, sin pasar por el inicio de sesión.
+- **Estado:** backend `85ae64ed` en producción desde el 21-nov a las 2:17 p. m. Solo entró este cambio; producción ya estaba al día con lo demás. En los primeros 27 minutos no entró ningún pedido, así que la medición con pedidos reales queda pendiente.
+- **Sigue del plan (cada uno con su diff aprobado):** lista de pedidos sin métricas en la primera página, sondeo del tablero, resumen de clientes sin carrito, y el filtro de falsas alarmas de Sentry.
