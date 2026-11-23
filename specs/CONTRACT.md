@@ -14223,3 +14223,15 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Pruebas:** 139 suites de sitios antes y después, con las mismas 16 fallas que ya tenía el código base; 8 pruebas nuevas de estas opciones (locales, D-566). Revisión visual a 1440 y 390 px en la copia de desarrollo. El Seller compila sin errores de tipos.
 - **Estado (23-nov):** backend `80eb2fe7` en producción y Seller 2026.11.23.1 en vivo (`414bbeb2`). La portada quedó guardada como borrador en el sitio de prueba del comercio. No se publicó: el comercio está en el plan gratis, que deja una sola tienda publicada, y tiene tres; la decisión es de Daniel.
 - **Pendiente:** controles del editor para las opciones nuevas; las páginas de las líneas de negocio del comercio (hoy sus enlaces llevan a «Nosotros»); que el comercio confirme los textos que nombran garantías.
+
+### 2026-11-23 — D-720: la lista de pedidos se pinta sin esperar los totales (ticket 1621, lentitud en Pedidos)
+
+- **Pedido:** segundo cambio del plan de lentitud. Daniel recibió el diff con la medición y respondió «has git pull y sube».
+- **Medición (todas las cargas del listado, 5 días de registros de producción):** el servidor responde en 0,1 s en la mitad de los casos, en 0,7 s en el 10 % más lento (2,6 s el 11-nov) y en 2 a 6 s en el 1 % más lento. Casi toda la parte lenta es calcular los totales del rango. El plan decía «de 4-6 s a menos de 1 s»: esa cifra salió del registro que solo anota lo que pasa de 2 s y estaba inflada.
+- **D-720:** «Todos los pedidos» pide la página 1 sin totales, como ya hacía con las páginas 2 en adelante. Con la lista pintada pide los totales aparte, con la misma consulta y una sola fila. Mientras llegan, las tarjetas de totales se ven atenuadas.
+  - **Con búsqueda o filtros de columna** no cambia nada: el servidor ya manda los totales con la lista.
+  - **Generar orden** deja de pedir totales que no usa.
+  - Solo front; el backend no cambia. El trabajo total del servidor tampoco baja: eso es el punto 13 del plan (totales con valores guardados).
+- **Por fuera:** Despachos y Pagos de pedidos, porque el camino sin totales del servidor ignora el orden por columna y esas pantallas ordenan (necesitan antes un cambio de backend, con su diff). La vista de producción tampoco se tocó.
+- **Hallazgo sin corregir:** Generar orden anuncia hasta 200 pedidos, pero el servidor entrega máximo 100 por página; con más de 100 faltan pedidos sin aviso.
+- **Pruebas:** build de producción sin errores. No se probó en el navegador antes de publicar (la sesión no puede iniciar sesión en el Seller).

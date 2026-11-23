@@ -394,7 +394,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       soloConDespacho: true, // D-491: sin pedidos solo de servicios
     };
 
-    this.ventasService.getOrdersByFilterOptimized(filter, 1, this.LIMITE_PEDIDOS)
+    // Sin totales: esta pantalla no los usa (ticket 1621).
+    this.ventasService.getOrdersByFilterOptimized(filter, 1, this.LIMITE_PEDIDOS, false)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

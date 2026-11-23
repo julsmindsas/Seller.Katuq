@@ -164,7 +164,7 @@
                                         -->
 
                                         <!-- Panel de Métricas Estilo Breadcrumb (Solo para vista de todos los pedidos) - Compacto -->
-                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-1 px-2 mt-2 d-none d-lg-block">
+                                        <div *ngIf="!isFromProduction" [class.totales-cargando]="totalesCargando" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-1 px-2 mt-2 d-none d-lg-block">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
                                             <!-- Total Pedidos -->
                                             <div class="metric-chip metric-chip-primary"
@@ -310,7 +310,7 @@
                                                     <span class="pedidos-list-pane__title">{{ 'Pedidos' | translate }}</span>
                                                     <span class="pedidos-list-pane__count">{{ totalRecords || orders.length }}</span>
                                                 </div>
-                                                <div class="pedidos-triage">
+                                                <div class="pedidos-triage" [class.totales-cargando]="totalesCargando">
                                                     <button type="button" class="pedidos-triage__chip is-active" (click)="onMetricClick('all')"
                                                             [title]="totalPOS ? 'Pedidos de venta normal. Los ' + totalPOS + ' de punto de venta (POS) se suman al número de arriba.' : 'Todos los pedidos del filtro'">
                                                         {{ 'Todos' | translate }} · {{ getTotalPedidos() }}
@@ -728,7 +728,7 @@
                                     </div>
 
                                     <!-- ===== Footer de métricas (resumen/totales de la tabla original) ===== -->
-                                    <div *ngIf="modoVista === 'split' && !isFromProduction" class="pedidos-footer-metrics">
+                                    <div *ngIf="modoVista === 'split' && !isFromProduction" class="pedidos-footer-metrics" [class.totales-cargando]="totalesCargando">
                                         <div class="pfm-group">
                                             <span class="pfm-group__label">{{ 'RESUMEN' | translate }}</span>
                                             <div class="pfm-item"><span class="pfm-item__k">{{ 'Pedidos' | translate }}</span><b class="pfm-item__v">{{ getTotalPedidos() }}</b></div>
@@ -1630,7 +1630,7 @@
 
                         <!-- FILA DE RESUMEN -->
                         <ng-template *ngIf="!isFromProduction" pTemplate="summary">
-                            <tr class="summary-row"
+                            <tr class="summary-row" [class.totales-cargando]="totalesCargando"
                                 style="font-size: 0.85em; background-color: #faf9fe; border-top: 1px solid #ececf4;">
                                 <!-- Columna Detalles -->
                                 <td *ngIf="isColumnVisible('detalles')" class="summary-cell"

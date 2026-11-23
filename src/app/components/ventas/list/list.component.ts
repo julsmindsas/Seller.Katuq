@@ -69,7 +69,7 @@ import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerc
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 import { LogisticaService } from "../../../shared/services/despachos/logistica.services";
 import { normalizeTransportadorName } from "../../../shared/services/despachos/transportador.util";
-import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
+import { Observable, Subject, Subscription, firstValueFrom, forkJoin, of } from "rxjs";
 import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
@@ -4676,6 +4676,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Secuencia de refrescos: un refresco forzado supersede al que esté en vuelo,
   // y la respuesta del viejo se descarta para que no pise la del nuevo.
   private refrescoSeq = 0;
+  // Ticket 1621: los totales del listado se piden aparte, cuando la lista ya está pintada.
+  totalesCargando = false;
+  private totalesSub?: Subscription;
 
   // Método para aplicar el filtro de fecha desde el calendario
   onDateFilterSelect(event: any, filterCallback: Function) {
@@ -4890,7 +4893,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Por eso en produccion se traen TODAS las paginas y se unen.
       const paginatedRequest = this.isFromProduction
         ? this.cargarTodasLasPaginasProduccion(filter)
-        : this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize, this.currentPage === 1);
+        : this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize, false);
+      const esPrimeraPagina = this.currentPage === 1;
       
       // Cargar pedidos paginados primero
       paginatedRequest.pipe(
@@ -4899,6 +4903,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (paginatedResponse) => {
           // Respuesta obsoleta: un refresco forzado más nuevo la supersedió
           if (seqRefresco !== this.refrescoSeq) return;
+          // Los totales no cambian al paginar: solo se piden con la página 1. Con búsqueda
+          // o filtros de columna el servidor ya los manda junto con la lista.
+          if (!this.isFromProduction && esPrimeraPagina) {
+            this.cargarTotalesDelListado(filter, !!paginatedResponse?.metrics);
+          }
           // Si debemos cargar POS, hacerlo en paralelo
           if (shouldLoadPOS) {
             this.ventasService.getOrdersPOSByFilter(posFilter).pipe(
@@ -4930,6 +4939,29 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Usar método sin paginación
       this.refrescarDatosSinPaginacion();
     }
+  }
+
+  /**
+   * Pide los totales del rango filtrado (la misma consulta de la lista, con una sola fila)
+   * y los deja en backendMetrics. Mientras llegan, las tarjetas se ven atenuadas.
+   * Una petición anterior que siga en curso se cancela para que no pise la nueva.
+   */
+  private cargarTotalesDelListado(filter: any, yaLlegaron: boolean): void {
+    this.totalesSub?.unsubscribe();
+    this.totalesCargando = !yaLlegaron;
+    if (yaLlegaron) return;
+    this.totalesSub = this.ventasService.getOrdersByFilterOptimized(filter, 1, 1, true).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.totalesCargando = false;
+        this.changeDetectorRef.markForCheck();
+      }),
+    ).subscribe({
+      next: (respuesta) => {
+        if (respuesta?.metrics) this.backendMetrics = respuesta.metrics;
+      },
+      error: (error) => console.error('Error cargando los totales del listado:', error),
+    });
   }
 
   /**
