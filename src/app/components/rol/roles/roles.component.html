@@ -79,6 +79,8 @@
 
             <!-- Sección: Menús y permisos -->
             <div class="section-title">{{ 'rol.roles.menusYPermisos' | translate }}</div>
+            <!-- Ticket 1636: el Administrador ve todo el menú; la lista de abajo no lo limita. -->
+            <p class="rol-aviso-administrador" *ngIf="esRolAdministrador">{{ 'rol.roles.administradorVeTodo' | translate }}</p>
             <div class="row mb-4">
               <div class="col-12">
                 <p-pickList [source]="availableMenus" [target]="selectedMenus"

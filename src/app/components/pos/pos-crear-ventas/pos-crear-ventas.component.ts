@@ -1334,7 +1334,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
                       console.log(p)
                     );
                     // Abrir el modal de tirilla (factura) para que se imprima la factura
-                    this.modalService.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = this.pedidoGral;
+                    FacturaTirillaComponent.abrir(this.modalService, this.pedidoGral);
 
                   }
                   else {
@@ -1362,7 +1362,7 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
               this.showPedidoConfirm = true;
               this.showSteper = false;
               // Usar el pedido con la referencia actualizada
-              this.modalService.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = orderFromResponse;
+              FacturaTirillaComponent.abrir(this.modalService, orderFromResponse);
 
               Swal.fire({
                 title: "Pedido creado!",

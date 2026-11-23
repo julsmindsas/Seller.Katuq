@@ -3035,6 +3035,91 @@
           </div>
         </ng-container>
 
+        <!-- ===== DISTRISEX (API de Aliados) ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'distrisex'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>{{ 'integrations.distrisex.queHace' | translate }}</span>
+          </div>
+
+          <!-- Ambiente -->
+          <div class="form-group">
+            <label for="distrisexEnvironment">
+              <i class="fa fa-flask"></i> {{ 'integrations.integrationModal.ambiente2' | translate }}
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-flask prefix-icon"></i>
+              <select id="distrisexEnvironment" formControlName="environment" class="form-control">
+                <option value="staging">{{ 'integrations.integrations.pruebas' | translate }}</option>
+                <option value="production">{{ 'integrations.integrationModal.produccion' | translate }}</option>
+              </select>
+            </div>
+            <small class="form-text text-muted">{{ 'integrations.distrisex.ambienteAyuda' | translate }}</small>
+          </div>
+
+          <!-- Key ID -->
+          <div class="form-group">
+            <label for="distrisexKeyId">
+              <i class="fa fa-id-badge"></i> {{ 'integrations.distrisex.keyId' | translate }}
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-badge prefix-icon"></i>
+              <input type="text" id="distrisexKeyId" formControlName="keyId" placeholder="dsx_test_…" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('keyId')?.invalid && integrationForm.get('keyId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> {{ 'integrations.distrisex.keyIdInvalido' | translate }}
+            </div>
+          </div>
+
+          <!-- Secreto API -->
+          <div class="form-group">
+            <label for="distrisexApiSecret">
+              <i class="fa fa-key"></i> {{ 'integrations.distrisex.secretoApi' | translate }}
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="distrisexApiSecret" formControlName="apiSecret"
+                     [placeholder]="editingIntegrationId ? ('integrations.integrations.guardadaDejalaVaciaParaConservarla' | translate) : ('integrations.distrisex.secretoApiAyuda' | translate)" autocomplete="off">
+              <i class="fa fa-eye suffix-icon" [title]="'integrations.integrations.mostrarOcultar' | translate" (click)="toggleApiKeyVisibility()"></i>
+            </div>
+            <small class="form-text text-muted">{{ 'integrations.distrisex.secretoApiNota' | translate }}</small>
+          </div>
+
+          <!-- Secreto de avisos -->
+          <div class="form-group">
+            <label for="distrisexWebhookSecret">
+              <i class="fa fa-shield-alt"></i> {{ 'integrations.distrisex.secretoAvisos' | translate }}
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="distrisexWebhookSecret" formControlName="webhookSecret"
+                     [placeholder]="editingIntegrationId ? ('integrations.integrations.guardadaDejalaVaciaParaConservarla' | translate) : ('integrations.distrisex.secretoAvisosAyuda' | translate)" autocomplete="off">
+            </div>
+            <small class="form-text text-muted">{{ 'integrations.distrisex.secretoAvisosNota' | translate }}</small>
+          </div>
+
+          <!-- Bodega Katuq -->
+          <div class="form-group">
+            <label for="distrisexBodegaCode">
+              <i class="fa fa-warehouse"></i> {{ 'integrations.integrations.bodegaEnKatuq' | translate }}
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-warehouse prefix-icon"></i>
+              <input type="text" id="distrisexBodegaCode" formControlName="bodegaCode" placeholder="BOD-DISTRISEX-1" autocomplete="off">
+            </div>
+            <small class="form-text text-muted">{{ 'integrations.distrisex.bodegaAyuda' | translate }}</small>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>{{ 'integrations.integrations.importante' | translate }}</strong> {{ 'integrations.distrisex.importante' | translate }}</span>
+          </div>
+        </ng-container>
+
         <!-- ===== FORMULARIO DINÁMICO BASADO EN ESQUEMA ===== -->
         <ng-container *ngIf="isDynamicForm && currentSchema">
           <div class="dynamic-form-container">

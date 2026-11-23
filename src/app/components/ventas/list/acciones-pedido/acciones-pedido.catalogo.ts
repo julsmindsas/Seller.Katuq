@@ -141,7 +141,7 @@ export const ACCIONES_PEDIDO: AccionPedido[] = [
     nombresAnteriores: [],
     icono: 'users', tipo: 'contexto' },
   // D-624 (ticket 1473): «Despacho rápido» abre en Envíos la misma ventana «Generar orden de envío» con este pedido ya
-  // cargado. Solo con la bandera `despachoRapidoPedido`; comparte lugar con «Ver despacho y entrega» (nunca se ven las dos).
+  // cargado. Para todos los comercios (ticket 1631); comparte lugar con «Ver despacho y entrega» (nunca se ven las dos).
   { id: 'quickDispatch', titulo: 'Despacho rápido', resena: 'Crea la orden de envío de este pedido',
     nombresAnteriores: [],
     icono: 'send', tipo: 'contexto' },

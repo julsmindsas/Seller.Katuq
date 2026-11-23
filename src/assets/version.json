@@ -1,18 +1,72 @@
 {
-  "version": "2026.11.17.2 - 17 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-17T14:55:18.389Z",
+  "version": "2026.11.23.1 - 23 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-23T22:49:41.584Z",
   "notas": [
     {
-      "fecha": "2026-11-17T14:55:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Las ventas del POS ya no desaparecen del listado de ventas después de hacer el cierre de caja: siguen ahí, marcadas como cerradas.",
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
       "modulos": [
-        "ventas/ventas-pos",
-        "ventas/pedidos"
+        "integrations"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-19T23:05:00Z",
+      "tipo": "NUEVO",
+      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
+      "modulos": [
+        "integrations"
+      ]
+    },
+    {
+      "fecha": "2026-11-19T21:31:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."
+    },
+    {
+      "fecha": "2026-11-19T21:08:00Z",
+      "tipo": "CORRIGE",
+      "texto": "La venta asistida ya no se pone lenta cuando el pedido lleva muchos productos: agregar productos y subir sus imágenes vuelve a ser rápido.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T17:08:00Z",
+      "tipo": "NUEVO",
+      "texto": "«Despacho rápido» ya está en las opciones del pedido para todos los comercios: crea la orden de envío de ese pedido sin ir a Envíos a buscarlo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T16:41:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Quitamos del menú dos pantallas internas de Katuq que a los comercios no les cargaban («Katuq en vivo» y «Monitor A2A»), y la etiqueta NUEVO ahora desaparece sola a los 30 días."
+    },
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "En la barra superior, el nombre de tu comercio vuelve a verse al lado del logo en pantallas anchas, completo y sin cortarse cuando hay espacio."
+    },
+    {
+      "fecha": "2026-11-18T15:47:00Z",
+      "tipo": "MEJORA",
+      "texto": "Al editar un cliente, si no puedes cambiar el tipo de documento ahora la ficha te dice por qué: solo lo cambia un administrador de tu empresa.",
+      "modulos": [
+        "ventas/clienteslista"
+      ]
+    },
+    {
+      "fecha": "2026-11-18T15:09:00Z",
+      "tipo": "CORRIGE",
+      "texto": "En el POS, la factura de la venta ahora abre en una ventana con los botones siempre a la vista: imprimes, cierras con la X o con Esc y sigues con la siguiente venta.",
+      "modulos": [
+        "ventas/ventas-pos"
+      ]
+    },
     {
       "fecha": "2026-11-17T14:55:00Z",
       "tipo": "CORRIGE",
@@ -435,74 +489,8 @@
       "modulos": [
         "ventas"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En modo oscuro, Pedidos y Tesorería ya no muestran bloques blancos ni textos que no se leen.",
-      "modulos": [
-        "ventas",
-        "tesoreria"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el POS se ve completo el total de la barra de abajo, los botones de arriba traen su nombre, «E-wallet» ahora se llama «Billetera digital» y los montos se ven como $79.500.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "El POS recuerda la última bodega que elegiste y la deja seleccionada al entrar.",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "MEJORA",
-      "texto": "Si cobras por tipo de cliente y aún no tienes tipos creados, te avisamos en Precios y al crear un cliente, con un enlace directo para crearlos.",
-      "modulos": [
-        "lista-precios/lista-precios",
-        "ventas/clientes"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T20:40:00Z",
-      "tipo": "NUEVO",
-      "texto": "Ahora puedes poner a Opttia a atender en tu sitio web: responde dudas con el tono de tu marca, recomienda tus productos con precio, arma el carrito y lleva al pago. Se enciende por sitio, en el editor, pestaña «Tienda».",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al terminar una venta en Venta asistida, la pantalla final y su comprobante muestran el número de pedido con el que quedó guardado.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "En el detalle del pedido, las imágenes adjuntas tienen el botón «PDF» para imprimirlas o guardarlas como PDF.",
-      "modulos": [
-        "ventas"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T16:00:00Z",
-      "tipo": "MEJORA",
-      "texto": "Al crear un pedido ya no es obligatorio elegir datos de facturación: si no eliges ninguno, el pedido queda como Consumidor Final.",
-      "modulos": [
-        "ventas"
-      ]
     }
   ],
-  "commit": "3e5295c6b09edc161d789367aec0178cb1225e55",
+  "commit": "414bbeb28ac841cf517cb10ade482f77d5bad8d8",
   "cambiosSinCommit": 0
 }

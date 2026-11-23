@@ -8,7 +8,12 @@ import { anclaSinDestino, paginaInternaQueNoExiste } from "../../anclas-inicio";
 export interface EnlaceMenu {
   etiqueta: string;
   url: string;
-  hijos?: { etiqueta: string; url: string }[];
+  /** `grupo`: el título de la columna del desplegable donde va el enlace (desplegable con columnas, D-693). */
+  hijos?: { etiqueta: string; url: string; grupo?: string }[];
+  /** Desplegable con frase de entrada y enlace de cierre («Ir a…»), D-693. Solo con hijos. */
+  intro?: string;
+  cierreTexto?: string;
+  cierreUrl?: string;
 }
 
 export interface MensajeBarra {
@@ -30,7 +35,7 @@ export interface AtencionTienda {
   fueraDeHorario?: string;
 }
 
-export const TOPES = Object.freeze({ menu: 7, hijos: 8, mensajes: 3, enlacesBarra: 3 });
+export const TOPES = Object.freeze({ menu: 7, hijos: 16, mensajes: 3, enlacesBarra: 3 });
 
 export const DIAS_SEMANA: readonly { valor: number; corto: string }[] = [
   { valor: 1, corto: "Lun" },
@@ -61,8 +66,21 @@ export function menuDe(datos: any): EnlaceMenu[] {
   return fuente.map((e: any) => ({
     etiqueta: String((e && e.etiqueta) || ""),
     url: String((e && e.url) || ""),
-    hijos: Array.isArray(e && e.hijos) ? e.hijos.map((h: any) => ({ etiqueta: String((h && h.etiqueta) || ""), url: String((h && h.url) || "") })) : [],
+    hijos: Array.isArray(e && e.hijos)
+      ? e.hijos.map((h: any) => ({ etiqueta: String((h && h.etiqueta) || ""), url: String((h && h.url) || ""), ...(h && h.grupo ? { grupo: String(h.grupo) } : {}) }))
+      : [],
+    // Lo que el desplegable trae de más (frase, cierre) se conserva aunque el panel todavía no lo edite.
+    ...extrasDelDesplegable(e),
   }));
+}
+
+/** La frase y el enlace de cierre del desplegable de un enlace (D-693), solo los que traen algo. */
+function extrasDelDesplegable(e: any): Partial<EnlaceMenu> {
+  const extras: Partial<EnlaceMenu> = {};
+  if (e && e.intro) extras.intro = String(e.intro);
+  if (e && e.cierreTexto) extras.cierreTexto = String(e.cierreTexto);
+  if (e && e.cierreUrl) extras.cierreUrl = String(e.cierreUrl);
+  return extras;
 }
 
 /**
@@ -74,7 +92,7 @@ export function menuDe(datos: any): EnlaceMenu[] {
 export function conMenu(datos: any, menu: EnlaceMenu[]): void {
   const limpio = menu.slice(0, TOPES.menu).map((e) => {
     const hijos = (e.hijos || []).slice(0, TOPES.hijos);
-    return hijos.length ? { etiqueta: e.etiqueta, url: e.url, hijos } : { etiqueta: e.etiqueta, url: e.url };
+    return hijos.length ? { etiqueta: e.etiqueta, url: e.url, hijos, ...extrasDelDesplegable(e) } : { etiqueta: e.etiqueta, url: e.url };
   });
   datos.menu = limpio;
   datos.enlaces = limpio

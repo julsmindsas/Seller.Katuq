@@ -799,6 +799,7 @@ export class IntegrationsService {
     const map: Record<string, string> = {
       osmosis:           'Guía Cereza',
       fullpi:            'Fullpi',
+      distrisex:         'DistriSex',
       prindel:           'Prindel',
       enviame:           'Envíame.io',
       partners_logistics:'Partners Logística',
@@ -855,6 +856,7 @@ export class IntegrationsService {
       case "prindel":
       case "osmosis": // Cereza/Guía Cereza opera como proveedor logístico (despacha desde sus bodegas)
       case "fullpi": // WMS Fullpi (spec 017): despacha pedidos desde su bodega y reporta stock
+      case "distrisex": // Proveedor DistriSex: despacha al cliente final los pedidos de su bodega
         return IntegrationCategory.LOGISTICS;
       case "mailchimp":
       case "hubspot":
@@ -1751,6 +1753,16 @@ export class IntegrationsService {
           description:
             "WMS de fulfillment: recibe tus pedidos pagados para despacharlos desde su bodega, reporta el estado de cada envío y sincroniza el inventario disponible.",
           logo: "assets/images/logos/fullpi.svg",
+          active: true,
+        },
+        {
+          // DistriSex (API de Aliados). Catálogo, existencias y pedidos corren
+          // por los flows distrisex-* (prenderlos en /flows es el interruptor).
+          id: "distrisex",
+          name: "DistriSex",
+          description:
+            "Proveedor con catálogo propio: recibe tus pedidos pagados y los despacha a tu cliente. Sincroniza su catálogo, sus existencias y el estado de cada pedido.",
+          logo: "assets/images/logos/distrisex.svg",
           active: true,
         },
       ],

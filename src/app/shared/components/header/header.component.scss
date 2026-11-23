@@ -41,10 +41,13 @@
     // Buscador central (como el diseño): nombre a la izquierda, búsqueda al
     // centro, acciones a la derecha. El orden flex reubica el app-search que
     // en el template va de primero.
+    // Parte de su ancho mínimo y crece con lo que sobre (ticket 1634): así el buscador es el
+    // primero en ceder. Con `auto` reclamaba su ancho completo y la fila le quitaba espacio al
+    // nombre del comercio aunque el buscador siguiera ancho («FLOR…»).
     app-search {
       display: block;
       order: 2;
-      flex: 1 1 auto;
+      flex: 1 1 140px;
       max-width: 430px;
       min-width: 140px;
       margin: 0 auto;
@@ -57,9 +60,8 @@
     .nav-right { order: 3; flex: 1 0 0% !important; max-width: none !important; }
 
     // El nombre del comercio cede espacio a las acciones en cualquier ancho (sin scroll lateral):
-    // primero se encoge el buscador (shrink 6) y luego el nombre, con «…». Con el menú de 264 px
+    // cuando el buscador ya está en su mínimo, se recorta el nombre con «…». Con el menú de 264 px
     // (D-546) y un nombre largo, a 1147 px el perfil se salía 38 px.
-    app-search { flex-shrink: 6; }
     .header-logos-section { flex: 0 1 auto !important; overflow: hidden; }
     .company-logo { overflow: hidden; }
 
@@ -69,6 +71,18 @@
       // No se encoge por debajo de 88 px y el selector de idioma deja solo la bandera.
       .header-logos-section { flex-shrink: 0 !important; min-width: 88px; max-width: 46%; }
       .nav-right .nav-menus > li.language-nav ::ng-deep .lang-txt { display: none; }
+      // Los botones ya miden 44 px; el relleno extra del `li` sacaba el perfil de la pantalla
+      // (22 px a 390 px de ancho).
+      .nav-right .nav-menus > li { padding: 0 !important; }
+    }
+
+    // Celulares angostos (360 px): menos margen y un logo del comercio de hasta 80 px,
+    // para que las cinco acciones sigan dentro de la pantalla.
+    @media (max-width: 400px) {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      .header-logos-section { padding-left: 4px !important; padding-right: 4px !important; }
+      .header-logos-section ::ng-deep .company-brand-logo { max-width: 80px; }
     }
 
     @media (max-width: 767.98px) {

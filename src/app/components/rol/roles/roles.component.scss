@@ -398,3 +398,15 @@ $rl-err: #D64545;
     }
   }
 }
+
+// Ticket 1636: aviso de que el rol Administrador ve todo el menú (par color fuerte / fondo suave).
+.rol-aviso-administrador {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #EFEAFE;
+  color: #211F3A;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: normal;
+}

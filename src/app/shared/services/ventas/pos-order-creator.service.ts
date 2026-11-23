@@ -284,7 +284,7 @@ export class PosOrderCreatorService {
     this.clearCustomerData();
     
     // Mostrar la factura/tirilla
-    this.modal.open(FacturaTirillaComponent, { size: 'xl', fullscreen: true }).componentInstance.pedido = order;
+    FacturaTirillaComponent.abrir(this.modal, order);
     
     // Mostrar mensaje de éxito
     this.showSuccessAlert('Pedido creado con éxito');

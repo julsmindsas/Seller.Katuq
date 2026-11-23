@@ -98,6 +98,16 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     "¿Qué productos tienen bajo stock?",
   ];
 
+  /** El saludo lleva el nombre de quien entró; antes decía «Hola, Daniel» a todos (ticket 1636). */
+  get saludo(): string {
+    try {
+      const nombre = String(JSON.parse(localStorage.getItem("user") || "{}").name || "").trim().split(/\s+/)[0];
+      return nombre ? `Hola, ${nombre}` : "Hola";
+    } catch {
+      return "Hola";
+    }
+  }
+
   constructor(
     private agentService: AgentService,
     private webSocketService: WebSocketService,

@@ -228,7 +228,23 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
    * Solo Administrador y Super Administrador; el cliente corporativo no entra.
    */
   get tipoDocEditable(): boolean {
-    if (!this.isEdit || this.target !== 'client' || !this.persist || !(this.clienteData?.cd || this.clienteData?.id)) return false;
+    return this.esClienteGuardado && this.esAdministrador;
+  }
+
+  /**
+   * Ticket 1635: el tipo está bloqueado solo por el rol. La ficha le dice a la persona quién lo puede
+   * cambiar, en vez de dejar el campo gris sin explicación.
+   */
+  get tipoDocSoloAdministrador(): boolean {
+    return this.esClienteGuardado && !this.esAdministrador;
+  }
+
+  /** Un cliente que ya existe y se guarda desde esta ficha (el corporativo no entra). */
+  private get esClienteGuardado(): boolean {
+    return this.isEdit && this.target === 'client' && this.persist && !!(this.clienteData?.cd || this.clienteData?.id);
+  }
+
+  private get esAdministrador(): boolean {
     try {
       const rol = JSON.parse(localStorage.getItem('user') || '{}').rol;
       return ['Administrador', 'Super Administrador'].includes(rol);
