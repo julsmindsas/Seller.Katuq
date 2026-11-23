@@ -341,6 +341,9 @@ const AJUSTES_MANUAL_MARCA: { clave: string; nombre: string; no: string; si: str
   { clave: "estados", nombre: "Colores de estado", no: "Verde y rojo", si: "Los de la marca", valor: "marca", nota: "Confirmaciones, errores y la etiqueta de descuento sin verde ni rojo; los distinguen el ícono, el texto y el borde." },
   { clave: "panelCompra", nombre: "Carrito y pago", no: "Colores de Katuq", si: "Los de la marca", valor: "marca", nota: "El carrito, el pago, la ventana de la cuenta y los avisos usan el color de texto de la marca y grises neutros." },
   { clave: "emojis", nombre: "Emojis en la tienda", no: "Sí", si: "No", valor: "no", nota: "El carrito y el asistente llevan íconos de línea o solo texto." },
+  // D-693
+  { clave: "tarjetas", nombre: "Tarjetas de producto", no: "Sencillas", si: "Con marco de la marca", valor: "marco", nota: "La tarjeta de producto, las pestañas de la vitrina y los paneles del kit llevan el borde del color de acento y una sombra suave; la marca del producto, una barrita de acento." },
+  { clave: "botonTarjeta", nombre: "Botón de la tarjeta", no: "Compacto, junto al precio", si: "A todo el ancho", valor: "ancho", nota: "El precio arriba y «Agregar al carrito» debajo, de lado a lado. En celular queda el botón compacto." },
 ];
 
 /** D-689: dónde se abre «Entrega y pago» en la tienda del diseño nuevo (tema.pagoVista). Vacío = ventana al centro. */
@@ -5575,9 +5578,61 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const b = this.bloqueActual;
     if (!b) return;
     const cols = b.datos.columnas || [];
-    if (cols.length >= 3) return;
+    if (cols.length >= this.maxColumnas(b)) return;
     b.datos.columnas = [...cols, { imagen: "", titulo: "", cuerpo: "", ctaTexto: "", ctaUrl: "" }];
     this.marcarSucio();
+  }
+
+  /** Formas de las columnas del diseño nuevo (D-693): la de siempre o tarjetas de marca. */
+  readonly formasColumnas: { id: string; nombre: string; ayuda: string }[] = [
+    { id: "", nombre: "De siempre", ayuda: "Hasta tres columnas abiertas, con foto o ícono." },
+    { id: "tarjetas", nombre: "Tarjetas", ayuda: "Hasta cinco tarjetas en fila: la foto arriba, tu ícono sobre ella, la etiqueta, el título y el enlace." },
+    { id: "horizontal", nombre: "Apaisadas", ayuda: "Hasta cuatro tarjetas de a dos: el texto a la izquierda y la foto a la derecha." },
+    { id: "franja", nombre: "Franja", ayuda: "Una sola tarjeta a lo ancho: tu ícono, el texto y el botón en una fila. Usa la primera columna." },
+  ];
+
+  /** La forma elegida, si es una de las de tarjetas de marca ("" = la de siempre). */
+  formaColumnas(b: any): string {
+    const v = String((b && b.datos && b.datos.variante) || "");
+    return ["tarjetas", "horizontal", "franja"].includes(v) ? v : "";
+  }
+
+  elegirFormaColumnas(b: any, id: string): void {
+    if (!b || !b.datos) return;
+    b.datos.variante = id;
+    this.marcarSucio();
+  }
+
+  /** Cuántas columnas admite el bloque según su forma (los topes del servidor). */
+  maxColumnas(b: any): number {
+    const v = this.disenoNuevo ? this.formaColumnas(b) : "";
+    return v === "tarjetas" ? 5 : v === "horizontal" ? 4 : v === "franja" ? 1 : 3;
+  }
+
+  /** El ícono propio de una columna (D-693): una imagen de la marca en lugar del ícono de la lista. */
+  subirIconoColumna(evento: Event, indice: number): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+    this.subiendo = true;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendo = false;
+        input.value = "";
+        const b = this.bloqueActual;
+        if (!res || !res.success || !res.url || !b || !b.datos.columnas[indice]) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        b.datos.columnas[indice].iconoImagen = res.url;
+        this.marcarSucio();
+      },
+      error: () => {
+        this.subiendo = false;
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
   }
 
   quitarColumna(i: number): void {
@@ -5710,12 +5765,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     return this.disenoNuevo && SitioEditorComponent.CON_CABECERA_V2.includes(tipo);
   }
 
-  /** Pie v2: hasta 5 columnas, cada una con su título y hasta 8 enlaces (los topes del servidor). */
+  /** Pie v2: hasta 7 columnas, cada una con su título y hasta 14 enlaces (los topes del servidor, D-693). */
+  readonly maxColumnasPie = 7;
+  readonly maxEnlacesPie = 14;
+
   agregarColumnaPie(): void {
     const b = this.bloqueActual;
     if (!b) return;
     const columnas = Array.isArray(b.datos.columnas) ? b.datos.columnas : [];
-    if (columnas.length >= 5) return;
+    if (columnas.length >= this.maxColumnasPie) return;
     b.datos.columnas = [...columnas, { titulo: "", enlaces: [{ etiqueta: "", url: "" }] }];
     this.marcarSucio();
   }
@@ -5729,7 +5787,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   agregarEnlaceAColumnaPie(columna: { enlaces?: { etiqueta: string; url: string }[] }): void {
     const enlaces = Array.isArray(columna.enlaces) ? columna.enlaces : [];
-    if (enlaces.length >= 8) return;
+    if (enlaces.length >= this.maxEnlacesPie) return;
     columna.enlaces = [...enlaces, { etiqueta: "", url: "" }];
     this.marcarSucio();
   }

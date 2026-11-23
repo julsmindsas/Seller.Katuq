@@ -10,11 +10,54 @@
 <div class="segmentos" role="group" aria-label="Forma de las baldosas">
   <button type="button" [class.is-activo]="forma === ''" [attr.aria-pressed]="forma === ''" (click)="elegirForma('')">Fotos</button>
   <button type="button" [class.is-activo]="forma === 'iconos'" [attr.aria-pressed]="forma === 'iconos'" (click)="elegirForma('iconos')">Íconos</button>
+  <button type="button" [class.is-activo]="forma === 'tarjetas'" [attr.aria-pressed]="forma === 'tarjetas'" (click)="elegirForma('tarjetas')">Tarjetas</button>
 </div>
+<p class="nota" *ngIf="forma === 'tarjetas'">
+  Tarjetas altas con la foto en círculo, el nombre y una flecha. Se usan con las categorías que eliges a mano, más abajo.
+</p>
 <p class="nota" *ngIf="forma === 'iconos'">
   Con íconos, cada categoría que sale necesita el suyo en Tienda › Nombres de categorías. Si a una le falta, la banda sale
   con fotos.<ng-container *ngIf="!conIcono"> Todavía ninguna tiene ícono.</ng-container>
 </p>
+
+<span class="rotulo">Categorías elegidas a mano <small>({{ propias.length }} de {{ maxPropias }})</small></span>
+<p class="nota" *ngIf="!aMano">
+  Sin ninguna, la banda muestra las categorías de tu catálogo. Si prefieres decidir cuáles van, con qué foto y a dónde
+  llevan (por ejemplo, grupos como «Redes y conectividad»), agrégalas aquí.
+</p>
+<p class="nota" *ngIf="aMano">La banda muestra estas, en este orden, y no las de tu catálogo.</p>
+<div class="repetible" *ngFor="let c of propias; let i = index; let primero = first; let ultimo = last; trackBy: porIndice">
+  <div class="repetible__cabeza">
+    <span class="numero">Categoría {{ i + 1 }}</span>
+    <button type="button" class="mini" [disabled]="primero" (click)="moverPropia(i, -1)" aria-label="Subir categoría">↑</button>
+    <button type="button" class="mini" [disabled]="ultimo" (click)="moverPropia(i, 1)" aria-label="Bajar categoría">↓</button>
+    <button type="button" class="mini mini--quitar" (click)="quitarPropia(i)">Quitar</button>
+  </div>
+  <span class="repetible__rotulo">Nombre</span>
+  <input type="text" maxlength="40" placeholder="Redes y conectividad" aria-label="Nombre de la categoría"
+         [(ngModel)]="c.nombre" (ngModelChange)="cambiar()" />
+  <span class="repetible__rotulo">A dónde lleva</span>
+  <input type="text" list="kq-destinos-inicio" placeholder="/?catalogo=1&q=redes, /c/mesh o https://…" aria-label="Destino de la categoría"
+         [(ngModel)]="c.url" (ngModelChange)="cambiar()" />
+  <span class="repetible__rotulo">Foto</span>
+  <div class="foto-cat">
+    <img *ngIf="c.imagen" [src]="c.imagen" alt="" />
+    <label class="foto-cat__archivo">
+      {{ subiendo === i ? 'Subiendo…' : (c.imagen ? 'Cambiar la foto' : 'Elegir una foto') }}
+      <input type="file" accept="image/*" (change)="subirFoto($event, i)" [disabled]="subiendo >= 0" />
+    </label>
+    <button type="button" class="mini mini--quitar" *ngIf="c.imagen" (click)="quitarFoto(c)">Quitar foto</button>
+  </div>
+  <button type="button" class="opcion" [class.is-active]="c.destacada === true" [attr.aria-pressed]="c.destacada === true" (click)="alternarDestacada(c)">
+    <span class="opcion__texto">
+      <strong>Destacada</strong>
+      <small>Va rellena con el color de tu marca. Úsala para «Ver todas las categorías».</small>
+    </span>
+    <span class="palanca"><span></span></span>
+  </button>
+  <p class="repetible__aviso" *ngIf="incompleta(c)">Escribe el nombre y a dónde lleva: sin los dos, no sale en la página.</p>
+</div>
+<button type="button" class="agregar" [disabled]="propias.length >= maxPropias" (click)="agregarPropia()">Agregar una categoría</button>
 
 <span class="rotulo">Cantidad de productos</span>
 <div class="segmentos" role="group" aria-label="Mostrar cuántos productos tiene cada categoría">

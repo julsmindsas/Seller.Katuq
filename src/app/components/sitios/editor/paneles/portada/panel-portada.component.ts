@@ -32,6 +32,21 @@ interface DiapositivaPortada {
   ctaUrl?: string;
   alineacion?: string;
   foco?: string;
+  /** Banners de marca (D-693): la etiqueta sobre el título, la parte del título en el color de acento y la foto de celular. */
+  antetitulo?: string;
+  resaltado?: string;
+  imagenMovil?: string;
+}
+
+/** Un peldaño de la portada «Escalera» (D-693), como lo guarda el servidor (`peldanos`). */
+interface PeldanoPortada {
+  etiqueta?: string;
+  titulo?: string;
+  texto?: string;
+  icono?: string;
+  iconoImagen?: string;
+  url?: string;
+  emblemas?: string[];
 }
 
 /** Una foto del carrusel con su texto, para pintar su tarjeta. */
@@ -72,6 +87,8 @@ interface DestinoPlano {
 export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
   static readonly MAX_ESPACIOS = 3;
   static readonly MAX_SELLOS = 4;
+  static readonly MAX_PELDANOS = 5;
+  static readonly MAX_EMBLEMAS = 6;
   /** Topes del servidor: el nombre cabe en dos líneas de la tarjeta más angosta (DISENO D2). */
   static readonly MAX_TITULO = 22;
   static readonly MAX_ENLACE = 20;
@@ -82,6 +99,10 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
   readonly iconos = ICONOS_SITIO;
   readonly maxEspacios = PanelPortadaComponent.MAX_ESPACIOS;
   readonly maxSellos = PanelPortadaComponent.MAX_SELLOS;
+  readonly maxPeldanos = PanelPortadaComponent.MAX_PELDANOS;
+  readonly maxEmblemas = PanelPortadaComponent.MAX_EMBLEMAS;
+  /** Qué imagen de la escalera o de un banner se está subiendo ("" = ninguna). */
+  subiendoMarca = "";
   readonly maxTitulo = PanelPortadaComponent.MAX_TITULO;
   readonly maxEnlace = PanelPortadaComponent.MAX_ENLACE;
 
@@ -134,6 +155,20 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
     return this.datos.composicion === "espacios";
   }
 
+  /** Portada «Escalera» (D-693): el título a la izquierda y hasta cinco tarjetas que suben como peldaños. */
+  get conEscalera(): boolean {
+    return this.datos.composicion === "escalera";
+  }
+
+  /** «Foto a lo ancho»: la portada de siempre (ni espacios ni escalera). */
+  get conAncho(): boolean {
+    return !this.conEspacios && !this.conEscalera;
+  }
+
+  get peldanos(): PeldanoPortada[] {
+    return Array.isArray(this.datos.peldanos) ? this.datos.peldanos : [];
+  }
+
   /**
    * Las fotos del carrusel las agrega, quita y mueve el editor (campo «Carrusel», arriba); aquí se detecta el cambio y
    * cada foto se empareja con su texto por la URL. Una foto nueva nace sin texto (usa el de la portada) y el texto de
@@ -165,12 +200,12 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
 
   /** Hay carrusel (dos o más fotos) y la portada es «Foto a lo ancho»: cada foto puede llevar su texto. */
   get conCarrusel(): boolean {
-    return !this.conEspacios && this.fotos.length >= 2;
+    return this.conAncho && this.fotos.length >= 2;
   }
 
   /** Cualquier foto con texto propio (título, apoyo, botón o alineación): la portada pasa a un texto por foto. */
   get conTextoPorFoto(): boolean {
-    return this.conCarrusel && this.fotos.some((f) => !!(f.d.titulo || f.d.subtitulo || f.d.ctaTexto || f.d.alineacion));
+    return this.conCarrusel && this.fotos.some((f) => !!(f.d.titulo || f.d.subtitulo || f.d.ctaTexto || f.d.alineacion || f.d.antetitulo));
   }
 
   /** Avisos de una foto, en el orden en que se resuelven (ninguno impide publicar). */
@@ -200,7 +235,7 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
 
   // ── Composición ───────────────────────────────────────────────────────────
 
-  elegirComposicion(valor: "" | "espacios"): void {
+  elegirComposicion(valor: "" | "espacios" | "escalera"): void {
     this.datos.composicion = valor;
     // La primera vez que se elige, y solo si la página ya tiene un plano con ancla, nacen los tres pasos del artboard:
     // hablan del kit del plano, así que sin plano serían contenido falso (DISENO §1, principio 5).
@@ -364,6 +399,112 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
 
   trazoIcono(nombre: string | undefined): string {
     return (nombre && TRAZOS_ICONO_SITIO[nombre]) || "";
+  }
+
+  // ── Escalera (D-693) ──────────────────────────────────────────────────────
+
+  agregarPeldano(): void {
+    if (this.peldanos.length >= this.maxPeldanos) return;
+    this.datos.peldanos = [...this.peldanos, { etiqueta: "", titulo: "", texto: "" }];
+    this.avisar();
+  }
+
+  quitarPeldano(i: number): void {
+    const lista = [...this.peldanos];
+    lista.splice(i, 1);
+    this.datos.peldanos = lista;
+    this.avisar();
+  }
+
+  moverPeldano(i: number, paso: -1 | 1): void {
+    const j = i + paso;
+    const lista = [...this.peldanos];
+    if (j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+    this.datos.peldanos = lista;
+    this.avisar();
+  }
+
+  /**
+   * Sube una imagen de la escalera o de un banner y la deja donde toca: el logo de la portada (`marca`), el ícono
+   * propio de un peldaño (`icono:<i>`), un emblema más (`emblema:<i>`) o la foto de celular de un banner (`movil:<i>`).
+   */
+  subirDeMarca(evento: Event, destino: string): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+    this.subiendoMarca = destino;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendoMarca = "";
+        input.value = "";
+        if (!res || !res.success || !res.url) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        const [que, indice] = destino.split(":");
+        const i = Number(indice);
+        if (que === "marca") this.datos.marcaImagen = res.url;
+        else if (que === "icono" && this.peldanos[i]) this.peldanos[i].iconoImagen = res.url;
+        else if (que === "emblema" && this.peldanos[i]) {
+          const actuales = this.peldanos[i].emblemas || [];
+          if (actuales.length < this.maxEmblemas) this.peldanos[i].emblemas = [...actuales, res.url];
+        } else if (que === "movil" && this.fotos[i]) this.fotos[i].d.imagenMovil = res.url;
+        this.avisar();
+      },
+      error: () => {
+        this.subiendoMarca = "";
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
+  }
+
+  quitarMarca(): void {
+    delete this.datos.marcaImagen;
+    this.avisar();
+  }
+
+  quitarIconoPropio(i: number): void {
+    if (!this.peldanos[i]) return;
+    delete this.peldanos[i].iconoImagen;
+    this.avisar();
+  }
+
+  quitarEmblema(i: number, k: number): void {
+    const p = this.peldanos[i];
+    if (!p) return;
+    const lista = [...(p.emblemas || [])];
+    lista.splice(k, 1);
+    if (lista.length) p.emblemas = lista;
+    else delete p.emblemas;
+    this.avisar();
+  }
+
+  quitarFotoMovil(i: number): void {
+    if (!this.fotos[i]) return;
+    delete this.fotos[i].d.imagenMovil;
+    this.avisar();
+  }
+
+  /** El peldaño sale en la página solo con etiqueta o nombre. */
+  peldanoVacio(p: PeldanoPortada): boolean {
+    return !String(p.etiqueta || "").trim() && !String(p.titulo || "").trim();
+  }
+
+  // ── Banners (D-693) ───────────────────────────────────────────────────────
+
+  /** Portada secundaria: va debajo de la portada principal de la página y sus títulos no son el título principal. */
+  alternarSecundaria(): void {
+    if (this.datos.secundaria === true) delete this.datos.secundaria;
+    else this.datos.secundaria = true;
+    this.avisar();
+  }
+
+  /** La parte resaltada de una foto tiene que estar dentro de su título (o del de la portada). */
+  resaltadoDeFotoHuerfano(f: FotoCarrusel): boolean {
+    const r = String(f.d.resaltado || "").trim();
+    return !!r && !String(f.d.titulo || this.datos.titulo || "").includes(r);
   }
 
   // ── Sellos («Cómo funciona») ──────────────────────────────────────────────

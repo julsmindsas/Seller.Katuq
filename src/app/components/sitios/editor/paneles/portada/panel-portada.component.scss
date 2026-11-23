@@ -258,3 +258,55 @@
     outline-offset: 1px;
   }
 }
+
+// Escalera y banners (D-693). Ninguna clase lleva «p-» (trampa de CSS global).
+.portada__opcion {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  text-align: left;
+  background: var(--kb-surface);
+  border: 1px solid var(--kb-line-3);
+  border-radius: 11px;
+  color: var(--kb-ink);
+  cursor: pointer;
+
+  strong {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  small {
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: normal;
+    color: var(--kb-muted);
+  }
+
+  &.is-active {
+    border-color: var(--kb-accent-fg);
+    background: var(--kb-accent-wash);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}
+
+.portada__emblema {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+
+  img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: var(--kb-surface-3);
+  }
+}

@@ -5,17 +5,27 @@
   <div class="portada__campo">
     <label class="portada__etiqueta">Cómo se arma</label>
     <div class="portada__segmentado" role="group" aria-label="Cómo se arma la portada">
-      <button type="button" [class.is-active]="!conEspacios" [attr.aria-pressed]="!conEspacios" (click)="elegirComposicion('')">Foto a lo ancho</button>
+      <button type="button" [class.is-active]="conAncho" [attr.aria-pressed]="conAncho" (click)="elegirComposicion('')">Foto a lo ancho</button>
       <button type="button" [class.is-active]="conEspacios" [attr.aria-pressed]="conEspacios" (click)="elegirComposicion('espacios')">Espacios</button>
+      <button type="button" [class.is-active]="conEscalera" [attr.aria-pressed]="conEscalera" (click)="elegirComposicion('escalera')">Escalera</button>
     </div>
-    <small class="portada__ayuda" *ngIf="!conEspacios">La portada de siempre: tu foto de fondo con el título encima. Con dos o más
+    <small class="portada__ayuda" *ngIf="conEscalera">El título a la izquierda y hasta cinco tarjetas que suben como peldaños
+      (tus líneas de negocio o los pasos de tu servicio). Se ve completa en la Vista fiel.</small>
+    <small class="portada__ayuda" *ngIf="conAncho">La portada de siempre: tu foto de fondo con el título encima. Con dos o más
       fotos en «Carrusel» (arriba), cada una puede llevar su propio texto, más abajo.</small>
     <small class="portada__ayuda" *ngIf="conEspacios">El título a la izquierda y hasta tres tarjetas de espacio a la derecha
       («En la casa», «En el negocio»…). Se ve completa en la Vista fiel.</small>
   </div>
 
   <!-- Foto a lo ancho: botón secundario y, con carrusel, el texto de cada foto -->
-  <ng-container *ngIf="!conEspacios">
+  <ng-container *ngIf="conAncho">
+    <div class="portada__campo">
+      <button type="button" class="portada__opcion" [class.is-active]="datos.secundaria === true" [attr.aria-pressed]="datos.secundaria === true" (click)="alternarSecundaria()">
+        <strong>Es una portada secundaria</strong>
+        <small>Enciéndelo si esta portada va debajo de otra: sus títulos dejan de ser el título principal de la página.</small>
+      </button>
+    </div>
+
     <div class="portada__campo">
       <label class="portada__etiqueta" for="portada-cta2-ancho">Botón secundario (opcional)</label>
       <input id="portada-cta2-ancho" type="text" maxlength="40" [(ngModel)]="datos.cta2Texto" (ngModelChange)="cambiar()"
@@ -43,9 +53,17 @@
         <input [id]="'portada-foto-alt-' + i" type="text" [attr.maxlength]="maxAlt" [(ngModel)]="f.d.alt" (ngModelChange)="cambiar()"
                placeholder="Una frase corta, como se la dirías a alguien por teléfono" />
 
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-ante-' + i">Etiqueta sobre el título (opcional)</label>
+        <input [id]="'portada-foto-ante-' + i" type="text" maxlength="40" [(ngModel)]="f.d.antetitulo" (ngModelChange)="cambiar()" placeholder="01 · Elige" />
+
         <label class="portada__etiqueta" [attr.for]="'portada-foto-titulo-' + i">Título de esta foto</label>
         <input [id]="'portada-foto-titulo-' + i" type="text" [attr.maxlength]="maxTituloFoto" [(ngModel)]="f.d.titulo" (ngModelChange)="cambiar()"
                [attr.placeholder]="datos.titulo || 'Si lo dejas vacío, sale el de la portada'" />
+
+        <label class="portada__etiqueta" [attr.for]="'portada-foto-resaltado-' + i">Parte del título en el color de tu marca (opcional)</label>
+        <input [id]="'portada-foto-resaltado-' + i" type="text" maxlength="60" [(ngModel)]="f.d.resaltado" (ngModelChange)="cambiar()" placeholder="cada necesidad." />
+        <small class="portada__ayuda portada__ayuda--error" *ngIf="resaltadoDeFotoHuerfano(f)">Escríbela igual que en el título: si no
+          está dentro del título, no se resalta.</small>
 
         <label class="portada__etiqueta" [attr.for]="'portada-foto-apoyo-' + i">Subtítulo de esta foto</label>
         <input [id]="'portada-foto-apoyo-' + i" type="text" [attr.maxlength]="maxApoyoFoto" [(ngModel)]="f.d.subtitulo" (ngModelChange)="cambiar()"
@@ -69,11 +87,120 @@
           <option *ngFor="let o of focos" [value]="o.valor">{{ o.etiqueta }}</option>
         </select>
 
+        <span class="portada__etiqueta" [id]="'portada-foto-cel-' + i">Foto para celular (opcional)</span>
+        <div class="portada__foto" role="group" [attr.aria-labelledby]="'portada-foto-cel-' + i">
+          <img *ngIf="f.d.imagenMovil" [src]="f.d.imagenMovil" alt="" />
+          <label class="portada__archivo">
+            {{ subiendoMarca === 'movil:' + i ? 'Subiendo…' : (f.d.imagenMovil ? 'Cambiar' : 'Elegir') }}
+            <input type="file" accept="image/*" (change)="subirDeMarca($event, 'movil:' + i)" [disabled]="!!subiendoMarca" />
+          </label>
+          <button type="button" class="portada__quitar" *ngIf="f.d.imagenMovil" (click)="quitarFotoMovil(i)">Quitar</button>
+        </div>
+        <small class="portada__ayuda">Reemplaza a la foto en celular. Úsala si la foto trae un gráfico a un lado que en una pantalla angosta queda debajo del texto.</small>
+
         <ul class="portada__avisos" *ngIf="avisosDeFoto(f).length">
           <li *ngFor="let a of avisosDeFoto(f)">{{ a }}</li>
         </ul>
       </div>
     </ng-container>
+  </ng-container>
+
+  <!-- Escalera (D-693) -->
+  <ng-container *ngIf="conEscalera">
+    <div class="portada__campo">
+      <span class="portada__etiqueta" id="portada-esc-marca">Logo sobre el título (opcional)</span>
+      <div class="portada__foto" role="group" aria-labelledby="portada-esc-marca">
+        <img *ngIf="datos.marcaImagen" [src]="datos.marcaImagen" alt="" />
+        <label class="portada__archivo">
+          {{ subiendoMarca === 'marca' ? 'Subiendo…' : (datos.marcaImagen ? 'Cambiar' : 'Elegir una imagen') }}
+          <input type="file" accept="image/*" (change)="subirDeMarca($event, 'marca')" [disabled]="!!subiendoMarca" />
+        </label>
+        <button type="button" class="portada__quitar" *ngIf="datos.marcaImagen" (click)="quitarMarca()">Quitar</button>
+      </div>
+      <small class="portada__ayuda">Por ejemplo, tu logo con eslogan. Sobre un fondo oscuro, sube la versión clara, con fondo transparente.</small>
+    </div>
+
+    <div class="portada__campo">
+      <label class="portada__etiqueta" for="portada-esc-ante">Antetítulo</label>
+      <input id="portada-esc-ante" type="text" maxlength="40" [(ngModel)]="datos.antetitulo" (ngModelChange)="cambiar()" placeholder="Quiénes somos" />
+    </div>
+
+    <div class="portada__campo">
+      <label class="portada__etiqueta" for="portada-esc-resaltado">Parte del título en el color de tu marca (opcional)</label>
+      <input id="portada-esc-resaltado" type="text" maxlength="40" [(ngModel)]="datos.resaltado" (ngModelChange)="cambiar()" placeholder="tecnología." />
+      <small class="portada__ayuda">Va en su propio renglón, debajo del resto del título.</small>
+      <small class="portada__ayuda portada__ayuda--error" *ngIf="resaltadoHuerfano">Escríbela igual que en el título: si no
+        está dentro del título, no se resalta.</small>
+    </div>
+
+    <h4 class="portada__subgrupo">Peldaños <small>({{ peldanos.length }} de {{ maxPeldanos }})</small></h4>
+    <p class="portada__nota">Cada tarjeta es más alta que la anterior y la última va rellena con el color de tu marca. El número
+      (01, 02…) lo pone la página.</p>
+
+    <div class="portada__espacio" *ngFor="let q of peldanos; let i = index; trackBy: porIndice">
+      <div class="portada__cabeza">
+        <strong class="portada__nombre">Peldaño {{ i + 1 }}</strong>
+        <div class="portada__acciones">
+          <button type="button" class="portada__icono" (click)="moverPeldano(i, -1)" [disabled]="i === 0" aria-label="Subir este peldaño">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+          </button>
+          <button type="button" class="portada__icono" (click)="moverPeldano(i, 1)" [disabled]="i === peldanos.length - 1" aria-label="Bajar este peldaño">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <button type="button" class="portada__quitar" (click)="quitarPeldano(i)">Quitar</button>
+        </div>
+      </div>
+
+      <label class="portada__etiqueta" [attr.for]="'portada-pel-eti-' + i">Palabra grande</label>
+      <input [id]="'portada-pel-eti-' + i" type="text" maxlength="16" [(ngModel)]="q.etiqueta" (ngModelChange)="cambiar()" placeholder="Elige" />
+
+      <label class="portada__etiqueta" [attr.for]="'portada-pel-tit-' + i">Nombre en la cinta</label>
+      <input [id]="'portada-pel-tit-' + i" type="text" maxlength="28" [(ngModel)]="q.titulo" (ngModelChange)="cambiar()" placeholder="Baudio Store" />
+
+      <label class="portada__etiqueta" [attr.for]="'portada-pel-txt-' + i">Texto</label>
+      <input [id]="'portada-pel-txt-' + i" type="text" maxlength="110" [(ngModel)]="q.texto" (ngModelChange)="cambiar()"
+             placeholder="Tecnología al alcance de todos. Tienda física y online." />
+
+      <label class="portada__etiqueta" [attr.for]="'portada-pel-url-' + i">Lleva a</label>
+      <input [id]="'portada-pel-url-' + i" type="text" [(ngModel)]="q.url" (ngModelChange)="cambiar()" placeholder="/?catalogo=1, /nosotros o https://…" />
+
+      <span class="portada__etiqueta" [id]="'portada-pel-ico-' + i">Ícono</span>
+      <div class="portada__foto" role="group" [attr.aria-labelledby]="'portada-pel-ico-' + i">
+        <img *ngIf="q.iconoImagen" [src]="q.iconoImagen" alt="" />
+        <label class="portada__archivo">
+          {{ subiendoMarca === 'icono:' + i ? 'Subiendo…' : (q.iconoImagen ? 'Cambiar' : 'Subir el tuyo') }}
+          <input type="file" accept="image/*" (change)="subirDeMarca($event, 'icono:' + i)" [disabled]="!!subiendoMarca" />
+        </label>
+        <button type="button" class="portada__quitar" *ngIf="q.iconoImagen" (click)="quitarIconoPropio(i)">Quitar</button>
+      </div>
+      <div class="portada__ico-fila" *ngIf="!q.iconoImagen">
+        <svg *ngIf="q.icono" class="portada__ico-muestra" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="trazoIcono(q.icono)"/></svg>
+        <select [(ngModel)]="q.icono" (ngModelChange)="cambiar()" [attr.aria-label]="'Ícono del catálogo para el peldaño ' + (i + 1)">
+          <option value="">O elige uno de la lista</option>
+          <option *ngFor="let ic of iconos" [value]="ic">{{ ic }}</option>
+        </select>
+      </div>
+
+      <span class="portada__etiqueta" [id]="'portada-pel-emb-' + i">Imágenes al pie de la tarjeta (opcional, hasta {{ maxEmblemas }})</span>
+      <div class="portada__foto" role="group" [attr.aria-labelledby]="'portada-pel-emb-' + i">
+        <span class="portada__emblema" *ngFor="let u of q.emblemas || []; let k = index; trackBy: porIndice">
+          <img [src]="u" alt="" />
+          <button type="button" class="portada__quitar" (click)="quitarEmblema(i, k)" [attr.aria-label]="'Quitar la imagen ' + (k + 1)">×</button>
+        </span>
+        <label class="portada__archivo" *ngIf="(q.emblemas || []).length < maxEmblemas">
+          {{ subiendoMarca === 'emblema:' + i ? 'Subiendo…' : 'Agregar' }}
+          <input type="file" accept="image/*" (change)="subirDeMarca($event, 'emblema:' + i)" [disabled]="!!subiendoMarca" />
+        </label>
+      </div>
+      <small class="portada__ayuda">Una sola sale grande, centrada. Varias salen como círculos pequeños, de a tres por fila.</small>
+
+      <ul class="portada__avisos" *ngIf="peldanoVacio(q)">
+        <li>Escribe la palabra grande o el nombre: sin ninguno, este peldaño no sale en la página.</li>
+      </ul>
+    </div>
+
+    <button type="button" class="portada__agregar" *ngIf="peldanos.length < maxPeldanos" (click)="agregarPeldano()">+ Agregar un peldaño</button>
   </ng-container>
 
   <ng-container *ngIf="conEspacios">

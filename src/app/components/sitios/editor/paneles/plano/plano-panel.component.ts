@@ -847,6 +847,13 @@ export class PanelPlanoComponent extends PanelSitioBase implements OnChanges, On
     this.cambiar();
   }
 
+  /** Disposición «paneles» (D-693): el plano y el kit lado a lado, debajo de la cabecera y del selector. */
+  alternarPaneles(): void {
+    if (this.datos.disposicion === "paneles") delete this.datos.disposicion;
+    else this.datos.disposicion = "paneles";
+    this.cambiar();
+  }
+
   quitarInstalacion(): void {
     this.datos.instalacionId = "";
     this.cambiar();

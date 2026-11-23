@@ -88,6 +88,42 @@ export class BarrasEncabezadoPanelComponent extends PanelSitioBase {
     this.guardar(menu);
   }
 
+  /** La frase de entrada y el enlace de cierre del desplegable de un enlace (D-693). Vacío = no se guarda. */
+  cambiarDesplegable(k: number, campo: "intro" | "cierreTexto" | "cierreUrl", valor: string): void {
+    const menu = this.copia();
+    if (!menu[k]) return;
+    const e: EnlaceMenu = { ...menu[k] };
+    if (String(valor || "").trim()) e[campo] = valor;
+    else delete e[campo];
+    menu[k] = e;
+    this.guardar(menu);
+  }
+
+  /** El grupo de un enlace del submenú: los del mismo grupo van en una columna con ese título. */
+  cambiarGrupo(k: number, h: number, valor: string): void {
+    const menu = this.copia();
+    const hijos = (menu[k].hijos || []).slice();
+    if (!hijos[h]) return;
+    const hijo = { ...hijos[h] };
+    if (String(valor || "").trim()) hijo.grupo = valor;
+    else delete hijo.grupo;
+    hijos[h] = hijo;
+    menu[k] = { ...menu[k], hijos };
+    this.guardar(menu);
+  }
+
+  /** Los grupos ya escritos en ese submenú, para sugerirlos al escribir. */
+  gruposDe(e: EnlaceMenu): string[] {
+    return [...new Set((e.hijos || []).map((h) => h.grupo || "").filter(Boolean))];
+  }
+
+  /** Encabezado en dos filas: logo, buscador y cuenta arriba; redes, menú y ayuda abajo (D-693). */
+  alternarDosFilas(): void {
+    if (this.datos.filas === "dos") delete this.datos.filas;
+    else this.datos.filas = "dos";
+    this.avisar();
+  }
+
   cambiarHijo(k: number, h: number, campo: "etiqueta" | "url", valor: string): void {
     const menu = this.copia();
     const hijos = (menu[k].hijos || []).slice();

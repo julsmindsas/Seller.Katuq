@@ -13,6 +13,14 @@
     </div>
     <small class="asup__ayuda">Claro es el fondo de la página. Oscuro usa el color de la barra y el pie. Alterno es el de las franjas intercaladas.</small>
     <p class="asup__aviso" *ngIf="fondoPropio">Esta sección tiene un fondo propio (color o foto, más abajo): manda sobre este tono.</p>
+    <ng-container *ngIf="conImagenDeFondo">
+      <div class="segmentos" role="group" aria-label="Cómo se usa la imagen de fondo">
+        <button type="button" [class.is-activo]="!esTrama" [attr.aria-pressed]="!esTrama" (click)="esTrama && alternarTrama()">La imagen es una foto</button>
+        <button type="button" [class.is-activo]="esTrama" [attr.aria-pressed]="esTrama" (click)="!esTrama && alternarTrama()">Es una trama</button>
+      </div>
+      <small class="asup__ayuda">Una trama (líneas, puntos, una textura suave) va sobre el tono de la sección y el texto conserva
+        sus colores. Una foto manda sobre el tono y el texto va en blanco.</small>
+    </ng-container>
     <p class="asup__aviso" *ngIf="!conEstructura">Para tener el tono Oscuro, pon un color de estructura en Estilo › Diseño nuevo.</p>
   </div>
 

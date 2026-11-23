@@ -250,6 +250,13 @@ export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
     this.avisar();
   }
 
+  /** Tarjeta sencilla (D-693): sin la línea «Ideal para» ni los datos del producto. */
+  alternarTarjetaSimple(): void {
+    if (this.datos.tarjetaSimple === true) delete this.datos.tarjetaSimple;
+    else this.datos.tarjetaSimple = true;
+    this.avisar();
+  }
+
   alternarPropuesta(): void {
     this.datos.accionSecundaria = this.datos.accionSecundaria === "propuesta" ? "" : "propuesta";
     this.avisar();

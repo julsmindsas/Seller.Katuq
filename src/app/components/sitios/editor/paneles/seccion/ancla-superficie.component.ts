@@ -72,7 +72,25 @@ export class AnclaSuperficieComponent extends PanelSitioBase implements OnChange
   /** La sección tiene un color o una foto de fondo propios: mandan sobre el tono. */
   get fondoPropio(): boolean {
     const b: any = this.bloque;
-    return !!(b && b.estilo && (b.estilo.fondo || b.estilo.fondoImagen));
+    return !!(b && b.estilo && (b.estilo.fondo || (b.estilo.fondoImagen && b.estilo.fondoTrama !== true)));
+  }
+
+  /** La sección tiene una imagen de fondo y ningún color propio: la imagen puede ser una trama (D-693). */
+  get conImagenDeFondo(): boolean {
+    const b: any = this.bloque;
+    return !!(b && b.estilo && b.estilo.fondoImagen && !b.estilo.fondo);
+  }
+
+  get esTrama(): boolean {
+    const b: any = this.bloque;
+    return !!(b && b.estilo && b.estilo.fondoTrama === true);
+  }
+
+  /** La imagen de fondo es una trama (líneas, puntos) sobre el tono de la sección: el texto conserva sus colores. */
+  alternarTrama(): void {
+    if (this.esTrama) delete this.estilo.fondoTrama;
+    else this.estilo.fondoTrama = true;
+    this.avisar();
   }
 
   elegirSuperficie(valor: "" | "alterna" | "estructura"): void {

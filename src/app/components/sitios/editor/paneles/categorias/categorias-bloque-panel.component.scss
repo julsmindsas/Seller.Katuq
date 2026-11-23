@@ -11,3 +11,46 @@
   text-transform: uppercase;
   color: var(--kb-muted);
 }
+
+// Categorías elegidas a mano (D-693).
+.foto-cat {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: var(--kb-surface-3);
+  }
+}
+
+.foto-cat__archivo {
+  position: relative;
+  flex: 1 1 140px;
+  padding: 9px 12px;
+  border: 1.5px dashed var(--kb-line-5);
+  border-radius: 11px;
+  background: var(--kb-surface);
+  color: var(--kb-accent-fg);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &:focus-within {
+    outline: 3px solid #7c5cff;
+    outline-offset: 2px;
+  }
+}

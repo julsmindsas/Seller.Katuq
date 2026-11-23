@@ -81,6 +81,8 @@ export interface DatosPlano {
   instalacionId?: string;
   permitirCompra?: boolean;
   enviarAsesor?: boolean;
+  /** «paneles»: cabecera, entradas y selector a todo el ancho; debajo, el plano y el kit lado a lado (D-693). */
+  disposicion?: string;
   inicial?: string;
   nombres?: NombreCortoPlano[];
   entradas?: EntradaPlano[];

@@ -319,6 +319,12 @@ input[type="checkbox"]:not(#_) {
     gap: 6px;
     align-items: center;
   }
+
+  // D-693: el grupo del enlace va en su propio renglón, debajo del nombre y el destino.
+  &__grupo {
+    grid-column: 1 / 3;
+    margin-bottom: 6px;
+  }
 }
 
 .enlace-texto {

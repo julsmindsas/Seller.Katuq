@@ -703,8 +703,11 @@
             <div class="campo campo--avanzado">
               <label>Alto de la portada</label>
               <div class="segmentado">
-                <button [class.is-active]="b.datos.altura !== 'completa'"
+                <button [class.is-active]="b.datos.altura !== 'completa' && b.datos.altura !== 'banda'"
                         (click)="b.datos.altura = 'normal'; marcarSucio()">Normal</button>
+                <!-- D-693: franja apaisada (3 a 1), la medida de un banner de carrusel. Solo el diseño nuevo la pinta. -->
+                <button *ngIf="disenoNuevo" [class.is-active]="b.datos.altura === 'banda'"
+                        (click)="b.datos.altura = 'banda'; marcarSucio()">Banner</button>
                 <button [class.is-active]="b.datos.altura === 'completa'"
                         (click)="b.datos.altura = 'completa'; marcarSucio()">Pantalla completa</button>
               </div>
@@ -1359,6 +1362,13 @@
                 <small>Cada marca con su página y sus productos filtrables. Sale sola del campo «Marca» de tus productos.</small></span>
               <span class="palanca"><span></span></span>
             </button>
+            <!-- D-693: los logos en tarjetas claras (solo el diseño nuevo). -->
+            <button class="opcion" *ngIf="disenoNuevo" [class.is-active]="b.datos.variante === 'tarjetas'" [attr.aria-pressed]="b.datos.variante === 'tarjetas'"
+                    (click)="b.datos.variante = b.datos.variante === 'tarjetas' ? '' : 'tarjetas'; marcarSucio()">
+              <span class="opcion__texto"><strong>Logos en tarjetas</strong>
+                <small>Cada logo en su tarjeta clara, centrada, también sobre una sección oscura. Sube los logos en un solo color oscuro.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
           </ng-container>
 
           <!-- Ticket 1236: sucursales -->
@@ -1617,7 +1627,8 @@
                 <small>Una o dos líneas bajo tu logo. Si lo dejas vacío, no sale.</small>
               </div>
               <h4 class="subgrupo">Columnas del pie <small>(diseño nuevo)</small></h4>
-              <p class="nota">Hasta 5 columnas con su título y 8 enlaces. Sin columnas, el pie arma las de siempre. Tus
+              <p class="nota">Hasta {{ maxColumnasPie }} columnas con su título y {{ maxEnlacesPie }} enlaces. Con 6 o 7, el pie
+                las acomoda en cinco: las cortas van una debajo de otra. Sin columnas, el pie arma las de siempre. Tus
                 páginas (políticas, términos) salen solas aunque no las pongas aquí, y tu correo y tu dirección pasan a
                 la columna del logo.</p>
               <div class="pie-col" *ngFor="let c of (b.datos.columnas || []); let ci = index">
@@ -1635,14 +1646,14 @@
                   <small class="aviso" *ngIf="paginaInternaSinExistir(e.url)">Esa página no existe en tu sitio: quien toque el enlace verá un error 404.</small>
                 </div>
                 <div class="pie-col__acciones">
-                  <button class="agregar agregar--sm" *ngIf="(c.enlaces?.length || 0) < 8" (click)="agregarEnlaceAColumnaPie(c)">
+                  <button class="agregar agregar--sm" *ngIf="(c.enlaces?.length || 0) < maxEnlacesPie" (click)="agregarEnlaceAColumnaPie(c)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
                     Agregar enlace
                   </button>
                   <button class="enlace-sutil" (click)="quitarColumnaPie(ci)">Quitar columna</button>
                 </div>
               </div>
-              <button class="agregar agregar--sm" *ngIf="(b.datos.columnas?.length || 0) < 5" (click)="agregarColumnaPie()">
+              <button class="agregar agregar--sm" *ngIf="(b.datos.columnas?.length || 0) < maxColumnasPie" (click)="agregarColumnaPie()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
                 Agregar columna
               </button>
@@ -1696,11 +1707,25 @@
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
 
+            <!-- D-693: la forma de las columnas (solo el diseño nuevo pinta las tarjetas de marca). -->
+            <ng-container *ngIf="disenoNuevo">
+              <span class="repetible__rotulo">Forma</span>
+              <div class="segmentado" role="group" aria-label="Forma de las columnas">
+                <button type="button" *ngFor="let f of formasColumnas" [class.is-active]="formaColumnas(b) === f.id"
+                        [attr.aria-pressed]="formaColumnas(b) === f.id" (click)="elegirFormaColumnas(b, f.id)">{{ f.nombre }}</button>
+              </div>
+              <ng-container *ngFor="let f of formasColumnas"><p class="nota nota--simple" *ngIf="formaColumnas(b) === f.id">{{ f.ayuda }} Se ve en la Vista fiel.</p></ng-container>
+            </ng-container>
+
             <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.columnas)">
             <div class="repetible" *ngFor="let c of b.datos.columnas; let i = index" cdkDrag>
               <div class="repetible__hueco" *cdkDragPlaceholder></div>
               <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <span class="repetible__nombre">Columna {{ i + 1 }}</span>
+              <ng-container *ngIf="disenoNuevo && formaColumnas(b) && formaColumnas(b) !== 'franja'">
+                <span class="repetible__rotulo">Etiqueta (opcional)</span>
+                <input type="text" [(ngModel)]="c.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Empresas, Próximamente…" maxlength="30" />
+              </ng-container>
               <span class="repetible__rotulo">Título</span>
               <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()"
                      placeholder="Título" maxlength="90" />
@@ -1715,8 +1740,21 @@
                 </label>
                 <button class="repetible__quitar" *ngIf="c.imagen" (click)="c.imagen = ''; marcarSucio()">Quitar foto</button>
               </div>
-              <!-- Beneficios: una columna sin foto puede llevar un ícono (solo el diseño nuevo lo pinta). -->
-              <ng-container *ngIf="disenoNuevo && !c.imagen">
+              <!-- D-693: el ícono propio de la marca (tarjetas y franja). -->
+              <ng-container *ngIf="disenoNuevo && (formaColumnas(b) === 'tarjetas' || formaColumnas(b) === 'franja')">
+                <span class="repetible__rotulo">Tu ícono (opcional)</span>
+                <div class="mini-imagen">
+                  <img *ngIf="c.iconoImagen" [src]="c.iconoImagen" alt="" />
+                  <label class="btn-fantasma btn-fantasma--sm">
+                    {{ c.iconoImagen ? 'Cambiar ícono' : 'Subir ícono' }}
+                    <input type="file" accept="image/*" hidden (change)="subirIconoColumna($event, i)" [disabled]="subiendo" />
+                  </label>
+                  <button class="repetible__quitar" *ngIf="c.iconoImagen" (click)="c.iconoImagen = ''; marcarSucio()">Quitar ícono</button>
+                </div>
+              </ng-container>
+              <!-- Beneficios: una columna sin foto puede llevar un ícono (solo el diseño nuevo lo pinta). En las tarjetas de
+                   marca el ícono de la lista sale también con foto, si no se subió uno propio. -->
+              <ng-container *ngIf="disenoNuevo && (!c.imagen || formaColumnas(b) === 'tarjetas') && !c.iconoImagen">
                 <span class="repetible__rotulo">Ícono (opcional)</span>
                 <div class="iconos">
                   <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
@@ -1740,11 +1778,11 @@
             </div>
 
             <button class="agregar agregar--sm" (click)="agregarColumna()"
-                    *ngIf="(b.datos.columnas?.length || 0) < 3">
+                    *ngIf="(b.datos.columnas?.length || 0) < maxColumnas(b)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
               Agregar columna
             </button>
-            <p class="nota nota--simple">Máximo tres. En celular se apilan una debajo de otra.</p>
+            <p class="nota nota--simple">Máximo {{ maxColumnas(b) }}. En celular se apilan una debajo de otra o se deslizan con el dedo.</p>
           </ng-container>
 
           <!-- Imagen suelta -->

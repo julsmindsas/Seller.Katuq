@@ -4,6 +4,19 @@
   <br /><button type="button" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
 </p>
 
+<h4 class="subgrupo">Forma del encabezado</h4>
+<button type="button" class="opcion" [class.is-active]="datos.filas === 'dos'" [attr.aria-pressed]="datos.filas === 'dos'" (click)="alternarDosFilas()">
+  <span class="opcion__texto">
+    <strong>En dos filas</strong>
+    <small>Arriba el logo, el buscador al centro y la cuenta. Abajo tus redes, el menú y la ayuda. En celular queda en una fila, como siempre.</small>
+  </span>
+  <span class="palanca"><span></span></span>
+</button>
+<p class="nota" *ngIf="datos.filas === 'dos'">
+  En la fila de abajo, a la derecha, salen el «Botón» del encabezado (como enlace de ayuda) y el WhatsApp del asesor.
+  Si el destino del botón es <strong>#chat</strong>, abre el asistente de tu tienda.
+</p>
+
 <h4 class="subgrupo">Menú <small>(diseño nuevo, hasta {{ topes.menu }} enlaces)</small></h4>
 <p class="nota">
   En computador salen en una fila junto al logo; si no caben, o en celular, van en el botón ☰. Cada enlace puede abrir
@@ -34,10 +47,26 @@
       <input type="text" list="kq-destinos-inicio" placeholder="Destino" aria-label="Destino del enlace del submenú"
              [ngModel]="h.url" (ngModelChange)="cambiarHijo(k, j, 'url', $event)" />
       <button type="button" class="mini mini--quitar" (click)="quitarHijo(k, j)">Quitar</button>
+      <input type="text" class="hijos__grupo" maxlength="40" placeholder="Grupo (opcional): título de su columna" aria-label="Grupo del enlace del submenú" [attr.list]="'kq-grupos-' + k"
+             [ngModel]="h.grupo || ''" (ngModelChange)="cambiarGrupo(k, j, $event)" />
     </div>
+    <datalist [id]="'kq-grupos-' + k"><option *ngFor="let g of gruposDe(e)" [value]="g"></option></datalist>
     <button type="button" class="agregar" [disabled]="(e.hijos?.length || 0) >= topes.hijos" (click)="agregarHijo(k)">
       Agregar al submenú
     </button>
+    <p class="nota">Hasta {{ topes.hijos }}. Los enlaces con el mismo grupo van juntos en una columna con ese título.</p>
+    <ng-container *ngIf="e.hijos?.length">
+      <span class="repetible__rotulo">Frase del submenú (opcional)</span>
+      <input type="text" maxlength="140" placeholder="Ej.: Tecnología al alcance de todos y en un solo lugar." aria-label="Frase del submenú"
+             [ngModel]="e.intro || ''" (ngModelChange)="cambiarDesplegable(k, 'intro', $event)" />
+      <span class="repetible__rotulo">Enlace de cierre (opcional)</span>
+      <div class="hijos__fila">
+        <input type="text" maxlength="40" placeholder="Texto (Ver todas las categorías)" aria-label="Texto del enlace de cierre"
+               [ngModel]="e.cierreTexto || ''" (ngModelChange)="cambiarDesplegable(k, 'cierreTexto', $event)" />
+        <input type="text" list="kq-destinos-inicio" placeholder="Destino" aria-label="Destino del enlace de cierre"
+               [ngModel]="e.cierreUrl || ''" (ngModelChange)="cambiarDesplegable(k, 'cierreUrl', $event)" />
+      </div>
+    </ng-container>
   </div>
 </div>
 <button type="button" class="agregar" [disabled]="menu.length >= topes.menu" (click)="agregarEnlace()">Agregar enlace</button>

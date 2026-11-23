@@ -70,6 +70,16 @@
     <button type="button" class="vitrina__agregar" *ngIf="pestanas.length < topes.pestanas" (click)="agregarPestana()">+ Agregar una pestaña</button>
   </ng-container>
 
+  <!-- D-693: tarjeta sencilla (sin «Ideal para» ni datos). -->
+  <button type="button" class="vitrina__opcion" [class.is-active]="datos.tarjetaSimple === true" [attr.aria-pressed]="datos.tarjetaSimple === true"
+          (click)="alternarTarjetaSimple()">
+    <span class="vitrina__opcion-txt">
+      <strong>Tarjeta sencilla</strong>
+      <small>Solo la foto, la marca, el nombre, el precio y el botón. Sin la línea «Ideal para» ni los datos del producto.</small>
+    </span>
+    <span class="vitrina__palanca" aria-hidden="true"><span></span></span>
+  </button>
+
   <!-- «Agregar a mi propuesta» (T17): solo cuando la página tiene la guía, que es la que sabe atenderlo. -->
   <button type="button" class="vitrina__opcion" *ngIf="hayGuia || datos.accionSecundaria === 'propuesta'"
           [class.is-active]="datos.accionSecundaria === 'propuesta'" [attr.aria-pressed]="datos.accionSecundaria === 'propuesta'"
