@@ -14203,3 +14203,23 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Estado:** backend `85ae64ed` en producción desde el 21-nov a las 2:17 p. m. Solo entró este cambio; producción ya estaba al día con lo demás.
 - **Medición en producción (21-nov, de 2:17 a 4:46 p. m.):** entraron 2 pedidos. Respondieron en 0,14 s y 0,16 s. Los correos salieron después, en 2,5 s y 1,6 s, los dos de cada pedido. Sin errores ni reinicios. Son solo 2 pedidos: la comparación con la medición previa se repite cuando haya una semana de datos.
 - **Sigue del plan (cada uno con su diff aprobado):** lista de pedidos sin métricas en la primera página, sondeo del tablero, resumen de clientes sin carrito, y el filtro de falsas alarmas de Sentry.
+
+### 2026-11-23 — D-693: portada de marca en el constructor de sitios (paquete de piezas de Baudio) (aws-claude-1)
+
+- **Pedido (Daniel, 23-nov):** rehacer la página de prueba de Baudio (`baudio-v3-marca`) con base en el paquete de piezas que entregó el comercio (9 secciones: encabezado, portada, categorías, destacados, soluciones, kit, marcas, descubre más y pie), usando el constructor.
+- **Decisión:** lo que la portada pide y el constructor no tenía se agrega como opciones del diseño nuevo, apagadas de fábrica y disponibles para cualquier comercio. No hay CSS suelto por sitio (misma regla de D-689).
+- **Opciones nuevas (servidor):**
+  - Encabezado en dos filas y desplegable con frase, columnas por grupo y enlace de cierre (hasta 16 enlaces por desplegable).
+  - Portada «escalera» (hasta 5 tarjetas que suben) y carrusel de banners con etiqueta, parte resaltada, foto propia para celular y altura de banda.
+  - Categorías elegidas a mano, en tarjetas con la foto en círculo.
+  - Columnas como tarjetas de marca: verticales (hasta 5), apaisadas y franja; etiqueta e ícono propio por columna.
+  - Marcas en tarjetas; vitrina de tarjeta sencilla.
+  - Plano: hasta 10 puntos y 4 entradas, proporciones 3:2 y 16:9, y disposición en paneles.
+  - Pie con hasta 7 columnas de 14 enlaces, que fluyen en cinco.
+  - Fondo de trama por sección (la imagen va sobre el color de la sección y el texto conserva sus colores).
+  - Dos ajustes de manual de marca: tarjetas con marco del color de acento y botón «Agregar al carrito» a todo el ancho.
+- **El diseño de siempre no cambia:** los campos nuevos solo se guardan si se eligen y el diseño de siempre no los lee.
+- **Editor del Seller (primer paso):** el panel del menú conserva la frase, los grupos y el cierre de cada desplegable (antes los borraba al editar) y acepta 16 enlaces; el panel del plano acepta 10 puntos, 4 entradas y las proporciones nuevas. Los controles para editar las demás opciones nuevas quedan para la siguiente entrega.
+- **Pruebas:** 139 suites de sitios antes y después, con las mismas 16 fallas que ya tenía el código base; 8 pruebas nuevas de estas opciones (locales, D-566). Revisión visual a 1440 y 390 px en la copia de desarrollo. El Seller compila sin errores de tipos.
+- **Estado:** backend en la rama `feature/baudio-portada` (`80eb2fe7`), sin publicar. La página se carga en producción después de publicar el backend.
+- **Pendiente:** controles del editor para las opciones nuevas; las páginas de las líneas de negocio del comercio (hoy sus enlaces llevan a «Nosotros»); que el comercio confirme los textos que nombran garantías.

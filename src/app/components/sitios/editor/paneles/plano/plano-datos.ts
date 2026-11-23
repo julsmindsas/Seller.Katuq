@@ -39,7 +39,7 @@ export interface AlternativaPlano {
   etiqueta?: string;
 }
 
-export type Proporcion = "" | "8:5" | "4:3" | "1:1";
+export type Proporcion = "" | "8:5" | "4:3" | "1:1" | "3:2" | "16:9";
 
 export interface EspacioPlano {
   id: string;
@@ -91,12 +91,12 @@ export interface DatosPlano {
 export const TOPES_PLANO = Object.freeze({
   espacios: 4,
   lineas: 10,
-  puntos: 8,
+  puntos: 10,
   /** Desde 7 puntos el editor avisa (PLAN-V2 T11 y T13). */
   puntosComodos: 6,
   alternativas: 2,
   nombres: 24,
-  entradas: 3,
+  entradas: 4,
   cantidad: 20,
   /** Lo que se lee por bloque: lo que pase de ahí se arma con un asesor. */
   ids: 40,
@@ -131,6 +131,8 @@ export const PROPORCIONES: { valor: Proporcion; texto: string; rx: number; ry: n
   { valor: "", texto: "8:5 (apaisado)", rx: 8, ry: 5 },
   { valor: "4:3", texto: "4:3", rx: 4, ry: 3 },
   { valor: "1:1", texto: "1:1 (cuadrado)", rx: 1, ry: 1 },
+  { valor: "3:2", texto: "3:2", rx: 3, ry: 2 },
+  { valor: "16:9", texto: "16:9 (panorámico)", rx: 16, ry: 9 },
 ];
 
 const ID_ESPACIO = /^[a-z0-9-]{1,20}$/;
