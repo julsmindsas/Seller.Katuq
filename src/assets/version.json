@@ -1,6 +1,6 @@
 {
-  "version": "2026.11.19.3 - 19 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-19T23:00:14.227Z",
+  "version": "2026.11.23.1 - 23 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-23T22:49:41.584Z",
   "notas": [
     {
       "fecha": "2026-11-19T23:05:00Z",
@@ -491,6 +491,6 @@
       ]
     }
   ],
-  "commit": "cc6c8725301833736daa805d0c27a53019fe1c61",
+  "commit": "414bbeb28ac841cf517cb10ade482f77d5bad8d8",
   "cambiosSinCommit": 0
 }
