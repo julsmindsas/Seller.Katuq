@@ -14235,3 +14235,4 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Por fuera:** Despachos y Pagos de pedidos, porque el camino sin totales del servidor ignora el orden por columna y esas pantallas ordenan (necesitan antes un cambio de backend, con su diff). La vista de producción tampoco se tocó.
 - **Hallazgo sin corregir:** Generar orden anuncia hasta 200 pedidos, pero el servidor entrega máximo 100 por página; con más de 100 faltan pedidos sin aviso.
 - **Pruebas:** build de producción sin errores. No se probó en el navegador antes de publicar (la sesión no puede iniciar sesión en el Seller).
+- **Estado:** Seller 2026.11.23.2 en producción desde el 23-nov a las 7:00 p. m. (`ae99682c`). Falta comprobar en los registros que la lista y los totales se piden por separado, y verla en el navegador.
