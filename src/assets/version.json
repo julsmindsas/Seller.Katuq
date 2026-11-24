@@ -1,8 +1,25 @@
 {
-  "version": "2026.11.24.9 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:46:05.207Z",
-  "notas": [],
+  "version": "2026.11.24.10 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T20:50:20.500Z",
+  "notas": [
+    {
+      "fecha": "2026-11-24T20:48:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Despachos, las órdenes que salen con DistriSex ahora muestran el número y el estado del pedido allá, y un aviso si DistriSex lo cancela o no lo recibe.",
+      "modulos": [
+        "despachos"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T20:48:00Z",
+      "tipo": "MEJORA",
+      "texto": "En Despachos, las órdenes que salen con DistriSex ahora muestran el número y el estado del pedido allá, y un aviso si DistriSex lo cancela o no lo recibe.",
+      "modulos": [
+        "despachos"
+      ]
+    },
     {
       "fecha": "2026-11-24T20:38:00Z",
       "tipo": "NUEVO",
@@ -477,13 +494,8 @@
         "notificaciones/whatsapp/inbox",
         "dashboards"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los nombres del menú y de las pantallas ahora coinciden (Prospectos, Ajustes de inventario) y cada sitio y catálogo explica mejor para qué sirve."
     }
   ],
-  "commit": "21455f2f75ed811f7d3934d408ba10567420b48e",
+  "commit": "4e26d5c27475e1fab6ce148ff4df32b582c6f670",
   "cambiosSinCommit": 0
 }
