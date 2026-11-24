@@ -14325,5 +14325,5 @@ Pedido de Daniel: «lo mismo con el checkout, busca las mejores prácticas de lo
 - **Costo:** el script de la tienda del diseño nuevo pesa unos 6 KB más comprimido.
 - **Sin probar:** celular real con el teclado abierto, lector de pantalla real, pago a cuotas con los diseños nuevos, envío por zonas, y un tema claro sin los ajustes de marca de Baudio.
 - **Propuestas que quedan para decidir** (tocan servidor o datos del comercio, no se hicieron): enlaces a políticas y ayuda junto al botón final; decir qué producto se agotó con botón para quitarlo; estado real del pago al volver del banco; invitar a guardar la cuenta después de comprar; fecha estimada de llegada por opción de envío; cupón también en el carrito.
-- **Estado:** backend en la rama de trabajo (`feature/baudio-portada`), sin publicar; espera el «publica» de Daniel por ser el flujo de compra.
+- **Estado (24-nov, con el «publica» de Daniel):** backend `d1a389cc` en producción; Baudio publicado con `pagoDiseno: tarjetas` y comprobado en vivo a 1440 y 390 px sin enviar pedidos; Seller 2026.11.24.5 en vivo con el control. Con este despliegue salió también D-721 (NPS, de otra sesión), con el sí de Daniel.
 ||||||| 901b37f5
