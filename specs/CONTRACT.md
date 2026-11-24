@@ -14270,6 +14270,8 @@ Daniel eligió «arrancar por el backend» y aprobó el diff 1 («aprobado y pub
 
 **Paso 3 (T-18), aprobado y publicado:** backend `0a7c0bbc` (merge `17b86d3c`). Toda edición que trae carrito o importes va por la transacción que relee el pedido; en un pedido con precio corregido los campos de precio iguales a lo guardado se quitan del payload (Tesorería, Despachos y el Seller siguen cobrando y despachando) y uno distinto da 409 `PRICE_AGREEMENT_LOCKED`; `editLineaIva` da 409.
 
+**Paso 4 (T-20), aprobado y publicado:** backend `eb742e3f`. El tablero de Producción guarda el avance en un pedido con precio corregido (carrito fusionado con los precios guardados; importes distintos → noActualizadas) y relee solo el acuerdo justo antes del lote: si cambió, ese pedido no se guarda. Residual: relectura no atómica con el commit. Pendiente: reenvíos Woo/Shopify (katuq-order-upsert, processors de Shopify) escriben carrito sin esta guarda.
+
 **Sin bandera por comercio (Daniel, 24-nov):** «estamos llenando de banderas a los comercios». Se retira del diseño `companies.featureFlags.orderPriceCorrections` (y `orderPriceListChanges` de D-544): los cambios salen para todos y quién corrige precios lo decide el permiso del rol (`correct_price`, T-07). Cuando se monte `confirm`, `access.js` deja de exigir esas banderas. Excepción a la sección «Flag» de design.md, que queda superada.
 
 El diff S-11 del 23-oct y las pruebas S-01..S-10 quedaron en otra máquina: S-11 se reconstruye. Plan de 15 diffs (8 backend, 7 Seller) más índice en katuq-db, permiso a un rol y roster, en la copia local de esta sesión. Pendiente conocido para T-18: la rama sin transacción de la edición y el upsert de flows no relean la marca antes de escribir.
