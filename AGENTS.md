@@ -2,6 +2,12 @@
 
 Guía compartida para los agentes que trabajan en este repositorio. `CLAUDE.md` y `agent.md` remiten a este archivo para evitar reglas duplicadas. Comunicación y especificaciones en español; código e identificadores canónicos en inglés.
 
+## Respuestas a Daniel: primero cortas (24-nov-2026)
+
+- **La primera explicación es corta y concisa:** qué quedó hecho, qué falta y, si hace falta una decisión, una sola pregunta de sí o no. En palabras sencillas, sin secciones, tablas ni nombres técnicos.
+- **El detalle se da solo si Daniel lo pide.** Va completo en el contrato o en el commit, no en el mensaje.
+- **Sin mensajes de relleno:** una revisión automática sin novedad no se reporta.
+
 ## Base de datos: PostgreSQL desde el 1-nov-2026 (D-579)
 
 Desde el domingo 1-nov-2026 a la 1:03 p. m. (hora de Colombia), producción guarda y lee los datos de Katuq en **PostgreSQL** (servidor `katuq-db`), no en Firestore.
