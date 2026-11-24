@@ -14338,3 +14338,14 @@ Pedido de Daniel: «lo mismo con el checkout, busca las mejores prácticas de lo
 - **Estado:** alerta en backend `447465c5` y Seller 2026.11.24.6; «Reenviar a Cereza» y el arreglo de ORE-000469 en backend `bd2d7687` y Seller 2026.11.24.8, en producción. Aún sin usar con un pedido real.
 - **Texto del aviso (Daniel, 24-nov: «eso no sabe qué es el usuario»):** el aviso y la nota dicen el motivo en palabras sencillas («Guía Cereza no logró comunicarse con ICG», «ICG no le asignó a Guía Cereza el número del pedido»); el error crudo de Cereza queda solo en `ultimoErrorPush` y en el registro del webhook. Backend `317bff14`, Seller 2026.11.24.9. Los 9 pedidos que ya habían fallado (ORE-002142, 2143, 2144, 2219, 2220, 2221, 2244, 2246 y 2247) recibieron la alerta con el sí de Daniel, repitiendo su último aviso guardado por el mismo código del webhook (simulación primero, 9 de 9 `icg_failure_flagged`, estados sin cambio).
 - **Limpieza:** se quitó una línea suelta de un choque de cambios (`||||||| 901b37f5`) al final del contrato; el contenido estaba completo.
+
+### 2026-11-24 — D-697: página de error con el marco del sitio, categorías del menú con dirección propia y ficha sin «Cuidados: NO» (aws-claude-1)
+
+Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» a empezar por los arreglos de código y luego «publica»).
+
+- **D-697 (página de error):** las direcciones que no existen en una tienda publicada (ruta, página propia, producto, categoría, marca) siguen respondiendo 404 sin indexar, pero ahora salen con el encabezado y el pie del mismo sitio y los botones «Ir a la tienda» y «Ver todos los productos». Aplica a v1 y v2. Si pintar el marco falla, sale la hoja mínima de siempre con el botón.
+- **Categorías:** `/c/<slug>` resuelve también un grupo o una ruta del árbol de categorías cuando ninguna categoría de producto lleva ese slug (la de producto gana). Así la dirección canónica de las categorías del menú existe.
+- **Ficha:** «Garantía» y «Cuidados y uso» no se pintan cuando el dato es «NO», «N/A», un guion o similar (lista cerrada).
+- **Descartado:** dar 404 a `?categoria=` desconocida (una categoría real sin productos también lo daría). **Sin hacer:** quitar el enlace a las marcas sin productos (cuesta una consulta por visita a la portada).
+- **Pendiente:** la instantánea de `caracterizacionGraciasPagar` (página «gracias» sin pedido) cambia en dos campos y espera el «actualiza la prueba» de Daniel. El 404 con marco no se guarda en caché; falta decidir si se le pone tope.
+- **Evidencia:** backend `411ddc7c` en producción el 24-nov; en vivo, las cuatro direcciones inexistentes probadas dan 404 con encabezado y botón, tres categorías del menú dan 200 y la ficha de muestra ya no trae «Cuidados y uso». Páginas buenas comparadas byte a byte antes y después en la copia de pruebas.
