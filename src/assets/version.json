@@ -1,17 +1,25 @@
 {
-  "version": "2026.11.23.3 - 23 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T01:39:03.899Z",
+  "version": "2026.11.24.1 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T13:41:08.479Z",
   "notas": [
     {
-      "fecha": "2026-11-24T00:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Ahora cada usuario solo abre las pantallas que su rol tiene en el menú, también si escribe o pega la dirección. Si alguien necesita una pantalla, el administrador se la agrega a su rol en Roles.",
+      "fecha": "2026-11-24T02:26:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio ahora puedes armar el encabezado en dos filas con submenús por columnas, una portada en escalera, banners con su propia foto para celular, categorías elegidas a mano, tarjetas con tu ícono, y un pie con todo tu menú y los datos de tu empresa.",
       "modulos": [
-        "rol"
+        "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T02:26:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio ahora puedes armar el encabezado en dos filas con submenús por columnas, una portada en escalera, banners con su propia foto para celular, categorías elegidas a mano, tarjetas con tu ícono, y un pie con todo tu menú y los datos de tu empresa.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-24T00:45:00Z",
       "tipo": "MEJORA",
@@ -478,19 +486,8 @@
       "fecha": "2026-11-09T21:15:00Z",
       "tipo": "CORRIGE",
       "texto": "En el celular, el menú lateral ya no deja una franja visible cuando está cerrado."
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, las tablas de Tipos de cliente, Géneros, Ocasiones y Canales se ven como tarjetas, con Activo y Acciones a la vista y sin deslizar de lado.",
-      "modulos": [
-        "proceso/tipos-cliente",
-        "proceso/generos",
-        "proceso/ocasiones",
-        "proceso/canales"
-      ]
     }
   ],
-  "commit": "1d47170ead7141bd058ff6e1b3dfec566013db48",
+  "commit": "a45e7808f703b076c17b39c3b544b6bf8733ab9a",
   "cambiosSinCommit": 0
 }
