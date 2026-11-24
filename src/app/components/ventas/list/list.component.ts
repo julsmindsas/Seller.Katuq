@@ -2955,6 +2955,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       falta_cedula: '⚠️ Push a Guía Cereza bloqueado: falta cédula del cliente. Capturar el documento y reintentar push manual desde logística.',
       missing_nroPedido: '⚠️ Push externo bloqueado: pedido sin número. Revisar integración.',
       push_cereza_failed: '⚠️ Cereza rechazó el push automático. Ver notas de facturación/pagos para el detalle del error. Reintentar push manual desde logística.',
+      icg_sync_failed: '⚠️ Guía Cereza recibió el pedido pero no lo pudo pasar a ICG. El aviso se quita solo cuando Cereza lo sincronice.',
       woo_productos_no_encontrados: '⚠️ Llegó de WooCommerce con productos que no existen en Katuq. Ver notas de facturación/pagos.',
     };
     const m = pedido?.motivoAtencion;
