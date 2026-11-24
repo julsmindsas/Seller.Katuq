@@ -14246,3 +14246,21 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Hallazgo sin corregir:** Generar orden anuncia hasta 200 pedidos, pero el servidor entrega máximo 100 por página; con más de 100 faltan pedidos sin aviso.
 - **Pruebas:** build de producción sin errores. No se probó en el navegador antes de publicar (la sesión no puede iniciar sesión en el Seller).
 - **Estado:** Seller 2026.11.23.2 en producción desde el 23-nov a las 6:56 p. m. (`ae99682c`). Comprobado en los registros de producción: las 3 primeras cargas con la versión nueva (7:34 p. m.) pidieron la lista sin totales y enseguida los totales aparte, todas con respuesta correcta y sin errores. Falta verla en el navegador.
+
+### 2026-11-24 — D-718 (seguimiento): DistriSex arranca con una muestra, productos con variantes y una regresión corregida en las existencias de Cereza
+
+- **Arranque (Daniel, 23-nov):** conexión con el ambiente de pruebas de DistriSex funcionando, bodega y flows sembrados. Encendido solo el catálogo diario y con una muestra de 3 referencias («préndelo para 2 productos», «no tomes decisiones sin preguntarme»): el nodo lee todo el catálogo y sincroniza solo `soloReferencias` (backend `b429bdd4`). Los 3 productos quedaron en Katuq y en Shopify. Existencias y pedidos de DistriSex siguen apagados.
+- **Título:** la ficha técnica de un producto sencillo llega como lista y se metía en el título. Corregido en `e7e4806e`, en producción el 24-nov.
+- **Variantes (Daniel, 23-nov: 1-A y 2-A):**
+  - Un producto de DistriSex cuyas variantes valen lo mismo es UN producto de Katuq con `variantes[]`, la estructura de D-214 (color en `option2`, el otro eje en `option1`, por nombre). Referencia del producto = SKU del padre; referencia de cada variante = su SKU.
+  - Con precios distintos entre variantes sigue un producto por SKU, porque en Katuq un producto con variantes tiene un solo precio en venta asistida y POS.
+  - Lo que no cabe en dos ejes no se crea y se reporta. Un SKU que ya existe como producto aparte tampoco se reorganiza solo.
+  - Shopify rotula la opción con el nombre real del eje (`atributos.option1Name`/`option2Name`: Tamaño, Sabor…). Sin ese nombre, que es el caso de todos los productos anteriores, sigue saliendo Talla / Color.
+  - Existencias: un ajuste por producto con la suma de sus variantes; hacia Shopify, la cantidad de cada variante se le pide a DistriSex (`stockPorVarianteDistrisex`, en cadena después de Cereza). Pedido: viaja el SKU de la variante elegida; sin elección no sale.
+  - Medido con el catálogo de pruebas (1.660 productos): 1.173 sencillos, 320 con variantes agrupadas, 409 productos por SKU con precio distinto y 19 que no caben.
+- **Regresión del 23-nov, corregida el 24-nov:** al sembrar se sumó la bodega de DistriSex al flow de existencias de Cereza (`oms-cereza-stock-sombra`). La existencia por talla de Cereza exige que todas las bodegas pedidas sean suyas, así que los productos de Cereza con talla o color se omitían (`bodega_sin_codigo_del_proveedor`): 111 omisiones en 59 productos entre el 23-nov 2:44 p. m. y el 24-nov 9:01 a. m. Con el sí de Daniel el flow volvió a sus tres bodegas y se republicaron los 59 por el mismo camino del flow (39 con cantidad distinta, 20 sin cambio). **No volver a sumar esa bodega** hasta definir cómo se reparte por talla el respaldo de DistriSex en un producto de Cereza.
+- **Estado:** backend `b06e7f97` y `b0d9a81c` en producción desde el 24-nov (Daniel: «publica todo»; merge `aeec3138`). Pruebas locales (D-566): 10 de DistriSex en verde, `tests/flows` 23/23, contrato de seguridad de inventario y disparador de inventario en verde; simulación con el catálogo real sin inconsistencias.
+- **Pendiente:**
+  - Pasar la muestra a la forma nueva: las dos tallas del body existen como productos aparte y deben quedar como uno con dos tallas (retirar productos necesita el sí de Daniel).
+  - Decidir si el paso que busca el producto de un pedido de Shopify lo encuentra también por la referencia de la variante (módulo de pedidos compartido).
+  - Llave de producción de DistriSex, confirmar el secreto de los avisos, y prender existencias y pedidos cuando Daniel lo diga.
