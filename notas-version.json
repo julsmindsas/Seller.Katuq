@@ -192,5 +192,6 @@
   {"fecha":"2026-11-24T16:45:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En el editor de tu sitio ahora puedes elegir el diseño de la rejilla del catálogo (vitrina, compacta o lista), el de los filtros (panel o barra) y el del asistente de la tienda."},
   {"fecha":"2026-11-24T16:45:00Z","tipo":"MEJORA","modulos":["sitios"],"texto":"En tu tienda en línea, tus compradores ahora entran o crean su cuenta con solo el correo: siempre les llega el código y, si son nuevos, completan sus datos después."},
   {"fecha":"2026-11-24T17:30:00Z","tipo":"CORRIGE","modulos":["rol"],"texto":"Al crear un rol, la ventana de plantillas ya no queda tapada por la barra de arriba: ves su título y la X para cerrarla."},
-  {"fecha":"2026-11-24T17:30:00Z","tipo":"CORRIGE","texto":"Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."}
+  {"fecha":"2026-11-24T17:30:00Z","tipo":"CORRIGE","texto":"Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."},
+  {"fecha":"2026-11-24T19:55:00Z","tipo":"MEJORA","modulos":["sitios"],"texto":"El pago de tu tienda en línea es más claro para tus compradores, y en el editor (Estilo, «Vista del pago») ahora eliges cómo se arma: el de siempre, por bloques o por pasos."}
 ]

@@ -2630,6 +2630,15 @@
               </div>
               <small class="nota-estilo">{{ vistaPagoNota }}</small>
             </div>
+            <!-- D-696: cómo se arma el formulario (tema.pagoDiseno). No cambia qué datos se piden ni cómo se cobra. -->
+            <div class="campo">
+              <label id="lbl-pago-diseno">Cómo se arma «Entrega y pago»</label>
+              <div class="segmentos" role="group" aria-labelledby="lbl-pago-diseno">
+                <button type="button" *ngFor="let d of disenosPago" [class.is-active]="($any(contenido.tema).pagoDiseno || '') === d.id"
+                        [attr.aria-pressed]="($any(contenido.tema).pagoDiseno || '') === d.id" (click)="cambiarAjuste('pagoDiseno', d.id)">{{ d.nombre }}</button>
+              </div>
+              <small class="nota-estilo">{{ notaDeDiseno(disenosPago, $any(contenido.tema).pagoDiseno) }} No cambia qué datos se piden ni cómo se cobra.</small>
+            </div>
             <button type="button" class="enlace-sutil" (click)="verVistaFiel()" [disabled]="cargandoFiel">
               {{ cargandoFiel ? 'Cargando…' : 'Ver cómo queda' }}
             </button>

@@ -353,6 +353,13 @@ const VISTAS_PAGO: { id: string; nombre: string; nota: string }[] = [
   { id: "lateral", nombre: "Panel lateral", nota: "El pago se queda en el mismo panel del carrito, a la derecha, sin tapar la página." },
 ];
 
+/** D-696: cómo se arma «Entrega y pago» en la tienda del diseño nuevo (tema.pagoDiseno). Vacío = el formulario de siempre. */
+const DISENOS_PAGO: { id: string; nombre: string; nota: string }[] = [
+  { id: "", nombre: "El de siempre", nota: "El formulario de siempre, de corrido." },
+  { id: "tarjetas", nombre: "Por bloques", nota: "Todo en una pantalla, ordenado en tres bloques numerados: Contacto, Entrega y Pago. Cada forma de pago y de entrega trae su explicación." },
+  { id: "pasos", nombre: "Por pasos", nota: "Un bloque a la vez, con el resumen de lo ya escrito y la opción de cambiarlo. Sirve cuando la tienda pide muchos datos." },
+];
+
 /** D-694: diseños elegibles del catálogo (bloque catálogo: `rejilla` y `filtros`) y del asistente (tema). Vacío = el de siempre. */
 type OpcionDiseno = { id: string; nombre: string; nota: string };
 const DISENOS_REJILLA: OpcionDiseno[] = [
@@ -3316,6 +3323,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** D-689: vistas del pago del diseño nuevo (tema.pagoVista). */
   readonly vistasPago = VISTAS_PAGO;
+  /** D-696: diseños del pago del diseño nuevo (tema.pagoDiseno). */
+  readonly disenosPago = DISENOS_PAGO;
 
   /** D-694: diseños del catálogo y del asistente. */
   readonly disenosRejilla = DISENOS_REJILLA;
