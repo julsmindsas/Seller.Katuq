@@ -187,5 +187,6 @@
   {"fecha":"2026-11-19T21:31:00Z","tipo":"CORRIGE","texto":"En el celular, los botones de arriba (idioma, tema, Opttia, avisos y tu perfil) ya caben completos en la pantalla."},
   {"fecha":"2026-11-19T23:05:00Z","tipo":"NUEVO","modulos":["integrations"],"texto":"En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos."},
   {"fecha":"2026-11-23T23:52:00Z","tipo":"MEJORA","modulos":["ventas/pedidos"],"texto":"La lista de pedidos ya no espera a que se calculen los totales: aparece primero y los totales llegan un momento después."},
-  {"fecha":"2026-11-24T00:45:00Z","tipo":"MEJORA","modulos":["rol"],"texto":"Ahora cada usuario solo abre las pantallas que su rol tiene en el menú, también si escribe o pega la dirección. Si alguien necesita una pantalla, el administrador se la agrega a su rol en Roles."}
+  {"fecha":"2026-11-24T00:45:00Z","tipo":"MEJORA","modulos":["rol"],"texto":"Ahora cada usuario solo abre las pantallas que su rol tiene en el menú, también si escribe o pega la dirección. Si alguien necesita una pantalla, el administrador se la agrega a su rol en Roles."},
+  {"fecha":"2026-11-24T01:30:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En la sección «Dónde estás» de tu sitio ahora puedes mostrar el mapa interactivo de Google: tus clientes lo mueven, hacen zoom y lo abren en Maps. Si escribes el nombre de tu negocio como aparece en Google, el mapa muestra tus estrellas y reseñas."}
 ]
