@@ -632,7 +632,7 @@ const SECCIONES_LISTAS: {
     pista: "Dirección, horario y cómo llegar",
     grupo: "Dar confianza",
     tipo: "ubicacion",
-    datos: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "" },
+    datos: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "", mostrarMapa: false, nombreEnMapa: "" },
   },
 
   // ── Contacto ──────────────────────────────────────────────────────────────
@@ -732,7 +732,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
     titulo: "Lo que dicen nuestros clientes",
     items: [{ texto: "", autor: "", estrellas: 5 }],
   },
-  ubicacion: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "" },
+  ubicacion: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "", mostrarMapa: false, nombreEnMapa: "" },
   sucursales: { titulo: "Nuestras sucursales", descripcion: "", usarPuntosDeRetiro: true, sedes: [] },
   agenda: {
     titulo: "Agenda tu visita",

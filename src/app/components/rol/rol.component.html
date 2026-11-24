@@ -87,7 +87,8 @@
                       placement="top" [ngbTooltip]="'comun.editar' | translate">
                       <i class="icofont icofont-pencil-alt-5"></i>
                     </button>
-                    <button class="action-btn action-delete" (click)="eliminarRol(role)"
+                    <!-- Ticket 1637: el rol Administrador no se borra (el servidor también lo frena) -->
+                    <button class="action-btn action-delete" *ngIf="!esRolProtegido(role)" (click)="eliminarRol(role)"
                       placement="top" [ngbTooltip]="'comun.eliminar' | translate">
                       <i class="icofont icofont-trash"></i>
                     </button>

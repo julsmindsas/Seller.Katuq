@@ -11,6 +11,7 @@ import { OnboardingGuard } from './shared/guards/onboarding.guard';
 import { BlankComponent } from './shared/components/layout/blank/blank.component';
 import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { PageNotFoundComponent } from './shared/components/page-not-found/page-not-found.component';
+import { MenuRolGuard } from './shared/guards/menu-rol.guard';
 // Importar el componente de términos y condiciones
 import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
 // Importar el componente de política de privacidad
@@ -120,6 +121,8 @@ const routes: Routes = [
     path: 'agent-builder',
     component: ContentComponent,
     canActivate: [AdminGuard, SubscriptionGuard],
+    // Ticket 1637: la pantalla abre solo si el rol la tiene en su menú.
+    canActivateChild: [MenuRolGuard],
     data: { requiresPremium: true, shell: true }, // shell: marco con menú, ver ThemeModeService (D-502)
     children: [
       {
@@ -242,6 +245,8 @@ const routes: Routes = [
     path: '',
     component: ContentComponent,
     canActivate: [AdminGuard],
+    // Ticket 1637: una pantalla del menú abre solo si el rol la tiene, también por dirección directa.
+    canActivateChild: [MenuRolGuard],
     // D-502: el tema oscuro solo se aplica dentro del marco con menú (ThemeModeService)
     data: { shell: true },
     children: content

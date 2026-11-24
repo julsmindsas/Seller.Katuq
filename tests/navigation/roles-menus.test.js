@@ -27,7 +27,7 @@ const filtrar = termino => catalogo.filter(e => ['etiqueta', 'title', 'previousT
 
 test('buscar «listado» muestra los listados de Clientes, Cotizaciones y Productos como entradas distintas', () => {
   const etiquetas = filtrar('listado').filter(e => e.movable).map(textoDeEntrada);
-  for (const esperada of ['Clientes · Listado', 'Cotizaciones · Listado', 'Productos · Listado']) assert(etiquetas.includes(esperada), `falta ${esperada}`);
+  for (const esperada of ['Clientes · Listado', 'Cotizaciones · Listado', 'Productos (Inventario) · Listado']) assert(etiquetas.includes(esperada), `falta ${esperada}`);
 });
 
 test('el buscador del selector también encuentra por el nombre anterior', () => {
@@ -38,7 +38,7 @@ test('el buscador del selector también encuentra por el nombre anterior', () =>
 test('«Creación rápida» sale una sola vez, bajo Inventario › Productos, no bajo Configuración › Productos', () => {
   const rapidas = catalogo.filter(e => e.path === 'productos/crear-rapido');
   assert.equal(rapidas.length, 1);
-  assert.equal(textoDeEntrada(rapidas[0]), 'Productos · Creación rápida');
+  assert.equal(textoDeEntrada(rapidas[0]), 'Productos (Inventario) · Creación rápida');
   const posicion = catalogo.indexOf(rapidas[0]);
   const encabezado = catalogo.slice(0, posicion).reverse().find(e => e.movable === false);
   assert.equal(encabezado.id, 'productos', 'viene justo después de las pantallas del grupo de Inventario');
@@ -71,7 +71,7 @@ const rolViejo = [
 test('un rol guardado con los nombres de antes se abre con los de ahora, sin duplicados', () => {
   const seleccionadas = plano(entradasConNombresActuales(rolViejo, catalogo));
   assert.deepEqual(seleccionadas.map(textoDeEntrada), [
-    'Clientes · Listado', 'Bodegas · Existencias', 'Sitio web · Catálogo por link', 'Productos · Creación rápida', 'Algo que ya no existe',
+    'Clientes · Listado', 'Bodegas · Existencias', 'Sitio web · Catálogo por link', 'Productos (Inventario) · Creación rápida', 'Algo que ya no existe',
   ]);
   const disponibles = plano(disponiblesSinSeleccionadas(catalogo, seleccionadas));
   for (const entrada of seleccionadas) {

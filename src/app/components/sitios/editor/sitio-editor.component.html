@@ -1567,8 +1567,22 @@
               <input type="text" [(ngModel)]="b.datos.horario" (ngModelChange)="marcarSucio()"
                      maxlength="200" placeholder="Ej: lunes a sábado, 9am a 7pm" />
             </div>
+            <!-- Ticket 1625: mapa interactivo de Google, solo si el comercio lo enciende -->
+            <button class="opcion" [class.is-active]="b.datos.mostrarMapa"
+                    (click)="b.datos.mostrarMapa = !b.datos.mostrarMapa; marcarSucio()">
+              <span class="opcion__texto"><strong>Mostrar el mapa de Google</strong>
+                <small>Tus clientes mueven el mapa, hacen zoom y lo abren en Maps. Va al lado del texto en computador y debajo en celular.</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <div class="campo" *ngIf="b.datos.mostrarMapa">
+              <label>Nombre del negocio en Google</label>
+              <input type="text" [(ngModel)]="b.datos.nombreEnMapa" (ngModelChange)="marcarSucio()"
+                     maxlength="120" placeholder="Ej: Almara regalos" />
+              <small>Si tu negocio tiene ficha en Google, con su nombre el mapa muestra tus estrellas y reseñas.</small>
+            </div>
             <p class="nota">
               El botón “Cómo llegar” abre la app de mapas del cliente con tu dirección.
+              <ng-container *ngIf="b.datos.mostrarMapa"> El mapa lo carga Google, que recibe la visita de quien lo ve.</ng-container>
             </p>
           </ng-container>
 

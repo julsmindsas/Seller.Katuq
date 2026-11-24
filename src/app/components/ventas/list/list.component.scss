@@ -5252,6 +5252,11 @@ $pd-chip-border: var(--ds-control-border);
     i { color: var(--ds-accent-ink); margin-right: 4px; }
   }
 }
+// Totales del listado mientras llegan (se piden aparte de la lista, ticket 1621).
+.totales-cargando {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
 .pedidos-triage {
   display: flex;
   gap: 6px;

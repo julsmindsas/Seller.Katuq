@@ -10,7 +10,7 @@ import { NotificationStatus } from '../../services/notifications/notification.ty
 import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../services/subscription.service';
-import { FilaMenu, ResultadoBusqueda, SeccionVista, buscarEntradas, construirVistaMenu, hasNewChild as tieneHijoNuevo, insigniaVigente } from './menu-vista';
+import { FilaMenu, ResultadoBusqueda, SeccionVista, buscarEntradas, construirVistaMenu, hasNewChild as tieneHijoNuevo, insigniaVigente, marcarNovedadVista, rutaNormalizada } from './menu-vista';
 import {
   FavoritoGuardado, FavoritoVista, agregarFavorito, cargarFavoritos, esFavorito, guardarFavoritos, quitarFavorito, resolverFavoritos
 } from './menu-favoritos';
@@ -91,6 +91,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public favoritos: FavoritoVista[] = [];
   private favoritosPendientes = false;
   private vista: SeccionVista[] = [];
+  /** Ticket 1637: pantallas con NUEVO que esta persona ya abrió (se guardan en su navegador). */
+  private novedadesVistas = new Set<string>();
   public isSearchFocused: boolean = false;
 
   // Propiedades del perfil de usuario (Glassmorphism redesign)
@@ -147,6 +149,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private translate: TranslateService
   ) {
+    this.novedadesVistas = this.leerNovedadesVistas();
     // Procesar items del menú en secciones cada vez que cambian
     this.navServices.items.pipe(takeUntil(this.destroy$)).subscribe(menuItems => {
       this.processMenuItems(menuItems);
@@ -156,6 +159,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // (antes estaba anidada dentro de items.subscribe, lo que acumulaba suscripciones y filtraba memoria)
     this.router.events.pipe(takeUntil(this.destroy$)).subscribe((event) => {
       if (event instanceof NavigationEnd) {
+        // Ticket 1637: al abrir una pantalla con NUEVO, la insignia se apaga para esta persona.
+        this.registrarNovedadVista(event.urlAfterRedirects || event.url);
         // Marcar como activo el item correspondiente a la URL actual
         // (los padres se marcan automáticamente en setActiveRecursive())
         const originalMenuItems = this.navServices.getMenuItems();
@@ -447,7 +452,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       return false;
     };
 
-    this.vista = construirVistaMenu(menuItems, shouldHide);
+    this.vista = construirVistaMenu(menuItems, shouldHide, new Date(), this.novedadesVistas);
     this.sections = this.vista.map(seccion => ({
       id: seccion.id,
       grupoEnLinea: seccion.grupoEnLinea,
@@ -1555,6 +1560,41 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.notificationManager) {
       this.notificationManager.markAllAsRead();
     }
+  }
+
+  /** Ticket 1637: llave de las novedades vistas, una por persona (correo de la sesión). */
+  private llaveNovedadesVistas(): string | null {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const correo = String(user?.email || user?.correo || '').trim().toLowerCase();
+      return correo ? `katuq.menu.novedadesVistas.${correo}` : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private leerNovedadesVistas(): Set<string> {
+    try {
+      const llave = this.llaveNovedadesVistas();
+      const guardadas = llave ? JSON.parse(localStorage.getItem(llave) || '[]') : [];
+      return new Set((Array.isArray(guardadas) ? guardadas : []).filter((r: any) => typeof r === 'string'));
+    } catch {
+      return new Set<string>();
+    }
+  }
+
+  /** Ticket 1637: si la pantalla abierta llevaba NUEVO, lo apaga en el menú y lo recuerda para la próxima vez. */
+  private registrarNovedadVista(url: string): void {
+    const ruta = rutaNormalizada(String(url || '').split('?')[0].split('#')[0]);
+    if (!ruta || this.novedadesVistas.has(ruta)) return;
+    if (!marcarNovedadVista(this.vista, ruta)) return;
+    this.novedadesVistas.add(ruta);
+    try {
+      const llave = this.llaveNovedadesVistas();
+      // Tope por si acaso: las insignias vencen con badgeUntil, la lista no necesita crecer sin fin.
+      if (llave) localStorage.setItem(llave, JSON.stringify([...this.novedadesVistas].slice(-200)));
+    } catch { /* sin almacenamiento, la insignia vuelve al recargar: no pasa nada */ }
+    this.cdr.markForCheck();
   }
 
   /** Ticket 1177: la insignia del ítem se muestra mientras no venza badgeUntil. */

@@ -60,7 +60,14 @@ export class RolComponent implements OnInit {
     this.router.navigateByUrl('rol/crearRol');
   }
 
+  /** Ticket 1637: «Administrador» y «Super Administrador» no se eliminan (mismo criterio que el servidor). */
+  esRolProtegido(role: any): boolean {
+    const limpio = String(role?.rol || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
+    return limpio === 'administrador' || limpio === 'super administrador';
+  }
+
   eliminarRol(role: any) {
+    if (this.esRolProtegido(role)) return;
     Swal.fire({
       title: this.translate.instant('rol.rol.eliminarRol'),
       html: this.translate.instant('rol.rol.seEliminaraElRol', {rol: role.rol}),

@@ -65,21 +65,57 @@ function sinTildes(texto: string): string {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
-/** La insignia que se pinta, o null si no hay o ya venció. */
-export function etiquetaInsignia(item: Menu | undefined | null, ahora: Date = new Date()): InsigniaVista | null {
+/** Rutas con NUEVO que la persona ya abrió (ticket 1637): para ella la insignia se apaga. */
+export type NovedadesVistas = ReadonlySet<string>;
+const SIN_VISTAS: NovedadesVistas = new Set<string>();
+
+/**
+ * La insignia que se pinta, o null si no hay, ya venció o, si es NUEVO, la persona ya abrió esa
+ * pantalla (ticket 1637). «Próximamente» se sigue mostrando: no hay nada que abrir.
+ */
+export function etiquetaInsignia(item: Menu | undefined | null, ahora: Date = new Date(), vistas: NovedadesVistas = SIN_VISTAS): InsigniaVista | null {
   if (!insigniaVigente(item, ahora)) return null;
   const valor = String(item!.badgeValue).trim();
   if (sinTildes(valor) === 'proximamente') return { texto: 'PRONTO', tono: 'pronto' };
+  if (item!.path && vistas.has(rutaNormalizada(item!.path))) return null;
   return { texto: valor.toUpperCase(), tono: 'nuevo' };
 }
 
 /** Un hijo cuenta como novedad solo si tiene NUEVO vigente: «Próximamente» no enciende el punto. */
-export function esNovedad(hijo: Menu | undefined | null, ahora: Date = new Date()): boolean {
-  return !!hijo && hijo.type !== 'info' && etiquetaInsignia(hijo, ahora)?.tono === 'nuevo';
+export function esNovedad(hijo: Menu | undefined | null, ahora: Date = new Date(), vistas: NovedadesVistas = SIN_VISTAS): boolean {
+  return !!hijo && hijo.type !== 'info' && etiquetaInsignia(hijo, ahora, vistas)?.tono === 'nuevo';
 }
 
-export function hasNewChild(item: Menu | undefined | null, ahora: Date = new Date()): boolean {
-  return !!item?.children?.some(hijo => esNovedad(hijo, ahora));
+export function hasNewChild(item: Menu | undefined | null, ahora: Date = new Date(), vistas: NovedadesVistas = SIN_VISTAS): boolean {
+  return !!item?.children?.some(hijo => esNovedad(hijo, ahora, vistas));
+}
+
+/**
+ * Ticket 1637: la persona abrió `ruta`. Apaga en la vista ya armada el NUEVO de esa pantalla y, si su
+ * grupo se queda sin novedades, también el punto del grupo. Cambia la vista en su sitio (no la rearma)
+ * para no cerrar los grupos abiertos. Devuelve si cambió algo.
+ */
+export function marcarNovedadVista(secciones: SeccionVista[], ruta: string): boolean {
+  const buscada = rutaNormalizada(ruta);
+  if (!buscada) return false;
+  let cambio = false;
+  const apagar = (fila: FilaMenu) => {
+    if (fila.insignia?.tono === 'nuevo' && fila.ruta && rutaNormalizada(fila.ruta) === buscada) {
+      fila.insignia = null;
+      cambio = true;
+    }
+  };
+  for (const seccion of secciones || []) {
+    for (const fila of seccion.filas) {
+      apagar(fila);
+      if (fila.tipo === 'grupo') {
+        fila.hijos.forEach(apagar);
+        const punto = fila.hijos.some(hijo => hijo.tipo !== 'info' && hijo.insignia?.tono === 'nuevo');
+        if (fila.punto !== punto) { fila.punto = punto; cambio = true; }
+      }
+    }
+  }
+  return cambio;
 }
 
 function anterioresDe(...items: Array<Menu | undefined>): string[] {
@@ -90,7 +126,7 @@ function tipoDe(item: Menu): TipoFila {
   return item.type === 'info' ? 'info' : item.type === 'extLink' ? 'externo' : 'enlace';
 }
 
-function filaDeHijo(hijo: Menu, clave: string, ahora: Date): FilaMenu {
+function filaDeHijo(hijo: Menu, clave: string, ahora: Date, vistas: NovedadesVistas): FilaMenu {
   const tipo = tipoDe(hijo);
   return {
     clave,
@@ -99,7 +135,7 @@ function filaDeHijo(hijo: Menu, clave: string, ahora: Date): FilaMenu {
     titulo: hijo.title || '',
     ruta: tipo === 'info' ? undefined : hijo.path,
     anteriores: anterioresDe(hijo),
-    insignia: etiquetaInsignia(hijo, ahora),
+    insignia: etiquetaInsignia(hijo, ahora, vistas),
     punto: false,
     fuente: hijo,
     hijos: [],
@@ -107,7 +143,7 @@ function filaDeHijo(hijo: Menu, clave: string, ahora: Date): FilaMenu {
 }
 
 /** Un hijo de un grupo `inline`: se dibuja como enlace de la sección, con su propio ícono. */
-function filaEnLinea(hijo: Menu, clave: string, ahora: Date): FilaMenu {
+function filaEnLinea(hijo: Menu, clave: string, ahora: Date, vistas: NovedadesVistas): FilaMenu {
   const tipo = tipoDe(hijo);
   return {
     clave,
@@ -117,7 +153,7 @@ function filaEnLinea(hijo: Menu, clave: string, ahora: Date): FilaMenu {
     ruta: tipo === 'info' ? undefined : hijo.path,
     icono: hijo.menuIcon,
     anteriores: anterioresDe(hijo),
-    insignia: etiquetaInsignia(hijo, ahora),
+    insignia: etiquetaInsignia(hijo, ahora, vistas),
     punto: false,
     fuente: hijo,
     hijos: [],
@@ -131,7 +167,7 @@ function filaEnLinea(hijo: Menu, clave: string, ahora: Date): FilaMenu {
  * - un grupo con un solo hijo (por definición o porque el rol solo ve uno) se dibuja como enlace directo
  *   con el nombre y el ícono del grupo, que abre ese hijo.
  */
-function filasDeItem(item: Menu, clave: string, ahora: Date): FilaMenu[] {
+function filasDeItem(item: Menu, clave: string, ahora: Date, vistas: NovedadesVistas): FilaMenu[] {
   if (!item.children) {
     const tipo = tipoDe(item);
     return [{
@@ -143,7 +179,7 @@ function filasDeItem(item: Menu, clave: string, ahora: Date): FilaMenu[] {
       ruta: tipo === 'info' ? undefined : item.path,
       icono: item.menuIcon,
       anteriores: anterioresDe(item),
-      insignia: etiquetaInsignia(item, ahora),
+      insignia: etiquetaInsignia(item, ahora, vistas),
       punto: false,
       fuente: item,
       hijos: [],
@@ -151,7 +187,7 @@ function filasDeItem(item: Menu, clave: string, ahora: Date): FilaMenu[] {
   }
   const hijos = item.children;
   if (item.display === 'inline') {
-    return hijos.map((hijo, i) => filaEnLinea(hijo, `${clave}.${i}`, ahora));
+    return hijos.map((hijo, i) => filaEnLinea(hijo, `${clave}.${i}`, ahora, vistas));
   }
   if (hijos.length === 0) return [];
   const unico = hijos.length === 1 && hijos[0].type !== 'info' ? hijos[0] : null;
@@ -166,7 +202,7 @@ function filasDeItem(item: Menu, clave: string, ahora: Date): FilaMenu[] {
       ruta: unico.path,
       icono: item.menuIcon,
       anteriores: anterioresDe(item, unico),
-      insignia: etiquetaInsignia(unico, ahora),
+      insignia: etiquetaInsignia(unico, ahora, vistas),
       punto: false,
       fuente: item,
       hijos: [],
@@ -181,14 +217,14 @@ function filasDeItem(item: Menu, clave: string, ahora: Date): FilaMenu[] {
     icono: item.menuIcon,
     anteriores: anterioresDe(item),
     insignia: null,
-    punto: hasNewChild(item, ahora),
+    punto: hasNewChild(item, ahora, vistas),
     fuente: item,
-    hijos: hijos.map((hijo, i) => filaDeHijo(hijo, `${clave}.${i}`, ahora)),
+    hijos: hijos.map((hijo, i) => filaDeHijo(hijo, `${clave}.${i}`, ahora, vistas)),
   }];
 }
 
-export function construirFilas(items: Menu[], prefijo = '', ahora: Date = new Date()): FilaMenu[] {
-  return items.flatMap((item, i) => filasDeItem(item, `${prefijo}${i}`, ahora));
+export function construirFilas(items: Menu[], prefijo = '', ahora: Date = new Date(), vistas: NovedadesVistas = SIN_VISTAS): FilaMenu[] {
+  return items.flatMap((item, i) => filasDeItem(item, `${prefijo}${i}`, ahora, vistas));
 }
 
 /**
@@ -200,6 +236,7 @@ export function construirVistaMenu(
   menu: Menu[],
   ocultar: (item: Menu) => boolean = () => false,
   ahora: Date = new Date(),
+  vistas: NovedadesVistas = SIN_VISTAS,
 ): SeccionVista[] {
   const secciones: SeccionVista[] = [];
   let titulo: string | null = null;
@@ -246,7 +283,7 @@ export function construirVistaMenu(
   cerrar();
 
   secciones.forEach((seccion, i) => {
-    seccion.filas = construirFilas(seccion.items, `${i}.`, ahora);
+    seccion.filas = construirFilas(seccion.items, `${i}.`, ahora, vistas);
   });
   // Una sección sin filas (por ejemplo, solo tenía un grupo sin hijos visibles) no se dibuja.
   return secciones.filter(seccion => seccion.filas.length > 0);

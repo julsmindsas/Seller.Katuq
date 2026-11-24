@@ -11142,5 +11142,8 @@
   "De 0 a 100, admite decimales.": "De 0 a 100, aceita decimais.",
   "Sin descuento": "Sem desconto",
   "El descuento debe estar entre 0 y 100": "O desconto deve estar entre 0 e 100",
-  "Pedido bloqueado para el descuento": "Pedido bloqueado para o desconto"
+  "Pedido bloqueado para el descuento": "Pedido bloqueado para o desconto",
+  "sinAcceso.titulo": "Sua função não tem acesso a esta tela",
+  "sinAcceso.texto": "Se você precisa dela para o seu trabalho, peça ao administrador da sua empresa que a adicione à sua função em Funções.",
+  "sinAcceso.volver": "Ir para Boas-vindas"
 }

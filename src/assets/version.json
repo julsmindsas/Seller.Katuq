@@ -1,17 +1,33 @@
 {
-  "version": "2026.11.23.1 - 23 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-23T22:49:41.584Z",
+  "version": "2026.11.23.3 - 23 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T01:39:03.899Z",
   "notas": [
     {
-      "fecha": "2026-11-19T23:05:00Z",
-      "tipo": "NUEVO",
-      "texto": "En Conexiones ya puedes conectar DistriSex como proveedor: su catálogo, sus existencias y tus pedidos de sus productos van y vienen solos.",
+      "fecha": "2026-11-24T00:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Ahora cada usuario solo abre las pantallas que su rol tiene en el menú, también si escribe o pega la dirección. Si alguien necesita una pantalla, el administrador se la agrega a su rol en Roles.",
       "modulos": [
-        "integrations"
+        "rol"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T00:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "Ahora cada usuario solo abre las pantallas que su rol tiene en el menú, también si escribe o pega la dirección. Si alguien necesita una pantalla, el administrador se la agrega a su rol en Roles.",
+      "modulos": [
+        "rol"
+      ]
+    },
+    {
+      "fecha": "2026-11-23T23:52:00Z",
+      "tipo": "MEJORA",
+      "texto": "La lista de pedidos ya no espera a que se calculen los totales: aparece primero y los totales llegan un momento después.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-19T23:05:00Z",
       "tipo": "NUEVO",
@@ -473,24 +489,8 @@
         "proceso/ocasiones",
         "proceso/canales"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, Venta asistida ya no corta el logo de tu negocio, la franja de TOTAL A PAGAR queda dentro de la tarjeta y el botón de volver arriba no tapa la barra de abajo.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En Pedidos, el estado «Sin producir» ya se lee bien, el progreso del pedido te dice cuál es el siguiente paso y los estados salen con su nombre completo, como «Pago en revisión».",
-      "modulos": [
-        "ventas"
-      ]
     }
   ],
-  "commit": "414bbeb28ac841cf517cb10ade482f77d5bad8d8",
+  "commit": "1d47170ead7141bd058ff6e1b3dfec566013db48",
   "cambiosSinCommit": 0
 }

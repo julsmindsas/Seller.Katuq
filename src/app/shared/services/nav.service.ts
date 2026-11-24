@@ -336,10 +336,84 @@ export class NavService implements OnDestroy {
   }
 
   filterMenuItemsByAuthorization() {
-    const rawAuthorized: any[] = JSON.parse(
+    this.MENUITEMS = this.calcularMenu(false);
+    this.items.next(this.MENUITEMS);
+  }
+
+  /** Ticket 1637: rutas que no son de ninguna pantalla y nunca se bloquean. */
+  private static readonly RUTAS_SIEMPRE_ABIERTAS = ["sin-acceso", "welcome", "change-password"];
+
+  /** Ticket 1637: una ruta del menú o de la barra de direcciones, sin "/" a los lados, query ni fragmento. */
+  static normalizarRuta(ruta: any): string {
+    let r = String(ruta ?? "").split("#")[0].split("?")[0].trim();
+    try { r = decodeURIComponent(r); } catch { /* se deja como vino */ }
+    return r.replace(/^\/+|\/+$/g, "");
+  }
+
+  /**
+   * Ticket 1637: pantallas del catálogo que el rol de la sesión puede abrir. Es el mismo cálculo del
+   * menú lateral con todas las banderas de empresa encendidas: las banderas tienen sus propios guards
+   * y cargan después del login, y aquí solo decide el rol (un recargo de página no bloquea por error).
+   */
+  pantallasDelRol(): Set<string> {
+    const salida = new Set<string>();
+    const recorrer = (items: Menu[]) => {
+      for (const it of items || []) {
+        if (it.path) salida.add(NavService.normalizarRuta(it.path));
+        if (it.children) recorrer(it.children);
+      }
+    };
+    recorrer(this.calcularMenu(true));
+    return salida;
+  }
+
+  /**
+   * Ticket 1637: ¿la dirección se puede abrir con el rol de la sesión? Solo decide sobre las pantallas
+   * del menú: la dirección es la pantalla cuyo path es su prefijo más largo, por segmentos
+   * (`dropshipping/dashboard/123` es `dropshipping/dashboard`). Lo que no es de ninguna pantalla del
+   * menú (detalle, crear, Bienvenida, Cambiar contraseña) se abre como siempre.
+   */
+  pantallaPermitida(url: string): boolean {
+    const ruta = NavService.normalizarRuta(url);
+    if (!ruta) return true;
+    const primerSegmento = ruta.split("/")[0];
+    if (NavService.RUTAS_SIEMPRE_ABIERTAS.includes(primerSegmento)) return true;
+    let pantalla = "";
+    for (const p of this.collectAllMenuPaths().map(NavService.normalizarRuta)) {
+      if (p && (ruta === p || ruta.startsWith(p + "/")) && p.length > pantalla.length) pantalla = p;
+    }
+    if (!pantalla) return true;
+    if (this.pantallasDelRol().has(pantalla)) return true;
+    // Un permiso guardado en el rol que no es del menú (p. ej. «Creación rápida», productos/crear-rapido,
+    // que ofrece el editor de Roles) abre su dirección aunque caiga dentro de otra pantalla.
+    return this.rutasGuardadasDelRol().some((p) => p && (ruta === p || ruta.startsWith(p + "/")));
+  }
+
+  /** Ticket 1637: los path que trae guardados el rol de la sesión (o los del login, si se perdieron). */
+  private rutasGuardadasDelRol(): string[] {
+    let guardadas: any[] = JSON.parse(localStorage.getItem("authorizedMenuItems") || "[]");
+    if (!guardadas.length) {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (Array.isArray(user.menu)) guardadas = user.menu;
+    }
+    return guardadas
+      .map((item: any) => (typeof item === "string" ? item : item?.path))
+      .filter((p: any) => typeof p === "string" && p !== "*")
+      .map(NavService.normalizarRuta);
+  }
+
+  /**
+   * El menú lateral según el rol y las banderas de la empresa. Con `todasLasBanderas` hace las cuentas
+   * como si todas estuvieran encendidas y sin tocar el estado del servicio (lo usa pantallasDelRol).
+   */
+  private calcularMenu(todasLasBanderas: boolean): Menu[] {
+    let rawAuthorized: any[] = JSON.parse(
       localStorage.getItem("authorizedMenuItems") || "[]",
     );
     const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // Ticket 1637: si la sesión perdió authorizedMenuItems, el guard usa el menú que trajo el login
+    // (igual que InitializationGuard). El menú lateral sigue como siempre.
+    if (todasLasBanderas && !rawAuthorized.length && Array.isArray(user.menu)) rawAuthorized = user.menu;
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
       user.rol === "Administrador" && user.company === "Julsmind";
@@ -376,21 +450,28 @@ export class NavService implements OnDestroy {
       authorizedPaths.includes("contabilidad");
 
     // Verificar si dropshipping está habilitado para filtros adicionales
-    const isDropshippingEnabled = this.isDropshippingEnabled();
-    this.dropshippingPrendido = isDropshippingEnabled;
+    const isDropshippingEnabled = todasLasBanderas || this.isDropshippingEnabled();
+    if (!todasLasBanderas) {
+      this.dropshippingPrendido = isDropshippingEnabled;
 
-    // Alistamiento (picking y packing): sin la bandera de la empresa no se ofrece
-    this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
-    // Agenda de servicios (D-491): igual, con su bandera.
-    this.agendaPrendida = this.features.isEnabled("serviceAgenda");
-    // NPS por comercio (D-490): igual, con su bandera.
-    this.npsPrendido = this.features.isEnabled("npsModulo");
-    // Centro de ayuda (D-628): igual, con su bandera.
-    this.ayudaPrendida = this.features.isEnabled("centroDeAyuda");
-    // Leads de landing (D-633): igual, con su bandera.
-    this.landingsV2Prendido = this.features.isEnabled("landingsV2");
-    // Buzón de TikTok (D-709): igual, con su bandera.
-    this.tiktokPrendido = this.features.isEnabled("tiktokMensajes");
+      // Alistamiento (picking y packing): sin la bandera de la empresa no se ofrece
+      this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
+      // Agenda de servicios (D-491): igual, con su bandera.
+      this.agendaPrendida = this.features.isEnabled("serviceAgenda");
+      // NPS por comercio (D-490): igual, con su bandera.
+      this.npsPrendido = this.features.isEnabled("npsModulo");
+      // Centro de ayuda (D-628): igual, con su bandera.
+      this.ayudaPrendida = this.features.isEnabled("centroDeAyuda");
+      // Leads de landing (D-633): igual, con su bandera.
+      this.landingsV2Prendido = this.features.isEnabled("landingsV2");
+      // Buzón de TikTok (D-709): igual, con su bandera.
+      this.tiktokPrendido = this.features.isEnabled("tiktokMensajes");
+    }
+    const alistamientoPrendido = todasLasBanderas || this.alistamientoPrendido;
+    const agendaPrendida = todasLasBanderas || this.agendaPrendida;
+    const ayudaPrendida = todasLasBanderas || this.ayudaPrendida;
+    const landingsV2Prendido = todasLasBanderas || this.landingsV2Prendido;
+    const tiktokPrendido = todasLasBanderas || this.tiktokPrendido;
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -421,7 +502,7 @@ export class NavService implements OnDestroy {
           // Encuestas son de la familia Administrador (el servidor responde 403 a los demás);
           // Seguimiento, de quien tenga la ruta.
           if (child.path && child.path.startsWith("nps/")) {
-            if (!this.npsVisible(user)) return false;
+            if (!todasLasBanderas && !this.npsVisible(user)) return false;
             if (child.path !== "nps/seguimiento" && !isCompanyAdmin && !isSuperAdmin) return false;
           }
           // Filtrar rutas de dropshipping si no está habilitado
@@ -434,14 +515,14 @@ export class NavService implements OnDestroy {
           }
 
           // Agenda (D-491): sin la bandera no se ofrece; su configuración, solo a la familia Administrador.
-          if (child.path && (child.path === "agenda" || child.path.startsWith("agenda/")) && !this.agendaPrendida) return false;
+          if (child.path && (child.path === "agenda" || child.path.startsWith("agenda/")) && !agendaPrendida) return false;
           if (child.path === "agenda/configuracion" && !isCompanyAdmin && !isSuperAdmin) return false;
 
           // Filtrar el alistamiento si la empresa no tiene la bandera prendida
           if (
             child.path &&
             child.path.startsWith("picking-packing") &&
-            !this.alistamientoPrendido
+            !alistamientoPrendido
           ) {
             return false;
           }
@@ -449,13 +530,13 @@ export class NavService implements OnDestroy {
           // Centro de ayuda (D-628): con la bandera `centroDeAyuda`, lo ve cualquier rol; su administración,
           // solo el Super Administrador de Julsmind (el servidor responde 403 a los demás).
           if (child.path && (child.path === "centro-de-ayuda" || child.path.startsWith("centro-de-ayuda/"))) {
-            if (!this.ayudaPrendida) return false;
+            if (!ayudaPrendida) return false;
             return child.path === "centro-de-ayuda" ||
               (isSuperAdmin && String(user.company || "").trim().toLowerCase() === "julsmind");
           }
 
           // Leads de landing (D-633): sin la bandera `landingsV2` no se ofrece.
-          if (child.path === "sitios/leads" && !this.landingsV2Prendido) return false;
+          if (child.path === "sitios/leads" && !landingsV2Prendido) return false;
 
           // Filtros normales de autorización y roles
           return (
@@ -484,7 +565,7 @@ export class NavService implements OnDestroy {
         // D-709: el buzón de TikTok se agrega aquí, igual que los canales futuros, y no en el menú fijo: no es un
         // permiso propio (no entra al editor de roles), lo ve quien ve «Instagram» y solo con la bandera
         // `tiktokMensajes`. Sin la bandera, TikTok sigue como «Próximamente».
-        const tiktok: Menu[] = this.tiktokPrendido && authorizedPaths.includes(NavService.RUTA_BASE_TIKTOK)
+        const tiktok: Menu[] = tiktokPrendido && authorizedPaths.includes(NavService.RUTA_BASE_TIKTOK)
           ? [{ ...NavService.ENTRADA_TIKTOK }]
           : [];
         const children: Menu[] = item.id === "mensajes"
@@ -557,8 +638,7 @@ export class NavService implements OnDestroy {
       finalMenu.pop();
     }
 
-    this.MENUITEMS = finalMenu;
-    this.items.next(this.MENUITEMS);
+    return finalMenu;
   }
 
   /**
