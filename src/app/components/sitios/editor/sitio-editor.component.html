@@ -1674,6 +1674,29 @@
                 <input type="text" [ngModel]="b.datos.contacto?.horario" (ngModelChange)="ponerContactoPie('horario', $event)" maxlength="80"
                        placeholder="Lunes a sábado, 8:00 a. m. a 6:00 p. m." />
               </div>
+              <!-- D-693: con 6 o 7 columnas, la columna del logo dice quién vende y cómo contactarlo. -->
+              <ng-container *ngIf="(b.datos.columnas?.length || 0) > 5">
+                <p class="nota">Con 6 o 7 columnas, la columna del logo muestra tu razón social y tu NIT (los de tu empresa), la
+                  dirección, el correo y el teléfono, que abre WhatsApp. Aquí puedes poner el correo y la dirección que
+                  quieres mostrar en esta página; si los dejas vacíos, salen los de tu empresa.</p>
+                <div class="campo">
+                  <label>Nombre que se muestra</label>
+                  <input type="text" [ngModel]="b.datos.contacto?.nombre" (ngModelChange)="ponerContactoPie('nombre', $event)" maxlength="80" placeholder="El nombre de tu marca" />
+                  <small>Si lo dejas vacío, sale la razón social de tu empresa. El NIT es siempre el de tu empresa.</small>
+                </div>
+                <div class="campo">
+                  <label>Correo que se muestra</label>
+                  <input type="email" [ngModel]="b.datos.contacto?.correo" (ngModelChange)="ponerContactoPie('correo', $event)" maxlength="180" placeholder="info@tuempresa.com" />
+                </div>
+                <div class="campo">
+                  <label>Dirección que se muestra</label>
+                  <input type="text" [ngModel]="b.datos.contacto?.direccion" (ngModelChange)="ponerContactoPie('direccion', $event)" maxlength="160" placeholder="Centro empresarial, calle y número, ciudad, oficina" />
+                </div>
+                <div class="campo">
+                  <label>Nota bajo el teléfono (opcional)</label>
+                  <input type="text" [ngModel]="b.datos.contacto?.nota" (ngModelChange)="ponerContactoPie('nota', $event)" maxlength="40" placeholder="Teléfono y WhatsApp" />
+                </div>
+              </ng-container>
               <p class="aviso aviso--info">Las columnas y el contacto se ven en la página publicada con el diseño nuevo.
                 Esta vista previa todavía muestra el pie de siempre: revísalo con «Ver cómo queda».</p>
             </ng-container>

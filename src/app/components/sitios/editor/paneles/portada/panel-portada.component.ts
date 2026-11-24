@@ -433,6 +433,11 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
     if (!archivo) return;
+    // El peldaño o la foto se toman ANTES de subir: si mientras sube se reordena o se quita otro, la imagen llega al suyo.
+    const [que, indice] = destino.split(":");
+    const peldano = que === "icono" || que === "emblema" ? this.peldanos[Number(indice)] : null;
+    const foto = que === "movil" ? this.fotos[Number(indice)] : null;
+    const datos = this.datos;
     this.subiendoMarca = destino;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
@@ -442,14 +447,13 @@ export class PanelPortadaComponent extends PanelSitioBase implements DoCheck {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
         }
-        const [que, indice] = destino.split(":");
-        const i = Number(indice);
-        if (que === "marca") this.datos.marcaImagen = res.url;
-        else if (que === "icono" && this.peldanos[i]) this.peldanos[i].iconoImagen = res.url;
-        else if (que === "emblema" && this.peldanos[i]) {
-          const actuales = this.peldanos[i].emblemas || [];
-          if (actuales.length < this.maxEmblemas) this.peldanos[i].emblemas = [...actuales, res.url];
-        } else if (que === "movil" && this.fotos[i]) this.fotos[i].d.imagenMovil = res.url;
+        if (que === "marca") datos.marcaImagen = res.url;
+        else if (que === "icono" && peldano && this.peldanos.includes(peldano)) peldano.iconoImagen = res.url;
+        else if (que === "emblema" && peldano && this.peldanos.includes(peldano)) {
+          const actuales = peldano.emblemas || [];
+          if (actuales.length < this.maxEmblemas) peldano.emblemas = [...actuales, res.url];
+        } else if (que === "movil" && foto && this.fotos.includes(foto)) foto.d.imagenMovil = res.url;
+        else return;
         this.avisar();
       },
       error: () => {

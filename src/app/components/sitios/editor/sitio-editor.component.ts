@@ -409,6 +409,8 @@ const OPCIONES_ESTILO = {
     { id: "estrecho", nombre: "Estrecho" },
     { id: "", nombre: "Normal" },
     { id: "amplio", nombre: "Amplio" },
+    // D-693: 1720 px, para un diseño hecho a 1920 con 100 px de margen.
+    { id: "panoramico", nombre: "Panorámico" },
   ],
   espaciado: [
     { id: "compacto", nombre: "Compacto" },
@@ -5613,18 +5615,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   subirIconoColumna(evento: Event, indice: number): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
-    if (!archivo) return;
+    // La columna se toma ANTES de subir: si mientras sube se reordena o se cambia de sección, el ícono llega a la suya.
+    const bloque = this.bloqueActual;
+    const columna = bloque && Array.isArray(bloque.datos.columnas) ? bloque.datos.columnas[indice] : null;
+    if (!archivo || !columna) return;
     this.subiendo = true;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
         this.subiendo = false;
         input.value = "";
-        const b = this.bloqueActual;
-        if (!res || !res.success || !res.url || !b || !b.datos.columnas[indice]) {
+        if (!res || !res.success || !res.url) {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
         }
-        b.datos.columnas[indice].iconoImagen = res.url;
+        if (!bloque || !Array.isArray(bloque.datos.columnas) || !bloque.datos.columnas.includes(columna)) return;
+        columna.iconoImagen = res.url;
         this.marcarSucio();
       },
       error: () => {
@@ -5799,7 +5804,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   /** Pie v2: el contacto de la columna de marca. Un campo vacío no se guarda (el servidor lo descarta). */
-  ponerContactoPie(campo: "whatsapp" | "linea" | "horario", valor: string): void {
+  ponerContactoPie(campo: "whatsapp" | "linea" | "horario" | "correo" | "direccion" | "nota" | "nombre", valor: string): void {
     const b = this.bloqueActual;
     if (!b) return;
     b.datos.contacto = { ...(b.datos.contacto || {}), [campo]: valor };

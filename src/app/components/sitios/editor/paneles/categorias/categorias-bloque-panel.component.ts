@@ -114,17 +114,20 @@ export class CategoriasBloquePanelComponent extends PanelSitioBase {
   subirFoto(evento: Event, i: number): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
-    if (!archivo) return;
+    // La categoría se toma ANTES de subir: si mientras sube se reordena o se quita otra, la foto llega a la suya.
+    const destino = this.propias[i];
+    if (!archivo || !destino) return;
     this.subiendo = i;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
         this.subiendo = -1;
         input.value = "";
-        if (!res || !res.success || !res.url || !this.propias[i]) {
+        if (!res || !res.success || !res.url) {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
         }
-        this.propias[i].imagen = res.url;
+        if (!this.propias.includes(destino)) return;
+        destino.imagen = res.url;
         this.avisar();
       },
       error: () => {
