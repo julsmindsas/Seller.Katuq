@@ -1,25 +1,35 @@
 {
-  "version": "2026.11.24.3 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T16:56:10.773Z",
+  "version": "2026.11.24.4 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T17:03:29.982Z",
   "notas": [
     {
-      "fecha": "2026-11-24T16:45:00Z",
-      "tipo": "NUEVO",
-      "texto": "En el editor de tu sitio ahora puedes elegir el diseño de la rejilla del catálogo (vitrina, compacta o lista), el de los filtros (panel o barra) y el del asistente de la tienda.",
+      "fecha": "2026-11-24T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al crear un rol, la ventana de plantillas ya no queda tapada por la barra de arriba: ves su título y la X para cerrarla.",
       "modulos": [
-        "sitios"
+        "rol"
       ]
     },
     {
-      "fecha": "2026-11-24T16:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "En tu tienda en línea, tus compradores ahora entran o crean su cuenta con solo el correo: siempre les llega el código y, si son nuevos, completan sus datos después.",
-      "modulos": [
-        "sitios"
-      ]
+      "fecha": "2026-11-24T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Al crear un rol, la ventana de plantillas ya no queda tapada por la barra de arriba: ves su título y la X para cerrarla.",
+      "modulos": [
+        "rol"
+      ]
+    },
+    {
+      "fecha": "2026-11-24T17:30:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."
+    },
     {
       "fecha": "2026-11-24T16:45:00Z",
       "tipo": "NUEVO",
@@ -480,25 +490,8 @@
       "modulos": [
         "inventario/inventario-catalogo"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "MEJORA",
-      "texto": "El resumen de clientes te dice a qué hora se calculó, y al pulsar Actualizar trae la cifra al día.",
-      "modulos": [
-        "ventas/clienteslista"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "MEJORA",
-      "texto": "La ayuda de Cartera total y Cartera pendiente explica cómo se calcula cada una y por qué pueden diferir por poco.",
-      "modulos": [
-        "cartera",
-        "tesoreria"
-      ]
     }
   ],
-  "commit": "31d817617d79e0ed0b1978a18395928ddc6ae7f6",
+  "commit": "93288b6eb580f28f89f0f2d5e2af43cd7461c51e",
   "cambiosSinCommit": 0
 }
