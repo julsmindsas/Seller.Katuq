@@ -3029,10 +3029,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       falta_cedula: '⚠️ Push a Guía Cereza bloqueado: falta cédula del cliente. Capturar el documento y reintentar push manual desde logística.',
       missing_nroPedido: '⚠️ Push externo bloqueado: pedido sin número. Revisar integración.',
       push_cereza_failed: '⚠️ Cereza rechazó el push automático. Ver notas de facturación/pagos para el detalle del error. Reintentar push manual desde logística.',
-      icg_sync_failed: '⚠️ Guía Cereza recibió el pedido pero no lo pudo pasar a ICG. Para que lo intente otra vez: menú del pedido › «Reenviar a Cereza». El aviso se quita solo cuando Cereza lo sincronice.',
       woo_productos_no_encontrados: '⚠️ Llegó de WooCommerce con productos que no existen en Katuq. Ver notas de facturación/pagos.',
     };
     const m = pedido?.motivoAtencion;
+    // D-641: el motivo de Cereza llega en inglés técnico («Error Fetching http headers»); al
+    // usuario se le dice en palabras sencillas y sin el texto crudo.
+    if (m === 'icg_sync_failed') {
+      return `⚠️ Este pedido no llegó a ICG: ${this.motivoIcgEnPalabras(pedido?.ultimoErrorPush)}\n\n`
+        + 'Para que Cereza lo intente otra vez: menú del pedido › «Reenviar a Cereza». '
+        + 'El aviso se quita solo cuando el pedido llegue a ICG.';
+    }
     const base = motivos[m] || '⚠️ Pedido requiere atención del operador. Ver notas del pedido.';
     // Si hay ultimoErrorPush, anexarlo (acotado para tooltip legible)
     if (pedido?.ultimoErrorPush) {
@@ -3040,6 +3046,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return `${base}\n\nError: ${err}`;
     }
     return base;
+  }
+
+  /** D-641: el motivo que da Cereza cuando no pudo pasar un pedido a ICG, en palabras sencillas. */
+  private motivoIcgEnPalabras(error: any): string {
+    const e = String(error || '').toLowerCase();
+    if (/fetching http headers|could not connect|connect to host|timed? ?out|connection/.test(e)) {
+      return 'Guía Cereza no logró comunicarse con ICG.';
+    }
+    if (/consecutive/.test(e)) {
+      return 'ICG no le asignó a Guía Cereza el número del pedido.';
+    }
+    return 'Guía Cereza no pudo pasarlo.';
   }
 
   getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string; tooltip?: string; hasNote?: boolean; alerta?: boolean }[] {
