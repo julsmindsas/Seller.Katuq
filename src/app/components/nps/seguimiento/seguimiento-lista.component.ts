@@ -51,6 +51,10 @@ export class SeguimientoListaComponent implements OnInit, OnDestroy {
   filtroEstado: FiltroEstado = 'abiertos';
   filtroResponsable = '';
   filtroEncuesta = '';
+  /** D-721: casos de detractores, de pasivos o todos. */
+  filtroSegmento: 'detractor' | 'pasivo' | '' = '';
+  /** Hay casos de pasivos en la lista: se aclara que los indicadores son de detractores. */
+  hayPasivos = false;
   /** El estado con que se hizo la última consulta (null si falló). */
   private estadoConsultado: EstadoCaso | '' | null = null;
 
@@ -83,11 +87,12 @@ export class SeguimientoListaComponent implements OnInit, OnDestroy {
     this.cargando = true;
     this.error = null;
     const estado = this.estadoServidor();
-    this.nps.casos({ estado, responsable: this.filtroResponsable, encuesta: this.filtroEncuesta })
+    this.nps.casos({ estado, responsable: this.filtroResponsable, encuesta: this.filtroEncuesta, segmento: this.filtroSegmento })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (r) => {
           this.casos = (r?.casos || []).slice().sort(orden);
+          this.hayPasivos = this.filtroSegmento === 'pasivo' || this.casos.some((c) => c.segmento === 'pasivo');
           this.indicadores = r?.indicadores || null;
           this.estadoConsultado = estado;
           this.cargando = false;

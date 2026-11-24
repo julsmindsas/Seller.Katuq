@@ -14297,6 +14297,18 @@ El diff S-11 del 23-oct y las pruebas S-01..S-10 quedaron en otra máquina: S-11
 - **Pendiente:**
   - Llave de producción de DistriSex, confirmar el secreto de los avisos, y prender existencias y pedidos cuando Daniel lo diga.
 
+### 2026-11-24 — D-721: «Atender caso» para clientes pasivos, a mano y sin avisos (ticket 1649, ALMARA)
+
+- **Pedido:** ALMARA (Ana María Cataño) quiere para los pasivos (nota 7 u 8) la misma opción «Atender caso» que tienen los detractores (D-490).
+- **Decisión de Santiago (24-nov):** el caso de un pasivo se abre a mano y no manda avisos. Se descartaron abrirlo solo para cada pasivo (llenaría de correos al responsable) y hacerlo configurable por encuesta.
+- **D-721:**
+  - En Resultados, un pasivo que no es de prueba y no tiene caso muestra «Atender caso». Lo abre la familia Administrador (los mismos que ven Resultados) con `POST /v1/nps/casos/:id/abrir`; queda a nombre del responsable de la encuesta y lleva a la ficha del caso. Es idempotente.
+  - El caso se atiende igual que el de un detractor (estados, notas, responsable, historial, cierre con nota). Queda con `caso.origen = "manual"`: nace avisado, no vence a las 48 h y no entra en el recordatorio diario. Al reasignarlo sí se avisa al nuevo responsable.
+  - Seguimiento: los casos de pasivos salen en la lista con su pastilla y hay un filtro Detractores/Pasivos (`?segmento=`). Los indicadores de 90 días se calculan solo con detractores; si hay casos de pasivos, la pantalla lo aclara.
+  - Los detractores no cambian. Sin bandera (es un botón nuevo dentro del módulo `npsModulo`), sin colección nueva, sin migración ni índice. Los casos viejos sin `origen` cuentan como automáticos.
+- **Pruebas:** backend con 6 pruebas nuevas locales (fuera de git, D-566) y las 5 suites NPS existentes en verde; Seller con tsc sin errores y los diccionarios es/en/pt/de completos.
+- **Estado:** OpenSpec `casos-para-pasivos` en el backend. Falta desplegar el backend (máquina principal) y después publicar el Seller; si el Seller sale antes, el botón responde 404.
+
 ### 2026-11-24 — D-696: checkout de las tiendas del diseño nuevo según buenas prácticas, con dos diseños elegibles (aws-claude-1)
 
 Pedido de Daniel: «lo mismo con el checkout, busca las mejores prácticas de los checkout». Solo cambia lo que el comprador ve y cómo lo usa: no se tocó el pedido, el cobro, los medios de pago ni ninguna respuesta del servidor.
@@ -14314,3 +14326,4 @@ Pedido de Daniel: «lo mismo con el checkout, busca las mejores prácticas de lo
 - **Sin probar:** celular real con el teclado abierto, lector de pantalla real, pago a cuotas con los diseños nuevos, envío por zonas, y un tema claro sin los ajustes de marca de Baudio.
 - **Propuestas que quedan para decidir** (tocan servidor o datos del comercio, no se hicieron): enlaces a políticas y ayuda junto al botón final; decir qué producto se agotó con botón para quitarlo; estado real del pago al volver del banco; invitar a guardar la cuenta después de comprar; fecha estimada de llegada por opción de envío; cupón también en el carrito.
 - **Estado:** backend en la rama de trabajo (`feature/baudio-portada`), sin publicar; espera el «publica» de Daniel por ser el flujo de compra.
+||||||| 901b37f5
