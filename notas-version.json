@@ -195,5 +195,6 @@
   {"fecha":"2026-11-24T17:30:00Z","tipo":"CORRIGE","texto":"Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."},
   {"fecha":"2026-11-24T19:55:00Z","tipo":"MEJORA","modulos":["sitios"],"texto":"El pago de tu tienda en línea es más claro para tus compradores, y en el editor (Estilo, «Vista del pago») ahora eliges cómo se arma: el de siempre, por bloques o por pasos."},
   {"fecha":"2026-11-24T20:04:00Z","tipo":"MEJORA","modulos":["ventas/pedidos"],"texto":"Si Guía Cereza no logra pasar un pedido a ICG, ahora lo ves con un aviso junto al número del pedido; el aviso se quita solo cuando Cereza lo sincroniza."},
-  {"fecha":"2026-11-24T20:32:00Z","tipo":"MEJORA","modulos":["ventas/pedidos"],"texto":"Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo."}
+  {"fecha":"2026-11-24T20:32:00Z","tipo":"MEJORA","modulos":["ventas/pedidos"],"texto":"Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo."},
+  {"fecha":"2026-11-24T20:38:00Z","tipo":"NUEVO","modulos":["ventas/pedidos"],"texto":"Si un pedido no llegó a ICG, ahora lo puedes reenviar a Guía Cereza desde el menú del pedido, con «Reenviar a Cereza». El estado del pedido no cambia."}
 ]
