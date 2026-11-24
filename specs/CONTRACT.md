@@ -14251,6 +14251,8 @@ El detalle con archivo y línea está en `proposal.md`.
 
 Daniel eligió «arrancar por el backend» y aprobó el diff 1 («aprobado y publicalo»). Backend `b8045cd3` (merge `7e00eb52`, en producción): lector `services/orders/priceChange/totalesGuardados.js` para los seis listados/búsquedas/export de pedidos (T-24, mismo patrón que bootstrap); `create`, `edit`, `editBatch` y `orderRepository.create/update` descartan `pricingAgreement`, `lastPriceChange`, `pendingPriceChangeEvent` y `priceChangeHistoryPending`; un pedido con precio corregido no deja cambiar carrito ni importes (409 `PRICE_AGREEMENT_LOCKED`) hasta T-18. Sin efecto hoy: ningún pedido tiene la marca y `confirm` no está montada. El listado POS ahora atrapa el error de cálculo por pedido, como los demás.
 
+**Paso 2 (T-26), aprobado y publicado el mismo día:** backend `9f4a0d08` (merge `8eaf2275`). Ruta del mensajero (comercio e independiente), planilla y búsqueda de Logística con el precio pactado; la marca de la copia `shipping_orders.pedidos` (escrita por el cliente) nunca se usa, solo la del pedido de `orders`; sin marca, la ruta calcula igual que antes.
+
 El diff S-11 del 23-oct y las pruebas S-01..S-10 quedaron en otra máquina: S-11 se reconstruye. Plan de 15 diffs (8 backend, 7 Seller) más índice en katuq-db, permiso a un rol y roster, en la copia local de esta sesión. Pendiente conocido para T-18: la rama sin transacción de la edición y el upsert de flows no relean la marca antes de escribir.
 
 ### 2026-11-24 — D-718 (seguimiento): DistriSex arranca con una muestra, productos con variantes y una regresión corregida en las existencias de Cereza
