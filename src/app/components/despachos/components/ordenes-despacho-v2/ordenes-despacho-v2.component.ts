@@ -1,3 +1,4 @@
+import { referenciaDistrisex, ReferenciaDistrisex } from 'src/app/shared/utils/referencia-distrisex';
 import { Component, EventEmitter, OnInit, Output, Input, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, of, EMPTY } from 'rxjs';
@@ -628,6 +629,13 @@ export class OrdenesDespachoV2Component implements OnInit {
   get allVendors(): any[] {
     // Priorizar vendors cargados de la API, usar Input como fallback
     return this.loadedVendors.length > 0 ? this.loadedVendors : this.vendors;
+  }
+
+  /** Referencias de DistriSex de los pedidos de la orden (D-718). */
+  referenciasDistrisex(order: any): ReferenciaDistrisex[] {
+    return (order?.pedidos || [])
+      .map((pedido: any) => referenciaDistrisex(pedido))
+      .filter((ref: ReferenciaDistrisex | null): ref is ReferenciaDistrisex => !!ref);
   }
 
   confirmDispatchWithTransporter(): void {

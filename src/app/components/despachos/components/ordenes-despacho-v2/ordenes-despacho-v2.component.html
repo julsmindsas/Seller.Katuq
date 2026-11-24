@@ -140,6 +140,14 @@
               <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
               <span class="espera-cereza__txt">Sin confirmar</span>
             </span>
+
+            <!-- DistriSex (D-718): número y estado del pedido allá, o por qué no lo recibió. -->
+            <span class="ref-distrisex" *ngFor="let ref of referenciasDistrisex(order)"
+                  [class.ref-distrisex--alerta]="ref.alerta"
+                  [pTooltip]="ref.tooltip" [escape]="false" tooltipPosition="top">
+              <i class="pi pi-exclamation-triangle" *ngIf="ref.alerta"></i>
+              <span class="ref-distrisex__txt">{{ ref.label }}</span>
+            </span>
           </div>
 
           <div class="cell col-total">
@@ -274,6 +282,14 @@
                     [title]="detalleEsperaCereza(order)">
                 <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
                 <span class="espera-cereza__txt">Sin confirmar</span>
+              </span>
+
+              <!-- DistriSex (D-718): número y estado del pedido allá, o por qué no lo recibió. -->
+              <span class="ref-distrisex" *ngFor="let ref of referenciasDistrisex(order)"
+                    [class.ref-distrisex--alerta]="ref.alerta"
+                    [pTooltip]="ref.tooltip" [escape]="false" tooltipPosition="top">
+                <i class="pi pi-exclamation-triangle" *ngIf="ref.alerta"></i>
+                <span class="ref-distrisex__txt">{{ ref.label }}</span>
               </span>
             </div>
           </div>

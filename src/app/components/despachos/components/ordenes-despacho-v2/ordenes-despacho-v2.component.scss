@@ -1371,3 +1371,33 @@
   &.cobro-entrega--no_cobrar { color: #1E7A46; background: #E7F6EC; }
   &.cobro-entrega--confirmar { color: #5F3FE0; background: #F1EEFC; }
 }
+
+// Referencia del pedido en DistriSex (D-718): misma forma que la señal de Cereza.
+.ref-distrisex {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  max-width: 100%;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: help;
+  color: #5F3FE0;
+  background: #F1EDFF;
+  border: 1px solid #DDD4FB;
+
+  .ref-distrisex__txt {
+    color: inherit;
+    font-size: inherit;
+    white-space: nowrap;
+  }
+
+  &.ref-distrisex--alerta {
+    color: #B45309;
+    background: #FEF3C7;
+    border-color: #FCD9A0;
+  }
+}

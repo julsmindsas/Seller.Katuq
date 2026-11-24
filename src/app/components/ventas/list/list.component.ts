@@ -73,6 +73,7 @@ import { Observable, Subject, Subscription, firstValueFrom, forkJoin, of } from 
 import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
+import { referenciaDistrisex } from "../../../shared/utils/referencia-distrisex";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import {
   FacturacionAutomaticaService,
@@ -3083,70 +3084,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     // DistriSex (D-718): el número del pedido allá con su estado, o el motivo
     // por el que DistriSex no lo recibió.
-    const dsx = integ.distrisex;
-    if (dsx?.orderId) {
-      out.push({
-        label: `DSX-${dsx.orderId}`,
-        platform: 'DistriSex',
-        tooltip: this.buildDistrisexTooltip(dsx),
-        alerta: dsx.needsAttention === true,
-      });
-    } else if (dsx?.error) {
-      out.push({
-        label: 'DSX sin enviar',
-        platform: 'DistriSex',
-        tooltip: this.buildDistrisexTooltip(dsx),
-        alerta: true,
-      });
+    const dsx = referenciaDistrisex({ integrations: integ });
+    if (dsx) {
+      out.push({ label: dsx.label, platform: 'DistriSex', tooltip: dsx.tooltip, alerta: dsx.alerta });
     }
     return out;
-  }
-
-  /**
-   * Tooltip de la referencia de DistriSex. Con el pedido ya enviado: estado
-   * allá, transportadora y última consulta (se actualiza cada 30 min). Sin
-   * enviar: el mensaje con el que DistriSex o Katuq lo rechazó.
-   */
-  private buildDistrisexTooltip(dsx: any): string {
-    if (!dsx) return '';
-    const fecha = (valor: any): string => {
-      const segundos = valor?._seconds ?? valor?.seconds;
-      const d = segundos != null ? new Date(segundos * 1000) : new Date(valor);
-      return isNaN(d.getTime()) ? '' : d.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
-    };
-    const parts: string[] = [];
-    if (!dsx.orderId) {
-      parts.push(`<strong>DistriSex no recibió el pedido</strong>`);
-      parts.push(this.escaparHtml(dsx.error?.message || dsx.error?.code || 'Sin detalle del error.'));
-      const cuando = fecha(dsx.lastErrorAt);
-      if (cuando) parts.push(`Último intento: ${cuando}`);
-      return parts.join('<br>');
-    }
-    parts.push(`<strong>DistriSex</strong>`);
-    if (dsx.status) {
-      const labelMap: Record<string, string> = {
-        'pending': 'Pendiente',
-        'on-hold': 'En revisión',
-        'processing': 'En proceso',
-        'completed': 'Aprobado',
-        'cancelled': 'Cancelado',
-        'refunded': 'Reembolsado',
-        'failed': 'Fallido',
-      };
-      const label = labelMap[String(dsx.status).toLowerCase()] || dsx.status;
-      parts.push(`Estado: <b>${this.escaparHtml(label)}</b>`);
-    }
-    if (dsx.carrier) {
-      parts.push(`Transportadora: ${this.escaparHtml(dsx.carrier)}`);
-    }
-    if (dsx.needsAttention === true) {
-      parts.push(String(dsx.status).toLowerCase() === 'cancelled'
-        ? '⚠️ DistriSex canceló este pedido.'
-        : '⚠️ Cancelado en Katuq, pero DistriSex lo sigue teniendo activo: avisa a tu asesor de DistriSex.');
-    }
-    const cuando = fecha(dsx.lastStatusSync);
-    if (cuando) parts.push(`Última consulta: ${cuando}`);
-    return parts.join('<br>');
   }
 
   /**
