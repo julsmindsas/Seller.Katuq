@@ -1,17 +1,25 @@
 {
-  "version": "2026.11.24.6 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:08:37.622Z",
+  "version": "2026.11.24.7 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T20:32:06.750Z",
   "notas": [
     {
-      "fecha": "2026-11-24T20:04:00Z",
+      "fecha": "2026-11-24T20:32:00Z",
       "tipo": "MEJORA",
-      "texto": "Si Guía Cereza no logra pasar un pedido a ICG, ahora lo ves con un aviso junto al número del pedido; el aviso se quita solo cuando Cereza lo sincroniza.",
+      "texto": "Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo.",
       "modulos": [
         "ventas/pedidos"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T20:32:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-24T20:04:00Z",
       "tipo": "MEJORA",
@@ -480,13 +488,8 @@
       "fecha": "2026-11-09T22:18:00Z",
       "tipo": "CORRIGE",
       "texto": "Los avisos emergentes ya no tapan el menú de arriba y el nombre de tu empresa ya no sale cortado junto al logo."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ahora puedes cerrar el panel de notificaciones con la tecla Esc, y el botón de borrar todas quedó separado del de marcar como leídas."
     }
   ],
-  "commit": "b8dbc4fdf1f15b6b3705cb1cac7805c6a3decdca",
+  "commit": "af0e2939e17263a09a0422aab630b1e008cc6105",
   "cambiosSinCommit": 0
 }
