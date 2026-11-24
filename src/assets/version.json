@@ -1,30 +1,25 @@
 {
-  "version": "2026.11.24.5 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:03:00.873Z",
+  "version": "2026.11.24.6 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T20:08:37.622Z",
   "notas": [
     {
-      "fecha": "2026-11-24T17:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Al crear un rol, la ventana de plantillas ya no queda tapada por la barra de arriba: ves su título y la X para cerrarla.",
-      "modulos": [
-        "rol"
-      ]
-    },
-    {
-      "fecha": "2026-11-24T17:30:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."
-    },
-    {
-      "fecha": "2026-11-24T19:55:00Z",
+      "fecha": "2026-11-24T20:04:00Z",
       "tipo": "MEJORA",
-      "texto": "El pago de tu tienda en línea es más claro para tus compradores, y en el editor (Estilo, «Vista del pago») ahora eliges cómo se arma: el de siempre, por bloques o por pasos.",
+      "texto": "Si Guía Cereza no logra pasar un pedido a ICG, ahora lo ves con un aviso junto al número del pedido; el aviso se quita solo cuando Cereza lo sincroniza.",
       "modulos": [
-        "sitios"
+        "ventas/pedidos"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T20:04:00Z",
+      "tipo": "MEJORA",
+      "texto": "Si Guía Cereza no logra pasar un pedido a ICG, ahora lo ves con un aviso junto al número del pedido; el aviso se quita solo cuando Cereza lo sincroniza.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-24T19:55:00Z",
       "tipo": "MEJORA",
@@ -490,16 +485,8 @@
       "fecha": "2026-11-09T22:18:00Z",
       "tipo": "CORRIGE",
       "texto": "Ahora puedes cerrar el panel de notificaciones con la tecla Esc, y el botón de borrar todas quedó separado del de marcar como leídas."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En vivo cuenta igual los pedidos entregados hoy en todos sus bloques, la flota ya no se repite y los nombres de los mensajeros salen bien escritos.",
-      "modulos": [
-        "en-vivo"
-      ]
     }
   ],
-  "commit": "87f292c9ff3238872d67589956c53a186164d41a",
+  "commit": "b8dbc4fdf1f15b6b3705cb1cac7805c6a3decdca",
   "cambiosSinCommit": 0
 }
