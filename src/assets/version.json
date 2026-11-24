@@ -1,17 +1,25 @@
 {
-  "version": "2026.11.24.7 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:32:06.750Z",
+  "version": "2026.11.24.8 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T20:38:42.890Z",
   "notas": [
     {
-      "fecha": "2026-11-24T20:32:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo.",
+      "fecha": "2026-11-24T20:38:00Z",
+      "tipo": "NUEVO",
+      "texto": "Si un pedido no llegó a ICG, ahora lo puedes reenviar a Guía Cereza desde el menú del pedido, con «Reenviar a Cereza». El estado del pedido no cambia.",
       "modulos": [
         "ventas/pedidos"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T20:38:00Z",
+      "tipo": "NUEVO",
+      "texto": "Si un pedido no llegó a ICG, ahora lo puedes reenviar a Guía Cereza desde el menú del pedido, con «Reenviar a Cereza». El estado del pedido no cambia.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-24T20:32:00Z",
       "tipo": "MEJORA",
@@ -483,13 +491,8 @@
       "fecha": "2026-11-09T22:18:00Z",
       "tipo": "CORRIGE",
       "texto": "Los nombres del menú y de las pantallas ahora coinciden (Prospectos, Ajustes de inventario) y cada sitio y catálogo explica mejor para qué sirve."
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los avisos emergentes ya no tapan el menú de arriba y el nombre de tu empresa ya no sale cortado junto al logo."
     }
   ],
-  "commit": "af0e2939e17263a09a0422aab630b1e008cc6105",
+  "commit": "3c6066b56137081929febb84a770854cf185ab8a",
   "cambiosSinCommit": 0
 }
