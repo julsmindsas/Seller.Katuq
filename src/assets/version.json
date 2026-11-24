@@ -1,6 +1,6 @@
 {
-  "version": "2026.11.24.4 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T17:03:29.982Z",
+  "version": "2026.11.24.5 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T20:03:00.873Z",
   "notas": [
     {
       "fecha": "2026-11-24T17:30:00Z",
@@ -14,9 +14,25 @@
       "fecha": "2026-11-24T17:30:00Z",
       "tipo": "CORRIGE",
       "texto": "Las pantallas ya no se quedan cargando mientras Katuq consulta el nombre de tu plan: se abren de una vez."
+    },
+    {
+      "fecha": "2026-11-24T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "El pago de tu tienda en línea es más claro para tus compradores, y en el editor (Estilo, «Vista del pago») ahora eliges cómo se arma: el de siempre, por bloques o por pasos.",
+      "modulos": [
+        "sitios"
+      ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T19:55:00Z",
+      "tipo": "MEJORA",
+      "texto": "El pago de tu tienda en línea es más claro para tus compradores, y en el editor (Estilo, «Vista del pago») ahora eliges cómo se arma: el de siempre, por bloques o por pasos.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-24T17:30:00Z",
       "tipo": "CORRIGE",
@@ -482,16 +498,8 @@
       "modulos": [
         "en-vivo"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Las tarjetas Agotados y Stock bajo del inventario ya muestran el número real de productos.",
-      "modulos": [
-        "inventario/inventario-catalogo"
-      ]
     }
   ],
-  "commit": "93288b6eb580f28f89f0f2d5e2af43cd7461c51e",
+  "commit": "87f292c9ff3238872d67589956c53a186164d41a",
   "cambiosSinCommit": 0
 }
