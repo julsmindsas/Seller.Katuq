@@ -10974,5 +10974,8 @@
     "De 0 a 100, admite decimales.": "Von 0 bis 100, Dezimalstellen erlaubt.",
     "Sin descuento": "Kein Rabatt",
     "El descuento debe estar entre 0 y 100": "Der Rabatt muss zwischen 0 und 100 liegen",
-    "Pedido bloqueado para el descuento": "Bestellung für Rabatt gesperrt"
+    "Pedido bloqueado para el descuento": "Bestellung für Rabatt gesperrt",
+  "sinAcceso.titulo": "Deine Rolle hat keinen Zugriff auf diese Seite",
+  "sinAcceso.texto": "Wenn du sie für deine Arbeit brauchst, bitte den Administrator deines Unternehmens, sie unter Rollen deiner Rolle hinzuzufügen.",
+  "sinAcceso.volver": "Zur Startseite"
 }

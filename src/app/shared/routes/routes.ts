@@ -8,8 +8,11 @@ import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.
 import { PlataformaUiGuard } from "../../components/plataforma/servicios/plataforma-ui.guard";
 import { ConsolaWhatsappGuard } from "../services/messaging/consola-whatsapp-acceso";
 import { TiktokMensajesGuard } from "../../components/notificaciones/meta-inbox/tiktok-mensajes.guard";
+import { SinAccesoComponent } from "../components/sin-acceso/sin-acceso.component";
 
 export const content: Routes = [
+  // Ticket 1637: a donde lleva MenuRolGuard cuando el rol no tiene la pantalla.
+  { path: "sin-acceso", component: SinAccesoComponent, canActivate: [AuthGuard] },
   {
     path: "sample-page",
     loadChildren: () =>

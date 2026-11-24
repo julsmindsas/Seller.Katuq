@@ -10974,5 +10974,8 @@
   "De 0 a 100, admite decimales.": "De 0 a 100, admite decimales.",
   "Sin descuento": "Sin descuento",
   "El descuento debe estar entre 0 y 100": "El descuento debe estar entre 0 y 100",
-  "Pedido bloqueado para el descuento": "Pedido bloqueado para el descuento"
+  "Pedido bloqueado para el descuento": "Pedido bloqueado para el descuento",
+  "sinAcceso.titulo": "Tu rol no tiene acceso a esta pantalla",
+  "sinAcceso.texto": "Si la necesitas para tu trabajo, pídele al administrador de tu empresa que la agregue a tu rol en Roles.",
+  "sinAcceso.volver": "Ir a Bienvenida"
 }

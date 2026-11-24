@@ -11154,5 +11154,8 @@
   "De 0 a 100, admite decimales.": "From 0 to 100, decimals allowed.",
   "Sin descuento": "No discount",
   "El descuento debe estar entre 0 y 100": "The discount must be between 0 and 100",
-  "Pedido bloqueado para el descuento": "Order locked for discount changes"
+  "Pedido bloqueado para el descuento": "Order locked for discount changes",
+  "sinAcceso.titulo": "Your role doesn't have access to this screen",
+  "sinAcceso.texto": "If you need it for your work, ask your company's administrator to add it to your role in Roles.",
+  "sinAcceso.volver": "Go to Welcome"
 }
