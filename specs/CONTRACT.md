@@ -14247,6 +14247,12 @@ El detalle con archivo y línea está en `proposal.md`.
 - **Pruebas:** build de producción sin errores. No se probó en el navegador antes de publicar (la sesión no puede iniciar sesión en el Seller).
 - **Estado:** Seller 2026.11.23.2 en producción desde el 23-nov a las 6:56 p. m. (`ae99682c`). Comprobado en los registros de producción: las 3 primeras cargas con la versión nueva (7:34 p. m.) pidieron la lista sin totales y enseguida los totales aparte, todas con respuesta correcta y sin errores. Falta verla en el navegador.
 
+### 2026-11-24 — D-543 (Corregir precio, ticket 1355): paso 1 de 15 publicado; S-11 se reconstruye
+
+Daniel eligió «arrancar por el backend» y aprobó el diff 1 («aprobado y publicalo»). Backend `b8045cd3` (merge `7e00eb52`, en producción): lector `services/orders/priceChange/totalesGuardados.js` para los seis listados/búsquedas/export de pedidos (T-24, mismo patrón que bootstrap); `create`, `edit`, `editBatch` y `orderRepository.create/update` descartan `pricingAgreement`, `lastPriceChange`, `pendingPriceChangeEvent` y `priceChangeHistoryPending`; un pedido con precio corregido no deja cambiar carrito ni importes (409 `PRICE_AGREEMENT_LOCKED`) hasta T-18. Sin efecto hoy: ningún pedido tiene la marca y `confirm` no está montada. El listado POS ahora atrapa el error de cálculo por pedido, como los demás.
+
+El diff S-11 del 23-oct y las pruebas S-01..S-10 quedaron en otra máquina: S-11 se reconstruye. Plan de 15 diffs (8 backend, 7 Seller) más índice en katuq-db, permiso a un rol y roster, en la copia local de esta sesión. Pendiente conocido para T-18: la rama sin transacción de la edición y el upsert de flows no relean la marca antes de escribir.
+
 ### 2026-11-24 — D-718 (seguimiento): DistriSex arranca con una muestra, productos con variantes y una regresión corregida en las existencias de Cereza
 
 - **Arranque (Daniel, 23-nov):** conexión con el ambiente de pruebas de DistriSex funcionando, bodega y flows sembrados. Encendido solo el catálogo diario y con una muestra de 3 referencias («préndelo para 2 productos», «no tomes decisiones sin preguntarme»): el nodo lee todo el catálogo y sincroniza solo `soloReferencias` (backend `b429bdd4`). Los 3 productos quedaron en Katuq y en Shopify. Existencias y pedidos de DistriSex siguen apagados.
