@@ -14246,6 +14246,7 @@ El detalle con archivo y línea está en `proposal.md`.
   - Hecho con tres agentes en paralelo y revisores independientes de código y de diseño; hallazgos confirmados aplicados.
 - **D-695 (cuenta con solo el correo):** en los sitios con «crear cuenta» encendido hay una sola puerta. El código llega siempre; quien ya es cliente entra y quien es nuevo completa nombre, celular y autorización de datos después de comprobar el código. La ficha del cliente nace en ese último paso, ya confirmada. Hay «Reenviar código». Los sitios sin «crear cuenta» siguen igual. Pasó revisión independiente de seguridad, corrección y experiencia.
 - **Catálogo (24-nov):** `categoria` acepta un grupo o una ruta del árbol del comercio; con una marca elegida el panel ofrece solo sus categorías. La prueba dorada `consultarCatalogo` cambia en el caso «categoría Camisas» y su archivo sigue sin actualizar, a la espera de Daniel.
+- **Estado (24-nov):** backend `7c30ec9e` en producción y Seller 2026.11.24.3 en vivo. La tienda del comercio piloto quedó con rejilla compacta, filtros en barra y el asistente con avatar.
 - **Pendiente:** igualar al paquete las medidas de las nueve secciones de la portada del comercio piloto; tamaño de página del catálogo (12) para las rejillas compacta y lista; probar el chat con la IA real y en iPhone.
 
 ### 2026-11-23 — D-720: la lista de pedidos se pinta sin esperar los totales (ticket 1621, lentitud en Pedidos)

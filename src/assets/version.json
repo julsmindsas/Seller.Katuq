@@ -1,17 +1,41 @@
 {
-  "version": "2026.11.24.1 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T13:41:08.479Z",
+  "version": "2026.11.24.3 - 24 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-24T16:56:10.773Z",
   "notas": [
     {
-      "fecha": "2026-11-24T02:26:00Z",
+      "fecha": "2026-11-24T16:45:00Z",
       "tipo": "NUEVO",
-      "texto": "En el editor de tu sitio ahora puedes armar el encabezado en dos filas con submenús por columnas, una portada en escalera, banners con su propia foto para celular, categorías elegidas a mano, tarjetas con tu ícono, y un pie con todo tu menú y los datos de tu empresa.",
+      "texto": "En el editor de tu sitio ahora puedes elegir el diseño de la rejilla del catálogo (vitrina, compacta o lista), el de los filtros (panel o barra) y el del asistente de la tienda.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-24T16:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "En tu tienda en línea, tus compradores ahora entran o crean su cuenta con solo el correo: siempre les llega el código y, si son nuevos, completan sus datos después.",
       "modulos": [
         "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-24T16:45:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el editor de tu sitio ahora puedes elegir el diseño de la rejilla del catálogo (vitrina, compacta o lista), el de los filtros (panel o barra) y el del asistente de la tienda.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-24T16:45:00Z",
+      "tipo": "MEJORA",
+      "texto": "En tu tienda en línea, tus compradores ahora entran o crean su cuenta con solo el correo: siempre les llega el código y, si son nuevos, completan sus datos después.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-24T02:26:00Z",
       "tipo": "NUEVO",
@@ -473,21 +497,8 @@
         "cartera",
         "tesoreria"
       ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Borrar toda la base de productos y «Limpiar precios» ya no aparecen en la barra de trabajo, para que nadie los toque por error.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T21:15:00Z",
-      "tipo": "CORRIGE",
-      "texto": "En el celular, el menú lateral ya no deja una franja visible cuando está cerrado."
     }
   ],
-  "commit": "a45e7808f703b076c17b39c3b544b6bf8733ab9a",
+  "commit": "31d817617d79e0ed0b1978a18395928ddc6ae7f6",
   "cambiosSinCommit": 0
 }
