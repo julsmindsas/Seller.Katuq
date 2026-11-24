@@ -104,6 +104,8 @@ export interface Caso {
   empresaQueResponde?: string;
   nroTicket?: string | number;
   estado: EstadoCaso;
+  /** D-721: `manual` = caso de un pasivo abierto desde Resultados (sin plazo ni avisos). */
+  origen?: 'automatico' | 'manual';
   responsable: PersonaNps | null;
   vencido: boolean;
   notas: NotaCaso[];
@@ -125,6 +127,8 @@ export interface FiltrosCasos {
   estado?: EstadoCaso | '';
   responsable?: string;
   encuesta?: string;
+  /** D-721: casos de detractores o de pasivos; vacío = todos. */
+  segmento?: 'detractor' | 'pasivo' | '';
 }
 
 export interface CambiosCaso {

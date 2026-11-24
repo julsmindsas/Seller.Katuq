@@ -208,6 +208,13 @@
               <span class="res-caso__texto">{{ casoAbierto(c) ? ('nps.resultados.atenderElCaso' | translate) : ('nps.resultados.verElCaso' | translate) }}</span>
               <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </a>
+            <!-- D-721 (ticket 1649): el caso de un pasivo se abre a mano -->
+            <button type="button" class="res-caso" *ngIf="puedeAbrirCaso(c)" (click)="abrirCaso(c)" [disabled]="abriendoCaso.has(c.id)">
+              <i class="pi" [ngClass]="abriendoCaso.has(c.id) ? 'pi-spin pi-spinner' : 'pi-flag'" aria-hidden="true"></i>
+              <span class="res-caso__texto">{{ 'nps.resultados.atenderCaso' | translate }}</span>
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            </button>
+            <p class="nps-fila__error" *ngIf="errorCaso?.id === c.id" role="alert">{{ errorCaso?.mensaje }}</p>
           </div>
         </li>
       </ul>

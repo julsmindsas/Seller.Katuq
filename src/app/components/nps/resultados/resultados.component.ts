@@ -220,9 +220,35 @@ export class ResultadosComponent implements OnInit, OnDestroy {
     else this.textosAbiertos.add(id);
   }
 
-  /** El caso solo existe para los detractores que no son de prueba. */
+  /** El caso se abre solo para los detractores y a mano para los pasivos (D-721). */
   tieneCaso(c: Comentario): boolean {
-    return c.segmento === 'detractor' && !!c.casoEstado;
+    return !!c.casoEstado;
+  }
+
+  /** D-721 (ticket 1649): un pasivo sin caso y que no es de prueba se puede atender a mano. */
+  puedeAbrirCaso(c: Comentario): boolean {
+    return c.segmento === 'pasivo' && !c.casoEstado && !c.prueba;
+  }
+
+  /** Respuestas cuyo caso se está abriendo, y el error de la última que falló. */
+  abriendoCaso = new Set<string>();
+  errorCaso: { id: string; mensaje: string } | null = null;
+
+  abrirCaso(c: Comentario): void {
+    if (this.abriendoCaso.has(c.id)) return;
+    this.abriendoCaso.add(c.id);
+    this.errorCaso = null;
+    this.nps.abrirCaso(c.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (r) => {
+        this.abriendoCaso.delete(c.id);
+        c.casoEstado = r?.caso?.estado || 'nuevo';
+        this.router.navigate(['/nps/seguimiento', c.id]);
+      },
+      error: (e) => {
+        this.abriendoCaso.delete(c.id);
+        this.errorCaso = { id: c.id, mensaje: mensajeError(e, this.translate.instant('nps.resultados.noSePudoAbrirElCaso'), this.translate) };
+      },
+    });
   }
 
   casoAbierto(c: Comentario): boolean {

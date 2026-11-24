@@ -257,6 +257,16 @@
   &:hover { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent-ink; }
 }
 
+// D-721: «Atender caso» de un pasivo es un botón, con el mismo aspecto que el enlace del caso.
+button.res-caso {
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+.nps-fila__error { margin: 4px 0 0; color: $cfg-err; font-size: 12px; font-weight: 700; }
+
 .res-caso__texto { color: inherit; font-size: 12.5px; font-weight: 700; }
 
 .res-mas { display: flex; justify-content: center; padding-top: 12px; }

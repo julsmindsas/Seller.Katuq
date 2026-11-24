@@ -32,6 +32,8 @@
         <span class="nps-muted">{{ 'nps.seguimientoLista.promedio90Dias' | translate }}</span>
       </div>
     </div>
+    <!-- D-721: los casos de pasivos no tienen plazo y no entran en los indicadores -->
+    <p class="nps-muted seg-nota-indicadores" *ngIf="indicadores && hayPasivos">{{ 'nps.seguimientoLista.indicadoresSoloDetractores' | translate }}</p>
   </section>
 
   <!-- ── Lista ─────────────────────────────────────────── -->
@@ -44,6 +46,14 @@
           <option value="abiertos">{{ 'nps.seguimientoLista.abiertos' | translate }}</option>
           <option value="todos">{{ 'nps.seguimientoLista.todos' | translate }}</option>
           <option *ngFor="let e of ESTADOS" [value]="e">{{ NOMBRE_ESTADO[e] | translate }}</option>
+        </select>
+      </label>
+      <label class="nps-campo">
+        <span class="nps-campo__label">{{ 'nps.seguimientoLista.cliente' | translate }}</span>
+        <select class="nps-select" name="segmento" [(ngModel)]="filtroSegmento" (ngModelChange)="cargar()" [disabled]="cargando">
+          <option value="">{{ 'nps.seguimientoLista.todos' | translate }}</option>
+          <option value="detractor">{{ 'nps.resultados.filtroDetractores' | translate }}</option>
+          <option value="pasivo">{{ 'nps.resultados.filtroPasivos' | translate }}</option>
         </select>
       </label>
       <label class="nps-campo" *ngIf="esAdmin && responsables.length">
@@ -84,6 +94,7 @@
               <span class="nps-fila__titulo">{{ quien(c) }}</span>
               <span class="nps-pastilla" [ngClass]="'is-' + c.estado">{{ NOMBRE_ESTADO[c.estado] | translate }}</span>
               <span class="nps-pastilla is-vencido" *ngIf="c.vencido">{{ 'nps.caso.vencido' | translate }}</span>
+              <span class="nps-pastilla is-pasivo" *ngIf="c.segmento === 'pasivo'">{{ 'nps.segmento.pasivo' | translate }}</span>
               <span class="nps-doc" *ngIf="c.pedido">{{ 'nps.seguimientoLista.pedido' | translate:{nroPedido: c.pedido.nroPedido} }}</span>
               <span class="nps-doc" *ngIf="c.nroTicket">{{ 'nps.resultados.ticket' | translate:{nroTicket: c.nroTicket} }}</span>
               <time class="nps-fila__fecha" [attr.datetime]="c.fecha">{{ fecha(c.fecha) }}</time>

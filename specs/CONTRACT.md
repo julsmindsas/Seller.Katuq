@@ -14296,3 +14296,15 @@ El diff S-11 del 23-oct y las pruebas S-01..S-10 quedaron en otra máquina: S-11
 - **Despacho como Cereza (24-nov, Daniel: «como Cereza por el momento»):** el envío automático de todos los pedidos no lo pidió nadie; el comercio solo dijo que todo pedido se puede despachar aunque no esté pagado. El barrido automático manda únicamente los pagados (misma regla de Cereza y Fullpi) y el resto lo despacha una persona en Despachos escogiendo DistriSex como transportador (`shippingProviders/distrisexProvider` → `pushSingleOrder`). Backend `9f6eca73` en producción (merge `5f21ad91`). El flow `distrisex-orders-push-oms` quedó apagado por orden de Daniel; existencias y estados siguen encendidos para la muestra. Primer pedido de prueba: ORE-002245 entró bien a la bodega de DistriSex con su talla y no salió por un celular con indicativo +1. Falta probar el despacho desde la pantalla.
 - **Pendiente:**
   - Llave de producción de DistriSex, confirmar el secreto de los avisos, y prender existencias y pedidos cuando Daniel lo diga.
+
+### 2026-11-24 — D-721: «Atender caso» para clientes pasivos, a mano y sin avisos (ticket 1649, ALMARA)
+
+- **Pedido:** ALMARA (Ana María Cataño) quiere para los pasivos (nota 7 u 8) la misma opción «Atender caso» que tienen los detractores (D-490).
+- **Decisión de Santiago (24-nov):** el caso de un pasivo se abre a mano y no manda avisos. Se descartaron abrirlo solo para cada pasivo (llenaría de correos al responsable) y hacerlo configurable por encuesta.
+- **D-721:**
+  - En Resultados, un pasivo que no es de prueba y no tiene caso muestra «Atender caso». Lo abre la familia Administrador (los mismos que ven Resultados) con `POST /v1/nps/casos/:id/abrir`; queda a nombre del responsable de la encuesta y lleva a la ficha del caso. Es idempotente.
+  - El caso se atiende igual que el de un detractor (estados, notas, responsable, historial, cierre con nota). Queda con `caso.origen = "manual"`: nace avisado, no vence a las 48 h y no entra en el recordatorio diario. Al reasignarlo sí se avisa al nuevo responsable.
+  - Seguimiento: los casos de pasivos salen en la lista con su pastilla y hay un filtro Detractores/Pasivos (`?segmento=`). Los indicadores de 90 días se calculan solo con detractores; si hay casos de pasivos, la pantalla lo aclara.
+  - Los detractores no cambian. Sin bandera (es un botón nuevo dentro del módulo `npsModulo`), sin colección nueva, sin migración ni índice. Los casos viejos sin `origen` cuentan como automáticos.
+- **Pruebas:** backend con 6 pruebas nuevas locales (fuera de git, D-566) y las 5 suites NPS existentes en verde; Seller con tsc sin errores y los diccionarios es/en/pt/de completos.
+- **Estado:** OpenSpec `casos-para-pasivos` en el backend. Falta desplegar el backend (máquina principal) y después publicar el Seller; si el Seller sale antes, el botón responde 404.

@@ -77,7 +77,12 @@ export class NpsService extends BaseService {
   // ── Casos ────────────────────────────────────────────────────────────
 
   casos(filtros: FiltrosCasos = {}): Observable<{ success: boolean; casos: Caso[]; indicadores: IndicadoresCasos }> {
-    return this.get(`/v1/nps/casos${consulta({ estado: filtros.estado, responsable: filtros.responsable, encuesta: filtros.encuesta })}`);
+    return this.get(`/v1/nps/casos${consulta({ estado: filtros.estado, responsable: filtros.responsable, encuesta: filtros.encuesta, segmento: filtros.segmento })}`);
+  }
+
+  /** D-721: abre a mano el caso de un pasivo (idempotente). 400 ES_PRUEBA / NO_ES_PASIVO. */
+  abrirCaso(id: string): Observable<{ success: boolean; caso: Caso }> {
+    return this.post(`/v1/nps/casos/${encodeURIComponent(id)}/abrir`, {});
   }
 
   caso(id: string): Observable<{ success: boolean; caso: Caso }> {
