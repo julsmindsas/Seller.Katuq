@@ -34,15 +34,22 @@ export function mismaEntrada(a: Partial<Menu>, b: Partial<Menu>): boolean {
 export function catalogoDeMenus(menus: Menu[], permisosFuera: { [idGrupo: string]: Menu[] } = {}): Menu[] {
   const catalogo: Menu[] = [];
   let indice = 0;
+  // Ticket 1637: hay grupos con el mismo nombre en secciones distintas (dos «Productos»: Inventario y
+  // Configuración). Al repetido se le suma su sección en lo que se ve; el título guardado no cambia.
+  const veces = new Map<string, number>();
+  for (const menu of menus) if (menu.children && menu.title) veces.set(menu.title, (veces.get(menu.title) || 0) + 1);
+  let seccion = '';
   for (const menu of menus) {
+    if (menu.headTitle1) seccion = menu.headTitle1;
     if (menu.children) {
-      catalogo.push({ ...menu, children: [], movable: false, index: indice++ } as Menu);
+      const grupo = (veces.get(menu.title || '') || 0) > 1 && seccion ? `${menu.title} (${seccion})` : menu.title;
+      catalogo.push({ ...menu, children: [], movable: false, index: indice++, ...(grupo !== menu.title ? { etiqueta: grupo } : {}) } as Menu);
       for (const hijo of menu.children) {
         if (hijo.inheritsPermissionFrom) continue;
-        catalogo.push({ ...hijo, etiqueta: `${menu.title} · ${hijo.title}`, movable: true, index: indice++ } as Menu);
+        catalogo.push({ ...hijo, etiqueta: `${grupo} · ${hijo.title}`, movable: true, index: indice++ } as Menu);
       }
       for (const permiso of permisosFuera[menu.id || ''] || []) {
-        catalogo.push({ ...permiso, etiqueta: `${menu.title} · ${permiso.title}`, movable: true, index: indice++ } as Menu);
+        catalogo.push({ ...permiso, etiqueta: `${grupo} · ${permiso.title}`, movable: true, index: indice++ } as Menu);
       }
     } else if (menu.path && menu.type === 'link') {
       // Enlaces de primer nivel (Tesorería de antes, Pauta...): también son permisos asignables.
