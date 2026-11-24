@@ -1933,6 +1933,23 @@ export class IntegrationsService {
   }
 
   /**
+   * D-641: reenvía a Guía Cereza un pedido que no llegó a ICG (cancela la orden
+   * vieja en Cereza y crea otra con la misma transportadora; el estado no cambia).
+   * Backend: POST /v1/osmosis/orders/:id/resend-icg
+   *
+   * @param katuqOrderId  cd Firestore del pedido (no nroPedido)
+   */
+  reenviarPorFallaIcg(
+    katuqOrderId: string,
+  ): Observable<{ success: boolean; action?: string; message?: string; osmosisOrderId?: string }> {
+    return this.http.post<{ success: boolean; action?: string; message?: string; osmosisOrderId?: string }>(
+      `${environment.urlApi}/v1/osmosis/orders/${katuqOrderId}/resend-icg`,
+      {},
+      { headers: this.getApiHeaders() },
+    );
+  }
+
+  /**
    * Cancela en Guía Cereza el envío de un pedido y lo deja listo para volver a
    * despacharse (queda en "En Despacho", conservando su orden de envío).
    * Se usa cuando salió con la transportadora o la bodega equivocada.

@@ -649,7 +649,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Útil para retry manual cuando el push automatico fallo o el pedido no tiene
     // osmosisOrderId todavia. El backend (POST /v1/osmosis/orders/:id/push) es
     // idempotente: si ya existe en Cereza, hace lookup por nroPedido y no duplica.
-    if (!this.isFromProduction && this.puedeReenviarACereza(pedido)) {
+    // D-641: si Cereza avisó que no lo pudo pasar a ICG, la opción lo reenvía de verdad
+    // (cancela la orden vieja en Cereza y crea otra), en vez del envío normal.
+    if (!this.isFromProduction && this.tieneAvisoIcg(pedido)) {
+      items.push({
+        label: 'Reenviar a Cereza (no llegó a ICG)',
+        icon: 'pi pi-refresh',
+        command: () => this.reenviarPorFallaIcg(this.selectedMenuPedido)
+      });
+    } else if (!this.isFromProduction && this.puedeReenviarACereza(pedido)) {
       const yaTieneOsmosis = !!(pedido as any)?.integraciones?.osmosis?.id;
       items.push({
         label: yaTieneOsmosis ? 'Resincronizar con Cereza' : 'Enviar a Cereza',
@@ -687,6 +695,71 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const estado = String(pedido?.estadoProceso || '').toLowerCase();
     if (estado === 'cancelado') return false;
     return true;
+  }
+
+  /**
+   * D-641: Cereza avisó que recibió el pedido pero no lo pudo pasar a ICG, y el pedido sigue con
+   * su envío en Cereza (si no, lo que sirve es despacharlo otra vez). Un cancelado no se reenvía.
+   */
+  tieneAvisoIcg(pedido: any): boolean {
+    if (!pedido?.requiereAtencionLogistica || pedido?.motivoAtencion !== 'icg_sync_failed') return false;
+    if (String(pedido?.estadoProceso || '').toLowerCase() === 'cancelado') return false;
+    const osm = pedido?.integrations?.osmosis || pedido?.integraciones?.osmosis || {};
+    return !!(osm.osmosisOrderId || osm.orderId || osm.id);
+  }
+
+  /**
+   * D-641: «Reenviar a Cereza» para un pedido que no llegó a ICG. El servidor revisa que la orden
+   * siga sin entrar a ICG, la cancela en Cereza y crea otra con la misma transportadora. El estado
+   * del pedido no cambia.
+   */
+  reenviarPorFallaIcg(pedido: Pedido): void {
+    const katuqOrderId = (pedido as any)?.cd || (pedido as any)?.id;
+    if (!katuqOrderId || !this.tieneAvisoIcg(pedido)) return;
+
+    Swal.fire({
+      title: `Reenviar ${pedido.nroPedido} a Guía Cereza`,
+      html: `<div style="text-align:left">
+               <p>Cereza recibió este pedido pero no lo pudo pasar a ICG.</p>
+               <p style="margin-top:10px">Se cancelará esa orden en Cereza y se creará otra con la misma
+                  transportadora, para que lo vuelva a intentar. El estado del pedido no cambia.</p>
+             </div>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#5F3FE0',
+      confirmButtonText: 'Sí, reenviar',
+      cancelButtonText: 'No',
+    }).then((res) => {
+      if (!res.isConfirmed) return;
+      Swal.fire({ title: 'Reenviando a Cereza...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      this.integrationsService.reenviarPorFallaIcg(katuqOrderId).subscribe({
+        next: (r: any) => {
+          Swal.fire({
+            icon: 'success',
+            title: r?.action === 'already_in_icg' ? 'Ya estaba en ICG' : 'Reenviado a Cereza',
+            text: r?.message || 'Listo.',
+            confirmButtonColor: '#5F3FE0',
+          });
+          setTimeout(() => {
+            try { this.refrescarDespuesDeCambio(); } catch (_) { /* best effort */ }
+          }, 800);
+        },
+        error: (err: any) => {
+          Swal.fire({
+            icon: err?.status === 422 ? 'warning' : 'error',
+            title: err?.status === 422 ? 'Reenvío incompleto' : 'No se reenvió',
+            text: err?.error?.message || err?.message || 'No se pudo contactar a Cereza. Intenta de nuevo en unos minutos.',
+            confirmButtonColor: '#5F3FE0',
+          });
+          if (err?.status === 422) {
+            setTimeout(() => {
+              try { this.refrescarDespuesDeCambio(); } catch (_) { /* best effort */ }
+            }, 800);
+          }
+        },
+      });
+    });
   }
 
   /**
@@ -2955,7 +3028,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       falta_cedula: '⚠️ Push a Guía Cereza bloqueado: falta cédula del cliente. Capturar el documento y reintentar push manual desde logística.',
       missing_nroPedido: '⚠️ Push externo bloqueado: pedido sin número. Revisar integración.',
       push_cereza_failed: '⚠️ Cereza rechazó el push automático. Ver notas de facturación/pagos para el detalle del error. Reintentar push manual desde logística.',
-      icg_sync_failed: '⚠️ Guía Cereza recibió el pedido pero no lo pudo pasar a ICG. El aviso se quita solo cuando Cereza lo sincronice.',
+      icg_sync_failed: '⚠️ Guía Cereza recibió el pedido pero no lo pudo pasar a ICG. Para que lo intente otra vez: menú del pedido › «Reenviar a Cereza». El aviso se quita solo cuando Cereza lo sincronice.',
       woo_productos_no_encontrados: '⚠️ Llegó de WooCommerce con productos que no existen en Katuq. Ver notas de facturación/pagos.',
     };
     const m = pedido?.motivoAtencion;
