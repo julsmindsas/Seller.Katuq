@@ -185,7 +185,7 @@
 </ng-template>
 
 <!-- Modal: Selector de plantilla de rol -->
-<div class="template-modal-overlay" *ngIf="showTemplateModal" (click)="cerrarSelectorPlantillas()">
+<div class="template-modal-overlay" *ngIf="showTemplateModal" [style.padding-top.px]="margenSuperiorPlantillas" (click)="cerrarSelectorPlantillas()">
   <div class="template-modal-box" (click)="$event.stopPropagation()">
     <div class="template-modal-header">
       <h5 class="mb-1"><i class="icofont icofont-magic-alt"></i> {{ 'rol.roles.elegiUnaPlantilla' | translate }}</h5>

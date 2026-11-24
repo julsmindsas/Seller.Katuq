@@ -592,7 +592,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (this.tierNameRequested) return;
     this.tierNameRequested = true;
-    this.subscriptionService.getBillingInfo().pipe(takeUntil(this.destroy$)).subscribe({
+    this.subscriptionService.getBillingInfo(true).pipe(takeUntil(this.destroy$)).subscribe({
       next: (info: any) => { this.currentPlan.tierName = info?.currentTierName || null; this.cdr.markForCheck(); },
       error: () => { this.tierNameRequested = false; }
     });

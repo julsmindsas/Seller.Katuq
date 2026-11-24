@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import {
@@ -16,6 +16,7 @@ import {
 } from '../models/subscription.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './firebase/auth.service';
+import { SKIP_LOADER } from './interceptor/loader.interceptor';
 
 /**
  * Subscription Service
@@ -128,9 +129,15 @@ export class SubscriptionService {
     );
   }
 
-  /** Resumen de ventas, tramo y precios oficiales para la empresa activa. */
-  getBillingInfo(): Observable<any> {
-    return this.http.get<any>(`${environment.urlApi}/v1/billing/info`);
+  /**
+   * Resumen de ventas, tramo y precios oficiales para la empresa activa.
+   * `segundoPlano`: sin el cargador de pantalla completa. Ticket 1637: el menú lateral la pide solo para el
+   * nombre del plan, y como el resumen suma las ventas del ciclo puede tardar más de 20 s en un comercio
+   * grande; mientras tanto el cargador tapaba la pantalla que el usuario sí abrió.
+   */
+  getBillingInfo(segundoPlano = false): Observable<any> {
+    const context = segundoPlano ? new HttpContext().set(SKIP_LOADER, true) : undefined;
+    return this.http.get<any>(`${environment.urlApi}/v1/billing/info`, { context });
   }
 
   /**

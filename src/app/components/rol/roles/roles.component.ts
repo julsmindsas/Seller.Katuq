@@ -197,7 +197,15 @@ export class RolesComponent implements OnInit {
   }
 
   // ─── Plantillas: abrir/cerrar modal + aplicar ──────────────────────────
+  /**
+   * Ticket 1637: la ventana vive dentro del contenido de la página, que queda debajo de la barra de arriba;
+   * por eso empieza donde termina la barra, que es más alta cuando muestra el aviso de versión nueva.
+   */
+  public margenSuperiorPlantillas = 88;
+
   abrirSelectorPlantillas(): void {
+    const finBarra = document.querySelector('.page-header')?.getBoundingClientRect().bottom ?? 0;
+    this.margenSuperiorPlantillas = Math.max(16, Math.round(finBarra) + 12);
     this.showTemplateModal = true;
   }
 

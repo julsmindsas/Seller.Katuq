@@ -294,7 +294,9 @@ $rl-err: #D64545;
   align-items: center;
   justify-content: center;
   z-index: 1060;
-  padding: 16px;
+  // Ticket 1637: la ventana vive dentro del contenido de la página y no puede quedar encima de la barra de
+  // arriba; el margen de arriba lo pone el componente al abrir (donde termina la barra). 88 px si no se mide.
+  padding: 88px 16px 16px;
 }
 
 .template-modal-box {
@@ -302,7 +304,7 @@ $rl-err: #D64545;
   border-radius: 20px;
   width: 100%;
   max-width: 880px;
-  max-height: 90vh;
+  max-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
