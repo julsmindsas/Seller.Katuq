@@ -355,6 +355,7 @@
                                                                   tooltipPosition="top">
                                                                 {{ ref.label }}
                                                                 <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                                <i *ngIf="ref.alerta" class="pi pi-exclamation-triangle" style="font-size: 0.75rem; color: #B45309;" aria-label="Requiere atención"></i>
                                                             </span>
                                                         </div>
                                                         <div class="pedido-row__cliente">{{ getClienteNombre(pedido) }}</div>
@@ -435,6 +436,7 @@
                                                                       tooltipPosition="top">
                                                                     {{ ref.label }}
                                                                     <i *ngIf="ref.hasNote" class="pi pi-truck" aria-label="Con tracking"></i>
+                                                                    <i *ngIf="ref.alerta" class="pi pi-exclamation-triangle" style="font-size: 0.75rem; color: #B45309;" aria-label="Requiere atención"></i>
                                                                 </span>
                                                                 <span class="pedido-detail__entrega">
                                                                     {{ 'Entrega' | translate }} {{ convertFechaEntregaString(pedidoDetalle?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
@@ -1220,6 +1222,10 @@
                                                            class="pi pi-truck ml-1"
                                                            style="font-size: 0.75rem; color: #1E874B; vertical-align: middle;"
                                                            aria-label="Con tracking"></i>
+                                                        <i *ngIf="ref.alerta"
+                                                           class="pi pi-exclamation-triangle ml-1"
+                                                           style="font-size: 0.75rem; color: #B45309; vertical-align: middle;"
+                                                           aria-label="Requiere atención"></i>
                                                     </span>
                                                     <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
                                                 </div>
