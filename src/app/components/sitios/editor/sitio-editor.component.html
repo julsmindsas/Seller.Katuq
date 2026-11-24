@@ -1114,6 +1114,25 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
+            <!-- D-694: diseños de la rejilla y de los filtros (solo diseño nuevo) -->
+            <ng-container *ngIf="disenoNuevo">
+              <div class="campo">
+                <label id="lbl-cat-rejilla">Diseño de la rejilla</label>
+                <div class="segmentos" role="group" aria-labelledby="lbl-cat-rejilla">
+                  <button type="button" *ngFor="let o of disenosRejilla" [class.is-active]="(b.datos.rejilla || '') === o.id"
+                          [attr.aria-pressed]="(b.datos.rejilla || '') === o.id" (click)="ponerDisenoCatalogo(b, 'rejilla', o.id)">{{ o.nombre }}</button>
+                </div>
+                <small class="nota-estilo">{{ notaDeDiseno(disenosRejilla, b.datos.rejilla) }} Tus compradores pueden cambiar entre cuadrícula y lista.</small>
+              </div>
+              <div class="campo">
+                <label id="lbl-cat-filtros">Diseño de los filtros</label>
+                <div class="segmentos" role="group" aria-labelledby="lbl-cat-filtros">
+                  <button type="button" *ngFor="let o of disenosFiltros" [class.is-active]="(b.datos.filtros || '') === o.id"
+                          [attr.aria-pressed]="(b.datos.filtros || '') === o.id" (click)="ponerDisenoCatalogo(b, 'filtros', o.id)">{{ o.nombre }}</button>
+                </div>
+                <small class="nota-estilo">{{ notaDeDiseno(disenosFiltros, b.datos.filtros) }} En celular los filtros se abren en una hoja desde abajo.</small>
+              </div>
+            </ng-container>
             <button class="opcion" [class.is-active]="b.datos.mostrarBuscador !== false"
                     (click)="b.datos.mostrarBuscador = b.datos.mostrarBuscador === false; marcarSucio()">
               <span class="opcion__texto">
@@ -2614,6 +2633,33 @@
             <button type="button" class="enlace-sutil" (click)="verVistaFiel()" [disabled]="cargandoFiel">
               {{ cargandoFiel ? 'Cargando…' : 'Ver cómo queda' }}
             </button>
+          </div>
+        </div>
+
+        <!-- D-694: diseño del asistente de la tienda (tema.asistenteEntrada y tema.asistentePanel) -->
+        <div class="grupo acordeon" *ngIf="puedeDisenoNuevo && disenoNuevo" [class.is-abierto]="estiloAbierto === 'asistente'">
+          <button type="button" class="acordeon__cabeza" (click)="abrirGrupoEstilo('asistente')" [attr.aria-expanded]="estiloAbierto === 'asistente'">
+            <span class="acordeon__titulo">Asistente de la tienda</span>
+            <svg class="acordeon__flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="acordeon__cuerpo" *ngIf="estiloAbierto === 'asistente'">
+            <div class="campo">
+              <label id="lbl-asis-entrada">Botón de entrada</label>
+              <div class="segmentos" role="group" aria-labelledby="lbl-asis-entrada">
+                <button type="button" *ngFor="let o of entradasAsistente" [class.is-active]="($any(contenido.tema).asistenteEntrada || '') === o.id"
+                        [attr.aria-pressed]="($any(contenido.tema).asistenteEntrada || '') === o.id" (click)="cambiarAjuste('asistenteEntrada', o.id)">{{ o.nombre }}</button>
+              </div>
+              <small class="nota-estilo">{{ notaDeDiseno(entradasAsistente, $any(contenido.tema).asistenteEntrada) }}</small>
+            </div>
+            <div class="campo">
+              <label id="lbl-asis-panel">Ventana del chat</label>
+              <div class="segmentos" role="group" aria-labelledby="lbl-asis-panel">
+                <button type="button" *ngFor="let o of panelesAsistente" [class.is-active]="($any(contenido.tema).asistentePanel || '') === o.id"
+                        [attr.aria-pressed]="($any(contenido.tema).asistentePanel || '') === o.id" (click)="cambiarAjuste('asistentePanel', o.id)">{{ o.nombre }}</button>
+              </div>
+              <small class="nota-estilo">{{ notaDeDiseno(panelesAsistente, $any(contenido.tema).asistentePanel) }}</small>
+            </div>
+            <small class="nota-estilo">Se ve si tu tienda tiene el asistente encendido (pestaña Tienda).</small>
           </div>
         </div>
 

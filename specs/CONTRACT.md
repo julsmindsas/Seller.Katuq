@@ -14234,6 +14234,20 @@ El detalle con archivo y línea está en `proposal.md`.
   - Hallazgo: el comercio está en el plan gratis, que muestra 50 productos de sus 746 activos; por eso hay categorías y marcas del diseño con pocos productos o sin página.
 - **Pendiente:** igualar al paquete las medidas de las demás secciones (encabezado, portada, banners, categorías, destacados, soluciones, kit, marcas y descubre más); las páginas de las líneas de negocio del comercio (hoy sus enlaces llevan a «Nosotros»); las redes sociales del comercio en «Mi marca»; que el comercio confirme los textos que nombran garantías.
 
+### 2026-11-24 — D-694 y D-695: más diseños del catálogo y del asistente; cuenta del comprador con solo el correo (aws-claude-1)
+
+- **Pedido (Daniel, 24-nov):** «mejorar el diseño o la experiencia de la parrilla de catálogo y sus filtros, están muy sencillos, deberíamos tener más diseños», y lo mismo para la burbuja de la IA. Y, tras probar la cuenta en la tienda: «con el mero correo se valida; si es cliente sigue y si no existe se toma como nuevo, igual llega el código y pide completar datos».
+- **D-694 (diseños, solo diseño nuevo):** son opciones que el comercio elige; sin elegirlas la tienda se ve como antes.
+  - Bloque catálogo, `rejilla`: vitrina, compacta o lista. El comprador puede cambiar entre cuadrícula y lista; «Ver más productos», paginación con números, esqueletos de carga y estado sin resultados.
+  - Bloque catálogo, `filtros`: panel (grupos plegables, buscador en listas largas, precio con deslizador) o barra (un botón por filtro, rejilla a todo el ancho). En celular, hoja inferior con «Ver N productos».
+  - Tema, `asistenteEntrada` (con avatar, círculo, etiqueta) y `asistentePanel` (tarjeta, oscura, lateral): preguntas para empezar, productos con foto y precio en la respuesta, «Reintentar» en errores.
+  - Editor del Seller: los cuatro controles (bloque Catálogo y Estilo › Asistente de la tienda).
+  - **Correcciones para toda tienda del diseño nuevo:** fila de filtros activos con ✕ y «Limpiar todo»; las marcas y categorías del panel se actualizan al filtrar sin recargar; «Todo» dice el total de la marca; el total y el título siguen al filtro; la dirección refleja los filtros; mensaje cuando no hay resultados; en el chat, Esc y foco correctos, reintento tras un error y anuncios para lectores de pantalla. El diseño de siempre no cambia.
+  - Hecho con tres agentes en paralelo y revisores independientes de código y de diseño; hallazgos confirmados aplicados.
+- **D-695 (cuenta con solo el correo):** en los sitios con «crear cuenta» encendido hay una sola puerta. El código llega siempre; quien ya es cliente entra y quien es nuevo completa nombre, celular y autorización de datos después de comprobar el código. La ficha del cliente nace en ese último paso, ya confirmada. Hay «Reenviar código». Los sitios sin «crear cuenta» siguen igual. Pasó revisión independiente de seguridad, corrección y experiencia.
+- **Catálogo (24-nov):** `categoria` acepta un grupo o una ruta del árbol del comercio; con una marca elegida el panel ofrece solo sus categorías. La prueba dorada `consultarCatalogo` cambia en el caso «categoría Camisas» y su archivo sigue sin actualizar, a la espera de Daniel.
+- **Pendiente:** igualar al paquete las medidas de las nueve secciones de la portada del comercio piloto; tamaño de página del catálogo (12) para las rejillas compacta y lista; probar el chat con la IA real y en iPhone.
+
 ### 2026-11-23 — D-720: la lista de pedidos se pinta sin esperar los totales (ticket 1621, lentitud en Pedidos)
 
 - **Pedido:** segundo cambio del plan de lentitud. Daniel recibió el diff con la medición y respondió «has git pull y sube».

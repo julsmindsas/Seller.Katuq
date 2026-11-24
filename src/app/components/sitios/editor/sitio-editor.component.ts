@@ -353,6 +353,32 @@ const VISTAS_PAGO: { id: string; nombre: string; nota: string }[] = [
   { id: "lateral", nombre: "Panel lateral", nota: "El pago se queda en el mismo panel del carrito, a la derecha, sin tapar la página." },
 ];
 
+/** D-694: diseños elegibles del catálogo (bloque catálogo: `rejilla` y `filtros`) y del asistente (tema). Vacío = el de siempre. */
+type OpcionDiseno = { id: string; nombre: string; nota: string };
+const DISENOS_REJILLA: OpcionDiseno[] = [
+  { id: "", nombre: "Clásica", nota: "La rejilla de siempre." },
+  { id: "vitrina", nombre: "Vitrina", nota: "Fotos grandes; el botón de agregar aparece sobre la foto." },
+  { id: "compacta", nombre: "Compacta", nota: "Más productos por pantalla. Ideal para catálogos grandes." },
+  { id: "lista", nombre: "Lista", nota: "Una fila por producto, con descripción y el precio alineado." },
+];
+const DISENOS_FILTROS: OpcionDiseno[] = [
+  { id: "", nombre: "De siempre", nota: "El panel lateral de siempre." },
+  { id: "panel", nombre: "Panel", nota: "Panel lateral con grupos que se pliegan, buscador en las listas largas y precio con deslizador." },
+  { id: "barra", nombre: "Barra", nota: "Un botón por filtro arriba de los productos; la rejilla usa todo el ancho." },
+];
+const ENTRADAS_ASISTENTE: OpcionDiseno[] = [
+  { id: "", nombre: "Pastilla", nota: "El botón de siempre, con el nombre del asistente." },
+  { id: "avatar", nombre: "Con avatar", nota: "Avatar, nombre y oficio. Al bajar por la página se recoge para no tapar nada." },
+  { id: "circulo", nombre: "Círculo", nota: "Un círculo con el ícono; el nombre asoma al pasar el cursor." },
+  { id: "lateral", nombre: "Etiqueta", nota: "Una etiqueta vertical en el borde derecho de la pantalla." },
+];
+const PANELES_ASISTENTE: OpcionDiseno[] = [
+  { id: "", nombre: "De siempre", nota: "La ventana de siempre, con la cabecera del color de acento." },
+  { id: "tarjeta", nombre: "Tarjeta", nota: "Ventana clara con preguntas para empezar y productos con foto y precio." },
+  { id: "tinta", nombre: "Oscura", nota: "Como la tarjeta, con la cabecera del color del encabezado de tu tienda." },
+  { id: "lateral", nombre: "Lateral", nota: "Un panel a toda la altura, al lado derecho." },
+];
+
 const OPCIONES_ESTILO = {
   botonForma: [
     { id: "", nombre: "Del estilo" },
@@ -3290,6 +3316,24 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** D-689: vistas del pago del diseño nuevo (tema.pagoVista). */
   readonly vistasPago = VISTAS_PAGO;
+
+  /** D-694: diseños del catálogo y del asistente. */
+  readonly disenosRejilla = DISENOS_REJILLA;
+  readonly disenosFiltros = DISENOS_FILTROS;
+  readonly entradasAsistente = ENTRADAS_ASISTENTE;
+  readonly panelesAsistente = PANELES_ASISTENTE;
+
+  /** La nota de la opción elegida de una lista de diseños. */
+  notaDeDiseno(lista: { id: string; nombre: string; nota: string }[], valor: any): string {
+    return (lista.find((o) => o.id === (valor || "")) || lista[0]).nota;
+  }
+
+  /** Elige un diseño del bloque catálogo (`rejilla` o `filtros`). El de siempre deja el campo vacío. */
+  ponerDisenoCatalogo(bloque: any, campo: "rejilla" | "filtros", id: string): void {
+    if (!bloque || !bloque.datos || (bloque.datos[campo] || "") === id) return;
+    bloque.datos[campo] = id;
+    this.marcarSucio();
+  }
 
   private get vistaPago(): { id: string; nombre: string; nota: string } {
     const v = String(((this.contenido && this.contenido.tema) as any)?.pagoVista || "");
