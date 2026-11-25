@@ -11,6 +11,28 @@ export interface DatosDevolucion {
   observacion?: string;
 }
 
+/** Un aviso de pago de una pasarela, ya traducido (D-725). */
+export interface AvisoPago {
+  id: string;
+  fecha: string | null;
+  pasarela: string | null;
+  evento: string | null;
+  estadoReportado: string | null;
+  transaccion: string | null;
+  referencia: string | null;
+  monto: number | null;
+  medio: string | null;
+  firma: 'valida' | 'invalida' | 'sin_revisar';
+  accion: string;
+  tipo: 'aplicado' | 'ignorado' | 'rechazado' | 'fallo';
+}
+
+export interface AvisosDePedido {
+  pedido: { id: string; nroPedido: string | null };
+  avisos: AvisoPago[];
+  resumen: { total: number; aplicados: number; ignorados: number; rechazados: number; fallidos: number };
+}
+
 /** Fila del tablero de devoluciones de Tesorería (D-724). */
 export interface FilaDevolucion {
   id: string;
@@ -86,6 +108,11 @@ export class DevolucionPagoService extends BaseService {
       .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
       .join('&');
     return this.getSinLoader<any>(`/v1/orders/devolucion-pago/lista${q ? '?' + q : ''}`).pipe(map((r) => r.data as TableroDevoluciones));
+  }
+
+  /** D-725: historial de avisos de pago del pedido (solo lectura). */
+  avisos(orderId: string): Observable<AvisosDePedido> {
+    return this.getSinLoader<any>(`/v1/orders/${encodeURIComponent(orderId)}/avisos-pago`).pipe(map((r) => r.data as AvisosDePedido));
   }
 
   marcarDevuelto(orderId: string, datos: DatosDevolucion): Observable<DevolucionPagoVista> {

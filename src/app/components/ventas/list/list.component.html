@@ -720,6 +720,10 @@
                                                         <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" *ngIf="!(bloquePersonalizado && accionesDelBloque.includes('history'))" (click)="verHistorialPedido(pedidoDetalle); contarUso('history')">
                                                             <i class="pi pi-history"></i> {{ 'Historial' | translate }}
                                                         </button>
+                                                        <!-- D-725: avisos que mandó la pasarela sobre este pedido -->
+                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" *ngIf="puedeVerAvisosPago()" (click)="verAvisosPago(pedidoDetalle)">
+                                                            <i class="pi pi-bell"></i> Avisos de pago
+                                                        </button>
                                                         <button type="button" class="pedido-detail__btn pedido-detail__btn--primary" (click)="openOptionsModal(pedidoDetalle)">
                                                             <i class="pi pi-ellipsis-h"></i> {{ 'Más opciones' | translate }}
                                                         </button>

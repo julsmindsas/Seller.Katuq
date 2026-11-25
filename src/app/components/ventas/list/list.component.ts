@@ -48,6 +48,7 @@ import { escaparHtml } from "../../../shared/utils/escapar-html";
 import { DevolucionPagoService } from "../../../shared/services/ventas/devolucion-pago.service";
 import { DevolucionPagoVista, devolucionPagoDe, puedeMarcarDevolucion } from "../../../shared/utils/devolucion-pago";
 import { abrirMarcarDevuelto } from "../../../shared/utils/devolucion-pago-dialogo";
+import { abrirAvisosPago } from "../../../shared/utils/avisos-pago-dialogo";
 // Ticket 1618 (openspec descuento-linea-edicion-pedido): mismo saneo 0-100 que usa el carrito
 // de Venta asistida (`carrito.component.ts::onDescLineaChange`) y el POS.
 import { sanearDescuento } from "../../../shared/utils/pos-linea-precio";
@@ -614,6 +615,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         label: 'Facturar',
         icon: 'pi pi-file-export',
         command: () => this.facturarPedidoSiigo(this.selectedMenuPedido)
+      });
+    }
+
+    // D-725: avisos que mandó la pasarela sobre este pedido.
+    if (this.puedeVerAvisosPago()) {
+      items.push({
+        label: 'Avisos de pago',
+        icon: 'pi pi-bell',
+        command: () => this.verAvisosPago(this.selectedMenuPedido)
       });
     }
 
@@ -2501,6 +2511,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isFromProduction) return false;
     const dev = this.devolucionDe(pedido);
     return !!dev && dev.estado === 'por_devolver' && puedeMarcarDevolucion(this.UserLogged?.rol);
+  }
+
+  /** D-725: «Avisos de pago» del pedido (Administración, Tesorería y soporte; bandera paymentRefundTracking). */
+  puedeVerAvisosPago(): boolean {
+    return !this.isFromProduction && this.devolucionPago.activa && puedeMarcarDevolucion(this.UserLogged?.rol);
+  }
+
+  verAvisosPago(pedido: any): void {
+    if (!pedido?._id || !this.puedeVerAvisosPago()) return;
+    abrirAvisosPago(this.devolucionPago, pedido);
   }
 
   /** D-723: registra que el pago de pasarela ya se devolvió, con la referencia de la pasarela. */

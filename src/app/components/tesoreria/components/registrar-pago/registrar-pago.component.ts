@@ -180,7 +180,9 @@ export class RegistrarPagoComponent implements OnInit {
 
   private validarValor(v: any): void {
     const val = Number(v) || 0;
-    this.valorExcedido = this.faltaPorPagar > 0 && val > this.faltaPorPagar;
+    // El saldo puede traer decimales del cálculo del IVA (29.999,9952 se muestra $30.000): se compara
+    // en pesos enteros, como se muestra, o pagar exactamente lo que dice la pantalla «supera» el saldo.
+    this.valorExcedido = this.faltaPorPagar > 0 && Math.round(val) > Math.round(this.faltaPorPagar);
   }
 
   // ── Archivo (drag & drop) ──────────────────────────────────────────────────

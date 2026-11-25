@@ -37,7 +37,7 @@
 
   <div class="tk-grid" *ngIf="metrics && !loadingMetrics && !metricsError">
     <div class="tk-card tk-accent-green tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.recaudadoHoy' | translate"
-         (click)="irAPestana(3, $event)" (keydown.enter)="irAPestana(3, $event)" (keydown.space)="irAPestana(3, $event)">
+         (click)="verRecaudadoHoy($event)" (keydown.enter)="verRecaudadoHoy($event)" (keydown.space)="verRecaudadoHoy($event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.recaudadoHoy' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaRecaudadoHoy' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -173,7 +173,7 @@
         <i class="pi pi-list"></i>
         <span>{{ 'tesoreria.gestionPagos.historial' | translate }}</span>
       </ng-template>
-      <app-historial-pagos *ngIf="activeIndex === 3" [active]="activeIndex === 3"></app-historial-pagos>
+      <app-historial-pagos *ngIf="activeIndex === 3" [active]="activeIndex === 3" [filtroInicial]="filtroHistorial"></app-historial-pagos>
     </p-tabPanel>
 
     <p-tabPanel>

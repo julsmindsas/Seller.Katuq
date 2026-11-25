@@ -170,15 +170,26 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
    * Sin pago y Cartera pendiente → «Sin pago», Rechazados → «Rechazados», Recaudado hoy → «Historial»,
    * Alertas → «Alertas». El botón de ayuda (i) de cada tarjeta no navega.
    */
-  irAPestana(indice: number, evento?: Event): void {
+  irAPestana(indice: number, evento?: Event, filtro: { status?: string; desde?: string; hasta?: string } | null = null): void {
     const origen = evento?.target as HTMLElement | null;
     if (origen?.closest && origen.closest('.tk-info-btn')) return;
     evento?.preventDefault();
+    this.filtroHistorial = filtro;
     this.activeIndex = indice;
     setTimeout(() => this.pestanas?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
+  /** Filtro con el que abre «Historial» desde una tarjeta (null al entrar por la pestaña). */
+  filtroHistorial: { status?: string; desde?: string; hasta?: string } | null = null;
+
+  /** «Recaudado hoy» abre el Historial con lo mismo que cuenta la tarjeta: pagos aprobados de hoy (Colombia). */
+  verRecaudadoHoy(evento?: Event): void {
+    const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+    this.irAPestana(3, evento, { status: 'Aprobado', desde: hoy, hasta: hoy });
+  }
+
   onTabChange(event: { index: number }): void {
+    this.filtroHistorial = null;
     this.activeIndex = event.index;
   }
 

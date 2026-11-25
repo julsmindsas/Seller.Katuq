@@ -30,6 +30,8 @@ import { abrirHistorialPago } from '../linea-tiempo-pago/linea-tiempo-pago.compo
 })
 export class HistorialPagosComponent implements OnChanges, OnDestroy {
   @Input() active = false;
+  /** Filtro con el que abre (tarjeta «Recaudado hoy»: aprobados de hoy). Null: sin filtro. */
+  @Input() filtroInicial: { status?: string; desde?: string; hasta?: string } | null = null;
 
   @ViewChild('dt') dt: Table | undefined;
 
@@ -66,6 +68,13 @@ export class HistorialPagosComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['filtroInicial'] && this.filtroInicial) {
+      this.status = this.filtroInicial.status || '';
+      this.fechaDesde = this.filtroInicial.desde || '';
+      this.fechaHasta = this.filtroInicial.hasta || '';
+      // Si ya estaba cargada, se recarga con el filtro; si no, la carga inicial ya lo usa.
+      if (this.loadedOnce) this.applyFilters();
+    }
     if (changes['active'] && this.active && !this.loadedOnce) {
       this.loadedOnce = true;
       // La p-table lazy dispara onLazyLoad al montarse → carga inicial.
