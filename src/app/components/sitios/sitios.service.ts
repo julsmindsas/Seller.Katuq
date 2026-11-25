@@ -488,6 +488,8 @@ export interface MetricasSitio {
   porCampana?: FilaOrigen[];
   /** Ticket 1238: lo mismo por código de cupón o de influenciador. */
   porCupon?: FilaOrigen[];
+  /** Mensajes que atendió el asistente del sitio y en cuántos le faltó el dato, por tema. */
+  asistente?: { mensajes: number; sinRespuesta: number; temas: { tema: string; veces: number }[] };
   visitantesUnicos: number;
   /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
   conversion: number | null;
