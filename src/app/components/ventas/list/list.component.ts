@@ -715,7 +715,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * del pedido no cambia.
    */
   reenviarPorFallaIcg(pedido: Pedido): void {
-    const katuqOrderId = (pedido as any)?.cd || (pedido as any)?.id;
+    const katuqOrderId = (pedido as any)?._id || (pedido as any)?.cd || (pedido as any)?.id;
     if (!katuqOrderId || !this.tieneAvisoIcg(pedido)) return;
 
     Swal.fire({
