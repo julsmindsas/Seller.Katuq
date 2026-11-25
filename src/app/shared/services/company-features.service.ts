@@ -129,6 +129,12 @@ export const COMPANY_FEATURE_FLAGS = [
   // Pago a cuotas en la tienda en línea con Addi y Sistecrédito (D-517, ticket 1233): cada comercio
   // con su convenio y sus credenciales. Dueño: Daniel. Se retira el 2027-04-30.
   'storeInstallmentPayments',
+  // Pasarela de pago Bold (D-722): conectar las llaves de Bold en Integraciones y, después, cobrar
+  // con su link. Dueño: Daniel. Se retira el 2027-05-31.
+  'paymentGatewayBold',
+  // Devoluciones a mano de pagos de pasarela (D-723): «Pago por devolver» y «Marcar como devuelto».
+  // Dueño: Daniel. Se retira el 2027-05-31.
+  'paymentRefundTracking',
   // Un envío, una clave (D-499 fase 0, FE-03). Dueño: Daniel. Se retira el 2027-03-31.
   'invoiceIdempotency',
   // Bandeja única de facturación (D-499 fase 1, FE-02). Dueño: Daniel. Se retira el 2027-03-31.

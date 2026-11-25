@@ -31,6 +31,7 @@ const CLAVES_GUARDADAS: { [proveedor: string]: string[] } = {
   addi: ['clientSecret', 'callbackPassword'],
   sistecredito: ['subscriptionKey', 'applicationToken'],
   woocommerce: ['consumerSecret', 'webhookSecret'],
+  bold: ['secretKey'],
   enviame: ['apiKey'],
   partners_logistics: ['apiKey'],
   aliaddo_fulfillment: ['apiToken', 'webhookSecret'],
@@ -60,6 +61,7 @@ const NOMBRES_CAMPO: { [campo: string]: string } = {
   allySlug: 'Ally slug', callbackUser: 'usuario de notificación', callbackPassword: 'contraseña de notificación',
   subscriptionKey: 'Subscription Key', applicationKey: 'Application Key', applicationToken: 'Application Token',
   minAmount: 'monto mínimo',
+  identityKey: 'llave de identidad', secretKey: 'llave secreta', linkVigenciaHoras: 'vigencia del link',
 };
 
 // Proveedores que solo se ofrecen con una bandera del comercio encendida, igual que su
@@ -67,6 +69,8 @@ const NOMBRES_CAMPO: { [campo: string]: string } = {
 const BANDERA_DE_PROVEEDOR: { [proveedor: string]: CompanyFeatureFlag } = {
   addi: 'storeInstallmentPayments',
   sistecredito: 'storeInstallmentPayments',
+  // D-722: Bold se ofrece solo a los comercios con la pasarela encendida.
+  bold: 'paymentGatewayBold',
 };
 
 // El catálogo DIAN asigna este mismo rango a software propio en habilitación.
@@ -377,8 +381,19 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.selectedIntegrationType === 'addi' || this.selectedIntegrationType === 'sistecredito';
   }
 
-  /** Nombre del proveedor a cuotas elegido, para los textos de ayuda. */
+  /** Bold (D-722): pasarela de pago; también se prueba antes de guardar, como Addi. */
+  get esBold(): boolean {
+    return this.selectedIntegrationType === 'bold';
+  }
+
+  /** Proveedores que solo se guardan con una prueba de conexión exitosa (D-518, D-722). */
+  get pruebaObligatoria(): boolean {
+    return this.esPagoACuotas || this.esBold;
+  }
+
+  /** Nombre del proveedor elegido, para los textos de ayuda y de la prueba obligatoria. */
   get nombreProveedorCuotas(): string {
+    if (this.esBold) return 'Bold';
     return this.selectedIntegrationType === 'sistecredito' ? 'Sistecrédito' : 'Addi';
   }
 
@@ -400,6 +415,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   /** Campos de conexión del proveedor a cuotas (sin nombre ni reglas). */
   private camposConexionCuotas(): string[] {
+    if (this.esBold) return ['environment', 'identityKey', 'secretKey'];
     return this.selectedIntegrationType === 'sistecredito'
       ? ['environment', 'subscriptionKey', 'applicationKey', 'applicationToken']
       : ['environment', 'clientId', 'clientSecret', 'allySlug', 'callbackUser', 'callbackPassword'];
@@ -412,7 +428,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   /** ¿Hay que probar antes de guardar? Conexión nueva, o se tocó algún dato de conexión. */
   get cuotasPideProbar(): boolean {
-    if (!this.esPagoACuotas) return false;
+    if (!this.pruebaObligatoria) return false;
     if (!this.editingIntegrationId) return true;
     // Reactivar un Addi o Sistecrédito desactivado: el servidor vuelve a probar
     // (integrationConfigService.necesitaPrueba), así que aquí también se espera la prueba.
@@ -774,6 +790,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'addi':
         this.integrationForm = this.createAddiForm();
         break;
+      case 'bold':
+        this.integrationForm = this.createBoldForm();
+        break;
       case 'sistecredito':
         this.integrationForm = this.createSistecreditoForm();
         break;
@@ -906,6 +925,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'addi':
         this.integrationForm = this.createAddiForm();
+        break;
+      case 'bold':
+        this.integrationForm = this.createBoldForm();
         break;
       case 'sistecredito':
         this.integrationForm = this.createSistecreditoForm();
@@ -1131,6 +1153,22 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       integritySecret: ['', Validators.required],     // Firmar widget (homologado)
       testMode: [false],                              // Toggle test/prod
       currency: ['COP']                               // Default COP
+    });
+  }
+
+  /**
+   * Bold (D-722): las dos llaves salen del panel de Bold (Integraciones › Llaves de
+   * integración), del mismo ambiente. La secreta se guarda cifrada y no vuelve al
+   * navegador. Nace en Pruebas, como las demás pasarelas nuevas.
+   */
+  createBoldForm(): FormGroup {
+    return this.fb.group({
+      name: ['Bold', Validators.required],
+      enabled: [true],
+      environment: ['staging', Validators.required],   // 'staging' | 'production'
+      identityKey: ['', Validators.required],
+      secretKey: ['', Validators.required],             // Cifrada; no vuelve al navegador
+      linkVigenciaHoras: [24, [Validators.min(1), Validators.max(720)]]
     });
   }
 
@@ -2076,7 +2114,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
     // Al editar, las claves guardadas no llegan al navegador: probar con los
     // campos vacíos siempre fallaba aunque la conexión funcionara.
-    const faltan = this.clavesVaciasAlEditar();
+    // Bold (D-722) prueba solo con la llave de identidad: la secreta guardada no hace falta.
+    const faltan = this.esBold ? [] : this.clavesVaciasAlEditar();
     if (faltan.length) {
       this.pruebaConexion = 'idle';
       this.mensajePrueba = `Para probar, vuelve a escribir ${this.unirNombres(faltan)}. Si no las cambias, al guardar se conservan las que ya tienes.`;
@@ -2101,7 +2140,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.isTesting = false;
         this.pruebaConexion = result.success ? 'ok' : 'error';
         // D-518 (error 6): queda anotado CON QUÉ datos funcionó; si cambian, hay que probar otra vez.
-        this.credencialesCuotasProbadas = result.success && this.esPagoACuotas ? this.firmaConexionCuotas() : null;
+        this.credencialesCuotasProbadas = result.success && this.pruebaObligatoria ? this.firmaConexionCuotas() : null;
         this.mensajePrueba = this.limpiarMensaje(result.message) ||
           (result.success ? 'Los datos responden bien.' : 'El servicio no aceptó estos datos.');
         if (result.success) {
@@ -2317,6 +2356,18 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           currency: formData.currency || 'COP'       // Default COP
         };
         break;
+      case 'bold': {
+        const horas = formData.linkVigenciaHoras;
+        credentials = {
+          identityKey: this.sinEspacios(formData.identityKey),
+          secretKey: this.sinEspacios(formData.secretKey),
+          environment: formData.environment === 'production' ? 'production' : 'staging',
+          // Vacío = 24 horas (lo decide el servidor al crear el link).
+          linkVigenciaHoras: horas === null || horas === undefined || String(horas).trim() === ''
+            ? undefined : Math.round(Number(horas))
+        };
+        break;
+      }
       case 'addi':
         // Identificadores y llaves generadas sin espacios de más (suelen venir al copiar).
         // La contraseña de notificación va tal cual: la escribió el comercio en Addi.

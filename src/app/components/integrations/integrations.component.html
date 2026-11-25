@@ -678,6 +678,93 @@
           </div>
         </ng-container>
 
+        <!-- Bold (D-722): pasarela de pago con las llaves del comercio. Como Addi, la llave
+             secreta se guarda cifrada y al editar llega vacía; dejarla así conserva la guardada.
+             Solo se guarda después de una prueba exitosa (pruebaObligatoria). -->
+        <ng-container *ngIf="esBold">
+          <div class="form-group">
+            <label id="boldEntornoRotulo">{{ 'integrations.integrationModal.ambiente' | translate }} <span class="field-required">*</span></label>
+            <div class="kx-radios" role="radiogroup" aria-labelledby="boldEntornoRotulo">
+              <label class="kx-radio" [class.is-on]="entornoCuotas === 'staging'">
+                <input type="radio" id="boldEntornoStaging" class="visually-hidden" formControlName="environment" value="staging">
+                <span class="kx-radio__p"><span></span></span>
+                <span class="kx-radio__txt">
+                  <strong>{{ 'integrations.integrations.pruebas' | translate }}</strong>
+                  <small>{{ 'integrations.integrations.boldLlavesDePruebas' | translate }}</small>
+                </span>
+              </label>
+              <label class="kx-radio" [class.is-on]="entornoCuotas === 'production'">
+                <input type="radio" id="boldEntornoProduccion" class="visually-hidden" formControlName="environment" value="production">
+                <span class="kx-radio__p"><span></span></span>
+                <span class="kx-radio__txt">
+                  <strong>{{ 'integrations.integrationModal.produccion' | translate }}</strong>
+                  <small>{{ 'integrations.integrations.boldCobrosReales' | translate }}</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>{{ 'integrations.integrations.boldDondeEstanLasLlaves' | translate }}</span>
+            <a href="https://developers.bold.co/pagos-en-linea/llaves-de-integracion" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> {{ 'integrations.integrations.boldVerGuia' | translate }}
+            </a>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="boldIdentityKey">
+                <i class="fa fa-key"></i> {{ 'integrations.integrations.boldLlaveIdentidad' | translate }}
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-id-card prefix-icon"></i>
+                <input type="text" id="boldIdentityKey" formControlName="identityKey" autocomplete="off" spellcheck="false">
+              </div>
+              <div *ngIf="integrationForm.get('identityKey')?.invalid && integrationForm.get('identityKey')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> {{ 'integrations.integrations.boldPegaLlaveIdentidad' | translate }}
+              </div>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="boldSecretKey">
+                <i class="fa fa-lock"></i> {{ 'integrations.integrations.boldLlaveSecreta' | translate }}
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="boldSecretKey" formControlName="secretKey" autocomplete="new-password"
+                  [placeholder]="editingIntegrationId ? ('integrations.integrations.guardadoDejaloVacioParaConservarlo' | translate) : ''">
+                <i class="fa fa-eye suffix-icon" [title]="'integrations.integrations.mostrarUOcultar' | translate" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
+              </div>
+              <div *ngIf="integrationForm.get('secretKey')?.invalid && integrationForm.get('secretKey')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> {{ 'integrations.integrations.boldPegaLlaveSecreta' | translate }}
+              </div>
+              <small class="form-text text-muted">{{ 'integrations.integrations.boldSecretaAyuda' | translate }}</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="field-col form-group">
+              <label for="boldLinkVigenciaHoras">
+                <i class="fa fa-clock-o"></i> {{ 'integrations.integrations.boldVigenciaLink' | translate }}
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-hashtag prefix-icon"></i>
+                <input type="number" id="boldLinkVigenciaHoras" formControlName="linkVigenciaHoras" min="1" max="720" step="1" inputmode="numeric" placeholder="24" autocomplete="off">
+              </div>
+              <div *ngIf="integrationForm.get('linkVigenciaHoras')?.invalid && integrationForm.get('linkVigenciaHoras')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> {{ 'integrations.integrations.boldVigenciaError' | translate }}
+              </div>
+              <small class="form-text text-muted">{{ 'integrations.integrations.boldVigenciaAyuda' | translate }}</small>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- ePayco Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'epayco'">
           <div class="alert alert-info d-flex align-items-start mb-4">

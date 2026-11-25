@@ -36,7 +36,8 @@
   </div>
 
   <div class="tk-grid" *ngIf="metrics && !loadingMetrics && !metricsError">
-    <div class="tk-card tk-accent-green">
+    <div class="tk-card tk-accent-green tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.recaudadoHoy' | translate"
+         (click)="irAPestana(3, $event)" (keydown.enter)="irAPestana(3, $event)" (keydown.space)="irAPestana(3, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.recaudadoHoy' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaRecaudadoHoy' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -48,7 +49,8 @@
       <div class="tk-value">{{ metrics.recaudadoHoy.monto | copMoneda }}</div>
       <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} {{ 'tesoreria.gestionPagos.pagoSAprobadoS' | translate }}</div>
     </div>
-    <div class="tk-card tk-accent-orange">
+    <div class="tk-card tk-accent-orange tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.carteraPendiente' | translate"
+         (click)="irAPestana(1, $event)" (keydown.enter)="irAPestana(1, $event)" (keydown.space)="irAPestana(1, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.carteraPendiente' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaCarteraPendiente' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -64,7 +66,8 @@
         {{ 'tesoreria.gestionPagos.carteraInternaAparte' | translate:{ monto: (metrics.carteraPendiente.internos?.monto | copMoneda), cantidad: (metrics.carteraPendiente.internos?.cantidad | number) } }}
       </div>
     </div>
-    <div class="tk-card tk-accent-purple">
+    <div class="tk-card tk-accent-purple tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.porRevisar' | translate"
+         (click)="irAPestana(0, $event)" (keydown.enter)="irAPestana(0, $event)" (keydown.space)="irAPestana(0, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.porRevisar' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaPorRevisar' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -76,7 +79,8 @@
       <div class="tk-value">{{ metrics.porRevisar.monto | copMoneda }}</div>
       <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} {{ 'tesoreria.gestionPagos.comprobanteSEnCola' | translate }}</div>
     </div>
-    <div class="tk-card tk-accent-blue">
+    <div class="tk-card tk-accent-blue tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.sinPago' | translate"
+         (click)="irAPestana(1, $event)" (keydown.enter)="irAPestana(1, $event)" (keydown.space)="irAPestana(1, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.sinPago' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaSinPago' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -88,7 +92,9 @@
       <div class="tk-value">{{ sinPagoCantidad !== null ? (sinPagoCantidad | number) : (sinPagoError ? '—' : '…') }}</div>
       <div class="tk-sub">{{ 'tesoreria.gestionPagos.pedidosSinPagoCompletoUltimo' | translate }}</div>
     </div>
-    <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
+    <div class="tk-card tk-card-link" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'" role="button" tabindex="0"
+         [attr.aria-label]="'tesoreria.gestionPagos.alertasActivas' | translate"
+         (click)="irAPestana(4, $event)" (keydown.enter)="irAPestana(4, $event)" (keydown.space)="irAPestana(4, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.alertasActivas' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaAlertasActivas' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -100,7 +106,8 @@
       <div class="tk-value">{{ metrics.alertasActivas.cantidad | number }}</div>
       <div class="tk-sub">{{ 'tesoreria.gestionPagos.posiblesDuplicados' | translate }}</div>
     </div>
-    <div class="tk-card tk-accent-gray">
+    <div class="tk-card tk-accent-gray tk-card-link" role="button" tabindex="0" [attr.aria-label]="'tesoreria.gestionPagos.rechazados' | translate"
+         (click)="irAPestana(2, $event)" (keydown.enter)="irAPestana(2, $event)" (keydown.space)="irAPestana(2, $event)">
       <div class="tk-label">{{ 'tesoreria.gestionPagos.rechazados' | translate }}
         <button type="button" class="tk-info-btn" [pTooltip]="'tesoreria.gestionPagos.ayudaRechazados' | translate"
                 tooltipPosition="bottom" tooltipStyleClass="tk-ayuda-tooltip" tooltipEvent="hover"
@@ -115,7 +122,7 @@
   </div>
 
   <!-- Pestañas -->
-  <p-tabView [activeIndex]="activeIndex" (onChange)="onTabChange($event)" styleClass="tk-tabs">
+  <p-tabView #pestanas [activeIndex]="activeIndex" (onChange)="onTabChange($event)" styleClass="tk-tabs">
 
     <p-tabPanel>
       <ng-template pTemplate="header">
@@ -181,6 +188,15 @@
         (changed)="onDataChanged()"
         (goToReview)="goToReview()">
       </app-alertas-tesoreria>
+    </p-tabPanel>
+
+    <!-- D-724: pagos de pasarela por devolver y devueltos (bandera paymentRefundTracking) -->
+    <p-tabPanel *ngIf="devolucionesActivas">
+      <ng-template pTemplate="header">
+        <i class="pi pi-replay"></i>
+        <span>{{ 'tesoreria.devoluciones.pestana' | translate }}</span>
+      </ng-template>
+      <app-devoluciones-pago *ngIf="activeIndex === 5" [active]="activeIndex === 5"></app-devoluciones-pago>
     </p-tabPanel>
 
   </p-tabView>

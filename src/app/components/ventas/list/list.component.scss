@@ -6786,3 +6786,22 @@ $pd-chip-border: var(--ds-control-border);
   .pedidos-triage__chip, .pedidos-pager__btn { min-height: 44px; }
   .pedido-row { min-height: 56px; }
 }
+
+// D-723: «Pago por devolver» (ámbar) y «Devuelto» (gris) de pagos de pasarela. Nombres sin «p-»
+// (trampa de [class*="p-"] del CSS global).
+.devpago-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 12px !important; font-weight: 700; line-height: 1.6; letter-spacing: normal;
+  color: #B45309; background: #FEF3C7; border: 1px solid #FCD34D;
+  white-space: nowrap;
+}
+.devpago-chip.devpago--listo { color: #4B5563; background: #F3F4F6; border-color: #D1D5DB; }
+.devpago-chip.devpago--fila { margin-top: 4px; }
+.devpago-btn {
+  display: inline-flex; align-items: center;
+  padding: 4px 12px; border-radius: 11px; border: 1px solid #5F3FE0;
+  background: #fff; color: #5F3FE0; font-size: 12px; font-weight: 700; letter-spacing: normal; cursor: pointer;
+  &:hover { background: #EEEAFD; }
+  &:focus-visible { outline: 3px solid #7C5CFF !important; }
+}

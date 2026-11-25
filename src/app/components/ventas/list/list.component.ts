@@ -45,6 +45,9 @@ import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { ClienteFactura, clienteDeFactura, facturaPorErrorAConsumidorFinal } from "../../../shared/utils/cliente-factura";
 import { escaparHtml } from "../../../shared/utils/escapar-html";
+import { DevolucionPagoService } from "../../../shared/services/ventas/devolucion-pago.service";
+import { DevolucionPagoVista, devolucionPagoDe, puedeMarcarDevolucion } from "../../../shared/utils/devolucion-pago";
+import { abrirMarcarDevuelto } from "../../../shared/utils/devolucion-pago-dialogo";
 // Ticket 1618 (openspec descuento-linea-edicion-pedido): mismo saneo 0-100 que usa el carrito
 // de Venta asistida (`carrito.component.ts::onDescLineaChange`) y el POS.
 import { sanearDescuento } from "../../../shared/utils/pos-linea-precio";
@@ -187,6 +190,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private proveedorPorTipo: { orderInvoice: ProveedorResuelto; posInvoice: ProveedorResuelto } | null = null;
   // Con inject() para no cambiar el constructor.
   private companyFeatures = inject(CompanyFeaturesService);
+  // D-723: «Pago por devolver» / «Devuelto» de pagos de pasarela (bandera paymentRefundTracking).
+  private devolucionPago = inject(DevolucionPagoService);
   // D-624 (ticket 1473): solo para «Despacho rápido», que abre Envíos con el pedido cargado.
   private routerDespacho = inject(Router);
   private facturacionAutomatica = inject(FacturacionAutomaticaService);
@@ -609,6 +614,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         label: 'Facturar',
         icon: 'pi pi-file-export',
         command: () => this.facturarPedidoSiigo(this.selectedMenuPedido)
+      });
+    }
+
+    // D-723: el pago de pasarela de un pedido cancelado ya se devolvió desde el panel de la pasarela.
+    if (this.puedeMarcarDevuelto(pedido)) {
+      items.push({
+        label: 'Marcar pago como devuelto',
+        icon: 'pi pi-replay',
+        command: () => this.marcarPagoDevuelto(this.selectedMenuPedido)
       });
     }
 
@@ -2463,6 +2477,44 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * corregir los datos de facturación y volver a facturar. Katuq no anula nada en el
    * sistema contable; la factura queda en el historial del pedido.
    */
+  /**
+   * D-723: «Pago por devolver» (pedido pagado por pasarela y cancelado) o «Devuelto». null si no
+   * aplica o la bandera `paymentRefundTracking` está apagada. Regla espejo del servidor.
+   */
+  devolucionDe(pedido: any): DevolucionPagoVista | null {
+    if (!pedido || !this.devolucionPago.activa) return null;
+    return devolucionPagoDe(pedido, this.devolucionPago.desdeActual);
+  }
+
+  /** Texto de ayuda de la etiqueta de devolución. */
+  tituloDevolucion(dev: DevolucionPagoVista | null): string {
+    if (!dev) return '';
+    const valor = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(dev.valor) || 0);
+    if (dev.estado === 'devuelto') {
+      return `Devuelto ${valor} por ${dev.pasarela || 'la pasarela'} · referencia ${dev.referencia || ''} · ${dev.fechaDevolucion || ''} · marcado por ${dev.marcadoPor || ''}`;
+    }
+    return `El cliente pagó ${valor} con ${dev.pasarela || 'una pasarela'} (transacción ${dev.transaccion || 'sin número'}) y el pedido se canceló. Devuélvelo desde el panel de ${dev.pasarela || 'la pasarela'} y márcalo aquí.`;
+  }
+
+  /** Administrador y Tesorería, con el pedido por devolver (el servidor vuelve a validar). */
+  puedeMarcarDevuelto(pedido: any): boolean {
+    if (this.isFromProduction) return false;
+    const dev = this.devolucionDe(pedido);
+    return !!dev && dev.estado === 'por_devolver' && puedeMarcarDevolucion(this.UserLogged?.rol);
+  }
+
+  /** D-723: registra que el pago de pasarela ya se devolvió, con la referencia de la pasarela. */
+  async marcarPagoDevuelto(pedido: any): Promise<void> {
+    const dev = this.devolucionDe(pedido);
+    if (!pedido || !dev || dev.estado !== 'por_devolver') return;
+    const registro = await abrirMarcarDevuelto(this.devolucionPago, {
+      id: pedido._id, valor: dev.valor, pasarela: dev.pasarela, transaccion: dev.transaccion,
+    });
+    if (!registro) return;
+    pedido.devolucionPago = registro;
+    this.changeDetectorRef.detectChanges();
+  }
+
   liberarFactura(pedido: Pedido): void {
     const fiscal = (pedido as any)?.facturacionElectronica || {};
     const numero = escaparHtml(fiscal.invoiceNumber || pedido.nroFactura || '');
@@ -4347,6 +4399,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarAccesoCambiarCliente();
+    // D-723: fecha desde la que el comercio marca devoluciones (solo con la bandera encendida).
+    this.devolucionPago.desde().subscribe(() => this.changeDetectorRef.markForCheck());
     // Ticket 1448: «Crédito» solo se ofrece como filtro con la bandera `estadoCredito` encendida.
     if (this.companyFeatures.isEnabled("estadoCredito")) {
       this.estadosPagoOptions.push({ label: "Crédito", value: "Credito" });

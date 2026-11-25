@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { Tooltip } from 'primeng/tooltip';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AjustesComprobanteComponent } from '../components/ajustes-comprobante/ajustes-comprobante.component';
@@ -65,6 +65,11 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** D-724: pestaña «Devoluciones» (pagos de pasarela de pedidos cancelados). */
+  get devolucionesActivas(): boolean {
+    return this.features.isEnabled('paymentRefundTracking');
+  }
+
   abrirAjustesComprobante(): void {
     this.modal.open(AjustesComprobanteComponent, { size: 'lg', backdrop: 'static', scrollable: true });
   }
@@ -97,6 +102,7 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
    * (el texto también va en un `aria-describedby` para lectores de pantalla).
    */
   @ViewChildren(Tooltip) private ayudas!: QueryList<Tooltip>;
+  @ViewChild('pestanas', { read: ElementRef }) private pestanas?: ElementRef<HTMLElement>;
 
   ayudaFoco(evento: Event, abrir: boolean): void {
     const ayuda = this.ayudas?.find((t) => t.el.nativeElement === evento.target);
@@ -157,6 +163,19 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
           this.sinPagoError = true;
         },
       });
+  }
+
+  /**
+   * Las tarjetas de arriba llevan a su pestaña (pedido de Monika, 25-nov): Por revisar → «Por revisar»,
+   * Sin pago y Cartera pendiente → «Sin pago», Rechazados → «Rechazados», Recaudado hoy → «Historial»,
+   * Alertas → «Alertas». El botón de ayuda (i) de cada tarjeta no navega.
+   */
+  irAPestana(indice: number, evento?: Event): void {
+    const origen = evento?.target as HTMLElement | null;
+    if (origen?.closest && origen.closest('.tk-info-btn')) return;
+    evento?.preventDefault();
+    this.activeIndex = indice;
+    setTimeout(() => this.pestanas?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
   onTabChange(event: { index: number }): void {

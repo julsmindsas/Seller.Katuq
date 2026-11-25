@@ -106,6 +106,8 @@ export const DIRECTORIO_INTEGRACIONES: GrupoDirectorio[] = [
       // Sin logo a propósito: solo se usará si el kit de marca de cada proveedor lo permite.
       { id: 'addi', nombre: 'Addi', queHace: 'Tus clientes pagan a cuotas con Addi en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },
       { id: 'sistecredito', nombre: 'Sistecrédito', queHace: 'Tus clientes pagan a cuotas con Sistecrédito en tu tienda en línea.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'storeInstallmentPayments' },
+      // D-722: Bold, con las llaves del comercio. Sin logo hasta revisar su kit de marca.
+      { id: 'bold', nombre: 'Bold', queHace: 'Cobra con un link de pago: tarjeta, PSE, Nequi y Bancolombia.', estado: 'conectable', categoria: C.PAYMENT, fuente: 'config', bandera: 'paymentGatewayBold' },
       { id: 'epayco', nombre: 'ePayco', queHace: 'Cobra con tarjeta, PSE y efectivo.', estado: 'pronto', categoria: C.PAYMENT, fuente: 'ninguna', logo: L + 'epayco.svg' },
       { id: 'mercadopago', nombre: 'Mercado Pago', queHace: 'Cobra con tu cuenta de Mercado Pago.', estado: 'pronto', categoria: C.PAYMENT, fuente: 'ninguna', logo: L + 'mercadopago.svg' },
     ],

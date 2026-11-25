@@ -1,0 +1,137 @@
+<div class="tk-dev-wrap">
+
+  <!-- Resumen -->
+  <div class="tk-grid tk-dev-grid" *ngIf="tablero">
+    <button type="button" class="tk-card tk-accent-orange tk-dev-card" [class.is-on]="estado === 'por_devolver' && !foco"
+            (click)="verEstado('por_devolver')">
+      <div class="tk-label">{{ 'tesoreria.devoluciones.porDevolver' | translate }}</div>
+      <div class="tk-value">{{ tablero.resumen.porDevolver.cantidad | number }}</div>
+      <div class="tk-sub">{{ tablero.resumen.porDevolver.valor | copMoneda }}</div>
+    </button>
+    <button type="button" class="tk-card tk-accent-red tk-dev-card" [class.is-on]="foco === 'atrasadas'"
+            (click)="verFoco('atrasadas')">
+      <div class="tk-label">{{ 'tesoreria.devoluciones.atrasadas' | translate }}</div>
+      <div class="tk-value">{{ tablero.resumen.porDevolver.atrasadas | number }}</div>
+      <div class="tk-sub">{{ 'tesoreria.devoluciones.masDeDias' | translate:{ dias: tablero.diasAviso } }}</div>
+    </button>
+    <button type="button" class="tk-card tk-accent-gray tk-dev-card" [class.is-on]="estado === 'devuelto' && !foco"
+            (click)="verEstado('devuelto')">
+      <div class="tk-label">{{ 'tesoreria.devoluciones.devueltos' | translate }}</div>
+      <div class="tk-value">{{ tablero.resumen.devueltos.cantidad | number }}</div>
+      <div class="tk-sub">{{ tablero.resumen.devueltos.valor | copMoneda }} · {{ 'tesoreria.devoluciones.enElPeriodo' | translate }}</div>
+    </button>
+    <button type="button" class="tk-card tk-accent-purple tk-dev-card" [class.is-on]="foco === 'sinNota'"
+            (click)="verFoco('sinNota')">
+      <div class="tk-label">{{ 'tesoreria.devoluciones.facturasSinNota' | translate }}</div>
+      <div class="tk-value">{{ tablero.resumen.facturasSinNotaCredito | number }}</div>
+      <div class="tk-sub">{{ 'tesoreria.devoluciones.facturasSinNotaAyuda' | translate }}</div>
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="tk-toolbar">
+    <div class="tk-field">
+      <label for="tk-dev-estado">{{ 'tesoreria.devoluciones.mostrar' | translate }}</label>
+      <select id="tk-dev-estado" [(ngModel)]="estado" (change)="foco = null; cargar()">
+        <option value="por_devolver">{{ 'tesoreria.devoluciones.porDevolver' | translate }}</option>
+        <option value="devuelto">{{ 'tesoreria.devoluciones.devueltos' | translate }}</option>
+        <option value="todos">{{ 'tesoreria.devoluciones.todos' | translate }}</option>
+      </select>
+    </div>
+    <div class="tk-field">
+      <label for="tk-dev-desde">{{ 'tesoreria.devoluciones.devueltosDesde' | translate }}</label>
+      <input id="tk-dev-desde" type="date" [(ngModel)]="fechaDesde" (change)="cargar()">
+    </div>
+    <div class="tk-field">
+      <label for="tk-dev-hasta">{{ 'tesoreria.historialPagos.hasta' | translate }}</label>
+      <input id="tk-dev-hasta" type="date" [(ngModel)]="fechaHasta" (change)="cargar()">
+    </div>
+    <button type="button" class="cfg-btn cfg-btn--sec tk-dev-recargar" (click)="cargar()" [disabled]="cargando">
+      <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      {{ 'tesoreria.alertasTesoreria.actualizar' | translate }}
+    </button>
+  </div>
+
+  <!-- Filtro de las tarjetas Atrasadas y Facturas sin nota crédito -->
+  <div class="tk-dev-foco" *ngIf="foco">
+    <span>{{ (foco === 'atrasadas' ? 'tesoreria.devoluciones.viendoAtrasadas' : 'tesoreria.devoluciones.viendoSinNota') | translate }}</span>
+    <button type="button" class="tk-dev-quitar" (click)="verFoco(null)">
+      <i class="pi pi-times"></i> {{ 'tesoreria.devoluciones.quitarFiltro' | translate }}
+    </button>
+  </div>
+
+  <div class="tk-note tk-dev-nota" *ngIf="tablero && !tablero.desde">
+    <i class="pi pi-info-circle me-1"></i> {{ 'tesoreria.devoluciones.sinFechaInicio' | translate }}
+  </div>
+
+  <div class="tk-error" *ngIf="error" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i> {{ error }}
+  </div>
+
+  <!-- Tabla -->
+  <div class="tk-dev-tabla" *ngIf="!error">
+    <table class="tk-dev-t">
+      <thead>
+        <tr>
+          <th>{{ 'tesoreria.historialPagos.pedido' | translate }}</th>
+          <th>{{ 'tesoreria.devoluciones.pasarela' | translate }}</th>
+          <th class="num">{{ 'tesoreria.devoluciones.valor' | translate }}</th>
+          <th>{{ 'tesoreria.devoluciones.cancelado' | translate }}</th>
+          <th>{{ 'tesoreria.devoluciones.estado' | translate }}</th>
+          <th>{{ 'tesoreria.devoluciones.devolucion' | translate }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="cargando && !filas.length">
+          <td colspan="7" class="tk-dev-vacio"><i class="pi pi-spin pi-spinner"></i></td>
+        </tr>
+        <tr *ngIf="!cargando && !filas.length">
+          <td colspan="7" class="tk-dev-vacio">
+            <i class="pi pi-check-circle"></i>
+            <strong>{{ (estado === 'devuelto' ? 'tesoreria.devoluciones.vacioDevueltos' : 'tesoreria.devoluciones.vacioPorDevolver') | translate }}</strong>
+          </td>
+        </tr>
+        <tr *ngFor="let f of filas; trackBy: trackFila" [class.is-atrasada]="f.atrasada">
+          <td>
+            <div class="tk-dev-pedido">{{ f.nroPedido }}</div>
+            <div class="tk-dev-cliente">{{ f.cliente }}</div>
+          </td>
+          <td>
+            <div>{{ f.pasarela }}</div>
+            <div class="tk-dev-sec" [title]="f.transaccion || ''">{{ f.transaccion }}</div>
+          </td>
+          <td class="num tk-dev-valor">{{ f.valor | copMoneda }}</td>
+          <td>
+            <div>{{ f.fechaCancelacion | date:'dd/MM/yyyy' }}</div>
+            <div class="tk-dev-sec" [title]="f.motivoCancelacion || ''">{{ f.motivoCancelacion }}</div>
+          </td>
+          <td>
+            <span class="tk-dev-chip" *ngIf="f.estado === 'por_devolver' && !f.atrasada">
+              {{ 'tesoreria.devoluciones.porDevolverDias' | translate:{ dias: f.diasEsperando } }}
+            </span>
+            <span class="tk-dev-chip tk-dev--atrasada" *ngIf="f.estado === 'por_devolver' && f.atrasada">
+              {{ 'tesoreria.devoluciones.atrasadaDias' | translate:{ dias: f.diasEsperando } }}
+            </span>
+            <span class="tk-dev-chip tk-dev--lista" *ngIf="f.estado === 'devuelto'">{{ 'tesoreria.devoluciones.devuelto' | translate }}</span>
+            <div class="tk-dev-nc" *ngIf="f.facturaSinNotaCredito">
+              <i class="pi pi-file"></i> {{ 'tesoreria.devoluciones.facturadoSinNota' | translate }}
+            </div>
+          </td>
+          <td>
+            <ng-container *ngIf="f.estado === 'devuelto'">
+              <div class="tk-dev-ref">{{ f.referencia }}</div>
+              <div class="tk-dev-sec">{{ f.fechaDevolucion }} · {{ f.marcadoPor }}</div>
+              <div class="tk-dev-sec" *ngIf="f.observacion" [title]="f.observacion">{{ f.observacion }}</div>
+            </ng-container>
+          </td>
+          <td class="tk-dev-acc">
+            <button type="button" class="cfg-btn" *ngIf="f.estado === 'por_devolver' && puedeMarcar" (click)="marcar(f)">
+              {{ 'tesoreria.devoluciones.marcarDevuelto' | translate }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

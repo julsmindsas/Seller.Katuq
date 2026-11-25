@@ -18,6 +18,7 @@ import { GestionPagosComponent } from './gestion-pagos/gestion-pagos.component';
 import { TablaPagosPedidosComponent } from './components/tabla-pagos-pedidos/tabla-pagos-pedidos.component';
 import { HistorialPagosComponent } from './components/historial-pagos/historial-pagos.component';
 import { AlertasTesoreriaComponent } from './components/alertas-tesoreria/alertas-tesoreria.component';
+import { DevolucionesPagoComponent } from './components/devoluciones-pago/devoluciones-pago.component';
 
 // Modales
 import { RevisarPagoComponent } from './components/revisar-pago/revisar-pago.component';
@@ -37,6 +38,7 @@ import { LineaTiempoPagoComponent, HistorialPagoModalComponent } from './compone
     TablaPagosPedidosComponent,
     HistorialPagosComponent,
     AlertasTesoreriaComponent,
+    DevolucionesPagoComponent,
     RevisarPagoComponent,
     RegistrarPagoComponent,
     AjustesComprobanteComponent,

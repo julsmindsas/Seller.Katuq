@@ -185,6 +185,7 @@ export class IntegrationUIHelperService {
     wompi: 'fa-credit-card',
     addi: 'fa-credit-card',
     sistecredito: 'fa-credit-card',
+    bold: 'fa-credit-card',
     epayco: 'fa-credit-card',
     paypal: 'fa-paypal',
     stripe: 'fa-stripe',

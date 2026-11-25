@@ -367,6 +367,9 @@
                                                                     'badge-info': pedido?.estadoPago === 'PreAprobado' || pedido?.estadoPago === 'Credito',
                                                                     'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                                 }">{{ getPaymentStatusDisplay(pedido?.estadoPago).short }}</span>
+                                                            <!-- D-723: pago de pasarela por devolver / devuelto -->
+                                                            <span *ngIf="devolucionDe(pedido) as dev" class="devpago-chip" [class.devpago--listo]="dev.estado === 'devuelto'"
+                                                                [title]="tituloDevolucion(dev)">{{ dev.estado === 'devuelto' ? 'Devuelto' : 'Pago por devolver' }}</span>
                                                             <span class="modern-badge pedido-pill"
                                                                 [ngClass]="{
                                                                     'badge-secondary': pedido?.estadoProceso === 'SinProducir',
@@ -459,6 +462,11 @@
                                                                     'badge-info': pedidoDetalle?.estadoPago === 'PreAprobado' || pedidoDetalle?.estadoPago === 'Credito',
                                                                     'badge-danger': pedidoDetalle?.estadoPago === 'Rechazado' || pedidoDetalle?.estadoPago === 'Cancelado' || pedidoDetalle?.estadoPago === 'Precancelado'
                                                                 }">{{ 'Pago' | translate }}: {{ getPaymentStatusDisplay(pedidoDetalle?.estadoPago).short }}</span>
+                                                            <!-- D-723: pago de pasarela por devolver / devuelto, y el botón para marcarlo -->
+                                                            <span *ngIf="devolucionDe(pedidoDetalle) as dev" class="devpago-chip" [class.devpago--listo]="dev.estado === 'devuelto'"
+                                                                [title]="tituloDevolucion(dev)">{{ dev.estado === 'devuelto' ? 'Devuelto' : 'Pago por devolver' }}</span>
+                                                            <button *ngIf="puedeMarcarDevuelto(pedidoDetalle)" type="button" class="devpago-btn"
+                                                                (click)="marcarPagoDevuelto(pedidoDetalle)">Marcar como devuelto</button>
                                                             <span class="modern-badge pedido-pill"
                                                                 [ngClass]="{
                                                                     'badge-secondary': pedidoDetalle?.estadoProceso === 'SinProducir',
@@ -1302,6 +1310,9 @@
                                                     }"></i>
                                                     {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
                                                 </span>
+                                                <!-- D-723: pago de pasarela por devolver / devuelto -->
+                                                <span *ngIf="devolucionDe(pedido) as dev" class="devpago-chip devpago--fila" [class.devpago--listo]="dev.estado === 'devuelto'"
+                                                    [title]="tituloDevolucion(dev)">{{ dev.estado === 'devuelto' ? 'Devuelto' : 'Pago por devolver' }}</span>
                                             </td>
 
                                             <!-- Columna Estado de Proceso -->

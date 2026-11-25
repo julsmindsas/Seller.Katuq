@@ -818,6 +818,7 @@ export class IntegrationsService {
       wompi:             'Wompi',
       addi:              'Addi',
       sistecredito:      'Sistecrédito',
+      bold:              'Bold',
       epayco:            'ePayco',
       paypal:            'PayPal',
       stripe:            'Stripe',
@@ -841,6 +842,7 @@ export class IntegrationsService {
       case "wompi":
       case "addi":
       case "sistecredito":
+      case "bold":
       case "epayco":
       case "paypal":
       case "stripe":
@@ -1627,6 +1629,14 @@ export class IntegrationsService {
           id: "sistecredito",
           name: "Sistecrédito",
           description: "Pago a cuotas en tu tienda en línea, con tu convenio de Sistecrédito",
+          logo: "",
+          active: true,
+        },
+        // D-722: Bold. Sin logo; el formulario lo esconde con la bandera paymentGatewayBold apagada.
+        {
+          id: "bold",
+          name: "Bold",
+          description: "Cobra con un link de pago de Bold: tarjeta, PSE, Nequi y Bancolombia",
           logo: "",
           active: true,
         },
