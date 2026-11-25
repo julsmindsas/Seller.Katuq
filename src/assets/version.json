@@ -1,17 +1,25 @@
 {
-  "version": "2026.11.24.10 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:50:20.500Z",
+  "version": "2026.11.25.1 - 25 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-25T20:02:35.353Z",
   "notas": [
     {
-      "fecha": "2026-11-24T20:48:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Despachos, las órdenes que salen con DistriSex ahora muestran el número y el estado del pedido allá, y un aviso si DistriSex lo cancela o no lo recibe.",
+      "fecha": "2026-11-25T16:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste.",
       "modulos": [
-        "despachos"
+        "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-25T16:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-24T20:48:00Z",
       "tipo": "MEJORA",
@@ -484,18 +492,8 @@
         "despachos",
         "cotizaciones/catalogos"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no verás términos técnicos: el chat KAI habla de temas como Ventas e Inventario, WhatsApp muestra qué mensaje automático se envió en vez del nombre de la plantilla y los reportes dicen «según tus facturas».",
-      "modulos": [
-        "agent-builder/chat-agui",
-        "notificaciones/whatsapp/inbox",
-        "dashboards"
-      ]
     }
   ],
-  "commit": "4e26d5c27475e1fab6ce148ff4df32b582c6f670",
+  "commit": "509f5b350cfc9ef1a1e10193f514b3b6abd3e701",
   "cambiosSinCommit": 0
 }
