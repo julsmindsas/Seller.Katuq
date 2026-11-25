@@ -14,6 +14,7 @@ import { claveDeTexto, primerNombre, tipoDeTransportador } from '../../servicios
 import { aplicarEvento, estadoInicial } from '../../servicios/en-vivo-reductores';
 import { dinero, entero, estadoLegible } from '../../utilidades/formato';
 import { claseTono, mapaDeEtapas } from '../../utilidades/tonos';
+import { nombreDeEtapa, Traductor } from '../../utilidades/traductor';
 import { AccionFicha, CeldaFicha, ContenidoPedido, LineaProducto } from '../ficha.modelos';
 import { armarRecorrido, textoDeHora } from './recorrido';
 
@@ -139,6 +140,8 @@ export interface EntradaPedido {
   /** Ids de pasos que se acaban de cumplir. */
   nuevos: ReadonlySet<string>;
   ahoraMs: number;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 /** El pedido tal como se ve AHORA: la foto (o el detalle) más lo que llegó por eventos. Null si no hay nada. */
@@ -160,27 +163,27 @@ export function pedidoParaFicha(entrada: Pick<EntradaPedido, 'id' | 'vivo' | 'de
 // ── Textos ──────────────────────────────────────────────────────────────────
 
 /** Estado del pago con su tono. */
-export function pagoDe(estadoPago: string | null | undefined): { texto: string; clase: string } {
+export function pagoDe(estadoPago: string | null | undefined, t: Traductor): { texto: string; clase: string } {
   const clave = claveDeTexto(estadoPago).replace(/[\s_-]+/g, '');
   switch (clave) {
     case '':
-      return { texto: 'Sin dato', clase: 't-slate' };
+      return { texto: t('enVivo.ficha.pagoSinDato'), clase: 't-slate' };
     case 'aprobado':
     case 'pagado':
-      return { texto: 'Aprobado', clase: 't-ok' };
+      return { texto: t('enVivo.ficha.pagoAprobado'), clase: 't-ok' };
     case 'pendiente':
-      return { texto: 'Pendiente', clase: 't-warn' };
+      return { texto: t('enVivo.ficha.pagoPendiente'), clase: 't-warn' };
     case 'pospendiente':
-      return { texto: 'Pago en revisión', clase: 't-warn' };
+      return { texto: t('enVivo.ficha.pagoEnRevision'), clase: 't-warn' };
     case 'credito':
-      return { texto: 'Crédito', clase: 't-info' };
+      return { texto: t('enVivo.ficha.pagoCredito'), clase: 't-info' };
     case 'preaprobado':
-      return { texto: 'Pre-aprobado', clase: 't-info' };
+      return { texto: t('enVivo.ficha.pagoPreaprobado'), clase: 't-info' };
     case 'rechazado':
-      return { texto: 'Rechazado', clase: 't-bad' };
+      return { texto: t('enVivo.ficha.pagoRechazado'), clase: 't-bad' };
     case 'precancelado':
     case 'cancelado':
-      return { texto: 'Cancelado', clase: 't-bad' };
+      return { texto: t('enVivo.ficha.pagoCancelado'), clase: 't-bad' };
     default: {
       const legible = estadoLegible(estadoPago);
       return { texto: legible.charAt(0).toUpperCase() + legible.slice(1), clase: 't-slate' };
@@ -213,9 +216,7 @@ export function destinoTodosLosPedidos(
   return { comandos: ['/ventas/pedidos'], parametros };
 }
 
-const NOTA_DATOS = 'Sin teléfono, dirección ni documento: la pantalla muestra solo lo necesario.';
-
-function contenidoVacio(fase: 'cargando' | 'no-encontrado'): ContenidoPedido {
+function contenidoVacio(fase: 'cargando' | 'no-encontrado', t: Traductor): ContenidoPedido {
   return {
     fase,
     cliente: '',
@@ -232,10 +233,7 @@ function contenidoVacio(fase: 'cargando' | 'no-encontrado'): ContenidoPedido {
     total: '',
     acciones: [],
     nota: '',
-    mensaje:
-      fase === 'no-encontrado'
-        ? 'No pudimos abrir este pedido. Puede que ya no esté disponible o que no esté a tu alcance.'
-        : 'Cargando el pedido…',
+    mensaje: t(fase === 'no-encontrado' ? 'enVivo.ficha.pedidoNoEncontrado' : 'enVivo.ficha.cargandoElPedido'),
   };
 }
 
@@ -247,18 +245,18 @@ export interface ResultadoPedido {
 
 /** Arma la ficha de un pedido. Siempre devuelve algo que pintar (cargando, no encontrado o completo). */
 export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
-  const { ocultar, ahoraMs } = entrada;
+  const { ocultar, ahoraMs, t } = entrada;
   const katuq = entrada.vista === 'katuq';
-  const comercioOculto = `Comercio en ${entrada.ciudadComercio || 'Colombia'}`;
+  const comercioOculto = t('enVivo.ficha.comercioEnCiudad', { ciudad: entrada.ciudadComercio || 'Colombia' });
   const nombreDelComercio = ocultar ? comercioOculto : entrada.nombreComercio;
 
   const pedido = pedidoParaFicha(entrada);
   if (!pedido) {
     const fallo = entrada.detalle.id === entrada.id && entrada.detalle.fase === 'error';
     return {
-      eyebrow: katuq ? (nombreDelComercio || 'Toda Katuq') : 'Pedido',
-      titulo: 'Pedido',
-      contenido: contenidoVacio(fallo ? 'no-encontrado' : 'cargando'),
+      eyebrow: katuq ? (nombreDelComercio || t('enVivo.ficha.todaKatuq')) : t('enVivo.ficha.pedido'),
+      titulo: t('enVivo.ficha.pedido'),
+      contenido: contenidoVacio(fallo ? 'no-encontrado' : 'cargando', t),
     };
   }
 
@@ -274,7 +272,11 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
     pedido.tipoTransportador ?? (pedido.transportador && !katuq ? tipoDeTransportador(pedido.transportador, entrada.flota) : null);
   const transportador = pedido.transportador;
   const salida =
-    !katuq && transportador ? (tipo === 'transportadora' ? `por ${transportador}` : `con ${primerNombre(transportador)}`) : '';
+    !katuq && transportador
+      ? tipo === 'transportadora'
+        ? t('enVivo.ficha.salidaPor', { nombre: transportador })
+        : t('enVivo.ficha.salidaCon', { nombre: primerNombre(transportador) })
+      : '';
 
   const horaFinal = (() => {
     if (pedido.etapa !== 'rechazado' && pedido.etapa !== 'cancelado') return null;
@@ -282,25 +284,33 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
     return evento ? instante(evento) || null : null;
   })();
 
-  const recorrido = armarRecorrido(pedido, { etapas, ahoraMs, horaFinal, salida, nuevos: entrada.nuevos });
+  const recorrido = armarRecorrido(pedido, { etapas, ahoraMs, horaFinal, salida, nuevos: entrada.nuevos, t });
 
   // Celdas
-  const pago = pagoDe(pedido.estadoPago);
+  const pago = pagoDe(pedido.estadoPago, t);
   const esPos = pedido.canal === 'POS';
-  const etiquetaEntrega = katuq ? 'Entrega' : tipo === 'transportadora' ? 'Transportadora' : 'Mensajero';
+  const etiquetaEntrega = katuq
+    ? t('enVivo.ficha.entrega')
+    : tipo === 'transportadora'
+    ? t('enVivo.ficha.transportadora')
+    : t('enVivo.ficha.mensajero');
   const valorEntrega = esPos
-    ? 'Mostrador'
+    ? t('enVivo.ficha.mostrador')
     : !transportador
-    ? 'Sin asignar'
+    ? t('enVivo.ficha.sinAsignar')
     : katuq
     ? tipo === 'transportadora'
-      ? 'Transportadora asignada'
-      : 'Mensajero asignado'
+      ? t('enVivo.ficha.transportadoraAsignada')
+      : t('enVivo.ficha.mensajeroAsignado')
     : transportador;
   const celdas: CeldaFicha[] = [
-    { etiqueta: 'Canal', valor: `${pedido.canal}${pedido.ia ? ' · con Opttia' : ''}`, clase: '' },
-    { etiqueta: 'Pago', valor: pago.texto, clase: pago.clase },
-    { etiqueta: 'Llegó', valor: textoDeHora(pedido.tC, ahoraMs) || 'Sin hora registrada', clase: '' },
+    {
+      etiqueta: t('enVivo.ficha.canal'),
+      valor: pedido.ia ? t('enVivo.ficha.canalConOpttia', { canal: pedido.canal }) : pedido.canal,
+      clase: '',
+    },
+    { etiqueta: t('enVivo.ficha.pago'), valor: pago.texto, clase: pago.clase },
+    { etiqueta: t('enVivo.ficha.llego'), valor: textoDeHora(pedido.tC, ahoraMs, t) || t('enVivo.ficha.sinHoraRegistrada'), clase: '' },
     { etiqueta: etiquetaEntrega, valor: valorEntrega, clase: '' },
   ];
 
@@ -318,14 +328,16 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
   let principal = '';
   let principalNota = '';
   if (ocultar) {
-    principal = detalle ? `${entero(unidades)} ${Math.round(unidades) === 1 ? 'producto' : 'productos'}` : '';
+    principal = detalle
+      ? t(Math.round(unidades) === 1 ? 'enVivo.ficha.productoUno' : 'enVivo.ficha.productosVarios', { n: entero(unidades) })
+      : '';
   } else if (pedido.cancelado) {
     // Un pedido cancelado muestra monto 0, pero sus líneas conservan su valor.
     principal = detalle ? dinero(sumaProductos + envio) : '';
   } else {
     principal = dinero(pedido.monto);
   }
-  if (pedido.cancelado) principalNota = 'No suma en ventas';
+  if (pedido.cancelado) principalNota = t('enVivo.ficha.noSumaEnVentas');
 
   const total = ocultar || !detalle ? '' : dinero(pedido.cancelado || pedido.monto <= 0 ? sumaProductos + envio : pedido.monto);
 
@@ -336,7 +348,7 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
       const nombre = entrada.nombreComercio || empresa;
       acciones.push({
         tipo: 'ver-tablero',
-        etiqueta: ocultar ? 'Ver el tablero del comercio' : `Ver el tablero de ${nombre}`,
+        etiqueta: ocultar ? t('enVivo.ficha.verTableroComercio') : t('enVivo.ficha.verTablero', { nombre }),
         primaria: true,
         empresa,
         nombre,
@@ -345,12 +357,12 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
     }
   } else {
     if (!entrada.soloLectura && numero) {
-      acciones.push({ tipo: 'abrir-pedidos', etiqueta: 'Abrir en Todos los pedidos', primaria: true, numero, creado: pedido.creado });
+      acciones.push({ tipo: 'abrir-pedidos', etiqueta: t('enVivo.ficha.abrirEnPedidos'), primaria: true, numero, creado: pedido.creado });
     }
     if (pedido.etapa === 'camino' && transportador && tipo === 'mensajero') {
       acciones.push({
         tipo: 'ver-mensajero',
-        etiqueta: `Ver a ${primerNombre(transportador)} y lo que lleva`,
+        etiqueta: t('enVivo.ficha.verMensajero', { nombre: primerNombre(transportador) }),
         primaria: false,
         nombre: transportador,
       });
@@ -358,17 +370,21 @@ export function armarPedido(entrada: EntradaPedido): ResultadoPedido {
   }
 
   const ubicacion = [pedido.ciudad, ocultar ? null : pedido.barrio].filter((x) => !!x).join(' · ');
-  const eyebrow = katuq ? nombreDelComercio || 'Comercio' : entrada.soloLectura ? entrada.nombreComercio || 'Pedido' : 'Pedido';
-  const nota = `${!katuq && entrada.soloLectura ? 'Solo lectura: lo estás viendo como Katuq. ' : ''}${NOTA_DATOS}`;
+  const eyebrow = katuq
+    ? nombreDelComercio || t('enVivo.ficha.comercio')
+    : entrada.soloLectura
+    ? entrada.nombreComercio || t('enVivo.ficha.pedido')
+    : t('enVivo.ficha.pedido');
+  const nota = t(!katuq && entrada.soloLectura ? 'enVivo.ficha.notaDatosSoloLectura' : 'enVivo.ficha.notaDatos');
 
   return {
     eyebrow,
-    titulo: numero ? `Pedido #${numero}` : 'Pedido',
+    titulo: numero ? t('enVivo.ficha.tituloPedido', { numero }) : t('enVivo.ficha.pedido'),
     contenido: {
       fase: 'listo',
-      cliente: ocultar ? 'Cliente' : pedido.cliente || 'Cliente',
+      cliente: ocultar ? t('enVivo.ficha.cliente') : pedido.cliente || t('enVivo.ficha.cliente'),
       ubicacion,
-      etapaNombre: info?.nombre ?? pedido.etapa,
+      etapaNombre: nombreDeEtapa(pedido.etapa, info, t),
       etapaClase: claseTono(info?.tono ?? 'neutro'),
       principal,
       principalNota,

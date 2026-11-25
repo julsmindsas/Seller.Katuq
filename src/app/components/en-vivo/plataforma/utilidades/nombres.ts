@@ -1,4 +1,5 @@
 import { dineroCorto, formatearCifra, iniciales } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 
 /**
  * Nombres y rótulos de los comercios en la vista de toda Katuq. Todo puro (sin Angular).
@@ -30,9 +31,10 @@ export function ciudadVisible(ciudad: string | null | undefined): string {
 }
 
 /** "Café Altamira", o con la privacidad encendida "Comercio en Medellín". */
-export function nombreVisible(comercio: IdentidadComercio, ocultar: boolean): string {
-  if (ocultar) return `Comercio en ${ciudadVisible(comercio.ciudad)}`;
-  return String(comercio.nombre ?? '').trim() || 'Comercio';
+export function nombreVisible(comercio: IdentidadComercio, ocultar: boolean, t?: Traductor): string {
+  // Sin traductor (quien aún no lo pasa) sale en español, como antes.
+  if (ocultar) return t ? t('enVivo.plataforma.comercioEnCiudad', { ciudad: ciudadVisible(comercio.ciudad) }) : `Comercio en ${ciudadVisible(comercio.ciudad)}`; // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  return String(comercio.nombre ?? '').trim() || (t ? t('enVivo.plataforma.comercio') : 'Comercio');
 }
 
 /** Iniciales para el avatar: las del nombre, o con la privacidad las dos primeras letras de la ciudad. */
@@ -45,8 +47,8 @@ export function inicialesVisibles(comercio: IdentidadComercio, ocultar: boolean)
 }
 
 /** "$3,4 M" o, con la privacidad, "12 pedidos" (el dinero nunca sale). */
-export function valorCorto(ventas: number, pedidos: number, ocultar: boolean): string {
-  return ocultar ? formatearCifra(pedidos, 'pedidos') : dineroCorto(ventas);
+export function valorCorto(ventas: number, pedidos: number, ocultar: boolean, t?: Traductor): string {
+  return ocultar ? formatearCifra(pedidos, 'pedidos', t) : dineroCorto(ventas, t);
 }
 
 const CLASES_DE_COMERCIO: ReadonlyArray<string> = ['t-accent', 't-info', 't-pack', 't-ok', 't-warn'];

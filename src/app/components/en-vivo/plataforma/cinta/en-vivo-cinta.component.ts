@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { armarCinta, duracionCinta, ItemCinta } from '../utilidades/cinta';
-import { avisarAperturaDeComercio, cifrasGlobal$, ocultar$ } from '../utilidades/fuentes';
+import { avisarAperturaDeComercio, cifrasGlobal$, idioma$, ocultar$, traductorDe } from '../utilidades/fuentes';
 import { AperturaComercio } from '../utilidades/nombres';
 
 interface VistaCinta {
@@ -40,10 +41,11 @@ export class EnVivoCintaComponent {
   readonly copias: ReadonlyArray<number> = [0, 1];
   readonly vm$: Observable<VistaCinta>;
 
-  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService) {
-    this.vm$ = combineLatest([cifrasGlobal$(estado), ocultar$(estado)]).pipe(
+  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService, translate: TranslateService) {
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([cifrasGlobal$(estado), ocultar$(estado), idioma$(translate)]).pipe(
       map(([cifras, ocultar]) => {
-        const items = armarCinta(cifras?.comercios ?? [], ocultar);
+        const items = armarCinta(cifras?.comercios ?? [], ocultar, t);
         return { items, duracion: duracionCinta(items.length) };
       })
     );

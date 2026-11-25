@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, NgZone, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
-import { avisarAperturaDeComercio, cifrasGlobal$, eventos$, instanteVisible$, ocultar$ } from '../utilidades/fuentes';
+import { avisarAperturaDeComercio, cifrasGlobal$, eventos$, idioma$, instanteVisible$, ocultar$, traductorDe } from '../utilidades/fuentes';
 import { comercioDelMomento, Momento } from '../utilidades/momento';
 import { AperturaComercio } from '../utilidades/nombres';
 
@@ -34,15 +35,17 @@ export class EnVivoComercioDelMomentoComponent {
   /** `momento` es null mientras nadie haya vendido en la última media hora. */
   readonly vm$: Observable<{ momento: Momento | null }>;
 
-  constructor(estado: EnVivoEstadoService, zona: NgZone, private readonly interaccion: EnVivoInteraccionService) {
+  constructor(estado: EnVivoEstadoService, zona: NgZone, private readonly interaccion: EnVivoInteraccionService, translate: TranslateService) {
+    const t = traductorDe(translate);
     this.vm$ = combineLatest([
       cifrasGlobal$(estado),
       eventos$(estado),
       ocultar$(estado),
       instanteVisible$(zona, interaccion, REFRESCO_MS),
+      idioma$(translate),
     ]).pipe(
       map(([cifras, eventos, ocultar, ahoraMs]) => ({
-        momento: comercioDelMomento(cifras?.comercios ?? [], eventos, ahoraMs, ocultar),
+        momento: comercioDelMomento(cifras?.comercios ?? [], eventos, ahoraMs, ocultar, t),
       }))
     );
   }

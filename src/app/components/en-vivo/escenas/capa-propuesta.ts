@@ -22,6 +22,7 @@ import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import type { KitEscena } from './kit-escena';
 import { BELT_Z, CAMION, CARRIL_SALIDA, PADS, PARQUEO_CASA, PICK, SALIDA_X } from './operacion.mundo';
 import { ease } from './tweens';
+import type { Traductor } from '../utilidades/traductor';
 
 type V3 = ThreeNS.Vector3;
 
@@ -74,6 +75,8 @@ export interface AnfitrionCapa {
   alTocarGrupo(grupoId: string): void;
   /** Calidad baja (tableta, poca memoria): la burbuja de WhatsApp no vuela, aparece en la casa. */
   calidadBaja?(): boolean;
+  /** El traductor del idioma activo (la capa no inyecta el traductor de la librería). */
+  traductor(): Traductor;
 }
 
 /** Dónde caen los montones, el de la transportadora y la fila de producción (mundo de la operación). */
@@ -255,7 +258,7 @@ export class CapaPropuesta {
     const otros = (p.grupos ?? []).filter((g) => !g.transportadora && !!g.veh).map((g) => String(g.veh));
     const chaquetaDe = (g: GrupoEnEscena): string | null =>
       g.veh ? this.e.prepararVehiculo(g.veh, g.color, otros.filter((n) => n !== g.veh)) : null;
-    const plan = armarEnsayo(p, chaquetaDe, ANCLAS);
+    const plan = armarEnsayo(p, chaquetaDe, ANCLAS, this.h.traductor());
     if (plan) this.montar(plan);
     this.e.marcarSucio();
   }

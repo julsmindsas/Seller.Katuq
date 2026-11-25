@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
+import { combineLatest, Subscription } from 'rxjs';
+import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { armarTiempos, TramoTiempo, VistaTiempos } from '../utilidades/tiempos';
 
@@ -19,22 +20,31 @@ import { armarTiempos, TramoTiempo, VistaTiempos } from '../utilidades/tiempos';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnVivoTiemposComercioComponent implements OnInit, OnDestroy {
-  vista: VistaTiempos = armarTiempos(null, null);
+  vista: VistaTiempos;
 
   private suscripcion: Subscription | null = null;
 
-  constructor(private readonly estado: EnVivoEstadoService, private readonly cambios: ChangeDetectorRef) {}
+  private readonly t = (clave: string, params?: Record<string, unknown>): string => this.translate.instant(clave, params);
+
+  constructor(
+    private readonly estado: EnVivoEstadoService,
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
+  ) {
+    this.vista = armarTiempos(null, null, this.t);
+  }
 
   ngOnInit(): void {
-    this.suscripcion = this.estado.estado$
-      .pipe(
+    this.suscripcion = combineLatest([
+      this.estado.estado$.pipe(
         map((e) => ({ tiempos: e.radar?.tiempos ?? null, comparacion: e.radar?.comparacion ?? null })),
         distinctUntilChanged((a, b) => a.tiempos === b.tiempos && a.comparacion === b.comparacion)
-      )
-      .subscribe((e) => {
-        this.vista = armarTiempos(e.tiempos, e.comparacion);
-        this.cambios.markForCheck();
-      });
+      ),
+      this.translate.onLangChange.pipe(startWith(null)),
+    ]).subscribe(([e]) => {
+      this.vista = armarTiempos(e.tiempos, e.comparacion, this.t);
+      this.cambios.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {

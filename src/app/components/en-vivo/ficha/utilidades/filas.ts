@@ -2,6 +2,7 @@ import { EtapaId, EtapaInfo, EventoEnVivo, PedidoEnVivo } from '../../servicios/
 import { claveDeTexto } from '../../servicios/en-vivo-reglas';
 import { dineroCorto, horaRelativa, iniciales } from '../../utilidades/formato';
 import { claseTono } from '../../utilidades/tonos';
+import { nombreDeEtapa, Traductor } from '../../utilidades/traductor';
 import { FilaVista } from '../ficha.modelos';
 
 /**
@@ -132,14 +133,19 @@ export interface OpcionesFilas {
   katuq: boolean;
   ahoraMs: number;
   etapas: ReadonlyMap<EtapaId, EtapaInfo>;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 /** Quién aparece en la fila: el cliente (comercio) o el comercio (toda Katuq), enmascarado con "ocultar". */
-export function quienDeFila(fila: FilaPedido, opciones: Pick<OpcionesFilas, 'ocultar' | 'katuq'>): string {
+export function quienDeFila(fila: FilaPedido, opciones: Pick<OpcionesFilas, 'ocultar' | 'katuq' | 't'>): string {
+  const { t } = opciones;
   if (opciones.katuq) {
-    return opciones.ocultar ? `Comercio en ${fila.ciudadComercio || 'Colombia'}` : fila.nombreComercio || 'Comercio';
+    return opciones.ocultar
+      ? t('enVivo.ficha.comercioEnCiudad', { ciudad: fila.ciudadComercio || 'Colombia' })
+      : fila.nombreComercio || t('enVivo.ficha.comercio');
   }
-  return opciones.ocultar ? 'Cliente' : fila.cliente || 'Cliente';
+  return opciones.ocultar ? t('enVivo.ficha.cliente') : fila.cliente || t('enVivo.ficha.cliente');
 }
 
 /** Hasta `MAX_FILAS` filas con sus textos, y cuántas quedaron sin mostrar. */
@@ -153,18 +159,21 @@ export function filasParaPintar(
     const quien = quienDeFila(fila, opciones);
     const numero = String(fila.numero ?? '').replace(/^\s*#/, '');
     const titulo = numero ? `#${numero} · ${quien}` : quien;
-    const hace = horaRelativa(fila.ms, opciones.ahoraMs);
-    const subtitulo = [fila.ciudad, etapa?.nombre ?? fila.etapa, hace].filter((x) => !!x).join(' · ');
-    const monto = !opciones.ocultar && fila.monto > 0 ? dineroCorto(fila.monto) : '';
+    const hace = horaRelativa(fila.ms, opciones.ahoraMs, opciones.t);
+    const subtitulo = [fila.ciudad, nombreDeEtapa(fila.etapa, etapa, opciones.t), hace].filter((x) => !!x).join(' · ');
+    const monto = !opciones.ocultar && fila.monto > 0 ? dineroCorto(fila.monto, opciones.t) : '';
     return {
       id: fila.id,
       empresa: fila.empresa,
-      iniciales: opciones.katuq ? iniciales(opciones.ocultar ? 'Comercio' : fila.nombreComercio) : iniciales(opciones.ocultar ? 'Cliente' : fila.cliente),
+      iniciales: opciones.katuq ? iniciales(opciones.ocultar ? opciones.t('enVivo.ficha.comercio') : fila.nombreComercio) : iniciales(opciones.ocultar ? opciones.t('enVivo.ficha.cliente') : fila.cliente),
       claseAvatar: claseTono(etapa?.tono ?? 'neutro'),
       titulo,
       subtitulo,
       monto,
-      etiquetaAria: `Abrir el pedido ${numero || ''} ${quien}. ${subtitulo}${monto ? `. ${monto}` : ''}`.replace(/\s+/g, ' ').trim(),
+      etiquetaAria: opciones
+        .t(monto ? 'enVivo.ficha.abrirPedidoConMonto' : 'enVivo.ficha.abrirPedido', { numero, quien, subtitulo, monto })
+        .replace(/\s+/g, ' ')
+        .trim(),
     };
   });
   return { filas: vista, restantes: Math.max(0, filas.length - visibles.length) };

@@ -10,12 +10,14 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { MensajeroEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { armarFlota, EntradaFlota } from '../utilidades/flota';
 import { duracion, iniciales } from '../utilidades/formato';
 import { cadaFueraDeZona } from '../utilidades/movimiento';
+import { Traductor } from '../utilidades/traductor';
 
 interface FilaFlota {
   entrada: EntradaFlota;
@@ -53,7 +55,8 @@ export class EnVivoFlotaComponent implements OnInit, OnChanges, OnDestroy {
   @Input() pedidos: ReadonlyArray<PedidoEnVivo> = [];
   /** Instante (ms) de la última foto: respaldo para el "desde hace" si el pedido no trae su hora de salida. */
   @Input() actualizadoEn: number | null = null;
-  @Input() titulo = 'Mensajeros y transportadoras';
+  /** Título de la tarjeta; sin él, "Mensajeros y transportadoras" en el idioma activo. */
+  @Input() titulo = '';
   @Output() abrir = new EventEmitter<FlotaAbierta>();
 
   filas: FilaFlota[] = [];
@@ -64,14 +67,27 @@ export class EnVivoFlotaComponent implements OnInit, OnChanges, OnDestroy {
   /** Durante "Repetir el día": el instante simulado hace de "ahora" en el tiempo en ruta. */
   private instanteSimulado: number | null = null;
   private suscripcionRepeticion: Subscription | null = null;
+  private suscripcionIdioma: Subscription | null = null;
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   constructor(
     private readonly zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    private readonly interaccion: EnVivoInteraccionService
+    private readonly interaccion: EnVivoInteraccionService,
+    private readonly translate: TranslateService
   ) {}
 
+  /** Título para mostrar: el que pasa quien lo usa o el de siempre en el idioma activo. */
+  get tituloVisible(): string {
+    return this.titulo || this.translate.instant('enVivo.flota.mensajerosYTransportadoras');
+  }
+
   ngOnInit(): void {
+    // Con otro idioma los estados y subtítulos se vuelven a escribir.
+    this.suscripcionIdioma = this.translate.onLangChange.subscribe(() => {
+      this.armarFilas();
+      this.cambios.markForCheck();
+    });
     this.suscripcionRepeticion = this.interaccion.repeticion$.subscribe((r) => {
       this.instanteSimulado = r.activa ? r.instanteMs : null;
       this.armarFilas();
@@ -94,6 +110,7 @@ export class EnVivoFlotaComponent implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.pararTemporizador?.();
     this.suscripcionRepeticion?.unsubscribe();
+    this.suscripcionIdioma?.unsubscribe();
   }
 
   alTocar(fila: FilaFlota): void {
@@ -108,16 +125,18 @@ export class EnVivoFlotaComponent implements OnInit, OnChanges, OnDestroy {
     this.filas = this.entradas.map((entrada, i) => {
       const moto = entrada.tipo === 'mensajero';
       const ahora = this.instanteSimulado ?? this.ahoraMs;
-      const minutos = entrada.salioEn !== null ? duracion(Math.max(0, ahora - entrada.salioEn)) : null;
+      const minutos = entrada.salioEn !== null ? duracion(Math.max(0, ahora - entrada.salioEn), this.t) : null;
       const pastilla = entrada.enRuta
-        ? `En ruta · ${entrada.pedidos}${minutos ? ` · ${minutos}` : ''}`
+        ? minutos
+          ? this.t('enVivo.flota.enRutaTiempo', { pedidos: entrada.pedidos, tiempo: minutos })
+          : this.t('enVivo.flota.enRuta', { pedidos: entrada.pedidos })
         : moto
-        ? 'En bodega'
-        : 'Disponible';
+        ? this.t('enVivo.flota.enBodega')
+        : this.t('enVivo.flota.disponible');
       return {
         entrada,
         iniciales: moto ? iniciales(entrada.nombre) : 'EN',
-        subtitulo: moto ? 'Moto · mensajero propio' : 'Camión · envíos a otras ciudades',
+        subtitulo: this.t(moto ? 'enVivo.flota.subtituloMoto' : 'enVivo.flota.subtituloCamion'),
         pastilla,
         claseEstado: entrada.enRuta ? 't-info' : 't-slate',
         claseAvatar: moto ? COLORES_AVATAR[i % COLORES_AVATAR.length] : 't-slate',

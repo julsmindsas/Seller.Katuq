@@ -12,6 +12,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import type { FuenteMargenes, MargenesEncuadre, RoundedBox, Three } from '../../../shared/escena-3d/escena-base';
 import type { GeoColombia } from '../../../shared/escena-3d/mapa-colombia.scene';
@@ -19,6 +20,7 @@ import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.serv
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, EtapaInfo } from '../servicios/en-vivo.modelos';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
+import type { Traductor } from '../utilidades/traductor';
 import { cargarGeoColombia } from './geo-colombia';
 import type { GestorEtiquetas } from './etiquetas-html';
 import { EnVivoOrbeService } from './opttia-guia.service';
@@ -43,6 +45,8 @@ export interface EscenaMontable extends EscenaOrbitable {
   fijarReducirMovimiento(reducir: boolean): void;
   fijarPrivado(privado: boolean): void;
   fijarAutomatica(activa: boolean): void;
+  /** El traductor del idioma activo (lo que dibuja la escena no es una plantilla de Angular). */
+  fijarTraductor(t: Traductor): void;
   fijarEtapas(etapas: ReadonlyArray<EtapaInfo>): void;
   reiniciar(): void;
   soltarEfectos(): void;
@@ -87,8 +91,8 @@ export abstract class EnVivoEscenaBase<E extends EscenaMontable> implements Afte
   sin3d = false;
   /** Colores de la leyenda de demanda (solo el país de Katuq la llena; vacía = no se muestra). */
   coloresLeyenda: string[] = [];
-  /** Texto accesible del canvas (lo pone cada escena). */
-  abstract readonly etiquetaAria: string;
+  /** Clave de i18n del texto accesible del canvas (la pone cada escena; la plantilla la traduce). */
+  abstract readonly claveAria: string;
 
   protected escena: E | null = null;
   protected geo: GeoColombia | null = null;
@@ -116,7 +120,11 @@ export abstract class EnVivoEscenaBase<E extends EscenaMontable> implements Afte
     protected readonly estadoSvc: EnVivoEstadoService,
     protected readonly interaccion: EnVivoInteraccionService,
     protected readonly orbe: EnVivoOrbeService,
+    protected readonly translate: TranslateService,
   ) {}
+
+  /** El traductor que reciben la escena y el orbe. */
+  protected readonly tr: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   // ----------------------------------------------------------- lo que dice cada hija
 
@@ -237,6 +245,8 @@ export abstract class EnVivoEscenaBase<E extends EscenaMontable> implements Afte
         },
       });
       if (this.destruido) { escena.destruir(); return; }
+      escena.fijarTraductor(this.tr);
+      this.orbe.fijarTraductor(this.tr);
       escena.iniciar();
       this.escena = escena;
       this.preparar(escena);
@@ -269,6 +279,11 @@ export abstract class EnVivoEscenaBase<E extends EscenaMontable> implements Afte
     this.alMontar(escena);
     this.aplicarAutomatica();
     this.subs.add(this.estadoSvc.preferencias$.subscribe((p) => this.escena?.fijarPrivado(p.ocultar)));
+    // Al cambiar el idioma, los textos que dibuja la escena se vuelven a pintar.
+    this.subs.add(this.translate.onLangChange.subscribe(() => {
+      this.orbe.fijarTraductor(this.tr);
+      this.escena?.fijarTraductor(this.tr);
+    }));
     this.subs.add(this.estadoSvc.estado$.subscribe((e) => this.alEtapas(e)));
     this.subs.add(this.interaccion.modoPantalla$.subscribe(() => this.aplicarAutomatica()));
     this.subs.add(

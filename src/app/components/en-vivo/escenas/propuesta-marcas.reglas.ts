@@ -1,3 +1,4 @@
+import type { Traductor } from '../utilidades/traductor';
 import type { ColorEscena, GrupoEnEscena, PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { esColorGrupo, etiquetaDeGrupo } from './capa-propuesta.reglas';
 
@@ -72,6 +73,7 @@ export function arcosDePropuesta(
   p: PropuestaArcos | null | undefined,
   ciudadDe: (pedidoId: string) => string | null | undefined,
   origen: string | null,
+  t: Traductor,
   max = MAX_ARCOS_PROPUESTA
 ): PlanArcos {
   const plan: PlanArcos = { arcos: [], etiquetas: [], sinCiudad: 0 };
@@ -110,7 +112,7 @@ export function arcosDePropuesta(
       plan.arcos.push(arco);
       primero = primero ?? arco;
     }
-    if (primero) plan.etiquetas.push({ grupo: g.id, texto: etiquetaDeGrupo(g, n), color, clave: primero.clave });
+    if (primero) plan.etiquetas.push({ grupo: g.id, texto: etiquetaDeGrupo(g, n, t), color, clave: primero.clave });
   }
   return plan;
 }
@@ -134,7 +136,7 @@ export type PropuestaMarcas = Pick<PropuestaEnEscena, 'id' | 'pedidos' | 'grupos
  * pedidos como un solo grupo. Con un solo grupo, el texto es la etiqueta de la propuesta (la misma
  * del orbe); con varios, la de cada grupo. null (sin propuesta) = ninguna marca.
  */
-export function marcasDePropuesta(p: PropuestaMarcas | null | undefined, max = MAX_MARCAS_PROPUESTA): Map<string, MarcaPropuesta> {
+export function marcasDePropuesta(p: PropuestaMarcas | null | undefined, t: Traductor, max = MAX_MARCAS_PROPUESTA): Map<string, MarcaPropuesta> {
   const marcas = new Map<string, MarcaPropuesta>();
   if (!p) return marcas;
   const tope = Math.max(0, Math.floor(max));
@@ -148,7 +150,7 @@ export function marcasDePropuesta(p: PropuestaMarcas | null | undefined, max = M
     const ids = sinRepetir(g.pedidos).filter((id) => !marcas.has(id));
     if (!ids.length) continue;
     const color = esColorGrupo(g.color) ? g.color : RESPALDO_MARCA;
-    const etiqueta = fuente.length === 1 && propia ? propia : etiquetaDeGrupo(g, ids.length);
+    const etiqueta = fuente.length === 1 && propia ? propia : etiquetaDeGrupo(g, ids.length, t);
     for (let i = 0; i < ids.length && marcas.size < tope; i++) {
       marcas.set(ids[i], { grupo: g.id, color, etiqueta });
     }

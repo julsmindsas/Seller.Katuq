@@ -1,3 +1,4 @@
+import { TranslateService } from '@ngx-translate/core';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -39,8 +40,7 @@ export class EnVivoEscenaPaisComponent extends EnVivoEscenaBase<PaisKatuqEscena>
   /** Muestra la leyenda del mapa de demanda por departamento (abajo a la izquierda). */
   @Input() leyenda = true;
 
-  readonly etiquetaAria =
-    'Mapa 3D de Colombia con todos los comercios de Katuq: una torre por comercio que crece con lo vendido hoy y departamentos más oscuros donde hay más pedidos. Las cifras, la carrera y la lista dicen lo mismo en texto.';
+  readonly claveAria = 'enVivo.escenas.pais.aria';
 
   private ultimasCifras: CifrasGlobalEnVivo | null = null;
   private ultimasAlertas: ReadonlyArray<AlertaRadar> | null = null;
@@ -51,9 +51,10 @@ export class EnVivoEscenaPaisComponent extends EnVivoEscenaBase<PaisKatuqEscena>
     host: ElementRef<HTMLElement>,
     estado: EnVivoEstadoService,
     interaccion: EnVivoInteraccionService,
-    orbe: EnVivoOrbeService
+    orbe: EnVivoOrbeService,
+    translate: TranslateService
   ) {
-    super(zona, cdr, host, estado, interaccion, orbe);
+    super(zona, cdr, host, estado, interaccion, orbe, translate);
   }
 
   // ------------------------------------------------------ API para quien la integra

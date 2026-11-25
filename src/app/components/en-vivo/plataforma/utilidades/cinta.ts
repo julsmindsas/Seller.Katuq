@@ -1,5 +1,6 @@
 import { ComercioEnVivo } from '../../servicios/en-vivo.modelos';
-import { dinero, dineroCorto, variacionPct } from '../../utilidades/formato';
+import { dinero, dineroCorto, formatearCifra, variacionPct } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 import { ordenarComercios } from './carrera';
 import { claseDeComercio, inicialesVisibles, nombreVisible } from './nombres';
 
@@ -47,10 +48,10 @@ export function variacionDeComercio(c: ComercioEnVivo): VariacionCinta | null {
 }
 
 /** Todos los comercios (también los que hoy van en cero: contra ayer, un cero también cuenta). */
-export function armarCinta(comercios: ReadonlyArray<ComercioEnVivo>, ocultar: boolean): ItemCinta[] {
+export function armarCinta(comercios: ReadonlyArray<ComercioEnVivo>, ocultar: boolean, t: Traductor): ItemCinta[] {
   return ordenarComercios(comercios, ocultar, false).map((c) => {
-    const nombre = nombreVisible(c, ocultar);
-    const pedidos = `${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'}`;
+    const nombre = nombreVisible(c, ocultar, t);
+    const pedidos = formatearCifra(c.n, 'pedidos', t);
     return {
       empresa: c.empresa,
       nombre,
@@ -58,9 +59,11 @@ export function armarCinta(comercios: ReadonlyArray<ComercioEnVivo>, ocultar: bo
       iniciales: inicialesVisibles(c, ocultar),
       clase: claseDeComercio(c.empresa),
       pedidos,
-      ventas: ocultar ? null : dineroCorto(c.ventas),
+      ventas: ocultar ? null : dineroCorto(c.ventas, t),
       variacion: ocultar ? null : variacionDeComercio(c),
-      etiqueta: `${nombre}: ${pedidos}${ocultar ? '' : `, ${dinero(c.ventas)}`}. Abrir su tablero`,
+      etiqueta: ocultar
+        ? t('enVivo.plataforma.cintaEtiqueta', { nombre, pedidos })
+        : t('enVivo.plataforma.cintaEtiquetaVentas', { nombre, pedidos, ventas: dinero(c.ventas) }),
     };
   });
 }

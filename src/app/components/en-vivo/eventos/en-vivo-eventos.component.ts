@@ -11,6 +11,7 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
 import { EtapaInfo, EventoCambioEstado, EventoEnVivo, PedidoEnVivo, VistaEnVivo } from '../servicios/en-vivo.modelos';
@@ -18,6 +19,7 @@ import { describirEvento, DescripcionEvento, instanteDeEvento } from '../utilida
 import { dinero, horaRelativa } from '../utilidades/formato';
 import { cadaFueraDeZona } from '../utilidades/movimiento';
 import { claseTono, mapaDeEtapas } from '../utilidades/tonos';
+import { Traductor } from '../utilidades/traductor';
 
 /** Una fila ya armada de la lista. */
 interface FilaEvento {
@@ -79,7 +81,8 @@ export class EnVivoEventosComponent implements OnInit, OnChanges, OnDestroy {
   @Input() ocultar = false;
   /** Cuántas filas se muestran. */
   @Input() maximo = 40;
-  @Input() titulo = 'Eventos de hoy';
+  /** Título de la lista; sin él, "Eventos de hoy" en el idioma activo. */
+  @Input() titulo = '';
   /** false: la lista no se anuncia a lectores de pantalla (útil en toda Katuq, donde son demasiados). */
   @Input() anunciar = true;
   @Output() abrir = new EventEmitter<EventoAbierto>();
@@ -96,14 +99,27 @@ export class EnVivoEventosComponent implements OnInit, OnChanges, OnDestroy {
   /** Durante "Repetir el día": el instante simulado que hace de "ahora" en las horas relativas. */
   private instanteSimulado: number | null = null;
   private suscripcionRepeticion: Subscription | null = null;
+  private suscripcionIdioma: Subscription | null = null;
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   constructor(
     private readonly zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    private readonly interaccion: EnVivoInteraccionService
+    private readonly interaccion: EnVivoInteraccionService,
+    private readonly translate: TranslateService
   ) {}
 
+  /** Título para mostrar: el que pasa quien lo usa o el de siempre en el idioma activo. */
+  get tituloVisible(): string {
+    return this.titulo || this.translate.instant('enVivo.eventos.eventosDeHoy');
+  }
+
   ngOnInit(): void {
+    // Con otro idioma las pastillas y las frases de cada evento se vuelven a escribir.
+    this.suscripcionIdioma = this.translate.onLangChange.subscribe(() => {
+      this.ngOnChanges({});
+      this.cambios.markForCheck();
+    });
     this.suscripcionRepeticion = this.interaccion.repeticion$.subscribe((r) => {
       this.instanteSimulado = r.activa ? r.instanteMs : null;
       this.cambios.markForCheck();
@@ -132,7 +148,7 @@ export class EnVivoEventosComponent implements OnInit, OnChanges, OnDestroy {
         ocultar: this.ocultar,
         etapas,
         pedido: pedidosPorId.get(evento.pedidoId) ?? null,
-      });
+      }, this.t);
       return {
         id: evento.id,
         evento,
@@ -151,12 +167,13 @@ export class EnVivoEventosComponent implements OnInit, OnChanges, OnDestroy {
   ngOnDestroy(): void {
     this.pararTemporizador?.();
     this.suscripcionRepeticion?.unsubscribe();
+    this.suscripcionIdioma?.unsubscribe();
     this.temporizadores.forEach((id) => window.clearTimeout(id));
     this.temporizadores.clear();
   }
 
   hace(fila: FilaEvento): string {
-    return horaRelativa(fila.ms, this.instanteSimulado ?? this.ahoraMs);
+    return horaRelativa(fila.ms, this.instanteSimulado ?? this.ahoraMs, this.t);
   }
 
   alTocar(fila: FilaEvento): void {

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import type { MargenesEncuadre } from '../../../shared/escena-3d/escena-base';
 import { EnVivoInteraccionService, OpcionVista } from '../compartido/en-vivo-interaccion.service';
@@ -15,11 +16,11 @@ import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EtapaInfo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { irAlTablero } from './navegacion';
 
-/** Las vistas del selector de toda Katuq: dos escenas 3D (las enchufa otro módulo) y el muro. */
-const OPCIONES: ReadonlyArray<OpcionVista> = [
-  { id: 'comercios', etiqueta: 'Comercios' },
-  { id: 'colombia', etiqueta: 'Colombia' },
-  { id: 'muro', etiqueta: 'Muro' },
+/** Las vistas del selector de toda Katuq: dos escenas 3D (las enchufa otro módulo) y el muro. Los ids no se traducen; la etiqueta sí. */
+const OPCIONES: ReadonlyArray<{ id: string; clave: string }> = [
+  { id: 'comercios', clave: 'enVivo.paginas.comercios' },
+  { id: 'colombia', clave: 'enVivo.paginas.colombia' },
+  { id: 'muro', clave: 'enVivo.paginas.muro' },
 ];
 
 /** Lo que la página lee del estado para pintar lo suyo. */
@@ -54,7 +55,7 @@ interface VistaPagina {
   styleUrls: ['./en-vivo-katuq-pagina.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoKatuqPaginaComponent implements OnInit {
+export class EnVivoKatuqPaginaComponent implements OnInit, OnDestroy {
   readonly vm$: Observable<VistaPagina>;
   /** Panel de Opttia solo con el interruptor prendido (D-386). */
   readonly opttiaActivo$: Observable<boolean>;
@@ -63,6 +64,7 @@ export class EnVivoKatuqPaginaComponent implements OnInit {
   /** La vista elegida tiene escena 3D y esta sí se pudo montar (si no, Opttia no ofrece recorrido ni "Verlo en la escena"). */
   readonly conEscena$: Observable<boolean>;
   private readonly sin3d$ = new BehaviorSubject<boolean>(false);
+  private readonly subs = new Subscription();
 
   get ampliado(): boolean {
     return this.ampliadoSubject.value;
@@ -74,7 +76,8 @@ export class EnVivoKatuqPaginaComponent implements OnInit {
     private readonly interaccion: EnVivoInteraccionService,
     private readonly ficha: EnVivoFichaService,
     private readonly orbe: EnVivoOrbeService,
-    private readonly host: ElementRef<HTMLElement>
+    private readonly host: ElementRef<HTMLElement>,
+    private readonly translate: TranslateService
   ) {
     this.vm$ = combineLatest([estado.estado$, estado.preferencias$, interaccion.opcionActiva$, this.ampliadoSubject, anchoFlotante$()]).pipe(
       map(([e, prefs, opcion, ampliado, ancho]) => ({
@@ -96,7 +99,18 @@ export class EnVivoKatuqPaginaComponent implements OnInit {
 
   ngOnInit(): void {
     // Antes de que el shell inicie: así su encabezado ya trae el selector y la vista guardada vuelve sola.
-    this.interaccion.fijarOpciones(OPCIONES);
+    this.fijarOpciones();
+    // Con otro idioma, las etiquetas del selector se registran de nuevo.
+    this.subs.add(this.translate.onLangChange.subscribe(() => this.fijarOpciones()));
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+  }
+
+  private fijarOpciones(): void {
+    const opciones: OpcionVista[] = OPCIONES.map((o) => ({ id: o.id, etiqueta: this.translate.instant(o.clave) }));
+    this.interaccion.fijarOpciones(opciones);
   }
 
   /** Los paneles flotan (y la lista sale de la columna) salvo en "Ampliar" y en el muro. */

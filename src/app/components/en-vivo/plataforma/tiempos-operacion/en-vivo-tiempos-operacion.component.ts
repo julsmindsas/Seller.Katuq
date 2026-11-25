@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
-import { cifrasGlobal$, ocultar$, radarCongelado$ } from '../utilidades/fuentes';
+import { cifrasGlobal$, idioma$, ocultar$, radarCongelado$, traductorDe } from '../utilidades/fuentes';
 import { armarTiempos, TramoTiempo, VistaTiempos } from '../utilidades/tiempos';
 
 /**
@@ -27,9 +28,10 @@ import { armarTiempos, TramoTiempo, VistaTiempos } from '../utilidades/tiempos';
 export class EnVivoTiemposOperacionComponent {
   readonly vm$: Observable<VistaTiempos>;
 
-  constructor(estado: EnVivoEstadoService, interaccion: EnVivoInteraccionService) {
-    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado)]).pipe(
-      map(([radar, cifras, ocultar]) => armarTiempos(radar?.tiempos, cifras?.comercios ?? [], ocultar))
+  constructor(estado: EnVivoEstadoService, interaccion: EnVivoInteraccionService, translate: TranslateService) {
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado), idioma$(translate)]).pipe(
+      map(([radar, cifras, ocultar]) => armarTiempos(radar?.tiempos, cifras?.comercios ?? [], ocultar, t))
     );
   }
 

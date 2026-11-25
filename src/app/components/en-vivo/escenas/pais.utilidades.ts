@@ -5,6 +5,7 @@
  */
 
 import { diaDeColombia } from '../servicios/en-vivo-reglas';
+import { Traductor } from '../utilidades/traductor';
 
 // ── Geografía mínima (lo que usan estas cuentas del JSON de Colombia) ─────────
 
@@ -57,13 +58,13 @@ export function resolverDane(geo: GeoMinimo, dane: string | null | undefined, no
 }
 
 /** Nombre para mostrar de un lugar: el del mapa, o el texto que trajo el pedido, o "Sin ciudad". */
-export function nombreDeLugar(geo: GeoMinimo, dane: string | null | undefined, texto?: string | null): string {
+export function nombreDeLugar(geo: GeoMinimo, dane: string | null | undefined, texto: string | null | undefined, t: Traductor): string {
   const d = (dane ?? '').trim();
   const c = d ? geo.ciudades[d] : undefined;
   if (c) return c[2].replace(/\s*D\.C\.$/, '');
   if (texto && texto.trim()) return texto.trim();
   const depto = d.length >= 2 ? geo.departamentos.find((x) => x.dane === d.slice(0, 2)) : undefined;
-  return depto ? depto.nombre : 'Sin ciudad';
+  return depto ? depto.nombre : t('enVivo.escenas.sinCiudad');
 }
 
 // ── Alturas ───────────────────────────────────────────────────────────────────
@@ -92,16 +93,17 @@ export function tonoDeComercio(empresa: string): string {
 }
 
 /** Letrero corto en mayúsculas para la fachada de un edificio. */
-export function letreroDe(nombre: string, maximo = 22): string {
+export function letreroDe(nombre: string, t: Traductor, maximo = 22): string {
   const limpio = String(nombre ?? '').trim().toUpperCase();
-  return limpio.length > maximo ? limpio.slice(0, maximo - 1).trimEnd() + '…' : limpio || 'COMERCIO';
+  return limpio.length > maximo ? limpio.slice(0, maximo - 1).trimEnd() + '…' : limpio || t('enVivo.escenas.comercioLetrero');
 }
 
 /** "Comercio en Medellín" (ocultar comercios y montos); sin ciudad, "Comercio". */
-export const nombreOculto = (ciudad: string | null | undefined): string => (ciudad && ciudad.trim() ? `Comercio en ${ciudad.trim()}` : 'Comercio');
+export const nombreOculto = (ciudad: string | null | undefined, t: Traductor): string =>
+  ciudad && ciudad.trim() ? t('enVivo.escenas.comercioEn', { ciudad: ciudad.trim() }) : t('enVivo.escenas.comercio');
 
-export const nombreVisible = (nombre: string, ciudad: string | null | undefined, privado: boolean): string =>
-  privado ? nombreOculto(ciudad) : nombre || nombreOculto(ciudad);
+export const nombreVisible = (nombre: string, ciudad: string | null | undefined, privado: boolean, t: Traductor): string =>
+  privado ? nombreOculto(ciudad, t) : nombre || nombreOculto(ciudad, t);
 
 export interface ComercioPlano {
   empresa: string;
@@ -469,14 +471,14 @@ export interface ComercioDeCifras {
 }
 
 /** Los comercios de las cifras de toda Katuq, con su ciudad resuelta contra el mapa y su tono estable. */
-export function prepararComercios(geo: GeoMinimo, comercios: ReadonlyArray<ComercioDeCifras>): ComercioDibujo[] {
+export function prepararComercios(geo: GeoMinimo, comercios: ReadonlyArray<ComercioDeCifras>, t: Traductor): ComercioDibujo[] {
   return comercios.map((c) => {
     const dane = resolverDane(geo, c.dane, c.ciudad);
     return {
       empresa: c.empresa,
       nombre: (c.nombre || '').trim() || c.empresa,
       dane,
-      ciudad: nombreDeLugar(geo, dane, c.ciudad),
+      ciudad: nombreDeLugar(geo, dane, c.ciudad, t),
       n: c.n,
       ventas: c.ventas,
       tono: tonoDeComercio(c.empresa),

@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { RadarEnVivo } from '../../servicios/en-vivo.modelos';
-import { cifrasGlobal$, ocultar$, radarCongelado$ } from '../utilidades/fuentes';
-import { armarLogros, cruzoElRecord, LogroVista, TEXTO_RECORD_KATUQ, vaAlRecord, VistaLogros } from '../utilidades/logros';
+import { cifrasGlobal$, idioma$, ocultar$, radarCongelado$, traductorDe } from '../utilidades/fuentes';
+import { armarLogros, CLAVE_RECORD_KATUQ, cruzoElRecord, LogroVista, vaAlRecord, VistaLogros } from '../utilidades/logros';
 
 /** Hito que se guarda como "ya celebrado hoy" (el estado lo separa por vista: el de Katuq no se mezcla con el de un comercio). */
 const HITO_RECORD = 'record-dia';
@@ -42,10 +43,12 @@ export class EnVivoLogrosComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly estado: EnVivoEstadoService,
-    private readonly interaccion: EnVivoInteraccionService
+    private readonly interaccion: EnVivoInteraccionService,
+    private readonly translate: TranslateService
   ) {
-    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado)]).pipe(
-      map(([radar, cifras, ocultar]) => armarLogros(radar, cifras, ocultar))
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado), idioma$(translate)]).pipe(
+      map(([radar, cifras, ocultar]) => armarLogros(radar, cifras, ocultar, t))
     );
   }
 
@@ -67,7 +70,7 @@ export class EnVivoLogrosComponent implements OnInit, OnDestroy {
     if (actual !== null) this.ultimoVaAlRecord = actual;
     // El radar congelado no cambia durante la repetición, así que aquí nunca llega un cruce falso.
     if (cruzo && !this.interaccion.repitiendo && this.estado.marcarCelebrado(HITO_RECORD)) {
-      this.celebrar.emit(TEXTO_RECORD_KATUQ);
+      this.celebrar.emit(this.translate.instant(CLAVE_RECORD_KATUQ));
     }
   }
 }

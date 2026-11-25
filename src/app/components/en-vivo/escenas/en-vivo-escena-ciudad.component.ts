@@ -1,3 +1,4 @@
+import { TranslateService } from '@ngx-translate/core';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -32,8 +33,7 @@ import type { ObjetivoOrbe } from './opttia-puntos';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnVivoEscenaCiudadComponent extends EnVivoEscenaBase<CiudadKatuqEscena> {
-  readonly etiquetaAria =
-    'Escena 3D de una ciudad con un edificio por comercio de Katuq: crece con lo vendido hoy, recibe una caja con cada pedido nuevo y saca motos y camiones con cada envío. Las cifras, la carrera y la lista dicen lo mismo en texto.';
+  readonly claveAria = 'enVivo.escenas.ciudad.aria';
 
   private ultimasCifras: CifrasGlobalEnVivo | null = null;
   private ultimasAlertas: ReadonlyArray<AlertaRadar> | null = null;
@@ -44,9 +44,10 @@ export class EnVivoEscenaCiudadComponent extends EnVivoEscenaBase<CiudadKatuqEsc
     host: ElementRef<HTMLElement>,
     estado: EnVivoEstadoService,
     interaccion: EnVivoInteraccionService,
-    orbe: EnVivoOrbeService
+    orbe: EnVivoOrbeService,
+    translate: TranslateService
   ) {
-    super(zona, cdr, host, estado, interaccion, orbe);
+    super(zona, cdr, host, estado, interaccion, orbe, translate);
   }
 
   // ------------------------------------------------------ API para quien la integra

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
 import { scan } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { CARRERA_VACIA, EstadoCarrera, FilaCarrera, reducirCarrera, TOP_CARRERA } from '../utilidades/carrera';
-import { avisarAperturaDeComercio, cifrasGlobal$, ocultar$ } from '../utilidades/fuentes';
+import { avisarAperturaDeComercio, cifrasGlobal$, idioma$, ocultar$, traductorDe } from '../utilidades/fuentes';
 import { AperturaComercio } from '../utilidades/nombres';
 
 /**
@@ -36,10 +37,11 @@ export class EnVivoCarreraComponent {
   readonly top = TOP_CARRERA;
   readonly vm$: Observable<EstadoCarrera>;
 
-  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService) {
-    this.vm$ = combineLatest([cifrasGlobal$(estado), ocultar$(estado)]).pipe(
+  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService, translate: TranslateService) {
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([cifrasGlobal$(estado), ocultar$(estado), idioma$(translate)]).pipe(
       scan(
-        (previo: EstadoCarrera, [cifras, ocultar]) => reducirCarrera(previo, { comercios: cifras?.comercios ?? [], ocultar }),
+        (previo: EstadoCarrera, [cifras, ocultar]) => reducirCarrera(previo, { comercios: cifras?.comercios ?? [], ocultar, t }),
         CARRERA_VACIA
       )
     );

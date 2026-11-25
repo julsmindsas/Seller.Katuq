@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { EstadoApp, OpcionTransportadoraPlan, ResultadoGrupo, TarifaPlan, TipoGrupo } from '../plan-despachos.modelos';
 import { dinero } from '../../utilidades/formato';
 
@@ -71,6 +72,8 @@ export class EnVivoGrupoDespachoComponent {
   @Output() aprobar = new EventEmitter<void>();
   @Output() abrirPedido = new EventEmitter<string>();
 
+  constructor(private readonly translate: TranslateService) {}
+
   get esTransportadora(): boolean {
     return this.grupo.tipo === 'transportadora';
   }
@@ -104,25 +107,33 @@ export class EnVivoGrupoDespachoComponent {
     const r = this.resultado;
     if (!r) return '';
     if (this.esTransportadora) return this.textoResultadoTransportadora(r);
-    const orden = r.nroShippingOrder ? ` en la orden ${r.nroShippingOrder}` : '';
+    const orden = r.nroShippingOrder;
     switch (r.estado) {
       case 'despachado':
-        return `Despachado${orden}.`;
-      case 'despachado-parcial':
-        return `Salieron ${r.despachados?.length ?? 0}${orden}; ${r.fuera?.length ?? 0} quedaron por fuera.`;
+        return orden
+          ? this.translate.instant('enVivo.despachos.resDespachadoOrden', { orden })
+          : this.translate.instant('enVivo.despachos.resDespachado');
+      case 'despachado-parcial': {
+        const params = { orden, salieron: r.despachados?.length ?? 0, fuera: r.fuera?.length ?? 0 };
+        return orden
+          ? this.translate.instant('enVivo.despachos.resParcialOrden', params)
+          : this.translate.instant('enVivo.despachos.resParcial', params);
+      }
       case 'reanudado':
-        return `Se terminaron de despachar${orden}.`;
+        return orden
+          ? this.translate.instant('enVivo.despachos.resReanudadoOrden', { orden })
+          : this.translate.instant('enVivo.despachos.resReanudado');
       case 'ya-aprobado':
       case 'en-curso':
-        return r.razon || 'Ya estaba aprobado.';
+        return r.razon || this.translate.instant('enVivo.despachos.resYaAprobado');
       default:
-        return r.razon || 'No se pudo despachar.';
+        return r.razon || this.translate.instant('enVivo.despachos.resNoDespachado');
     }
   }
 
   /** Cada pedido sale con su propia orden de envío: "Enviados a Cereza: 3 órdenes de envío (51, 52, 53)." */
   private textoResultadoTransportadora(r: ResultadoGrupo): string {
-    const nombre = r.transportadora || this.transportadora?.nombre || 'la transportadora';
+    const nombre = r.transportadora || this.transportadora?.nombre || this.translate.instant('enVivo.despachos.transportadoraDefecto');
     const ordenes = r.nroShippingOrders?.length ? r.nroShippingOrders : r.nroShippingOrder ? [r.nroShippingOrder] : [];
     const salieron = r.despachados?.length ?? ordenes.length;
     const fuera = r.fuera?.length ?? 0;
@@ -130,19 +141,21 @@ export class EnVivoGrupoDespachoComponent {
       case 'despachado': {
         const n = ordenes.length || salieron;
         const detalle = ordenes.length ? ` (${ordenes.join(', ')})` : '';
-        return `${n === 1 ? 'Enviado' : 'Enviados'} a ${nombre}: ${n} ${n === 1 ? 'orden de envío' : 'órdenes de envío'}${detalle}.`;
+        return this.translate.instant(n === 1 ? 'enVivo.despachos.trDespachadoUno' : 'enVivo.despachos.trDespachadoVarios', { nombre, n, detalle });
       }
       case 'despachado-parcial': {
-        const detalle = ordenes.length ? ` (${ordenes.length === 1 ? 'orden' : 'órdenes'} ${ordenes.join(', ')})` : '';
-        return `${salieron === 1 ? 'Salió' : 'Salieron'} ${salieron} a ${nombre}${detalle}; ${fuera} ${fuera === 1 ? 'quedó' : 'quedaron'} por fuera.`;
+        const detalle = ordenes.length
+          ? ` (${this.translate.instant(ordenes.length === 1 ? 'enVivo.despachos.trOrdenUna' : 'enVivo.despachos.trOrdenVarias', { ordenes: ordenes.join(', ') })})`
+          : '';
+        return this.translate.instant('enVivo.despachos.trParcial', { salieron, nombre, detalle, fuera });
       }
       case 'reanudado':
-        return `Se terminaron de enviar a ${nombre}.`;
+        return this.translate.instant('enVivo.despachos.trReanudado', { nombre });
       case 'ya-aprobado':
       case 'en-curso':
-        return r.razon || 'Ya estaba aprobado.';
+        return r.razon || this.translate.instant('enVivo.despachos.resYaAprobado');
       default:
-        return r.razon || 'No se pudo enviar.';
+        return r.razon || this.translate.instant('enVivo.despachos.resNoEnviado');
     }
   }
 
@@ -159,7 +172,7 @@ export class EnVivoGrupoDespachoComponent {
   /** El selector no repite la razón (va debajo): solo dice cuál es la sugerencia y cuáles las alternativas. */
   etiquetaOpcion(o: OpcionMensajero, i: number): string {
     if (!o.razon) return o.nombre;
-    return i === 0 ? `${o.nombre} · sugerido` : `${o.nombre} · alternativa`;
+    return this.translate.instant(i === 0 ? 'enVivo.despachos.opcionSugerido' : 'enVivo.despachos.opcionAlternativa', { nombre: o.nombre });
   }
 
   elegir(id: string): void {
@@ -168,13 +181,13 @@ export class EnVivoGrupoDespachoComponent {
 
   /** "Fija": la plata por pedido; "incluida" y "ninguna": el texto del servidor tal cual. */
   textoTarifa(t: TarifaPlan): string {
-    if (t.tipo === 'fija' && typeof t.valor === 'number') return `${dinero(t.valor)} por pedido`;
-    return t.texto || 'Sin tarifa';
+    if (t.tipo === 'fija' && typeof t.valor === 'number') return this.translate.instant('enVivo.despachos.tarifaPorPedido', { valor: dinero(t.valor) });
+    return t.texto || this.translate.instant('enVivo.despachos.sinTarifa');
   }
 
   /** Como con el mensajero: el selector dice cuál es la sugerida; la tarifa de la elegida va debajo. */
   etiquetaTransportadora(t: OpcionTransportadoraPlan, i: number): string {
-    return i === 0 ? `${t.nombre} · sugerida` : `${t.nombre} · alternativa`;
+    return this.translate.instant(i === 0 ? 'enVivo.despachos.trSugerida' : 'enVivo.despachos.trAlternativa', { nombre: t.nombre });
   }
 
   elegirTransportadora(proveedor: string): void {

@@ -2,6 +2,7 @@ import { EtapaId, EtapaInfo, EventoEnVivo, PedidoEnVivo, VistaEnVivo } from '../
 import { estadoLegible } from './formato';
 import { IconoId } from './iconos';
 import { TonoVisual } from './tonos';
+import { nombreDeEtapa, Traductor } from './traductor';
 
 /**
  * Lo que necesita la lista "Lo que está pasando" para pintar un evento. La línea se arma así:
@@ -49,7 +50,7 @@ function iconoDeTransporte(tipo: string | null): IconoId {
  * Describe un evento para la lista, del comercio o de toda Katuq. Puro.
  * En toda Katuq nunca se escribe el cliente: solo el comercio y la ciudad del cliente.
  */
-export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripcion): DescripcionEvento {
+export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripcion, t: Traductor): DescripcionEvento {
   const { ocultar, etapas } = contexto;
   const global = contexto.vista === 'katuq';
   const pedido = contexto.pedido ?? null;
@@ -59,22 +60,23 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
   const ia = evento.ia ?? pedido?.ia ?? false;
   const esPos = canal === 'POS';
   const monto = ocultar ? null : evento.monto ?? pedido?.monto ?? null;
-  const cliente = ocultar ? 'Cliente' : evento.cliente ?? pedido?.cliente ?? 'Cliente';
+  const cliente = ocultar ? t('enVivo.evento.cliente') : evento.cliente ?? pedido?.cliente ?? t('enVivo.evento.cliente');
   const transportador = evento.transportador ?? pedido?.transportador ?? null;
   const tipoTransporte = evento.tipoTransportador ?? pedido?.tipoTransportador ?? null;
   const ciudadComercio = evento.ciudadComercio ?? '';
 
   const negrita = global
     ? ocultar
-      ? `Comercio en ${ciudadComercio || 'Colombia'}`
-      : evento.nombreComercio ?? 'Comercio'
+      ? t('enVivo.evento.comercioEn', { ciudad: ciudadComercio || 'Colombia' })
+      : evento.nombreComercio ?? t('enVivo.evento.comercio')
     : null;
   // En toda Katuq también va el número: distingue un pedido de otro. Con "ocultar" no, porque su prefijo delata al comercio.
   const numero = global && ocultar ? null : evento.numero ?? null;
   // En toda Katuq, sin número la frase dice "un pedido"; con número, el número ya es el sujeto.
   const sujeto = (conNumero: string, sinNumero: string): string => (numero ? conNumero : sinNumero);
   const quien = global ? '' : cliente;
-  const nombreEtapa = (id: EtapaId): string => (etapas.get(id)?.nombre ?? id).toLowerCase();
+  const nombreEtapa = (id: EtapaId): string => nombreDeEtapa(id, etapas.get(id), t).toLowerCase();
+  const clienteEn = (): string => (ciudad ? t('enVivo.evento.clienteEn', { ciudad }) : '');
   // Con el nombre del comercio oculto la ciudad ya va en la negrita: no se repite.
   const ciudadDelComercio = global && !ocultar ? ciudadComercio : '';
 
@@ -87,35 +89,39 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         monto,
         tono: ia ? 'pack' : esPos ? 'ok' : 'acento',
         icono: ia ? 'ia' : esPos ? 'efectivo' : 'bolsa',
-        pastilla: ia ? 'Con Opttia' : esPos ? 'Venta en tienda' : 'Nuevo pedido',
+        pastilla: ia ? t('enVivo.evento.conOpttia') : esPos ? t('enVivo.evento.ventaEnTienda') : t('enVivo.evento.nuevoPedido'),
         texto: global ? conSeparador(ciudadDelComercio) : conSeparador(unir([quien, ciudad])),
         meta: global
           ? esPos
-            ? 'Punto de venta'
+            ? t('enVivo.evento.puntoDeVenta')
             : ia
-            ? `Lo armó el bot de WhatsApp${ciudad ? ` · cliente en ${ciudad}` : ''}`
-            : unir([ciudad ? `Cliente en ${ciudad}` : '', canal])
+            ? ciudad
+              ? t('enVivo.evento.armoElBotCiudad', { ciudad })
+              : t('enVivo.evento.armoElBot')
+            : unir([clienteEn(), canal])
           : canal
-          ? `${canal}${ia ? ' con Opttia' : ''}`
+          ? ia
+            ? t('enVivo.evento.canalConOpttia', { canal })
+            : canal
           : ia
-          ? 'Con Opttia'
+          ? t('enVivo.evento.conOpttia')
           : '',
       };
 
     case 'cambio_estado': {
       const etapa = etapas.get(evento.etapaNueva);
-      const accion =
-        evento.etapaAnterior !== evento.etapaNueva
-          ? `pasó a ${nombreEtapa(evento.etapaNueva)}`
-          : `cambió a ${estadoLegible(evento.estadoNuevo) || nombreEtapa(evento.etapaNueva)}`;
+      const cambioDeEtapa = evento.etapaAnterior !== evento.etapaNueva;
+      const destino = cambioDeEtapa ? nombreEtapa(evento.etapaNueva) : estadoLegible(evento.estadoNuevo) || nombreEtapa(evento.etapaNueva);
+      const accion = t(cambioDeEtapa ? 'enVivo.evento.pasoA' : 'enVivo.evento.cambioA', { destino });
+      const accionDeUnPedido = t(cambioDeEtapa ? 'enVivo.evento.unPedidoPasoA' : 'enVivo.evento.unPedidoCambioA', { destino });
       return {
         ...comun,
         tono: etapa?.tono ?? 'neutro',
         icono: 'flecha',
-        pastilla: etapa?.nombre ?? 'Cambio de estado',
+        pastilla: etapa ? nombreDeEtapa(evento.etapaNueva, etapa, t) : t('enVivo.evento.cambioDeEstado'),
         monto: global ? monto : null,
-        texto: global ? sujeto(accion, `· un pedido ${accion}`) : accion,
-        meta: global ? (ciudad ? `Cliente en ${ciudad}` : '') : unir([quien, ciudad]),
+        texto: global ? sujeto(accion, accionDeUnPedido) : accion,
+        meta: global ? clienteEn() : unir([quien, ciudad]),
       };
     }
 
@@ -125,9 +131,9 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         monto,
         tono: 'ok',
         icono: 'tarjeta',
-        pastilla: 'Pago confirmado',
-        texto: global ? sujeto('pago confirmado', '· pago confirmado') : conSeparador(quien),
-        meta: global ? (ciudad ? `Cliente en ${ciudad}` : '') : canal,
+        pastilla: t('enVivo.evento.pagoConfirmado'),
+        texto: global ? sujeto(t('enVivo.evento.pagoConfirmadoMin'), t('enVivo.evento.unPagoConfirmado')) : conSeparador(quien),
+        meta: global ? clienteEn() : canal,
       };
 
     case 'salida': {
@@ -137,17 +143,23 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         ...comun,
         tono: 'info',
         icono: iconoDeTransporte(tipoTransporte),
-        pastilla: enMoto ? 'Salió en moto' : enCamion ? 'Salió en camión' : 'Salió',
+        pastilla: enMoto ? t('enVivo.evento.salioEnMoto') : enCamion ? t('enVivo.evento.salioEnCamion') : t('enVivo.evento.salio'),
         monto: global ? monto : null,
-        texto: global ? sujeto('salió a entrega', '· despachó un pedido') : transportador ? `con ${transportador}` : 'salió a entrega',
+        texto: global
+          ? sujeto(t('enVivo.evento.salioAEntrega'), t('enVivo.evento.despachoUnPedido'))
+          : transportador
+          ? t('enVivo.evento.conTransportador', { transportador })
+          : t('enVivo.evento.salioAEntrega'),
         meta: global
           ? enCamion
-            ? `Transportadora${ciudad ? ` hacia ${ciudad}` : ''}`
-            : unir(['Mensajero propio', ciudadComercio])
+            ? ciudad
+              ? t('enVivo.evento.transportadoraHacia', { ciudad })
+              : t('enVivo.evento.transportadora')
+            : unir([t('enVivo.evento.mensajeroPropio'), ciudadComercio])
           : enMoto
-          ? unir(['Moto', ciudad])
+          ? unir([t('enVivo.evento.moto'), ciudad])
           : enCamion
-          ? `Hacia ${ciudad || 'otra ciudad'}`
+          ? t('enVivo.evento.hacia', { ciudad: ciudad || t('enVivo.evento.otraCiudad') })
           : ciudad,
       };
     }
@@ -157,8 +169,12 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         ...comun,
         tono: 'info',
         icono: iconoDeTransporte(tipoTransporte),
-        pastilla: 'Asignado',
-        texto: global ? sujeto('asignado', '· un pedido asignado') : transportador ? `asignado a ${transportador}` : 'asignado',
+        pastilla: t('enVivo.evento.asignado'),
+        texto: global
+          ? sujeto(t('enVivo.evento.asignadoMin'), t('enVivo.evento.unPedidoAsignado'))
+          : transportador
+          ? t('enVivo.evento.asignadoA', { transportador })
+          : t('enVivo.evento.asignadoMin'),
         meta: unir([global ? '' : quien, ciudad]),
       };
 
@@ -167,10 +183,10 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         ...comun,
         tono: 'ok',
         icono: 'check',
-        pastilla: 'Entregado',
+        pastilla: t('enVivo.evento.entregado'),
         monto: global ? monto : null,
-        texto: global ? sujeto('entregado', '· entregó un pedido') : conSeparador(quien),
-        meta: global ? (ciudad ? `En ${ciudad}` : '') : unir([ciudad, transportador]),
+        texto: global ? sujeto(t('enVivo.evento.entregadoMin'), t('enVivo.evento.entregoUnPedido')) : conSeparador(quien),
+        meta: global ? (ciudad ? t('enVivo.evento.enCiudad', { ciudad }) : '') : unir([ciudad, transportador]),
       };
 
     case 'rechazado':
@@ -178,9 +194,9 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         ...comun,
         tono: 'peligro',
         icono: 'equis',
-        pastilla: 'Rechazado',
+        pastilla: t('enVivo.evento.rechazado'),
         texto: global ? '' : conSeparador(quien),
-        meta: global ? 'El cliente rechazó un pedido' : ciudad,
+        meta: global ? t('enVivo.evento.clienteRechazo') : ciudad,
       };
 
     default:
@@ -188,9 +204,9 @@ export function describirEvento(evento: EventoEnVivo, contexto: ContextoDescripc
         ...comun,
         tono: 'peligro',
         icono: 'equis',
-        pastilla: 'Cancelado',
+        pastilla: t('enVivo.evento.cancelado'),
         texto: global ? '' : conSeparador(quien),
-        meta: global ? 'Se canceló un pedido' : ciudad,
+        meta: global ? t('enVivo.evento.sePedidoCancelo') : ciudad,
       };
   }
 }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { ocultarDe$ } from '../comercio-fuentes';
 import { armarLogros, FilaLogro, VistaLogros } from '../utilidades/logros';
@@ -22,7 +23,11 @@ export class EnVivoLogrosComercioComponent implements OnInit, OnDestroy {
 
   private suscripcion: Subscription | null = null;
 
-  constructor(private readonly estado: EnVivoEstadoService, private readonly cambios: ChangeDetectorRef) {}
+  constructor(
+    private readonly estado: EnVivoEstadoService,
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     this.suscripcion = combineLatest([
@@ -46,8 +51,9 @@ export class EnVivoLogrosComercioComponent implements OnInit, OnDestroy {
         )
       ),
       ocultarDe$(this.estado.preferencias$),
+      this.translate.onLangChange.pipe(startWith(null)),
     ]).subscribe(([entrada, ocultar]) => {
-      this.vista = armarLogros({ ...entrada, ocultar });
+      this.vista = armarLogros({ ...entrada, ocultar }, (clave, params) => this.translate.instant(clave, params));
       this.cambios.markForCheck();
     });
   }

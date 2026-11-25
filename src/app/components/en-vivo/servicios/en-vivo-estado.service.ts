@@ -11,7 +11,7 @@ import {
   SalidaCanal,
 } from './en-vivo.modelos';
 import { EnVivoCanalService } from './en-vivo-canal.service';
-import { diaDeColombia, textoAlDia } from './en-vivo-reglas';
+import { diaDeColombia } from './en-vivo-reglas';
 import { esRegistro } from './en-vivo-sse.parser';
 import { aplicarCifras, aplicarEvento, aplicarFoto, estadoInicial } from './en-vivo-reductores';
 
@@ -182,7 +182,7 @@ export class EnVivoEstadoService implements OnDestroy {
         const resultado = aplicarFoto(this.estado, salida.foto, { trasCorte: salida.trasCorte, ahoraMs: Date.now() });
         this.publicar(resultado.estado);
         if (resultado.cambios > 0) {
-          this.avisosSubject.next({ tipo: 'al-dia', cambios: resultado.cambios, texto: textoAlDia(resultado.cambios) });
+          this.avisosSubject.next({ tipo: 'al-dia', cambios: resultado.cambios });
         }
         break;
       }
@@ -232,9 +232,9 @@ export class EnVivoEstadoService implements OnDestroy {
     this.nuevosSubject.next(evento);
   }
 
-  /** Aviso pasajero con un texto libre (el shell lo muestra igual que "Te pusimos al día"). */
-  avisar(texto: string): void {
-    this.avisosSubject.next({ tipo: 'info', texto });
+  /** Aviso pasajero con una CLAVE de traducción (el shell la traduce y la muestra igual que "Te pusimos al día"). */
+  avisar(clave: string): void {
+    this.avisosSubject.next({ tipo: 'info', clave });
   }
 
   private mismasOpciones(a: OpcionesCanal, b: OpcionesCanal): boolean {

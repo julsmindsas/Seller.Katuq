@@ -6,6 +6,7 @@ import {
   PedidoEnVivo,
 } from './en-vivo.modelos';
 import { claveDeTexto, primerNombre } from './en-vivo-reglas';
+import { Traductor } from '../utilidades/traductor';
 
 /**
  * Acciones de Opttia → acciones de la pantalla. Opttia solo SUGIERE (`{ tipo, objetivo, texto }`,
@@ -53,16 +54,17 @@ const ETAPAS: ReadonlyArray<EtapaId> = [
   'cancelado',
 ];
 
-const TEXTO_ETAPA: Readonly<Record<EtapaId, string>> = {
-  recibido: 'sin producir',
-  produccion: 'en producción',
-  producido: 'producidos',
-  empacado: 'empacados',
-  listo: 'para despachar',
-  camino: 'despachados',
-  entregado: 'entregados',
-  rechazado: 'rechazados',
-  cancelado: 'cancelados',
+/** Clave de la etiqueta "Ver pedidos …" de cada etapa. */
+const CLAVE_VER_ETAPA: Readonly<Record<EtapaId, string>> = {
+  recibido: 'enVivo.acciones.verPedidosRecibido',
+  produccion: 'enVivo.acciones.verPedidosProduccion',
+  producido: 'enVivo.acciones.verPedidosProducido',
+  empacado: 'enVivo.acciones.verPedidosEmpacado',
+  listo: 'enVivo.acciones.verPedidosListo',
+  camino: 'enVivo.acciones.verPedidosCamino',
+  entregado: 'enVivo.acciones.verPedidosEntregado',
+  rechazado: 'enVivo.acciones.verPedidosRechazado',
+  cancelado: 'enVivo.acciones.verPedidosCancelado',
 };
 
 /** Número de pedido comparable: sin "#", sin tildes y en minúsculas. */
@@ -82,14 +84,14 @@ function buscarComercio(comercios: ReadonlyArray<ComercioEnVivo>, objetivo: stri
 }
 
 /** El botón de una acción `lista` con su etiqueta por defecto, o null si el objetivo no existe. */
-function deLista(objetivo: string, contexto: ContextoAccionesOpttia): AccionOpttiaUi | null {
+function deLista(objetivo: string, contexto: ContextoAccionesOpttia, t: Traductor): AccionOpttiaUi | null {
   const lista = (clave: string, etiqueta: string): AccionOpttiaUi => ({ etiqueta, accion: { tipo: 'abrir-lista', clave } });
-  if (objetivo === 'todos') return lista('todos', 'Ver todos los pedidos');
-  if (objetivo === 'ia') return lista('ia', 'Ver los pedidos de Opttia');
+  if (objetivo === 'todos') return lista('todos', t('enVivo.acciones.verTodos'));
+  if (objetivo === 'ia') return lista('ia', t('enVivo.acciones.verOpttia'));
 
   if (objetivo.startsWith('etapa:')) {
     const etapa = objetivo.slice('etapa:'.length) as EtapaId;
-    return ETAPAS.indexOf(etapa) === -1 ? null : lista(`etapa:${etapa}`, `Ver pedidos ${TEXTO_ETAPA[etapa]}`);
+    return ETAPAS.indexOf(etapa) === -1 ? null : lista(`etapa:${etapa}`, t(CLAVE_VER_ETAPA[etapa]));
   }
 
   if (objetivo.startsWith('canal:')) {
@@ -97,14 +99,14 @@ function deLista(objetivo: string, contexto: ContextoAccionesOpttia): AccionOptt
     if (!pedido) return null;
     // El servidor solo deja pasar canales sin espacios ("tienda-web"): se busca el nombre real del canal.
     const canal = contexto.pedidos.map((p) => p.canal).find((c) => claveDeCanal(c) === claveDeCanal(pedido)) ?? pedido;
-    return lista(`canal:${canal}`, `Ver pedidos de ${canal}`);
+    return lista(`canal:${canal}`, t('enVivo.acciones.verCanal', { canal }));
   }
 
   if (objetivo.startsWith('atascados:')) {
     const comercio = buscarComercio(contexto.comercios, objetivo.slice('atascados:'.length));
     return comercio
       ? {
-          etiqueta: `Ver atascados de ${comercio.nombre}`,
+          etiqueta: t('enVivo.acciones.verAtascados', { nombre: comercio.nombre }),
           accion: { tipo: 'abrir-comercio', empresa: comercio.empresa, nombre: comercio.nombre, foco: 'atascados' },
         }
       : null;
@@ -117,7 +119,11 @@ function deLista(objetivo: string, contexto: ContextoAccionesOpttia): AccionOptt
  * abrir con lo que hay (un pedido que ya no está en la foto, un comercio que no se conoce...): en
  * ese caso la pantalla no pinta el botón.
  */
-export function accionOpttiaAUi(accion: AccionOpttia | null | undefined, contexto: ContextoAccionesOpttia): AccionOpttiaUi | null {
+export function accionOpttiaAUi(
+  accion: AccionOpttia | null | undefined,
+  contexto: ContextoAccionesOpttia,
+  t: Traductor
+): AccionOpttiaUi | null {
   if (!accion || typeof accion.objetivo !== 'string') return null;
   const objetivo = accion.objetivo.trim();
   if (!objetivo) return null;
@@ -127,7 +133,7 @@ export function accionOpttiaAUi(accion: AccionOpttia | null | undefined, context
   switch (accion.tipo) {
     case 'tablero': {
       const comercio = buscarComercio(contexto.comercios, objetivo);
-      return comercio ? con(`Ver ${comercio.nombre}`, { tipo: 'abrir-comercio', empresa: comercio.empresa, nombre: comercio.nombre }) : null;
+      return comercio ? con(t('enVivo.acciones.verComercio', { nombre: comercio.nombre }), { tipo: 'abrir-comercio', empresa: comercio.empresa, nombre: comercio.nombre }) : null;
     }
 
     case 'ficha': {
@@ -135,7 +141,7 @@ export function accionOpttiaAUi(accion: AccionOpttia | null | undefined, context
       const numero = claveDeNumero(objetivo);
       const pedido = numero ? contexto.pedidos.find((p) => claveDeNumero(p.numero) === numero) : undefined;
       return pedido
-        ? con(`Abrir el pedido #${String(pedido.numero ?? '').replace(/^\s*#/, '')}`, {
+        ? con(t('enVivo.acciones.abrirPedido', { numero: String(pedido.numero ?? '').replace(/^\s*#/, '') }), {
             tipo: 'abrir-pedido',
             pedidoId: pedido.id,
             empresa: contexto.empresa ?? null,
@@ -150,11 +156,11 @@ export function accionOpttiaAUi(accion: AccionOpttia | null | undefined, context
       if (!mensajero) return null;
       const suyo = claveDeTexto(mensajero.nombre);
       const pedidoIds = contexto.pedidos.filter((p) => p.etapa === 'camino' && claveDeTexto(p.transportador) === suyo).map((p) => p.id);
-      return con(`Ver a ${primerNombre(mensajero.nombre)}`, { tipo: 'abrir-mensajero', nombre: mensajero.nombre, pedidoIds });
+      return con(t('enVivo.acciones.verMensajero', { nombre: primerNombre(mensajero.nombre) }), { tipo: 'abrir-mensajero', nombre: mensajero.nombre, pedidoIds });
     }
 
     case 'lista': {
-      const resuelta = deLista(objetivo, contexto);
+      const resuelta = deLista(objetivo, contexto, t);
       return resuelta ? { etiqueta: etiquetaOpttia || resuelta.etiqueta, accion: resuelta.accion } : null;
     }
 
@@ -166,11 +172,12 @@ export function accionOpttiaAUi(accion: AccionOpttia | null | undefined, context
 /** Las acciones de una respuesta o de un punto del resumen, sin las que no se pueden abrir. */
 export function accionesOpttiaAUi(
   acciones: ReadonlyArray<AccionOpttia> | null | undefined,
-  contexto: ContextoAccionesOpttia
+  contexto: ContextoAccionesOpttia,
+  t: Traductor
 ): AccionOpttiaUi[] {
   const salida: AccionOpttiaUi[] = [];
   for (const accion of acciones ?? []) {
-    const ui = accionOpttiaAUi(accion, contexto);
+    const ui = accionOpttiaAUi(accion, contexto, t);
     if (ui) salida.push(ui);
   }
   return salida;

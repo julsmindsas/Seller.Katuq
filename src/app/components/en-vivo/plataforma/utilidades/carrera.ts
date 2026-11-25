@@ -1,5 +1,6 @@
 import { ComercioEnVivo } from '../../servicios/en-vivo.modelos';
-import { dinero } from '../../utilidades/formato';
+import { dinero, formatearCifra } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 import {
   claseDeComercio,
   inicialesVisibles,
@@ -84,6 +85,8 @@ export interface EntradaCarrera {
   ocultar: boolean;
   top?: number;
   banca?: number;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 /**
@@ -113,10 +116,13 @@ function etiquetaDeFila(
   puesto: number,
   nombre: string,
   c: ComercioEnVivo,
-  ocultar: boolean
+  ocultar: boolean,
+  t: Traductor
 ): string {
-  const pedidos = `${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'}`;
-  return `${puesto}. ${nombre}: ${pedidos}${ocultar ? '' : `, ${dinero(c.ventas)}`}. Abrir su tablero`;
+  const pedidos = formatearCifra(c.n, 'pedidos', t);
+  return ocultar
+    ? t('enVivo.plataforma.carreraEtiqueta', { puesto, nombre, pedidos })
+    : t('enVivo.plataforma.carreraEtiquetaVentas', { puesto, nombre, pedidos, ventas: dinero(c.ventas) });
 }
 
 /**
@@ -127,6 +133,7 @@ export function reducirCarrera(previo: EstadoCarrera, entrada: EntradaCarrera): 
   const top = Math.max(1, entrada.top ?? TOP_CARRERA);
   const banca = Math.max(0, entrada.banca ?? BANCA_CARRERA);
   const ocultar = entrada.ocultar;
+  const t = entrada.t;
 
   const ordenados = ordenarComercios(entrada.comercios, ocultar);
   const lider = ordenados.length > 0 ? Math.max(1, ocultar ? ordenados[0].n : ordenados[0].ventas) : 1;
@@ -145,7 +152,7 @@ export function reducirCarrera(previo: EstadoCarrera, entrada: EntradaCarrera): 
     const antes = puestosPrevios.get(c.empresa);
     const sube = hayPrevios && dentro && antes !== undefined && i < antes ? antes - i : 0;
     if (sube > 0) subidas.set(c.empresa, (subidas.get(c.empresa) ?? 0) + 1);
-    const nombre = nombreVisible(c, ocultar);
+    const nombre = nombreVisible(c, ocultar, t);
     porEmpresa.set(c.empresa, {
       empresa: c.empresa,
       nombre,
@@ -155,11 +162,11 @@ export function reducirCarrera(previo: EstadoCarrera, entrada: EntradaCarrera): 
       puesto: i + 1,
       y: dentro ? i : top,
       dentro,
-      valor: valorCorto(c.ventas, c.n, ocultar),
+      valor: valorCorto(c.ventas, c.n, ocultar, t),
       ancho: Math.round(((ocultar ? c.n : c.ventas) / lider) * 1000) / 10,
       sube,
       claveSube: subidas.get(c.empresa) ?? 0,
-      etiqueta: etiquetaDeFila(i + 1, nombre, c, ocultar),
+      etiqueta: etiquetaDeFila(i + 1, nombre, c, ocultar, t),
     });
   });
 

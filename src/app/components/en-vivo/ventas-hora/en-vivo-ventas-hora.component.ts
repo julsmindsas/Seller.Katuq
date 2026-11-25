@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { CifraPorHora, ResumenDia } from '../servicios/en-vivo.modelos';
 import { dinero, dineroCorto, entero, horaCorta, horaDeColombia, horaDeReloj, textoPct, variacionPct } from '../utilidades/formato';
 import { escalaBonita, filaDeHora, ventanaHoras } from '../utilidades/horas';
+import { Traductor } from '../utilidades/traductor';
 
 /** Una barra de la gráfica: la hora de hoy y el punto de ayer. */
 interface Barra {
@@ -28,7 +31,7 @@ interface Barra {
   styleUrls: ['./en-vivo-ventas-hora.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoVentasHoraComponent implements OnChanges {
+export class EnVivoVentasHoraComponent implements OnChanges, OnDestroy {
   @Input() porHora: ReadonlyArray<CifraPorHora> = [];
   /** Total de hoy (ventas y pedidos), del servidor. */
   @Input() hoy: ResumenDia | null = null;
@@ -37,14 +40,15 @@ export class EnVivoVentasHoraComponent implements OnChanges {
   /** Instante que marca "ahora" (ms). La hora actual sale de aquí. */
   @Input() ahoraMs = Date.now();
   @Input() ocultar = false;
-  @Input() titulo = 'Hoy contra ayer';
+  /** Título de la tarjeta; sin él, "Hoy contra ayer" en el idioma activo. */
+  @Input() titulo = '';
 
   barras: Barra[] = [];
   /** Puntos de la línea de ayer, en un cuadro de 100 x 100. */
   linea = '';
   topeTexto = '';
   mitadTexto = '';
-  etiquetaEje = 'Ventas por hora';
+  etiquetaEje = '';
   /** Parte resaltada del resumen ("+12 %") y el resto de la frase. */
   resumenPctTexto = '';
   resumenResto = '';
@@ -52,6 +56,25 @@ export class EnVivoVentasHoraComponent implements OnChanges {
   /** Lo que lee el puntero o el teclado al pasar por una barra. */
   lectura = '';
   private horaLeida: number | null = null;
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
+  private readonly suscripcionIdioma: Subscription;
+
+  constructor(private readonly cambios: ChangeDetectorRef, private readonly translate: TranslateService) {
+    // Con otro idioma las etiquetas y las lecturas se vuelven a escribir.
+    this.suscripcionIdioma = translate.onLangChange.subscribe(() => {
+      this.ngOnChanges();
+      this.cambios.markForCheck();
+    });
+  }
+
+  /** Título para mostrar: el que pasa quien lo usa o el de siempre en el idioma activo. */
+  get tituloVisible(): string {
+    return this.titulo || this.translate.instant('enVivo.ventasHora.hoyContraAyer');
+  }
+
+  ngOnDestroy(): void {
+    this.suscripcionIdioma.unsubscribe();
+  }
 
   ngOnChanges(): void {
     const clave = this.ocultar ? 'pedidos' : 'ventas';
@@ -65,9 +88,9 @@ export class EnVivoVentasHoraComponent implements OnChanges {
       maximo = Math.max(maximo, fila[clave], fila[claveAyer]);
     }
     const tope = escalaBonita(maximo * 1.08);
-    this.topeTexto = this.ocultar ? entero(tope) : dineroCorto(tope);
-    this.mitadTexto = this.ocultar ? entero(tope / 2) : dineroCorto(tope / 2);
-    this.etiquetaEje = this.ocultar ? 'Pedidos por hora' : 'Ventas por hora';
+    this.topeTexto = this.ocultar ? entero(tope) : dineroCorto(tope, this.t);
+    this.mitadTexto = this.ocultar ? entero(tope / 2) : dineroCorto(tope / 2, this.t);
+    this.etiquetaEje = this.t(this.ocultar ? 'enVivo.ventasHora.pedidosPorHora' : 'enVivo.ventasHora.ventasPorHora');
 
     const puntos: string[] = [];
     this.barras = horas.map((hora, i) => {
@@ -75,7 +98,7 @@ export class EnVivoVentasHoraComponent implements OnChanges {
       puntos.push(`${((i + 0.5) / horas.length) * 100},${100 - (fila[claveAyer] / tope) * 100}`);
       return {
         hora,
-        etiqueta: horaCorta(hora),
+        etiqueta: horaCorta(hora, this.t),
         alto: (fila[clave] / tope) * 100,
         actual: hora === horaActual,
         futura: hora > horaActual,
@@ -106,11 +129,13 @@ export class EnVivoVentasHoraComponent implements OnChanges {
     const ayer = this.ocultar
       ? this.pedidos(fila.pedidosAyer)
       : `${dinero(fila.ventasAyer)} · ${this.pedidos(fila.pedidosAyer)}`;
-    return `Hoy ${futura ? 'todavía no llega' : hoy} · Ayer ${ayer}`;
+    return futura
+      ? this.t('enVivo.ventasHora.lecturaFutura', { ayer })
+      : this.t('enVivo.ventasHora.lectura', { hoy, ayer });
   }
 
   private pedidos(n: number): string {
-    return `${entero(n)} ${n === 1 ? 'pedido' : 'pedidos'}`;
+    return this.t(n === 1 ? 'enVivo.formato.pedido' : 'enVivo.formato.pedidos', { n: entero(n) });
   }
 
   private armarResumen(): void {
@@ -126,12 +151,15 @@ export class EnVivoVentasHoraComponent implements OnChanges {
     const referencia = this.ocultar ? ayer.pedidos : ayer.ventas;
     const pct = variacionPct(actual, referencia);
     this.resumenPct = pct;
-    const instante = horaDeReloj(this.ahoraMs);
+    const instante = horaDeReloj(this.ahoraMs, this.t);
     const cuanto = (n: number): string => (this.ocultar ? this.pedidos(n) : dinero(n));
     this.resumenPctTexto = pct === null ? '' : textoPct(pct);
     this.resumenResto =
       pct === null
-        ? `Hoy ${cuanto(actual)}; ayer a las ${instante} no había ${this.ocultar ? 'pedidos' : 'ventas'} para comparar.`
-        : `contra ayer a las ${instante}: hoy ${cuanto(actual)}, ayer ${cuanto(referencia)}.`;
+        ? this.t(this.ocultar ? 'enVivo.ventasHora.sinComparacionPedidos' : 'enVivo.ventasHora.sinComparacionVentas', {
+            hoy: cuanto(actual),
+            hora: instante,
+          })
+        : this.t('enVivo.ventasHora.contraAyerA', { hora: instante, hoy: cuanto(actual), ayer: cuanto(referencia) });
   }
 }

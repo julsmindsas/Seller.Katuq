@@ -5,8 +5,9 @@ import {
   TipoEvento,
   TonoEnVivo,
 } from '../../servicios/en-vivo.modelos';
-import { dinero, duracion, FormatoCifra, horaDeColombia, horaRelativa } from '../../utilidades/formato';
+import { dinero, duracion, FormatoCifra, formatearCifra, horaDeColombia, horaRelativa } from '../../utilidades/formato';
 import { ventanaHoras } from '../../utilidades/horas';
+import { Traductor } from '../../utilidades/traductor';
 import { empresaDeEvento } from './momento';
 import { claseDeComercio, inicialesVisibles, mantenerOrdenEstable, nombreVisible } from './nombres';
 import { alertasPorEmpresa } from './radar';
@@ -118,24 +119,26 @@ export interface EntradaMuro {
   radar: RadarEnVivo | null;
   ocultar: boolean;
   ahoraMs: number;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 /** Hasta cuándo un comercio con un pedido reciente sigue "Vendiendo". */
 export const VENDIENDO_MS = 10 * 60 * 1000;
 
 const ROTULO_EVENTO: Readonly<Record<TipoEvento, string>> = {
-  pedido_nuevo: 'Nuevo pedido',
-  cambio_estado: 'Cambio de estado',
-  pago_confirmado: 'Pago confirmado',
-  salida: 'Salió a entrega',
-  asignado: 'Asignado',
-  entregado: 'Entregado',
-  rechazado: 'Rechazado',
-  cancelado: 'Cancelado',
+  pedido_nuevo: 'enVivo.plataforma.eventoPedidoNuevo',
+  cambio_estado: 'enVivo.plataforma.eventoCambioEstado',
+  pago_confirmado: 'enVivo.plataforma.eventoPagoConfirmado',
+  salida: 'enVivo.plataforma.eventoSalida',
+  asignado: 'enVivo.plataforma.eventoAsignado',
+  entregado: 'enVivo.plataforma.eventoEntregado',
+  rechazado: 'enVivo.plataforma.eventoRechazado',
+  cancelado: 'enVivo.plataforma.eventoCancelado',
 };
 
-export function rotuloDeEvento(tipo: TipoEvento | string): string {
-  return ROTULO_EVENTO[tipo as TipoEvento] ?? 'Cambio';
+export function rotuloDeEvento(tipo: TipoEvento | string, t: Traductor): string {
+  return t(ROTULO_EVENTO[tipo as TipoEvento] ?? 'enVivo.plataforma.eventoCambio');
 }
 
 interface Actividad {
@@ -183,17 +186,18 @@ export function estadoDeTarjeta(
   alerta: 'bad' | 'warn' | '',
   llegadaMs: number | null,
   pedidosHoy: number,
-  ahoraMs: number
+  ahoraMs: number,
+  t: Traductor
 ): EstadoTarjeta {
-  if (alerta === 'bad') return { texto: 'Atención', clase: 't-bad' };
-  if (alerta === 'warn') return { texto: 'Revisar', clase: 't-warn' };
+  if (alerta === 'bad') return { texto: t('enVivo.plataforma.estadoAtencion'), clase: 't-bad' };
+  if (alerta === 'warn') return { texto: t('enVivo.plataforma.estadoRevisar'), clase: 't-warn' };
   if (llegadaMs !== null) {
     const quieto = Math.max(0, ahoraMs - llegadaMs);
     return quieto < VENDIENDO_MS
-      ? { texto: 'Vendiendo', clase: 't-ok' }
-      : { texto: `Hace ${duracion(quieto)}`, clase: 't-slate' };
+      ? { texto: t('enVivo.plataforma.estadoVendiendo'), clase: 't-ok' }
+      : { texto: t('enVivo.plataforma.estadoHace', { tiempo: duracion(quieto, t) }), clase: 't-slate' };
   }
-  return { texto: pedidosHoy > 0 ? 'Con pedidos hoy' : 'Sin pedidos hoy', clase: 't-slate' };
+  return { texto: t(pedidosHoy > 0 ? 'enVivo.plataforma.estadoConPedidos' : 'enVivo.plataforma.estadoSinPedidos'), clase: 't-slate' };
 }
 
 /** Lo que pinta el muro: las tarjetas en un orden que no brinca entre lecturas. */
@@ -224,7 +228,7 @@ export function reducirMuro(
 
 /** Una tarjeta por comercio, en el orden en que llegan. `reducirMuro` se encarga de mantener un orden estable. */
 export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: EntradaMuro): TarjetaMuro[] {
-  const { eventos, radar, ocultar, ahoraMs } = entrada;
+  const { eventos, radar, ocultar, ahoraMs, t } = entrada;
   const { ultimo, llegada } = actividadPorComercio(eventos);
   const alertas = alertasPorEmpresa(radar);
   const hora = horaDeColombia(ahoraMs);
@@ -232,7 +236,7 @@ export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: Ent
   return comercios
     .filter((c) => !!c && !!c.empresa)
     .map((c): TarjetaMuro => {
-      const nombre = nombreVisible(c, ocultar);
+      const nombre = nombreVisible(c, ocultar, t);
       const alerta = claseDeAlerta(alertas.get(c.empresa));
 
       // El último evento: el del servidor (`ultimoEvento`) o el más nuevo de la lista, el que sea más reciente.
@@ -244,16 +248,16 @@ export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: Ent
       const llegadaServidor = c.ultimoEvento && c.ultimoEvento.tipo === 'pedido_nuevo' ? msServidor : null;
       const ultimaLlegada = Math.max(llegada.get(c.empresa) ?? 0, llegadaServidor ?? 0) || null;
 
-      const hace = elegido ? horaRelativa(elegido.ms, ahoraMs) : '';
+      const hace = elegido ? horaRelativa(elegido.ms, ahoraMs, t) : '';
       const monto = !ocultar && elegido && elegido.tipo === 'pedido_nuevo' && elegido.monto !== null && elegido.monto > 0 ? dinero(elegido.monto) : '';
       const ultimoTexto = elegido
-        ? [rotuloDeEvento(elegido.tipo), hace, monto].filter((p) => !!p).join(' · ')
-        : 'Sin eventos todavía';
+        ? [rotuloDeEvento(elegido.tipo, t), hace, monto].filter((p) => !!p).join(' · ')
+        : t('enVivo.plataforma.muroSinEventos');
 
       const etapas = c.etapas ?? ({} as ComercioEnVivo['etapas']);
       const enPreparacion = (etapas.recibido ?? 0) + (etapas.produccion ?? 0) + (etapas.producido ?? 0) + (etapas.empacado ?? 0);
-      const pedidosTexto = `${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'}`;
-      const estado = estadoDeTarjeta(alerta, ultimaLlegada, c.n, ahoraMs);
+      const pedidosTexto = formatearCifra(c.n, 'pedidos', t);
+      const estado = estadoDeTarjeta(alerta, ultimaLlegada, c.n, ahoraMs, t);
 
       return {
         empresa: c.empresa,
@@ -270,12 +274,12 @@ export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: Ent
         spark: sparkline(c.porHora?.ventas, c.porHora?.ventasAyer, hora),
         ultimo: ultimoTexto,
         pipeline: [
-          { texto: `${enPreparacion} prep.`, titulo: 'En preparación' },
-          { texto: `${etapas.listo ?? 0} para despachar`, titulo: 'Para despachar' },
-          { texto: `${etapas.camino ?? 0} en ruta`, titulo: 'Despachados' },
-          { texto: `${etapas.entregado ?? 0} entr.`, titulo: 'Entregados' },
+          { texto: t('enVivo.plataforma.pipePrep', { n: enPreparacion }), titulo: t('enVivo.plataforma.pipeTituloPrep') },
+          { texto: t('enVivo.plataforma.pipeListo', { n: etapas.listo ?? 0 }), titulo: t('enVivo.plataforma.pipeTituloListo') },
+          { texto: t('enVivo.plataforma.pipeCamino', { n: etapas.camino ?? 0 }), titulo: t('enVivo.plataforma.pipeTituloCamino') },
+          { texto: t('enVivo.plataforma.pipeEntregado', { n: etapas.entregado ?? 0 }), titulo: t('enVivo.plataforma.pipeTituloEntregado') },
         ],
-        etiqueta: `${nombre}: ${pedidosTexto} hoy, ${estado.texto.toLowerCase()}. Abrir su tablero`,
+        etiqueta: t('enVivo.plataforma.muroEtiqueta', { nombre, pedidos: pedidosTexto, estado: estado.texto.toLowerCase() }),
       };
     });
 }

@@ -23,7 +23,11 @@ import {
   ResumenOpttia,
 } from '../servicios/en-vivo.modelos';
 import { dinero } from '../utilidades/formato';
+import type { Traductor } from '../utilidades/traductor';
 import { enmascarar, lineasDelResumen, OpcionesMascara } from './opttia-reglas';
+
+/** Prefijo de las claves de i18n de esta carpeta. */
+const K = 'enVivo.opttia.';
 
 /** La línea cambia cada 9 segundos. */
 export const PERIODO_NARRACION_MS = 9000;
@@ -95,18 +99,20 @@ export function cambiosEnElPodio(
   return cambios;
 }
 
-function ordinal(puesto: number): string {
-  return `${puesto + 1}.º`;
+/** "2.º" / "2nd": el puesto del podio (0 = primero). */
+function ordinal(puesto: number, t: Traductor): string {
+  return puesto === 1 ? t(`${K}ordinal2`) : puesto === 2 ? t(`${K}ordinal3`) : t(`${K}ordinalN`, { n: puesto + 1 });
 }
 
 /** "FLORECER pasó a ALMARA y ya va de 2.º en la carrera." (con "ocultar": sin nombres). */
-export function textoDeCarrera(cambio: CambioEnElPodio, ocultar: boolean): string {
+export function textoDeCarrera(cambio: CambioEnElPodio, ocultar: boolean, t: Traductor): string {
   if (ocultar) {
-    return cambio.puesto === 0 ? 'Un comercio pasó al primer puesto de la carrera.' : `Un comercio subió al ${ordinal(cambio.puesto)} puesto de la carrera.`;
+    return cambio.puesto === 0 ? t(`${K}carreraOcultoPrimero`) : t(`${K}carreraOcultoSubio`, { puesto: ordinal(cambio.puesto, t) });
   }
+  const params = { sube: cambio.sube.nombre, pasoA: cambio.pasoA.nombre };
   return cambio.puesto === 0
-    ? `${cambio.sube.nombre} pasó a ${cambio.pasoA.nombre} y ya lidera la carrera.`
-    : `${cambio.sube.nombre} pasó a ${cambio.pasoA.nombre} y ya va de ${ordinal(cambio.puesto)} en la carrera.`;
+    ? t(`${K}carreraLidera`, params)
+    : t(`${K}carreraVaDe`, { ...params, puesto: ordinal(cambio.puesto, t) });
 }
 
 // ── Alertas ─────────────────────────────────────────────────────────────────
@@ -130,23 +136,25 @@ function cerrarFrase(texto: string): string {
 }
 
 /** Nombre del comercio de una alerta o "un comercio" si no hay o se oculta. */
-function comercioDeAlerta(alerta: AlertaRadar, ocultar: boolean): string {
-  return !ocultar && alerta.comercio ? alerta.comercio : 'un comercio';
+function comercioDeAlerta(alerta: AlertaRadar, ocultar: boolean, t: Traductor): string {
+  return !ocultar && alerta.comercio ? alerta.comercio : t(`${K}unComercio`);
 }
 
 /**
  * "Atención: FLORECER, sin pedidos hace 1 h 5 min." · en racha: "FLORECER está en racha: vende
  * 2,4 veces su ritmo del día." · en un comercio: "Atención: #1023 lleva 2 h listo."
  */
-export function textoDeAlerta(alerta: AlertaRadar, vista: EstadoEnVivo['vista'], ocultar: boolean): string {
+export function textoDeAlerta(alerta: AlertaRadar, vista: EstadoEnVivo['vista'], ocultar: boolean, t: Traductor): string {
   const titulo = String(alerta.titulo ?? '').trim();
   const global = vista === 'katuq';
-  const comercio = comercioDeAlerta(alerta, ocultar);
+  const comercio = comercioDeAlerta(alerta, ocultar, t);
   let texto: string;
   if (alerta.tipo === 'racha') {
-    texto = global ? `${empezarEnMayuscula(comercio)} está en racha: ${empezarEnMinuscula(titulo)}` : titulo;
+    texto = global ? t(`${K}alertaRacha`, { comercio: empezarEnMayuscula(comercio), titulo: empezarEnMinuscula(titulo) }) : titulo;
   } else {
-    texto = global ? `Atención: ${comercio}, ${empezarEnMinuscula(titulo)}` : `Atención: ${empezarEnMinuscula(titulo)}`;
+    texto = global
+      ? t(`${K}alertaAtencionComercio`, { comercio, titulo: empezarEnMinuscula(titulo) })
+      : t(`${K}alertaAtencion`, { titulo: empezarEnMinuscula(titulo) });
   }
   return enmascarar(cerrarFrase(texto), { montos: ocultar });
 }
@@ -157,19 +165,21 @@ export function textoDeAlerta(alerta: AlertaRadar, vista: EstadoEnVivo['vista'],
  * "Opttia te armó un pedido de $128.900 por WhatsApp." · en toda Katuq: "Opttia cerró un pedido
  * de $128.900 para FLORECER por WhatsApp." Con "ocultar": sin monto ni nombre de comercio.
  */
-export function textoPedidoOpttia(evento: EventoEnVivo, vista: EstadoEnVivo['vista'], soloLectura: boolean, ocultar: boolean): string {
-  const monto = !ocultar && typeof evento.monto === 'number' && evento.monto > 0 ? ` de ${dinero(evento.monto)}` : '';
+export function textoPedidoOpttia(evento: EventoEnVivo, vista: EstadoEnVivo['vista'], soloLectura: boolean, ocultar: boolean, t: Traductor): string {
+  const monto = !ocultar && typeof evento.monto === 'number' && evento.monto > 0 ? dinero(evento.monto) : null;
   if (vista === 'katuq') {
     const comercio = ocultar ? null : evento.nombreComercio ?? evento.comercio?.nombre ?? null;
-    return `Opttia cerró un pedido${monto}${comercio ? ` para ${comercio}` : ''} por WhatsApp.`;
+    const clave = monto ? (comercio ? 'pedidoKatuqMontoComercio' : 'pedidoKatuqMonto') : comercio ? 'pedidoKatuqComercio' : 'pedidoKatuq';
+    return t(`${K}${clave}`, { monto, comercio });
   }
-  return `Opttia ${soloLectura ? 'le armó' : 'te armó'} un pedido${monto} por WhatsApp.`;
+  const clave = soloLectura ? (monto ? 'pedidoAjenoMonto' : 'pedidoAjeno') : monto ? 'pedidoPropioMonto' : 'pedidoPropio';
+  return t(`${K}${clave}`, { monto });
 }
 
 /** "Si el ritmo sigue así, hoy Katuq rompe su récord de 123 pedidos." */
-export function textoDeRecord(vista: EstadoEnVivo['vista'], soloLectura: boolean, recordPedidos: number): string {
-  const quien = vista === 'katuq' ? 'Katuq rompe su' : soloLectura ? 'este comercio rompe su' : 'rompes tu';
-  return `Si el ritmo sigue así, hoy ${quien} récord de ${Math.round(recordPedidos)} pedidos.`;
+export function textoDeRecord(vista: EstadoEnVivo['vista'], soloLectura: boolean, recordPedidos: number, t: Traductor): string {
+  const clave = vista === 'katuq' ? 'recordKatuq' : soloLectura ? 'recordAjeno' : 'recordPropio';
+  return t(`${K}${clave}`, { n: Math.round(recordPedidos) });
 }
 
 /** ¿Va camino al récord? Solo si hay récord y la proyección al cierre lo supera. */
@@ -203,14 +213,16 @@ function diaDe(estado: EstadoEnVivo): string {
  * "Organicé 6 pedidos en 2 salidas; apruébalas aquí." (D-422). A quien no puede aprobar (su rol no
  * tiene Despachos) no se le invita a aprobar: "Organicé 6 pedidos en 2 salidas."
  */
-export function textoPlanEnEscena(pedidos: number, salidas: number, aprobar = true): string {
-  const p = `${pedidos} ${pedidos === 1 ? 'pedido' : 'pedidos'}`;
-  const s = `${salidas} ${salidas === 1 ? 'salida' : 'salidas'}`;
-  if (!aprobar) return `Organicé ${p} en ${s}.`;
-  return `Organicé ${p} en ${s}; ${salidas === 1 ? 'apruébala' : 'apruébalas'} aquí.`;
+export function textoPlanEnEscena(pedidos: number, salidas: number, aprobar: boolean, t: Traductor): string {
+  const p = t(pedidos === 1 ? `${K}pedidoUno` : `${K}pedidoVarios`, { n: pedidos });
+  const s = t(salidas === 1 ? `${K}salidaUna` : `${K}salidaVarias`, { n: salidas });
+  if (!aprobar) return t(`${K}planOrganice`, { pedidos: p, salidas: s });
+  return t(salidas === 1 ? `${K}planOrganiceApruebala` : `${K}planOrganiceApruebalas`, { pedidos: p, salidas: s });
 }
 
 export class NarradorOpttia {
+  /** Traductor del idioma activo (la clase no inyecta `TranslateService`): lo fija quien la usa. */
+  private tr: Traductor = (clave) => clave;
   private cola: LineaNarracion[] = [];
   private base: BaseDeLaVista | null = null;
   private readonly hitos = new Set<string>();
@@ -224,6 +236,10 @@ export class NarradorOpttia {
   private saludoEnCola: string | null = null;
 
   constructor(private readonly maxCola: number = MAX_COLA_NARRACION) {}
+
+  fijarTraductor(tr: Traductor): void {
+    this.tr = tr;
+  }
 
   /** Líneas esperando turno. */
   get pendientes(): number {
@@ -282,7 +298,7 @@ export class NarradorOpttia {
     if (callar || clave === this.ultimoAvisoPlan) return;
     this.ultimoAvisoPlan = clave;
     if (pedidos <= 0 || salidas <= 0) return;
-    this.encolar('plan', textoPlanEnEscena(pedidos, salidas, aprobar), false);
+    this.encolar('plan', textoPlanEnEscena(pedidos, salidas, aprobar, this.tr), false);
   }
 
   /**
@@ -311,7 +327,7 @@ export class NarradorOpttia {
   /** Un evento que llegó en vivo (no los de la foto). Solo narra los pedidos que armó Opttia. */
   alEvento(evento: EventoEnVivo, estado: Pick<EstadoEnVivo, 'vista' | 'soloLectura'>, ocultar: boolean, callar = false): void {
     if (callar || evento.tipo !== 'pedido_nuevo' || evento.ia !== true) return;
-    this.encolar('pedido-opttia', textoPedidoOpttia(evento, estado.vista, estado.soloLectura, ocultar), false);
+    this.encolar('pedido-opttia', textoPedidoOpttia(evento, estado.vista, estado.soloLectura, ocultar, this.tr), false);
   }
 
   /**
@@ -343,7 +359,7 @@ export class NarradorOpttia {
     const mismaRegla = base.refComercios !== null && ocultar === base.ocultar;
     if (mismaRegla && !silencioso) {
       for (const cambio of cambiosEnElPodio(base.orden, orden)) {
-        this.encolar('carrera', textoDeCarrera(cambio, ocultar), false);
+        this.encolar('carrera', textoDeCarrera(cambio, ocultar, this.tr), false);
       }
     }
     base.orden = orden;
@@ -362,14 +378,14 @@ export class NarradorOpttia {
     if (base.alertas && !silencioso) {
       actuales.forEach((alerta, clave) => {
         if (!(base.alertas as Map<string, AlertaRadar>).has(clave)) {
-          this.encolar('alerta', textoDeAlerta(alerta, estado.vista, ocultar), alerta.sev >= 2);
+          this.encolar('alerta', textoDeAlerta(alerta, estado.vista, ocultar, this.tr), alerta.sev >= 2);
         }
       });
       // Un comercio al que se le había dado por callado y volvió a recibir pedidos.
       base.alertas.forEach((alerta, clave) => {
         if (alerta.tipo === 'silencio' && !actuales.has(clave)) {
-          const quien = empezarEnMayuscula(comercioDeAlerta(alerta, ocultar));
-          this.encolar('vuelve', `${quien} volvió a recibir pedidos.`, true);
+          const quien = empezarEnMayuscula(comercioDeAlerta(alerta, ocultar, this.tr));
+          this.encolar('vuelve', this.tr(`${K}vuelveAVender`, { comercio: quien }), true);
         }
       });
     }
@@ -383,7 +399,7 @@ export class NarradorOpttia {
     const hito = `record|${diaDe(estado)}|${llave}`;
     if (this.hitos.has(hito)) return;
     this.hitos.add(hito);
-    this.encolar('record', textoDeRecord(estado.vista, estado.soloLectura, record), true);
+    this.encolar('record', textoDeRecord(estado.vista, estado.soloLectura, record, this.tr), true);
   }
 
   private encolar(tipo: TipoLineaNarracion, texto: string, urgente: boolean): void {

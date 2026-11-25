@@ -14,6 +14,7 @@ import {
 import { decimal, diaDeColombia, dinero, FormatoCifra, variacionPct } from './formato';
 import { IconoId } from './iconos';
 import { TonoVisual } from './tonos';
+import { Traductor } from './traductor';
 
 /**
  * Armado de lo que pintan las cifras del tablero a partir de lo que manda el SERVIDOR.
@@ -92,10 +93,11 @@ export function tarjetasComercio(
   cifras: CifrasEnVivo,
   conteos: Partial<Record<EtapaId, number>>,
   flota: ReadonlyArray<MensajeroEnVivo>,
-  opciones: OpcionesTarjetas
+  opciones: OpcionesTarjetas,
+  t: Traductor
 ): TarjetaCifra[] {
   const { ocultar, soloPropias } = opciones;
-  const rotulo = (normal: string, propio: string): string => (soloPropias ? propio : normal);
+  const rotulo = (normal: string, propio: string): string => t(soloPropias ? propio : normal);
   const enPreparacion = (conteos.recibido ?? 0) + (conteos.produccion ?? 0) + (conteos.producido ?? 0) + (conteos.empacado ?? 0);
   const enLaCalle = flota.filter((m) => m.enRuta).length;
   const ayer = cifras.ayerMismaHora;
@@ -104,75 +106,77 @@ export function tarjetasComercio(
     ocultar
       ? {
           id: 'ventas',
-          etiqueta: rotulo('Ventas de hoy', 'Mis ventas de hoy'),
+          etiqueta: rotulo('enVivo.tarjetas.ventasHoy', 'enVivo.tarjetas.misVentasHoy'),
           valor: cifras.pedidos,
           formato: 'ventas',
           tono: 'acento',
           icono: 'bolsa',
           destacada: true,
-          sub: 'Montos ocultos en pantalla',
+          sub: t('enVivo.tarjetas.montosOcultos'),
           clave: 'todos',
         }
       : {
           id: 'ventas',
-          etiqueta: rotulo('Ventas de hoy', 'Mis ventas de hoy'),
+          etiqueta: rotulo('enVivo.tarjetas.ventasHoy', 'enVivo.tarjetas.misVentasHoy'),
           valor: cifras.ventas,
           formato: 'dinero',
           tono: 'acento',
           icono: 'bolsa',
           destacada: true,
           ...variacion(cifras.ventas, ayer.ventas),
-          sub: 'vs. ayer a esta hora',
+          sub: t('enVivo.tarjetas.vsAyer'),
           clave: 'todos',
         },
     {
       id: 'pedidos',
-      etiqueta: rotulo('Pedidos hoy', 'Mis pedidos hoy'),
+      etiqueta: rotulo('enVivo.tarjetas.pedidosHoy', 'enVivo.tarjetas.misPedidosHoy'),
       valor: cifras.pedidos,
       formato: 'entero',
       tono: 'tinta',
       icono: 'capas',
-      sub: ocultar ? `${ayer.pedidos} ayer a esta hora` : `Ticket promedio ${dinero(cifras.ticketPromedio)}`,
+      sub: ocultar
+        ? t('enVivo.tarjetas.pedidosAyerHora', { n: ayer.pedidos })
+        : t('enVivo.tarjetas.ticketPromedio', { valor: dinero(cifras.ticketPromedio) }),
       clave: 'todos',
     },
     {
       id: 'prep',
-      etiqueta: rotulo('En preparación', 'Mis pedidos en preparación'),
+      etiqueta: rotulo('enVivo.tarjetas.enPreparacion', 'enVivo.tarjetas.misEnPreparacion'),
       valor: enPreparacion,
       formato: 'entero',
       tono: 'aviso',
       icono: 'caja',
-      sub: 'Sin producir, en producción, producidos y empacados',
+      sub: t('enVivo.tarjetas.preparacionDetalle'),
       clave: 'prep',
     },
     {
       id: 'listos',
-      etiqueta: rotulo('Para despachar', 'Mis pedidos para despachar'),
+      etiqueta: rotulo('enVivo.tarjetas.paraDespachar', 'enVivo.tarjetas.misParaDespachar'),
       valor: conteos.listo ?? 0,
       formato: 'entero',
       tono: 'acento',
       icono: 'tienda',
-      sub: (conteos.listo ?? 0) > 0 ? 'Esperando mensajero' : 'Nada esperando',
+      sub: t((conteos.listo ?? 0) > 0 ? 'enVivo.tarjetas.esperandoMensajero' : 'enVivo.tarjetas.nadaEsperando'),
       clave: 'etapa:listo',
     },
     {
       id: 'camino',
-      etiqueta: rotulo('Despachados', 'Mis pedidos despachados'),
+      etiqueta: rotulo('enVivo.tarjetas.despachados', 'enVivo.tarjetas.misDespachados'),
       valor: conteos.camino ?? 0,
       formato: 'entero',
       tono: 'info',
       icono: 'moto',
-      sub: `${enLaCalle} ${enLaCalle === 1 ? 'mensajero' : 'mensajeros'} en la calle`,
+      sub: t(enLaCalle === 1 ? 'enVivo.tarjetas.mensajeroEnCalle' : 'enVivo.tarjetas.mensajerosEnCalle', { n: enLaCalle }),
       clave: 'etapa:camino',
     },
     {
       id: 'entregados',
-      etiqueta: rotulo('Entregados hoy', 'Mis pedidos entregados hoy'),
+      etiqueta: rotulo('enVivo.tarjetas.entregadosHoy', 'enVivo.tarjetas.misEntregadosHoy'),
       valor: conteos.entregado ?? 0,
       formato: 'entero',
       tono: 'ok',
       icono: 'check',
-      sub: 'Incluye ventas en tienda',
+      sub: t('enVivo.tarjetas.incluyeTienda'),
       clave: 'etapa:entregado',
     },
   ];
@@ -180,12 +184,12 @@ export function tarjetasComercio(
   if (cifras.conOpttia) {
     tarjetas.push({
       id: 'opttia',
-      etiqueta: 'Con Opttia',
+      etiqueta: t('enVivo.tarjetas.conOpttia'),
       valor: ocultar ? cifras.conOpttia.pedidos : cifras.conOpttia.ventas,
       formato: ocultar ? 'pedidos' : 'dinero',
       tono: 'pack',
       icono: 'ia',
-      sub: `${cifras.conOpttia.pedidos} ${cifras.conOpttia.pedidos === 1 ? 'pedido armado' : 'pedidos armados'} por el bot de WhatsApp`,
+      sub: t(cifras.conOpttia.pedidos === 1 ? 'enVivo.tarjetas.pedidoArmado' : 'enVivo.tarjetas.pedidosArmados', { n: cifras.conOpttia.pedidos }),
       clave: 'ia',
     });
   }
@@ -195,88 +199,93 @@ export function tarjetasComercio(
 // ── Toda Katuq ──────────────────────────────────────────────────────────────
 
 /** Cifras de toda Katuq (las genéricas; la vista de plataforma puede armar las suyas con el mismo componente). */
-export function tarjetasKatuq(g: CifrasGlobalEnVivo, opciones: { ocultar: boolean }): TarjetaCifra[] {
+export function tarjetasKatuq(g: CifrasGlobalEnVivo, opciones: { ocultar: boolean }, t: Traductor): TarjetaCifra[] {
   const { ocultar } = opciones;
   const total = g.comercios.length;
   const tarjetas: TarjetaCifra[] = [
     ocultar
       ? {
           id: 'ventas',
-          etiqueta: 'Ventas en Katuq hoy',
+          etiqueta: t('enVivo.tarjetas.ventasKatuqHoy'),
           valor: g.pedidos,
           formato: 'ventas',
           tono: 'acento',
           icono: 'bolsa',
           destacada: true,
-          sub: 'Montos ocultos en pantalla',
+          sub: t('enVivo.tarjetas.montosOcultos'),
         }
       : {
           id: 'ventas',
-          etiqueta: 'Ventas en Katuq hoy',
+          etiqueta: t('enVivo.tarjetas.ventasKatuqHoy'),
           valor: g.ventas,
           formato: 'dinero',
           tono: 'acento',
           icono: 'bolsa',
           destacada: true,
           ...variacion(g.ventas, g.ayerMismaHora?.ventas ?? 0),
-          sub: 'vs. ayer a esta hora',
+          sub: t('enVivo.tarjetas.vsAyer'),
         },
     {
       id: 'pedidos',
-      etiqueta: 'Pedidos hoy',
+      etiqueta: t('enVivo.tarjetas.pedidosHoy'),
       valor: g.pedidos,
       formato: 'entero',
       tono: 'tinta',
       icono: 'capas',
-      sub: g.ayerMismaHora ? `${g.ayerMismaHora.pedidos} ayer a esta hora` : undefined,
+      sub: g.ayerMismaHora ? t('enVivo.tarjetas.pedidosAyerHora', { n: g.ayerMismaHora.pedidos }) : undefined,
     },
     {
       id: 'comercios',
-      etiqueta: 'Comercios vendiendo',
+      etiqueta: t('enVivo.tarjetas.comerciosVendiendo'),
       valor: g.comerciosHoy ?? 0,
       formato: 'entero',
       tono: 'pack',
       icono: 'tienda',
-      sub: `${g.comerciosUltimaHora ?? 0} con pedidos en la última hora${total ? ` · de ${total}` : ''}`,
+      sub: total
+        ? t('enVivo.tarjetas.comerciosUltimaHoraDeTotal', { n: g.comerciosUltimaHora ?? 0, total })
+        : t('enVivo.tarjetas.comerciosUltimaHora', { n: g.comerciosUltimaHora ?? 0 }),
     },
     {
       id: 'ritmo',
-      etiqueta: 'Pedidos por minuto',
+      etiqueta: t('enVivo.tarjetas.pedidosPorMinuto'),
       valor: g.pedidosPorMinuto ?? 0,
       formato: 'decimal',
       tono: 'aviso',
       icono: 'pulso',
-      sub: g.ritmoRecord ? `Récord de hoy ${decimal(g.ritmoRecord.porMinuto)}` : undefined,
+      sub: g.ritmoRecord ? t('enVivo.tarjetas.recordHoy', { valor: decimal(g.ritmoRecord.porMinuto) }) : undefined,
     },
     {
       id: 'camino',
-      etiqueta: 'Despachados',
+      etiqueta: t('enVivo.tarjetas.despachados'),
       valor: g.enCamino ?? g.porEtapa?.camino ?? 0,
       formato: 'entero',
       tono: 'info',
       icono: 'moto',
-      sub: `${g.despachosHoy ?? 0} despachos hoy`,
+      sub: t((g.despachosHoy ?? 0) === 1 ? 'enVivo.tarjetas.despachoHoy' : 'enVivo.tarjetas.despachosHoy', { n: g.despachosHoy ?? 0 }),
     },
     {
       id: 'entregados',
-      etiqueta: 'Entregados hoy',
+      etiqueta: t('enVivo.tarjetas.entregadosHoy'),
       valor: g.entregadosHoy ?? 0,
       formato: 'entero',
       tono: 'ok',
       icono: 'check',
-      sub: g.ciudadesEntregadas !== undefined ? `En ${g.ciudadesEntregadas} ${g.ciudadesEntregadas === 1 ? 'ciudad' : 'ciudades'}` : undefined,
+      sub:
+        g.ciudadesEntregadas !== undefined
+          ? t(g.ciudadesEntregadas === 1 ? 'enVivo.tarjetas.enCiudad' : 'enVivo.tarjetas.enCiudades', { n: g.ciudadesEntregadas })
+          : undefined,
     },
   ];
 
   if (g.opttia && g.opttia.pedidos > 0) {
     tarjetas.push({
       id: 'opttia',
-      etiqueta: 'Con Opttia',
+      etiqueta: t('enVivo.tarjetas.conOpttia'),
       valor: ocultar ? g.opttia.pedidos : g.opttia.ventas,
       formato: ocultar ? 'pedidos' : 'dinero',
       tono: 'pack',
       icono: 'ia',
-      sub: `${g.opttia.pedidos} ${g.opttia.pedidos === 1 ? 'pedido armado' : 'pedidos armados'} por el bot de WhatsApp`,
+      sub: t(g.opttia.pedidos === 1 ? 'enVivo.tarjetas.pedidoArmado' : 'enVivo.tarjetas.pedidosArmados', { n: g.opttia.pedidos }),
     });
   }
   return tarjetas;
@@ -296,11 +305,11 @@ export interface DatosHeroe {
   record: RecordPedidos | null;
 }
 
-export function datosHeroeComercio(estado: EstadoEnVivo): DatosHeroe | null {
+export function datosHeroeComercio(estado: EstadoEnVivo, t: Traductor): DatosHeroe | null {
   const c = estado.cifras;
   if (!c) return null;
   return {
-    etiqueta: estado.soloPropias ? 'Mis ventas de hoy' : 'Ventas de hoy',
+    etiqueta: t(estado.soloPropias ? 'enVivo.tarjetas.misVentasHoy' : 'enVivo.tarjetas.ventasHoy'),
     ventas: c.ventas,
     pedidos: c.pedidos,
     ticketPromedio: c.ticketPromedio,
@@ -311,10 +320,10 @@ export function datosHeroeComercio(estado: EstadoEnVivo): DatosHeroe | null {
   };
 }
 
-export function datosHeroeKatuq(g: CifrasGlobalEnVivo | null, radar: RadarEnVivo | null): DatosHeroe | null {
+export function datosHeroeKatuq(g: CifrasGlobalEnVivo | null, radar: RadarEnVivo | null, t: Traductor): DatosHeroe | null {
   if (!g) return null;
   return {
-    etiqueta: 'Ventas en Katuq hoy',
+    etiqueta: t('enVivo.tarjetas.ventasKatuqHoy'),
     ventas: g.ventas,
     pedidos: g.pedidos,
     ticketPromedio: g.ticketPromedio,

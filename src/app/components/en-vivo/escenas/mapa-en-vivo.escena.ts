@@ -5,6 +5,8 @@ import { EtapaInfo, EventoEnVivo, EventoSalida, PedidoEnVivo } from '../servicio
 import { ArcoFijoPedido, ArcosFijos } from './arcos-fijos';
 import { primerNombre } from '../servicios/en-vivo-reglas';
 import { dinero } from '../utilidades/formato';
+import { Traductor } from '../utilidades/traductor';
+import { pedidosTexto } from './traduccion-escena';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { esOscuro } from './escena-tokens';
 import { OpcionesEscenaMapa, ToqueMapa, aplicarLucesDeTema, hexDe, margenesBase, vistaPais } from './mapas.tipos';
@@ -139,6 +141,15 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   /** "Ocultar clientes y montos": las tarjetas no muestran valores. */
   fijarPrivado(privado: boolean): void {
     this.nucleo.privado = privado;
+  }
+
+  /** El traductor del idioma activo; al cambiar el idioma se repintan los nombres fijos (ciudades, bodega, arcos de Opttia). */
+  fijarTraductor(t: Traductor): void {
+    this.nucleo.fijarTraductor(t);
+    if (!this.nucleo.kit) return;
+    this.refrescarColumnas();
+    this.ubicarBodega();
+    this.rehacerArcosFijos();
   }
 
   fijarReducirMovimiento(reducir: boolean): void {
@@ -397,8 +408,8 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   }
 
   private textoBodega(): string {
-    const ciudad = this.origen ? nombreDeLugar(this.cfg.geo, this.origen, this.textoCiudad.get(this.origen)) : '';
-    return `${this.bodegaPropia ? 'Tu bodega' : 'Bodega'} · ${ciudad}`;
+    const ciudad = this.origen ? nombreDeLugar(this.cfg.geo, this.origen, this.textoCiudad.get(this.origen), this.nucleo.t) : '';
+    return `${this.nucleo.t(this.bodegaPropia ? 'enVivo.escenas.tuBodega' : 'enVivo.escenas.bodega')} · ${ciudad}`;
   }
 
   private ubicarBodega(): void {
@@ -453,7 +464,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     const fijos = this.arcosFijos;
     if (!fijos) return;
     // Los de hoy, y si no, los de la ventana que trae la foto (un pedido de anoche empacado hoy).
-    const plan = arcosDePropuesta(this.propuesta, (id) => this.ciudadDePedido.get(id) ?? this.ciudadEnFoto.get(id), this.origen);
+    const plan = arcosDePropuesta(this.propuesta, (id) => this.ciudadDePedido.get(id) ?? this.ciudadEnFoto.get(id), this.origen, this.nucleo.t);
     const o = this.origen ? this.posDeCiudad(this.origen, 0) : null;
     const lista: ArcoFijoPedido[] = [];
     for (const a of plan.arcos) {
@@ -537,7 +548,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     top.forEach((d) => {
       const c = this.cols.get(d);
       if (!c) return;
-      const html = `${esc(nombreDeLugar(this.cfg.geo, d, this.textoCiudad.get(d)))} · <b>${c.n}</b>`;
+      const html = `${esc(nombreDeLugar(this.cfg.geo, d, this.textoCiudad.get(d), this.nucleo.t))} · <b>${c.n}</b>`;
       const e = this.etqCiudades.get(d);
       if (!e) this.etqCiudades.set(d, this.nucleo.fija(html, () => c.ancla, c.n));
       else { this.nucleo.etq.actualizarHtml(e, html); this.nucleo.prioridadDe(e, c.n); }
@@ -561,7 +572,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
   }
 
   private ubicacion(ev: EventoEnVivo, dane: string | null): string {
-    return nombreDeLugar(this.cfg.geo, dane, ev.ciudad);
+    return nombreDeLugar(this.cfg.geo, dane, ev.ciudad, this.nucleo.t);
   }
 
   /** Pedido nuevo: haz y pulso en la ciudad del pedido, su columna crece y sale una tarjeta. */
@@ -578,7 +589,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     fx.pulso(this.alSuelo(p), ev.ia ? 'pack' : 'accent', 2.2, 1.1);
     if (ligero) return;
     const venta = ev.etapa === 'entregado';
-    const pill = ev.ia ? 'Con Opttia' : venta ? 'Venta en tienda' : 'Nuevo pedido';
+    const pill = this.nucleo.t(ev.ia ? 'enVivo.escenas.conOpttia' : venta ? 'enVivo.escenas.ventaEnTienda' : 'enVivo.escenas.nuevoPedido');
     const arriba = p.clone().setY(ALTO_MAPA + 1.4);
     this.nucleo.tarjeta(
       () => arriba,
@@ -612,9 +623,9 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     if (!o || this.nucleo.reducir) return;
     const primero = evs[0];
     const camion = primero.tipoTransportador === 'transportadora';
-    const nombre = camion ? (primero.transportador || 'Transportadora') : primerNombre(primero.transportador) || 'Mensajero';
+    const nombre = camion ? (primero.transportador || this.nucleo.t('enVivo.escenas.transportadora')) : primerNombre(primero.transportador) || this.nucleo.t('enVivo.escenas.mensajero');
     const n = evs.length;
-    const html = `${svgEscena(camion ? 'camion' : 'moto')}${esc(nombre)} · ${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
+    const html = `${svgEscena(camion ? 'camion' : 'moto')}${esc(nombre)} · ${pedidosTexto(n, this.nucleo.t)}`;
     const arriba = o.clone().setY(ALTO_MAPA + 2.7);
     this.nucleo.etq.crear({ clase: 'eve-lbl--veh', html, pos: () => arriba, ms: 2600 });
   }
@@ -631,7 +642,7 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.nucleo.tarjeta(
       () => arriba,
       'ok',
-      'Entregado',
+      this.nucleo.t('enVivo.escenas.entregado'),
       `<span class="eve-mono">#${esc(ev.numero ?? '')}</span><small>${esc(this.ubicacion(ev, d))}</small>`,
       3200,
     );
@@ -666,9 +677,9 @@ export class MapaEnVivoEscena extends MapaColombiaEscena {
     this.hoverDane = t ? t.id : null;
     const c = t ? this.cols.get(t.id) : null;
     if (c && t) {
-      const nombre = nombreDeLugar(this.cfg.geo, t.id, this.textoCiudad.get(t.id));
+      const nombre = nombreDeLugar(this.cfg.geo, t.id, this.textoCiudad.get(t.id), this.nucleo.t);
       this.nucleo.hover(
-        `<b>${esc(nombre)}</b><span>${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'} hoy · toca para ver la lista</span>`,
+        `<b>${esc(nombre)}</b><span>${this.nucleo.t(c.n === 1 ? 'enVivo.escenas.mapa.hoverUno' : 'enVivo.escenas.mapa.hoverOtros', { n: c.n })}</span>`,
         () => c.ancla,
       );
     } else this.nucleo.hover(null);

@@ -36,7 +36,7 @@ export interface ContextoMundo {
   /** Token de color (slate, info, warn...) de cada estación según las etapas del servidor. */
   tonoEtapa: (id: EstacionId) => string;
   /** Lo que dice la pantalla de la tienda: un aviso pasajero o el nombre del comercio. */
-  textoPantalla: () => { flash: string | null; nombre: string };
+  textoPantalla: () => { flash: string | null; nombre: string; rotulo: string; rotuloFlash: string };
 }
 
 /**
@@ -131,7 +131,8 @@ export class MundoOperacion {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = `800 ${Math.round(h * 0.2)}px Georama, "Segoe UI", sans-serif`;
-      ctx.fillText(flash ? '¡NUEVO PEDIDO!' : 'TIENDA EN LÍNEA', w / 2, h * 0.32);
+      const textos = this.ctx.textoPantalla();
+      ctx.fillText(flash ? textos.rotuloFlash : textos.rotulo, w / 2, h * 0.32);
       ctx.fillStyle = '#FFFFFF';
       const txt = flash || this.ctx.textoPantalla().nombre;
       let fs = Math.round(h * 0.3);

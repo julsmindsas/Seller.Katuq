@@ -8,6 +8,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map, scan } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
@@ -17,9 +18,11 @@ import {
   avisarAperturaDeComercio,
   cifrasGlobal$,
   eventos$,
+  idioma$,
   instanteVisible$,
   ocultar$,
   radarCongelado$,
+  traductorDe,
 } from '../utilidades/fuentes';
 import { empresaDeEvento } from '../utilidades/momento';
 import { MURO_VACIO, reducirMuro, SPARK_ALTO, SPARK_ANCHO, TarjetaMuro, VistaMuro } from '../utilidades/muro';
@@ -77,8 +80,10 @@ export class EnVivoMuroComponent implements OnInit, OnDestroy {
     private readonly interaccion: EnVivoInteraccionService,
     zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    private readonly orbe: EnVivoOrbeService
+    private readonly orbe: EnVivoOrbeService,
+    translate: TranslateService
   ) {
+    const t = traductorDe(translate);
     this.vm$ = combineLatest([
       cifrasGlobal$(estado),
       eventos$(estado),
@@ -86,10 +91,11 @@ export class EnVivoMuroComponent implements OnInit, OnDestroy {
       ocultar$(estado),
       instanteVisible$(zona, interaccion, REFRESCO_MS),
       interaccion.repeticion$.pipe(map((r) => r.activa)),
+      idioma$(translate),
     ]).pipe(
       scan(
         (previo: VistaMuroPantalla, [cifras, eventos, radar, ocultar, ahoraMs, repitiendo]): VistaMuroPantalla => ({
-          ...reducirMuro(previo, cifras?.comercios ?? [], { eventos, radar, ocultar, ahoraMs }),
+          ...reducirMuro(previo, cifras?.comercios ?? [], { eventos, radar, ocultar, ahoraMs, t }),
           animar: !repitiendo,
         }),
         { ...MURO_VACIO, animar: true }

@@ -1,6 +1,7 @@
 import { CifrasEnVivo, EstadoEnVivo, RadarEnVivo } from '../servicios/en-vivo.modelos';
 import { horaDeColombia } from './formato';
 import { entregadosDeHoy } from './tarjetas';
+import { Traductor } from './traductor';
 
 /**
  * Celebraciones de "En vivo": qué hitos se cruzaron (puro) y el confeti plano (canvas 2D).
@@ -51,14 +52,14 @@ function vaAlRecord(radar: RadarEnVivo | null): boolean | null {
  * Hitos que se cruzaron entre dos lecturas de cifras. Pura: sin reloj, sin almacenamiento.
  * El orden es el de importancia para mostrar (el primero es el que se anuncia).
  */
-export function hitosCruzados(previa: Lectura, actual: Lectura, horaActual: number): Hito[] {
+export function hitosCruzados(previa: Lectura, actual: Lectura, horaActual: number, t: Traductor): Hito[] {
   const hitos: Hito[] = [];
   const antes = previa.cifras;
   const ahora = actual.cifras;
 
-  if (antes.pedidos < 1 && ahora.pedidos >= 1) hitos.push({ clave: 'primer-pedido', texto: '¡Primer pedido del día!' });
+  if (antes.pedidos < 1 && ahora.pedidos >= 1) hitos.push({ clave: 'primer-pedido', texto: t('enVivo.celebraciones.primerPedido') });
   if (previa.entregados < 1 && actual.entregados >= 1) {
-    hitos.push({ clave: 'primera-entrega', texto: '¡Primera entrega del día!' });
+    hitos.push({ clave: 'primera-entrega', texto: t('enVivo.celebraciones.primeraEntrega') });
   }
 
   const decenasAntes = Math.floor(antes.pedidos / PEDIDOS_POR_HITO);
@@ -67,19 +68,19 @@ export function hitosCruzados(previa: Lectura, actual: Lectura, horaActual: numb
     // Si de golpe se cruzaron varias, se anuncia la más alta y todas quedan marcadas.
     for (let d = decenasAhora; d > decenasAntes; d--) {
       const n = d * PEDIDOS_POR_HITO;
-      hitos.push({ clave: `pedidos-${n}`, texto: `¡${n} pedidos hoy!` });
+      hitos.push({ clave: `pedidos-${n}`, texto: t('enVivo.celebraciones.pedidosHoy', { n }) });
     }
   }
 
   if (!esMejorHora(antes, horaActual) && esMejorHora(ahora, horaActual)) {
-    hitos.push({ clave: `mejor-hora-${horaActual}`, texto: '¡Esta es la mejor hora del día!' });
+    hitos.push({ clave: `mejor-hora-${horaActual}`, texto: t('enVivo.celebraciones.mejorHora') });
   }
-  if (!superoAyer(antes) && superoAyer(ahora)) hitos.push({ clave: 'mas-que-ayer', texto: '¡Ya vendiste más que todo ayer!' });
+  if (!superoAyer(antes) && superoAyer(ahora)) hitos.push({ clave: 'mas-que-ayer', texto: t('enVivo.celebraciones.masQueAyer') });
 
   // Solo si en la lectura anterior ya se conocía la proyección y NO pasaba el récord: así nunca
   // se celebra algo que ya era verdad al cargar.
   if (vaAlRecord(previa.radar) === false && vaAlRecord(actual.radar) === true) {
-    hitos.push({ clave: 'record-dia', texto: '¡Vas camino a tu récord de pedidos!' });
+    hitos.push({ clave: 'record-dia', texto: t('enVivo.celebraciones.recordDia') });
   }
   return hitos;
 }
@@ -102,7 +103,7 @@ export class DetectorHitos {
   /**
    * @param silencio true durante "Repetir el día": se sigue la línea base pero no se devuelve nada.
    */
-  procesar(estado: EstadoEnVivo, ahoraMs: number, silencio: boolean): Hito[] {
+  procesar(estado: EstadoEnVivo, ahoraMs: number, silencio: boolean, t: Traductor): Hito[] {
     if (estado.vista !== 'comercio' || !estado.cargado || !estado.cifras) {
       this.previa = null;
       return [];
@@ -121,7 +122,7 @@ export class DetectorHitos {
     if (previa.cifras === actual.cifras && previa.radar === actual.radar && previa.entregados === actual.entregados) {
       return [];
     }
-    return silencio ? [] : hitosCruzados(previa, actual, horaDeColombia(ahoraMs));
+    return silencio ? [] : hitosCruzados(previa, actual, horaDeColombia(ahoraMs), t);
   }
 }
 

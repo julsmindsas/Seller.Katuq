@@ -13,6 +13,7 @@ import { EnVivoFichaService } from '../ficha/ficha.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EventoEnVivo } from '../servicios/en-vivo.modelos';
 import { diaDeColombia } from '../utilidades/formato';
+import type { Traductor } from '../utilidades/traductor';
 import { EnVivoPropuestaEscenaPuente } from './propuestas-escena.puente';
 import { RespuestaProduccion, RespuestaPropuestas, RespuestaWhatsapp } from './propuestas.modelos';
 import {
@@ -49,6 +50,7 @@ import {
   ItemCola,
   itemsDelPedido,
   itemsDeProduccion,
+  lineaFuera,
   LecturaFuente,
   lecturasDe,
   leerAplazados,
@@ -101,8 +103,9 @@ const BANDERAS = ['despachosOpttia', 'opttiaProduccion', 'opttiaCobroWhatsapp'] 
 const ESPERA_PRODUCCION_MS = 75_000;
 /** El enlace de WhatsApp se pide al tocar: si tarda más, el navegador ya no deja abrir la pestaña. */
 const ESPERA_WHATSAPP_MS = 8000;
-const SIN_RESPUESTA_WHATSAPP = 'Katuq no respondió a tiempo. Vuelve a tocar "Abrir WhatsApp" o abre el pedido.';
-const NO_WHATSAPP = 'No pude armar el mensaje de WhatsApp. Abre el pedido para revisarlo.';
+/** Claves de i18n (no los textos): se traducen al guardar el aviso. */
+const SIN_RESPUESTA_WHATSAPP = 'enVivo.propuestas.sinRespuestaWhatsapp';
+const NO_WHATSAPP = 'enVivo.propuestas.noWhatsapp';
 const PREFIJO_APLAZADOS = 'katuq.enVivo.propuestas.v1';
 /** El texto de Opttia del plan (`/explicar`) se pide a lo sumo una vez cada 10 min (el servidor también lo limita). */
 const EXPLICAR_CADA_MS = 10 * 60_000;
@@ -228,8 +231,8 @@ const VISTA_VACIA: VistaPropuestas = {
   tv: false,
   repitiendo: false,
   aprobable: false,
-  etiquetaAprobar: 'Aprobar',
-  textoAplicando: 'Despachando…',
+  etiquetaAprobar: '',
+  textoAplicando: '',
   avisoEquipo: null,
   ajustable: false,
   sinPermiso: false,
@@ -275,6 +278,8 @@ const VISTA_VACIA: VistaPropuestas = {
 @Injectable({ providedIn: 'root' })
 export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   private readonly vistaSub = new BehaviorSubject<VistaPropuestas>(VISTA_VACIA);
+  /** Traductor de la pantalla (el servicio no inyecta el traductor de la librería): lo fija la tarjeta al crearse. */
+  private tr: Traductor = (clave) => clave;
 
   readonly vista$: Observable<VistaPropuestas> = this.vistaSub.asObservable();
   readonly disponible$: Observable<boolean> = this.vistaSub.pipe(map((v) => v.disponible), distinctUntilChanged());
@@ -379,6 +384,18 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   ngOnDestroy(): void {
     this.usos = 1;
     this.detener();
+  }
+
+  /** La tarjeta le pasa el traductor del idioma activo (se llama al crearse la tarjeta). */
+  fijarTraductor(tr: Traductor): void {
+    this.tr = tr;
+  }
+
+  /** Cambió el idioma: se vuelven a armar los textos de la cola y de la tarjeta. */
+  republicar(): void {
+    this.servidorItems = this.servidorItems.map((it) => (it.servidor ? desdeServidor(it.servidor, this.tr) ?? it : it));
+    this.recomponer();
+    this.publicar();
   }
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────────
@@ -697,7 +714,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     this.lecturas = lecturasDe(r, enviadoMs, Date.now());
     if (!mismaVersion) {
       this.servidorItems = (Array.isArray(r.propuestas) ? r.propuestas : [])
-        .map((p) => desdeServidor(p))
+        .map((p) => desdeServidor(p, this.tr))
         .filter((x): x is ItemCola => x !== null);
       this.despachos = r.despachos && typeof r.despachos === 'object' ? r.despachos : null;
       this.armarEditables();
@@ -768,7 +785,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       if (this.aplicando.has(id) || !this.servidorItems.some((x) => x.id === id)) return;
       if (!incluyeCambio(lectura, this.resultadosMs.get(id) ?? Number.POSITIVE_INFINITY)) return;
       if (this.actual?.id === id) {
-        if (r.estado === 'en-curso') this.resultados.set(id, { ...r, estado: 'no-despachado', razon: NO_SALIO_TODAVIA });
+        if (r.estado === 'en-curso') this.resultados.set(id, { ...r, estado: 'no-despachado', razon: this.tr(NO_SALIO_TODAVIA) });
         return;
       }
       this.quitarResultado(id);
@@ -811,6 +828,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       sacados: this.sacados,
       opciones,
       seguir: hoja && sucesor ? { de: hoja.id, a: sucesor.id } : null,
+      t: this.tr,
     });
     if (r.seguido) this.hojaActualizada = true;
     const editables = r.editables;
@@ -863,7 +881,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     const ahora = Date.now();
     const e = this.estado.estado;
     this.aplazados = this.aplazados.dia === this.dia() ? this.aplazados : this.leerGuardados();
-    const senales = this.respuestaDisponible ? senalesDeCobro(e.radar?.atencion, e.pedidos) : [];
+    const senales = this.respuestaDisponible ? senalesDeCobro(e.radar?.atencion, e.pedidos, this.tr) : [];
     const resueltos = this.resueltos(ahora);
     this.cola = armarCola(this.servidorItems, senales, this.aplazados, ahora, resueltos);
     this.reubicarActual();
@@ -925,7 +943,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     this.confirmando = false;
     if (this.hojaAbierta) this.hojaActualizada = true;
     this.alDia = false;
-    this.anuncio = `Se actualizó: ${tituloVisible(it, this.ocultar)}`;
+    this.anuncio = this.tr('enVivo.propuestas.anuncioSeActualizo', { titulo: tituloVisible(it, this.ocultar) });
     this.bloqueadoHasta = Date.now() + BLOQUEO_AL_PASAR_MS;
     this.programar('desbloqueo', BLOQUEO_AL_PASAR_MS + 50, () => this.publicar());
   }
@@ -940,7 +958,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     this.cerrarHoja();
     if (!it) return;
     this.alDia = false;
-    this.anuncio = `Opttia propone: ${tituloVisible(it, this.ocultar)}`;
+    this.anuncio = this.tr('enVivo.propuestas.anuncioPropone', { titulo: tituloVisible(it, this.ocultar) });
     // Tras pasar a otra propuesta, Aprobar queda bloqueado un momento (evita toques accidentales).
     this.bloqueadoHasta = Date.now() + BLOQUEO_AL_PASAR_MS;
     this.programar('desbloqueo', BLOQUEO_AL_PASAR_MS + 50, () => this.publicar());
@@ -1117,7 +1135,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     if (aviso && !aviso.reintentar) return;
     this.avisosWhatsapp.delete(pedidoId);
     this.whatsappPedido = pedidoId;
-    this.anuncio = 'Armando el mensaje de WhatsApp…';
+    this.anuncio = this.tr('enVivo.propuestas.armandoWhatsapp');
     this.publicar();
     let sub: Subscription | null = null;
     sub = this.get<RespuestaWhatsapp>(`${RUTA}/pedido/${encodeURIComponent(pedidoId)}/whatsapp`)
@@ -1134,7 +1152,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       .subscribe({
         next: (r) => {
           if (!r || r.success !== true || !esEnlaceWhatsapp(r.url)) {
-            const texto = r && typeof r.message === 'string' && r.message && r.message.length < 200 ? r.message : NO_WHATSAPP;
+            const texto = r && typeof r.message === 'string' && r.message && r.message.length < 200 ? r.message : this.tr(NO_WHATSAPP);
             this.avisosWhatsapp.set(pedidoId, { texto, reintentar: false });
             this.anuncio = texto;
             return;
@@ -1142,11 +1160,11 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
           // Entretanto pudo pasar a TV, a "ocultar" o a la repetición: entonces no se abre.
           if (!this.habilitado || !muestraWhatsapp(it, this.condicionWhatsapp())) return;
           window.open(r.url, '_blank', 'noopener');
-          this.anuncio = 'Abrí WhatsApp con el recordatorio listo: tú decides si lo envías.';
+          this.anuncio = this.tr('enVivo.propuestas.abriWhatsapp');
           this.puente.avisar({ tipo: 'whatsapp-abierto', pedidoId });
         },
         error: (e) => {
-          const texto = sinRespuesta(e) ? SIN_RESPUESTA_WHATSAPP : mensajeDe(e, NO_WHATSAPP);
+          const texto = sinRespuesta(e) ? this.tr(SIN_RESPUESTA_WHATSAPP) : mensajeDe(e, this.tr(NO_WHATSAPP));
           this.avisosWhatsapp.set(pedidoId, { texto, reintentar: true });
           this.anuncio = texto;
         },
@@ -1204,7 +1222,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   private recomponerSinMover(): void {
     const ahora = Date.now();
     const e = this.estado.estado;
-    const senales = this.respuestaDisponible ? senalesDeCobro(e.radar?.atencion, e.pedidos) : [];
+    const senales = this.respuestaDisponible ? senalesDeCobro(e.radar?.atencion, e.pedidos, this.tr) : [];
     const resueltos = this.resueltos(ahora);
     this.cola = armarCola(this.servidorItems, senales, this.aplazados, ahora, resueltos);
   }
@@ -1243,7 +1261,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     const g = this.editables.get(id);
     const elegida = g?.transportadoras.find((t) => t.proveedor === proveedor);
     if (!g || !elegida || !this.ajustable(id)) return;
-    this.editables.set(id, { ...g, proveedor, zona: `Por ${elegida.nombre}` });
+    this.editables.set(id, { ...g, proveedor, zona: this.tr('enVivo.propuestas.porTransportadora', { nombre: elegida.nombre }) });
     this.actividad();
     this.publicar();
   }
@@ -1361,7 +1379,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     aprobando.forEach((a) => this.aplicando.add(a.item.id));
     this.aplicandoTodos = todos;
     this.confirmando = false;
-    this.anuncio = aprobando.length === 1 ? 'Despachando…' : `Despachando ${aprobando.length} grupos…`;
+    this.anuncio = aprobando.length === 1 ? this.tr('enVivo.propuestas.despachando') : this.tr('enVivo.propuestas.despachandoGrupos', { n: aprobando.length });
     this.publicar();
     let ok = 0;
     let detenida = false;
@@ -1403,7 +1421,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     }
     // Lo que el servidor no contestó queda como "no despachado" (se puede reintentar tras refrescar).
     lote.forEach((a, i) => {
-      if (!this.resultados.has(a.item.id)) this.ponerResultado(a.item.id, { indice: i, estado: 'no-despachado', razon: 'Katuq no devolvió el resultado de este grupo.' });
+      if (!this.resultados.has(a.item.id)) this.ponerResultado(a.item.id, { indice: i, estado: 'no-despachado', razon: this.tr('enVivo.propuestas.sinResultadoGrupo') });
     });
     return { ok: resultados.filter((x) => x.estado === 'despachado' || x.estado === 'reanudado').length, error: null, detener: false };
   }
@@ -1411,7 +1429,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
   /** Sin respuesta en un grupo de transportadora: "en curso" y la serie se detiene. Lo demás, como siempre. */
   private alFallar(lote: Aprobando[], e: unknown): PasoAprobacion {
     const enDuda = lote.every((a) => a.tipo === 'transportadora') && sinRespuesta(e);
-    const razon = enDuda ? SIN_RESPUESTA : mensajeDe(e, 'No se pudo aprobar. Inténtalo de nuevo.');
+    const razon = enDuda ? this.tr(SIN_RESPUESTA) : mensajeDe(e, this.tr('enVivo.propuestas.noSePudoAprobar'));
     lote.forEach((a, i) => this.ponerResultado(a.item.id, { indice: i, estado: enDuda ? 'en-curso' : 'no-despachado', razon }));
     return { ok: 0, error: razon, detener: enDuda };
   }
@@ -1421,12 +1439,12 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     if (!this.subs || !this.habilitado) return;
     const a = this.actual;
     const res = a ? this.resultados.get(a.id) : undefined;
-    if (detenida) this.anuncio = 'Se detuvo la aprobación: un grupo de transportadora no respondió a tiempo.';
-    else if (ok === aprobando.length) this.anuncio = ok === 1 && a && res ? this.textoDe(a, res).texto : `${ok} grupos despachados.`;
-    else this.anuncio = aprobando.length === 1 && ultimoError ? ultimoError : 'Revisa el resultado de cada grupo.';
+    if (detenida) this.anuncio = this.tr('enVivo.propuestas.seDetuvoAprobacion');
+    else if (ok === aprobando.length) this.anuncio = ok === 1 && a && res ? this.textoDe(a, res).texto : this.tr('enVivo.propuestas.gruposDespachados', { n: ok });
+    else this.anuncio = aprobando.length === 1 && ultimoError ? ultimoError : this.tr('enVivo.propuestas.revisaResultado');
     // La escena celebra lo que el servidor sí hizo (los eventos reales animan la salida).
     if (ok > 0 && !this.repitiendo && !this.interaccion.repitiendo) {
-      this.interaccion.emitir({ tipo: 'celebrar', texto: ok === 1 ? 'Despacho aprobado' : `${ok} despachos aprobados` });
+      this.interaccion.emitir({ tipo: 'celebrar', texto: ok === 1 ? this.tr('enVivo.propuestas.celebraDespachoUno') : this.tr('enVivo.propuestas.celebraDespachosVarios', { n: ok }) });
     }
     this.recomponer();
     this.publicar();
@@ -1464,13 +1482,13 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     // Un reintento tras un error empieza limpio.
     this.resultadosProduccion.delete(it.id);
     this.confirmando = false;
-    this.anuncio = textoAplicando(it);
+    this.anuncio = textoAplicando(it, this.tr);
     this.publicar();
     this.serie = this.postSinLoader<RespuestaProduccion>(`${RUTA}/produccion/aprobar`, { propuestaId: it.id, items })
       .pipe(
         timeout(ESPERA_PRODUCCION_MS),
-        map((r) => resultadoProduccion(r, nros)),
-        catchError((e) => of(resultadoProduccionDeError(e))),
+        map((r) => resultadoProduccion(r, nros, this.tr)),
+        catchError((e) => of(resultadoProduccionDeError(e, this.tr))),
         finalize(() => {
           this.aplicando.delete(it.id);
           this.serie = null;
@@ -1490,7 +1508,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     // La escena celebra lo que el servidor sí hizo; los eventos reales mueven las cajas.
     const n = res.pasaron.length;
     if (n > 0 && !this.repitiendo && !this.interaccion.repitiendo) {
-      this.interaccion.emitir({ tipo: 'celebrar', texto: n === 1 ? '1 pedido a producción' : `${n} pedidos a producción` });
+      this.interaccion.emitir({ tipo: 'celebrar', texto: n === 1 ? this.tr('enVivo.propuestas.celebraProduccionUno') : this.tr('enVivo.propuestas.celebraProduccionVarios', { n }) });
     }
     this.recomponer();
     this.publicar();
@@ -1521,7 +1539,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     const g = base ? this.editables.get(base.id) ?? null : null;
     const opciones = base ? this.opciones.get(base.id) ?? [] : [];
     // Lo que se ve es lo que se va a aprobar: la propuesta con lo que la persona ajustó.
-    const it = base ? ajustada(base, g, opciones) : null;
+    const it = base ? ajustada(base, g, opciones, this.tr) : null;
     const res = it ? this.resultados.get(it.id) ?? null : null;
     const resProduccion = it ? this.resultadosProduccion.get(it.id) ?? null : null;
     const aplicando = !!it && this.aplicando.has(it.id);
@@ -1534,42 +1552,42 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     const pendientes = disponible && this.puedeAprobarDespachos() && !this.tv ? this.pendientesDespachos() : [];
     const todos = aprobarTodosDisponible(pendientes.map((x) => this.editables.get(x.id) as GrupoEditable));
     const viejo = it && this.viejos.has(it.id) ? this.viejos.get(it.id)?.nro ?? '' : null;
-    const confirmar = it ? textoConfirmar(it, g, g ? nombreDe(g, opciones) : null, this.ocultar) : '';
+    const confirmar = it ? textoConfirmar(it, g, g ? nombreDe(g, opciones) : null, this.ocultar, this.tr) : '';
     const frase = it && g && this.frases[g.id] ? this.frases[g.id] : null;
-    const colores = coloresPorMensajero(this.cola.map((x) => (x.id === it?.id ? it : ajustada(x, this.editables.get(x.id), this.opciones.get(x.id) ?? []))));
+    const colores = coloresPorMensajero(this.cola.map((x) => (x.id === it?.id ? it : ajustada(x, this.editables.get(x.id), this.opciones.get(x.id) ?? [], this.tr))));
 
     const vista: VistaPropuestas = {
       disponible,
       visible,
       alDia: this.alDia && !it,
       item: it,
-      eyebrow: it ? eyebrow(it, indice, this.cola.length) : 'Opttia propone',
+      eyebrow: it ? eyebrow(it, indice, this.cola.length, this.tr) : this.tr('enVivo.propuestas.opttiaPropone'),
       titulo: it ? tituloVisible(it, this.ocultar) : '',
       razon: it ? razonVisible(it, this.ocultar) : '',
       frase: frase ? (this.ocultar ? sinMontos(frase) : frase) : null,
-      chips: it ? chipsDe(it, this.ocultar) : [],
+      chips: it ? chipsDe(it, this.ocultar, this.tr) : [],
       indice,
       total: this.cola.length,
       tv: this.tv,
       repitiendo: this.repitiendo,
       aprobable,
-      etiquetaAprobar: etiquetaAprobar(it),
-      textoAplicando: textoAplicando(it),
-      avisoEquipo: avisoEquipo(it),
+      etiquetaAprobar: etiquetaAprobar(it, this.tr),
+      textoAplicando: textoAplicando(it, this.tr),
+      avisoEquipo: avisoEquipo(it, this.tr),
       ajustable: permisoDespachos && !this.tv && !!it && this.ajustable(it.id) && !yaAprobado(res),
       // El aviso del rol solo cuando de verdad es el rol (no cuando al grupo le falta el mensajero).
       sinPermiso: !!it && it.tipo !== 'cobro' && it.modo === 'on' && !permiso,
       sinPermisoTexto:
         it?.tipo === 'produccion'
-          ? 'Puedes ver la propuesta. Pasarla a En producción es para quien tiene Pedidos o Despachos en su rol.'
-          : 'Puedes ver la propuesta. Aprobar es para quien tiene Despachos en su rol.',
+          ? this.tr('enVivo.propuestas.sinPermisoProduccion')
+          : this.tr('enVivo.propuestas.sinPermisoDespachos'),
       // Un pedido que no tiene cómo (sin saldo, sin celular...) deja "Abrir pedido" como principal.
       whatsapp: whatsapp && !(avisoWa && !avisoWa.reintentar),
       whatsappAbriendo: whatsapp && !!it?.pedidoId && this.whatsappPedido === it.pedidoId,
       whatsappAviso: whatsapp && avisoWa ? avisoWa.texto : null,
-      falta: aprobable && !yaAprobado(res) ? faltaParaAprobar(g) : null,
+      falta: aprobable && !yaAprobado(res) ? faltaParaAprobar(g, this.tr) : null,
       bloqueado: ahora < this.bloqueadoHasta,
-      viejo: viejo !== null ? (viejo ? `Cambió el #${viejo}, lo actualizo.` : 'Cambió un pedido de esta propuesta, la actualizo.') : null,
+      viejo: viejo !== null ? (viejo ? this.tr('enVivo.propuestas.cambioPedidoNro', { nro: viejo }) : this.tr('enVivo.propuestas.cambioPedido')) : null,
       aplicando,
       aplicandoTodos: this.aplicandoTodos,
       ocupado: this.aplicando.size > 0,
@@ -1579,10 +1597,10 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
           : resProduccion
             ? { texto: resProduccion.texto, tono: resProduccion.tono, fuera: resProduccion.fuera, final: resProduccion.final }
             : aprobadoFuera
-              ? { texto: 'Aprobado desde el celular.', tono: 't-ok', fuera: [], final: true }
+              ? { texto: this.tr('enVivo.propuestas.aprobadoDesdeCelular'), tono: 't-ok', fuera: [], final: true }
               : null,
       confirmar,
-      todos: todos && pendientes.length >= 2 ? { ...todos, confirmar: textoConfirmarTodos(todos.grupos, todos.pedidos) } : null,
+      todos: todos && pendientes.length >= 2 ? { ...todos, confirmar: textoConfirmarTodos(todos.grupos, todos.pedidos, this.tr) } : null,
       anuncio: this.anuncio,
       hoja: this.hojaAbierta && it && g ? this.armarHoja(it, g, opciones, res, viejo, confirmar, permisoDespachos) : null,
       boton: this.botonPropio(disponible, visible),
@@ -1592,7 +1610,7 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     // La escena ensaya solo la propuesta a la vista (con lo ajustado); al confirmar, los fantasmas se
     // van (los eventos reales animan).
     const ensayar = visible && !!it && !this.repitiendo && !aplicando && !aprobadoFuera && !this.resuelto(it.id);
-    this.puente.mostrar(ensayar && it ? paraEscena(it, colores) : null);
+    this.puente.mostrar(ensayar && it ? paraEscena(it, colores, this.tr) : null);
     this.puente.contar(disponible && !this.repitiendo ? contar(this.cola) : { ideas: 0, urgentes: 0 });
   }
 
@@ -1617,14 +1635,14 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
       // El permiso del rol: el grupo "escoge mensajero" se puede ajustar y, ya con mensajero, aprobar.
       puedeAprobar: permiso,
       bloqueado: this.tv
-        ? 'En modo pantalla no se aprueba.'
+        ? this.tr('enVivo.propuestas.hojaModoPantalla')
         : this.repitiendo
-          ? 'Estás repitiendo el día. Vuelve a "en vivo" para aprobar.'
+          ? this.tr('enVivo.propuestas.hojaRepitiendo')
           : viejo !== null
-            ? 'Cambió un pedido de este grupo: ya lo estoy actualizando; espera un momento para aprobar.'
+            ? this.tr('enVivo.propuestas.hojaCambioPedido')
             : null,
       viejo,
-      actualizada: this.hojaActualizada ? 'El grupo cambió y ya se actualizó con lo último: revísalo antes de aprobar.' : null,
+      actualizada: this.hojaActualizada ? this.tr('enVivo.propuestas.hojaActualizada') : null,
       confirmar,
       fuera: this.despachos?.fueraDelPlan ?? [],
       automaticos: this.despachos?.envioAutomatico ?? [],
@@ -1636,9 +1654,9 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     const opciones = this.opciones.get(it.id) ?? [];
     const nro = new Map(it.pedidos.map((p) => [p.id, p.nroPedido]));
     return {
-      texto: textoResultado(r, { tipo: g?.tipo ?? 'mensajero', nombre: g ? nombreDe(g, opciones) : null, pedidos: g?.pedidos.length ?? it.pedidos.length }),
+      texto: textoResultado(r, { tipo: g?.tipo ?? 'mensajero', nombre: g ? nombreDe(g, opciones) : null, pedidos: g?.pedidos.length ?? it.pedidos.length }, this.tr),
       tono: tonoResultado(r),
-      fuera: (r.fuera || []).map((f) => ({ id: f.id, texto: `Dejé fuera el #${f.nroPedido || nro.get(f.id) || f.id}: ${f.razon}` })),
+      fuera: (r.fuera || []).map((f) => ({ id: f.id, texto: lineaFuera(f.nroPedido || nro.get(f.id) || f.id, f.razon, this.tr) })),
       final: yaAprobado(r),
     };
   }
@@ -1677,8 +1695,8 @@ export class EnVivoPropuestasService extends BaseService implements OnDestroy {
     if (!disponible || visible || this.conBotonOrbe || this.tv || this.repitiendo) return null;
     const c = contar(this.cola);
     if (!c.ideas) return null;
-    const texto = textoIdeas(c);
-    return { texto, aria: `${texto.replace(' · ', ', ')}. Ver la propuesta` };
+    const texto = textoIdeas(c, this.tr);
+    return { texto, aria: this.tr('enVivo.propuestas.botonAria', { texto: texto.replace(' · ', ', ') }) };
   }
 
   /** Al volver a la pestaña, si hace rato no se pide, se pide de respaldo. */

@@ -8,8 +8,9 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { EtapaId, EtapaInfo, PedidoEnVivo } from '../../servicios/en-vivo.modelos';
@@ -102,8 +103,11 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
     private readonly interaccion: EnVivoInteraccionService,
     private readonly zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    private readonly orbe: EnVivoOrbeService
+    private readonly orbe: EnVivoOrbeService,
+    private readonly translate: TranslateService
   ) {}
+
+  private readonly t = (clave: string, params?: Record<string, unknown>): string => this.translate.instant(clave, params);
 
   ngOnInit(): void {
     this.suscripcion.add(
@@ -130,6 +134,7 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
           )
         ),
         ocultarDe$(this.estado.preferencias$),
+        this.translate.onLangChange.pipe(startWith(null)),
       ]).subscribe(([entrada, ocultar]) => {
         this.entrada = entrada;
         this.ocultar = ocultar;
@@ -138,7 +143,9 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Opttia marca aquí la tarjeta de lo que señala (el tablero no es 3D).
+    // Opttia marca aquí la tarjeta de lo que señala (el tablero no es 3D). El orbe arma las etiquetas de la propuesta con este traductor.
+    this.orbe.fijarTraductor(this.t);
+    this.suscripcion.add(this.translate.onLangChange.subscribe(() => this.orbe.fijarTraductor(this.t)));
     this.soltarMarcas = this.orbe.usarMarcas('pedido');
     this.suscripcion.add(
       this.orbe.marca$.subscribe((m) => {
@@ -177,7 +184,7 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
 
   /** "Opttia: …" si esta es la tarjeta que Opttia señala; null si no. */
   textoOpttia(id: string): string | null {
-    return this.marca && this.marca.id === id ? `Opttia: ${this.marca.texto}` : null;
+    return this.marca && this.marca.id === id ? this.t('enVivo.comercio.tablero.opttiaDice', { texto: this.marca.texto }) : null;
   }
 
   /** Clases de la marca de la propuesta: `is-sug` y el color de su grupo (`is-sug--info`...); '' si no es de la propuesta. */
@@ -189,13 +196,13 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
   /** "Opttia propone: …" en la tarjeta pintada de más arriba de cada grupo, por columna; null en las demás. */
   textoPropuesta(id: string): string | null {
     const m = this.marcasPropuesta.get(id);
-    return m && this.conTextoPropuesta.has(id) ? `Opttia propone: ${m.etiqueta}` : null;
+    return m && this.conTextoPropuesta.has(id) ? this.t('enVivo.comercio.tablero.opttiaPropone', { etiqueta: m.etiqueta }) : null;
   }
 
   /** Lo que lee el lector de pantalla: la tarjeta y, si es de la propuesta, qué propone Opttia. */
   ariaDe(t: TarjetaTablero): string {
     const m = this.marcasPropuesta.get(t.id);
-    return m ? `${t.aria}. Opttia propone: ${m.etiqueta}` : t.aria;
+    return m ? this.t('enVivo.comercio.tablero.ariaConPropuesta', { aria: t.aria, etiqueta: m.etiqueta }) : t.aria;
   }
 
   porColumna(_: number, columna: ColumnaTablero): EtapaId {
@@ -221,6 +228,7 @@ export class EnVivoTableroPedidosComponent implements OnInit, OnDestroy {
       dia: entrada.dia,
       etapas: mapaDeEtapas(entrada.etapas),
       ocultar: this.ocultar,
+      t: this.t,
     });
 
     this.marcarNuevasYMovidas(entrada.pedidos);

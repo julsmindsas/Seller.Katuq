@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, NgZone, OnDestroy } from '@angular/core';
-import { Observable } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { Observable, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { EnVivoPropuestasService, VistaPropuestas } from './en-vivo-propuestas.service';
 import { CONFIRMAR_MS, ItemCola } from './propuestas.reglas';
@@ -46,12 +47,17 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
   private confirmandoId: string | null = null;
   private temporizador = 0;
   private ultimoId: string | null = null;
+  private readonly idioma: Subscription;
 
   constructor(
     private readonly propuestas: EnVivoPropuestasService,
     private readonly zona: NgZone,
-    private readonly cd: ChangeDetectorRef
+    private readonly cd: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {
+    // El servicio no inyecta el traductor: la tarjeta se lo da y le avisa si cambia el idioma.
+    propuestas.fijarTraductor((clave, params) => this.translate.instant(clave, params));
+    this.idioma = this.translate.onLangChange.subscribe(() => propuestas.republicar());
     this.vm$ = propuestas.vista$.pipe(
       tap((vm) => {
         const id = vm.item?.id ?? null;
@@ -66,6 +72,7 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.idioma.unsubscribe();
     window.clearTimeout(this.temporizador);
     this.propuestas.fijarConfirmando(false);
   }
@@ -214,17 +221,20 @@ export class EnVivoSugerenciaComponent implements OnDestroy {
   }
 
   textoTodos(vm: VistaPropuestas): string {
-    if (vm.aplicandoTodos) return 'Despachando los grupos…';
+    if (vm.aplicandoTodos) return this.translate.instant('enVivo.propuestas.despachandoLosGrupos');
     if (!vm.todos) return '';
     if (this.confirmando === 'todos' && this.confirmandoId === vm.item?.id) return vm.todos.confirmar;
-    return `Aprobar los ${vm.todos.grupos} grupos (${vm.todos.pedidos} ${vm.todos.pedidos === 1 ? 'pedido' : 'pedidos'})`;
+    return this.translate.instant(vm.todos.pedidos === 1 ? 'enVivo.propuestas.aprobarTodosUno' : 'enVivo.propuestas.aprobarTodosVarios', {
+      grupos: vm.todos.grupos,
+      pedidos: vm.todos.pedidos,
+    });
   }
 
   /** En la TV no hay botones: se dice desde dónde se aprueba. */
   textoTv(it: ItemCola): string {
-    if (it.modo === 'sombra') return 'Así lo haría Opttia · pronto se podrá aprobar';
-    if (it.tipo === 'cobro') return 'Revísalo desde tu celular o el computador';
-    return 'Apruébalo desde tu celular o el computador';
+    if (it.modo === 'sombra') return this.translate.instant('enVivo.propuestas.tvSombra');
+    if (it.tipo === 'cobro') return this.translate.instant('enVivo.propuestas.tvCobro');
+    return this.translate.instant('enVivo.propuestas.tvAprobar');
   }
 
   esConfirmando(tipo: Confirmacion, vm: VistaPropuestas): boolean {

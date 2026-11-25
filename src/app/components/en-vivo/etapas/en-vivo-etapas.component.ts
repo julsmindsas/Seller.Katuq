@@ -9,9 +9,12 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { EtapaId, EtapaInfo } from '../servicios/en-vivo.modelos';
 import { ClaveLista } from '../utilidades/tarjetas';
 import { claseTono, ETAPAS_DE_LA_BANDA, mapaDeEtapas } from '../utilidades/tonos';
+import { nombreDeEtapa } from '../utilidades/traductor';
 
 interface PasoEtapa {
   id: EtapaId;
@@ -50,8 +53,15 @@ export class EnVivoEtapasComponent implements OnChanges, OnDestroy {
 
   private previos = new Map<EtapaId, number>();
   private temporizadores = new Set<number>();
+  private readonly suscripcionIdioma: Subscription;
 
-  constructor(private readonly cambios: ChangeDetectorRef) {}
+  constructor(private readonly cambios: ChangeDetectorRef, private readonly translate: TranslateService) {
+    // Con otro idioma los nombres de las etapas se vuelven a escribir.
+    this.suscripcionIdioma = translate.onLangChange.subscribe(() => {
+      this.ngOnChanges({});
+      this.cambios.markForCheck();
+    });
+  }
 
   ngOnChanges(_: SimpleChanges): void {
     const mapa = mapaDeEtapas(this.etapas);
@@ -59,7 +69,7 @@ export class EnVivoEtapasComponent implements OnChanges, OnDestroy {
     for (const id of this.visibles) {
       const info = mapa.get(id);
       if (!info) continue;
-      siguientes.push({ id, nombre: info.nombre, clase: claseTono(info.tono), n: this.conteos[id] ?? 0 });
+      siguientes.push({ id, nombre: nombreDeEtapa(id, info, (clave, params) => this.translate.instant(clave, params)), clase: claseTono(info.tono), n: this.conteos[id] ?? 0 });
     }
     if (this.animar) {
       for (const paso of siguientes) {
@@ -72,6 +82,7 @@ export class EnVivoEtapasComponent implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.suscripcionIdioma.unsubscribe();
     this.temporizadores.forEach((id) => window.clearTimeout(id));
     this.temporizadores.clear();
   }

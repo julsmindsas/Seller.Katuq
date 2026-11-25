@@ -26,6 +26,8 @@ import {
   esEstacion,
 } from './operacion.tipos';
 import { Tweens, ease, limitar } from './tweens';
+import { Traductor, nombreDeEtapa } from '../utilidades/traductor';
+import { pedidosTexto, traductorVacio } from './traduccion-escena';
 
 // ==========================================================================
 // Escena 3D de la operación del comercio (D-386, tareas 5.1, 5.2 y 5.4).
@@ -51,15 +53,13 @@ const OPACIDAD_ATENUADA = 0.4;
 
 // Nombres de Katuq. El color de cada estación es fijo para que las cinco se distingan en la
 // banda (el servidor puede repetir tono entre Producido y Empacado); el nombre sí viene del servidor.
-const NOMBRES_ETAPA: Record<EstacionId, { nombre: string; corto: string; tono: string }> = {
-  recibido: { nombre: 'Sin producir', corto: 'Sin producir', tono: 'slate' },
-  produccion: { nombre: 'En producción', corto: 'En producción', tono: 'info' },
-  producido: { nombre: 'Producido', corto: 'Producido', tono: 'warn' },
-  empacado: { nombre: 'Empacado', corto: 'Empacado', tono: 'pack' },
-  listo: { nombre: 'Para despachar', corto: 'Para despachar', tono: 'accent' },
-};
-const CORTO_ETAPA: Record<string, string> = {
-  recibido: 'Sin producir', produccion: 'En producción', producido: 'Producido', empacado: 'Empacado', listo: 'Para despachar',
+// El nombre en español es solo el respaldo: lo que se muestra sale de `nombreDeEtapa` y del nombre corto traducido.
+const NOMBRES_ETAPA: Record<EstacionId, { nombre: string; tono: string }> = {
+  recibido: { nombre: 'Sin producir', tono: 'slate' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  produccion: { nombre: 'En producción', tono: 'info' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  producido: { nombre: 'Producido', tono: 'warn' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  empacado: { nombre: 'Empacado', tono: 'pack' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  listo: { nombre: 'Para despachar', tono: 'accent' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
 };
 /** Igual que el servidor: sin tildes, mayúsculas, espacios de más, cédula delante ni teléfono detrás. */
 const claveNombre = (n: string | null | undefined): string =>
@@ -179,9 +179,11 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   private readonly vehiculos: Vehiculo[] = [];
   private readonly etqEstacion = new Map<EstacionId, EtiquetaH>();
   private etapas = NOMBRES_ETAPA;
+  private t: Traductor = traductorVacio;
 
   private pantallaFlash: string | null = null;
-  private nombreComercio = 'TU TIENDA';
+  /** null = sin nombre: la pantalla dice «TU TIENDA» en el idioma activo. */
+  private nombreComercio: string | null = null;
   private anillos: ThreeNS.Mesh[] = [];
   private matAnillo: ThreeNS.MeshBasicMaterial | null = null;
 
@@ -219,10 +221,10 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
 
   /** Etapas con nombre y tono tal como las manda el servidor (rotula y tiñe las estaciones). */
   fijarEtapas(etapas: ReadonlyArray<EtapaInfo>): void {
-    const siguiente: Record<EstacionId, { nombre: string; corto: string; tono: string }> = { ...NOMBRES_ETAPA };
+    const siguiente: Record<EstacionId, { nombre: string; tono: string }> = { ...NOMBRES_ETAPA };
     for (const e of etapas) {
       if (!esEstacion(e.id)) continue;
-      siguiente[e.id] = { nombre: e.nombre || NOMBRES_ETAPA[e.id].nombre, corto: CORTO_ETAPA[e.id], tono: NOMBRES_ETAPA[e.id].tono };
+      siguiente[e.id] = { nombre: e.nombre || NOMBRES_ETAPA[e.id].nombre, tono: NOMBRES_ETAPA[e.id].tono };
     }
     this.etapas = siguiente;
     if (this.scene) this.aplicarEstacionesEstilo();
@@ -231,9 +233,23 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   /** Nombre de la tienda que se lee en la pantalla de la fachada. */
   fijarComercio(nombre: string | null | undefined): void {
     const limpio = (nombre ?? '').trim().toUpperCase();
-    this.nombreComercio = limpio ? limpio.slice(0, 22) : 'TU TIENDA';
+    this.nombreComercio = limpio ? limpio.slice(0, 22) : null;
     this.mundo.pantalla?.pintar();
     this.sucio = true;
+  }
+
+  /** El traductor del componente anfitrión; al cambiar el idioma se vuelve a llamar y se repintan los textos. */
+  fijarTraductor(t: Traductor): void {
+    this.t = t;
+    if (!this.scene) return;
+    this.mundo.pantalla?.pintar();
+    this.aplicarEstacionesEstilo();
+    this.sucio = true;
+  }
+
+  /** Nombre corto de una etapa para los pulsos y el hover ('' si no es una estación). */
+  private cortoDe(id: string): string {
+    return esEstacion(id) ? this.t(`enVivo.escenas.etapaCorta.${id}`) : '';
   }
 
   /** "Ocultar clientes y montos": las tarjetas dicen "Cliente" y no muestran valores. */
@@ -499,7 +515,12 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       pickables: this.pickables,
       calidadBaja: this.opts.calidadBaja,
       tonoEtapa: (id) => this.etapas[id].tono,
-      textoPantalla: () => ({ flash: this.pantallaFlash, nombre: this.nombreComercio }),
+      textoPantalla: () => ({
+        flash: this.pantallaFlash,
+        nombre: this.nombreComercio ?? this.t('enVivo.escenas.tienda.nombreDefecto'),
+        rotulo: this.t('enVivo.escenas.tienda.rotulo'),
+        rotuloFlash: this.t('enVivo.escenas.tienda.nuevoPedido'),
+      }),
     });
     this.mundo.construir();
     this.crearVehiculos();
@@ -614,14 +635,14 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   }
 
   private corto(v: Vehiculo): string {
-    if (!v.nombre) return v.tipo === 'camion' ? 'Transportadora' : '';
+    if (!v.nombre) return v.tipo === 'camion' ? this.t('enVivo.escenas.transportadora') : '';
     return v.tipo === 'moto' ? v.nombre.split(' ')[0] : v.nombre;
   }
 
   private refrescarEtiquetaVeh(v: Vehiculo): void {
     const nombre = this.corto(v);
     const n = v.pedidos.size;
-    const html = `${v.tipo === 'moto' ? SVG_MOTO : SVG_CAMION}${esc(nombre)}${v.vis !== 'base' && n ? ` · ${n} ${n === 1 ? 'pedido' : 'pedidos'}` : ''}`;
+    const html = `${v.tipo === 'moto' ? SVG_MOTO : SVG_CAMION}${esc(nombre)}${v.vis !== 'base' && n ? ` · ${pedidosTexto(n, this.t)}` : ''}`;
     if (!v.etq) {
       v.etq = this.etq.crear({
         clase: 'eve-lbl--veh',
@@ -806,7 +827,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
 
   private htmlEstacion(id: EstacionId, n: number): string {
     const extra = n > CAJAS_VISIBLES ? `<em>+${n - CAJAS_VISIBLES}</em>` : '';
-    return `<i class="eve-dot"></i><span>${esc(this.etapas[id].nombre)}</span><b>${n}</b>${extra}`;
+    return `<i class="eve-dot"></i><span>${esc(nombreDeEtapa(id, { id, nombre: this.etapas[id].nombre, tono: 'neutro' }, this.t))}</span><b>${n}</b>${extra}`;
   }
 
   private refrescarConteos(animar: boolean): void {
@@ -825,7 +846,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   }
 
   private quien(o: { cliente: string | null }): string {
-    return this.privado ? 'Cliente' : o.cliente || 'Cliente';
+    return this.privado ? this.t('enVivo.escenas.cliente') : o.cliente || this.t('enVivo.escenas.cliente');
   }
 
   private ubic(o: { ciudad: string | null; barrio: string | null }): string {
@@ -1038,7 +1059,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     const o = this.hoverPedido ? this.pedidos.get(this.hoverPedido) : null;
     if (o && this.hoverPedido) {
       const id2 = this.hoverPedido;
-      const sub = [this.quien(o), CORTO_ETAPA[o.etapa] ?? ''].filter((x) => !!x).join(' · ');
+      const sub = [this.quien(o), this.cortoDe(o.etapa)].filter((x) => !!x).join(' · ');
       this.etqHover = this.etq.crear({
         clase: 'eve-lbl--hover',
         html: `<b>#${esc(o.numero ?? '')}</b><span>${esc(sub)}</span>`,
@@ -1098,7 +1119,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     if (o.etapa === 'entregado') { // venta en el punto de venta: nace entregada
       this.pulso(this.kit.v(-13.1, -3.0, 0.1), 'ok', 2.6, 1.1);
       if (modo === 'animado') this.flashPantalla(this.montoTxt(o.monto) || '#' + (o.numero ?? ''));
-      this.pop(this.kit.v(-13.1, -3.0, 2.2), 'ok', 'Venta en tienda', this.cuerpoPedido(o, true));
+      this.pop(this.kit.v(-13.1, -3.0, 2.2), 'ok', this.t('enVivo.escenas.ventaEnTienda'), this.cuerpoPedido(o, true));
       fin();
       return;
     }
@@ -1114,7 +1135,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     if (modo === 'desvanecido' || this.tw.reducido) {
       c.g.position.copy(destino);
       this.aparecer(c.g, fin);
-      if (this.tw.reducido) this.pop(this.kit.v(destino.x, destino.z, 1.4), o.ia ? 'pack' : 'accent', o.ia ? 'Con Opttia' : 'Nuevo pedido', this.cuerpoPedido(o, true));
+      if (this.tw.reducido) this.pop(this.kit.v(destino.x, destino.z, 1.4), o.ia ? 'pack' : 'accent', o.ia ? this.t('enVivo.escenas.conOpttia') : this.t('enVivo.escenas.nuevoPedido'), this.cuerpoPedido(o, true));
       return;
     }
     c.g.position.set(destino.x, 11, destino.z);
@@ -1125,7 +1146,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     this.tw.agregar(0.95, (k) => { c.g.position.y = 11 + (destino.y - 11) * ease.bounce(k); }, () => {
       c.viajando = false;
       this.pulso(this.kit.v(PADS[st].x, PADS[st].z, 0.17), 'accent', 2.4, 1.0);
-      this.pop(this.kit.v(destino.x, destino.z, 1.4), o.ia ? 'pack' : 'accent', o.ia ? 'Con Opttia' : 'Nuevo pedido', this.cuerpoPedido(o, true));
+      this.pop(this.kit.v(destino.x, destino.z, 1.4), o.ia ? 'pack' : 'accent', o.ia ? this.t('enVivo.escenas.conOpttia') : this.t('enVivo.escenas.nuevoPedido'), this.cuerpoPedido(o, true));
       this.acomodar(st, true);
       fin();
     }, c.g);
@@ -1177,7 +1198,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
           c.viajando = false;
           this.enBanda = Math.max(0, this.enBanda - 1);
           this.pulso(this.kit.v(PADS[nueva].x, PADS[nueva].z, 0.17), this.etapas[nueva].tono, 2.0, 0.9);
-          this.pop(this.kit.v(dest.x, dest.z, 1.3), this.etapas[nueva].tono, this.etapas[nueva].corto,
+          this.pop(this.kit.v(dest.x, dest.z, 1.3), this.etapas[nueva].tono, this.cortoDe(nueva),
             `<span class="eve-mono">#${esc(o?.numero ?? '')}</span><small>${esc(this.quien(o ?? { cliente: null }))}</small>`, 2600);
           this.acomodar(nueva, true);
           fin();
@@ -1321,7 +1342,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     this.tw.agregar(0.9, (k) => { pin.position.y = 9 + (2.75 - 9) * ease.bounce(k); }, () => {
       this.pulso(this.kit.v(casa.x, casa.z - 1.5, 0.12), 'ok', 2.6, 1.1);
       this.confeti(this.kit.v(casa.x, casa.z, 3.4));
-      this.pop(this.kit.v(casa.x, casa.z, 4.0), 'ok', 'Entregado', subtexto, 3600);
+      this.pop(this.kit.v(casa.x, casa.z, 4.0), 'ok', this.t('enVivo.escenas.entregado'), subtexto, 3600);
       this.tw.esperar(2.6, () => this.tw.agregar(0.4, (u) => pin.scale.setScalar(1 - u), () => this.soltarEfimero(pin)));
       fin();
     });
@@ -1427,7 +1448,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       else this.revisarRegreso(veh);
     }
     const c = this.cajas.get(id);
-    const etiqueta = ev.tipo === 'cancelado' ? 'Cancelado' : 'Rechazado';
+    const etiqueta = ev.tipo === 'cancelado' ? this.t('enVivo.escenas.cancelado') : this.t('enVivo.escenas.rechazado');
     if (!c || !c.g.visible || c.g.parent !== this.scene) {
       if (c) this.borrarCaja(id);
       ESTACIONES.forEach((st) => this.acomodar(st, true));

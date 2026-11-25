@@ -28,8 +28,9 @@ export interface RelojRepeticion {
   cada(ms: number, fn: () => void): () => void;
 }
 
-export const AVISO_SIN_LLEGADAS = 'Hoy todavía no hay pedidos para repetir';
-export const AVISO_SIN_DATOS = 'Todavía no hay datos del día para repetir';
+/** Claves de traducción de los avisos (el shell las traduce: este archivo no inyecta el traductor). */
+export const AVISO_SIN_LLEGADAS = 'enVivo.repeticion.sinLlegadas';
+export const AVISO_SIN_DATOS = 'enVivo.repeticion.sinDatos';
 
 export type ResultadoRepeticion =
   | { iniciada: true; plan: PlanRepeticion }

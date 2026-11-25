@@ -7,6 +7,7 @@ import {
 import { diaDeColombia, diaYMes, dinero, dineroCorto, entero, horaCorta } from '../../utilidades/formato';
 import { mejorHora } from '../../utilidades/horas';
 import { IconoId } from '../../utilidades/iconos';
+import { Traductor } from '../../utilidades/traductor';
 import { conMayuscula } from './atencion';
 import { entregadoHoy } from './tablero';
 
@@ -73,11 +74,11 @@ export function contarEntregadosHoy(pedidos: ReadonlyArray<PedidoEnVivo>, dia: s
   return pedidos.filter((p) => p.etapa === 'entregado' && entregadoHoy(p, dia)).length;
 }
 
-function unidad(n: number, singular: string, plural: string): string {
-  return `${entero(n)} ${Math.round(n) === 1 ? singular : plural}`;
+function unidad(n: number, t: Traductor): string {
+  return t(Math.round(n) === 1 ? 'enVivo.comercio.logros.pedidoUno' : 'enVivo.comercio.logros.pedidoOtros', { n: entero(n) });
 }
 
-export function armarLogros(entrada: EntradaLogros): VistaLogros {
+export function armarLogros(entrada: EntradaLogros, t: Traductor): VistaLogros {
   const { proyeccion, record, cifras, pedidos, ocultar, soloLectura, soloPropias } = entrada;
   const tercera = soloLectura;
 
@@ -85,13 +86,17 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
   const proyectados = proyeccion ? Math.max(0, Math.round(proyeccion.pedidos)) : 0;
   const superaRecord = !!proyeccion && !!record && proyeccion.pedidos > record.n;
   let grande = '—';
-  let detalle = 'Todavía no hay con qué proyectar el cierre.';
+  let detalle = t('enVivo.comercio.logros.sinProyeccion');
   if (proyeccion) {
-    grande = ocultar ? unidad(proyectados, 'pedido', 'pedidos') : dineroCorto(proyeccion.ventas);
+    grande = ocultar ? unidad(proyectados, t) : dineroCorto(proyeccion.ventas, t);
     const faltan = record ? Math.max(0, Math.round(record.n - proyeccion.pedidos)) : 0;
     const partes = [
-      ocultar ? '' : `≈ ${unidad(proyectados, 'pedido', 'pedidos')}`,
-      record ? (superaRecord ? '¡pinta récord!' : `${faltan === 1 ? 'faltaría' : 'faltarían'} ${entero(faltan)} para el récord`) : '',
+      ocultar ? '' : `≈ ${unidad(proyectados, t)}`,
+      record
+        ? superaRecord
+          ? t('enVivo.comercio.logros.pintaRecord')
+          : t(faltan === 1 ? 'enVivo.comercio.logros.faltaUno' : 'enVivo.comercio.logros.faltanVarios', { n: entero(faltan) })
+        : '',
     ].filter(Boolean);
     detalle = conMayuscula(partes.join(' · '));
   }
@@ -103,9 +108,9 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
       id: 'record',
       icono: 'trofeo',
       clase: 't-warn',
-      antes: `${tercera ? 'Su' : 'Tu'} récord: `,
-      destacado: unidad(record.n, 'pedido', 'pedidos'),
-      despues: ` en un día, el ${diaYMes(record.fecha)}`,
+      antes: t(tercera ? 'enVivo.comercio.logros.recordAntesTercera' : 'enVivo.comercio.logros.recordAntes'),
+      destacado: unidad(record.n, t),
+      despues: t('enVivo.comercio.logros.recordDespues', { fecha: diaYMes(record.fecha, t) }),
     });
   }
 
@@ -114,9 +119,9 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
     id: 'mejor-hora',
     icono: 'rayo',
     clase: 't-accent',
-    antes: 'Mejor hora de hoy: ',
-    destacado: mejor ? horaCorta(mejor.hora) : '—',
-    despues: mejor ? ` · ${unidad(mejor.pedidos, 'pedido', 'pedidos')}` : '',
+    antes: t('enVivo.comercio.logros.mejorHoraAntes'),
+    destacado: mejor ? horaCorta(mejor.hora, t) : '—',
+    despues: mejor ? ` · ${unidad(mejor.pedidos, t)}` : '',
   });
 
   const ia = opttiaDeHoy(cifras, pedidos);
@@ -124,9 +129,9 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
     id: 'opttia',
     icono: 'ia',
     clase: 't-pack',
-    antes: `Opttia ${tercera ? 'le' : 'te'} armó `,
-    destacado: unidad(ia.pedidos, 'pedido', 'pedidos'),
-    despues: ocultar || ia.pedidos === 0 ? ' por WhatsApp' : ` por WhatsApp · ${dinero(ia.ventas)}`,
+    antes: t(tercera ? 'enVivo.comercio.logros.opttiaAntesTercera' : 'enVivo.comercio.logros.opttiaAntes'),
+    destacado: unidad(ia.pedidos, t),
+    despues: ocultar || ia.pedidos === 0 ? t('enVivo.comercio.logros.opttiaDespues') : t('enVivo.comercio.logros.opttiaDespuesMonto', { monto: dinero(ia.ventas) }),
   });
 
   const entregados = contarEntregadosHoy(pedidos, cifras?.dia ?? null);
@@ -134,13 +139,13 @@ export function armarLogros(entrada: EntradaLogros): VistaLogros {
     id: 'entregados',
     icono: 'check',
     clase: 't-ok',
-    antes: soloPropias ? 'Mis pedidos entregados hoy: ' : 'Entregados hoy: ',
+    antes: t(soloPropias ? 'enVivo.comercio.logros.entregadosAntesPropios' : 'enVivo.comercio.logros.entregadosAntes'),
     destacado: entero(entregados),
-    despues: ` de ${unidad(cifras?.pedidos ?? 0, 'pedido', 'pedidos')}`,
+    despues: t('enVivo.comercio.logros.entregadosDespues', { pedidos: unidad(cifras?.pedidos ?? 0, t) }),
   });
 
   return {
-    etiqueta: `Si el ritmo sigue, hoy ${tercera ? 'cierra' : 'cierras'} en`,
+    etiqueta: t(tercera ? 'enVivo.comercio.logros.etiquetaTercera' : 'enVivo.comercio.logros.etiqueta'),
     grande,
     detalle,
     superaRecord,

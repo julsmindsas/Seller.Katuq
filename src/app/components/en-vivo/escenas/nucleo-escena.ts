@@ -9,6 +9,8 @@ import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { KitEscena } from './kit-escena';
 import { AccionesCamara, CamaraAutomatica, DetectorRafaga } from './pais.utilidades';
 import { Tweens } from './tweens';
+import { Traductor } from '../utilidades/traductor';
+import { traductorVacio } from './traduccion-escena';
 
 type V3 = ThreeNS.Vector3;
 
@@ -66,6 +68,8 @@ export class NucleoEscena {
   fx!: EfectosEscena;
   privado = false;
   reducir: boolean;
+  /** Traductor del idioma activo: lo pone el componente anfitrión de la escena. */
+  t: Traductor = traductorVacio;
   private etapas = new Map<EtapaId, EtapaInfo>(ETAPAS_POR_DEFECTO.map((e) => [e.id, e]));
   private etqHover: EtiquetaH | null = null;
   private readonly fijas = new Map<string, Fija>();
@@ -93,6 +97,10 @@ export class NucleoEscena {
   }
 
   // ---------------------------------------------------------------- opciones
+
+  fijarTraductor(t: Traductor): void {
+    this.t = t;
+  }
 
   fijarReducirMovimiento(reducir: boolean): void {
     this.reducir = reducir;

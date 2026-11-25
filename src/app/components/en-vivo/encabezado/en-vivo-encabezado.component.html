@@ -2,14 +2,14 @@
   <div class="brand">
     <div class="brand__logo" [class.is-katuq]="logoKatuq" aria-hidden="true">{{ logo }}</div>
     <div class="brand__texto">
-      <h1 class="brand__name">{{ marca }}</h1>
-      <div class="brand__eyebrow">{{ subtitulo }}</div>
+      <h1 class="brand__name">{{ marcaVisible }}</h1>
+      <div class="brand__eyebrow">{{ subtituloVisible }}</div>
     </div>
   </div>
 
   <div class="live" role="status" [ngClass]="aspecto.clase" [class.is-late]="aspecto.late">
     <span class="live__dot" aria-hidden="true"></span>
-    <span>{{ aspecto.texto }}</span>
+    <span>{{ aspecto.texto | translate }}</span>
   </div>
 
   <app-en-vivo-reloj [instante]="instante"></app-en-vivo-reloj>
@@ -40,8 +40,8 @@
     <button
       type="button"
       class="ibtn"
-      [attr.aria-label]="etiquetaOcultar"
-      [title]="etiquetaOcultar"
+      [attr.aria-label]="etiquetaOcultarVisible"
+      [title]="etiquetaOcultarVisible"
       [attr.aria-pressed]="ocultar"
       (click)="alternarOcultar.emit()"
     >

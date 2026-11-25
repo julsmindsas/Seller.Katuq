@@ -6,6 +6,7 @@ import { EnVivoPropuestasService } from '../propuestas/en-vivo-propuestas.servic
 import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.puente';
 import { saludo } from '../propuestas/propuestas.reglas';
 import { horaDeColombia } from '../utilidades/formato';
+import type { Traductor } from '../utilidades/traductor';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { LineaNarracion, NarradorOpttia, PERIODO_NARRACION_MS, PRIMERA_LINEA_MS } from './opttia-narrador';
 import { mascaraDe } from './opttia-reglas';
@@ -31,6 +32,7 @@ export class EnVivoNarracionService implements OnDestroy {
   /** La línea que toca mostrar; null = nada (la barra se esconde). */
   readonly linea$: Observable<LineaNarracion | null> = this.lineaSubject.asObservable();
 
+  private traduce: Traductor = (clave) => clave;
   private usos = 0;
   private suscripciones: Subscription | null = null;
   private pararCiclo: (() => void) | null = null;
@@ -43,6 +45,12 @@ export class EnVivoNarracionService implements OnDestroy {
     private readonly puente: EnVivoPropuestaEscenaPuente,
     private readonly zona: NgZone
   ) {}
+
+  /** El componente le pasa el traductor del idioma activo (el servicio no inyecta el traductor de la librería). */
+  fijarTraductor(tr: Traductor): void {
+    this.traduce = tr;
+    this.narrador.fijarTraductor(tr);
+  }
 
   get linea(): LineaNarracion | null {
     return this.lineaSubject.value;
@@ -114,7 +122,7 @@ export class EnVivoNarracionService implements OnDestroy {
     // las suscripciones que vacían la cola al empezar, para que un contador que ya había no se pierda.
     suscripciones.add(
       this.puente.contador$.subscribe((c) => {
-        const texto = saludo(c, horaDeColombia(Date.now()));
+        const texto = saludo(c, horaDeColombia(Date.now()), this.traduce);
         if (!texto || this.interaccion.repitiendo || !this.propuestas.reclamarSaludo()) return;
         if (this.puente.actual === null) this.narrador.saludar(texto);
       })

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import type { MargenesEncuadre } from '../../../shared/escena-3d/escena-base';
@@ -17,11 +18,11 @@ import { irAlTablero } from './navegacion';
 import { EnVivoPropuestasService } from '../propuestas/en-vivo-propuestas.service';
 import { sesionEsJulsmind } from './sesion-katuq';
 
-/** Las vistas del selector del comercio: dos escenas 3D (las enchufa otro módulo) y el tablero. */
-const OPCIONES: ReadonlyArray<OpcionVista> = [
-  { id: 'operacion', etiqueta: 'Mi operación' },
-  { id: 'pais', etiqueta: 'Mi país' },
-  { id: 'pedidos', etiqueta: 'Pedidos' },
+/** Las vistas del selector del comercio: dos escenas 3D (las enchufa otro módulo) y el tablero. Los ids no se traducen; la etiqueta sí. */
+const OPCIONES: ReadonlyArray<{ id: string; clave: string }> = [
+  { id: 'operacion', clave: 'enVivo.paginas.miOperacion' },
+  { id: 'pais', clave: 'enVivo.paginas.miPais' },
+  { id: 'pedidos', clave: 'enVivo.paginas.pedidos' },
 ];
 
 /** Vistas que no son escena 3D: llenan el recuadro como lista, sin paneles flotantes ni narración encima. */
@@ -101,7 +102,8 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
     private readonly ficha: EnVivoFichaService,
     private readonly orbe: EnVivoOrbeService,
     private readonly host: ElementRef<HTMLElement>,
-    private readonly propuestas: EnVivoPropuestasService
+    private readonly propuestas: EnVivoPropuestasService,
+    private readonly translate: TranslateService
   ) {
     this.empresa$ = ruta.queryParamMap.pipe(
       map((p) => p.get('empresa') ?? undefined),
@@ -155,7 +157,9 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Antes de que el shell inicie: así su encabezado ya trae el selector y la vista guardada vuelve sola.
-    this.interaccion.fijarOpciones(OPCIONES);
+    this.fijarOpciones();
+    // Con otro idioma, las etiquetas del selector se registran de nuevo.
+    this.subs.add(this.translate.onLangChange.subscribe(() => this.fijarOpciones()));
     // Opttia propone en la escena (D-422). Katuq mirando otro comercio (?empresa=) no pide propuestas;
     // el servicio tampoco las pide con solo lectura, para el vendedor D-349 ni con Opttia apagado.
     this.subs.add(this.empresa$.subscribe((empresa) => this.propuestas.fijarAjena(!!empresa)));
@@ -168,6 +172,11 @@ export class EnVivoComercioPaginaComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.unsubscribe();
     this.propuestas.detener();
+  }
+
+  private fijarOpciones(): void {
+    const opciones: OpcionVista[] = OPCIONES.map((o) => ({ id: o.id, etiqueta: this.translate.instant(o.clave) }));
+    this.interaccion.fijarOpciones(opciones);
   }
 
   /** "Pedidos" llena el recuadro como lista (sin escena 3D). */

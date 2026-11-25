@@ -1,3 +1,4 @@
+import { TranslateService } from '@ngx-translate/core';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -55,8 +56,7 @@ export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena
   /** true = "Tu bodega" (el comercio mira lo suyo); false = "Bodega" (Katuq mira a un comercio). */
   @Input() bodegaPropia = true;
 
-  readonly etiquetaAria =
-    'Mapa 3D de Colombia con los pedidos de hoy: una columna por ciudad, un pulso con cada pedido nuevo y un arco por cada envío. Las cifras y la lista dicen lo mismo en texto.';
+  readonly claveAria = 'enVivo.escenas.mapa.aria';
 
   private ultimaFoto: number | null = null;
   /** La propuesta de Opttia que muestra la tarjeta (la escena la esconde mientras se repite el día). */
@@ -69,9 +69,10 @@ export class EnVivoEscenaMapaComponent extends EnVivoEscenaBase<MapaEnVivoEscena
     estado: EnVivoEstadoService,
     interaccion: EnVivoInteraccionService,
     orbe: EnVivoOrbeService,
-    private readonly puente: EnVivoPropuestaEscenaPuente
+    private readonly puente: EnVivoPropuestaEscenaPuente,
+    translate: TranslateService
   ) {
-    super(zona, cdr, host, estado, interaccion, orbe);
+    super(zona, cdr, host, estado, interaccion, orbe, translate);
   }
 
   override ngOnDestroy(): void {

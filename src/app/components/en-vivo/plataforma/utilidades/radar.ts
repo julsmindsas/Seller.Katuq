@@ -7,6 +7,7 @@ import {
 } from '../../servicios/en-vivo.modelos';
 import { IconoId } from '../../utilidades/iconos';
 import { claseTono } from '../../utilidades/tonos';
+import { Traductor } from '../../utilidades/traductor';
 import { nombreVisible } from './nombres';
 
 /**
@@ -108,7 +109,8 @@ export function armarRadar(
   radar: RadarEnVivo | null | undefined,
   comercios: ReadonlyArray<ComercioEnVivo>,
   ocultar: boolean,
-  clavesPrevias: ReadonlySet<string> | null
+  clavesPrevias: ReadonlySet<string> | null,
+  t: Traductor
 ): VistaRadar {
   const crudas: ReadonlyArray<AlertaRadar> = radar?.alertas ?? [];
   const claves = new Set<string>();
@@ -123,7 +125,7 @@ export function armarRadar(
       return {
         clave,
         empresa: a.empresa ?? null,
-        nombre: nombreVisible(identidad, ocultar),
+        nombre: nombreVisible(identidad, ocultar, t),
         nombreReal: String(a.comercio ?? comercio?.nombre ?? '').trim() || (a.empresa ?? 'Comercio'),
         titulo: conMayusculaInicial(a.titulo),
         texto: a.texto,
@@ -140,7 +142,7 @@ export function armarRadar(
   return {
     alertas,
     porRevisar,
-    resumen: porRevisar > 0 ? `${porRevisar} por revisar` : 'Todo en orden',
+    resumen: porRevisar > 0 ? t('enVivo.plataforma.radarPorRevisar', { n: porRevisar }) : t('enVivo.plataforma.radarTodoEnOrden'),
     claves,
   };
 }

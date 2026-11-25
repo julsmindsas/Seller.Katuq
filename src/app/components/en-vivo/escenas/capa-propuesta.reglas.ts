@@ -1,3 +1,5 @@
+import type { Traductor } from '../utilidades/traductor';
+import { pedidosTexto } from './traduccion-escena';
 import type {
   ColorEscena,
   EfectoEscena,
@@ -157,14 +159,12 @@ export function nombreCorto(nombre: string | null | undefined): string {
   return limpio.split(/\s+/)[0] ?? '';
 }
 
-const cuantos = (n: number): string => `${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
-
 /** Lo que dice la etiqueta del montón: "Carlos · 4", "Coordinadora · 2" o "3 pedidos". */
-export function etiquetaDeGrupo(g: Pick<GrupoEnEscena, 'veh' | 'transportadora'>, n: number): string {
+export function etiquetaDeGrupo(g: Pick<GrupoEnEscena, 'veh' | 'transportadora'>, n: number, t: Traductor): string {
   const veh = String(g.veh ?? '').trim();
-  if (g.transportadora) return `${veh || 'Transportadora'} · ${n}`;
+  if (g.transportadora) return `${veh || t('enVivo.escenas.transportadora')} · ${n}`;
   const corto = nombreCorto(veh);
-  return corto ? `${corto} · ${n}` : cuantos(n);
+  return corto ? `${corto} · ${n}` : pedidosTexto(n, t);
 }
 
 /**
@@ -255,10 +255,10 @@ function sinRepetir(ids: ReadonlyArray<string>): string[] {
 
 // ── un armador por efecto (registro cerrado, sin if/else por tipo) ──────────
 
-type Armador = (p: PropuestaEnsayo, chaquetaDe: ChaquetaDe, anclas: AnclasEnsayo) => PlanEnsayo;
+type Armador = (p: PropuestaEnsayo, chaquetaDe: ChaquetaDe, anclas: AnclasEnsayo, t: Traductor) => PlanEnsayo;
 
 /** Despachos: un montón por grupo frente al PICK (o frente al camión si es de transportadora). */
-const armarMontones: Armador = (p, chaquetaDe, anclas) => {
+const armarMontones: Armador = (p, chaquetaDe, anclas, t) => {
   const fuente = gruposDe(p, RESPALDO_MONTONES[0]).slice(0, MAX_GRUPOS_ENSAYO);
   const reparto = repartir(fuente.map((g) => sinRepetir(g.pedidos).length), MAX_FANTASMAS);
   let enFila = 0;
@@ -285,7 +285,7 @@ const armarMontones: Armador = (p, chaquetaDe, anclas) => {
       fantasmas: reparto[k],
       veh: g.veh ? String(g.veh) : null,
       transportadora: !!g.transportadora,
-      etiqueta: etiquetaDeGrupo(g, pedidos.length),
+      etiqueta: etiquetaDeGrupo(g, pedidos.length, t),
       ruta: g.transportadora ? 'camion' : 'moto',
       pedidoCasa: g.transportadora ? null : pedidos[0] ?? null,
       alto: altoMonton(reparto[k]),
@@ -390,11 +390,11 @@ const ARMADORES: Readonly<Record<EfectoEscena, Armador>> = {
  * (con destino, escala, número y retraso) y qué pedidos quedan sin atenuar. null si el efecto no se
  * conoce o la propuesta no trae pedidos.
  */
-export function armarEnsayo(p: PropuestaEnsayo | null | undefined, chaquetaDe: ChaquetaDe, anclas: AnclasEnsayo): PlanEnsayo | null {
+export function armarEnsayo(p: PropuestaEnsayo | null | undefined, chaquetaDe: ChaquetaDe, anclas: AnclasEnsayo, t: Traductor): PlanEnsayo | null {
   if (!p) return null;
   const armar = ARMADORES[p.efecto];
   if (!armar) return null;
-  const plan = armar(p, chaquetaDe, anclas);
+  const plan = armar(p, chaquetaDe, anclas, t);
   return plan.grupos.length ? plan : null;
 }
 

@@ -27,6 +27,7 @@ import type { GrupoEditable, OpcionMensajero, PedidoEditable } from '../despacho
 import { contarListos } from '../despachos/plan-despachos.reglas';
 import { enmascarar } from '../opttia/opttia-reglas';
 import { claveDeNombre, dinero, duracion } from '../utilidades/formato';
+import type { Traductor } from '../utilidades/traductor';
 import type {
   ColorEscena,
   ContadorPropuestas,
@@ -44,6 +45,19 @@ import type {
   ResultadoPedidoProduccion,
   TipoPropuesta,
 } from './propuestas.modelos';
+
+/** Prefijo de las claves de i18n de esta carpeta. */
+const K = 'enVivo.propuestas.';
+
+/** "1 pedido" / "3 pedidos". */
+function pedidosTexto(n: number, t: Traductor): string {
+  return t(n === 1 ? `${K}pedidoUno` : `${K}pedidoVarios`, { n });
+}
+
+/** "1 quedó por fuera" / "3 quedaron por fuera". */
+function quedoFuera(n: number, t: Traductor): string {
+  return t(n === 1 ? `${K}quedoFueraUno` : `${K}quedoFueraVarios`, { n });
+}
 
 // ── Tiempos ─────────────────────────────────────────────────────────────────
 
@@ -125,11 +139,16 @@ export interface ItemCola {
 const PESO_PRIORIDAD: Readonly<Record<PrioridadPropuesta, number>> = { urgente: 0, importante: 1, 'cuando-puedas': 2 };
 const PESO_TIPO: Readonly<Record<TipoPropuesta, number>> = { despachos: 0, produccion: 1, cobro: 2 };
 
-export const ETIQUETA_PRIORIDAD: Readonly<Record<PrioridadPropuesta, string>> = {
-  urgente: 'Urgente',
-  importante: 'Importante',
-  'cuando-puedas': 'Cuando puedas',
+const CLAVE_PRIORIDAD: Readonly<Record<PrioridadPropuesta, string>> = {
+  urgente: `${K}prioridadUrgente`,
+  importante: `${K}prioridadImportante`,
+  'cuando-puedas': `${K}prioridadCuandoPuedas`,
 };
+
+/** La etiqueta de la prioridad en el idioma activo ("Urgente", "Importante", "Cuando puedas"). */
+export function etiquetaPrioridad(p: PrioridadPropuesta, t: Traductor): string {
+  return t(CLAVE_PRIORIDAD[p]);
+}
 
 const PRIORIDADES = new Set<string>(['urgente', 'importante', 'cuando-puedas']);
 const EFECTOS = new Set<string>(['montones', 'fila', 'moneda']);
@@ -144,7 +163,7 @@ function texto(v: unknown, max = 240): string {
  * Convierte una propuesta del servidor en un ítem de la cola. Desconfía de la forma: lo que no se
  * reconoce se descarta (null) y "sombra" nunca se puede aprobar, diga lo que diga `puedeAprobar`.
  */
-export function desdeServidor(p: PropuestaServidor | null | undefined): ItemCola | null {
+export function desdeServidor(p: PropuestaServidor | null | undefined, t: Traductor): ItemCola | null {
   if (!p || typeof p !== 'object' || typeof p.id !== 'string' || !p.id) return null;
   if (p.tipo !== 'despachos' && p.tipo !== 'produccion') return null;
   const modo: ModoPropuesta = p.modo === 'on' ? 'on' : 'sombra';
@@ -165,7 +184,7 @@ export function desdeServidor(p: PropuestaServidor | null | undefined): ItemCola
     prioridad,
     horaLimite: texto(p.horaLimite, 60) || null,
     limiteMin: limiteDe(grupo, p.horaLimite),
-    titulo: texto(p.titulo) || (p.tipo === 'despachos' ? `${pedidos.length} pedidos listos para salir` : `${pedidos.length} pedidos por arrancar`),
+    titulo: texto(p.titulo) || t(p.tipo === 'despachos' ? `${K}tituloDespachos` : `${K}tituloProduccion`, { n: pedidos.length }),
     razon: texto(p.razon, 400),
     consecuencias: Array.isArray(p.consecuencias) ? p.consecuencias.map((c) => texto(c, 120)).filter(Boolean).slice(0, 4) : [],
     pedidos,
@@ -231,7 +250,8 @@ const ETAPAS_SIN_COBRO = new Set(['entregado', 'rechazado', 'cancelado']);
  */
 export function senalesDeCobro(
   atencion: ReadonlyArray<AlertaRadar> | null | undefined,
-  pedidos: ReadonlyArray<PedidoEnVivo>
+  pedidos: ReadonlyArray<PedidoEnVivo>,
+  t: Traductor
 ): ItemCola[] {
   if (!Array.isArray(atencion)) return [];
   const porId = new Map(pedidos.map((p) => [p.id, p]));
@@ -243,7 +263,7 @@ export function senalesDeCobro(
     if (p && ((p.estadoPago && p.estadoPago !== 'Pendiente') || ETAPAS_SIN_COBRO.has(p.etapa) || p.cancelado)) continue;
     vistos.add(a.pedidoId);
     const numero = a.numero || p?.numero || null;
-    const tiempo = typeof a.minutos === 'number' && a.minutos > 0 ? ` lleva ${duracion(a.minutos * 60_000)}` : ' sigue';
+    const tiempo = typeof a.minutos === 'number' && a.minutos > 0 ? duracion(a.minutos * 60_000) : null;
     out.push({
       id: idCobro(a.pedidoId),
       clave: idCobro(a.pedidoId),
@@ -252,9 +272,9 @@ export function senalesDeCobro(
       prioridad: 'importante',
       horaLimite: null,
       limiteMin: null,
-      titulo: `${numero ? `El #${numero}` : 'Un pedido'}${tiempo} sin pago`,
-      razon: texto(a.sugerencia) || 'Ábrelo para revisar el pago antes de despacharlo.',
-      consecuencias: ['No cambia el pedido'],
+      titulo: tituloCobro(numero, tiempo, t),
+      razon: texto(a.sugerencia) || t(`${K}cobroRazon`),
+      consecuencias: [t(`${K}cobroConsecuencia`)],
       pedidos: [{ id: a.pedidoId, nroPedido: numero ?? '' }],
       porCobrar: 0,
       monto: p && p.monto > 0 ? p.monto : null,
@@ -264,6 +284,12 @@ export function senalesDeCobro(
     });
   }
   return out;
+}
+
+/** "El #1045 lleva 2 h sin pago" · "El #1045 sigue sin pago" · "Un pedido lleva 2 h sin pago" · "Un pedido sigue sin pago". */
+function tituloCobro(numero: string | null, tiempo: string | null, t: Traductor): string {
+  if (numero) return tiempo ? t(`${K}cobroTituloLleva`, { numero, tiempo }) : t(`${K}cobroTituloSigue`, { numero });
+  return tiempo ? t(`${K}cobroTituloPedidoLleva`, { tiempo }) : t(`${K}cobroTituloPedidoSigue`);
 }
 
 /** Orden de la cola: prioridad, hora límite (sin hora al final), más pedidos primero, tipo y huella. */
@@ -306,9 +332,14 @@ export function armarCola(
  * Lo que dice el botón con propuestas (el del orbe o, sin orbe, el de la tarjeta):
  * "Opttia tiene 3 ideas · 1 urgente".
  */
-export function textoIdeas(c: { ideas: number; urgentes: number }): string {
-  const ideas = `Opttia tiene ${c.ideas} ${c.ideas === 1 ? 'idea' : 'ideas'}`;
-  return c.urgentes > 0 ? `${ideas} · ${c.urgentes} ${c.urgentes === 1 ? 'urgente' : 'urgentes'}` : ideas;
+export function textoIdeas(c: { ideas: number; urgentes: number }, t: Traductor): string {
+  const ideas = t(c.ideas === 1 ? `${K}ideasUna` : `${K}ideasVarias`, { n: c.ideas });
+  return c.urgentes > 0 ? `${ideas} · ${textoUrgentes(c.urgentes, t)}` : ideas;
+}
+
+/** "1 urgente" / "3 urgentes". */
+function textoUrgentes(n: number, t: Traductor): string {
+  return t(n === 1 ? `${K}urgenteUna` : `${K}urgentesVarias`, { n });
 }
 
 /** El contador del botón del orbe. La sombra no cuenta como idea: no se puede aprobar. */
@@ -327,11 +358,11 @@ export function contar(items: ReadonlyArray<ItemCola>): ContadorPropuestas {
  * Saludo de la narración al llegar (plantilla con los conteos de la cola; sin llamar al modelo):
  * "Buenos días: 3 para hoy, 1 urgente". null si no hay ideas.
  */
-export function saludo(c: ContadorPropuestas, horaColombia: number): string | null {
+export function saludo(c: ContadorPropuestas, horaColombia: number, t: Traductor): string | null {
   if (!c || c.ideas <= 0) return null;
-  const parte = horaColombia < 12 ? 'Buenos días' : horaColombia < 19 ? 'Buenas tardes' : 'Buenas noches';
-  const urgentes = c.urgentes > 0 ? `, ${c.urgentes} ${c.urgentes === 1 ? 'urgente' : 'urgentes'}` : '';
-  return `${parte}: ${c.ideas} para hoy${urgentes}.`;
+  const parte = t(horaColombia < 12 ? `${K}saludoManana` : horaColombia < 19 ? `${K}saludoTarde` : `${K}saludoNoche`);
+  if (c.urgentes > 0) return t(`${K}saludoHoyUrgentes`, { parte, n: c.ideas, urgentes: textoUrgentes(c.urgentes, t) });
+  return t(`${K}saludoHoy`, { parte, n: c.ideas });
 }
 
 /** Un evento que dice que el pedido ya salió (aprobado en otro lado, p. ej. desde el celular mientras la TV mira). */
@@ -524,7 +555,7 @@ export function nombreCorto(nombre: string | null | undefined): string {
 }
 
 /** Lo único que la escena necesita de la propuesta que está en la tarjeta. */
-export function paraEscena(it: ItemCola, colores: ReadonlyMap<string, ColorEscena> = new Map()): PropuestaEnEscena {
+export function paraEscena(it: ItemCola, colores: ReadonlyMap<string, ColorEscena>, t: Traductor): PropuestaEnEscena {
   const e = it.servidor?.escena;
   const pedidos = it.pedidos.map((p) => p.id);
   const transportadora = esTransportadora(it);
@@ -549,17 +580,20 @@ export function paraEscena(it: ItemCola, colores: ReadonlyMap<string, ColorEscen
     pedidos,
     grupos,
     estacion,
-    etiqueta: etiquetaEscena(it, veh, transportadora),
+    etiqueta: etiquetaEscena(it, veh, transportadora, t),
   };
 }
 
 /** "Carlos · 4", "Coordinadora · 2", "Escoge mensajero · 3", "5 por arrancar", "#1045 · sin pago". */
-function etiquetaEscena(it: ItemCola, veh: string | null, transportadora: boolean): string {
+function etiquetaEscena(it: ItemCola, veh: string | null, transportadora: boolean, t: Traductor): string {
   const n = it.pedidos.length;
-  if (it.tipo === 'cobro') return `${it.pedidos[0]?.nroPedido ? `#${it.pedidos[0].nroPedido}` : 'Pedido'} · sin pago`;
-  if (it.tipo === 'produccion') return `${n} por arrancar`;
-  if (transportadora) return `${veh || 'Transportadora'} · ${n}`;
-  return `${veh ? nombreCorto(veh) : 'Escoge mensajero'} · ${n}`;
+  if (it.tipo === 'cobro') {
+    const nro = it.pedidos[0]?.nroPedido;
+    return nro ? t(`${K}escenaCobroNro`, { nro }) : t(`${K}escenaCobroSinNro`);
+  }
+  if (it.tipo === 'produccion') return t(`${K}escenaProduccion`, { n });
+  if (transportadora) return `${veh || t(`${K}transportadora`)} · ${n}`;
+  return `${veh ? nombreCorto(veh) : t(`${K}escogeMensajero`)} · ${n}`;
 }
 
 // ── Cuándo pedir ────────────────────────────────────────────────────────────
@@ -600,10 +634,10 @@ export function puedePedir(c: CondicionPedir): boolean {
 // ── Textos de la tarjeta ────────────────────────────────────────────────────
 
 /** "Opttia propone · 1 de 3 · Urgente" (la tarjeta lo pone en MAYÚSCULA con estilos). */
-export function eyebrow(it: ItemCola, indice: number, total: number): string {
-  const partes = ['Opttia propone'];
-  if (indice >= 0 && total > 0) partes.push(`${indice + 1} de ${total}`);
-  partes.push(ETIQUETA_PRIORIDAD[it.prioridad]);
+export function eyebrow(it: ItemCola, indice: number, total: number, t: Traductor): string {
+  const partes = [t(`${K}opttiaPropone`)];
+  if (indice >= 0 && total > 0) partes.push(t(`${K}eyebrowIndice`, { i: indice + 1, total }));
+  partes.push(etiquetaPrioridad(it.prioridad, t));
   return partes.join(' · ');
 }
 
@@ -622,14 +656,14 @@ export function razonVisible(it: ItemCola, ocultar: boolean): string {
  * "ocultar"). En producción encendida, "avisa a tu equipo, no al cliente" va en su propio aviso
  * (`avisoEquipo`), no repetido como chip.
  */
-export function chipsDe(it: ItemCola, ocultar: boolean): Array<{ texto: string; efecto: boolean }> {
-  const consecuencias = avisoEquipo(it) ? it.consecuencias.filter((c) => !/no al cliente/i.test(c)) : it.consecuencias;
+export function chipsDe(it: ItemCola, ocultar: boolean, t: Traductor): Array<{ texto: string; efecto: boolean }> {
+  const consecuencias = avisoEquipo(it, t) ? it.consecuencias.filter((c) => !/no al cliente/i.test(c)) : it.consecuencias;
   const out = consecuencias.map((c) => ({ texto: ocultar ? sinMontos(c) : c, efecto: true }));
   if (it.tipo !== 'cobro') {
     const n = it.pedidos.length;
-    out.push({ texto: `${n} ${n === 1 ? 'pedido' : 'pedidos'}`, efecto: false });
+    out.push({ texto: pedidosTexto(n, t), efecto: false });
   }
-  if (it.porCobrar > 0 && !ocultar) out.push({ texto: `${dinero(it.porCobrar)} por cobrar`, efecto: false });
+  if (it.porCobrar > 0 && !ocultar) out.push({ texto: t(`${K}porCobrar`, { monto: dinero(it.porCobrar) }), efecto: false });
   return out;
 }
 
@@ -647,19 +681,18 @@ function enMinuscula(t: string): string {
  * Texto del botón en el segundo paso: dice el efecto real.
  * "Confirmar: salen 4 con Carlos · le avisa a Carlos en su app" · "Confirmar: 2 pedidos a Cereza".
  */
-export function textoConfirmar(it: ItemCola, g: GrupoEditable | null, nombre: string | null, ocultar = false): string {
-  if (it.tipo === 'produccion') return confirmacionProduccion(it);
+export function textoConfirmar(it: ItemCola, g: GrupoEditable | null, nombre: string | null, ocultar: boolean, t: Traductor): string {
+  if (it.tipo === 'produccion') return confirmacionProduccion(it, t);
   const n = g ? g.pedidos.length : it.pedidos.length;
-  const pedidos = `${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
   let base: string;
-  if (g && g.tipo === 'transportadora') base = `Confirmar: ${pedidos} a ${nombre || 'la transportadora'}`;
-  else base = `Confirmar: ${n === 1 ? 'sale 1' : `salen ${n}`} con ${nombre ? nombreCorto(nombre) : 'el mensajero'}`;
+  if (g && g.tipo === 'transportadora') base = t(`${K}confirmarTransportadora`, { pedidos: pedidosTexto(n, t), nombre: nombre || t(`${K}laTransportadora`) });
+  else base = t(n === 1 ? `${K}confirmarSaleUno` : `${K}confirmarSalenVarios`, { n, nombre: nombre ? nombreCorto(nombre) : t(`${K}elMensajero`) });
   const efecto = it.consecuencias[0];
   return efecto ? `${base} · ${enMinuscula(ocultar ? sinMontos(efecto) : efecto)}` : base;
 }
 
-export function textoConfirmarTodos(grupos: number, pedidos: number): string {
-  return `Confirmar: salen ${pedidos} ${pedidos === 1 ? 'pedido' : 'pedidos'} en ${grupos} grupos`;
+export function textoConfirmarTodos(grupos: number, pedidos: number, t: Traductor): string {
+  return t(`${K}confirmarTodos`, { pedidos: pedidosTexto(pedidos, t), grupos });
 }
 
 export type TonoResultado = 't-ok' | 't-warn' | 't-bad';
@@ -689,31 +722,32 @@ export function esperaParaPasar(r: ResultadoGrupo): number | null {
  * en la orden 412.", "Listo: enviados a Cereza: 2 órdenes de envío (51, 52).", parcial, ya
  * aprobado, en curso o la razón del servidor.
  */
-export function textoResultado(r: ResultadoGrupo, ctx: { tipo: TipoGrupo; nombre: string | null; pedidos: number }): string {
-  if (ctx.tipo === 'transportadora') return textoResultadoTransportadora(r, ctx.nombre);
-  const orden = r.nroShippingOrder ? ` en la orden ${r.nroShippingOrder}` : '';
-  const con = ctx.nombre ? ` con ${nombreCorto(ctx.nombre)}` : '';
+export function textoResultado(r: ResultadoGrupo, ctx: { tipo: TipoGrupo; nombre: string | null; pedidos: number }, t: Traductor): string {
+  if (ctx.tipo === 'transportadora') return textoResultadoTransportadora(r, ctx.nombre, t);
+  const orden = r.nroShippingOrder ? t(`${K}enLaOrden`, { orden: r.nroShippingOrder }) : '';
+  const con = ctx.nombre ? t(`${K}conMensajero`, { nombre: nombreCorto(ctx.nombre) }) : '';
   const salieron = r.despachados?.length ?? ctx.pedidos;
+  const unir = (...partes: string[]): string => partes.filter(Boolean).join(' ');
   switch (r.estado) {
     case 'despachado':
-      return `Listo: ${salieron === 1 ? 'salió 1' : `salieron ${salieron}`}${con}${orden}.`;
+      return `${unir(t(salieron === 1 ? `${K}listoSalioUno` : `${K}listoSalieronVarios`, { n: salieron }), con, orden)}.`;
     case 'despachado-parcial': {
       const fuera = r.fuera?.length ?? 0;
-      return `${salieron === 1 ? 'Salió 1' : `Salieron ${salieron}`}${con}${orden}; ${fuera} ${fuera === 1 ? 'quedó' : 'quedaron'} por fuera.`;
+      return `${unir(t(salieron === 1 ? `${K}salioUno` : `${K}salieronVarios`, { n: salieron }), con, orden)}; ${quedoFuera(fuera, t)}.`;
     }
     case 'reanudado':
-      return `Listo: se terminaron de despachar${orden}.`;
+      return `${unir(t(`${K}listoTerminaronDespachar`), orden)}.`;
     case 'ya-aprobado':
-      return r.razon || 'Ya estaba aprobado.';
+      return r.razon || t(`${K}yaEstabaAprobado`);
     case 'en-curso':
-      return r.razon || 'Sigue en curso.';
+      return r.razon || t(`${K}sigueEnCurso`);
     default:
-      return r.razon || 'No se pudo despachar.';
+      return r.razon || t(`${K}noSePudoDespachar`);
   }
 }
 
-function textoResultadoTransportadora(r: ResultadoGrupo, nombreElegida: string | null): string {
-  const nombre = r.transportadora || nombreElegida || 'la transportadora';
+function textoResultadoTransportadora(r: ResultadoGrupo, nombreElegida: string | null, t: Traductor): string {
+  const nombre = r.transportadora || nombreElegida || t(`${K}laTransportadora`);
   const ordenes = r.nroShippingOrders?.length ? r.nroShippingOrders : r.nroShippingOrder ? [r.nroShippingOrder] : [];
   const salieron = r.despachados?.length ?? ordenes.length;
   const fuera = r.fuera?.length ?? 0;
@@ -721,20 +755,20 @@ function textoResultadoTransportadora(r: ResultadoGrupo, nombreElegida: string |
     case 'despachado': {
       const n = ordenes.length || salieron;
       const detalle = ordenes.length ? ` (${ordenes.join(', ')})` : '';
-      return `Listo: ${n === 1 ? 'enviado' : 'enviados'} a ${nombre}, ${n} ${n === 1 ? 'orden de envío' : 'órdenes de envío'}${detalle}.`;
+      return t(n === 1 ? `${K}transpListoUno` : `${K}transpListoVarios`, { n, nombre, detalle });
     }
     case 'despachado-parcial': {
-      const detalle = ordenes.length ? ` (${ordenes.length === 1 ? 'orden' : 'órdenes'} ${ordenes.join(', ')})` : '';
-      return `${salieron === 1 ? 'Salió 1' : `Salieron ${salieron}`} a ${nombre}${detalle}; ${fuera} ${fuera === 1 ? 'quedó' : 'quedaron'} por fuera.`;
+      const detalle = ordenes.length ? ` ${t(ordenes.length === 1 ? `${K}detalleOrdenUna` : `${K}detalleOrdenVarias`, { lista: ordenes.join(', ') })}` : '';
+      return t(salieron === 1 ? `${K}transpParcialUno` : `${K}transpParcialVarios`, { n: salieron, nombre, detalle, fuera: quedoFuera(fuera, t) });
     }
     case 'reanudado':
-      return `Listo: se terminaron de enviar a ${nombre}.`;
+      return t(`${K}transpReanudado`, { nombre });
     case 'ya-aprobado':
-      return r.razon || 'Ya estaba aprobado.';
+      return r.razon || t(`${K}yaEstabaAprobado`);
     case 'en-curso':
-      return r.razon || 'Sigue en curso.';
+      return r.razon || t(`${K}sigueEnCurso`);
     default:
-      return r.razon || 'No se pudo enviar.';
+      return r.razon || t(`${K}noSePudoEnviar`);
   }
 }
 
@@ -846,12 +880,12 @@ export function mensajeDe(e: unknown, defecto: string): string {
   return m && m.length < 200 ? m : defecto;
 }
 
-export const SIN_RESPUESTA =
-  'Katuq no respondió a tiempo y no sé si alcanzó a enviar. Espera a que se actualice antes de volver a aprobar.';
+/** Clave de i18n (no el texto): quien la usa la traduce al guardarla. */
+export const SIN_RESPUESTA = 'enVivo.propuestas.sinRespuesta';
 
 /** Tras "sin respuesta", lo leído después todavía trae el grupo sin despachar: se puede reintentar. */
-export const NO_SALIO_TODAVIA =
-  'Ya se actualizó y todavía no aparece despachado. Puedes aprobarlo otra vez: si alcanzó a salir, Katuq no lo repite.';
+/** Clave de i18n (no el texto). */
+export const NO_SALIO_TODAVIA = 'enVivo.propuestas.noSalioTodavia';
 
 // ── Lo que la persona ajustó ────────────────────────────────────────────────
 
@@ -862,18 +896,14 @@ function firmaCorta(t: string): string {
   return (h >>> 0).toString(36);
 }
 
-function cuantos(n: number, uno: string, varios: string): string {
-  return `${n} ${n === 1 ? uno : varios}`;
-}
-
 /** Las mismas plantillas del servidor (services/opttiaPropuestas/fuentes/despachos.js). */
-function avisoClientes(n: number): string {
-  return `Avisa a ${n === 1 ? 'su cliente' : 'los clientes'}, como en Despachos`;
+function avisoClientes(n: number, t: Traductor): string {
+  return t(n === 1 ? `${K}avisoClienteUno` : `${K}avisoClientesVarios`);
 }
 
-function tarifaEnTexto(t: TarifaPlan | null | undefined): string {
-  if (t && t.tipo === 'fija' && typeof t.valor === 'number' && Number.isFinite(t.valor)) return `${dinero(t.valor)} por pedido`;
-  return (t && texto(t.texto, 120)) || 'Sin tarifa';
+function tarifaEnTexto(tarifa: TarifaPlan | null | undefined, t: Traductor): string {
+  if (tarifa && tarifa.tipo === 'fija' && typeof tarifa.valor === 'number' && Number.isFinite(tarifa.valor)) return t(`${K}tarifaPorPedido`, { monto: dinero(tarifa.valor) });
+  return (tarifa && texto(tarifa.texto, 120)) || t(`${K}sinTarifa`);
 }
 
 /**
@@ -882,7 +912,7 @@ function tarifaEnTexto(t: TarifaPlan | null | undefined): string {
  * salen del grupo ajustado, con las MISMAS plantillas del servidor: la tarjeta y la escena muestran
  * lo que de verdad se va a aprobar. Sin ajustes devuelve el mismo ítem (no se copia).
  */
-export function ajustada(it: ItemCola, g: GrupoEditable | null | undefined, opciones: ReadonlyArray<OpcionMensajero>): ItemCola {
+export function ajustada(it: ItemCola, g: GrupoEditable | null | undefined, opciones: ReadonlyArray<OpcionMensajero>, tr: Traductor): ItemCola {
   const grupo = it.servidor?.grupo;
   if (it.tipo !== 'despachos' || !g || !grupo) return it;
   const esTransp = g.tipo === 'transportadora';
@@ -899,20 +929,26 @@ export function ajustada(it: ItemCola, g: GrupoEditable | null | undefined, opci
   let consecuencias: string[];
   let veh: string | null;
   if (esTransp) {
-    const t = g.transportadoras.find((x) => x.proveedor === g.proveedor) ?? null;
-    const nombre = (t && texto(t.nombre, 60)) || 'la transportadora';
-    titulo = `${cuantos(n, 'pedido', 'pedidos')} por ${nombre}`;
-    razon = mismoQuien ? it.razon : texto(t?.nota, 400) || tarifaEnTexto(t?.tarifa);
-    consecuencias = [`Crea ${cuantos(n, 'orden', 'órdenes')} en ${nombre}`];
-    veh = (t && texto(t.nombre, 60)) || null;
+    const tp = g.transportadoras.find((x) => x.proveedor === g.proveedor) ?? null;
+    const nombre = (tp && texto(tp.nombre, 60)) || tr(`${K}laTransportadora`);
+    titulo = tr(`${K}ajTituloTransportadora`, { pedidos: pedidosTexto(n, tr), nombre });
+    razon = mismoQuien ? it.razon : texto(tp?.nota, 400) || tarifaEnTexto(tp?.tarifa, tr);
+    consecuencias = [tr(n === 1 ? `${K}ajCreaOrdenUna` : `${K}ajCreaOrdenVarias`, { n, nombre })];
+    veh = (tp && texto(tp.nombre, 60)) || null;
   } else {
     const o = opciones.find((x) => x.id === g.mensajeroId) ?? null;
     const pila = o ? nombreCorto(o.nombre) : '';
     titulo = pila
-      ? `${pila} lleva ${cuantos(n, 'pedido', 'pedidos')} a ${g.zona}${it.horaLimite ? ` (${it.horaLimite})` : ''}`
-      : `${cuantos(n, 'pedido', 'pedidos')} a ${g.zona}: escoge mensajero`;
-    razon = mismoQuien || !o ? it.razon : texto(o.razon, 400) || 'Lo escogiste en Ajustar';
-    consecuencias = ['Pasan a Despachado', pila ? `Le avisa a ${pila} en su app` : 'Le avisa al mensajero en su app', avisoClientes(n)];
+      ? it.horaLimite
+        ? tr(`${K}ajTituloLlevaHora`, { pila, pedidos: pedidosTexto(n, tr), zona: g.zona, hora: it.horaLimite })
+        : tr(`${K}ajTituloLleva`, { pila, pedidos: pedidosTexto(n, tr), zona: g.zona })
+      : tr(`${K}ajTituloEscoge`, { pedidos: pedidosTexto(n, tr), zona: g.zona });
+    razon = mismoQuien || !o ? it.razon : texto(o.razon, 400) || tr(`${K}ajRazonEscogiste`);
+    consecuencias = [
+      tr(`${K}ajPasanADespachado`),
+      pila ? tr(`${K}ajAvisaAMensajero`, { pila }) : tr(`${K}ajAvisaAlMensajero`),
+      avisoClientes(n, tr),
+    ];
     veh = o ? nombreCanonico(o.nombre) || null : null;
   }
   return {
@@ -930,10 +966,10 @@ export function ajustada(it: ItemCola, g: GrupoEditable | null | undefined, opci
  * Qué le falta al grupo para poder aprobarlo (aparte del permiso del rol): pedidos y con quién
  * salen. null si nada. Lo dice la tarjeta junto al botón Aprobar, que queda deshabilitado.
  */
-export function faltaParaAprobar(g: GrupoEditable | null | undefined): string | null {
+export function faltaParaAprobar(g: GrupoEditable | null | undefined, t: Traductor): string | null {
   if (!g) return null;
-  if (!g.pedidos.length) return 'El grupo quedó sin pedidos: devuelve alguno en Ajustar o pasa a la siguiente.';
-  if (!conQuien(g)) return g.tipo === 'transportadora' ? 'Escoge la transportadora en Ajustar.' : 'Escoge el mensajero en Ajustar.';
+  if (!g.pedidos.length) return t(`${K}faltaSinPedidos`);
+  if (!conQuien(g)) return t(g.tipo === 'transportadora' ? `${K}faltaTransportadora` : `${K}faltaMensajero`);
   return null;
 }
 
@@ -953,6 +989,7 @@ export function conservarAjustes(e: {
   sacados: ReadonlyArray<PedidoEditable>;
   opciones: ReadonlyMap<string, ReadonlyArray<OpcionMensajero>>;
   seguir?: { de: string; a: string } | null;
+  t: Traductor;
 }): { editables: Map<string, GrupoEditable>; sacados: PedidoEditable[]; seguido: boolean } {
   // Cada pedido del plan nuevo, con su huella nueva.
   const enPlan = new Map<string, PedidoEditable>();
@@ -987,8 +1024,8 @@ export function conservarAjustes(e: {
   if (s && previo && destino && !conservados.has(s.a) && previo.tipo === destino.tipo) {
     seguido = true;
     if (destino.tipo === 'transportadora') {
-      const t = destino.transportadoras.find((x) => x.proveedor === previo.proveedor);
-      if (t && t.proveedor !== destino.proveedor) editables.set(s.a, { ...destino, proveedor: t.proveedor, zona: `Por ${t.nombre}` });
+      const elegida = destino.transportadoras.find((x) => x.proveedor === previo.proveedor);
+      if (elegida && elegida.proveedor !== destino.proveedor) editables.set(s.a, { ...destino, proveedor: elegida.proveedor, zona: e.t(`${K}porTransportadora`, { nombre: elegida.nombre }) });
     } else if (previo.mensajeroId && (e.opciones.get(s.a) ?? []).some((o) => o.id === previo.mensajeroId)) {
       editables.set(s.a, { ...destino, mensajeroId: previo.mensajeroId });
     }
@@ -1040,9 +1077,10 @@ export function incluyeCambio(l: LecturaFuente | null | undefined, cambioMs: num
 /** Una aprobación lleva a lo sumo 50 pedidos (los demás salen en la siguiente propuesta). */
 export const MAX_ITEMS_PRODUCCION = 50;
 
-export const ETIQUETA_PRODUCCION = 'Pasar a En producción';
-export const APLICANDO_PRODUCCION = 'Pasando a En producción…';
-export const AVISO_EQUIPO = 'Avisa a tu equipo, no al cliente';
+/** Claves de i18n (no los textos). */
+export const ETIQUETA_PRODUCCION = 'enVivo.propuestas.etiquetaProduccion';
+export const APLICANDO_PRODUCCION = 'enVivo.propuestas.aplicandoProduccion';
+export const AVISO_EQUIPO = 'enVivo.propuestas.avisoEquipo';
 
 /** Los pedidos con huella tal como llegaron, sin repetir y a lo sumo 50. Lo que no se reconoce se descarta. */
 function limpiarItems(crudo: unknown): ItemAprobable[] {
@@ -1070,27 +1108,27 @@ export function produccionAprobable(it: ItemCola | null | undefined): boolean {
 }
 
 /** El texto del botón en el primer toque: el del servidor en producción ("Pasar a En producción"); "Aprobar" en lo demás. */
-export function etiquetaAprobar(it: ItemCola | null | undefined): string {
-  if (!it || it.tipo !== 'produccion') return 'Aprobar';
-  return texto(it.servidor?.aprobar?.etiqueta, 60) || ETIQUETA_PRODUCCION;
+export function etiquetaAprobar(it: ItemCola | null | undefined, t: Traductor): string {
+  if (!it || it.tipo !== 'produccion') return t(`${K}aprobar`);
+  return texto(it.servidor?.aprobar?.etiqueta, 60) || t(ETIQUETA_PRODUCCION);
 }
 
 /** El texto del botón mientras se aprueba. */
-export function textoAplicando(it: ItemCola | null | undefined): string {
-  return it && it.tipo === 'produccion' ? APLICANDO_PRODUCCION : 'Despachando…';
+export function textoAplicando(it: ItemCola | null | undefined, t: Traductor): string {
+  return it && it.tipo === 'produccion' ? t(APLICANDO_PRODUCCION) : t(`${K}despachando`);
 }
 
 /** Segundo toque de producción: lo dice el servidor ("Confirmar: 3 pedidos pasan a En producción"). */
-export function confirmacionProduccion(it: ItemCola): string {
+export function confirmacionProduccion(it: ItemCola, t: Traductor): string {
   const delServidor = texto(it.servidor?.aprobar?.confirmacion, 120);
   if (delServidor) return delServidor;
   const n = itemsDeProduccion(it).length || it.pedidos.length;
-  return `Confirmar: ${n === 1 ? '1 pedido pasa' : `${n} pedidos pasan`} a En producción`;
+  return t(n === 1 ? `${K}confirmarProduccionUno` : `${K}confirmarProduccionVarios`, { n });
 }
 
 /** Producción encendida: el aviso "Avisa a tu equipo, no al cliente". null en lo demás (y en sombra). */
-export function avisoEquipo(it: ItemCola | null | undefined): string | null {
-  return it && it.tipo === 'produccion' && it.modo === 'on' ? AVISO_EQUIPO : null;
+export function avisoEquipo(it: ItemCola | null | undefined, t: Traductor): string | null {
+  return it && it.tipo === 'produccion' && it.modo === 'on' ? t(AVISO_EQUIPO) : null;
 }
 
 /**
@@ -1117,28 +1155,34 @@ export interface ResultadoProduccion {
 
 const ESTADOS_PEDIDO_PRODUCCION = new Set<string>(['en-produccion', 'ya-cambio', 'en-curso', 'fuera']);
 
-export const NO_PASO_PRODUCCION = 'No se pudo pasar a En producción. Inténtalo de nuevo.';
-export const SIN_RESPUESTA_PRODUCCION =
-  'Katuq no respondió a tiempo. Espera a que se actualice antes de volver a intentarlo: un pedido no cambia dos veces.';
+/** Claves de i18n (no los textos). */
+export const NO_PASO_PRODUCCION = 'enVivo.propuestas.noPasoProduccion';
+export const SIN_RESPUESTA_PRODUCCION = 'enVivo.propuestas.sinRespuestaProduccion';
 
 /** Termina en punto si no trae puntuación propia. */
 function conPunto(t: string): string {
   return /[.!?…]$/.test(t) ? t : `${t}.`;
 }
 
-function pasaronTexto(n: number): string {
-  return n === 1 ? '1 pasó' : `${n} pasaron`;
+function pasaronTexto(n: number, t: Traductor): string {
+  return t(n === 1 ? `${K}pasoUnoProduccion` : `${K}pasaronVariosProduccion`, { n });
 }
 
 /** La línea de un pedido que no pasó: fuera dice "Dejé fuera…"; lo demás, la razón del servidor. */
-function lineaProduccion(r: ResultadoPedidoProduccion, nro: string): string {
+export function lineaProduccion(r: ResultadoPedidoProduccion, nro: string, t: Traductor): string {
   const razon = texto(r.razon, 200);
-  if (r.estado === 'fuera') return `Dejé fuera ${nro ? `el #${nro}` : 'un pedido'}: ${razon || 'no se pudo pasar'}`;
-  return `${nro ? `El #${nro}` : 'Un pedido'}: ${razon || defectoProduccion(r.estado)}`;
+  if (r.estado === 'fuera') return lineaFuera(nro, razon || t(`${K}noSePudoPasar`), t);
+  const motivo = razon || defectoProduccion(r.estado, t);
+  return nro ? t(`${K}lineaNro`, { nro, razon: motivo }) : t(`${K}lineaSinNro`, { razon: motivo });
 }
 
-function defectoProduccion(estado: EstadoPedidoProduccion): string {
-  return estado === 'en-curso' ? 'Lo está aprobando otra persona' : 'Ya había cambiado';
+/** "Dejé fuera el #1043: fue cancelado" (también para los pedidos que el plan de despachos dejó fuera). */
+export function lineaFuera(nro: string, razon: string, t: Traductor): string {
+  return nro ? t(`${K}lineaFueraNro`, { nro, razon }) : t(`${K}lineaFueraSinNro`, { razon });
+}
+
+function defectoProduccion(estado: EstadoPedidoProduccion, t: Traductor): string {
+  return t(estado === 'en-curso' ? `${K}loEstaAprobandoOtra` : `${K}yaHabiaCambiado`);
 }
 
 function errorProduccion(textoError: string): ResultadoProduccion {
@@ -1152,27 +1196,28 @@ function errorProduccion(textoError: string): ResultadoProduccion {
  */
 export function resultadoProduccion(
   r: RespuestaProduccion | null | undefined,
-  nros: ReadonlyMap<string, string> = new Map()
+  nros: ReadonlyMap<string, string>,
+  t: Traductor
 ): ResultadoProduccion {
-  if (!r || typeof r !== 'object') return errorProduccion('Katuq no devolvió el resultado. Actualiza la propuesta antes de volver a intentarlo.');
-  if (r.success !== true) return errorProduccion(conPunto(texto(r.message, 200) || NO_PASO_PRODUCCION));
+  if (!r || typeof r !== 'object') return errorProduccion(t(`${K}sinResultadoProduccion`));
+  if (r.success !== true) return errorProduccion(conPunto(texto(r.message, 200) || t(NO_PASO_PRODUCCION)));
   const lista = (Array.isArray(r.resultados) ? r.resultados : []).filter(
     (x): x is ResultadoPedidoProduccion => !!x && typeof x.id === 'string' && !!x.id && ESTADOS_PEDIDO_PRODUCCION.has(x.estado)
   );
-  if (!lista.length) return errorProduccion('Katuq no devolvió el resultado de estos pedidos. Actualiza la propuesta antes de volver a intentarlo.');
+  if (!lista.length) return errorProduccion(t(`${K}sinResultadoPedidos`));
   const nro = (x: ResultadoPedidoProduccion): string => texto(x.nroPedido, 40) || nros.get(x.id) || '';
   const pasaron = lista.filter((x) => x.estado === 'en-produccion');
   const otros = lista.filter((x) => x.estado !== 'en-produccion');
   const ids = pasaron.map((x) => x.id);
   if (!otros.length) {
-    return { estado: 'listo', texto: `Listo: ${pasaronTexto(pasaron.length)} a En producción.`, tono: 't-ok', fuera: [], final: true, pasaron: ids };
+    return { estado: 'listo', texto: t(`${K}listoProduccion`, { pasaron: pasaronTexto(pasaron.length, t) }), tono: 't-ok', fuera: [], final: true, pasaron: ids };
   }
-  const lineas = otros.map((x) => ({ id: x.id, texto: conPunto(lineaProduccion(x, nro(x))) }));
+  const lineas = otros.map((x) => ({ id: x.id, texto: conPunto(lineaProduccion(x, nro(x), t)) }));
   if (pasaron.length) {
     const m = otros.length;
     return {
       estado: 'parcial',
-      texto: `${pasaronTexto(pasaron.length)} a En producción; ${m} ${m === 1 ? 'quedó' : 'quedaron'} por fuera.`,
+      texto: t(`${K}parcialProduccion`, { pasaron: pasaronTexto(pasaron.length, t), fuera: quedoFuera(m, t) }),
       tono: 't-warn',
       fuera: lineas,
       final: true,
@@ -1192,18 +1237,18 @@ export function resultadoProduccion(
     const principal =
       unico === 'fuera'
         ? otros.length === 1
-          ? lineaProduccion(primero, nro(primero))
-          : `Ninguno pasó a En producción: ${razon || 'quedaron fuera'}`
-        : razon || defectoProduccion(unico);
+          ? lineaProduccion(primero, nro(primero), t)
+          : t(`${K}ningunoPasoRazon`, { razon: razon || t(`${K}quedaronFuera`) })
+        : razon || defectoProduccion(unico, t);
     return { estado, texto: conPunto(principal), tono, fuera: [], final: true, pasaron: [] };
   }
-  return { estado, texto: 'Ninguno pasó a En producción.', tono, fuera: lineas, final: true, pasaron: [] };
+  return { estado, texto: t(`${K}ningunoPaso`), tono, fuera: lineas, final: true, pasaron: [] };
 }
 
 /** Un error HTTP al aprobar producción (400 PROPUESTA_INVALIDA, 423, red caída o se acabó el tiempo). */
-export function resultadoProduccionDeError(e: unknown): ResultadoProduccion {
-  if (sinRespuesta(e)) return errorProduccion(SIN_RESPUESTA_PRODUCCION);
-  return errorProduccion(conPunto(mensajeDe(e, NO_PASO_PRODUCCION)));
+export function resultadoProduccionDeError(e: unknown, t: Traductor): ResultadoProduccion {
+  if (sinRespuesta(e)) return errorProduccion(t(SIN_RESPUESTA_PRODUCCION));
+  return errorProduccion(conPunto(mensajeDe(e, t(NO_PASO_PRODUCCION))));
 }
 
 /** Cuánto esperar para pasar sola a la siguiente; null = no pasar (un error: la persona lo lee y reintenta). */

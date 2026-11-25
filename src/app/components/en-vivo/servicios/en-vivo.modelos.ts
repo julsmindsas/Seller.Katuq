@@ -733,8 +733,8 @@ export interface PreferenciasEnVivo {
   ocultar: boolean;
 }
 
-/** Avisos pasajeros para el shell. */
+/** Avisos pasajeros para el shell. El shell arma el texto en el idioma activo. */
 export type AvisoEnVivo =
-  | { tipo: 'al-dia'; cambios: number; texto: string }
-  /** Texto libre (por ejemplo, "Hoy todavía no hay pedidos para repetir"). */
-  | { tipo: 'info'; texto: string };
+  | { tipo: 'al-dia'; cambios: number }
+  /** Clave de traducción del aviso (por ejemplo, `enVivo.repeticion.sinLlegadas`). */
+  | { tipo: 'info'; clave: string };

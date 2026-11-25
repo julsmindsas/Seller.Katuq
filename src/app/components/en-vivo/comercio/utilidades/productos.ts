@@ -1,5 +1,6 @@
 import { ProductoEstrella } from '../../servicios/en-vivo.modelos';
 import { dineroCorto, entero } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 
 /**
  * Productos estrella de hoy (diseño 18). El servidor suma por nombre las líneas del carrito de los
@@ -53,12 +54,12 @@ export function topProductos(
     .map(({ producto }) => producto);
 }
 
-export function filasProductos(productos: ReadonlyArray<ProductoEstrella> | null | undefined, ocultar: boolean): FilaProducto[] {
+export function filasProductos(productos: ReadonlyArray<ProductoEstrella> | null | undefined, ocultar: boolean, t: Traductor): FilaProducto[] {
   const top = topProductos(productos);
   const mayor = Math.max(1, ...top.map((p) => p.unidades));
   return top.map((p, i) => {
-    const unidadesTexto = `${entero(p.unidades)} und.`;
-    const valorTexto = ocultar ? '' : dineroCorto(p.valor);
+    const unidadesTexto = t(p.unidades === 1 ? 'enVivo.comercio.productos.unidadUna' : 'enVivo.comercio.productos.unidadVarias', { n: entero(p.unidades) });
+    const valorTexto = ocultar ? '' : dineroCorto(p.valor, t);
     return {
       clave: p.nombre,
       posicion: i + 1,

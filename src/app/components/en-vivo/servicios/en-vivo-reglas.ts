@@ -126,12 +126,5 @@ export function tipoDeTransportador(
   return flota.some((m) => claveDeTexto(m.nombre) === clave) ? 'mensajero' : 'transportadora';
 }
 
-// ── Textos fijos ────────────────────────────────────────────────────────────
-
-/** "Te pusimos al día: 3 cambios" (singular con 1). */
-export function textoAlDia(cambios: number): string {
-  return `Te pusimos al día: ${cambios} ${cambios === 1 ? 'cambio' : 'cambios'}`;
-}
-
 /** Motivos de `reconectar` tras los que el servidor perdió eventos y la foto nueva hay que contarla como corte. */
 export const MOTIVOS_RECONECTAR_CON_CORTE: ReadonlyArray<string> = ['error', 'apagado'];

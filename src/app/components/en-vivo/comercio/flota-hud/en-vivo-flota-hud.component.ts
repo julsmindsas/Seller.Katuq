@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
@@ -27,13 +28,15 @@ export class EnVivoFlotaHudComponent implements OnInit, OnDestroy {
   private entradas: EntradaFlota[] = [];
   private ahoraMs = Date.now();
   private suscripcion: Subscription | null = null;
+  private suscripcionIdioma: Subscription | null = null;
   private pararReloj: (() => void) | null = null;
 
   constructor(
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
     private readonly zona: NgZone,
-    private readonly cambios: ChangeDetectorRef
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -51,6 +54,12 @@ export class EnVivoFlotaHudComponent implements OnInit, OnDestroy {
         this.cambios.markForCheck();
       });
 
+    // Al cambiar el idioma, los estados y los subtítulos se vuelven a armar.
+    this.suscripcionIdioma = this.translate.onLangChange.subscribe(() => {
+      this.armarFilas();
+      this.cambios.markForCheck();
+    });
+
     // El tiempo de quien sigue en la calle sube solo, sin esperar un evento.
     this.pararReloj = cadaFueraDeZona(this.zona, ACTUALIZAR_MS, () => {
       this.ahoraMs = Date.now();
@@ -62,6 +71,8 @@ export class EnVivoFlotaHudComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.suscripcion?.unsubscribe();
     this.suscripcion = null;
+    this.suscripcionIdioma?.unsubscribe();
+    this.suscripcionIdioma = null;
     this.pararReloj?.();
     this.pararReloj = null;
   }
@@ -75,6 +86,6 @@ export class EnVivoFlotaHudComponent implements OnInit, OnDestroy {
   }
 
   private armarFilas(): void {
-    this.filas = filasFlotaHud(this.entradas, this.ahoraMs);
+    this.filas = filasFlotaHud(this.entradas, this.ahoraMs, (clave, params) => this.translate.instant(clave, params));
   }
 }

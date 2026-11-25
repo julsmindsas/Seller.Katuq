@@ -14,8 +14,9 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { LoaderService } from '../../shared/services/loader.service';
 import { KatuqCommerceContextService } from '../../shared/services/security/katuq-commerce-context.service';
 import { EnVivoCelebracionComponent } from './celebracion/en-vivo-celebracion.component';
@@ -42,6 +43,7 @@ import { MensajeSinAcceso, mensajeSinAcceso, textoDeCarga } from './utilidades/m
 import { cadaFueraDeZona } from './utilidades/movimiento';
 import { ControlPantalla } from './utilidades/pantalla';
 import { Sonidos } from './utilidades/sonidos';
+import { Traductor } from './utilidades/traductor';
 import {
   ClaveLista,
   conteosDeEtapas,
@@ -128,7 +130,7 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild(EnVivoCelebracionComponent) celebracion?: EnVivoCelebracionComponent;
 
   readonly vm$: Observable<VistaModelo>;
-  /** Aviso pasajero "Te pusimos al día: N cambios". */
+  /** Aviso pasajero ("Te pusimos al día: N cambios"), ya en el idioma activo. */
   aviso: string | null = null;
 
   private readonly pantalla: ControlPantalla;
@@ -142,6 +144,8 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
   private iniciado = false;
   private pararReloj: (() => void) | null = null;
   private temporizadorAviso = 0;
+  /** Traductor que se le pasa a las utilidades puras (ellas no inyectan `TranslateService`). */
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   constructor(
     private readonly ruta: ActivatedRoute,
@@ -152,7 +156,8 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
     private readonly contexto: KatuqCommerceContextService,
     private readonly zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    @Inject(DOCUMENT) doc: Document
+    @Inject(DOCUMENT) doc: Document,
+    private readonly translate: TranslateService
   ) {
     this.pantalla = new ControlPantalla(doc, () => {
       // La persona salió de la pantalla completa con Esc: el modo termina con ella.
@@ -183,7 +188,10 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
     this.suscripciones.add(
       this.estado.avisos$.subscribe((aviso) => {
         window.clearTimeout(this.temporizadorAviso);
-        this.aviso = aviso.texto;
+        this.aviso =
+          aviso.tipo === 'al-dia'
+            ? this.t(aviso.cambios === 1 ? 'enVivo.aviso.alDiaUno' : 'enVivo.aviso.alDiaVarios', { n: aviso.cambios })
+            : this.t(aviso.clave);
         this.cambios.markForCheck();
         this.temporizadorAviso = window.setTimeout(() => {
           this.aviso = null;
@@ -345,7 +353,7 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
 
   /** Celebra los hitos que se cruzaron: una vez por día cada uno, nunca al cargar ni al repetir. */
   private buscarHitos(estado: EstadoEnVivo): void {
-    const hitos = this.detector.procesar(estado, Date.now(), this.interaccion.repitiendo);
+    const hitos = this.detector.procesar(estado, Date.now(), this.interaccion.repitiendo, this.t);
     // Todos quedan marcados; solo se anuncia el primero (el más importante).
     const nuevos = hitos.filter((h) => this.estado.marcarCelebrado(h.clave));
     if (nuevos.length === 0) return;
@@ -355,7 +363,10 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
   // ── Vista ─────────────────────────────────────────────────────────────────
 
   private armarVm$(): Observable<VistaModelo> {
+    // Con otro idioma la vista se arma de nuevo: sus textos salen ya traducidos.
+    const idioma$ = this.translate.onLangChange.pipe(startWith(null));
     return combineLatest([
+      idioma$,
       this.estado.estado$,
       this.estado.preferencias$,
       this.reloj$,
@@ -364,7 +375,7 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
       this.interaccion.opciones$,
       this.interaccion.opcionActiva$,
     ]).pipe(
-      map(([estado, prefs, reloj, repeticion, modoPantalla, opciones, opcionActiva]) =>
+      map(([, estado, prefs, reloj, repeticion, modoPantalla, opciones, opcionActiva]) =>
         this.armarVista(estado, prefs, repeticion.instanteMs ?? reloj, repeticion, modoPantalla, opciones, opcionActiva)
       )
     );
@@ -383,9 +394,10 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
     const sinAcceso = estado.conexion === 'sin-acceso' || estado.disponible === false;
     const motivo: MotivoSinAcceso | null = estado.motivoSinAcceso ?? (estado.disponible === false ? 'rol' : null);
     const conteos = conteosDeEtapas(estado);
+    const t = this.t;
     const marca = katuq
-      ? 'Katuq en vivo'
-      : estado.empresa ?? this.contexto.resolve()?.displayName ?? 'Tu comercio';
+      ? t('enVivo.shell.katuqEnVivo')
+      : estado.empresa ?? this.contexto.resolve()?.displayName ?? t('enVivo.shell.tuComercio');
 
     const base = {
       estado,
@@ -397,27 +409,25 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
       opciones,
       opcionActiva,
       sinAcceso,
-      mensajeSinAcceso: mensajeSinAcceso(motivo, estado.vista),
-      textoCarga: textoDeCarga(estado.conexion),
+      mensajeSinAcceso: mensajeSinAcceso(motivo, estado.vista, t),
+      textoCarga: textoDeCarga(estado.conexion, t),
       marca,
       logo: katuq ? 'K' : iniciales(marca),
-      etiquetaOcultar: katuq ? 'Ocultar comercios y montos' : 'Ocultar clientes y montos',
-      subtitulo: katuq
-        ? 'Toda la plataforma · En vivo'
-        : estado.soloLectura
-        ? 'Katuq · En vivo · solo lectura'
-        : 'Katuq · En vivo',
+      etiquetaOcultar: t(katuq ? 'enVivo.shell.ocultarComerciosYMontos' : 'enVivo.encabezado.ocultarClientesYMontos'),
+      subtitulo: t(
+        katuq ? 'enVivo.shell.subtituloPlataforma' : estado.soloLectura ? 'enVivo.shell.subtituloSoloLectura' : 'enVivo.encabezado.katuqEnVivo'
+      ),
       conteos,
       ventanaPulsoMs: katuq ? VENTANA_PULSO_KATUQ_MS : VENTANA_PULSO_COMERCIO_MS,
-      tituloEventos: katuq ? 'En todos los comercios' : 'Eventos de hoy',
+      tituloEventos: t(katuq ? 'enVivo.eventos.enTodosLosComercios' : 'enVivo.eventos.eventosDeHoy'),
     };
 
     if (katuq) {
       const g = estado.cifrasGlobal;
       return {
         ...base,
-        tarjetas: g ? tarjetasKatuq(g, { ocultar: prefs.ocultar }) : [],
-        heroe: datosHeroeKatuq(g, estado.radar),
+        tarjetas: g ? tarjetasKatuq(g, { ocultar: prefs.ocultar }, t) : [],
+        heroe: datosHeroeKatuq(g, estado.radar, t),
         pulso: g ? this.pulsoKatuq(g.pedidosPorMinuto ?? 0, g.ritmoRecord?.porMinuto) : null,
         hoy: g ? { ventas: g.ventas, pedidos: g.pedidos, ticketPromedio: g.ticketPromedio } : null,
         ayerMismaHora: g?.ayerMismaHora ?? null,
@@ -428,8 +438,8 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
     const c = estado.cifras;
     return {
       ...base,
-      tarjetas: c ? tarjetasComercio(c, conteos, estado.flota, { ocultar: prefs.ocultar, soloPropias: estado.soloPropias }) : [],
-      heroe: datosHeroeComercio(estado),
+      tarjetas: c ? tarjetasComercio(c, conteos, estado.flota, { ocultar: prefs.ocultar, soloPropias: estado.soloPropias }, t) : [],
+      heroe: datosHeroeComercio(estado, t),
       pulso: c ? this.pulsoComercio(c.porHora, ahoraMs, prefs.ocultar) : null,
       hoy: c ? { ventas: c.ventas, pedidos: c.pedidos, ticketPromedio: c.ticketPromedio } : null,
       ayerMismaHora: c?.ayerMismaHora ?? null,
@@ -443,19 +453,21 @@ export class EnVivoComponent implements OnInit, OnChanges, OnDestroy {
     const pedidos = porHora.find((h) => h.hora === hora)?.pedidos ?? 0;
     const mejor = mejorHora(porHora, ocultar ? 'pedidos' : 'ventas');
     return {
-      etiqueta: 'El pulso de tu tienda · cada pico es un pedido',
+      etiqueta: this.t('enVivo.shell.pulsoTienda'),
       valor: String(pedidos),
-      unidad: `${pedidos === 1 ? 'pedido' : 'pedidos'} esta hora`,
-      nota: mejor ? `Mejor hora de hoy: ${horaCorta(mejor.hora)} · ${mejor.pedidos} pedidos` : '',
+      unidad: this.t(pedidos === 1 ? 'enVivo.shell.pedidoEstaHora' : 'enVivo.shell.pedidosEstaHora'),
+      nota: mejor
+        ? this.t('enVivo.shell.mejorHoraDeHoy', { hora: horaCorta(mejor.hora, this.t), n: mejor.pedidos })
+        : '',
     };
   }
 
   private pulsoKatuq(porMinuto: number, record: number | undefined): DatosPulso {
     return {
-      etiqueta: 'El pulso de Katuq · cada pico es un pedido',
+      etiqueta: this.t('enVivo.shell.pulsoKatuq'),
       valor: decimal(porMinuto),
-      unidad: 'pedidos por minuto',
-      nota: record !== undefined ? `Récord de hoy ${decimal(record)}` : '',
+      unidad: this.t('enVivo.shell.pedidosPorMinuto'),
+      nota: record !== undefined ? this.t('enVivo.tarjetas.recordHoy', { valor: decimal(record) }) : '',
     };
   }
 }

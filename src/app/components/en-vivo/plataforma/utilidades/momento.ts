@@ -1,5 +1,6 @@
 import { ComercioEnVivo, EventoEnVivo } from '../../servicios/en-vivo.modelos';
-import { dineroCorto } from '../../utilidades/formato';
+import { dineroCorto, formatearCifra } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 import { claseDeComercio, ciudadVisible, inicialesVisibles, nombreVisible } from './nombres';
 
 /**
@@ -46,7 +47,8 @@ export function comercioDelMomento(
   comercios: ReadonlyArray<ComercioEnVivo>,
   eventos: ReadonlyArray<EventoEnVivo>,
   ahoraMs: number,
-  ocultar: boolean
+  ocultar: boolean,
+  t?: Traductor
 ): Momento | null {
   const desde = ahoraMs - VENTANA_MOMENTO_MS;
   const hasta = ahoraMs + MARGEN_RELOJ_MS;
@@ -82,8 +84,9 @@ export function comercioDelMomento(
   // La identidad buena es la de las cifras; el evento solo respalda si el comercio aún no está ahí.
   const fila = comercios.find((c) => c.empresa === empresa);
   const identidad = { nombre: fila?.nombre ?? cuenta.nombre, ciudad: fila?.ciudad ?? cuenta.ciudad };
-  const nombre = nombreVisible(identidad, ocultar);
-  const pedidosTexto = `${cuenta.pedidos} ${cuenta.pedidos === 1 ? 'pedido' : 'pedidos'}`;
+  const nombre = nombreVisible(identidad, ocultar, t);
+  // Sin traductor (quien aún no lo pasa) los textos salen en español, como antes.
+  const pedidosTexto = formatearCifra(cuenta.pedidos, 'pedidos', t);
   return {
     empresa,
     nombre,
@@ -92,8 +95,14 @@ export function comercioDelMomento(
     clase: claseDeComercio(empresa),
     ciudad: ocultar ? '' : ciudadVisible(identidad.ciudad),
     pedidos: cuenta.pedidos,
-    ventas: ocultar || cuenta.ventas <= 0 ? null : dineroCorto(cuenta.ventas),
-    unidad: cuenta.pedidos === 1 ? 'pedido en 30 min' : 'pedidos en 30 min',
-    etiqueta: `Comercio del momento: ${nombre}, ${pedidosTexto} en 30 minutos. Abrir su tablero`,
+    ventas: ocultar || cuenta.ventas <= 0 ? null : dineroCorto(cuenta.ventas, t),
+    unidad: t
+      ? t(cuenta.pedidos === 1 ? 'enVivo.plataforma.momentoUnidadUno' : 'enVivo.plataforma.momentoUnidadVarios')
+      : cuenta.pedidos === 1
+      ? 'pedido en 30 min'
+      : 'pedidos en 30 min',
+    etiqueta: t
+      ? t('enVivo.plataforma.momentoEtiqueta', { nombre, pedidos: pedidosTexto })
+      : `Comercio del momento: ${nombre}, ${pedidosTexto} en 30 minutos. Abrir su tablero`, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
   };
 }

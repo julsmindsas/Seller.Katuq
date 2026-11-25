@@ -1,6 +1,7 @@
 import { EtapaId, EtapaInfo, PedidoEnVivo } from '../../servicios/en-vivo.modelos';
 import { diaDeColombia, diaYMes, horaDeReloj, horaRelativa } from '../../utilidades/formato';
 import { claseTono } from '../../utilidades/tonos';
+import { Traductor } from '../../utilidades/traductor';
 import { PasoRecorrido } from '../ficha.modelos';
 
 /**
@@ -13,18 +14,18 @@ import { PasoRecorrido } from '../ficha.modelos';
  */
 
 /** Pasos de un pedido normal, con el nombre que lleva el recorrido (distinto del de la franja). */
-export const PASOS_RECORRIDO: ReadonlyArray<{ id: EtapaId; nombre: string }> = [
-  { id: 'recibido', nombre: 'Pedido recibido' },
-  { id: 'produccion', nombre: 'En producción' },
-  { id: 'producido', nombre: 'Producido' },
-  { id: 'empacado', nombre: 'Empacado' },
-  { id: 'listo', nombre: 'Para despachar' },
-  { id: 'camino', nombre: 'Salió a entrega' },
-  { id: 'entregado', nombre: 'Entregado' },
+export const PASOS_RECORRIDO: ReadonlyArray<{ id: EtapaId; clave: string }> = [
+  { id: 'recibido', clave: 'enVivo.ficha.pasoRecibido' },
+  { id: 'produccion', clave: 'enVivo.ficha.pasoProduccion' },
+  { id: 'producido', clave: 'enVivo.ficha.pasoProducido' },
+  { id: 'empacado', clave: 'enVivo.ficha.pasoEmpacado' },
+  { id: 'listo', clave: 'enVivo.ficha.pasoListo' },
+  { id: 'camino', clave: 'enVivo.ficha.pasoCamino' },
+  { id: 'entregado', clave: 'enVivo.ficha.pasoEntregado' },
 ];
 
-export const TEXTO_SIN_HORA = 'Sin hora registrada';
-export const TEXTO_PENDIENTE = 'Pendiente';
+export const CLAVE_SIN_HORA = 'enVivo.ficha.sinHoraRegistrada';
+export const CLAVE_PENDIENTE = 'enVivo.ficha.pendiente';
 
 const ES_FINAL: ReadonlyArray<EtapaId> = ['rechazado', 'cancelado'];
 
@@ -36,14 +37,14 @@ function esHora(valor: unknown): valor is number {
  * "3:40 p. m. · hace 20 min" si es de hoy; "7 de octubre · 3:40 p. m." si es de otro día.
  * Vacío si no hay hora.
  */
-export function textoDeHora(ms: number | null | undefined, ahoraMs: number): string {
+export function textoDeHora(ms: number | null | undefined, ahoraMs: number, t: Traductor): string {
   if (!esHora(ms)) return '';
-  const hora = horaDeReloj(ms);
+  const hora = horaDeReloj(ms, t);
   if (diaDeColombia(ms) === diaDeColombia(ahoraMs)) {
-    const relativa = horaRelativa(ms, ahoraMs);
+    const relativa = horaRelativa(ms, ahoraMs, t);
     return relativa ? `${hora} · ${relativa}` : hora;
   }
-  return `${diaYMes(diaDeColombia(ms))} · ${hora}`;
+  return `${diaYMes(diaDeColombia(ms), t)} · ${hora}`;
 }
 
 /** Hora (ms) en que el pedido entró a la etapa, o null si no se vio. La llegada sale también de `tC`. */
@@ -65,6 +66,8 @@ export interface OpcionesRecorrido {
   salida?: string;
   /** Ids de pasos que se acaban de cumplir: entran animados. */
   nuevos?: ReadonlySet<string>;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 function claseDe(etapas: ReadonlyMap<EtapaId, EtapaInfo>, etapa: EtapaId): string {
@@ -73,9 +76,9 @@ function claseDe(etapas: ReadonlyMap<EtapaId, EtapaInfo>, etapa: EtapaId): strin
 
 /** Arma los pasos del recorrido de un pedido. */
 export function armarRecorrido(pedido: PedidoEnVivo, opciones: OpcionesRecorrido): PasoRecorrido[] {
-  const { etapas, ahoraMs } = opciones;
+  const { etapas, ahoraMs, t } = opciones;
   const nuevos = opciones.nuevos ?? new Set<string>();
-  const cuando = (ms: number | null): string => textoDeHora(ms, ahoraMs) || TEXTO_SIN_HORA;
+  const cuando = (ms: number | null): string => textoDeHora(ms, ahoraMs, t) || t(CLAVE_SIN_HORA);
 
   // Venta de mostrador: nace entregada, no pasa por la franja.
   if (pedido.canal === 'POS' && pedido.etapa === 'entregado') {
@@ -83,8 +86,8 @@ export function armarRecorrido(pedido: PedidoEnVivo, opciones: OpcionesRecorrido
     return [
       {
         id: 'pos',
-        nombre: 'Venta en el punto de venta',
-        detalle: `${cuando(llegada)} · se entregó en el mostrador`,
+        nombre: t('enVivo.ficha.pasoVentaPos'),
+        detalle: t('enVivo.ficha.pasoVentaPosDetalle', { cuando: cuando(llegada) }),
         cumplido: true,
         actual: false,
         sinHora: llegada === null,
@@ -119,8 +122,8 @@ export function armarRecorrido(pedido: PedidoEnVivo, opciones: OpcionesRecorrido
     const extra = paso.id === 'camino' && cumplido && opciones.salida ? ` · ${opciones.salida}` : '';
     pasos.push({
       id: paso.id,
-      nombre: paso.nombre,
-      detalle: cumplido ? `${cuando(hora)}${extra}` : TEXTO_PENDIENTE,
+      nombre: t(paso.clave),
+      detalle: cumplido ? `${cuando(hora)}${extra}` : t(CLAVE_PENDIENTE),
       cumplido,
       actual,
       sinHora: cumplido && hora === null,
@@ -133,7 +136,7 @@ export function armarRecorrido(pedido: PedidoEnVivo, opciones: OpcionesRecorrido
     const hora = esHora(opciones.horaFinal) ? opciones.horaFinal : null;
     pasos.push({
       id: etapa,
-      nombre: etapa === 'rechazado' ? 'Rechazado' : 'Cancelado',
+      nombre: t(etapa === 'rechazado' ? 'enVivo.ficha.pasoRechazado' : 'enVivo.ficha.pasoCancelado'),
       detalle: cuando(hora),
       cumplido: true,
       actual: true,

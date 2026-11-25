@@ -1,4 +1,4 @@
-<section class="kpis" [attr.aria-label]="rotulo">
+<section class="kpis" [attr.aria-label]="rotulo || ('enVivo.cifras.cifrasDeHoy' | translate)">
   <ng-container *ngFor="let t of tarjetas; trackBy: porId">
     <button
       *ngIf="t.clave; else estatica"

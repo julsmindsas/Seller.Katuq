@@ -1,6 +1,7 @@
 import { CifraPorCanal } from '../../servicios/en-vivo.modelos';
 import { entero } from '../../utilidades/formato';
 import { claveDeTexto } from '../../servicios/en-vivo-reglas';
+import { Traductor } from '../../utilidades/traductor';
 
 /**
  * De dónde llegan los pedidos en toda Katuq: la mezcla de canales (barra partida) y una barra por
@@ -50,7 +51,8 @@ export function claseDeCanal(canal: string): string {
 
 export function armarCanales(
   porCanal: ReadonlyArray<CifraPorCanal> | null | undefined,
-  opttia: { pedidos: number; ventas: number } | null | undefined
+  opttia: { pedidos: number; ventas: number } | null | undefined,
+  t: Traductor
 ): VistaCanales {
   const lista = (porCanal ?? [])
     .filter((c) => !!c && c.pedidos > 0)
@@ -66,7 +68,7 @@ export function armarCanales(
       clase: claseDeCanal(c.canal),
       pedidos: c.pedidos,
       pct,
-      texto: `${entero(c.pedidos)} · ${pct} %`,
+      texto: t('enVivo.plataforma.canalTexto', { n: entero(c.pedidos), pct }),
       ancho: Math.round((c.pedidos / mayor) * 1000) / 10,
     };
   });
@@ -76,8 +78,8 @@ export function armarCanales(
     const pct = total > 0 ? Math.min(100, Math.round((opttia.pedidos / total) * 100)) : 0;
     conOpttia = {
       pedidos: opttia.pedidos,
-      texto: total > 0 ? `${pct} % del día` : '',
-      etiqueta: `${entero(opttia.pedidos)} con Opttia`,
+      texto: total > 0 ? t('enVivo.plataforma.canalPctDelDia', { pct }) : '',
+      etiqueta: t('enVivo.plataforma.canalConOpttia', { n: entero(opttia.pedidos) }),
     };
   }
   return { filas, total, conOpttia };

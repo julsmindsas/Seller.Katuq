@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { prefiereMenosMovimiento } from '../utilidades/movimiento';
 import { EnVivoNarracionService } from './en-vivo-narracion.service';
@@ -34,10 +35,12 @@ export class EnVivoNarracionComponent implements OnInit, OnDestroy {
   constructor(
     private readonly narracion: EnVivoNarracionService,
     private readonly zona: NgZone,
-    private readonly cambios: ChangeDetectorRef
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    this.narracion.fijarTraductor((clave, params) => this.translate.instant(clave, params));
     this.narracion.iniciar();
     this.suscripcion = this.narracion.linea$.subscribe((linea) => this.mostrar(linea));
   }

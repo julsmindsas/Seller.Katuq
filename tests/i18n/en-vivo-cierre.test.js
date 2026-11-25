@@ -52,16 +52,17 @@ test('13.2/13.3: las claves que piden las pantallas existen en los cuatro idioma
     }
   }
   assert.ok([...usadas].filter(k => PREFIJO.test(k)).length > 170, 'claves propias usadas');
+  // Por ahora solo inglés (regla «Inglés siempre», 2-nov-2026): pt y de quedan aparte.
   for (const clave of usadas) {
-    for (const idioma of IDIOMAS) {
+    for (const idioma of ['es', 'en']) {
       assert.equal(typeof dics[idioma][clave], 'string', `${idioma}: ${clave}`);
       assert.ok(dics[idioma][clave].trim().length > 0, `${idioma}: ${clave} no vacía`);
       assert.deepEqual(variables(dics[idioma][clave]), variables(dics.es[clave]), `${idioma}: variables de ${clave}`);
     }
   }
-  // Y todas las claves enVivo.* de es existen en los otros tres idiomas.
+  // Y todas las claves enVivo.* de es existen en inglés (pt y de, aparte por ahora).
   for (const clave of Object.keys(dics.es).filter(k => PREFIJO.test(k))) {
-    for (const idioma of ['en', 'pt', 'de']) assert.ok(dics[idioma][clave], `${idioma}: ${clave}`);
+    for (const idioma of ['en']) assert.ok(dics[idioma][clave], `${idioma}: ${clave}`);
   }
 });
 

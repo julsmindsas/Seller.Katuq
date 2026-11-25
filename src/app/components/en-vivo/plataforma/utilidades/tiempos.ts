@@ -1,5 +1,6 @@
 import { ComercioEnVivo, TiemposOperacion } from '../../servicios/en-vivo.modelos';
 import { duracion, entero } from '../../utilidades/formato';
+import { Traductor } from '../../utilidades/traductor';
 import { nombreVisible } from './nombres';
 
 /**
@@ -34,9 +35,9 @@ export interface VistaTiempos {
 }
 
 const ETIQUETAS: Readonly<Record<ClaveTramo, string>> = {
-  prep: 'Preparación',
-  espera: 'Espera para salir',
-  entrega: 'Entrega',
+  prep: 'enVivo.plataforma.tiemposPrep',
+  espera: 'enVivo.plataforma.tiemposEspera',
+  entrega: 'enVivo.plataforma.tiemposEntrega',
 };
 
 function medianaValida(ms: number | null | undefined): ms is number {
@@ -46,10 +47,11 @@ function medianaValida(ms: number | null | undefined): ms is number {
 export function armarTiempos(
   tiempos: TiemposOperacion | null | undefined,
   comercios: ReadonlyArray<ComercioEnVivo>,
-  ocultar: boolean
+  ocultar: boolean,
+  t: Traductor
 ): VistaTiempos {
   if (!tiempos) {
-    return { hayDatos: false, ciclo: '—', nota: 'Todavía no hay entregas con hora registrada hoy.', tramos: [], rapido: null, camion: null };
+    return { hayDatos: false, ciclo: '—', nota: t('enVivo.plataforma.tiemposSinEntregas'), tramos: [], rapido: null, camion: null };
   }
 
   const valores: Record<ClaveTramo, number | null> = {
@@ -65,8 +67,8 @@ export function armarTiempos(
       const valor = valores[k];
       return {
         clave: k,
-        etiqueta: ETIQUETAS[k],
-        texto: valor === null ? '—' : duracion(valor),
+        etiqueta: t(ETIQUETAS[k]),
+        texto: valor === null ? '—' : duracion(valor, t),
         flex: valor !== null && total > 0 ? valor / total : 0,
       };
     }
@@ -79,17 +81,17 @@ export function armarTiempos(
     const identidad = { nombre: fila?.nombre ?? tiempos.rapido.nombre ?? tiempos.rapido.empresa, ciudad: fila?.ciudad ?? null };
     rapido = {
       empresa: tiempos.rapido.empresa,
-      nombre: nombreVisible(identidad, ocultar),
-      texto: duracion(tiempos.rapido.mediana),
+      nombre: nombreVisible(identidad, ocultar, t),
+      texto: duracion(tiempos.rapido.mediana, t),
     };
   }
 
   return {
     hayDatos: medianaValida(tiempos.ciclo) || entregas > 0 || valores.prep !== null || valores.espera !== null || valores.entrega !== null,
-    ciclo: medianaValida(tiempos.ciclo) ? duracion(tiempos.ciclo) : '—',
-    nota: `de punta a punta con mensajero propio · ${entero(entregas)} ${entregas === 1 ? 'entrega' : 'entregas'}`,
+    ciclo: medianaValida(tiempos.ciclo) ? duracion(tiempos.ciclo, t) : '—',
+    nota: t(entregas === 1 ? 'enVivo.plataforma.tiemposNotaUna' : 'enVivo.plataforma.tiemposNotaVarias', { n: entero(entregas) }),
     tramos,
     rapido,
-    camion: medianaValida(tiempos.camion) ? duracion(tiempos.camion) : null,
+    camion: medianaValida(tiempos.camion) ? duracion(tiempos.camion, t) : null,
   };
 }

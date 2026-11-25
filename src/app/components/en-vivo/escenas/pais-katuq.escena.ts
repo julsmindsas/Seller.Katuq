@@ -9,6 +9,7 @@ import {
   tonoCss,
 } from '../servicios/en-vivo.modelos';
 import { dinero, dineroCorto } from '../utilidades/formato';
+import { Traductor } from '../utilidades/traductor';
 import { esOscuro } from './escena-tokens';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { OpcionesEscenaMapa, ToqueMapa, aplicarLucesDeTema, hexDe, margenesBase, vistaPais } from './mapas.tipos';
@@ -143,6 +144,15 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
     this.sucio = true;
   }
 
+  /** El traductor del idioma activo; al cambiar el idioma se repintan los nombres fijos y la tarjeta del puntero. */
+  fijarTraductor(t: Traductor): void {
+    this.nucleo.fijarTraductor(t);
+    if (!this.nucleo.kit) return;
+    this.actualizarNombres();
+    this.mostrarResalte(this.empresaResaltada ?? this.hoverEmpresa);
+    this.sucio = true;
+  }
+
   fijarReducirMovimiento(reducir: boolean): void {
     this.opts.reducirMovimiento = reducir;
     this.nucleo.fijarReducirMovimiento(reducir);
@@ -160,7 +170,7 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
    * reconexión y cada vez que llegan cifras nuevas.
    */
   aplicarFoto(cifras: CifrasGlobalEnVivo, alertas?: ReadonlyArray<AlertaRadar> | null): void {
-    const todos = prepararComercios(this.cfg.geo, cifras.comercios ?? []);
+    const todos = prepararComercios(this.cfg.geo, cifras.comercios ?? [], this.nucleo.t);
     this.comercios = ordenarPorVentas(todos.filter((c) => c.dane)).slice(0, MAX_TORRES);
     this.entregas.clear();
     (cifras.ciudades ?? []).forEach((c) => this.entregas.set(c.dane, c.pedidos));
@@ -504,7 +514,7 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
     lideres.forEach((l) => {
       const t = this.torres.get(l.id);
       if (!t) return;
-      const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado);
+      const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado, this.nucleo.t);
       const html = `<span class="t-${t.c.tono}"><i class="eve-dot"></i>${esc(nombre)} · <b>${t.c.n}</b></span>`;
       if (!t.etq) {
         const cima = this.cimaDe(t, 0.35);
@@ -596,14 +606,16 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
     if (ligero) return;
     const venta = ev.etapa === 'entregado';
     const dane = resolverDane(this.cfg.geo, ev.dane, ev.ciudad);
-    const donde = venta ? 'Punto de venta' : `Cliente en ${nombreDeLugar(this.cfg.geo, dane, ev.ciudad)}`;
+    const donde = venta
+      ? this.nucleo.t('enVivo.escenas.puntoDeVenta')
+      : this.nucleo.t('enVivo.escenas.clienteEn', { lugar: nombreDeLugar(this.cfg.geo, dane, ev.ciudad, this.nucleo.t) });
     const canal = ev.canal ? ` · ${ev.canal}` : '';
-    const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado);
+    const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado, this.nucleo.t);
     const pos = this.cimaDe(t, 0.6);
     const hizo = this.nucleo.tarjeta(
       pos,
       ev.ia ? 'pack' : tono,
-      ev.ia ? 'Con Opttia' : venta ? 'Venta en tienda' : 'Nuevo pedido',
+      this.nucleo.t(ev.ia ? 'enVivo.escenas.conOpttia' : venta ? 'enVivo.escenas.ventaEnTienda' : 'enVivo.escenas.nuevoPedido'),
       `<span class="eve-who">${esc(nombre)}</span><span class="eve-amt">${esc(this.monto(ev.monto))}</span><small>${esc(donde + canal)}</small>`,
       3400,
     );
@@ -667,10 +679,10 @@ export class PaisKatuqEscena extends MapaColombiaEscena {
     }
     this.anillo.position.set(t.p.x, ALTO_MAPA + 0.07, t.p.z);
     this.anillo.visible = true;
-    const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado);
-    const dinero$ = this.nucleo.privado ? 'montos ocultos' : dineroCorto(t.c.ventas);
+    const nombre = nombreVisible(t.c.nombre, t.c.ciudad, this.nucleo.privado, this.nucleo.t);
+    const dinero$ = this.nucleo.privado ? this.nucleo.t('enVivo.escenas.montosOcultos') : dineroCorto(t.c.ventas);
     this.nucleo.hover(
-      `<b>${esc(nombre)}</b><span>${t.c.n} ${t.c.n === 1 ? 'pedido' : 'pedidos'} · ${esc(dinero$)} · toca para ver su tablero</span>`,
+      `<b>${esc(nombre)}</b><span>${this.nucleo.t(t.c.n === 1 ? 'enVivo.escenas.hoverComercioUno' : 'enVivo.escenas.hoverComercioOtros', { n: t.c.n, monto: dinero$ })}</span>`,
       this.cimaDe(t, 0.45),
     );
   }

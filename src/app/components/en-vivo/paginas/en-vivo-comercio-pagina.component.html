@@ -63,7 +63,7 @@
             [etapas]="vm.etapas"
             vista="comercio"
             [ocultar]="vm.ocultar"
-            titulo="Eventos de hoy"
+            [titulo]="'enVivo.eventos.eventosDeHoy' | translate"
             [anunciar]="true"
             (abrir)="abrirPedido($event)"
             (resaltar)="resaltarPedidos($event)"

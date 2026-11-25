@@ -9,6 +9,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, map, timeout } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
@@ -17,6 +18,7 @@ import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { esNoDisponible, RespuestaNoDisponible, RespuestaPregunta, ResumenOpttia, VistaEnVivo } from '../servicios/en-vivo.modelos';
 import { EnVivoService } from '../servicios/en-vivo.service';
 import { dineroCorto } from '../utilidades/formato';
+import type { Traductor } from '../utilidades/traductor';
 import { IconoId } from '../utilidades/iconos';
 import { cadaFueraDeZona, prefiereMenosMovimiento } from '../utilidades/movimiento';
 import { claseTono } from '../utilidades/tonos';
@@ -92,8 +94,9 @@ interface Rebanada {
 const REFRESCO_MS = 5000;
 const PASO_PUNTOS_MS = 260;
 const TIMEOUT_PREGUNTA_MS = 25000;
-const TEXTO_SIN_RESPUESTA = 'Opttia no pudo responder ahora. Intenta de nuevo en un momento.';
-const TEXTO_NO_DISPONIBLE = 'Opttia no está disponible en este momento.';
+/** Claves de i18n (no los textos). */
+const TEXTO_SIN_RESPUESTA = 'enVivo.opttia.sinRespuesta';
+const TEXTO_NO_DISPONIBLE = 'enVivo.opttia.noDisponible';
 
 function mismaRebanada(a: Rebanada, b: Rebanada): boolean {
   return (
@@ -151,8 +154,8 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
   vista: VistaEnVivo = 'comercio';
   soloLectura = false;
   ocultar = false;
-  titulo = tituloDeLaTarjeta('comercio', false);
-  sugeridas: ReadonlyArray<string> = preguntasSugeridas('comercio', false);
+  titulo = '';
+  sugeridas: ReadonlyArray<string> = [];
 
   // ── Resumen ──
   hayResumen = false;
@@ -184,16 +187,30 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
   private cancelarRespuesta: (() => void) | null = null;
   private readonly temporizadores = new Set<number>();
   private destruido = false;
+  /** Traductor para las funciones puras (arma el texto con el idioma activo en cada llamada). */
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   constructor(
     private readonly estado: EnVivoEstadoService,
     private readonly servicio: EnVivoService,
     private readonly interaccion: EnVivoInteraccionService,
     private readonly zona: NgZone,
-    private readonly cambios: ChangeDetectorRef
-  ) {}
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
+  ) {
+    this.titulo = tituloDeLaTarjeta('comercio', false, this.t);
+    this.sugeridas = preguntasSugeridas('comercio', false, this.t);
+  }
 
   ngOnInit(): void {
+    // Cambió el idioma: se vuelven a armar el título y las preguntas sugeridas.
+    this.suscripciones.add(
+      this.translate.onLangChange.subscribe(() => {
+        this.titulo = tituloDeLaTarjeta(this.vista, this.soloLectura, this.t);
+        this.sugeridas = preguntasSugeridas(this.vista, this.soloLectura, this.t);
+        this.cambios.markForCheck();
+      })
+    );
     this.suscripciones.add(
       this.estado.preferencias$
         .pipe(
@@ -238,15 +255,15 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
 
   /** El chip de la cabecera: "Escribiendo…" o "Actualizado hace N s". */
   get cuando(): string {
-    if (this.escribiendoResumen) return 'Escribiendo…';
-    return textoActualizado(instanteDelResumen(this.ultimoResumen), this.ahoraMs);
+    if (this.escribiendoResumen) return this.translate.instant('enVivo.opttia.escribiendo');
+    return textoActualizado(instanteDelResumen(this.ultimoResumen), this.ahoraMs, this.t);
   }
 
   /** "3 pedidos" o "3 pedidos · $450 mil" (sin el monto si se ocultan). */
   get textoVendido(): string {
     const v = this.vendido;
     if (!v) return '';
-    const pedidos = `${v.pedidos} ${v.pedidos === 1 ? 'pedido' : 'pedidos'}`;
+    const pedidos = this.translate.instant(v.pedidos === 1 ? 'enVivo.opttia.pedidoUno' : 'enVivo.opttia.pedidoVarios', { n: v.pedidos });
     return this.ocultar ? pedidos : `${pedidos} · ${dineroCorto(v.ventas)}`;
   }
 
@@ -262,8 +279,8 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
     this.vista = r.vista;
     this.soloLectura = r.soloLectura;
     this.vendido = r.vendido;
-    this.titulo = tituloDeLaTarjeta(r.vista, r.soloLectura);
-    this.sugeridas = preguntasSugeridas(r.vista, r.soloLectura);
+    this.titulo = tituloDeLaTarjeta(r.vista, r.soloLectura, this.t);
+    this.sugeridas = preguntasSugeridas(r.vista, r.soloLectura, this.t);
 
     if (cambioVista) {
       // Otra vista u otro comercio: lo que había era de otro lado.
@@ -303,7 +320,7 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
         this.textoBloqueo = '';
         if (this.respuesta?.fase === 'tope') this.respuesta = null;
       } else {
-        this.textoBloqueo = this.tope.texto(this.ahoraMs);
+        this.textoBloqueo = this.tope.texto(this.ahoraMs, this.t);
       }
     }
     this.pintar();
@@ -339,7 +356,7 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
 
     this.hayResumen = true;
     this.puntos = puntosDelResumen(resumen).map((p) => {
-      const boton = accionOpttiaAUi(p.accion, contexto);
+      const boton = accionOpttiaAUi(p.accion, contexto, this.t);
       return {
         clase: claseTono(p.tono),
         icono: iconoDeTono(p.tono),
@@ -426,7 +443,7 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
     this.cancelarRespuesta?.();
     this.cancelarRespuesta = null;
     this.crudaRespuesta = null;
-    this.respuesta = { pregunta, fase: 'pensando', textoVisible: '', lector: 'Opttia está pensando…', botones: [], verEnEscena: false, nota: '' };
+    this.respuesta = { pregunta, fase: 'pensando', textoVisible: '', lector: this.translate.instant('enVivo.opttia.estaPensando'), botones: [], verEnEscena: false, nota: '' };
     this.cambios.markForCheck();
 
     const e = this.estado.estado;
@@ -446,7 +463,7 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
   private alResponder(pregunta: string, r: RespuestaPregunta | RespuestaNoDisponible): void {
     this.enviando = false;
     if (esNoDisponible(r)) {
-      this.alAvisar(pregunta, TEXTO_NO_DISPONIBLE);
+      this.alAvisar(pregunta, this.translate.instant(TEXTO_NO_DISPONIBLE));
       return;
     }
 
@@ -454,12 +471,12 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
     const minutos = minutosParaReintentar(r);
     if (minutos !== null) {
       this.tope.bloquear(minutos, Date.now());
-      this.textoBloqueo = this.tope.texto(Date.now());
+      this.textoBloqueo = this.tope.texto(Date.now(), this.t);
       this.respuesta = {
         pregunta,
         fase: 'tope',
         textoVisible: '',
-        lector: `Llegaste al tope de ${MAX_PREGUNTAS_POR_HORA} preguntas por hora. ${this.textoBloqueo}.`,
+        lector: `${this.translate.instant('enVivo.enVivoOpttia.llegasteAlTopeDePreguntas', { maxPreguntasPorHora: MAX_PREGUNTAS_POR_HORA })} ${this.textoBloqueo}.`,
         botones: [],
         verEnEscena: false,
         nota: '',
@@ -468,15 +485,15 @@ export class EnVivoOpttiaComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const texto = typeof r.texto === 'string' && r.texto.trim() ? r.texto.trim() : TEXTO_SIN_RESPUESTA;
-    const acciones = accionesOpttiaAUi(Array.isArray(r.acciones) ? r.acciones : [], this.contextoAcciones());
+    const texto = typeof r.texto === 'string' && r.texto.trim() ? r.texto.trim() : this.translate.instant(TEXTO_SIN_RESPUESTA);
+    const acciones = accionesOpttiaAUi(Array.isArray(r.acciones) ? r.acciones : [], this.contextoAcciones(), this.t);
     this.crudaRespuesta = { texto, acciones };
-    this.pintarRespuesta(pregunta, true, textoPreguntasRestantes(r.restantes));
+    this.pintarRespuesta(pregunta, true, textoPreguntasRestantes(r.restantes, this.t));
   }
 
   private alFallar(pregunta: string): void {
     this.enviando = false;
-    this.alAvisar(pregunta, TEXTO_SIN_RESPUESTA);
+    this.alAvisar(pregunta, this.translate.instant(TEXTO_SIN_RESPUESTA));
   }
 
   /** Un aviso amable en el lugar de la respuesta (Opttia no respondió o no está disponible). */

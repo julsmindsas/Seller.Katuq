@@ -1,9 +1,11 @@
 import { EventEmitter, NgZone } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
-import { distinctUntilChanged, map, scan } from 'rxjs/operators';
+import { distinctUntilChanged, map, scan, startWith } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { CifrasGlobalEnVivo, EventoEnVivo, RadarEnVivo } from '../../servicios/en-vivo.modelos';
+import { Traductor } from '../../utilidades/traductor';
 import { AperturaComercio } from './nombres';
 import { RADAR_SIN_LEER, reducirRadarCongelado } from './radar';
 
@@ -12,6 +14,22 @@ import { RADAR_SIN_LEER, reducirRadarCongelado } from './radar';
  * preferencia "ocultar") y el `EnVivoInteraccionService` (repetición del día y acciones). Aquí
  * vive lo que usan varias a la vez, para que cada componente quede en pocas líneas.
  */
+
+/** Traductor para las utilidades puras: el componente lo arma con su `TranslateService`. */
+export function traductorDe(translate: TranslateService): Traductor {
+  return (clave, params) => translate.instant(clave, params);
+}
+
+/**
+ * Emite al arrancar y cada vez que cambia el idioma. Las piezas lo suman a su `combineLatest` para
+ * que los textos armados en TypeScript se rearmen al cambiar de idioma.
+ */
+export function idioma$(translate: TranslateService): Observable<string> {
+  return translate.onLangChange.pipe(
+    map((evento) => evento.lang),
+    startWith(translate.currentLang)
+  );
+}
 
 /** Cifras de toda Katuq (null en la vista de un comercio o antes de la primera foto). */
 export function cifrasGlobal$(estado: EnVivoEstadoService): Observable<CifrasGlobalEnVivo | null> {

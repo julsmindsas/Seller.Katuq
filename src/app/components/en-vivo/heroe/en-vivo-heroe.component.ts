@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { calcularBarraProyeccion, BarraProyeccion } from '../utilidades/proyeccion';
 import { dinero, dineroCorto, entero, horaDeColombia, textoPct, variacionPct } from '../utilidades/formato';
 import { filaDeHora, HORAS_VISIBLES, ventanaHoras } from '../utilidades/horas';
 import { DatosHeroe } from '../utilidades/tarjetas';
+import { Traductor } from '../utilidades/traductor';
 
 /** Una barra del mini gráfico por hora. */
 interface BarraMini {
@@ -32,7 +35,7 @@ const LIENZO_ALTO = 70;
   styleUrls: ['./en-vivo-heroe.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoHeroeComponent implements OnChanges {
+export class EnVivoHeroeComponent implements OnChanges, OnDestroy {
   @Input() datos: DatosHeroe | null = null;
   @Input() ocultar = false;
   /** Instante que marca "ahora" (ms); de ahí sale la hora actual del mini gráfico. */
@@ -48,17 +51,35 @@ export class EnVivoHeroeComponent implements OnChanges {
   proyeccion: BarraProyeccion | null = null;
   barras: BarraMini[] = [];
   linea = '';
-  tituloMini = 'Ventas por hora · hoy contra ayer';
+  tituloMini = '';
   estaHora = '';
+
+  private readonly t: Traductor = (clave, params) => this.translate.instant(clave, params);
+  private readonly suscripcionIdioma: Subscription;
+
+  constructor(private readonly cambios: ChangeDetectorRef, private readonly translate: TranslateService) {
+    // Con otro idioma los textos se vuelven a escribir sin esperar a que lleguen datos nuevos.
+    this.suscripcionIdioma = translate.onLangChange.subscribe(() => {
+      this.ngOnChanges();
+      this.cambios.markForCheck();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.suscripcionIdioma.unsubscribe();
+  }
 
   ngOnChanges(): void {
     const d = this.datos;
     if (!d) return;
     const ocultar = this.ocultar;
+    const t = this.t;
 
-    this.etiqueta = ocultar ? 'Pedidos de hoy' : d.etiqueta;
+    this.etiqueta = ocultar ? t('enVivo.heroe.pedidosDeHoy') : d.etiqueta;
     this.numero = ocultar ? entero(d.pedidos) : dinero(d.ventas);
-    this.leyenda = ocultar ? `${entero(d.pedidos)} ${d.pedidos === 1 ? 'pedido' : 'pedidos'} hoy` : `${d.etiqueta}: ${this.numero}`;
+    this.leyenda = ocultar
+      ? t(d.pedidos === 1 ? 'enVivo.heroe.leyendaPedido' : 'enVivo.heroe.leyendaPedidos', { n: entero(d.pedidos) })
+      : t('enVivo.heroe.leyendaVentas', { etiqueta: d.etiqueta, valor: this.numero });
 
     const referencia = ocultar ? d.ayerMismaHora?.pedidos : d.ayerMismaHora?.ventas;
     const pct = d.ayerMismaHora && referencia !== undefined ? variacionPct(ocultar ? d.pedidos : d.ventas, referencia) : null;
@@ -66,14 +87,14 @@ export class EnVivoHeroeComponent implements OnChanges {
     this.variacionSube = pct === null || pct >= 0;
     const comparacion =
       pct !== null
-        ? 'contra ayer a esta hora'
+        ? t('enVivo.heroe.contraAyer')
         : d.ayerMismaHora
-        ? `Ayer a esta hora no hubo ${ocultar ? 'pedidos' : 'ventas'}`
+        ? t(ocultar ? 'enVivo.heroe.ayerSinPedidos' : 'enVivo.heroe.ayerSinVentas')
         : '';
-    const ticket = ocultar ? '' : `ticket promedio ${dinero(d.ticketPromedio)}`;
+    const ticket = ocultar ? '' : t('enVivo.heroe.ticketPromedio', { valor: dinero(d.ticketPromedio) });
     this.resto = [comparacion, ticket].filter(Boolean).join(' · ');
 
-    this.proyeccion = calcularBarraProyeccion(d.pedidos, d.proyeccion, d.record, ocultar);
+    this.proyeccion = calcularBarraProyeccion(d.pedidos, d.proyeccion, d.record, ocultar, t);
     this.armarMini(d);
   }
 
@@ -109,8 +130,10 @@ export class EnVivoHeroeComponent implements OnChanges {
       };
     });
     this.linea = puntos.join(' ');
-    this.tituloMini = this.ocultar ? 'Pedidos por hora · hoy contra ayer' : 'Ventas por hora · hoy contra ayer';
+    this.tituloMini = this.t(this.ocultar ? 'enVivo.heroe.pedidosPorHoraHoyContraAyer' : 'enVivo.heroe.ventasPorHoraHoyContraAyer');
     const ahora = filaDeHora(d.porHora, horaActual);
-    this.estaHora = `Esta hora: ${this.ocultar ? `${entero(ahora.pedidos)} pedidos` : dineroCorto(ahora.ventas)}`;
+    this.estaHora = this.ocultar
+      ? this.t('enVivo.heroe.estaHoraPedidos', { n: entero(ahora.pedidos) })
+      : this.t('enVivo.heroe.estaHoraVentas', { monto: dineroCorto(ahora.ventas, this.t) });
   }
 }

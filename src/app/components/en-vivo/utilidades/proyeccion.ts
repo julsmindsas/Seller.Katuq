@@ -1,5 +1,6 @@
 import { ProyeccionCierre, RecordPedidos } from '../servicios/en-vivo.modelos';
 import { diaYMes, dineroCorto, entero } from './formato';
+import { Traductor } from './traductor';
 
 /**
  * Geometría y textos de la barra "Proyección al cierre": hoy / lo que falta según el ritmo /
@@ -28,7 +29,8 @@ export function calcularBarraProyeccion(
   pedidosHoy: number,
   proyeccion: ProyeccionCierre | null,
   record: RecordPedidos | null,
-  ocultar: boolean
+  ocultar: boolean,
+  t: Traductor
 ): BarraProyeccion | null {
   if (!proyeccion) return null;
   const proyectados = Math.max(0, proyeccion.pedidos);
@@ -38,14 +40,16 @@ export function calcularBarraProyeccion(
   const superaRecord = !!record && proyectados > record.n;
 
   const texto = ocultar
-    ? `≈ ${entero(proyectados)} pedidos`
-    : `≈ ${dineroCorto(proyeccion.ventas)} · ${entero(proyectados)} pedidos`;
-  const textoRecord = record ? `Récord: ${entero(record.n)} pedidos (${diaYMes(record.fecha)})` : 'Sin récord todavía';
-  const veredicto = !record
-    ? ''
+    ? t('enVivo.proyeccion.aproxPedidos', { pedidos: entero(proyectados) })
+    : t('enVivo.proyeccion.aproxMontoPedidos', { monto: dineroCorto(proyeccion.ventas, t), pedidos: entero(proyectados) });
+  const textoRecord = record
+    ? t('enVivo.proyeccion.record', { n: entero(record.n), fecha: diaYMes(record.fecha, t) })
+    : t('enVivo.proyeccion.sinRecord');
+  const accesible = !record
+    ? t('enVivo.proyeccion.accesible', { texto })
     : superaRecord
-    ? ' A este ritmo se supera el récord.'
-    : ` Faltarían ${entero(Math.max(0, record.n - proyectados))} para el récord.`;
+    ? t('enVivo.proyeccion.accesibleSupera', { texto })
+    : t('enVivo.proyeccion.accesibleFalta', { texto, n: entero(Math.max(0, record.n - proyectados)) });
 
   return {
     hoy,
@@ -55,6 +59,6 @@ export function calcularBarraProyeccion(
     texto,
     textoRecord,
     superaRecord,
-    accesible: `Proyección al cierre: ${texto}.${veredicto}`,
+    accesible,
   };
 }

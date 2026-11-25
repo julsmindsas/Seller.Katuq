@@ -2,6 +2,7 @@ import { EtapaId, EtapaInfo } from '../../servicios/en-vivo.modelos';
 import { claveDeTexto } from '../../servicios/en-vivo-reglas';
 import { dinero, diaDeColombia, entero } from '../../utilidades/formato';
 import { ClaveLista } from '../../utilidades/tarjetas';
+import { Traductor } from '../../utilidades/traductor';
 import { CeldaFicha, ContenidoLista } from '../ficha.modelos';
 import { claveDeCanal, FilaPedido, filasParaPintar, ordenarFilas } from './filas';
 
@@ -39,15 +40,15 @@ const PREPARACION: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'producid
 const NO_VENDEN: ReadonlyArray<EtapaId> = ['cancelado', 'rechazado'];
 
 const TITULO_ETAPA: Readonly<Record<EtapaId, string>> = {
-  recibido: 'Sin producir',
-  produccion: 'En producción',
-  producido: 'Producidos',
-  empacado: 'Empacados',
-  listo: 'Para despachar',
-  camino: 'Despachados',
-  entregado: 'Entregados hoy',
-  rechazado: 'Rechazados',
-  cancelado: 'Cancelados',
+  recibido: 'enVivo.ficha.listaEtapaRecibido',
+  produccion: 'enVivo.ficha.listaEtapaProduccion',
+  producido: 'enVivo.ficha.listaEtapaProducido',
+  empacado: 'enVivo.ficha.listaEtapaEmpacado',
+  listo: 'enVivo.ficha.listaEtapaListo',
+  camino: 'enVivo.ficha.listaEtapaCamino',
+  entregado: 'enVivo.ficha.listaEtapaEntregado',
+  rechazado: 'enVivo.ficha.listaEtapaRechazado',
+  cancelado: 'enVivo.ficha.listaEtapaCancelado',
 };
 
 /** Interpreta una clave; null si no es una que la ficha sepa abrir. */
@@ -132,24 +133,28 @@ export function filtrarFilas(
 }
 
 /** Título sin el conteo: "Despachados", "Pedidos a Medellín", "Llegaron por WhatsApp". */
-export function tituloDeLista(clave: ClaveLista, filasDeLaClave: ReadonlyArray<FilaPedido>, katuq: boolean): string {
+export function tituloDeLista(clave: ClaveLista, filasDeLaClave: ReadonlyArray<FilaPedido>, katuq: boolean, t: Traductor): string {
   const k = parsearClave(clave);
-  if (!k) return 'Pedidos';
+  if (!k) return t('enVivo.ficha.pedidos');
   switch (k.tipo) {
     case 'todos':
-      return katuq ? 'Pedidos recientes' : 'Pedidos de hoy';
+      return t(katuq ? 'enVivo.ficha.listaTodosKatuq' : 'enVivo.ficha.listaTodosHoy');
     case 'prep':
-      return 'En preparación';
+      return t('enVivo.ficha.listaPrep');
     case 'ia':
-      return 'Vendidos con Opttia';
+      return t('enVivo.ficha.listaIa');
     case 'etapa':
-      return TITULO_ETAPA[k.etapa];
+      return t(TITULO_ETAPA[k.etapa]);
     case 'canal':
-      return `Llegaron por ${filasDeLaClave.find((f) => !!f.canal)?.canal || k.canal}`;
+      return t('enVivo.ficha.listaCanal', { canal: filasDeLaClave.find((f) => !!f.canal)?.canal || k.canal });
     default: {
       const nombre = filasDeLaClave.find((f) => !!f.ciudad)?.ciudad;
       // Un código DANE sin pedidos no tiene nombre que mostrar.
-      return nombre ? `Pedidos a ${nombre}` : /^\d+$/.test(k.ciudad) ? 'Pedidos a esta ciudad' : `Pedidos a ${k.ciudad}`;
+      return nombre
+        ? t('enVivo.ficha.listaCiudad', { ciudad: nombre })
+        : /^\d+$/.test(k.ciudad)
+        ? t('enVivo.ficha.listaEstaCiudad')
+        : t('enVivo.ficha.listaCiudad', { ciudad: k.ciudad });
     }
   }
 }
@@ -181,6 +186,8 @@ export interface EntradaLista {
   nombreComercio: string;
   ahoraMs: number;
   etapas: ReadonlyMap<EtapaId, EtapaInfo>;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 export interface ResultadoLista {
@@ -194,27 +201,27 @@ export function armarLista(entrada: EntradaLista): ResultadoLista | null {
   const filas = filtrarFilas(entrada.clave, entrada.filas, entrada.dia);
   if (filas === null) return null;
 
-  const { ocultar, katuq } = entrada;
+  const { ocultar, katuq, t } = entrada;
   const resumen = resumenDeFilas(filas);
   const celdas: CeldaFicha[] = ocultar
     ? []
     : [
-        { etiqueta: 'Suman', valor: dinero(resumen.suma), clase: '' },
+        { etiqueta: t('enVivo.ficha.suman'), valor: dinero(resumen.suma), clase: '' },
         katuq
-          ? { etiqueta: 'Comercios', valor: entero(resumen.comercios), clase: '' }
-          : { etiqueta: 'Ticket promedio', valor: dinero(resumen.ticket), clase: '' },
+          ? { etiqueta: t('enVivo.ficha.comercios'), valor: entero(resumen.comercios), clase: '' }
+          : { etiqueta: t('enVivo.ficha.ticketPromedio'), valor: dinero(resumen.ticket), clase: '' },
       ];
-  const pintadas = filasParaPintar(filas, { ocultar, katuq, ahoraMs: entrada.ahoraMs, etapas: entrada.etapas });
+  const pintadas = filasParaPintar(filas, { ocultar, katuq, ahoraMs: entrada.ahoraMs, etapas: entrada.etapas, t });
 
   return {
-    eyebrow: katuq ? 'Toda Katuq' : entrada.nombreComercio,
-    titulo: `${tituloDeLista(entrada.clave, filas, katuq)} · ${entero(filas.length)}`,
+    eyebrow: katuq ? t('enVivo.ficha.todaKatuq') : entrada.nombreComercio,
+    titulo: `${tituloDeLista(entrada.clave, filas, katuq, t)} · ${entero(filas.length)}`,
     contenido: {
       celdas,
       filas: pintadas.filas,
       restantes: pintadas.restantes,
-      vacio: 'No hay pedidos aquí ahora.',
-      nota: katuq ? 'Muestra los pedidos con movimiento reciente en toda Katuq.' : '',
+      vacio: t('enVivo.ficha.listaVacia'),
+      nota: katuq ? t('enVivo.ficha.listaNotaKatuq') : '',
     },
   };
 }

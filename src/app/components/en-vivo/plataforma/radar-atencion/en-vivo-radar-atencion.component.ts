@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable } from 'rxjs';
 import { scan } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
-import { avisarAperturaDeComercio, cifrasGlobal$, ocultar$, radarCongelado$ } from '../utilidades/fuentes';
+import { avisarAperturaDeComercio, cifrasGlobal$, idioma$, ocultar$, radarCongelado$, traductorDe } from '../utilidades/fuentes';
 import { AperturaComercio } from '../utilidades/nombres';
 import { AlertaVista, armarRadar, VistaRadar } from '../utilidades/radar';
 
@@ -36,12 +37,13 @@ export class EnVivoRadarAtencionComponent {
 
   readonly vm$: Observable<EstadoRadar>;
 
-  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService) {
-    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado)]).pipe(
+  constructor(estado: EnVivoEstadoService, private readonly interaccion: EnVivoInteraccionService, translate: TranslateService) {
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([radarCongelado$(estado, interaccion), cifrasGlobal$(estado), ocultar$(estado), idioma$(translate)]).pipe(
       scan(
         (previo: EstadoRadar, [radar, cifras, ocultar]): EstadoRadar => ({
           // Las que no estaban en la lectura anterior entran resaltadas; la primera lectura no marca ninguna.
-          vista: armarRadar(radar, cifras?.comercios ?? [], ocultar, previo.vista ? previo.vista.claves : null),
+          vista: armarRadar(radar, cifras?.comercios ?? [], ocultar, previo.vista ? previo.vista.claves : null, t),
         }),
         { vista: null }
       )

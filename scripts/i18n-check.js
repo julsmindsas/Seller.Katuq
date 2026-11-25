@@ -33,6 +33,10 @@
  *   clavePendiente      una clave de `es` no está en un idioma de `idiomasPendientes` (pt y de mientras
  *                       solo se traduce al inglés); en pantalla sale en español, el idioma por defecto
  *
+ * Origen «literal»: frases en español dentro de un .ts (utilidades que arman etiquetas, que no pasan por
+ * plantilla ni por toastr). Solo son error en `modulosEstrictosLiterales` (lista de carpetas en la config);
+ * en el resto cuentan como textos sueltos informativos. Una línea se exime con el comentario `i18n-ignorar`.
+ *
  * Un texto suelto no cuenta si no tiene letras, si es solo nombres propios (`nombresPropios`) o
  * si está en `textosIgnorados`. `igualesPermitidos` NO sirve para ignorar textos sueltos: un
  * cognado como «Total» puede quedar igual en pt, pero en el HTML igual tiene que ir al traductor.
@@ -523,6 +527,64 @@ function sueltosEnTs(tokens) {
   return hallazgos;
 }
 
+// Propiedades de un objeto cuyo valor se le muestra a la persona (etiquetas armadas en .ts puros).
+const CLAVES_ETIQUETA_TS = new Set([
+  'etiqueta', 'nombre', 'titulo', 'subtitulo', 'texto', 'sub', 'pastilla', 'meta', 'mensaje', 'descripcion',
+  'label', 'tooltip', 'accesible', 'aria', 'ariaLabel', 'leyenda', 'resumen', 'cabecera', 'encabezado',
+]);
+// Llamadas cuyo argumento literal no es un texto visible (claves, selectores, registros, errores).
+const LLAMADAS_SIN_TEXTO = new Set([
+  'instant', 'get', 'stream', 'log', 'warn', 'error', 'debug', 'info', 'Error', 'TypeError', 'require', 'querySelector',
+  'querySelectorAll', 'addEventListener', 'removeEventListener', 'getItem', 'setItem', 'removeItem', 'has', 'includes',
+  'startsWith', 'endsWith', 'indexOf', 'getElementById', 'createElement', 'setAttribute', 'getAttribute', 'matches',
+  'test', 'match', 'replace', 'split', 'join', 'from', 'tipo', 'hasOwnProperty', 'ofType',
+]);
+const PALABRAS_ES = /(?<![\p{L}])(de|del|la|las|el|los|un|una|por|para|con|sin|en|que|hoy|ayer|tu|tus|mis|y|o|al|se|no|ya|más|todos|todas|pedido|pedidos|cliente|clientes|sesión)(?![\p{L}])/iu;
+const DIACRITICOS = /[áéíóúñüÁÉÍÓÚÑÜ¿¡]/;
+
+/** ¿Este literal parece una frase en español hecha para mostrarse? (heurística conservadora) */
+function pareceTextoEnEspanol(visible, porClave) {
+  const t = visible.replace(/\s+/g, ' ').trim();
+  if (t.length < 3 || !tieneLetra(t)) return false;
+  if (/^[^\s]+$/.test(t) && !DIACRITICOS.test(t)) {
+    // una sola «palabra» sin acentos: solo cuenta si va en una propiedad de etiqueta y empieza en mayúscula
+    return porClave && /^\p{Lu}\p{Ll}+$/u.test(t);
+  }
+  if (/^(https?:|\/|\.{1,2}\/|#|[a-z]+-[a-z-]+$)/.test(t)) return false;
+  if (/[;{}]\s*$/.test(t) || /:\s*[\w#.\-()%, ]+;/.test(t)) return false; // CSS
+  if (DIACRITICOS.test(t)) return true;
+  const palabras = t.split(' ');
+  if (palabras.length >= 2 && /^\p{Lu}/u.test(t) && PALABRAS_ES.test(t)) return true;
+  return porClave && palabras.length >= 2 && /^\p{Lu}/u.test(t);
+}
+
+/**
+ * Literales en español dentro de un .ts que se ven como texto de pantalla (frases con acentos o
+ * stopwords, o valores de propiedades como `etiqueta:`/`texto:`). Cubre las utilidades puras que
+ * arman etiquetas y que `sueltosEnTs` (solo Swal/toastr) y las plantillas no ven. Se omiten las
+ * claves de traducción, las comparaciones, los registros y los errores.
+ */
+function literalesEnEspanolEnTs(tokens) {
+  const hallazgos = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const tk = tokens[i];
+    if (tk.tipo !== 'cadena' && !(tk.tipo === 'plantilla')) continue;
+    const val = d => (tokens[i + d] ? tokens[i + d].valor : '');
+    if ((val(-1) === '=' && ['=', '!'].includes(val(-2))) || (['=', '!'].includes(val(1)) && val(2) === '=')) continue;
+    if (val(-1) === 'from' || val(-1) === 'case' || val(-1) === 'import' || val(-1) === 'typeof') continue;
+    if (val(-1) === '(' && LLAMADAS_SIN_TEXTO.has(val(-2))) continue;
+    if (val(-1) === 'new' || val(-2) === 'new') continue;
+    if (val(1) === ':' && tokens[i + 1] && tokens[i + 1].tipo === 'punt' && (val(-1) === '{' || val(-1) === ',')) continue; // es una clave de objeto
+    const visible = tk.tipo === 'plantilla' ? tk.estatico : tk.valor;
+    const prev = tokens[i - 1];
+    const antes = tokens[i - 2];
+    const porClave = !!(prev && prev.valor === ':' && antes && (antes.tipo === 'ident' || antes.tipo === 'cadena') && CLAVES_ETIQUETA_TS.has(antes.valor));
+    if (!pareceTextoEnEspanol(textoVisible(visible), porClave)) continue;
+    hallazgos.push({ offset: tk.inicio + 1, texto: tk.valor, visible, origen: 'literal' });
+  }
+  return hallazgos;
+}
+
 /** Plantillas en línea de un componente: `template: \`…\`` o `template: '…'`. */
 function plantillasEnLinea(tokens) {
   const res = [];
@@ -951,10 +1013,12 @@ function ejecutar({ raiz = RAIZ_REPO, config: rutaConfig = CONFIG_REPO, modulos 
   // Código.
   const cerradas = resolverModulos(config.modulosCerrados, config, raizCodigo);
   const pedidas = resolverModulos(modulos, config, raizCodigo);
+  const estrictas = resolverModulos(config.modulosEstrictosLiterales || [], config, raizCodigo);
   const archivos = fs.existsSync(raizCodigo) ? listarArchivos(raizCodigo) : [];
   const usos = [];
   const literales = new Set();
   const sueltos = [];
+  const literalesTs = [];
   const modulo = [];
 
   for (const archivo of archivos) {
@@ -980,6 +1044,7 @@ function ejecutar({ raiz = RAIZ_REPO, config: rutaConfig = CONFIG_REPO, modulos 
       ts.usos.forEach(u => usos.push({ ...u, archivo: rel, linea: linea(u.offset) }));
       ts.dinamicas.forEach(d => usos.push({ ...d, dinamica: true, archivo: rel, linea: linea(d.offset) }));
       encontrados = sueltosEnTs(tokens);
+      encontrados.push(...literalesEnEspanolEnTs(tokens));
       // Plantillas en línea (`template: \`…\``): se revisan como un .html.
       for (const p of plantillasEnLinea(tokens)) {
         const html = escanearHtml(p.texto, atributosTexto);
@@ -1001,6 +1066,13 @@ function ejecutar({ raiz = RAIZ_REPO, config: rutaConfig = CONFIG_REPO, modulos 
       const l = linea(h.offset);
       if (ignoradas.has(l) || ignoradas.has(l - 1) || permitidos.ignorado(h.visible)) continue;
       const suelto = { tipo: 'textoSuelto', archivo: rel, linea: l, texto: h.texto.trim(), origen: h.origen, bloque, carpeta };
+      if (h.origen === 'literal') {
+        // Aparte de los textos sueltos de plantilla/mensaje: no altera sus conteos ni los de los bloques.
+        if (fuera) continue;
+        literalesTs.push(suelto);
+        if (enCerrado && estrictas.incluye(relCodigo, bloque)) hallazgos.push({ ...suelto, mensaje: `literal en español en un .ts de un módulo estricto: «${h.texto}»` });
+        continue;
+      }
       if (enPedido) modulo.push(suelto);
       if (fuera) continue;
       sueltos.push(suelto);
@@ -1050,6 +1122,7 @@ function ejecutar({ raiz = RAIZ_REPO, config: rutaConfig = CONFIG_REPO, modulos 
     errores,
     avisos,
     sueltos,
+    literalesTs,
     modulo,
     modulosPedidos: pedidas.carpetas,
     modulosCerrados: cerradas.carpetas,
@@ -1155,7 +1228,8 @@ function main(argv) {
 
   const porOrigen = informe.sueltos.reduce((acc, s) => ({ ...acc, [s.origen]: (acc[s.origen] || 0) + 1 }), {});
   console.log(`\nTextos sueltos en todo el panel (informativo fuera de los módulos cerrados): ${informe.sueltos.length}`
-    + ` (texto ${porOrigen.texto || 0}, interpolación ${porOrigen.interpolacion || 0}, atributo ${porOrigen.atributo || 0}, mensaje ${porOrigen.mensaje || 0}).`);
+    + ` (texto ${porOrigen.texto || 0}, interpolación ${porOrigen.interpolacion || 0}, atributo ${porOrigen.atributo || 0}, mensaje ${porOrigen.mensaje || 0}).
+Literales en español dentro de .ts (informativo; error solo en modulosEstrictosLiterales): ${informe.literalesTs.length}`);
   if (bloques) imprimirBloques(informe);
 
   if (opciones.modulos.length) {
@@ -1177,4 +1251,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { ejecutar, main, escanearHtml, lexTs, sueltosEnTs, clavesDePipe, clavesDeTs, recorrerJson, plantillasEnLinea };
+module.exports = { literalesEnEspanolEnTs, ejecutar, main, escanearHtml, lexTs, sueltosEnTs, clavesDePipe, clavesDeTs, recorrerJson, plantillasEnLinea };

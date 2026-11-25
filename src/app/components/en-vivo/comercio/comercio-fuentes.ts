@@ -2,6 +2,7 @@ import { combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { EstadoEnVivo, PreferenciasEnVivo } from '../servicios/en-vivo.modelos';
 import { armarFlota } from '../utilidades/flota';
+import { Traductor } from '../utilidades/traductor';
 import { armarAtencion, contarUrgentes, ItemAtencion } from './utilidades/atencion';
 
 /**
@@ -48,10 +49,10 @@ function mismaEntrada(a: EntradaAtencion, b: EntradaAtencion): boolean {
   );
 }
 
-export function vistaAtencionDe(estado: EntradaAtencion): VistaAtencion {
+export function vistaAtencionDe(estado: EntradaAtencion, t: Traductor): VistaAtencion {
   // La flota con lo que lleva cada uno sirve para abrir al mensajero con sus pedidos.
   const flota = armarFlota(estado.flota, estado.pedidos, estado.actualizadoEn);
-  const items = armarAtencion(estado.radar, flota);
+  const items = armarAtencion(estado.radar, flota, t);
   return {
     calculada: estado.radar !== null,
     items,
@@ -69,7 +70,10 @@ export function vistaAtencionDe(estado: EntradaAtencion): VistaAtencion {
  */
 export function atencionCongelada$(
   estado$: Observable<EstadoEnVivo>,
-  repitiendo$: Observable<boolean>
+  repitiendo$: Observable<boolean>,
+  t: Traductor,
+  /** Emite al cambiar el idioma (con un valor inicial): los textos de la lista se vuelven a armar. */
+  idioma$: Observable<unknown>
 ): Observable<VistaAtencion> {
   return combineLatest([
     estado$.pipe(
@@ -87,8 +91,9 @@ export function atencionCongelada$(
       distinctUntilChanged(mismaEntrada)
     ),
     repitiendo$.pipe(distinctUntilChanged()),
+    idioma$,
   ]).pipe(
     filter(([, repitiendo], emision) => emision === 0 || !repitiendo),
-    map(([entrada]) => vistaAtencionDe(entrada))
+    map(([entrada]) => vistaAtencionDe(entrada, t))
   );
 }

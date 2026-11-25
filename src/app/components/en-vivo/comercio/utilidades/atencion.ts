@@ -2,6 +2,7 @@ import { claveDeTexto, primerNombre } from '../../servicios/en-vivo-reglas';
 import { AlertaRadar, claseTonoCss, RadarEnVivo, TipoAlertaRadar } from '../../servicios/en-vivo.modelos';
 import { EntradaFlota } from '../../utilidades/flota';
 import { IconoId } from '../../utilidades/iconos';
+import { Traductor } from '../../utilidades/traductor';
 
 /**
  * "Atención ahora" y "Lo próximo" del comercio (diseño 18). El SERVIDOR calcula qué necesita
@@ -82,7 +83,7 @@ function claveDe(alerta: AlertaRadar): string {
  * Los puntos de `radar.atencion`, del más urgente al menos urgente (el servidor ya los manda
  * así; se ordena por gravedad, sin mover los del mismo nivel). Sin radar o sin `atencion` queda vacío.
  */
-export function armarAtencion(radar: RadarEnVivo | null | undefined, flota: ReadonlyArray<EntradaFlota>): ItemAtencion[] {
+export function armarAtencion(radar: RadarEnVivo | null | undefined, flota: ReadonlyArray<EntradaFlota>, t: Traductor): ItemAtencion[] {
   const lista = radar?.atencion ?? [];
   return lista
     .map((alerta, orden) => ({ alerta, orden }))
@@ -98,11 +99,13 @@ export function armarAtencion(radar: RadarEnVivo | null | undefined, flota: Read
         texto: alerta.texto ?? '',
         sugerencia: conMayuscula(alerta.sugerencia),
         accion,
-        etiquetaAccion: accion ? (accion.tipo === 'pedido' ? 'Ver el pedido' : 'Ver al mensajero') : '',
+        etiquetaAccion: accion ? t(accion.tipo === 'pedido' ? 'enVivo.comercio.atencion.verElPedido' : 'enVivo.comercio.atencion.verAlMensajero') : '',
         ariaAccion: accion
           ? accion.tipo === 'pedido'
-            ? `Ver el pedido${accion.numero ? ` ${accion.numero}` : ''}`
-            : `Ver al mensajero ${accion.nombre}`
+            ? accion.numero
+              ? t('enVivo.comercio.atencion.ariaPedido', { numero: accion.numero })
+              : t('enVivo.comercio.atencion.verElPedido')
+            : t('enVivo.comercio.atencion.ariaMensajero', { nombre: accion.nombre })
           : '',
         nuevo: false,
       };
@@ -120,8 +123,8 @@ export function contarUrgentes(items: ReadonlyArray<ItemAtencion>): number {
 }
 
 /** "3 por atender" · "Todo al día". */
-export function textoUrgentes(urgentes: number): string {
-  return urgentes > 0 ? `${urgentes} por atender` : 'Todo al día';
+export function textoUrgentes(urgentes: number, t: Traductor): string {
+  return urgentes > 0 ? t('enVivo.comercio.atencion.porAtender', { n: urgentes }) : t('enVivo.enVivoSugerencia.todoAlDia');
 }
 
 /**

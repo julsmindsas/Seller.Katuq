@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Observable } from 'rxjs';
+import { combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { armarCanales, FilaCanal, VistaCanales } from '../utilidades/canales';
+import { idioma$, traductorDe } from '../utilidades/fuentes';
 
 /**
  * "De dónde llegan los pedidos" en toda Katuq: la mezcla de canales en una barra partida, una barra
@@ -21,12 +23,15 @@ import { armarCanales, FilaCanal, VistaCanales } from '../utilidades/canales';
 export class EnVivoCanalesKatuqComponent {
   readonly vm$: Observable<VistaCanales>;
 
-  constructor(estado: EnVivoEstadoService) {
-    this.vm$ = estado.estado$.pipe(
-      map((e) => e.cifrasGlobal),
-      distinctUntilChanged(),
-      map((cifras) => armarCanales(cifras?.porCanal, cifras?.opttia))
-    );
+  constructor(estado: EnVivoEstadoService, translate: TranslateService) {
+    const t = traductorDe(translate);
+    this.vm$ = combineLatest([
+      estado.estado$.pipe(
+        map((e) => e.cifrasGlobal),
+        distinctUntilChanged()
+      ),
+      idioma$(translate),
+    ]).pipe(map(([cifras]) => armarCanales(cifras?.porCanal, cifras?.opttia, t)));
   }
 
   porCanal(_: number, fila: FilaCanal): string {

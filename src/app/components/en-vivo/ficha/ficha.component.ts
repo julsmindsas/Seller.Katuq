@@ -15,6 +15,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { AccionPantalla, EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
@@ -22,6 +23,7 @@ import { EnVivoService } from '../servicios/en-vivo.service';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, esNoDisponible } from '../servicios/en-vivo.modelos';
 import { cadaFueraDeZona } from '../utilidades/movimiento';
+import { Traductor } from '../utilidades/traductor';
 import { AccionFicha, ContenidoFicha, PedidoAbierto, TableroSolicitado, VistaFicha, claveDeVista } from './ficha.modelos';
 import { EnVivoFichaService } from './ficha.service';
 import { armarContenido, empresaDeConsulta } from './utilidades/contenido';
@@ -127,7 +129,8 @@ export class EnVivoFichaComponent implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly zona: NgZone,
     private readonly cambios: ChangeDetectorRef,
-    @Inject(DOCUMENT) private readonly doc: Document
+    @Inject(DOCUMENT) private readonly doc: Document,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -139,6 +142,8 @@ export class EnVivoFichaComponent implements OnInit, OnDestroy {
     );
 
     this.suscripciones.add(this.interaccion.acciones$.subscribe((accion) => this.alAccion(accion)));
+    // Al cambiar de idioma se rearma el contenido (sus textos se arman aquí, no en la plantilla).
+    this.suscripciones.add(this.translate.onLangChange.subscribe(() => this.refrescar(false)));
     this.suscripciones.add(
       combineLatest([
         this.servicio.estadoFicha$,
@@ -291,6 +296,7 @@ export class EnVivoFichaComponent implements OnInit, OnDestroy {
     }
 
     const ahoraMs = Date.now();
+    const t: Traductor = (clave, params) => this.translate.instant(clave, params);
     const armar = (nuevos: ReadonlySet<string>): ContenidoFicha =>
       armarContenido({
         vista,
@@ -300,6 +306,7 @@ export class EnVivoFichaComponent implements OnInit, OnDestroy {
         ahoraMs,
         nuevos,
         empresaEnfoque: this.empresa ?? null,
+        t,
       });
 
     let contenido = armar(this.nuevos);

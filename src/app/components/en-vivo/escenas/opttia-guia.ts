@@ -1,3 +1,5 @@
+import { Traductor } from '../utilidades/traductor';
+import { traductorVacio } from './traduccion-escena';
 import { ObjetivoOrbe, PuntoOrbe } from './opttia-puntos';
 
 /**
@@ -139,9 +141,15 @@ export class GuiaOpttia {
   private propuestaVisible = false;
   /** La próxima vez que se señale la propuesta, la cámara se acerca (solo la primera). */
   private camaraPropuesta = false;
+  private t: Traductor = traductorVacio;
 
   constructor(cfg: Partial<ConfigGuia> = {}) {
     this.cfg = { ...CONFIG_GUIA, ...cfg };
+  }
+
+  /** El traductor del idioma activo (lo pone el servicio; se vuelve a poner al cambiar el idioma). */
+  fijarTraductor(t: Traductor): void {
+    this.t = t;
   }
 
   get enRecorrido(): boolean {
@@ -259,7 +267,7 @@ export class GuiaOpttia {
       const puntos = fuentes.puntos();
       if (puntos.length) {
         const p = puntos[this.indice++ % puntos.length];
-        ordenes.push(this.senalarPunto(ahoraMs, p, this.cfg.senalMs, 'Opttia', false));
+        ordenes.push(this.senalarPunto(ahoraMs, p, this.cfg.senalMs, this.t('enVivo.escenas.guia.titulo'), false));
       } else {
         const lineas = fuentes.lineas();
         if (lineas.length) {
@@ -313,8 +321,8 @@ export class GuiaOpttia {
     if (!puntos.length) {
       const texto =
         ctx.vista === 'katuq'
-          ? 'Todo en orden: ningún comercio necesita atención ahora.'
-          : 'Todo al día: nada atascado, demorado ni sin cobrar.';
+          ? this.t('enVivo.enVivoRadarAtencion.todoEnOrdenNingunComercio')
+          : this.t('enVivo.enVivoAtencionAhora.todoAlDiaNadaAtascado');
       return [{ tipo: 'soltar' }, this.hablar(ahoraMs, texto, 5000)];
     }
     this.recorrido = { puntos, i: 0, proximoMs: ahoraMs };
@@ -332,13 +340,13 @@ export class GuiaOpttia {
       ordenes.push({ tipo: 'soltar' });
       // Con una propuesta viva, el recorrido termina volviendo a ella.
       if (this.propuesta) ordenes.push(this.senalarPropuesta());
-      else ordenes.push(this.hablar(ahoraMs, 'Eso es lo importante por ahora. Te aviso si algo cambia.', 4000));
+      else ordenes.push(this.hablar(ahoraMs, this.t('enVivo.escenas.guia.esoEsLoImportante'), 4000));
       return;
     }
     const p = r.puntos[r.i];
     r.i++;
     r.proximoMs = ahoraMs + this.cfg.pasoMs;
-    ordenes.push(this.senalarPunto(ahoraMs, p, SENAL_RECORRIDO_MS, `Opttia · ${r.i} de ${r.puntos.length}`, true));
+    ordenes.push(this.senalarPunto(ahoraMs, p, SENAL_RECORRIDO_MS, this.t('enVivo.escenas.guia.paso', { paso: r.i, total: r.puntos.length }), true));
   }
 
   /**
@@ -370,7 +378,7 @@ export class GuiaOpttia {
         texto: destino.texto,
         ms: SENAL_ENTREGA_MS,
         camara: false,
-        titulo: 'Opttia · por WhatsApp',
+        titulo: this.t('enVivo.escenas.guia.porWhatsapp'),
         tono: 'pack',
         destello: true,
       },
@@ -392,7 +400,7 @@ export class GuiaOpttia {
         texto,
         ms: SENAL_RESPUESTA_MS,
         camara: true,
-        titulo: 'Opttia · tu pregunta',
+        titulo: this.t('enVivo.escenas.guia.tuPregunta'),
         tono: 'pack',
         destello: false,
       },
@@ -417,7 +425,7 @@ export class GuiaOpttia {
   /** Habla desde donde está, sin señalar nada. */
   private hablar(ahoraMs: number, texto: string, ms: number): OrdenSenalar {
     this.senal = { hastaMs: ahoraMs + ms };
-    return { tipo: 'senalar', obj: null, alterno: null, texto, ms, camara: false, titulo: 'Opttia', tono: 'pack', destello: false };
+    return { tipo: 'senalar', obj: null, alterno: null, texto, ms, camara: false, titulo: this.t('enVivo.escenas.guia.titulo'), tono: 'pack', destello: false };
   }
 }
 

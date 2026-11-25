@@ -1,5 +1,6 @@
 import { EstadoEnVivo } from '../../servicios/en-vivo.modelos';
 import { mapaDeEtapas } from '../../utilidades/tonos';
+import { Traductor } from '../../utilidades/traductor';
 import { ContenidoFicha, ContenidoLista, VistaFicha, claveDeVista } from '../ficha.modelos';
 import { filasDeEventos, filasDePedidos } from './filas';
 import { armarLista } from './lista';
@@ -29,6 +30,8 @@ export interface EntradaContenido {
   nuevos: ReadonlySet<string>;
   /** El comercio que mira la pantalla (`@Input() empresa` de la ficha), si lo hay. */
   empresaEnfoque: string | null;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 /**
@@ -44,16 +47,18 @@ export function empresaDeConsulta(
   return empresaDeLaVista || empresaEnfoque || empresaDeLaFoto || null;
 }
 
-const LISTA_NO_ENTENDIDA: ContenidoLista = {
-  celdas: [],
-  filas: [],
-  restantes: 0,
-  vacio: 'No pudimos abrir esta lista.',
-  nota: '',
-};
+function listaNoEntendida(t: Traductor): ContenidoLista {
+  return {
+    celdas: [],
+    filas: [],
+    restantes: 0,
+    vacio: t('enVivo.ficha.listaNoEntendida'),
+    nota: '',
+  };
+}
 
 export function armarContenido(entrada: EntradaContenido): ContenidoFicha {
-  const { vista, estado, ocultar, ahoraMs } = entrada;
+  const { vista, estado, ocultar, ahoraMs, t } = entrada;
   const katuq = estado.vista === 'katuq';
   const etapas = mapaDeEtapas(estado.etapas);
   const dia = katuq ? null : estado.cifras?.dia ?? null;
@@ -73,7 +78,7 @@ export function armarContenido(entrada: EntradaContenido): ContenidoFicha {
       const eventoDelPedido = katuq ? estado.eventos.find((e) => e.pedidoId === vista.id) ?? null : null;
       const nombreComercio = katuq
         ? comercio?.nombre ?? eventoDelPedido?.nombreComercio ?? ''
-        : estado.empresa ?? 'Tu comercio';
+        : estado.empresa ?? t('enVivo.ficha.tuComercio');
       const resultado = armarPedido({
         id: vista.id,
         empresa: katuq ? empresa : null,
@@ -89,6 +94,7 @@ export function armarContenido(entrada: EntradaContenido): ContenidoFicha {
         ocultar,
         nuevos: entrada.nuevos,
         ahoraMs,
+        t,
       });
       eyebrow = resultado.eyebrow;
       titulo = resultado.titulo;
@@ -103,13 +109,14 @@ export function armarContenido(entrada: EntradaContenido): ContenidoFicha {
         dia,
         katuq,
         ocultar,
-        nombreComercio: estado.empresa ?? 'Tu comercio',
+        nombreComercio: estado.empresa ?? t('enVivo.ficha.tuComercio'),
         ahoraMs,
         etapas,
+        t,
       });
-      eyebrow = resultado ? resultado.eyebrow : katuq ? 'Toda Katuq' : estado.empresa ?? 'Tu comercio';
-      titulo = resultado ? resultado.titulo : 'Pedidos';
-      lista = resultado ? resultado.contenido : LISTA_NO_ENTENDIDA;
+      eyebrow = resultado ? resultado.eyebrow : katuq ? t('enVivo.ficha.todaKatuq') : estado.empresa ?? t('enVivo.ficha.tuComercio');
+      titulo = resultado ? resultado.titulo : t('enVivo.ficha.pedidos');
+      lista = resultado ? resultado.contenido : listaNoEntendida(t);
       break;
     }
 
@@ -121,10 +128,11 @@ export function armarContenido(entrada: EntradaContenido): ContenidoFicha {
         eventos: estado.eventos,
         actualizadoEn: estado.actualizadoEn,
         dia,
-        nombreComercio: estado.empresa ?? 'Tu comercio',
+        nombreComercio: estado.empresa ?? t('enVivo.ficha.tuComercio'),
         ocultar,
         ahoraMs,
         etapas,
+        t,
       });
       eyebrow = resultado.eyebrow;
       titulo = resultado.titulo;

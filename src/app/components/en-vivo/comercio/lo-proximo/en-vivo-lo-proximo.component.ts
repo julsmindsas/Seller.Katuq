@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { atencionCongelada$ } from '../comercio-fuentes';
@@ -39,19 +40,26 @@ export class EnVivoLoProximoComponent implements OnInit, OnDestroy {
   constructor(
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
-    private readonly cambios: ChangeDetectorRef
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
+
+  private readonly t = (clave: string, params?: Record<string, unknown>): string => this.translate.instant(clave, params);
 
   ngOnInit(): void {
     this.suscripcion = atencionCongelada$(
       this.estado.estado$,
-      this.interaccion.repeticion$.pipe(map((r) => r.activa))
+      this.interaccion.repeticion$.pipe(map((r) => r.activa)),
+      this.t,
+      this.translate.onLangChange.pipe(startWith(null))
     ).subscribe((atencion) => {
       this.vista = {
         calculada: atencion.calculada,
         proximos: masUrgentes(atencion.items),
         urgentes: atencion.urgentes,
-        titulo: atencion.soloPropias ? 'Lo que conviene hacer con mis pedidos' : 'Lo que conviene hacer ya',
+        titulo: atencion.soloPropias
+          ? this.t('enVivo.comercio.proximo.tituloPropias')
+          : this.t('enVivo.enVivoLoProximo.loQueConvieneHacerYa'),
         empresa: atencion.empresa,
       };
       this.cambios.markForCheck();

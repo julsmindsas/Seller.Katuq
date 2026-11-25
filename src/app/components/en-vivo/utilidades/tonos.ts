@@ -23,15 +23,15 @@ export function claseTono(tono: TonoVisual | null | undefined): string {
 
 /** Las etapas de la banda, en orden, para cuando la foto aún no las trae. */
 export const ETAPAS_POR_DEFECTO: ReadonlyArray<EtapaInfo> = [
-  { id: 'recibido', nombre: 'Sin producir', tono: 'neutro' },
-  { id: 'produccion', nombre: 'En producción', tono: 'info' },
-  { id: 'producido', nombre: 'Producido', tono: 'aviso' },
-  { id: 'empacado', nombre: 'Empacado', tono: 'aviso' },
-  { id: 'listo', nombre: 'Para despachar', tono: 'acento' },
-  { id: 'camino', nombre: 'Despachado', tono: 'info' },
-  { id: 'entregado', nombre: 'Entregado', tono: 'ok' },
-  { id: 'rechazado', nombre: 'Rechazado', tono: 'peligro' },
-  { id: 'cancelado', nombre: 'Cancelado', tono: 'peligro' },
+  { id: 'recibido', nombre: 'Sin producir', tono: 'neutro' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'produccion', nombre: 'En producción', tono: 'info' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'producido', nombre: 'Producido', tono: 'aviso' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'empacado', nombre: 'Empacado', tono: 'aviso' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'listo', nombre: 'Para despachar', tono: 'acento' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'camino', nombre: 'Despachado', tono: 'info' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'entregado', nombre: 'Entregado', tono: 'ok' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'rechazado', nombre: 'Rechazado', tono: 'peligro' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'cancelado', nombre: 'Cancelado', tono: 'peligro' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
 ];
 
 /** Etapas de la franja de la operación (sin rechazado ni cancelado). */

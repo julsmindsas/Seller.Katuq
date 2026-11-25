@@ -1,6 +1,7 @@
 import { CifrasGlobalEnVivo, RadarEnVivo } from '../../servicios/en-vivo.modelos';
-import { decimal, diaYMes, dineroCorto, entero, horaCorta } from '../../utilidades/formato';
+import { decimal, diaYMes, dineroCorto, entero, formatearCifra, horaCorta } from '../../utilidades/formato';
 import { IconoId } from '../../utilidades/iconos';
+import { Traductor } from '../../utilidades/traductor';
 
 /**
  * Récords y proyección de toda Katuq (spec `radar-en-vivo`, "Proyección y récords"): hacia dónde va
@@ -51,12 +52,24 @@ export function cruzoElRecord(previo: boolean | null, actual: boolean | null): b
   return previo === false && actual === true;
 }
 
-export const TEXTO_RECORD_KATUQ = '¡Katuq va camino a su récord de pedidos!';
+/** Clave del aviso de celebración; el componente la traduce al emitirlo. */
+export const CLAVE_RECORD_KATUQ = 'enVivo.plataforma.recordKatuq';
+
+/**
+ * Parte un texto traducido en `antes`, `negrita` y `despues` por los marcadores `**`: así cada logro
+ * es UNA frase en el diccionario y el inglés puede ordenar las palabras como necesite.
+ */
+export function partirNegrita(texto: string): { antes: string; negrita: string; despues: string } {
+  const partes = texto.split('**');
+  if (partes.length < 3) return { antes: texto, negrita: '', despues: '' };
+  return { antes: partes[0], negrita: partes[1], despues: partes.slice(2).join('') };
+}
 
 export function armarLogros(
   radar: RadarEnVivo | null | undefined,
   cifras: CifrasGlobalEnVivo | null | undefined,
-  ocultar: boolean
+  ocultar: boolean,
+  t: Traductor
 ): VistaLogros {
   const proyeccion = radar?.proyeccion ?? null;
   const record = radar?.record ?? null;
@@ -65,8 +78,8 @@ export function armarLogros(
   let subtexto = '';
   if (proyeccion && record) {
     subtexto = pintaRecord
-      ? '¡pinta récord!'
-      : `faltarían ${entero(Math.max(0, Math.round(record.n - proyeccion.pedidos)))} para el récord`;
+      ? t('enVivo.plataforma.logrosPintaRecord')
+      : t('enVivo.plataforma.logrosFaltarian', { n: entero(Math.max(0, Math.round(record.n - proyeccion.pedidos))) });
   }
 
   const items: LogroVista[] = [];
@@ -77,15 +90,13 @@ export function armarLogros(
           clave: 'record',
           icono: 'trofeo',
           clase: 't-warn',
-          antes: 'Récord de pedidos en 90 días: ',
-          negrita: entero(record.n),
-          despues: `, el ${diaYMes(record.fecha)}`,
+          ...partirNegrita(t('enVivo.plataforma.logrosRecord', { n: entero(record.n), fecha: diaYMes(record.fecha, t) })),
         }
       : {
           clave: 'record',
           icono: 'trofeo',
           clase: 't-warn',
-          antes: 'Todavía no hay un récord de pedidos registrado',
+          antes: t('enVivo.plataforma.logrosRecordSin'),
           negrita: '',
           despues: '',
         }
@@ -98,15 +109,15 @@ export function armarLogros(
           clave: 'mejor-hora',
           icono: 'rayo',
           clase: 't-accent',
-          antes: 'Mejor hora de hoy: ',
-          negrita: horaCorta(mejor.hora),
-          despues: ` · ${entero(mejor.pedidos)} ${mejor.pedidos === 1 ? 'pedido' : 'pedidos'}`,
+          ...partirNegrita(
+            t('enVivo.plataforma.logrosMejorHora', { hora: horaCorta(mejor.hora, t), pedidos: formatearCifra(mejor.pedidos, 'pedidos', t) })
+          ),
         }
       : {
           clave: 'mejor-hora',
           icono: 'rayo',
           clase: 't-accent',
-          antes: 'Todavía no hay una mejor hora hoy',
+          antes: t('enVivo.plataforma.logrosMejorHoraSin'),
           negrita: '',
           despues: '',
         }
@@ -119,15 +130,17 @@ export function armarLogros(
           clave: 'opttia',
           icono: 'ia',
           clase: 't-pack',
-          antes: 'Opttia ayudó a vender ',
-          negrita: ocultar ? `${entero(ia.pedidos)} ${ia.pedidos === 1 ? 'pedido' : 'pedidos'}` : dineroCorto(ia.ventas),
-          despues: ' por WhatsApp',
+          ...partirNegrita(
+            t('enVivo.plataforma.logrosOpttia', {
+              valor: ocultar ? formatearCifra(ia.pedidos, 'pedidos', t) : dineroCorto(ia.ventas, t),
+            })
+          ),
         }
       : {
           clave: 'opttia',
           icono: 'ia',
           clase: 't-pack',
-          antes: 'Opttia todavía no ha armado pedidos hoy',
+          antes: t('enVivo.plataforma.logrosOpttiaSin'),
           negrita: '',
           despues: '',
         }
@@ -140,15 +153,13 @@ export function armarLogros(
           clave: 'ritmo',
           icono: 'pulso',
           clase: 't-ok',
-          antes: 'Ritmo récord de hoy: ',
-          negrita: decimal(ritmo.porMinuto),
-          despues: ' pedidos por minuto',
+          ...partirNegrita(t('enVivo.plataforma.logrosRitmo', { valor: decimal(ritmo.porMinuto) })),
         }
       : {
           clave: 'ritmo',
           icono: 'pulso',
           clase: 't-ok',
-          antes: 'Todavía no hay un ritmo récord hoy',
+          antes: t('enVivo.plataforma.logrosRitmoSin'),
           negrita: '',
           despues: '',
         }
@@ -156,9 +167,13 @@ export function armarLogros(
 
   return {
     hayProyeccion: proyeccion !== null,
-    etiqueta: 'Si el ritmo sigue, hoy cierra en',
-    grande: proyeccion ? (ocultar ? `${entero(proyeccion.pedidos)} pedidos` : dineroCorto(proyeccion.ventas)) : '—',
-    prefijo: proyeccion && !ocultar ? `≈ ${entero(proyeccion.pedidos)} pedidos · ` : '',
+    etiqueta: t('enVivo.plataforma.logrosSiElRitmoSigue'),
+    grande: proyeccion
+      ? ocultar
+        ? formatearCifra(proyeccion.pedidos, 'pedidos', t)
+        : dineroCorto(proyeccion.ventas, t)
+      : '—',
+    prefijo: proyeccion && !ocultar ? t('enVivo.plataforma.logrosPrefijo', { pedidos: formatearCifra(proyeccion.pedidos, 'pedidos', t) }) : '',
     subtexto,
     pintaRecord,
     items,

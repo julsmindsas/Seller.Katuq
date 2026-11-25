@@ -4,6 +4,7 @@ import { armarFlota, sigueEnLaCalle } from '../../utilidades/flota';
 import { claveDeNombre, diaDeColombia, entero } from '../../utilidades/formato';
 import { CeldaFicha, ContenidoMensajero } from '../ficha.modelos';
 import { filasDePedidos, filasParaPintar, ordenarFilas } from './filas';
+import { Traductor } from '../../utilidades/traductor';
 import { textoDeHora } from './recorrido';
 
 /**
@@ -27,6 +28,8 @@ export interface EntradaMensajero {
   ocultar: boolean;
   ahoraMs: number;
   etapas: ReadonlyMap<EtapaId, EtapaInfo>;
+  /** Traductor del componente. */
+  t: Traductor;
 }
 
 export interface ResultadoMensajero {
@@ -68,6 +71,7 @@ export function ultimaSalida(
 }
 
 export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
+  const { t } = entrada;
   const clave = claveDeNombre(entrada.nombre);
   const entradas = armarFlota(entrada.flota, entrada.pedidos, entrada.actualizadoEn);
   const delaFlota = entradas.find((e) => e.clave === clave) ?? null;
@@ -83,13 +87,13 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
 
   if (!delaFlota && suyos.length === 0) {
     return {
-      eyebrow: 'Mensajero',
+      eyebrow: t('enVivo.ficha.mensajero'),
       titulo: entrada.nombre,
       contenido: {
         esTransportadora: false,
         descripcion: '',
         subtitulo: entrada.nombreComercio,
-        pastilla: 'Sin datos',
+        pastilla: t('enVivo.ficha.sinDatos'),
         clasePastilla: 't-slate',
         celdas: [],
         tituloLleva: '',
@@ -98,7 +102,7 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
         tituloSinCerrar: '',
         filasSinCerrar: [],
         restantesSinCerrar: 0,
-        nota: 'Ya no tenemos datos de este mensajero en la pantalla.',
+        nota: t('enVivo.ficha.mensajeroSinDatosNota'),
       },
     };
   }
@@ -113,8 +117,16 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
   const entregados = entregadosDeHoyPor(suyos, entrada.dia);
 
   const celdas: CeldaFicha[] = [
-    { etiqueta: 'Última salida', valor: ultima !== null ? textoDeHora(ultima, entrada.ahoraMs) : 'Hoy no ha salido', clase: '' },
-    { etiqueta: 'Entregó hoy', valor: `${entero(entregados)} ${entregados === 1 ? 'pedido' : 'pedidos'}`, clase: '' },
+    {
+      etiqueta: t('enVivo.ficha.ultimaSalida'),
+      valor: ultima !== null ? textoDeHora(ultima, entrada.ahoraMs, t) : t('enVivo.ficha.hoyNoHaSalido'),
+      clase: '',
+    },
+    {
+      etiqueta: t('enVivo.ficha.entregoHoy'),
+      valor: t(entregados === 1 ? 'enVivo.ficha.pedidoUno' : 'enVivo.ficha.pedidosVarios', { n: entero(entregados) }),
+      clase: '',
+    },
   ];
 
   const opcionesFilas = {
@@ -122,31 +134,31 @@ export function armarMensajero(entrada: EntradaMensajero): ResultadoMensajero {
     katuq: false,
     ahoraMs: entrada.ahoraMs,
     etapas: entrada.etapas,
+    t,
   };
   const pintadas = filasParaPintar(ordenarFilas(filasDePedidos(lleva)), opcionesFilas);
   const pintadasSinCerrar = filasParaPintar(ordenarFilas(filasDePedidos(sinCerrar)), opcionesFilas);
 
   return {
-    eyebrow: esTransportadora ? 'Transportadora' : 'Mensajero',
+    eyebrow: t(esTransportadora ? 'enVivo.ficha.transportadora' : 'enVivo.ficha.mensajero'),
     titulo: delaFlota?.nombre ?? entrada.nombre,
     contenido: {
       esTransportadora,
-      descripcion: esTransportadora ? 'Camión · envíos a otras ciudades' : 'Moto · mensajero propio',
+      descripcion: t(esTransportadora ? 'enVivo.ficha.descCamion' : 'enVivo.ficha.descMoto'),
       subtitulo: entrada.nombreComercio,
-      pastilla: lleva.length > 0 ? `En ruta · ${lleva.length}` : esTransportadora ? 'Disponible' : 'En bodega',
+      pastilla:
+        lleva.length > 0
+          ? t('enVivo.ficha.enRuta', { n: lleva.length })
+          : t(esTransportadora ? 'enVivo.ficha.disponible' : 'enVivo.ficha.enBodega'),
       clasePastilla: lleva.length > 0 ? 't-info' : 't-slate',
       celdas,
-      tituloLleva: lleva.length > 0 ? 'Lo que lleva ahora' : 'No lleva pedidos ahora',
+      tituloLleva: t(lleva.length > 0 ? 'enVivo.ficha.llevaAhora' : 'enVivo.ficha.noLlevaAhora'),
       filas: pintadas.filas,
       restantes: pintadas.restantes,
-      tituloSinCerrar:
-        sinCerrar.length > 0 ? 'De días anteriores, sin marcar como entregados' : '',
+      tituloSinCerrar: sinCerrar.length > 0 ? t('enVivo.ficha.sinCerrar') : '',
       filasSinCerrar: pintadasSinCerrar.filas,
       restantesSinCerrar: pintadasSinCerrar.restantes,
-      nota:
-        sinCerrar.length > 0
-          ? 'Si esos pedidos ya se entregaron, márcalos como entregados para que su estado se vea al día.'
-          : 'Aquí se ve su estado; la ubicación en vivo no se muestra en esta pantalla.',
+      nota: t(sinCerrar.length > 0 ? 'enVivo.ficha.notaSinCerrar' : 'enVivo.ficha.notaEstado'),
     },
   };
 }

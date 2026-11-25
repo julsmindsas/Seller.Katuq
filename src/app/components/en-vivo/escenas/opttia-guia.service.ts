@@ -7,6 +7,8 @@ import { EnVivoPropuestaEscenaPuente } from '../propuestas/propuestas-escena.pue
 import type { PropuestaEnEscena } from '../propuestas/propuestas.modelos';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
+import { Traductor } from '../utilidades/traductor';
+import { traductorVacio } from './traduccion-escena';
 import { ContextoGuia, FuentesGuia, GuiaOpttia, OrdenOrbe, OrdenSenalar } from './opttia-guia';
 import { AnfitrionOrbe, OrbeOpttia } from './opttia-orbe';
 import {
@@ -69,6 +71,8 @@ const ACERCAR_PROPUESTA = 0.4;
 @Injectable({ providedIn: 'root' })
 export class EnVivoOrbeService implements OnDestroy {
   private readonly guia = new GuiaOpttia();
+  /** Traductor del idioma activo: lo pone el componente de cada escena (los servicios no inyectan el traductor de la librería). */
+  private t: Traductor = traductorVacio;
   private readonly anfitriones = new Map<AnfitrionOrbe, OrbeOpttia>();
   /** Escenas anotadas: con Opttia apagado (D-386) no llevan orbe y lo recuperan si se prende. */
   private readonly registrados = new Set<AnfitrionOrbe>();
@@ -119,6 +123,12 @@ export class EnVivoOrbeService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.apagar();
+  }
+
+  /** El componente anfitrión le pasa su traductor (se vuelve a pasar al cambiar el idioma). */
+  fijarTraductor(t: Traductor): void {
+    this.t = t;
+    this.guia.fijarTraductor(t);
   }
 
   // ---------------------------------------------------------- escenas 3D
@@ -245,7 +255,7 @@ export class EnVivoOrbeService implements OnDestroy {
    */
   private publicarMarcasPropuesta(): void {
     const p = this.opttiaActivo && this.marcasEn.pedido > 0 ? this.propuestaVigente : null;
-    const marcas = p ? marcasDePropuesta(p) : SIN_MARCAS_PROPUESTA;
+    const marcas = p ? marcasDePropuesta(p, this.t) : SIN_MARCAS_PROPUESTA;
     if (marcas === this.marcasPropuestaSubject.value) return;
     this.zona.run(() => this.marcasPropuestaSubject.next(marcas));
   }
@@ -285,7 +295,7 @@ export class EnVivoOrbeService implements OnDestroy {
   proponer(p: PropuestaEnEscena): void {
     // Con la escena en pausa (abajo en la página o la pestaña oculta) no hay quién dibuje la señal:
     // la guía no la da por puesta y la señala en el primer cuadro de cuando la escena vuelva.
-    this.ejecutar(this.guia.proponer(performance.now(), propuestaParaOrbe(p), this.contextoVisible()));
+    this.ejecutar(this.guia.proponer(performance.now(), propuestaParaOrbe(p, this.t), this.contextoVisible()));
   }
 
   /** La propuesta ya no está en la tarjeta: el orbe la suelta y vuelve a su ronda. */
@@ -317,7 +327,7 @@ export class EnVivoOrbeService implements OnDestroy {
   }
 
   private puntos() {
-    return puntosDelOrbe(this.estado.estado, this.estado.preferencias.ocultar, Date.now());
+    return puntosDelOrbe(this.estado.estado, this.estado.preferencias.ocultar, Date.now(), this.t);
   }
 
   private fuentes(): FuentesGuia {
@@ -408,7 +418,7 @@ export class EnVivoOrbeService implements OnDestroy {
     s.add(
       this.estado.nuevos$.subscribe((ev) => {
         if (this.interaccion.repitiendo) return;
-        const entrega = entregaDeEvento(ev, this.estado.estado.vista, this.estado.preferencias.ocultar);
+        const entrega = entregaDeEvento(ev, this.estado.estado.vista, this.estado.preferencias.ocultar, this.t);
         if (!entrega) return;
         this.ejecutar(this.guia.entrega(performance.now(), entrega, this.contexto()));
       })

@@ -8,6 +8,8 @@ import type { AccionUi } from '../servicios/en-vivo-acciones';
 import { ComercioEnVivo, EstadoEnVivo, EventoEnVivo } from '../servicios/en-vivo.modelos';
 import { armarFlota } from '../utilidades/flota';
 import { dinero, diaDeColombia } from '../utilidades/formato';
+import { Traductor } from '../utilidades/traductor';
+import { pedidosTexto } from './traduccion-escena';
 
 /**
  * Lo que el orbe de Opttia quiere mostrar en las escenas (D-386, 5.14), todo puro: de qué puntos
@@ -48,9 +50,6 @@ type EntradaPuntos = Pick<
   'vista' | 'radar' | 'flota' | 'pedidos' | 'actualizadoEn' | 'cifras' | 'cifrasGlobal' | 'eventos' | 'opttia' | 'soloLectura'
 >;
 
-/** `Hoy te armé 3 pedidos por WhatsApp.` */
-const pedidosTexto = (n: number): string => `${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
-
 /** Punto final de la frase, sin duplicarlo. */
 function frase(texto: string): string {
   const t = String(texto ?? '').trim();
@@ -81,9 +80,9 @@ function identidadDe(c: ComercioEnVivo | undefined, respaldo: string | null | un
 }
 
 /** Los puntos de la vista de un comercio: "Atención ahora" (radar.atencion) y lo que Opttia armó por WhatsApp. */
-function puntosDeComercio(e: EntradaPuntos): PuntoOrbe[] {
+function puntosDeComercio(e: EntradaPuntos, t: Traductor): PuntoOrbe[] {
   const flota = armarFlota(e.flota, e.pedidos, e.actualizadoEn);
-  const puntos: PuntoOrbe[] = armarAtencion(e.radar, flota).map((i): PuntoOrbe => {
+  const puntos: PuntoOrbe[] = armarAtencion(e.radar, flota, t).map((i): PuntoOrbe => {
     const accion = i.accion;
     const obj: ObjetivoOrbe = !accion
       ? ESTACION_LLEGADA
@@ -104,16 +103,16 @@ function puntosDeComercio(e: EntradaPuntos): PuntoOrbe[] {
       clave: 'ia|hoy',
       obj: ESTACION_LLEGADA,
       tono: 'pack',
-      texto: e.soloLectura
-        ? `Hoy armó ${pedidosTexto(vendido.pedidos)} por WhatsApp con Opttia.`
-        : `Hoy te armé ${pedidosTexto(vendido.pedidos)} por WhatsApp.`,
+      texto: t(e.soloLectura ? 'enVivo.escenas.puntos.hoyArmoOpttia' : 'enVivo.escenas.puntos.hoyTeArme', {
+        pedidos: pedidosTexto(vendido.pedidos, t),
+      }),
     });
   }
   return puntos.slice(0, MAX_PUNTOS_ORBE);
 }
 
 /** Los puntos de toda Katuq: alertas del radar, el comercio del momento y donde más vendió Opttia por WhatsApp. */
-function puntosDeKatuq(e: EntradaPuntos, ocultar: boolean, ahoraMs: number): PuntoOrbe[] {
+function puntosDeKatuq(e: EntradaPuntos, ocultar: boolean, ahoraMs: number, t: Traductor): PuntoOrbe[] {
   const comercios = e.cifrasGlobal?.comercios ?? [];
   const puntos: PuntoOrbe[] = [];
   const alertas = (e.radar?.alertas ?? [])
@@ -137,7 +136,7 @@ function puntosDeKatuq(e: EntradaPuntos, ocultar: boolean, ahoraMs: number): Pun
       clave: `m|${momento.empresa}`,
       obj: { tipo: 'comercio', id: momento.empresa },
       tono: 'warn',
-      texto: `${momento.nombre} está en racha: ${pedidosTexto(momento.pedidos)} en 30 minutos.`,
+      texto: t('enVivo.escenas.puntos.enRacha', { nombre: momento.nombre, pedidos: pedidosTexto(momento.pedidos, t) }),
     });
   }
 
@@ -153,7 +152,7 @@ function puntosDeKatuq(e: EntradaPuntos, ocultar: boolean, ahoraMs: number): Pun
       clave: `ia|${top.empresa}`,
       obj: { tipo: 'comercio', id: top.empresa },
       tono: 'pack',
-      texto: `Aquí fue donde más vendí hoy por WhatsApp: ${pedidosTexto(top.n)} en ${nombre}.`,
+      texto: t('enVivo.escenas.puntos.dondeMasVendi', { pedidos: pedidosTexto(top.n, t), nombre }),
     });
   }
   return puntos.slice(0, MAX_PUNTOS_ORBE);
@@ -163,8 +162,8 @@ function puntosDeKatuq(e: EntradaPuntos, ocultar: boolean, ahoraMs: number): Pun
  * La lista del orbe, de lo más urgente a lo menos urgente. Los textos ya van con "ocultar" aplicado
  * (montos y nombres de comercios). Vacía = nada que señalar.
  */
-export function puntosDelOrbe(e: EntradaPuntos, ocultar: boolean, ahoraMs: number): PuntoOrbe[] {
-  const crudos = e.vista === 'katuq' ? puntosDeKatuq(e, ocultar, ahoraMs) : puntosDeComercio(e);
+export function puntosDelOrbe(e: EntradaPuntos, ocultar: boolean, ahoraMs: number, t: Traductor): PuntoOrbe[] {
+  const crudos = e.vista === 'katuq' ? puntosDeKatuq(e, ocultar, ahoraMs, t) : puntosDeComercio(e, t);
   const mascara = mascaraDe(e, ocultar);
   return crudos.map((p) => ({ ...p, texto: enmascarar(p.texto, mascara) }));
 }
@@ -238,7 +237,7 @@ export interface EntregaOrbe {
  * comercio es la caja nueva (o la estación de llegada, si aún no está) y la ciudad del pedido en el
  * mapa; en toda Katuq, el comercio que lo recibió. Con "ocultar" no dice montos ni nombres.
  */
-export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', ocultar: boolean): EntregaOrbe | null {
+export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', ocultar: boolean, t: Traductor): EntregaOrbe | null {
   if (ev.tipo !== 'pedido_nuevo' || ev.ia !== true) return null;
   if (vista === 'katuq') {
     const empresa = empresaDeEvento(ev);
@@ -247,13 +246,13 @@ export function entregaDeEvento(ev: EventoEnVivo, vista: 'comercio' | 'katuq', o
       { nombre: ev.nombreComercio ?? ev.comercio?.nombre ?? null, ciudad: ev.ciudadComercio ?? ev.comercio?.ciudad ?? null },
       ocultar
     );
-    return { obj: { tipo: 'comercio', id: empresa }, alterno: null, texto: `¡Le armé un pedido a ${nombre} por WhatsApp!` };
+    return { obj: { tipo: 'comercio', id: empresa }, alterno: null, texto: t('enVivo.escenas.puntos.leArmeUnPedido', { nombre }) };
   }
   const monto = typeof ev.monto === 'number' && Number.isFinite(ev.monto) && ev.monto > 0 ? ev.monto : 0;
   return {
     obj: { tipo: 'pedido', id: ev.pedidoId },
     alterno: ESTACION_LLEGADA,
-    texto: `¡Este lo armé yo por WhatsApp!${ocultar || !monto ? '' : ` ${dinero(monto)}`}`,
+    texto: ocultar || !monto ? t('enVivo.escenas.puntos.esteLoArme') : t('enVivo.escenas.puntos.esteLoArmeMonto', { monto: dinero(monto) }),
   };
 }
 
@@ -267,14 +266,14 @@ export { textoIdeas } from '../propuestas/propuestas.reglas';
  * grupo) o, si no hay pedidos, su estación; la estación queda de respaldo si la caja no se ve. Dice
  * la etiqueta de la propuesta ("Carlos · 4") con el tono de Opttia. Los textos los arma el código.
  */
-export function propuestaParaOrbe(p: Pick<PropuestaEnEscena, 'pedidos' | 'grupos' | 'estacion' | 'etiqueta'>): PropuestaGuia {
+export function propuestaParaOrbe(p: Pick<PropuestaEnEscena, 'pedidos' | 'grupos' | 'estacion' | 'etiqueta'>, t: Traductor): PropuestaGuia {
   const primero = (p.grupos ?? []).find((g) => g.pedidos?.length)?.pedidos[0] ?? (p.pedidos ?? [])[0] ?? null;
   const estacion: ObjetivoOrbe | null = p.estacion ? { tipo: 'estacion', id: p.estacion } : null;
   return {
     obj: primero ? { tipo: 'pedido', id: primero } : estacion,
     alterno: estacion,
-    texto: textoParaBurbuja(String(p.etiqueta ?? '').trim() || 'Tengo una idea para ti.'),
-    titulo: 'Opttia propone',
+    texto: textoParaBurbuja(String(p.etiqueta ?? '').trim() || t('enVivo.escenas.puntos.tengoUnaIdea')),
+    titulo: t('enVivo.enVivoSugerencia.opttiaPropone'),
     tono: 'pack',
   };
 }

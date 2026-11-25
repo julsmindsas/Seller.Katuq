@@ -9,6 +9,8 @@ import {
   tonoCss,
 } from '../servicios/en-vivo.modelos';
 import { dinero, dineroCorto } from '../utilidades/formato';
+import { Traductor } from '../utilidades/traductor';
+import { pedidosTexto } from './traduccion-escena';
 import { esOscuro } from './escena-tokens';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { OpcionesEscenaMapa, ToqueMapa } from './mapas.tipos';
@@ -158,6 +160,16 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     this.sucio = true;
   }
 
+  /** El traductor del idioma activo; al cambiar el idioma se repintan los letreros y la tarjeta del puntero. */
+  fijarTraductor(t: Traductor): void {
+    this.nucleo.fijarTraductor(t);
+    if (!this.nucleo.kit) return;
+    this.lotes.forEach((l) => { l.pintado = null; });
+    this.actualizarLotes();
+    this.mostrarResalte(this.empresaResaltada ?? this.hoverEmpresa);
+    this.sucio = true;
+  }
+
   fijarReducirMovimiento(reducir: boolean): void {
     this.opts.reducirMovimiento = reducir;
     this.nucleo.fijarReducirMovimiento(reducir);
@@ -170,7 +182,7 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
 
   /** Pone los edificios al día con las cifras de toda Katuq (los 16 que más venden). Se llama al cargar y con cada cifra nueva. */
   aplicarFoto(cifras: CifrasGlobalEnVivo, alertas?: ReadonlyArray<AlertaRadar> | null): void {
-    this.comercios = ordenarPorVentas(prepararComercios(this.cfg.geo, cifras.comercios ?? [])).slice(0, MAX_EDIFICIOS);
+    this.comercios = ordenarPorVentas(prepararComercios(this.cfg.geo, cifras.comercios ?? [], this.nucleo.t)).slice(0, MAX_EDIFICIOS);
     this.alertas = alertasPorComercio(alertas, this.comercios, (t) => tonoCss(t));
     this.asignar();
     this.sucio = true;
@@ -460,14 +472,14 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     ctx.fillStyle = esOscuro(tokens) ? '#14112B' : '#FFFFFF';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const nombre = this.nucleo.privado ? nombreOculto(l.c.ciudad).toUpperCase() : letreroDe(l.c.nombre);
+    const nombre = this.nucleo.privado ? nombreOculto(l.c.ciudad, this.nucleo.t).toUpperCase() : letreroDe(l.c.nombre, this.nucleo.t);
     let fs = Math.round(h * 0.42);
     const fam = 'Georama, "Segoe UI", system-ui, sans-serif';
     ctx.font = `900 ${fs}px ${fam}`;
     while (ctx.measureText(nombre).width > w * 0.9 && fs > 20) { fs -= 2; ctx.font = `900 ${fs}px ${fam}`; }
     ctx.fillText(nombre, w / 2, h * 0.38);
     ctx.font = `700 ${Math.round(h * 0.21)}px ${fam}`;
-    ctx.fillText(`${l.c.n} ${l.c.n === 1 ? 'pedido' : 'pedidos'} hoy`, w / 2, h * 0.77);
+    ctx.fillText(this.nucleo.t(l.c.n === 1 ? 'enVivo.escenas.ciudad.letreroUno' : 'enVivo.escenas.ciudad.letreroOtros', { n: l.c.n }), w / 2, h * 0.77);
   }
 
   private cima(l: Lote, extra: number): V3 {
@@ -580,13 +592,15 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     } else l.bump = 1;
     const venta = ev.etapa === 'entregado';
     const dane = resolverDane(this.cfg.geo, ev.dane, ev.ciudad);
-    const donde = venta ? 'Punto de venta' : `Cliente en ${nombreDeLugar(this.cfg.geo, dane, ev.ciudad)}`;
-    const nombre = nombreVisible(c.nombre, c.ciudad, this.nucleo.privado);
+    const donde = venta
+      ? this.nucleo.t('enVivo.escenas.puntoDeVenta')
+      : this.nucleo.t('enVivo.escenas.clienteEn', { lugar: nombreDeLugar(this.cfg.geo, dane, ev.ciudad, this.nucleo.t) });
+    const nombre = nombreVisible(c.nombre, c.ciudad, this.nucleo.privado, this.nucleo.t);
     const pos = this.cima(l, 1.0);
     const hizo = this.nucleo.tarjeta(
       () => pos,
       ev.ia ? 'pack' : c.tono,
-      ev.ia ? 'Con Opttia' : venta ? 'Venta en tienda' : 'Nuevo pedido',
+      this.nucleo.t(ev.ia ? 'enVivo.escenas.conOpttia' : venta ? 'enVivo.escenas.ventaEnTienda' : 'enVivo.escenas.nuevoPedido'),
       `<span class="eve-who">${esc(nombre)}</span><span class="eve-amt">${esc(this.monto(ev.monto))}</span><small>${esc(donde)}</small>`,
       3400,
     );
@@ -602,7 +616,7 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     if (!l || !l.c || this.vehiculos.size >= MAX_VEHICULOS) return;
     const camion = primero.tipoTransportador === 'transportadora';
     const n = evs.length;
-    const etiqueta = `${svgEscena(camion ? 'camion' : 'moto')}${n} ${n === 1 ? 'pedido' : 'pedidos'}`;
+    const etiqueta = `${svgEscena(camion ? 'camion' : 'moto')}${pedidosTexto(n, this.nucleo.t)}`;
     const veh = this.crearVehiculo(l.c, camion);
     const z = l.cz + PASO / 2 + 0.35;
     veh.position.set(l.cx, 0.05, z);
@@ -683,11 +697,11 @@ export class CiudadKatuqEscena extends EscenaBase<string> {
     this.anillo.position.set(l.cx, 0.17, l.cz);
     this.anillo.visible = true;
     const c = l.c;
-    const nombre = nombreVisible(c.nombre, c.ciudad, this.nucleo.privado);
-    const dinero$ = this.nucleo.privado ? 'montos ocultos' : dineroCorto(c.ventas);
+    const nombre = nombreVisible(c.nombre, c.ciudad, this.nucleo.privado, this.nucleo.t);
+    const dinero$ = this.nucleo.privado ? this.nucleo.t('enVivo.escenas.montosOcultos') : dineroCorto(c.ventas);
     const lote = l;
     this.nucleo.hover(
-      `<b>${esc(nombre)}</b><span>${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'} · ${esc(dinero$)} · toca para ver su tablero</span>`,
+      `<b>${esc(nombre)}</b><span>${this.nucleo.t(c.n === 1 ? 'enVivo.escenas.hoverComercioUno' : 'enVivo.escenas.hoverComercioOtros', { n: c.n, monto: dinero$ })}</span>`,
       () => this.cima(lote, 0.6),
     );
   }

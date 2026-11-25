@@ -14,6 +14,7 @@ import {
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import type { FuenteMargenes, MargenesEncuadre, Three } from '../../../shared/escena-3d/escena-base';
 import { KatuqCommerceContextService } from '../../../shared/services/security/katuq-commerce-context.service';
@@ -28,6 +29,7 @@ import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EstadoEnVivo, EventoEnVivo, PedidoEnVivo } from '../servicios/en-vivo.modelos';
 import { sinPedidosSinCerrar } from '../utilidades/flota';
 import { alCambiarMovimiento, prefiereMenosMovimiento } from '../utilidades/movimiento';
+import type { Traductor } from '../utilidades/traductor';
 import type { CapaPropuesta } from './capa-propuesta';
 import { leerTokens } from './escena-tokens';
 import { EnVivoOrbeService } from './opttia-guia.service';
@@ -121,8 +123,12 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     private readonly cdr: ChangeDetectorRef,
     private readonly host: ElementRef<HTMLElement>,
     private readonly orbe: EnVivoOrbeService,
-    private readonly puente: EnVivoPropuestaEscenaPuente
+    private readonly puente: EnVivoPropuestaEscenaPuente,
+    private readonly translate: TranslateService
   ) {}
+
+  /** El traductor que reciben la escena, el orbe y la capa de Opttia (lo que dibujan no es una plantilla de Angular). */
+  private readonly tr: Traductor = (clave, params) => this.translate.instant(clave, params);
 
   ngAfterViewInit(): void {
     this.zona.runOutsideAngular(() => {
@@ -245,6 +251,8 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
         onClick: (t) => this.zona.run(() => this.alToque(t)),
         onVacio: () => this.zona.run(() => this.ficha.cerrar()),
       });
+      escena.fijarTraductor(this.tr);
+      this.orbe.fijarTraductor(this.tr);
       escena.iniciar();
       this.escena = escena;
       // La capa del ensayo de Opttia se cuelga antes de conectar: la propuesta vigente llega al suscribirse.
@@ -254,6 +262,7 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
         reducir: () => this.reducirMovimiento,
         alTocarGrupo: (id) => this.zona.run(() => this.puente.tocarGrupo(id)),
         calidadBaja: () => calidadBaja,
+        traductor: () => this.tr,
       });
       capa.iniciar();
       this.capa = capa;
@@ -296,6 +305,11 @@ export class EnVivoEscenaOperacionComponent implements AfterViewInit, OnChanges,
     this.sincronizar();
     this.alFicha(this.vistaFicha);
 
+    // Al cambiar el idioma, los textos que dibuja la escena se vuelven a pintar.
+    this.subs.add(this.translate.onLangChange.subscribe(() => this.zona.runOutsideAngular(() => {
+      this.orbe.fijarTraductor(this.tr);
+      this.escena?.fijarTraductor(this.tr);
+    })));
     this.subs.add(this.estado.estado$.subscribe((e) => this.alEstado(e)));
     this.subs.add(this.estado.nuevos$.subscribe((ev) => this.alEventoNuevo(ev)));
     this.subs.add(this.estado.preferencias$.subscribe((p) => {

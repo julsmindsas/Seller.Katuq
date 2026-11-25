@@ -9,7 +9,8 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { dineroCorto, entero, formatearCifra } from '../utilidades/formato';
+import { TranslateService } from '@ngx-translate/core';
+import { dineroCorto, entero, formatearCifra, FormatoCifra } from '../utilidades/formato';
 import { ClaveLista, TarjetaCifra } from '../utilidades/tarjetas';
 import { claseTono } from '../utilidades/tonos';
 
@@ -41,7 +42,7 @@ export class EnVivoCifrasComponent implements OnChanges, OnDestroy {
   /** false: sin conteo ni marcas (la repetición del día, por ejemplo). */
   @Input() animar = true;
   /** Texto del grupo para lectores de pantalla. */
-  @Input() rotulo = 'Cifras de hoy';
+  @Input() rotulo = '';
   @Output() abrir = new EventEmitter<ClaveLista>();
 
   marcas: Record<string, MarcaSube[]> = {};
@@ -53,9 +54,11 @@ export class EnVivoCifrasComponent implements OnChanges, OnDestroy {
   private temporizadores = new Set<number>();
   private contador = 0;
 
-  constructor(private readonly cambios: ChangeDetectorRef) {}
+  constructor(private readonly cambios: ChangeDetectorRef, private readonly translate: TranslateService) {}
 
-  readonly formatear = formatearCifra;
+  /** Valor escrito según su formato, en el idioma activo ("1 venta", "3 pedidos"). */
+  readonly formatear = (valor: number, formato: FormatoCifra): string =>
+    formatearCifra(valor, formato, (clave, params) => this.translate.instant(clave, params));
   readonly claseDe = (t: TarjetaCifra): string => (t.tono === 'tinta' ? 't-ink' : claseTono(t.tono));
 
   ngOnChanges(cambios: SimpleChanges): void {
@@ -64,7 +67,7 @@ export class EnVivoCifrasComponent implements OnChanges, OnDestroy {
     for (const tarjeta of this.tarjetas) {
       const previo = this.previos.get(tarjeta.id);
       if (this.haPintado && previo !== undefined && tarjeta.valor !== previo) {
-        anuncios.push(`${tarjeta.etiqueta}: ${formatearCifra(tarjeta.valor, tarjeta.formato)}`);
+        anuncios.push(`${tarjeta.etiqueta}: ${this.formatear(tarjeta.valor, tarjeta.formato)}`);
         if (this.animar && tarjeta.valor > previo && tarjeta.formato !== 'decimal') this.marcarSube(tarjeta, tarjeta.valor - previo);
       }
       this.previos.set(tarjeta.id, tarjeta.valor);
@@ -91,7 +94,7 @@ export class EnVivoCifrasComponent implements OnChanges, OnDestroy {
   }
 
   private marcarSube(tarjeta: TarjetaCifra, diferencia: number): void {
-    const texto = tarjeta.formato === 'dinero' ? `+${dineroCorto(diferencia)}` : `+${entero(diferencia)}`;
+    const texto = tarjeta.formato === 'dinero' ? `+${dineroCorto(diferencia, (clave, params) => this.translate.instant(clave, params))}` : `+${entero(diferencia)}`;
     const marca: MarcaSube = { n: ++this.contador, texto };
     this.marcas = { ...this.marcas, [tarjeta.id]: [marca] };
     this.rebotando = new Set(this.rebotando).add(tarjeta.id);

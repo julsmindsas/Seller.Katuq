@@ -1,6 +1,7 @@
 import { claseTonoCss, EtapaId, EtapaInfo, PedidoEnVivo } from '../../servicios/en-vivo.modelos';
 import { primerNombre } from '../../servicios/en-vivo-reglas';
 import { diaDeColombia, dinero, duracion, horaRelativa } from '../../utilidades/formato';
+import { nombreDeEtapa, Traductor } from '../../utilidades/traductor';
 
 /**
  * Tablero "Pedidos" del comercio (diseño 18): una columna por etapa con una tarjeta por pedido.
@@ -16,13 +17,13 @@ export interface DefinicionColumna {
 
 /** Las siete columnas, en orden (los estados de proceso de Katuq). Los rechazados y cancelados no tienen columna. */
 export const COLUMNAS_TABLERO: ReadonlyArray<DefinicionColumna> = [
-  { id: 'recibido', nombre: 'Sin producir' },
-  { id: 'produccion', nombre: 'En producción' },
-  { id: 'producido', nombre: 'Producido' },
-  { id: 'empacado', nombre: 'Empacado' },
-  { id: 'listo', nombre: 'Para despachar' },
-  { id: 'camino', nombre: 'Despachado' },
-  { id: 'entregado', nombre: 'Entregados hoy' },
+  { id: 'recibido', nombre: 'Sin producir' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'produccion', nombre: 'En producción' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'producido', nombre: 'Producido' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'empacado', nombre: 'Empacado' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'listo', nombre: 'Para despachar' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'camino', nombre: 'Despachado' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
+  { id: 'entregado', nombre: 'Entregados hoy' }, // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
 ];
 
 /** Minutos en la etapa a partir de los cuales una tarjeta se marca "tarde". */
@@ -81,6 +82,8 @@ export interface OpcionesTablero {
   dia: string | null;
   etapas: ReadonlyMap<EtapaId, EtapaInfo>;
   ocultar: boolean;
+  /** Traductor del idioma activo (la utilidad no inyecta `TranslateService`). */
+  t: Traductor;
   maximo?: number;
   maximoEntregados?: number;
 }
@@ -126,7 +129,7 @@ function tarjetaDe(pedido: PedidoEnVivo, nombreColumna: string, o: OpcionesTable
   const enEtapa = entrada !== null ? Math.max(0, o.ahoraMs - entrada) : null;
   const tarde = esTarde(pedido, enEtapa);
   const entregado = pedido.etapa === 'entregado';
-  const tiempo = entrada === null ? '' : entregado ? horaRelativa(entrada, o.ahoraMs) : duracion(enEtapa ?? 0);
+  const tiempo = entrada === null ? '' : entregado ? horaRelativa(entrada, o.ahoraMs, o.t) : duracion(enEtapa ?? 0, o.t);
   const numero = numeroDe(pedido);
   const tipo = pedido.tipoTransportador ?? null;
   const transporte =
@@ -135,7 +138,7 @@ function tarjetaDe(pedido: PedidoEnVivo, nombreColumna: string, o: OpcionesTable
         ? pedido.transportador
         : primerNombre(pedido.transportador)
       : '';
-  const cliente = o.ocultar ? 'Cliente' : pedido.cliente || 'Cliente';
+  const cliente = o.ocultar ? o.t('enVivo.comercio.tablero.cliente') : pedido.cliente || o.t('enVivo.comercio.tablero.cliente');
   const monto = o.ocultar || pedido.monto <= 0 ? '' : dinero(pedido.monto);
 
   return {
@@ -152,8 +155,9 @@ function tarjetaDe(pedido: PedidoEnVivo, nombreColumna: string, o: OpcionesTable
     nuevo: false,
     movida: false,
     aria:
-      `Pedido ${numero.slice(1)}, ${nombreColumna}` +
-      `${pedido.ia ? ', armado con Opttia' : ''}${tarde ? ', va tarde' : ''}${tiempo ? `, ${tiempo}` : ''}. Ver el detalle`,
+      o.t('enVivo.comercio.tablero.ariaPedido', { numero: numero.slice(1), columna: nombreColumna }) +
+      `${pedido.ia ? o.t('enVivo.comercio.tablero.ariaConOpttia') : ''}${tarde ? o.t('enVivo.comercio.tablero.ariaTarde') : ''}${tiempo ? `, ${tiempo}` : ''}` +
+      o.t('enVivo.comercio.tablero.ariaVerDetalle'),
   };
 }
 
@@ -192,12 +196,14 @@ export function armarColumnas(pedidos: ReadonlyArray<PedidoEnVivo>, o: OpcionesT
     });
     const tope = entregados ? maximoEntregados : maximo;
     const visibles = ordenada.slice(0, tope);
+    // "Entregados hoy" lleva su propio rótulo; las demás columnas usan el nombre de la etapa.
+    const nombre = entregados ? o.t('enVivo.comercio.tablero.entregadosHoy') : nombreDeEtapa(definicion.id, o.etapas.get(definicion.id), o.t);
     return {
       id: definicion.id,
-      nombre: definicion.nombre,
+      nombre,
       clase: claseTonoCss(o.etapas.get(definicion.id)?.tono),
       total: lista.length,
-      tarjetas: visibles.map((p) => tarjetaDe(p, definicion.nombre, o)),
+      tarjetas: visibles.map((p) => tarjetaDe(p, nombre, o)),
       resto: lista.length - visibles.length,
     };
   });

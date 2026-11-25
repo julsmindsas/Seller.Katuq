@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, startWith } from 'rxjs/operators';
 import { EnVivoInteraccionService } from '../../compartido/en-vivo-interaccion.service';
 import { EnVivoEstadoService } from '../../servicios/en-vivo-estado.service';
 import { emitirAccionDeAtencion } from '../comercio-acciones';
@@ -41,13 +42,18 @@ export class EnVivoAtencionAhoraComponent implements OnInit, OnDestroy {
   constructor(
     private readonly estado: EnVivoEstadoService,
     private readonly interaccion: EnVivoInteraccionService,
-    private readonly cambios: ChangeDetectorRef
+    private readonly cambios: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
+
+  private readonly t = (clave: string, params?: Record<string, unknown>): string => this.translate.instant(clave, params);
 
   ngOnInit(): void {
     this.suscripcion = atencionCongelada$(
       this.estado.estado$,
-      this.interaccion.repeticion$.pipe(map((r) => r.activa))
+      this.interaccion.repeticion$.pipe(map((r) => r.activa)),
+      this.t,
+      this.translate.onLangChange.pipe(startWith(null))
     ).subscribe((atencion) => {
       const items = marcarNuevos(atencion.items, atencion.calculada ? this.previas : null);
       this.previas = atencion.calculada ? new Set(items.map((i) => i.clave)) : null;
@@ -55,7 +61,7 @@ export class EnVivoAtencionAhoraComponent implements OnInit, OnDestroy {
         calculada: atencion.calculada,
         items,
         titulo: this.tituloDe(atencion),
-        chip: textoUrgentes(atencion.urgentes),
+        chip: textoUrgentes(atencion.urgentes, this.t),
         empresa: atencion.empresa,
       };
       this.cambios.markForCheck();
@@ -76,7 +82,13 @@ export class EnVivoAtencionAhoraComponent implements OnInit, OnDestroy {
   }
 
   private tituloDe(atencion: VistaAtencion): string {
-    if (atencion.soloLectura) return `Lo que necesita ${atencion.empresa ?? 'el comercio'}`;
-    return atencion.soloPropias ? 'Lo que necesitan mis pedidos' : 'Lo que necesita tu operación';
+    if (atencion.soloLectura) {
+      return atencion.empresa
+        ? this.t('enVivo.comercio.atencion.tituloComercio', { empresa: atencion.empresa })
+        : this.t('enVivo.comercio.atencion.tituloElComercio');
+    }
+    return atencion.soloPropias
+      ? this.t('enVivo.comercio.atencion.tituloPropias')
+      : this.t('enVivo.enVivoAtencionAhora.loQueNecesitaTuOperacion');
   }
 }

@@ -4,7 +4,7 @@
     class="eve-canvas"
     [hidden]="sin3d"
     role="img"
-    [attr.aria-label]="etiquetaAria"
+    [attr.aria-label]="claveAria | translate"
   ></canvas>
   <div #etiquetas class="eve-labels" aria-hidden="true"></div>
   <app-en-vivo-orbe-boton *ngIf="!sin3d"></app-en-vivo-orbe-boton>

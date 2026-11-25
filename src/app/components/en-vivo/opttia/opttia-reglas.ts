@@ -17,6 +17,10 @@ import {
 } from '../servicios/en-vivo.modelos';
 import { diaDeColombia } from '../utilidades/formato';
 import { IconoId } from '../utilidades/iconos';
+import type { Traductor } from '../utilidades/traductor';
+
+/** Prefijo de las claves de i18n de esta carpeta. */
+const K = 'enVivo.opttia.';
 
 /** Tope de caracteres de una pregunta (el servidor la corta igual). */
 export const MAX_CARACTERES_PREGUNTA = 160;
@@ -32,39 +36,22 @@ export const AVISAR_PREGUNTAS_RESTANTES = 5;
 
 // ── Preguntas sugeridas ─────────────────────────────────────────────────────
 
-const PREGUNTAS_KATUQ: ReadonlyArray<string> = [
-  '¿Quién necesita ayuda ahora?',
-  '¿Cómo vamos contra ayer?',
-  '¿Quién despacha más rápido?',
-  '¿Cuánto vendió Opttia hoy?',
-  '¿Vamos para récord?',
-];
-
-const PREGUNTAS_COMERCIO: ReadonlyArray<string> = [
-  '¿Qué despacho primero?',
-  '¿Cómo voy contra ayer?',
-  '¿Cuál es mi mejor canal hoy?',
-  '¿Qué mensajero está libre?',
-];
-
+/** Claves de las preguntas sugeridas (el texto está en los diccionarios). */
+const PREGUNTAS_KATUQ: ReadonlyArray<string> = ['preguntaKatuq1', 'preguntaKatuq2', 'preguntaKatuq3', 'preguntaKatuq4', 'preguntaKatuq5'];
+const PREGUNTAS_COMERCIO: ReadonlyArray<string> = ['preguntaComercio1', 'preguntaComercio2', 'preguntaComercio3', 'preguntaComercio4'];
 /** Cuando Katuq mira el tablero de un comercio ajeno: las mismas, en tercera persona. */
-const PREGUNTAS_COMERCIO_AJENO: ReadonlyArray<string> = [
-  '¿Qué despacha primero?',
-  '¿Cómo va contra ayer?',
-  '¿Cuál es su mejor canal hoy?',
-  '¿Qué mensajero está libre?',
-];
+const PREGUNTAS_COMERCIO_AJENO: ReadonlyArray<string> = ['preguntaAjeno1', 'preguntaAjeno2', 'preguntaAjeno3', 'preguntaAjeno4'];
 
-/** Las preguntas sugeridas de la vista: distintas para toda Katuq y para un comercio. */
-export function preguntasSugeridas(vista: VistaEnVivo, soloLectura: boolean): ReadonlyArray<string> {
-  if (vista === 'katuq') return PREGUNTAS_KATUQ;
-  return soloLectura ? PREGUNTAS_COMERCIO_AJENO : PREGUNTAS_COMERCIO;
+/** Las preguntas sugeridas de la vista, en el idioma activo: distintas para toda Katuq y para un comercio. */
+export function preguntasSugeridas(vista: VistaEnVivo, soloLectura: boolean, t: Traductor): ReadonlyArray<string> {
+  const claves = vista === 'katuq' ? PREGUNTAS_KATUQ : soloLectura ? PREGUNTAS_COMERCIO_AJENO : PREGUNTAS_COMERCIO;
+  return claves.map((c) => t(`${K}${c}`));
 }
 
 /** Título de la tarjeta según quién mira. */
-export function tituloDeLaTarjeta(vista: VistaEnVivo, soloLectura: boolean): string {
-  if (vista === 'katuq') return 'Lo que está pasando en Katuq, en palabras';
-  return soloLectura ? 'Lo que Opttia diría de este comercio' : 'Opttia te recomienda';
+export function tituloDeLaTarjeta(vista: VistaEnVivo, soloLectura: boolean, t: Traductor): string {
+  if (vista === 'katuq') return t(`${K}tituloKatuq`);
+  return t(soloLectura ? `${K}tituloAjeno` : `${K}tituloComercio`);
 }
 
 // ── La pregunta ─────────────────────────────────────────────────────────────
@@ -92,9 +79,9 @@ export function minutosParaReintentar(respuesta: Pick<RespuestaPregunta, 'reinte
 }
 
 /** "Podrás volver a preguntar en 7 min" · "en 1 min". */
-export function textoReintento(minutos: number): string {
+export function textoReintento(minutos: number, t: Traductor): string {
   const n = Math.max(1, Math.round(minutos));
-  return `Podrás volver a preguntar en ${n} min`;
+  return t(`${K}reintento`, { n });
 }
 
 /** Minutos que faltan (hacia arriba) hasta `hastaMs`; 0 si ya pasó. */
@@ -123,9 +110,9 @@ export class TopeDePreguntas {
   }
 
   /** "Podrás volver a preguntar en 7 min", con los minutos que faltan ahora; vacío si no hay tope. */
-  texto(ahoraMs: number): string {
+  texto(ahoraMs: number, t: Traductor): string {
     if (this.hastaMs === null) return '';
-    return textoReintento(Math.max(1, minutosRestantes(this.hastaMs, ahoraMs)));
+    return textoReintento(Math.max(1, minutosRestantes(this.hastaMs, ahoraMs)), t);
   }
 
   /** Abre de nuevo si ya pasó el tiempo. Devuelve true solo en el momento en que se abrió. */
@@ -141,11 +128,11 @@ export class TopeDePreguntas {
 }
 
 /** "Te queda 1 pregunta esta hora" / "Te quedan 3 preguntas esta hora". Vacío si quedan muchas o ninguna. */
-export function textoPreguntasRestantes(restantes: number | null | undefined): string {
+export function textoPreguntasRestantes(restantes: number | null | undefined, t: Traductor): string {
   if (typeof restantes !== 'number' || !Number.isFinite(restantes)) return '';
   const n = Math.floor(restantes);
   if (n <= 0 || n > AVISAR_PREGUNTAS_RESTANTES) return '';
-  return n === 1 ? 'Te queda 1 pregunta esta hora' : `Te quedan ${n} preguntas esta hora`;
+  return n === 1 ? t(`${K}restantesUna`) : t(`${K}restantesVarias`, { n });
 }
 
 // ── "Ocultar" aplicado al texto de Opttia ───────────────────────────────────
@@ -188,7 +175,7 @@ export function enmascarar(texto: string | null | undefined, opciones: OpcionesM
     try {
       const patron = new RegExp(`(^|[^\\p{L}\\p{N}])(${escaparParaRegExp(nombre)})(?![\\p{L}\\p{N}])`, 'giu');
       salida = salida.replace(patron, (_todo: string, previo: string, _nombre: string, posicion: number) => {
-        const quien = abreFrase(salida.slice(0, posicion + previo.length)) ? 'Un comercio' : 'un comercio';
+        const quien = abreFrase(salida.slice(0, posicion + previo.length)) ? 'Un comercio' : 'un comercio'; // i18n-ignorar: respaldo sin traductor; en pantalla va la clave
         return `${previo}${quien}`;
       });
     } catch {
@@ -251,14 +238,14 @@ export function instanteDelResumen(resumen: ResumenOpttia | null | undefined): n
 }
 
 /** "Actualizado hace 40 s" · "Actualizado hace 3 min" · "Actualizado hace 2 h" · "Actualizado ahora". */
-export function textoActualizado(generadoMs: number | null, ahoraMs: number): string {
+export function textoActualizado(generadoMs: number | null, ahoraMs: number, t: Traductor): string {
   if (generadoMs === null) return '';
   const segundos = Math.max(0, Math.round((ahoraMs - generadoMs) / 1000));
-  if (segundos < 8) return 'Actualizado ahora';
-  if (segundos < 60) return `Actualizado hace ${segundos} s`;
+  if (segundos < 8) return t(`${K}actualizadoAhora`);
+  if (segundos < 60) return t(`${K}actualizadoSegundos`, { n: segundos });
   const minutos = Math.round(segundos / 60);
-  if (minutos < 60) return `Actualizado hace ${minutos} min`;
-  return `Actualizado hace ${Math.floor(minutos / 60)} h`;
+  if (minutos < 60) return t(`${K}actualizadoMinutos`, { n: minutos });
+  return t(`${K}actualizadoHoras`, { n: Math.floor(minutos / 60) });
 }
 
 /** Clave de un resumen: cambia solo cuando Opttia escribió uno nuevo. */
