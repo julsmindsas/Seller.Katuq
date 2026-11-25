@@ -1,17 +1,41 @@
 {
-  "version": "2026.11.24.10 - 24 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-24T20:50:20.500Z",
+  "version": "2026.11.25.2 - 25 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-25T20:04:16.522Z",
   "notas": [
     {
-      "fecha": "2026-11-24T20:48:00Z",
-      "tipo": "MEJORA",
-      "texto": "En Despachos, las órdenes que salen con DistriSex ahora muestran el número y el estado del pedido allá, y un aviso si DistriSex lo cancela o no lo recibe.",
+      "fecha": "2026-11-25T16:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste.",
       "modulos": [
-        "despachos"
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-25T19:58:00Z",
+      "tipo": "CORRIGE",
+      "texto": "«Reenviar a Cereza», en el menú de un pedido que no llegó a ICG, ya funciona: antes no hacía nada al darle clic.",
+      "modulos": [
+        "ventas/pedidos"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-25T19:58:00Z",
+      "tipo": "CORRIGE",
+      "texto": "«Reenviar a Cereza», en el menú de un pedido que no llegó a ICG, ya funciona: antes no hacía nada al darle clic.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-25T16:55:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-24T20:48:00Z",
       "tipo": "MEJORA",
@@ -471,31 +495,8 @@
       "modulos": [
         "ventas/ventas-pos"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los valores en pesos se ven igual en todas las pantallas, con punto de miles, y las cifras grandes ya no se cortan ni se parten.",
-      "modulos": [
-        "ventas",
-        "inventario/inventario-catalogo",
-        "tesoreria",
-        "cotizaciones",
-        "despachos",
-        "cotizaciones/catalogos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:18:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no verás términos técnicos: el chat KAI habla de temas como Ventas e Inventario, WhatsApp muestra qué mensaje automático se envió en vez del nombre de la plantilla y los reportes dicen «según tus facturas».",
-      "modulos": [
-        "agent-builder/chat-agui",
-        "notificaciones/whatsapp/inbox",
-        "dashboards"
-      ]
     }
   ],
-  "commit": "4e26d5c27475e1fab6ce148ff4df32b582c6f670",
+  "commit": "4b4fa2e01549a191436e5dd410f96cefe55b2234",
   "cambiosSinCommit": 0
 }
