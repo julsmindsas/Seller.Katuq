@@ -187,6 +187,17 @@
             activarte el histórico completo.
           </p>
         </ng-container>
+
+        <!-- Lo que el asistente del sitio no supo responder, por tema (no se guarda la pregunta). -->
+        <section class="clics" *ngIf="datos.asistente && datos.asistente.sinRespuesta > 0">
+          <h6>Lo que tu asistente no supo responder</h6>
+          <p class="clics__nota">De {{ datos.asistente.mensajes }} mensajes, en {{ datos.asistente.sinRespuesta }} le faltó el dato. Publícalo en tu sitio (preguntas frecuentes, envíos o la ficha del producto) y la próxima vez lo responde.</p>
+          <ul>
+            <li *ngFor="let t of datos.asistente.temas">
+              <span>{{ temaDelAsistente(t.tema) }}</span><strong>{{ t.veces }}</strong>
+            </li>
+          </ul>
+        </section>
       </ng-container>
 
       <!-- F4-40·B16: lo que hizo Opttia. Carga y falla aparte; las métricas de

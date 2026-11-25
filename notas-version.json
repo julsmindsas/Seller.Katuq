@@ -198,5 +198,6 @@
   {"fecha":"2026-11-24T20:32:00Z","tipo":"MEJORA","modulos":["ventas/pedidos"],"texto":"Los pedidos que despachas con DistriSex ahora muestran junto a su número el número y el estado que tienen allá; si DistriSex no lo recibe, ves el motivo ahí mismo."},
   {"fecha":"2026-11-24T20:38:00Z","tipo":"NUEVO","modulos":["ventas/pedidos"],"texto":"Si un pedido no llegó a ICG, ahora lo puedes reenviar a Guía Cereza desde el menú del pedido, con «Reenviar a Cereza». El estado del pedido no cambia."},
   {"fecha":"2026-11-24T20:48:00Z","tipo":"MEJORA","modulos":["despachos"],"texto":"En Despachos, las órdenes que salen con DistriSex ahora muestran el número y el estado del pedido allá, y un aviso si DistriSex lo cancela o no lo recibe."},
+  {"fecha":"2026-11-25T16:55:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste."},
   {"fecha":"2026-11-25T19:58:00Z","tipo":"CORRIGE","modulos":["ventas/pedidos"],"texto":"«Reenviar a Cereza», en el menú de un pedido que no llegó a ICG, ya funciona: antes no hacía nada al darle clic."}
 ]

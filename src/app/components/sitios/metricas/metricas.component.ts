@@ -269,4 +269,19 @@ export class MetricasComponent implements OnInit {
       maximumFractionDigits: 0,
     });
   }
+
+  /** Nombre que ve el comercio para cada tema que el asistente no supo responder. */
+  temaDelAsistente(tema: string): string {
+    const nombres: Record<string, string> = {
+      envios: 'Envíos y tiempos de entrega',
+      garantia: 'Garantía',
+      devoluciones: 'Cambios y devoluciones',
+      factura: 'Factura',
+      pagos: 'Formas de pago y cuotas',
+      horario: 'Horario y ubicación',
+      compatibilidad: 'Compatibilidad e instalación',
+      existencias: 'Existencias',
+    };
+    return nombres[tema] || 'Otros temas';
+  }
 }
