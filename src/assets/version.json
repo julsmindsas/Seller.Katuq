@@ -1,25 +1,25 @@
 {
-  "version": "2026.11.25.2 - 25 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-25T20:04:16.522Z",
+  "version": "2026.11.26.1 - 26 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-26T15:30:30.669Z",
   "notas": [
     {
-      "fecha": "2026-11-25T16:55:00Z",
+      "fecha": "2026-11-26T14:15:00Z",
       "tipo": "NUEVO",
-      "texto": "En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste.",
+      "texto": "En «Cómo va» de tu sitio ahora ves cuántas respuestas con inteligencia artificial lleva tu asistente en el mes.",
       "modulos": [
         "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-25T19:58:00Z",
-      "tipo": "CORRIGE",
-      "texto": "«Reenviar a Cereza», en el menú de un pedido que no llegó a ICG, ya funciona: antes no hacía nada al darle clic.",
-      "modulos": [
-        "ventas/pedidos"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-26T14:15:00Z",
+      "tipo": "NUEVO",
+      "texto": "En «Cómo va» de tu sitio ahora ves cuántas respuestas con inteligencia artificial lleva tu asistente en el mes.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-25T19:58:00Z",
       "tipo": "CORRIGE",
@@ -487,16 +487,8 @@
       "modulos": [
         "facturacion-electronica"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:27:17Z",
-      "tipo": "CORRIGE",
-      "texto": "En el cierre de caja, los saldos ya no aceptan centavos y la rueda del mouse no cambia el valor por error. Un cierre que quedó con centavos de diferencia ahora aparece como que cuadra, y ya no dice «Falta $0».",
-      "modulos": [
-        "ventas/ventas-pos"
-      ]
     }
   ],
-  "commit": "4b4fa2e01549a191436e5dd410f96cefe55b2234",
+  "commit": "ed00cee6937cca25b74408497406b0a05f52a386",
   "cambiosSinCommit": 0
 }
