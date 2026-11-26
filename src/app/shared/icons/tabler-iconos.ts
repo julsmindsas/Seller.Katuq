@@ -222,6 +222,10 @@ export const TABLER_ICONOS: Record<string, string[]> = {
     'M12 8l0 4l2 2',
     'M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5',
   ],
+  'inbox': [
+    'M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12',
+    'M4 13h3l3 3h4l3 -3h3',
+  ],
   'layout-sidebar-left-collapse': [
     'M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12',
     'M9 4v16',

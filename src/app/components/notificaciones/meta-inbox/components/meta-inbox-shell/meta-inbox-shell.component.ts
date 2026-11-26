@@ -1,26 +1,18 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 
 import { LoaderService } from 'src/app/shared/services/loader.service';
-import { TranslateService } from '@ngx-translate/core';
 
 import { MetaInboxService } from '../../meta-inbox.service';
+import { MetaHiloDetalleComponent } from '../meta-hilo-detalle/meta-hilo-detalle.component';
 import {
   META_CANAL_LABEL,
   MetaCanal,
   MetaConexion,
   MetaHilo,
-  MetaImagenAdjunta,
-  MetaMensaje,
-  MetaVentana,
 } from '../../models/meta-thread.model';
-
-/** Imágenes que se pueden adjuntar a una respuesta de TikTok (D-709). */
-const TIPOS_IMAGEN = ['image/jpeg', 'image/png'];
-const MAX_IMAGEN_MB = 3;
 
 /**
  * Buzón de Meta — una sola implementación para Instagram, Messenger y TikTok (D-709).
@@ -48,31 +40,9 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   cargandoHilos = false;
 
   hiloActivo: MetaHilo | null = null;
-  mensajes: MetaMensaje[] = [];
-  ventana: MetaVentana | null = null;
-  cargandoMensajes = false;
 
-  borrador = '';
-  enviando = false;
-  avisoEnvio: string | null = null;
-
-  /** TikTok: imagen elegida para la próxima respuesta y su error de validación. */
-  imagen: MetaImagenAdjunta | null = null;
-  errorImagen: string | null = null;
-  /** TikTok: el servidor dice si el país del cliente deja mandar imágenes en esta conversación. */
-  permiteImagen = false;
-
-  /**
-   * TikTok: imágenes que escribió el cliente, ya descargadas (id del mensaje → dirección `blob:`). El
-   * servidor las entrega por una ruta que pide la sesión, así que no se pueden mostrar con un `<img src>`
-   * directo. De cada una se guarda la dirección cruda (para revocarla) y la marcada como segura (para el
-   * `<img>`): Angular 14 no deja pasar `blob:` en `[src]` y lo dejaría como `unsafe:blob:…`.
-   * `generacionImagenes` descarta respuestas que llegan después de cambiar de conversación.
-   */
-  private imagenesEntrantes = new Map<string, { crudo: string; seguro: SafeUrl }>();
-  private imagenesEnCurso = new Set<string>();
-  private imagenesFallidas = new Set<string>();
-  private generacionImagenes = 0;
+  /** La conversación abierta: dice si hay un envío o texto a medias para no pisarla con el refresco. */
+  @ViewChild(MetaHiloDetalleComponent) private detalle?: MetaHiloDetalleComponent;
 
   private destroy$ = new Subject<void>();
 
@@ -90,8 +60,6 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     private router: Router,
     private servicio: MetaInboxService,
     private loader: LoaderService,
-    private translate: TranslateService,
-    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -149,8 +117,6 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.loader.releaseGlobalLoader();
     this.destroy$.next();
     this.destroy$.complete();
-    this.soltarImagenAdjunta();
-    this.soltarImagenesEntrantes();
   }
 
   /**
@@ -179,8 +145,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         tick += 1;
-        if (this.enviando) return;
-        if ((this.borrador || '').trim().length > 0 || this.imagen) return;
+        if (this.detalle?.ocupado) return;
 
         if (document.hidden) {
           if (tick % 4 !== 0) return;
@@ -189,7 +154,6 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         }
 
         this.refrescarHilosEnSilencio();
-        if (this.hiloActivo) this.refrescarMensajesEnSilencio();
       });
   }
 
@@ -275,36 +239,9 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     }
   }
 
-  private refrescarMensajesEnSilencio(): void {
-    const hilo = this.hiloActivo;
-    if (!hilo) return;
-
-    this.servicio
-      .mensajesDeHilo(this.canal, hilo.identidadHash)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((r) => {
-        // El operador pudo cambiar de conversación mientras la respuesta venía
-        // en camino: si ya no es la misma, se descarta en vez de pintar los
-        // mensajes de un hilo sobre otro.
-        if (this.hiloActivo?.identidadHash !== hilo.identidadHash) return;
-        this.mensajes = r.items;
-        this.ventana = r.ventana;
-        this.fijarPermiteImagen(hilo, r.permiteImagen);
-        this.cargarImagenesEntrantes(r.items);
-      });
-  }
-
   private reiniciar(): void {
     this.hilos = [];
     this.hiloActivo = null;
-    this.mensajes = [];
-    this.ventana = null;
-    this.borrador = '';
-    this.avisoEnvio = null;
-    this.soltarImagenAdjunta();
-    this.errorImagen = null;
-    this.permiteImagen = false;
-    this.soltarImagenesEntrantes();
   }
 
   private cargarConexion(): void {
@@ -338,112 +275,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   abrirHilo(hilo: MetaHilo): void {
-    // Otra conversación: lo que se descargó de la anterior ya no sirve.
-    if (this.hiloActivo?.identidadHash !== hilo.identidadHash) this.soltarImagenesEntrantes();
     this.hiloActivo = hilo;
-    this.avisoEnvio = null;
-    this.borrador = '';
-    this.soltarImagenAdjunta();
-    this.errorImagen = null;
-    this.fijarPermiteImagen(hilo, undefined);
-    this.cargandoMensajes = true;
-
-    this.servicio
-      .mensajesDeHilo(this.canal, hilo.identidadHash)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((r) => {
-        this.mensajes = r.items;
-        this.ventana = r.ventana;
-        this.fijarPermiteImagen(hilo, r.permiteImagen);
-        this.cargarImagenesEntrantes(r.items);
-        this.cargandoMensajes = false;
-      });
-  }
-
-  /**
-   * ¿Se ofrece adjuntar imagen? Solo en TikTok y solo si el servidor lo permite para este cliente. Sin
-   * dato (o con `false`) no se ofrece: es lo seguro, porque TikTok rechaza la imagen donde no se puede.
-   * El dato de la conversación abierta manda sobre el del listado.
-   */
-  private fijarPermiteImagen(hilo: MetaHilo, desdeConversacion: boolean | undefined): void {
-    const permite = typeof desdeConversacion === 'boolean' ? desdeConversacion : hilo.permiteImagen === true;
-    this.permiteImagen = this.esTiktok && permite;
-    if (!this.permiteImagen) {
-      this.soltarImagenAdjunta();
-      this.errorImagen = null;
-    }
-  }
-
-  // ─── Imágenes que escribió el cliente (TikTok) ─────────────────────────
-
-  /**
-   * Trae las imágenes del cliente que todavía no están: son rutas del propio servidor (`/v1/meta/...`)
-   * que piden la sesión, así que se descargan como blob y se muestran con una dirección local. Un mensaje
-   * ya descargado, en curso o fallido no se vuelve a pedir en cada refresco.
-   */
-  private cargarImagenesEntrantes(items: MetaMensaje[]): void {
-    if (!this.esTiktok) return;
-    const generacion = this.generacionImagenes;
-
-    for (const m of items) {
-      const ruta = m.mediaUrl;
-      if (m.tipo !== 'image' || !ruta || !ruta.startsWith('/')) continue;
-      if (this.imagenesEntrantes.has(m.id) || this.imagenesEnCurso.has(m.id) || this.imagenesFallidas.has(m.id)) continue;
-
-      this.imagenesEnCurso.add(m.id);
-      this.servicio
-        .imagenEntrante(ruta)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((blob) => {
-          if (generacion !== this.generacionImagenes) return;
-          this.imagenesEnCurso.delete(m.id);
-          if (blob) {
-            // Solo se marca como segura la dirección que acaba de crear este mismo navegador con la
-            // imagen que entregó nuestro servidor: nunca una dirección que venga en un mensaje.
-            const crudo = URL.createObjectURL(blob);
-            this.imagenesEntrantes.set(m.id, { crudo, seguro: this.sanitizer.bypassSecurityTrustUrl(crudo) });
-          } else {
-            this.imagenesFallidas.add(m.id);
-          }
-        });
-    }
-  }
-
-  private soltarImagenesEntrantes(): void {
-    this.imagenesEntrantes.forEach((imagen) => URL.revokeObjectURL(imagen.crudo));
-    this.imagenesEntrantes.clear();
-    this.imagenesEnCurso.clear();
-    this.imagenesFallidas.clear();
-    this.generacionImagenes += 1;
-  }
-
-  /** La imagen del cliente ya descargada, lista para el `<img>`; null mientras llega o si no se pudo. */
-  imagenDe(m: MetaMensaje): SafeUrl | null {
-    return this.esTiktok ? this.imagenesEntrantes.get(m.id)?.seguro || null : null;
-  }
-
-  /** TikTok: publicación que el cliente compartió. `mediaUrl` es su enlace público. */
-  esPublicacion(m: MetaMensaje): boolean {
-    return this.esTiktok && m.tipo === 'share_post' && /^https?:\/\//i.test(m.mediaUrl || '');
-  }
-
-  /**
-   * Lo que se dice de un adjunto cuando no hay texto ni imagen que mostrar. En Instagram y Facebook es
-   * siempre «Archivo adjunto», como antes; en TikTok distingue sticker, mensaje no soportado y la imagen
-   * que está llegando o no llegó.
-   */
-  textoAdjunto(m: MetaMensaje): string | null {
-    if (!this.esTiktok) {
-      return !m.body && m.mediaUrl ? this.translate.instant('notificaciones.meta.attachment') : null;
-    }
-    if (this.imagenDe(m) || this.esPublicacion(m)) return null;
-    if (m.tipo === 'sticker') return this.translate.instant('notificaciones.meta.tiktokSticker');
-    if (m.tipo === 'unsupported') return this.translate.instant('notificaciones.meta.tiktokNoSoportado');
-    if (m.tipo === 'image') {
-      if (this.imagenesFallidas.has(m.id)) return this.translate.instant('notificaciones.meta.tiktokImagenNoCargo');
-      if (m.mediaUrl && m.mediaUrl.startsWith('/')) return this.translate.instant('notificaciones.meta.tiktokCargandoImagen');
-    }
-    return !m.body && m.mediaUrl ? this.translate.instant('notificaciones.meta.attachment') : null;
   }
 
   irAConexion(): void {
@@ -454,239 +286,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     return this.canal === 'tiktok';
   }
 
-  /**
-   * TikTok no deja enviar con la cuenta desconectada o vencida: se escribiría a un canal que no responde.
-   * (Las conversaciones anteriores se conservan y se pueden leer.)
-   */
-  get sinConexionParaEnviar(): boolean {
-    return this.esTiktok && !this.conectado;
-  }
-
-  /**
-   * Texto de la ventana en lenguaje llano. La API habla de "messaging window";
-   * el operador necesita saber si puede escribir y hasta cuándo.
-   */
-  get textoVentana(): string {
-    if (!this.ventana) return '';
-    if (this.esTiktok) return this.textoVentanaTiktok(this.ventana);
-    if (!this.ventana.abierta) {
-      return this.translate.instant('notificaciones.meta.windowClosed', { nombre: this.nombreContacto });
-    }
-    const min = this.ventana.minutosRestantes;
-    if (min >= 120) return this.translate.instant('notificaciones.meta.windowHours', { horas: Math.floor(min / 60) });
-    if (min >= 60) return this.translate.instant('notificaciones.meta.windowOneHour');
-    return this.translate.instant('notificaciones.meta.windowMinutes', { min });
-  }
-
-  /**
-   * La ventana de TikTok (D-709), con sus tres casos: te quedan N mensajes, puedes responder sin límite
-   * mientras el cliente siga contestando, o hay que esperar a que escriba de nuevo.
-   */
-  private textoVentanaTiktok(v: MetaVentana): string {
-    if (this.sinConexionParaEnviar) {
-      return this.translate.instant('notificaciones.meta.tiktokVentanaSinConexion');
-    }
-    if (!v.abierta) return this.translate.instant('notificaciones.meta.tiktokVentanaCerrada');
-
-    const hasta = this.fechaCorta(v.venceEn);
-
-    if (v.estado === 'abierta') {
-      return hasta
-        ? this.translate.instant('notificaciones.meta.tiktokVentanaSinLimite', { hasta })
-        : this.translate.instant('notificaciones.meta.tiktokVentanaSinLimiteSinFecha');
-    }
-
-    const n = v.restantes;
-    if (typeof n !== 'number') return this.translate.instant('notificaciones.meta.tiktokVentanaPuedes');
-    if (hasta) {
-      return this.translate.instant(
-        n === 1 ? 'notificaciones.meta.tiktokVentanaUnMensaje' : 'notificaciones.meta.tiktokVentanaMensajes',
-        { n, hasta },
-      );
-    }
-    return this.translate.instant(
-      n === 1
-        ? 'notificaciones.meta.tiktokVentanaUnMensajeSinFecha'
-        : 'notificaciones.meta.tiktokVentanaMensajesSinFecha',
-      { n },
-    );
-  }
-
-  /** «10 nov, 3:45 p. m.», en el idioma de la pantalla. Vacío si no hay fecha válida. */
-  private fechaCorta(iso: string | null | undefined): string {
-    if (!iso) return '';
-    const fecha = new Date(iso);
-    if (isNaN(fecha.getTime())) return '';
-    try {
-      return fecha.toLocaleString(this.translate.currentLang || 'es', {
-        day: 'numeric',
-        month: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-    } catch {
-      return fecha.toLocaleString();
-    }
-  }
-
-  /** Con la ventana abierta y, en TikTok, la cuenta conectada. */
-  get puedeEscribir(): boolean {
-    return Boolean(this.ventana?.abierta) && !this.sinConexionParaEnviar && !this.enviando;
-  }
-
-  /** Clave del texto de ayuda del campo de respuesta. */
-  get claveMarcador(): string {
-    if (this.sinConexionParaEnviar) return 'notificaciones.meta.tiktokReplyReconnect';
-    return this.ventana?.abierta ? 'notificaciones.meta.replyPlaceholder' : 'notificaciones.meta.replyClosed';
-  }
-
-  get nombreContacto(): string {
-    return this.hiloActivo?.contactoNombre || this.translate.instant('notificaciones.meta.theContact');
-  }
-
-  get puedeEnviar(): boolean {
-    const hayQueEnviar = this.borrador.trim().length > 0 || (this.esTiktok && Boolean(this.imagen));
-    return (
-      Boolean(this.ventana?.abierta) &&
-      !this.sinConexionParaEnviar &&
-      hayQueEnviar &&
-      !this.enviando
-    );
-  }
-
-  // ─── Imagen adjunta (TikTok) ───────────────────────────────────────────
-
-  /**
-   * Lee la imagen elegida a base64, que es como viaja en la respuesta. Valida tipo y peso antes: 3 MB como
-   * máximo, por seguridad (el servidor acepta más, pero TikTok podría rechazarla).
-   */
-  alElegirImagen(evento: Event): void {
-    const campo = evento.target as HTMLInputElement;
-    const archivo = campo.files && campo.files[0];
-    // Se vacía para poder elegir la misma imagen otra vez después de quitarla.
-    campo.value = '';
-    if (!archivo) return;
-
-    this.errorImagen = null;
-    if (!TIPOS_IMAGEN.includes(archivo.type)) {
-      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenTipo');
-      return;
-    }
-    if (archivo.size > MAX_IMAGEN_MB * 1024 * 1024) {
-      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenPeso', { mb: MAX_IMAGEN_MB });
-      return;
-    }
-
-    const lector = new FileReader();
-    lector.onload = () => {
-      const url = typeof lector.result === 'string' ? lector.result : '';
-      const coma = url.indexOf(',');
-      if (coma < 0) {
-        this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenLectura');
-        return;
-      }
-      this.imagen = {
-        base64: url.slice(coma + 1),
-        mime: archivo.type,
-        nombre: archivo.name,
-        vistaPrevia: url,
-      };
-    };
-    lector.onerror = () => {
-      this.errorImagen = this.translate.instant('notificaciones.meta.tiktokImagenLectura');
-    };
-    lector.readAsDataURL(archivo);
-  }
-
-  quitarImagen(): void {
-    this.soltarImagenAdjunta();
-    this.errorImagen = null;
-  }
-
-  private soltarImagenAdjunta(): void {
-    this.imagen = null;
-  }
-
-  enviar(): void {
-    if (!this.puedeEnviar || !this.hiloActivo) return;
-
-    const imagen = this.esTiktok ? this.imagen : null;
-    const texto = this.borrador.trim();
-    this.enviando = true;
-    this.avisoEnvio = null;
-
-    this.servicio
-      .responder(this.canal, this.hiloActivo.identidadHash, texto, imagen)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((r) => {
-        this.enviando = false;
-        if (r.enviado) {
-          this.borrador = '';
-          this.abrirHilo(this.hiloActivo!);
-          return;
-        }
-        this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
-        // TikTok mandó la imagen y no el texto: la imagen ya salió (no se reintenta), el texto se conserva
-        // para volver a enviarlo y la conversación se refresca para que la imagen aparezca.
-        if (r.parcial) {
-          this.soltarImagenAdjunta();
-          this.refrescarMensajesEnSilencio();
-        }
-      });
-  }
-
-  /**
-   * Reenvía un mensaje que falló. Reusa el mismo camino que un envío normal,
-   * así que la ventana se vuelve a validar: si ya expiró, el operador recibe la
-   * explicación en vez de un segundo fallo mudo.
-   */
-  reintentar(m: MetaMensaje): void {
-    if (!this.hiloActivo || this.enviando || !m.body) return;
-
-    this.enviando = true;
-    this.avisoEnvio = null;
-
-    this.servicio
-      .responder(this.canal, this.hiloActivo.identidadHash, m.body)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((r) => {
-        this.enviando = false;
-        if (r.enviado) {
-          this.abrirHilo(this.hiloActivo!);
-          return;
-        }
-        this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
-      });
-  }
-
-  /**
-   * Traduce el motivo técnico a algo que el operador entienda y pueda actuar. En TikTok el servidor
-   * manda su propio mensaje (ya en palabras sencillas, con el motivo de TikTok si fue quien rechazó):
-   * se muestra tal cual.
-   */
-  private explicarFallo(motivo?: string, mensajeServidor?: string): string {
-    if (this.esTiktok && mensajeServidor) return mensajeServidor;
-    switch (motivo) {
-      case 'ventana_cerrada':
-        return this.esTiktok
-          ? this.translate.instant('notificaciones.meta.tiktokFailWindowClosed')
-          : this.translate.instant('notificaciones.meta.failWindowClosed', { nombre: this.nombreContacto });
-      case 'sin_conexion':
-        return this.translate.instant('notificaciones.meta.failNotConnected', { canal: this.canalLabel });
-      case 'contacto_desconocido':
-        return this.translate.instant('notificaciones.meta.failUnknownContact');
-      case 'rechazado_por_meta':
-        return this.translate.instant('notificaciones.meta.failRejected', { canal: this.canalLabel });
-      default:
-        return this.translate.instant('notificaciones.meta.failDefault');
-    }
-  }
-
   trackHilo(_: number, h: MetaHilo): string {
     return h.identidadHash;
-  }
-
-  trackMensaje(_: number, m: MetaMensaje): string {
-    return m.id;
   }
 }

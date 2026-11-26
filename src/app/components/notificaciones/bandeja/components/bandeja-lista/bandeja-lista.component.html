@@ -1,0 +1,158 @@
+<div class="bj-lista">
+  <header class="bj-lista__cabeza">
+    <div class="bj-buscar">
+      <i class="fa fa-search bj-buscar__icono" aria-hidden="true"></i>
+      <input
+        type="search"
+        class="bj-buscar__campo"
+        [placeholder]="'notificaciones.bandeja.searchPlaceholder' | translate"
+        [attr.aria-label]="'notificaciones.bandeja.searchPlaceholder' | translate"
+        [ngModel]="filtro.busqueda"
+        (ngModelChange)="buscar($event)"
+      />
+    </div>
+
+    <!-- Canal: solo los que el usuario puede ver y están conectados -->
+    <div
+      class="bj-filtros"
+      *ngIf="mostrarCanales"
+      role="group"
+      [attr.aria-label]="'notificaciones.bandeja.channelsAria' | translate"
+    >
+      <button
+        type="button"
+        class="bj-filtro"
+        [class.is-activo]="!filtro.canal"
+        [attr.aria-pressed]="!filtro.canal"
+        (click)="elegirCanal(null)"
+      >
+        {{ 'notificaciones.bandeja.allChannels' | translate }}
+      </button>
+      <button
+        type="button"
+        class="bj-filtro"
+        *ngFor="let canal of canalesDisponibles"
+        [class.is-activo]="filtro.canal === canal"
+        [attr.aria-pressed]="filtro.canal === canal"
+        (click)="elegirCanal(canal)"
+      >
+        {{ canalLabel(canal) }}
+      </button>
+    </div>
+
+    <div class="bj-filtros">
+      <button
+        type="button"
+        class="bj-filtro"
+        [class.is-activo]="filtro.sinResponder"
+        [attr.aria-pressed]="filtro.sinResponder"
+        (click)="alternarSinResponder()"
+      >
+        {{ 'notificaciones.whatsapp.list.unanswered' | translate }}
+        <span class="bj-filtro__cuenta" *ngIf="sinResponderCount > 0">{{ sinResponderCount }}</span>
+      </button>
+      <button
+        type="button"
+        class="bj-filtro"
+        *ngIf="mostrarMios"
+        [class.is-activo]="filtro.mios"
+        [attr.aria-pressed]="filtro.mios"
+        (click)="alternarMios()"
+      >
+        {{ 'notificaciones.bandeja.mine' | translate }}
+      </button>
+    </div>
+
+    <label class="bj-numero" *ngIf="mostrarLinea">
+      <span class="bj-numero__etiqueta">{{ 'notificaciones.whatsapp.list.line' | translate }}</span>
+      <select
+        class="bj-numero__campo"
+        [ngModel]="filtro.lineId || ''"
+        (ngModelChange)="elegirLinea($event)"
+        [attr.aria-label]="'notificaciones.whatsapp.list.lineFilterAria' | translate"
+      >
+        <option value="">{{ 'notificaciones.whatsapp.list.allLines' | translate }}</option>
+        <option *ngFor="let l of opcionesLinea" [value]="l.id">
+          {{ l.displayName || l.displayPhone }}{{ l.displayName ? " · " + l.displayPhone : "" }}
+        </option>
+      </select>
+    </label>
+  </header>
+
+  <!-- Un canal no cargó: los demás se muestran igual -->
+  <p class="bj-aviso" role="status" *ngIf="avisoCaidos && !errorCarga">
+    {{ 'notificaciones.bandeja.channelsFailed' | translate: { canales: avisoCaidos } }}
+  </p>
+
+  <div class="bj-lista__cuerpo">
+    <p class="bj-estado" *ngIf="cargando">{{ 'notificaciones.whatsapp.list.loading' | translate }}</p>
+
+    <div class="bj-estado bj-estado--error" role="alert" *ngIf="!cargando && errorCarga">
+      <span class="bj-estado__texto">{{ 'notificaciones.whatsapp.list.loadError' | translate }}</span>
+      <button type="button" class="bj-reintentar" (click)="reintentar.emit()">
+        {{ 'notificaciones.whatsapp.list.retry' | translate }}
+      </button>
+    </div>
+
+    <!-- Estado vacío: sin chats, o sin chats con estos filtros -->
+    <div class="bj-vacio" *ngIf="!cargando && !errorCarga && filas.length === 0">
+      <span class="bj-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></span>
+      <p class="bj-vacio__titulo">
+        {{ (conversaciones.length ? 'notificaciones.bandeja.emptyFilterTitle' : 'notificaciones.bandeja.emptyTitle') | translate }}
+      </p>
+      <p class="bj-vacio__texto">
+        {{ (conversaciones.length ? 'notificaciones.bandeja.emptyFilterText' : 'notificaciones.bandeja.emptyText') | translate }}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="bj-fila"
+      *ngFor="let fila of filas; trackBy: trackFila"
+      [class.is-activa]="esSeleccionada(fila)"
+      [class.is-sin-leer]="(fila.conversacion.sinLeer || 0) > 0"
+      (click)="alElegir(fila)"
+    >
+      <span class="bj-fila__avatar" aria-hidden="true">{{ fila.iniciales }}</span>
+
+      <span class="bj-fila__cuerpo">
+        <span class="bj-fila__arriba">
+          <span class="bj-fila__nombre">{{ fila.nombre }}</span>
+          <span class="bj-fila__hora">{{ fila.hora }}</span>
+        </span>
+
+        <span class="bj-fila__etiquetas">
+          <span class="bj-canal" [attr.data-canal]="fila.conversacion.canal">
+            <i [class]="fila.canalIcono" aria-hidden="true"></i>
+            <span class="bj-canal__texto">{{ fila.canalLabel }}</span>
+          </span>
+          <app-linea-chip
+            *ngIf="multiNumero"
+            [linea]="fila.conversacion.linea"
+            [compacta]="true"
+          ></app-linea-chip>
+        </span>
+
+        <span class="bj-fila__abajo">
+          <span class="bj-fila__resumen">{{ fila.resumen }}</span>
+          <span
+            class="bj-fila__sin-leer"
+            *ngIf="(fila.conversacion.sinLeer || 0) > 0"
+            [attr.aria-label]="'notificaciones.bandeja.unreadAria' | translate: { n: fila.conversacion.sinLeer }"
+          >{{ fila.conversacion.sinLeer }}</span>
+        </span>
+
+        <span class="bj-fila__dueno" *ngIf="fila.conversacion.dueno as dueno">
+          <i class="fa fa-user-o" aria-hidden="true"></i>
+          <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.handledBy' | translate: { nombre: dueno.nombre || dueno.email } }}</span>
+        </span>
+      </span>
+    </button>
+
+    <div class="bj-mas" *ngIf="hayMas && !cargando && !errorCarga">
+      <button type="button" class="bj-btn" [disabled]="cargandoMas" (click)="verMas.emit()">
+        {{ (cargandoMas ? 'notificaciones.bandeja.loadingMore' : 'notificaciones.bandeja.showMore') | translate }}
+      </button>
+    </div>
+  </div>
+</div>

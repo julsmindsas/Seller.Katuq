@@ -44,6 +44,10 @@ export const COMPANY_FEATURE_FLAGS = [
   // (mensajes directos, con la ventana de 48 horas). Mismo nombre que el backend. Nace apagada.
   // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
   'tiktokMensajes',
+  // Bandeja única (conv-bandeja-unica, ticket 1302): «Todos» en Comunicaciones › Mensajes, una sola lista con los
+  // chats de WhatsApp, Instagram, Facebook y TikTok. Mismo nombre que el backend. Nace apagada.
+  // Dueño: Daniel. Se retira 30 días después de tenerla encendida para todos.
+  'bandejaUnica',
   // Agenda de servicios (D-491): citas, horario y personas que atienden. Dueño: Daniel.
   // Se retira el 2027-03-31: encendida para todos o eliminada.
   'serviceAgenda',

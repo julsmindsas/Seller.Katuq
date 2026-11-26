@@ -1,0 +1,105 @@
+    <header class="mb-chat__head">
+      <span class="mb-chat__nombre">{{ nombreContacto }}</span>
+      <span class="mb-chat__canal">{{ canalLabel }}</span>
+    </header>
+
+    <div class="mb-chat__mensajes">
+      <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
+      <div
+        class="mb-msg"
+        *ngFor="let m of mensajes; trackBy: trackMensaje"
+        [class.mb-msg--mio]="m.direccion === 'outbound'"
+      >
+        <span class="mb-msg__burbuja">
+          <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
+          <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
+          <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" />
+          <!-- TikTok: publicación compartida; su enlace es público -->
+          <a
+            class="mb-msg__enlace"
+            *ngIf="esPublicacion(m)"
+            [href]="m.mediaUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{{ 'notificaciones.meta.tiktokVerPublicacion' | translate }}</a>
+          <span class="mb-msg__adjunto" *ngIf="textoAdjunto(m) as texto">
+            <i class="pi pi-paperclip"></i> {{ texto }}
+          </span>
+          <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
+            {{ 'notificaciones.meta.notSent' | translate }}
+            <button
+              type="button"
+              class="mb-msg__reintentar"
+              [disabled]="enviando"
+              (click)="reintentar(m)"
+            >
+              {{ 'notificaciones.meta.retry' | translate }}
+            </button>
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- La ventana (24 h en Meta; en TikTok, cuántos mensajes quedan): se explica siempre, no solo cuando falla -->
+    <div class="mb-ventana" [class.mb-ventana--cerrada]="!ventana?.abierta" *ngIf="ventana">
+      <i class="pi" [ngClass]="ventana.abierta ? 'pi-clock' : 'pi-lock'"></i>
+      <span>{{ textoVentana }}</span>
+    </div>
+
+    <div class="mb-aviso mb-aviso--error" *ngIf="avisoEnvio">
+      <span class="mb-aviso__detalle">{{ avisoEnvio }}</span>
+    </div>
+
+    <!-- TikTok: imagen elegida, antes de enviarla -->
+    <div class="mb-adjunta" *ngIf="imagen">
+      <img class="mb-adjunta__miniatura" [src]="imagen.vistaPrevia" alt="" />
+      <span class="mb-adjunta__nombre">{{ imagen.nombre }}</span>
+      <button
+        type="button"
+        class="mb-adjunta__quitar"
+        [disabled]="enviando"
+        [attr.aria-label]="'notificaciones.meta.tiktokQuitarImagen' | translate"
+        (click)="quitarImagen()"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <p class="mb-adjunta__error" *ngIf="errorImagen" role="alert">{{ errorImagen }}</p>
+
+    <form class="mb-responder" (ngSubmit)="enviar()">
+      <!-- TikTok: solo si el país del cliente deja mandar imágenes -->
+      <button
+        type="button"
+        class="mb-btn mb-btn--ghost mb-btn--icono"
+        *ngIf="permiteImagen"
+        [disabled]="!puedeEscribir"
+        [title]="'notificaciones.meta.tiktokAdjuntarImagen' | translate"
+        [attr.aria-label]="'notificaciones.meta.tiktokAdjuntarImagen' | translate"
+        (click)="selectorImagen.click()"
+      >
+        <i class="pi pi-image"></i>
+      </button>
+      <input
+        #selectorImagen
+        type="file"
+        class="mb-responder__archivo"
+        accept="image/jpeg,image/png"
+        tabindex="-1"
+        (change)="alElegirImagen($event)"
+      />
+      <textarea
+        class="mb-responder__campo"
+        [(ngModel)]="borrador"
+        name="borrador"
+        rows="2"
+        [disabled]="!puedeEscribir"
+        [placeholder]="claveMarcador | translate"
+      ></textarea>
+      <button
+        type="submit"
+        class="mb-btn mb-btn--primario"
+        [disabled]="!puedeEnviar"
+      >
+        {{ (enviando ? 'notificaciones.meta.sending' : 'notificaciones.meta.send') | translate }}
+      </button>
+    </form>

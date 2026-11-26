@@ -1,0 +1,377 @@
+// Lista de la bandeja única — base D-400/D-131: plano, fondo lila, acento #5F3FE0, sin gradientes.
+// Los $cfg-* son tokens --ds-* (claro y oscuro). Ningún nombre de clase lleva «p-» (trampa de CSS global);
+// todo span con texto trae color y tamaño propios (el global `span.ng-star-inserted` los pinta de azul).
+@import '../../../../../shared/styles/config-pagina';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+$canal-instagram: #8e27b0;
+$canal-instagram-fondo: #f3e9fb;
+$canal-tiktok: #5a6b78;
+$canal-tiktok-fondo: #eef0f3;
+
+.bj-lista {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  color: $cfg-ink;
+
+  button, input, select { font-family: inherit; letter-spacing: normal; }
+  p { letter-spacing: normal; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &__cabeza {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-bottom: 1px solid $cfg-line;
+    flex-shrink: 0;
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+// ── Búsqueda ──
+.bj-buscar {
+  position: relative;
+
+  &__icono {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $cfg-muted;
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  &__campo {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px 0 34px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    background: $cfg-chip-bg;
+    color: $cfg-ink;
+    font-size: 13.5px;
+
+    &::placeholder { color: $cfg-muted; }
+    &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
+  }
+}
+
+// ── Filtros ──
+.bj-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bj-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+  color: $cfg-body;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+
+  &:hover { border-color: #d9cffb; color: $cfg-accent-ink; }
+
+  &.is-activo {
+    background: $cfg-accent-soft;
+    border-color: #d9cffb;
+    color: $cfg-accent-ink;
+  }
+
+  &__cuenta {
+    min-width: 18px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+  }
+}
+
+.bj-numero {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+
+  &__etiqueta {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: $cfg-muted;
+  }
+
+  &__campo {
+    min-height: 38px;
+    padding: 0 10px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    background: $cfg-chip-bg;
+    color: $cfg-ink;
+    font-size: 13px;
+  }
+}
+
+// ── Avisos y estados ──
+.bj-aviso {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-warn-soft;
+  color: $cfg-warn;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.bj-estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 14px;
+  color: $cfg-muted;
+  font-size: 12.5px;
+
+  &__texto { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+  &--error { background: $cfg-err-soft; }
+}
+
+.bj-reintentar {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid $cfg-err;
+  border-radius: 10px;
+  background: var(--ds-surface);
+  color: $cfg-err;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bj-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent-ink;
+    font-size: 26px;
+  }
+  &__titulo { margin: 0; font-size: 15px; font-weight: 800; color: $cfg-ink; }
+  &__texto { margin: 0; font-size: 12.5px; color: $cfg-muted; }
+}
+
+// ── Fila ──
+.bj-fila {
+  display: flex;
+  // La lista es una columna flex con scroll: sin esto las filas se encogen y se enciman en celular.
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid $cfg-line-soft;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease;
+
+  &:hover { background: $cfg-row-hover; }
+
+  &.is-activa {
+    background: rgba(124, 92, 255, .09);
+    box-shadow: inset 0 0 0 1px #d9cffb;
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__arriba {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__nombre {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $cfg-ink;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  &.is-sin-leer &__nombre { font-weight: 800; }
+
+  &__hora {
+    flex: 0 0 auto;
+    color: $cfg-muted;
+    font-size: 11px;
+  }
+
+  &__etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &__abajo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__resumen {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $cfg-body;
+    font-size: 12.5px;
+  }
+
+  &.is-sin-leer &__resumen { color: $cfg-ink; font-weight: 700; }
+
+  &__sin-leer {
+    flex: 0 0 auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 20px;
+    text-align: center;
+  }
+
+  &__dueno {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: $cfg-muted;
+    font-size: 11px;
+
+    i { font-size: 12px; color: $cfg-muted; }
+  }
+
+  &__dueno-texto {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $cfg-muted;
+    font-size: 11px;
+  }
+}
+
+// ── Distintivo del canal: par fuerte / fondo suave ──
+.bj-canal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: $cfg-accent-soft;
+  color: $cfg-accent-ink;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: nowrap;
+
+  i { font-size: 12px; color: inherit; }
+
+  &__texto { color: inherit; font-size: 11px; font-weight: 800; }
+
+  &[data-canal="whatsapp"] { background: $cfg-ok-soft; color: $cfg-ok; }
+  &[data-canal="instagram"] { background: $canal-instagram-fondo; color: $canal-instagram; }
+  &[data-canal="facebook"] { background: $cfg-info-soft; color: $cfg-info; }
+  &[data-canal="tiktok"] { background: $canal-tiktok-fondo; color: $canal-tiktok; }
+}
+
+.bj-mas {
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+}
+
+.bj-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}

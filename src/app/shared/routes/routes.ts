@@ -8,6 +8,7 @@ import { CentroAyudaGuard } from "../../components/centro-de-ayuda/centro-ayuda.
 import { PlataformaUiGuard } from "../../components/plataforma/servicios/plataforma-ui.guard";
 import { ConsolaWhatsappGuard } from "../services/messaging/consola-whatsapp-acceso";
 import { TiktokMensajesGuard } from "../../components/notificaciones/meta-inbox/tiktok-mensajes.guard";
+import { BandejaUnicaGuard } from "../../components/notificaciones/bandeja/bandeja-unica.guard";
 import { SinAccesoComponent } from "../components/sin-acceso/sin-acceso.component";
 
 export const content: Routes = [
@@ -489,6 +490,17 @@ export const content: Routes = [
       ).then((m) => m.MetaInboxModule),
     canActivate: [AuthGuard, TiktokMensajesGuard],
     data: { title: "Conversaciones TikTok" },
+  },
+  // Bandeja única (conv-bandeja-unica): todos los canales en una sola lista. Solo con la bandera `bandejaUnica`;
+  // sin ella vuelve al buzón de WhatsApp. Va antes de la genérica «notificaciones», como los buzones.
+  {
+    path: "notificaciones/bandeja",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/bandeja/bandeja.module"
+      ).then((m) => m.BandejaModule),
+    canActivate: [AuthGuard, BandejaUnicaGuard],
+    data: { title: "Todos los mensajes" },
   },
   {
     path: "notificaciones",

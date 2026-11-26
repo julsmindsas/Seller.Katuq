@@ -1,0 +1,78 @@
+<div class="cfg-pagina bj" [class.bj--detalle]="seleccion">
+  <!-- Encabezado de la pantalla (D-400) -->
+  <header class="cfg-cabeza">
+    <div class="cfg-cabeza__textos">
+      <span class="cfg-eyebrow">{{ 'notificaciones.bandeja.eyebrow' | translate }}</span>
+      <h1 class="cfg-titulo">{{ 'notificaciones.bandeja.title' | translate }}</h1>
+      <p class="cfg-sub">{{ 'notificaciones.bandeja.subtitle' | translate }}</p>
+    </div>
+  </header>
+
+  <div class="bj__cuerpo">
+    <!-- Columna izquierda: una sola lista con todos los canales -->
+    <aside class="bj__lista">
+      <app-bandeja-lista
+        [conversaciones]="conversaciones"
+        [canalesDisponibles]="canales"
+        [canalesCaidos]="carga?.canalesCaidos || []"
+        [cargando]="cargando"
+        [errorCarga]="errorCarga"
+        [hayMas]="!!carga?.hayMasWhatsapp"
+        [cargandoMas]="cargandoMas"
+        [claveSeleccion]="claveSeleccion"
+        [multiNumero]="multiNumero && canales.includes('whatsapp')"
+        [lineas]="lineas"
+        [esAdministrador]="esAdministrador"
+        [miEmail]="miEmail"
+        (seleccionar)="abrir($event)"
+        (verMas)="verMas()"
+        (reintentar)="reintentar()"
+      ></app-bandeja-lista>
+    </aside>
+
+    <!-- Columna derecha: la misma conversación que abre el buzón de cada canal -->
+    <section class="bj__detalle">
+      <div class="bj-elige" *ngIf="!seleccion">
+        <span class="bj-elige__icono"><i class="pi pi-comments" aria-hidden="true"></i></span>
+        <p class="bj-elige__titulo">{{ 'notificaciones.bandeja.chooseTitle' | translate }}</p>
+        <p class="bj-elige__texto">{{ 'notificaciones.bandeja.chooseText' | translate }}</p>
+      </div>
+
+      <!-- WhatsApp: el detalle de hoy (dueño, bot, carrito, plantillas) con las mismas entradas del buzón -->
+      <app-whatsapp-thread-detail
+        *ngIf="whatsappAbierto as chat"
+        [phoneHash]="chat.phoneHash"
+        [lineId]="chat.line?.id || null"
+        [chat]="chat"
+        [multiNumero]="multiNumero"
+        [equipo]="equipo"
+        [esAdministrador]="esAdministrador"
+        [miEmail]="miEmail"
+        (duenoCambiado)="onDuenoCambiado($event)"
+        (backToList)="volver()"
+      ></app-whatsapp-thread-detail>
+
+      <!-- Instagram, Facebook y TikTok: la conversación y la ficha de hoy -->
+      <div class="bj-red" *ngIf="redAbierta as hilo">
+        <div class="bj-red__chat">
+          <button type="button" class="bj-volver" (click)="volver()">
+            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            <span class="bj-volver__texto">{{ 'notificaciones.bandeja.back' | translate }}</span>
+          </button>
+          <app-meta-hilo-detalle
+            [canal]="hilo.canal"
+            [hilo]="hilo"
+            [conectado]="redConectada"
+          ></app-meta-hilo-detalle>
+        </div>
+        <aside class="bj-red__ficha">
+          <app-meta-contact-panel
+            [canal]="hilo.canal"
+            [identidadHash]="hilo.identidadHash"
+            [nombrePerfil]="hilo.contactoNombre"
+          ></app-meta-contact-panel>
+        </aside>
+      </div>
+    </section>
+  </div>
+</div>

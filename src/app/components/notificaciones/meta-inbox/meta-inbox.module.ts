@@ -1,4 +1,3 @@
-import { CopMonedaPipe } from '../../../shared/pipes/cop-moneda.pipe';
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -6,8 +5,8 @@ import { RouterModule } from "@angular/router";
 import { TranslateModule } from "@ngx-translate/core";
 
 import { MetaInboxRoutingModule } from "./meta-inbox-routing.module";
+import { MetaInboxPiezasModule } from "./meta-inbox-piezas.module";
 import { MetaInboxShellComponent } from "./components/meta-inbox-shell/meta-inbox-shell.component";
-import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-contact-panel.component";
 
 /**
  * Buzones de Meta (Instagram Direct y Messenger).
@@ -16,7 +15,7 @@ import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-
  * módulo de WhatsApp, que sigue vivo en producción.
  */
 @NgModule({
-  declarations: [MetaInboxShellComponent, MetaContactPanelComponent],
-  imports: [CopMonedaPipe, CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule, TranslateModule],
+  declarations: [MetaInboxShellComponent],
+  imports: [CommonModule, FormsModule, RouterModule, MetaInboxRoutingModule, TranslateModule, MetaInboxPiezasModule],
 })
 export class MetaInboxModule {}

@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
@@ -43,6 +43,7 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
 
   private busqueda$ = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private perfilSub?: Subscription;
 
   constructor(
     private servicio: MetaInboxService,
@@ -68,9 +69,16 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
   }
 
   private cargarPerfil(): void {
-    if (!this.identidadHash) return;
+    // Al cambiar de conversación se descarta la petición anterior y su perfil: una respuesta tardía
+    // de otro chat nunca debe pintar su cliente y sus pedidos junto al chat actual.
+    this.perfilSub?.unsubscribe();
+    this.perfil = null;
+    if (!this.identidadHash) {
+      this.cargando = false;
+      return;
+    }
     this.cargando = true;
-    this.servicio
+    this.perfilSub = this.servicio
       .perfilDeHilo(this.canal, this.identidadHash)
       .pipe(takeUntil(this.destroy$))
       .subscribe((p) => {
@@ -119,13 +127,14 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
     const id = cliente?.id || cliente?.docId;
     if (!id || this.vinculando) return;
 
+    const { canal, identidadHash } = this;
     this.vinculando = true;
     this.servicio
-      .vincularCliente(this.canal, this.identidadHash, id)
+      .vincularCliente(canal, identidadHash, id)
       .pipe(takeUntil(this.destroy$))
       .subscribe((p) => {
         this.vinculando = false;
-        if (p) {
+        if (p && canal === this.canal && identidadHash === this.identidadHash) {
           this.perfil = p;
           this.resultados = [];
           this.termino = '';
@@ -135,13 +144,14 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
 
   desvincular(): void {
     if (this.vinculando) return;
+    const { canal, identidadHash } = this;
     this.vinculando = true;
     this.servicio
-      .desvincularCliente(this.canal, this.identidadHash)
+      .desvincularCliente(canal, identidadHash)
       .pipe(takeUntil(this.destroy$))
       .subscribe((p) => {
         this.vinculando = false;
-        if (p) this.perfil = p;
+        if (p && canal === this.canal && identidadHash === this.identidadHash) this.perfil = p;
       });
   }
 

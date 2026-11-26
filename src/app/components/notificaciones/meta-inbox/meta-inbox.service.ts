@@ -186,14 +186,19 @@ export class MetaInboxService extends BaseService {
 
   // ─── Conversaciones ────────────────────────────────────────────────────
 
+  /** Lista los hilos de un canal; si la petición falla devuelve vacío (lo que usan los buzones). */
   listarHilos(canal: MetaCanal, dias = 90): Observable<MetaHilo[]> {
+    return this.listarHilosEstricto(canal, dias).pipe(catchError(() => of([])));
+  }
+
+  /** Igual que `listarHilos`, pero no tapa el error: quien lo necesita (la bandeja) distingue «sin chats» de «no cargó». */
+  listarHilosEstricto(canal: MetaCanal, dias = 90): Observable<MetaHilo[]> {
     return this.get<any>(`/v1/meta/conversations/${canal}?dias=${dias}`).pipe(
       map((r) =>
         r && r.data && r.data.items
           ? (r.data.items as MetaHilo[]).map((h) => ({ ...h, ventana: normalizarVentana(h.ventana) }))
           : [],
       ),
-      catchError(() => of([])),
     );
   }
 

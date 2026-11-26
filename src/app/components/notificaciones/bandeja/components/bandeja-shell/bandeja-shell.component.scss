@@ -1,0 +1,132 @@
+// Bandeja única — base D-400/D-131: encabezado cfg-*, tarjetas blancas sobre fondo lila, acento #5F3FE0,
+// plano y sin gradientes. Ningún nombre de clase lleva «p-» (trampa de CSS global) y todo span con texto
+// trae color y tamaño propios. Lista y detalle se ven uno por vez en pantallas de menos de 1024 px.
+@import '../../../../../shared/styles/config-pagina';
+@include config-pagina;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bj {
+  &__cuerpo {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 16px;
+    height: calc(100vh - 300px);
+    min-height: 560px;
+  }
+
+  &__lista,
+  &__detalle {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--ds-surface);
+    border: 1px solid $cfg-line;
+    border-radius: 16px;
+    box-shadow: $cfg-shadow-panel;
+  }
+
+  // En celular: lista → detalle, uno por vez, sin scroll horizontal.
+  @media (max-width: 1023px) {
+    &__cuerpo {
+      grid-template-columns: minmax(0, 1fr);
+      height: calc(100vh - 260px);
+      min-height: 480px;
+    }
+
+    &__detalle { display: none; }
+
+    &.bj--detalle {
+      .bj__lista { display: none; }
+      .bj__detalle { display: flex; }
+    }
+  }
+}
+
+// Nada elegido todavía
+.bj-elige {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  padding: 32px 16px;
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent-ink;
+    font-size: 26px;
+  }
+  &__titulo { margin: 0; color: $cfg-ink; font-size: 15px; font-weight: 800; }
+  &__texto { margin: 0; color: $cfg-muted; font-size: 12.5px; }
+}
+
+// Conversación de redes (Instagram, Facebook, TikTok) con su ficha
+.bj-red {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  &__chat {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__ficha {
+    flex: 0 0 300px;
+    min-width: 0;
+    border-left: 1px solid $cfg-line;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 1199px) {
+    flex-direction: column;
+    overflow-y: auto;
+
+    &__chat { flex: 0 0 auto; }
+    &__ficha { flex: 0 0 auto; border-left: 0; border-top: 1px solid $cfg-line; overflow-y: visible; }
+  }
+}
+
+.bj-volver {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 40px;
+  margin: 8px 8px 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: $cfg-body;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  i { color: inherit; }
+
+  &__texto { color: inherit; font-size: 13.5px; font-weight: 700; }
+
+  &:hover { background: $cfg-tint; color: $cfg-accent-ink; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  @media (max-width: 1023px) {
+    display: inline-flex;
+  }
+}

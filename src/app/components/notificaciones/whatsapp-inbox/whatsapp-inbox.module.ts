@@ -9,11 +9,10 @@ import { WhatsappInboxRoutingModule } from "./whatsapp-inbox-routing.module";
 import { WhatsappInboxShellComponent } from "./components/whatsapp-inbox-shell/whatsapp-inbox-shell.component";
 import { WhatsappThreadListComponent } from "./components/whatsapp-thread-list/whatsapp-thread-list.component";
 import { WhatsappPedidosListComponent } from "./components/whatsapp-pedidos-list/whatsapp-pedidos-list.component";
-import { WhatsappThreadDetailComponent } from "./components/whatsapp-thread-detail/whatsapp-thread-detail.component";
-import { WhatsappContactPanelComponent } from "./components/whatsapp-contact-panel/whatsapp-contact-panel.component";
 import { WhatsappNewConversationDialogComponent } from "./components/new-conversation-dialog/new-conversation-dialog.component";
 
 import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
+import { WhatsappInboxPiezasModule } from "./whatsapp-inbox-piezas.module";
 
 /**
  * Módulo lazy WhatsApp Inbox (spec 009).
@@ -21,8 +20,8 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
  * Estructura:
  *   - Shell (3 columnas)
  *   - ThreadList (izquierda) ── selecciona hilo
- *   - ThreadDetail (centro) ── stream de mensajes
- *   - ContactPanel (derecha) ── perfil + lead + pedidos + rating
+ *   - ThreadDetail (centro) ── stream de mensajes   ┐ declarados en
+ *   - ContactPanel (derecha) ── perfil + lead + ...  ┘ WhatsappInboxPiezasModule
  *
  * El servicio va en `providedIn: "root"` y NO en `providers` de este módulo:
  * provisto aquí recibía el HttpClient del módulo lazy (SharedModule importa
@@ -33,10 +32,7 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
     WhatsappInboxShellComponent,
     WhatsappThreadListComponent,
     WhatsappPedidosListComponent,
-    WhatsappThreadDetailComponent,
-    WhatsappContactPanelComponent,
     WhatsappNewConversationDialogComponent,
-    PhoneMaskPipe,
   ],
   imports: [
     CommonModule,
@@ -44,6 +40,7 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
     ReactiveFormsModule,
     SharedModule,
     InboxCoreModule,
+    WhatsappInboxPiezasModule,
     WhatsappInboxRoutingModule,
   ],
   exports: [PhoneMaskPipe],

@@ -138,6 +138,8 @@ export class NavService implements OnDestroy {
   private landingsV2Prendido = false;
   // Buzón de TikTok (D-709): bandera `tiktokMensajes`. Último valor con el que se filtró el menú.
   private tiktokPrendido = false;
+  // Bandeja única (conv-bandeja-unica): bandera `bandejaUnica`. Último valor con el que se filtró el menú.
+  private bandejaPrendida = false;
   /** D-709: quien ve esta ruta («Instagram») ve también el buzón de TikTok. */
   private static readonly RUTA_BASE_TIKTOK = "/notificaciones/instagram/inbox";
   /** D-709: la entrada del buzón de TikTok en Comunicaciones; solo se ofrece con la bandera `tiktokMensajes`. */
@@ -145,6 +147,18 @@ export class NavService implements OnDestroy {
     path: "/notificaciones/tiktok/inbox",
     title: "TikTok",
     menuIcon: "brand-tiktok",
+    type: "link",
+    icon: "message-circle",
+  };
+  /**
+   * La entrada «Todos» (bandeja única) de Comunicaciones: primer hijo de «Mensajes», solo con la bandera
+   * `bandejaUnica` y si el usuario ve al menos un buzón. No es un permiso propio (no entra al editor de
+   * roles): hereda de los buzones, igual que la de TikTok.
+   */
+  private static readonly ENTRADA_TODOS: Menu = {
+    path: "/notificaciones/bandeja",
+    title: "Todos",
+    menuIcon: "inbox",
     type: "link",
     icon: "message-circle",
   };
@@ -235,6 +249,14 @@ export class NavService implements OnDestroy {
       .pipe(takeUntil(this.unsubscriber))
       .subscribe((prendida) => {
         if (prendida !== this.tiktokPrendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
+    this.features
+      .isEnabled$("bandejaUnica")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.bandejaPrendida) {
           this.filterMenuItemsByAuthorization();
         }
       });
@@ -379,7 +401,9 @@ export class NavService implements OnDestroy {
     const primerSegmento = ruta.split("/")[0];
     if (NavService.RUTAS_SIEMPRE_ABIERTAS.includes(primerSegmento)) return true;
     let pantalla = "";
-    for (const p of this.collectAllMenuPaths().map(NavService.normalizarRuta)) {
+    // «Todos» (bandeja única) no está en el menú fijo: se suma para que sea su propia pantalla y no la de «Notificaciones».
+    const rutasDelMenu = [...this.collectAllMenuPaths(), NavService.ENTRADA_TODOS.path as string];
+    for (const p of rutasDelMenu.map(NavService.normalizarRuta)) {
       if (p && (ruta === p || ruta.startsWith(p + "/")) && p.length > pantalla.length) pantalla = p;
     }
     if (!pantalla) return true;
@@ -466,12 +490,15 @@ export class NavService implements OnDestroy {
       this.landingsV2Prendido = this.features.isEnabled("landingsV2");
       // Buzón de TikTok (D-709): igual, con su bandera.
       this.tiktokPrendido = this.features.isEnabled("tiktokMensajes");
+      // Bandeja única: igual, con su bandera.
+      this.bandejaPrendida = this.features.isEnabled("bandejaUnica");
     }
     const alistamientoPrendido = todasLasBanderas || this.alistamientoPrendido;
     const agendaPrendida = todasLasBanderas || this.agendaPrendida;
     const ayudaPrendida = todasLasBanderas || this.ayudaPrendida;
     const landingsV2Prendido = todasLasBanderas || this.landingsV2Prendido;
     const tiktokPrendido = todasLasBanderas || this.tiktokPrendido;
+    const bandejaPrendida = todasLasBanderas || this.bandejaPrendida;
 
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
@@ -568,8 +595,10 @@ export class NavService implements OnDestroy {
         const tiktok: Menu[] = tiktokPrendido && authorizedPaths.includes(NavService.RUTA_BASE_TIKTOK)
           ? [{ ...NavService.ENTRADA_TIKTOK }]
           : [];
+        // Bandeja única: «Todos» va de primero, solo con la bandera y porque ya quedó al menos un buzón visible.
+        const todos: Menu[] = bandejaPrendida ? [{ ...NavService.ENTRADA_TODOS }] : [];
         const children: Menu[] = item.id === "mensajes"
-          ? [...filteredChildren, ...tiktok, ...canalesFuturosVisibles(flag => this.features.isEnabled(flag as CompanyFeatureFlag)).map(channel => ({
+          ? [...todos, ...filteredChildren, ...tiktok, ...canalesFuturosVisibles(flag => this.features.isEnabled(flag as CompanyFeatureFlag)).map(channel => ({
               title: channel.title, icon: channel.icon, menuIcon: channel.menuIcon, type: "info", badgeValue: "Próximamente",
             }))]
           : filteredChildren;
