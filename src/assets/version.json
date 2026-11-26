@@ -1,40 +1,7 @@
 {
-  "version": "2026.11.26.3 - 26 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-26T20:17:27.611Z",
-  "notas": [
-    {
-      "fecha": "2026-11-26T18:00:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Un pedido con descuento por producto y descuento global muestra el mismo total en el pedido, el PDF y la orden de venta.",
-      "modulos": [
-        "ventas/pedidos"
-      ]
-    },
-    {
-      "fecha": "2026-11-26T18:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "En el carrito puedes escoger de qué bodega sale cada producto y ves cuántas existencias tiene cada bodega.",
-      "modulos": [
-        "ventas/venta-asistida"
-      ]
-    },
-    {
-      "fecha": "2026-11-26T18:30:00Z",
-      "tipo": "NUEVO",
-      "texto": "Puedes marcar una bodega como «Usar solo como última opción»: los productos solo salen de ella si ninguna otra bodega de la zona tiene existencias.",
-      "modulos": [
-        "inventarios/bodegas"
-      ]
-    },
-    {
-      "fecha": "2026-11-26T20:00:00Z",
-      "tipo": "NUEVO",
-      "texto": "En la sección «Dónde estás» de tu sitio ahora puedes mostrar el mapa interactivo de Google: tus clientes lo mueven, hacen zoom y lo abren en Maps. Si escribes el nombre de tu negocio como aparece en Google, el mapa muestra tus estrellas y reseñas.",
-      "modulos": [
-        "sitios"
-      ]
-    }
-  ],
+  "version": "2026.11.26.4 - 26 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-26T21:11:21.962Z",
+  "notas": [],
   "recientes": [
     {
       "fecha": "2026-11-26T20:00:00Z",
@@ -510,6 +477,6 @@
       "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
     }
   ],
-  "commit": "2717c9ec6a1a2ca68fa421d47e263ffe58ba603c",
+  "commit": "8895ceae72c01052636e70655bac9586a49345c4",
   "cambiosSinCommit": 0
 }
