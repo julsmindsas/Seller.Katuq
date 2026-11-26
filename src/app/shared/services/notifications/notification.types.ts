@@ -71,7 +71,11 @@ export enum NotificationType {
   TICKET_REOPENED = 'TICKET_REOPENED',
 
   // NPS (D-490): un cliente calificó de 0 a 6; actionUrl lleva al caso (/nps/seguimiento/<id>)
-  NPS_DETRACTOR = 'NPS_DETRACTOR'
+  NPS_DETRACTOR = 'NPS_DETRACTOR',
+
+  // Bandeja única (D-725): avisos para quien atiende el chat (paraEmails)
+  CHAT_SIN_RESPONDER = 'chat_sin_responder',
+  CHAT_MENCION = 'chat_mencion'
 }
 
 // Canales de notificación disponibles

@@ -111,3 +111,85 @@ export interface ErrorChatConDueno {
 export function esErrorChatConDueno(err: any): err is { status: number; error: ErrorChatConDueno } {
   return !!err && err.status === 409 && err.error?.error === 'CHAT_CON_DUENO';
 }
+
+/* ---------- Atención multiagente (D-725, fase C de CONV) ---------- */
+
+/** Nota interna de un chat: nunca va al cliente. */
+export interface NotaChat {
+  id: string;
+  texto: string;
+  /** Correo de quien la escribió. */
+  por: string;
+  nombre: string;
+  /** ISO. */
+  en: string;
+  menciones: string[];
+}
+
+/** Disponibilidad del asesor para el reparto automático. */
+export type EstadoAsesor = 'disponible' | 'ausente';
+
+/** Persona del equipo con su estado (`GET /atencion/equipo`). */
+export interface MiembroAtencion {
+  email: string;
+  nombre: string;
+  rol?: string;
+  estado: EstadoAsesor;
+  coordina: boolean;
+}
+
+/** `GET /atencion/yo`. */
+export interface YoAtencion {
+  email: string;
+  nombre: string;
+  coordina: boolean;
+  esAdmin: boolean;
+  estado: EstadoAsesor;
+}
+
+/** Ajustes de atención del comercio (`companyConfig/{empresa}.atencion`). */
+export interface AjustesAtencion {
+  repartoAutomatico: boolean;
+  /** 0 apaga el aviso; máximo 240. */
+  minutosSinResponder: number;
+}
+
+/** Una fila de carga por asesor en la vista Equipo. */
+export interface CargaAsesor {
+  email: string;
+  nombre: string;
+  estado: EstadoAsesor;
+  chats: number;
+  sinResponder: number;
+}
+
+/** `GET /atencion/resumen` (solo quien coordina). */
+export interface ResumenAtencion {
+  sinAsignar: number;
+  sinResponder: number;
+  porAsesor: CargaAsesor[];
+  ajustes: AjustesAtencion;
+}
+
+/** Movimiento del historial del chat (`log`). */
+export interface MovimientoChat {
+  accion: string;
+  por?: string;
+  para?: string;
+  nota?: string;
+  en?: string;
+}
+
+/** `GET /atencion/threads/:threadId` (el front trata el 404 como sin dueño y sin notas). */
+export interface HiloAtencion {
+  threadId: string;
+  owner: DuenoChat | null;
+  notas: NotaChat[];
+  log: MovimientoChat[];
+}
+
+/** Lo que emite `app-chat-dueno.pasar` cuando recibe `conNota=true`. */
+export interface Transferencia {
+  email: string;
+  nota: string;
+}

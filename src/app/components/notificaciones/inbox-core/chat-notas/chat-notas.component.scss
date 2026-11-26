@@ -1,0 +1,129 @@
+// Notas internas del chat (D-725). Plano, acento #5F3FE0, tokens --ds-* (claro y oscuro).
+// Ningún nombre de clase lleva «p-» (trampa de CSS global) y cada span trae color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+
+:host { display: block; min-width: 0; }
+
+.nt-notas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  color: $cfg-ink;
+
+  button, textarea { font-family: inherit; letter-spacing: normal; }
+  p { letter-spacing: normal; margin: 0; }
+  button:focus-visible, textarea:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &__cabeza { display: flex; flex-direction: column; gap: 2px; }
+
+  &__titulo {
+    font-size: 11px !important;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: $cfg-muted !important;
+  }
+
+  &__aviso { font-size: 12px !important; line-height: 1.4; color: $cfg-body !important; }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  &__vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 18px 12px;
+    border: 1px dashed $cfg-line;
+    border-radius: 16px;
+    background: $cfg-tint;
+    text-align: center;
+
+    i { font-size: 22px !important; color: $cfg-accent !important; }
+  }
+
+  &__vacio-titulo { font-size: 13px !important; font-weight: 800; color: $cfg-ink !important; }
+  &__vacio-texto { font-size: 12px !important; color: $cfg-body !important; }
+
+  &__form { display: flex; flex-direction: column; gap: 8px; }
+
+  &__caja {
+    width: 100%;
+    min-height: 72px;
+    padding: 10px 12px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 11px;
+    background: var(--ds-surface);
+    color: $cfg-ink;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+
+    &:disabled { opacity: .6; }
+  }
+
+  &__menciona { min-width: 0; }
+
+  &__pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+  &__contador { font-size: 11px !important; color: $cfg-muted !important; }
+
+  &__btn {
+    appearance: none;
+    min-height: 34px;
+    padding: 0 16px;
+    border: 1px solid $cfg-accent;
+    border-radius: 11px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent) !important;
+    font-size: 12.5px !important;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+
+    &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+  }
+}
+
+.nt-nota {
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: $cfg-warn-soft;
+
+  &--mia { background: $cfg-accent-soft; }
+
+  &__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+  &__autor { font-size: 12px !important; font-weight: 800; color: $cfg-ink !important; }
+  &__fecha { font-size: 11px !important; color: $cfg-muted !important; }
+
+  &__texto {
+    font-size: 13px !important;
+    line-height: 1.45;
+    color: $cfg-ink;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__menciones { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+  &__mencion {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: $cfg-chip-bg;
+    color: $cfg-accent !important;
+    font-size: 11px !important;
+    font-weight: 700;
+  }
+}

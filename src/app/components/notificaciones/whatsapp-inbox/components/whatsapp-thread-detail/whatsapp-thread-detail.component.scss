@@ -282,6 +282,14 @@
     text-transform: uppercase;
   }
 
+  /* [D-725] «· Nombre» de quien envió el saliente. */
+  &__autor {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--km-muted);
+  }
+
   &__status-icon {
     letter-spacing: -2px;
 

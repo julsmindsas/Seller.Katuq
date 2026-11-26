@@ -28,3 +28,13 @@ export function esFamiliaAdministrador(rol: unknown): boolean {
 export function esSuperAdministrador(rol: unknown): boolean {
   return normalizarRol(rol) === 'super administrador';
 }
+
+/**
+ * ¿El rol es de supervisión? Espejo de `esSupervisor` del backend (D-725): el
+ * nombre contiene supervisor, líder, jefe, coordinador, director o gerente y no es
+ * de la familia Administrador. Con ADMIN, quien coordina es `esFamiliaAdministrador || esRolSupervisor`.
+ */
+export function esRolSupervisor(rol: unknown): boolean {
+  if (esFamiliaAdministrador(rol)) return false;
+  return /^(supervisor|supervisora|coordinador|coordinadora|lider)(\s|$)/.test(normalizarRol(rol));
+}

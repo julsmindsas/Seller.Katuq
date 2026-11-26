@@ -1,6 +1,7 @@
 import { WhatsappThread, claveChat } from "../whatsapp-inbox/models/whatsapp-thread.model";
 import { MetaHilo } from "../meta-inbox/models/meta-thread.model";
 import {
+  ASESOR_SIN_ASIGNAR,
   ConversacionRed,
   ConversacionResumen,
   ConversacionWhatsapp,
@@ -22,6 +23,7 @@ export function desdeWhatsapp(hilo: WhatsappThread): ConversacionWhatsapp {
     sinLeer: hilo.unreadCount || 0,
     linea: hilo.line || undefined,
     dueno: hilo.owner || undefined,
+    threadId: hilo.threadId || undefined,
     origen: hilo,
   };
 }
@@ -34,6 +36,9 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     resumen: hilo.ultimoMensajeResumen || "",
     ultimoEn: hilo.ultimoMensajeEn,
     ultimaDireccion: hilo.ultimaDireccion === "inbound" ? "inbound" : "outbound",
+    // Sin la bandera el servidor no manda dueño ni threadId: quedan vacíos y nada cambia.
+    dueno: hilo.owner || undefined,
+    threadId: hilo.threadId || `red_${hilo.canal}__${hilo.identidadHash}`,
     origen: hilo,
   };
 }
@@ -81,6 +86,15 @@ export function filtrar(
     if (filtro.lineId && c.lineId !== filtro.lineId) return false;
     if (filtro.sinResponder && c.ultimaDireccion !== "inbound") return false;
     if (filtro.mios && (!yo || (c.dueno?.email || "").trim().toLowerCase() !== yo)) return false;
+    if (filtro.asesor) {
+      const dueno = (c.dueno?.email || "").trim().toLowerCase();
+      if (filtro.asesor === ASESOR_SIN_ASIGNAR) {
+        // Sin threadId (número compartido) no se puede asignar: no cuenta como «sin asignar».
+        if (dueno || !c.threadId) return false;
+      } else if (dueno !== filtro.asesor.trim().toLowerCase()) {
+        return false;
+      }
+    }
     if (busqueda && !normalizarTexto(c.nombre).includes(busqueda)) return false;
     return true;
   });

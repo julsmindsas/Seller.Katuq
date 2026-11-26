@@ -122,6 +122,15 @@ $error-bg: #fdecec;
   }
   &__texto { color: var(--ds-ink); }
   &__adjunto { color: $muted; }
+  /* [D-725] Quién envió el mensaje. */
+  &__autor {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: normal;
+    color: $muted;
+  }
   /* TikTok: imagen del cliente y publicación compartida. */
   &__imagen {
     display: block;

@@ -268,9 +268,9 @@ export class NotificationManagerService {
       const response: any = await this.http.get(`${endpoint}?limit=50`).toPromise();
       if (!response?.success || !Array.isArray(response.notifications)) return;
 
-      this.remoteNotifications = response.notifications.map((raw: any) =>
-        this.toKatuqNotification(raw, raw.id)
-      );
+      this.remoteNotifications = response.notifications
+        .filter((raw: any) => this.esParaMi(raw))
+        .map((raw: any) => this.toKatuqNotification(raw, raw.id));
 
       // El historial ya está en pantalla: no se debe toastear al abrir la app.
       this.remoteNotifications.forEach(n => this.toastedIds.add(n.id!));
@@ -280,6 +280,22 @@ export class NotificationManagerService {
     } catch (error) {
       console.warn('⚠️ No se pudo cargar el historial de notificaciones:', error);
     }
+  }
+
+  /**
+   * Un aviso con `paraEmails` no vacío solo es para esas personas (D-725).
+   * Sin `paraEmails` (o vacío) lo ve toda la empresa, como siempre.
+   */
+  private esParaMi(raw: any): boolean {
+    const lista = raw?.paraEmails;
+    const correos: string[] = Array.isArray(lista)
+      ? lista
+      : lista && typeof lista === 'object'
+        ? Object.values(lista).map(v => String(v))
+        : [];
+    if (!correos.length) return true;
+    const yo = (this.currentUserId || '').trim().toLowerCase();
+    return !!yo && correos.some(c => String(c || '').trim().toLowerCase() === yo);
   }
 
   /**
@@ -381,6 +397,9 @@ export class NotificationManagerService {
       // Eliminada por este usuario → no se muestra
       if (value.deletedBy && value.deletedBy[userKey]) continue;
 
+      // Aviso dirigido a otras personas (paraEmails) → no se muestra
+      if (!this.esParaMi(value)) continue;
+
       // Leída por este usuario, o con el campo global anterior a este cambio
       const leida = !!(value.readBy && value.readBy[userKey]) || value.read === true;
 
@@ -475,7 +494,11 @@ export class NotificationManagerService {
       'TICKET_REOPENED': NotificationType.TICKET_REOPENED,
 
       // NPS (D-490): la escribe el backend con actionUrl al caso
-      'NPS_DETRACTOR': NotificationType.NPS_DETRACTOR
+      'NPS_DETRACTOR': NotificationType.NPS_DETRACTOR,
+
+      // Bandeja única (D-725)
+      'chat_sin_responder': NotificationType.CHAT_SIN_RESPONDER,
+      'chat_mencion': NotificationType.CHAT_MENCION
     };
 
     return typeMap[type] || NotificationType.SYSTEM_ALERT;
@@ -502,7 +525,9 @@ export class NotificationManagerService {
       'TICKET_REPLY': 'Nueva respuesta en tu ticket',
       'TICKET_CLOSED': 'Ticket resuelto',
       'TICKET_REOPENED': 'Ticket reabierto',
-      'NPS_DETRACTOR': 'Cliente inconforme'
+      'NPS_DETRACTOR': 'Cliente inconforme',
+      'chat_sin_responder': 'Chat sin responder',
+      'chat_mencion': 'Te mencionaron en un chat'
     };
     
     return typeNames[notification.type] || 'Notificación';

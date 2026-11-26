@@ -13,11 +13,11 @@
               (click)="tomar.emit()" [disabled]="ocupado">
         {{ 'notificaciones.owner.take' | translate }}
       </button>
-      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="dueno && (esMio || esAdministrador)"
+      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="dueno && (esMio || coordinador)"
               (click)="soltar.emit()" [disabled]="ocupado">
         {{ (esMio ? 'notificaciones.owner.release' : 'notificaciones.owner.removeOwner') | translate }}
       </button>
-      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="esAdministrador && !modoPasar"
+      <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" *ngIf="mostrarPasar && !modoPasar"
               (click)="abrirPasar()" [disabled]="ocupado">
         {{ 'notificaciones.owner.pass' | translate }}
       </button>
@@ -34,6 +34,10 @@
         [placeholder]="'notificaciones.owner.passTo' | translate"
       ></app-selector-equipo>
     </div>
+    <input *ngIf="conNota" type="text" class="dueno-franja__nota" maxlength="300"
+           [(ngModel)]="nota" [disabled]="ocupado"
+           [attr.aria-label]="'notificaciones.owner.passNote' | translate"
+           [placeholder]="'notificaciones.owner.passNote' | translate" />
     <button type="button" class="dueno-franja__btn" (click)="confirmarPasar()" [disabled]="!destino.length || ocupado">
       {{ 'notificaciones.owner.passChat' | translate }}
     </button>

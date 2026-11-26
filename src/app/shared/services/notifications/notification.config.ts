@@ -784,6 +784,39 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
       }
     },
     persistInNotificationCenter: true
+  },
+
+  // Bandeja única (D-725): los escribe el backend con paraEmails y actionUrl a la bandeja
+  [NotificationType.CHAT_SIN_RESPONDER]: {
+    type: NotificationType.CHAT_SIN_RESPONDER,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.HIGH,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: 'Chat sin responder',
+        message: 'Tienes un chat sin responder.',
+        actionText: 'Abrir la bandeja',
+        actionUrl: '/notificaciones/bandeja'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.CHAT_MENCION]: {
+    type: NotificationType.CHAT_MENCION,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: 'Te mencionaron en un chat',
+        message: 'Un compañero te mencionó en una nota interna.',
+        actionText: 'Abrir la bandeja',
+        actionUrl: '/notificaciones/bandeja'
+      }
+    },
+    persistInNotificationCenter: true
   }
 };
 

@@ -1,0 +1,124 @@
+<div class="eq">
+  <p class="eq-estado" *ngIf="cargando && !resumen">{{ 'notificaciones.whatsapp.list.loading' | translate }}</p>
+
+  <div class="eq-estado eq-estado--error" role="alert" *ngIf="error && !resumen">
+    <span class="eq-estado__texto">{{ 'notificaciones.bandeja.equipo.errorCarga' | translate }}</span>
+    <button type="button" class="eq-btn eq-btn--sec" (click)="reintentar.emit()">
+      {{ 'notificaciones.whatsapp.list.retry' | translate }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="resumen as r">
+    <!-- Tres cifras -->
+    <div class="eq-cifras">
+      <button
+        type="button"
+        class="eq-cifra eq-cifra--accion"
+        (click)="verAsesor.emit(sinAsignar)"
+        [attr.aria-label]="'notificaciones.bandeja.equipo.verSinAsignar' | translate"
+      >
+        <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinAsignar' | translate }}</span>
+        <span class="eq-cifra__valor">{{ r.sinAsignar }}</span>
+      </button>
+      <div class="eq-cifra">
+        <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinResponder' | translate }}</span>
+        <span class="eq-cifra__valor" [class.eq-cifra__valor--alerta]="r.sinResponder > 0">{{ r.sinResponder }}</span>
+      </div>
+      <div class="eq-cifra">
+        <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.disponibles' | translate }}</span>
+        <span class="eq-cifra__valor">{{ disponibles }}</span>
+      </div>
+    </div>
+
+    <p class="eq-aviso" role="status" *ngIf="error">
+      {{ 'notificaciones.bandeja.equipo.desactualizado' | translate }}
+    </p>
+
+    <!-- Carga por asesor -->
+    <section class="eq-card">
+      <h2 class="eq-titulo">{{ 'notificaciones.bandeja.equipo.asesores' | translate }}</h2>
+
+      <div class="eq-vacio" *ngIf="!r.porAsesor?.length">
+        <span class="eq-vacio__icono"><i class="pi pi-users" aria-hidden="true"></i></span>
+        <p class="eq-vacio__titulo">{{ 'notificaciones.bandeja.equipo.vacioTitulo' | translate }}</p>
+        <p class="eq-vacio__texto">{{ 'notificaciones.bandeja.equipo.vacioTexto' | translate }}</p>
+      </div>
+
+      <table class="eq-tabla" *ngIf="r.porAsesor?.length">
+        <thead>
+          <tr>
+            <th scope="col" class="eq-tabla__th">{{ 'notificaciones.bandeja.equipo.colAsesor' | translate }}</th>
+            <th scope="col" class="eq-tabla__th eq-tabla__th--num">{{ 'notificaciones.bandeja.equipo.colChats' | translate }}</th>
+            <th scope="col" class="eq-tabla__th eq-tabla__th--num">{{ 'notificaciones.bandeja.equipo.colSinResponder' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="eq-fila" *ngFor="let a of r.porAsesor; trackBy: trackAsesor" (click)="verAsesor.emit(a.email)">
+            <td class="eq-tabla__td">
+              <button
+                type="button"
+                class="eq-asesor"
+                (click)="$event.stopPropagation(); verAsesor.emit(a.email)"
+                [attr.aria-label]="'notificaciones.bandeja.equipo.verChats' | translate: { nombre: a.nombre || a.email }"
+              >
+                <span class="eq-asesor__nombre">{{ a.nombre || a.email }}</span>
+              </button>
+              <span class="eq-pill" [class.eq-pill--ausente]="a.estado === 'ausente'">
+                {{ (a.estado === 'ausente' ? 'notificaciones.bandeja.estado.ausente' : 'notificaciones.bandeja.estado.disponible') | translate }}
+              </span>
+            </td>
+            <td class="eq-tabla__td eq-tabla__td--num">{{ a.chats }}</td>
+            <td class="eq-tabla__td eq-tabla__td--num" [class.eq-tabla__td--alerta]="a.sinResponder > 0">{{ a.sinResponder }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Ajustes: solo el administrador -->
+    <section class="eq-card" *ngIf="esAdmin">
+      <h2 class="eq-titulo">{{ 'notificaciones.bandeja.equipo.ajustes.titulo' | translate }}</h2>
+
+      <form class="eq-form" (ngSubmit)="enviar()">
+        <label class="eq-check">
+          <input
+            type="checkbox"
+            class="eq-check__caja"
+            name="reparto"
+            [ngModel]="form.repartoAutomatico"
+            (ngModelChange)="cambiarReparto($event)"
+          />
+          <span class="eq-check__texto">
+            <span class="eq-check__titulo">{{ 'notificaciones.bandeja.equipo.ajustes.reparto' | translate }}</span>
+            <span class="eq-check__ayuda">{{ 'notificaciones.bandeja.equipo.ajustes.repartoAyuda' | translate }}</span>
+          </span>
+        </label>
+
+        <label class="eq-campo">
+          <span class="eq-campo__etiqueta">{{ 'notificaciones.bandeja.equipo.ajustes.minutos' | translate }}</span>
+          <input
+            type="number"
+            class="eq-campo__caja"
+            name="minutos"
+            min="0"
+            [max]="minutosMax"
+            step="1"
+            inputmode="numeric"
+            [ngModel]="form.minutosSinResponder"
+            (ngModelChange)="cambiarMinutos($event)"
+          />
+          <span class="eq-campo__ayuda" [class.eq-campo__ayuda--error]="!minutosValidos">
+            {{ (minutosValidos ? 'notificaciones.bandeja.equipo.ajustes.minutosAyuda' : 'notificaciones.bandeja.equipo.ajustes.minutosError') | translate: { max: minutosMax } }}
+          </span>
+        </label>
+
+        <div class="eq-form__pie">
+          <button type="submit" class="eq-btn" [disabled]="!puedeGuardar">
+            {{ (guardando ? 'notificaciones.bandeja.equipo.ajustes.guardando' : 'notificaciones.bandeja.equipo.ajustes.guardar') | translate }}
+          </button>
+          <span class="eq-form__ok" role="status" *ngIf="guardadoOk && !sucio">{{ 'notificaciones.bandeja.equipo.ajustes.guardado' | translate }}</span>
+          <span class="eq-form__error" role="alert" *ngIf="errorGuardar">{{ 'notificaciones.bandeja.equipo.ajustes.errorGuardar' | translate }}</span>
+        </div>
+      </form>
+    </section>
+  </ng-container>
+</div>

@@ -14403,3 +14403,23 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Sin bandera: sin copias, todo sigue igual.
 - **Pruebas:** locales fuera de git (D-566): backend `tests/accounting/correosCopia.test.js` 4/4; Seller `tests/clientes/correos-copia.test.js` 4/4. Las 40 suites de facturación del backend en verde salvo `emparejarCodigosSiigo` (ya fallaba en Windows). tsc y build de producción sin errores; diccionarios sin fallas nuevas.
 - **Pendiente:** no se ha probado contra SIIGO real (no hay sandbox): la primera factura con copias de un comercio confirma el envío (o deja su error en el pedido). Desplegar el backend antes de publicar el Seller.
+
+### 2026-11-26 — D-725: varios asesores en la bandeja única (CONV fase C, ticket 1303)
+
+- **Aprobación:** Daniel, 26-nov («aprobado a todas las fases» de CONV, D-631). Sin Vidagas; piloto FLORECER/Julsmind.
+- **Pedido (1303):** que varios asesores atiendan sin pisarse: asignar, pasar chats, notas, supervisar y avisar de lo que nadie responde, con los usuarios y roles de Katuq.
+- **D-725:**
+  - **Misma bandera `bandejaUnica`** (no hay bandera nueva). Sin ella, servidor y pantallas se comportan igual que antes.
+  - **Quién coordina:** familia Administrador y **supervisor** (rol cuyo nombre empieza por supervisor, coordinador o líder). No hay permisos ni usuarios nuevos.
+  - **Dueño del chat también en Instagram, Facebook y TikTok**, en la misma colección `messaging_threads` (hilo `red_<canal>__<hash>`). El primero que responde se queda con el chat; los demás ven quién lo atiende.
+  - **Pasar con nota** (dueño, supervisor o administrador), **notas internas con menciones** (nunca van al cliente; hasta 50 por chat) y bitácora de quién tomó, pasó o asignó.
+  - **Disponible / Ausente** por asesor, y **reparto automático por turnos** entre los disponibles para chats nuevos (apagado por defecto; lo enciende el administrador). El cliente que vuelve sigue con su asesor.
+  - **Vista «Equipo»** en la bandeja (solo quien coordina): sin asignar, sin responder, carga por asesor y ajustes.
+  - **Aviso de sin responder** en la campana a los X minutos (10 por defecto, 0 lo apaga): al dueño o, sin dueño, a quienes coordinan. Los avisos pueden ir dirigidos a personas (`paraEmails`).
+  - Cada mensaje enviado desde Katuq muestra quién lo envió.
+  - **Sin colecciones nuevas.** Campos nuevos: `messaging_threads` (`notas`, `ultimoEntranteEn`, `ultimoSalienteEn`, `sinResponderDesde`, `avisoSinResponderEn`), `messaging_lines.turno`, `users.atencion`, `companyConfig.atencion`, `meta_messages.enviadoPor`.
+  - Rutas nuevas bajo `/v1/messaging/atencion/*`; las de D-437 no cambian.
+- **Fuera (otras fases):** colas, horarios y enrutamiento (D); cerrar con motivo, etiquetas y mensajes automáticos (E); informes (H). El número compartido de Katuq sigue sin dueño de chat. No hay «está escribiendo» ni aviso fuera del navegador.
+- **Revisión y pruebas:** subagentes Sonnet con cuatro revisiones independientes y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 14/14 y 49 casos nuevos locales (D-566). Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: vista Equipo, tomar un chat de Instagram, nota interna guardada, dueño en WhatsApp; sin scroll horizontal. No se probó enviar mensajes ni el aviso programado en vivo.
+- **Límites conocidos:** el resumen y el aviso leen todos los chats del comercio (con miles hará falta filtro con índice); «sin asignar» cuenta chats antiguos; la campana dirigida es un filtro de presentación.
+- **Pendiente:** publicar backend y Seller juntos cuando Daniel diga «publica» y probar con mensajes reales en FLORECER y Julsmind. Artefactos en `openspec/changes/conv-multiagente/` (copia local, D-705).

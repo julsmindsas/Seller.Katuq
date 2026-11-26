@@ -63,6 +63,20 @@
       </button>
     </div>
 
+    <label class="bj-numero" *ngIf="mostrarAsesor">
+      <span class="bj-numero__etiqueta">{{ 'notificaciones.bandeja.asesor.label' | translate }}</span>
+      <select
+        class="bj-numero__campo"
+        [ngModel]="asesor || ''"
+        (ngModelChange)="elegirAsesor($event)"
+        [attr.aria-label]="'notificaciones.bandeja.asesor.aria' | translate"
+      >
+        <option value="">{{ 'notificaciones.bandeja.asesor.todos' | translate }}</option>
+        <option [value]="sinAsignar">{{ 'notificaciones.owner.unassigned' | translate }}</option>
+        <option *ngFor="let a of asesores" [value]="a.email">{{ a.nombre || a.email }}</option>
+      </select>
+    </label>
+
     <label class="bj-numero" *ngIf="mostrarLinea">
       <span class="bj-numero__etiqueta">{{ 'notificaciones.whatsapp.list.line' | translate }}</span>
       <select
@@ -145,6 +159,11 @@
         <span class="bj-fila__dueno" *ngIf="fila.conversacion.dueno as dueno">
           <i class="fa fa-user-o" aria-hidden="true"></i>
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.handledBy' | translate: { nombre: dueno.nombre || dueno.email } }}</span>
+        </span>
+
+        <span class="bj-fila__dueno" *ngIf="atencion && !fila.conversacion.dueno && fila.conversacion.threadId">
+          <i class="fa fa-user-o" aria-hidden="true"></i>
+          <span class="bj-fila__dueno-texto">{{ 'notificaciones.owner.unassigned' | translate }}</span>
         </span>
       </span>
     </button>

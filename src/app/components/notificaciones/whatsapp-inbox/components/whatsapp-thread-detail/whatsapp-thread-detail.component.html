@@ -66,6 +66,9 @@
     [dueno]="dueno"
     [miEmail]="miEmail"
     [esAdministrador]="esAdministrador"
+    [coordina]="atencion && coordina"
+    [puedePasar]="puedePasarChat"
+    [conNota]="atencion"
     [equipo]="equipo"
     [ocupado]="duenoOcupado"
     (tomar)="tomarChat()"
@@ -150,6 +153,7 @@
                 <span class="thread-detail__time">
                   {{ formatTime(item.msg.sentAt) }}
                 </span>
+                <span class="thread-detail__autor" *ngIf="autorDe(item.msg) as autor">· {{ autor }}</span>
                 <span
                   *ngIf="item.msg.direction === 'outbound'"
                   class="thread-detail__status-icon"

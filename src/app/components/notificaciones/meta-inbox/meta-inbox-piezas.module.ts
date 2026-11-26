@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { TranslateModule } from "@ngx-translate/core";
 
+import { InboxCoreModule } from "../inbox-core/inbox-core.module";
 import { CopMonedaPipe } from "../../../shared/pipes/cop-moneda.pipe";
 import { MetaHiloDetalleComponent } from "./components/meta-hilo-detalle/meta-hilo-detalle.component";
 import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-contact-panel.component";
@@ -15,7 +16,7 @@ import { MetaContactPanelComponent } from "./components/meta-contact-panel/meta-
  */
 @NgModule({
   declarations: [MetaHiloDetalleComponent, MetaContactPanelComponent],
-  imports: [CommonModule, FormsModule, TranslateModule, CopMonedaPipe],
+  imports: [CommonModule, FormsModule, TranslateModule, CopMonedaPipe, InboxCoreModule],
   exports: [MetaHiloDetalleComponent, MetaContactPanelComponent],
 })
 export class MetaInboxPiezasModule {}

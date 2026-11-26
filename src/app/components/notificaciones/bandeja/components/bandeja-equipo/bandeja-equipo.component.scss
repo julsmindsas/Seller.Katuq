@@ -1,0 +1,271 @@
+// Pestaña Equipo — base D-400/D-131: plano, tarjetas blancas sobre fondo lila, acento #5F3FE0, sin
+// gradientes. Ninguna clase lleva «p-» y todo span con texto trae color y tamaño propios.
+@import '../../../../../shared/styles/config-pagina';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.eq {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: $cfg-ink;
+
+  button, input { font-family: inherit; letter-spacing: normal; }
+  p, h2, label { letter-spacing: normal; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+
+.eq-estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  border: 1px solid $cfg-line;
+  color: $cfg-muted;
+  font-size: 13px;
+
+  &__texto { color: $cfg-err; font-size: 13px; font-weight: 700; }
+  &--error { background: $cfg-err-soft; }
+}
+
+.eq-aviso {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-warn-soft;
+  color: $cfg-warn;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+// ── Cifras ──
+.eq-cifras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 575px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.eq-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: $cfg-shadow-panel;
+  text-align: left;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  &__valor { color: $cfg-ink; font-size: 28px; font-weight: 800; line-height: 1.1; }
+  &__valor--alerta { color: $cfg-err; }
+
+  &--accion {
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
+    &:hover { background: $cfg-tint; border-color: #d9cffb; }
+  }
+}
+
+// ── Tarjetas ──
+.eq-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: $cfg-shadow-panel;
+}
+
+.eq-titulo {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 15px !important;
+  font-weight: 800;
+}
+
+// ── Tabla de asesores (sin scroll horizontal: el nombre se parte en líneas) ──
+.eq-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  &__th {
+    padding: 8px 6px;
+    border-bottom: 1px solid $cfg-line;
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-align: left;
+    text-transform: uppercase;
+    &--num { width: 84px; text-align: right; }
+  }
+
+  &__td {
+    padding: 10px 6px;
+    border-bottom: 1px solid $cfg-line-soft;
+    color: $cfg-ink;
+    font-size: 13.5px;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+    &--num { text-align: right; font-weight: 700; }
+    &--alerta { color: $cfg-err; }
+  }
+}
+
+.eq-fila {
+  cursor: pointer;
+  transition: background .12s ease;
+  &:hover { background: $cfg-row-hover; }
+}
+
+.eq-asesor {
+  display: block;
+  max-width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $cfg-accent-ink;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  &__nombre { color: inherit; font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
+}
+
+.eq-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: $cfg-ok-soft;
+  color: $cfg-ok;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+
+  &--ausente { background: $cfg-warn-soft; color: $cfg-warn; }
+}
+
+.eq-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent-ink;
+    font-size: 26px;
+  }
+  &__titulo { margin: 0; color: $cfg-ink; font-size: 15px; font-weight: 800; }
+  &__texto { margin: 0; color: $cfg-muted; font-size: 12.5px; }
+}
+
+// ── Ajustes ──
+.eq-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__pie { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  &__ok { color: $cfg-ok; font-size: 12.5px; font-weight: 700; }
+  &__error { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+}
+
+.eq-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  cursor: pointer;
+
+  &__caja { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px; accent-color: #5f3fe0; }
+  &__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__titulo { color: $cfg-ink; font-size: 13.5px; font-weight: 700; }
+  &__ayuda { color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+}
+
+.eq-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+  margin: 0;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  &__caja {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    background: $cfg-chip-bg;
+    color: $cfg-ink;
+    font-size: 14px;
+    &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
+  }
+
+  &__ayuda { color: $cfg-muted; font-size: 12px; line-height: 1.4; }
+  &__ayuda--error { color: $cfg-err; font-weight: 700; }
+}
+
+.eq-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  background: $cfg-accent;
+  color: var(--ds-on-accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &:hover:not(:disabled) { background: $cfg-accent-hover; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+
+  &--sec {
+    border-color: var(--ds-line-strong);
+    background: var(--ds-surface);
+    color: $cfg-body;
+    &:hover:not(:disabled) { background: $cfg-tint; color: $cfg-accent-ink; }
+  }
+}

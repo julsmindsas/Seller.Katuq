@@ -11,10 +11,12 @@ import { TranslateService } from "@ngx-translate/core";
 import {
   LineaResumen,
   MessagingLine,
+  MiembroAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { textoHumanoDePlantilla } from "../../../whatsapp-inbox/components/whatsapp-thread-list/plantillas-humanas";
 import { CANAL_BANDEJA_ICONO, CANAL_BANDEJA_LABEL } from "../../bandeja.canales";
 import {
+  ASESOR_SIN_ASIGNAR,
   CanalBandeja,
   ConversacionResumen,
   FILTRO_BANDEJA_VACIO,
@@ -65,7 +67,15 @@ export class BandejaListaComponent implements OnChanges {
   @Input() lineas: MessagingLine[] = [];
   @Input() esAdministrador = false;
   @Input() miEmail = "";
+  /** Bandeja con atención multiagente (D-725): «Míos» siempre visible y «Sin asignar» en cada fila. */
+  @Input() atencion = false;
+  /** Quien coordina ve el filtro por asesor. */
+  @Input() coordina = false;
+  @Input() asesores: MiembroAtencion[] = [];
+  /** Asesor elegido: lo manda quien aloja la lista (también lo cambia la pestaña Equipo). */
+  @Input() asesor: string | null = null;
 
+  @Output() asesorChange = new EventEmitter<string | null>();
   @Output() seleccionar = new EventEmitter<ConversacionResumen>();
   @Output() verMas = new EventEmitter<void>();
   @Output() reintentar = new EventEmitter<void>();
@@ -93,7 +103,17 @@ export class BandejaListaComponent implements OnChanges {
 
   /** «Míos» solo existe donde hay dueños de chat; si ya está activo se deja para poder apagarlo. */
   get mostrarMios(): boolean {
-    return this.hayDuenos || this.filtro.mios;
+    return this.atencion || this.hayDuenos || this.filtro.mios;
+  }
+
+  get mostrarAsesor(): boolean {
+    return this.atencion && this.coordina;
+  }
+
+  readonly sinAsignar = ASESOR_SIN_ASIGNAR;
+
+  elegirAsesor(valor: string): void {
+    this.asesorChange.emit(valor || null);
   }
 
   canalLabel(canal: CanalBandeja): string {
@@ -140,6 +160,8 @@ export class BandejaListaComponent implements OnChanges {
   private recalcular(): void {
     const todas = this.conversaciones || [];
     this.hayDuenos = todas.some((c) => !!c.dueno);
+    // El asesor elegido lo manda quien aloja la lista (null si no coordina).
+    this.filtro = { ...this.filtro, asesor: this.mostrarAsesor ? this.asesor : null };
     this.sinResponderCount = todas.filter((c) => c.ultimaDireccion === "inbound").length;
     this.opcionesLinea = this.armarOpcionesLinea(todas);
     // Si el canal o el número elegidos dejaron de estar disponibles, el filtro se suelta.

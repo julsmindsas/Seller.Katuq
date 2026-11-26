@@ -80,6 +80,10 @@ export interface WhatsappMessage {
   mediaPlaceholder?: boolean;
   /** true si lo escribió el bot de pedidos (consumo tipo BOT_REPLY). */
   esBot?: boolean;
+  /** [D-725] Correo de quien lo envió desde Katuq (o "bot"); solo llega con la bandeja única. */
+  sentBy?: string | null;
+  /** [D-725] Nombre de quien lo envió; el bot no lleva nombre. */
+  sentByName?: string | null;
 }
 
 /**

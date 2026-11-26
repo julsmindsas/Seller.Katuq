@@ -1,0 +1,50 @@
+<section class="nt-notas" [attr.aria-label]="'notificaciones.bandeja.notas.titulo' | translate">
+  <header class="nt-notas__cabeza">
+    <span class="nt-notas__titulo">{{ 'notificaciones.bandeja.notas.titulo' | translate }}</span>
+    <span class="nt-notas__aviso">{{ 'notificaciones.bandeja.notas.aviso' | translate }}</span>
+  </header>
+
+  <ul class="nt-notas__lista" *ngIf="notas?.length; else vacio">
+    <li class="nt-nota" *ngFor="let n of notas; trackBy: trackNota" [class.nt-nota--mia]="esMia(n)">
+      <div class="nt-nota__meta">
+        <span class="nt-nota__autor">{{ n.nombre || n.por }}</span>
+        <span class="nt-nota__fecha">{{ n.en | date: 'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <p class="nt-nota__texto">{{ n.texto }}</p>
+      <div class="nt-nota__menciones" *ngIf="n.menciones?.length">
+        <span class="nt-nota__mencion" *ngFor="let m of n.menciones">@{{ nombreDe(m) }}</span>
+      </div>
+    </li>
+  </ul>
+  <ng-template #vacio>
+    <div class="nt-notas__vacio">
+      <i class="fa fa-sticky-note-o" aria-hidden="true"></i>
+      <span class="nt-notas__vacio-titulo">{{ 'notificaciones.bandeja.notas.vacioTitulo' | translate }}</span>
+      <span class="nt-notas__vacio-texto">{{ 'notificaciones.bandeja.notas.vacioTexto' | translate }}</span>
+    </div>
+  </ng-template>
+
+  <form class="nt-notas__form" (ngSubmit)="enviar()">
+    <textarea class="nt-notas__caja" name="texto" rows="3" [maxlength]="maximo"
+              [(ngModel)]="texto" [disabled]="ocupado"
+              [attr.aria-label]="'notificaciones.bandeja.notas.placeholder' | translate"
+              [placeholder]="'notificaciones.bandeja.notas.placeholder' | translate"></textarea>
+    <div class="nt-notas__menciona">
+      <app-selector-equipo
+        [equipo]="equipo"
+        [emails]="menciones"
+        (emailsChange)="menciones = $event"
+        [multiple]="true"
+        [excluir]="excluidos"
+        [disabled]="ocupado"
+        [placeholder]="'notificaciones.bandeja.notas.mencionar' | translate"
+      ></app-selector-equipo>
+    </div>
+    <div class="nt-notas__pie">
+      <span class="nt-notas__contador">{{ texto.length }}/{{ maximo }}</span>
+      <button type="submit" class="nt-notas__btn" [disabled]="!puedeEnviar">
+        {{ 'notificaciones.bandeja.notas.agregar' | translate }}
+      </button>
+    </div>
+  </form>
+</section>

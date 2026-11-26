@@ -317,6 +317,8 @@ export class WhatsappInboxService extends BaseService {
       id: m.id,
       direction: m.direction === "inbound" ? "inbound" : "outbound",
       esBot: String(m.type || "") === "BOT_REPLY",
+      sentBy: m.sentBy || null,
+      sentByName: m.sentByName || null,
       type: "text",
       body: m.text || m.body || m.textPreview || plantilla,
       snippet: m.textPreview || m.text || m.body || plantilla,

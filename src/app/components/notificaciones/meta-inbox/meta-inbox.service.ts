@@ -5,6 +5,7 @@ import { catchError, map } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 import { BaseService } from 'src/app/shared/services/base.service';
+import { DuenoChat, esErrorChatConDueno } from 'src/app/shared/services/messaging/messaging.models';
 import {
   MetaCanal,
   MetaConexiones,
@@ -298,7 +299,7 @@ export class MetaInboxService extends BaseService {
     identidadHash: string,
     texto: string,
     imagen?: MetaImagenAdjunta | null,
-  ): Observable<{ enviado: boolean; motivo?: string; mensaje?: string; parcial?: boolean }> {
+  ): Observable<{ enviado: boolean; motivo?: string; mensaje?: string; parcial?: boolean; owner?: DuenoChat | null }> {
     const cuerpo: { texto?: string; imagen?: { base64: string; mime: string; nombre: string } } = {};
     if (texto) cuerpo.texto = texto;
     if (imagen) cuerpo.imagen = { base64: imagen.base64, mime: imagen.mime, nombre: imagen.nombre };
@@ -312,6 +313,15 @@ export class MetaInboxService extends BaseService {
         motivo: r && r.motivo ? r.motivo : undefined,
       })),
       catchError((err) => {
+        // [D-725] Con la bandeja única, otro asesor ya atiende el chat (409): se devuelve el dueño.
+        if (esErrorChatConDueno(err)) {
+          return of({
+            enviado: false,
+            motivo: 'chat_con_dueno',
+            mensaje: err.error.message,
+            owner: err.error.owner || null,
+          });
+        }
         const { code, message, parcial } = errorDelServidor(err);
         if (code === 'TIKTOK_VENTANA_CERRADA') {
           return of({ enviado: false, motivo: 'ventana_cerrada', mensaje: message });

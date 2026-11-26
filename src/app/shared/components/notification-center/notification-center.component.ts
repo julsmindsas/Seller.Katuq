@@ -491,7 +491,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.TICKET_REOPENED]: 'fa-undo',
 
       // NPS (D-490)
-      [NotificationType.NPS_DETRACTOR]: 'fa-frown-o'
+      [NotificationType.NPS_DETRACTOR]: 'fa-frown-o',
+
+      // Bandeja única (D-725)
+      [NotificationType.CHAT_SIN_RESPONDER]: 'fa-clock-o',
+      [NotificationType.CHAT_MENCION]: 'fa-at'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -630,7 +634,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.TICKET_REPLY]: 'shell.notificationCenter.types.ticketReply',
       [NotificationType.TICKET_CLOSED]: 'shell.notificationCenter.types.ticketClosed',
       [NotificationType.TICKET_REOPENED]: 'shell.notificationCenter.types.ticketReopened',
-      [NotificationType.NPS_DETRACTOR]: 'shell.notificationCenter.types.npsDetractor'
+      [NotificationType.NPS_DETRACTOR]: 'shell.notificationCenter.types.npsDetractor',
+      [NotificationType.CHAT_SIN_RESPONDER]: 'shell.notificationCenter.types.chatSinResponder',
+      [NotificationType.CHAT_MENCION]: 'shell.notificationCenter.types.chatMencion'
     };
 
     return nameMap[type] || type;

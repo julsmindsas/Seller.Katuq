@@ -3,6 +3,21 @@
       <span class="mb-chat__canal">{{ canalLabel }}</span>
     </header>
 
+    <!-- [D-725] Quién atiende el chat (solo con la bandeja única) -->
+    <app-chat-dueno
+      *ngIf="atencion && hilo"
+      [dueno]="duenoActual"
+      [miEmail]="miEmail"
+      [coordina]="coordina"
+      [puedePasar]="puedePasarChat"
+      [conNota]="true"
+      [equipo]="equipo"
+      [ocupado]="duenoOcupado"
+      (tomar)="tomarChat()"
+      (soltar)="soltarChat()"
+      (pasar)="pasarChat($event)"
+    ></app-chat-dueno>
+
     <div class="mb-chat__mensajes">
       <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
       <div
@@ -25,6 +40,7 @@
           <span class="mb-msg__adjunto" *ngIf="textoAdjunto(m) as texto">
             <i class="pi pi-paperclip"></i> {{ texto }}
           </span>
+          <span class="mb-msg__autor" *ngIf="autorDe(m) as autor">· {{ autor }}</span>
           <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
             {{ 'notificaciones.meta.notSent' | translate }}
             <button
@@ -93,7 +109,7 @@
         name="borrador"
         rows="2"
         [disabled]="!puedeEscribir"
-        [placeholder]="claveMarcador | translate"
+        [placeholder]="claveMarcador | translate: { nombre: nombreDueno }"
       ></textarea>
       <button
         type="submit"

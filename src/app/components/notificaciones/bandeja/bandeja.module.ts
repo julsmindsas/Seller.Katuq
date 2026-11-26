@@ -9,6 +9,7 @@ import { WhatsappInboxPiezasModule } from "../whatsapp-inbox/whatsapp-inbox-piez
 import { BandejaRoutingModule } from "./bandeja-routing.module";
 import { BandejaShellComponent } from "./components/bandeja-shell/bandeja-shell.component";
 import { BandejaListaComponent } from "./components/bandeja-lista/bandeja-lista.component";
+import { BandejaEquipoComponent } from "./components/bandeja-equipo/bandeja-equipo.component";
 
 /**
  * Bandeja única (conv-bandeja-unica): todos los canales en una sola lista. Módulo lazy y pequeño: reutiliza
@@ -18,7 +19,7 @@ import { BandejaListaComponent } from "./components/bandeja-lista/bandeja-lista.
  * pasan por el interceptor de la sesión.
  */
 @NgModule({
-  declarations: [BandejaShellComponent, BandejaListaComponent],
+  declarations: [BandejaShellComponent, BandejaListaComponent, BandejaEquipoComponent],
   imports: [
     CommonModule,
     FormsModule,

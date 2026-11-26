@@ -31,6 +31,8 @@
     box-shadow: $cfg-shadow-panel;
   }
 
+  &__cuerpo--oculto { display: none; }
+
   // En celular: lista → detalle, uno por vez, sin scroll horizontal.
   @media (max-width: 1023px) {
     &__cuerpo {
@@ -40,6 +42,7 @@
     }
 
     &__detalle { display: none; }
+    &__cuerpo--oculto { display: none; }
 
     &.bj--detalle {
       .bj__lista { display: none; }
@@ -129,4 +132,141 @@
   @media (max-width: 1023px) {
     display: inline-flex;
   }
+}
+
+// ── Mi estado (Disponible / Ausente) ──
+.bj-estado {
+  &__grupo {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: 12px;
+    background: var(--ds-surface);
+  }
+
+  &__opcion {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: $cfg-body;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+
+    &:hover:not(:disabled) { background: $cfg-tint; }
+    &.is-activo { background: $cfg-accent-soft; color: $cfg-accent-ink; }
+    &:disabled { opacity: .6; cursor: progress; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+  }
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; }
+
+  &__punto {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    &--ok { background: $cfg-ok; }
+    &--aus { background: $cfg-warn; }
+  }
+
+  &__error { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+}
+
+// ── Pestañas Chats / Equipo ──
+.bj-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid $cfg-line;
+}
+
+.bj-tab {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: $cfg-muted;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { color: $cfg-accent-ink; }
+  &.is-activo { color: $cfg-accent-ink; border-bottom-color: $cfg-accent; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: -3px; }
+}
+
+// ── Barra y panel de notas del chat abierto ──
+.bj-barra {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid $cfg-line;
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: 11px;
+    background: var(--ds-surface);
+    color: $cfg-body;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: normal;
+    cursor: pointer;
+
+    i { color: inherit; }
+    &:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
+    &.is-activo { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent-ink; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+  }
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; }
+
+  &__cuenta {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 20px;
+    text-align: center;
+  }
+}
+
+.bj-notas {
+  flex: 0 1 auto;
+  max-height: 45%;
+  min-height: 0;
+  overflow-y: auto;
+  border-bottom: 1px solid $cfg-line;
+  background: $cfg-tint;
+
+  &__estado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 14px;
+    color: $cfg-muted;
+    font-size: 12.5px;
+    &--error { background: $cfg-err-soft; }
+  }
+
+  &__error { margin: 0; color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+  &__error--pie { padding: 0 14px 12px; }
 }

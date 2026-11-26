@@ -6,9 +6,71 @@
       <h1 class="cfg-titulo">{{ 'notificaciones.bandeja.title' | translate }}</h1>
       <p class="cfg-sub">{{ 'notificaciones.bandeja.subtitle' | translate }}</p>
     </div>
+
+    <!-- Mi estado para el reparto de chats (solo con la atención multiagente) -->
+    <div class="cfg-acciones bj-estado" *ngIf="atencion">
+      <div class="bj-estado__grupo" role="group" [attr.aria-label]="'notificaciones.bandeja.estado.aria' | translate">
+        <button
+          type="button"
+          class="bj-estado__opcion"
+          [class.is-activo]="estado === 'disponible'"
+          [attr.aria-pressed]="estado === 'disponible'"
+          [disabled]="cambiandoEstado"
+          (click)="cambiarEstado('disponible')"
+        >
+          <span class="bj-estado__punto bj-estado__punto--ok" aria-hidden="true"></span>
+          <span class="bj-estado__texto">{{ 'notificaciones.bandeja.estado.disponible' | translate }}</span>
+        </button>
+        <button
+          type="button"
+          class="bj-estado__opcion"
+          [class.is-activo]="estado === 'ausente'"
+          [attr.aria-pressed]="estado === 'ausente'"
+          [disabled]="cambiandoEstado"
+          (click)="cambiarEstado('ausente')"
+        >
+          <span class="bj-estado__punto bj-estado__punto--aus" aria-hidden="true"></span>
+          <span class="bj-estado__texto">{{ 'notificaciones.bandeja.estado.ausente' | translate }}</span>
+        </button>
+      </div>
+      <span class="bj-estado__error" role="alert" *ngIf="errorEstado">{{ 'notificaciones.bandeja.estado.error' | translate }}</span>
+    </div>
   </header>
 
-  <div class="bj__cuerpo">
+  <!-- Pestañas: «Equipo» solo la ve quien coordina -->
+  <div class="bj-tabs" *ngIf="atencion && coordina">
+    <button
+      type="button"
+      class="bj-tab"
+      [class.is-activo]="vista === 'chats'"
+      [attr.aria-pressed]="vista === 'chats'"
+      (click)="cambiarVista('chats')"
+    >{{ 'notificaciones.bandeja.tab.chats' | translate }}</button>
+    <button
+      type="button"
+      class="bj-tab"
+      [class.is-activo]="vista === 'equipo'"
+      [attr.aria-pressed]="vista === 'equipo'"
+      (click)="cambiarVista('equipo')"
+    >{{ 'notificaciones.bandeja.tab.equipo' | translate }}</button>
+  </div>
+
+  <app-bandeja-equipo
+    *ngIf="atencion && coordina && vista === 'equipo'"
+    [resumen]="resumen"
+    [cargando]="resumenCargando"
+    [error]="resumenError"
+    [esAdmin]="esAdmin"
+    [guardando]="guardandoAjustes"
+    [guardadoOk]="ajustesGuardados"
+    [errorGuardar]="errorAjustes"
+    (verAsesor)="verChatsDe($event)"
+    (reintentar)="reintentarResumen()"
+    (guardar)="guardarAjustes($event)"
+  ></app-bandeja-equipo>
+
+  <!-- La lista se oculta (no se destruye) al ver Equipo: conserva sus filtros -->
+  <div class="bj__cuerpo" [class.bj__cuerpo--oculto]="atencion && coordina && vista === 'equipo'">
     <!-- Columna izquierda: una sola lista con todos los canales -->
     <aside class="bj__lista">
       <app-bandeja-lista
@@ -24,6 +86,11 @@
         [lineas]="lineas"
         [esAdministrador]="esAdministrador"
         [miEmail]="miEmail"
+        [atencion]="atencion"
+        [coordina]="coordina"
+        [asesores]="asesores"
+        [asesor]="asesor"
+        (asesorChange)="elegirAsesor($event)"
         (seleccionar)="abrir($event)"
         (verMas)="verMas()"
         (reintentar)="reintentar()"
@@ -38,6 +105,37 @@
         <p class="bj-elige__texto">{{ 'notificaciones.bandeja.chooseText' | translate }}</p>
       </div>
 
+      <!-- Notas internas del chat abierto (solo con atención multiagente y un chat con hilo propio) -->
+      <div class="bj-barra" *ngIf="seleccion && puedeVerNotas">
+        <button
+          type="button"
+          class="bj-barra__btn"
+          [class.is-activo]="notasAbiertas"
+          [attr.aria-pressed]="notasAbiertas"
+          (click)="alternarNotas()"
+        >
+          <i class="fa fa-sticky-note-o" aria-hidden="true"></i>
+          <span class="bj-barra__texto">{{ 'notificaciones.bandeja.notas.boton' | translate }}</span>
+          <span class="bj-barra__cuenta" *ngIf="notas.length">{{ notas.length }}</span>
+        </button>
+      </div>
+      <div class="bj-notas" *ngIf="seleccion && puedeVerNotas && notasAbiertas">
+        <p class="bj-notas__estado" *ngIf="notasCargando">{{ 'notificaciones.whatsapp.list.loading' | translate }}</p>
+        <div class="bj-notas__estado bj-notas__estado--error" role="alert" *ngIf="notasError">
+          <span class="bj-notas__error">{{ 'notificaciones.bandeja.notas.errorCarga' | translate }}</span>
+          <button type="button" class="bj-barra__btn" (click)="reintentarNotas()">{{ 'notificaciones.whatsapp.list.retry' | translate }}</button>
+        </div>
+        <app-chat-notas
+          *ngIf="!notasCargando && !notasError"
+          [notas]="notas"
+          [equipo]="equipo"
+          [miEmail]="miEmail"
+          [ocupado]="notasGuardando"
+          (agregar)="agregarNota($event)"
+        ></app-chat-notas>
+        <p class="bj-notas__error bj-notas__error--pie" role="alert" *ngIf="errorNota">{{ 'notificaciones.bandeja.notas.errorGuardar' | translate }}</p>
+      </div>
+
       <!-- WhatsApp: el detalle de hoy (dueño, bot, carrito, plantillas) con las mismas entradas del buzón -->
       <app-whatsapp-thread-detail
         *ngIf="whatsappAbierto as chat"
@@ -48,6 +146,8 @@
         [equipo]="equipo"
         [esAdministrador]="esAdministrador"
         [miEmail]="miEmail"
+        [atencion]="atencion"
+        [coordina]="coordina"
         (duenoCambiado)="onDuenoCambiado($event)"
         (backToList)="volver()"
       ></app-whatsapp-thread-detail>
@@ -63,6 +163,12 @@
             [canal]="hilo.canal"
             [hilo]="hilo"
             [conectado]="redConectada"
+            [atencion]="atencion"
+            [dueno]="dueno"
+            [miEmail]="miEmail"
+            [coordina]="coordina"
+            [equipo]="equipo"
+            (duenoCambiado)="onDuenoCambiado($event)"
           ></app-meta-hilo-detalle>
         </div>
         <aside class="bj-red__ficha">

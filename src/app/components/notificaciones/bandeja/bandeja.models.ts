@@ -29,8 +29,10 @@ interface ConversacionBase {
   sinLeer?: number;
   /** Solo WhatsApp: número por el que va el chat; ausente = número compartido de Katuq. */
   linea?: LineaResumen;
-  /** Solo WhatsApp: quien atiende el chat. */
+  /** Quien atiende el chat (WhatsApp con número propio y, con la bandeja única, también las redes). */
   dueno?: DuenoChat;
+  /** Id del hilo de atención (`messaging_threads`); ausente en el número compartido de Katuq. */
+  threadId?: string;
 }
 
 export interface ConversacionWhatsapp extends ConversacionBase {
@@ -58,7 +60,12 @@ export interface FiltroBandeja {
   mios: boolean;
   /** Búsqueda por nombre. */
   busqueda: string;
+  /** Solo quien coordina: correo del asesor, 'sin-asignar' o null (todos). */
+  asesor: string | null;
 }
+
+/** Valor del filtro por asesor para los chats sin dueño. */
+export const ASESOR_SIN_ASIGNAR = "sin-asignar";
 
 export const FILTRO_BANDEJA_VACIO: FiltroBandeja = {
   canal: null,
@@ -66,6 +73,7 @@ export const FILTRO_BANDEJA_VACIO: FiltroBandeja = {
   sinResponder: false,
   mios: false,
   busqueda: "",
+  asesor: null,
 };
 
 /** Lo que devuelve una carga de la bandeja. */

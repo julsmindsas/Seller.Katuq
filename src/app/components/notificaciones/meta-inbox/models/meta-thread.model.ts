@@ -1,3 +1,5 @@
+import { DuenoChat } from '../../../../shared/services/messaging/messaging.models';
+
 /**
  * Modelos de los buzones de Meta (Instagram Direct y Messenger).
  *
@@ -54,6 +56,10 @@ export interface MetaHilo {
   ventana: MetaVentana;
   /** Solo TikTok: si el país del cliente deja mandar imágenes en esta conversación. */
   permiteImagen?: boolean;
+  /** [D-725] Id del chat en `messaging_threads`; solo llega con la bandeja única. */
+  threadId?: string | null;
+  /** [D-725] Quién atiende el chat; `null` o ausente = sin asignar. */
+  owner?: DuenoChat | null;
 }
 
 /** Mensaje individual dentro de un hilo. */
@@ -66,6 +72,10 @@ export interface MetaMensaje {
   sentAt: string;
   estado: MetaEstadoEnvio | null;
   errorMotivo: string | null;
+  /** [D-725] Correo de quien lo envió desde Katuq; solo con la bandeja única. */
+  enviadoPor?: string | null;
+  /** [D-725] Nombre de quien lo envió. */
+  enviadoPorNombre?: string | null;
 }
 
 /** Pedido del cliente vinculado, para el panel derecho. */

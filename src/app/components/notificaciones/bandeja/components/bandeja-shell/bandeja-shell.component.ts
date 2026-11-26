@@ -1,14 +1,21 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { ChatNotasComponent } from "../../../inbox-core/chat-notas/chat-notas.component";
 import { Subject, Subscription, interval } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
 import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
 import { LoaderService } from "../../../../../shared/services/loader.service";
+import { AtencionService } from "../../../../../shared/services/messaging/atencion.service";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
+  AjustesAtencion,
   DuenoChat,
+  EstadoAsesor,
   MessagingLine,
+  MiembroAtencion,
   MiembroEquipo,
+  NotaChat,
+  ResumenAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { NavService } from "../../../../../shared/services/nav.service";
 import { esFamiliaAdministrador } from "../../../../../shared/utils/roles";
@@ -23,6 +30,9 @@ import {
   ConversacionResumen,
 } from "../../bandeja.models";
 import { mezclar } from "../../bandeja.util";
+
+/** Vistas de la bandeja: la lista de chats o, para quien coordina, la pestaña Equipo. */
+export type VistaBandeja = "chats" | "equipo";
 
 /** Cada cuánto se vuelve a leer la lista: el mismo intervalo de la lista del buzón de WhatsApp. */
 const REFRESCO_MS = 10000;
@@ -59,6 +69,33 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   lineas: MessagingLine[] = [];
   equipo: MiembroEquipo[] = [];
 
+  // ─── Atención multiagente (D-725). Si `/atencion/yo` falla, todo queda como antes ───
+  atencion = false;
+  coordina = false;
+  esAdmin = false;
+  estado: EstadoAsesor = "disponible";
+  cambiandoEstado = false;
+  errorEstado = false;
+  asesores: MiembroAtencion[] = [];
+  vista: VistaBandeja = "chats";
+  /** Filtro por asesor: correo, 'sin-asignar' o null. */
+  asesor: string | null = null;
+
+  resumen: ResumenAtencion | null = null;
+  resumenCargando = false;
+  resumenError = false;
+  guardandoAjustes = false;
+  ajustesGuardados = false;
+  errorAjustes = false;
+
+  // Notas internas del chat abierto
+  notasAbiertas = false;
+  notas: NotaChat[] = [];
+  notasCargando = false;
+  notasError = false;
+  notasGuardando = false;
+  errorNota = false;
+
   private conexiones: MetaConexiones | null = null;
   private refrescoSub?: Subscription;
   private cargaSub?: Subscription;
@@ -69,6 +106,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     private readonly meta: MetaInboxService,
     private readonly nav: NavService,
     private readonly lineasService: MessagingLinesService,
+    private readonly atencionSrv: AtencionService,
     private readonly loader: LoaderService,
     features: CompanyFeaturesService,
   ) {
@@ -80,6 +118,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loader.suppressGlobalLoader();
+    this.cargarAtencion();
     this.elegirCanalesYCargar();
     this.refrescoSub = interval(REFRESCO_MS).subscribe(() => {
       // Con la pestaña oculta no se pollea (D-117); al volver, el siguiente tick refresca.
@@ -110,6 +149,19 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     );
   }
 
+  /** Id del hilo de atención del chat abierto; sin él (número compartido) no hay notas ni dueño. */
+  get threadIdAbierto(): string | null {
+    return this.seleccion?.threadId || null;
+  }
+
+  get puedeVerNotas(): boolean {
+    return this.atencion && !!this.threadIdAbierto;
+  }
+
+  get dueno(): DuenoChat | null {
+    return this.seleccion?.dueno || null;
+  }
+
   get claveSeleccion(): string | null {
     return this.seleccion?.clave ?? null;
   }
@@ -136,23 +188,216 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       conversacion.origen.unreadCount = 0;
     }
     this.seleccion = conversacion;
+    this.reiniciarNotas();
   }
 
   /** Mobile: de vuelta a la lista. */
   volver(): void {
     this.seleccion = null;
+    this.reiniciarNotas();
   }
 
-  /** El detalle de WhatsApp cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */
+  /** El detalle cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */
   onDuenoCambiado(dueno: DuenoChat | null): void {
     const abierta = this.seleccion;
-    if (abierta?.canal !== "whatsapp") return;
-    this.seleccion = {
-      ...abierta,
-      dueno: dueno || undefined,
-      origen: { ...abierta.origen, owner: dueno },
-    };
-    this.cargar(true);
+    if (!abierta) return;
+    if (abierta.canal === "whatsapp") {
+      this.seleccion = {
+        ...abierta,
+        dueno: dueno || undefined,
+        origen: { ...abierta.origen, owner: dueno },
+      };
+      this.cargar(true);
+      return;
+    }
+    // Redes: el detalle recarga la conversación si su `hilo` cambia de objeto y pisaría lo que se escribe.
+    // Por eso se conserva el mismo objeto y solo se actualiza su dueño.
+    const igual = (abierta.dueno?.email || "").toLowerCase() === (dueno?.email || "").toLowerCase();
+    abierta.origen.owner = dueno;
+    this.seleccion = { ...abierta, dueno: dueno || undefined };
+    if (!igual) this.cargar(true);
+  }
+
+  // ─── Pestañas, filtro por asesor y estado ───
+
+  cambiarVista(vista: VistaBandeja): void {
+    if (vista === "equipo" && !this.coordina) return;
+    this.vista = vista;
+  }
+
+  elegirAsesor(asesor: string | null): void {
+    this.asesor = asesor;
+  }
+
+  /** Desde la pestaña Equipo: filtra la lista por ese asesor y vuelve a Chats. */
+  verChatsDe(asesor: string): void {
+    this.asesor = asesor;
+    this.vista = "chats";
+  }
+
+  cambiarEstado(estado: EstadoAsesor): void {
+    if (this.cambiandoEstado || estado === this.estado) return;
+    this.cambiandoEstado = true;
+    this.errorEstado = false;
+    this.atencionSrv
+      .cambiarEstado(estado)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (nuevo) => {
+          this.estado = nuevo;
+          this.cambiandoEstado = false;
+          if (this.coordina) this.cargarResumen();
+        },
+        error: () => {
+          this.cambiandoEstado = false;
+          this.errorEstado = true;
+        },
+      });
+  }
+
+  guardarAjustes(ajustes: AjustesAtencion): void {
+    if (this.guardandoAjustes) return;
+    this.guardandoAjustes = true;
+    this.ajustesGuardados = false;
+    this.errorAjustes = false;
+    this.atencionSrv
+      .guardarAjustes(ajustes)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (nuevos) => {
+          this.guardandoAjustes = false;
+          this.ajustesGuardados = true;
+          if (this.resumen) this.resumen = { ...this.resumen, ajustes: nuevos || ajustes };
+        },
+        error: () => {
+          this.guardandoAjustes = false;
+          this.errorAjustes = true;
+        },
+      });
+  }
+
+  // ─── Notas internas ───
+
+  alternarNotas(): void {
+    this.notasAbiertas = !this.notasAbiertas;
+    if (this.notasAbiertas) this.cargarNotas(false);
+  }
+
+  @ViewChild(ChatNotasComponent) private cuadroNotas?: ChatNotasComponent;
+
+  agregarNota(nota: { texto: string; menciones: string[] }): void {
+    const id = this.threadIdAbierto;
+    if (!id || this.notasGuardando) return;
+    this.notasGuardando = true;
+    this.errorNota = false;
+    this.atencionSrv
+      .agregarNota(id, nota.texto, nota.menciones)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (creada) => {
+          // Si ya se abrió otro chat, no se pisa su estado.
+          if (this.threadIdAbierto !== id) return;
+          this.notasGuardando = false;
+          if (creada) this.notas = [...this.notas, creada];
+          this.cuadroNotas?.limpiar();
+        },
+        error: () => {
+          if (this.threadIdAbierto !== id) return;
+          this.notasGuardando = false;
+          this.errorNota = true;
+        },
+      });
+  }
+
+  reintentarNotas(): void {
+    this.cargarNotas(false);
+  }
+
+  private reiniciarNotas(): void {
+    this.notas = [];
+    this.notasError = false;
+    this.errorNota = false;
+    this.notasGuardando = false;
+    this.notasCargando = false;
+    if (this.notasAbiertas && this.puedeVerNotas) this.cargarNotas(false);
+  }
+
+  /** En silencio (refresco) no muestra «Cargando…» ni borra lo que hay si falla. */
+  private cargarNotas(enSilencio: boolean): void {
+    const id = this.threadIdAbierto;
+    if (!this.atencion || !id) return;
+    if (!enSilencio) {
+      this.notasCargando = true;
+      this.notasError = false;
+    }
+    this.atencionSrv
+      .hilo(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (h) => {
+          if (this.threadIdAbierto !== id) return;
+          this.notasCargando = false;
+          if (!(enSilencio && this.notasGuardando)) this.notas = h.notas || [];
+        },
+        error: () => {
+          if (this.threadIdAbierto !== id) return;
+          this.notasCargando = false;
+          if (!enSilencio) this.notasError = true;
+        },
+      });
+  }
+
+  // ─── Atención: quién soy, el equipo y el resumen ───
+
+  /** Pide quién es el usuario y su equipo. Un fallo deja la bandeja como estaba (sin atención). */
+  private cargarAtencion(): void {
+    this.atencionSrv
+      .yo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (yo) => {
+          this.atencion = true;
+          this.coordina = !!yo.coordina;
+          this.esAdmin = !!yo.esAdmin;
+          this.estado = yo.estado === "ausente" ? "ausente" : "disponible";
+          this.atencionSrv
+            .equipo()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (equipo) => {
+                this.asesores = equipo;
+                this.equipo = equipo.map((m) => ({ email: m.email, nombre: m.nombre, rol: m.rol }));
+              },
+              error: () => undefined,
+            });
+          if (this.coordina) this.cargarResumen();
+        },
+        error: () => undefined,
+      });
+  }
+
+  /** Quien coordina: cifras y carga por asesor. Un fallo conserva las cifras anteriores. */
+  private cargarResumen(): void {
+    if (!this.atencion || !this.coordina) return;
+    if (!this.resumen) this.resumenCargando = true;
+    this.atencionSrv
+      .resumen()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          this.resumen = r;
+          this.resumenCargando = false;
+          this.resumenError = false;
+        },
+        error: () => {
+          this.resumenCargando = false;
+          this.resumenError = true;
+        },
+      });
+  }
+
+  reintentarResumen(): void {
+    this.cargarResumen();
   }
 
   verMas(): void {
@@ -180,7 +425,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.lineas = res.lines;
-          this.equipo = res.equipo;
+          if (!this.asesores.length) this.equipo = res.equipo;
         },
         error: () => undefined,
       });
@@ -242,6 +487,9 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         this.cargando = false;
         this.actualizarSeleccion();
       });
+    // El resumen y las notas se refrescan junto con la lista.
+    this.cargarResumen();
+    if (this.notasAbiertas && enSilencio) this.cargarNotas(true);
   }
 
   private conservarCaidos(previa: CargaBandeja, nueva: CargaBandeja): CargaBandeja {
@@ -263,9 +511,20 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
    */
   private actualizarSeleccion(): void {
     const abierta = this.seleccion;
-    if (!abierta || abierta.canal !== "whatsapp") return;
+    if (!abierta) return;
     const nueva = this.conversaciones.find((c) => c.clave === abierta.clave);
-    if (nueva) this.seleccion = nueva;
+    if (!nueva) return;
+    if (abierta.canal === "whatsapp") {
+      this.seleccion = nueva;
+      return;
+    }
+    // Redes: mismo objeto de `hilo`; solo se pone al día el dueño (el detalle lo recibe como entrada).
+    const antes = (abierta.dueno?.email || "").toLowerCase();
+    const ahora = (nueva.dueno?.email || "").toLowerCase();
+    if (antes !== ahora) {
+      abierta.origen.owner = nueva.dueno || null;
+      this.seleccion = { ...abierta, dueno: nueva.dueno };
+    }
   }
 
   private leerUsuario(): Record<string, unknown> {

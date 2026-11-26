@@ -14,10 +14,12 @@ import { Subscription, forkJoin, interval } from "rxjs";
 import { ToastrService } from "ngx-toastr";
 import { TranslateService } from "@ngx-translate/core";
 
+import { AtencionService } from "../../../../../shared/services/messaging/atencion.service";
 import { MessagingThreadsService } from "../../../../../shared/services/messaging/messaging-threads.service";
 import {
   DuenoChat,
   MiembroEquipo,
+  Transferencia,
   esErrorChatConDueno,
 } from "../../../../../shared/services/messaging/messaging.models";
 
@@ -92,6 +94,10 @@ export class WhatsappThreadDetailComponent
   @Input() equipo: MiembroEquipo[] = [];
   @Input() esAdministrador = false;
   @Input() miEmail = "";
+  /** [D-725] Bandeja única con `bandejaUnica`: dueño por AtencionService, pasar con nota y autor de cada saliente. Sin ella, igual que antes. */
+  @Input() atencion = false;
+  /** [D-725] Quien coordina (administrador o supervisor); solo cuenta con `atencion`. */
+  @Input() coordina = false;
 
   /** Emitido cuando el usuario quiere volver a la lista (mobile). */
   @Output() backToList = new EventEmitter<void>();
@@ -190,6 +196,7 @@ export class WhatsappThreadDetailComponent
     private readonly inbox: WhatsappInboxService,
     private readonly toastr: ToastrService,
     private readonly hilos: MessagingThreadsService,
+    private readonly atencionSrv: AtencionService,
     private readonly translate: TranslateService,
   ) {}
 
@@ -570,7 +577,7 @@ export class WhatsappThreadDetailComponent
 
   /** La franja de dueño se ve en chats de un número del comercio, con la bandera encendida. */
   get mostrarDueno(): boolean {
-    return this.multiNumero && !!this.lineId && !!this.chat?.threadId;
+    return (this.multiNumero || this.atencion) && !!this.lineId && !!this.chat?.threadId;
   }
 
   /** El chat lo atiende otra persona: el redactor queda en lectura. */
@@ -581,7 +588,7 @@ export class WhatsappThreadDetailComponent
 
   get motivoLectura(): string {
     const nombre = this.dueno?.nombre || this.dueno?.email || this.translate.instant('notificaciones.whatsapp.detail.someoneElse');
-    return this.esAdministrador
+    return this.esAdministrador || (this.atencion && this.coordina)
       ? this.translate.instant('notificaciones.whatsapp.detail.readOnlyAdmin', { nombre })
       : this.translate.instant('notificaciones.whatsapp.detail.readOnly', { nombre });
   }
@@ -589,22 +596,43 @@ export class WhatsappThreadDetailComponent
   tomarChat(): void {
     const threadId = this.chat?.threadId;
     if (!threadId) return;
-    this.accionDueno(this.hilos.tomar(threadId), "notificaciones.whatsapp.detail.ownerTaken");
+    this.accionDueno(this.atencion ? this.atencionSrv.tomar(threadId) : this.hilos.tomar(threadId), "notificaciones.whatsapp.detail.ownerTaken");
   }
 
   soltarChat(): void {
     const threadId = this.chat?.threadId;
     if (!threadId) return;
-    this.accionDueno(this.hilos.soltar(threadId), "notificaciones.whatsapp.detail.ownerReleased");
+    this.accionDueno(this.atencion ? this.atencionSrv.soltar(threadId) : this.hilos.soltar(threadId), "notificaciones.whatsapp.detail.ownerReleased");
   }
 
-  pasarChat(email: string): void {
+  /** Sin `atencion` llega el correo (como hoy); con ella, `{ email, nota }`. */
+  pasarChat(destino: string | Transferencia): void {
     const threadId = this.chat?.threadId;
-    if (!threadId || !email) return;
-    this.accionDueno(this.hilos.asignar(threadId, email), "notificaciones.whatsapp.detail.ownerPassed");
+    const t: Transferencia = typeof destino === "string" ? { email: destino, nota: "" } : destino;
+    if (!threadId || !t?.email) return;
+    if (!this.atencion) {
+      this.accionDueno(this.hilos.asignar(threadId, t.email), "notificaciones.whatsapp.detail.ownerPassed");
+      return;
+    }
+    // Sin dueño solo quien coordina puede dar el chat (asignar); con dueño se transfiere con la nota.
+    const peticion = !this.dueno && this.coordina
+      ? this.atencionSrv.asignar(threadId, t.email)
+      : this.atencionSrv.transferir(threadId, t.email, t.nota || "");
+    this.accionDueno(peticion, "notificaciones.whatsapp.detail.ownerPassed");
   }
 
-  private accionDueno(peticion: ReturnType<MessagingThreadsService["tomar"]>, exito: string): void {
+  /** [D-725] El dueño o quien coordina pasa el chat (con `atencion`). */
+  get puedePasarChat(): boolean {
+    return this.atencion && (this.coordina || !!(this.dueno && !this.soloLectura));
+  }
+
+  /** [D-725] «· Nombre» del saliente; vacío sin `atencion` o si no llega el nombre (el bot no lleva). */
+  autorDe(msg: WhatsappMessage): string {
+    if (!this.atencion || msg.direction !== "outbound") return "";
+    return msg.sentByName || "";
+  }
+
+  private accionDueno(peticion: ReturnType<AtencionService["tomar"]>, exito: string): void {
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
     peticion.subscribe({

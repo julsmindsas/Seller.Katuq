@@ -1,9 +1,18 @@
-import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+
+import { AtencionService } from '../../../../../shared/services/messaging/atencion.service';
+import {
+  DuenoChat,
+  MiembroEquipo,
+  Transferencia,
+  esErrorChatConDueno,
+} from '../../../../../shared/services/messaging/messaging.models';
 
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
@@ -38,6 +47,22 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   /** El canal tiene la cuenta conectada (TikTok no deja enviar sin ella). */
   @Input() conectado = false;
 
+  // ─── Atención multiagente (D-725): todo opcional; sin `atencion` la pantalla es la de siempre ───
+  /** Bandeja única con la bandera `bandejaUnica`: muestra el dueño del chat y quién envió. */
+  @Input() atencion = false;
+  /** Quién atiende el chat (lo trae la lista); `null` = sin asignar. */
+  @Input() dueno: DuenoChat | null = null;
+  @Input() miEmail = '';
+  /** Quien coordina (administrador o supervisor). */
+  @Input() coordina = false;
+  @Input() equipo: MiembroEquipo[] = [];
+  /** Cambió el dueño del chat abierto. */
+  @Output() duenoCambiado = new EventEmitter<DuenoChat | null>();
+
+  /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
+  duenoActual: DuenoChat | null = null;
+  duenoOcupado = false;
+
   mensajes: MetaMensaje[] = [];
   ventana: MetaVentana | null = null;
   cargandoMensajes = false;
@@ -70,6 +95,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     private servicio: MetaInboxService,
     private translate: TranslateService,
     private sanitizer: DomSanitizer,
+    private atencionSrv: AtencionService,
+    private toastr: ToastrService,
   ) {
     this.arrancarRefrescoAutomatico();
   }
@@ -87,6 +114,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (this.atencion && (changes['dueno'] || changes['hilo'])) {
+      this.duenoActual = this.dueno || this.hilo?.owner || null;
+    }
     if (!changes['hilo'] || !this.hilo) return;
     // Otra conversación: lo que se descargó de la anterior ya no sirve.
     const anterior = changes['hilo'].previousValue as MetaHilo | null;
@@ -149,6 +179,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     this.errorImagen = null;
     this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
+    this.cargarDueno(hilo);
 
     const canal = this.canal;
     this.servicio
@@ -332,11 +363,12 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
 
   /** Con la ventana abierta y, en TikTok, la cuenta conectada. */
   get puedeEscribir(): boolean {
-    return Boolean(this.ventana?.abierta) && !this.sinConexionParaEnviar && !this.enviando;
+    return Boolean(this.ventana?.abierta) && !this.sinConexionParaEnviar && !this.enviando && !this.soloLectura;
   }
 
   /** Clave del texto de ayuda del campo de respuesta. */
   get claveMarcador(): string {
+    if (this.soloLectura) return 'notificaciones.owner.onlyOwner';
     if (this.sinConexionParaEnviar) return 'notificaciones.meta.tiktokReplyReconnect';
     return this.ventana?.abierta ? 'notificaciones.meta.replyPlaceholder' : 'notificaciones.meta.replyClosed';
   }
@@ -351,7 +383,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
       Boolean(this.ventana?.abierta) &&
       !this.sinConexionParaEnviar &&
       hayQueEnviar &&
-      !this.enviando
+      !this.enviando &&
+      !this.soloLectura
     );
   }
 
@@ -426,6 +459,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
           this.abrirHilo(this.hilo!);
           return;
         }
+        this.alRechazoPorDueno(r);
         this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
         // TikTok mandó la imagen y no el texto: la imagen ya salió (no se reintenta), el texto se conserva
         // para volver a enviarlo y la conversación se refresca para que la imagen aparezca.
@@ -456,6 +490,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
           this.abrirHilo(this.hilo!);
           return;
         }
+        this.alRechazoPorDueno(r);
         this.avisoEnvio = this.explicarFallo(r.motivo, r.mensaje);
       });
   }
@@ -466,6 +501,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
    * se muestra tal cual.
    */
   private explicarFallo(motivo?: string, mensajeServidor?: string): string {
+    if (motivo === 'chat_con_dueno') {
+      return mensajeServidor || this.translate.instant('notificaciones.whatsapp.detail.ownedByOther');
+    }
     if (this.esTiktok && mensajeServidor) return mensajeServidor;
     switch (motivo) {
       case 'ventana_cerrada':
@@ -485,5 +523,113 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
 
   trackMensaje(_: number, m: MetaMensaje): string {
     return m.id;
+  }
+
+  // ─── Dueño del chat (D-725) ────────────────────────────────────────────
+
+  /** El chat de red que se está viendo: el id que trae la lista o, si falta, el de la forma `red_<canal>__<hash>`. */
+  get threadId(): string | null {
+    if (!this.hilo) return null;
+    return this.hilo.threadId || `red_${this.canal}__${this.hilo.identidadHash}`;
+  }
+
+  /** El chat lo atiende otra persona: el campo de respuesta queda en lectura. */
+  get soloLectura(): boolean {
+    if (!this.atencion || !this.duenoActual) return false;
+    return (this.duenoActual.email || '').toLowerCase() !== (this.miEmail || '').toLowerCase();
+  }
+
+  /** Nombre de quien atiende el chat, para el texto del campo en lectura. */
+  get nombreDueno(): string {
+    return this.duenoActual?.nombre || this.duenoActual?.email || '';
+  }
+
+  get esMio(): boolean {
+    return !!this.duenoActual && !!this.miEmail && this.duenoActual.email.toLowerCase() === this.miEmail.toLowerCase();
+  }
+
+  /** El dueño o quien coordina pasa el chat. */
+  get puedePasarChat(): boolean {
+    return this.atencion && (this.coordina || this.esMio);
+  }
+
+  /** Quién envió el mensaje, para pintarlo junto a la hora; solo con la bandeja única. */
+  autorDe(m: MetaMensaje): string {
+    if (!this.atencion || m.direccion !== 'outbound') return '';
+    return m.enviadoPorNombre || m.enviadoPor || '';
+  }
+
+  /** Trae el dueño al día al abrir el chat; un fallo deja el que ya había. */
+  private cargarDueno(hilo: MetaHilo): void {
+    if (!this.atencion) return;
+    const id = this.threadId;
+    if (!id) return;
+    this.atencionSrv
+      .hilo(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (h) => {
+          if (this.hilo?.identidadHash !== hilo.identidadHash) return;
+          this.duenoActual = h.owner && h.owner.email ? h.owner : null;
+          this.duenoCambiado.emit(this.duenoActual);
+        },
+        error: () => undefined,
+      });
+  }
+
+  private alRechazoPorDueno(r: { motivo?: string; owner?: DuenoChat | null }): void {
+    if (r.motivo === 'chat_con_dueno') this.ponerDueno(r.owner || null);
+  }
+
+  tomarChat(): void {
+    const id = this.threadId;
+    if (id) this.accionDueno(this.atencionSrv.tomar(id), 'notificaciones.whatsapp.detail.ownerTaken');
+  }
+
+  soltarChat(): void {
+    const id = this.threadId;
+    if (id) this.accionDueno(this.atencionSrv.soltar(id), 'notificaciones.whatsapp.detail.ownerReleased');
+  }
+
+  /** Pasar el chat: sin dueño y con permiso de coordinar se asigna; con dueño se transfiere con la nota. */
+  pasarChat(destino: Transferencia | string): void {
+    const id = this.threadId;
+    const t: Transferencia = typeof destino === 'string' ? { email: destino, nota: '' } : destino;
+    if (!id || !t?.email) return;
+    const peticion = !this.duenoActual && this.coordina
+      ? this.atencionSrv.asignar(id, t.email)
+      : this.atencionSrv.transferir(id, t.email, t.nota || '');
+    this.accionDueno(peticion, 'notificaciones.whatsapp.detail.ownerPassed');
+  }
+
+  private accionDueno(peticion: ReturnType<AtencionService['tomar']>, exito: string): void {
+    if (this.duenoOcupado) return;
+    this.duenoOcupado = true;
+    peticion.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (owner) => {
+        this.duenoOcupado = false;
+        this.ponerDueno(owner);
+        this.toastr.success(this.translate.instant(exito));
+      },
+      error: (err: any) => {
+        this.duenoOcupado = false;
+        if (esErrorChatConDueno(err)) {
+          this.ponerDueno(err.error.owner || null);
+          this.toastr.warning(
+            err.error.message || this.translate.instant('notificaciones.whatsapp.detail.alreadyOwned'),
+            this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'),
+          );
+          return;
+        }
+        // Los 403 ya los avisa el interceptor con el mensaje del servidor.
+        if (err?.status === 403) return;
+        this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.whatsapp.detail.ownerChangeError'));
+      },
+    });
+  }
+
+  private ponerDueno(owner: DuenoChat | null): void {
+    this.duenoActual = owner && owner.email ? owner : null;
+    this.duenoCambiado.emit(this.duenoActual);
   }
 }
