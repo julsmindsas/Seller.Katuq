@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from './../../../../environments/environment'
+import { SKIP_LOADER } from '../interceptor/loader.interceptor';
 
 import { Observable } from 'rxjs';
 
@@ -106,8 +107,10 @@ export class MaestroService {
       headers: headers_object
     };
   }
-  public getClientByDocument(data: any) {
-    return this.http.post(this.urlBase + '/v1/clients/doc', data, this.httpOptions);
+  /** `segundoPlano`: sin el cargador de pantalla completa (ticket 1650: se consulta al salir de un campo). */
+  public getClientByDocument(data: any, segundoPlano = false) {
+    const opciones = segundoPlano ? { ...this.httpOptions, context: new HttpContext().set(SKIP_LOADER, true) } : this.httpOptions;
+    return this.http.post(this.urlBase + '/v1/clients/doc', data, opciones);
   }
 
   public removeTagFromClients(tagName: string) {

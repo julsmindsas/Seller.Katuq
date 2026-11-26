@@ -57,9 +57,13 @@
                     <label class="form-label-modern">{{ (mostrarDv ? 'ventas.crearClienteModal.nit' : 'ventas.crearClienteModal.numeroDocumento') | translate }} <span class="required">*</span></label>
                     <input pInputText type="text" placeholder="{{ (mostrarDv ? 'ventas.crearClienteModal.nit' : 'ventas.crearClienteModal.numeroDocumento') | translate }}"
                       formControlName="documento" [attr.disabled]="isEdit && !documentoEditable ? true : null" class="w-100"
-                      (blur)="normalizarNit()">
+                      (blur)="normalizarNit(); avisarSiDocumentoExiste()">
                     <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
                       <i class="pi pi-exclamation-circle"></i>{{ 'ventas.crearClienteModal.campoObligatorio' | translate }}
+                    </div>
+                    <!-- Ticket 1650 (D-724): el documento ya tiene ficha; se avisa antes de llenar el resto. -->
+                    <div *ngIf="documentoExistente" class="error-message mt-1" role="alert">
+                      <i class="pi pi-info-circle"></i>{{ (documentoExistente === '*' ? 'ventas.crearClienteModal.documentoVariasFichas' : 'ventas.crearClienteModal.documentoYaExiste') | translate:{ nombre: documentoExistente } }}
                     </div>
                     <!-- Ticket 1462 (D-667): NIT y dígito de verificación separados; el DV se calcula solo. -->
                     <div class="nit-dv" *ngIf="mostrarDv">

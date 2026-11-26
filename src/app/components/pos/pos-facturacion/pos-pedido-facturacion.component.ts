@@ -6,6 +6,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { InfoIndicativos } from 'src/Mock/indicativosPais';
 import { InfoPaises } from 'src/Mock/pais-estado-ciudad';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { claveDocumento } from 'src/app/shared/utils/clave-documento';
+import { SugerenciaDocumento, aplicarSugerenciaDocumento, mismaRazonSocial, sugerenciaPorDocumento } from 'src/app/shared/utils/sugerencia-documento';
 
 @Component({
   selector: 'pos-app-pedido-facturacion',
@@ -333,7 +335,50 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
       });
     });
   }
+  /** Ticket 1650 (D-724): datos del cliente que ya existe con el documento escrito (igual que en Venta asistida). */
+  sugerenciaDocumento: SugerenciaDocumento | null = null;
+  /** Clave de traducción del aviso (varias fichas con el documento), o null. */
+  avisoDocumento: string | null = null;
+  private documentoConsultado = '';
+
+  buscarPorDocumento(): void {
+    const doc = String(this.numero_documento_facturacion || '').trim();
+    const clave = claveDocumento(doc);
+    if (!clave || clave.length < 5) {
+      this.limpiarSugerencia();
+      return;
+    }
+    if (clave === this.documentoConsultado) return;
+    this.documentoConsultado = clave;
+    this.sugerenciaDocumento = null;
+    this.avisoDocumento = null;
+    this.service.getClientByDocument({ documento: doc }, true).subscribe({
+      next: (res: any) => {
+        if (claveDocumento(this.numero_documento_facturacion) !== clave) return;
+        const s = sugerenciaPorDocumento(res, doc);
+        this.sugerenciaDocumento = s && !mismaRazonSocial(s.nombre, this.razon_social) ? s : null;
+      },
+      error: (err: any) => {
+        if (claveDocumento(this.numero_documento_facturacion) !== clave) return;
+        this.avisoDocumento = err?.status === 409 ? 'ventas.pedidoFacturacion.variasFichas' : null;
+      },
+    });
+  }
+
+  usarSugerenciaDocumento(): void {
+    if (!this.sugerenciaDocumento) return;
+    aplicarSugerenciaDocumento(this, this.sugerenciaDocumento);
+    this.sugerenciaDocumento = null;
+  }
+
+  limpiarSugerencia(): void {
+    this.sugerenciaDocumento = null;
+    this.avisoDocumento = null;
+    this.documentoConsultado = '';
+  }
+
   limpiarVariables() {
+    this.limpiarSugerencia();
     this.editandodato = false;
     this.alias_entrega = "";
     this.nombres_entrega = "";

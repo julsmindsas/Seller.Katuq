@@ -13,6 +13,8 @@ import { InfoIndicativos } from "src/Mock/indicativosPais";
 import { InfoPaises } from "src/Mock/pais-estado-ciudad";
 import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
 import { TIPOS_DOCUMENTO, esTipoDocumentoAnterior } from "src/app/shared/utils/tipos-documento";
+import { claveDocumento } from "src/app/shared/utils/clave-documento";
+import { SugerenciaDocumento, aplicarSugerenciaDocumento, mismaRazonSocial, sugerenciaPorDocumento } from "src/app/shared/utils/sugerencia-documento";
 
 @Component({
   selector: "app-pedido-facturacion",
@@ -147,6 +149,49 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
    * lo mínimo con lo que una factura ante la DIAN sale bien y se explica qué falta.
    * Devuelve true si los datos sirven para facturar.
    */
+  /** Ticket 1650 (D-724): datos del cliente que ya existe con el documento escrito. */
+  sugerenciaDocumento: SugerenciaDocumento | null = null;
+  /** Clave de traducción del aviso (varias fichas con el documento), o null. */
+  avisoDocumento: string | null = null;
+  private documentoConsultado = "";
+
+  /** Al salir del campo de documento: busca el cliente de la empresa con ese documento y propone sus datos. */
+  buscarPorDocumento(): void {
+    const doc = String(this.numero_documento_facturacion || "").trim();
+    const clave = claveDocumento(doc);
+    if (!clave || clave.length < 5) {
+      this.limpiarSugerencia();
+      return;
+    }
+    if (clave === this.documentoConsultado) return;
+    this.documentoConsultado = clave;
+    this.sugerenciaDocumento = null;
+    this.avisoDocumento = null;
+    this.service.getClientByDocument({ documento: doc }, true).subscribe({
+      next: (res: any) => {
+        if (claveDocumento(this.numero_documento_facturacion) !== clave) return;
+        const s = sugerenciaPorDocumento(res, doc);
+        this.sugerenciaDocumento = s && !mismaRazonSocial(s.nombre, this.razon_social) ? s : null;
+      },
+      error: (err: any) => {
+        if (claveDocumento(this.numero_documento_facturacion) !== clave) return;
+        this.avisoDocumento = err?.status === 409 ? "ventas.pedidoFacturacion.variasFichas" : null;
+      },
+    });
+  }
+
+  usarSugerenciaDocumento(): void {
+    if (!this.sugerenciaDocumento) return;
+    aplicarSugerenciaDocumento(this, this.sugerenciaDocumento);
+    this.sugerenciaDocumento = null;
+  }
+
+  limpiarSugerencia(): void {
+    this.sugerenciaDocumento = null;
+    this.avisoDocumento = null;
+    this.documentoConsultado = "";
+  }
+
   validarDatosFacturacion(): boolean {
     const faltan: string[] = [];
     const razon = String(this.razon_social || "").trim();
@@ -604,6 +649,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     });
   }
   limpiarVariables() {
+    this.limpiarSugerencia();
     // Variables de control
     this.editandodato = false;
     this.idenxFacturacion = null;

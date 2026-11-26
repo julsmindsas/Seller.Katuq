@@ -20,7 +20,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { CarteraService } from '../../../../shared/services/cartera/cartera.service';
 import { TipoRelacion } from '../../../../shared/services/cartera/cartera.models';
 import { CompanyFeaturesService } from '../../../../shared/services/company-features.service';
-import { digitoNit } from '../../../../shared/utils/clave-documento';
+import { claveDocumento, digitoNit } from '../../../../shared/utils/clave-documento';
 import { ClientesListaService } from '../services/clientes-lista.service';
 
 /** Resultado que el formulario entrega a quien lo abrió (modal: `close()`, inline: `guardado`). */
@@ -552,6 +552,41 @@ export class CrearClienteModalComponent implements OnInit, OnChanges {
     if (!/-/.test(raw) && base.length === 10 && digitoNit(base.slice(0, 9)) === base[9]) base = base.slice(0, 9);
     if (base && control.value !== base) control.setValue(base);
     this.recalcularDv();
+  }
+
+  /**
+   * Ticket 1650 (D-724): al salir del documento, si ya hay un cliente de la empresa con ese documento se
+   * avisa en ese momento con su nombre (antes se sabía recién al guardar). `'*'` = varias fichas. Solo al
+   * crear un cliente; el guardado y su aviso no cambian.
+   */
+  documentoExistente: string | null = null;
+  private documentoRevisado = '';
+
+  avisarSiDocumentoExiste(): void {
+    if (this.isEdit || this.target === 'corporate') return;
+    const doc = String(this.formulario?.controls?.['documento']?.value ?? '').trim();
+    const clave = claveDocumento(doc);
+    if (!clave || clave.length < 5) {
+      this.documentoExistente = null;
+      this.documentoRevisado = '';
+      return;
+    }
+    if (clave === this.documentoRevisado) return;
+    this.documentoRevisado = clave;
+    this.documentoExistente = null;
+    this.maestroService.getClientByDocument({ documento: doc }, true).subscribe({
+      next: (res: any) => {
+        if (claveDocumento(this.formulario.controls['documento'].value) !== clave) return;
+        const nombre = res && !Array.isArray(res) && res.cd
+          ? [res.nombres_completos, res.apellidos_completos].map((v: any) => String(v || '').trim()).filter(Boolean).join(' ')
+          : '';
+        this.documentoExistente = nombre || null;
+      },
+      error: (err: any) => {
+        if (claveDocumento(this.formulario.controls['documento'].value) !== clave) return;
+        this.documentoExistente = err?.status === 409 ? '*' : null;
+      },
+    });
   }
 
   /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */

@@ -97,7 +97,10 @@
       <div class="col-sm-6">
         <label class="form-label" for="tipo_documento_facturacion">Documento:</label>
         <input class="form-control" type="text" id="numero_documento_facturacion"
-          [(ngModel)]="numero_documento_facturacion" />
+          [(ngModel)]="numero_documento_facturacion" (blur)="buscarPorDocumento()" />
+      </div>
+      <div class="col-12 mt-2">
+        <ng-container *ngTemplateOutlet="sugerenciaDoc"></ng-container>
       </div>
     </div>
     <div class="row">
@@ -220,7 +223,10 @@
         <div class="col-sm-6">
           <label class="form-label" for="tipo_documento_facturacion">Documento:</label>
           <input class="form-control" type="text" id="numero_documento_facturacion"
-            [(ngModel)]="numero_documento_facturacion" />
+            [(ngModel)]="numero_documento_facturacion" (blur)="buscarPorDocumento()" />
+        </div>
+        <div class="col-12 mt-2">
+          <ng-container *ngTemplateOutlet="sugerenciaDoc"></ng-container>
         </div>
       </div>
       <div class="row">
@@ -310,3 +316,20 @@
   </ng-template>
 
 </p-tabView>
+
+<!-- Ticket 1650 (D-724): datos del cliente que ya existe con el documento escrito -->
+<ng-template #sugerenciaDoc>
+  <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 mb-3" role="status"
+    *ngIf="sugerenciaDocumento as s">
+    <span>
+      <i class="fa fa-user-circle me-1" aria-hidden="true"></i>
+      {{ 'ventas.pedidoFacturacion.encontramosCliente' | translate:{ nombre: s.nombre } }}
+      <small class="d-block" *ngIf="s.origen === 'perfil'">{{ 'ventas.pedidoFacturacion.yaFacturadoAsi' | translate }}</small>
+    </span>
+    <span class="d-flex gap-2">
+      <button type="button" class="btn btn-sm btn-primary" (click)="usarSugerenciaDocumento()">{{ 'ventas.pedidoFacturacion.usarEstosDatos' | translate }}</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="sugerenciaDocumento = null">{{ 'ventas.pedidoFacturacion.noGracias' | translate }}</button>
+    </span>
+  </div>
+  <div class="alert alert-warning py-2 mb-3" role="alert" *ngIf="avisoDocumento">{{ avisoDocumento | translate }}</div>
+</ng-template>
