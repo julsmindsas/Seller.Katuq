@@ -24,7 +24,8 @@
     letter-spacing: normal;
   }
 
-  input[type="text"] {
+  input[type="text"],
+  select {
     @include kb-input;
     margin-bottom: 12px;
   }

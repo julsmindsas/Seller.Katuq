@@ -7,6 +7,24 @@
 export interface PestanaVitrina {
   etiqueta: string;
   productoIds: string[];
+  /** Si está, el servidor llena la pestaña con los productos marcados así en su ficha; los de `productoIds` son el respaldo. */
+  fuente?: FuenteVitrina;
+}
+
+export type FuenteVitrina = "recomendado" | "nuevo" | "oferta";
+
+/** De dónde salen los productos de una pestaña. Valor vacío = los escoge el comercio (no se guarda `fuente`). */
+export const FUENTES_PESTANA: ReadonlyArray<{ valor: "" | FuenteVitrina; rotulo: string; marca: string }> = Object.freeze([
+  { valor: "", rotulo: "Los escojo yo", marca: "" },
+  { valor: "recomendado", rotulo: "Marcados como Recomendado", marca: "Recomendado" },
+  { valor: "nuevo", rotulo: "Marcados como Nuevo", marca: "Nuevo" },
+  { valor: "oferta", rotulo: "Marcados como Oferta", marca: "Oferta" },
+] as const);
+
+/** El nombre de la marca («Recomendado», «Nuevo», «Oferta») de la fuente de una pestaña, o vacío si es a mano. */
+export function marcaDeFuente(p: PestanaVitrina | null | undefined): string {
+  const f = FUENTES_PESTANA.find((x) => x.valor && p && x.valor === p.fuente);
+  return f ? f.marca : "";
 }
 
 export const TOPES_VITRINA = Object.freeze({ pestanas: 3, porPestana: 8, etiqueta: 30, columnas: 4 });
@@ -62,11 +80,11 @@ export function nombrePublicable(etiqueta: string | null | undefined): boolean {
 }
 
 /**
- * Una pestaña que la página pinta: con un nombre que se publica y con productos de la vitrina (la regla del servidor,
+ * Una pestaña que la página pinta: con un nombre que se publica y con productos de la vitrina o con una fuente por marca (la regla del servidor,
  * `pestanasPublicables`; allá además salen los agotados, que el panel no conoce).
  */
 export function pestanaLista(p: PestanaVitrina | null | undefined, idsVitrina?: string[]): boolean {
-  return !!p && nombrePublicable(p.etiqueta) && idsDePestana(p, idsVitrina).length > 0;
+  return !!p && nombrePublicable(p.etiqueta) && (!!marcaDeFuente(p) || idsDePestana(p, idsVitrina).length > 0);
 }
 
 /** Las pestañas que la página pinta de una vitrina (sus `datos`). */

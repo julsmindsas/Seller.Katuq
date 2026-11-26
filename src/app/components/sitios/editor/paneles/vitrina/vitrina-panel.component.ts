@@ -5,6 +5,7 @@ import { SitiosService } from "../../../sitios.service";
 import { PanelSitioBase } from "../panel-sitio-base";
 import { primeraImagen } from "../fichas/fichas-datos";
 import {
+  FUENTES_PESTANA,
   PestanaVitrina,
   SIN_FUENTE_DE_VENTAS,
   TOPES_VITRINA,
@@ -12,6 +13,7 @@ import {
   avisosDeCabecera,
   columnasDelTema,
   idsDePestana,
+  marcaDeFuente,
   pestanaLista,
   seVenEnComputador,
   tieneMarcador,
@@ -44,6 +46,7 @@ interface ProductoDeVitrina {
 })
 export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
   readonly topes = TOPES_VITRINA;
+  readonly fuentes = FUENTES_PESTANA;
   readonly destacados = SIN_FUENTE_DE_VENTAS;
 
   /** Nombre y foto de los productos de la vitrina (de referencia). */
@@ -155,16 +158,37 @@ export class VitrinaPanelComponent extends PanelSitioBase implements DoCheck {
     else if (this.pestanas.some((q, k) => k !== i && String(q.etiqueta || "").trim().toLowerCase() === nombre.toLowerCase())) {
       avisos.push("Otra pestaña se llama igual: tus clientes no sabrán cuál es cuál.");
     }
-    if (!n) avisos.push("Marca al menos un producto: sin productos la pestaña no sale.");
+    if (!n && !this.conFuente(p)) avisos.push("Marca al menos un producto: sin productos la pestaña no sale.");
     const computador = seVenEnComputador(n, this.columnas);
     const tableta = seVenEnComputador(n, COLUMNAS_TABLETA);
-    if (computador < n || tableta < n) {
+    if (!this.conFuente(p) && (computador < n || tableta < n)) {
       const donde = [computador < n ? `${computador} en computador` : "", tableta < n ? `${tableta} en tableta` : ""].filter(Boolean).join(" y ");
       const enTodas = this.cantidadesSinRecorte;
       const consejo = enTodas.length ? ` Con ${enTodas.length > 1 ? enTodas.slice(0, -1).join(", ") + " u " + enTodas[enTodas.length - 1] : enTodas[0]} se ven todos en cualquier pantalla.` : "";
       avisos.push(`Tiene ${n}: se ven ${donde}, para que la última fila no quede a medias; en el celular se ven todos.${consejo}`);
     }
     return avisos;
+  }
+
+  /** ¿La pestaña se llena sola con productos marcados? Entonces sus productos a mano son el respaldo. */
+  conFuente(p: PestanaVitrina): boolean {
+    return !!marcaDeFuente(p);
+  }
+
+  marcaDe(p: PestanaVitrina): string {
+    return marcaDeFuente(p);
+  }
+
+  /** Alguna pestaña con fuente: la vitrina puede quedar sin productos a mano y aun así llenarse sola. */
+  get algunaConFuente(): boolean {
+    return this.pestanas.some((p) => this.conFuente(p));
+  }
+
+  /** Cambia de dónde salen los productos. «Los escojo yo» borra la propiedad (no se guarda vacía). */
+  cambiarFuente(p: PestanaVitrina, valor: string): void {
+    if (valor) p.fuente = valor as PestanaVitrina["fuente"];
+    else delete p.fuente;
+    this.avisar();
   }
 
   /** Cantidades (de 3 a 8) que se ven completas en computador y en tableta: 4 u 8 con 4 columnas. */

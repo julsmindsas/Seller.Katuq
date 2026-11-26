@@ -23,7 +23,7 @@
     <button type="button" class="vitrina__fiel" (click)="pedirVistaFiel()">Ver en la Vista fiel</button>
 
     <p class="vitrina__aviso" *ngIf="datos.carrusel && listas.length">Con pestañas, «Mostrar en carrusel» no se usa: la vitrina va en filas.</p>
-    <p class="vitrina__aviso" *ngIf="!idsVitrina.length">Primero elige los productos de la vitrina (arriba).</p>
+    <p class="vitrina__aviso" *ngIf="!idsVitrina.length && !algunaConFuente">Primero elige los productos de la vitrina (arriba).</p>
     <p class="vitrina__aviso" *ngIf="listas.length === 1">Con una sola pestaña lista no salen las pestañas: se ven sus productos.</p>
     <div class="vitrina__aviso" *ngIf="sinPestana.length && listas.length">
       <span class="vitrina__aviso-txt">{{ sinPestana.length }} producto{{ sinPestana.length === 1 ? '' : 's' }} de la vitrina no
@@ -49,7 +49,14 @@
       <input [id]="'vitrina-nombre-' + i" type="text" [attr.maxlength]="topes.etiqueta" [(ngModel)]="p.etiqueta" (ngModelChange)="cambiar()"
              placeholder="En la casa" />
 
-      <span class="vitrina__etiqueta" [id]="'vitrina-prods-' + i">Productos <small class="vitrina__cuenta">({{ cuenta(p) }} de {{ topes.porPestana }})</small></span>
+      <label class="vitrina__etiqueta" [attr.for]="'vitrina-fuente-' + i">De dónde salen los productos</label>
+      <select [id]="'vitrina-fuente-' + i" [ngModel]="p.fuente || ''" (ngModelChange)="cambiarFuente(p, $event)">
+        <option *ngFor="let f of fuentes" [value]="f.valor">{{ f.rotulo }}</option>
+      </select>
+      <p class="vitrina__aviso" *ngIf="conFuente(p)">Esta pestaña se llena sola con hasta {{ topes.porPestana }} productos de tu tienda marcados como
+        {{ marcaDe(p) }} en su ficha.<ng-container *ngIf="p.fuente === 'oferta'"> Solo cuentan los que hoy tienen un precio rebajado.</ng-container> Si ninguno cumple, salen los que escojas aquí.</p>
+
+      <span class="vitrina__etiqueta" [id]="'vitrina-prods-' + i">{{ conFuente(p) ? 'Respaldo' : 'Productos' }} <small class="vitrina__cuenta">({{ cuenta(p) }} de {{ topes.porPestana }})</small></span>
       <ul class="vitrina__productos" role="group" [attr.aria-labelledby]="'vitrina-prods-' + i">
         <li *ngFor="let id of idsVitrina">
           <button type="button" class="vitrina__producto" [class.is-active]="lleva(p, id)" [attr.aria-pressed]="lleva(p, id)"
