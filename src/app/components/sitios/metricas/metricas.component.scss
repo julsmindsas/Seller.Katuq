@@ -490,3 +490,20 @@
   line-height: 1.4;
   letter-spacing: normal;
 }
+
+// D-698: aviso del consumo del asistente (par color fuerte / fondo suave).
+.clics__aviso {
+  margin: 0 0 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 11px;
+  background: #fdecec;
+  color: #b42318;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+.clics__aviso--suave {
+  background: #fff4e0;
+  color: #8a5300;
+}

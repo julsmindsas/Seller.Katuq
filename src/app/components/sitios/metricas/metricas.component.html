@@ -188,6 +188,16 @@
           </p>
         </ng-container>
 
+        <!-- D-698: respuestas con IA del asistente en el mes, de todo el comercio. El visitante nunca ve este límite. -->
+        <section class="clics" *ngIf="cupoAsistente as cupo">
+          <h6>Respuestas de tu asistente este mes</h6>
+          <p class="clics__nota" *ngIf="cupo.limite < 0">Tu asistente lleva {{ enMiles(cupo.usadas) }} {{ cupo.usadas === 1 ? 'respuesta' : 'respuestas' }} con inteligencia artificial este mes, sumando todos tus sitios.</p>
+          <p class="clics__nota" *ngIf="cupo.limite >= 0">Llevas {{ enMiles(cupo.usadas) }} de {{ enMiles(cupo.limite) }} respuestas con inteligencia artificial este mes, sumando todos tus sitios. Se reinicia el {{ diaDeReinicio(cupo.reinicia) }}.</p>
+          <p class="clics__aviso" *ngIf="cupo.limite >= 0 && cupo.usadas >= cupo.limite">Ya usaste todas las respuestas del mes. Tu asistente sigue atendiendo, pero sin inteligencia artificial: muestra productos de tu tienda y ofrece tus canales de contacto. Mejora tu plan para tener más.</p>
+          <p class="clics__aviso clics__aviso--suave" *ngIf="cupo.limite > 0 && cupo.usadas < cupo.limite && cupo.usadas >= cupo.limite * 0.8">Te queda poco: cuando se acaben, tu asistente sigue atendiendo, pero sin inteligencia artificial.</p>
+          <p class="clics__nota" *ngIf="datos.asistente?.sinCupo > 0">En este período, {{ enMiles(datos.asistente?.sinCupo) }} {{ datos.asistente?.sinCupo === 1 ? 'mensaje se atendió' : 'mensajes se atendieron' }} sin inteligencia artificial.</p>
+        </section>
+
         <!-- Lo que el asistente del sitio no supo responder, por tema (no se guarda la pregunta). -->
         <section class="clics" *ngIf="datos.asistente && datos.asistente.sinRespuesta > 0">
           <h6>Lo que tu asistente no supo responder</h6>

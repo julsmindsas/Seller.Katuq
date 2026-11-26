@@ -489,7 +489,13 @@ export interface MetricasSitio {
   /** Ticket 1238: lo mismo por código de cupón o de influenciador. */
   porCupon?: FilaOrigen[];
   /** Mensajes que atendió el asistente del sitio y en cuántos le faltó el dato, por tema. */
-  asistente?: { mensajes: number; sinRespuesta: number; temas: { tema: string; veces: number }[] };
+  asistente?: {
+    mensajes: number; sinRespuesta: number; temas: { tema: string; veces: number }[];
+    /** Mensajes del período que se atendieron sin IA por falta de créditos. */
+    sinCupo?: number;
+    /** Respuestas con IA del mes de todo el comercio; `limite` -1 es sin tope. */
+    cupo?: { usadas: number; limite: number; reinicia: string } | null;
+  };
   visitantesUnicos: number;
   /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
   conversion: number | null;

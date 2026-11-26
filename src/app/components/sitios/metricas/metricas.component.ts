@@ -270,6 +270,25 @@ export class MetricasComponent implements OnInit {
     });
   }
 
+  /** El consumo del mes del asistente, solo si hay algo que contar (uso o un tope). */
+  get cupoAsistente(): { usadas: number; limite: number; reinicia: string } | null {
+    const c = this.datos && this.datos.asistente ? this.datos.asistente.cupo : null;
+    return c && (c.usadas > 0 || c.limite >= 0) ? c : null;
+  }
+
+  /** «1 de diciembre»: el día en que se reinicia el consumo, en español sin depender del idioma del navegador. */
+  diaDeReinicio(iso: string): string {
+    const d = new Date(iso || '');
+    if (isNaN(d.getTime())) return 'primer día del mes';
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return `${d.getDate()} de ${meses[d.getMonth()]}`;
+  }
+
+  /** 2000 → «2.000». */
+  enMiles(n: number | undefined): string {
+    return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
   /** Nombre que ve el comercio para cada tema que el asistente no supo responder. */
   temaDelAsistente(tema: string): string {
     const nombres: Record<string, string> = {
