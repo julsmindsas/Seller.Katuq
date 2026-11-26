@@ -7,6 +7,7 @@ import { SelectorEquipoModule } from '../../../shared/components/selector-equipo
 import { ChatDuenoComponent } from './chat-dueno/chat-dueno.component';
 import { ChatCierreComponent } from './chat-cierre/chat-cierre.component';
 import { ChatEtiquetasComponent } from './chat-etiquetas/chat-etiquetas.component';
+import { ChatAyudaComponent } from './chat-ayuda/chat-ayuda.component';
 import { ChatRapidosComponent } from './chat-rapidos/chat-rapidos.component';
 import { ChatNotasComponent } from './chat-notas/chat-notas.component';
 import { ChipLineaComponent } from './chip-linea/chip-linea.component';
@@ -26,6 +27,7 @@ import { ChipLineaComponent } from './chip-linea/chip-linea.component';
     ChatCierreComponent,
     ChatEtiquetasComponent,
     ChatRapidosComponent,
+    ChatAyudaComponent,
   ],
   exports: [
     ChatDuenoComponent,
@@ -34,6 +36,7 @@ import { ChipLineaComponent } from './chip-linea/chip-linea.component';
     ChatCierreComponent,
     ChatEtiquetasComponent,
     ChatRapidosComponent,
+    ChatAyudaComponent,
   ],
 })
 export class InboxCoreModule {}

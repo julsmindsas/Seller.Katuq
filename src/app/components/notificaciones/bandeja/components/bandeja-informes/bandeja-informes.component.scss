@@ -1,0 +1,241 @@
+// Pestaña Informes (D-729) — base D-400/D-131: plano, tarjetas blancas sobre fondo lila, acento #5F3FE0,
+// sin gradientes. Ninguna clase lleva «p-» ni «chip-» (trampa de CSS global) y todo span con texto trae
+// color y tamaño propios. Las tablas anchas se desplazan dentro de su tarjeta, nunca la página.
+@import '../../../../../shared/styles/config-pagina';
+
+:host { display: block; min-width: 0; }
+:host([hidden]) { display: none; }
+
+.inf {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: $cfg-ink;
+
+  button, input, select { font-family: inherit; letter-spacing: normal; }
+  p, h2, label { letter-spacing: normal; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+
+.inf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: $cfg-shadow-panel;
+}
+
+.inf-titulo { margin: 0; color: $cfg-ink; font-size: 15px !important; font-weight: 800; }
+.inf-cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.inf-nota { margin: 0; color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+.inf-error { margin: 0; color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+
+.inf-aviso {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-warn-soft;
+  color: $cfg-warn;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+// ── Filtros ──
+.inf-filtros__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.inf-filtros__pie { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+.inf-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+}
+
+.inf-caja {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  background: $cfg-chip-bg;
+  color: $cfg-ink;
+  font-size: 14px;
+  &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
+}
+
+.inf-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  background: $cfg-accent;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: $cfg-accent-hover; }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+
+  &--sec {
+    border-color: var(--ds-line-strong);
+    background: var(--ds-surface);
+    color: $cfg-body;
+    &:hover:not(:disabled) { background: $cfg-tint; color: $cfg-accent-ink; }
+  }
+}
+
+// ── Estados ──
+.inf-estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  border: 1px solid $cfg-line;
+  color: $cfg-muted;
+  font-size: 13px;
+
+  &__texto { color: $cfg-err; font-size: 13px; font-weight: 700; }
+  &--error { background: $cfg-err-soft; }
+}
+
+.inf-rango {
+  margin: 0;
+  color: $cfg-muted;
+  font-size: 12.5px;
+  &__carga { margin-left: 8px; color: $cfg-accent-ink; font-size: 12.5px; font-weight: 700; }
+}
+
+// ── Tarjetas de cifras ──
+.inf-cifras {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+
+  @media (max-width: 1199px) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 767px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 399px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.inf-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: $cfg-shadow-panel;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  &__valor { color: $cfg-ink; font-size: 28px; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
+  &__valor--alerta { color: $cfg-err; }
+  &__nota { color: $cfg-muted; font-size: 11.5px; line-height: 1.4; }
+}
+
+// ── Tablas ──
+.inf-tablas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  min-width: 0;
+
+  @media (max-width: 399px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.inf-scroll { min-width: 0; overflow-x: auto; }
+
+.inf-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  &--ancha { min-width: 1560px; }
+}
+
+.inf-th {
+  padding: 8px 8px;
+  border-bottom: 1px solid $cfg-line;
+  color: $cfg-muted;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  &--num { text-align: right; }
+}
+
+.inf-td {
+  padding: 9px 8px;
+  border-bottom: 1px solid $cfg-line-soft;
+  color: $cfg-ink;
+  font-size: 13px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+  &--num { text-align: right; font-weight: 700; white-space: nowrap; }
+  &--nowrap { white-space: nowrap; }
+  &--corto { max-width: 160px; }
+}
+
+.inf-pill {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: $cfg-ok-soft;
+  color: $cfg-ok;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+  &--cerrado { background: $cfg-chip-bg; color: $cfg-muted; }
+}
+
+.inf-paginas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+
+.inf-vacio {
+  align-items: center;
+  padding: 24px 16px;
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: $cfg-tile;
+    color: $cfg-accent-ink;
+    font-size: 26px;
+  }
+  &__titulo { margin: 0; color: $cfg-ink; font-size: 15px; font-weight: 800; }
+  &__texto { margin: 0; color: $cfg-muted; font-size: 12.5px; }
+}

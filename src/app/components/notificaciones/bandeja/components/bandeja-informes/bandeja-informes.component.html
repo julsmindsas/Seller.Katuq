@@ -1,0 +1,266 @@
+<div class="inf">
+  <!-- Filtros -->
+  <section class="inf-card inf-filtros" aria-label="filtros">
+    <div class="inf-filtros__rejilla">
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.desde' | translate }}</span>
+        <input class="inf-caja" type="date" [(ngModel)]="form.desde" (ngModelChange)="tocar()" />
+      </label>
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.hasta' | translate }}</span>
+        <input class="inf-caja" type="date" [(ngModel)]="form.hasta" (ngModelChange)="tocar()" />
+      </label>
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.canal' | translate }}</span>
+        <select class="inf-caja" [(ngModel)]="form.canal" (ngModelChange)="tocar()">
+          <option value="">{{ 'notificaciones.bandeja.informes.todos' | translate }}</option>
+          <option *ngFor="let c of canales" [value]="c">{{ nombreCanal(c) }}</option>
+        </select>
+      </label>
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.numero' | translate }}</span>
+        <select class="inf-caja" [(ngModel)]="form.lineId" (ngModelChange)="tocar()">
+          <option value="">{{ 'notificaciones.bandeja.informes.todos' | translate }}</option>
+          <option *ngFor="let l of lineas" [value]="l.id">{{ l.nombre }}</option>
+        </select>
+      </label>
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.cola' | translate }}</span>
+        <select class="inf-caja" [(ngModel)]="form.colaId" (ngModelChange)="tocar()">
+          <option value="">{{ 'notificaciones.bandeja.informes.todas' | translate }}</option>
+          <option *ngFor="let c of colas" [value]="c.id">{{ c.nombre }}</option>
+        </select>
+      </label>
+      <label class="inf-campo">
+        <span class="inf-campo__etiqueta">{{ 'notificaciones.bandeja.informes.asesor' | translate }}</span>
+        <select class="inf-caja" [(ngModel)]="form.asesor" (ngModelChange)="tocar()">
+          <option value="">{{ 'notificaciones.bandeja.informes.todos' | translate }}</option>
+          <option *ngFor="let a of asesores" [value]="a.email">{{ a.nombre || a.email }}</option>
+          <option [value]="sistema">{{ 'notificaciones.bandeja.informes.sistema' | translate }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="inf-filtros__pie">
+      <button type="button" class="inf-btn" [disabled]="cargando" (click)="ver()">
+        {{ 'notificaciones.bandeja.informes.ver' | translate }}
+      </button>
+      <span class="inf-nota">{{ 'notificaciones.bandeja.informes.maxDias' | translate: { n: maxDias } }}</span>
+      <span class="inf-error" role="alert" *ngIf="errorFiltro">{{ errorFiltro | translate: { n: maxDias } }}</span>
+    </div>
+  </section>
+
+  <!-- Estados -->
+  <p class="inf-estado" *ngIf="cargando && !informe">{{ 'notificaciones.whatsapp.list.loading' | translate }}</p>
+
+  <div class="inf-estado inf-estado--error" role="alert" *ngIf="error && !cargando">
+    <span class="inf-estado__texto">{{ mensajeError || ('notificaciones.bandeja.informes.errorCarga' | translate) }}</span>
+    <button type="button" class="inf-btn inf-btn--sec" (click)="reintentar()">
+      {{ 'notificaciones.whatsapp.list.retry' | translate }}
+    </button>
+  </div>
+
+  <ng-container *ngIf="informe as inf">
+    <p class="inf-rango">
+      {{ 'notificaciones.bandeja.informes.rango' | translate: { desde: inf.rango.desde, hasta: inf.rango.hasta } }}
+      <span class="inf-rango__carga" *ngIf="cargando">{{ 'notificaciones.whatsapp.list.loading' | translate }}</span>
+    </p>
+
+    <!-- Tarjetas -->
+    <div class="inf-cifras">
+      <div class="inf-cifra">
+        <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.creados' | translate }}</span>
+        <span class="inf-cifra__valor">{{ inf.resumen.creados }}</span>
+      </div>
+      <div class="inf-cifra" [title]="'notificaciones.bandeja.informes.cerradosNota' | translate">
+        <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.cerrados' | translate }}</span>
+        <span class="inf-cifra__valor">{{ inf.resumen.cerrados }}</span>
+      </div>
+      <div class="inf-cifra">
+        <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.abiertos' | translate }}</span>
+        <span class="inf-cifra__valor">{{ inf.resumen.abiertos }}</span>
+      </div>
+      <div class="inf-cifra">
+        <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.sinResponder' | translate }}</span>
+        <span class="inf-cifra__valor" [class.inf-cifra__valor--alerta]="inf.resumen.sinResponder > 0">{{ inf.resumen.sinResponder }}</span>
+      </div>
+      <div class="inf-cifra">
+        <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.primeraRespuesta' | translate }}</span>
+        <span class="inf-cifra__valor">{{ seg(inf.resumen.primeraRespuestaSeg) }}</span>
+        <span class="inf-cifra__nota">{{ 'notificaciones.bandeja.informes.primeraNota' | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Vacío honesto -->
+    <div class="inf-card inf-vacio" *ngIf="!hayDatos">
+      <span class="inf-vacio__icono"><i class="pi pi-chart-bar" aria-hidden="true"></i></span>
+      <p class="inf-vacio__titulo">{{ 'notificaciones.bandeja.informes.vacioTitulo' | translate }}</p>
+      <p class="inf-vacio__texto">{{ 'notificaciones.bandeja.informes.vacioTexto' | translate }}</p>
+    </div>
+
+    <ng-container *ngIf="hayDatos">
+      <!-- Tablas pequeñas -->
+      <div class="inf-tablas">
+        <section class="inf-card">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.porCanal' | translate }}</h2>
+          <div class="inf-scroll">
+            <table class="inf-tabla">
+              <thead><tr>
+                <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCanal' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCreados' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCerrados' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let f of inf.resumen.porCanal; trackBy: trackIdx">
+                  <td class="inf-td">{{ nombreCanal(f.clave) }}</td>
+                  <td class="inf-td inf-td--num">{{ f.creados }}</td>
+                  <td class="inf-td inf-td--num">{{ f.cerrados }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="inf-card">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.porCola' | translate }}</h2>
+          <div class="inf-scroll">
+            <table class="inf-tabla">
+              <thead><tr>
+                <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCola' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCreados' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCerrados' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let f of inf.resumen.porCola; trackBy: trackIdx">
+                  <td class="inf-td">{{ claveNombre('cola', f) ? (claveNombre('cola', f)! | translate) : f.nombre }}</td>
+                  <td class="inf-td inf-td--num">{{ f.creados }}</td>
+                  <td class="inf-td inf-td--num">{{ f.cerrados }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="inf-card">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.porAsesor' | translate }}</h2>
+          <div class="inf-scroll">
+            <table class="inf-tabla">
+              <thead><tr>
+                <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colAsesor' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCreados' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colCerrados' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let f of inf.resumen.porAsesor; trackBy: trackIdx">
+                  <td class="inf-td">{{ claveNombre('asesor', f) ? (claveNombre('asesor', f)! | translate) : f.nombre }}</td>
+                  <td class="inf-td inf-td--num">{{ f.creados }}</td>
+                  <td class="inf-td inf-td--num">{{ f.cerrados }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="inf-card">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.porMotivo' | translate }}</h2>
+          <p class="inf-nota" *ngIf="!inf.resumen.porMotivo.length">{{ 'notificaciones.bandeja.informes.sinMotivos' | translate }}</p>
+          <div class="inf-scroll" *ngIf="inf.resumen.porMotivo.length">
+            <table class="inf-tabla">
+              <thead><tr>
+                <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colMotivo' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colTotal' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let f of inf.resumen.porMotivo; trackBy: trackIdx">
+                  <td class="inf-td">{{ f.nombre }}</td>
+                  <td class="inf-td inf-td--num">{{ f.total }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="inf-card">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.porEtiqueta' | translate }}</h2>
+          <p class="inf-nota" *ngIf="!inf.resumen.porEtiqueta.length">{{ 'notificaciones.bandeja.informes.sinEtiquetas' | translate }}</p>
+          <div class="inf-scroll" *ngIf="inf.resumen.porEtiqueta.length">
+            <table class="inf-tabla">
+              <thead><tr>
+                <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colEtiqueta' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colTotal' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let f of inf.resumen.porEtiqueta; trackBy: trackIdx">
+                  <td class="inf-td">{{ f.nombre }}</td>
+                  <td class="inf-td inf-td--num">{{ f.total }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- Auditoría -->
+      <section class="inf-card">
+        <div class="inf-cabeza">
+          <h2 class="inf-titulo">{{ 'notificaciones.bandeja.informes.auditoria' | translate }}</h2>
+          <button type="button" class="inf-btn inf-btn--sec" [disabled]="descargando" (click)="bajar()">
+            {{ (descargando ? 'notificaciones.bandeja.informes.descargando' : 'notificaciones.bandeja.informes.descargar') | translate }}
+          </button>
+        </div>
+        <p class="inf-aviso" role="status" *ngIf="truncado">{{ 'notificaciones.bandeja.informes.truncado' | translate }}</p>
+        <p class="inf-error" role="alert" *ngIf="errorDescarga">{{ 'notificaciones.bandeja.informes.errorDescarga' | translate }}</p>
+
+        <div class="inf-scroll">
+          <table class="inf-tabla inf-tabla--ancha">
+            <thead><tr>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCanal' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colNumero' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colContacto' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colAsesor' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCola' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colEtiquetas' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCreacion' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colUltimo' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colEstado' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colMotivo' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colCerroPor' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colDuracion' | translate }}</th>
+              <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colPrimera' | translate }}</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let f of inf.filas; trackBy: trackFila">
+                <td class="inf-td">{{ nombreCanal(f.canal) }}</td>
+                <td class="inf-td inf-td--corto">{{ nombreLinea(f.linea) }}</td>
+                <td class="inf-td">{{ f.contacto }}</td>
+                <td class="inf-td">{{ f.asesor || '—' }}</td>
+                <td class="inf-td">{{ f.cola || '—' }}</td>
+                <td class="inf-td">{{ f.etiquetas?.length ? f.etiquetas.join(', ') : '—' }}</td>
+                <td class="inf-td inf-td--nowrap">{{ f.creadoEn ? (f.creadoEn | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                <td class="inf-td inf-td--nowrap">{{ f.ultimoMensajeEn ? (f.ultimoMensajeEn | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                <td class="inf-td">
+                  <span class="inf-pill" [class.inf-pill--cerrado]="f.estado === 'cerrado'">{{ ('notificaciones.bandeja.informes.estado.' + f.estado) | translate }}</span>
+                </td>
+                <td class="inf-td">{{ f.motivoCierre || '—' }}</td>
+                <td class="inf-td">{{ f.cerradoPor === 'Sistema' ? ('notificaciones.bandeja.informes.sistema' | translate) : (f.cerradoPor || '—') }}</td>
+                <td class="inf-td inf-td--nowrap">{{ min(f.duracionMin) }}</td>
+                <td class="inf-td inf-td--nowrap">{{ seg(f.primeraRespuestaSeg) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="inf-paginas" *ngIf="inf.paginas > 1">
+          <button type="button" class="inf-btn inf-btn--sec" [disabled]="cargando || inf.pagina <= 1" (click)="irA(inf.pagina - 1)">
+            {{ 'notificaciones.bandeja.informes.anterior' | translate }}
+          </button>
+          <span class="inf-nota">{{ 'notificaciones.bandeja.informes.pagina' | translate: { n: inf.pagina, total: inf.paginas, filas: inf.total } }}</span>
+          <button type="button" class="inf-btn inf-btn--sec" [disabled]="cargando || inf.pagina >= inf.paginas" (click)="irA(inf.pagina + 1)">
+            {{ 'notificaciones.bandeja.informes.siguiente' | translate }}
+          </button>
+        </div>
+        <p class="inf-nota" *ngIf="inf.paginas <= 1">{{ 'notificaciones.bandeja.informes.totalFilas' | translate: { filas: inf.total } }}</p>
+        <p class="inf-nota">{{ 'notificaciones.bandeja.informes.notaDuracion' | translate }}</p>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

@@ -17,6 +17,8 @@ import {
   DuenoChat,
   EstadoAsesor,
   EtiquetaChat,
+  FiltrosInformeAtencion,
+  InformeAtencion,
   LineaDeCola,
   MessagingLine,
   MiembroAtencion,
@@ -24,14 +26,17 @@ import {
   NotaChat,
   RespuestaRapida,
   ResumenAtencion,
+  ResultadoUsoSugerencia,
+  TextoSugerido,
 } from "../../../../../shared/services/messaging/messaging.models";
+import { ResultadoUso } from "../../../inbox-core/chat-ayuda/chat-ayuda.component";
 import { NavService } from "../../../../../shared/services/nav.service";
 import { esFamiliaAdministrador } from "../../../../../shared/utils/roles";
 import { MetaInboxService } from "../../../meta-inbox/meta-inbox.service";
 import { MetaConexiones, MetaHilo } from "../../../meta-inbox/models/meta-thread.model";
 import { WhatsappThread } from "../../../whatsapp-inbox/models/whatsapp-thread.model";
 import { BandejaService } from "../../bandeja.service";
-import { CANALES_BANDEJA, RUTA_MENU_CANAL } from "../../bandeja.canales";
+import { CANAL_BANDEJA_LABEL, CANALES_BANDEJA, RUTA_MENU_CANAL } from "../../bandeja.canales";
 import {
   CanalBandeja,
   CargaBandeja,
@@ -39,9 +44,10 @@ import {
 } from "../../bandeja.models";
 import { mezclar } from "../../bandeja.util";
 import { normalizarCola } from "../../bandeja.colas";
+import { construirCsv } from "../bandeja-informes/bandeja-informes.util";
 
-/** Vistas de la bandeja: la lista de chats o, para quien coordina, la pestaña Equipo. */
-export type VistaBandeja = "chats" | "equipo";
+/** Vistas de la bandeja: la lista de chats o, para quien coordina, las pestañas Equipo e Informes (D-729). */
+export type VistaBandeja = "chats" | "equipo" | "informes";
 
 /** Cada cuánto se vuelve a leer la lista: el mismo intervalo de la lista del buzón de WhatsApp. */
 const REFRESCO_MS = 10000;
@@ -123,12 +129,31 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   /** Misma referencia siempre: lo que reciben los hijos cuando el chat no trae etiquetas. */
   private readonly sinEtiquetas: string[] = [];
 
+  // ─── Informes de atención (fase H, D-729). Solo lectura; campos estables ───
+  /** Se crea al entrar por primera vez y después solo se oculta: conserva filtros y resultados. */
+  informesVisto = false;
+  informe: InformeAtencion | null = null;
+  informeCargando = false;
+  informeError = false;
+  informeMensaje = "";
+  descargandoInforme = false;
+  errorDescargaInforme = false;
+  informeTruncado = false;
+  /** Cada lectura invalida la anterior: una respuesta tardía no pisa a la nueva. */
+  private informeSeq = 0;
+
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
   resumenError = false;
   guardandoAjustes = false;
   ajustesGuardados = false;
   errorAjustes = false;
+
+  // Ayuda de Opttia (D-730): texto que «Usar» pone en el cuadro de escribir y lo que el cuadro contestó.
+  // Son campos estables (no se arman en la plantilla) y se sueltan al cambiar de chat.
+  textoSugerido: TextoSugerido | null = null;
+  resultadoUso: ResultadoUso | null = null;
+  private sugeridoN = 0;
 
   // Notas internas del chat abierto
   notasAbiertas = false;
@@ -281,10 +306,92 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   // ─── Pestañas, filtro por asesor y estado ───
 
   cambiarVista(vista: VistaBandeja): void {
-    if (vista === "equipo" && !this.coordina) return;
+    if ((vista === "equipo" || vista === "informes") && !this.coordina) return;
     this.vista = vista;
+    if (vista === "informes" && !this.informesVisto) {
+      this.informesVisto = true;
+      this.consultarInforme({}); // rango por defecto del servidor: los últimos 7 días
+    }
     // Al entrar a Equipo se trae el catálogo al día (lo escrito en una tarjeta no se pisa: ver `sucio`).
     if (vista === "equipo" && this.esAdmin) this.cargarCatalogos();
+  }
+
+  /** Lee el informe (D-729). Un error 422 muestra el mensaje del servidor; lo anterior se conserva a la vista. */
+  consultarInforme(filtros: FiltrosInformeAtencion): void {
+    const seq = ++this.informeSeq;
+    this.informeCargando = true;
+    this.informeError = false;
+    this.informeMensaje = "";
+    this.atencionSrv
+      .informe(filtros)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (seq !== this.informeSeq) return;
+          this.informe = res;
+          this.informeCargando = false;
+          this.informeTruncado = false;
+        },
+        error: (err) => {
+          if (seq !== this.informeSeq) return;
+          this.informeCargando = false;
+          this.informeError = true;
+          const m = err?.status === 422 ? err?.error?.message : "";
+          this.informeMensaje = typeof m === "string" ? m : "";
+        },
+      });
+  }
+
+  /** Pide todas las filas (`pagina=0`) y arma el CSV en el navegador. Nada se guarda en el servidor. */
+  descargarInforme(filtros: FiltrosInformeAtencion): void {
+    if (this.descargandoInforme) return;
+    this.descargandoInforme = true;
+    this.errorDescargaInforme = false;
+    this.informeTruncado = false;
+    this.atencionSrv
+      .informe({ ...filtros, pagina: 0 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.descargandoInforme = false;
+          this.informeTruncado = !!res.truncado;
+          const csv = construirCsv(res.filas || [], {
+            cabeceras: [
+              "notificaciones.bandeja.informes.colCanal",
+              "notificaciones.bandeja.informes.colNumero",
+              "notificaciones.bandeja.informes.colContacto",
+              "notificaciones.bandeja.informes.colAsesor",
+              "notificaciones.bandeja.informes.colCola",
+              "notificaciones.bandeja.informes.colEtiquetas",
+              "notificaciones.bandeja.informes.colCreacion",
+              "notificaciones.bandeja.informes.colUltimo",
+              "notificaciones.bandeja.informes.colEstado",
+              "notificaciones.bandeja.informes.colMotivo",
+              "notificaciones.bandeja.informes.colCerroPor",
+              "notificaciones.bandeja.informes.colDuracionMin",
+              "notificaciones.bandeja.informes.colPrimeraSeg",
+            ].map((k) => this.traducir(k)),
+            abierto: this.traducir("notificaciones.bandeja.informes.estado.abierto"),
+            cerrado: this.traducir("notificaciones.bandeja.informes.estado.cerrado"),
+            sistema: this.traducir("notificaciones.bandeja.informes.sistema"),
+            nombreCanal: (c) => CANAL_BANDEJA_LABEL[c as CanalBandeja] || c,
+            nombreLinea: (id) => (this.lineasCola.find((l) => l.id === id) || { nombre: "" }).nombre || CANAL_BANDEJA_LABEL[String(id).replace(/^red_/, "") as CanalBandeja] || id,
+          });
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `informe-atencion-${res.rango.desde}-${res.rango.hasta}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        },
+        error: () => {
+          this.descargandoInforme = false;
+          this.errorDescargaInforme = true;
+        },
+      });
   }
 
   elegirAsesor(asesor: string | null): void {
@@ -531,7 +638,20 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.cargar(true);
   }
 
+  /** «Usar» de la ayuda de Opttia: el chat abierto lo pone en su cuadro sin enviar (D-730). */
+  usarSugerencia(texto: string): void {
+    this.resultadoUso = null;
+    this.textoSugerido = { texto, n: ++this.sugeridoN };
+  }
+
+  /** El cuadro del chat abierto dice qué pasó con la sugerencia (usada, bloqueado o cancelada). */
+  alResultadoSugerido(estado: ResultadoUsoSugerencia): void {
+    this.resultadoUso = { estado, n: ++this.sugeridoN };
+  }
+
   private reiniciarAcciones(): void {
+    this.textoSugerido = null;
+    this.resultadoUso = null;
     this.ocupadoCierre = false;
     this.errorCierre = "";
     this.ocupadoEtiquetas = false;

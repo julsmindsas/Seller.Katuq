@@ -6,16 +6,20 @@ import { catchError, map } from 'rxjs/operators';
 import { BaseService } from '../base.service';
 import {
   AccionHilo,
+  AyudaOpttia,
   AjustesAtencion,
   CatalogosAtencion,
   ColaAtencion,
   ColasAtencion,
   DuenoChat,
   EstadoAsesor,
+  FiltrosInformeAtencion,
   HiloAtencion,
+  InformeAtencion,
   MiembroAtencion,
   NotaChat,
   ResumenAtencion,
+  TipoAyudaOpttia,
   Transferencia,
   YoAtencion,
 } from './messaging.models';
@@ -52,6 +56,17 @@ export class AtencionService extends BaseService {
   /** Solo quien coordina (si no, 403). */
   resumen(): Observable<ResumenAtencion> {
     return this.get<ResumenAtencion>(`${this.base}/resumen`);
+  }
+
+  /** Informe de atención (D-729). Solo quien coordina (si no, 403); rango inválido = 422. Solo lectura. */
+  informe(filtros: FiltrosInformeAtencion = {}): Observable<InformeAtencion> {
+    const partes: string[] = [];
+    Object.entries(filtros).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === '') return;
+      partes.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+    });
+    const qs = partes.length ? `?${partes.join('&')}` : '';
+    return this.getSinLoader<InformeAtencion>(`${this.base}/informe${qs}`);
   }
 
   /** GET: quien coordina. */
@@ -161,6 +176,15 @@ export class AtencionService extends BaseService {
     return this.post<{ nota: NotaChat }>(`${this.ruta(threadId)}/notas`, { texto, menciones }).pipe(
       map((res) => res.nota),
     );
+  }
+
+  /**
+   * Ayuda de Opttia (D-730): resumen del chat o respuesta sugerida. Solo lectura del chat; no envía ni guarda.
+   * Sin loader global (la pantalla muestra «Opttia está pensando»). Errores: 422, 403, 429 `CUPO_AGOTADO`,
+   * 503 `OPTTIA_NO_DISPONIBLE`; el mensaje viene en `error.message`.
+   */
+  ayuda(threadId: string, tipo: TipoAyudaOpttia): Observable<AyudaOpttia> {
+    return this.postSinLoader<AyudaOpttia>(`${this.ruta(threadId)}/ayuda`, { tipo });
   }
 
   private normalizar(r: Partial<AccionHilo> | null): AccionHilo {

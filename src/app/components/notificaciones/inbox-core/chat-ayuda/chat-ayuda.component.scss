@@ -1,0 +1,130 @@
+// Ayuda de Opttia al asesor (D-730). Plano, acento #5F3FE0, tokens --ds-* (claro y oscuro).
+// Ningún nombre de clase lleva «p-» (trampa de CSS global) y cada span trae color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+
+:host { display: contents; }
+
+.ay-menu { position: relative; display: inline-flex; }
+
+.ay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 14px !important; }
+  &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &.is-activo { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &:disabled { opacity: .6; cursor: default; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &--fuerte {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    color: var(--ds-on-accent);
+    &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; color: var(--ds-on-accent); }
+    .ay-btn__texto { color: var(--ds-on-accent); }
+  }
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; }
+}
+
+.ay-opciones {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: 0 10px 30px rgba(33, 31, 58, .12);
+}
+
+.ay-opcion {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: $cfg-body;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; letter-spacing: normal; }
+  &:hover { background: $cfg-tint; color: $cfg-accent-ink; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+
+.ay-bloque {
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+  text-align: left;
+}
+
+.ay-etiqueta {
+  color: $cfg-muted;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.ay-cuerpo {
+  margin: 0;
+  color: $cfg-ink;
+  font-size: 13.5px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ay-estado {
+  margin: 0;
+  color: $cfg-accent-ink;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+.ay-aviso {
+  margin: 0;
+  color: $cfg-muted;
+  font-size: 12px;
+  letter-spacing: normal;
+
+  &--alerta { color: $cfg-warn; font-weight: 700; font-size: 12.5px; }
+}
+
+.ay-error {
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+
+  &__texto { color: $cfg-err; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+}
+
+.ay-acciones { display: flex; flex-wrap: wrap; gap: 8px; }

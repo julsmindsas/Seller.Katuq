@@ -53,7 +53,33 @@
       [attr.aria-pressed]="vista === 'equipo'"
       (click)="cambiarVista('equipo')"
     >{{ 'notificaciones.bandeja.tab.equipo' | translate }}</button>
+    <button
+      type="button"
+      class="bj-tab"
+      [class.is-activo]="vista === 'informes'"
+      [attr.aria-pressed]="vista === 'informes'"
+      (click)="cambiarVista('informes')"
+    >{{ 'notificaciones.bandeja.tab.informes' | translate }}</button>
   </div>
+
+  <!-- Informes (D-729): se crea al entrar y solo se oculta, para conservar filtros y resultados -->
+  <app-bandeja-informes
+    *ngIf="atencion && coordina && informesVisto"
+    [hidden]="vista !== 'informes'"
+    [informe]="informe"
+    [cargando]="informeCargando"
+    [error]="informeError"
+    [mensajeError]="informeMensaje"
+    [descargando]="descargandoInforme"
+    [errorDescarga]="errorDescargaInforme"
+    [truncado]="informeTruncado"
+    [canales]="canales"
+    [lineas]="lineasCola"
+    [colas]="colas"
+    [asesores]="asesores"
+    (consultar)="consultarInforme($event)"
+    (descargar)="descargarInforme($event)"
+  ></app-bandeja-informes>
 
   <app-bandeja-equipo
     *ngIf="atencion && coordina && vista === 'equipo'"
@@ -87,7 +113,7 @@
   ></app-bandeja-equipo>
 
   <!-- La lista se oculta (no se destruye) al ver Equipo: conserva sus filtros -->
-  <div class="bj__cuerpo" [class.bj__cuerpo--oculto]="atencion && coordina && vista === 'equipo'">
+  <div class="bj__cuerpo" [class.bj__cuerpo--oculto]="atencion && coordina && vista !== 'chats'">
     <!-- Columna izquierda: una sola lista con todos los canales -->
     <aside class="bj__lista">
       <app-bandeja-lista
@@ -146,6 +172,11 @@
           [error]="errorEtiquetas"
           (guardar)="etiquetarChat($event)"
         ></app-chat-etiquetas>
+        <app-chat-ayuda
+          [threadId]="threadIdAbierto"
+          [resultado]="resultadoUso"
+          (usar)="usarSugerencia($event)"
+        ></app-chat-ayuda>
         <button
           type="button"
           class="bj-barra__btn"
@@ -190,6 +221,8 @@
         [colas]="colasActivas"
         [rapidos]="rapidos"
         [miNombre]="miNombre"
+        [textoSugerido]="textoSugerido"
+        (sugeridoResultado)="alResultadoSugerido($event)"
         (duenoCambiado)="onDuenoCambiado($event)"
         (colaCambiada)="onColaCambiada($event)"
         (backToList)="volver()"
@@ -214,6 +247,8 @@
             [colas]="colasActivas"
             [rapidos]="rapidos"
             [miNombre]="miNombre"
+            [textoSugerido]="textoSugerido"
+            (sugeridoResultado)="alResultadoSugerido($event)"
             (duenoCambiado)="onDuenoCambiado($event)"
             (colaCambiada)="onColaCambiada($event)"
           ></app-meta-hilo-detalle>

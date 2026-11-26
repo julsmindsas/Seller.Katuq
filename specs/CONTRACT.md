@@ -14473,3 +14473,28 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Rutas nuevas: `GET`/`PUT /v1/messaging/atencion/catalogos`; en el hilo `cerrar`, `reabrir` y `etiquetas`.
 - **Queda para decidir (no construido):** seguimiento antes de las 24 horas y mensajes de «asesor asignado», «en espera» e «inactividad del cliente» (envían mensajes con costo: faltan topes y quién paga); registro de consentimiento con retención; campos del agente; respuestas rápidas con imagen o por cola; quitar la baja de un contacto de redes.
 - **Revisión y pruebas:** subagentes Sonnet con tres revisiones y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 19/19 (2 archivos nuevos locales, D-566) y envío de WhatsApp intacto. Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: crear etiqueta y respuesta rápida, etiquetar un chat, insertar con `/`, cerrar sin motivo (no deja) y con motivo, ver Cerrados y abrir de nuevo; sin scroll horizontal ni errores. No se probaron en vivo los mensajes de bienvenida y cierre ni el cierre automático.
+
+### 2026-11-26 — D-729: informes de atención en la bandeja única (CONV fase H, ticket 1306)
+
+- **Aprobación:** Daniel, 26-nov («aprobado a todas las fases» de CONV, D-631). Primera entrega de la fase H.
+- **D-729:**
+  - **Misma bandera `bandejaUnica`.** Pestaña «Informes» en la bandeja, solo para quien coordina. El informe no escribe nada.
+  - **Rango de fechas** en hora de Colombia, máximo 31 días (por defecto los últimos 7), con filtros por canal, número, cola y asesor. Entran los chats creados o cerrados en el rango.
+  - **Resumen:** chats nuevos, cerrados, siguen abiertos, sin responder, mediana de primera respuesta, y tablas por canal, cola, asesor, motivo de cierre y etiqueta.
+  - **Auditoría por chat** (50 por página) y **descarga en CSV** (hasta 5000 chats): canal, número, contacto enmascarado, asesor, cola, etiquetas, creación, último mensaje, estado, motivo, quién cerró, duración aproximada y primera respuesta. Sin teléfonos completos ni texto de mensajes.
+  - **Campo nuevo `messaging_threads.primeraRespuestaSeg`:** segundos entre el primer mensaje del cliente sin responder y la primera respuesta de una persona. Se decide una sola vez; si respondió primero el bot o el chat es anterior a esta entrega, queda sin medir.
+  - Ruta nueva `GET /v1/messaging/atencion/informe`. Sin colecciones, banderas ni índices nuevos: una lectura de los chats del comercio y filtros en memoria.
+- **Queda para decidir (necesita guardar datos nuevos):** tiempo de resolución por ciclos, historial de cierres, transferencias y reaperturas, mensajes por día, bot contra asesor, satisfacción, tiempo de conexión del asesor (D-634) e índice por fecha cuando un comercio tenga muchos chats.
+- **Revisión y pruebas:** ver D-730 (se construyeron y revisaron juntas).
+
+### 2026-11-26 — D-730: Opttia ayuda al asesor en el chat (CONV fase F, ticket 1311)
+
+- **Aprobación:** Daniel, 26-nov («aprobado a todas las fases» de CONV, D-631). Primera entrega de la fase F, sin tocar el bot de pedidos.
+- **D-730:**
+  - **Misma bandera `bandejaUnica`.** Botón «Opttia» en la barra del chat con dos acciones: **resumir el chat** y **sugerir una respuesta**.
+  - Opttia nunca envía nada al cliente ni guarda nada en el chat. La respuesta sugerida se pone en el cuadro de escribir solo cuando el asesor pulsa «Usar», y la puede cambiar.
+  - Pasa por el camino de IA aprobado (D-257, una pasada por Opttia/ADK). Viajan solo los últimos 30 mensajes de texto recortados, con correos y números largos enmascarados; no viajan teléfono, correo ni documento del cliente. No se enmascaran nombres ni direcciones que el cliente escriba.
+  - **Cupo:** cada uso cuenta en un contador mensual propio por comercio (`atencionAyuda`), con tope por defecto de 1000 al mes si el plan no define otro, y un freno de frecuencia por chat y por persona. Si el servicio de cupos falla, no se llama al modelo.
+  - Ruta nueva `POST /v1/messaging/atencion/threads/:threadId/ayuda`; solo quien puede ver el chat.
+- **Queda para decidir o con diff aprobado por Daniel:** bot en Instagram, Facebook y TikTok; nota interna automática cuando el bot entrega el chat (toca el despachador del bot); preguntas frecuentes sin IA; encuesta de satisfacción; audios; confirmar el tope de 1000 al mes.
+- **Revisión y pruebas (H y F):** subagentes Sonnet con tres revisiones y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 21/21 (2 archivos nuevos locales, D-566) y envío de WhatsApp intacto. Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: informe con filtros, rango mayor rechazado, descarga CSV, resumen real de un chat de prueba con Opttia y respuesta sugerida puesta en el cuadro; sin scroll horizontal ni errores.

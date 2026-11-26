@@ -1,0 +1,61 @@
+<!-- Botón «Opttia» con sus dos acciones -->
+<div class="ay-menu">
+  <button
+    type="button"
+    class="ay-btn"
+    [class.is-activo]="menu || fase !== 'reposo'"
+    [attr.aria-expanded]="menu"
+    aria-haspopup="true"
+    [disabled]="ocupado || !threadId"
+    (click)="alternar()"
+  >
+    <i class="fa fa-magic" aria-hidden="true"></i>
+    <span class="ay-btn__texto">{{ 'notificaciones.bandeja.ayuda.boton' | translate }}</span>
+  </button>
+  <div class="ay-opciones" *ngIf="menu" role="menu">
+    <button type="button" class="ay-opcion" role="menuitem" (click)="pedir('resumen')">
+      <span class="ay-opcion__texto">{{ 'notificaciones.bandeja.ayuda.resumir' | translate }}</span>
+    </button>
+    <button type="button" class="ay-opcion" role="menuitem" (click)="pedir('respuesta')">
+      <span class="ay-opcion__texto">{{ 'notificaciones.bandeja.ayuda.sugerir' | translate }}</span>
+    </button>
+  </div>
+</div>
+
+<!-- Bloque en línea: pensando, resumen, respuesta o error. Nada se guarda. -->
+<div class="ay-bloque" *ngIf="fase !== 'reposo'" [attr.aria-busy]="ocupado">
+  <p class="ay-estado" role="status" *ngIf="fase === 'pensando'">{{ 'notificaciones.bandeja.ayuda.pensando' | translate }}</p>
+
+  <ng-container *ngIf="fase === 'resumen'">
+    <span class="ay-etiqueta">{{ 'notificaciones.bandeja.ayuda.resumenTitulo' | translate }}</span>
+    <p class="ay-cuerpo">{{ resumen }}</p>
+    <ng-container *ngIf="pendiente">
+      <span class="ay-etiqueta">{{ 'notificaciones.bandeja.ayuda.pendiente' | translate }}</span>
+      <p class="ay-cuerpo">{{ pendiente }}</p>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="fase === 'respuesta'">
+    <span class="ay-etiqueta">{{ 'notificaciones.bandeja.ayuda.respuestaTitulo' | translate }}</span>
+    <p class="ay-cuerpo">{{ texto }}</p>
+    <p class="ay-aviso ay-aviso--alerta" role="status" *ngIf="bloqueado">{{ 'notificaciones.bandeja.ayuda.bloqueado' | translate }}</p>
+  </ng-container>
+
+  <div class="ay-error" role="alert" *ngIf="fase === 'error'">
+    <span class="ay-error__texto">{{ mensajeError || ('notificaciones.bandeja.ayuda.error' | translate) }}</span>
+  </div>
+
+  <p class="ay-aviso" *ngIf="fase === 'resumen' || fase === 'respuesta'">{{ 'notificaciones.bandeja.ayuda.aviso' | translate }}</p>
+
+  <div class="ay-acciones" *ngIf="fase !== 'pensando'">
+    <button type="button" class="ay-btn ay-btn--fuerte" *ngIf="fase === 'respuesta' && !bloqueado" (click)="usarTexto()">
+      <span class="ay-btn__texto">{{ 'notificaciones.bandeja.ayuda.usar' | translate }}</span>
+    </button>
+    <button type="button" class="ay-btn ay-btn--fuerte" *ngIf="fase === 'respuesta' && bloqueado" (click)="copiar()">
+      <span class="ay-btn__texto">{{ (copiado ? 'notificaciones.bandeja.ayuda.copiado' : 'notificaciones.bandeja.ayuda.copiar') | translate }}</span>
+    </button>
+    <button type="button" class="ay-btn" (click)="cerrar()">
+      <span class="ay-btn__texto">{{ (fase === 'respuesta' ? 'notificaciones.bandeja.ayuda.descartar' : 'notificaciones.bandeja.ayuda.cerrar') | translate }}</span>
+    </button>
+  </div>
+</div>

@@ -314,3 +314,93 @@ export interface AccionHilo {
   cierre: CierreChat | null;
   etiquetas: string[];
 }
+
+// ─── Informes de atención (fase H, D-729) ───
+
+/** Filtros de `GET /atencion/informe`. Fechas `AAAA-MM-DD` (hora de Colombia); `pagina` 0 = descarga completa. */
+export interface FiltrosInformeAtencion {
+  desde?: string;
+  hasta?: string;
+  canal?: string;
+  lineId?: string;
+  colaId?: string;
+  asesor?: string;
+  pagina?: number;
+}
+
+/** Una fila de cifras por canal, cola o asesor. */
+export interface CifraInforme {
+  clave: string;
+  nombre: string;
+  creados: number;
+  cerrados: number;
+}
+
+/** Una fila de «por motivo» o «por etiqueta». */
+export interface TotalInforme {
+  nombre: string;
+  total: number;
+}
+
+export interface ResumenInforme {
+  creados: number;
+  cerrados: number;
+  abiertos: number;
+  sinResponder: number;
+  /** Mediana en segundos; null si ningún chat la tiene. */
+  primeraRespuestaSeg: number | null;
+  conPrimeraRespuesta: number;
+  porCanal: CifraInforme[];
+  porCola: CifraInforme[];
+  porAsesor: CifraInforme[];
+  porMotivo: TotalInforme[];
+  porEtiqueta: TotalInforme[];
+}
+
+/** Fila de auditoría: nunca trae teléfonos completos ni texto de mensajes. */
+export interface FilaInforme {
+  threadId: string;
+  canal: string;
+  linea: string;
+  contacto: string;
+  asesor: string | null;
+  cola: string | null;
+  etiquetas: string[];
+  creadoEn: string | null;
+  ultimoMensajeEn: string | null;
+  estado: 'abierto' | 'cerrado';
+  motivoCierre: string | null;
+  cerradoPor: string | null;
+  duracionMin: number | null;
+  primeraRespuestaSeg: number | null;
+}
+
+export interface InformeAtencion {
+  rango: { desde: string; hasta: string };
+  resumen: ResumenInforme;
+  filas: FilaInforme[];
+  pagina: number;
+  paginas: number;
+  total: number;
+  /** Solo con `pagina=0`: hay más filas de las que caben en la descarga. */
+  truncado?: boolean;
+}
+
+// ─── Ayuda de Opttia al asesor (fase F, D-730) ───
+
+/** Qué pide el asesor: un resumen del chat o una respuesta sugerida. */
+export type TipoAyudaOpttia = 'resumen' | 'respuesta';
+
+/** `POST /atencion/threads/:id/ayuda`: no guarda nada en el chat ni envía nada al cliente. */
+export type AyudaOpttia =
+  | { tipo: 'resumen'; resumen: string; pendiente: string }
+  | { tipo: 'respuesta'; texto: string };
+
+/** Lo que el asesor eligió hacer con la sugerencia en el cuadro de escribir. */
+export type ResultadoUsoSugerencia = 'usado' | 'bloqueado' | 'cancelado';
+
+/** Texto sugerido para el cuadro de escribir; `n` cambia en cada uso para detectar repetidos. */
+export interface TextoSugerido {
+  texto: string;
+  n: number;
+}

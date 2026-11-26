@@ -5,11 +5,14 @@ import { takeUntil } from 'rxjs/operators';
 
 import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 import { AtencionService } from '../../../../../shared/services/messaging/atencion.service';
 import {
   ColaBasica,
   RespuestaRapida,
+  ResultadoUsoSugerencia,
+  TextoSugerido,
   DuenoChat,
   MiembroEquipo,
   Transferencia,
@@ -70,6 +73,10 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   @Input() rapidos: RespuestaRapida[] = [];
   /** [D-728] Nombre de quien escribe, para la variable {asesor}. */
   @Input() miNombre = '';
+  /** [D-730] Texto que la ayuda de Opttia quiere en el cuadro de escribir; `n` cambia en cada uso. */
+  @Input() textoSugerido: TextoSugerido | null = null;
+  /** [D-730] Qué pasó con la sugerencia: usada, cuadro bloqueado o el asesor no quiso reemplazar. */
+  @Output() sugeridoResultado = new EventEmitter<ResultadoUsoSugerencia>();
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
@@ -127,6 +134,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['textoSugerido'] && !changes['textoSugerido'].firstChange && this.textoSugerido) {
+      void this.aplicarSugerido(this.textoSugerido.texto);
+    }
     if (this.atencion && (changes['dueno'] || changes['hilo'])) {
       this.duenoActual = this.dueno || this.hilo?.owner || null;
     }
@@ -561,6 +571,38 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   /** [D-728] Las teclas del cuadro pasan primero por la lista de respuestas rápidas (flechas, Enter, Esc). */
   alTeclaRapidos(event: Event): void {
     this.rapidosLista?.alTecla(event as KeyboardEvent);
+  }
+
+  /**
+   * [D-730] «Usar» de la ayuda de Opttia: pone el texto en el cuadro sin enviar. Con texto escrito pregunta
+   * antes de reemplazar; con el cuadro bloqueado (solo lectura, ventana cerrada) no escribe y lo avisa.
+   */
+  private async aplicarSugerido(texto: string): Promise<void> {
+    // Se responde en el turno siguiente: emitir dentro de ngOnChanges cambiaría el padre ya revisado.
+    await Promise.resolve();
+    // La sugerencia es de ESTE chat: si cambia mientras se espera la pregunta, no se escribe en el otro.
+    const chatDeOrigen = `${this.canal}|${this.hilo?.identidadHash}`;
+    if (!this.puedeEscribir) {
+      this.sugeridoResultado.emit('bloqueado');
+      return;
+    }
+    if ((this.borrador || '').trim()) {
+      const r = await Swal.fire({
+        title: this.translate.instant('notificaciones.bandeja.ayuda.reemplazarTitulo'),
+        text: this.translate.instant('notificaciones.bandeja.ayuda.reemplazarTexto'),
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('notificaciones.bandeja.ayuda.reemplazarSi'),
+        cancelButtonText: this.translate.instant('notificaciones.bandeja.ayuda.reemplazarNo'),
+        confirmButtonColor: '#5F3FE0',
+      });
+      if (!r.isConfirmed || chatDeOrigen !== `${this.canal}|${this.hilo?.identidadHash}`) {
+        this.sugeridoResultado.emit('cancelado');
+        return;
+      }
+    }
+    this.borrador = texto;
+    this.sugeridoResultado.emit('usado');
   }
 
   /** [D-728] El texto de la respuesta rápida elegida reemplaza el comando; no se envía. */
