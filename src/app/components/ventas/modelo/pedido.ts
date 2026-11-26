@@ -396,6 +396,8 @@ export interface Facturacion {
   celular: string;
   departamento: string;
   correoElectronico: string;
+  /** Ticket 1651 (D-723): copias de la factura electrónica (hasta 5). */
+  correosCopia?: string[];
   nombres: string;
   pais: string;
   zonaCobro?: string;

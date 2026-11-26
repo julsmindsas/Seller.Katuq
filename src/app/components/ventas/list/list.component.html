@@ -539,6 +539,11 @@
                                                                     <small *ngFor="let fa of pedidoDetalle.facturasAnuladas" class="is-muted d-block">
                                                                         Anulada: {{ fa.invoiceNumber }} · NC {{ fa.notaCredito }}
                                                                     </small>
+                                                                    <!-- Ticket 1651 (D-723): copias por correo de la factura de SIIGO -->
+                                                                    <ng-container *ngIf="$any(pedidoDetalle).facturacionElectronica?.copiasCorreo as cc">
+                                                                        <small *ngIf="cc.enviado" class="is-muted d-block">{{ 'ventas.pedidoFacturacion.copiasEnviadas' | translate:{ correos: cc.para?.join(', ') } }}</small>
+                                                                        <small *ngIf="!cc.enviado" class="d-block text-warning" [title]="cc.error || ''">{{ 'ventas.pedidoFacturacion.copiasNoEnviadas' | translate:{ correos: cc.para?.join(', ') } }}</small>
+                                                                    </ng-container>
                                                                 </span>
                                                             </div>
                                                             <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Fecha de compra' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaCreacion ? (pedidoDetalle.fechaCreacion | date:'dd/MM/yyyy') : '—' }}</span></div>

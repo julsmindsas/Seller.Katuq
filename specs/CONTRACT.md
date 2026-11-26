@@ -14392,3 +14392,14 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Sin bandera; nada cambia en cómo se emite la factura.
 - **Pruebas:** locales fuera de git (D-566): Seller `tests/clientes/sugerencia-documento.test.js` 5/5, backend `tests/accounting/nombreTercero.test.js` 4/4; pruebas de vista previa existentes en verde; tsc sin errores; diccionarios sin fallas nuevas.
 - **Estado:** OpenSpec `razon-social-por-nit` en el backend. Las ayudas de pantalla funcionan sin desplegar el backend; el aviso de la vista previa necesita el despliegue.
+
+### 2026-11-26 — D-723: la factura de SIIGO se envía en copia a hasta 5 correos del perfil de facturación (ticket 1651, ALMARA)
+
+- **Pedido:** ALMARA (Esneider Hincapié) quiere que la factura electrónica llegue a más de un buzón (contabilidad, compras, recepción de facturas).
+- **Decisión de Santiago (26-nov):** campo aparte «Enviar copia a» (no varios correos separados en el campo actual, que leen unos 15 lugares del backend). World Office y DIAN propia siguen solo con el principal.
+- **D-723:**
+  - Datos de facturación (Venta asistida y POS, crear y editar): «Enviar copia a», hasta 5 correos validados (se pueden pegar separados por coma, punto y coma o espacio), guardados en el perfil del cliente como `correosCopia: string[]` y copiados al pedido con el perfil elegido. El correo principal no cambia. Las ediciones de perfil de `crear-ventas` y `pos-crear-ventas`, que no tienen el campo, conservan las copias que había.
+  - SIIGO: la factura se crea igual (el principal la recibe con `mail.send`). Si el perfil del pedido tiene copias y la factura se acaba de crear (no encontrada ni recuperada), Katuq llama `POST /v1/invoices/{id}/mail` con `mail_to` = primera copia y `copy_to` = las demás («;»), sin reintentos. El resultado queda en `facturacionElectronica.copiasCorreo { para, enviado, at, error? }` y el detalle del pedido lo muestra. Un fallo no toca la factura.
+  - Sin bandera: sin copias, todo sigue igual.
+- **Pruebas:** locales fuera de git (D-566): backend `tests/accounting/correosCopia.test.js` 4/4; Seller `tests/clientes/correos-copia.test.js` 4/4. Las 40 suites de facturación del backend en verde salvo `emparejarCodigosSiigo` (ya fallaba en Windows). tsc y build de producción sin errores; diccionarios sin fallas nuevas.
+- **Pendiente:** no se ha probado contra SIIGO real (no hay sandbox): la primera factura con copias de un comercio confirma el envío (o deja su error en el pedido). Desplegar el backend antes de publicar el Seller.

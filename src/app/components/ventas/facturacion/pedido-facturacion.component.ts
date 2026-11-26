@@ -14,6 +14,7 @@ import { InfoPaises } from "src/Mock/pais-estado-ciudad";
 import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
 import { TIPOS_DOCUMENTO, esTipoDocumentoAnterior } from "src/app/shared/utils/tipos-documento";
 import { claveDocumento } from "src/app/shared/utils/clave-documento";
+import { ErrorCopia, MAX_COPIAS, TEXTO_ERROR_COPIA, agregarCopias, normalizarCorreosCopia } from "src/app/shared/utils/correos-copia";
 import { SugerenciaDocumento, aplicarSugerenciaDocumento, mismaRazonSocial, sugerenciaPorDocumento } from "src/app/shared/utils/sugerencia-documento";
 
 @Component({
@@ -149,6 +150,30 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
    * lo mínimo con lo que una factura ante la DIAN sale bien y se explica qué falta.
    * Devuelve true si los datos sirven para facturar.
    */
+  /** Ticket 1651 (D-723): «Enviar copia a» (hasta 5); la factura de SIIGO se envía además a estos correos. */
+  correos_copia: string[] = [];
+  nuevo_correo_copia = "";
+  errorCorreoCopia: ErrorCopia = null;
+  readonly MAX_COPIAS = MAX_COPIAS;
+  readonly TEXTO_ERROR_COPIA: Record<string, string> = TEXTO_ERROR_COPIA;
+
+  agregarCorreoCopia(): void {
+    const r = agregarCopias(this.nuevo_correo_copia, this.correos_copia, this.correo_electronico_facturacion);
+    this.correos_copia = r.lista;
+    this.errorCorreoCopia = r.error;
+    if (!r.error) this.nuevo_correo_copia = "";
+  }
+
+  quitarCorreoCopia(i: number): void {
+    this.correos_copia = this.correos_copia.filter((_, j) => j !== i);
+    this.errorCorreoCopia = null;
+  }
+
+  /** Lo que se guarda: la lista sin el principal (pudo cambiar después de agregar las copias). */
+  private copiasParaGuardar(): string[] {
+    return normalizarCorreosCopia(this.correos_copia, this.correo_electronico_facturacion);
+  }
+
   /** Ticket 1650 (D-724): datos del cliente que ya existe con el documento escrito. */
   sugerenciaDocumento: SugerenciaDocumento | null = null;
   /** Clave de traducción del aviso (varias fichas con el documento), o null. */
@@ -217,6 +242,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     }
     if (!celular) { faltan.push("Celular"); }
     if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push("Correo electrónico válido"); }
+    // Ticket 1651: un correo en copia escrito y sin «Agregar» se agrega al guardar; si no sirve, se avisa.
+    if (String(this.nuevo_correo_copia || "").trim()) {
+      this.agregarCorreoCopia();
+      if (this.errorCorreoCopia) { faltan.push("Correo en copia válido (o bórralo)"); }
+    }
 
     // El documento debe tener forma de documento: el "-4" no pasa.
     let docInvalido = "";
@@ -258,6 +288,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       indicativoCel: this.indicativo_celular_facturacion,
       celular: this.numero_celular_facturacion,
       correoElectronico: this.correo_electronico_facturacion,
+      correosCopia: this.copiasParaGuardar(),
       direccion: this.direccion_facturacion,
       pais: this.pais,
       departamento: this.departamento,
@@ -494,6 +525,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.datosFacturacionElectronica[index].celular;
     this.correo_electronico_facturacion =
       this.datosFacturacionElectronica[index].correoElectronico;
+    this.correos_copia = normalizarCorreosCopia(
+      this.datosFacturacionElectronica[index].correosCopia,
+      this.datosFacturacionElectronica[index].correoElectronico,
+    );
     this.direccion_facturacion =
       this.datosFacturacionElectronica[index].direccion;
     this.pais = this.datosFacturacionElectronica[index].pais;
@@ -548,6 +583,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       indicativoCel: this.indicativo_celular_facturacion,
       celular: this.numero_celular_facturacion,
       correoElectronico: this.correo_electronico_facturacion,
+      correosCopia: this.copiasParaGuardar(),
       direccion: this.direccion_facturacion,
       pais: this.pais,
       departamento: this.departamento,
@@ -650,6 +686,9 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   }
   limpiarVariables() {
     this.limpiarSugerencia();
+    this.correos_copia = [];
+    this.nuevo_correo_copia = "";
+    this.errorCorreoCopia = null;
     // Variables de control
     this.editandodato = false;
     this.idenxFacturacion = null;

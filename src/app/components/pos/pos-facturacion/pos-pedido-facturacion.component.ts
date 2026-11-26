@@ -8,6 +8,7 @@ import { InfoPaises } from 'src/Mock/pais-estado-ciudad';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { claveDocumento } from 'src/app/shared/utils/clave-documento';
 import { SugerenciaDocumento, aplicarSugerenciaDocumento, mismaRazonSocial, sugerenciaPorDocumento } from 'src/app/shared/utils/sugerencia-documento';
+import { ErrorCopia, MAX_COPIAS, TEXTO_ERROR_COPIA, agregarCopias, normalizarCorreosCopia } from 'src/app/shared/utils/correos-copia';
 
 @Component({
   selector: 'pos-app-pedido-facturacion',
@@ -94,6 +95,7 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
       indicativoCel: this.indicativo_celular_facturacion,
       celular: this.numero_celular_facturacion,
       correoElectronico: this.correo_electronico_facturacion,
+      correosCopia: this.copiasParaGuardar(),
       direccion: this.direccion_facturacion,
       pais: this.pais,
       departamento: this.departamento,
@@ -241,6 +243,10 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.datosFacturacionElectronica[index].celular;
     this.correo_electronico_facturacion =
       this.datosFacturacionElectronica[index].correoElectronico;
+    this.correos_copia = normalizarCorreosCopia(
+      this.datosFacturacionElectronica[index].correosCopia,
+      this.datosFacturacionElectronica[index].correoElectronico,
+    );
     this.direccion_facturacion =
       this.datosFacturacionElectronica[index].direccion;
     this.pais = this.datosFacturacionElectronica[index].pais;
@@ -292,6 +298,7 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
       indicativoCel: this.indicativo_celular_facturacion,
       celular: this.numero_celular_facturacion,
       correoElectronico: this.correo_electronico_facturacion,
+      correosCopia: this.copiasParaGuardar(),
       direccion: this.direccion_facturacion,
       pais: this.pais,
       departamento: this.departamento,
@@ -335,6 +342,31 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
       });
     });
   }
+  /** Ticket 1651 (D-723): «Enviar copia a» (hasta 5), igual que en Venta asistida. */
+  correos_copia: string[] = [];
+  nuevo_correo_copia = '';
+  errorCorreoCopia: ErrorCopia = null;
+  readonly MAX_COPIAS = MAX_COPIAS;
+  readonly TEXTO_ERROR_COPIA: Record<string, string> = TEXTO_ERROR_COPIA;
+
+  agregarCorreoCopia(): void {
+    const r = agregarCopias(this.nuevo_correo_copia, this.correos_copia, this.correo_electronico_facturacion);
+    this.correos_copia = r.lista;
+    this.errorCorreoCopia = r.error;
+    if (!r.error) this.nuevo_correo_copia = '';
+  }
+
+  quitarCorreoCopia(i: number): void {
+    this.correos_copia = this.correos_copia.filter((_, j) => j !== i);
+    this.errorCorreoCopia = null;
+  }
+
+  /** Lo que se guarda. Un correo escrito sin «Agregar» entra si sirve (este formulario no tiene validación previa). */
+  private copiasParaGuardar(): string[] {
+    if (String(this.nuevo_correo_copia || '').trim()) this.agregarCorreoCopia();
+    return normalizarCorreosCopia(this.correos_copia, this.correo_electronico_facturacion);
+  }
+
   /** Ticket 1650 (D-724): datos del cliente que ya existe con el documento escrito (igual que en Venta asistida). */
   sugerenciaDocumento: SugerenciaDocumento | null = null;
   /** Clave de traducción del aviso (varias fichas con el documento), o null. */
@@ -379,6 +411,9 @@ export class POSPedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   limpiarVariables() {
     this.limpiarSugerencia();
+    this.correos_copia = [];
+    this.nuevo_correo_copia = '';
+    this.errorCorreoCopia = null;
     this.editandodato = false;
     this.alias_entrega = "";
     this.nombres_entrega = "";

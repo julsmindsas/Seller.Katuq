@@ -825,6 +825,10 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
       departamento: this.departamento,
       ciudad: this.ciudad_municipio,
       codigoPostal: this.codigo_postal,
+      // Ticket 1651 (D-723): este formulario no edita las copias; se conservan las que tenía el perfil.
+      ...(this.datosFacturacionElectronica[this.idenxFacturacion]?.correosCopia
+        ? { correosCopia: this.datosFacturacionElectronica[this.idenxFacturacion].correosCopia }
+        : {}),
     };
     this.datosFacturacionElectronica[this.idenxFacturacion] =
       datosFacturacionElec;

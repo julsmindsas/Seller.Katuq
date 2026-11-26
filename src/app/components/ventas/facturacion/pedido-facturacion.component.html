@@ -167,6 +167,7 @@
           [(ngModel)]="correo_electronico_facturacion" />
       </div>
     </div>
+    <ng-container *ngTemplateOutlet="copiasCorreo; context: { id: 'crear' }"></ng-container>
     <!-- Ticket 1041 (OH MY STORE): este bloque estaba comentado desde hace meses,
          y desde el 17 de septiembre la validacion exige Ciudad. Resultado: no se
          podian crear datos de facturacion nuevos porque el campo no existia.
@@ -291,6 +292,7 @@
           [(ngModel)]="correo_electronico_facturacion" />
       </div>
     </div>
+    <ng-container *ngTemplateOutlet="copiasCorreo; context: { id: 'editar' }"></ng-container>
     <div class="row">
       <div class="col-sm-12">
         <label class="form-label" for="direccion">{{ 'Dirección del Comprador:' | translate }}</label>
@@ -355,4 +357,24 @@
     </span>
   </div>
   <div class="alert alert-warning py-2 mb-3" role="alert" *ngIf="avisoDocumento">{{ avisoDocumento | translate }}</div>
+</ng-template>
+<!-- Ticket 1651 (D-723): «Enviar copia a», hasta 5 correos; la factura de SIIGO también les llega -->
+<ng-template #copiasCorreo let-id="id">
+  <div class="mb-3">
+    <label class="form-label" [attr.for]="'copia_correo_' + id">{{ 'ventas.pedidoFacturacion.enviarCopiaA' | translate }}</label>
+    <div class="d-flex flex-wrap gap-2 mb-2" *ngIf="correos_copia.length">
+      <span class="badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-1" *ngFor="let c of correos_copia; let i = index">
+        {{ c }}
+        <button type="button" class="btn-close" style="font-size:.6rem" [attr.aria-label]="('ventas.pedidoFacturacion.quitarCopia' | translate) + ' ' + c" (click)="quitarCorreoCopia(i)"></button>
+      </span>
+    </div>
+    <div class="input-group" *ngIf="correos_copia.length < MAX_COPIAS">
+      <input class="form-control" type="email" [id]="'copia_correo_' + id" [(ngModel)]="nuevo_correo_copia"
+        (keydown.enter)="$event.preventDefault(); agregarCorreoCopia()"
+        [placeholder]="'ventas.pedidoFacturacion.copiaPlaceholder' | translate" />
+      <button type="button" class="btn btn-outline-primary" (click)="agregarCorreoCopia()">{{ 'ventas.pedidoFacturacion.agregarCorreo' | translate }}</button>
+    </div>
+    <small class="text-danger d-block mt-1" *ngIf="errorCorreoCopia" role="alert">{{ TEXTO_ERROR_COPIA[errorCorreoCopia] | translate:{ max: MAX_COPIAS } }}</small>
+    <small class="text-muted d-block mt-1">{{ 'ventas.pedidoFacturacion.copiasAyuda' | translate:{ max: MAX_COPIAS } }}</small>
+  </div>
 </ng-template>
