@@ -169,6 +169,8 @@ export interface ResumenAtencion {
   sinResponder: number;
   porAsesor: CargaAsesor[];
   ajustes: AjustesAtencion;
+  /** Fase D (D-727): resumen por cola; ausente o vacío si el comercio no tiene colas. */
+  porCola?: ResumenCola[];
 }
 
 /** Movimiento del historial del chat (`log`). */
@@ -186,10 +188,77 @@ export interface HiloAtencion {
   owner: DuenoChat | null;
   notas: NotaChat[];
   log: MovimientoChat[];
+  /** Fase D (D-727): cola del chat; ausente o null si no tiene. */
+  colaId?: string | null;
 }
 
-/** Lo que emite `app-chat-dueno.pasar` cuando recibe `conNota=true`. */
+/** Lo que emite `app-chat-dueno.pasar` cuando recibe `conNota=true`: una persona o una cola, nunca las dos. */
 export interface Transferencia {
-  email: string;
+  email?: string;
+  colaId?: string;
   nota: string;
+}
+
+/* ---------- Colas, horarios y entrada (D-727, fase D de CONV) ---------- */
+
+export type RepartoCola = 'turnos' | 'manual';
+
+/** Franja de un día: horas locales de Colombia, `cierra` después de `abre`. */
+export interface FranjaCola {
+  /** `HH:MM`. */
+  abre: string;
+  cierra: string;
+}
+
+/** Horario de una cola: claves "0" (domingo) a "6"; `null` = cerrado ese día. */
+export interface HorarioCola {
+  activo: boolean;
+  dias: Record<string, FranjaCola | null>;
+}
+
+/** Lo mínimo de una cola: lo que recibe quien no coordina. */
+export interface ColaBasica {
+  id: string;
+  nombre: string;
+  activa: boolean;
+  /** Calculado por el servidor. */
+  enHorario?: boolean;
+}
+
+/** Cola completa (`companyConfig/{empresa}.atencion.colas`). Sin `id` = cola nueva. */
+export interface ColaAtencion extends Omit<ColaBasica, 'id'> {
+  id?: string;
+  /** Ids de líneas del comercio o `red_instagram`, `red_facebook`, `red_tiktok`. */
+  lineas: string[];
+  /** Correos del equipo. */
+  asesores: string[];
+  reparto: RepartoCola;
+  horario: HorarioCola;
+  /** 0 a 500 caracteres. Vacío = no se envía nada. */
+  mensajeFuera: string;
+}
+
+/** Número o cuenta que se puede meter en una cola (`lineas` de `GET /atencion/colas`). */
+export interface LineaDeCola {
+  id: string;
+  nombre: string;
+  canal: string;
+}
+
+/** `GET /atencion/colas`. Quien no coordina recibe colas básicas y `lineas` vacío. */
+export interface ColasAtencion {
+  colas: Array<ColaBasica & Partial<ColaAtencion>>;
+  lineas: LineaDeCola[];
+}
+
+/** Una fila de `porCola` en el resumen. */
+export interface ResumenCola {
+  id: string;
+  nombre: string;
+  activa: boolean;
+  enHorario: boolean;
+  /** Chats sin dueño. */
+  enEspera: number;
+  sinResponder: number;
+  chats: number;
 }

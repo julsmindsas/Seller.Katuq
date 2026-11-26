@@ -33,6 +33,8 @@ interface ConversacionBase {
   dueno?: DuenoChat;
   /** Id del hilo de atención (`messaging_threads`); ausente en el número compartido de Katuq. */
   threadId?: string;
+  /** Cola del chat (fase D); ausente si no tiene o no hay colas. */
+  colaId?: string;
 }
 
 export interface ConversacionWhatsapp extends ConversacionBase {
@@ -62,6 +64,8 @@ export interface FiltroBandeja {
   busqueda: string;
   /** Solo quien coordina: correo del asesor, 'sin-asignar' o null (todos). */
   asesor: string | null;
+  /** Id de la cola; null = todas. */
+  colaId: string | null;
 }
 
 /** Valor del filtro por asesor para los chats sin dueño. */
@@ -74,6 +78,7 @@ export const FILTRO_BANDEJA_VACIO: FiltroBandeja = {
   mios: false,
   busqueda: "",
   asesor: null,
+  colaId: null,
 };
 
 /** Lo que devuelve una carga de la bandeja. */

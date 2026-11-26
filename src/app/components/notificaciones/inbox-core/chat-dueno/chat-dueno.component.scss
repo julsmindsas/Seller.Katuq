@@ -143,3 +143,40 @@ $warn-soft: #FFF1DF;
 
   &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
 }
+
+// [D-727] Persona o cola
+.dueno-franja__tipo {
+  display: inline-flex;
+  flex: 1 1 100%;
+  gap: 6px;
+}
+
+.dueno-franja__tipo-op {
+  appearance: none;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $body !important;
+  font-size: 12.5px !important;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.is-activo { background: $accent-soft; border-color: #d9cffb; color: $accent !important; }
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}
+
+.dueno-franja__cola {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: var(--ds-ink) !important;
+  font-size: 12.5px !important;
+  letter-spacing: normal;
+
+  &:focus-visible { outline: 3px solid $accent-2 !important; outline-offset: 2px; }
+}

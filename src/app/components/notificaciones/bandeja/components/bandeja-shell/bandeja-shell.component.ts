@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ChatNotasComponent } from "../../../inbox-core/chat-notas/chat-notas.component";
+import { TranslateService } from "@ngx-translate/core";
 import { Subject, Subscription, interval } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
@@ -9,8 +10,11 @@ import { AtencionService } from "../../../../../shared/services/messaging/atenci
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
   AjustesAtencion,
+  ColaAtencion,
+  ColaBasica,
   DuenoChat,
   EstadoAsesor,
+  LineaDeCola,
   MessagingLine,
   MiembroAtencion,
   MiembroEquipo,
@@ -30,6 +34,7 @@ import {
   ConversacionResumen,
 } from "../../bandeja.models";
 import { mezclar } from "../../bandeja.util";
+import { normalizarCola } from "../../bandeja.colas";
 
 /** Vistas de la bandeja: la lista de chats o, para quien coordina, la pestaña Equipo. */
 export type VistaBandeja = "chats" | "equipo";
@@ -81,6 +86,17 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   /** Filtro por asesor: correo, 'sin-asignar' o null. */
   asesor: string | null = null;
 
+  /** Filtro por cola (D-727): id o null. */
+  cola: string | null = null;
+  /** Colas del comercio. Campos estables: no se recrean en cada revisión ni en cada refresco sin cambios. */
+  colas: ColaAtencion[] = [];
+  colasActivas: ColaBasica[] = [];
+  lineasCola: LineaDeCola[] = [];
+  guardandoColas = false;
+  colasGuardadoOk = false;
+  errorColas = "";
+  private colasFirma = "";
+
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
   resumenError = false;
@@ -108,6 +124,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     private readonly lineasService: MessagingLinesService,
     private readonly atencionSrv: AtencionService,
     private readonly loader: LoaderService,
+    private readonly translate: TranslateService,
     features: CompanyFeaturesService,
   ) {
     this.multiNumero = features.isEnabled("whatsappMultiNumero");
@@ -229,9 +246,71 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.asesor = asesor;
   }
 
+  elegirCola(cola: string | null): void {
+    this.cola = cola;
+  }
+
+  /** Desde la pestaña Equipo: filtra la lista por esa cola y vuelve a Chats. */
+  verChatsDeCola(cola: string): void {
+    this.cola = cola;
+    this.asesor = null;
+    this.vista = "chats";
+  }
+
+  /** Manda la lista completa de colas. Un 422 deja su mensaje en el editor, que sigue abierto. */
+  guardarColas(lista: ColaAtencion[]): void {
+    if (this.guardandoColas) return;
+    this.guardandoColas = true;
+    this.colasGuardadoOk = false;
+    this.errorColas = "";
+    this.atencionSrv
+      .guardarColas(lista)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (guardadas) => {
+          this.guardandoColas = false;
+          // La respuesta del guardado ya trae la lista con sus ids: se usa de una vez, antes de cerrar el editor.
+          if (Array.isArray(guardadas)) {
+            const previas = new Map(this.colas.map((c) => [c.id, c.enHorario]));
+            this.colas = guardadas.map((c) => normalizarCola({ ...c, enHorario: c.enHorario ?? previas.get(c.id) }));
+            this.colasActivas = this.colas.filter((c) => c.activa).map((c) => ({
+              id: c.id as string,
+              nombre: c.nombre,
+              activa: true,
+              enHorario: c.enHorario,
+            }));
+            this.colasFirma = "";
+          }
+          this.colasGuardadoOk = true;
+          // Refresco de fondo: trae el horario en vivo y los números.
+          this.cargarColas();
+          if (this.coordina) this.cargarResumen();
+        },
+        error: (err) => {
+          this.guardandoColas = false;
+          this.errorColas = err?.error?.message || this.traducir("notificaciones.bandeja.colas.errorGuardar");
+        },
+      });
+  }
+
+  /** El detalle pasó el chat abierto a una cola: se anota en el chat y se refresca la lista. */
+  onColaCambiada(colaId: string): void {
+    const abierta = this.seleccion;
+    if (!abierta) return;
+    if (abierta.canal === "whatsapp") {
+      this.seleccion = { ...abierta, colaId, origen: { ...abierta.origen, colaId } };
+    } else {
+      // Redes: mismo objeto de `hilo` (ver `onDuenoCambiado`); solo se anota la cola.
+      abierta.origen.colaId = colaId;
+      this.seleccion = { ...abierta, colaId };
+    }
+    this.cargar(true);
+  }
+
   /** Desde la pestaña Equipo: filtra la lista por ese asesor y vuelve a Chats. */
   verChatsDe(asesor: string): void {
     this.asesor = asesor;
+    this.cola = null;
     this.vista = "chats";
   }
 
@@ -371,9 +450,43 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
               error: () => undefined,
             });
           if (this.coordina) this.cargarResumen();
+          this.cargarColas();
         },
         error: () => undefined,
       });
+  }
+
+  /**
+   * Colas, para todos. Un fallo conserva las anteriores; si la lista no cambió se conserva el mismo
+   * arreglo, para no recrear lo que reciben los componentes hijos.
+   */
+  private cargarColas(): void {
+    if (!this.atencion) return;
+    this.atencionSrv
+      .colas()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const firma = JSON.stringify(res);
+          if (firma === this.colasFirma) return;
+          this.colasFirma = firma;
+          this.colas = res.colas.map((c) => normalizarCola(c));
+          this.colasActivas = this.colas.filter((c) => c.activa).map((c) => ({
+            id: c.id as string,
+            nombre: c.nombre,
+            activa: true,
+            enHorario: c.enHorario,
+          }));
+          this.lineasCola = res.lineas;
+          // Si la cola filtrada ya no existe, el filtro se suelta.
+          if (this.cola && !this.colas.some((c) => c.id === this.cola)) this.cola = null;
+        },
+        error: () => undefined,
+      });
+  }
+
+  private traducir(clave: string): string {
+    return this.translate.instant(clave);
   }
 
   /** Quien coordina: cifras y carga por asesor. Un fallo conserva las cifras anteriores. */
@@ -489,6 +602,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       });
     // El resumen y las notas se refrescan junto con la lista.
     this.cargarResumen();
+    this.cargarColas();
     if (this.notasAbiertas && enSilencio) this.cargarNotas(true);
   }
 

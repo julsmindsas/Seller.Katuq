@@ -1,0 +1,142 @@
+<form class="ce" (ngSubmit)="enviar()" novalidate>
+  <header class="ce-cabeza">
+    <h2 class="ce-titulo">
+      {{ (esNueva ? 'notificaciones.bandeja.colas.editor.tituloNueva' : 'notificaciones.bandeja.colas.editor.tituloEditar') | translate }}
+    </h2>
+  </header>
+
+  <!-- Nombre y estado -->
+  <label class="ce-campo">
+    <span class="ce-campo__etiqueta">{{ 'notificaciones.bandeja.colas.editor.nombre' | translate }}</span>
+    <input
+      type="text"
+      class="ce-campo__caja"
+      name="nombre"
+      [attr.maxlength]="maxNombre"
+      [ngModel]="m.nombre"
+      (ngModelChange)="cambiarNombre($event)"
+      [placeholder]="'notificaciones.bandeja.colas.editor.nombreEjemplo' | translate"
+    />
+  </label>
+
+  <label class="ce-check">
+    <input type="checkbox" class="ce-check__caja" name="activa" [ngModel]="m.activa" (ngModelChange)="cambiarActiva($event)" />
+    <span class="ce-check__texto">
+      <span class="ce-check__titulo">{{ 'notificaciones.bandeja.colas.editor.activa' | translate }}</span>
+      <span class="ce-check__ayuda">{{ 'notificaciones.bandeja.colas.editor.activaAyuda' | translate }}</span>
+    </span>
+  </label>
+
+  <!-- Números y cuentas -->
+  <fieldset class="ce-bloque">
+    <legend class="ce-bloque__titulo">{{ 'notificaciones.bandeja.colas.editor.lineas' | translate }}</legend>
+    <p class="ce-ayuda">{{ 'notificaciones.bandeja.colas.editor.lineasAyuda' | translate }}</p>
+    <p class="ce-vacio" *ngIf="!opcionesLinea.length">{{ 'notificaciones.bandeja.colas.editor.lineasVacio' | translate }}</p>
+    <label class="ce-linea" *ngFor="let l of opcionesLinea; trackBy: trackLinea" [class.is-bloqueada]="bloqueada(l)">
+      <input
+        type="checkbox"
+        class="ce-check__caja"
+        [name]="'linea-' + l.id"
+        [checked]="tieneLinea(l.id)"
+        [disabled]="bloqueada(l)"
+        (change)="marcarLinea(l.id, $any($event.target).checked)"
+      />
+      <span class="ce-linea__texto">
+        <span class="ce-linea__nombre">{{ l.nombre }}</span>
+        <span class="ce-linea__nota" *ngIf="l.ocupadaPor">{{ 'notificaciones.bandeja.colas.editor.lineaOcupada' | translate: { cola: l.ocupadaPor } }}</span>
+      </span>
+    </label>
+  </fieldset>
+
+  <!-- Asesores y reparto -->
+  <fieldset class="ce-bloque">
+    <legend class="ce-bloque__titulo">{{ 'notificaciones.bandeja.colas.editor.asesores' | translate }}</legend>
+    <app-selector-equipo
+      [equipo]="equipo"
+      [emails]="m.asesores"
+      [multiple]="true"
+      (emailsChange)="cambiarAsesores($event)"
+      [placeholder]="'notificaciones.bandeja.colas.editor.asesoresPlaceholder' | translate"
+    ></app-selector-equipo>
+
+    <div class="ce-opciones" role="radiogroup" [attr.aria-label]="'notificaciones.bandeja.colas.editor.reparto' | translate">
+      <label class="ce-opcion" [class.is-activa]="m.reparto === 'turnos'">
+        <input type="radio" class="ce-check__caja" name="reparto" value="turnos" [ngModel]="m.reparto" (ngModelChange)="cambiarReparto($event)" />
+        <span class="ce-check__texto">
+          <span class="ce-check__titulo">{{ 'notificaciones.bandeja.colas.editor.repartoTurnos' | translate }}</span>
+          <span class="ce-check__ayuda">{{ 'notificaciones.bandeja.colas.editor.repartoTurnosAyuda' | translate }}</span>
+        </span>
+      </label>
+      <label class="ce-opcion" [class.is-activa]="m.reparto === 'manual'">
+        <input type="radio" class="ce-check__caja" name="reparto" value="manual" [ngModel]="m.reparto" (ngModelChange)="cambiarReparto($event)" />
+        <span class="ce-check__texto">
+          <span class="ce-check__titulo">{{ 'notificaciones.bandeja.colas.editor.repartoManual' | translate }}</span>
+          <span class="ce-check__ayuda">{{ 'notificaciones.bandeja.colas.editor.repartoManualAyuda' | translate }}</span>
+        </span>
+      </label>
+    </div>
+  </fieldset>
+
+  <!-- Horario -->
+  <fieldset class="ce-bloque">
+    <legend class="ce-bloque__titulo">{{ 'notificaciones.bandeja.colas.editor.horario' | translate }}</legend>
+    <label class="ce-check">
+      <input type="checkbox" class="ce-check__caja" name="horario" [ngModel]="m.horario.activo" (ngModelChange)="cambiarHorarioActivo($event)" />
+      <span class="ce-check__texto">
+        <span class="ce-check__titulo">{{ 'notificaciones.bandeja.colas.editor.horarioActivo' | translate }}</span>
+        <span class="ce-check__ayuda">{{ 'notificaciones.bandeja.colas.editor.horarioAyuda' | translate }}</span>
+      </span>
+    </label>
+
+    <div class="ce-dias" *ngIf="m.horario.activo">
+      <div class="ce-dia" *ngFor="let d of dias; trackBy: trackDia" [class.is-cerrado]="!d.abierto">
+        <label class="ce-dia__nombre">
+          <input type="checkbox" class="ce-check__caja" [name]="'dia-' + d.n" [checked]="d.abierto" (change)="cambiarDia(d, 'abierto', $any($event.target).checked)" />
+          <span class="ce-dia__texto">{{ 'notificaciones.bandeja.colas.dia.' + d.clave | translate }}</span>
+        </label>
+        <ng-container *ngIf="d.abierto">
+          <label class="ce-hora">
+            <span class="ce-hora__etiqueta">{{ 'notificaciones.bandeja.colas.editor.abre' | translate }}</span>
+            <input type="time" class="ce-campo__caja ce-hora__caja" [name]="'abre-' + d.n" [value]="d.abre" (input)="cambiarDia(d, 'abre', $any($event.target).value)" />
+          </label>
+          <label class="ce-hora">
+            <span class="ce-hora__etiqueta">{{ 'notificaciones.bandeja.colas.editor.cierra' | translate }}</span>
+            <input type="time" class="ce-campo__caja ce-hora__caja" [name]="'cierra-' + d.n" [value]="d.cierra" (input)="cambiarDia(d, 'cierra', $any($event.target).value)" />
+          </label>
+        </ng-container>
+        <span class="ce-dia__cerrado" *ngIf="!d.abierto">{{ 'notificaciones.bandeja.colas.editor.cerrado' | translate }}</span>
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Mensaje de fuera de horario -->
+  <label class="ce-campo">
+    <span class="ce-campo__etiqueta">{{ 'notificaciones.bandeja.colas.editor.mensaje' | translate }}</span>
+    <textarea
+      class="ce-campo__caja ce-campo__area"
+      name="mensajeFuera"
+      rows="3"
+      [attr.maxlength]="maxMensaje"
+      [ngModel]="m.mensajeFuera"
+      (ngModelChange)="cambiarMensaje($event)"
+      [placeholder]="'notificaciones.bandeja.colas.editor.mensajeEjemplo' | translate"
+    ></textarea>
+    <span class="ce-campo__contador" [class.is-limite]="restantes <= 20">{{ m.mensajeFuera.length }} / {{ maxMensaje }}</span>
+    <span class="ce-aviso">{{ 'notificaciones.bandeja.colas.editor.mensajeAviso' | translate }}</span>
+  </label>
+
+  <!-- Errores en pantalla (después del primer intento) y el del servidor -->
+  <ul class="ce-errores" role="alert" *ngIf="intentado && errores.length">
+    <li class="ce-errores__item" *ngFor="let e of errores">{{ e | translate: { max: maxNombre } }}</li>
+  </ul>
+  <p class="ce-errores ce-errores--servidor" role="alert" *ngIf="errorServidor">{{ errorServidor }}</p>
+
+  <div class="ce-pie">
+    <button type="submit" class="ce-btn" [disabled]="guardando">
+      {{ (guardando ? 'notificaciones.bandeja.equipo.ajustes.guardando' : 'notificaciones.bandeja.equipo.ajustes.guardar') | translate }}
+    </button>
+    <button type="button" class="ce-btn ce-btn--sec" [disabled]="guardando" (click)="cancelar.emit()">
+      {{ 'comun.cancelar' | translate }}
+    </button>
+  </div>
+</form>

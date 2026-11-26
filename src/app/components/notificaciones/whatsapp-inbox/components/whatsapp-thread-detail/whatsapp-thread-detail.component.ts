@@ -19,6 +19,7 @@ import { MessagingThreadsService } from "../../../../../shared/services/messagin
 import {
   DuenoChat,
   MiembroEquipo,
+  ColaBasica,
   Transferencia,
   esErrorChatConDueno,
 } from "../../../../../shared/services/messaging/messaging.models";
@@ -103,6 +104,10 @@ export class WhatsappThreadDetailComponent
   @Output() backToList = new EventEmitter<void>();
   /** [D-437] Cambió el dueño del chat abierto. */
   @Output() duenoCambiado = new EventEmitter<DuenoChat | null>();
+  /** [D-727] Colas activas a las que se puede pasar el chat (campo estable de quien aloja). */
+  @Input() colas: ColaBasica[] = [];
+  /** [D-727] El chat pasó a una cola (id) tras pasarlo con éxito. */
+  @Output() colaCambiada = new EventEmitter<string>();
 
   @ViewChild("messagesContainer") messagesContainer?: ElementRef<HTMLElement>;
 
@@ -609,15 +614,20 @@ export class WhatsappThreadDetailComponent
   pasarChat(destino: string | Transferencia): void {
     const threadId = this.chat?.threadId;
     const t: Transferencia = typeof destino === "string" ? { email: destino, nota: "" } : destino;
-    if (!threadId || !t?.email) return;
+    if (!threadId || (!t?.email && !t?.colaId)) return;
     if (!this.atencion) {
-      this.accionDueno(this.hilos.asignar(threadId, t.email), "notificaciones.whatsapp.detail.ownerPassed");
+      this.accionDueno(this.hilos.asignar(threadId, t.email as string), "notificaciones.whatsapp.detail.ownerPassed");
+      return;
+    }
+    // [D-727] A una cola: el servidor deja el chat sin dueño y lo reparte según la cola.
+    if (t.colaId) {
+      this.accionDueno(this.atencionSrv.transferir(threadId, { colaId: t.colaId, nota: t.nota || "" }), "notificaciones.owner.queuePassed", t.colaId);
       return;
     }
     // Sin dueño solo quien coordina puede dar el chat (asignar); con dueño se transfiere con la nota.
     const peticion = !this.dueno && this.coordina
-      ? this.atencionSrv.asignar(threadId, t.email)
-      : this.atencionSrv.transferir(threadId, t.email, t.nota || "");
+      ? this.atencionSrv.asignar(threadId, t.email as string)
+      : this.atencionSrv.transferir(threadId, t.email as string, t.nota || "");
     this.accionDueno(peticion, "notificaciones.whatsapp.detail.ownerPassed");
   }
 
@@ -632,13 +642,14 @@ export class WhatsappThreadDetailComponent
     return msg.sentByName || "";
   }
 
-  private accionDueno(peticion: ReturnType<AtencionService["tomar"]>, exito: string): void {
+  private accionDueno(peticion: ReturnType<AtencionService["tomar"]>, exito: string, colaId?: string): void {
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
     peticion.subscribe({
       next: (owner) => {
         this.duenoOcupado = false;
         this.ponerDueno(owner);
+        if (colaId) this.colaCambiada.emit(colaId);
         this.toastr.success(this.translate.instant(exito));
       },
       error: (err: any) => {

@@ -6,12 +6,15 @@ import { catchError, map } from 'rxjs/operators';
 import { BaseService } from '../base.service';
 import {
   AjustesAtencion,
+  ColaAtencion,
+  ColasAtencion,
   DuenoChat,
   EstadoAsesor,
   HiloAtencion,
   MiembroAtencion,
   NotaChat,
   ResumenAtencion,
+  Transferencia,
   YoAtencion,
 } from './messaging.models';
 
@@ -83,9 +86,34 @@ export class AtencionService extends BaseService {
     return this.accion(threadId, 'asignar', { email });
   }
 
-  /** El dueño o quien coordina; la nota es opcional (máx. 300). */
-  transferir(threadId: string, email: string, nota = ''): Observable<DuenoChat | null> {
-    return this.accion(threadId, 'transferir', { email, nota });
+  /**
+   * El dueño o quien coordina; la nota es opcional (máx. 300). Se pasa a una persona (`email`) o a una
+   * cola (`colaId`), nunca a las dos. La forma `(threadId, email, nota)` se conserva.
+   */
+  transferir(
+    threadId: string,
+    destino: string | Pick<Transferencia, 'email' | 'colaId' | 'nota'>,
+    nota = '',
+  ): Observable<DuenoChat | null> {
+    if (typeof destino === 'string') return this.accion(threadId, 'transferir', { email: destino, nota });
+    const cuerpo: { email?: string; colaId?: string; nota: string } = { nota: destino.nota || '' };
+    if (destino.colaId) cuerpo.colaId = destino.colaId;
+    else if (destino.email) cuerpo.email = destino.email;
+    return this.accion(threadId, 'transferir', cuerpo);
+  }
+
+  /** Todos: colas (completas para quien coordina) y los números y cuentas que se pueden meter en una. */
+  colas(): Observable<ColasAtencion> {
+    return this.get<ColasAtencion>(`${this.base}/colas`).pipe(
+      map((res) => ({ colas: res?.colas || [], lineas: res?.lineas || [] })),
+    );
+  }
+
+  /** PUT: solo el administrador. Envía la lista completa; un 422 trae el mensaje en `error.message`. */
+  guardarColas(colas: ColaAtencion[]): Observable<ColaAtencion[]> {
+    return this.put<{ colas: ColaAtencion[] }>(`${this.base}/colas`, { colas }).pipe(
+      map((res) => res?.colas || []),
+    );
   }
 
   agregarNota(threadId: string, texto: string, menciones: string[] = []): Observable<NotaChat> {

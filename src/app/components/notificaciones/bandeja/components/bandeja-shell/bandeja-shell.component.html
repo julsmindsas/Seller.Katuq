@@ -64,7 +64,15 @@
     [guardando]="guardandoAjustes"
     [guardadoOk]="ajustesGuardados"
     [errorGuardar]="errorAjustes"
+    [colas]="colas"
+    [lineasCola]="lineasCola"
+    [equipoCola]="equipo"
+    [guardandoColas]="guardandoColas"
+    [colasGuardadoOk]="colasGuardadoOk"
+    [errorColas]="errorColas"
     (verAsesor)="verChatsDe($event)"
+    (verCola)="verChatsDeCola($event)"
+    (guardarColas)="guardarColas($event)"
     (reintentar)="reintentarResumen()"
     (guardar)="guardarAjustes($event)"
   ></app-bandeja-equipo>
@@ -90,6 +98,9 @@
         [coordina]="coordina"
         [asesores]="asesores"
         [asesor]="asesor"
+        [colas]="colas"
+        [cola]="cola"
+        (colaChange)="elegirCola($event)"
         (asesorChange)="elegirAsesor($event)"
         (seleccionar)="abrir($event)"
         (verMas)="verMas()"
@@ -148,7 +159,9 @@
         [miEmail]="miEmail"
         [atencion]="atencion"
         [coordina]="coordina"
+        [colas]="colasActivas"
         (duenoCambiado)="onDuenoCambiado($event)"
+        (colaCambiada)="onColaCambiada($event)"
         (backToList)="volver()"
       ></app-whatsapp-thread-detail>
 
@@ -168,7 +181,9 @@
             [miEmail]="miEmail"
             [coordina]="coordina"
             [equipo]="equipo"
+            [colas]="colasActivas"
             (duenoCambiado)="onDuenoCambiado($event)"
+            (colaCambiada)="onColaCambiada($event)"
           ></app-meta-hilo-detalle>
         </div>
         <aside class="bj-red__ficha">

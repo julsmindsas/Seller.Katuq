@@ -10,6 +10,8 @@ import { TranslateService } from "@ngx-translate/core";
 
 import {
   LineaResumen,
+  ColaAtencion,
+  ColaBasica,
   MessagingLine,
   MiembroAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
@@ -22,7 +24,7 @@ import {
   FILTRO_BANDEJA_VACIO,
   FiltroBandeja,
 } from "../../bandeja.models";
-import { filtrar } from "../../bandeja.util";
+import { colaIdDe, filtrar } from "../../bandeja.util";
 
 /** Una fila ya lista para pintar: se arma una vez por cambio de datos o de filtro, no en cada ciclo. */
 interface FilaVista {
@@ -33,6 +35,8 @@ interface FilaVista {
   resumen: string;
   canalLabel: string;
   canalIcono: string;
+  /** Nombre de la cola del chat; vacío si no tiene. */
+  colaNombre: string;
 }
 
 const LARGO_RESUMEN = 60;
@@ -75,6 +79,12 @@ export class BandejaListaComponent implements OnChanges {
   /** Asesor elegido: lo manda quien aloja la lista (también lo cambia la pestaña Equipo). */
   @Input() asesor: string | null = null;
 
+  /** [D-727] Colas del comercio (campo estable de quien aloja la lista); sin colas no hay filtro ni nombre. */
+  @Input() colas: Array<ColaBasica & Partial<ColaAtencion>> = [];
+  /** Cola elegida: la manda quien aloja la lista (también la cambia la pestaña Equipo). */
+  @Input() cola: string | null = null;
+
+  @Output() colaChange = new EventEmitter<string | null>();
   @Output() asesorChange = new EventEmitter<string | null>();
   @Output() seleccionar = new EventEmitter<ConversacionResumen>();
   @Output() verMas = new EventEmitter<void>();
@@ -108,6 +118,15 @@ export class BandejaListaComponent implements OnChanges {
 
   get mostrarAsesor(): boolean {
     return this.atencion && this.coordina;
+  }
+
+  /** El filtro por cola solo existe con la atención multiagente y al menos una cola. */
+  get mostrarCola(): boolean {
+    return this.atencion && this.colas.length > 0;
+  }
+
+  elegirCola(valor: string): void {
+    this.colaChange.emit(valor || null);
   }
 
   readonly sinAsignar = ASESOR_SIN_ASIGNAR;
@@ -161,7 +180,11 @@ export class BandejaListaComponent implements OnChanges {
     const todas = this.conversaciones || [];
     this.hayDuenos = todas.some((c) => !!c.dueno);
     // El asesor elegido lo manda quien aloja la lista (null si no coordina).
-    this.filtro = { ...this.filtro, asesor: this.mostrarAsesor ? this.asesor : null };
+    this.filtro = {
+      ...this.filtro,
+      asesor: this.mostrarAsesor ? this.asesor : null,
+      colaId: this.mostrarCola ? this.cola : null,
+    };
     this.sinResponderCount = todas.filter((c) => c.ultimaDireccion === "inbound").length;
     this.opcionesLinea = this.armarOpcionesLinea(todas);
     // Si el canal o el número elegidos dejaron de estar disponibles, el filtro se suelta.
@@ -171,7 +194,7 @@ export class BandejaListaComponent implements OnChanges {
     if (this.filtro.lineId && !this.opcionesLinea.some((l) => l.id === this.filtro.lineId)) {
       this.filtro = { ...this.filtro, lineId: null };
     }
-    this.filas = filtrar(todas, this.filtro, this.miEmail).map((c) => this.armarFila(c));
+    this.filas = filtrar(todas, this.filtro, this.miEmail, this.colas).map((c) => this.armarFila(c));
     this.avisoCaidos = this.canalesCaidos.map((c) => CANAL_BANDEJA_LABEL[c]).join(", ");
   }
 
@@ -211,7 +234,14 @@ export class BandejaListaComponent implements OnChanges {
       resumen: resumen.length > LARGO_RESUMEN ? resumen.slice(0, LARGO_RESUMEN) + "…" : resumen,
       canalLabel,
       canalIcono: CANAL_BANDEJA_ICONO[c.canal],
+      colaNombre: this.nombreDeCola(c),
     };
+  }
+
+  private nombreDeCola(c: ConversacionResumen): string {
+    if (!this.mostrarCola) return "";
+    const id = colaIdDe(c, this.colas);
+    return id ? this.colas.find((q) => q.id === id)?.nombre || "" : "";
   }
 
   private iniciales(nombre: string): string {

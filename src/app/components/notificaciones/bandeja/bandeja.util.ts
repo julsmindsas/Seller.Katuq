@@ -24,6 +24,7 @@ export function desdeWhatsapp(hilo: WhatsappThread): ConversacionWhatsapp {
     linea: hilo.line || undefined,
     dueno: hilo.owner || undefined,
     threadId: hilo.threadId || undefined,
+    colaId: hilo.colaId || undefined,
     origen: hilo,
   };
 }
@@ -39,6 +40,7 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     // Sin la bandera el servidor no manda dueño ni threadId: quedan vacíos y nada cambia.
     dueno: hilo.owner || undefined,
     threadId: hilo.threadId || `red_${hilo.canal}__${hilo.identidadHash}`,
+    colaId: hilo.colaId || undefined,
     origen: hilo,
   };
 }
@@ -74,10 +76,29 @@ export function normalizarTexto(texto: string): string {
     .trim();
 }
 
+/** Colas con las líneas que cubren: lo mínimo para ubicar un chat que aún no trae `colaId`. */
+export interface ColaConLineas {
+  id: string;
+  activa: boolean;
+  lineas?: string[];
+}
+
+/**
+ * Cola de un chat: la suya, o la cola activa que tiene su número o cuenta (WhatsApp: id de la línea;
+ * redes: `red_<canal>`). Sin colas o sin coincidencia, null.
+ */
+export function colaIdDe(c: ConversacionResumen, colas: ColaConLineas[] = []): string | null {
+  if (c.colaId) return c.colaId;
+  const linea = c.canal === "whatsapp" ? c.lineId : `red_${c.canal}`;
+  if (!linea) return null;
+  return colas.find((q) => q.activa && (q.lineas || []).includes(linea))?.id ?? null;
+}
+
 export function filtrar(
   lista: ConversacionResumen[],
   filtro: FiltroBandeja,
   miEmail: string,
+  colas: ColaConLineas[] = [],
 ): ConversacionResumen[] {
   const busqueda = normalizarTexto(filtro.busqueda);
   const yo = (miEmail || "").trim().toLowerCase();
@@ -95,6 +116,7 @@ export function filtrar(
         return false;
       }
     }
+    if (filtro.colaId && colaIdDe(c, colas) !== filtro.colaId) return false;
     if (busqueda && !normalizarTexto(c.nombre).includes(busqueda)) return false;
     return true;
   });

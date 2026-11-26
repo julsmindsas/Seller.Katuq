@@ -25,20 +25,38 @@
   </div>
 
   <div class="dueno-franja__pasar" *ngIf="modoPasar">
-    <div class="dueno-franja__selector">
+    <!-- [D-727] Persona o cola: solo con nota (bandeja única) y colas activas -->
+    <div class="dueno-franja__tipo" *ngIf="puedeCola" role="group" [attr.aria-label]="'notificaciones.owner.passToType' | translate">
+      <button type="button" class="dueno-franja__tipo-op" [class.is-activo]="destinoTipo === 'persona'"
+              [attr.aria-pressed]="destinoTipo === 'persona'" (click)="elegirTipo('persona')">
+        {{ 'notificaciones.owner.typePerson' | translate }}
+      </button>
+      <button type="button" class="dueno-franja__tipo-op" [class.is-activo]="destinoTipo === 'cola'"
+              [attr.aria-pressed]="destinoTipo === 'cola'" (click)="elegirTipo('cola')">
+        {{ 'notificaciones.owner.typeQueue' | translate }}
+      </button>
+    </div>
+    <div class="dueno-franja__selector" *ngIf="destinoTipo === 'persona' || !puedeCola">
       <app-selector-equipo
         [equipo]="equipo"
         [emails]="destino"
         (emailsChange)="destino = $event"
-        [excluir]="dueno ? [dueno.email] : []"
+        [excluir]="excluirDueno"
         [placeholder]="'notificaciones.owner.passTo' | translate"
       ></app-selector-equipo>
+    </div>
+    <div class="dueno-franja__selector" *ngIf="puedeCola && destinoTipo === 'cola'">
+      <select class="dueno-franja__cola" [(ngModel)]="colaDestino" [disabled]="ocupado"
+              [attr.aria-label]="'notificaciones.owner.passToQueue' | translate">
+        <option value="">{{ 'notificaciones.owner.passToQueue' | translate }}</option>
+        <option *ngFor="let c of opcionesCola" [value]="c.id">{{ c.nombre }}</option>
+      </select>
     </div>
     <input *ngIf="conNota" type="text" class="dueno-franja__nota" maxlength="300"
            [(ngModel)]="nota" [disabled]="ocupado"
            [attr.aria-label]="'notificaciones.owner.passNote' | translate"
            [placeholder]="'notificaciones.owner.passNote' | translate" />
-    <button type="button" class="dueno-franja__btn" (click)="confirmarPasar()" [disabled]="!destino.length || ocupado">
+    <button type="button" class="dueno-franja__btn" (click)="confirmarPasar()" [disabled]="!puedeConfirmar">
       {{ 'notificaciones.owner.passChat' | translate }}
     </button>
     <button type="button" class="dueno-franja__btn dueno-franja__btn--sec" (click)="cancelarPasar()">

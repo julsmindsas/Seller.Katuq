@@ -1,0 +1,191 @@
+// Editor de colas (D-727) — base D-400/D-131: plano, acento #5F3FE0, sin gradientes. Ninguna clase lleva
+// «p-» y todo span con texto trae color y tamaño propios (span.ng-star-inserted pinta de azul).
+@import '../../../../../shared/styles/config-pagina';
+
+:host { display: block; min-width: 0; }
+
+.ce {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: $cfg-ink;
+
+  button, input, textarea, select, legend { font-family: inherit; letter-spacing: normal; }
+  p, h2, label { letter-spacing: normal; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}
+
+.ce-titulo { margin: 0; color: $cfg-ink; font-size: 15px !important; font-weight: 800; }
+
+.ce-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  &__caja {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid $cfg-chip-border;
+    border-radius: 10px;
+    background: $cfg-chip-bg;
+    color: $cfg-ink;
+    font-size: 14px;
+    &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
+  }
+
+  &__area { min-height: 84px; padding: 10px 12px; resize: vertical; line-height: 1.45; }
+  &__contador { align-self: flex-end; color: $cfg-muted; font-size: 12px; &.is-limite { color: $cfg-warn; font-weight: 700; } }
+}
+
+.ce-aviso {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-warn-soft;
+  color: $cfg-warn;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.ce-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+
+  &__titulo {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0 4px;
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+}
+
+.ce-ayuda { margin: 0; color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+.ce-vacio { margin: 0; color: $cfg-muted; font-size: 12.5px; }
+
+.ce-check, .ce-opcion, .ce-linea {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  cursor: pointer;
+
+  &__caja { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; accent-color: #5f3fe0; }
+  &__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__titulo { color: $cfg-ink; font-size: 13.5px; font-weight: 700; }
+  &__ayuda { color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+}
+
+.ce-opciones { display: flex; flex-direction: column; gap: 8px; }
+
+.ce-opcion {
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+  &.is-activa { border-color: #d9cffb; background: $cfg-accent-soft; }
+}
+
+.ce-linea {
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+  &.is-bloqueada { opacity: .6; cursor: not-allowed; }
+  &__texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  &__nombre { color: $cfg-ink; font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
+  &__nota { color: $cfg-warn; font-size: 12px; line-height: 1.4; }
+}
+
+// Horario: una fila por día; en pantalla angosta las horas bajan a otra línea (sin scroll horizontal)
+.ce-dias { display: flex; flex-direction: column; gap: 8px; }
+
+.ce-dia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 10px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+
+  &__nombre { display: flex; align-items: center; gap: 10px; flex: 1 1 130px; margin: 0; cursor: pointer; }
+  &__texto { color: $cfg-ink; font-size: 13.5px; font-weight: 700; }
+  &__cerrado { color: $cfg-muted; font-size: 12.5px; }
+}
+
+.ce-hora {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+
+  &__etiqueta { color: $cfg-muted; font-size: 12px; font-weight: 700; }
+  &__caja { min-height: 36px; width: 112px; }
+}
+
+.ce-errores {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+  color: $cfg-err;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  &__item { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+  &--servidor { padding-left: 12px; }
+}
+
+.ce-pie { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.ce-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  background: $cfg-accent;
+  color: var(--ds-on-accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &:hover:not(:disabled) { background: $cfg-accent-hover; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+
+  &--sec {
+    border-color: var(--ds-line-strong);
+    background: var(--ds-surface);
+    color: $cfg-body;
+    &:hover:not(:disabled) { background: $cfg-tint; color: $cfg-accent-ink; }
+  }
+}

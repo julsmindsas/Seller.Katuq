@@ -303,6 +303,7 @@ export class WhatsappInboxService extends BaseService {
       threadId: it.threadId || null,
       line: it.line && it.line.id ? it.line : null,
       owner: it.owner && it.owner.email ? it.owner : null,
+      colaId: it.colaId || null,
     };
   }
 

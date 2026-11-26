@@ -8,7 +8,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import { DuenoChat, MiembroEquipo } from '../../../../shared/services/messaging/messaging.models';
+import { ColaBasica, DuenoChat, MiembroEquipo } from '../../../../shared/services/messaging/messaging.models';
 
 /**
  * Franja de "quién atiende" el chat (D-437). Solo presentación: emite Tomar,
@@ -40,17 +40,33 @@ export class ChatDuenoComponent implements OnChanges {
   @Input() conNota = false;
   @Input() equipo: MiembroEquipo[] = [];
   @Input() ocupado = false;
+  /** [D-727] Colas activas a las que se puede pasar el chat. Debe ser un campo estable, no un getter. */
+  @Input() colas: ColaBasica[] = [];
+  /** [D-727] Cola actual del chat: no se ofrece como destino. */
+  @Input() colaActualId: string | null = null;
 
   @Output() tomar = new EventEmitter<void>();
   @Output() soltar = new EventEmitter<void>();
-  /** `Transferencia` ({ email, nota }) con `conNota`; el correo solo (string) si no, como hoy. */
+  /** `Transferencia` ({ email? | colaId?, nota }) con `conNota`; el correo solo (string) si no, como hoy. */
   @Output() pasar = new EventEmitter<any>();
 
   modoPasar = false;
   destino: string[] = [];
   nota = '';
+  /** [D-727] A quién se pasa: una persona o una cola. */
+  destinoTipo: 'persona' | 'cola' = 'persona';
+  colaDestino = '';
+  /** Colas ofrecidas (sin la actual): se arma al cambiar las entradas, no en cada revisión. */
+  opcionesCola: ColaBasica[] = [];
+  /** Los destinos de estos dos tipos son los que se ofrecen en el selector «Persona / Cola». */
+  excluirDueno: string[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['colas'] || changes['colaActualId']) {
+      this.opcionesCola = (this.colas || []).filter((c) => c.activa && c.id !== this.colaActualId);
+      if (this.colaDestino && !this.opcionesCola.some((c) => c.id === this.colaDestino)) this.colaDestino = '';
+    }
+    if (changes['dueno']) this.excluirDueno = this.dueno?.email ? [this.dueno.email] : [];
     if (changes['dueno']) {
       this.modoPasar = false;
       this.destino = [];
@@ -61,6 +77,20 @@ export class ChatDuenoComponent implements OnChanges {
   /** Quien coordina: la entrada nueva o el alias de administrador. */
   get coordinador(): boolean {
     return this.coordina || this.esAdministrador;
+  }
+
+  /** Se puede elegir entre persona y cola solo con nota (bandeja única) y colas activas. */
+  get puedeCola(): boolean {
+    return this.conNota && this.opcionesCola.length > 0;
+  }
+
+  get puedeConfirmar(): boolean {
+    if (this.ocupado) return false;
+    return this.destinoTipo === 'cola' ? !!this.colaDestino : !!this.destino[0];
+  }
+
+  elegirTipo(tipo: 'persona' | 'cola'): void {
+    this.destinoTipo = tipo;
   }
 
   get mostrarPasar(): boolean {
@@ -90,22 +120,27 @@ export class ChatDuenoComponent implements OnChanges {
     this.modoPasar = true;
     this.destino = [];
     this.nota = '';
+    this.destinoTipo = 'persona';
+    this.colaDestino = '';
   }
 
   cancelarPasar(): void {
     this.modoPasar = false;
     this.destino = [];
     this.nota = '';
+    this.colaDestino = '';
   }
 
   confirmarPasar(): void {
-    const email = this.destino[0];
-    if (!email || this.ocupado) return;
+    if (!this.puedeConfirmar) return;
+    const nota = (this.nota || '').trim().slice(0, 300);
     this.modoPasar = false;
-    if (this.conNota) {
-      this.pasar.emit({ email, nota: (this.nota || '').trim().slice(0, 300) });
+    if (this.conNota && this.destinoTipo === 'cola') {
+      this.pasar.emit({ colaId: this.colaDestino, nota });
+    } else if (this.conNota) {
+      this.pasar.emit({ email: this.destino[0], nota });
     } else {
-      this.pasar.emit(email);
+      this.pasar.emit(this.destino[0]);
     }
     this.nota = '';
   }

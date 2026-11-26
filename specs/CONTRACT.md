@@ -14436,3 +14436,22 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Servidor sin cambios: `editBodega` guarda el campo y `lineWarehouse.js` acepta cualquier bodega de la misma zona.
 - **Pruebas:** local fuera de git (D-566) `tests/ventas/bodega-ultima-opcion.test.js` 6/6; tsc y build de producción sin errores; diccionarios sin fallas nuevas.
 - **Pendiente:** que el comercio marque ZF-01 y ZF-EXT como última opción (o hacerlo con su sí); publicar el Seller y probar en Chrome.
+
+### 2026-11-26 — D-727: colas, horarios y reparto por cola en la bandeja única (CONV fase D, ticket 1304)
+
+- **Aprobación:** Daniel, 26-nov («aprobado a todas las fases» de CONV, D-631). Sin Vidagas; piloto FLORECER/Julsmind.
+- **Pedido (1304):** que cada chat le llegue al grupo correcto y en su horario, sin armar un enrutador aparte.
+- **D-727:**
+  - **Misma bandera `bandejaUnica`.** Sin ella, o sin colas creadas, todo se comporta como en D-725.
+  - **Cola:** nombre, números y cuentas (WhatsApp, Instagram, Facebook, TikTok), asesores, reparto (por turnos o manual), horario por día (hora de Colombia) y mensaje de fuera de horario. Hasta 20 por comercio; un número o cuenta solo está en una cola activa.
+  - **Se guardan en `companyConfig/{empresa}.atencion.colas`** (sin colección nueva). Campos nuevos en `messaging_threads`: `colaId` y `fueraHorarioEn`. El turno de cada cola va en `companyConfig.atencion.turnos`.
+  - **Entrada:** el chat nuevo queda en la cola de su número o cuenta. Con reparto por turnos y en horario pasa al siguiente asesor disponible de la cola; manual o fuera de horario queda sin asignar. Si el número tiene bot, el bot atiende y el chat se reparte cuando el bot lo entrega.
+  - **Mensaje de fuera de horario:** único mensaje automático al cliente. Sale solo si la cola está cerrada y tiene texto, una vez cada 12 horas por chat, por el mismo camino de envío del canal (puede tener costo como cualquier respuesta). No toma el chat ni cuenta como respuesta. Con bot en el número no se envía.
+  - **Pasar a una cola** (dueño o quien coordina), con nota. El chat queda sin asignar en la cola destino y se reparte si corresponde.
+  - **Visibilidad:** el asesor ve además los números y cuentas de sus colas. En redes con cola, quien no es de la cola ve solo los chats a su nombre. Quien coordina ve todo.
+  - **Pantalla:** en «Equipo», lista de colas con en espera / sin responder y editor (solo administrador); filtro por cola y etiqueta de cola en la lista; «Pasar» a persona o cola.
+  - El aviso de «sin responder» no suena mientras la cola está cerrada.
+  - Rutas nuevas: `GET` y `PUT /v1/messaging/atencion/colas`; `transferir` acepta `colaId`.
+- **Pendiente para decidir:** el vendedor de un número sigue viendo sus chats aunque la cola sea de otros (la cola solo suma); al mover un número de cola, los chats viejos conservan la anterior.
+- **Fuera (otras fases):** cerrar con motivo, etiquetas y mensajes automáticos (E); Opttia en la atención (F); informes (H). Sin festivos ni varias franjas por día.
+- **Revisión y pruebas:** subagentes Sonnet con tres revisiones y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 17/17 (incluye 3 archivos nuevos locales, D-566) y envío de WhatsApp intacto. Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: crear dos colas con horario y mensaje, validaciones, número ya ocupado bloqueado, filtro por cola, pasar un chat de Instagram a otra cola; sin scroll horizontal ni errores. No se probó en vivo el mensaje de fuera de horario ni el reparto con mensajes reales.

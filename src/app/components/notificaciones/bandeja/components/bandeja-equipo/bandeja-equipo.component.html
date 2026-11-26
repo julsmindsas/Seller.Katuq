@@ -74,6 +74,63 @@
       </table>
     </section>
 
+    <!-- Colas de atención (D-727): una fila por cola; solo el administrador crea y edita -->
+    <section class="eq-card" *ngIf="!abierto">
+      <div class="eq-cabeza">
+        <h2 class="eq-titulo">{{ 'notificaciones.bandeja.colas.titulo' | translate }}</h2>
+        <button type="button" class="eq-btn" *ngIf="esAdmin" [disabled]="!puedeCrearCola" (click)="nuevaCola()">
+          {{ 'notificaciones.bandeja.colas.nueva' | translate }}
+        </button>
+      </div>
+      <p class="eq-ayuda" *ngIf="esAdmin && colas.length >= maxColas">{{ 'notificaciones.bandeja.colas.maximo' | translate: { max: maxColas } }}</p>
+
+      <div class="eq-vacio" *ngIf="!filasCola.length">
+        <span class="eq-vacio__icono"><i class="pi pi-sitemap" aria-hidden="true"></i></span>
+        <p class="eq-vacio__titulo">{{ 'notificaciones.bandeja.colas.vacioTitulo' | translate }}</p>
+        <p class="eq-vacio__texto">{{ 'notificaciones.bandeja.colas.vacioTexto' | translate }}</p>
+      </div>
+
+      <ul class="eq-colas" *ngIf="filasCola.length">
+        <li class="eq-cola" *ngFor="let c of filasCola; trackBy: trackCola">
+          <button
+            type="button"
+            class="eq-cola__ver"
+            (click)="verCola.emit(c.id)"
+            [attr.aria-label]="'notificaciones.bandeja.colas.verChats' | translate: { nombre: c.nombre }"
+          >
+            <span class="eq-cola__nombre">{{ c.nombre }}</span>
+            <span class="eq-cola__pills">
+              <span class="eq-pill eq-pill--neutra" *ngIf="!c.activa">{{ 'notificaciones.bandeja.colas.inactiva' | translate }}</span>
+              <span class="eq-pill" [class.eq-pill--ausente]="!c.enHorario" *ngIf="c.activa">
+                {{ (c.enHorario ? 'notificaciones.bandeja.colas.enHorario' : 'notificaciones.bandeja.colas.fueraHorario') | translate }}
+              </span>
+            </span>
+            <span class="eq-cola__cifras">
+              <span class="eq-cola__cifra">{{ 'notificaciones.bandeja.colas.enEspera' | translate: { n: c.enEspera } }}</span>
+              <span class="eq-cola__cifra" [class.eq-cola__cifra--alerta]="c.sinResponder > 0">{{ 'notificaciones.bandeja.colas.sinResponder' | translate: { n: c.sinResponder } }}</span>
+              <span class="eq-cola__cifra">{{ 'notificaciones.bandeja.colas.chats' | translate: { n: c.chats } }}</span>
+            </span>
+          </button>
+          <button type="button" class="eq-btn eq-btn--sec eq-cola__editar" *ngIf="esAdmin" (click)="editarCola(c.id)">
+            {{ 'notificaciones.bandeja.colas.editar' | translate }}
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="eq-card" *ngIf="abierto && esAdmin">
+      <app-bandeja-cola-editor
+        [cola]="editando"
+        [colas]="colas"
+        [lineas]="lineasCola"
+        [equipo]="equipoCola"
+        [guardando]="guardandoColas"
+        [errorServidor]="errorColas"
+        (guardar)="guardarCola($event)"
+        (cancelar)="cerrarEditor()"
+      ></app-bandeja-cola-editor>
+    </section>
+
     <!-- Ajustes: solo el administrador -->
     <section class="eq-card" *ngIf="esAdmin">
       <h2 class="eq-titulo">{{ 'notificaciones.bandeja.equipo.ajustes.titulo' | translate }}</h2>

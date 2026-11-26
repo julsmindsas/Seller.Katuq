@@ -60,6 +60,8 @@ export interface MetaHilo {
   threadId?: string | null;
   /** [D-725] Quién atiende el chat; `null` o ausente = sin asignar. */
   owner?: DuenoChat | null;
+  /** [D-727] Cola del chat; `null` o ausente = sin cola. */
+  colaId?: string | null;
 }
 
 /** Mensaje individual dentro de un hilo. */

@@ -54,6 +54,8 @@ export interface WhatsappThread {
   line?: LineaResumen | null;
   /** [D-437] Quién atiende el chat; `null` = sin asignar. */
   owner?: DuenoChat | null;
+  /** [D-727] Cola del chat; `null` o ausente = sin cola. */
+  colaId?: string | null;
 }
 
 /** [D-437] Clave de un chat: el mismo cliente en dos números son dos chats. */

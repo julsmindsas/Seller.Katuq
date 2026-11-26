@@ -8,6 +8,7 @@ import { ToastrService } from 'ngx-toastr';
 
 import { AtencionService } from '../../../../../shared/services/messaging/atencion.service';
 import {
+  ColaBasica,
   DuenoChat,
   MiembroEquipo,
   Transferencia,
@@ -58,6 +59,10 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   @Input() equipo: MiembroEquipo[] = [];
   /** Cambió el dueño del chat abierto. */
   @Output() duenoCambiado = new EventEmitter<DuenoChat | null>();
+  /** [D-727] Colas activas a las que se puede pasar el chat (campo estable de quien aloja). */
+  @Input() colas: ColaBasica[] = [];
+  /** [D-727] El chat pasó a una cola (id) tras pasarlo con éxito. */
+  @Output() colaCambiada = new EventEmitter<string>();
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
   duenoActual: DuenoChat | null = null;
@@ -595,20 +600,26 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   pasarChat(destino: Transferencia | string): void {
     const id = this.threadId;
     const t: Transferencia = typeof destino === 'string' ? { email: destino, nota: '' } : destino;
-    if (!id || !t?.email) return;
+    if (!id || (!t?.email && !t?.colaId)) return;
+    // [D-727] A una cola: el servidor deja el chat sin dueño y lo reparte según la cola.
+    if (t.colaId) {
+      this.accionDueno(this.atencionSrv.transferir(id, { colaId: t.colaId, nota: t.nota || '' }), 'notificaciones.owner.queuePassed', t.colaId);
+      return;
+    }
     const peticion = !this.duenoActual && this.coordina
-      ? this.atencionSrv.asignar(id, t.email)
-      : this.atencionSrv.transferir(id, t.email, t.nota || '');
+      ? this.atencionSrv.asignar(id, t.email as string)
+      : this.atencionSrv.transferir(id, t.email as string, t.nota || '');
     this.accionDueno(peticion, 'notificaciones.whatsapp.detail.ownerPassed');
   }
 
-  private accionDueno(peticion: ReturnType<AtencionService['tomar']>, exito: string): void {
+  private accionDueno(peticion: ReturnType<AtencionService['tomar']>, exito: string, colaId?: string): void {
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
     peticion.pipe(takeUntil(this.destroy$)).subscribe({
       next: (owner) => {
         this.duenoOcupado = false;
         this.ponerDueno(owner);
+        if (colaId) this.colaCambiada.emit(colaId);
         this.toastr.success(this.translate.instant(exito));
       },
       error: (err: any) => {
