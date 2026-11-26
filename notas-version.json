@@ -204,5 +204,6 @@
   {"fecha":"2026-11-26T16:30:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta."},
   {"fecha":"2026-11-26T18:00:00Z","tipo":"CORRIGE","modulos":["ventas/pedidos"],"texto":"Un pedido con descuento por producto y descuento global muestra el mismo total en el pedido, el PDF y la orden de venta."},
   {"fecha":"2026-11-26T18:30:00Z","tipo":"NUEVO","modulos":["ventas/venta-asistida"],"texto":"En el carrito puedes escoger de qué bodega sale cada producto y ves cuántas existencias tiene cada bodega."},
-  {"fecha":"2026-11-26T18:30:00Z","tipo":"NUEVO","modulos":["inventarios/bodegas"],"texto":"Puedes marcar una bodega como «Usar solo como última opción»: los productos solo salen de ella si ninguna otra bodega de la zona tiene existencias."}
+  {"fecha":"2026-11-26T18:30:00Z","tipo":"NUEVO","modulos":["inventarios/bodegas"],"texto":"Puedes marcar una bodega como «Usar solo como última opción»: los productos solo salen de ella si ninguna otra bodega de la zona tiene existencias."},
+  {"fecha":"2026-11-26T20:00:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En la sección «Dónde estás» de tu sitio ahora puedes mostrar el mapa interactivo de Google: tus clientes lo mueven, hacen zoom y lo abren en Maps. Si escribes el nombre de tu negocio como aparece en Google, el mapa muestra tus estrellas y reseñas."}
 ]
