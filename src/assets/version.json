@@ -1,17 +1,25 @@
 {
-  "version": "2026.11.26.1 - 26 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-26T15:30:30.669Z",
+  "version": "2026.11.26.2 - 26 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-26T16:55:04.262Z",
   "notas": [
     {
-      "fecha": "2026-11-26T14:15:00Z",
+      "fecha": "2026-11-26T16:30:00Z",
       "tipo": "NUEVO",
-      "texto": "En «Cómo va» de tu sitio ahora ves cuántas respuestas con inteligencia artificial lleva tu asistente en el mes.",
+      "texto": "En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta.",
       "modulos": [
         "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-26T16:30:00Z",
+      "tipo": "NUEVO",
+      "texto": "En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-26T14:15:00Z",
       "tipo": "NUEVO",
@@ -479,16 +487,8 @@
       "modulos": [
         "facturacion-electronica"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "El detalle de la factura muestra lo abonado, el saldo por pagar y los días de mora, si tienes permiso de Cartera.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "ed00cee6937cca25b74408497406b0a05f52a386",
+  "commit": "f107a86192a37221e2cf5acb4f11ed482832326c",
   "cambiosSinCommit": 0
 }
