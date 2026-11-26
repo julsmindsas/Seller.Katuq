@@ -9,16 +9,20 @@ import { LoaderService } from "../../../../../shared/services/loader.service";
 import { AtencionService } from "../../../../../shared/services/messaging/atencion.service";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
+  AccionHilo,
   AjustesAtencion,
+  CatalogosAtencion,
   ColaAtencion,
   ColaBasica,
   DuenoChat,
   EstadoAsesor,
+  EtiquetaChat,
   LineaDeCola,
   MessagingLine,
   MiembroAtencion,
   MiembroEquipo,
   NotaChat,
+  RespuestaRapida,
   ResumenAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { NavService } from "../../../../../shared/services/nav.service";
@@ -96,6 +100,28 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   colasGuardadoOk = false;
   errorColas = "";
   private colasFirma = "";
+
+  // ─── Cerrar con motivo, etiquetas y respuestas rápidas (D-728). Campos estables: nunca arreglos de un getter ───
+  /** Catálogos del comercio. Se cargan una vez (y al guardar); la firma evita recrearlos sin cambios. */
+  motivosCierre: string[] = [];
+  cierreAutoHoras = 0;
+  etiquetasCat: EtiquetaChat[] = [];
+  rapidos: RespuestaRapida[] = [];
+  miNombre = "";
+  private catalogosFirma = "";
+  /** Qué tarjeta de Equipo está guardando ('motivos' | 'etiquetas' | 'rapidos') y cuál guardó bien; vacío = ninguna. */
+  guardandoCat = "";
+  okCat = "";
+  /** Error 422 del servidor y a qué tarjeta pertenece. */
+  errorCatClave = "";
+  errorCatMensaje = "";
+  /** Acciones del chat abierto: cerrar, abrir de nuevo y etiquetar. */
+  ocupadoCierre = false;
+  errorCierre = "";
+  ocupadoEtiquetas = false;
+  errorEtiquetas = "";
+  /** Misma referencia siempre: lo que reciben los hijos cuando el chat no trae etiquetas. */
+  private readonly sinEtiquetas: string[] = [];
 
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
@@ -179,6 +205,19 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     return this.seleccion?.dueno || null;
   }
 
+  /** Etiquetas del chat abierto; la misma referencia mientras el chat no cambie. */
+  get etiquetasAbiertas(): string[] {
+    return this.seleccion?.etiquetas ?? this.sinEtiquetas;
+  }
+
+  get cerradoAbierto(): boolean {
+    return !!this.seleccion?.cerrado;
+  }
+
+  get motivoAbierto(): string {
+    return this.seleccion?.motivoCierre || "";
+  }
+
   get claveSeleccion(): string | null {
     return this.seleccion?.clave ?? null;
   }
@@ -206,12 +245,16 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     }
     this.seleccion = conversacion;
     this.reiniciarNotas();
+    this.reiniciarAcciones();
+    // Si el catálogo no llegó la primera vez, se vuelve a pedir al abrir un chat.
+    if (this.atencion && !this.motivosCierre.length) this.cargarCatalogos();
   }
 
   /** Mobile: de vuelta a la lista. */
   volver(): void {
     this.seleccion = null;
     this.reiniciarNotas();
+    this.reiniciarAcciones();
   }
 
   /** El detalle cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */
@@ -240,6 +283,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   cambiarVista(vista: VistaBandeja): void {
     if (vista === "equipo" && !this.coordina) return;
     this.vista = vista;
+    // Al entrar a Equipo se trae el catálogo al día (lo escrito en una tarjeta no se pisa: ver `sucio`).
+    if (vista === "equipo" && this.esAdmin) this.cargarCatalogos();
   }
 
   elegirAsesor(asesor: string | null): void {
@@ -355,6 +400,168 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ─── Cerrar con motivo, etiquetas y catálogos (D-728) ───
+
+  /** Cierra el chat abierto con un motivo del catálogo; un 403/409/422 se muestra en la barra. */
+  cerrarChat(motivo: string): void {
+    const id = this.threadIdAbierto;
+    if (!id || this.ocupadoCierre) return;
+    this.ocupadoCierre = true;
+    this.errorCierre = "";
+    this.atencionSrv
+      .cerrar(id, motivo)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.ocupadoCierre = false;
+          this.aplicarAccion(id, res);
+        },
+        error: (err) => {
+          if (this.threadIdAbierto !== id) return;
+          this.ocupadoCierre = false;
+          this.errorCierre = this.mensajeDe(err, "notificaciones.bandeja.cierre.errorCerrar");
+        },
+      });
+  }
+
+  /** Abre de nuevo el chat cerrado (no se asigna a nadie). */
+  reabrirChat(): void {
+    const id = this.threadIdAbierto;
+    if (!id || this.ocupadoCierre) return;
+    this.ocupadoCierre = true;
+    this.errorCierre = "";
+    this.atencionSrv
+      .reabrir(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.ocupadoCierre = false;
+          this.aplicarAccion(id, res);
+        },
+        error: (err) => {
+          if (this.threadIdAbierto !== id) return;
+          this.ocupadoCierre = false;
+          this.errorCierre = this.mensajeDe(err, "notificaciones.bandeja.cierre.errorAbrir");
+        },
+      });
+  }
+
+  etiquetarChat(ids: string[]): void {
+    const id = this.threadIdAbierto;
+    if (!id || this.ocupadoEtiquetas) return;
+    this.ocupadoEtiquetas = true;
+    this.errorEtiquetas = "";
+    this.atencionSrv
+      .etiquetar(id, ids)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.ocupadoEtiquetas = false;
+          this.aplicarAccion(id, res);
+        },
+        error: (err) => {
+          if (this.threadIdAbierto !== id) return;
+          this.ocupadoEtiquetas = false;
+          this.errorEtiquetas = this.mensajeDe(err, "notificaciones.bandeja.etiquetas.errorGuardar");
+        },
+      });
+  }
+
+  /**
+   * Guarda un pedazo de los catálogos (solo el administrador). Un 422 deja su mensaje en la tarjeta que lo
+   * envió y la tarjeta sigue abierta con lo escrito.
+   */
+  guardarCatalogos(clave: string, parcial: Partial<CatalogosAtencion>): void {
+    if (this.guardandoCat) return;
+    this.guardandoCat = clave;
+    this.okCat = "";
+    this.errorCatClave = "";
+    this.errorCatMensaje = "";
+    this.atencionSrv
+      .guardarCatalogos(parcial)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (nuevos) => {
+          this.guardandoCat = "";
+          this.okCat = clave;
+          this.catalogosFirma = "";
+          this.aplicarCatalogos(nuevos);
+        },
+        error: (err) => {
+          this.guardandoCat = "";
+          this.errorCatClave = clave;
+          this.errorCatMensaje = this.mensajeDe(err, "notificaciones.bandeja.catalogos.errorGuardar");
+        },
+      });
+  }
+
+  /** El mensaje del servidor (422 en español) o el texto general. */
+  private mensajeDe(err: any, claveGeneral: string): string {
+    const m = err?.error?.message;
+    return typeof m === "string" && m.trim() ? m : this.traducir(claveGeneral);
+  }
+
+  /** Lo que respondió el servidor se anota en el chat abierto y se refresca la lista (cerrado y etiquetas). */
+  private aplicarAccion(threadId: string, res: AccionHilo): void {
+    const abierta = this.seleccion;
+    if (!abierta || abierta.threadId !== threadId) {
+      this.cargar(true);
+      return;
+    }
+    const cerrado = !!res.cierre;
+    const motivoCierre = res.cierre?.motivo || undefined;
+    const etiquetas = res.etiquetas;
+    if (abierta.canal === "whatsapp") {
+      this.seleccion = {
+        ...abierta,
+        cerrado,
+        motivoCierre,
+        etiquetas,
+        dueno: res.owner || undefined,
+        origen: { ...abierta.origen, cerrado, motivoCierre: motivoCierre || null, etiquetas, owner: res.owner },
+      };
+    } else {
+      // Redes: mismo objeto de `hilo` (ver `onDuenoCambiado`); solo se anotan los datos nuevos.
+      abierta.origen.cerrado = cerrado;
+      abierta.origen.motivoCierre = motivoCierre || null;
+      abierta.origen.etiquetas = etiquetas;
+      abierta.origen.owner = res.owner;
+      this.seleccion = { ...abierta, cerrado, motivoCierre, etiquetas, dueno: res.owner || undefined };
+    }
+    this.cargar(true);
+  }
+
+  private reiniciarAcciones(): void {
+    this.ocupadoCierre = false;
+    this.errorCierre = "";
+    this.ocupadoEtiquetas = false;
+    this.errorEtiquetas = "";
+  }
+
+  /** Catálogos, para todos. Un fallo conserva los anteriores; sin cambios se conservan los mismos arreglos. */
+  private cargarCatalogos(): void {
+    if (!this.atencion) return;
+    this.atencionSrv
+      .catalogos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (c) => {
+          const firma = JSON.stringify(c);
+          if (firma === this.catalogosFirma) return;
+          this.catalogosFirma = firma;
+          this.aplicarCatalogos(c);
+        },
+        error: () => undefined,
+      });
+  }
+
+  private aplicarCatalogos(c: CatalogosAtencion): void {
+    this.motivosCierre = c.motivosCierre;
+    this.cierreAutoHoras = c.cierreAutoHoras;
+    this.etiquetasCat = c.etiquetas;
+    this.rapidos = c.rapidos;
+  }
+
   // ─── Notas internas ───
 
   alternarNotas(): void {
@@ -439,6 +646,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
           this.coordina = !!yo.coordina;
           this.esAdmin = !!yo.esAdmin;
           this.estado = yo.estado === "ausente" ? "ausente" : "disponible";
+          this.miNombre = yo.nombre || "";
+          this.cargarCatalogos();
           this.atencionSrv
             .equipo()
             .pipe(takeUntil(this.destroy$))
@@ -638,6 +847,15 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     if (antes !== ahora) {
       abierta.origen.owner = nueva.dueno || null;
       this.seleccion = { ...abierta, dueno: nueva.dueno };
+    }
+    // D-728: cerrado, motivo y etiquetas también se ponen al día sin cambiar el objeto de `hilo`.
+    const actual = this.seleccion as typeof abierta;
+    const etNuevas = (nueva.etiquetas || []).join("|");
+    if (!!actual.cerrado !== !!nueva.cerrado || (actual.motivoCierre || "") !== (nueva.motivoCierre || "") || (actual.etiquetas || []).join("|") !== etNuevas) {
+      abierta.origen.cerrado = !!nueva.cerrado;
+      abierta.origen.motivoCierre = nueva.motivoCierre || null;
+      abierta.origen.etiquetas = nueva.etiquetas || [];
+      this.seleccion = { ...actual, cerrado: nueva.cerrado, motivoCierre: nueva.motivoCierre, etiquetas: nueva.etiquetas };
     }
   }
 

@@ -56,6 +56,11 @@ export interface WhatsappThread {
   owner?: DuenoChat | null;
   /** [D-727] Cola del chat; `null` o ausente = sin cola. */
   colaId?: string | null;
+  /** [D-728] Chat cerrado con motivo; ausente = abierto. Solo llega con la bandeja única. */
+  cerrado?: boolean;
+  motivoCierre?: string | null;
+  /** [D-728] Ids de etiqueta vigentes. */
+  etiquetas?: string[];
 }
 
 /** [D-437] Clave de un chat: el mismo cliente en dos números son dos chats. */

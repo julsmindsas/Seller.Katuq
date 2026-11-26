@@ -20,10 +20,12 @@ import {
   DuenoChat,
   MiembroEquipo,
   ColaBasica,
+  RespuestaRapida,
   Transferencia,
   esErrorChatConDueno,
 } from "../../../../../shared/services/messaging/messaging.models";
 
+import { ChatRapidosComponent } from "../../../inbox-core/chat-rapidos/chat-rapidos.component";
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
   BotThreadState,
@@ -109,7 +111,13 @@ export class WhatsappThreadDetailComponent
   /** [D-727] El chat pasó a una cola (id) tras pasarlo con éxito. */
   @Output() colaCambiada = new EventEmitter<string>();
 
+  /** [D-728] Respuestas rápidas con comando (campo estable de quien aloja). Con catálogo no vacío se ocultan las 6 fijas; sin él todo queda igual. */
+  @Input() rapidos: RespuestaRapida[] = [];
+  /** [D-728] Nombre de quien escribe, para la variable {asesor}. */
+  @Input() miNombre = "";
+
   @ViewChild("messagesContainer") messagesContainer?: ElementRef<HTMLElement>;
+  @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
   messages: WhatsappMessage[] = [];
   feedItems: FeedItem[] = [];
@@ -404,6 +412,8 @@ export class WhatsappThreadDetailComponent
    * del textarea, así que solo bloqueamos cuando NO hay shift).
    */
   onEnterPress(event: Event): void {
+    // [D-728] Con la lista de respuestas rápidas abierta, Enter elige y no envía.
+    if (this.rapidosLista?.abierta || event.defaultPrevented) return;
     const keyEvent = event as KeyboardEvent;
     if (keyEvent.shiftKey) {
       return; // permitir newline
@@ -424,6 +434,27 @@ export class WhatsappThreadDetailComponent
   applyTemplate(tpl: QuickTemplate): void {
     this.composerText = tpl.sandboxBody;
     this.templatesOpen = false;
+  }
+
+  /** [D-728] Nombre del contacto para la variable {cliente}; vacío si el chat no trae uno real. */
+  get nombreCliente(): string {
+    const n = (this.chat?.contactName || "").trim();
+    return !n || n === this.translate.instant("notificaciones.sinNombre") ? "" : n;
+  }
+
+  /** [D-728] Con catálogo de respuestas rápidas, las 6 fijas del código se ocultan. */
+  get verFijas(): boolean {
+    return !(this.atencion && this.rapidos.length > 0);
+  }
+
+  /** [D-728] Las teclas del cuadro pasan primero por la lista de respuestas rápidas (flechas, Enter, Esc). */
+  alTeclaRapidos(event: Event): void {
+    this.rapidosLista?.alTecla(event as KeyboardEvent);
+  }
+
+  /** [D-728] El texto de la respuesta rápida elegida reemplaza el comando; no se envía. */
+  alElegirRapida(texto: string): void {
+    this.composerText = texto;
   }
 
   /** True si la UI debe mostrar el composer (hay hilo abierto con mensajes). */

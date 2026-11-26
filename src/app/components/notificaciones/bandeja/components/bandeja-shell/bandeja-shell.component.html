@@ -70,6 +70,15 @@
     [guardandoColas]="guardandoColas"
     [colasGuardadoOk]="colasGuardadoOk"
     [errorColas]="errorColas"
+    [motivosCierre]="motivosCierre"
+    [cierreAutoHoras]="cierreAutoHoras"
+    [etiquetasCat]="etiquetasCat"
+    [rapidos]="rapidos"
+    [guardandoCat]="guardandoCat"
+    [okCat]="okCat"
+    [errorCatClave]="errorCatClave"
+    [errorCatMensaje]="errorCatMensaje"
+    (guardarCatalogos)="guardarCatalogos($event.clave, $event.parcial)"
     (verAsesor)="verChatsDe($event)"
     (verCola)="verChatsDeCola($event)"
     (guardarColas)="guardarColas($event)"
@@ -100,6 +109,7 @@
         [asesor]="asesor"
         [colas]="colas"
         [cola]="cola"
+        [etiquetasCat]="etiquetasCat"
         (colaChange)="elegirCola($event)"
         (asesorChange)="elegirAsesor($event)"
         (seleccionar)="abrir($event)"
@@ -116,8 +126,26 @@
         <p class="bj-elige__texto">{{ 'notificaciones.bandeja.chooseText' | translate }}</p>
       </div>
 
-      <!-- Notas internas del chat abierto (solo con atención multiagente y un chat con hilo propio) -->
+      <!-- Barra del chat abierto (solo con atención multiagente y un chat con hilo propio): cerrar, etiquetas y notas -->
       <div class="bj-barra" *ngIf="seleccion && puedeVerNotas">
+        <app-chat-cierre
+          [threadId]="threadIdAbierto"
+          [cerrado]="cerradoAbierto"
+          [motivoCierre]="motivoAbierto"
+          [motivos]="motivosCierre"
+          [ocupado]="ocupadoCierre"
+          [error]="errorCierre"
+          (cerrar)="cerrarChat($event)"
+          (reabrir)="reabrirChat()"
+        ></app-chat-cierre>
+        <app-chat-etiquetas
+          [threadId]="threadIdAbierto"
+          [catalogo]="etiquetasCat"
+          [seleccionadas]="etiquetasAbiertas"
+          [ocupado]="ocupadoEtiquetas"
+          [error]="errorEtiquetas"
+          (guardar)="etiquetarChat($event)"
+        ></app-chat-etiquetas>
         <button
           type="button"
           class="bj-barra__btn"
@@ -160,6 +188,8 @@
         [atencion]="atencion"
         [coordina]="coordina"
         [colas]="colasActivas"
+        [rapidos]="rapidos"
+        [miNombre]="miNombre"
         (duenoCambiado)="onDuenoCambiado($event)"
         (colaCambiada)="onColaCambiada($event)"
         (backToList)="volver()"
@@ -182,6 +212,8 @@
             [coordina]="coordina"
             [equipo]="equipo"
             [colas]="colasActivas"
+            [rapidos]="rapidos"
+            [miNombre]="miNombre"
             (duenoCambiado)="onDuenoCambiado($event)"
             (colaCambiada)="onColaCambiada($event)"
           ></app-meta-hilo-detalle>

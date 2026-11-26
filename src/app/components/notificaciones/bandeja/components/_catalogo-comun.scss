@@ -1,0 +1,132 @@
+// Tarjetas de catálogos de la pestaña Equipo (D-728): motivos de cierre, etiquetas y respuestas rápidas.
+// Plano, acento #5F3FE0, tokens --ds-* (claro y oscuro). Ningún nombre de clase lleva «p-» ni «chip-»
+// (trampa de CSS global) y todo span con texto trae color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+
+:host { display: block; min-width: 0; }
+
+.ca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: var(--ds-surface);
+  box-shadow: $cfg-shadow-panel;
+  color: $cfg-ink;
+
+  button, input, select, textarea { font-family: inherit; letter-spacing: normal; }
+  p, h2, label { letter-spacing: normal; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}
+
+.ca-cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ca-titulo { margin: 0; color: $cfg-ink; font-size: 15px !important; font-weight: 800; }
+.ca-ayuda { margin: 0; color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
+
+.ca-lista { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.ca-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ca-caja {
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid $cfg-chip-border;
+  border-radius: 10px;
+  background: $cfg-chip-bg;
+  color: $cfg-ink;
+  font-size: 14px;
+  &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
+
+  &--area { padding: 10px 12px; resize: vertical; line-height: 1.45; }
+  &--corta { flex: 0 1 140px; }
+  &--num { flex: 0 1 120px; max-width: 160px; }
+}
+
+.ca-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+
+  &__etiqueta {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  &__ayuda { color: $cfg-muted; font-size: 12px; line-height: 1.4; }
+}
+
+.ca-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid $cfg-accent;
+  border-radius: 11px;
+  background: $cfg-accent;
+  color: var(--ds-on-accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease;
+
+  &:hover:not(:disabled) { background: $cfg-accent-hover; }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+
+  &--sec {
+    border-color: var(--ds-line-strong);
+    background: var(--ds-surface);
+    color: $cfg-body;
+    &:hover:not(:disabled) { background: $cfg-tint; color: $cfg-accent-ink; }
+  }
+
+  &--quitar { min-width: 40px; padding: 0 12px; }
+}
+
+.ca-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px;
+  border: 1px dashed $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+  text-align: center;
+
+  &__icono { color: $cfg-accent-ink; font-size: 22px !important; }
+  &__titulo { color: $cfg-ink; font-size: 13px; font-weight: 800; }
+  &__texto { color: $cfg-body; font-size: 12.5px; }
+}
+
+.ca-errores {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+  color: $cfg-err;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  &__item { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+  &--servidor { padding-left: 12px; }
+}
+
+.ca-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ca-ok { color: $cfg-ok; font-size: 12.5px; font-weight: 700; }
+.ca-cuenta { color: $cfg-muted; font-size: 12px; font-weight: 700; }

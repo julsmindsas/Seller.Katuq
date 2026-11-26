@@ -1,0 +1,46 @@
+<!-- Chat abierto: botón y bloque en línea para elegir el motivo -->
+<ng-container *ngIf="!cerrado">
+  <button
+    type="button"
+    class="cx-btn"
+    [class.is-activo]="abierto"
+    [attr.aria-expanded]="abierto"
+    [disabled]="ocupado"
+    (click)="alternar()"
+  >
+    <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+    <span class="cx-btn__texto">{{ 'notificaciones.bandeja.cierre.boton' | translate }}</span>
+  </button>
+
+  <form class="cx-bloque" *ngIf="abierto" (ngSubmit)="confirmar()" novalidate>
+    <label class="cx-campo">
+      <span class="cx-campo__etiqueta">{{ 'notificaciones.bandeja.cierre.motivo' | translate }}</span>
+      <select
+        class="cx-campo__caja"
+        name="motivoCierre"
+        [ngModel]="motivo"
+        (ngModelChange)="elegir($event)"
+        [disabled]="ocupado"
+        [attr.aria-invalid]="intentado && !motivo"
+      >
+        <option value="">{{ 'notificaciones.bandeja.cierre.elige' | translate }}</option>
+        <option *ngFor="let m of motivos" [value]="m">{{ m }}</option>
+      </select>
+    </label>
+    <button type="submit" class="cx-btn cx-btn--fuerte" [disabled]="ocupado">
+      <span class="cx-btn__texto">{{ (ocupado ? 'notificaciones.bandeja.cierre.cerrando' : 'notificaciones.bandeja.cierre.confirmar') | translate }}</span>
+    </button>
+    <p class="cx-error" role="alert" *ngIf="intentado && !motivo">{{ 'notificaciones.bandeja.cierre.motivoObligatorio' | translate }}</p>
+  </form>
+</ng-container>
+
+<!-- Chat cerrado: franja con el motivo y «Abrir de nuevo» -->
+<div class="cx-franja" *ngIf="cerrado" role="status">
+  <i class="fa fa-lock" aria-hidden="true"></i>
+  <span class="cx-franja__texto">{{ 'notificaciones.bandeja.cierre.cerrado' | translate: { motivo: motivoCierre || ('notificaciones.bandeja.cierre.sinMotivo' | translate) } }}</span>
+  <button type="button" class="cx-btn" [disabled]="ocupado" (click)="reabrir.emit()">
+    <span class="cx-btn__texto">{{ (ocupado ? 'notificaciones.bandeja.cierre.abriendo' : 'notificaciones.bandeja.cierre.abrir') | translate }}</span>
+  </button>
+</div>
+
+<p class="cx-error cx-error--linea" role="alert" *ngIf="error">{{ error }}</p>

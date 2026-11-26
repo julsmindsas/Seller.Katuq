@@ -40,6 +40,29 @@
       </button>
     </div>
 
+    <!-- Abiertos / Cerrados (D-728): nunca se mezclan -->
+    <div
+      class="bj-filtros"
+      *ngIf="mostrarEstado"
+      role="group"
+      [attr.aria-label]="'notificaciones.bandeja.estadoChat.aria' | translate"
+    >
+      <button
+        type="button"
+        class="bj-filtro"
+        [class.is-activo]="filtro.estado === 'abiertos'"
+        [attr.aria-pressed]="filtro.estado === 'abiertos'"
+        (click)="elegirEstado('abiertos')"
+      >{{ 'notificaciones.bandeja.estadoChat.abiertos' | translate }}</button>
+      <button
+        type="button"
+        class="bj-filtro"
+        [class.is-activo]="filtro.estado === 'cerrados'"
+        [attr.aria-pressed]="filtro.estado === 'cerrados'"
+        (click)="elegirEstado('cerrados')"
+      >{{ 'notificaciones.bandeja.estadoChat.cerrados' | translate }}</button>
+    </div>
+
     <div class="bj-filtros">
       <button
         type="button"
@@ -74,6 +97,19 @@
         <option value="">{{ 'notificaciones.bandeja.asesor.todos' | translate }}</option>
         <option [value]="sinAsignar">{{ 'notificaciones.owner.unassigned' | translate }}</option>
         <option *ngFor="let a of asesores" [value]="a.email">{{ a.nombre || a.email }}</option>
+      </select>
+    </label>
+
+    <label class="bj-numero" *ngIf="mostrarEtiqueta">
+      <span class="bj-numero__etiqueta">{{ 'notificaciones.bandeja.etiquetas.filtro' | translate }}</span>
+      <select
+        class="bj-numero__campo"
+        [ngModel]="filtro.etiqueta || ''"
+        (ngModelChange)="elegirEtiqueta($event)"
+        [attr.aria-label]="'notificaciones.bandeja.etiquetas.filtroAria' | translate"
+      >
+        <option value="">{{ 'notificaciones.bandeja.etiquetas.todas' | translate }}</option>
+        <option *ngFor="let e of etiquetasCat" [value]="e.id">{{ e.nombre }}</option>
       </select>
     </label>
 
@@ -125,10 +161,10 @@
     <div class="bj-vacio" *ngIf="!cargando && !errorCarga && filas.length === 0">
       <span class="bj-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></span>
       <p class="bj-vacio__titulo">
-        {{ (conversaciones.length ? 'notificaciones.bandeja.emptyFilterTitle' : 'notificaciones.bandeja.emptyTitle') | translate }}
+        {{ (filtro.estado === 'cerrados' && !cerradosCount ? 'notificaciones.bandeja.estadoChat.sinCerradosTitulo' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterTitle' : 'notificaciones.bandeja.emptyTitle') | translate }}
       </p>
       <p class="bj-vacio__texto">
-        {{ (conversaciones.length ? 'notificaciones.bandeja.emptyFilterText' : 'notificaciones.bandeja.emptyText') | translate }}
+        {{ (filtro.estado === 'cerrados' && !cerradosCount ? 'notificaciones.bandeja.estadoChat.sinCerradosTexto' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterText' : 'notificaciones.bandeja.emptyText') | translate }}
       </p>
     </div>
 
@@ -169,6 +205,18 @@
           >{{ fila.conversacion.sinLeer }}</span>
         </span>
 
+        <!-- Etiquetas del chat (D-728): color del catálogo, fondo suave -->
+        <span class="bj-fila__marcas" *ngIf="fila.etiquetas.length">
+          <span class="bj-et" *ngFor="let e of fila.etiquetas" [ngClass]="'bj-et--' + e.color">
+            <span class="bj-et__texto">{{ e.nombre }}</span>
+          </span>
+        </span>
+
+        <span class="bj-fila__dueno" *ngIf="fila.motivo">
+          <i class="fa fa-lock" aria-hidden="true"></i>
+          <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.cierre.cerrado' | translate: { motivo: fila.motivo } }}</span>
+        </span>
+
         <span class="bj-fila__dueno" *ngIf="fila.conversacion.dueno as dueno">
           <i class="fa fa-user-o" aria-hidden="true"></i>
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.handledBy' | translate: { nombre: dueno.nombre || dueno.email } }}</span>
@@ -179,7 +227,7 @@
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.colas.deCola' | translate: { nombre: fila.colaNombre } }}</span>
         </span>
 
-        <span class="bj-fila__dueno" *ngIf="atencion && !fila.conversacion.dueno && fila.conversacion.threadId">
+        <span class="bj-fila__dueno" *ngIf="atencion && !fila.conversacion.dueno && fila.conversacion.threadId && !fila.conversacion.cerrado">
           <i class="fa fa-user-o" aria-hidden="true"></i>
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.owner.unassigned' | translate }}</span>
         </span>

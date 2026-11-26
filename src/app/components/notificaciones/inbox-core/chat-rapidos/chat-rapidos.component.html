@@ -1,0 +1,13 @@
+<ul class="rq-lista" *ngIf="abierta" role="listbox" [attr.aria-label]="'notificaciones.bandeja.rapidos.listaAria' | translate">
+  <li
+    class="rq-opcion"
+    *ngFor="let o of opciones; let i = index; trackBy: trackOpcion"
+    role="option"
+    [class.is-activa]="i === indice"
+    [attr.aria-selected]="i === indice"
+    (mousedown)="alPulsar($event, o)"
+  >
+    <span class="rq-opcion__comando">{{ o.comando }}</span>
+    <span class="rq-opcion__texto">{{ o.texto }}</span>
+  </li>
+</ul>

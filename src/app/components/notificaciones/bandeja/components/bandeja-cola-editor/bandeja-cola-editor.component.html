@@ -125,6 +125,37 @@
     <span class="ce-aviso">{{ 'notificaciones.bandeja.colas.editor.mensajeAviso' | translate }}</span>
   </label>
 
+  <!-- Fase E (D-728): bienvenida y mensaje al cerrar, con el mismo aviso de costo -->
+  <label class="ce-campo">
+    <span class="ce-campo__etiqueta">{{ 'notificaciones.bandeja.colas.editor.bienvenida' | translate }}</span>
+    <textarea
+      class="ce-campo__caja ce-campo__area"
+      name="mensajeBienvenida"
+      rows="3"
+      [attr.maxlength]="maxMensajeCola"
+      [ngModel]="m.mensajeBienvenida"
+      (ngModelChange)="cambiarBienvenida($event)"
+      [placeholder]="'notificaciones.bandeja.colas.editor.bienvenidaEjemplo' | translate"
+    ></textarea>
+    <span class="ce-campo__contador" [class.is-limite]="maxMensajeCola - (m.mensajeBienvenida || '').length <= 20">{{ (m.mensajeBienvenida || '').length }} / {{ maxMensajeCola }}</span>
+    <span class="ce-aviso">{{ 'notificaciones.bandeja.colas.editor.bienvenidaAviso' | translate }}</span>
+  </label>
+
+  <label class="ce-campo">
+    <span class="ce-campo__etiqueta">{{ 'notificaciones.bandeja.colas.editor.cierre' | translate }}</span>
+    <textarea
+      class="ce-campo__caja ce-campo__area"
+      name="mensajeCierre"
+      rows="3"
+      [attr.maxlength]="maxMensajeCola"
+      [ngModel]="m.mensajeCierre"
+      (ngModelChange)="cambiarCierre($event)"
+      [placeholder]="'notificaciones.bandeja.colas.editor.cierreEjemplo' | translate"
+    ></textarea>
+    <span class="ce-campo__contador" [class.is-limite]="maxMensajeCola - (m.mensajeCierre || '').length <= 20">{{ (m.mensajeCierre || '').length }} / {{ maxMensajeCola }}</span>
+    <span class="ce-aviso">{{ 'notificaciones.bandeja.colas.editor.cierreAviso' | translate }}</span>
+  </label>
+
   <!-- Errores en pantalla (después del primer intento) y el del servidor -->
   <ul class="ce-errores" role="alert" *ngIf="intentado && errores.length">
     <li class="ce-errores__item" *ngFor="let e of errores">{{ e | translate: { max: maxNombre } }}</li>

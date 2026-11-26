@@ -205,7 +205,10 @@
 // ── Barra y panel de notas del chat abierto ──
 .bj-barra {
   display: flex;
+  flex-wrap: wrap; // D-728: cerrar y etiquetas abren su bloque en línea a todo el ancho
+  align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   flex-shrink: 0;
   padding: 8px 12px;
   border-bottom: 1px solid $cfg-line;

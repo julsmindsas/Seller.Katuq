@@ -1,0 +1,35 @@
+// Marca de etiqueta (D-728): fondo suave y texto fuerte por color; plana, sin gradientes, claro y oscuro por tokens.
+// Se incluye en cada componente que pinta etiquetas (los estilos son encapsulados por componente).
+// Ningún nombre lleva «p-» ni «chip-» (trampa de CSS global).
+@mixin etiqueta-marca($nombre: 'et-marca') {
+  .#{$nombre} {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 20px;
+    background: var(--ds-accent-soft);
+    color: var(--ds-accent-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: normal;
+    white-space: nowrap;
+
+    &--morado { background: var(--ds-accent-soft); color: var(--ds-accent-ink); }
+    &--verde { background: var(--ds-ok-soft); color: var(--ds-ok); }
+    &--ambar { background: var(--ds-warn-soft); color: var(--ds-warn); }
+    &--rojo { background: var(--ds-err-soft); color: var(--ds-err); }
+    &--azul { background: var(--ds-info-soft); color: var(--ds-info); }
+    &--gris { background: var(--ds-surface-2); color: var(--ds-muted); }
+  }
+
+  .#{$nombre}__texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+}

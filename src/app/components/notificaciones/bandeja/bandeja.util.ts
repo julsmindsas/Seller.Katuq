@@ -25,6 +25,9 @@ export function desdeWhatsapp(hilo: WhatsappThread): ConversacionWhatsapp {
     dueno: hilo.owner || undefined,
     threadId: hilo.threadId || undefined,
     colaId: hilo.colaId || undefined,
+    cerrado: hilo.cerrado === true,
+    motivoCierre: hilo.motivoCierre || undefined,
+    etiquetas: hilo.etiquetas || undefined,
     origen: hilo,
   };
 }
@@ -41,6 +44,9 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     dueno: hilo.owner || undefined,
     threadId: hilo.threadId || `red_${hilo.canal}__${hilo.identidadHash}`,
     colaId: hilo.colaId || undefined,
+    cerrado: hilo.cerrado === true,
+    motivoCierre: hilo.motivoCierre || undefined,
+    etiquetas: hilo.etiquetas || undefined,
     origen: hilo,
   };
 }
@@ -117,6 +123,9 @@ export function filtrar(
       }
     }
     if (filtro.colaId && colaIdDe(c, colas) !== filtro.colaId) return false;
+    // D-728: abiertos y cerrados no se mezclan; sin la bandeja nadie trae `cerrado` y todo es «abierto».
+    if (!!c.cerrado !== (filtro.estado === "cerrados")) return false;
+    if (filtro.etiqueta && !(c.etiquetas || []).includes(filtro.etiqueta)) return false;
     if (busqueda && !normalizarTexto(c.nombre).includes(busqueda)) return false;
     return true;
   });

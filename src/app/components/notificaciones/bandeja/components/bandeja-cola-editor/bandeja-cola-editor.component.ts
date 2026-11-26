@@ -15,7 +15,7 @@ import {
   MiembroEquipo,
   RepartoCola,
 } from "../../../../../shared/services/messaging/messaging.models";
-import { MAX_MENSAJE_FUERA, MAX_NOMBRE_COLA, normalizarCola } from "../../bandeja.colas";
+import { MAX_MENSAJE_COLA, MAX_MENSAJE_FUERA, MAX_NOMBRE_COLA, normalizarCola } from "../../bandeja.colas";
 
 /** Un día del horario listo para pintar. `n` es la clave del servidor: "0" domingo a "6" sábado. */
 export interface DiaEditor {
@@ -72,6 +72,7 @@ export class BandejaColaEditorComponent implements OnChanges {
 
   readonly maxNombre = MAX_NOMBRE_COLA;
   readonly maxMensaje = MAX_MENSAJE_FUERA;
+  readonly maxMensajeCola = MAX_MENSAJE_COLA;
 
   m: ColaAtencion = normalizarCola({});
   dias: DiaEditor[] = [];
@@ -133,6 +134,15 @@ export class BandejaColaEditorComponent implements OnChanges {
     this.m = { ...this.m, mensajeFuera: (v || "").slice(0, this.maxMensaje) };
   }
 
+  /** Fase E (D-728): bienvenida y mensaje al cerrar. */
+  cambiarBienvenida(v: string): void {
+    this.m = { ...this.m, mensajeBienvenida: (v || "").slice(0, this.maxMensajeCola) };
+  }
+
+  cambiarCierre(v: string): void {
+    this.m = { ...this.m, mensajeCierre: (v || "").slice(0, this.maxMensajeCola) };
+  }
+
   marcarLinea(id: string, marcada: boolean): void {
     const sin = this.m.lineas.filter((l) => l !== id);
     this.m = { ...this.m, lineas: marcada ? [...sin, id] : sin };
@@ -184,6 +194,9 @@ export class BandejaColaEditorComponent implements OnChanges {
       else if (abiertos.some((d) => d.cierra <= d.abre)) e.push("notificaciones.bandeja.colas.err.horaOrden");
     }
     if ((this.m.mensajeFuera || "").length > this.maxMensaje) e.push("notificaciones.bandeja.colas.err.mensajeLargo");
+    if ((this.m.mensajeBienvenida || "").length > this.maxMensajeCola || (this.m.mensajeCierre || "").length > this.maxMensajeCola) {
+      e.push("notificaciones.bandeja.colas.err.mensajeLargo");
+    }
     return e;
   }
 
@@ -203,6 +216,8 @@ export class BandejaColaEditorComponent implements OnChanges {
       ...this.m,
       nombre: this.m.nombre.trim(),
       mensajeFuera: (this.m.mensajeFuera || "").trim(),
+      mensajeBienvenida: (this.m.mensajeBienvenida || "").trim(),
+      mensajeCierre: (this.m.mensajeCierre || "").trim(),
       horario: { activo: this.m.horario.activo, dias },
     });
   }

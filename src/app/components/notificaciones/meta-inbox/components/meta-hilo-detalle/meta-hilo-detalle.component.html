@@ -105,10 +105,21 @@
         tabindex="-1"
         (change)="alElegirImagen($event)"
       />
+      <!-- [D-728] Respuestas rápidas con «/»: solo con la bandeja y catálogo; no envía solo -->
+      <app-chat-rapidos
+        *ngIf="atencion && rapidos.length"
+        [rapidos]="rapidos"
+        [texto]="borrador"
+        [cliente]="nombreCliente"
+        [asesor]="miNombre"
+        [deshabilitado]="!puedeEscribir"
+        (elegir)="alElegirRapida($event)"
+      ></app-chat-rapidos>
       <textarea
         class="mb-responder__campo"
         [(ngModel)]="borrador"
         name="borrador"
+        (keydown)="alTeclaRapidos($event)"
         rows="2"
         [disabled]="!puedeEscribir"
         [placeholder]="claveMarcador | translate: { nombre: nombreDueno }"

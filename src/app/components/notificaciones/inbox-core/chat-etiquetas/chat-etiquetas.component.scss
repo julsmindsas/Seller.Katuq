@@ -1,0 +1,111 @@
+// Etiquetas del chat (D-728). Plano, acento #5F3FE0, tokens --ds-* (claro y oscuro).
+// Ningún nombre de clase lleva «p-» ni «chip-» (trampa de CSS global) y cada span trae color y tamaño propios.
+@import '../../../../shared/styles/config-pagina';
+@import '../_etiqueta-marca';
+
+:host { display: contents; }
+
+@include etiqueta-marca('et-marca');
+
+.et-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 14px !important; }
+  &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &.is-activo { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &:disabled { opacity: .6; cursor: default; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &--fuerte {
+    background: $cfg-accent;
+    border-color: $cfg-accent;
+    color: var(--ds-on-accent);
+    &:hover:not(:disabled) { background: $cfg-accent-hover; border-color: $cfg-accent-hover; color: var(--ds-on-accent); }
+  }
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; }
+
+  &__cuenta {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 20px;
+    text-align: center;
+  }
+}
+
+.et-bloque {
+  flex: 1 0 100%;
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+}
+
+.et-form { display: flex; flex-direction: column; gap: 10px; }
+
+.et-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.et-casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  &.is-bloqueada { opacity: .5; cursor: default; }
+  &__caja { width: 16px; height: 16px; accent-color: #5f3fe0; }
+  &__caja:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+}
+
+.et-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  &__cuenta { color: $cfg-muted; font-size: 12px; font-weight: 700; }
+}
+
+.et-vacio {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__titulo { color: $cfg-ink; font-size: 13px; font-weight: 800; }
+  &__texto { color: $cfg-body; font-size: 12.5px; }
+}
+
+.et-error {
+  flex: 1 0 100%;
+  margin: 0;
+  padding: 2px 2px 0;
+  color: $cfg-err;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+}

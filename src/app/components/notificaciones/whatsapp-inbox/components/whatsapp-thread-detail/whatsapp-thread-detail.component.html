@@ -243,7 +243,7 @@
           <span class="thread-detail__lectura-texto">{{ motivoLectura }}</span>
         </div>
 
-        <div class="thread-detail__quick-replies" *ngIf="!soloLectura">
+        <div class="thread-detail__quick-replies" *ngIf="!soloLectura && verFijas">
           <button
             type="button"
             class="thread-detail__quick-chip"
@@ -256,11 +256,22 @@
         </div>
 
         <form class="thread-detail__composer" (submit)="onSend($event)">
+          <!-- [D-728] Respuestas rápidas con «/»: solo con la bandeja y catálogo; no envía solo -->
+          <app-chat-rapidos
+            *ngIf="atencion && rapidos.length"
+            [rapidos]="rapidos"
+            [texto]="composerText"
+            [cliente]="nombreCliente"
+            [asesor]="miNombre"
+            [deshabilitado]="sending || soloLectura"
+            (elegir)="alElegirRapida($event)"
+          ></app-chat-rapidos>
           <textarea
             class="thread-detail__composer-input"
             [(ngModel)]="composerText"
             name="composerText"
             [placeholder]="'notificaciones.whatsapp.detail.composerPlaceholder' | translate"
+            (keydown)="alTeclaRapidos($event)"
             (keydown.enter)="onEnterPress($event)"
             [disabled]="sending || soloLectura"
             rows="1"

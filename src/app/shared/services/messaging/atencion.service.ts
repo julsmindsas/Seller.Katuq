@@ -5,7 +5,9 @@ import { catchError, map } from 'rxjs/operators';
 
 import { BaseService } from '../base.service';
 import {
+  AccionHilo,
   AjustesAtencion,
+  CatalogosAtencion,
   ColaAtencion,
   ColasAtencion,
   DuenoChat,
@@ -67,7 +69,7 @@ export class AtencionService extends BaseService {
     return this.get<HiloAtencion>(this.ruta(threadId)).pipe(
       catchError((err) =>
         err?.status === 404
-          ? of({ threadId, owner: null, notas: [], log: [] } as HiloAtencion)
+          ? of({ threadId, owner: null, notas: [], log: [], cierre: null, etiquetas: [] } as HiloAtencion)
           : throwError(() => err),
       ),
     );
@@ -116,10 +118,58 @@ export class AtencionService extends BaseService {
     );
   }
 
+  /** Todos los que usan la bandeja: motivos de cierre, horas de cierre automático, etiquetas y respuestas rápidas. */
+  catalogos(): Observable<CatalogosAtencion> {
+    return this.get<Partial<CatalogosAtencion>>(`${this.base}/catalogos`).pipe(
+      map((res) => ({
+        motivosCierre: res?.motivosCierre || [],
+        cierreAutoHoras: Number(res?.cierreAutoHoras) || 0,
+        etiquetas: res?.etiquetas || [],
+        rapidos: res?.rapidos || [],
+      })),
+    );
+  }
+
+  /** PUT: solo el administrador. Cuerpo parcial; un 422 trae el mensaje en `error.message`. */
+  guardarCatalogos(parcial: Partial<CatalogosAtencion>): Observable<CatalogosAtencion> {
+    return this.put<Partial<CatalogosAtencion>>(`${this.base}/catalogos`, parcial).pipe(
+      map((res) => ({
+        motivosCierre: res?.motivosCierre || [],
+        cierreAutoHoras: Number(res?.cierreAutoHoras) || 0,
+        etiquetas: res?.etiquetas || [],
+        rapidos: res?.rapidos || [],
+      })),
+    );
+  }
+
+  /** Cierra el chat con un motivo del catálogo. */
+  cerrar(threadId: string, motivo: string): Observable<AccionHilo> {
+    return this.post<AccionHilo>(`${this.ruta(threadId)}/cerrar`, { motivo }).pipe(map((r) => this.normalizar(r)));
+  }
+
+  /** Abre de nuevo un chat cerrado (no lo asigna a nadie). */
+  reabrir(threadId: string): Observable<AccionHilo> {
+    return this.post<AccionHilo>(`${this.ruta(threadId)}/reabrir`, {}).pipe(map((r) => this.normalizar(r)));
+  }
+
+  /** Reemplaza las etiquetas del chat (ids del catálogo, máximo 5). */
+  etiquetar(threadId: string, etiquetas: string[]): Observable<AccionHilo> {
+    return this.put<AccionHilo>(`${this.ruta(threadId)}/etiquetas`, { etiquetas }).pipe(map((r) => this.normalizar(r)));
+  }
+
   agregarNota(threadId: string, texto: string, menciones: string[] = []): Observable<NotaChat> {
     return this.post<{ nota: NotaChat }>(`${this.ruta(threadId)}/notas`, { texto, menciones }).pipe(
       map((res) => res.nota),
     );
+  }
+
+  private normalizar(r: Partial<AccionHilo> | null): AccionHilo {
+    return {
+      owner: r?.owner || null,
+      ...(r?.colaId ? { colaId: r.colaId } : {}),
+      cierre: r?.cierre || null,
+      etiquetas: Array.isArray(r?.etiquetas) ? (r?.etiquetas as string[]) : [],
+    };
   }
 
   private ruta(threadId: string): string {

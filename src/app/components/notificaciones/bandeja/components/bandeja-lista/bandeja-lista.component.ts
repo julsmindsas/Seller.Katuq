@@ -12,6 +12,7 @@ import {
   LineaResumen,
   ColaAtencion,
   ColaBasica,
+  EtiquetaChat,
   MessagingLine,
   MiembroAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
@@ -24,6 +25,7 @@ import {
   FILTRO_BANDEJA_VACIO,
   FiltroBandeja,
 } from "../../bandeja.models";
+import { MarcaEtiqueta, marcasDe } from "../../bandeja.catalogos";
 import { colaIdDe, filtrar } from "../../bandeja.util";
 
 /** Una fila ya lista para pintar: se arma una vez por cambio de datos o de filtro, no en cada ciclo. */
@@ -37,6 +39,10 @@ interface FilaVista {
   canalIcono: string;
   /** Nombre de la cola del chat; vacío si no tiene. */
   colaNombre: string;
+  /** Etiquetas del chat que siguen en el catálogo (D-728). */
+  etiquetas: MarcaEtiqueta[];
+  /** Motivo del cierre; vacío si el chat está abierto. */
+  motivo: string;
 }
 
 const LARGO_RESUMEN = 60;
@@ -84,6 +90,9 @@ export class BandejaListaComponent implements OnChanges {
   /** Cola elegida: la manda quien aloja la lista (también la cambia la pestaña Equipo). */
   @Input() cola: string | null = null;
 
+  /** [D-728] Catálogo de etiquetas (campo estable de quien aloja); sin él no hay filtro ni marcas. */
+  @Input() etiquetasCat: EtiquetaChat[] = [];
+
   @Output() colaChange = new EventEmitter<string | null>();
   @Output() asesorChange = new EventEmitter<string | null>();
   @Output() seleccionar = new EventEmitter<ConversacionResumen>();
@@ -96,6 +105,8 @@ export class BandejaListaComponent implements OnChanges {
   sinResponderCount = 0;
   hayDuenos = false;
   avisoCaidos = "";
+  /** Cuántos chats cerrados hay en lo cargado; con 0 el estado vacío de «Cerrados» lo dice. */
+  cerradosCount = 0;
 
   constructor(private readonly translate: TranslateService) {}
 
@@ -123,6 +134,25 @@ export class BandejaListaComponent implements OnChanges {
   /** El filtro por cola solo existe con la atención multiagente y al menos una cola. */
   get mostrarCola(): boolean {
     return this.atencion && this.colas.length > 0;
+  }
+
+  /** Abiertos / Cerrados solo existe con la atención multiagente (D-728). */
+  get mostrarEstado(): boolean {
+    return this.atencion;
+  }
+
+  get mostrarEtiqueta(): boolean {
+    return this.atencion && this.etiquetasCat.length > 0;
+  }
+
+  elegirEstado(estado: "abiertos" | "cerrados"): void {
+    this.filtro = { ...this.filtro, estado };
+    this.recalcular();
+  }
+
+  elegirEtiqueta(valor: string): void {
+    this.filtro = { ...this.filtro, etiqueta: valor || null };
+    this.recalcular();
   }
 
   elegirCola(valor: string): void {
@@ -185,7 +215,14 @@ export class BandejaListaComponent implements OnChanges {
       asesor: this.mostrarAsesor ? this.asesor : null,
       colaId: this.mostrarCola ? this.cola : null,
     };
-    this.sinResponderCount = todas.filter((c) => c.ultimaDireccion === "inbound").length;
+    // Un chat cerrado ya no cuenta como sin responder (D-728).
+    this.sinResponderCount = todas.filter((c) => !c.cerrado && c.ultimaDireccion === "inbound").length;
+    this.cerradosCount = todas.filter((c) => c.cerrado).length;
+    // Con la bandeja apagada nadie trae `cerrado` y el filtro se queda en «Abiertos».
+    if (!this.mostrarEstado && this.filtro.estado !== "abiertos") this.filtro = { ...this.filtro, estado: "abiertos" };
+    if (this.filtro.etiqueta && !this.etiquetasCat.some((e) => e.id === this.filtro.etiqueta)) {
+      this.filtro = { ...this.filtro, etiqueta: null };
+    }
     this.opcionesLinea = this.armarOpcionesLinea(todas);
     // Si el canal o el número elegidos dejaron de estar disponibles, el filtro se suelta.
     if (this.filtro.canal && !this.canalesDisponibles.includes(this.filtro.canal)) {
@@ -235,6 +272,8 @@ export class BandejaListaComponent implements OnChanges {
       canalLabel,
       canalIcono: CANAL_BANDEJA_ICONO[c.canal],
       colaNombre: this.nombreDeCola(c),
+      etiquetas: this.atencion ? marcasDe(c.etiquetas, this.etiquetasCat) : [],
+      motivo: c.cerrado ? c.motivoCierre || "" : "",
     };
   }
 

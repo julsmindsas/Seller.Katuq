@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -9,12 +9,14 @@ import { ToastrService } from 'ngx-toastr';
 import { AtencionService } from '../../../../../shared/services/messaging/atencion.service';
 import {
   ColaBasica,
+  RespuestaRapida,
   DuenoChat,
   MiembroEquipo,
   Transferencia,
   esErrorChatConDueno,
 } from '../../../../../shared/services/messaging/messaging.models';
 
+import { ChatRapidosComponent } from '../../../inbox-core/chat-rapidos/chat-rapidos.component';
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
   META_CANAL_LABEL,
@@ -63,6 +65,12 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   @Input() colas: ColaBasica[] = [];
   /** [D-727] El chat pasó a una cola (id) tras pasarlo con éxito. */
   @Output() colaCambiada = new EventEmitter<string>();
+
+  /** [D-728] Respuestas rápidas con comando (campo estable de quien aloja); sin ellas el cuadro es el de siempre. */
+  @Input() rapidos: RespuestaRapida[] = [];
+  /** [D-728] Nombre de quien escribe, para la variable {asesor}. */
+  @Input() miNombre = '';
+  @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
   duenoActual: DuenoChat | null = null;
@@ -545,6 +553,21 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   }
 
   /** Nombre de quien atiende el chat, para el texto del campo en lectura. */
+  /** [D-728] Nombre del contacto para la variable {cliente}; vacío si no se conoce. */
+  get nombreCliente(): string {
+    return (this.hilo?.contactoNombre || '').trim();
+  }
+
+  /** [D-728] Las teclas del cuadro pasan primero por la lista de respuestas rápidas (flechas, Enter, Esc). */
+  alTeclaRapidos(event: Event): void {
+    this.rapidosLista?.alTecla(event as KeyboardEvent);
+  }
+
+  /** [D-728] El texto de la respuesta rápida elegida reemplaza el comando; no se envía. */
+  alElegirRapida(texto: string): void {
+    this.borrador = texto;
+  }
+
   get nombreDueno(): string {
     return this.duenoActual?.nombre || this.duenoActual?.email || '';
   }

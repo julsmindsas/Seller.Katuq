@@ -190,6 +190,10 @@ export interface HiloAtencion {
   log: MovimientoChat[];
   /** Fase D (D-727): cola del chat; ausente o null si no tiene. */
   colaId?: string | null;
+  /** Fase E (D-728): cierre del chat; ausente o null = abierto. */
+  cierre?: CierreChat | null;
+  /** Fase E (D-728): ids de etiqueta vigentes del chat. */
+  etiquetas?: string[];
 }
 
 /** Lo que emite `app-chat-dueno.pasar` cuando recibe `conNota=true`: una persona o una cola, nunca las dos. */
@@ -236,6 +240,10 @@ export interface ColaAtencion extends Omit<ColaBasica, 'id'> {
   horario: HorarioCola;
   /** 0 a 500 caracteres. Vacío = no se envía nada. */
   mensajeFuera: string;
+  /** Fase E (D-728): 0 a 500 caracteres; se envía al chat nuevo en horario. Vacío = no se envía. */
+  mensajeBienvenida?: string;
+  /** Fase E (D-728): 0 a 500 caracteres; se envía al cerrar el chat a mano. Vacío = no se envía. */
+  mensajeCierre?: string;
 }
 
 /** Número o cuenta que se puede meter en una cola (`lineas` de `GET /atencion/colas`). */
@@ -261,4 +269,48 @@ export interface ResumenCola {
   enEspera: number;
   sinResponder: number;
   chats: number;
+}
+
+/* ---------- Cerrar con motivo, etiquetas y respuestas rápidas (D-728, fase E de CONV) ---------- */
+
+/** Cierre de un chat; el servidor lo guarda en `messaging_threads.cierre`. */
+export interface CierreChat {
+  en: string;
+  /** Correo de quien cerró, o `sistema` en el cierre automático. */
+  por: string;
+  nombre?: string;
+  motivo: string;
+}
+
+export type ColorEtiqueta = 'morado' | 'verde' | 'ambar' | 'rojo' | 'azul' | 'gris';
+
+/** Etiqueta del catálogo del comercio. Sin `id` = etiqueta nueva (el servidor lo genera del nombre). */
+export interface EtiquetaChat {
+  id?: string;
+  nombre: string;
+  color: ColorEtiqueta;
+}
+
+/** Respuesta rápida: `comando` como `/pagos`; `{cliente}` y `{asesor}` se resuelven al insertarla. */
+export interface RespuestaRapida {
+  id?: string;
+  comando: string;
+  texto: string;
+}
+
+/** `GET /atencion/catalogos`: siempre los cuatro, con los valores por defecto del servidor. */
+export interface CatalogosAtencion {
+  motivosCierre: string[];
+  /** 0 = apagado; entero de 1 a 720 = horas sin que el cliente escriba. */
+  cierreAutoHoras: number;
+  etiquetas: EtiquetaChat[];
+  rapidos: RespuestaRapida[];
+}
+
+/** Respuesta de cerrar, reabrir y etiquetar un chat. */
+export interface AccionHilo {
+  owner: DuenoChat | null;
+  colaId?: string;
+  cierre: CierreChat | null;
+  etiquetas: string[];
 }

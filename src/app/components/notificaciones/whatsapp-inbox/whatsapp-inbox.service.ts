@@ -304,6 +304,10 @@ export class WhatsappInboxService extends BaseService {
       line: it.line && it.line.id ? it.line : null,
       owner: it.owner && it.owner.email ? it.owner : null,
       colaId: it.colaId || null,
+      // [D-728] Solo llegan con la bandeja única; sin ellos el chat queda abierto y sin etiquetas.
+      cerrado: it.cerrado === true,
+      motivoCierre: it.motivoCierre || null,
+      etiquetas: Array.isArray(it.etiquetas) ? it.etiquetas : [],
     };
   }
 

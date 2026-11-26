@@ -131,6 +131,33 @@
       ></app-bandeja-cola-editor>
     </section>
 
+    <!-- Catálogos de la fase E (D-728): motivos de cierre, etiquetas y respuestas rápidas; solo el administrador -->
+    <app-bandeja-motivos
+      *ngIf="esAdmin"
+      [motivos]="motivosCierre"
+      [horas]="cierreAutoHoras"
+      [guardando]="guardandoCat === 'motivos'"
+      [guardadoOk]="okCat === 'motivos'"
+      [errorServidor]="errorCatClave === 'motivos' ? errorCatMensaje : ''"
+      (guardar)="guardarCat('motivos', $event)"
+    ></app-bandeja-motivos>
+    <app-bandeja-etiquetas
+      *ngIf="esAdmin"
+      [etiquetas]="etiquetasCat"
+      [guardando]="guardandoCat === 'etiquetas'"
+      [guardadoOk]="okCat === 'etiquetas'"
+      [errorServidor]="errorCatClave === 'etiquetas' ? errorCatMensaje : ''"
+      (guardar)="guardarCat('etiquetas', $event)"
+    ></app-bandeja-etiquetas>
+    <app-bandeja-rapidos
+      *ngIf="esAdmin"
+      [rapidos]="rapidos"
+      [guardando]="guardandoCat === 'rapidos'"
+      [guardadoOk]="okCat === 'rapidos'"
+      [errorServidor]="errorCatClave === 'rapidos' ? errorCatMensaje : ''"
+      (guardar)="guardarCat('rapidos', $event)"
+    ></app-bandeja-rapidos>
+
     <!-- Ajustes: solo el administrador -->
     <section class="eq-card" *ngIf="esAdmin">
       <h2 class="eq-titulo">{{ 'notificaciones.bandeja.equipo.ajustes.titulo' | translate }}</h2>

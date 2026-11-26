@@ -12,6 +12,9 @@ import { BandejaShellComponent } from "./components/bandeja-shell/bandeja-shell.
 import { BandejaListaComponent } from "./components/bandeja-lista/bandeja-lista.component";
 import { BandejaEquipoComponent } from "./components/bandeja-equipo/bandeja-equipo.component";
 import { BandejaColaEditorComponent } from "./components/bandeja-cola-editor/bandeja-cola-editor.component";
+import { BandejaMotivosComponent } from "./components/bandeja-motivos/bandeja-motivos.component";
+import { BandejaEtiquetasComponent } from "./components/bandeja-etiquetas/bandeja-etiquetas.component";
+import { BandejaRapidosComponent } from "./components/bandeja-rapidos/bandeja-rapidos.component";
 
 /**
  * Bandeja única (conv-bandeja-unica): todos los canales en una sola lista. Módulo lazy y pequeño: reutiliza
@@ -21,7 +24,15 @@ import { BandejaColaEditorComponent } from "./components/bandeja-cola-editor/ban
  * pasan por el interceptor de la sesión.
  */
 @NgModule({
-  declarations: [BandejaShellComponent, BandejaListaComponent, BandejaEquipoComponent, BandejaColaEditorComponent],
+  declarations: [
+    BandejaShellComponent,
+    BandejaListaComponent,
+    BandejaEquipoComponent,
+    BandejaColaEditorComponent,
+    BandejaMotivosComponent,
+    BandejaEtiquetasComponent,
+    BandejaRapidosComponent,
+  ],
   imports: [
     CommonModule,
     FormsModule,

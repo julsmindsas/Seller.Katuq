@@ -11,9 +11,12 @@ import {
 import {
   AjustesAtencion,
   CargaAsesor,
+  CatalogosAtencion,
   ColaAtencion,
+  EtiquetaChat,
   LineaDeCola,
   MiembroEquipo,
+  RespuestaRapida,
   ResumenAtencion,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { MAX_COLAS, paraGuardar } from "../../bandeja.colas";
@@ -64,6 +67,19 @@ export class BandejaEquipoComponent implements OnChanges {
   /** Mensaje del servidor al fallar el guardado; vacío = el texto general. */
   @Input() errorColas = "";
 
+  // ─── Catálogos de la fase E (D-728): campos estables de quien aloja; solo el administrador los edita ───
+  @Input() motivosCierre: string[] = [];
+  @Input() cierreAutoHoras = 0;
+  @Input() etiquetasCat: EtiquetaChat[] = [];
+  @Input() rapidos: RespuestaRapida[] = [];
+  /** Tarjeta que está guardando ('motivos' | 'etiquetas' | 'rapidos'); vacío = ninguna. */
+  @Input() guardandoCat = '';
+  /** Tarjeta que guardó bien por última vez. */
+  @Input() okCat = '';
+  /** Tarjeta a la que pertenece el error 422 y su mensaje. */
+  @Input() errorCatClave = '';
+  @Input() errorCatMensaje = '';
+
   /** Correo del asesor, o `sin-asignar`: la bandeja filtra la lista y vuelve a Chats. */
   @Output() verAsesor = new EventEmitter<string>();
   @Output() reintentar = new EventEmitter<void>();
@@ -72,6 +88,8 @@ export class BandejaEquipoComponent implements OnChanges {
   @Output() verCola = new EventEmitter<string>();
   /** La lista completa de colas con el cambio ya hecho. */
   @Output() guardarColas = new EventEmitter<ColaAtencion[]>();
+  /** Un pedazo de los catálogos con su tarjeta de origen. */
+  @Output() guardarCatalogos = new EventEmitter<{ clave: string; parcial: Partial<CatalogosAtencion> }>();
 
   readonly minutosMax = 240;
   readonly sinAsignar = ASESOR_SIN_ASIGNAR;
@@ -166,6 +184,10 @@ export class BandejaEquipoComponent implements OnChanges {
     else lista.push(paraGuardar(cola));
     this.enviada = true;
     this.guardarColas.emit(lista);
+  }
+
+  guardarCat(clave: string, parcial: Partial<CatalogosAtencion>): void {
+    this.guardarCatalogos.emit({ clave, parcial });
   }
 
   trackCola(_: number, f: FilaCola): string {

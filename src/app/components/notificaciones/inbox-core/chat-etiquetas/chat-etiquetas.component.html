@@ -1,0 +1,45 @@
+<button
+  type="button"
+  class="et-btn"
+  [class.is-activo]="abierto"
+  [attr.aria-expanded]="abierto"
+  (click)="alternar()"
+>
+  <i class="fa fa-tag" aria-hidden="true"></i>
+  <span class="et-btn__texto">{{ 'notificaciones.bandeja.etiquetas.boton' | translate }}</span>
+  <span class="et-btn__cuenta" *ngIf="vigentes">{{ vigentes }}</span>
+</button>
+
+<div class="et-bloque" *ngIf="abierto">
+  <!-- Estado vacío: el comercio aún no creó etiquetas -->
+  <div class="et-vacio" *ngIf="!casillas.length">
+    <span class="et-vacio__titulo">{{ 'notificaciones.bandeja.etiquetas.vacioTitulo' | translate }}</span>
+    <span class="et-vacio__texto">{{ 'notificaciones.bandeja.etiquetas.vacioTexto' | translate }}</span>
+  </div>
+
+  <form *ngIf="casillas.length" class="et-form" (ngSubmit)="enviar()">
+    <ul class="et-lista">
+      <li *ngFor="let c of casillas; trackBy: trackCasilla" class="et-item">
+        <label class="et-casilla" [class.is-bloqueada]="bloqueada(c)">
+          <input
+            type="checkbox"
+            class="et-casilla__caja"
+            [name]="'et-' + c.id"
+            [checked]="c.marcada"
+            [disabled]="bloqueada(c) || ocupado"
+            (change)="alMarcar(c, $any($event.target).checked)"
+          />
+          <span class="et-marca" [ngClass]="'et-marca--' + c.color"><span class="et-marca__texto">{{ c.nombre }}</span></span>
+        </label>
+      </li>
+    </ul>
+    <div class="et-pie">
+      <span class="et-pie__cuenta">{{ 'notificaciones.bandeja.etiquetas.cuenta' | translate: { n: marcadas, max: max } }}</span>
+      <button type="submit" class="et-btn et-btn--fuerte" [disabled]="!sucio || ocupado">
+        <span class="et-btn__texto">{{ (ocupado ? 'notificaciones.bandeja.equipo.ajustes.guardando' : 'notificaciones.bandeja.equipo.ajustes.guardar') | translate }}</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<p class="et-error" role="alert" *ngIf="error">{{ error }}</p>

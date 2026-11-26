@@ -508,6 +508,7 @@
   }
 
   &__composer {
+    position: relative; // D-728: la lista de respuestas rápidas flota encima del campo
     display: flex;
     align-items: flex-end;
     gap: 10px;

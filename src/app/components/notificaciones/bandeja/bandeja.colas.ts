@@ -9,6 +9,8 @@ import {
 export const MAX_COLAS = 20;
 export const MAX_NOMBRE_COLA = 60;
 export const MAX_MENSAJE_FUERA = 500;
+/** Fase E (D-728): bienvenida y cierre tienen el mismo tope. */
+export const MAX_MENSAJE_COLA = 500;
 
 const DIAS = ["0", "1", "2", "3", "4", "5", "6"];
 
@@ -32,6 +34,8 @@ export function normalizarCola(c: Partial<ColaAtencion> & Partial<ColaBasica>): 
     reparto: c.reparto === "turnos" ? "turnos" : "manual",
     horario: { activo: !!c.horario?.activo, dias },
     mensajeFuera: c.mensajeFuera || "",
+    mensajeBienvenida: c.mensajeBienvenida || "",
+    mensajeCierre: c.mensajeCierre || "",
     enHorario: c.enHorario,
   };
 }

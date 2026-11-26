@@ -35,6 +35,11 @@ interface ConversacionBase {
   threadId?: string;
   /** Cola del chat (fase D); ausente si no tiene o no hay colas. */
   colaId?: string;
+  /** Fase E (D-728): chat cerrado con motivo. */
+  cerrado?: boolean;
+  motivoCierre?: string;
+  /** Fase E (D-728): ids de etiqueta vigentes del catálogo. */
+  etiquetas?: string[];
 }
 
 export interface ConversacionWhatsapp extends ConversacionBase {
@@ -66,6 +71,10 @@ export interface FiltroBandeja {
   asesor: string | null;
   /** Id de la cola; null = todas. */
   colaId: string | null;
+  /** Fase E (D-728): la lista muestra abiertos o cerrados, nunca mezclados. */
+  estado: "abiertos" | "cerrados";
+  /** Id de etiqueta; null = todas. */
+  etiqueta: string | null;
 }
 
 /** Valor del filtro por asesor para los chats sin dueño. */
@@ -79,6 +88,8 @@ export const FILTRO_BANDEJA_VACIO: FiltroBandeja = {
   busqueda: "",
   asesor: null,
   colaId: null,
+  estado: "abiertos",
+  etiqueta: null,
 };
 
 /** Lo que devuelve una carga de la bandeja. */

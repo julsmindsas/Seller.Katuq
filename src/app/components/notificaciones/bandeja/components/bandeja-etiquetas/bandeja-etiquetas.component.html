@@ -1,0 +1,59 @@
+<section class="ca-card">
+  <div class="ca-cabeza">
+    <h2 class="ca-titulo">{{ 'notificaciones.bandeja.catalogos.etiquetas.titulo' | translate }}</h2>
+    <button type="button" class="ca-btn ca-btn--sec" [disabled]="!puedeAgregar" (click)="agregar()">
+      {{ 'notificaciones.bandeja.catalogos.etiquetas.agregar' | translate }}
+    </button>
+  </div>
+  <p class="ca-ayuda">{{ 'notificaciones.bandeja.catalogos.etiquetas.ayuda' | translate: { max: maxEtiquetas } }}</p>
+
+  <form class="ca-form" (ngSubmit)="enviar()" novalidate>
+    <div class="ca-vacio" *ngIf="!filas.length">
+      <span class="ca-vacio__titulo">{{ 'notificaciones.bandeja.catalogos.etiquetas.vacioTitulo' | translate }}</span>
+      <span class="ca-vacio__texto">{{ 'notificaciones.bandeja.catalogos.etiquetas.vacioTexto' | translate }}</span>
+    </div>
+
+    <ul class="ca-lista" *ngIf="filas.length">
+      <li class="ca-fila" *ngFor="let f of filas; trackBy: trackFila; let i = index">
+        <input
+          type="text"
+          class="ca-caja"
+          [name]="'etiqueta-' + f.k"
+          [attr.maxlength]="maxNombre"
+          [attr.aria-label]="'notificaciones.bandeja.catalogos.etiquetas.campo' | translate: { n: i + 1 }"
+          [ngModel]="f.nombre"
+          (ngModelChange)="cambiarNombre(f, $event)"
+        />
+        <select
+          class="ca-caja ca-caja--corta"
+          [name]="'color-' + f.k"
+          [attr.aria-label]="'notificaciones.bandeja.catalogos.etiquetas.color' | translate"
+          [ngModel]="f.color"
+          (ngModelChange)="cambiarColor(f, $event)"
+        >
+          <option *ngFor="let c of colores" [value]="c">{{ 'notificaciones.bandeja.catalogos.etiquetas.colores.' + c | translate }}</option>
+        </select>
+        <button
+          type="button"
+          class="ca-btn ca-btn--sec ca-btn--quitar"
+          [attr.aria-label]="'notificaciones.bandeja.catalogos.quitar' | translate"
+          (click)="quitar(f)"
+        >
+          <i class="fa fa-trash-o" aria-hidden="true"></i>
+        </button>
+      </li>
+    </ul>
+
+    <ul class="ca-errores" role="alert" *ngIf="intentado && errores.length">
+      <li class="ca-errores__item" *ngFor="let e of errores">{{ e | translate: { min: 2, max: maxNombre } }}</li>
+    </ul>
+    <p class="ca-errores ca-errores--servidor" role="alert" *ngIf="errorServidor">{{ errorServidor }}</p>
+
+    <div class="ca-pie">
+      <button type="submit" class="ca-btn" [disabled]="!sucio || guardando">
+        {{ (guardando ? 'notificaciones.bandeja.equipo.ajustes.guardando' : 'notificaciones.bandeja.equipo.ajustes.guardar') | translate }}
+      </button>
+      <span class="ca-ok" role="status" *ngIf="guardadoOk && !sucio">{{ 'notificaciones.bandeja.equipo.ajustes.guardado' | translate }}</span>
+    </div>
+  </form>
+</section>

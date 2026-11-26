@@ -2,6 +2,10 @@
 // Los $cfg-* son tokens --ds-* (claro y oscuro). Ningún nombre de clase lleva «p-» (trampa de CSS global);
 // todo span con texto trae color y tamaño propios (el global `span.ng-star-inserted` los pinta de azul).
 @import '../../../../../shared/styles/config-pagina';
+@import '../../../inbox-core/etiqueta-marca';
+@include etiqueta-marca('bj-et');
+
+.bj-fila__marcas { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
 
 :host {
   display: flex;
