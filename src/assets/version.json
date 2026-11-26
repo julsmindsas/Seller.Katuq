@@ -1,17 +1,73 @@
 {
-  "version": "2026.11.26.2 - 26 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-26T16:55:04.262Z",
+  "version": "2026.11.26.3 - 26 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-26T20:17:27.611Z",
   "notas": [
     {
-      "fecha": "2026-11-26T16:30:00Z",
+      "fecha": "2026-11-26T18:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Un pedido con descuento por producto y descuento global muestra el mismo total en el pedido, el PDF y la orden de venta.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T18:30:00Z",
       "tipo": "NUEVO",
-      "texto": "En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta.",
+      "texto": "En el carrito puedes escoger de qué bodega sale cada producto y ves cuántas existencias tiene cada bodega.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T18:30:00Z",
+      "tipo": "NUEVO",
+      "texto": "Puedes marcar una bodega como «Usar solo como última opción»: los productos solo salen de ella si ninguna otra bodega de la zona tiene existencias.",
+      "modulos": [
+        "inventarios/bodegas"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T20:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "En la sección «Dónde estás» de tu sitio ahora puedes mostrar el mapa interactivo de Google: tus clientes lo mueven, hacen zoom y lo abren en Maps. Si escribes el nombre de tu negocio como aparece en Google, el mapa muestra tus estrellas y reseñas.",
       "modulos": [
         "sitios"
       ]
     }
   ],
   "recientes": [
+    {
+      "fecha": "2026-11-26T20:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "En la sección «Dónde estás» de tu sitio ahora puedes mostrar el mapa interactivo de Google: tus clientes lo mueven, hacen zoom y lo abren en Maps. Si escribes el nombre de tu negocio como aparece en Google, el mapa muestra tus estrellas y reseñas.",
+      "modulos": [
+        "sitios"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T18:30:00Z",
+      "tipo": "NUEVO",
+      "texto": "En el carrito puedes escoger de qué bodega sale cada producto y ves cuántas existencias tiene cada bodega.",
+      "modulos": [
+        "ventas/venta-asistida"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T18:30:00Z",
+      "tipo": "NUEVO",
+      "texto": "Puedes marcar una bodega como «Usar solo como última opción»: los productos solo salen de ella si ninguna otra bodega de la zona tiene existencias.",
+      "modulos": [
+        "inventarios/bodegas"
+      ]
+    },
+    {
+      "fecha": "2026-11-26T18:00:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Un pedido con descuento por producto y descuento global muestra el mismo total en el pedido, el PDF y la orden de venta.",
+      "modulos": [
+        "ventas/pedidos"
+      ]
+    },
     {
       "fecha": "2026-11-26T16:30:00Z",
       "tipo": "NUEVO",
@@ -452,43 +508,8 @@
       "fecha": "2026-11-09T22:45:00Z",
       "tipo": "CORRIGE",
       "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Tu catálogo por link ahora muestra el nombre y el logo de tu tienda, y el formulario de pedido se ve más cómodo en el celular.",
-      "modulos": [
-        "cotizaciones/catalogos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los indicadores de Producción se leen con palabras completas, Indicadores de inventario ya no abre en la bodega de tránsito y Movimientos siempre llega hasta hoy.",
-      "modulos": [
-        "produccion/dashboard",
-        "inventario/indicadores",
-        "inventario/historial-movimientos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los avisos de Qué comprar traen un botón para ir a corregirlos, y los comprobantes por revisar de Contabilidad se abren ya filtrados.",
-      "modulos": [
-        "compras/reposicion",
-        "contabilidad"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "MEJORA",
-      "texto": "La alerta de vencimiento de tu certificado de firma DIAN aparece aunque no hayas guardado la fecha: Katuq la lee del propio certificado.",
-      "modulos": [
-        "facturacion-electronica"
-      ]
     }
   ],
-  "commit": "f107a86192a37221e2cf5acb4f11ed482832326c",
+  "commit": "2717c9ec6a1a2ca68fa421d47e263ffe58ba603c",
   "cambiosSinCommit": 0
 }
