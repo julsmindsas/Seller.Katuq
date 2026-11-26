@@ -32,6 +32,7 @@ import {
 } from "../modelo/pedido";
 import { Table } from "primeng/table";
 import { PaymentService } from "../../../shared/services/ventas/payment.service";
+import { calcularTotalesCanonico } from "../../../shared/services/ventas/iva-canonico";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { jsPDF } from "jspdf";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -3992,13 +3993,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const subtotalProductos = Number(this.checkPriceScale(item) || 0);
       const envio = Number(item.totalEnvio || 0);
       item.totalPedidoSinDescuento = subtotalProductos;
-      let descuento = 0;
-      if (item.porceDescuento) {
-        descuento = subtotalProductos * (Number(item.porceDescuento) / 100);
-        item.totalDescuento = descuento;
-      } else {
-        descuento = Number(item.totalDescuento || 0);
-      }
+      // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+      const descuento = this.descuentoDelPedido(item, subtotalProductos);
+      if (item.porceDescuento || this.tieneDescuentoLinea(item)) item.totalDescuento = descuento;
       item.subtotal = subtotalProductos - descuento + envio;
       const ivaResult = this.checkIVAPrice(item);
       item.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, item);
@@ -4669,6 +4666,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Incluye: productos, adiciones y preferencias
    * Consistente con PaymentService
    */
+  /** ¿Alguna línea trae descuento propio (item.descuentoLinea)? */
+  private tieneDescuentoLinea(pedido: any): boolean {
+    return Array.isArray(pedido?.carrito) && pedido.carrito.some((i: any) => Number(i?.descuentoLinea) > 0);
+  }
+
+  /**
+   * Ticket 1654 (ALMACEN BOMBAS, BAS-000125): el descuento del pedido como lo calcula el backend
+   * (orderCalculationService): cada línea con su descuento compuesto con el global. Antes el global se
+   * aplicaba sobre el valor bruto y el de línea no contaba, así que el PDF, la orden de venta y la vista
+   * mostraban otro total que el del pedido. Sin descuentos de línea, el cálculo es el de siempre.
+   */
+  private descuentoDelPedido(pedido: any, subtotalProductos: number): number {
+    if (this.tieneDescuentoLinea(pedido)) {
+      return Math.min(subtotalProductos, calcularTotalesCanonico(pedido).totalDescuento);
+    }
+    if (pedido?.porceDescuento) return subtotalProductos * (Number(pedido.porceDescuento) / 100);
+    return Number(pedido?.totalDescuento || 0);
+  }
+
   checkPriceScale(pedido) {
     // spec 010 (T-14): delega al punto único de cálculo (PaymentService).
     // Con el flag `ivaCalcUnificado` ON usa el motor canónico (iva-canonico.ts),
@@ -5173,13 +5189,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.totalPedidoSinDescuento = subtotalProductos;
 
             // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
-            let descuento = 0;
-            if (order.porceDescuento) {
-              descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
-              order.totalDescuento = descuento;
-            } else {
-              descuento = Number(order.totalDescuento || 0);
-            }
+            // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+            const descuento = this.descuentoDelPedido(order, subtotalProductos);
+            if (order.porceDescuento || this.tieneDescuentoLinea(order)) order.totalDescuento = descuento;
 
             // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
             order.subtotal = subtotalProductos - descuento + envio;
@@ -5523,13 +5535,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               order.totalPedidoSinDescuento = subtotalProductos;
 
               // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
-              let descuento = 0;
-              if (order.porceDescuento) {
-                descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
-                order.totalDescuento = descuento;
-              } else {
-                descuento = Number(order.totalDescuento || 0);
-              }
+              // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+              const descuento = this.descuentoDelPedido(order, subtotalProductos);
+              if (order.porceDescuento || this.tieneDescuentoLinea(order)) order.totalDescuento = descuento;
 
               // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
               order.subtotal = subtotalProductos - descuento + envio;
@@ -6944,13 +6952,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     pedido.totalPedidoSinDescuento = subtotalProductos;
 
     // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
-    let descuento = 0;
-    if (pedido.porceDescuento) {
-      descuento = subtotalProductos * (Number(pedido.porceDescuento) / 100);
-      pedido.totalDescuento = descuento;
-    } else {
-      descuento = Number(pedido.totalDescuento) || 0;
-    }
+    // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+    const descuento = this.descuentoDelPedido(pedido, subtotalProductos);
+    if (pedido.porceDescuento || this.tieneDescuentoLinea(pedido)) pedido.totalDescuento = descuento;
 
     // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
     pedido.subtotal = subtotalProductos - descuento + totalEnvio;
@@ -7062,13 +7066,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     order.totalPedidoSinDescuento = subtotalProductos;
 
     // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
-    let descuento = 0;
-    if (order.porceDescuento) {
-      descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
-      order.totalDescuento = descuento;
-    } else {
-      descuento = Number(order.totalDescuento || 0);
-    }
+    // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+    const descuento = this.descuentoDelPedido(order, subtotalProductos);
+    if (order.porceDescuento || this.tieneDescuentoLinea(order)) order.totalDescuento = descuento;
 
     // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
     const envio = Number(order.totalEnvio || 0);
@@ -9436,13 +9436,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     order.totalPedidoSinDescuento = subtotalProductos;
 
     // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
-    let descuento = 0;
-    if (order.porceDescuento) {
-      descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
-      order.totalDescuento = descuento;
-    } else {
-      descuento = Number(order.totalDescuento || 0);
-    }
+    // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+    const descuento = this.descuentoDelPedido(order, subtotalProductos);
+    if (order.porceDescuento || this.tieneDescuentoLinea(order)) order.totalDescuento = descuento;
 
     // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
     const envio = Number(order.totalEnvio || 0);
@@ -9872,13 +9868,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           order.totalPedidoSinDescuento = subtotalProductos;
 
           // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
-          let descuento = 0;
-          if (order.porceDescuento) {
-            descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
-            order.totalDescuento = descuento;
-          } else {
-            descuento = Number(order.totalDescuento || 0);
-          }
+          // Ticket 1654: línea y global compuestos, igual que el backend (antes el global iba sobre el bruto).
+          const descuento = this.descuentoDelPedido(order, subtotalProductos);
+          if (order.porceDescuento || this.tieneDescuentoLinea(order)) order.totalDescuento = descuento;
 
           // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
           order.subtotal = subtotalProductos - descuento + envio;

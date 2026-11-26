@@ -201,5 +201,6 @@
   {"fecha":"2026-11-25T16:55:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En «Cómo va» de tu sitio ahora ves de qué temas le preguntaron a tu asistente y no supo responder, para que publiques ese dato y la próxima vez lo conteste."},
   {"fecha":"2026-11-25T19:58:00Z","tipo":"CORRIGE","modulos":["ventas/pedidos"],"texto":"«Reenviar a Cereza», en el menú de un pedido que no llegó a ICG, ya funciona: antes no hacía nada al darle clic."},
   {"fecha":"2026-11-26T14:15:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En «Cómo va» de tu sitio ahora ves cuántas respuestas con inteligencia artificial lleva tu asistente en el mes."},
-  {"fecha":"2026-11-26T16:30:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta."}
+  {"fecha":"2026-11-26T16:30:00Z","tipo":"NUEVO","modulos":["sitios"],"texto":"En tu sitio, una pestaña de la sección de productos ahora se puede llenar sola con los productos que marques como Recomendado, Nuevo u Oferta."},
+  {"fecha":"2026-11-26T18:00:00Z","tipo":"CORRIGE","modulos":["ventas/pedidos"],"texto":"Un pedido con descuento por producto y descuento global muestra el mismo total en el pedido, el PDF y la orden de venta."}
 ]
