@@ -10154,6 +10154,8 @@
   "ventas.crearClienteModal.faltanDatos": "Faltan datos",
   "ventas.crearClienteModal.infoBasica": "Información básica",
   "ventas.crearClienteModal.campoObligatorio": "Campo obligatorio",
+  "inventarios.crearBodegas.ultimaOpcion": "Usar solo como última opción",
+  "inventarios.crearBodegas.ultimaOpcionAyuda": "En la venta asistida, los productos salen de esta bodega solo si ninguna otra bodega de la zona tiene existencias.",
   "ventas.crearClienteModal.documentoYaExiste": "Ya existe un cliente con este documento: {{nombre}}. Búscalo en Clientes en vez de crear otro.",
   "ventas.crearClienteModal.documentoVariasFichas": "Ya hay varias fichas de clientes con este documento. Búscalas en Clientes en vez de crear otra.",
   "ventas.pedidoFacturacion.encontramosCliente": "Encontramos a {{nombre}} con este documento.",

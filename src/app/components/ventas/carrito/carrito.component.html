@@ -119,8 +119,20 @@
                 <div class="item-meta">
                   <span class="item-name">{{ itemCarrito?.producto?.crearProducto?.titulo }}</span>
                   <span class="item-sku">{{ itemCarrito?.producto?.identificacion?.referencia || 'N/A' }}</span>
-                  <!-- D-539 (ticket 1331): de qué bodega de la zona sale esta línea -->
-                  <span class="item-bodega" *ngIf="itemCarrito?.bodegaNombre">Sale de {{ itemCarrito.bodegaNombre }}</span>
+                  <!-- D-539 (ticket 1331): de qué bodega de la zona sale esta línea.
+                       D-726 (ticket 1653): con varias bodegas en la zona se escoge a mano, viendo existencias. -->
+                  <label class="item-bodega item-bodega--select" *ngIf="itemCarrito?.idBodega && bodegasZona?.length > 1; else bodegaSoloTexto">
+                    <span>Sale de</span>
+                    <select [ngModel]="itemCarrito.idBodega" (ngModelChange)="cambiarBodegaLinea(itemCarrito, $event)"
+                      [attr.aria-label]="'Bodega de la que sale ' + (itemCarrito?.producto?.crearProducto?.titulo || 'el producto')">
+                      <option *ngFor="let b of bodegasZona" [value]="b.idBodega">
+                        {{ b.nombre || b.idBodega }} · {{ existencias(itemCarrito, b.idBodega) }}{{ b.ultimaOpcion ? ' (última opción)' : '' }}
+                      </option>
+                    </select>
+                  </label>
+                  <ng-template #bodegaSoloTexto>
+                    <span class="item-bodega" *ngIf="itemCarrito?.bodegaNombre">Sale de {{ itemCarrito.bodegaNombre }}</span>
+                  </ng-template>
                   <!-- Pill de configuración pendiente (D-147): línea agregada desde un
                        combo que requiere configuración adicional antes de cerrar la venta. -->
                   <button *ngIf="itemCarrito?._requiereConfiguracionPendiente" type="button"

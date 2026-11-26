@@ -10334,6 +10334,8 @@
   "ventas.crearClienteModal.faltanDatos": "Missing information",
   "ventas.crearClienteModal.infoBasica": "Basic information",
   "ventas.crearClienteModal.campoObligatorio": "Required field",
+  "inventarios.crearBodegas.ultimaOpcion": "Use only as a last resort",
+  "inventarios.crearBodegas.ultimaOpcionAyuda": "In assisted sales, products ship from this warehouse only if no other warehouse in the zone has stock.",
   "ventas.crearClienteModal.documentoYaExiste": "A customer with this ID already exists: {{nombre}}. Find them in Customers instead of creating another one.",
   "ventas.crearClienteModal.documentoVariasFichas": "There are already several customer records with this ID. Find them in Customers instead of creating another one.",
   "ventas.pedidoFacturacion.encontramosCliente": "We found {{nombre}} with this ID.",

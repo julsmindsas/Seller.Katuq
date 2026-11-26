@@ -494,6 +494,14 @@ export class CrearVentasComponent
     // Consumir el contexto una sola vez.
     try { sessionStorage.removeItem(clave); } catch { /* noop */ }
 
+    // D-726 (ticket 1653): la bodega escogida en la conversión va ANTES de cargar el carrito; si no,
+    // la bodega de cada producto se calculaba contra la bodega que estaba activa antes.
+    try {
+      if (ctx.bodega) this.aplicarCambioBodega(ctx.bodega);
+    } catch (e) {
+      console.error("Conversión cotización: error poniendo la bodega", e);
+    }
+
     // Cargar el carrito con las líneas de la cotización AQUÍ (newPedido ya limpió el
     // carrito al iniciar). La suscripción de ngOnInit sincroniza a pedidoGral.carrito
     // y habilita tieneProductosEnCarrito.
@@ -4691,10 +4699,23 @@ export class CrearVentasComponent
    * para que salga de la del pedido como siempre (bandera apagada, una sola
    * bodega en la zona o línea sin desglose de existencias).
    */
+  /** D-726 (ticket 1653): bodegas de la zona para el selector del carrito (vacío si no aplica D-539). */
+  get bodegasZonaCarrito(): any[] {
+    if (!this.bodega?.idBodega || !this.companyFeaturesBodegas.isEnabled('multiBodegaMismaZona')) return [];
+    const zona = bodegasDeLaZona(this.bodega, this.bodegas);
+    return zona.length < 2 ? [] : zona;
+  }
+
   bodegaDeLaLinea(item: any): { idBodega?: string; bodegaNombre?: string } {
     if (!this.bodega?.idBodega || !this.companyFeaturesBodegas.isEnabled('multiBodegaMismaZona')) return {};
     const zona = bodegasDeLaZona(this.bodega, this.bodegas);
     if (zona.length < 2) return {};
+    // D-726 (ticket 1653): la bodega que el vendedor escogió a mano se respeta mientras siga en la zona.
+    if (item?.bodegaManual === true) {
+      const manual = zona.find((b: any) => b.idBodega === item.idBodega);
+      if (manual) return { idBodega: manual.idBodega, bodegaNombre: manual.nombre || manual.idBodega };
+      delete item.bodegaManual;
+    }
     const elegida = bodegaParaLinea(item, this.bodega, zona);
     if (!elegida) return {};
     // Se deja también en la línea del carrito para que el carrito muestre de dónde sale.
@@ -4707,6 +4728,10 @@ export class CrearVentasComponent
     this.bodegaService.getBodegasByChannelName("Venta Asistida").subscribe({
       next: (bodegas) => {
         this.bodegas = bodegas;
+        // D-726 (ticket 1653): si el carrito ya tenía productos (conversión de una cotización), se
+        // recalcula de qué bodega sale cada uno ahora que se conocen las bodegas de la zona.
+        const enCarrito = this.cartService.productInCart.value || [];
+        if (enCarrito.length) this.cartService.productInCart.next([...enCarrito]);
         // Ya no necesitamos esta parte aquí, se maneja en ngOnInit
         // const bodegaGuardada = JSON.parse(localStorage.getItem('warehouse') || 'null');
         // if (bodegaGuardada) {

@@ -111,6 +111,24 @@
       letter-spacing: normal;
     }
 
+    // D-726 (ticket 1653): la misma pastilla, con un selector de bodega adentro.
+    .item-bodega--select {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 100%;
+
+      select {
+        max-width: 220px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        text-overflow: ellipsis;
+      }
+    }
+
     .item-name {
       font-weight: 800;
       font-size: 13.5px;

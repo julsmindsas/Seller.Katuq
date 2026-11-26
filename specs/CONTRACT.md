@@ -14423,3 +14423,16 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
 - **Revisión y pruebas:** subagentes Sonnet con cuatro revisiones independientes y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 14/14 y 49 casos nuevos locales (D-566). Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: vista Equipo, tomar un chat de Instagram, nota interna guardada, dueño en WhatsApp; sin scroll horizontal. No se probó enviar mensajes ni el aviso programado en vivo.
 - **Límites conocidos:** el resumen y el aviso leen todos los chats del comercio (con miles hará falta filtro con índice); «sin asignar» cuenta chats antiguos; la campana dirigida es un filtro de presentación.
 - **Pendiente:** publicar backend y Seller juntos cuando Daniel diga «publica» y probar con mensajes reales en FLORECER y Julsmind. Artefactos en `openspec/changes/conv-multiagente/` (copia local, D-705).
+
+### 2026-11-26 — D-726: bodega de última opción y bodega por producto a mano en la venta asistida (ticket 1653, ALMACEN BOMBAS)
+
+- **Pedido:** al convertir cotizaciones con equipos o combos, los productos salían de «ZF-01 Zona Franca - Libre Disposición»; esa bodega debe ser la última opción, y piden escoger a mano de qué bodega sale cada producto viendo las existencias.
+- **Causa:** la regla por línea de D-539 (`multiBodegaMismaZona`) escoge, dentro de la zona del pedido, la del pedido si alcanza y si no la de más existencias. En ALMACEN BOMBAS (copia katuq_dev) ZF-01 y ZF-EXT tienen `zona = Medellín`, igual que las MED-*, y en equipos Zona Franca suele tener más. Además la conversión cargaba el carrito antes de poner la bodega escogida.
+- **Decisión de Santiago (26-nov):** misma zona (no se cruza a Bogotá ni Cali; D-539 sigue igual) y selector manual con existencias.
+- **D-726 (solo Seller):**
+  - Bodega: casilla «Usar solo como última opción» (`warehouses.ultimaOpcion`). La regla (`bodega-zona.ts`) busca primero entre las bodegas de la zona que no son de última opción y solo después en las de última opción. Sin bodegas marcadas, la regla es la de siempre.
+  - Carrito: con dos o más bodegas en la zona, «Sale de» es un selector con las existencias de cada bodega; lo escogido queda en la línea (`bodegaManual`) y la regla no lo cambia mientras la bodega siga en la zona.
+  - Conversión de cotizaciones: la bodega escogida se aplica antes de cargar el carrito; al llegar la lista de bodegas se recalcula la bodega de cada línea.
+  - Servidor sin cambios: `editBodega` guarda el campo y `lineWarehouse.js` acepta cualquier bodega de la misma zona.
+- **Pruebas:** local fuera de git (D-566) `tests/ventas/bodega-ultima-opcion.test.js` 6/6; tsc y build de producción sin errores; diccionarios sin fallas nuevas.
+- **Pendiente:** que el comercio marque ZF-01 y ZF-EXT como última opción (o hacerlo con su sí); publicar el Seller y probar en Chrome.

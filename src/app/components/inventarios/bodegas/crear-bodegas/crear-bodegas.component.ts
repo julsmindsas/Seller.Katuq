@@ -62,7 +62,9 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       ciudad: [''],
       departamento: [''],
       pais: [''],
-      tipo: ['Física', Validators.required]
+      tipo: ['Física', Validators.required],
+      // D-726 (ticket 1653): los productos del pedido solo salen de aquí si ninguna otra bodega de la zona tiene.
+      ultimaOpcion: [false]
     });
   }
 
@@ -127,7 +129,8 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       idBodega: this.bodegaData.idBodega,
       tipo: this.bodegaData.tipo,
       direccion: this.bodegaData.direccion,
-      coordenadas: this.bodegaData.coordenadas
+      coordenadas: this.bodegaData.coordenadas,
+      ultimaOpcion: this.bodegaData.ultimaOpcion === true
     });
 
     // Cargar país y esperar a que se carguen departamentos

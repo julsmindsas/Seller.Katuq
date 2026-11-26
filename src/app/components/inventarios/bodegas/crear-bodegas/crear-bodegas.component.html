@@ -57,6 +57,13 @@
                       <option *ngFor="let tipo of tiposBodega" [value]="tipo">{{ tipo }}</option>
                     </select>
                   </div>
+
+                  <!-- D-726 (ticket 1653): bodega de última opción para los productos del pedido -->
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="bodega-ultima-opcion" formControlName="ultimaOpcion">
+                    <label class="form-check-label" for="bodega-ultima-opcion">{{ 'inventarios.crearBodegas.ultimaOpcion' | translate }}</label>
+                    <small class="d-block text-muted">{{ 'inventarios.crearBodegas.ultimaOpcionAyuda' | translate }}</small>
+                  </div>
                   
                   <div class="row g-2">
                     <div class="col-md-6 mb-3">

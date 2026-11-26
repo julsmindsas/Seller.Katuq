@@ -10154,6 +10154,8 @@
     "ventas.crearClienteModal.faltanDatos": "Angaben fehlen",
     "ventas.crearClienteModal.infoBasica": "Grundinformationen",
     "ventas.crearClienteModal.campoObligatorio": "Pflichtfeld",
+    "inventarios.crearBodegas.ultimaOpcion": "Nur als letzte Option verwenden",
+    "inventarios.crearBodegas.ultimaOpcionAyuda": "Im begleiteten Verkauf kommen Produkte nur dann aus diesem Lager, wenn kein anderes Lager der Zone Bestand hat.",
     "ventas.crearClienteModal.documentoYaExiste": "Es gibt bereits einen Kunden mit dieser Ausweisnummer: {{nombre}}. Suche ihn unter Kunden, statt einen neuen anzulegen.",
     "ventas.crearClienteModal.documentoVariasFichas": "Es gibt bereits mehrere Kundenkarten mit dieser Ausweisnummer. Suche sie unter Kunden, statt eine neue anzulegen.",
     "ventas.pedidoFacturacion.encontramosCliente": "Wir haben {{nombre}} mit dieser Ausweisnummer gefunden.",

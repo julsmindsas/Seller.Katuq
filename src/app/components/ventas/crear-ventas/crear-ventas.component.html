@@ -672,7 +672,7 @@
                   <span>Productos seleccionados</span>
                 </div>
                 <div class="section-content no-padding">
-                  <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)" *ngIf="pedidoGral"></app-carrito>
+                  <app-carrito #carrito [pedido]="pedidoGral" [bodegasZona]="bodegasZonaCarrito" (notaAgregada)="onNotaAgregada($event)" *ngIf="pedidoGral"></app-carrito>
                 </div>
               </div>
 

@@ -18,6 +18,7 @@ import {
   lineasDelGrupo,
   valorComun,
 } from "../../../shared/utils/combo-lineas";
+import { existenciasEnBodega } from "../../../shared/utils/bodega-zona";
 
 @Component({
   selector: "app-carrito",
@@ -43,7 +44,29 @@ export class CarritoComponent implements OnInit {
 
   @Input()
   public pedido: Pedido;
-  
+
+  /**
+   * D-726 (ticket 1653): bodegas de la zona del pedido (D-539). Con dos o más, «Sale de» es un selector
+   * con las existencias de cada una. Vacío (por omisión) = solo el texto, como antes.
+   */
+  @Input() bodegasZona: any[] = [];
+
+  existencias(item: any, idBodega: string): number {
+    return existenciasEnBodega(item, idBodega);
+  }
+
+  /** Lo escogido a mano queda fijo en la línea; crear-ventas ya no lo cambia con la regla automática. */
+  cambiarBodegaLinea(item: any, idBodega: string): void {
+    const bodega = (this.bodegasZona || []).find((b) => b.idBodega === idBodega);
+    if (!bodega || !item?.cartItemId) return;
+    this.carsingleton.updateProductQuantity({
+      cartItemId: item.cartItemId,
+      idBodega: bodega.idBodega,
+      bodegaNombre: bodega.nombre || bodega.idBodega,
+      bodegaManual: true,
+    });
+  }
+
   @Output() 
   notaAgregada = new EventEmitter<any>();
 
