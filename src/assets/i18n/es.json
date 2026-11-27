@@ -11504,5 +11504,8 @@
   "notificaciones.informes2.ventana": "Con mensajes de los últimos {{dias}} días",
   "notificaciones.informes2.ventanaMas": "Con mensajes de los últimos {{dias}} días (+{{n}} más viejos)",
   "notificaciones.informes2.pasaronObjetivoDe": "Pasaron el objetivo de {{t}}",
-  "notificaciones.cierre.pestanasAria": "Secciones de la bandeja"
+  "notificaciones.cierre.pestanasAria": "Secciones de la bandeja",
+  "notificaciones.cierre.rapidosAbierta": "Respuestas rápidas: {{n}}. Muévete con las flechas y elige con Enter.",
+  "notificaciones.cierre.abriendoChat": "Abriendo el chat…",
+  "notificaciones.cierre.noSeAbrioChat": "No pudimos abrir este chat desde el informe. Búscalo en Chats."
 }

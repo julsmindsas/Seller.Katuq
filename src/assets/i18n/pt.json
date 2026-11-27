@@ -11672,5 +11672,8 @@
   "notificaciones.informes2.ventana": "Com mensagens dos últimos {{dias}} dias",
   "notificaciones.informes2.ventanaMas": "Com mensagens dos últimos {{dias}} dias (+{{n}} mais antigos)",
   "notificaciones.informes2.pasaronObjetivoDe": "Passaram da meta de {{t}}",
-  "notificaciones.cierre.pestanasAria": "Seções da caixa de entrada"
+  "notificaciones.cierre.pestanasAria": "Seções da caixa de entrada",
+  "notificaciones.cierre.rapidosAbierta": "Respostas rápidas: {{n}}. Use as setas e Enter para escolher.",
+  "notificaciones.cierre.abriendoChat": "Abrindo o chat…",
+  "notificaciones.cierre.noSeAbrioChat": "Não conseguimos abrir este chat pelo relatório. Procure-o em Chats."
 }

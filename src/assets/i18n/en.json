@@ -11684,5 +11684,8 @@
   "notificaciones.informes2.ventana": "With messages in the last {{dias}} days",
   "notificaciones.informes2.ventanaMas": "With messages in the last {{dias}} days (+{{n}} older)",
   "notificaciones.informes2.pasaronObjetivoDe": "Past the {{t}} target",
-  "notificaciones.cierre.pestanasAria": "Inbox sections"
+  "notificaciones.cierre.pestanasAria": "Inbox sections",
+  "notificaciones.cierre.rapidosAbierta": "Quick replies: {{n}}. Use the arrow keys and press Enter to choose.",
+  "notificaciones.cierre.abriendoChat": "Opening the chat…",
+  "notificaciones.cierre.noSeAbrioChat": "We couldn't open this chat from the report. Look for it in Chats."
 }
