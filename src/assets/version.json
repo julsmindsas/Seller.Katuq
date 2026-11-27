@@ -1,8 +1,25 @@
 {
-  "version": "2026.11.26.4 - 26 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-26T21:11:21.962Z",
-  "notas": [],
+  "version": "2026.11.27.1 - 27 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-27T15:51:58.875Z",
+  "notas": [
+    {
+      "fecha": "2026-11-27T15:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "Si usas un asistente de IA en tu navegador (Claude, ChatGPT, Gemini), ahora entiende mejor el editor de tu sitio y te ayuda a armar tu página. Con «Copiar guía para mi asistente» le pasas las instrucciones en un clic.",
+      "modulos": [
+        "sitios"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-27T15:00:00Z",
+      "tipo": "NUEVO",
+      "texto": "Si usas un asistente de IA en tu navegador (Claude, ChatGPT, Gemini), ahora entiende mejor el editor de tu sitio y te ayuda a armar tu página. Con «Copiar guía para mi asistente» le pasas las instrucciones en un clic.",
+      "modulos": [
+        "sitios"
+      ]
+    },
     {
       "fecha": "2026-11-26T20:00:00Z",
       "tipo": "NUEVO",
@@ -470,13 +487,8 @@
         "productos",
         "despachos"
       ]
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "CORRIGE",
-      "texto": "El menú lateral muestra el mismo nombre de tu plan que la página de Precios."
     }
   ],
-  "commit": "8895ceae72c01052636e70655bac9586a49345c4",
+  "commit": "2f6dd4f9d0ad11c6e028b93a0489ba6685f763c8",
   "cambiosSinCommit": 0
 }
