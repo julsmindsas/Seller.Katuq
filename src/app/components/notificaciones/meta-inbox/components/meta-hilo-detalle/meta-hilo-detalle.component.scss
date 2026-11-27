@@ -351,3 +351,60 @@ $error-bg: #fdecec;
   }
   .mb-btn { margin-top: 6px; }
 }
+
+/* ─── Archivos de Instagram y Facebook (bandeja única) ─────────────────────────────────────────────── */
+
+/* Los archivos van arriba del texto, dentro de la misma burbuja. */
+.mb-msg__archivos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* Arrastrar un archivo sobre el chat: borde punteado y el aviso arriba, sin mover los mensajes. */
+.mb-chat__mensajes--soltar {
+  outline: 2px dashed #b9a8f5;
+  outline-offset: -6px;
+  background: #faf8ff;
+}
+
+.mb-soltar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: #f2eeff;
+  color: $acento;
+  pointer-events: none;
+
+  i { font-size: 14px; color: inherit; }
+
+  &__texto {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: normal;
+    color: $acento;
+  }
+}
+
+/* Con archivos el formulario se parte en filas: la bandeja del adjuntar (vista previa, avance) va arriba. */
+.mb-responder--archivos {
+  flex-wrap: wrap;
+}
+
+/* En el celular el cuadro de escribir ocupa su fila y los botones quedan debajo, con Enviar a la derecha. */
+@media (max-width: 560px) {
+  .mb-responder--archivos {
+    .mb-responder__campo {
+      flex: 1 1 100%;
+      order: -1;
+    }
+    .mb-btn--primario { margin-left: auto; }
+  }
+}

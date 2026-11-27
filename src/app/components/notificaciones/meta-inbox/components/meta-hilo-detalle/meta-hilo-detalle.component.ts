@@ -13,7 +13,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Subject, interval } from 'rxjs';
+import { Subject, Subscription, interval } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 
 import { TranslateService } from '@ngx-translate/core';
@@ -48,6 +48,7 @@ import { SONDEO_RESPALDO_MS } from '../../../../../shared/services/messaging/ban
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
   META_CANAL_LABEL,
+  MetaAdjunto,
   MetaCanal,
   MetaErrorCarga,
   MetaHilo,
@@ -55,6 +56,10 @@ import {
   MetaMensaje,
   MetaVentana,
 } from '../../models/meta-thread.model';
+import { CanalConArchivos, canalConArchivos } from '../../adjuntos/adjuntos-red.util';
+import { CacheAdjuntosRed } from '../../adjuntos/cache-adjuntos-red';
+import { EnvioAdjuntoRedService, EventoEnvioRed } from '../../adjuntos/envio-adjunto-red.service';
+import { EstadoAdjuntarRed, MetaAdjuntarComponent } from '../../adjuntos/meta-adjuntar/meta-adjuntar.component';
 
 /** Imágenes que se pueden adjuntar a una respuesta de TikTok (D-709). */
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png'];
@@ -181,6 +186,17 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
 
   private destroy$ = new Subject<void>();
 
+  // ─── Archivos de Instagram y Facebook (solo con `atencion`, bandeja única) ───
+  /** Clip, micrófono y envío de archivos del cuadro de escribir. */
+  @ViewChild(MetaAdjuntarComponent) adjuntar?: MetaAdjuntarComponent;
+  /** Archivos ya bajados de este chat (blob local); se sueltan al cambiar de chat y al salir. */
+  readonly cache: CacheAdjuntosRed;
+  /** Lo que tiene el adjuntar: un archivo o una nota listos, o grabando. */
+  adjEstado: EstadoAdjuntarRed = { conArchivo: false, grabando: false };
+  /** Se arrastra un archivo sobre el chat («Suelta para adjuntar»). */
+  arrastrando = false;
+  private readonly envioSub: Subscription;
+
   constructor(
     private servicio: MetaInboxService,
     private translate: TranslateService,
@@ -188,8 +204,15 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     private atencionSrv: AtencionService,
     private toastr: ToastrService,
     private zona: NgZone,
+    private envios: EnvioAdjuntoRedService,
   ) {
     this.arrancarRefrescoAutomatico();
+    this.cache = new CacheAdjuntosRed(
+      (ruta) => this.servicio.descargarAdjunto(ruta),
+      sanitizer,
+      (a) => (this.hilo ? this.envios.recienteDe(this.claveChat(this.hilo), a) : null),
+    );
+    this.envioSub = this.envios.eventos$.subscribe((ev) => this.alTerminarEnvioArchivo(ev));
   }
 
   get canalLabel(): string {
@@ -226,6 +249,12 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     const anterior = changes['hilo'].previousValue as MetaHilo | null;
     if (anterior?.identidadHash !== this.hilo.identidadHash || changes['canal']) {
       this.soltarImagenesEntrantes();
+      // Archivos: lo bajado del chat anterior se suelta (revoke) y una descarga tardía se descarta. Un envío en
+      // camino sigue en el servicio; si termina mientras se mira este otro chat, sale un aviso.
+      this.cache.soltar();
+      this.adjEstado = { conArchivo: false, grabando: false };
+      this.arrastrando = false;
+      this.envios.chatVisible = this.claveChat(this.hilo);
       // Mientras llegan los de la nueva conversación no se ven ni se usan los mensajes ni la ventana de la anterior
       // (el campo de respuesta queda cerrado hasta que llegue la ventana real). Solo al cambiar de conversación:
       // al enviar o reintentar se recarga la misma y vaciar haría parpadear el chat.
@@ -275,6 +304,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     this.caja?.nativeElement.removeEventListener('scroll', this.alMoverCaja);
     this.soltarImagenAdjunta();
     this.soltarImagenesEntrantes();
+    this.cache.soltar();
+    this.envioSub.unsubscribe();
+    if (this.hilo && this.envios.chatVisible === this.claveChat(this.hilo)) this.envios.chatVisible = null;
   }
 
   /**
@@ -459,6 +491,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     this.errorImagen = null;
     this.avisoEnvio = null;
     this.errorCarga = tipo;
+    this.cache.soltar();
   }
 
   /** Título del aviso cuando el chat no se puede mostrar. */
@@ -631,6 +664,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
    */
   textoAdjunto(m: MetaMensaje): string | null {
     if (!this.esTiktok) {
+      // Bandeja única: el archivo se ve dentro de la burbuja.
+      if (this.vistaArchivo(m)) return null;
       return !m.body && m.mediaUrl ? this.translate.instant('notificaciones.meta.attachment') : null;
     }
     if (this.imagenDe(m) || this.esPublicacion(m)) return null;
@@ -645,6 +680,112 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
 
   get esTiktok(): boolean {
     return this.canal === 'tiktok';
+  }
+
+  // ─── Archivos de Instagram y Facebook (bandeja única) ──────────────────
+
+  /** Con la bandeja única, Instagram y Facebook ven y envían archivos. TikTok sigue con su imagen (D-709). */
+  get usaArchivos(): boolean {
+    return this.atencion && canalConArchivos(this.canal);
+  }
+
+  /** Canal para el adjuntar (solo se usa cuando `usaArchivos`). */
+  get canalArchivos(): CanalConArchivos {
+    return this.canal === 'facebook' ? 'facebook' : 'instagram';
+  }
+
+  /** El servidor dice que pasaron las 24 h: no se adjunta ni se graba. */
+  get ventanaCerrada(): boolean {
+    return this.ventana?.abierta === false;
+  }
+
+  adjuntosDe(m: MetaMensaje): MetaAdjunto[] {
+    return Array.isArray(m.adjuntos) ? m.adjuntos : [];
+  }
+
+  /** Con la bandeja, los archivos del mensaje se pintan dentro de la burbuja. */
+  vistaArchivo(m: MetaMensaje): boolean {
+    return this.usaArchivos && this.adjuntosDe(m).length > 0;
+  }
+
+  trackAdjunto(i: number, a: MetaAdjunto): string {
+    return a.url || a.id || String(i);
+  }
+
+  /** La foto de un mensaje terminó de cargar: si el asesor estaba abajo, sigue abajo. */
+  alCargarAdjunto(): void {
+    if (this.ultimoAbajo) this.irAlFinal();
+  }
+
+  /** Texto de ayuda del cuadro: con un archivo listo, el texto sale después del archivo. */
+  get claveMarcadorCuadro(): string {
+    if (this.usaArchivos && this.adjEstado.conArchivo && this.puedeEscribir) return 'notificaciones.redes3.adjuntos.cuadroConArchivo';
+    return this.claveMarcador;
+  }
+
+  /** Pegar una captura o un archivo en el cuadro lo adjunta (bandeja única). */
+  alPegar(ev: ClipboardEvent): void {
+    if (!this.usaArchivos || !this.adjuntar) return;
+    const archivo = ev.clipboardData?.files && ev.clipboardData.files[0];
+    if (!archivo) return;
+    // Texto copiado de otra app (que a veces trae también una imagen): se pega como texto.
+    if ((ev.clipboardData?.getData('text/plain') || '').trim()) return;
+    ev.preventDefault();
+    this.adjuntar.tomarArchivo(archivo);
+  }
+
+  private traeArchivos(ev: DragEvent): boolean {
+    const tipos = ev.dataTransfer?.types;
+    return !!tipos && Array.from(tipos as ArrayLike<string>).includes('Files');
+  }
+
+  alArrastrarEncima(ev: DragEvent): void {
+    if (!this.usaArchivos || !this.adjuntar || this.errorCarga || !this.traeArchivos(ev)) return;
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+    this.arrastrando = true;
+  }
+
+  alSalirArrastre(ev: DragEvent): void {
+    const actual = ev.currentTarget as HTMLElement | null;
+    const hacia = ev.relatedTarget as Node | null;
+    if (actual && hacia && actual.contains(hacia)) return;
+    this.arrastrando = false;
+  }
+
+  alSoltar(ev: DragEvent): void {
+    // Sin la bandeja (buzón viejo) o en TikTok el chat no recibe archivos: el navegador se comporta como siempre.
+    if (!this.usaArchivos || (!this.arrastrando && !this.traeArchivos(ev))) return;
+    ev.preventDefault();
+    this.arrastrando = false;
+    if (!this.adjuntar) return;
+    const archivo = ev.dataTransfer?.files && ev.dataTransfer.files[0];
+    if (archivo) this.adjuntar.tomarArchivo(archivo);
+  }
+
+  /** Terminó un envío de archivo (de este chat o de otro; el servicio avisa los de otros chats). */
+  private alTerminarEnvioArchivo(ev: EventoEnvioRed): void {
+    if (!this.hilo || ev.clave !== this.claveChat(this.hilo)) return;
+    if (ev.tipo === 'listo') {
+      this.bajarAlFinal = true;
+      this.refrescarMensajesEnSilencio();
+      if (ev.parcial) {
+        // Salió el archivo y no el texto: el texto vuelve al cuadro para enviarlo de nuevo.
+        if (ev.texto && !(this.borrador || '').trim()) this.borrador = ev.texto;
+        this.avisoEnvio = this.translate.instant('notificaciones.redes3.adjuntos.parcial', { canal: this.canalLabel });
+      }
+      return;
+    }
+    // Se cortó después de subir: se relee el chat para ver si salió antes de reintentar.
+    if (ev.tipo === 'revisar') {
+      this.refrescarMensajesEnSilencio();
+      return;
+    }
+    const err: any = ev.error;
+    if (esErrorChatConDueno(err)) {
+      this.ponerDueno(err.error.owner || null);
+      this.toastr.warning(this.textoChatConDueno(), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
+    }
   }
 
   /**
@@ -750,15 +891,25 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
   }
 
   get puedeEnviar(): boolean {
-    const hayQueEnviar = this.borrador.trim().length > 0 || (this.esTiktok && Boolean(this.imagen));
+    const hayQueEnviar =
+      this.borrador.trim().length > 0 ||
+      (this.esTiktok && Boolean(this.imagen)) ||
+      // Bandeja única: un archivo o una nota listos se envían aunque no haya texto.
+      (this.usaArchivos && this.adjEstado.conArchivo);
     return (
       Boolean(this.ventana?.abierta) &&
       !this.errorCarga &&
       !this.sinConexionParaEnviar &&
       hayQueEnviar &&
       !this.enviando &&
-      !this.soloLectura
+      !this.soloLectura &&
+      !(this.usaArchivos && this.adjEstado.grabando)
     );
+  }
+
+  /** Un mensaje con archivo no se reintenta como texto (su texto saldría solo). */
+  puedeReintentar(m: MetaMensaje): boolean {
+    return !!m.body && this.adjuntosDe(m).length === 0;
   }
 
   // ─── Imagen adjunta (TikTok) ───────────────────────────────────────────
@@ -817,6 +968,18 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
   enviar(): void {
     if (!this.puedeEnviar || !this.hilo) return;
 
+    // Bandeja única: con un archivo listo se envía el archivo y el texto sale después, como otro mensaje. No usa
+    // `enviando`: el sondeo de respaldo y la señal del canal en vivo siguen corriendo.
+    if (this.usaArchivos && this.adjEstado.conArchivo && this.adjuntar) {
+      this.avisoEnvio = null;
+      const r = this.adjuntar.enviarElegido((this.borrador || '').trim());
+      if (r === 'enviado') {
+        this.borrador = '';
+        this.bajarAlFinal = true;
+      }
+      if (r !== 'nada') return;
+    }
+
     const imagen = this.esTiktok ? this.imagen : null;
     const texto = this.borrador.trim();
     this.enviando = true;
@@ -849,7 +1012,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
    * explicación en vez de un segundo fallo mudo.
    */
   reintentar(m: MetaMensaje): void {
-    if (!this.hilo || this.enviando || !m.body) return;
+    if (!this.hilo || this.enviando || !this.puedeReintentar(m)) return;
 
     this.enviando = true;
     this.avisoEnvio = null;

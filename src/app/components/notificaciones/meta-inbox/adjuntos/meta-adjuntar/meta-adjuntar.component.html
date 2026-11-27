@@ -1,0 +1,120 @@
+<!-- Bandeja encima del cuadro: aviso, vista previa, grabación y avance del envío -->
+<div class="madjr__bandeja" *ngIf="aviso || elegido || envio || estadoGrabacion !== 'inactivo'">
+  <!-- Aviso local (tipo, tamaño, micrófono, ventana cerrada…) -->
+  <div class="madjr__aviso" *ngIf="aviso" role="status">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="madjr__aviso-texto">{{ aviso.clave | translate: aviso.params }}</span>
+    <button type="button" class="madjr__x" (click)="aviso = null" [attr.aria-label]="'notificaciones.redes3.adjuntos.cerrar' | translate">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- Grabando una nota de voz -->
+  <div class="madjr__fila madjr__fila--grabando" *ngIf="estadoGrabacion !== 'inactivo'">
+    <span class="madjr__punto" aria-hidden="true"></span>
+    <span class="madjr__estado" aria-live="polite">
+      {{ (estadoGrabacion === 'pidiendo' ? 'notificaciones.redes3.adjuntos.voz.pidiendo' : 'notificaciones.redes3.adjuntos.voz.grabando') | translate }}
+    </span>
+    <ng-container *ngIf="grabando">
+      <span class="madjr__tiempo" role="timer">{{ segundosGrabados }} / 2:30</span>
+      <span class="madjr__nivel" aria-hidden="true"><span class="madjr__nivel-barra" [style.width.%]="nivelGrabacion"></span></span>
+      <button type="button" class="madjr__boton" (click)="detenerGrabacion()">
+        <i class="fa fa-stop" aria-hidden="true"></i>
+        {{ 'notificaciones.redes3.adjuntos.voz.detener' | translate }}
+      </button>
+    </ng-container>
+    <button type="button" class="madjr__boton madjr__boton--sec" (click)="cancelarGrabacion()">
+      {{ 'notificaciones.redes3.adjuntos.voz.descartar' | translate }}
+    </button>
+  </div>
+
+  <!-- Vista previa de lo elegido (aún no se envía) -->
+  <div class="madjr__fila" *ngIf="elegido as e">
+    <img *ngIf="e.kind === 'image' && e.vista" class="madjr__miniatura" [src]="e.vista" [alt]="e.nombre" />
+    <span *ngIf="e.kind !== 'image'" class="madjr__icono" aria-hidden="true">
+      <i class="fa" [ngClass]="e.voz ? 'fa-microphone' : e.kind === 'video' ? 'fa-film' : e.kind === 'audio' ? 'fa-music' : 'fa-file-pdf-o'"></i>
+    </span>
+    <span class="madjr__info">
+      <span class="madjr__nombre" [attr.title]="e.nombre">
+        {{ e.voz ? ('notificaciones.redes3.adjuntos.nombreVoz' | translate) : e.nombre }}
+      </span>
+      <span class="madjr__detalle">
+        {{ e.voz ? duracionElegida : tamanoElegido }}
+        <ng-container *ngIf="e.voz"> · {{ 'notificaciones.redes3.adjuntos.voz.lista' | translate }}</ng-container>
+      </span>
+      <audio *ngIf="e.kind === 'audio' && e.vista" class="madjr__audio" controls preload="metadata" [src]="e.vista"></audio>
+    </span>
+    <button type="button" class="madjr__boton madjr__boton--sec" (click)="quitar()">
+      {{ (e.voz ? 'notificaciones.redes3.adjuntos.voz.descartar' : 'notificaciones.redes3.adjuntos.quitar') | translate }}
+    </button>
+  </div>
+
+  <!-- Envío en camino (sigue aunque cambies de chat) -->
+  <div class="madjr__fila" *ngIf="envio as env" [class.madjr__fila--fallo]="env.etapa === 'fallo'">
+    <span class="madjr__icono" aria-hidden="true">
+      <i class="fa" [ngClass]="env.etapa === 'fallo' ? 'fa-exclamation-circle' : env.voz ? 'fa-microphone' : 'fa-paperclip'"></i>
+    </span>
+    <span class="madjr__info">
+      <span class="madjr__nombre" [attr.title]="env.nombre">
+        {{ env.voz ? ('notificaciones.redes3.adjuntos.nombreVoz' | translate) : env.nombre }}
+      </span>
+      <span class="madjr__detalle" aria-live="polite">
+        <ng-container *ngIf="env.etapa === 'subiendo'">{{ 'notificaciones.redes3.adjuntos.subiendo' | translate: { n: env.progreso } }}</ng-container>
+        <ng-container *ngIf="env.etapa === 'enviando'">{{ 'notificaciones.redes3.adjuntos.enviando' | translate: paramsCanal }}</ng-container>
+        <ng-container *ngIf="env.etapa === 'fallo'">{{ (env.errorClave || 'notificaciones.redes3.errores.generico') | translate: paramsCanal }}</ng-container>
+      </span>
+      <span class="madjr__progreso" *ngIf="env.etapa !== 'fallo'" aria-hidden="true">
+        <span
+          class="madjr__progreso-barra"
+          [class.madjr__progreso-barra--enviando]="env.etapa === 'enviando'"
+          [style.width.%]="env.etapa === 'enviando' ? 100 : env.progreso"
+        ></span>
+      </span>
+    </span>
+    <button *ngIf="env.etapa === 'subiendo'" type="button" class="madjr__boton madjr__boton--sec" (click)="cancelarEnvio()">
+      {{ 'notificaciones.redes3.adjuntos.cancelar' | translate }}
+    </button>
+    <ng-container *ngIf="env.etapa === 'fallo'">
+      <button type="button" class="madjr__boton" (click)="reintentarEnvio()">
+        {{ 'notificaciones.meta.retry' | translate }}
+      </button>
+      <button type="button" class="madjr__boton madjr__boton--sec" (click)="quitarEnvio()">
+        {{ 'notificaciones.redes3.adjuntos.quitar' | translate }}
+      </button>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Clip y micrófono (al lado del cuadro de escribir) -->
+<div class="madjr__acciones">
+  <input
+    #selector
+    type="file"
+    class="madjr__selector"
+    [accept]="accept"
+    (change)="alElegir($event)"
+    tabindex="-1"
+    aria-hidden="true"
+  />
+  <button
+    type="button"
+    class="madjr__accion"
+    (click)="abrirSelector()"
+    [disabled]="!puedeAdjuntar"
+    [attr.aria-label]="claveBoton | translate: paramsCanal"
+    [title]="claveBoton | translate: paramsCanal"
+  >
+    <i class="fa fa-paperclip" aria-hidden="true"></i>
+  </button>
+  <button
+    *ngIf="formatoVoz"
+    type="button"
+    class="madjr__accion"
+    (click)="grabar()"
+    [disabled]="!puedeAdjuntar"
+    [attr.aria-label]="(ventanaCerrada ? 'notificaciones.redes3.adjuntos.avisoVentana' : 'notificaciones.redes3.adjuntos.voz.grabar') | translate: paramsCanal"
+    [title]="(ventanaCerrada ? 'notificaciones.redes3.adjuntos.avisoVentana' : 'notificaciones.redes3.adjuntos.voz.grabar') | translate: paramsCanal"
+  >
+    <i class="fa fa-microphone" aria-hidden="true"></i>
+  </button>
+</div>

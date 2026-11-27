@@ -1,0 +1,285 @@
+// Adjuntar del chat de Instagram y Facebook. El host no pinta caja propia (display: contents): la bandeja ocupa
+// una fila entera encima del cuadro y los botones quedan al lado del campo, dentro del mismo formulario.
+// Plano, acento #5F3FE0, radios 11/16, sin gradientes ni clases con «p-»; los span con texto llevan color y
+// tamaño propios.
+
+$acento: #5f3fe0;
+$ink: #211f3a;
+$ink-2: #4b4763;
+$muted: #6b6786;
+$linea: #e9e6f3;
+$error: #d64545;
+
+:host {
+  display: contents;
+}
+
+.madjr__bandeja {
+  order: -2;
+  flex: 1 0 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.madjr__aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  background: #fff4e6;
+  color: #b45309;
+
+  i { margin-top: 2px; font-size: 13px; color: inherit; }
+}
+
+.madjr__aviso-texto {
+  flex: 1;
+  font-size: 12.5px !important;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: normal;
+  color: inherit !important;
+}
+
+.madjr__x {
+  flex: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0 4px;
+  font-size: 13px;
+  cursor: pointer;
+
+  i { color: inherit; }
+}
+
+.madjr__fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px solid $linea;
+  background: #fbfaff;
+  min-width: 0;
+
+  &--fallo {
+    background: #fdf1f4;
+    border-color: transparent;
+    flex-wrap: wrap;
+
+    .madjr__icono { background: #fff; color: $error; }
+    .madjr__detalle { color: $error !important; font-weight: 700; }
+  }
+
+  &--grabando {
+    background: #f2eeff;
+    border-color: #e4dcff;
+    flex-wrap: wrap;
+  }
+}
+
+.madjr__miniatura {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 11px;
+  background: #eeecf6;
+}
+
+.madjr__icono {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2eeff;
+  color: $acento;
+
+  i { font-size: 16px; color: inherit; }
+}
+
+.madjr__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.madjr__nombre {
+  font-size: 13px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: $ink !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.madjr__detalle {
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: $muted !important;
+}
+
+.madjr__audio {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: 34px;
+  margin-top: 4px;
+}
+
+.madjr__progreso {
+  display: block;
+  height: 5px;
+  margin-top: 4px;
+  border-radius: 99px;
+  background: #e9e6f3;
+  overflow: hidden;
+}
+
+.madjr__progreso-barra {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: $acento;
+  transition: width 0.2s ease;
+
+  &--enviando {
+    animation: madjr-latido 1.2s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
+.madjr__punto {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: $error;
+  animation: madjr-latido 1.2s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.madjr__estado {
+  font-size: 12.5px !important;
+  font-weight: 800;
+  letter-spacing: normal;
+  color: $ink !important;
+}
+
+.madjr__tiempo {
+  font-size: 12.5px !important;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+  color: $ink-2 !important;
+}
+
+.madjr__nivel {
+  flex: 1 1 60px;
+  display: block;
+  height: 6px;
+  min-width: 40px;
+  border-radius: 99px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.madjr__nivel-barra {
+  display: block;
+  height: 100%;
+  background: $acento;
+  transition: width 0.15s linear;
+}
+
+.madjr__boton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 11px;
+  background: $acento;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 11px; }
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
+
+  &--sec {
+    background: #fff;
+    color: $ink-2;
+    border: 1.5px solid $linea;
+
+    &:hover:not(:disabled) { border-color: #d9cffb; color: $acento; filter: none; }
+  }
+}
+
+.madjr__acciones {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: none;
+}
+
+.madjr__selector {
+  display: none;
+}
+
+.madjr__accion {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e4e2ef;
+  border-radius: 11px;
+  background: #fff;
+  color: #5b5878;
+  font-size: 16px;
+  cursor: pointer;
+
+  i { color: inherit; }
+
+  &:hover:not(:disabled) { border-color: $acento; color: $acento; }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+}
+
+.madjr__x,
+.madjr__boton,
+.madjr__accion {
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}
+
+@keyframes madjr-latido {
+  0%,
+  100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

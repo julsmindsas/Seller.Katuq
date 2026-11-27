@@ -1,0 +1,262 @@
+// Archivo dentro de una burbuja del chat de Instagram o Facebook. Plano, acento #5F3FE0, radios 11/16, sin
+// gradientes. Ninguna clase lleva «p-» (el reset global [class*="p-"] fuerza la letra) y cada span con texto
+// lleva color y tamaño propios (span.ng-star-inserted pinta de azul).
+
+$acento: #5f3fe0;
+$ink: #211f3a;
+$ink-2: #4b4763;
+$muted: #6b6786;
+$linea: #e9e6f3;
+
+:host {
+  display: block;
+  max-width: 100%;
+}
+
+.madj {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.madj__foto {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 11px;
+  background: #f1eef9;
+  overflow: hidden;
+  cursor: zoom-in;
+  max-width: 280px;
+  min-width: 140px;
+  min-height: 100px;
+
+  &:disabled { cursor: default; }
+
+  &--sticker {
+    background: transparent;
+    min-width: 0;
+    min-height: 0;
+    max-width: 140px;
+  }
+}
+
+.madj__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.madj__foto--sticker .madj__img {
+  object-fit: contain;
+  max-height: 140px;
+}
+
+.madj__esqueleto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 100px;
+  padding: 12px;
+  color: $muted;
+
+  i { font-size: 22px; color: inherit; }
+}
+
+.madj__esqueleto-texto {
+  font-size: 11.5px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: $muted !important;
+}
+
+.madj__tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid $linea;
+  min-width: 0;
+
+  &--voz .madj__icono {
+    background: #ede8ff;
+    color: $acento;
+  }
+
+  &--apagada,
+  &--etiqueta {
+    background: #f7f6fb;
+    .madj__icono { background: #eeecf6; color: $muted; }
+  }
+}
+
+.madj--saliente .madj__tarjeta {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.madj__icono {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2eeff;
+  color: $acento;
+
+  i { font-size: 15px; color: inherit; }
+}
+
+.madj__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.madj__nombre {
+  font-size: 13px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: $ink !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.madj__tarjeta--etiqueta .madj__nombre {
+  white-space: normal;
+  font-weight: 600;
+  color: $ink-2 !important;
+}
+
+.madj__detalle {
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: $muted !important;
+
+  &--estado { display: block; }
+}
+
+.madj__boton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 11px;
+  background: $acento;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 11px; }
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
+  &:disabled { background: #eeecf6; color: #8f8bab; cursor: not-allowed; }
+
+  &--sec {
+    background: #fff;
+    color: $ink-2;
+    border: 1.5px solid $linea;
+
+    &:hover:not(:disabled) { border-color: #d9cffb; color: $acento; filter: none; }
+  }
+}
+
+.madj__audio {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: 40px;
+}
+
+.madj__video {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  max-height: 360px;
+  border-radius: 11px;
+  background: $ink;
+}
+
+.madj__aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  background: #fff4e6;
+}
+
+.madj__aviso-texto {
+  flex: 1 1 160px;
+  font-size: 12px !important;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: #b45309 !important;
+}
+
+.madj__ampliada {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px 16px;
+  background: rgba(33, 31, 58, 0.82);
+  cursor: zoom-out;
+}
+
+.madj__grande {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 11px;
+  object-fit: contain;
+  cursor: default;
+}
+
+.madj__cerrar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 11px;
+  background: #fff;
+  color: $ink;
+  font-size: 18px;
+  cursor: pointer;
+
+  i { color: inherit; }
+}
+
+.madj__foto,
+.madj__boton,
+.madj__cerrar {
+  &:focus-visible {
+    outline: 3px solid #7c5cff !important;
+    outline-offset: 2px;
+  }
+}

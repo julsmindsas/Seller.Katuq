@@ -23,7 +23,19 @@
     <!-- Mensajes: abren en el último, con separador de día y hora. Los avisos de carga, error y chat vacío quedan
          fuera de la región que anuncia el lector de pantalla; esa región empieza callada y anuncia solo lo que
          llega después de la primera carga (aria-live lo enciende el componente). -->
-    <div class="mb-chat__mensajes" #caja>
+    <div
+      class="mb-chat__mensajes"
+      #caja
+      [class.mb-chat__mensajes--soltar]="arrastrando"
+      (dragover)="alArrastrarEncima($event)"
+      (dragleave)="alSalirArrastre($event)"
+      (drop)="alSoltar($event)"
+    >
+      <!-- Bandeja única (Instagram y Facebook): arrastrar un archivo sobre el chat lo adjunta -->
+      <div class="mb-soltar" *ngIf="arrastrando" aria-hidden="true">
+        <i class="fa fa-paperclip"></i>
+        <span class="mb-soltar__texto">{{ 'notificaciones.redes3.adjuntos.soltar' | translate }}</span>
+      </div>
       <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
 
       <!-- No se puede mostrar el chat: corte (con Reintentar) o el servidor lo rechazó (sin acceso o no existe).
@@ -62,6 +74,16 @@
           [class.mb-msg--mio]="item.mensaje.direccion === 'outbound'"
         >
           <span class="mb-msg__burbuja" *ngIf="item.mensaje as m">
+            <!-- Bandeja única (Instagram y Facebook): foto, audio, video, PDF o lo que compartió el cliente -->
+            <span class="mb-msg__archivos" *ngIf="vistaArchivo(m)">
+              <app-meta-adjunto-vista
+                *ngFor="let a of adjuntosDe(m); trackBy: trackAdjunto"
+                [adjunto]="a"
+                [cache]="cache"
+                [saliente]="m.direccion === 'outbound'"
+                (cargada)="alCargarAdjunto()"
+              ></app-meta-adjunto-vista>
+            </span>
             <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
             <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
             <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" (load)="alCargarImagen(m)" />
@@ -85,6 +107,7 @@
               <button
                 type="button"
                 class="mb-msg__reintentar"
+                *ngIf="puedeReintentar(m)"
                 [disabled]="enviando"
                 (click)="reintentar(m)"
               >
@@ -123,7 +146,15 @@
     </div>
     <p class="mb-adjunta__error" *ngIf="errorImagen" role="alert">{{ errorImagen }}</p>
 
-    <form class="mb-responder" *ngIf="!errorCarga" (ngSubmit)="enviar()">
+    <form
+      class="mb-responder"
+      [class.mb-responder--archivos]="usaArchivos"
+      *ngIf="!errorCarga"
+      (ngSubmit)="enviar()"
+      (dragover)="alArrastrarEncima($event)"
+      (dragleave)="alSalirArrastre($event)"
+      (drop)="alSoltar($event)"
+    >
       <!-- TikTok: solo si el país del cliente deja mandar imágenes -->
       <button
         type="button"
@@ -154,14 +185,24 @@
         [deshabilitado]="!puedeEscribir"
         (elegir)="alElegirRapida($event)"
       ></app-chat-rapidos>
+      <!-- Bandeja única (Instagram y Facebook): clip, micrófono, vista previa y avance del envío de archivos -->
+      <app-meta-adjuntar
+        *ngIf="usaArchivos && hilo"
+        [canal]="canalArchivos"
+        [hash]="hilo.identidadHash"
+        [bloqueado]="soloLectura || enviando || !ventana"
+        [ventanaCerrada]="ventanaCerrada"
+        (estadoCambio)="adjEstado = $event"
+      ></app-meta-adjuntar>
       <textarea
         class="mb-responder__campo"
         [(ngModel)]="borrador"
         name="borrador"
         (keydown)="alTeclaCuadro($event)"
+        (paste)="alPegar($event)"
         rows="2"
         [disabled]="!puedeEscribir"
-        [placeholder]="claveMarcador | translate: { nombre: nombreDueno }"
+        [placeholder]="claveMarcadorCuadro | translate: { nombre: nombreDueno }"
         [title]="'notificaciones.redes2.cuadroAyuda' | translate"
       ></textarea>
       <button

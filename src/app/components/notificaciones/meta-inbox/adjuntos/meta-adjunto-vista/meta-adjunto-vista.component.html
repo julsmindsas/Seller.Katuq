@@ -1,0 +1,181 @@
+<div class="madj" #caja [class.madj--saliente]="saliente" *ngIf="a">
+  <!-- Publicación, historia, reel o enlace compartido: una etiqueta, no un archivo -->
+  <div class="madj__tarjeta madj__tarjeta--etiqueta" *ngIf="esEtiqueta; else archivo">
+    <span class="madj__icono" aria-hidden="true"><i class="fa fa-share"></i></span>
+    <span class="madj__info">
+      <span class="madj__nombre">{{ claveEtiqueta | translate }}</span>
+    </span>
+  </div>
+
+  <ng-template #archivo>
+    <!-- Lo envió el comercio y Meta no deja volver a bajarlo: nombre y tamaño -->
+    <div class="madj__tarjeta" *ngIf="enviadoSinCopia; else conArchivo">
+      <span class="madj__icono" aria-hidden="true"><i class="fa" [ngClass]="esImagen ? 'fa-picture-o' : kind === 'video' ? 'fa-film' : kind === 'audio' ? 'fa-music' : iconoDocumento"></i></span>
+      <span class="madj__info">
+        <span class="madj__nombre" [attr.title]="nombreArchivo">{{ nombreArchivo }}</span>
+        <span class="madj__detalle">
+          {{ tamano }}<ng-container *ngIf="tamano"> · </ng-container>{{ 'notificaciones.redes3.adjuntos.enviado' | translate }}
+        </span>
+      </span>
+    </div>
+  </ng-template>
+
+  <ng-template #conArchivo>
+    <!-- No se puede bajar: el motivo en palabras -->
+    <div class="madj__tarjeta madj__tarjeta--apagada" *ngIf="!disponible; else disponibleTpl">
+      <span class="madj__icono" aria-hidden="true"><i class="fa" [ngClass]="esImagen ? 'fa-picture-o' : iconoDocumento"></i></span>
+      <span class="madj__info">
+        <span class="madj__nombre">{{ nombreArchivo }}</span>
+        <span class="madj__detalle">{{ claveMotivo | translate }}</span>
+      </span>
+    </div>
+  </ng-template>
+
+  <ng-template #disponibleTpl>
+    <!-- Falló la descarga -->
+    <div class="madj__tarjeta madj__tarjeta--apagada" *ngIf="estado?.estado === 'error'; else normal" role="status">
+      <span class="madj__icono" aria-hidden="true"><i class="fa fa-exclamation-circle"></i></span>
+      <span class="madj__info">
+        <span class="madj__nombre">{{ nombreArchivo }}</span>
+        <span class="madj__detalle">{{ claveFallo | translate }}</span>
+      </span>
+      <button *ngIf="puedeReintentarBajar" type="button" class="madj__boton madj__boton--sec" (click)="reintentarBajar()">
+        {{ 'notificaciones.meta.retry' | translate }}
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template #normal>
+    <ng-container [ngSwitch]="esImagen && !soloDescarga && !noSeReproduce ? 'imagen' : kind">
+      <!-- Foto o sticker: se baja al quedar a la vista y se amplía dentro de la página -->
+      <ng-container *ngSwitchCase="'imagen'">
+        <button
+          type="button"
+          class="madj__foto"
+          [class.madj__foto--sticker]="kind === 'sticker'"
+          (click)="ampliar()"
+          [disabled]="estado?.estado !== 'listo'"
+          [attr.aria-label]="(kind === 'sticker' ? 'notificaciones.redes3.adjuntos.verSticker' : 'notificaciones.redes3.adjuntos.verFoto') | translate"
+        >
+          <img
+            *ngIf="estado?.estado === 'listo' && $any(estado).url as src"
+            class="madj__img"
+            [src]="src"
+            [alt]="nombreArchivo"
+            (load)="alCargarFoto()"
+            (error)="alFallarReproduccion()"
+          />
+          <span *ngIf="estado?.estado !== 'listo'" class="madj__esqueleto">
+            <i class="fa fa-picture-o" aria-hidden="true"></i>
+            <span class="madj__esqueleto-texto">{{ 'notificaciones.redes3.adjuntos.cargando' | translate }}</span>
+          </span>
+        </button>
+      </ng-container>
+
+      <!-- Audio -->
+      <ng-container *ngSwitchCase="'audio'">
+        <div class="madj__tarjeta" [class.madj__tarjeta--voz]="a.voice">
+          <span class="madj__icono" aria-hidden="true"><i class="fa" [ngClass]="a.voice ? 'fa-microphone' : 'fa-music'"></i></span>
+          <span class="madj__info">
+            <span class="madj__nombre">{{ (a.voice ? 'notificaciones.redes3.adjuntos.nombreVoz' : 'notificaciones.redes3.adjuntos.nombreAudio') | translate }}</span>
+            <span class="madj__detalle" *ngIf="!reproducir && tamano">{{ tamano }}</span>
+          </span>
+          <button *ngIf="!reproducir" type="button" class="madj__boton" (click)="alReproducir()">
+            <i class="fa fa-play" aria-hidden="true"></i>
+            {{ 'notificaciones.redes3.adjuntos.reproducir' | translate }}
+          </button>
+        </div>
+        <ng-container *ngIf="reproducir">
+          <span class="madj__detalle madj__detalle--estado" *ngIf="estado?.estado === 'cargando'" role="status">{{ 'notificaciones.redes3.adjuntos.cargando' | translate }}</span>
+          <audio
+            *ngIf="estado?.estado === 'listo' && !noSeReproduce && !soloDescarga && $any(estado).url as src"
+            class="madj__audio"
+            controls
+            autoplay
+            preload="auto"
+            [src]="src"
+            (error)="alFallarReproduccion()"
+          ></audio>
+          <div class="madj__aviso" *ngIf="estado?.estado === 'listo' && (noSeReproduce || soloDescarga)" role="status">
+            <span class="madj__aviso-texto">{{ 'notificaciones.redes3.adjuntos.noReproduceAudio' | translate }}</span>
+            <button type="button" class="madj__boton madj__boton--sec" (click)="descargar()">
+              <i class="fa fa-download" aria-hidden="true"></i>
+              {{ 'notificaciones.redes3.adjuntos.descargar' | translate }}
+            </button>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- Video -->
+      <ng-container *ngSwitchCase="'video'">
+        <div class="madj__tarjeta" *ngIf="!reproducir || estado?.estado !== 'listo'">
+          <span class="madj__icono" aria-hidden="true"><i class="fa fa-film"></i></span>
+          <span class="madj__info">
+            <span class="madj__nombre">{{ nombreArchivo }}</span>
+            <span class="madj__detalle" *ngIf="!reproducir && tamano">{{ tamano }}</span>
+            <span class="madj__detalle" *ngIf="reproducir" role="status">{{ 'notificaciones.redes3.adjuntos.cargando' | translate }}</span>
+          </span>
+          <button *ngIf="!reproducir" type="button" class="madj__boton" (click)="alReproducir()">
+            <i class="fa fa-play" aria-hidden="true"></i>
+            {{ 'notificaciones.redes3.adjuntos.reproducir' | translate }}
+          </button>
+        </div>
+        <ng-container *ngIf="reproducir && estado?.estado === 'listo'">
+          <video
+            *ngIf="!noSeReproduce && !soloDescarga && $any(estado).url as src"
+            class="madj__video"
+            controls
+            playsinline
+            autoplay
+            [src]="src"
+            (error)="alFallarReproduccion()"
+          ></video>
+          <div class="madj__aviso" *ngIf="noSeReproduce || soloDescarga" role="status">
+            <span class="madj__aviso-texto">{{ 'notificaciones.redes3.adjuntos.noReproduceVideo' | translate }}</span>
+            <button type="button" class="madj__boton madj__boton--sec" (click)="descargar()">
+              <i class="fa fa-download" aria-hidden="true"></i>
+              {{ 'notificaciones.redes3.adjuntos.descargar' | translate }}
+            </button>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- Documento (o archivo que el navegador no muestra) -->
+      <ng-container *ngSwitchDefault>
+        <div class="madj__tarjeta">
+          <span class="madj__icono" aria-hidden="true"><i class="fa" [ngClass]="iconoDocumento"></i></span>
+          <span class="madj__info">
+            <span class="madj__nombre" [attr.title]="nombreArchivo">{{ nombreArchivo }}</span>
+            <span class="madj__detalle" *ngIf="estado?.estado !== 'cargando' && tamano">{{ tamano }}</span>
+            <span class="madj__detalle" *ngIf="estado?.estado === 'cargando'" role="status">{{ 'notificaciones.redes3.adjuntos.cargando' | translate }}</span>
+          </span>
+          <button type="button" class="madj__boton" (click)="descargar()" [disabled]="estado?.estado === 'cargando'">
+            <i class="fa fa-download" aria-hidden="true"></i>
+            {{ 'notificaciones.redes3.adjuntos.descargar' | translate }}
+          </button>
+        </div>
+      </ng-container>
+    </ng-container>
+  </ng-template>
+
+  <!-- Foto ampliada dentro de la página (Esc o la X cierran) -->
+  <div
+    class="madj__ampliada"
+    *ngIf="ampliada && estado?.estado === 'listo'"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="nombreArchivo"
+    (click)="cerrar()"
+  >
+    <button
+      #cerrarAmpliada
+      type="button"
+      class="madj__cerrar"
+      (click)="cerrar(); $event.stopPropagation()"
+      [attr.aria-label]="'notificaciones.redes3.adjuntos.cerrar' | translate"
+    >
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+    <img class="madj__grande" [src]="$any(estado).url" [alt]="nombreArchivo" (click)="$event.stopPropagation()" />
+  </div>
+</div>

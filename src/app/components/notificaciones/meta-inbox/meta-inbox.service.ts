@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable, of, throwError, timer } from 'rxjs';
 import { catchError, map, retry } from 'rxjs/operators';
 
@@ -20,6 +20,7 @@ import {
   MetaVentana,
   MetaVentanaEstado,
 } from './models/meta-thread.model';
+import { esRutaDeMediaRed } from './adjuntos/adjuntos-red.util';
 
 const VENTANA_SIN_DATOS: MetaVentana = { abierta: false, minutosRestantes: 0, expiraEn: null };
 
@@ -260,10 +261,45 @@ export class MetaInboxService extends BaseService {
    * un `<img src>` directo daría 401. Null si no se pudo traer.
    */
   imagenEntrante(ruta: string): Observable<Blob | null> {
-    return this.http.get(`${environment.urlApi}${ruta}`, { responseType: 'blob' }).pipe(
+    // Sin la pantalla de carga: la imagen llega dentro del chat, que se refresca solo.
+    const contexto = new HttpContext().set(SKIP_LOADER, true);
+    return this.http.get(`${environment.urlApi}${ruta}`, { responseType: 'blob', context: contexto }).pipe(
       map((blob) => blob || null),
       catchError(() => of(null)),
     );
+  }
+
+  // ─── Archivos de Instagram y Facebook (bandeja única) ─────────────────
+
+  /**
+   * Baja como blob, con la sesión, el archivo de un mensaje de Instagram o Facebook (la ruta la arma el servidor).
+   * Solo se piden rutas de archivos del chat (`/v1/meta/conversations/<canal>/<hash>/media/<docId>?i=<n>`): el
+   * interceptor le pone la sesión a cualquier dirección del backend, así que una ruta rara no se pide. Sin
+   * pantalla de carga ni avisos sueltos: el chat dice qué pasó con cada archivo (410 vencido, 404 no está, 5xx
+   * reintentar).
+   */
+  descargarAdjunto(ruta: string): Observable<Blob> {
+    if (!esRutaDeMediaRed(ruta)) {
+      return throwError(() => new HttpErrorResponse({ status: 404, statusText: 'ruta_no_valida' }));
+    }
+    return this.http.get(`${environment.urlApi}${ruta}`, {
+      responseType: 'blob',
+      context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true),
+    });
+  }
+
+  /**
+   * Envía un archivo por Instagram o Facebook (multipart a la misma ruta de respuesta), con el avance de la
+   * subida. El formulario lleva `file`, `clientMessageId`, `kind` y, si hay, `texto` (sale como un segundo
+   * mensaje, después del archivo). Sin pantalla de carga; la pantalla explica los 403 con su propio texto.
+   */
+  enviarAdjunto(canal: MetaCanal, identidadHash: string, form: FormData): Observable<HttpEvent<any>> {
+    const url = `${environment.urlApi}/v1/meta/conversations/${canal}/${encodeURIComponent(identidadHash)}/reply`;
+    const req = new HttpRequest('POST', url, form, {
+      reportProgress: true,
+      context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true),
+    });
+    return this.http.request<any>(req);
   }
 
   // ─── No leídos (bandeja única) ─────────────────────────────────────────

@@ -94,6 +94,36 @@ export interface MetaMensaje {
   enviadoPor?: string | null;
   /** [D-725] Nombre de quien lo envió. */
   enviadoPorNombre?: string | null;
+  /**
+   * Archivos del mensaje (Instagram y Facebook, solo con la bandeja única): hasta 10. Los que se pueden ver
+   * traen `url`, una ruta del propio servidor que se pide con la sesión; las publicaciones, historias o reels
+   * compartidos llegan como etiqueta, sin `url`.
+   */
+  adjuntos?: MetaAdjunto[];
+}
+
+/** Tipo de archivo de un mensaje de Instagram o Facebook. */
+export type MetaAdjuntoKind = 'image' | 'audio' | 'video' | 'document' | 'sticker';
+
+/**
+ * Archivo de un mensaje de Instagram o Facebook (bandeja única). Nunca trae la dirección del CDN de Meta: `url`
+ * es `/v1/meta/conversations/<canal>/<hash>/media/<docId>?i=<n>` y se pide con la sesión (blob).
+ */
+export interface MetaAdjunto {
+  id?: string;
+  /** image, audio, video, document o sticker. Sin él (o con otro valor) es una etiqueta. */
+  kind?: MetaAdjuntoKind | string | null;
+  /** Tipo que dijo Meta: image, audio, video, file, share, story_mention, ig_reel, reel, post, ig_post, fallback… */
+  tipo?: string | null;
+  mime?: string | null;
+  bytes?: number | null;
+  filename?: string | null;
+  caption?: string | null;
+  voice?: boolean;
+  /** false: ya no se puede bajar (`motivo` dice por qué). */
+  disponible?: boolean;
+  motivo?: string | null;
+  url?: string | null;
 }
 
 /** Pedido del cliente vinculado, para el panel derecho. */
