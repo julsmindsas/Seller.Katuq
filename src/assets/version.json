@@ -1,6 +1,6 @@
 {
-  "version": "2026.11.27.3 - 27 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-27T17:37:21.575Z",
+  "version": "2026.11.27.4 - 27 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-27T22:49:47.016Z",
   "notas": [],
   "recientes": [
     {
@@ -480,6 +480,6 @@
       ]
     }
   ],
-  "commit": "bac4cbf6f2a7638301060d758f318d3edcf6bf69",
+  "commit": "3e60e90ce3a790a428525ce1ee9984a3b75846f6",
   "cambiosSinCommit": 0
 }
