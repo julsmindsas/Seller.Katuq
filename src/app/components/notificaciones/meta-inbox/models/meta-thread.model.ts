@@ -62,6 +62,8 @@ export interface MetaHilo {
   owner?: DuenoChat | null;
   /** [D-727] Cola del chat; `null` o ausente = sin cola. */
   colaId?: string | null;
+  /** Entrantes sin leer (0 a 99); solo llega con la bandeja única. Ausente = no se sabe. */
+  noLeidos?: number;
   /** [D-728] Chat cerrado con motivo; ausente = abierto. Solo llega con la bandeja única. */
   cerrado?: boolean;
   motivoCierre?: string | null;

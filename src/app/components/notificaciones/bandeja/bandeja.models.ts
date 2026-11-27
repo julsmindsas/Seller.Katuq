@@ -25,7 +25,7 @@ interface ConversacionBase {
   /** ISO del último mensaje. */
   ultimoEn: string;
   ultimaDireccion: DireccionMensaje;
-  /** Solo WhatsApp: entrantes sin marcar como vistos. */
+  /** Entrantes sin marcar como vistos (WhatsApp; redes con la bandeja única, tope 99). */
   sinLeer?: number;
   /** Solo WhatsApp: número por el que va el chat; ausente = número compartido de Katuq. */
   linea?: LineaResumen;

@@ -133,6 +133,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     return this.enviando || (this.borrador || '').trim().length > 0 || !!this.imagen;
   }
 
+  /** Último `sentAt` entrante ya enviado al servidor como «visto», por chat (canal|hash). */
+  private readonly ultimoMarcado = new Map<string, string>();
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['textoSugerido'] && !changes['textoSugerido'].firstChange && this.textoSugerido) {
       void this.aplicarSugerido(this.textoSugerido.texto);
@@ -192,6 +195,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
         this.cargarImagenesEntrantes(r.items);
+        this.marcarLeidoSiHaceFalta(hilo, r.items);
       });
   }
 
@@ -216,6 +220,39 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         this.fijarPermiteImagen(hilo, r.permiteImagen);
         this.cargarImagenesEntrantes(r.items);
         this.cargandoMensajes = false;
+        this.marcarLeidoSiHaceFalta(hilo, r.items);
+      });
+  }
+
+  /**
+   * Bandeja única: con los mensajes ya en pantalla se le dice al servidor hasta cuál entrante se vio (su
+   * `sentAt`, nunca la hora del navegador). Sin la bandeja el servidor no manda `threadId` ni `noLeidos` y no
+   * se llama a nada: los buzones de siempre quedan igual. Sin entrantes no se llama. Un mismo mensaje no se
+   * marca dos veces seguidas (el refresco de 8 s vuelve a pasar por aquí), salvo que el intento anterior
+   * fallara por el servidor o la red.
+   */
+  private marcarLeidoSiHaceFalta(hilo: MetaHilo, items: MetaMensaje[]): void {
+    if (!hilo.threadId && typeof hilo.noLeidos !== 'number') return;
+    let hasta: string | null = null;
+    let hastaMs = 0;
+    for (const m of items) {
+      if (m.direccion !== 'inbound') continue;
+      const t = Date.parse(m.sentAt);
+      if (Number.isFinite(t) && t >= hastaMs) {
+        hastaMs = t;
+        hasta = m.sentAt;
+      }
+    }
+    if (!hasta) return;
+    const canal = this.canal;
+    const clave = `${canal}|${hilo.identidadHash}`;
+    if (this.ultimoMarcado.get(clave) === hasta) return;
+    this.ultimoMarcado.set(clave, hasta);
+    this.servicio
+      .marcarLeido(canal, hilo.identidadHash, hasta)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        if (r.reintentar && this.ultimoMarcado.get(clave) === hasta) this.ultimoMarcado.delete(clave);
       });
   }
 

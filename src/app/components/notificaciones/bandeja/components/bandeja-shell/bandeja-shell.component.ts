@@ -300,9 +300,15 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   abrir(conversacion: ConversacionResumen): void {
     // Marcado visual de «leído», como el buzón de WhatsApp; el detalle lo confirma al servidor.
-    if (conversacion.canal === "whatsapp" && (conversacion.sinLeer || 0) > 0) {
+    if ((conversacion.sinLeer || 0) > 0) {
       conversacion.sinLeer = 0;
-      conversacion.origen.unreadCount = 0;
+      if (conversacion.canal === "whatsapp") {
+        conversacion.origen.unreadCount = 0;
+      } else {
+        conversacion.origen.noLeidos = 0;
+        // El refresco de 10 s no debe devolver la insignia antes de que el servidor confirme.
+        this.bandeja.recordarLeidoLocal(conversacion.clave, conversacion.ultimoEn);
+      }
     }
     this.seleccion = conversacion;
     this.reiniciarNotas();

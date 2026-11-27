@@ -41,6 +41,8 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     resumen: hilo.ultimoMensajeResumen || "",
     ultimoEn: hilo.ultimoMensajeEn,
     ultimaDireccion: hilo.ultimaDireccion === "inbound" ? "inbound" : "outbound",
+    // Sin la bandera el servidor no manda `noLeidos`: queda en 0 y la fila no muestra insignia.
+    sinLeer: Math.max(0, Math.floor(Number(hilo.noLeidos) || 0)),
     // Sin la bandera el servidor no manda dueño ni threadId: quedan vacíos y nada cambia.
     dueno: hilo.owner || undefined,
     threadId: hilo.threadId || `red_${hilo.canal}__${hilo.identidadHash}`,

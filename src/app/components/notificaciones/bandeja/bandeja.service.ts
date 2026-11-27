@@ -4,7 +4,7 @@ import { catchError, map } from "rxjs/operators";
 
 import { WhatsappInboxService } from "../whatsapp-inbox/whatsapp-inbox.service";
 import { MetaInboxService } from "../meta-inbox/meta-inbox.service";
-import { MetaCanal } from "../meta-inbox/models/meta-thread.model";
+import { MetaCanal, MetaHilo } from "../meta-inbox/models/meta-thread.model";
 import { CanalBandeja, CargaBandeja, ConversacionResumen } from "./bandeja.models";
 import { desdeRed, desdeWhatsapp, mezclar } from "./bandeja.util";
 
@@ -30,6 +30,9 @@ interface AporteCanal {
  */
 @Injectable({ providedIn: "root" })
 export class BandejaService {
+  /** Chats de redes que la persona acaba de abrir: clave → hasta cuándo se oculta la insignia y desde qué mensaje. */
+  private readonly leidoLocal = new Map<string, { ultimoEn: string; hasta: number }>();
+
   constructor(
     private readonly whatsapp: WhatsappInboxService,
     private readonly meta: MetaInboxService,
@@ -102,12 +105,36 @@ export class BandejaService {
     );
   }
 
+  /**
+   * Al abrir un chat de red la insignia se apaga en pantalla. El refresco de 10 s podría devolverla antes de
+   * que el servidor confirme, así que durante un minuto un chat sin mensajes posteriores a ese `ultimoEn`
+   * sigue en 0. Pasado el minuto manda lo que diga el servidor (si no pudo marcarlo, la insignia vuelve).
+   */
+  recordarLeidoLocal(clave: string, ultimoEn: string): void {
+    this.leidoLocal.set(clave, { ultimoEn, hasta: Date.now() + 60000 });
+  }
+
+  private aplicarLeidoLocal(hilo: MetaHilo): MetaHilo {
+    const clave = `${hilo.canal}|${hilo.identidadHash}`;
+    const marca = this.leidoLocal.get(clave);
+    if (!marca) return hilo;
+    if (Date.now() > marca.hasta) {
+      this.leidoLocal.delete(clave);
+      return hilo;
+    }
+    if (!(hilo.noLeidos && hilo.noLeidos > 0)) return hilo;
+    const nuevo = Date.parse(hilo.ultimoMensajeEn);
+    const visto = Date.parse(marca.ultimoEn);
+    // Un mensaje posterior al que se vio sí cuenta como no leído.
+    return Number.isFinite(nuevo) && Number.isFinite(visto) && nuevo <= visto ? { ...hilo, noLeidos: 0 } : hilo;
+  }
+
   private traerRed(canal: MetaCanal): Observable<AporteCanal> {
     return this.meta.listarHilosEstricto(canal).pipe(
       map((hilos) => ({
         canal,
         caido: false,
-        conversaciones: hilos.map(desdeRed),
+        conversaciones: hilos.map((h) => desdeRed(this.aplicarLeidoLocal(h))),
       })),
       catchError(() => of({ canal, caido: true, conversaciones: [] })),
     );

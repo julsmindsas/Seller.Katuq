@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpContext } from '@angular/common/http';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { catchError, map, retry } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 import { BaseService } from 'src/app/shared/services/base.service';
+import { SKIP_LOADER } from 'src/app/shared/services/interceptor/loader.interceptor';
+import { SIN_AVISO_NEGOCIO } from 'src/app/shared/services/interceptor/sin-aviso-negocio.context';
 import { DuenoChat, esErrorChatConDueno } from 'src/app/shared/services/messaging/messaging.models';
 import {
   MetaCanal,
@@ -98,6 +100,7 @@ function errorDelServidor(err: any): MetaErrorServidor {
  *   POST   /v1/meta/conversations/:canal/:hash/vincular
  *   DELETE /v1/meta/conversations/:canal/:hash/vincular
  *   POST   /v1/meta/conversations/:canal/:hash/reply
+ *   PATCH  /v1/meta/conversations/:canal/:hash/leido   (bandeja única: marca leído; TikTok va por su ruta propia)
  *
  * TikTok (D-709), detrás de la bandera `tiktokMensajes`, usa los mismos y además:
  *   GET    /v1/meta/connections/tiktok/autorizar?redirectUri=   → {url, state} de la autorización de TikTok
@@ -237,6 +240,38 @@ export class MetaInboxService extends BaseService {
     return this.http.get(`${environment.urlApi}${ruta}`, { responseType: 'blob' }).pipe(
       map((blob) => blob || null),
       catchError(() => of(null)),
+    );
+  }
+
+  // ─── No leídos (bandeja única) ─────────────────────────────────────────
+
+  /**
+   * Marca como leído el chat de una red (solo con la bandeja única; sin ella el servidor responde
+   * `disponible:false` y no escribe). `hasta` es el `sentAt` del último mensaje entrante que la persona tiene
+   * en pantalla. Sin respuesta fingida: un reintento a los 2 s para los fallos del servidor (5xx o de red) y,
+   * si aún falla (403 porque el chat no es suyo, 503 al no poder comprobar el permiso…), `{updated:0}`: la
+   * insignia vuelve en el próximo refresco, que es lo honesto. No se muestra aviso ni cierra la sesión por esto.
+   */
+  marcarLeido(
+    canal: MetaCanal,
+    identidadHash: string,
+    hasta: string,
+  ): Observable<{ updated: number; disponible: boolean; reintentar?: boolean }> {
+    const ruta = `/v1/meta/conversations/${canal}/${encodeURIComponent(identidadHash)}/leido`;
+    const contexto = new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true);
+    return this.http.patch<any>(`${environment.urlApi}${ruta}`, { hasta }, { context: contexto }).pipe(
+      retry({
+        count: 1,
+        delay: (err: any) => (err && err.status >= 400 && err.status < 500 ? throwError(() => err) : timer(2000)),
+      }),
+      map((r) => ({
+        updated: r && typeof r.updated === 'number' ? r.updated : 0,
+        disponible: !!r && r.disponible !== false,
+      })),
+      // `reintentar`: falló el servidor o la red (no un rechazo 4xx): vale la pena volver a intentarlo más tarde.
+      catchError((err: any) =>
+        of({ updated: 0, disponible: true, reintentar: !(err && err.status >= 400 && err.status < 500) }),
+      ),
     );
   }
 
