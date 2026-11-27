@@ -53,6 +53,7 @@
         class="mb-hilo"
         *ngFor="let h of hilos; trackBy: trackHilo"
         [class.is-activa]="hiloActivo?.identidadHash === h.identidadHash"
+        [attr.data-hilo]="h.identidadHash"
         (click)="abrirHilo(h)"
       >
         <span class="mb-hilo__avatar" aria-hidden="true">
@@ -74,6 +75,7 @@
       <button
         type="button"
         class="mb-volver"
+        #volver
         *ngIf="hiloActivo"
         (click)="volverALista()"
       >

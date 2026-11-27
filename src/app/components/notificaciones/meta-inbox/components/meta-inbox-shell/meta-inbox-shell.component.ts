@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject, asyncScheduler, interval } from 'rxjs';
 import { filter, finalize, takeUntil, throttleTime } from 'rxjs/operators';
@@ -36,7 +36,7 @@ import {
   templateUrl: './meta-inbox-shell.component.html',
   styleUrls: ['./meta-inbox-shell.component.scss'],
 })
-export class MetaInboxShellComponent implements OnInit, OnDestroy {
+export class MetaInboxShellComponent implements OnInit, OnDestroy, AfterViewChecked {
   canal: MetaCanal = 'instagram';
   canalLabel = '';
 
@@ -50,6 +50,13 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   /** La conversación abierta: dice si hay un envío o texto a medias para no pisarla con el refresco. */
   @ViewChild(MetaHiloDetalleComponent) private detalle?: MetaHiloDetalleComponent;
+
+  /**
+   * Foco en celular y tableta (una columna a la vez): al abrir un chat la fila tocada se esconde, así que el foco
+   * pasa a «Volver»; al volver, regresa a la fila del chat que se cerró. Se aplica después de pintar.
+   */
+  @ViewChild('volver') private botonVolver?: ElementRef<HTMLButtonElement>;
+  private focoPendiente: { a: 'volver' } | { a: 'fila'; hash: string } | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -86,7 +93,30 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     private servicio: MetaInboxService,
     private loader: LoaderService,
     private enVivoSrv: BandejaEnVivoService,
+    private host: ElementRef<HTMLElement>,
   ) {}
+
+  ngAfterViewChecked(): void {
+    const foco = this.focoPendiente;
+    if (!foco) return;
+    this.focoPendiente = null;
+    if (foco.a === 'volver') {
+      this.botonVolver?.nativeElement.focus();
+      return;
+    }
+    const filas = this.host.nativeElement.querySelectorAll<HTMLElement>('.mb-hilo[data-hilo]');
+    for (const fila of Array.from(filas)) {
+      if (fila.getAttribute('data-hilo') === foco.hash) {
+        fila.focus();
+        return;
+      }
+    }
+  }
+
+  /** Celular y tableta: se ve la lista o el chat, uno por vez (el mismo corte del scss). */
+  private get unaColumna(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(max-width: 1023px)').matches;
+  }
 
   ngOnInit(): void {
     // Sin el overlay global: esta pantalla se refresca sola cada 8 segundos y
@@ -362,11 +392,15 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   abrirHilo(hilo: MetaHilo): void {
     this.hiloActivo = hilo;
+    // La fila tocada se esconde en una columna: sin esto el foco se perdería.
+    if (this.unaColumna) this.focoPendiente = { a: 'volver' };
   }
 
-  /** «Volver» en celular y tableta: cierra el chat y deja ver la lista otra vez. */
+  /** «Volver» en celular y tableta: cierra el chat, deja ver la lista otra vez y devuelve el foco a su fila. */
   volverALista(): void {
+    const hash = this.hiloActivo?.identidadHash;
     this.hiloActivo = null;
+    if (hash) this.focoPendiente = { a: 'fila', hash };
   }
 
   /** Iniciales del avatar (sin «@» ni emojis partidos); vacío = ícono de persona. */
