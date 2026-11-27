@@ -5,7 +5,8 @@ import { FiltroListaGuardado } from "../bandeja-lista/bandeja-lista.component";
  * (ventana privada, datos bloqueados), todo sigue igual que antes, sin recordar nada.
  *
  * - Al volver (de un pedido, por ejemplo): el chat abierto y los filtros. Va en `sessionStorage` (solo esta
- *   pestaña) y vence a las 4 horas. Solo guarda claves internas de la fila (hash del número, nunca el número).
+ *   pestaña) y vence a las 4 horas. Solo guarda claves internas de la fila (hash del número, nunca el número)
+ *   y los filtros; no la búsqueda, que puede ser el número o el nombre de un cliente.
  * - El último motivo de cierre que usó la persona, en `localStorage`.
  */
 export interface VueltaBandeja {
@@ -24,6 +25,13 @@ function claveDe(base: string, usuario: string): string {
   return `katuq.bandeja.${base}.${usuario.toLowerCase()}`;
 }
 
+/** Quita la búsqueda (también la que dejó guardada una versión anterior). */
+function sinBusqueda(filtro: FiltroListaGuardado): FiltroListaGuardado {
+  const copia = { ...filtro } as FiltroListaGuardado & { busqueda?: unknown };
+  delete copia.busqueda;
+  return copia;
+}
+
 export function leerVuelta(usuario: string): VueltaBandeja | null {
   if (!usuario) return null;
   try {
@@ -35,7 +43,7 @@ export function leerVuelta(usuario: string): VueltaBandeja | null {
       clave: typeof v.clave === "string" && v.clave ? v.clave : null,
       asesor: typeof v.asesor === "string" && v.asesor ? v.asesor : null,
       cola: typeof v.cola === "string" && v.cola ? v.cola : null,
-      filtro: v.filtro && typeof v.filtro === "object" ? v.filtro : null,
+      filtro: v.filtro && typeof v.filtro === "object" ? sinBusqueda(v.filtro) : null,
       en: v.en,
     };
   } catch {
@@ -46,7 +54,8 @@ export function leerVuelta(usuario: string): VueltaBandeja | null {
 export function guardarVuelta(usuario: string, v: Omit<VueltaBandeja, "en">): void {
   if (!usuario) return;
   try {
-    sessionStorage.setItem(claveDe("vuelta", usuario), JSON.stringify({ ...v, en: Date.now() }));
+    const filtro = v.filtro ? sinBusqueda(v.filtro) : null;
+    sessionStorage.setItem(claveDe("vuelta", usuario), JSON.stringify({ ...v, filtro, en: Date.now() }));
   } catch {
     // Sin almacenamiento: no se recuerda nada.
   }

@@ -233,8 +233,6 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   /** Chat que pide abrir el enlace (`?chat=<id del hilo>`, del aviso): gana sobre la fila recordada. */
   private hiloPedido: string | null = null;
   private readonly usuarioClave: string;
-  /** Búsqueda recordada: se repite en el servidor cuando llega la primera lista (ya se saben los canales). */
-  private busquedaInicial = "";
 
   /** Último motivo de cierre que usó la persona; se ofrece marcado si sigue en el catálogo. */
   private ultimoMotivo = "";
@@ -274,7 +272,6 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       this.filtroLista = vuelta.filtro;
       this.filtroListaInicial = vuelta.filtro;
       this.claveARestaurar = vuelta.clave;
-      this.busquedaInicial = (vuelta.filtro?.busqueda || "").trim();
     }
   }
 
@@ -461,8 +458,12 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     if (this.claveARestaurar) {
       const clave = this.claveARestaurar;
       this.claveARestaurar = null;
+      // Solo en la pestaña de chats: en Equipo o Informes el chat abierto taparía las pestañas en el celular.
+      if (this.vista !== "chats" || this.seleccion) return;
       const fila = this.conversaciones.find((c) => c.clave === clave);
-      if (fila && !this.seleccion) this.abrir(fila);
+      // Con mensajes nuevos no se reabre solo: abrirlo los daría por leídos sin que nadie los viera. La fila
+      // queda en la lista con su cifra de no leídos.
+      if (fila && !((fila.sinLeer || 0) > 0)) this.abrir(fila);
     }
   }
 
@@ -1323,10 +1324,6 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         this.cargando = false;
         this.actualizarSeleccion();
         this.abrirPendiente();
-        if (this.busquedaInicial) {
-          this.alBuscar(this.busquedaInicial);
-          this.busquedaInicial = "";
-        }
         // Llegaron eventos mientras esta carga iba en camino: otra confirmación, en su turno.
         this.seguirConfirmacionPendiente();
       });

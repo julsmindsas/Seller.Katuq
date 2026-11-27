@@ -32,9 +32,12 @@ import {
 import { MarcaEtiqueta, marcasDe } from "../../bandeja.catalogos";
 import { colaIdDe, filtrar, mezclar, normalizarTexto, telefonoDe } from "../../bandeja.util";
 
-/** Lo que la lista recuerda al volver (de un pedido, por ejemplo): sus filtros locales. */
+/**
+ * Lo que la lista recuerda al volver (de un pedido, por ejemplo): sus filtros locales. La búsqueda no va: puede
+ * ser el número o el nombre de un cliente, y lo guardado solo lleva claves internas.
+ */
 export type FiltroListaGuardado = Partial<
-  Pick<FiltroBandeja, "canal" | "lineId" | "sinResponder" | "mios" | "busqueda" | "estado" | "etiqueta">
+  Pick<FiltroBandeja, "canal" | "lineId" | "sinResponder" | "mios" | "estado" | "etiqueta">
 >;
 
 /** Una fila ya lista para pintar: se arma una vez por cambio de datos o de filtro, no en cada ciclo. */
@@ -269,7 +272,6 @@ export class BandejaListaComponent implements OnChanges {
       lineId: f.lineId,
       sinResponder: f.sinResponder,
       mios: f.mios,
-      busqueda: f.busqueda,
       estado: f.estado,
       etiqueta: f.etiqueta,
     });
@@ -288,7 +290,7 @@ export class BandejaListaComponent implements OnChanges {
   }
 
   /**
-   * Aplica lo recordado a medida que existe su opción: la búsqueda y los interruptores enseguida; el canal, el
+   * Aplica lo recordado a medida que existe su opción: los interruptores enseguida; el canal, el
    * número, la etiqueta y «Cerrados» cuando llegan los canales, los números, el catálogo y la atención.
    */
   private aplicarRestaurado(todas: ConversacionResumen[]): void {
@@ -296,7 +298,6 @@ export class BandejaListaComponent implements OnChanges {
     if (!r) return;
     const listo: Partial<FiltroBandeja> = {};
     const pendiente: FiltroListaGuardado = {};
-    if (typeof r.busqueda === "string") listo.busqueda = r.busqueda;
     if (typeof r.sinResponder === "boolean") listo.sinResponder = r.sinResponder;
     if (typeof r.mios === "boolean") listo.mios = r.mios;
     if (r.canal) {
