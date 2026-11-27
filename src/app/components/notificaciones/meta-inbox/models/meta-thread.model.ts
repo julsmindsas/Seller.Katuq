@@ -44,6 +44,15 @@ export interface MetaVentana {
   venceEn?: string | null;
 }
 
+/**
+ * Por qué no cargaron los mensajes de un chat:
+ * - `red`: corte breve (sin conexión, 5xx, demasiadas peticiones). Se reintenta solo y no se borra lo que hay.
+ * - `acceso`: el servidor dice que este chat ya no es para esta persona (403, por ejemplo lo pasaron a una cola
+ *   que no ve). Se deja de mostrar y de escribir, y no se sigue preguntando.
+ * - `no_existe`: el chat no está (404 o pedido inválido). Igual que `acceso`.
+ */
+export type MetaErrorCarga = 'red' | 'acceso' | 'no_existe';
+
 /** Hilo resumido para el listado. */
 export interface MetaHilo {
   identidadHash: string;

@@ -20,21 +20,20 @@
       (pasar)="pasarChat($event)"
     ></app-chat-dueno>
 
-    <!-- Mensajes: abren en el último, con separador de día y hora; el lector de pantalla anuncia lo nuevo -->
-    <div
-      class="mb-chat__mensajes"
-      #caja
-      role="log"
-      aria-live="polite"
-      [attr.aria-label]="'notificaciones.redes2.mensajesCon' | translate: { nombre: tituloContacto }"
-    >
+    <!-- Mensajes: abren en el último, con separador de día y hora. Los avisos de carga, error y chat vacío quedan
+         fuera de la región que anuncia el lector de pantalla; esa región empieza callada y anuncia solo lo que
+         llega después de la primera carga (aria-live lo enciende el componente). -->
+    <div class="mb-chat__mensajes" #caja>
       <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
 
-      <!-- La primera carga falló: se dice y se ofrece Reintentar (sin franja de 24 h ni cuadro de escribir) -->
+      <!-- No se puede mostrar el chat: corte (con Reintentar) o el servidor lo rechazó (sin acceso o no existe).
+           Sin franja de 24 h ni cuadro de escribir. -->
       <div class="mb-estado mb-estado--error" *ngIf="errorCarga && !cargandoMensajes" role="alert">
-        <span class="mb-estado__icono" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
-        <span class="mb-estado__titulo">{{ 'notificaciones.redes2.errorCargaTitulo' | translate }}</span>
-        <span class="mb-estado__texto">{{ 'notificaciones.redes2.errorCargaTexto' | translate }}</span>
+        <span class="mb-estado__icono" aria-hidden="true">
+          <i class="pi" [ngClass]="errorCarga === 'red' ? 'pi-exclamation-triangle' : 'pi-lock'"></i>
+        </span>
+        <span class="mb-estado__titulo">{{ claveErrorTitulo | translate }}</span>
+        <span class="mb-estado__texto">{{ claveErrorTexto | translate }}</span>
         <button type="button" class="mb-btn mb-btn--ghost" (click)="reintentarCarga()">
           {{ 'notificaciones.meta.retry' | translate }}
         </button>
@@ -45,6 +44,14 @@
         <span class="mb-estado__titulo">{{ 'notificaciones.redes2.sinMensajesTitulo' | translate }}</span>
       </div>
 
+      <div
+        class="mb-chat__registro"
+        #registro
+        role="log"
+        aria-live="off"
+        [attr.aria-busy]="cargandoMensajes ? 'true' : null"
+        [attr.aria-label]="'notificaciones.redes2.mensajesCon' | translate: { nombre: tituloContacto }"
+      >
       <ng-container *ngFor="let item of feed; trackBy: trackFeed">
         <div class="mb-dia" *ngIf="esDia(item)">
           <span class="mb-dia__texto">{{ item.etiqueta }}</span>
@@ -57,7 +64,7 @@
           <span class="mb-msg__burbuja" *ngIf="item.mensaje as m">
             <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
             <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
-            <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" />
+            <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" (load)="alCargarImagen(m)" />
             <!-- TikTok: publicación compartida; su enlace es público -->
             <a
               class="mb-msg__enlace"
@@ -87,6 +94,7 @@
           </span>
         </div>
       </ng-container>
+      </div>
     </div>
 
     <!-- La ventana (24 h en Meta; en TikTok, cuántos mensajes quedan): se explica siempre, no solo cuando falla -->

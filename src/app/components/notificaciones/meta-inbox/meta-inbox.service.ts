@@ -11,6 +11,7 @@ import { DuenoChat, esErrorChatConDueno } from 'src/app/shared/services/messagin
 import {
   MetaCanal,
   MetaConexiones,
+  MetaErrorCarga,
   MetaErrorServidor,
   MetaHilo,
   MetaImagenAdjunta,
@@ -66,6 +67,18 @@ function normalizarConexiones(datos: any): MetaConexiones | null {
       motivo: t.motivo ?? null,
     },
   } as MetaConexiones;
+}
+
+/**
+ * Tipo de fallo al leer un chat. Solo un rechazo del servidor sobre ESTE chat es definitivo: 401/403 (sin
+ * acceso; por ejemplo `FUERA_DE_ALCANCE` de las colas) y 400/404/410 (no existe o el pedido no vale). Sin
+ * conexión (0), 5xx, 429 o cualquier otro cuentan como corte breve.
+ */
+export function tipoErrorCarga(err: any): MetaErrorCarga {
+  const status = Number(err?.status);
+  if (status === 401 || status === 403) return 'acceso';
+  if (status === 400 || status === 404 || status === 410) return 'no_existe';
+  return 'red';
 }
 
 /** Código y mensaje con que el servidor rechazó una petición (`400 {code, message}`), si los trae. */
@@ -208,16 +221,20 @@ export class MetaInboxService extends BaseService {
 
   /**
    * Mensajes y ventana de una conversación. Si la petición falla no se inventa una ventana cerrada: vuelve
-   * `error: true` (con lista vacía) para que la pantalla conserve lo que ya mostraba o, en la primera carga,
-   * diga que no cargó. Un refresco fallido nunca debe parecer «ya pasaron 24 horas».
+   * `error` (con lista vacía) y su tipo. Con `red` la pantalla conserva lo que ya mostraba o, en la primera
+   * carga, dice que no cargó: un refresco fallido nunca debe parecer «ya pasaron 24 horas». Con `acceso` o
+   * `no_existe` el chat ya no es para esta persona y la pantalla deja de mostrarlo.
+   *
+   * La pantalla explica esos rechazos con su propio texto: el interceptor no saca su aviso de 403 (que con el
+   * refresco de 4 s saldría una y otra vez). Una sesión vencida sigue cerrando la sesión como siempre.
    */
   mensajesDeHilo(
     canal: MetaCanal,
     identidadHash: string,
-  ): Observable<{ items: MetaMensaje[]; ventana: MetaVentana; permiteImagen?: boolean; error?: boolean }> {
-    return this.get<any>(
-      `/v1/meta/conversations/${canal}/${encodeURIComponent(identidadHash)}`,
-    ).pipe(
+  ): Observable<{ items: MetaMensaje[]; ventana: MetaVentana; permiteImagen?: boolean; error?: MetaErrorCarga }> {
+    const ruta = `/v1/meta/conversations/${canal}/${encodeURIComponent(identidadHash)}`;
+    const contexto = new HttpContext().set(SIN_AVISO_NEGOCIO, true);
+    return this.http.get<any>(`${environment.urlApi}${ruta}`, { context: contexto }).pipe(
       map((r) =>
         r && r.data
           ? {
@@ -227,11 +244,11 @@ export class MetaInboxService extends BaseService {
             }
           : { items: [], ventana: { ...VENTANA_SIN_DATOS } },
       ),
-      catchError(() =>
+      catchError((err) =>
         of({
           items: [] as MetaMensaje[],
           ventana: { ...VENTANA_SIN_DATOS },
-          error: true,
+          error: tipoErrorCarga(err),
         }),
       ),
     );

@@ -1,9 +1,11 @@
 import {
   AfterViewChecked,
+  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   Output,
@@ -47,6 +49,7 @@ import { MetaInboxService } from '../../meta-inbox.service';
 import {
   META_CANAL_LABEL,
   MetaCanal,
+  MetaErrorCarga,
   MetaHilo,
   MetaImagenAdjunta,
   MetaMensaje,
@@ -70,7 +73,7 @@ const MAX_IMAGEN_MB = 3;
   templateUrl: './meta-hilo-detalle.component.html',
   styleUrls: ['./meta-hilo-detalle.component.scss'],
 })
-export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterViewChecked {
+export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterViewInit, AfterViewChecked {
   @Input() canal: MetaCanal = 'instagram';
   @Input() hilo: MetaHilo | null = null;
   /** El canal tiene la cuenta conectada (TikTok no deja enviar sin ella). */
@@ -116,6 +119,26 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
   /** Caja con scroll de los mensajes: se baja al final al abrir, al enviar y con lo nuevo si el asesor ya estaba abajo. */
   @ViewChild('caja') private caja?: ElementRef<HTMLElement>;
   private bajarAlFinal = false;
+  /**
+   * Región que el lector de pantalla anuncia (solo los mensajes). Abre en `aria-live="off"` y pasa a `polite`
+   * cuando ya se pintó la primera carga del chat: así anuncia lo que llega después y no lee todo el historial.
+   */
+  @ViewChild('registro') private registro?: ElementRef<HTMLElement>;
+  private encenderAnuncios = false;
+  /**
+   * El asesor estaba abajo la última vez que se pudo medir. Sirve cuando la caja estuvo escondida (la ficha
+   * del contacto en la bandeja la tapa con `display:none`): al volver a verse, se baja al final si estaba abajo.
+   */
+  private ultimoAbajo = true;
+  private altoCaja = 0;
+  private observadorCaja?: ResizeObserver;
+  /** Imágenes de TikTok que llegaron con el asesor abajo: al terminar de cargar (y tomar alto) se vuelve a bajar. */
+  private imagenesParaBajar = new Set<string>();
+  /**
+   * Chat que el servidor rechazó para esta persona (`canal|hash`): no se sigue preguntando por él hasta que se
+   * vuelva a abrir o se toque Reintentar.
+   */
+  private hiloCerrado: string | null = null;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
   duenoActual: DuenoChat | null = null;
@@ -128,8 +151,11 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
   private horas = new Map<string, string>();
   ventana: MetaVentana | null = null;
   cargandoMensajes = false;
-  /** La primera carga de la conversación falló: se ofrece Reintentar y no se deja escribir. */
-  errorCarga = false;
+  /**
+   * La conversación no se puede mostrar: `red` si falló la primera carga (se ofrece Reintentar); `acceso` o
+   * `no_existe` si el servidor la rechazó, también en mitad de un refresco. En todos los casos no se deja escribir.
+   */
+  errorCarga: MetaErrorCarga | null = null;
 
   borrador = '';
   enviando = false;
@@ -161,6 +187,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     private sanitizer: DomSanitizer,
     private atencionSrv: AtencionService,
     private toastr: ToastrService,
+    private zona: NgZone,
   ) {
     this.arrancarRefrescoAutomatico();
   }
@@ -202,25 +229,94 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
       // Mientras llegan los de la nueva conversación no se ven ni se usan los mensajes ni la ventana de la anterior
       // (el campo de respuesta queda cerrado hasta que llegue la ventana real). Solo al cambiar de conversación:
       // al enviar o reintentar se recarga la misma y vaciar haría parpadear el chat.
+      // El lector de pantalla calla mientras se vacía y se pinta el historial del chat nuevo.
+      this.fijarAnuncios(false);
       this.ponerMensajes([], 'abrir');
       this.ventana = null;
-      this.errorCarga = false;
+      this.errorCarga = null;
     }
     this.abrirHilo(this.hilo);
   }
 
+  ngAfterViewInit(): void {
+    const el = this.caja?.nativeElement;
+    if (!el) return;
+    // El scroll del asesor se escucha fuera de Angular: no hace falta repintar la pantalla en cada movimiento.
+    this.zona.runOutsideAngular(() => el.addEventListener('scroll', this.alMoverCaja, { passive: true }));
+    if (typeof ResizeObserver === 'undefined') return;
+    this.altoCaja = el.clientHeight;
+    // La caja escondida mide 0: al volver a verse (por ejemplo al cerrar la ficha en la bandeja) el navegador la
+    // deja arriba, en lo más viejo. Si el asesor estaba abajo, se vuelve a bajar.
+    this.observadorCaja = new ResizeObserver(() => {
+      const alto = el.clientHeight;
+      const volvioAVerse = this.altoCaja === 0 && alto > 0;
+      this.altoCaja = alto;
+      if (volvioAVerse && this.ultimoAbajo) el.scrollTop = el.scrollHeight;
+    });
+    this.observadorCaja.observe(el);
+  }
+
   ngAfterViewChecked(): void {
-    if (!this.bajarAlFinal || !this.caja) return;
-    const el = this.caja.nativeElement;
-    el.scrollTop = el.scrollHeight;
-    this.bajarAlFinal = false;
+    if (this.bajarAlFinal && this.caja) {
+      this.irAlFinal();
+      this.bajarAlFinal = false;
+    }
+    if (this.encenderAnuncios) {
+      // Después de pintar: lo que ya se ve no se anuncia, lo que llegue desde ahora sí.
+      this.encenderAnuncios = false;
+      this.fijarAnuncios(true);
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.observadorCaja?.disconnect();
+    this.caja?.nativeElement.removeEventListener('scroll', this.alMoverCaja);
     this.soltarImagenAdjunta();
     this.soltarImagenesEntrantes();
+  }
+
+  /**
+   * Baja la caja de mensajes al final. Público para que quien aloja el chat lo pida si lo tuvo escondido (la
+   * caja también lo hace sola al volver a verse si el asesor estaba abajo).
+   */
+  irAlFinal(): void {
+    const el = this.caja?.nativeElement;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    this.ultimoAbajo = true;
+  }
+
+  /**
+   * Scroll del asesor: se recuerda si quedó abajo. Solo mientras la caja se ve: escondida mide 0, y al volver a
+   * verse (antes de que la observe `ResizeObserver`, que la baja) el navegador la pone arriba sin que el asesor
+   * se haya movido.
+   */
+  private readonly alMoverCaja = (): void => {
+    const el = this.caja?.nativeElement;
+    if (!el || el.clientHeight === 0) return;
+    if (this.observadorCaja && this.altoCaja === 0) return;
+    this.ultimoAbajo = cercaDelFinal(el);
+  };
+
+  /** La imagen del cliente terminó de cargar y tomó su alto: si el asesor estaba abajo cuando llegó, sigue abajo. */
+  alCargarImagen(m: MetaMensaje): void {
+    // Si mientras tanto subió a leer algo más viejo (lo dice su último scroll), no se le mueve.
+    if (!this.imagenesParaBajar.delete(m.id) || !this.ultimoAbajo) return;
+    this.irAlFinal();
+  }
+
+  /** Enciende o apaga los anuncios del lector de pantalla en la región de mensajes (directo en el DOM, sin ciclo extra). */
+  private fijarAnuncios(encendido: boolean): void {
+    this.registro?.nativeElement.setAttribute('aria-live', encendido ? 'polite' : 'off');
+  }
+
+  /** ¿El asesor está abajo? Con la caja escondida no se puede medir y vale lo último que se supo. */
+  private estaAbajo(): boolean {
+    const el = this.caja?.nativeElement;
+    if (el && el.clientHeight === 0) return this.ultimoAbajo;
+    return cercaDelFinal(el);
   }
 
   /**
@@ -243,6 +339,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
   private refrescarMensajesEnSilencio(): void {
     const hilo = this.hilo;
     if (!hilo) return;
+    // El servidor ya dijo que este chat no es para esta persona: no se le sigue preguntando cada 4 s.
+    if (this.hiloCerrado === this.claveChat(hilo)) return;
     this.ultimoRefresco = Date.now();
     // Uno a la vez: con uno en camino se pide otro al terminar, así una ráfaga de eventos más rápida que la
     // respuesta no descarta todas las lecturas.
@@ -271,9 +369,13 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
         if (this.hilo?.identidadHash !== hilo.identidadHash) return;
         if (seq !== this.refrescoSeq) return;
         // Un corte breve no borra el chat ni cierra la ventana: se deja todo como estaba y el próximo
-        // refresco lo intenta de nuevo.
+        // refresco lo intenta de nuevo. Un rechazo del servidor sí: el chat ya no es para esta persona.
+        if (r.error === 'acceso' || r.error === 'no_existe') {
+          this.perderChat(hilo, r.error);
+          return;
+        }
         if (r.error) return;
-        this.errorCarga = false;
+        this.errorCarga = null;
         this.ponerMensajes(r.items, 'refresco');
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
@@ -289,7 +391,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     this.errorImagen = null;
     this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
-    this.errorCarga = false;
+    this.errorCarga = null;
+    // Abrir (o Reintentar) vuelve a preguntar aunque el servidor lo hubiera rechazado antes.
+    this.hiloCerrado = null;
     this.cargarDueno(hilo);
     // Los refrescos en silencio que ya iban en camino quedan viejos.
     this.refrescoSeq++;
@@ -304,16 +408,23 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
         // En la bandeja se cambia de conversación a cada rato: una respuesta tardía de la anterior no pisa la nueva.
         if (this.hilo?.identidadHash !== hilo.identidadHash || this.canal !== canal) return;
         this.cargandoMensajes = false;
+        if (r.error === 'acceso' || r.error === 'no_existe') {
+          // El servidor rechazó el chat: se dice por qué (no «revisa tu conexión») y no se deja escribir.
+          this.perderChat(hilo, r.error);
+          return;
+        }
         if (r.error) {
           // Primera carga (nada en pantalla): se dice que no cargó, sin franja de 24 h ni cuadro de escribir.
           // Si ya había mensajes (se recargó tras enviar), se conservan como en un refresco.
-          if (!this.mensajes.length && !this.ventana) this.errorCarga = true;
+          if (!this.mensajes.length && !this.ventana) this.errorCarga = 'red';
         } else {
           this.ponerMensajes(r.items, 'abrir');
           this.ventana = r.ventana;
           this.fijarPermiteImagen(hilo, r.permiteImagen);
           this.cargarImagenesEntrantes(r.items);
           this.marcarLeidoSiHaceFalta(hilo, r.items);
+          // Ya pintada la primera carga, el lector de pantalla anuncia solo lo que llegue después.
+          this.encenderAnuncios = true;
         }
         // Un evento en vivo llegó mientras se abría: se relee una vez más.
         if (this.refrescoPendiente && !this.refrescoEnCurso && !this.enviando) {
@@ -328,13 +439,48 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     if (this.hilo && !this.cargandoMensajes) this.abrirHilo(this.hilo);
   }
 
+  private claveChat(hilo: MetaHilo): string {
+    return `${this.canal}|${hilo.identidadHash}`;
+  }
+
+  /**
+   * El servidor dijo que este chat ya no es para esta persona (403: lo pasaron a una cola que no ve) o que no
+   * existe (404). Se vacía la pantalla, se cierra el cuadro de escribir (lo escrito ya no se podría enviar) y
+   * se deja de preguntar por él; el aviso propio explica qué pasó.
+   */
+  private perderChat(hilo: MetaHilo, tipo: 'acceso' | 'no_existe'): void {
+    this.hiloCerrado = this.claveChat(hilo);
+    this.refrescoPendiente = false;
+    this.fijarAnuncios(false);
+    this.ponerMensajes([], 'abrir');
+    this.ventana = null;
+    this.borrador = '';
+    this.soltarImagenAdjunta();
+    this.errorImagen = null;
+    this.avisoEnvio = null;
+    this.errorCarga = tipo;
+  }
+
+  /** Título del aviso cuando el chat no se puede mostrar. */
+  get claveErrorTitulo(): string {
+    if (this.errorCarga === 'acceso') return 'notificaciones.redes2.sinAccesoTitulo';
+    if (this.errorCarga === 'no_existe') return 'notificaciones.redes2.noExisteTitulo';
+    return 'notificaciones.redes2.errorCargaTitulo';
+  }
+
+  get claveErrorTexto(): string {
+    if (this.errorCarga === 'acceso') return 'notificaciones.redes2.sinAccesoTexto';
+    if (this.errorCarga === 'no_existe') return 'notificaciones.redes2.noExisteTexto';
+    return 'notificaciones.redes2.errorCargaTexto';
+  }
+
   /**
    * Pinta los mensajes con su separador de día y su hora. Al abrir (o tras enviar) baja al final; en un
    * refresco solo baja si llegó algo nuevo y el asesor ya estaba abajo (medido antes de pintar), para no
    * sacarlo de lo que está leyendo más arriba.
    */
   private ponerMensajes(items: MetaMensaje[], motivo: 'abrir' | 'refresco'): void {
-    const estabaAbajo = cercaDelFinal(this.caja?.nativeElement);
+    const estabaAbajo = this.estaAbajo();
     const ultimoAntes = this.mensajes.length ? this.mensajes[this.mensajes.length - 1].id : null;
     const ultimoAhora = items.length ? items[items.length - 1].id : null;
     const hayNuevos = items.length > this.mensajes.length || ultimoAhora !== ultimoAntes;
@@ -445,8 +591,12 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
             // Solo se marca como segura la dirección que acaba de crear este mismo navegador con la
             // imagen que entregó nuestro servidor: nunca una dirección que venga en un mensaje.
             const crudo = URL.createObjectURL(blob);
-            // La imagen agranda la caja: si el asesor estaba abajo, sigue abajo.
-            if (cercaDelFinal(this.caja?.nativeElement)) this.bajarAlFinal = true;
+            // La imagen agranda la caja: si el asesor estaba abajo, sigue abajo. El alto real llega cuando el
+            // navegador la decodifica, así que se vuelve a bajar en su (load).
+            if (this.estaAbajo()) {
+              this.bajarAlFinal = true;
+              this.imagenesParaBajar.add(m.id);
+            }
             this.imagenesEntrantes.set(m.id, { crudo, seguro: this.sanitizer.bypassSecurityTrustUrl(crudo) });
           } else {
             this.imagenesFallidas.add(m.id);
@@ -460,6 +610,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     this.imagenesEntrantes.clear();
     this.imagenesEnCurso.clear();
     this.imagenesFallidas.clear();
+    this.imagenesParaBajar.clear();
     this.generacionImagenes += 1;
   }
 
@@ -760,13 +911,25 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
    * Error al tomar, soltar o pasar el chat, en palabras del comercio. Se lee el código que manda el servidor,
    * nunca su `message`; lo desconocido o un 5xx da el aviso general.
    */
-  private textoErrorDueno(err: any): string {
+  private textoErrorDueno(err: any, destino?: string): string {
     const codigo = err?.error && typeof err.error === 'object' ? err.error.error || err.error.code : null;
     switch (codigo) {
       case 'THREAD_NOT_FOUND':
         return this.translate.instant('notificaciones.redes2.errorChatNoExiste');
       case 'TOO_MANY_REQUESTS':
         return this.translate.instant('notificaciones.redes2.errorMuyRapido');
+      case 'TARGET_NOT_IN_TEAM':
+        return this.translate.instant('notificaciones.redes2.errorFueraDelEquipo');
+      case 'LINE_NOT_ALLOWED':
+        return this.translate.instant('notificaciones.redes2.errorCanalNoPermitido');
+      case 'INVALID_INPUT': {
+        // El servidor usa el mismo código para varios casos; el más común se reconoce aquí mismo.
+        const actual = (this.duenoActual?.email || '').toLowerCase();
+        if (destino && actual && destino.toLowerCase() === actual) {
+          return this.translate.instant('notificaciones.redes2.errorYaLoAtiende', { nombre: this.nombreDueno });
+        }
+        return this.translate.instant('notificaciones.redes2.errorDatosDueno');
+      }
       default:
         return err?.status === 429
           ? this.translate.instant('notificaciones.redes2.errorMuyRapido')
@@ -778,12 +941,21 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
    * [D-728] Cuadro de escribir igual que en WhatsApp: con la lista de respuestas rápidas abierta las teclas
    * son suyas; si no, Enter envía y Mayús+Enter hace un salto de línea. Mientras se escribe con un teclado
    * de composición (tildes, japonés…) Enter no envía.
+   *
+   * Con catálogo de respuestas rápidas, un comando a medias («/sal», o la lista cerrada con Esc) no sale con
+   * Enter: le llegaría al cliente tal cual. El botón Enviar sí lo manda si el asesor lo quiere.
    */
   alTeclaCuadro(event: KeyboardEvent): void {
     if (this.rapidosLista?.alTecla(event)) return;
     if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
     event.preventDefault();
+    if (this.esComandoRapido) return;
     this.enviar();
+  }
+
+  /** Lo escrito es solo un comando de respuesta rápida (la misma regla con que se abre la lista). */
+  private get esComandoRapido(): boolean {
+    return this.atencion && this.rapidos.length > 0 && /^\/[a-z0-9_]*$/i.test(this.borrador || '');
   }
 
   // ─── Dueño del chat (D-725) ────────────────────────────────────────────
@@ -922,10 +1094,15 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
     const peticion = !this.duenoActual && this.coordina
       ? this.atencionSrv.asignar(id, t.email as string)
       : this.atencionSrv.transferir(id, t.email as string, t.nota || '');
-    this.accionDueno(peticion, 'notificaciones.whatsapp.detail.ownerPassed');
+    this.accionDueno(peticion, 'notificaciones.whatsapp.detail.ownerPassed', undefined, t.email);
   }
 
-  private accionDueno(peticion: ReturnType<AtencionService['tomar']>, exito: string, colaId?: string): void {
+  private accionDueno(
+    peticion: ReturnType<AtencionService['tomar']>,
+    exito: string,
+    colaId?: string,
+    destino?: string,
+  ): void {
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
     peticion.pipe(takeUntil(this.destroy$)).subscribe({
@@ -949,7 +1126,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
         }
         // Los 403 ya los avisa el interceptor con el mensaje del servidor.
         if (err?.status === 403) return;
-        this.toastr.error(this.textoErrorDueno(err));
+        this.toastr.error(this.textoErrorDueno(err, destino));
       },
     });
   }
