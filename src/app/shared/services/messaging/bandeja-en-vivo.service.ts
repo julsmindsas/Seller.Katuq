@@ -8,7 +8,14 @@ import { CompanyFeaturesService } from '../company-features.service';
 /** Canales que viajan por el canal en vivo. */
 export type CanalEnVivo = 'whatsapp' | 'instagram' | 'facebook' | 'tiktok';
 
-/** Qué cambió en el chat. */
+/**
+ * Qué cambió en el chat, según el servidor (v1):
+ * - `entrante` / `saliente`: llegó o salió un mensaje (trae `textoCorto` y `hora`, salvo en la puesta al día).
+ * - `dueno`: tomar, soltar, pasar o reparto (trae `asesor`; null = sin dueño).
+ * - `estado`: el chat se cerró o se reabrió (a mano o por inactividad; trae `estado`). En la puesta al día es
+ *   también el motivo de cualquier otro cambio del chat (dueño, etiquetas…). No es el estado de un mensaje.
+ * - `leido`: alguien vio los entrantes; `etiquetas`; `nota`: nota interna nueva.
+ */
 export type MotivoEnVivo = 'entrante' | 'saliente' | 'dueno' | 'estado' | 'leido' | 'etiquetas' | 'nota';
 
 /** Evento «chat» del canal en vivo (contrato v1). Cualquier campo puede venir en null. */
@@ -26,7 +33,14 @@ export interface EventoChatEnVivo {
   hora: string | null;
   noLeidos: number | null;
   asesor: { email: string; nombre: string } | null;
+  /** Estado del chat después del cambio: 'abierto', 'cerrado' o null (no se sabe). */
   estado: string | null;
+  /**
+   * Solo del cliente (no viaja en el protocolo): el evento llegó en la puesta al día tras reconectar, entre
+   * «listo» y «al_dia». Esos eventos resumen lo que cambió mientras no hubo conexión (pudo haber mensajes
+   * aunque el motivo diga otra cosa), así que quien muestra el chat abierto lo relee.
+   */
+  puestaAlDia: boolean;
 }
 
 /**
@@ -49,15 +63,24 @@ const MOTIVOS: ReadonlySet<string> = new Set(['entrante', 'saliente', 'dueno', '
 /** Espera creciente: 1 s, 2 s, 4 s… con tope de 30 s. */
 const ESPERA_BASE_MS = 1000;
 const ESPERA_TOPE_MS = 30000;
-/** Sin «listo» en este tiempo después de abrir, el intento cuenta como fallido. */
-const ESPERA_LISTO_MS = 10000;
+/**
+ * Sin «listo» en este tiempo después de abrir, el intento cuenta como fallido (y se reintenta con la espera
+ * creciente normal). El servidor puede tardar hasta 8 s en validar la sesión y luego calcula el alcance.
+ */
+const ESPERA_LISTO_MS = 15000;
+/**
+ * Primer reintento tras un reinicio del servidor (1001) o tras perder una conexión que estaba en vivo: espera al
+ * azar entre 0 y esta ventana, para que todos los clientes no vuelvan en el mismo segundo.
+ */
+const VENTANA_PRIMER_REINTENTO_MS = 5000;
 /** Latido por defecto si «listo» no trae `latidoMs`. */
 const LATIDO_MS = 25000;
 /** Con la pestaña oculta la conexión se mantiene este rato; después se cierra hasta que vuelva a verse. */
 const OCULTA_MAX_MS = 2 * 60 * 1000;
 /**
- * Si el servidor nunca respondió «listo» en esta pestaña y fallan varios intentos seguidos (la ruta aún no
- * existe: 404/400 en el upgrade o cierre inmediato), se deja de intentar un buen rato. Así la consola no se
+ * Si el servidor nunca respondió «listo» en esta pestaña y fallan varios upgrades seguidos (el socket ni
+ * siquiera abrió: la ruta aún no existe, 404/400), se deja de intentar un buen rato. Los cierres con código
+ * del servidor (1011, 1013…) o un «listo» que no llega siguen la espera creciente normal. Así la consola no se
  * llena de avisos del navegador y la pantalla sigue con su sondeo de siempre.
  */
 const FALLOS_SIN_RUTA = 3;
@@ -67,10 +90,14 @@ const PAUSA_SIN_RUTA_MS = 10 * 60 * 1000;
 const CIERRE_SESION = 4401;
 const CIERRE_EMPRESA = 4403;
 const CIERRE_DEMASIADAS = 4409;
+/** El servidor se reinicia: se reintenta. */
+const CIERRE_APAGADO = 1001;
 
 interface Sesion {
   token: string;
   empresa: string;
+  /** Para saber si otra pestaña cambió de usuario (no viaja al servidor). */
+  email: string;
 }
 
 /**
@@ -118,6 +145,14 @@ export class BandejaEnVivoService implements OnDestroy {
   private rutaConfirmada = false;
   /** El intento actual recibió «listo». */
   private listoEnIntento = false;
+  /** El socket del intento actual llegó a abrir (el upgrade funcionó). */
+  private abrioEnIntento = false;
+  /** Sesión con la que se saludó en el intento actual. */
+  private sesionSocket: Sesion | null = null;
+  /** Entre «listo» (con «desde») y «al_dia»/«recargar»: los eventos son de la puesta al día. */
+  private poniendoAlDia = false;
+  /** Cambió el usuario en otra pestaña: al próximo «listo» se pide recargar (no hubo «desde» que mandar). */
+  private recargarTrasListo = false;
   /** «desde» que se mandó en el intento actual. */
   private desdeEnviado: string | null = null;
   private intentos = 0;
@@ -180,11 +215,14 @@ export class BandejaEnVivoService implements OnDestroy {
     this.cursor = null;
     this.intentos = 0;
     this.dormido = false;
+    this.recargarTrasListo = false;
     if (typeof window !== 'undefined') {
       this.zone.runOutsideAngular(() => {
         document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
         window.addEventListener('online', this.alVolverLaRed);
         window.addEventListener('storage', this.alCambiarAlmacen);
+        // Pestaña abierta ya oculta (en segundo plano): también suelta la conexión pasado el rato.
+        if (document.hidden) this.cambioDeVisibilidad();
       });
     }
     this.conectar();
@@ -250,9 +288,13 @@ export class BandejaEnVivoService implements OnDestroy {
       }
       this.ws = ws;
       this.listoEnIntento = false;
+      this.abrioEnIntento = false;
+      this.poniendoAlDia = false;
+      this.sesionSocket = sesion;
       this.desdeEnviado = null;
       ws.onopen = () => {
         if (this.ws !== ws) return;
+        this.abrioEnIntento = true;
         this.ultimoMensaje = Date.now();
         const hola: Record<string, unknown> = {
           tipo: 'hola',
@@ -315,36 +357,42 @@ export class BandejaEnVivoService implements OnDestroy {
       this.latidoMs = Number.isFinite(latido) && latido >= 5000 ? latido : LATIDO_MS;
       this.arrancarLatido();
       this.ponerEstado('en_vivo');
-      // Reconexión sin cursor que mandar: lo que pasó mientras tanto no llega, hay que recargar.
-      if (reconexion && !this.desdeEnviado) this.zone.run(() => this.recargarSubject.next());
+      this.poniendoAlDia = !!this.desdeEnviado;
+      // Reconexión sin cursor que mandar (o con otro usuario): lo que pasó mientras tanto no llega, hay que
+      // recargar.
+      const recargar = (reconexion && !this.desdeEnviado) || this.recargarTrasListo;
+      this.recargarTrasListo = false;
+      if (recargar) this.zone.run(() => this.recargarSubject.next());
       return;
     }
     if (tipo === 'recargar') {
+      this.poniendoAlDia = false;
       this.zone.run(() => this.recargarSubject.next());
       return;
     }
     if (tipo === 'chat') {
-      const evento = normalizarEvento(msg);
+      const evento = normalizarEvento(msg, this.poniendoAlDia);
       if (evento) this.zone.run(() => this.eventosSubject.next(evento));
       return;
     }
+    if (tipo === 'al_dia') this.poniendoAlDia = false;
     // «al_dia» y «pong» solo cuentan como vida de la conexión (y el cursor, arriba).
   }
 
   /** Cierre o fallo del intento actual: decide si se reintenta, cuándo, o si se deja de intentar. */
   private alFallar(codigo: number | null): void {
     const habiaListo = this.listoEnIntento;
+    const abrio = this.abrioEnIntento;
+    const sesion = this.sesionSocket;
     this.cerrarSocket();
 
-    if (codigo === CIERRE_SESION) {
-      // La sesión la maneja el resto de la app; con este mismo token no se vuelve a intentar.
-      this.tokenRechazado = leerSesion()?.token ?? null;
+    if (codigo === CIERRE_SESION || codigo === CIERRE_EMPRESA) {
+      // La sesión la maneja el resto de la app. Se anota el token (o la empresa) con el que se saludó, no el que
+      // haya ahora: si otra pestaña ya renovó la sesión, se vuelve a saludar con la nueva; con la misma, no.
+      if (codigo === CIERRE_SESION) this.tokenRechazado = sesion?.token ?? leerSesion()?.token ?? null;
+      else this.empresaRechazada = sesion?.empresa ?? leerSesion()?.empresa ?? null;
       this.ponerEstado('apagado');
-      return;
-    }
-    if (codigo === CIERRE_EMPRESA) {
-      this.empresaRechazada = leerSesion()?.empresa ?? null;
-      this.ponerEstado('apagado');
+      if (this.suscriptores > 0 && !this.dormido && this.sesionParaConectar()) this.programarReintento(0);
       return;
     }
     if (codigo === CIERRE_DEMASIADAS) {
@@ -357,7 +405,8 @@ export class BandejaEnVivoService implements OnDestroy {
       return;
     }
 
-    if (!habiaListo) this.fallosSinListo += 1;
+    // Solo un upgrade que no abrió cuenta como «la ruta no existe».
+    if (!habiaListo && !abrio) this.fallosSinListo += 1;
     if (!this.rutaConfirmada && this.fallosSinListo >= FALLOS_SIN_RUTA) {
       // El servidor aún no tiene la ruta: se deja quieto un rato; las pantallas siguen con su sondeo.
       this.pausaHasta = Date.now() + PAUSA_SIN_RUTA_MS;
@@ -368,10 +417,17 @@ export class BandejaEnVivoService implements OnDestroy {
     }
 
     this.ponerEstado(this.rutaConfirmada ? 'reconectando' : 'conectando');
-    const base = Math.min(ESPERA_TOPE_MS, ESPERA_BASE_MS * Math.pow(2, this.intentos));
+    let espera: number;
+    if (this.intentos === 0 && (codigo === CIERRE_APAGADO || habiaListo)) {
+      // Reinicio del servidor o caída de una conexión viva: todos los clientes se enteran a la vez. El primer
+      // reintento se reparte al azar en una ventana ancha; después sigue la espera creciente.
+      espera = Math.round(Math.random() * VENTANA_PRIMER_REINTENTO_MS);
+    } else {
+      const base = Math.min(ESPERA_TOPE_MS, ESPERA_BASE_MS * Math.pow(2, this.intentos));
+      espera = Math.min(ESPERA_TOPE_MS, Math.round(base * (0.75 + Math.random() * 0.5)));
+    }
     this.intentos += 1;
-    const conAzar = Math.min(ESPERA_TOPE_MS, Math.round(base * (0.75 + Math.random() * 0.5)));
-    this.programarReintento(conAzar);
+    this.programarReintento(espera);
   }
 
   private programarReintento(ms: number): void {
@@ -425,6 +481,8 @@ export class BandejaEnVivoService implements OnDestroy {
     const ws = this.ws;
     this.ws = null;
     this.listoEnIntento = false;
+    this.abrioEnIntento = false;
+    this.poniendoAlDia = false;
     if (!ws) return;
     ws.onopen = null;
     ws.onmessage = null;
@@ -464,7 +522,12 @@ export class BandejaEnVivoService implements OnDestroy {
     }
   }
 
-  /** Otra pestaña cerró sesión o cambió de usuario: se cierra el canal; el resto lo maneja la app. */
+  /**
+   * Otra pestaña escribió la sesión. Cerró sesión: se cierra el canal (el resto lo maneja la app). Cambió de
+   * usuario o de empresa: se vuelve a saludar con la nueva, sin cursor, y se pide recargar al llegar «listo».
+   * Cualquier otra escritura (tema, idioma, el mismo usuario con un token renovado) no toca la conexión: si el
+   * token viejo vence, el servidor cierra con 4401 y se vuelve a saludar con el nuevo.
+   */
   private cambioDeAlmacen(e: StorageEvent): void {
     if (e.key !== null && e.key !== 'user') return;
     const sesion = leerSesion();
@@ -474,14 +537,15 @@ export class BandejaEnVivoService implements OnDestroy {
       this.ponerEstado('apagado');
       return;
     }
-    // Otra sesión en el mismo navegador: se vuelve a saludar con la nueva.
-    if (this.ws) {
-      this.cerrarSocket();
-      this.cursor = null;
-      this.estuvoListo = false;
-      this.intentos = 0;
-      this.conectar();
-    }
+    const antes = this.sesionSocket;
+    if (!antes || (antes.empresa === sesion.empresa && antes.email === sesion.email)) return;
+    const activo = !!this.ws || !!this.temporizadorReintento;
+    this.cerrarSocket();
+    this.sesionSocket = null;
+    this.cursor = null;
+    this.intentos = 0;
+    this.recargarTrasListo = true;
+    if (activo) this.conectar();
   }
 
   // ─── Utilidades ───
@@ -514,7 +578,8 @@ function leerSesion(): Sesion | null {
     const u = JSON.parse(localStorage.getItem('user') || 'null');
     const token = u && typeof u.token === 'string' ? u.token : '';
     const empresa = u && u.company != null ? String(u.company) : '';
-    return token && empresa ? { token, empresa } : null;
+    const email = u && typeof u.email === 'string' ? u.email.trim().toLowerCase() : '';
+    return token && empresa ? { token, empresa, email } : null;
   } catch {
     return null;
   }
@@ -525,7 +590,7 @@ function texto(v: unknown): string | null {
 }
 
 /** Valida un evento «chat»; sin canal conocido o sin forma de ubicar el chat, se descarta. */
-export function normalizarEvento(msg: any): EventoChatEnVivo | null {
+export function normalizarEvento(msg: any, puestaAlDia = false): EventoChatEnVivo | null {
   if (!msg || msg.tipo !== 'chat') return null;
   const canal = String(msg.canal || '');
   if (!CANALES.has(canal)) return null;
@@ -552,16 +617,18 @@ export function normalizarEvento(msg: any): EventoChatEnVivo | null {
     hora: texto(msg.hora),
     noLeidos,
     asesor,
-    estado: texto(msg.estado),
+    estado: msg.estado === 'abierto' || msg.estado === 'cerrado' ? msg.estado : null,
+    puestaAlDia,
   };
 }
 
 /**
- * ¿El evento cambia los mensajes que se ven dentro del chat? Entrante, saliente y estado de un mensaje (o un
- * motivo que este cliente no conoce). Dueño, etiquetas, leído y notas se ven en la lista o en la barra.
+ * ¿El evento cambia los mensajes que se ven dentro del chat? Entrante, saliente, un motivo que este cliente no
+ * conoce o cualquier evento de la puesta al día. «estado» es el cierre o la reapertura del chat (se ve en la
+ * lista y en la barra, no en los mensajes), igual que dueño, etiquetas, leído y notas.
  */
 export function eventoTocaMensajes(e: EventoChatEnVivo): boolean {
-  return e.motivo === null || e.motivo === 'entrante' || e.motivo === 'saliente' || e.motivo === 'estado';
+  return e.puestaAlDia || e.motivo === null || e.motivo === 'entrante' || e.motivo === 'saliente';
 }
 
 /** Lo mínimo para saber si un evento es de un chat abierto. */

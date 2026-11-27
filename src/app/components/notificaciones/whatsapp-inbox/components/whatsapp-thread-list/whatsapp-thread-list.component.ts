@@ -118,8 +118,9 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     // refresca.
     this.refreshSub = interval(10000).subscribe(() => {
       if (document.hidden) return;
-      // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
-      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
+      // Con el canal en vivo conectado este sondeo queda de respaldo (como mucho cada 30 s), salvo que la lista
+      // tenga chats del número compartido de Katuq: esos no tienen hilo y no producen eventos.
+      if (this.enVivo && this.todosConHilo() && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       if ((this.searchQuery || "").trim().length === 0) {
         this.fetchThreadsSilent();
         this.fetchBotSesiones();
@@ -159,6 +160,14 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
       return { label: "notificaciones.whatsapp.list.tagCustomer", kind: "cliente" };
     }
     return null;
+  }
+
+  /**
+   * ¿Todos los chats de la lista van por una línea propia con su hilo? Solo esos llegan por el canal en vivo.
+   * Sin la bandera de varios números el servidor no manda línea y la respuesta es no: el sondeo sigue igual.
+   */
+  private todosConHilo(): boolean {
+    return this.threads.length > 0 && this.threads.every((t) => !!t.line?.id && !!t.threadId);
   }
 
   ngOnChanges(changes: SimpleChanges): void {

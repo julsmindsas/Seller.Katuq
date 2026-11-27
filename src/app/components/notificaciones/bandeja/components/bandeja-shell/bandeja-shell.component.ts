@@ -63,6 +63,13 @@ export type VistaBandeja = "chats" | "equipo" | "informes";
 const REFRESCO_MS = 5000;
 
 /**
+ * Con el canal en vivo, la lista se confirma por HTTP como mucho cada 3 s por página de WhatsApp abierta: la
+ * fila ya cambió en memoria al llegar el evento, y la lista comparte con el envío el cupo de consultas del
+ * buzón de WhatsApp (90 por minuto por usuario).
+ */
+const CONFIRMA_EN_VIVO_MS = 3000;
+
+/**
  * Bandeja única («Todos los mensajes»): una sola lista con los chats de WhatsApp, Instagram, Facebook y
  * TikTok, y a la derecha la misma conversación que abre cada buzón. Aquí no se envía nada: la respuesta
  * sale por el canal y el número de la conversación, desde el detalle de ese canal.
@@ -180,14 +187,24 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   estadoEnVivo: EstadoEnVivo = "apagado";
   /** Cada cambio le pide al chat abierto releer sus mensajes en silencio. */
   senalDetalle = 0;
-  private listaPendiente = false;
   private detallePendiente = false;
   private notasPendiente = false;
   private readonly rafaga$ = new Subject<void>();
   /** Un refresco en vivo pedido mientras otra carga iba en camino: se hace al terminar esa. */
   private recargaEnVivoPendiente = false;
-  /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
-  private ultimoRefresco = 0;
+  /**
+   * Cuándo se hizo la última carga completa (lista, resumen y colas). El sondeo de respaldo se mide contra esta
+   * y no contra los refrescos en vivo, que son solo de la lista: si no, con tráfico el resumen nunca se refresca.
+   */
+  private ultimoRefrescoCompleto = 0;
+  /** Confirmación por HTTP de la lista en vivo: cuándo salió la última y la que espera su turno. */
+  private ultimaConfirmacion = 0;
+  private temporizadorConfirmacion: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * Eventos aplicados en memoria mientras una carga iba en camino. Esa carga pudo leer el servidor antes del
+   * evento: al llegar se le vuelven a aplicar, para que la fila no salte atrás y luego adelante.
+   */
+  private eventosEnCarga: EventoChatEnVivo[] = [];
 
   private conexiones: MetaConexiones | null = null;
   private refrescoSub?: Subscription;
@@ -219,8 +236,9 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.refrescoSub = interval(REFRESCO_MS).subscribe(() => {
       // Con la pestaña oculta no se pollea (D-117); al volver, el siguiente tick refresca.
       if (document.hidden || this.cargando || this.cargandoMas) return;
-      // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
-      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
+      // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s. Salvo con chats del
+      // número compartido de WhatsApp, que no producen eventos: ahí sigue el de siempre.
+      if (this.enVivo && !this.hayWhatsappSinHilo() && Date.now() - this.ultimoRefrescoCompleto < SONDEO_RESPALDO_MS) return;
       this.cargar(true);
     });
     this.escucharEnVivo();
@@ -229,16 +247,16 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   // ─── Canal en vivo ───
 
   /**
-   * Cada evento pone al día la fila en memoria (si ya está en la lista) y pide un refresco en silencio que lo
-   * confirma; las ráfagas se agrupan en uno cada 400 ms como mucho. Si el evento es del chat abierto, el
-   * detalle relee sus mensajes. Un cambio de estado de un mensaje (enviado, entregado…) solo se ve en el chat.
+   * Cada evento pone al día la fila en memoria (si ya está en la lista) y, si con eso no basta, pide una
+   * confirmación por HTTP de la lista (como mucho cada 3 s por página de WhatsApp). Si el evento trae mensajes
+   * nuevos del chat abierto, el detalle los relee (agrupado: uno cada 400 ms como mucho).
    */
   private escucharEnVivo(): void {
     this.enVivoSrv.conectado$.pipe(takeUntil(this.destroy$)).subscribe((v) => (this.enVivo = v));
     this.enVivoSrv.estado$.pipe(takeUntil(this.destroy$)).subscribe((e) => (this.estadoEnVivo = e));
     this.enVivoSrv.eventos$.pipe(takeUntil(this.destroy$)).subscribe((e) => this.alEventoEnVivo(e));
     this.enVivoSrv.recargar$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.listaPendiente = true;
+      this.programarConfirmacion(true);
       this.detallePendiente = !!this.seleccion;
       this.notasPendiente = this.notasAbiertas;
       this.rafaga$.next();
@@ -248,8 +266,6 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         if (this.detallePendiente) this.senalDetalle++;
         if (this.notasPendiente && this.notasAbiertas) this.cargarNotas(true);
-        if (this.listaPendiente) this.refrescarEnVivo();
-        this.listaPendiente = false;
         this.detallePendiente = false;
         this.notasPendiente = false;
       });
@@ -258,73 +274,95 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   private alEventoEnVivo(e: EventoChatEnVivo): void {
     if (!this.canales.includes(e.canal)) return;
     const delAbierto = eventoEsDelChat(e, this.chatAbiertoEnVivo());
-    if (e.motivo !== "estado") {
-      this.listaPendiente = true;
-      this.aplicarEnMemoria(e, delAbierto);
+    // Todo motivo cambia la fila: «estado» es que el chat se cerró o se reabrió.
+    if (this.cargaEnCurso()) this.eventosEnCarga.push(e);
+    const r = this.carga ? aplicarEventoEnVivo(this.carga, e, this.claveSeleccion) : null;
+    if (r && r.carga !== this.carga) {
+      this.carga = r.carga;
+      // La barra del chat abierto (dueño, cerrado) sigue a su fila.
+      if (delAbierto) this.actualizarSeleccion();
     }
+    if (!r || !r.completo) this.programarConfirmacion();
     if (delAbierto) {
       if (e.motivo === "nota") this.notasPendiente = true;
       if (eventoTocaMensajes(e)) this.detallePendiente = true;
+      if (this.notasPendiente || this.detallePendiente) this.rafaga$.next();
     }
-    this.rafaga$.next();
   }
 
   private chatAbiertoEnVivo(): ChatAbiertoEnVivo | null {
     const s = this.seleccion;
-    if (!s) return null;
-    return s.canal === "whatsapp"
-      ? { canal: "whatsapp", hash: s.origen.phoneHash, lineId: s.lineId || null, threadId: s.threadId || null }
-      : { canal: s.canal, hash: s.origen.identidadHash, threadId: s.threadId || null };
+    return s ? chatEnVivoDe(s) : null;
+  }
+
+  /** Chats de WhatsApp del número compartido de Katuq: no tienen hilo y no producen eventos en vivo. */
+  private hayWhatsappSinHilo(): boolean {
+    if (!this.canales.includes("whatsapp")) return false;
+    if (!this.multiNumero) return true;
+    return this.conversaciones.some((c) => c.canal === "whatsapp" && !c.threadId);
+  }
+
+  private cargaEnCurso(): boolean {
+    return this.cargando || this.cargandoMas || (!!this.cargaSub && !this.cargaSub.closed);
+  }
+
+  /**
+   * Confirmación por HTTP de la lista en vivo: la primera sale enseguida y las siguientes esperan su turno
+   * (`CONFIRMA_EN_VIVO_MS` por página de WhatsApp). `ya` (el servidor pidió recargar) no espera.
+   */
+  private programarConfirmacion(ya = false): void {
+    if (this.temporizadorConfirmacion) {
+      if (!ya) return;
+      clearTimeout(this.temporizadorConfirmacion);
+      this.temporizadorConfirmacion = null;
+    }
+    const intervalo = CONFIRMA_EN_VIVO_MS * Math.max(1, this.carga?.paginasWhatsapp ?? 1);
+    const espera = ya ? 0 : this.ultimaConfirmacion + intervalo - Date.now();
+    if (espera <= 0) {
+      this.confirmarEnVivo();
+      return;
+    }
+    this.temporizadorConfirmacion = setTimeout(() => {
+      this.temporizadorConfirmacion = null;
+      this.confirmarEnVivo();
+    }, espera);
+  }
+
+  private confirmarEnVivo(): void {
+    this.ultimaConfirmacion = Date.now();
+    this.refrescarEnVivo();
   }
 
   /**
    * Refresco en silencio solo de la lista (el resumen y las colas siguen con el sondeo). Uno a la vez: si
-   * otra carga va en camino, se hace uno más al terminar, así una ráfaga no cancela todas las cargas.
+   * otra carga va en camino, se pide otra confirmación al terminar, así una ráfaga no cancela todas las cargas.
    */
   private refrescarEnVivo(): void {
-    const enCurso = this.cargando || this.cargandoMas || (!!this.cargaSub && !this.cargaSub.closed);
-    if (enCurso) {
+    if (this.cargaEnCurso()) {
       this.recargaEnVivoPendiente = true;
       return;
     }
     this.cargar(true, true);
   }
 
-  /**
-   * Con el texto y la hora del evento, la fila que ya está en la lista se pone al día de una vez (y se
-   * reordena por hora, como la carga). No se agregan filas: las nuevas llegan con el refresco. Si el evento
-   * coincide con más de una fila (el mismo cliente en dos números sin línea en el evento), no se toca nada.
-   */
-  private aplicarEnMemoria(e: EventoChatEnVivo, delAbierto: boolean): void {
-    const carga = this.carga;
-    if (!carga) return;
-    const indices: number[] = [];
-    carga.conversaciones.forEach((c, i) => {
-      const chat: ChatAbiertoEnVivo =
-        c.canal === "whatsapp"
-          ? { canal: "whatsapp", hash: c.origen.phoneHash, lineId: c.lineId || null, threadId: c.threadId || null }
-          : { canal: c.canal, hash: c.origen.identidadHash, threadId: c.threadId || null };
-      if (eventoEsDelChat(e, chat)) indices.push(i);
-    });
-    if (indices.length !== 1) return;
-    const actual = carga.conversaciones[indices[0]];
-    const cambios: { ultimoEn?: string; ultimaDireccion?: "inbound" | "outbound"; resumen?: string; sinLeer?: number } = {};
-    const hora = e.hora && Number.isFinite(Date.parse(e.hora)) ? e.hora : null;
-    const masNuevo = !!hora && Date.parse(hora) >= (Date.parse(actual.ultimoEn) || 0);
-    if ((e.motivo === "entrante" || e.motivo === "saliente") && masNuevo) {
-      cambios.ultimoEn = hora as string;
-      cambios.ultimaDireccion = e.motivo === "entrante" ? "inbound" : "outbound";
-      if (e.textoCorto !== null) cambios.resumen = e.textoCorto;
-    }
-    // El chat abierto no muestra insignia: el detalle lo marca como leído.
-    if (e.noLeidos !== null && !delAbierto) cambios.sinLeer = e.noLeidos;
-    if (!Object.keys(cambios).length) return;
-    const lista = carga.conversaciones.slice();
-    lista[indices[0]] = { ...actual, ...cambios } as ConversacionResumen;
-    this.carga = { ...carga, conversaciones: mezclar([lista]) };
+  /** Terminó una carga: si se pidió confirmar mientras iba en camino, se pide en su turno. */
+  private seguirConfirmacionPendiente(): void {
+    if (!this.recargaEnVivoPendiente) return;
+    this.recargaEnVivoPendiente = false;
+    this.programarConfirmacion();
+  }
+
+  /** Vuelve a aplicar sobre una carga recién llegada los eventos que llegaron mientras iba en camino. */
+  private conEventosEnCarga(carga: CargaBandeja): CargaBandeja {
+    let r = carga;
+    for (const e of this.eventosEnCarga) r = aplicarEventoEnVivo(r, e, this.claveSeleccion).carga;
+    this.eventosEnCarga = [];
+    return r;
   }
 
   ngOnDestroy(): void {
+    if (this.temporizadorConfirmacion) clearTimeout(this.temporizadorConfirmacion);
+    this.temporizadorConfirmacion = null;
     this.loader.releaseGlobalLoader();
     this.loader.mostrarBarraSuperior();
     this.refrescoSub?.unsubscribe();
@@ -1017,14 +1055,17 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     if (!this.carga || this.cargandoMas) return;
     this.cargandoMas = true;
     this.cargaSub?.unsubscribe();
+    this.eventosEnCarga = [];
     this.cargaSub = this.bandeja
       .verMasWhatsapp(this.carga)
       .pipe(takeUntil(this.destroy$))
       .subscribe((carga) => {
-        this.carga = carga;
+        // La página se sumó a la carga de cuando se pidió: los eventos de mientras tanto se vuelven a aplicar.
+        this.carga = this.conEventosEnCarga(carga);
         this.cargandoMas = false;
+        this.actualizarSeleccion();
         // Llegaron eventos en vivo mientras se traía la página: se confirma con un refresco en silencio.
-        if (this.recargaEnVivoPendiente) this.cargar(true, true);
+        this.seguirConfirmacionPendiente();
       });
   }
 
@@ -1093,22 +1134,21 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     if (enSilencio && this.cargandoMas) return;
     if (!enSilencio) this.cargando = true;
     this.cargaSub?.unsubscribe();
-    this.ultimoRefresco = Date.now();
-    // Esta carga ya trae lo que un refresco en vivo pendiente iba a pedir.
+    if (!soloLista) this.ultimoRefrescoCompleto = Date.now();
+    // Esta carga ya trae lo que un refresco en vivo pendiente iba a pedir, y lo que ya se aplicó en memoria.
     this.recargaEnVivoPendiente = false;
+    this.eventosEnCarga = [];
     const previa = this.carga;
     this.cargaSub = this.bandeja
       .cargar(this.canales, previa?.paginasWhatsapp ?? 1)
       .pipe(takeUntil(this.destroy$))
       .subscribe((nueva) => {
-        this.carga = enSilencio && previa ? this.conservarCaidos(previa, nueva) : nueva;
+        const lista = enSilencio && previa ? this.conservarCaidos(previa, nueva) : nueva;
+        this.carga = this.conEventosEnCarga(lista);
         this.cargando = false;
         this.actualizarSeleccion();
-        // Llegaron eventos mientras esta carga iba en camino: una más, en silencio.
-        if (this.recargaEnVivoPendiente) {
-          this.recargaEnVivoPendiente = false;
-          this.cargar(true, true);
-        }
+        // Llegaron eventos mientras esta carga iba en camino: otra confirmación, en su turno.
+        this.seguirConfirmacionPendiente();
       });
     if (soloLista) return;
     // El resumen y las notas se refrescan junto con la lista.
@@ -1169,4 +1209,106 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       return {};
     }
   }
+}
+
+/** Lo mínimo de una fila para saber si un evento en vivo es suyo. */
+function chatEnVivoDe(c: ConversacionResumen): ChatAbiertoEnVivo {
+  return c.canal === "whatsapp"
+    ? { canal: "whatsapp", hash: c.origen.phoneHash, lineId: c.lineId || null, threadId: c.threadId || null }
+    : { canal: c.canal, hash: c.origen.identidadHash, threadId: c.threadId || null };
+}
+
+/**
+ * Aplica un evento en vivo a la fila que ya está en la lista y la reordena por hora, como la carga. No agrega
+ * filas: las nuevas llegan con la confirmación. Si el evento coincide con más de una fila (el mismo cliente en
+ * dos números sin línea en el evento), no toca nada.
+ *
+ * `completo` dice si con esto la fila ya quedó como la dejaría el servidor; si no (fila nueva, varias
+ * coincidencias, sin texto, estado o etiquetas que el evento no trae completos), hay que confirmar por HTTP.
+ * Se puede volver a aplicar el mismo evento sin efecto doble (la insignia solo sube con un mensaje más nuevo).
+ */
+function aplicarEventoEnVivo(
+  carga: CargaBandeja,
+  e: EventoChatEnVivo,
+  claveAbierta: string | null,
+): { carga: CargaBandeja; completo: boolean } {
+  const indices: number[] = [];
+  carga.conversaciones.forEach((c, i) => {
+    if (eventoEsDelChat(e, chatEnVivoDe(c))) indices.push(i);
+  });
+  // «nota» no cambia nada de la lista.
+  const sinLista = e.motivo === "nota" && !e.puestaAlDia;
+  if (indices.length !== 1) return { carga, completo: sinLista };
+  const actual = carga.conversaciones[indices[0]];
+  const abierta = actual.clave === claveAbierta;
+  const cambios: Partial<ConversacionBaseEnVivo> = {};
+  let completo = !e.puestaAlDia;
+  const hora = e.hora && Number.isFinite(Date.parse(e.hora)) ? e.hora : null;
+  const horaMs = hora ? Date.parse(hora) : 0;
+  const actualMs = Date.parse(actual.ultimoEn) || 0;
+
+  if (e.motivo === "entrante" || e.motivo === "saliente") {
+    // Sin texto (la puesta al día no lo trae) la fila no se mueve: la confirmación la ordena con su texto.
+    if (hora && e.textoCorto !== null && horaMs >= actualMs) {
+      cambios.ultimoEn = hora;
+      cambios.ultimaDireccion = e.motivo === "entrante" ? "inbound" : "outbound";
+      cambios.resumen = e.textoCorto;
+    } else if (!hora || e.textoCorto === null) {
+      // Con hora vieja (la fila ya trae algo más nuevo) no hay nada que confirmar.
+      completo = false;
+    }
+    if (e.motivo === "entrante" && !abierta && e.noLeidos === null && actual.canal === "whatsapp") {
+      // WhatsApp no manda su cuenta de no leídos: se suma uno (solo con un mensaje más nuevo que la fila) y
+      // la confirmación trae la cifra del servidor.
+      if (hora && e.textoCorto !== null && horaMs > actualMs) cambios.sinLeer = (actual.sinLeer || 0) + 1;
+      completo = false;
+    }
+  } else if (e.motivo === "dueno") {
+    cambios.dueno = e.asesor ? { email: e.asesor.email, nombre: e.asesor.nombre || e.asesor.email } : undefined;
+    // El reparto también puede cambiar la cola, que el evento no trae.
+    completo = false;
+  } else if (e.motivo !== "nota") {
+    // estado (cierre o reapertura), leido, etiquetas o un motivo desconocido: lo que el evento trae se aplica,
+    // el resto (motivo del cierre, etiquetas, no leídos de WhatsApp) llega con la confirmación.
+    completo = false;
+  }
+  if (e.estado === "cerrado" || e.estado === "abierto") {
+    const cerrado = e.estado === "cerrado";
+    if (!!actual.cerrado !== cerrado) {
+      cambios.cerrado = cerrado;
+      if (!cerrado) cambios.motivoCierre = undefined;
+      // Cerrar deja el chat sin dueño.
+      if (cerrado && e.motivo === "estado") cambios.dueno = undefined;
+    }
+  }
+  // El chat abierto no muestra insignia: el detalle lo marca como leído.
+  if (e.noLeidos !== null && !abierta) cambios.sinLeer = e.noLeidos;
+  if (!Object.keys(cambios).length) return { carga, completo };
+
+  const nueva = { ...actual, ...cambios } as ConversacionResumen;
+  if ("dueno" in cambios || "cerrado" in cambios) {
+    // El detalle lee el dueño y el cierre del hilo original: se pone al día una copia (nunca el mismo objeto).
+    const dueno = nueva.dueno || null;
+    const cerrado = !!nueva.cerrado;
+    if (nueva.canal === "whatsapp") {
+      nueva.origen = { ...nueva.origen, owner: dueno, cerrado, motivoCierre: cerrado ? nueva.origen.motivoCierre : null };
+    } else {
+      // Mismo cambio, otro tipo de hilo (redes).
+      nueva.origen = { ...nueva.origen, owner: dueno, cerrado, motivoCierre: cerrado ? nueva.origen.motivoCierre : null };
+    }
+  }
+  const lista = carga.conversaciones.slice();
+  lista[indices[0]] = nueva;
+  return { carga: { ...carga, conversaciones: mezclar([lista]) }, completo };
+}
+
+/** Campos de la fila que un evento en vivo puede cambiar. */
+interface ConversacionBaseEnVivo {
+  ultimoEn: string;
+  ultimaDireccion: "inbound" | "outbound";
+  resumen: string;
+  sinLeer: number;
+  dueno: DuenoChat | undefined;
+  cerrado: boolean;
+  motivoCierre: string | undefined;
 }

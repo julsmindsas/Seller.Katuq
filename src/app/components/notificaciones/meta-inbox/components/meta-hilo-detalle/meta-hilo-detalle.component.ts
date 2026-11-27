@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, interval } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
@@ -85,8 +85,11 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   @Input() senalRefresco = 0;
   /** Cuándo se pidieron los mensajes por última vez (para el sondeo lento con el canal en vivo). */
   private ultimoRefresco = 0;
-  /** Cada lectura invalida a la anterior: una respuesta tardía no pisa a una más nueva. */
+  /** Sube con cada apertura de conversación: un refresco que iba en camino antes de ella se descarta. */
   private refrescoSeq = 0;
+  /** Un refresco a la vez; si se pide otro mientras tanto (o durante la apertura), se hace uno más al terminar. */
+  private refrescoEnCurso = false;
+  private refrescoPendiente = false;
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
@@ -155,8 +158,10 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     }
     // Evento en vivo de este chat: se releen los mensajes ya. Solo se frena en mitad de un envío (el
     // refresco no toca lo que el asesor está escribiendo ni la imagen elegida).
-    if (changes['senalRefresco'] && !changes['senalRefresco'].firstChange && !changes['hilo'] && this.hilo && !this.enviando && !this.cargandoMensajes) {
-      this.refrescarMensajesEnSilencio();
+    if (changes['senalRefresco'] && !changes['senalRefresco'].firstChange && !changes['hilo'] && this.hilo && !this.enviando) {
+      // Con la apertura en camino se relee al terminar: esa respuesta pudo salir antes del evento.
+      if (this.cargandoMensajes) this.refrescoPendiente = true;
+      else this.refrescarMensajesEnSilencio();
     }
     if (!changes['hilo'] || !this.hilo) return;
     // Otra conversación: lo que se descargó de la anterior ya no sirve.
@@ -199,12 +204,27 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   private refrescarMensajesEnSilencio(): void {
     const hilo = this.hilo;
     if (!hilo) return;
-    const seq = ++this.refrescoSeq;
     this.ultimoRefresco = Date.now();
+    // Uno a la vez: con uno en camino se pide otro al terminar, así una ráfaga de eventos más rápida que la
+    // respuesta no descarta todas las lecturas.
+    if (this.refrescoEnCurso) {
+      this.refrescoPendiente = true;
+      return;
+    }
+    const seq = this.refrescoSeq;
+    this.refrescoEnCurso = true;
 
     this.servicio
       .mensajesDeHilo(this.canal, hilo.identidadHash)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.refrescoEnCurso = false;
+          if (!this.refrescoPendiente || this.cargandoMensajes) return;
+          this.refrescoPendiente = false;
+          if (this.hilo && !this.enviando) this.refrescarMensajesEnSilencio();
+        }),
+      )
       .subscribe((r) => {
         // El operador pudo cambiar de conversación mientras la respuesta venía
         // en camino: si ya no es la misma, se descarta en vez de pintar los
@@ -229,6 +249,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     this.cargarDueno(hilo);
     // Los refrescos en silencio que ya iban en camino quedan viejos.
     this.refrescoSeq++;
+    this.refrescoPendiente = false;
     this.ultimoRefresco = Date.now();
 
     const canal = this.canal;
@@ -244,6 +265,11 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         this.cargarImagenesEntrantes(r.items);
         this.cargandoMensajes = false;
         this.marcarLeidoSiHaceFalta(hilo, r.items);
+        // Un evento en vivo llegó mientras se abría: se relee una vez más.
+        if (this.refrescoPendiente && !this.refrescoEnCurso && !this.enviando) {
+          this.refrescoPendiente = false;
+          this.refrescarMensajesEnSilencio();
+        }
       });
   }
 

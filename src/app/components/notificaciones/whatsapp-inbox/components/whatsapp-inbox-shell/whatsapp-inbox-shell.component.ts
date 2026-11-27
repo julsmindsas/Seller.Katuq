@@ -29,6 +29,9 @@ import {
 import { esFamiliaAdministrador } from "../../../../../shared/utils/roles";
 import { WhatsappThread, claveChat } from "../../models/whatsapp-thread.model";
 
+/** Con el canal en vivo, la lista se relee como mucho cada 3 s (la fila ya trae lo nuevo al confirmarse). */
+const REFRESCO_LISTA_EN_VIVO_MS = 3000;
+
 /**
  * Shell del inbox de WhatsApp — layout Master-Detail responsive (spec 009 UI).
  *
@@ -88,9 +91,8 @@ export class WhatsappInboxShellComponent
   /** Cada cambio le pide a la lista o al chat abierto refrescarse ya. */
   senalLista = 0;
   senalDetalle = 0;
-  private listaPendiente = false;
-  private detallePendiente = false;
-  private readonly rafaga$ = new Subject<void>();
+  private readonly rafagaLista$ = new Subject<void>();
+  private readonly rafagaDetalle$ = new Subject<void>();
   private readonly enVivoSubs = new Subscription();
 
   private pageBodyEl: HTMLElement | null = null;
@@ -128,34 +130,37 @@ export class WhatsappInboxShellComponent
     this.escucharEnVivo();
   }
 
-  /** Eventos de WhatsApp del canal en vivo, agrupados: como mucho un refresco cada 400 ms. */
+  /**
+   * Eventos de WhatsApp del canal en vivo, agrupados. El chat abierto se relee como mucho cada 400 ms (solo con
+   * mensajes nuevos); la lista, como mucho cada 3 s: comparte con el envío el cupo de consultas del buzón.
+   */
   private escucharEnVivo(): void {
     this.enVivoSubs.add(this.enVivoSrv.conectado$.subscribe((v) => (this.enVivo = v)));
     this.enVivoSubs.add(
       this.enVivoSrv.eventos$.subscribe((e) => {
         if (e.canal !== "whatsapp") return;
-        // Un cambio de estado (enviado, entregado, leído por el cliente) solo se ve dentro del chat.
-        if (e.motivo !== "estado") this.listaPendiente = true;
+        // Todo motivo cambia la fila (también «estado»: el chat se cerró o se reabrió).
+        this.rafagaLista$.next();
         if (eventoTocaMensajes(e) && eventoEsDelChat(e, { canal: "whatsapp", hash: this.selectedPhoneHash, lineId: this.selectedLineId, threadId: this.seleccion?.threadId })) {
-          this.detallePendiente = true;
+          this.rafagaDetalle$.next();
         }
-        this.rafaga$.next();
       }),
     );
     this.enVivoSubs.add(
       this.enVivoSrv.recargar$.subscribe(() => {
-        this.listaPendiente = true;
-        this.detallePendiente = !!this.selectedPhoneHash;
-        this.rafaga$.next();
+        this.rafagaLista$.next();
+        if (this.selectedPhoneHash) this.rafagaDetalle$.next();
       }),
     );
     this.enVivoSubs.add(
-      this.rafaga$.pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true })).subscribe(() => {
-        if (this.listaPendiente) this.senalLista++;
-        if (this.detallePendiente) this.senalDetalle++;
-        this.listaPendiente = false;
-        this.detallePendiente = false;
-      }),
+      this.rafagaLista$
+        .pipe(throttleTime(REFRESCO_LISTA_EN_VIVO_MS, asyncScheduler, { leading: true, trailing: true }))
+        .subscribe(() => this.senalLista++),
+    );
+    this.enVivoSubs.add(
+      this.rafagaDetalle$
+        .pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true }))
+        .subscribe(() => this.senalDetalle++),
     );
   }
 

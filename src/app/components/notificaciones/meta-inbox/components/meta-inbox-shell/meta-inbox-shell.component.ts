@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject, asyncScheduler, interval } from 'rxjs';
-import { filter, takeUntil, throttleTime } from 'rxjs/operators';
+import { filter, finalize, takeUntil, throttleTime } from 'rxjs/operators';
 
 import { LoaderService } from 'src/app/shared/services/loader.service';
 import {
@@ -60,13 +60,15 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   enVivo = false;
   /** Cada cambio le pide a la conversación abierta releer sus mensajes. */
   senalDetalle = 0;
-  private listaPendiente = false;
-  private detallePendiente = false;
-  private readonly rafaga$ = new Subject<void>();
+  private readonly rafagaLista$ = new Subject<void>();
+  private readonly rafagaDetalle$ = new Subject<void>();
   /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
   private ultimoRefresco = 0;
-  /** Cada lectura invalida a la anterior: una respuesta tardía no pisa a una más nueva. */
+  /** Sube con cada carga completa (cambio de canal): una respuesta de antes se descarta. */
   private hilosSeq = 0;
+  /** Un refresco en silencio a la vez; otro pedido mientras tanto (o durante la carga) se hace al terminar. */
+  private refrescoEnCurso = false;
+  private refrescoPendiente = false;
 
   /**
    * Fecha del entrante más nuevo que ya vimos. Sirve para distinguir "llegó algo
@@ -109,32 +111,32 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.escucharEnVivo();
   }
 
-  /** Eventos de este canal del canal en vivo, agrupados: como mucho un refresco cada 400 ms. */
+  /**
+   * Eventos de este canal del canal en vivo, agrupados. La conversación abierta se relee como mucho cada 400 ms
+   * (solo con mensajes nuevos); la lista, como mucho cada 3 s.
+   */
   private escucharEnVivo(): void {
     this.enVivoSrv.conectado$.pipe(takeUntil(this.destroy$)).subscribe((v) => (this.enVivo = v));
     this.enVivoSrv.eventos$.pipe(takeUntil(this.destroy$)).subscribe((e) => {
       if (e.canal !== this.canal) return;
-      if (e.motivo !== 'estado') this.listaPendiente = true;
+      // Todo motivo cambia la fila (también «estado»: la conversación se cerró o se reabrió).
+      this.rafagaLista$.next();
       const h = this.hiloActivo;
       if (h && eventoTocaMensajes(e) && eventoEsDelChat(e, { canal: this.canal, hash: h.identidadHash, threadId: h.threadId })) {
-        this.detallePendiente = true;
+        this.rafagaDetalle$.next();
       }
-      this.rafaga$.next();
     });
     this.enVivoSrv.recargar$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.listaPendiente = true;
-      this.detallePendiente = !!this.hiloActivo;
-      this.rafaga$.next();
+      this.rafagaLista$.next();
+      if (this.hiloActivo) this.rafagaDetalle$.next();
     });
-    this.rafaga$
+    // La lista no toca la conversación abierta: se relee aunque el asesor esté escribiendo.
+    this.rafagaLista$
+      .pipe(throttleTime(3000, asyncScheduler, { leading: true, trailing: true }), takeUntil(this.destroy$))
+      .subscribe(() => this.refrescarHilosEnSilencio());
+    this.rafagaDetalle$
       .pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true }), takeUntil(this.destroy$))
-      .subscribe(() => {
-        // La lista no toca la conversación abierta: se relee aunque el asesor esté escribiendo.
-        if (this.listaPendiente && !this.cargandoHilos) this.refrescarHilosEnSilencio();
-        if (this.detallePendiente) this.senalDetalle++;
-        this.listaPendiente = false;
-        this.detallePendiente = false;
-      });
+      .subscribe(() => this.senalDetalle++);
   }
 
   /**
@@ -213,17 +215,36 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   /** Igual que cargar, pero sin spinner: el refresco no debe parpadear. */
   private refrescarHilosEnSilencio(): void {
-    const seq = ++this.hilosSeq;
-    const canal = this.canal;
     this.ultimoRefresco = Date.now();
+    // Uno a la vez (también con la carga completa en camino): el pedido de más se hace al terminar, en vez de
+    // descartar respuestas o perder el evento.
+    if (this.refrescoEnCurso || this.cargandoHilos) {
+      this.refrescoPendiente = true;
+      return;
+    }
+    const seq = this.hilosSeq;
+    const canal = this.canal;
+    this.refrescoEnCurso = true;
     this.servicio
       .listarHilos(canal)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.refrescoEnCurso = false;
+          this.seguirSiQuedoPendiente();
+        }),
+      )
       .subscribe((items) => {
         if (seq !== this.hilosSeq || canal !== this.canal) return;
         this.hilos = items;
         this.avisarSiLlegoAlgoNuevo(items);
       });
+  }
+
+  private seguirSiQuedoPendiente(): void {
+    if (!this.refrescoPendiente || this.refrescoEnCurso || this.cargandoHilos) return;
+    this.refrescoPendiente = false;
+    this.refrescarHilosEnSilencio();
   }
 
   /**
@@ -315,14 +336,18 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   private cargarHilos(): void {
     this.cargandoHilos = true;
-    this.hilosSeq++;
+    const seq = ++this.hilosSeq;
+    this.refrescoPendiente = false;
     this.ultimoRefresco = Date.now();
     this.servicio
       .listarHilos(this.canal)
       .pipe(takeUntil(this.destroy$))
       .subscribe((items) => {
+        if (seq !== this.hilosSeq) return;
         this.hilos = items;
         this.cargandoHilos = false;
+        // Llegaron eventos mientras se cargaba: una lectura más.
+        this.seguirSiQuedoPendiente();
       });
   }
 

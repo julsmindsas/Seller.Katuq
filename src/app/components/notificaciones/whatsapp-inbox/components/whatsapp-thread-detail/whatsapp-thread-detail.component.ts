@@ -11,6 +11,7 @@ import {
   ViewChild,
 } from "@angular/core";
 import { Subscription, forkJoin, interval } from "rxjs";
+import { finalize } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
@@ -219,8 +220,14 @@ export class WhatsappThreadDetailComponent
   private refreshSub: Subscription | null = null;
   /** Cuándo se pidieron los mensajes por última vez (para el sondeo lento con el canal en vivo). */
   private ultimoRefresco = 0;
-  /** Cada refresco invalida al anterior: una respuesta tardía no pisa a una más nueva. */
+  /** Sube con cada carga completa (`loadAll`): un refresco que iba en camino antes de ella se descarta. */
   private refrescoSeq = 0;
+  /** Un refresco a la vez; si se pide otro mientras tanto, se hace uno más al terminar (no se descartan). */
+  private refrescoEnCurso = false;
+  private refrescoPendiente = false;
+  private refrescoPendienteConSync = false;
+  /** Llegó un evento en vivo mientras `loadAll` iba en camino. */
+  private senalDuranteCarga = false;
 
   constructor(
     private readonly inbox: WhatsappInboxService,
@@ -243,9 +250,11 @@ export class WhatsappThreadDetailComponent
       this.templatesOpen = false;
       this.loadAll();
       this.restartAutoRefresh();
-    } else if (changes["senalRefresco"] && !changes["senalRefresco"].firstChange && !this.sending && !this.loading) {
+    } else if (changes["senalRefresco"] && !changes["senalRefresco"].firstChange && !this.sending) {
       // El evento ya dice que el mensaje está guardado: no hace falta pedir la sincronización con Kapso.
-      this.refreshMessages(false);
+      // Con la carga del chat en camino, se relee al terminar (esa respuesta pudo salir antes del evento).
+      if (this.loading) this.senalDuranteCarga = true;
+      else this.refreshMessages(false);
     }
   }
 
@@ -526,17 +535,34 @@ export class WhatsappThreadDetailComponent
     if (!this.phoneHash) {
       return;
     }
+    this.ultimoRefresco = Date.now();
+    // Uno a la vez: si ya va uno en camino, se pide otro al terminar. Así una ráfaga de eventos más rápida que
+    // la respuesta no descarta todas las lecturas.
+    if (this.refrescoEnCurso) {
+      this.refrescoPendiente = true;
+      this.refrescoPendienteConSync = this.refrescoPendienteConSync || conSync;
+      return;
+    }
     const hash = this.phoneHash;
     const lineId = this.lineId;
-    const seq = ++this.refrescoSeq;
-    this.ultimoRefresco = Date.now();
+    const seq = this.refrescoSeq;
+    this.refrescoEnCurso = true;
+    const siguiente = () => {
+      this.refrescoEnCurso = false;
+      if (!this.refrescoPendiente) return;
+      const sync = this.refrescoPendienteConSync;
+      this.refrescoPendiente = false;
+      this.refrescoPendienteConSync = false;
+      this.refreshMessages(sync);
+    };
     // Antes del refresh, pedir al backend que sincronice inbounds desde Kapso
     // (best-effort, el servicio ignora el error).
     if (conSync) this.inbox.syncInbound().subscribe();
-    this.inbox.getMessages(hash, lineId).subscribe({
+    this.inbox.getMessages(hash, lineId).pipe(finalize(siguiente)).subscribe({
       next: (page) => {
         // Si el chat cambió mientras respondía, se descarta.
         if (this.phoneHash !== hash || this.lineId !== lineId) return;
+        // Una carga completa empezó después de este pedido: la suya manda.
         if (seq !== this.refrescoSeq) return;
         const items = page.items;
         if (items.length === 0) return; // mantener estado anterior si vacío
@@ -574,7 +600,9 @@ export class WhatsappThreadDetailComponent
       // Firestore del hilo completo); al volver, el siguiente tick refresca.
       if (document.hidden) return;
       if (this.sending) return;
-      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
+      // Con el canal en vivo este sondeo queda de respaldo, pero solo en chats de una línea propia: los del
+      // número compartido de Katuq (sin línea) no tienen hilo y no producen eventos, así que siguen cada 4 s.
+      if (this.enVivo && this.lineId && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       this.refreshMessages();
     });
   }
@@ -648,6 +676,7 @@ export class WhatsappThreadDetailComponent
     const lineId = this.lineId;
     this.refrescoSeq++;
     this.ultimoRefresco = Date.now();
+    this.senalDuranteCarga = false;
     this.cargarEstadoBot(hash);
     forkJoin([
       this.inbox.getMessages(hash, lineId),
@@ -663,10 +692,15 @@ export class WhatsappThreadDetailComponent
         this.inbox
           .markThreadViewed(hash, lineId)
           .subscribe({ error: () => undefined });
+        if (this.senalDuranteCarga) {
+          this.senalDuranteCarga = false;
+          this.refreshMessages(false);
+        }
       },
       // Si falla, se mantiene el estado anterior (como antes de D-437).
       error: () => {
         this.loading = false;
+        this.senalDuranteCarga = false;
       },
     });
   }
