@@ -11,6 +11,9 @@ export interface OpcionRapida {
 /** Cuántas opciones se ven a la vez. */
 const MAX_VISIBLES = 8;
 
+/** Cada lista de la página lleva su propio prefijo: dos chats abiertos no repiten ids. */
+let siguienteLista = 0;
+
 /**
  * Respuestas rápidas con comando (D-728). Se coloca dentro del formulario del cuadro de escribir, justo
  * encima del campo. Cuando lo escrito empieza con «/» y es solo un comando a medias (sin espacios), abre
@@ -43,6 +46,8 @@ export class ChatRapidosComponent implements OnChanges {
   opciones: OpcionRapida[] = [];
   abierta = false;
   indice = 0;
+  /** Id de la lista (para `aria-controls` del cuadro de escribir). */
+  readonly idLista = `rq-lista-${++siguienteLista}`;
   /** Texto con el que se cerró la lista a mano (Esc): no se reabre hasta que cambie. */
   private cerradaPara: string | null = null;
 
@@ -88,6 +93,17 @@ export class ChatRapidosComponent implements OnChanges {
 
   trackOpcion(_: number, o: OpcionRapida): string {
     return o.comando;
+  }
+
+  /** Id estable de una opción: sale del comando, así no cambia al filtrar ni al mover la selección. */
+  idDe(o: OpcionRapida): string {
+    return `${this.idLista}-${o.comando.replace(/[^a-z0-9_]/gi, '').toLowerCase()}`;
+  }
+
+  /** Id de la opción marcada mientras la lista está abierta (para `aria-activedescendant`); null si no hay. */
+  get idActiva(): string | null {
+    const o = this.abierta ? this.opciones[this.indice] : undefined;
+    return o ? this.idDe(o) : null;
   }
 
   private insertar(o: OpcionRapida | undefined): void {

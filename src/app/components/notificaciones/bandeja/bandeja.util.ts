@@ -3,6 +3,7 @@ import { MetaCanal, MetaHilo } from "../meta-inbox/models/meta-thread.model";
 import { ItemRelacionado } from "../../../shared/services/messaging/messaging.models";
 import {
   ASESOR_SIN_ASIGNAR,
+  CanalBandeja,
   ConversacionRed,
   ConversacionResumen,
   ConversacionWhatsapp,
@@ -29,8 +30,31 @@ export function desdeWhatsapp(hilo: WhatsappThread): ConversacionWhatsapp {
     cerrado: hilo.cerrado === true,
     motivoCierre: hilo.motivoCierre || undefined,
     etiquetas: hilo.etiquetas || undefined,
+    sinResponderDesde: hilo.threadId ? leerSinResponderDesde(hilo) : undefined,
     origen: hilo,
   };
+}
+
+/**
+ * `sinResponderDesde` tal como lo manda el servidor en la fila: texto, `null` o ausente (`undefined`). Cualquier
+ * otro valor cuenta como ausente, para no esconder un chat por un dato raro.
+ */
+export function leerSinResponderDesde(fila: object): string | null | undefined {
+  if (!("sinResponderDesde" in fila)) return undefined;
+  const v = (fila as { sinResponderDesde?: unknown }).sinResponderDesde;
+  if (v === null) return null;
+  return typeof v === "string" && v.trim() ? v : undefined;
+}
+
+/**
+ * ¿El cliente espera respuesta de una persona? Con el dato del hilo de atención (`sinResponderDesde`) manda ese
+ * dato: así cuenta también el chat que Opttia pasó a un asesor aunque el último mensaje sea del bot. Sin el dato,
+ * la regla de siempre: el último mensaje es del cliente. Un chat cerrado nunca cuenta (D-728).
+ */
+export function esSinResponder(c: ConversacionResumen): boolean {
+  if (c.cerrado) return false;
+  if (c.sinResponderDesde !== undefined) return !!c.sinResponderDesde;
+  return c.ultimaDireccion === "inbound";
 }
 
 export function desdeRed(hilo: MetaHilo): ConversacionRed {
@@ -50,6 +74,8 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     cerrado: hilo.cerrado === true,
     motivoCierre: hilo.motivoCierre || undefined,
     etiquetas: hilo.etiquetas || undefined,
+    // Solo con el hilo de atención que manda el servidor (con la bandeja); si no, la regla de siempre.
+    sinResponderDesde: hilo.threadId ? leerSinResponderDesde(hilo) : undefined,
     origen: hilo,
   };
 }
@@ -105,6 +131,57 @@ export function desdeRelacionado(item: ItemRelacionado): ConversacionResumen {
     cerrado: item.cerrado === true,
     motivoCierre: item.motivoCierre || null,
     etiquetas: item.etiquetas,
+  });
+}
+
+/** Lo que guarda un id de hilo de atención: `<línea>__<hash del contacto>` (redes: `red_<canal>__<hash>`). */
+export function partesDeThreadId(threadId: string): { lineId: string; hash: string } | null {
+  const id = (threadId || "").trim();
+  const i = id.lastIndexOf("__");
+  if (i <= 0 || i + 2 >= id.length) return null;
+  return { lineId: id.slice(0, i), hash: id.slice(i + 2) };
+}
+
+/** Lo que se sabe de un chat del informe que no está en la lista cargada (de `GET /atencion/threads/:id`). */
+export interface DatosHiloInforme {
+  owner?: { email: string; nombre: string } | null;
+  colaId?: string | null;
+  cerrado?: boolean;
+  motivoCierre?: string | null;
+  etiquetas?: string[];
+  /** WhatsApp: nombre y teléfono del número del comercio, si se conocen. */
+  linea?: { nombre: string; telefono: string };
+}
+
+/**
+ * Fila mínima para abrir desde el informe un chat que no está en la lista cargada (otra página, cerrado o viejo).
+ * Sale del id del hilo, que ya lleva la línea y el hash del contacto: sin nombre ni número del cliente. El
+ * detalle trae la conversación y la ficha por su cuenta. Null si el id no tiene esa forma.
+ */
+export function desdeHiloDelInforme(
+  canal: CanalBandeja,
+  threadId: string,
+  datos: DatosHiloInforme = {},
+): ConversacionResumen | null {
+  const partes = partesDeThreadId(threadId);
+  if (!partes) return null;
+  if (canal !== "whatsapp" && partes.lineId !== `red_${canal}`) return null;
+  return desdeRelacionado({
+    canal,
+    lineId: partes.lineId,
+    linea: canal === "whatsapp" && datos.linea ? { id: partes.lineId, ...datos.linea } : undefined,
+    hash: partes.hash,
+    nombre: "",
+    ultimoEn: "",
+    ultimaDireccion: "inbound",
+    threadId,
+    owner: datos.owner || undefined,
+    colaId: datos.colaId || undefined,
+    cerrado: datos.cerrado === true,
+    motivoCierre: datos.motivoCierre || undefined,
+    etiquetas: datos.etiquetas,
+    // No se usa para armar la fila: lo pide el tipo del chat relacionado.
+    porque: "mismo_telefono",
   });
 }
 
@@ -184,7 +261,7 @@ export function filtrar(
   return lista.filter((c) => {
     if (filtro.canal && c.canal !== filtro.canal) return false;
     if (filtro.lineId && c.lineId !== filtro.lineId) return false;
-    if (filtro.sinResponder && c.ultimaDireccion !== "inbound") return false;
+    if (filtro.sinResponder && !esSinResponder(c)) return false;
     if (filtro.mios && (!yo || (c.dueno?.email || "").trim().toLowerCase() !== yo)) return false;
     if (filtro.asesor) {
       const dueno = (c.dueno?.email || "").trim().toLowerCase();

@@ -11503,5 +11503,6 @@
   "notificaciones.informes2.notaEtiquetas": "Un chat con varias etiquetas suma en cada una: el % es sobre las etiquetas usadas, no sobre los chats.",
   "notificaciones.informes2.ventana": "Con mensajes de los últimos {{dias}} días",
   "notificaciones.informes2.ventanaMas": "Con mensajes de los últimos {{dias}} días (+{{n}} más viejos)",
-  "notificaciones.informes2.pasaronObjetivoDe": "Pasaron el objetivo de {{t}}"
+  "notificaciones.informes2.pasaronObjetivoDe": "Pasaron el objetivo de {{t}}",
+  "notificaciones.cierre.pestanasAria": "Secciones de la bandeja"
 }

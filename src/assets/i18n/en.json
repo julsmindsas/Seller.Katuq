@@ -11683,5 +11683,6 @@
   "notificaciones.informes2.notaEtiquetas": "A chat with several tags counts in each one: the % is over the tags used, not over the chats.",
   "notificaciones.informes2.ventana": "With messages in the last {{dias}} days",
   "notificaciones.informes2.ventanaMas": "With messages in the last {{dias}} days (+{{n}} older)",
-  "notificaciones.informes2.pasaronObjetivoDe": "Past the {{t}} target"
+  "notificaciones.informes2.pasaronObjetivoDe": "Past the {{t}} target",
+  "notificaciones.cierre.pestanasAria": "Inbox sections"
 }

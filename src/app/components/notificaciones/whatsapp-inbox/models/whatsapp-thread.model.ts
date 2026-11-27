@@ -99,6 +99,12 @@ export interface WhatsappThread {
   motivoCierre?: string | null;
   /** [D-728] Ids de etiqueta vigentes. */
   etiquetas?: string[];
+  /**
+   * Desde cuándo el cliente espera respuesta de una persona (ISO); `null` = ya le respondió una persona. Lo
+   * marca el servidor también cuando Opttia pasa el chat a un asesor, aunque el último mensaje sea del bot.
+   * Ausente = el servidor no lo manda todavía: la pantalla mira quién escribió último.
+   */
+  sinResponderDesde?: string | null;
 }
 
 /** [D-437] Clave de un chat: el mismo cliente en dos números son dos chats. */

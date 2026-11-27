@@ -22,7 +22,7 @@ import {
 import { nombreDeAsesor } from '../../../inbox-core/chat-dueno/nombre-asesor';
 import { CANAL_BANDEJA_ICONO, CANAL_BANDEJA_LABEL } from '../../bandeja.canales';
 import { CanalBandeja } from '../../bandeja.models';
-import { claveRelacionado } from '../../bandeja.util';
+import { claveRelacionado, leerSinResponderDesde } from '../../bandeja.util';
 
 /** Cuánto vale una respuesta guardada en memoria para el mismo chat. */
 export const VIGENCIA_RELACIONADOS_MS = 60_000;
@@ -276,8 +276,17 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
       porque: this.translate.instant(TEXTO_PORQUE[item.porque] || TEXTO_PORQUE.mismo_telefono),
       dueno: item.owner ? nombreDeAsesor(item.owner.email, item.owner.nombre, this.equipo) : '',
       cerrado: item.cerrado === true,
-      sinResponder: item.cerrado !== true && item.ultimaDireccion === 'inbound',
+      sinResponder: item.cerrado !== true && this.esperaRespuesta(item),
     };
+  }
+
+  /**
+   * Con `sinResponderDesde` del hilo (si el servidor lo manda) cuenta también el chat que Opttia pasó a un asesor;
+   * sin el dato, la regla de siempre: el último mensaje es del cliente.
+   */
+  private esperaRespuesta(item: ItemRelacionado): boolean {
+    const desde = item.threadId ? leerSinResponderDesde(item) : undefined;
+    return desde !== undefined ? !!desde : item.ultimaDireccion === 'inbound';
   }
 
   /**

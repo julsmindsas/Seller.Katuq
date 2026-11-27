@@ -29,6 +29,7 @@ import {
   EstadoAsesor,
   EtiquetaChat,
   FiltrosInformeAtencion,
+  HiloAtencion,
   InformeAtencion,
   LineaDeCola,
   MessagingLine,
@@ -53,14 +54,18 @@ import {
   CargaBandeja,
   ConversacionResumen,
 } from "../../bandeja.models";
-import { claveRelacionado, desdeRelacionado, mezclar } from "../../bandeja.util";
+import { claveRelacionado, desdeHiloDelInforme, desdeRelacionado, mezclar } from "../../bandeja.util";
 import { normalizarCola } from "../../bandeja.colas";
 import { construirCsv } from "../bandeja-informes/bandeja-informes.util";
+import { ChatDelInforme } from "../bandeja-informes/bandeja-informes.component";
 import { FiltroListaGuardado } from "../bandeja-lista/bandeja-lista.component";
 import { guardarUltimoMotivo, guardarVuelta, leerUltimoMotivo, leerVuelta } from "./bandeja-recuerdo";
 
 /** Vistas de la bandeja: la lista de chats o, para quien coordina, las pestañas Equipo e Informes (D-729). */
 export type VistaBandeja = "chats" | "equipo" | "informes";
+
+/** Orden de las pestañas (las flechas del teclado se mueven en este orden). */
+const PESTANAS: VistaBandeja[] = ["chats", "equipo", "informes"];
 
 /** Cada cuánto se vuelve a leer la lista: el mismo intervalo de la lista del buzón de WhatsApp. */
 const REFRESCO_MS = 5000;
@@ -170,6 +175,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   informeTruncado = false;
   /** Cada lectura invalida la anterior: una respuesta tardía no pisa a la nueva. */
   private informeSeq = 0;
+  /** «Abrir chat» del informe: solo el último pulsado abre su chat. */
+  private abrirInformeSeq = 0;
 
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
@@ -715,10 +722,68 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     if (vista === "equipo") this.cargarResumen(true);
     if (vista === "informes" && !this.informesVisto) {
       this.informesVisto = true;
-      this.consultarInforme({}); // rango por defecto del servidor: los últimos 7 días
+      // Rango por defecto del servidor (los últimos 7 días) con todas las filas de una vez (`pagina` 0): cambiar de
+      // página y descargar ya no vuelven a consultar, igual que después de «Ver informe».
+      this.consultarInforme({ pagina: 0 });
     }
     // Al entrar a Equipo se trae el catálogo al día (lo escrito en una tarjeta no se pisa: ver `sucio`).
     if (vista === "equipo" && this.esAdmin) this.cargarCatalogos();
+  }
+
+  /** Pestañas con flechas, Inicio y Fin (patrón de pestañas): mueven la elegida y el foco. */
+  alTeclaPestana(ev: KeyboardEvent): void {
+    const i = PESTANAS.indexOf(this.vista);
+    let destino = -1;
+    if (ev.key === "ArrowRight") destino = (i + 1) % PESTANAS.length;
+    else if (ev.key === "ArrowLeft") destino = (i - 1 + PESTANAS.length) % PESTANAS.length;
+    else if (ev.key === "Home") destino = 0;
+    else if (ev.key === "End") destino = PESTANAS.length - 1;
+    if (destino < 0) return;
+    ev.preventDefault();
+    const vista = PESTANAS[destino];
+    this.cambiarVista(vista);
+    setTimeout(() => document.getElementById(`bj-tab-${vista}`)?.focus(), 0);
+  }
+
+  /**
+   * «Abrir chat» de la auditoría del informe: vuelve a Chats y abre ese chat. Si está en la lista cargada se abre
+   * su fila; si no (otra página, cerrado o viejo), una fila mínima armada con el id del hilo (línea y hash del
+   * contacto, sin nombre ni teléfono) y lo que el hilo de atención dice de su dueño, cola, cierre y etiquetas.
+   */
+  abrirChatDelInforme(c: ChatDelInforme): void {
+    const threadId = (c?.threadId || "").trim();
+    const canal = c?.canal as CanalBandeja;
+    if (!threadId || !CANALES_BANDEJA.includes(canal)) return;
+    const seq = ++this.abrirInformeSeq;
+    this.vista = "chats";
+    const cargada = this.conversaciones.find((x) => x.threadId === threadId);
+    if (cargada) {
+      this.abrir(cargada);
+      return;
+    }
+    const lineaDe = (lineId: string) => {
+      const l = this.lineas.find((x) => x.id === lineId);
+      return l ? { nombre: l.displayName || "", telefono: l.displayPhone || "" } : undefined;
+    };
+    const abrirMinima = (h: HiloAtencion | null) => {
+      if (seq !== this.abrirInformeSeq) return;
+      // Pudo llegar con la lista mientras tanto.
+      const yaEsta = this.conversaciones.find((x) => x.threadId === threadId);
+      const lineId = threadId.slice(0, Math.max(0, threadId.lastIndexOf("__")));
+      const fila = yaEsta ?? desdeHiloDelInforme(canal, threadId, {
+        owner: h?.owner || null,
+        colaId: h?.colaId || null,
+        cerrado: !!h?.cierre,
+        motivoCierre: h?.cierre?.motivo || null,
+        etiquetas: h?.etiquetas,
+        linea: canal === "whatsapp" ? lineaDe(lineId) : undefined,
+      });
+      if (fila) this.abrir(fila);
+    };
+    this.atencionSrv
+      .hilo(threadId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (h) => abrirMinima(h), error: () => abrirMinima(null) });
   }
 
   /** Lee el informe (D-729). Un error 422 muestra el mensaje del servidor; lo anterior se conserva a la vista. */
@@ -1464,6 +1529,18 @@ function aplicarEventoEnVivo(
       cambios.ultimoEn = hora;
       cambios.ultimaDireccion = e.motivo === "entrante" ? "inbound" : "outbound";
       cambios.resumen = e.textoCorto;
+      // «Sin responder» del hilo de atención (solo si la fila lo trae): un mensaje del cliente lo marca, como hace
+      // el servidor. Un saliente no se sabe si fue de una persona o de Opttia (que no lo apaga): lo dice la
+      // confirmación.
+      // Un chat cerrado que el cliente reabre al escribir llega con estado «abierto».
+      const quedaCerrado = e.estado === "cerrado" || (e.estado !== "abierto" && !!actual.cerrado);
+      if (actual.sinResponderDesde !== undefined && !quedaCerrado) {
+        if (e.motivo === "entrante") {
+          if (!actual.sinResponderDesde) cambios.sinResponderDesde = hora;
+        } else if (actual.sinResponderDesde) {
+          completo = false;
+        }
+      }
     } else if (!hora || e.textoCorto === null) {
       // Con hora vieja (la fila ya trae algo más nuevo) no hay nada que confirmar.
       completo = false;
@@ -1522,4 +1599,5 @@ interface ConversacionBaseEnVivo {
   dueno: DuenoChat | undefined;
   cerrado: boolean;
   motivoCierre: string | undefined;
+  sinResponderDesde: string | null | undefined;
 }

@@ -40,6 +40,12 @@ interface ConversacionBase {
   motivoCierre?: string;
   /** Fase E (D-728): ids de etiqueta vigentes del catálogo. */
   etiquetas?: string[];
+  /**
+   * Desde cuándo el cliente espera a una persona (ISO), según el hilo de atención; `null` = una persona ya
+   * respondió. `undefined` = la fila no lo trae (servidor sin el dato o número compartido): se usa la dirección
+   * del último mensaje. Ver `esSinResponder`.
+   */
+  sinResponderDesde?: string | null;
 }
 
 export interface ConversacionWhatsapp extends ConversacionBase {
@@ -61,7 +67,7 @@ export interface FiltroBandeja {
   canal: CanalBandeja | null;
   /** null = todos los números. */
   lineId: string | null;
-  /** Último mensaje del cliente. */
+  /** El cliente espera respuesta de una persona (ver `esSinResponder`). */
   sinResponder: boolean;
   /** Chats cuyo dueño es el usuario. */
   mios: boolean;

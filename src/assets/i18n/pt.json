@@ -11671,5 +11671,6 @@
   "notificaciones.informes2.notaEtiquetas": "Um chat com várias etiquetas conta em cada uma: o % é sobre as etiquetas usadas, não sobre os chats.",
   "notificaciones.informes2.ventana": "Com mensagens dos últimos {{dias}} dias",
   "notificaciones.informes2.ventanaMas": "Com mensagens dos últimos {{dias}} dias (+{{n}} mais antigos)",
-  "notificaciones.informes2.pasaronObjetivoDe": "Passaram da meta de {{t}}"
+  "notificaciones.informes2.pasaronObjetivoDe": "Passaram da meta de {{t}}",
+  "notificaciones.cierre.pestanasAria": "Seções da caixa de entrada"
 }

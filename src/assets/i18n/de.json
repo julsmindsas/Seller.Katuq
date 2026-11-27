@@ -11503,5 +11503,6 @@
   "notificaciones.informes2.notaEtiquetas": "Ein Chat mit mehreren Etiketten zählt bei jedem: Der % bezieht sich auf die verwendeten Etiketten, nicht auf die Chats.",
   "notificaciones.informes2.ventana": "Mit Nachrichten der letzten {{dias}} Tage",
   "notificaciones.informes2.ventanaMas": "Mit Nachrichten der letzten {{dias}} Tage (+{{n}} ältere)",
-  "notificaciones.informes2.pasaronObjetivoDe": "Über dem Ziel von {{t}}"
+  "notificaciones.informes2.pasaronObjetivoDe": "Über dem Ziel von {{t}}",
+  "notificaciones.cierre.pestanasAria": "Bereiche des Posteingangs"
 }

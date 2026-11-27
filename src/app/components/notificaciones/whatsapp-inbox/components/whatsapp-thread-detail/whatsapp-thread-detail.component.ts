@@ -33,6 +33,7 @@ import {
 import { ChatRapidosComponent } from "../../../inbox-core/chat-rapidos/chat-rapidos.component";
 import { mapaDeEquipo, nombreConMapa } from "../../../inbox-core/chat-dueno/nombre-asesor";
 import { inicialesDe } from "../../../inbox-core/iniciales";
+import { agruparPorDia, cercaDelFinal, formatoHora } from "../../../inbox-core/feed-mensajes.util";
 import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import { claveDeErrorChat } from "../../errores-envio";
@@ -55,8 +56,6 @@ import { enlaceMapa } from "../../adjuntos/adjuntos.util";
 const VENTANA_MS = 24 * 60 * 60 * 1000;
 /** Con menos de estas horas por delante, la franja avisa cuánto queda. */
 const HORAS_AVISO_VENTANA = 6;
-/** Distancia al final (px) con la que el asesor sigue «abajo» y lo nuevo lo baja. */
-const MARGEN_FINAL_PX = 80;
 /**
  * Id del reintento de un saliente fallido: `retry-<id del fallido>`. El servidor guarda el envío como
  * `reply-retry-<id>`, así que el chat sabe que ese fallido ya se reintentó (y un segundo clic es el mismo envío).
@@ -622,17 +621,9 @@ export class WhatsappThreadDetailComponent
     return LOCALE_POR_IDIOMA[idioma] || idioma;
   }
 
-  /** Hora del mensaje en el idioma de la pantalla («3:45 p. m.», «3:45 PM»). */
+  /** Hora del mensaje en el idioma de la pantalla («3:45 p. m.», «3:45 PM»); la misma pieza que el chat de redes. */
   formatTime(iso: string): string {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) {
-      return "";
-    }
-    try {
-      return d.toLocaleTimeString(this.locale, { hour: "numeric", minute: "2-digit" });
-    } catch {
-      return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    }
+    return formatoHora(iso, this.locale);
   }
 
   // ─── Composer ────────────────────────────────────────────────────────
@@ -895,9 +886,7 @@ export class WhatsappThreadDetailComponent
 
   /** ¿El asesor está mirando el final de la caja? Se pregunta antes de pintar lo nuevo. */
   private cercaDelFinal(): boolean {
-    const el = this.messagesContainer?.nativeElement;
-    if (!el) return true;
-    return el.scrollHeight - el.scrollTop - el.clientHeight <= MARGEN_FINAL_PX;
+    return cercaDelFinal(this.messagesContainer?.nativeElement);
   }
 
   // ─── Auto-refresh ────────────────────────────────────────────────────
@@ -1293,62 +1282,19 @@ export class WhatsappThreadDetailComponent
   }
 
   /**
-   * Construye el feed mixto con separadores de día + mensajes agrupados.
-   *
-   * - Cada cambio de día inserta un `DateSeparatorItem` ("Hoy", "Ayer" o
-   *   fecha corta tipo "Lun, 15 jun").
-   * - Mensajes consecutivos del mismo emisor llevan `grouped=true` para que
-   *   visualmente se peguen (border-radius compactado).
+   * Construye el feed mixto con separadores de día + mensajes agrupados, con las mismas piezas del chat de redes
+   * (`inbox-core/feed-mensajes.util`): «Hoy», «Ayer», el día de la semana o la fecha corta en el idioma de la
+   * pantalla, y `grouped` para el mensaje que sigue a otro del mismo lado dentro del mismo día.
    */
   private buildFeedItems(messages: WhatsappMessage[]): FeedItem[] {
-    const items: FeedItem[] = [];
-    let lastDayKey = "";
-    let lastDirection = "";
-
-    for (const msg of messages) {
-      const d = new Date(msg.sentAt);
-      const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      if (dayKey !== lastDayKey) {
-        items.push({
-          kind: "date",
-          label: this.formatDay(d),
-          key: dayKey,
-        });
-        lastDayKey = dayKey;
-        lastDirection = ""; // reset agrupación al cambiar de día
-      }
-      const grouped =
-        lastDirection === msg.direction && items.length > 0;
-      items.push({ kind: "message", msg, grouped });
-      lastDirection = msg.direction;
-    }
-    return items;
-  }
-
-  private formatDay(d: Date): string {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const day = new Date(d);
-    day.setHours(0, 0, 0, 0);
-    const diffDays = Math.round(
-      (today.getTime() - day.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    if (diffDays === 0) return this.translate.instant('notificaciones.whatsapp.detail.today');
-    if (diffDays === 1) return this.translate.instant('notificaciones.whatsapp.detail.yesterday');
-    // Fechas en el idioma de la pantalla (antes siempre en español de Colombia).
-    const locale = this.locale;
-    const fecha = (opciones: Intl.DateTimeFormatOptions): string => {
-      try {
-        return day.toLocaleDateString(locale, opciones);
-      } catch {
-        return day.toLocaleDateString(undefined, opciones);
-      }
+    const textos = {
+      hoy: this.translate.instant("notificaciones.whatsapp.detail.today"),
+      ayer: this.translate.instant("notificaciones.whatsapp.detail.yesterday"),
     };
-    if (diffDays > 1 && diffDays < 7) {
-      return fecha({ weekday: "long" }).replace(/^./, (c) => c.toLocaleUpperCase());
-    }
-    const opciones: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" };
-    if (day.getFullYear() !== today.getFullYear()) opciones.year = "numeric";
-    return fecha(opciones);
+    return agruparPorDia(messages, (m) => m.sentAt, this.locale, textos, (m) => m.direction).map((item): FeedItem =>
+      item.tipo === "dia"
+        ? { kind: "date", label: item.etiqueta, key: item.clave }
+        : { kind: "message", msg: item.mensaje, grouped: item.agrupado },
+    );
   }
 }

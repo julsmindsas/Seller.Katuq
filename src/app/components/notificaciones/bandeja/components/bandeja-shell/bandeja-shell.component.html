@@ -49,27 +49,45 @@
     </div>
   </header>
 
-  <!-- Pestañas: «Equipo» solo la ve quien coordina -->
-  <div class="bj-tabs" *ngIf="atencion && coordina">
+  <!-- Pestañas: «Equipo» solo la ve quien coordina. Patrón de pestañas: flechas, Inicio y Fin -->
+  <div
+    class="bj-tabs"
+    *ngIf="atencion && coordina"
+    role="tablist"
+    [attr.aria-label]="'notificaciones.cierre.pestanasAria' | translate"
+    (keydown)="alTeclaPestana($event)"
+  >
     <button
       type="button"
       class="bj-tab"
+      id="bj-tab-chats"
+      role="tab"
+      aria-controls="bj-panel-chats"
       [class.is-activo]="vista === 'chats'"
-      [attr.aria-pressed]="vista === 'chats'"
+      [attr.aria-selected]="vista === 'chats'"
+      [attr.tabindex]="vista === 'chats' ? 0 : -1"
       (click)="cambiarVista('chats')"
     >{{ 'notificaciones.bandeja.tab.chats' | translate }}</button>
     <button
       type="button"
       class="bj-tab"
+      id="bj-tab-equipo"
+      role="tab"
+      [attr.aria-controls]="vista === 'equipo' ? 'bj-panel-equipo' : null"
       [class.is-activo]="vista === 'equipo'"
-      [attr.aria-pressed]="vista === 'equipo'"
+      [attr.aria-selected]="vista === 'equipo'"
+      [attr.tabindex]="vista === 'equipo' ? 0 : -1"
       (click)="cambiarVista('equipo')"
     >{{ 'notificaciones.bandeja.tab.equipo' | translate }}</button>
     <button
       type="button"
       class="bj-tab"
+      id="bj-tab-informes"
+      role="tab"
+      [attr.aria-controls]="informesVisto ? 'bj-panel-informes' : null"
       [class.is-activo]="vista === 'informes'"
-      [attr.aria-pressed]="vista === 'informes'"
+      [attr.aria-selected]="vista === 'informes'"
+      [attr.tabindex]="vista === 'informes' ? 0 : -1"
       (click)="cambiarVista('informes')"
     >{{ 'notificaciones.bandeja.tab.informes' | translate }}</button>
   </div>
@@ -77,6 +95,9 @@
   <!-- Informes (D-729): se crea al entrar y solo se oculta, para conservar filtros y resultados -->
   <app-bandeja-informes
     *ngIf="atencion && coordina && informesVisto"
+    id="bj-panel-informes"
+    role="tabpanel"
+    aria-labelledby="bj-tab-informes"
     [hidden]="vista !== 'informes'"
     [informe]="informe"
     [cargando]="informeCargando"
@@ -91,10 +112,14 @@
     [asesores]="asesores"
     (consultar)="consultarInforme($event)"
     (descargar)="descargarInforme($event)"
+    (abrirChat)="abrirChatDelInforme($event)"
   ></app-bandeja-informes>
 
   <app-bandeja-equipo
     *ngIf="atencion && coordina && vista === 'equipo'"
+    id="bj-panel-equipo"
+    role="tabpanel"
+    aria-labelledby="bj-tab-equipo"
     [resumen]="resumen"
     [cargando]="resumenCargando"
     [error]="resumenError"
@@ -125,7 +150,13 @@
   ></app-bandeja-equipo>
 
   <!-- La lista se oculta (no se destruye) al ver Equipo: conserva sus filtros -->
-  <div class="bj__cuerpo" [class.bj__cuerpo--oculto]="atencion && coordina && vista !== 'chats'">
+  <div
+    class="bj__cuerpo"
+    id="bj-panel-chats"
+    [attr.role]="atencion && coordina ? 'tabpanel' : null"
+    [attr.aria-labelledby]="atencion && coordina ? 'bj-tab-chats' : null"
+    [class.bj__cuerpo--oculto]="atencion && coordina && vista !== 'chats'"
+  >
     <!-- Columna izquierda: una sola lista con todos los canales -->
     <aside class="bj__lista">
       <app-bandeja-lista
@@ -187,6 +218,7 @@
           [cerrado]="cerradoAbierto"
           [motivoCierre]="motivoAbierto"
           [motivos]="motivosCierre"
+          [motivoSugerido]="motivoSugerido"
           [ocupado]="ocupadoCierre"
           [error]="errorCierre"
           (cerrar)="cerrarChat($event)"

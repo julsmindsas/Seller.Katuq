@@ -105,6 +105,8 @@
     flex-direction: column;
     flex: 1;
     min-width: 0;
+    // Sin esto el chat crece con sus mensajes y empuja el cuadro de escribir fuera de la columna.
+    min-height: 0;
   }
 
   &__ficha {

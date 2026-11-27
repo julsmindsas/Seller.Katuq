@@ -30,7 +30,7 @@ import {
   FiltroBandeja,
 } from "../../bandeja.models";
 import { MarcaEtiqueta, marcasDe } from "../../bandeja.catalogos";
-import { colaIdDe, filtrar, mezclar, normalizarTexto, telefonoDe } from "../../bandeja.util";
+import { colaIdDe, esSinResponder, filtrar, mezclar, normalizarTexto, telefonoDe } from "../../bandeja.util";
 
 /**
  * Lo que la lista recuerda al volver (de un pedido, por ejemplo): sus filtros locales. La búsqueda no va: puede
@@ -330,8 +330,9 @@ export class BandejaListaComponent implements OnChanges {
       asesor: this.mostrarAsesor ? this.asesor : null,
       colaId: this.mostrarCola ? this.cola : null,
     };
-    // Un chat cerrado ya no cuenta como sin responder (D-728).
-    this.sinResponderCount = todas.filter((c) => !c.cerrado && c.ultimaDireccion === "inbound").length;
+    // Un chat cerrado ya no cuenta como sin responder (D-728). Con el dato del servidor cuenta también el chat que
+    // Opttia pasó a un asesor; sin él, mira quién escribió último (ver `esSinResponder`).
+    this.sinResponderCount = todas.filter((c) => esSinResponder(c)).length;
     this.cerradosCount = todas.filter((c) => c.cerrado).length;
     // Con la bandeja apagada nadie trae `cerrado` y el filtro se queda en «Abiertos».
     if (!this.mostrarEstado && this.filtro.estado !== "abiertos") this.filtro = { ...this.filtro, estado: "abiertos" };
@@ -474,6 +475,12 @@ export class BandejaListaComponent implements OnChanges {
     if (h < 24) return this.translate.instant("notificaciones.whatsapp.list.hoursAgo", { n: h });
     const d = Math.floor(h / 24);
     if (d < 7) return this.translate.instant("notificaciones.whatsapp.list.daysAgo", { n: d });
-    return new Date(entonces).toLocaleDateString();
+    // La fecha en el idioma de la pantalla, no en el del navegador.
+    const fecha = new Date(entonces);
+    try {
+      return fecha.toLocaleDateString(this.translate.currentLang || undefined);
+    } catch {
+      return fecha.toLocaleDateString();
+    }
   }
 }

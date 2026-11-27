@@ -18,6 +18,11 @@ export class ChatCierreComponent implements OnChanges {
   @Input() motivoCierre = '';
   /** Motivos del catálogo: campo estable de quien aloja. */
   @Input() motivos: string[] = [];
+  /**
+   * Último motivo que usó esta persona (lo guarda quien aloja). Al abrir el bloque queda marcado si sigue en el
+   * catálogo; igual hay que pulsar «Confirmar», así que nunca cierra solo.
+   */
+  @Input() motivoSugerido = '';
   /** Hay una petición en curso. */
   /** Chat al que pertenece el bloque: si cambia, se descarta el motivo a medias (D-728). */
   @Input() threadId: string | null = null;
@@ -43,7 +48,11 @@ export class ChatCierreComponent implements OnChanges {
   alternar(): void {
     if (this.ocupado) return;
     this.abierto = !this.abierto;
-    if (!this.abierto) this.reiniciar();
+    if (!this.abierto) {
+      this.reiniciar();
+      return;
+    }
+    if (!this.motivo && this.motivoSugerido && this.motivos.includes(this.motivoSugerido)) this.motivo = this.motivoSugerido;
   }
 
   elegir(valor: string): void {
