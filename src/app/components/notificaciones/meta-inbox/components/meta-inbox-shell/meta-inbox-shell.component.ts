@@ -11,6 +11,7 @@ import {
   eventoTocaMensajes,
 } from 'src/app/shared/services/messaging/bandeja-en-vivo.service';
 
+import { esFamiliaAdministrador } from 'src/app/shared/utils/roles';
 import { inicialesDe } from '../../../inbox-core/iniciales';
 import { MetaInboxService } from '../../meta-inbox.service';
 import { MetaHiloDetalleComponent } from '../meta-hilo-detalle/meta-hilo-detalle.component';
@@ -407,8 +408,22 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy, AfterViewChec
   readonly inicialesDe = inicialesDe;
 
   irAConexion(): void {
+    if (!this.esAdministrador) return;
     this.router.navigate(['/integrations/meta']);
   }
+
+  /**
+   * Solo la familia Administrador conecta o desconecta las redes (el servidor responde 403 a los demás). Los demás
+   * no ven el botón: ven a quién pedírselo. Sin sesión legible, no se ofrece.
+   */
+  readonly esAdministrador: boolean = (() => {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('user') || '{}');
+      return esFamiliaAdministrador(usuario && usuario.rol);
+    } catch {
+      return false;
+    }
+  })();
 
   get esTiktok(): boolean {
     return this.canal === 'tiktok';

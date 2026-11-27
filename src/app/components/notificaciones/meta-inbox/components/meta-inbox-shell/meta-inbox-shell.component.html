@@ -23,8 +23,12 @@
       <span class="mb-aviso__detalle" *ngIf="!necesitaReconectar">
         {{ 'notificaciones.meta.notConnectedDetail' | translate }}
       </span>
+      <!-- Solo un administrador conecta las redes: los demás ven a quién pedírselo -->
+      <span class="mb-aviso__detalle mb-aviso__detalle--admin" *ngIf="!esAdministrador">
+        {{ 'notificaciones.redes3.conexion.pideAdministrador' | translate: { canal: canalLabel } }}
+      </span>
     </div>
-    <button type="button" class="mb-btn mb-btn--primario" (click)="irAConexion()">
+    <button type="button" class="mb-btn mb-btn--primario" *ngIf="esAdministrador" (click)="irAConexion()">
       {{ (necesitaReconectar ? 'notificaciones.meta.reconnect' : 'notificaciones.meta.connect') | translate }}
     </button>
   </div>

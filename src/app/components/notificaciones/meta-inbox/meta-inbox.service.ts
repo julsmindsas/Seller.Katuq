@@ -8,7 +8,10 @@ import { BaseService } from 'src/app/shared/services/base.service';
 import { SKIP_LOADER } from 'src/app/shared/services/interceptor/loader.interceptor';
 import { SIN_AVISO_NEGOCIO } from 'src/app/shared/services/interceptor/sin-aviso-negocio.context';
 import { DuenoChat, esErrorChatConDueno } from 'src/app/shared/services/messaging/messaging.models';
+import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
 import {
+  META_CANAL_LABEL,
   MetaCanal,
   MetaConexiones,
   MetaErrorCarga,
@@ -82,6 +85,22 @@ export function tipoErrorCarga(err: any): MetaErrorCarga {
   return 'red';
 }
 
+/**
+ * Clave de traducción para un rechazo al conectar o desconectar Instagram o Facebook; null si no tiene una
+ * explicación propia (entonces la pantalla dice lo de siempre). Lee el código, nunca el `message` del servidor.
+ */
+export function claveErrorConexion(err: any, accion: 'conectar' | 'desconectar' = 'conectar'): string | null {
+  const status = Number(err?.status);
+  const cuerpo = err && err.error && typeof err.error === 'object' ? err.error : {};
+  const codigo = typeof cuerpo.code === 'string' ? cuerpo.code : '';
+  if (codigo === 'META_CUENTA_EN_USO' || (status === 409 && accion === 'conectar')) {
+    return 'notificaciones.redes3.conexion.cuentaEnUso';
+  }
+  if (codigo === 'FUERA_DE_ALCANCE' || status === 403) return 'notificaciones.redes3.conexion.soloAdministrador';
+  if (codigo === 'NO_SE_PUDO_REVISAR' || status === 503) return 'notificaciones.redes3.conexion.noSePudoRevisar';
+  return null;
+}
+
 /** Código y mensaje con que el servidor rechazó una petición (`400 {code, message}`), si los trae. */
 function errorDelServidor(err: any): MetaErrorServidor {
   const cuerpo = err && err.error && typeof err.error === 'object' ? err.error : {};
@@ -122,7 +141,11 @@ function errorDelServidor(err: any): MetaErrorServidor {
  */
 @Injectable({ providedIn: 'root' })
 export class MetaInboxService extends BaseService {
-  constructor(http: HttpClient) {
+  constructor(
+    http: HttpClient,
+    private readonly toastr: ToastrService,
+    private readonly translate: TranslateService,
+  ) {
     super(http);
   }
 
@@ -135,26 +158,51 @@ export class MetaInboxService extends BaseService {
     );
   }
 
-  /** Completa la conexión con el código que devuelve el diálogo de Meta. */
+  /**
+   * Completa la conexión con el código que devuelve el diálogo de Meta.
+   *
+   * Los rechazos que tienen explicación no se tragan: la página ya está en otra empresa (409
+   * `META_CUENTA_EN_USO`), solo un administrador conecta (403 `FUERA_DE_ALCANCE`) o no se pudo revisar (503
+   * `NO_SE_PUDO_REVISAR`). Se avisa en palabras del comercio y se devuelve el estado de las conexiones tal como
+   * quedó (sin cambios), para que la tarjeta no diga además «revisa los permisos de la cuenta». Cualquier otro
+   * fallo devuelve null, como siempre.
+   */
   conectar(
     canal: MetaCanal,
     code: string,
     redirectUri?: string,
   ): Observable<MetaConexiones | null> {
-    return this.post<any>(`/v1/meta/connections/${canal}`, {
-      code,
-      redirectUri,
-    }).pipe(
+    const contexto = new HttpContext().set(SIN_AVISO_NEGOCIO, true);
+    return this.http
+      .post<any>(`${environment.urlApi}/v1/meta/connections/${canal}`, { code, redirectUri }, { context: contexto })
+      .pipe(
+        map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
+        catchError((err) => this.alFallarConexion(err, canal, 'conectar')),
+      );
+  }
+
+  /** Desconecta una red. Igual que `conectar`: un 403 o un 503 se explican en vez de quedar en silencio. */
+  desconectar(canal: MetaCanal): Observable<MetaConexiones | null> {
+    const contexto = new HttpContext().set(SIN_AVISO_NEGOCIO, true);
+    return this.http.delete<any>(`${environment.urlApi}/v1/meta/connections/${canal}`, { context: contexto }).pipe(
       map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
-      catchError(() => of(null)),
+      catchError((err) => this.alFallarConexion(err, canal, 'desconectar')),
     );
   }
 
-  desconectar(canal: MetaCanal): Observable<MetaConexiones | null> {
-    return this.delete<any>(`/v1/meta/connections/${canal}`).pipe(
-      map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
-      catchError(() => of(null)),
+  /**
+   * Rechazo al conectar o desconectar: si tiene explicación, aviso claro y el estado actual de las conexiones
+   * (null si tampoco se pudo leer); si no, null como antes.
+   */
+  private alFallarConexion(err: any, canal: MetaCanal, accion: 'conectar' | 'desconectar'): Observable<MetaConexiones | null> {
+    const clave = claveErrorConexion(err, accion);
+    if (!clave) return of(null);
+    this.toastr.warning(
+      this.translate.instant(clave, { canal: META_CANAL_LABEL[canal] }),
+      this.translate.instant('notificaciones.redes3.conexion.titulo', { canal: META_CANAL_LABEL[canal] }),
+      { timeOut: 9000, closeButton: true },
     );
+    return this.obtenerConexiones();
   }
 
   /**
