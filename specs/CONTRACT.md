@@ -14513,3 +14513,16 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Probar la cancelación de un pedido que DistriSex ya aprobó (debe quedar con aviso para el asesor).
   - DistriSex propone pruebas en producción el lunes 30-nov: faltan las credenciales de producción y el sí de Daniel.
   - `distrisex-orders-push-oms` sigue apagado; existencias de DistriSex sin prender.
+
+### 2026-11-27 — D-731: «Otros chats de este cliente» y no leídos en redes, en la bandeja única (CONV, pendientes de B) — construido, sin publicar
+
+- **Pedido de Daniel (27-nov):** «retomemos comunicaciones», «¿no te faltó desarrollar algo?» y «arranca con un ejército de agentes». Se compararon el plan D-631 y lo construido; de lo pendiente se tomaron tres piezas sin costo por mensaje y sin tocar el bot.
+- **D-731, misma bandera `bandejaUnica`** (sin ella nada cambia; sin banderas, colecciones ni índices nuevos):
+  - **Otros chats de este cliente:** botón en la barra del chat (también en el número compartido). Solo lectura. Une solo por vínculo cierto: mismo teléfono, misma ficha de cliente (el teléfono debe ser exclusivo de esa ficha) o vínculo hecho a mano en redes (D-170). Nunca por nombre ni por sugerencia. Si quien consulta no puede ver el chat de partida, la respuesta es la misma que si no existiera; los chats relacionados que no puede ver se omiten. Sin teléfonos completos ni texto de mensajes. Ruta nueva `GET /v1/messaging/atencion/relacionados`, con freno de frecuencia. Si la lista puede estar incompleta, lo dice.
+  - **No leídos en Instagram, Facebook y TikTok:** campo nuevo `messaging_threads.noLeidos` (solo hilos de redes, tope 99). Sube con cada mensaje del cliente y se limpia cuando alguien que puede ver el chat lo abre, para todo el comercio, igual que WhatsApp. Rutas nuevas `PATCH /v1/meta/conversations/:canal/:hash/leido` (y la de TikTok). El permiso para marcar falla cerrado. Marcar leído nunca crea el hilo ni toca el reparto.
+- **Fuera, a decisión de Daniel:**
+  - paginación en redes: necesita tres campos más en el hilo (uno copia un trozo del último mensaje), un índice y una migración;
+  - lecturas acotadas para comercios con muchos chats: la revisión mostró que sin tres índices nuevos queda más lento que hoy y que cambia qué cuenta «Equipo» (ventana de 90 días) y el cierre automático.
+- **Construcción y revisión:** 19 subagentes Sonnet en dos tandas (3 diseños con 6 revisiones; 4 constructores, 4 revisores y 2 correctores). 10 hallazgos de la revisión del código: 9 corregidos, 1 descartado con razón (límite ya documentado del contador). El orquestador leyó el diff del servidor de no leídos y comprobó que el adaptador admite la consulta dentro de la transacción.
+- **Pruebas:** mensajería 12/12 (2 archivos nuevos locales, D-566). Build de producción del Seller sin errores; gradientes en 0 en el componente nuevo. **Sin revisar en navegador** y sin mensajes reales.
+- **Commits:** backend `336aec58`, `ba65353b`, `f4b038a2`, `00ed58e5`; front `d99fa7a1`, `9eaace1a`, `a736e46b`. Solo en `feature/tickets-aws-claude-2`. Diseños y resultados en la copia local del orquestador.
