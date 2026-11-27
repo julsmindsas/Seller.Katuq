@@ -1563,6 +1563,7 @@
     "notificaciones.bandeja.relacionados.ayuda.sinFicha": "Diese Nummer steht in keiner Kundenakte: Es werden nur Chats mit derselben Nummer angezeigt.",
     "notificaciones.bandeja.relacionados.ayuda.sinVinculo": "Dieser Kontakt ist keinem Kunden zugeordnet. Verknüpfe ihn in der Kontaktkarte, um seine weiteren Chats zu sehen.",
     "notificaciones.bandeja.relacionados.ayuda.ambiguo": "Mehrere Kundenakten haben diese Nummer: Es werden nur Chats mit derselben Nummer angezeigt.",
+    "notificaciones.bandeja.relacionados.ayuda.truncado": "Es kann weitere Chats dieses Kunden geben, die nicht geprüft werden konnten.",
     "notificaciones.bandeja.notas.errorCarga": "Wir konnten die Notizen nicht laden.",
     "notificaciones.bandeja.notas.errorGuardar": "Wir konnten die Notiz nicht speichern. Versuchen Sie es erneut.",
     "notificaciones.bandeja.equipo.sinAsignar": "Nicht zugewiesen",

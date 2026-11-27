@@ -1731,6 +1731,7 @@
   "notificaciones.bandeja.relacionados.ayuda.sinFicha": "Este telefone não está em nenhuma ficha de cliente: só aparecem os chats com o mesmo telefone.",
   "notificaciones.bandeja.relacionados.ayuda.sinVinculo": "Este contato não está vinculado a um cliente. Vincule-o na ficha do contato para ver os outros chats.",
   "notificaciones.bandeja.relacionados.ayuda.ambiguo": "Há mais de uma ficha com este telefone: só aparecem os chats com o mesmo telefone.",
+  "notificaciones.bandeja.relacionados.ayuda.truncado": "Pode haver mais conversas deste cliente que não foram verificadas.",
   "notificaciones.bandeja.notas.errorCarga": "Não conseguimos carregar as notas.",
   "notificaciones.bandeja.notas.errorGuardar": "Não conseguimos salvar a nota. Tente novamente.",
   "notificaciones.bandeja.equipo.sinAsignar": "Sem atribuição",

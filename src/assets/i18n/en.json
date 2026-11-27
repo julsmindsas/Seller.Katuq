@@ -1743,6 +1743,7 @@
   "notificaciones.bandeja.relacionados.ayuda.sinFicha": "This phone isn't in any customer record: only chats with the same phone are shown.",
   "notificaciones.bandeja.relacionados.ayuda.sinVinculo": "This contact isn't linked to a customer. Link it in its contact card to see their other chats.",
   "notificaciones.bandeja.relacionados.ayuda.ambiguo": "More than one customer record has this phone: only chats with the same phone are shown.",
+  "notificaciones.bandeja.relacionados.ayuda.truncado": "There may be more chats from this customer that could not be checked.",
   "notificaciones.bandeja.notas.errorCarga": "We could not load the notes.",
   "notificaciones.bandeja.notas.errorGuardar": "We could not save the note. Try again.",
   "notificaciones.bandeja.equipo.sinAsignar": "Unassigned",

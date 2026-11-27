@@ -436,6 +436,8 @@ export interface ItemRelacionado {
   colaId?: string;
   cerrado: boolean;
   motivoCierre?: string;
+  /** Etiquetas vigentes del chat (solo los que tienen hilo): evita que guardar una etiqueta borre las que ya tenía. */
+  etiquetas?: string[];
   porque: PorqueRelacionado;
 }
 
@@ -443,5 +445,7 @@ export interface RelacionadosRespuesta {
   /** null = sin ancla (ver `motivo`). */
   ancla: AnclaRelacionados | null;
   motivo?: 'sin_telefono' | 'sin_vinculo';
+  /** La lista puede estar incompleta (una conversación muy larga tapó otros chats). */
+  truncado?: boolean;
   items: ItemRelacionado[];
 }

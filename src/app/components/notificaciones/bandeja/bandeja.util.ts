@@ -85,6 +85,7 @@ export function desdeRelacionado(item: ItemRelacionado): ConversacionResumen {
       colaId: item.colaId || null,
       cerrado: item.cerrado === true,
       motivoCierre: item.motivoCierre || null,
+      etiquetas: item.etiquetas,
     });
   }
   const canal = item.canal as MetaCanal;
@@ -103,6 +104,7 @@ export function desdeRelacionado(item: ItemRelacionado): ConversacionResumen {
     colaId: item.colaId || null,
     cerrado: item.cerrado === true,
     motivoCierre: item.motivoCierre || null,
+    etiquetas: item.etiquetas,
   });
 }
 

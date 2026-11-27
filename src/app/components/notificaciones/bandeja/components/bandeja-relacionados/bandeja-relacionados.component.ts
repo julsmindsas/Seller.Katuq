@@ -81,7 +81,10 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   clienteNombre = '';
 
   private claveActual = '';
-  private sub: Subscription | null = null;
+  /** Peticiones en vuelo (una por chat). Cambiar de chat NO las cancela: su respuesta llena la memoria igual. */
+  private readonly subs = new Set<Subscription>();
+  private readonly pendientes = new Set<string>();
+  private reintento: ReturnType<typeof setTimeout> | null = null;
   private readonly memoria = new Map<string, { en: number; res: RelacionadosRespuesta }>();
 
   constructor(
@@ -97,7 +100,9 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subs.forEach((s) => s.unsubscribe());
+    this.subs.clear();
+    if (this.reintento) clearTimeout(this.reintento);
   }
 
   /** El botón se ve con resultados, con una ayuda que dar o con un error que reintentar; si no, no estorba. */
@@ -138,8 +143,8 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   }
 
   private cargar(saltarMemoria = false): void {
-    this.sub?.unsubscribe();
-    this.sub = null;
+    if (this.reintento) clearTimeout(this.reintento);
+    this.reintento = null;
     this.abierto = false;
     this.filas = [];
     this.ayuda = '';
@@ -164,22 +169,41 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
 
     this.estado = 'cargando';
     this.actualizar();
-    this.sub = this.atencion.relacionados(canal, hash, lineId).subscribe({
+    // Si este chat ya tiene una petición en vuelo (el asesor salió y volvió), se espera esa: pedir otra la
+    // toparía con el freno del servidor.
+    if (this.pendientes.has(clave)) return;
+    this.pedir(clave, canal, hash, lineId, true);
+  }
+
+  private pedir(clave: string, canal: CanalBandeja, hash: string, lineId: string | null, puedeReintentar: boolean): void {
+    this.pendientes.add(clave);
+    const sub = this.atencion.relacionados(canal, hash, lineId).subscribe({
       next: (res) => {
-        // Respuesta tardía de otro chat: se descarta.
-        if (this.claveActual !== clave) return;
+        this.pendientes.delete(clave);
+        // La respuesta llena la memoria aunque ya no sea el chat abierto; solo se pinta si lo es.
         this.guardar(clave, res);
-        this.aplicar(res);
+        if (this.claveActual === clave) this.aplicar(res);
       },
       error: (err) => {
+        this.pendientes.delete(clave);
         if (this.claveActual !== clave) return;
         const status = err?.status;
+        // Un solo reintento automático cuando el servidor pide esperar un momento.
+        if (status === 429 && puedeReintentar) {
+          this.reintento = setTimeout(() => {
+            this.reintento = null;
+            if (this.claveActual === clave && !this.pendientes.has(clave)) this.pedir(clave, canal, hash, lineId, false);
+          }, 2300);
+          return;
+        }
         // 404 es igual si el chat no existe o no se puede ver: no se muestra nada. Sin la bandera (403) tampoco.
         if (status === 404 || status === 403) this.estado = 'vacio';
         else this.estado = status === 429 ? 'limite' : 'error';
         this.actualizar();
       },
     });
+    this.subs.add(sub);
+    sub.add(() => this.subs.delete(sub));
   }
 
   private actualizar(): void {
@@ -216,7 +240,10 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
         ? 'notificaciones.bandeja.relacionados.ayuda.sinFicha'
         : 'notificaciones.bandeja.relacionados.ayuda.sinVinculo';
     } else if (res.ancla?.ambiguo) clave = 'notificaciones.bandeja.relacionados.ayuda.ambiguo';
-    return clave ? this.translate.instant(clave) : '';
+    const partes = [clave, res.truncado ? 'notificaciones.bandeja.relacionados.ayuda.truncado' : '']
+      .filter(Boolean)
+      .map((c) => this.translate.instant(c));
+    return partes.join(' ');
   }
 
   private fila(item: ItemRelacionado): FilaRelacionado {
