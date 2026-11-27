@@ -14498,3 +14498,17 @@ Revisión de la tienda de Baudio (tres agentes de solo lectura; Daniel: «sí» 
   - Ruta nueva `POST /v1/messaging/atencion/threads/:threadId/ayuda`; solo quien puede ver el chat.
 - **Queda para decidir o con diff aprobado por Daniel:** bot en Instagram, Facebook y TikTok; nota interna automática cuando el bot entrega el chat (toca el despachador del bot); preguntas frecuentes sin IA; encuesta de satisfacción; audios; confirmar el tope de 1000 al mes.
 - **Revisión y pruebas (H y F):** subagentes Sonnet con tres revisiones y verificación de cada hallazgo; lo confirmado se corrigió. Backend: pruebas de mensajería 21/21 (2 archivos nuevos locales, D-566) y envío de WhatsApp intacto. Front: build de producción sin errores, gradientes en 0. Navegador con el arnés local y katuq_dev (FLORECER) a 1440 y 390 px: informe con filtros, rango mayor rechazado, descarga CSV, resumen real de un chat de prueba con Opttia y respuesta sugerida puesta en el cuadro; sin scroll horizontal ni errores.
+
+### 2026-11-26 — D-718 (seguimiento): pruebas de pedidos con DistriSex, cancelación y avisos
+
+- **Pantallas (24-nov):** «Todos los pedidos» y Despachos muestran el número del pedido en DistriSex, su estado y los avisos para el asesor (front `af0e2939` y `4e26d5c2`, versiones 2026.11.24.7 y 2026.11.24.10).
+- **Dirección (Daniel, 24-nov: «sí»):** la unidad sin tipo y las especificaciones viajan junto al barrio, que es el único texto libre que DistriSex muestra en la dirección (máximo 60 caracteres). Backend `24c46a7d`, en producción con el merge `611d0fdf`.
+- **Regla de pruebas (Daniel, 24-nov):** un pedido de prueba se despacha siempre con su orden de despacho, para que quede la trazabilidad: pedido → orden de despacho → envío a DistriSex.
+- **Pedidos de prueba (ambiente de pruebas de DistriSex):** 13 pedidos creados desde la tienda de Shopify y despachados por el camino real. ORE-002245 → 76002, ORE-002254 → 76003, ORE-002255 → 76005 y los diez del 25-nov que pidió DistriSex: ORE-002298, 2299, 2300, 2302, 2303, 2305, 2306, 2307, 2308 y 2309 → 76010 a 76019, con diez ciudades, dos tallas, cantidades de 1 a 3 y direcciones con apartamento, torre, oficina, casa, manzana, interior y bloque.
+- **Cancelación probada (25-nov):** cancelados en Shopify los pedidos de ORE-002308 y ORE-002309; Katuq los pasó a Cancelado y la consulta de estados (`distrisex-orders-sync-oms`, cada 30 minutos) los canceló en DistriSex (76018 y 76019). DistriSex confirmó el 26-nov que llegó bien.
+- **Avisos de DistriSex (26-nov):** DistriSex configuró la dirección de avisos de OH MY STORE y entregó su secreto, que quedó guardado cifrado en la configuración de la integración. Primer aviso firmado recibido y aplicado: 76002 pasó a completado y Katuq lo registró en ORE-002245.
+- **Pendiente:**
+  - Ver llegar los avisos de completado del 76005 y de cancelado del 76010, que DistriSex ofreció enviar.
+  - Probar la cancelación de un pedido que DistriSex ya aprobó (debe quedar con aviso para el asesor).
+  - DistriSex propone pruebas en producción el lunes 30-nov: faltan las credenciales de producción y el sí de Daniel.
+  - `distrisex-orders-push-oms` sigue apagado; existencias de DistriSex sin prender.
