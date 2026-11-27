@@ -89,7 +89,7 @@
       <div class="inf-cifra">
         <span class="inf-cifra__etiqueta">{{ 'notificaciones.bandeja.informes.primeraRespuesta' | translate }}</span>
         <span class="inf-cifra__valor">{{ seg(inf.resumen.primeraRespuestaSeg) }}</span>
-        <span class="inf-cifra__nota inf-cifra__nota--fuerte">{{ (inf.resumen.conPrimeraRespuesta === 1 ? 'notificaciones.informes2.sobreUnChat' : 'notificaciones.informes2.sobreChats') | translate: { n: inf.resumen.conPrimeraRespuesta || 0 } }}</span>
+        <span class="inf-cifra__nota inf-cifra__nota--fuerte" *ngIf="inf.resumen.conPrimeraRespuesta > 0">{{ (inf.resumen.conPrimeraRespuesta === 1 ? 'notificaciones.informes2.sobreUnChat' : 'notificaciones.informes2.sobreChats') | translate: { n: inf.resumen.conPrimeraRespuesta || 0 } }}</span>
         <span class="inf-cifra__nota" *ngIf="opcional(inf.resumen.primeraRespuestaP90Seg) !== null">{{ 'notificaciones.informes2.p90' | translate: { t: seg(inf.resumen.primeraRespuestaP90Seg) } }}</span>
         <span class="inf-cifra__nota" *ngIf="opcional(inf.resumen.dentroObjetivoPct) !== null && opcional(inf.resumen.objetivoSeg) !== null">{{ 'notificaciones.informes2.dentroObjetivo' | translate: { pct: inf.resumen.dentroObjetivoPct, t: seg(inf.resumen.objetivoSeg) } }}</span>
         <span class="inf-cifra__nota" *ngIf="opcional(inf.resumen.anterior?.primeraRespuestaSeg) !== null">{{ 'notificaciones.informes2.anteriorTiempo' | translate: { t: seg(inf.resumen.anterior?.primeraRespuestaSeg) } }}</span>
@@ -197,7 +197,7 @@
                     <span class="inf-barra" aria-hidden="true"><span class="inf-barra__relleno" [style.width.%]="f.pct"></span></span>
                   </td>
                   <td class="inf-td inf-td--num">{{ f.total }}</td>
-                  <td class="inf-td inf-td--num inf-td--pct">{{ f.pct }} %</td>
+                  <td class="inf-td inf-td--num inf-td--pct">{{ 'notificaciones.informes2.pct' | translate: { n: f.pct } }}</td>
                 </tr>
               </tbody>
             </table>
@@ -212,7 +212,7 @@
               <thead><tr>
                 <th scope="col" class="inf-th">{{ 'notificaciones.bandeja.informes.colEtiqueta' | translate }}</th>
                 <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.bandeja.informes.colTotal' | translate }}</th>
-                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.informes2.colPct' | translate }}</th>
+                <th scope="col" class="inf-th inf-th--num">{{ 'notificaciones.informes2.colPctEtiquetas' | translate }}</th>
               </tr></thead>
               <tbody>
                 <tr *ngFor="let f of etiquetas; trackBy: trackIdx">
@@ -221,11 +221,12 @@
                     <span class="inf-barra" aria-hidden="true"><span class="inf-barra__relleno" [style.width.%]="f.pct"></span></span>
                   </td>
                   <td class="inf-td inf-td--num">{{ f.total }}</td>
-                  <td class="inf-td inf-td--num inf-td--pct">{{ f.pct }} %</td>
+                  <td class="inf-td inf-td--num inf-td--pct">{{ 'notificaciones.informes2.pct' | translate: { n: f.pct } }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
+          <p class="inf-nota" *ngIf="inf.resumen.porEtiqueta.length">{{ 'notificaciones.informes2.notaEtiquetas' | translate }}</p>
         </section>
       </div>
 

@@ -205,43 +205,43 @@ export class BandejaInformesComponent implements OnChanges {
   bajarResumen(): void {
     const inf = this.informe;
     if (!inf) return;
+    // Claves completas y literales: así el chequeo de i18n las encuentra.
     const t = (k: string, p?: Record<string, unknown>) => this.traducir(k, p);
-    const b = "notificaciones.bandeja.informes.";
-    const n = "notificaciones.informes2.";
     const csv = construirCsvResumen(inf.resumen, {
-      titulo: t(n + "csvTitulo", { desde: fechaCorta(inf.rango.desde), hasta: fechaCorta(inf.rango.hasta) }),
-      cifras: t(n + "csvCifras"),
-      valor: t(n + "csvValor"),
-      creados: t(b + "creados"),
-      cerrados: t(b + "cerrados"),
-      abiertos: t(b + "abiertos"),
-      sinResponder: t(n + "sinResponderNuevos"),
-      primeraRespuestaSeg: t(n + "csvPrimeraSeg"),
-      conPrimeraRespuesta: t(n + "csvConPrimera"),
+      titulo: t("notificaciones.informes2.csvTitulo", { desde: fechaCorta(inf.rango.desde), hasta: fechaCorta(inf.rango.hasta) }),
+      cifras: t("notificaciones.informes2.csvCifras"),
+      valor: t("notificaciones.informes2.csvValor"),
+      creados: t("notificaciones.bandeja.informes.creados"),
+      cerrados: t("notificaciones.bandeja.informes.cerrados"),
+      abiertos: t("notificaciones.bandeja.informes.abiertos"),
+      sinResponder: t("notificaciones.informes2.sinResponderNuevos"),
+      primeraRespuestaSeg: t("notificaciones.informes2.csvPrimeraSeg"),
+      conPrimeraRespuesta: t("notificaciones.informes2.csvConPrimera"),
       opcionales: {
-        clientesNuevos: t(n + "clientesNuevos"),
-        clientesVuelven: t(n + "clientesVuelven"),
-        reabiertos: t(n + "reabiertos"),
-        p90Seg: t(n + "csvP90Seg"),
-        dentroObjetivoPct: t(n + "csvDentroObjetivo"),
+        clientesNuevos: t("notificaciones.informes2.clientesNuevos"),
+        clientesVuelven: t("notificaciones.informes2.clientesVuelven"),
+        reabiertos: t("notificaciones.informes2.reabiertos"),
+        p90Seg: t("notificaciones.informes2.csvP90Seg"),
+        dentroObjetivoPct: t("notificaciones.informes2.csvDentroObjetivo"),
       },
-      porCanal: t(b + "porCanal"),
-      porCola: t(b + "porCola"),
-      porAsesor: t(b + "porAsesor"),
-      porMotivo: t(b + "porMotivo"),
-      porEtiqueta: t(b + "porEtiqueta"),
-      colCanal: t(b + "colCanal"),
-      colCola: t(b + "colCola"),
-      colAsesor: t(b + "colAsesor"),
-      colMotivo: t(b + "colMotivo"),
-      colEtiqueta: t(b + "colEtiqueta"),
-      colCreados: t(b + "colCreados"),
-      colCerrados: t(b + "colCerrados"),
-      colTotal: t(b + "colTotal"),
-      colPct: t(n + "colPct"),
-      sinCola: t(b + "sinCola"),
-      sinAsignar: t(b + "sinAsignar"),
-      sistema: t(b + "sistema"),
+      porCanal: t("notificaciones.bandeja.informes.porCanal"),
+      porCola: t("notificaciones.bandeja.informes.porCola"),
+      porAsesor: t("notificaciones.bandeja.informes.porAsesor"),
+      porMotivo: t("notificaciones.bandeja.informes.porMotivo"),
+      porEtiqueta: t("notificaciones.bandeja.informes.porEtiqueta"),
+      colCanal: t("notificaciones.bandeja.informes.colCanal"),
+      colCola: t("notificaciones.bandeja.informes.colCola"),
+      colAsesor: t("notificaciones.bandeja.informes.colAsesor"),
+      colMotivo: t("notificaciones.bandeja.informes.colMotivo"),
+      colEtiqueta: t("notificaciones.bandeja.informes.colEtiqueta"),
+      colCreados: t("notificaciones.bandeja.informes.colCreados"),
+      colCerrados: t("notificaciones.bandeja.informes.colCerrados"),
+      colTotal: t("notificaciones.bandeja.informes.colTotal"),
+      colPct: t("notificaciones.informes2.colPct"),
+      colPctEtiquetas: t("notificaciones.informes2.colPctEtiquetas"),
+      sinCola: t("notificaciones.bandeja.informes.sinCola"),
+      sinAsignar: t("notificaciones.bandeja.informes.sinAsignar"),
+      sistema: t("notificaciones.bandeja.informes.sistema"),
       nombreCanal: (c) => this.nombreCanal(c),
     });
     descargarCsv(csv, `resumen-atencion-${inf.rango.desde}-${inf.rango.hasta}.csv`);
@@ -258,26 +258,26 @@ export class BandejaInformesComponent implements OnChanges {
 
   /** Mismos textos y columnas que la descarga que arma la bandeja. */
   private textosAuditoria() {
-    const b = "notificaciones.bandeja.informes.";
+    // Claves completas y literales: así el chequeo de i18n las encuentra.
     return {
       cabeceras: [
-        "colCanal",
-        "colNumero",
-        "colContacto",
-        "colAsesor",
-        "colCola",
-        "colEtiquetas",
-        "colCreacion",
-        "colUltimo",
-        "colEstado",
-        "colMotivo",
-        "colCerroPor",
-        "colDuracionMin",
-        "colPrimeraSeg",
-      ].map((k) => this.traducir(b + k)),
-      abierto: this.traducir(b + "estado.abierto"),
-      cerrado: this.traducir(b + "estado.cerrado"),
-      sistema: this.traducir(b + "sistema"),
+        "notificaciones.bandeja.informes.colCanal",
+        "notificaciones.bandeja.informes.colNumero",
+        "notificaciones.bandeja.informes.colContacto",
+        "notificaciones.bandeja.informes.colAsesor",
+        "notificaciones.bandeja.informes.colCola",
+        "notificaciones.bandeja.informes.colEtiquetas",
+        "notificaciones.bandeja.informes.colCreacion",
+        "notificaciones.bandeja.informes.colUltimo",
+        "notificaciones.bandeja.informes.colEstado",
+        "notificaciones.bandeja.informes.colMotivo",
+        "notificaciones.bandeja.informes.colCerroPor",
+        "notificaciones.bandeja.informes.colDuracionMin",
+        "notificaciones.bandeja.informes.colPrimeraSeg",
+      ].map((k) => this.traducir(k)),
+      abierto: this.traducir("notificaciones.bandeja.informes.estado.abierto"),
+      cerrado: this.traducir("notificaciones.bandeja.informes.estado.cerrado"),
+      sistema: this.traducir("notificaciones.bandeja.informes.sistema"),
       nombreCanal: (c: string) => this.nombreCanal(c),
       nombreLinea: (id: string) =>
         this.nombresLinea.get(id) || CANAL_BANDEJA_LABEL[String(id).replace(/^red_/, "") as CanalBandeja] || id,
@@ -303,8 +303,11 @@ export class BandejaInformesComponent implements OnChanges {
     }
     this.completo = inf.pagina === 0;
     if (this.completo) {
-      this.totalVista = (inf.filas || []).length;
-      this.paginasVista = Math.max(1, Math.ceil(this.totalVista / FILAS_POR_PAGINA));
+      // El texto dice el total real del servidor (puede pasar de las 5000 filas que llegan);
+      // las páginas se cuentan con las filas que sí están en memoria.
+      const recibidas = (inf.filas || []).length;
+      this.totalVista = typeof inf.total === "number" ? inf.total : recibidas;
+      this.paginasVista = Math.max(1, Math.ceil(recibidas / FILAS_POR_PAGINA));
       this.paginaVista = 1;
       this.cortarPagina();
     } else {

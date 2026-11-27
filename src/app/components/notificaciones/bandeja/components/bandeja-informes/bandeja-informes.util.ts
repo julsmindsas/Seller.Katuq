@@ -73,7 +73,11 @@ export interface TotalConPorcentaje extends TotalInforme {
   pct: number;
 }
 
-/** Porcentaje de cada fila sobre la suma de la lista (las barras suman 100 %). */
+/**
+ * Porcentaje de cada fila sobre la suma de la lista (las barras suman 100 %). En motivos la suma es la de
+ * cierres; en etiquetas es la de etiquetas usadas (un chat con dos etiquetas suma en las dos), por eso esa
+ * columna dice «% de etiquetas usadas» y no «% de chats».
+ */
 export function conPorcentaje(lista: TotalInforme[] | null | undefined): TotalConPorcentaje[] {
   const filas = Array.isArray(lista) ? lista : [];
   const suma = filas.reduce((s, f) => s + (Number(f.total) || 0), 0);
@@ -158,6 +162,8 @@ export interface TextosCsvResumen {
   colCerrados: string;
   colTotal: string;
   colPct: string;
+  /** Cabecera del % de etiquetas: es sobre las etiquetas usadas, no sobre los chats. */
+  colPctEtiquetas: string;
   sinCola: string;
   sinAsignar: string;
   sistema: string;
@@ -205,7 +211,7 @@ export function construirCsvResumen(r: ResumenInforme, t: TextosCsvResumen): str
   bloque(t.porCola, [t.colCola, t.colCreados, t.colCerrados], (r.porCola || []).map((f) => [nombreCola(f), f.creados, f.cerrados]));
   bloque(t.porAsesor, [t.colAsesor, t.colCreados, t.colCerrados], (r.porAsesor || []).map((f) => [nombreAsesor(f), f.creados, f.cerrados]));
   bloque(t.porMotivo, [t.colMotivo, t.colTotal, t.colPct], conPorcentaje(r.porMotivo).map((f) => [f.nombre, f.total, f.pct]));
-  bloque(t.porEtiqueta, [t.colEtiqueta, t.colTotal, t.colPct], conPorcentaje(r.porEtiqueta).map((f) => [f.nombre, f.total, f.pct]));
+  bloque(t.porEtiqueta, [t.colEtiqueta, t.colTotal, t.colPctEtiquetas], conPorcentaje(r.porEtiqueta).map((f) => [f.nombre, f.total, f.pct]));
   return "\uFEFF" + filas.map((f) => f.map(celdaCsv).join(";")).join("\r\n");
 }
 
