@@ -1181,6 +1181,9 @@ export class WhatsappThreadDetailComponent
       // Con el canal en vivo este sondeo queda de respaldo, pero solo en chats de una línea propia: los del
       // número compartido de Katuq (sin línea) no tienen hilo y no producen eventos, así que siguen cada 4 s.
       if (this.enVivo && this.lineId && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
+      // Buzón viejo (comercios sin la bandeja única): se queda en el ritmo de siempre, cada 8 s. Cada
+      // refresco relee la actividad del comercio en el servidor y ahí no hay canal en vivo que lo alivie.
+      if (!this.atencion && Date.now() - this.ultimoRefresco < 7500) return;
       const conSync = !this.enVivo || Date.now() - this.ultimoSync >= SONDEO_RESPALDO_MS;
       this.refreshMessages(conSync);
     });
