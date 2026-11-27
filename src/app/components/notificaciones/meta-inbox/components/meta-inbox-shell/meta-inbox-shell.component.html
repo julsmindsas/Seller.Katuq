@@ -29,7 +29,8 @@
     </button>
   </div>
 
-  <div class="mb-cols">
+  <!-- En celular y tableta se ve la lista o el chat, uno por vez (con «Volver») -->
+  <div class="mb-cols" [class.mb-cols--detalle]="!!hiloActivo">
     <!-- Columna 1: hilos -->
     <aside class="mb-lista">
       <header class="mb-lista__head">
@@ -54,7 +55,10 @@
         [class.is-activa]="hiloActivo?.identidadHash === h.identidadHash"
         (click)="abrirHilo(h)"
       >
-        <span class="mb-hilo__avatar">{{ (h.contactoNombre || '?').charAt(0) }}</span>
+        <span class="mb-hilo__avatar" aria-hidden="true">
+          <ng-container *ngIf="inicialesDe(h.contactoNombre) as ini; else sinIniciales">{{ ini }}</ng-container>
+          <ng-template #sinIniciales><i class="pi pi-user"></i></ng-template>
+        </span>
         <span class="mb-hilo__cuerpo">
           <span class="mb-hilo__nombre">{{ h.contactoNombre || ('notificaciones.meta.contactOf' | translate: { canal: canalLabel }) }}</span>
           <span class="mb-hilo__snippet">{{ h.ultimoMensajeResumen }}</span>
@@ -67,6 +71,15 @@
 
     <!-- Columna 2: conversación -->
     <section class="mb-chat">
+      <button
+        type="button"
+        class="mb-volver"
+        *ngIf="hiloActivo"
+        (click)="volverALista()"
+      >
+        <i class="fa fa-arrow-left" aria-hidden="true"></i>
+        <span class="mb-volver__texto">{{ 'notificaciones.bandeja.back' | translate }}</span>
+      </button>
       <div class="mb-vacio mb-vacio--centro" *ngIf="!hiloActivo">
         <div class="mb-vacio__icono"><i class="pi pi-comments"></i></div>
         <p class="mb-vacio__titulo">{{ 'notificaciones.meta.chooseThread' | translate }}</p>

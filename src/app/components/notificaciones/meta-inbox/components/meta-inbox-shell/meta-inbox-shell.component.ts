@@ -11,6 +11,7 @@ import {
   eventoTocaMensajes,
 } from 'src/app/shared/services/messaging/bandeja-en-vivo.service';
 
+import { inicialesDe } from '../../../inbox-core/iniciales';
 import { MetaInboxService } from '../../meta-inbox.service';
 import { MetaHiloDetalleComponent } from '../meta-hilo-detalle/meta-hilo-detalle.component';
 import {
@@ -362,6 +363,14 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   abrirHilo(hilo: MetaHilo): void {
     this.hiloActivo = hilo;
   }
+
+  /** «Volver» en celular y tableta: cierra el chat y deja ver la lista otra vez. */
+  volverALista(): void {
+    this.hiloActivo = null;
+  }
+
+  /** Iniciales del avatar (sin «@» ni emojis partidos); vacío = ícono de persona. */
+  readonly inicialesDe = inicialesDe;
 
   irAConexion(): void {
     this.router.navigate(['/integrations/meta']);

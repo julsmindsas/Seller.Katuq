@@ -91,14 +91,18 @@ $error-bg: #fdecec;
     text-transform: uppercase;
     color: $muted;
   }
+  /* Ocupa el alto que deja quien aloja (columna flex) y hace scroll por dentro. El tope de 70vh solo cuenta
+     donde la columna no limita el alto (la ficha apilada debajo del chat en pantallas medianas). */
   &__mensajes {
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 70vh;
     padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     overflow-y: auto;
-    max-height: 460px;
+    overscroll-behavior: contain;
   }
 }
 
@@ -120,12 +124,29 @@ $error-bg: #fdecec;
     background: var(--ds-accent-soft);
     border-color: var(--ds-line-strong);
   }
-  &__texto { color: var(--ds-ink); }
-  &__adjunto { color: $muted; }
+  &__texto { color: var(--ds-ink); font-size: 13px; }
+  &__adjunto { color: $muted; font-size: 13px; }
   /* [D-725] Quién envió el mensaje. */
-  &__autor {
-    display: block;
+  /* Hora y, con la bandeja única, quién envió. Los span llevan color y tamaño propios (span.ng-star-inserted). */
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px;
     margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: $muted;
+  }
+  &__hora {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: $muted;
+    font-variant-numeric: tabular-nums;
+  }
+  &__autor {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: normal;
@@ -210,6 +231,7 @@ $error-bg: #fdecec;
 
     &:disabled { opacity: 0.6; cursor: not-allowed; }
     &:focus { outline: none; border-color: $acento-2; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
   }
 
   /* El selector de archivos real queda oculto: lo abre el botón de imagen. */
@@ -271,4 +293,53 @@ $error-bg: #fdecec;
   color: $muted;
   margin: 0;
   letter-spacing: normal;
+}
+
+/* Separador de día dentro del hilo («Hoy», «Ayer», «lun, 15 jun»). */
+.mb-dia {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0 2px;
+
+  &__texto {
+    padding: 3px 12px;
+    border-radius: 20px;
+    background: $chip-bg;
+    border: 1px solid $chip-borde;
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+}
+
+/* Estado de la caja: chat sin mensajes o carga fallida (con Reintentar). */
+.mb-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: auto;
+  padding: 24px 16px;
+  text-align: center;
+
+  &__icono {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--ds-tile, #{$chip-bg});
+    color: $acento;
+    font-size: 20px;
+  }
+  &__titulo { font-size: 14px; font-weight: 800; color: $ink; letter-spacing: normal; }
+  &__texto { font-size: 12.5px; color: #6b6786; letter-spacing: normal; }
+
+  &--error &__icono {
+    background: $error-bg;
+    color: $error;
+  }
+  .mb-btn { margin-top: 6px; }
 }

@@ -1,5 +1,5 @@
     <header class="mb-chat__head">
-      <span class="mb-chat__nombre">{{ nombreContacto }}</span>
+      <span class="mb-chat__nombre">{{ tituloContacto }}</span>
       <span class="mb-chat__canal">{{ canalLabel }}</span>
     </header>
 
@@ -20,46 +20,77 @@
       (pasar)="pasarChat($event)"
     ></app-chat-dueno>
 
-    <div class="mb-chat__mensajes">
+    <!-- Mensajes: abren en el último, con separador de día y hora; el lector de pantalla anuncia lo nuevo -->
+    <div
+      class="mb-chat__mensajes"
+      #caja
+      role="log"
+      aria-live="polite"
+      [attr.aria-label]="'notificaciones.redes2.mensajesCon' | translate: { nombre: tituloContacto }"
+    >
       <p class="mb-cargando" *ngIf="cargandoMensajes">{{ 'notificaciones.meta.loadingMessages' | translate }}</p>
-      <div
-        class="mb-msg"
-        *ngFor="let m of mensajes; trackBy: trackMensaje"
-        [class.mb-msg--mio]="m.direccion === 'outbound'"
-      >
-        <span class="mb-msg__burbuja">
-          <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
-          <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
-          <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" />
-          <!-- TikTok: publicación compartida; su enlace es público -->
-          <a
-            class="mb-msg__enlace"
-            *ngIf="esPublicacion(m)"
-            [href]="m.mediaUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >{{ 'notificaciones.meta.tiktokVerPublicacion' | translate }}</a>
-          <span class="mb-msg__adjunto" *ngIf="textoAdjunto(m) as texto">
-            <i class="pi pi-paperclip"></i> {{ texto }}
-          </span>
-          <span class="mb-msg__autor" *ngIf="autorDe(m) as autor">· {{ autor }}</span>
-          <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
-            {{ 'notificaciones.meta.notSent' | translate }}
-            <button
-              type="button"
-              class="mb-msg__reintentar"
-              [disabled]="enviando"
-              (click)="reintentar(m)"
-            >
-              {{ 'notificaciones.meta.retry' | translate }}
-            </button>
-          </span>
-        </span>
+
+      <!-- La primera carga falló: se dice y se ofrece Reintentar (sin franja de 24 h ni cuadro de escribir) -->
+      <div class="mb-estado mb-estado--error" *ngIf="errorCarga && !cargandoMensajes" role="alert">
+        <span class="mb-estado__icono" aria-hidden="true"><i class="pi pi-exclamation-triangle"></i></span>
+        <span class="mb-estado__titulo">{{ 'notificaciones.redes2.errorCargaTitulo' | translate }}</span>
+        <span class="mb-estado__texto">{{ 'notificaciones.redes2.errorCargaTexto' | translate }}</span>
+        <button type="button" class="mb-btn mb-btn--ghost" (click)="reintentarCarga()">
+          {{ 'notificaciones.meta.retry' | translate }}
+        </button>
       </div>
+
+      <div class="mb-estado" *ngIf="sinMensajes">
+        <span class="mb-estado__icono" aria-hidden="true"><i class="pi pi-comments"></i></span>
+        <span class="mb-estado__titulo">{{ 'notificaciones.redes2.sinMensajesTitulo' | translate }}</span>
+      </div>
+
+      <ng-container *ngFor="let item of feed; trackBy: trackFeed">
+        <div class="mb-dia" *ngIf="esDia(item)">
+          <span class="mb-dia__texto">{{ item.etiqueta }}</span>
+        </div>
+        <div
+          class="mb-msg"
+          *ngIf="esMensaje(item)"
+          [class.mb-msg--mio]="item.mensaje.direccion === 'outbound'"
+        >
+          <span class="mb-msg__burbuja" *ngIf="item.mensaje as m">
+            <span class="mb-msg__texto" *ngIf="m.body">{{ m.body }}</span>
+            <!-- TikTok: imagen que escribió el cliente, ya descargada con la sesión -->
+            <img class="mb-msg__imagen" *ngIf="imagenDe(m)" [src]="imagenDe(m)" alt="" />
+            <!-- TikTok: publicación compartida; su enlace es público -->
+            <a
+              class="mb-msg__enlace"
+              *ngIf="esPublicacion(m)"
+              [href]="m.mediaUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >{{ 'notificaciones.meta.tiktokVerPublicacion' | translate }}</a>
+            <span class="mb-msg__adjunto" *ngIf="textoAdjunto(m) as texto">
+              <i class="pi pi-paperclip"></i> {{ texto }}
+            </span>
+            <span class="mb-msg__meta" *ngIf="horaDe(m) || autorDe(m)">
+              <time class="mb-msg__hora" *ngIf="horaDe(m) as hora" [attr.datetime]="m.sentAt">{{ hora }}</time>
+              <span class="mb-msg__autor" *ngIf="autorDe(m) as autor">· {{ autor }}</span>
+            </span>
+            <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
+              {{ 'notificaciones.meta.notSent' | translate }}
+              <button
+                type="button"
+                class="mb-msg__reintentar"
+                [disabled]="enviando"
+                (click)="reintentar(m)"
+              >
+                {{ 'notificaciones.meta.retry' | translate }}
+              </button>
+            </span>
+          </span>
+        </div>
+      </ng-container>
     </div>
 
     <!-- La ventana (24 h en Meta; en TikTok, cuántos mensajes quedan): se explica siempre, no solo cuando falla -->
-    <div class="mb-ventana" [class.mb-ventana--cerrada]="!ventana?.abierta" *ngIf="ventana">
+    <div class="mb-ventana" [class.mb-ventana--cerrada]="!ventana?.abierta" *ngIf="ventana && !errorCarga">
       <i class="pi" [ngClass]="ventana.abierta ? 'pi-clock' : 'pi-lock'"></i>
       <span>{{ textoVentana }}</span>
     </div>
@@ -84,7 +115,7 @@
     </div>
     <p class="mb-adjunta__error" *ngIf="errorImagen" role="alert">{{ errorImagen }}</p>
 
-    <form class="mb-responder" (ngSubmit)="enviar()">
+    <form class="mb-responder" *ngIf="!errorCarga" (ngSubmit)="enviar()">
       <!-- TikTok: solo si el país del cliente deja mandar imágenes -->
       <button
         type="button"
@@ -119,10 +150,11 @@
         class="mb-responder__campo"
         [(ngModel)]="borrador"
         name="borrador"
-        (keydown)="alTeclaRapidos($event)"
+        (keydown)="alTeclaCuadro($event)"
         rows="2"
         [disabled]="!puedeEscribir"
         [placeholder]="claveMarcador | translate: { nombre: nombreDueno }"
+        [title]="'notificaciones.redes2.cuadroAyuda' | translate"
       ></textarea>
       <button
         type="submit"

@@ -1,4 +1,15 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, interval } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
@@ -20,6 +31,17 @@ import {
 } from '../../../../../shared/services/messaging/messaging.models';
 
 import { ChatRapidosComponent } from '../../../inbox-core/chat-rapidos/chat-rapidos.component';
+import { mapaDeEquipo, nombreConMapa } from '../../../inbox-core/chat-dueno/nombre-asesor';
+import {
+  ItemFeed,
+  MensajeEnFeed,
+  SeparadorDia,
+  agruparPorDia,
+  cercaDelFinal,
+  esMensajeEnFeed,
+  esSeparadorDia,
+  formatoHora,
+} from '../../../inbox-core/feed-mensajes.util';
 import { SONDEO_RESPALDO_MS } from '../../../../../shared/services/messaging/bandeja-en-vivo.service';
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
@@ -48,7 +70,7 @@ const MAX_IMAGEN_MB = 3;
   templateUrl: './meta-hilo-detalle.component.html',
   styleUrls: ['./meta-hilo-detalle.component.scss'],
 })
-export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
+export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterViewChecked {
   @Input() canal: MetaCanal = 'instagram';
   @Input() hilo: MetaHilo | null = null;
   /** El canal tiene la cuenta conectada (TikTok no deja enviar sin ella). */
@@ -91,14 +113,23 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   private refrescoEnCurso = false;
   private refrescoPendiente = false;
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
+  /** Caja con scroll de los mensajes: se baja al final al abrir, al enviar y con lo nuevo si el asesor ya estaba abajo. */
+  @ViewChild('caja') private caja?: ElementRef<HTMLElement>;
+  private bajarAlFinal = false;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
   duenoActual: DuenoChat | null = null;
   duenoOcupado = false;
 
   mensajes: MetaMensaje[] = [];
+  /** Los mensajes con un separador por día, listos para pintar. */
+  feed: ItemFeed<MetaMensaje>[] = [];
+  /** Hora de cada mensaje (id → «3:45 p. m.»), ya en el idioma de la pantalla. */
+  private horas = new Map<string, string>();
   ventana: MetaVentana | null = null;
   cargandoMensajes = false;
+  /** La primera carga de la conversación falló: se ofrece Reintentar y no se deja escribir. */
+  errorCarga = false;
 
   borrador = '';
   enviando = false;
@@ -171,10 +202,18 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
       // Mientras llegan los de la nueva conversación no se ven ni se usan los mensajes ni la ventana de la anterior
       // (el campo de respuesta queda cerrado hasta que llegue la ventana real). Solo al cambiar de conversación:
       // al enviar o reintentar se recarga la misma y vaciar haría parpadear el chat.
-      this.mensajes = [];
+      this.ponerMensajes([], 'abrir');
       this.ventana = null;
+      this.errorCarga = false;
     }
     this.abrirHilo(this.hilo);
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.bajarAlFinal || !this.caja) return;
+    const el = this.caja.nativeElement;
+    el.scrollTop = el.scrollHeight;
+    this.bajarAlFinal = false;
   }
 
   ngOnDestroy(): void {
@@ -231,7 +270,11 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         // mensajes de un hilo sobre otro.
         if (this.hilo?.identidadHash !== hilo.identidadHash) return;
         if (seq !== this.refrescoSeq) return;
-        this.mensajes = r.items;
+        // Un corte breve no borra el chat ni cierra la ventana: se deja todo como estaba y el próximo
+        // refresco lo intenta de nuevo.
+        if (r.error) return;
+        this.errorCarga = false;
+        this.ponerMensajes(r.items, 'refresco');
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
         this.cargarImagenesEntrantes(r.items);
@@ -246,6 +289,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     this.errorImagen = null;
     this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
+    this.errorCarga = false;
     this.cargarDueno(hilo);
     // Los refrescos en silencio que ya iban en camino quedan viejos.
     this.refrescoSeq++;
@@ -259,18 +303,73 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
       .subscribe((r) => {
         // En la bandeja se cambia de conversación a cada rato: una respuesta tardía de la anterior no pisa la nueva.
         if (this.hilo?.identidadHash !== hilo.identidadHash || this.canal !== canal) return;
-        this.mensajes = r.items;
-        this.ventana = r.ventana;
-        this.fijarPermiteImagen(hilo, r.permiteImagen);
-        this.cargarImagenesEntrantes(r.items);
         this.cargandoMensajes = false;
-        this.marcarLeidoSiHaceFalta(hilo, r.items);
+        if (r.error) {
+          // Primera carga (nada en pantalla): se dice que no cargó, sin franja de 24 h ni cuadro de escribir.
+          // Si ya había mensajes (se recargó tras enviar), se conservan como en un refresco.
+          if (!this.mensajes.length && !this.ventana) this.errorCarga = true;
+        } else {
+          this.ponerMensajes(r.items, 'abrir');
+          this.ventana = r.ventana;
+          this.fijarPermiteImagen(hilo, r.permiteImagen);
+          this.cargarImagenesEntrantes(r.items);
+          this.marcarLeidoSiHaceFalta(hilo, r.items);
+        }
         // Un evento en vivo llegó mientras se abría: se relee una vez más.
         if (this.refrescoPendiente && !this.refrescoEnCurso && !this.enviando) {
           this.refrescoPendiente = false;
           this.refrescarMensajesEnSilencio();
         }
       });
+  }
+
+  /** «Reintentar» del aviso de carga fallida. */
+  reintentarCarga(): void {
+    if (this.hilo && !this.cargandoMensajes) this.abrirHilo(this.hilo);
+  }
+
+  /**
+   * Pinta los mensajes con su separador de día y su hora. Al abrir (o tras enviar) baja al final; en un
+   * refresco solo baja si llegó algo nuevo y el asesor ya estaba abajo (medido antes de pintar), para no
+   * sacarlo de lo que está leyendo más arriba.
+   */
+  private ponerMensajes(items: MetaMensaje[], motivo: 'abrir' | 'refresco'): void {
+    const estabaAbajo = cercaDelFinal(this.caja?.nativeElement);
+    const ultimoAntes = this.mensajes.length ? this.mensajes[this.mensajes.length - 1].id : null;
+    const ultimoAhora = items.length ? items[items.length - 1].id : null;
+    const hayNuevos = items.length > this.mensajes.length || ultimoAhora !== ultimoAntes;
+
+    const idioma = this.translate.currentLang || this.translate.defaultLang || 'es';
+    this.mensajes = items;
+    this.horas = new Map(items.map((m) => [m.id, formatoHora(m.sentAt, idioma)] as [string, string]));
+    this.feed = agruparPorDia(items, (m) => m.sentAt, idioma, {
+      hoy: this.translate.instant('notificaciones.redes2.hoy'),
+      ayer: this.translate.instant('notificaciones.redes2.ayer'),
+    });
+
+    if (motivo === 'abrir') this.bajarAlFinal = items.length > 0;
+    else if (hayNuevos && estabaAbajo) this.bajarAlFinal = true;
+  }
+
+  /** La carga salió bien y la conversación no tiene mensajes. */
+  get sinMensajes(): boolean {
+    return !this.cargandoMensajes && !this.errorCarga && !!this.ventana && this.mensajes.length === 0;
+  }
+
+  horaDe(m: MetaMensaje): string {
+    return this.horas.get(m.id) || '';
+  }
+
+  esDia(item: ItemFeed<MetaMensaje>): item is SeparadorDia {
+    return esSeparadorDia(item);
+  }
+
+  esMensaje(item: ItemFeed<MetaMensaje>): item is MensajeEnFeed<MetaMensaje> {
+    return esMensajeEnFeed(item);
+  }
+
+  trackFeed(_: number, item: ItemFeed<MetaMensaje>): string {
+    return item.tipo === 'dia' ? `dia:${item.clave}` : item.mensaje.id;
   }
 
   /**
@@ -346,6 +445,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
             // Solo se marca como segura la dirección que acaba de crear este mismo navegador con la
             // imagen que entregó nuestro servidor: nunca una dirección que venga en un mensaje.
             const crudo = URL.createObjectURL(blob);
+            // La imagen agranda la caja: si el asesor estaba abajo, sigue abajo.
+            if (cercaDelFinal(this.caja?.nativeElement)) this.bajarAlFinal = true;
             this.imagenesEntrantes.set(m.id, { crudo, seguro: this.sanitizer.bypassSecurityTrustUrl(crudo) });
           } else {
             this.imagenesFallidas.add(m.id);
@@ -472,7 +573,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
 
   /** Con la ventana abierta y, en TikTok, la cuenta conectada. */
   get puedeEscribir(): boolean {
-    return Boolean(this.ventana?.abierta) && !this.sinConexionParaEnviar && !this.enviando && !this.soloLectura;
+    return (
+      Boolean(this.ventana?.abierta) && !this.errorCarga && !this.sinConexionParaEnviar && !this.enviando && !this.soloLectura
+    );
   }
 
   /** Clave del texto de ayuda del campo de respuesta. */
@@ -482,14 +585,24 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     return this.ventana?.abierta ? 'notificaciones.meta.replyPlaceholder' : 'notificaciones.meta.replyClosed';
   }
 
+  /** Para usar dentro de frases («…{nombre} tiene que escribirte»): sin nombre dice «el contacto». */
   get nombreContacto(): string {
     return this.hilo?.contactoNombre || this.translate.instant('notificaciones.meta.theContact');
+  }
+
+  /** Título del chat: el nombre del contacto o «Contacto de Instagram», nunca «el contacto» en minúscula. */
+  get tituloContacto(): string {
+    return (
+      (this.hilo?.contactoNombre || '').trim() ||
+      this.translate.instant('notificaciones.meta.contactOf', { canal: this.canalLabel })
+    );
   }
 
   get puedeEnviar(): boolean {
     const hayQueEnviar = this.borrador.trim().length > 0 || (this.esTiktok && Boolean(this.imagen));
     return (
       Boolean(this.ventana?.abierta) &&
+      !this.errorCarga &&
       !this.sinConexionParaEnviar &&
       hayQueEnviar &&
       !this.enviando &&
@@ -610,9 +723,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
    * se muestra tal cual.
    */
   private explicarFallo(motivo?: string, mensajeServidor?: string): string {
-    if (motivo === 'chat_con_dueno') {
-      return mensajeServidor || this.translate.instant('notificaciones.whatsapp.detail.ownedByOther');
-    }
+    if (motivo === 'chat_con_dueno') return this.textoChatConDueno();
     if (this.esTiktok && mensajeServidor) return mensajeServidor;
     switch (motivo) {
       case 'ventana_cerrada':
@@ -634,6 +745,47 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     return m.id;
   }
 
+  /**
+   * Otro asesor ya atiende el chat: se dice quién con el nombre del equipo, en el idioma de la pantalla
+   * (no con el texto que arma el servidor).
+   */
+  private textoChatConDueno(): string {
+    const nombre = this.nombreDueno;
+    return nombre
+      ? this.translate.instant('notificaciones.redes2.chatDeOtro', { nombre })
+      : this.translate.instant('notificaciones.whatsapp.detail.ownedByOther');
+  }
+
+  /**
+   * Error al tomar, soltar o pasar el chat, en palabras del comercio. Se lee el código que manda el servidor,
+   * nunca su `message`; lo desconocido o un 5xx da el aviso general.
+   */
+  private textoErrorDueno(err: any): string {
+    const codigo = err?.error && typeof err.error === 'object' ? err.error.error || err.error.code : null;
+    switch (codigo) {
+      case 'THREAD_NOT_FOUND':
+        return this.translate.instant('notificaciones.redes2.errorChatNoExiste');
+      case 'TOO_MANY_REQUESTS':
+        return this.translate.instant('notificaciones.redes2.errorMuyRapido');
+      default:
+        return err?.status === 429
+          ? this.translate.instant('notificaciones.redes2.errorMuyRapido')
+          : this.translate.instant('notificaciones.whatsapp.detail.ownerChangeError');
+    }
+  }
+
+  /**
+   * [D-728] Cuadro de escribir igual que en WhatsApp: con la lista de respuestas rápidas abierta las teclas
+   * son suyas; si no, Enter envía y Mayús+Enter hace un salto de línea. Mientras se escribe con un teclado
+   * de composición (tildes, japonés…) Enter no envía.
+   */
+  alTeclaCuadro(event: KeyboardEvent): void {
+    if (this.rapidosLista?.alTecla(event)) return;
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return;
+    event.preventDefault();
+    this.enviar();
+  }
+
   // ─── Dueño del chat (D-725) ────────────────────────────────────────────
 
   /** El chat de red que se está viendo: el id que trae la lista o, si falta, el de la forma `red_<canal>__<hash>`. */
@@ -651,12 +803,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   /** Nombre de quien atiende el chat, para el texto del campo en lectura. */
   /** [D-728] Nombre del contacto para la variable {cliente}; vacío si no se conoce. */
   get nombreCliente(): string {
-    return (this.hilo?.contactoNombre || '').trim();
-  }
-
-  /** [D-728] Las teclas del cuadro pasan primero por la lista de respuestas rápidas (flechas, Enter, Esc). */
-  alTeclaRapidos(event: Event): void {
-    this.rapidosLista?.alTecla(event as KeyboardEvent);
+    const nombre = (this.hilo?.contactoNombre || '').trim();
+    // Un usuario de Instagram («@mafe_92») no es un nombre para saludar: se quita la variable.
+    return nombre.startsWith('@') ? '' : nombre;
   }
 
   /**
@@ -697,8 +846,20 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   }
 
   get nombreDueno(): string {
-    return this.duenoActual?.nombre || this.duenoActual?.email || '';
+    if (!this.duenoActual) return '';
+    return nombreConMapa(this.duenoActual.email, this.duenoActual.nombre, this.mapaEquipo);
   }
+
+  /** Correo → nombre del equipo; se rearma solo cuando cambia la lista del equipo. */
+  private get mapaEquipo(): Map<string, string> {
+    if (this.equipoMapeado !== this.equipo) {
+      this.equipoMapeado = this.equipo;
+      this.mapaEquipoCache = mapaDeEquipo(this.equipo);
+    }
+    return this.mapaEquipoCache;
+  }
+  private equipoMapeado: MiembroEquipo[] | null = null;
+  private mapaEquipoCache = new Map<string, string>();
 
   get esMio(): boolean {
     return !!this.duenoActual && !!this.miEmail && this.duenoActual.email.toLowerCase() === this.miEmail.toLowerCase();
@@ -712,7 +873,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   /** Quién envió el mensaje, para pintarlo junto a la hora; solo con la bandeja única. */
   autorDe(m: MetaMensaje): string {
     if (!this.atencion || m.direccion !== 'outbound') return '';
-    return m.enviadoPorNombre || m.enviadoPor || '';
+    // El nombre del equipo primero, luego la copia guardada en el mensaje y al final el correo.
+    return nombreConMapa(m.enviadoPor, m.enviadoPorNombre, this.mapaEquipo);
   }
 
   /** Trae el dueño al día al abrir el chat; un fallo deja el que ya había. */
@@ -778,14 +940,16 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         if (esErrorChatConDueno(err)) {
           this.ponerDueno(err.error.owner || null);
           this.toastr.warning(
-            err.error.message || this.translate.instant('notificaciones.whatsapp.detail.alreadyOwned'),
+            this.duenoActual && this.nombreDueno
+              ? this.translate.instant('notificaciones.redes2.chatDeOtro', { nombre: this.nombreDueno })
+              : this.translate.instant('notificaciones.whatsapp.detail.alreadyOwned'),
             this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'),
           );
           return;
         }
         // Los 403 ya los avisa el interceptor con el mensaje del servidor.
         if (err?.status === 403) return;
-        this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.whatsapp.detail.ownerChangeError'));
+        this.toastr.error(this.textoErrorDueno(err));
       },
     });
   }

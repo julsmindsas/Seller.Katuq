@@ -206,10 +206,15 @@ export class MetaInboxService extends BaseService {
     );
   }
 
+  /**
+   * Mensajes y ventana de una conversación. Si la petición falla no se inventa una ventana cerrada: vuelve
+   * `error: true` (con lista vacía) para que la pantalla conserve lo que ya mostraba o, en la primera carga,
+   * diga que no cargó. Un refresco fallido nunca debe parecer «ya pasaron 24 horas».
+   */
   mensajesDeHilo(
     canal: MetaCanal,
     identidadHash: string,
-  ): Observable<{ items: MetaMensaje[]; ventana: MetaVentana; permiteImagen?: boolean }> {
+  ): Observable<{ items: MetaMensaje[]; ventana: MetaVentana; permiteImagen?: boolean; error?: boolean }> {
     return this.get<any>(
       `/v1/meta/conversations/${canal}/${encodeURIComponent(identidadHash)}`,
     ).pipe(
@@ -226,6 +231,7 @@ export class MetaInboxService extends BaseService {
         of({
           items: [] as MetaMensaje[],
           ventana: { ...VENTANA_SIN_DATOS },
+          error: true,
         }),
       ),
     );
