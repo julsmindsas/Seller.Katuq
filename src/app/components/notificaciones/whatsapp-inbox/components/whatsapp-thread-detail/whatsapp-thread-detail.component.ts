@@ -10,8 +10,8 @@ import {
   SimpleChanges,
   ViewChild,
 } from "@angular/core";
-import { Subscription, forkJoin, interval } from "rxjs";
-import { finalize } from "rxjs/operators";
+import { Subscription, forkJoin, interval, of } from "rxjs";
+import { catchError, finalize } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
@@ -30,14 +30,59 @@ import {
 } from "../../../../../shared/services/messaging/messaging.models";
 
 import { ChatRapidosComponent } from "../../../inbox-core/chat-rapidos/chat-rapidos.component";
+import { mapaDeEquipo, nombreConMapa } from "../../../inbox-core/chat-dueno/nombre-asesor";
+import { inicialesDe } from "../../../inbox-core/iniciales";
 import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
+import { claveDeErrorChat } from "../../errores-envio";
 import {
   BotThreadState,
   ContactProfile,
   WhatsappMessage,
   WhatsappThread,
 } from "../../models/whatsapp-thread.model";
+
+/** Ventana de 24 h de WhatsApp desde el último mensaje del cliente (guía visual; el servidor decide). */
+const VENTANA_MS = 24 * 60 * 60 * 1000;
+/** Con menos de estas horas por delante, la franja avisa cuánto queda. */
+const HORAS_AVISO_VENTANA = 6;
+/** Distancia al final (px) con la que el asesor sigue «abajo» y lo nuevo lo baja. */
+const MARGEN_FINAL_PX = 80;
+
+/** Idioma de la pantalla → formato de fechas del navegador. */
+const LOCALE_POR_IDIOMA: Record<string, string> = {
+  es: "es-CO",
+  en: "en-US",
+  pt: "pt-BR",
+  de: "de-DE",
+};
+
+/**
+ * Motivos con que el asistente pasa un chat a una persona → clave de traducción. Los motivos que
+ * guarda el servidor son códigos o frases técnicas; uno que no esté aquí no se muestra.
+ */
+const MOTIVOS_TRASPASO: Array<{ prueba: RegExp; clave: string }> = [
+  { prueba: /^pedido_directo_/, clave: "notificaciones.wa2.motivos.pedidoDirecto" },
+  { prueba: /^pedido_sin_link$/, clave: "notificaciones.wa2.motivos.sinLink" },
+  { prueba: /^pidió un asesor/i, clave: "notificaciones.wa2.motivos.pidioAsesor" },
+  { prueba: /^sin saldo/i, clave: "notificaciones.wa2.motivos.sinSaldo" },
+  { prueba: /^cita solicitada sin agenda/i, clave: "notificaciones.wa2.motivos.citaSinAgenda" },
+  { prueba: /^(cita:|agenda_)/i, clave: "notificaciones.wa2.motivos.cita" },
+  { prueba: /^el asistente no respondió/i, clave: "notificaciones.wa2.motivos.asistenteNoRespondio" },
+  { prueba: /^no se pudo enviar la respuesta/i, clave: "notificaciones.wa2.motivos.envioFallo" },
+  { prueba: /^tope de /i, clave: "notificaciones.wa2.motivos.tope" },
+  { prueba: /^cotización /i, clave: "notificaciones.wa2.motivos.cotizacion" },
+  { prueba: /^falló el cierre/i, clave: "notificaciones.wa2.motivos.cierreFallo" },
+  { prueba: /^tomada desde el buzón/i, clave: "notificaciones.wa2.motivos.tomadaBuzon" },
+  { prueba: /^un vendedor respondió/i, clave: "notificaciones.wa2.motivos.respondioBuzon" },
+];
+
+/** Franja de la ventana de 24 h encima del cuadro de escribir. */
+interface GuiaVentana {
+  clave: string;
+  params?: Record<string, unknown>;
+  vencida: boolean;
+}
 
 /**
  * Plantilla de respuesta rápida (chip del composer).
@@ -137,6 +182,13 @@ export class WhatsappThreadDetailComponent
   feedItems: FeedItem[] = [];
   profile: ContactProfile | null = null;
   loading = false;
+  /**
+   * La carga del chat abierto falló: se muestra el aviso con Reintentar y no se puede escribir. Nunca se deja
+   * a la vista el chat anterior (su nombre o sus mensajes) mientras el cuadro le escribe al nuevo.
+   */
+  errorCarga = false;
+  /** El servidor dijo que hay mensajes más viejos que los cargados (la ventana de 24 h no se adivina con ellos). */
+  private hayAnteriores = false;
   contactPanelOpen = false;
 
   // ─── Bot de pedidos ────────────────────────────────────────────────────
@@ -192,7 +244,7 @@ export class WhatsappThreadDetailComponent
       id: "despacho",
       label: "notificaciones.whatsapp.templates.shipping",
       sandboxBody:
-        "Tu pedido va en camino con el transportador. Llega en máximo 48 horas hábiles.",
+        "Tu pedido ya va en camino con el transportador. Te avisamos cualquier novedad.",
     },
     {
       id: "pago-pendiente",
@@ -228,6 +280,17 @@ export class WhatsappThreadDetailComponent
   private refrescoPendienteConSync = false;
   /** Llegó un evento en vivo mientras `loadAll` iba en camino. */
   private senalDuranteCarga = false;
+  /** Cuándo se pidió por última vez la sincronización con Kapso (con el canal en vivo va solo en el sondeo lento). */
+  private ultimoSync = 0;
+  /** Sube con cada cambio de chat: la respuesta de un envío o de una carga del chat anterior se reconoce y se descarta. */
+  private chatSeq = 0;
+  /** Tras enviar, el próximo refresco baja al final aunque el asesor estuviera leyendo más arriba. */
+  private bajarTrasEnvio = false;
+  /** El perfil falló en la carga: los refrescos lo vuelven a pedir, uno a la vez y cada 30 s como mucho. */
+  private perfilEnCurso = false;
+  private ultimoIntentoPerfil = 0;
+  /** Correo → nombre del equipo (autor de cada mensaje, dueño y franja del bot). */
+  private mapaEquipo = new Map<string, string>();
 
   constructor(
     private readonly inbox: WhatsappInboxService,
@@ -241,6 +304,9 @@ export class WhatsappThreadDetailComponent
     if (changes["textoSugerido"] && !changes["textoSugerido"].firstChange && this.textoSugerido) {
       void this.aplicarSugerido(this.textoSugerido.texto);
     }
+    if (changes["equipo"]) {
+      this.mapaEquipo = mapaDeEquipo(this.equipo);
+    }
     if (changes["chat"] || changes["phoneHash"] || changes["lineId"]) {
       this.dueno = this.chat?.owner || null;
     }
@@ -248,6 +314,7 @@ export class WhatsappThreadDetailComponent
       this.contactPanelOpen = false;
       this.composerText = "";
       this.templatesOpen = false;
+      this.vaciarChat();
       this.loadAll();
       this.restartAutoRefresh();
     } else if (changes["senalRefresco"] && !changes["senalRefresco"].firstChange && !this.sending) {
@@ -287,30 +354,41 @@ export class WhatsappThreadDetailComponent
     this.backToList.emit();
   }
 
+  /**
+   * La fila de la lista, solo si es de ESTE chat (mismo cliente y mismo número). Nunca se pinta el nombre de
+   * otro chat mientras el cuadro de escribir le escribe a este.
+   */
+  private get chatActual(): WhatsappThread | null {
+    const c = this.chat;
+    if (!c || !this.phoneHash || c.phoneHash !== this.phoneHash) return null;
+    if ((c.line?.id || null) !== (this.lineId || null)) return null;
+    return c;
+  }
+
+  /** Nombre real del contacto (ficha, perfil de WhatsApp o la fila); vacío si no tiene. */
+  private get nombreReal(): string {
+    const p = this.profile;
+    return (p?.clienteNombre || p?.profileName || this.chatActual?.contactName || "").trim();
+  }
+
   get headerName(): string {
-    if (!this.profile) {
-      return "";
-    }
     return (
-      this.profile.clienteNombre ||
-      this.profile.profileName ||
-      this.profile.phoneMasked ||
+      this.nombreReal ||
+      this.profile?.phoneMasked ||
+      this.chatActual?.phoneMasked ||
       this.translate.instant('notificaciones.whatsapp.detail.contact')
     );
   }
 
+  /** Número enmascarado bajo el nombre; no se repite si ya es el título. */
+  get telefonoCabecera(): string {
+    const tel = this.profile?.phoneMasked || this.chatActual?.phoneMasked || "";
+    return tel && tel !== this.headerName ? tel : "";
+  }
+
+  /** Iniciales del nombre real; vacío = la vista pone el ícono de persona. */
   get headerInitials(): string {
-    const name = this.headerName.trim();
-    if (!name) {
-      return "?";
-    }
-    const parts = name.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) {
-      return "?";
-    }
-    const first = parts[0][0] || "";
-    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-    return (first + last).toUpperCase();
+    return inicialesDe(this.nombreReal);
   }
 
   /**
@@ -342,6 +420,8 @@ export class WhatsappThreadDetailComponent
         return this.translate.instant('notificaciones.whatsapp.media.image');
       case "audio":
         return this.translate.instant('notificaciones.whatsapp.media.audio');
+      case "video":
+        return this.translate.instant('notificaciones.wa2.media.video');
       case "document":
         return this.translate.instant('notificaciones.whatsapp.media.document');
       case "sticker":
@@ -367,32 +447,75 @@ export class WhatsappThreadDetailComponent
     }
   }
 
-  /** Hora HH:MM (formato 12h) del timestamp ISO del mensaje. */
+  /** Estado del saliente leído en palabras (lector de pantalla), no el valor crudo («delivered»). */
+  statusLabel(status: string): string {
+    switch (status) {
+      case "sent":
+      case "delivered":
+      case "read":
+      case "failed":
+        return this.translate.instant(`notificaciones.wa2.estado.${status}`);
+      default:
+        return "";
+    }
+  }
+
+  /** Formato de fechas del idioma de la pantalla. */
+  private get locale(): string {
+    const idioma = (this.translate.currentLang || this.translate.defaultLang || "es").slice(0, 2);
+    return LOCALE_POR_IDIOMA[idioma] || idioma;
+  }
+
+  /** Hora del mensaje en el idioma de la pantalla («3:45 p. m.», «3:45 PM»). */
   formatTime(iso: string): string {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) {
       return "";
     }
-    let h = d.getHours();
-    const m = d.getMinutes().toString().padStart(2, "0");
-    const ampm = h >= 12 ? "p.m." : "a.m.";
-    h = h % 12 || 12;
-    return `${h}:${m} ${ampm}`;
+    try {
+      return d.toLocaleTimeString(this.locale, { hour: "numeric", minute: "2-digit" });
+    } catch {
+      return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    }
   }
 
   // ─── Composer ────────────────────────────────────────────────────────
   /**
    * Submit del composer. Hace POST /reply, en éxito limpia el textarea
-   * y recarga mensajes para que aparezca el saliente recién enviado.
-   * Si falla, dispara toast rojo con el mensaje del backend.
+   * y recarga mensajes para que aparezca el saliente recién enviado (la
+   * burbuja muestra su estado; ya no sale el aviso «Mensaje enviado»).
+   * Si falla, dispara un aviso con el error en palabras del comercio.
    */
   onSend(event: Event): void {
     event.preventDefault();
-    if (!this.phoneHash) {
-      return;
-    }
-    const text = (this.composerText || "").trim();
-    if (!text || this.sending) {
+    this.enviarTexto((this.composerText || "").trim(), true);
+  }
+
+  /** Un saliente fallido escrito a mano (no del bot ni una plantilla) se puede volver a enviar desde su burbuja. */
+  puedeReintentar(msg: WhatsappMessage): boolean {
+    return (
+      msg.direction === "outbound" &&
+      msg.status === "failed" &&
+      !msg.esBot &&
+      !msg.plantilla &&
+      !!(msg.body || "").trim() &&
+      this.canShowComposer &&
+      !this.soloLectura
+    );
+  }
+
+  /** «Reintentar» de un mensaje que no se envió: mismo camino que un envío normal (el servidor revisa la ventana). */
+  reintentar(msg: WhatsappMessage): void {
+    if (!this.puedeReintentar(msg)) return;
+    this.enviarTexto((msg.body || "").trim(), false);
+  }
+
+  /**
+   * Envía `text` al chat abierto. `desdeCuadro`: el texto salió del cuadro de escribir y se limpia al enviar
+   * (un reintento desde la burbuja no toca lo que el asesor esté escribiendo).
+   */
+  private enviarTexto(text: string, desdeCuadro: boolean): void {
+    if (!this.phoneHash || !text || this.sending) {
       return;
     }
     // [D-437] Chat de otra persona: el servidor lo rechazaría (409).
@@ -400,6 +523,8 @@ export class WhatsappThreadDetailComponent
       return;
     }
     const hash = this.phoneHash;
+    const lineId = this.lineId;
+    const seq = this.chatSeq;
     // [D-118] Id estable por mensaje lógico: si el envío falla (o el operador
     // no sabe si salió) y reintenta el MISMO texto, se reusa el id y el
     // backend no dispara un segundo mensaje real. Texto editado → id nuevo.
@@ -410,14 +535,16 @@ export class WhatsappThreadDetailComponent
     }
     this.sending = true;
     this.inbox
-      .sendReply(hash, text, this.pendingClientMessageId, this.lineId)
+      .sendReply(hash, text, this.pendingClientMessageId, lineId)
       .subscribe({
         next: () => {
+          // El asesor ya pasó a otro chat: el de ahora no se toca (su cuadro y su estado son suyos).
+          if (seq !== this.chatSeq) return;
           this.pendingClientMessageId = null;
           this.pendingForText = null;
-          this.composerText = "";
+          if (desdeCuadro) this.composerText = "";
           this.sending = false;
-          this.toastr.success(this.translate.instant('notificaciones.whatsapp.detail.sent'), "WhatsApp");
+          this.bajarTrasEnvio = true;
           // Recargar para ver el saliente en el feed.
           this.refreshMessages();
           // Responder a mano le quita el hilo al bot (lo marca el backend);
@@ -425,18 +552,36 @@ export class WhatsappThreadDetailComponent
           this.cargarEstadoBot(hash);
         },
         error: (err: any) => {
+          if (seq !== this.chatSeq) {
+            // Falló el envío del chat anterior: se avisa sin culpar al chat abierto.
+            if (!esErrorChatConDueno(err) && err?.status !== 403) {
+              this.toastr.error(this.translate.instant("notificaciones.wa2.errores.otroChat"), this.translate.instant('notificaciones.whatsapp.detail.sendErrorTitle'));
+            }
+            return;
+          }
           this.sending = false;
           // [D-437] El chat lo atiende otra persona: se pinta su nombre y el redactor queda en lectura.
           if (esErrorChatConDueno(err)) {
             this.ponerDueno(err.error.owner || null);
-            this.toastr.warning(err.error.message || this.translate.instant('notificaciones.whatsapp.detail.ownedByOther'), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
+            this.toastr.warning(this.textoChatConDueno(err.error.owner), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
             return;
           }
-          const message =
-            err?.error?.message || err?.error?.error || err?.message || this.translate.instant('notificaciones.whatsapp.detail.sendError');
-          this.toastr.error(message, this.translate.instant('notificaciones.whatsapp.detail.sendErrorTitle'));
+          // Los 403 ya los avisa el interceptor con el mensaje del servidor.
+          if (err?.status === 403) return;
+          this.toastr.error(
+            this.translate.instant(claveDeErrorChat(err)),
+            this.translate.instant('notificaciones.whatsapp.detail.sendErrorTitle'),
+          );
         },
       });
+  }
+
+  /** «Este chat lo atiende Ana» con el nombre del equipo; sin dueño legible, el texto general. */
+  private textoChatConDueno(owner: DuenoChat | null | undefined): string {
+    const nombre = owner ? nombreConMapa(owner.email, owner.nombre, this.mapaEquipo) : "";
+    return nombre
+      ? this.translate.instant("notificaciones.wa2.errores.chatConDueno", { nombre })
+      : this.translate.instant('notificaciones.whatsapp.detail.ownedByOther');
   }
 
   /**
@@ -468,10 +613,12 @@ export class WhatsappThreadDetailComponent
     this.templatesOpen = false;
   }
 
-  /** [D-728] Nombre del contacto para la variable {cliente}; vacío si el chat no trae uno real. */
+  /**
+   * [D-728] Nombre del contacto para la variable {cliente}: el mismo del encabezado (ficha o perfil de WhatsApp)
+   * y, si no, el de la fila. Vacío si no tiene uno real: nunca el número enmascarado.
+   */
   get nombreCliente(): string {
-    const n = (this.chat?.contactName || "").trim();
-    return !n || n === this.translate.instant("notificaciones.sinNombre") ? "" : n;
+    return this.nombreReal;
   }
 
   /** [D-728] Con catálogo de respuestas rápidas, las 6 fijas del código se ocultan. */
@@ -521,9 +668,46 @@ export class WhatsappThreadDetailComponent
     this.composerText = texto;
   }
 
-  /** True si la UI debe mostrar el composer (hay hilo abierto con mensajes). */
+  /** True si la UI debe mostrar el composer (hay hilo abierto, cargado bien y con mensajes). */
   get canShowComposer(): boolean {
-    return !!this.phoneHash && this.messages.length > 0;
+    return !!this.phoneHash && !this.loading && !this.errorCarga && this.messages.length > 0;
+  }
+
+  /**
+   * Franja de la ventana de 24 h: cuánto queda para responder sin plantilla, o que ya pasó. Es solo una guía
+   * con los mensajes cargados; quien decide si se puede enviar sigue siendo el servidor.
+   */
+  get guiaVentana(): GuiaVentana | null {
+    if (!this.canShowComposer || this.soloLectura) return null;
+    let ultimoEntrante = 0;
+    for (const m of this.messages) {
+      if (m.direction !== "inbound") continue;
+      const t = new Date(m.sentAt).getTime();
+      if (!Number.isNaN(t) && t > ultimoEntrante) ultimoEntrante = t;
+    }
+    if (!ultimoEntrante) {
+      // Con mensajes más viejos sin cargar no se sabe cuándo escribió el cliente: mejor no decir nada.
+      return this.hayAnteriores ? null : { clave: "notificaciones.wa2.ventana.sinEntrantes", vencida: true };
+    }
+    const restante = ultimoEntrante + VENTANA_MS - Date.now();
+    if (restante <= 0) return { clave: "notificaciones.wa2.ventana.vencida", vencida: true };
+    const horas = Math.floor(restante / (60 * 60 * 1000));
+    if (horas >= HORAS_AVISO_VENTANA) return null;
+    if (horas < 1) return { clave: "notificaciones.wa2.ventana.menosDeUna", vencida: false };
+    return { clave: "notificaciones.wa2.ventana.quedan", params: { n: horas }, vencida: false };
+  }
+
+  /** «Reintentar» del aviso de error: vuelve a cargar el chat abierto. */
+  reintentarCarga(): void {
+    this.vaciarChat();
+    this.loadAll();
+  }
+
+  /** ¿El asesor está mirando el final de la caja? Se pregunta antes de pintar lo nuevo. */
+  private cercaDelFinal(): boolean {
+    const el = this.messagesContainer?.nativeElement;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= MARGEN_FINAL_PX;
   }
 
   // ─── Auto-refresh ────────────────────────────────────────────────────
@@ -557,7 +741,11 @@ export class WhatsappThreadDetailComponent
     };
     // Antes del refresh, pedir al backend que sincronice inbounds desde Kapso
     // (best-effort, el servicio ignora el error).
-    if (conSync) this.inbox.syncInbound().subscribe();
+    if (conSync) {
+      this.ultimoSync = Date.now();
+      this.inbox.syncInbound().subscribe();
+    }
+    this.reintentarPerfil(hash, lineId, seq);
     this.inbox.getMessages(hash, lineId).pipe(finalize(siguiente)).subscribe({
       next: (page) => {
         // Si el chat cambió mientras respondía, se descarta.
@@ -566,17 +754,25 @@ export class WhatsappThreadDetailComponent
         if (seq !== this.refrescoSeq) return;
         const items = page.items;
         if (items.length === 0) return; // mantener estado anterior si vacío
-        const prevCount = this.messages.length;
+        // La carga había fallado y este refresco sí trajo el chat: se quita el aviso.
+        const veniaDeError = this.errorCarga;
+        this.errorCarga = false;
+        this.hayAnteriores = !!page.hasMore;
+        // Nuevos = los que no estaban (por id): con la página llena el total no crece aunque lleguen mensajes.
+        const previos = new Set(veniaDeError ? [] : this.messages.map((m) => m.id));
+        const nuevos = items.filter((m) => !previos.has(m.id));
+        // Lo nuevo baja la pantalla solo si el asesor ya estaba abajo (o acaba de enviar): si subió a leer, se queda.
+        const abajo = veniaDeError || this.bajarTrasEnvio || this.cercaDelFinal();
         this.messages = items;
         this.feedItems = this.buildFeedItems(items);
-        if (items.length > prevCount) this.needsScroll = true;
+        if (nuevos.length > 0 && abajo) {
+          this.needsScroll = true;
+          this.bajarTrasEnvio = false;
+        }
         // Si llegaron ENTRANTES nuevos con el chat abierto, marcarlos vistos
         // de una — antes el badge de la lista crecía aunque el operador
         // estuviera leyendo el hilo ("abro el chat y no se quitan").
-        const nuevosInbound = items
-          .slice(prevCount)
-          .some((m) => m.direction === "inbound");
-        if (items.length > prevCount && nuevosInbound) {
+        if (nuevos.some((m) => m.direction === "inbound")) {
           this.markAsRead();
         }
       },
@@ -589,6 +785,8 @@ export class WhatsappThreadDetailComponent
    * refresca (el asesor debe ver lo que el cliente sigue escribiendo); la
    * pantalla solo baja al final cuando llegan mensajes nuevos. Con el canal en
    * vivo conectado queda de respaldo: un refresco cada 30 s como mucho.
+   * La sincronización con Kapso va en cada vuelta solo con el canal caído; con
+   * el canal conectado, en el sondeo lento (cada 30 s como mucho).
    */
   private restartAutoRefresh(): void {
     this.stopAutoRefresh();
@@ -603,7 +801,8 @@ export class WhatsappThreadDetailComponent
       // Con el canal en vivo este sondeo queda de respaldo, pero solo en chats de una línea propia: los del
       // número compartido de Katuq (sin línea) no tienen hilo y no producen eventos, así que siguen cada 4 s.
       if (this.enVivo && this.lineId && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
-      this.refreshMessages();
+      const conSync = !this.enVivo || Date.now() - this.ultimoSync >= SONDEO_RESPALDO_MS;
+      this.refreshMessages(conSync);
     });
   }
 
@@ -618,13 +817,43 @@ export class WhatsappThreadDetailComponent
 
   /** Carga (o refresca) el estado del bot para el hilo. Nunca bloquea el chat. */
   private cargarEstadoBot(hash: string): void {
-    this.inbox.getBotState(hash, this.lineId).subscribe({
+    const lineId = this.lineId;
+    this.inbox.getBotState(hash, lineId).subscribe({
       next: (estado) => {
         // Si el hilo cambió mientras respondía, se descarta.
-        if (this.phoneHash === hash) this.botState = estado;
+        if (this.phoneHash === hash && this.lineId === lineId) this.botState = estado;
       },
       error: () => undefined,
     });
+  }
+
+  /**
+   * «Atendido por el bot» solo si el servidor lo dice y nadie del equipo tomó el chat. Tras «Tomar» la
+   * pastilla se quita de una (el bot ya no contesta cuando hay dueño; aquí solo cambia lo que se ve).
+   */
+  get botAtiende(): boolean {
+    return !!this.botState?.atendiendoBot && !this.dueno;
+  }
+
+  /** Texto de la franja de traspaso: quién lleva el chat, en palabras y sin códigos. */
+  get textoTraspaso(): string {
+    const tomadaPor = (this.botState?.tomadaPor || "").trim();
+    if (!tomadaPor) return this.translate.instant("notificaciones.wa2.franja.botNoAtiende");
+    if (tomadaPor === "sin_asignar" || tomadaPor === "unknown") {
+      return this.translate.instant("notificaciones.wa2.franja.botHandedOver");
+    }
+    const nombre = tomadaPor.includes("@")
+      ? nombreConMapa(tomadaPor, null, this.mapaEquipo)
+      : this.translate.instant("notificaciones.whatsapp.detail.someoneElse");
+    return this.translate.instant("notificaciones.whatsapp.detail.handledBy", { nombre });
+  }
+
+  /** Motivo del traspaso traducido; vacío si el servidor guardó uno que no se sabe contar. */
+  get motivoTraspasoTexto(): string {
+    const motivo = (this.botState?.motivoTraspaso || "").trim();
+    if (!motivo) return "";
+    const conocido = MOTIVOS_TRASPASO.find((m) => m.prueba.test(motivo));
+    return conocido ? this.translate.instant(conocido.clave) : "";
   }
 
   /** El vendedor se queda con la conversación; el bot se calla en este hilo. */
@@ -669,23 +898,29 @@ export class WhatsappThreadDetailComponent
       this.feedItems = [];
       this.profile = null;
       this.botState = null;
+      this.loading = false;
+      this.errorCarga = false;
       return;
     }
     this.loading = true;
+    this.errorCarga = false;
     const hash = this.phoneHash;
     const lineId = this.lineId;
-    this.refrescoSeq++;
+    const seq = ++this.refrescoSeq;
     this.ultimoRefresco = Date.now();
     this.senalDuranteCarga = false;
+    this.ultimoIntentoPerfil = Date.now();
     this.cargarEstadoBot(hash);
     forkJoin([
       this.inbox.getMessages(hash, lineId),
-      this.inbox.getContactProfile(hash, lineId),
+      // Una falla del perfil no tumba los mensajes: la cabecera usa la fila de la lista y el refresco lo reintenta.
+      this.inbox.getContactProfile(hash, lineId).pipe(catchError(() => of(null))),
     ]).subscribe({
       next: ([page, profile]) => {
-        if (this.phoneHash !== hash || this.lineId !== lineId) return;
+        if (this.phoneHash !== hash || this.lineId !== lineId || seq !== this.refrescoSeq) return;
         this.messages = page.items;
         this.feedItems = this.buildFeedItems(page.items);
+        this.hayAnteriores = !!page.hasMore;
         this.profile = profile;
         this.loading = false;
         this.needsScroll = true;
@@ -697,12 +932,53 @@ export class WhatsappThreadDetailComponent
           this.refreshMessages(false);
         }
       },
-      // Si falla, se mantiene el estado anterior (como antes de D-437).
+      // Si fallan los mensajes, el chat queda vacío con el aviso y Reintentar; nunca con lo del chat anterior.
       error: () => {
+        if (this.phoneHash !== hash || this.lineId !== lineId || seq !== this.refrescoSeq) return;
+        this.messages = [];
+        this.feedItems = [];
         this.loading = false;
+        this.errorCarga = true;
         this.senalDuranteCarga = false;
       },
     });
+  }
+
+  /**
+   * Deja el detalle en blanco al cambiar de chat (o al reintentar): mensajes, perfil, estado del bot, el envío en
+   * curso y su id idempotente. Así nada del chat anterior se ve ni se reusa en el nuevo.
+   */
+  private vaciarChat(): void {
+    this.chatSeq++;
+    this.messages = [];
+    this.feedItems = [];
+    this.profile = null;
+    this.botState = null;
+    this.errorCarga = false;
+    this.hayAnteriores = false;
+    this.sending = false;
+    this.pendingClientMessageId = null;
+    this.pendingForText = null;
+    this.bajarTrasEnvio = false;
+    this.needsScroll = false;
+  }
+
+  /** El perfil falló en la carga: un refresco lo vuelve a pedir (uno a la vez, cada 30 s como mucho). */
+  private reintentarPerfil(hash: string, lineId: string | null, seq: number): void {
+    if (this.profile || this.loading || this.perfilEnCurso) return;
+    if (Date.now() - this.ultimoIntentoPerfil < SONDEO_RESPALDO_MS) return;
+    this.perfilEnCurso = true;
+    this.ultimoIntentoPerfil = Date.now();
+    this.inbox
+      .getContactProfile(hash, lineId)
+      .pipe(finalize(() => (this.perfilEnCurso = false)))
+      .subscribe({
+        next: (perfil) => {
+          if (this.phoneHash !== hash || this.lineId !== lineId || seq !== this.refrescoSeq) return;
+          this.profile = perfil;
+        },
+        error: () => undefined,
+      });
   }
 
   // ─── Dueño del chat (D-437) ───────────────────────────────────────────
@@ -719,7 +995,9 @@ export class WhatsappThreadDetailComponent
   }
 
   get motivoLectura(): string {
-    const nombre = this.dueno?.nombre || this.dueno?.email || this.translate.instant('notificaciones.whatsapp.detail.someoneElse');
+    const nombre =
+      (this.dueno ? nombreConMapa(this.dueno.email, this.dueno.nombre, this.mapaEquipo) : "") ||
+      this.translate.instant('notificaciones.whatsapp.detail.someoneElse');
     return this.esAdministrador || (this.atencion && this.coordina)
       ? this.translate.instant('notificaciones.whatsapp.detail.readOnlyAdmin', { nombre })
       : this.translate.instant('notificaciones.whatsapp.detail.readOnly', { nombre });
@@ -763,32 +1041,40 @@ export class WhatsappThreadDetailComponent
     return this.atencion && (this.coordina || !!(this.dueno && !this.soloLectura));
   }
 
-  /** [D-725] «· Nombre» del saliente; vacío sin `atencion` o si no llega el nombre (el bot no lleva). */
+  /**
+   * [D-725] «· Nombre» del saliente: el nombre del equipo, luego el que guardó el mensaje y al final el correo
+   * (como en redes). Vacío sin `atencion`, en los entrantes y en los del bot.
+   */
   autorDe(msg: WhatsappMessage): string {
     if (!this.atencion || msg.direction !== "outbound") return "";
-    return msg.sentByName || "";
+    const por = (msg.sentBy || "").trim();
+    if (por === "bot") return "";
+    return nombreConMapa(por, msg.sentByName, this.mapaEquipo);
   }
 
   private accionDueno(peticion: ReturnType<AtencionService["tomar"]>, exito: string, colaId?: string): void {
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
+    const hash = this.phoneHash;
     peticion.subscribe({
       next: (owner) => {
         this.duenoOcupado = false;
         this.ponerDueno(owner);
         if (colaId) this.colaCambiada.emit(colaId);
         this.toastr.success(this.translate.instant(exito));
+        // Tomar, soltar o pasar cambia quién responde: se relee el estado real del bot para la pastilla y la franja.
+        if (hash && hash === this.phoneHash) this.cargarEstadoBot(hash);
       },
       error: (err: any) => {
         this.duenoOcupado = false;
         if (esErrorChatConDueno(err)) {
           this.ponerDueno(err.error.owner || null);
-          this.toastr.warning(err.error.message || this.translate.instant('notificaciones.whatsapp.detail.alreadyOwned'), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
+          this.toastr.warning(this.textoChatConDueno(err.error.owner), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));
           return;
         }
         // Los 403 ya los avisa el interceptor con el mensaje del servidor.
         if (err?.status === 403) return;
-        this.toastr.error(err?.error?.message || this.translate.instant('notificaciones.whatsapp.detail.ownerChangeError'));
+        this.toastr.error(this.translate.instant(claveDeErrorChat(err, 'notificaciones.whatsapp.detail.ownerChangeError')));
       },
     });
   }
@@ -841,15 +1127,20 @@ export class WhatsappThreadDetailComponent
     );
     if (diffDays === 0) return this.translate.instant('notificaciones.whatsapp.detail.today');
     if (diffDays === 1) return this.translate.instant('notificaciones.whatsapp.detail.yesterday');
-    if (diffDays < 7) {
-      return day
-        .toLocaleDateString("es-CO", { weekday: "long" })
-        .replace(/^./, (c) => c.toUpperCase());
+    // Fechas en el idioma de la pantalla (antes siempre en español de Colombia).
+    const locale = this.locale;
+    const fecha = (opciones: Intl.DateTimeFormatOptions): string => {
+      try {
+        return day.toLocaleDateString(locale, opciones);
+      } catch {
+        return day.toLocaleDateString(undefined, opciones);
+      }
+    };
+    if (diffDays > 1 && diffDays < 7) {
+      return fecha({ weekday: "long" }).replace(/^./, (c) => c.toLocaleUpperCase());
     }
-    return day.toLocaleDateString("es-CO", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
+    const opciones: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" };
+    if (day.getFullYear() !== today.getFullYear()) opciones.year = "numeric";
+    return fecha(opciones);
   }
 }

@@ -5,31 +5,33 @@
       class="thread-detail__back"
       (click)="onBack()"
       [attr.aria-label]="'notificaciones.whatsapp.detail.back' | translate"
+      [title]="'notificaciones.whatsapp.detail.back' | translate"
     >
-      ←
+      <i class="fa fa-arrow-left" aria-hidden="true"></i>
     </button>
 
     <div class="thread-detail__avatar" aria-hidden="true">
-      {{ headerInitials }}
+      <ng-container *ngIf="headerInitials; else iconoPersona">{{ headerInitials }}</ng-container>
+      <ng-template #iconoPersona><i class="fa fa-user"></i></ng-template>
     </div>
 
     <div class="thread-detail__header-info">
-      <h3 class="thread-detail__name">
+      <h3 class="thread-detail__name" [attr.title]="headerName">
         {{ headerName }}
       </h3>
-      <p class="thread-detail__phone" *ngIf="profile">
-        {{ profile.phoneMasked }}
+      <p class="thread-detail__phone" *ngIf="telefonoCabecera">
+        {{ telefonoCabecera }}
       </p>
       <app-linea-chip [linea]="chat?.line"></app-linea-chip>
     </div>
 
-    <!-- Quién atiende: pill del bot + acción (mockup) -->
-    <div class="thread-detail__bot-pill" *ngIf="botState?.atendiendoBot">
+    <!-- Quién atiende: pill del bot + acción (solo si nadie del equipo tomó el chat) -->
+    <div class="thread-detail__bot-pill" *ngIf="botAtiende">
       <span class="thread-detail__bot-dot" aria-hidden="true"></span>
-      {{ 'notificaciones.whatsapp.detail.botPill' | translate }}
+      <span class="thread-detail__bot-pill-texto">{{ 'notificaciones.whatsapp.detail.botPill' | translate }}</span>
     </div>
     <button
-      *ngIf="botState?.atendiendoBot"
+      *ngIf="botAtiende"
       type="button"
       class="thread-detail__bot-take"
       (click)="tomarConversacion()"
@@ -78,19 +80,19 @@
     (pasar)="pasarChat($event)"
   ></app-chat-dueno>
 
-  <!-- Franja secundaria del bot: traspaso / devolver (solo si aplica) -->
+  <!-- Franja secundaria del bot: traspaso / devolver (solo si aplica), en palabras y sin códigos -->
   <div
-    class="thread-detail__bot-strip"
+    class="thread-detail__franja"
     *ngIf="botState && botState.botHabilitado && !botState.atendiendoBot && (botState.tomadaPor || botState.motivoTraspaso)"
   >
-    <span class="thread-detail__bot-strip-text">
-      {{ botState.tomadaPor ? ('notificaciones.whatsapp.detail.handledBy' | translate: { nombre: botState.tomadaPor }) : ('notificaciones.whatsapp.detail.botNotHandling' | translate) }}
-      <em *ngIf="botState.motivoTraspaso">{{ botState.motivoTraspaso }}</em>
+    <span class="thread-detail__franja-texto">
+      {{ textoTraspaso }}
+      <em *ngIf="motivoTraspasoTexto" class="thread-detail__franja-motivo">{{ motivoTraspasoTexto }}</em>
     </span>
     <button
       *ngIf="botState.tomadaPor"
       type="button"
-      class="thread-detail__bot-strip-btn"
+      class="thread-detail__franja-boton"
       (click)="devolverAlBot()"
       [disabled]="botActionBusy"
     >
@@ -102,17 +104,31 @@
     <div class="thread-detail__chat">
       <div *ngIf="loading" class="thread-detail__state">{{ 'notificaciones.whatsapp.detail.loadingMessages' | translate }}</div>
 
+      <!-- La carga falló: el chat queda vacío (nada del anterior) y no se puede escribir hasta que cargue -->
+      <div *ngIf="!loading && errorCarga" class="thread-detail__error" role="alert">
+        <span class="thread-detail__error-icono" aria-hidden="true"><i class="fa fa-exclamation-circle"></i></span>
+        <strong class="thread-detail__error-titulo">{{ 'notificaciones.wa2.detail.loadError' | translate }}</strong>
+        <span class="thread-detail__error-texto">{{ 'notificaciones.wa2.detail.loadErrorHint' | translate }}</span>
+        <button type="button" class="thread-detail__error-boton" (click)="reintentarCarga()">
+          <i class="fa fa-refresh" aria-hidden="true"></i>
+          {{ 'notificaciones.wa2.detail.retry' | translate }}
+        </button>
+      </div>
+
       <div
-        *ngIf="!loading && messages.length === 0"
+        *ngIf="!loading && !errorCarga && messages.length === 0"
         class="thread-detail__state"
       >
-        {{ 'notificaciones.whatsapp.detail.noMessages' | translate }}
+        {{ 'notificaciones.wa2.detail.noMessages' | translate }}
       </div>
 
       <div
         #messagesContainer
         class="thread-detail__messages"
-        *ngIf="!loading && messages.length > 0"
+        *ngIf="!loading && !errorCarga && messages.length > 0"
+        role="log"
+        aria-live="polite"
+        [attr.aria-label]="'notificaciones.wa2.detail.mensajesAria' | translate"
       >
         <ng-container *ngFor="let item of feedItems; trackBy: trackFeedItem">
           <!-- Separador de fecha -->
@@ -157,13 +173,28 @@
                 </span>
                 <span class="thread-detail__autor" *ngIf="autorDe(item.msg) as autor">· {{ autor }}</span>
                 <span
-                  *ngIf="item.msg.direction === 'outbound'"
+                  *ngIf="item.msg.direction === 'outbound' && item.msg.status !== 'failed'"
                   class="thread-detail__status-icon"
                   [attr.data-status]="item.msg.status"
-                  [attr.aria-label]="item.msg.status"
+                  role="img"
+                  [attr.aria-label]="statusLabel(item.msg.status)"
+                  [attr.title]="statusLabel(item.msg.status)"
                 >
                   {{ statusIcon(item.msg.status) }}
                 </span>
+                <!-- Saliente que no salió: se dice con palabras y, si es un texto escrito a mano, se puede reintentar -->
+                <ng-container *ngIf="item.msg.direction === 'outbound' && item.msg.status === 'failed'">
+                  <span class="thread-detail__fallido">{{ 'notificaciones.wa2.detail.noSeEnvio' | translate }}</span>
+                  <button
+                    *ngIf="puedeReintentar(item.msg)"
+                    type="button"
+                    class="thread-detail__reintentar"
+                    (click)="reintentar(item.msg)"
+                    [disabled]="sending"
+                  >
+                    {{ 'notificaciones.wa2.detail.reintentar' | translate }}
+                  </button>
+                </ng-container>
               </div>
             </div>
           </div>
@@ -241,6 +272,17 @@
         <div class="thread-detail__lectura" *ngIf="soloLectura" role="status">
           <i class="fa fa-lock" aria-hidden="true"></i>
           <span class="thread-detail__lectura-texto">{{ motivoLectura }}</span>
+        </div>
+
+        <!-- Ventana de 24 h: guía de cuánto queda para responder sin plantilla (el servidor decide al enviar) -->
+        <div
+          class="thread-detail__ventana"
+          *ngIf="guiaVentana as guia"
+          [class.thread-detail__ventana--vencida]="guia.vencida"
+          role="status"
+        >
+          <i class="fa" [ngClass]="guia.vencida ? 'fa-clock-o' : 'fa-hourglass-half'" aria-hidden="true"></i>
+          <span class="thread-detail__ventana-texto">{{ guia.clave | translate: guia.params }}</span>
         </div>
 
         <div class="thread-detail__quick-replies" *ngIf="!soloLectura && verFijas">

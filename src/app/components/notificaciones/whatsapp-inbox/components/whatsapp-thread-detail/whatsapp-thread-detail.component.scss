@@ -1,6 +1,7 @@
 // Detalle del hilo — look del mockup "Marketing y WhatsApp":
 // burbujas salientes verdes suaves, entrantes blancas, tarjetas de carrito
-// y pedido dentro del chat, respuestas rápidas como chips.
+// y pedido dentro del chat, respuestas rápidas como chips. El botón Enviar es
+// el morado de Katuq (#5F3FE0), como el resto de acciones principales.
 @import '../../../../../shared/styles/katuq-marketing';
 
 :host {
@@ -33,10 +34,15 @@
     display: none;
     border: none;
     background: transparent;
-    font-size: 20px;
+    font-size: 18px;
     color: var(--km-muted);
     cursor: pointer;
     padding: 4px 8px;
+    border-radius: 9px;
+
+    i { color: inherit; }
+
+    &:hover { color: var(--km-accent); }
 
     @media (max-width: 1023px) {
       display: block;
@@ -47,6 +53,8 @@
     @include km-avatar(40px);
     background: var(--km-accent-wash);
     color: var(--km-accent);
+
+    i { font-size: 16px; color: inherit; }
   }
 
   &__header-info {
@@ -86,12 +94,23 @@
     white-space: nowrap;
   }
 
+  &__bot-pill-texto {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--km-green-ink);
+  }
+
   &__bot-dot {
     width: 7px;
     height: 7px;
     border-radius: 99px;
     background: var(--km-green);
     animation: km-pulse 1.6s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
   }
 
   &__bot-take {
@@ -130,7 +149,8 @@
   }
 
   // ------------------------------------------------- franja traspaso/devolver
-  &__bot-strip {
+  // (antes «bot-strip-text»: el reset global [class*="p-"] le achicaba la letra)
+  &__franja {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -141,21 +161,22 @@
     flex-shrink: 0;
   }
 
-  &__bot-strip-text {
+  &__franja-texto {
     font-size: 12.5px;
     font-weight: 700;
+    letter-spacing: normal;
     color: var(--km-ink2);
-
-    em {
-      display: block;
-      font-style: normal;
-      font-weight: 600;
-      color: var(--km-muted);
-      font-size: 11.5px;
-    }
   }
 
-  &__bot-strip-btn {
+  &__franja-motivo {
+    display: block;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--km-muted);
+    font-size: 11.5px;
+  }
+
+  &__franja-boton {
     @include km-btn-ghost;
     font-size: 12px;
     padding: 7px 12px;
@@ -529,8 +550,7 @@
     background: #fbfaff;
 
     &:focus {
-      outline: none;
-      border-color: var(--km-green);
+      border-color: #5F3FE0;
       background: var(--km-surface);
     }
 
@@ -539,9 +559,16 @@
     }
   }
 
+  // Enviar: botón principal morado de Katuq (antes verde WhatsApp, con poco contraste para el texto blanco).
   &__composer-send {
-    @include km-btn-whatsapp;
+    @include km-btn-primary;
     flex: none;
+    font-size: 13.5px;
+    padding: 11px 18px;
+    border-radius: 11px;
+    box-shadow: none;
+
+    i { color: inherit; }
   }
 
   // ----------------------------------------------------------------- panel
@@ -626,3 +653,137 @@
 }
 
 .thread-detail__header-info app-linea-chip { margin-top: 3px; }
+
+// Foco visible con teclado en los botones y el campo del chat (el reset global quita el outline).
+.thread-detail__back,
+.thread-detail__bot-take,
+.thread-detail__action-btn,
+.thread-detail__franja-boton,
+.thread-detail__quick-chip,
+.thread-detail__composer-input,
+.thread-detail__composer-send,
+.thread-detail__order-link,
+.thread-detail__error-boton,
+.thread-detail__reintentar {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}
+
+.thread-detail__composer-input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+// La carga del chat falló: aviso con Reintentar (par color fuerte / fondo suave, sin border-left).
+.thread-detail__error {
+  margin: 28px auto;
+  max-width: 360px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--ds-err-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.thread-detail__error-icono {
+  font-size: 22px;
+  color: var(--ds-err);
+
+  i { color: inherit; }
+}
+
+.thread-detail__error-titulo {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ds-err);
+}
+
+.thread-detail__error-texto {
+  font-size: 12.5px !important;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: normal;
+  color: var(--km-ink2) !important;
+}
+
+.thread-detail__error-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 16px;
+  border: 1.5px solid var(--km-line2);
+  border-radius: 11px;
+  background: var(--km-surface);
+  color: var(--km-ink2);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+
+  i { color: inherit; }
+
+  &:hover { border-color: #d9cffb; color: #5F3FE0; }
+}
+
+// Saliente que no se envió: «No se envió · Reintentar».
+.thread-detail__fallido {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: normal;
+  color: var(--km-red);
+}
+
+.thread-detail__reintentar {
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  color: #5F3FE0;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &::before {
+    content: '·';
+    display: inline-block;
+    margin-right: 5px;
+    color: var(--km-muted);
+    text-decoration: none;
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+// Ventana de 24 h encima del cuadro de escribir (mismo par fuerte / suave que el aviso de redes).
+.thread-detail__ventana {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 9px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  background: var(--ds-warn-soft);
+  color: var(--ds-warn);
+
+  i { margin-top: 2px; font-size: 13px; color: inherit; }
+
+  &--vencida {
+    background: var(--ds-err-soft);
+    color: var(--ds-err);
+  }
+}
+
+.thread-detail__ventana-texto {
+  font-size: 12.5px !important;
+  line-height: 1.45;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: inherit !important;
+}

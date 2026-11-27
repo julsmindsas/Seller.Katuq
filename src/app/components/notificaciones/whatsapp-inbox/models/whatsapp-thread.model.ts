@@ -15,6 +15,7 @@ export type WhatsappMessageType =
   | "text"
   | "image"
   | "audio"
+  | "video"
   | "document"
   | "sticker";
 
@@ -91,6 +92,8 @@ export interface WhatsappMessage {
   sentBy?: string | null;
   /** [D-725] Nombre de quien lo envió; el bot no lleva nombre. */
   sentByName?: string | null;
+  /** Nombre técnico de la plantilla con que salió (aviso automático); un mensaje así no se reintenta como texto. */
+  plantilla?: string | null;
 }
 
 /**
