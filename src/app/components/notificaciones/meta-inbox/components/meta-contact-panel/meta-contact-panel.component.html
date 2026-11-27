@@ -4,9 +4,12 @@
   <ng-container *ngIf="!cargando && perfil">
     <!-- Identidad del contacto en el canal -->
     <div class="mp__cabecera">
-      <span class="mp__avatar">{{ (perfil.perfilNombre || nombrePerfil || '?').charAt(0) }}</span>
+      <span class="mp__avatar" aria-hidden="true">
+        <ng-container *ngIf="iniciales; else sinIniciales">{{ iniciales }}</ng-container>
+        <ng-template #sinIniciales><i class="pi pi-user"></i></ng-template>
+      </span>
       <div class="mp__ident">
-        <span class="mp__nombre">{{ perfil.perfilNombre || nombrePerfil || ('notificaciones.meta.contact' | translate) }}</span>
+        <span class="mp__nombre" [attr.title]="nombreContacto">{{ nombreContacto }}</span>
         <span class="mp__canal">{{ nombreCanal }}</span><!-- i18n-ignorar: nombre de la red -->
       </div>
     </div>
@@ -41,9 +44,7 @@
           (click)="vincular(c)"
         >
           <span class="mp__resultado-nombre">{{ nombreDe(c) }}</span>
-          <span class="mp__resultado-dato" *ngIf="c.numero_celular_whatsapp || c.telefono">
-            {{ c.numero_celular_whatsapp || c.telefono }}
-          </span>
+          <span class="mp__resultado-dato" *ngIf="telefonoDe(c) as tel">{{ tel }}</span>
         </button>
       </div>
     </ng-container>

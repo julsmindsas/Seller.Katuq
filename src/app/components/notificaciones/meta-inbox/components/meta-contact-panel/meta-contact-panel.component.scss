@@ -27,8 +27,11 @@ $chip-borde: #e9e7f3;
     color: #fff;
     display: grid;
     place-items: center;
+    flex: 0 0 auto;
+    font-size: 15px;
     font-weight: 800;
     text-transform: uppercase;
+    i { font-size: 16px; color: inherit; }
   }
   &__ident { display: flex; flex-direction: column; min-width: 0; }
   &__nombre {
@@ -86,6 +89,7 @@ $chip-borde: #e9e7f3;
     font-size: 12.5px;
     color: $ink;
     &:focus { outline: none; border-color: $acento-2; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
   }
 
   &__resultado {
@@ -102,10 +106,11 @@ $chip-borde: #e9e7f3;
     transition: border-color 0.12s ease;
 
     &:hover:not(:disabled) { border-color: $acento-2; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
   }
-  &__resultado-nombre { font-size: 13px; font-weight: 700; }
-  &__resultado-dato { font-size: 11.5px; color: $muted; }
+  &__resultado-nombre { font-size: 13px; font-weight: 700; color: $ink; letter-spacing: normal; }
+  &__resultado-dato { font-size: 11.5px; color: $muted; letter-spacing: normal; font-variant-numeric: tabular-nums; }
 
   &__cliente {
     display: flex;
@@ -124,6 +129,7 @@ $chip-borde: #e9e7f3;
     font-weight: 700;
     cursor: pointer;
     &:hover:not(:disabled) { border-color: $acento-2; color: $acento; }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
   }
   &__origen { font-size: 11px; color: $muted; }
 
@@ -149,6 +155,7 @@ $chip-borde: #e9e7f3;
     text-decoration: none;
     color: $ink;
     &:hover { background: var(--ds-row-hover); }
+    &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 1px; }
   }
   &__pedido-nro {
     font-family: 'JetBrains Mono', ui-monospace, monospace;

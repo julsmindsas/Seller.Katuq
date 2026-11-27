@@ -4,6 +4,8 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+import { inicialesDe } from '../../../inbox-core/iniciales';
 import { MetaInboxService } from '../../meta-inbox.service';
 import { META_CANAL_LABEL, MetaCanal, MetaPerfilContacto } from '../../models/meta-thread.model';
 
@@ -49,6 +51,7 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
     private servicio: MetaInboxService,
     private maestros: MaestroService,
     private translate: TranslateService,
+    private toastr: ToastrService,
   ) {
     this.busqueda$
       .pipe(debounceTime(300), takeUntil(this.destroy$))
@@ -114,17 +117,54 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
       });
   }
 
-  nombreDe(cliente: any): string {
+  /** Nombre del contacto en la red, o «Contacto de Instagram» si la red no lo dio. */
+  get nombreContacto(): string {
     return (
+      (this.perfil?.perfilNombre || this.nombrePerfil || '').trim() ||
+      this.translate.instant('notificaciones.meta.contactOf', { canal: this.nombreCanal })
+    );
+  }
+
+  /** Iniciales del avatar (sin «@» ni emojis partidos); vacío = ícono de persona. */
+  get iniciales(): string {
+    return inicialesDe(this.perfil?.perfilNombre || this.nombrePerfil);
+  }
+
+  /**
+   * Nombre de un cliente del buscador, como se ve en su ficha: el que arma el servidor (`displayLabel`),
+   * luego nombres + apellidos, la razón social de una empresa y al final el nombre suelto.
+   */
+  nombreDe(cliente: any): string {
+    const completo = [cliente?.nombres_completos, cliente?.apellidos_completos]
+      .map((v) => (typeof v === 'string' ? v.trim() : ''))
+      .filter(Boolean)
+      .join(' ');
+    return (
+      (typeof cliente?.displayLabel === 'string' && cliente.displayLabel.trim()) ||
+      completo ||
+      cliente?.razon_social ||
       cliente?.nombre_completo ||
       cliente?.nombre ||
-      cliente?.razon_social ||
       this.translate.instant('notificaciones.meta.unnamedCustomer')
     );
   }
 
+  /** Teléfono del resultado con solo los últimos 4 dígitos a la vista («··· 4567»). Vacío si no hay. */
+  telefonoDe(cliente: any): string {
+    const crudo = String(cliente?.numero_celular_whatsapp || cliente?.telefono || cliente?.numero_celular || '');
+    const digitos = crudo.replace(/\D/g, '');
+    if (digitos.length < 4) return '';
+    return `··· ${digitos.slice(-4)}`;
+  }
+
+  /** El buscador entrega el id de la ficha en `cd`; `id` y `docId` quedan de respaldo. */
+  private idDe(cliente: any): string {
+    const id = cliente?.cd || cliente?.id || cliente?.docId;
+    return typeof id === 'string' ? id : '';
+  }
+
   vincular(cliente: any): void {
-    const id = cliente?.id || cliente?.docId;
+    const id = this.idDe(cliente);
     if (!id || this.vinculando) return;
 
     const { canal, identidadHash } = this;
@@ -134,11 +174,15 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((p) => {
         this.vinculando = false;
-        if (p && canal === this.canal && identidadHash === this.identidadHash) {
-          this.perfil = p;
-          this.resultados = [];
-          this.termino = '';
+        if (canal !== this.canal || identidadHash !== this.identidadHash) return;
+        if (!p) {
+          // Antes fallaba en silencio: el asesor tocaba el cliente y no pasaba nada.
+          this.toastr.error(this.translate.instant('notificaciones.redes2.vincularError'));
+          return;
         }
+        this.perfil = p;
+        this.resultados = [];
+        this.termino = '';
       });
   }
 
@@ -151,11 +195,16 @@ export class MetaContactPanelComponent implements OnChanges, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((p) => {
         this.vinculando = false;
-        if (p && canal === this.canal && identidadHash === this.identidadHash) this.perfil = p;
+        if (canal !== this.canal || identidadHash !== this.identidadHash) return;
+        if (!p) {
+          this.toastr.error(this.translate.instant('notificaciones.redes2.desvincularError'));
+          return;
+        }
+        this.perfil = p;
       });
   }
 
   trackCliente(_: number, c: any): string {
-    return c?.id || c?.docId || String(_);
+    return this.idDe(c) || String(_);
   }
 }
