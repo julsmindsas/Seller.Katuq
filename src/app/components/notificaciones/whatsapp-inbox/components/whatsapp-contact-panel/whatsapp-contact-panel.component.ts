@@ -4,6 +4,7 @@ import { ToastrService } from "ngx-toastr";
 import { TranslateService } from "@ngx-translate/core";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
+import { inicialesDe } from "../../../inbox-core/iniciales";
 import {
   ContactProfile,
   Order,
@@ -70,14 +71,9 @@ export class WhatsappContactPanelComponent implements OnChanges {
     );
   }
 
-  /** Iniciales para el avatar grande. */
+  /** Iniciales del nombre real para el avatar grande; vacío = la vista pone el ícono de persona. */
   get initials(): string {
-    const name = this.displayName;
-    if (!name) {
-      return "?";
-    }
-    const parts = name.trim().split(/\s+/).slice(0, 2);
-    return parts.map((p) => p.charAt(0).toUpperCase()).join("");
+    return inicialesDe(this.profile?.clienteNombre || this.profile?.profileName || "");
   }
 
   /** Estado de la calificación: si tiene lead o ratingDraft o nada. */
@@ -113,10 +109,13 @@ export class WhatsappContactPanelComponent implements OnChanges {
     if (dias <= 0) return this.translate.instant('notificaciones.whatsapp.detail.today');
     if (dias === 1) return this.translate.instant('notificaciones.whatsapp.detail.yesterday');
     if (dias < 30) return this.translate.instant('notificaciones.whatsapp.list.daysAgo', { n: dias });
-    return new Date(mas).toLocaleDateString("es-CO", {
-      day: "numeric",
-      month: "short",
-    });
+    const idioma = (this.translate.currentLang || "es").slice(0, 2);
+    const locale = ({ es: "es-CO", en: "en-US", pt: "pt-BR", de: "de-DE" } as Record<string, string>)[idioma] || idioma;
+    try {
+      return new Date(mas).toLocaleDateString(locale, { day: "numeric", month: "short" });
+    } catch {
+      return new Date(mas).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    }
   }
 
   /**
@@ -245,14 +244,14 @@ export class WhatsappContactPanelComponent implements OnChanges {
     if (!this.profile || this.savingToCrm) return;
     this.savingToCrm = true;
 
-    const phone = this.profile.phoneMasked
-      ? this.profile.phoneMasked.replace(/\*/g, "")
-      : "";
+    // El front solo conoce el número enmascarado: quitarle los asteriscos inventaba un teléfono que no existe
+    // («+5734567»). El teléfono real lo pone el servidor desde el chat; aquí nunca se manda uno.
+    const masked = this.profile.phoneMasked || "";
     // Construir un nombre razonable.
     const name =
       this.profile.clienteNombre ||
       this.profile.profileName ||
-      `Contacto WhatsApp ${phone || ""}`.trim();
+      `Contacto WhatsApp ${masked}`.trim();
 
     let email = "";
     try {
@@ -261,8 +260,8 @@ export class WhatsappContactPanelComponent implements OnChanges {
 
     const body = {
       name,
-      phone,
-      phoneNormalized: phone,
+      phone: null,
+      phoneNormalized: null,
       source: "whatsapp_inbox",
       sourceDetail: "Capturado desde el visor de Conversaciones WhatsApp",
       profileName: this.profile.profileName || null,
@@ -270,7 +269,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
       whatsappPhoneHash: this.profile.phoneHash,
     };
 
-    this.inbox.guardarLeadEnCrm(body).subscribe({
+    this.inbox.guardarLeadEnCrm(this.profile.phoneHash, this.lineId, body).subscribe({
       next: (resp: any) => {
         this.savingToCrm = false;
         const leadId =
@@ -296,9 +295,12 @@ export class WhatsappContactPanelComponent implements OnChanges {
       },
       error: (err: any) => {
         this.savingToCrm = false;
-        const message =
-          err?.error?.error || this.translate.instant('notificaciones.whatsapp.contact.saveLeadError');
-        this.toastr.error(message, this.translate.instant('notificaciones.whatsapp.contact.saveToCrm'));
+        // Los 403 ya los avisa el interceptor; el resto, en palabras del comercio (nunca el código del servidor).
+        if (err?.status === 403) return;
+        this.toastr.error(
+          this.translate.instant('notificaciones.whatsapp.contact.saveLeadError'),
+          this.translate.instant('notificaciones.whatsapp.contact.saveToCrm'),
+        );
       },
     });
   }

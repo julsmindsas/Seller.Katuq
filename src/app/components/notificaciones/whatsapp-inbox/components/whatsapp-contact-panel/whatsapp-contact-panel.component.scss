@@ -172,10 +172,10 @@
     @include km-chip(var(--km-accent-ink), var(--km-accent-wash));
     font-size: 10px;
 
-    // Estados que ya mapea estadoChipClass() en el TS.
-    &.chip-success { color: var(--km-green-ink); background: var(--km-green-wash); }
-    &.chip-warning { color: var(--km-orange-ink); background: var(--km-orange-wash); }
-    &.chip-danger { color: var(--km-red); background: var(--km-red-wash); }
+    // Estados que mapea estadoChipClass() en el TS (is-success, is-info, is-danger, is-neutral).
+    &.is-success { color: var(--km-green-ink); background: var(--km-green-wash); }
+    &.is-danger { color: var(--km-red); background: var(--km-red-wash); }
+    &.is-neutral { color: var(--km-muted); background: #f4f2fb; }
   }
 
   &__order-bottom {
@@ -319,4 +319,20 @@
   &__draft-note {
     font-size: 11px;
   }
+}
+
+// Foco visible con teclado (el reset global quita el outline de botones y enlaces); el clic con mouse no lo pinta.
+.contact-panel__order,
+.contact-panel__link,
+.contact-panel__cta,
+.contact-panel__optout-btn {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}
+
+.contact-panel__avatar i {
+  font-size: 18px;
+  color: inherit;
 }

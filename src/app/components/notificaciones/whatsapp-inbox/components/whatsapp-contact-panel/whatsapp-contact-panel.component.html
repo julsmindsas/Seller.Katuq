@@ -5,12 +5,13 @@
     <!-- Identidad -->
     <div class="contact-panel__identity">
       <div class="contact-panel__avatar" aria-hidden="true">
-        {{ initials }}
+        <ng-container *ngIf="initials; else iconoPersona">{{ initials }}</ng-container>
+        <ng-template #iconoPersona><i class="fa fa-user"></i></ng-template>
       </div>
 
       <div class="contact-panel__identity-info">
         <h4 class="contact-panel__name">{{ displayName }}</h4>
-        <p class="contact-panel__phone">{{ profile.phoneMasked }}</p>
+        <p class="contact-panel__phone" *ngIf="profile.phoneMasked && profile.phoneMasked !== displayName">{{ profile.phoneMasked }}</p>
         <span
           class="contact-panel__chip"
           [class.is-verified]="profile.isClienteRegistrado"

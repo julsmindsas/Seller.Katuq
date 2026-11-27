@@ -96,7 +96,8 @@
     font-size: 12px;
   }
 
-  &__chip-count {
+  // (antes «chip-count»: el reset global [class*="p-"] le pisaba el tamaño de letra)
+  &__cuenta {
     font-size: 10px;
     font-weight: 800;
     color: #fff;
@@ -172,6 +173,8 @@
 
   &__avatar {
     @include km-avatar(40px);
+
+    i { font-size: 15px; color: inherit; }
   }
 
   &__content {
@@ -337,4 +340,48 @@
 
   &:hover { border-color: #d9cffb; color: var(--ds-accent-ink); }
   &:focus-visible { outline: 3px solid var(--ds-focus) !important; outline-offset: 2px; }
+}
+
+// «Ver más conversaciones» al final de la lista.
+.thread-list__mas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+}
+
+.thread-list__mas-error {
+  font-size: 12.5px !important;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: var(--ds-err) !important;
+}
+
+.thread-list__mas-boton {
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1.5px solid var(--km-line2);
+  border-radius: 11px;
+  background: var(--km-surface);
+  color: var(--km-ink2);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: #d9cffb; color: #5F3FE0; }
+  &:disabled { opacity: 0.6; cursor: progress; }
+}
+
+// Foco visible con teclado en la lista (el reset global quita el outline).
+.thread-list__item,
+.thread-list__chip,
+.thread-list__new-btn,
+.thread-list__search,
+.thread-list__mas-boton {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
 }

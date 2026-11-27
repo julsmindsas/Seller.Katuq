@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { TranslateService } from "@ngx-translate/core";
 import { Observable, of } from "rxjs";
@@ -14,7 +14,22 @@ import {
   ThreadsPage,
   WhatsappMessage,
   WhatsappThread,
+  WhatsappMessageType,
 } from "./models/whatsapp-thread.model";
+import { esNombreTecnicoPlantilla, textoHumanoDePlantilla } from "./components/whatsapp-thread-list/plantillas-humanas";
+
+/** Tipo del mensaje que manda WhatsApp (o Kapso) → tipo que pinta el chat. */
+const TIPOS_MEDIA: Record<string, WhatsappMessageType> = {
+  image: "image",
+  photo: "image",
+  audio: "audio",
+  voice: "audio",
+  ptt: "audio",
+  video: "video",
+  document: "document",
+  file: "document",
+  sticker: "sticker",
+};
 
 /** Plantilla aprobada del WABA (modal "Iniciar nueva conversación"). */
 export interface KapsoTemplate {
@@ -53,7 +68,7 @@ export interface KapsoTemplate {
  * Authorization y el backend respondía 401). Mismo caso que ImagenService.
  *
  * Endpoints:
- *   GET    /v1/whatsapp/conversations                    ?search=&status=&page=&lineId=
+ *   GET    /v1/whatsapp/conversations                    ?search=&status=&page=&pageSize=&lineId=
  *   GET    /v1/whatsapp/conversations/:phoneHash/messages ?lineId=
  *   GET    /v1/whatsapp/conversations/:phoneHash/profile  ?lineId=
  *   GET    /v1/whatsapp/conversations/:phoneHash/orders   ?lineId=
@@ -63,6 +78,7 @@ export interface KapsoTemplate {
  *   POST   /v1/whatsapp/conversations/:phoneHash/reply    ?lineId=  { text, clientMessageId }
  *   GET    /v1/whatsapp/conversations/:phoneHash/bot      ?lineId=
  *   POST   /v1/whatsapp/conversations/:phoneHash/bot/{tomar,devolver} ?lineId=
+ *   POST   /v1/whatsapp/conversations/:phoneHash/crm-lead ?lineId=  (si el servidor aún no la tiene: /v1/crm/leads/import)
  *   GET    /v1/whatsapp/conversations/bot/sesiones
  *   POST   /v1/whatsapp/sync-inbound
  *   GET    /v1/whatsapp/kapso-templates
@@ -82,6 +98,8 @@ export class WhatsappInboxService extends BaseService {
       search?: string;
       status?: "all" | "unread";
       page?: number;
+      /** Chats por página (el servidor usa 20 y topa en 100). */
+      pageSize?: number;
       lineId?: string | null;
     } = {},
   ): Observable<ThreadsPage> {
@@ -90,6 +108,7 @@ export class WhatsappInboxService extends BaseService {
       search: search || null,
       status: opts.status && opts.status !== "all" ? opts.status : null,
       page: opts.page && opts.page > 1 ? String(opts.page) : null,
+      pageSize: opts.pageSize && opts.pageSize > 0 ? String(Math.min(100, Math.floor(opts.pageSize))) : null,
       lineId: opts.lineId || null,
     };
     return this.get<any>(`${this.base}${this.query(params)}`).pipe(
@@ -128,7 +147,8 @@ export class WhatsappInboxService extends BaseService {
     return this.get<any>(this.rutaChat(phoneHash, "/profile", lineId)).pipe(
       map((p: any) => ({
         phoneHash: p?.phoneHash || phoneHash,
-        phoneMasked: p?.phoneMasked || "+??***????",
+        // Sin número, vacío: la cabecera usa el de la fila o «Contacto», nunca signos de pregunta.
+        phoneMasked: p?.phoneMasked || "",
         clienteNombre: p?.clienteNombre || undefined,
         profileName: p?.profileName || undefined,
         isClienteRegistrado: !!p?.isClienteRegistrado,
@@ -218,9 +238,22 @@ export class WhatsappInboxService extends BaseService {
     return this.post<unknown>("/v1/whatsapp/sync-inbound", {}).pipe(catchError(() => of(null)));
   }
 
-  /** Guarda el contacto como lead en el CRM de Katuq. */
-  guardarLeadEnCrm(body: Record<string, unknown>): Observable<any> {
-    return this.post<any>("/v1/crm/leads/import", body);
+  /**
+   * Guarda el contacto del chat como lead en el CRM de Katuq. El front no conoce el teléfono completo (solo el
+   * enmascarado), así que lo resuelve el servidor desde el chat (`/:phoneHash/crm-lead`, que respeta el alcance
+   * por número). Mientras el servidor no tenga esa ruta (404), se guarda como antes pero SIN teléfono: nunca un
+   * número inventado a partir del enmascarado.
+   */
+  guardarLeadEnCrm(phoneHash: string, lineId: string | null, body: Record<string, unknown>): Observable<any> {
+    const sinTelefono = { ...body, phone: null, phoneNormalized: null, whatsappPhoneHash: phoneHash };
+    return this.post<any>(this.rutaChat(phoneHash, "/crm-lead", lineId), body).pipe(
+      catchError((err: unknown) => {
+        if (err instanceof HttpErrorResponse && err.status === 404) {
+          return this.post<any>("/v1/crm/leads/import", sinTelefono);
+        }
+        throw err;
+      }),
+    );
   }
 
   /** Plantillas aprobadas para escribirle a un cliente (sin las del sistema). */
@@ -293,7 +326,8 @@ export class WhatsappInboxService extends BaseService {
     return {
       phoneHash: it.phoneHash,
       phoneMasked: it.phoneMasked,
-      contactName: it.clienteNombre || it.profileName || this.translate.instant("notificaciones.sinNombre"),
+      // Sin nombre, vacío: la lista muestra el número enmascarado (y no varias filas iguales «Sin nombre»).
+      contactName: String(it.clienteNombre || it.profileName || "").trim(),
       lastMessageAt: it.lastMessageAt,
       lastMessageSnippet: it.lastMessagePreview || it.lastMessageSnippet || "",
       unreadCount: it.unreadCount || 0,
@@ -315,21 +349,42 @@ export class WhatsappInboxService extends BaseService {
    * El backend devuelve otra forma (templateName, textPreview, timestamp); se
    * pasa a `WhatsappMessage`. Los del bot de pedidos llegan como BOT_REPLY y el
    * chat les pinta la marca.
+   *
+   * - Una foto, audio, video o documento sin texto se marca con `mediaPlaceholder`
+   *   y el chat dice «Imagen», «Audio»… en vez de una burbuja vacía (todavía no
+   *   se ve el archivo).
+   * - Un aviso automático sin texto dice lo que es («Recibimos tu pedido») y no
+   *   «[katuq_order_created_v2]»; tampoco sale el tipo interno (REPLY_INBOUND…).
    */
   private adaptarMensaje(m: any): WhatsappMessage {
-    const plantilla = m.templateName ? `[${m.templateName}]` : "";
+    const entrante = m.direction === "inbound";
+    const crudo = String(m.messageType || m.type || "").toLowerCase();
+    const tipo: WhatsappMessageType = (entrante && TIPOS_MEDIA[crudo]) || "text";
+    const plantilla = m.templateName ? String(m.templateName) : "";
+    const traducir = (clave: string) => this.translate.instant(clave);
+    const humano = (t: string) => (t && esNombreTecnicoPlantilla(t) ? textoHumanoDePlantilla(t, traducir) : t);
+    const propio = String(m.text || m.body || "").trim();
+    let texto = propio || String(m.textPreview || "").trim();
+    if (!propio && !entrante) {
+      texto = plantilla ? textoHumanoDePlantilla(plantilla, traducir) : humano(texto);
+    } else if (!propio) {
+      texto = humano(texto);
+    }
+    // Entrante sin texto (foto sin pie, nota de voz, ubicación…): se dice qué llegó, nunca una burbuja vacía.
+    const sinTexto = !texto;
     return {
       id: m.id,
-      direction: m.direction === "inbound" ? "inbound" : "outbound",
+      direction: entrante ? "inbound" : "outbound",
       esBot: String(m.type || "") === "BOT_REPLY",
       sentBy: m.sentBy || null,
       sentByName: m.sentByName || null,
-      type: "text",
-      body: m.text || m.body || m.textPreview || plantilla,
-      snippet: m.textPreview || m.text || m.body || plantilla,
+      type: tipo,
+      body: texto,
+      snippet: texto,
       sentAt: m.timestamp || m.sentAt || m.receivedAt || new Date().toISOString(),
-      status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
-      mediaPlaceholder: false,
+      status: m.status || (entrante ? "delivered" : "sent"),
+      mediaPlaceholder: sinTexto,
+      plantilla: plantilla || null,
     };
   }
 }

@@ -6,7 +6,8 @@
         <input
           type="search"
           class="thread-list__search"
-          [placeholder]="'notificaciones.whatsapp.list.searchPlaceholder' | translate"
+          [placeholder]="'notificaciones.wa2.list.searchPlaceholder' | translate"
+          [attr.aria-label]="'notificaciones.wa2.list.searchPlaceholder' | translate"
           [ngModel]="searchQuery"
           (ngModelChange)="onSearchChange($event)"
         />
@@ -45,8 +46,8 @@
         [class.is-active]="filtro === 'pendientes'"
         (click)="setFiltro('pendientes')"
       >
-        {{ 'notificaciones.whatsapp.list.unanswered' | translate }}
-        <span class="thread-list__chip-count" *ngIf="pendientesCount > 0">{{ pendientesCount }}</span>
+        {{ 'notificaciones.wa2.list.unread' | translate }}
+        <span class="thread-list__cuenta" *ngIf="pendientesCount > 0">{{ pendientesCount }}{{ hayMas ? '+' : '' }}</span>
       </button>
       <button
         type="button"
@@ -87,7 +88,7 @@
       *ngIf="!loading && !errorCarga && visibleThreads.length === 0"
       class="thread-list__state"
     >
-      {{ 'notificaciones.whatsapp.list.emptyFilter' | translate }}
+      {{ (hayMas ? 'notificaciones.wa2.list.emptyConMas' : 'notificaciones.whatsapp.list.emptyFilter') | translate }}
     </div>
 
     <button
@@ -99,19 +100,20 @@
       (click)="onSelect(thread)"
     >
       <div class="thread-list__avatar" aria-hidden="true">
-        {{ initialsFor(thread.contactName) }}
+        <ng-container *ngIf="initialsFor(thread.contactName) as ini; else iconoPersona">{{ ini }}</ng-container>
+        <ng-template #iconoPersona><i class="fa fa-user"></i></ng-template>
       </div>
 
       <div class="thread-list__content">
         <div class="thread-list__row-top">
-          <span class="thread-list__name">{{ thread.contactName }}</span>
+          <span class="thread-list__name" [attr.title]="nombreDe(thread)">{{ nombreDe(thread) }}</span>
           <span class="thread-list__date">
             {{ formatRelative(thread.lastMessageAt) }}
           </span>
         </div>
 
         <div class="thread-list__row-phone">
-          <span class="thread-list__phone">{{ thread.phoneMasked }}</span>
+          <span class="thread-list__phone" *ngIf="thread.contactName">{{ thread.phoneMasked }}</span>
           <app-linea-chip [linea]="thread.line" [compacta]="true"></app-linea-chip>
           <span
             *ngIf="thread.flags?.inboundTruncatedAt90d"
@@ -153,6 +155,14 @@
         </div>
       </div>
     </button>
+
+    <!-- Más conversaciones: el servidor tiene más que las cargadas -->
+    <div class="thread-list__mas" *ngIf="!loading && !errorCarga && hayMas">
+      <span class="thread-list__mas-error" *ngIf="errorMas" role="alert">{{ 'notificaciones.wa2.list.errorMas' | translate }}</span>
+      <button type="button" class="thread-list__mas-boton" (click)="verMas()" [disabled]="cargandoMas">
+        {{ (cargandoMas ? 'notificaciones.whatsapp.list.loading' : 'notificaciones.wa2.list.verMas') | translate }}
+      </button>
+    </div>
   </div>
 
   <app-whatsapp-new-conversation-dialog

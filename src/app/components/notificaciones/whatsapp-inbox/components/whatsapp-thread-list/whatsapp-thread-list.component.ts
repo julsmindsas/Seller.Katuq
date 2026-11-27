@@ -23,7 +23,12 @@ import {
   MessagingLine,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { textoHumanoDePlantilla } from "./plantillas-humanas";
+import { inicialesDe } from "../../../inbox-core/iniciales";
 import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
+
+/** Chats por página del servidor (su valor por defecto) y tope que acepta en una sola petición. */
+const POR_PAGINA = 20;
+const TOPE_POR_PETICION = 100;
 
 /** Etiqueta de estado de un hilo en la lista (mockup Marketing y WhatsApp). */
 interface ThreadTag {
@@ -45,6 +50,8 @@ interface ThreadTag {
  *    etiqueta del número en cada fila.
  *  - Marcado visual de leído en cliente (no espera al backend).
  *  - Banner amarillo si algún hilo tiene `flags.inboundTruncatedAt90d`.
+ *  - «Ver más conversaciones»: trae la página siguiente (antes solo se veían
+ *    las 20 más recientes). El refresco pide de una vez lo ya cargado.
  */
 @Component({
   selector: "app-whatsapp-thread-list",
@@ -98,6 +105,16 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
   private silentPendiente = false;
   /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
   private ultimoRefresco = 0;
+  /** Cuándo se pidió por última vez la sincronización con Kapso (con el canal en vivo, solo en el sondeo lento). */
+  private ultimoSync = 0;
+
+  /** Páginas cargadas con «Ver más» (1 = solo la primera). */
+  private paginas = 1;
+  /** El servidor dijo que hay más chats que los cargados. */
+  hayMas = false;
+  cargandoMas = false;
+  errorMas = false;
+  private masSub?: Subscription;
 
   constructor(
     private readonly inbox: WhatsappInboxService,
@@ -122,7 +139,9 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
       // tenga chats del número compartido de Katuq: esos no tienen hilo y no producen eventos.
       if (this.enVivo && this.todosConHilo() && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       if ((this.searchQuery || "").trim().length === 0) {
-        this.fetchThreadsSilent();
+        // La sincronización con Kapso va en cada vuelta solo con el canal caído; conectado, cada 30 s como mucho.
+        const conSync = !this.enVivo || Date.now() - this.ultimoSync >= SONDEO_RESPALDO_MS;
+        this.fetchThreadsSilent(conSync);
         this.fetchBotSesiones();
       }
     });
@@ -186,6 +205,7 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     this.refreshSub?.unsubscribe();
     this.fetchSub?.unsubscribe();
     this.silentSub?.unsubscribe();
+    this.masSub?.unsubscribe();
   }
 
   /**
@@ -202,19 +222,29 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
       return;
     }
     // Best-effort sync (el servicio ignora el error).
-    if (conSync) this.inbox.syncInbound().subscribe();
+    if (conSync) {
+      this.ultimoSync = Date.now();
+      this.inbox.syncInbound().subscribe();
+    }
     const siguiente = () => {
       this.silentSub = undefined;
       if (!this.silentPendiente) return;
       this.silentPendiente = false;
       this.fetchThreadsSilent(false);
     };
+    // Con páginas de «Ver más», una sola petición trae todo lo cargado (hasta el tope del servidor).
+    const tamano = Math.min(TOPE_POR_PETICION, this.paginas * POR_PAGINA);
     this.silentSub = this.inbox
-      .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
+      .getThreads({
+        search: this.searchQuery,
+        lineId: this.lineaFiltro || null,
+        ...(this.paginas > 1 ? { pageSize: tamano } : {}),
+      })
       .subscribe({
         next: (page) => {
           if (page.items.length === 0) return;
-          this.ponerHilos(page.items);
+          this.ponerHilos(this.conservarResto(page.items, tamano));
+          if (this.paginas * POR_PAGINA <= TOPE_POR_PETICION) this.hayMas = !!page.hasMore;
         },
         error: () => siguiente(),
         complete: () => siguiente(),
@@ -256,7 +286,7 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     return Array.from(mapa.values());
   }
 
-  /** Hilos sin responder (badge del chip "Sin responder"). */
+  /** Hilos con mensajes sin leer (badge del chip «No leídos»). */
   get pendientesCount(): number {
     return this.threads.filter((t) => t.unreadCount > 0).length;
   }
@@ -303,22 +333,61 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     return this.claveSeleccion === this.claveDe(thread);
   }
 
-  /** Texto enmascarado del snippet (máx 60 chars). */
+  /** Texto enmascarado del snippet (máx 60 chars), con las plantillas y los tipos internos en palabras. */
   truncateSnippet(snippet: string): string {
     if (!snippet) {
       return "";
     }
-    snippet = textoHumanoDePlantilla(snippet);
+    snippet = textoHumanoDePlantilla(snippet, (clave) => this.translate.instant(clave));
     return snippet.length > 60 ? snippet.slice(0, 60) + "…" : snippet;
   }
 
-  /** Iniciales para avatar. */
+  /** Iniciales para avatar; vacío = la vista pone el ícono de persona (contacto sin nombre). */
   initialsFor(name: string): string {
-    if (!name) {
-      return "?";
-    }
-    const parts = name.trim().split(/\s+/).slice(0, 2);
-    return parts.map((p) => p.charAt(0).toUpperCase()).join("");
+    return inicialesDe(name);
+  }
+
+  /** Título de la fila: el nombre o, sin nombre, el número enmascarado (nunca varias filas «Sin nombre»). */
+  nombreDe(thread: WhatsappThread): string {
+    return (thread.contactName || "").trim() || thread.phoneMasked || this.translate.instant("notificaciones.sinNombre");
+  }
+
+  /** «Ver más conversaciones»: trae la página siguiente y la suma al final, sin repetir chats. */
+  verMas(): void {
+    if (this.cargandoMas || !this.hayMas) return;
+    this.cargandoMas = true;
+    this.errorMas = false;
+    const pagina = this.paginas + 1;
+    const filtros = `${this.searchQuery}|${this.lineaFiltro}`;
+    this.masSub?.unsubscribe();
+    this.masSub = this.inbox
+      .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null, page: pagina })
+      .subscribe({
+        next: (page) => {
+          this.cargandoMas = false;
+          // La búsqueda o el número cambiaron mientras respondía: esta página ya no es de esta lista.
+          if (filtros !== `${this.searchQuery}|${this.lineaFiltro}`) return;
+          this.paginas = pagina;
+          this.hayMas = !!page.hasMore;
+          const vistos = new Set(this.threads.map((t) => this.claveDe(t)));
+          const nuevos = page.items.filter((t) => !vistos.has(this.claveDe(t)));
+          this.ponerHilos([...this.threads, ...nuevos]);
+        },
+        error: () => {
+          this.cargandoMas = false;
+          this.errorMas = true;
+        },
+      });
+  }
+
+  /**
+   * Más allá del tope de una petición, el refresco no trae las páginas viejas: se conservan las que ya
+   * estaban (sin repetir) detrás de lo que llegó.
+   */
+  private conservarResto(items: WhatsappThread[], tamano: number): WhatsappThread[] {
+    if (this.paginas * POR_PAGINA <= tamano) return items;
+    const llegaron = new Set(items.map((t) => this.claveDe(t)));
+    return [...items, ...this.threads.filter((t) => !llegaron.has(this.claveDe(t)))];
   }
 
   /**
@@ -366,16 +435,22 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     this.loading = true;
     this.errorCarga = false;
     this.ultimoRefresco = Date.now();
-    // Un refresco en silencio con la búsqueda o el número de antes ya no sirve.
+    // Un refresco en silencio con la búsqueda o el número de antes ya no sirve, ni las páginas de «Ver más».
     this.silentSub?.unsubscribe();
     this.silentSub = undefined;
     this.silentPendiente = false;
+    this.masSub?.unsubscribe();
+    this.cargandoMas = false;
+    this.errorMas = false;
+    this.paginas = 1;
+    this.hayMas = false;
     this.fetchSub?.unsubscribe();
     this.fetchSub = this.inbox
       .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
       .subscribe({
         next: (page) => {
           this.ponerHilos(page.items);
+          this.hayMas = !!page.hasMore;
           this.loading = false;
         },
         error: () => {
