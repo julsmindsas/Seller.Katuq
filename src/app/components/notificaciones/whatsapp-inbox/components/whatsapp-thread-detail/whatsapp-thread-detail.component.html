@@ -331,14 +331,16 @@
         </div>
 
         <form class="thread-detail__composer" (submit)="onSend($event)">
-          <!-- [D-728] Respuestas rápidas con «/»: solo con la bandeja y catálogo; no envía solo -->
+          <!-- [D-728] Respuestas rápidas con «/»: solo con la bandeja y catálogo; no envía solo.
+               Sin *ngIf y antes del campo, en la misma vista: así la lista se abre o cierra antes de que Angular
+               pinte los atributos ARIA del campo (con *ngIf llegaban un ciclo tarde y daban NG0100). Sin bandeja
+               o sin catálogo el componente queda cerrado y no ocupa lugar. -->
           <app-chat-rapidos
-            *ngIf="atencion && rapidos.length"
             [rapidos]="rapidos"
             [texto]="composerText"
             [cliente]="nombreCliente"
             [asesor]="miNombre"
-            [deshabilitado]="sending || soloLectura"
+            [deshabilitado]="!atencion || sending || soloLectura"
             (elegir)="alElegirRapida($event)"
           ></app-chat-rapidos>
           <!-- Bandeja única: clip, micrófono, vista previa y avance del envío de archivos -->
@@ -357,7 +359,6 @@
             name="composerText"
             [placeholder]="placeholderComposer | translate"
             [attr.aria-autocomplete]="atencion && rapidos.length ? 'list' : null"
-            [attr.aria-expanded]="atencion && rapidos.length ? (rapidosLista?.abierta ? 'true' : 'false') : null"
             [attr.aria-controls]="rapidosLista?.abierta ? rapidosLista?.idLista : null"
             [attr.aria-activedescendant]="rapidosLista?.idActiva || null"
             (keydown)="alTeclaRapidos($event)"

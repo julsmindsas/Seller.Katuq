@@ -53,3 +53,18 @@
     white-space: nowrap;
   }
 }
+
+// Solo para el lector de pantalla: cuántas respuestas hay y cómo elegir (no se ve).
+.rq-anuncio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  color: $cfg-ink;
+  font-size: 13px;
+}

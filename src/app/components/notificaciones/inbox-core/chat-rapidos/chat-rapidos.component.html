@@ -1,3 +1,6 @@
+<!-- El campo de escribir no puede decir «lista abierta» (un textarea no admite aria-expanded): lo anuncia esta
+     región, que siempre está en la página para que el lector de pantalla la oiga cambiar. -->
+<span class="rq-anuncio" aria-live="polite">{{ abierta ? ('notificaciones.cierre.rapidosAbierta' | translate: { n: opciones.length }) : '' }}</span>
 <ul class="rq-lista" *ngIf="abierta" role="listbox" [id]="idLista" [attr.aria-label]="'notificaciones.bandeja.rapidos.listaAria' | translate">
   <li
     class="rq-opcion"
