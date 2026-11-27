@@ -1,22 +1,32 @@
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import { HttpClient, HttpContext, HttpErrorResponse, HttpEvent, HttpRequest } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { TranslateService } from "@ngx-translate/core";
-import { Observable, of } from "rxjs";
+import { Observable, of, throwError } from "rxjs";
 import { catchError, map, retry } from "rxjs/operators";
 
+import { environment } from "../../../../environments/environment";
 import { BaseService } from "../../../shared/services/base.service";
+import { SKIP_LOADER } from "../../../shared/services/interceptor/loader.interceptor";
+import { SIN_AVISO_NEGOCIO } from "../../../shared/services/interceptor/sin-aviso-negocio.context";
 import {
   BotSesionResumen,
   BotThreadState,
   ContactProfile,
+  MediaInfo,
+  MediaKind,
   MessagesPage,
   Order,
   ThreadsPage,
+  UbicacionMensaje,
+  VentanaChat,
   WhatsappMessage,
   WhatsappThread,
   WhatsappMessageType,
 } from "./models/whatsapp-thread.model";
 import { esNombreTecnicoPlantilla, textoHumanoDePlantilla } from "./components/whatsapp-thread-list/plantillas-humanas";
+import { esRutaDeMedia } from "./adjuntos/adjuntos.util";
+
+const KINDS_MEDIA: ReadonlySet<string> = new Set(["image", "audio", "video", "document", "sticker"]);
 
 /** Tipo del mensaje que manda WhatsApp (o Kapso) → tipo que pinta el chat. */
 const TIPOS_MEDIA: Record<string, WhatsappMessageType> = {
@@ -29,6 +39,7 @@ const TIPOS_MEDIA: Record<string, WhatsappMessageType> = {
   document: "document",
   file: "document",
   sticker: "sticker",
+  location: "location",
 };
 
 /** Plantilla aprobada del WABA (modal "Iniciar nueva conversación"). */
@@ -76,6 +87,8 @@ export interface KapsoTemplate {
  *   PATCH  /v1/whatsapp/conversations/:phoneHash/rating   ?lineId=  { score }
  *   PATCH  /v1/whatsapp/conversations/:phoneHash/optout   ?lineId=  { optedOut }
  *   POST   /v1/whatsapp/conversations/:phoneHash/reply    ?lineId=  { text, clientMessageId }
+ *          (bandeja única: también multipart con `file`, `text`, `clientMessageId`, `kind`, `durationSec`)
+ *   GET    /v1/whatsapp/conversations/:phoneHash/media/:docId ?lineId=  (bandeja única: el archivo, como blob)
  *   GET    /v1/whatsapp/conversations/:phoneHash/bot      ?lineId=
  *   POST   /v1/whatsapp/conversations/:phoneHash/bot/{tomar,devolver} ?lineId=
  *   POST   /v1/whatsapp/conversations/:phoneHash/crm-lead ?lineId=  (si el servidor aún no la tiene: /v1/crm/leads/import)
@@ -137,7 +150,7 @@ export class WhatsappInboxService extends BaseService {
             return am - bm;
           })
           .map((m) => this.adaptarMensaje(m));
-        return { items, hasMore: !!response?.hasMore };
+        return { items, hasMore: !!response?.hasMore, ventana: this.adaptarVentana(response?.ventana) };
       }),
     );
   }
@@ -216,6 +229,36 @@ export class WhatsappInboxService extends BaseService {
       this.rutaChat(phoneHash, "/reply", lineId),
       { text, clientMessageId: msgId },
     );
+  }
+
+  /**
+   * Bandeja única: envía un archivo (foto, PDF, video, audio o nota de voz) con la misma ruta del texto, en
+   * multipart. Devuelve los eventos de la subida (`reportProgress`) para pintar «Subiendo X %»; cancelar la
+   * suscripción corta la subida. Sin pantalla de carga global: el chat muestra su propio avance.
+   */
+  enviarAdjunto(phoneHash: string, form: FormData, lineId?: string | null): Observable<HttpEvent<any>> {
+    const url = `${environment.urlApi}${this.rutaChat(phoneHash, "/reply", lineId)}`;
+    const req = new HttpRequest("POST", url, form, {
+      reportProgress: true,
+      context: new HttpContext().set(SKIP_LOADER, true),
+    });
+    return this.http.request<any>(req);
+  }
+
+  /**
+   * Bandeja única: baja el archivo de un mensaje como blob, con la sesión (la ruta la arma el servidor). Solo
+   * se piden rutas de archivos del chat (`/v1/whatsapp/conversations/<hash>/media/<id>`): el interceptor le pone
+   * la sesión a cualquier dirección del backend, así que una ruta rara no se pide. Sin pantalla de carga ni
+   * avisos sueltos: el chat dice qué pasó con cada archivo (410 vencido, 404 no disponible, 5xx reintentar).
+   */
+  descargarAdjunto(ruta: string): Observable<Blob> {
+    if (!esRutaDeMedia(ruta)) {
+      return throwError(() => new HttpErrorResponse({ status: 404, statusText: "ruta_no_valida" }));
+    }
+    return this.http.get(`${environment.urlApi}${ruta}`, {
+      responseType: "blob",
+      context: new HttpContext().set(SKIP_LOADER, true).set(SIN_AVISO_NEGOCIO, true),
+    });
   }
 
   /** [D-098] Marca o quita "no contactar" (opt-out de marketing). */
@@ -370,21 +413,73 @@ export class WhatsappInboxService extends BaseService {
     } else if (!propio) {
       texto = humano(texto);
     }
+    // Bandeja única: el archivo y la ubicación se pintan en la burbuja; el texto es solo el que los acompaña.
+    const adjuntos = this.adaptarAdjuntos(m.adjuntos);
+    const ubicacion = entrante ? this.adaptarUbicacion(m.ubicacion) : null;
+    if (adjuntos.length || ubicacion) {
+      texto = String(m.text || m.body || adjuntos[0]?.caption || "").trim();
+    }
+    const tipoFinal: WhatsappMessageType = adjuntos.length ? adjuntos[0].kind : ubicacion ? "location" : tipo;
     // Entrante sin texto (foto sin pie, nota de voz, ubicación…): se dice qué llegó, nunca una burbuja vacía.
-    const sinTexto = !texto;
+    const sinTexto = !texto && !adjuntos.length && !ubicacion;
     return {
       id: m.id,
       direction: entrante ? "inbound" : "outbound",
       esBot: String(m.type || "") === "BOT_REPLY",
       sentBy: m.sentBy || null,
       sentByName: m.sentByName || null,
-      type: tipo,
+      type: tipoFinal,
       body: texto,
       snippet: texto,
       sentAt: m.timestamp || m.sentAt || m.receivedAt || new Date().toISOString(),
       status: m.status || (entrante ? "delivered" : "sent"),
       mediaPlaceholder: sinTexto,
       plantilla: plantilla || null,
+      ...(adjuntos.length ? { adjuntos } : {}),
+      ...(ubicacion ? { ubicacion } : {}),
     };
+  }
+
+  /** Archivos del mensaje (solo llegan con la bandeja única). Se descarta lo que no tenga la forma esperada. */
+  private adaptarAdjuntos(crudo: unknown): MediaInfo[] {
+    if (!Array.isArray(crudo)) return [];
+    const out: MediaInfo[] = [];
+    for (const a of crudo) {
+      if (!a || typeof a !== "object" || !KINDS_MEDIA.has(String(a.kind)) || typeof a.id !== "string") continue;
+      const bytes = Number(a.bytes);
+      out.push({
+        id: a.id,
+        kind: a.kind as MediaKind,
+        mime: typeof a.mime === "string" ? a.mime : null,
+        bytes: Number.isFinite(bytes) && bytes > 0 ? bytes : null,
+        filename: typeof a.filename === "string" && a.filename.trim() ? a.filename.trim() : null,
+        voice: a.voice === true,
+        caption: typeof a.caption === "string" && a.caption.trim() ? a.caption : null,
+        // Sin una ruta válida no se puede bajar: se muestra como no disponible.
+        disponible: a.disponible === true && esRutaDeMedia(a.url),
+        ...(a.motivo === "vencido" || a.motivo === "compartido" || a.motivo === "sin_archivo"
+          ? { motivo: a.motivo }
+          : a.disponible === true && !esRutaDeMedia(a.url)
+          ? { motivo: "sin_archivo" as const }
+          : {}),
+        url: typeof a.url === "string" ? a.url : "",
+      });
+      if (out.length >= 1) break; // WhatsApp: un archivo por mensaje
+    }
+    return out;
+  }
+
+  private adaptarUbicacion(u: any): UbicacionMensaje | null {
+    if (!u || typeof u !== "object") return null;
+    const lat = Number(u.lat);
+    const lng = Number(u.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    return { lat, lng, nombre: texto(u.nombre), direccion: texto(u.direccion) };
+  }
+
+  private adaptarVentana(v: any): VentanaChat | null {
+    if (!v || typeof v !== "object" || typeof v.abierta !== "boolean") return null;
+    return { abierta: v.abierta, cierraEn: typeof v.cierraEn === "string" ? v.cierraEn : null };
   }
 }

@@ -1,0 +1,251 @@
+// Archivo dentro de una burbuja del chat de WhatsApp. Plano, acento #5F3FE0, radios 16/11, sin gradientes.
+// Ninguna clase lleva «p-» (el reset global [class*="p-"] fuerza la letra) y cada span con texto lleva color
+// y tamaño propios (span.ng-star-inserted pinta de azul).
+@import '../../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: block;
+  max-width: 100%;
+}
+
+.wadj {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.wadj__foto {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 11px;
+  background: #f1eef9;
+  overflow: hidden;
+  cursor: zoom-in;
+  max-width: 280px;
+  min-width: 140px;
+  min-height: 100px;
+
+  &:disabled { cursor: default; }
+
+  &--sticker {
+    background: transparent;
+    min-width: 0;
+    min-height: 0;
+    max-width: 140px;
+  }
+}
+
+.wadj__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.wadj__foto--sticker .wadj__img {
+  object-fit: contain;
+  max-height: 140px;
+}
+
+.wadj__esqueleto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 100px;
+  padding: 12px;
+  color: var(--km-muted);
+
+  i { font-size: 22px; color: inherit; }
+}
+
+.wadj__esqueleto-texto {
+  font-size: 11.5px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--km-muted) !important;
+}
+
+.wadj__tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--km-surface);
+  border: 1px solid var(--km-line2);
+  min-width: 0;
+
+  &--voz .wadj__icono {
+    background: #ede8ff;
+    color: #5F3FE0;
+  }
+
+  &--apagada {
+    background: #f7f6fb;
+    .wadj__icono { background: #eeecf6; color: var(--km-muted); }
+  }
+}
+
+.wadj--saliente .wadj__tarjeta {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.wadj__icono {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2eeff;
+  color: #5F3FE0;
+
+  i { font-size: 15px; color: inherit; }
+}
+
+.wadj__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wadj__nombre {
+  font-size: 13px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--km-ink) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wadj__detalle {
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--km-muted) !important;
+
+  &--estado { display: block; }
+}
+
+.wadj__boton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 11px;
+  background: #5F3FE0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 11px; }
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
+  &:disabled { background: #eeecf6; color: #b0abc4; cursor: not-allowed; }
+
+  &--sec {
+    background: var(--km-surface);
+    color: var(--km-ink2);
+    border: 1.5px solid var(--km-line2);
+
+    &:hover:not(:disabled) { border-color: #d9cffb; color: #5F3FE0; filter: none; }
+  }
+}
+
+.wadj__audio {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: 40px;
+}
+
+.wadj__video {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  max-height: 360px;
+  border-radius: 11px;
+  background: #211F3A;
+}
+
+.wadj__aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  background: var(--ds-warn-soft, #fff4e6);
+}
+
+.wadj__aviso-texto {
+  flex: 1 1 160px;
+  font-size: 12px !important;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--ds-warn, #b45309) !important;
+}
+
+.wadj__ampliada {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px 16px;
+  background: rgba(33, 31, 58, 0.82);
+  cursor: zoom-out;
+}
+
+.wadj__grande {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 11px;
+  object-fit: contain;
+  cursor: default;
+}
+
+.wadj__cerrar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 11px;
+  background: #fff;
+  color: #211F3A;
+  font-size: 18px;
+  cursor: pointer;
+
+  i { color: inherit; }
+}
+
+.wadj__foto,
+.wadj__boton,
+.wadj__cerrar {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}

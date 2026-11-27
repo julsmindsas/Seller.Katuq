@@ -10,6 +10,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from "@angular/core";
+import { DomSanitizer } from "@angular/platform-browser";
 import { Subscription, forkJoin, interval, of } from "rxjs";
 import { catchError, finalize } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
@@ -38,9 +39,17 @@ import { claveDeErrorChat } from "../../errores-envio";
 import {
   BotThreadState,
   ContactProfile,
+  MediaInfo,
+  UbicacionMensaje,
+  VentanaChat,
   WhatsappMessage,
   WhatsappThread,
+  claveChat,
 } from "../../models/whatsapp-thread.model";
+import { CacheAdjuntos } from "../../adjuntos/cache-adjuntos";
+import { EnvioAdjuntoService, EventoEnvioAdjunto } from "../../adjuntos/envio-adjunto.service";
+import { EstadoAdjuntar, WaAdjuntarComponent } from "../../adjuntos/wa-adjuntar/wa-adjuntar.component";
+import { enlaceMapa } from "../../adjuntos/adjuntos.util";
 
 /** Ventana de 24 h de WhatsApp desde el último mensaje del cliente (guía visual; el servidor decide). */
 const VENTANA_MS = 24 * 60 * 60 * 1000;
@@ -177,6 +186,19 @@ export class WhatsappThreadDetailComponent
 
   @ViewChild("messagesContainer") messagesContainer?: ElementRef<HTMLElement>;
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
+  /** Bandeja única: clip, micrófono y envío de archivos del cuadro de escribir. */
+  @ViewChild(WaAdjuntarComponent) adjuntar?: WaAdjuntarComponent;
+
+  // ─── Archivos (bandeja única, solo con `atencion`) ───────────────────────
+  /** Archivos ya bajados de este chat (blob local); se sueltan al cambiar de chat y al salir. */
+  readonly cache: CacheAdjuntos;
+  /** Ventana de 24 h según el servidor (con la bandera); null = no se sabe y no se bloquea nada. */
+  ventana: VentanaChat | null = null;
+  /** Lo que tiene el adjuntar: archivo o nota listos, o grabando. */
+  adjEstado: EstadoAdjuntar = { conArchivo: false, voz: false, grabando: false };
+  /** Se arrastra un archivo sobre el chat («Suelta para adjuntar»). */
+  arrastrando = false;
+  private envioSub: Subscription;
 
   messages: WhatsappMessage[] = [];
   feedItems: FeedItem[] = [];
@@ -298,7 +320,12 @@ export class WhatsappThreadDetailComponent
     private readonly hilos: MessagingThreadsService,
     private readonly atencionSrv: AtencionService,
     private readonly translate: TranslateService,
-  ) {}
+    private readonly envios: EnvioAdjuntoService,
+    sanitizer: DomSanitizer,
+  ) {
+    this.cache = new CacheAdjuntos(inbox, sanitizer);
+    this.envioSub = this.envios.eventos$.subscribe((ev) => this.alTerminarEnvioArchivo(ev));
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["textoSugerido"] && !changes["textoSugerido"].firstChange && this.textoSugerido) {
@@ -314,6 +341,8 @@ export class WhatsappThreadDetailComponent
       this.contactPanelOpen = false;
       this.composerText = "";
       this.templatesOpen = false;
+      this.arrastrando = false;
+      this.envios.chatVisible = this.phoneHash ? this.claveActual : null;
       this.vaciarChat();
       this.loadAll();
       this.restartAutoRefresh();
@@ -335,6 +364,120 @@ export class WhatsappThreadDetailComponent
 
   ngOnDestroy(): void {
     this.stopAutoRefresh();
+    this.cache.soltar();
+    this.envioSub.unsubscribe();
+    if (this.envios.chatVisible === this.claveActual) this.envios.chatVisible = null;
+  }
+
+  /** Clave de este chat (mismo cliente en otro número es otro chat). */
+  get claveActual(): string {
+    return claveChat(this.phoneHash || "", this.lineId);
+  }
+
+  /** El servidor dice que pasaron las 24 h: no se adjunta ni se graba (sin plantilla no sale nada). */
+  get ventanaCerrada(): boolean {
+    return this.ventana?.abierta === false;
+  }
+
+  /** Con la bandeja, el archivo o la ubicación se pintan dentro de la burbuja. */
+  conArchivo(msg: WhatsappMessage): boolean {
+    return !!(msg.adjuntos?.length || msg.ubicacion);
+  }
+
+  vistaArchivo(msg: WhatsappMessage): boolean {
+    return this.atencion && this.conArchivo(msg);
+  }
+
+  /** Sin la bandeja (buzón viejo), un mensaje con archivo y sin texto dice «Foto», «Audio»… como siempre. */
+  esPlaceholder(msg: WhatsappMessage): boolean {
+    return !!msg.mediaPlaceholder || (!this.atencion && this.conArchivo(msg) && !(msg.body || "").trim());
+  }
+
+  trackAdjunto(_: number, a: MediaInfo): string {
+    return a.url || a.id;
+  }
+
+  mapaDe(u: UbicacionMensaje): string {
+    return enlaceMapa(u.lat, u.lng);
+  }
+
+  /** Enviar se habilita con texto o con un archivo listo (no mientras se graba ni con el chat de otra persona). */
+  get puedeEnviar(): boolean {
+    if (this.sending || this.soloLectura || this.adjEstado.grabando) return false;
+    return !!(this.composerText || "").trim() || (this.atencion && this.adjEstado.conArchivo);
+  }
+
+  /** Texto de ayuda del cuadro: con un archivo es el pie de foto; con una nota de voz no se escribe. */
+  get placeholderComposer(): string {
+    if (this.atencion && this.adjEstado.voz) return "notificaciones.wa2.adjuntos.cuadroVoz";
+    if (this.atencion && this.adjEstado.conArchivo) return "notificaciones.wa2.adjuntos.cuadroPie";
+    return "notificaciones.whatsapp.detail.composerPlaceholder";
+  }
+
+  /** Pegar una captura o un archivo en el cuadro lo adjunta (bandeja única). */
+  alPegar(ev: ClipboardEvent): void {
+    if (!this.atencion || !this.adjuntar) return;
+    const archivo = ev.clipboardData?.files && ev.clipboardData.files[0];
+    if (!archivo) return;
+    // Texto copiado de otra app (que a veces trae también una imagen): se pega como texto.
+    if ((ev.clipboardData?.getData("text/plain") || "").trim()) return;
+    ev.preventDefault();
+    this.adjuntar.tomarArchivo(archivo);
+  }
+
+  private traeArchivos(ev: DragEvent): boolean {
+    const tipos = ev.dataTransfer?.types;
+    return !!tipos && Array.from(tipos as ArrayLike<string>).includes("Files");
+  }
+
+  alArrastrarEncima(ev: DragEvent): void {
+    if (!this.atencion || !this.adjuntar || !this.canShowComposer || !this.traeArchivos(ev)) return;
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
+    this.arrastrando = true;
+  }
+
+  alSalirArrastre(ev: DragEvent): void {
+    const actual = ev.currentTarget as HTMLElement | null;
+    const hacia = ev.relatedTarget as Node | null;
+    if (actual && hacia && actual.contains(hacia)) return;
+    this.arrastrando = false;
+  }
+
+  alSoltar(ev: DragEvent): void {
+    // Sin la bandeja (buzón viejo) el chat no recibe archivos: el navegador se comporta como siempre.
+    if (!this.atencion || (!this.arrastrando && !this.traeArchivos(ev))) return;
+    ev.preventDefault();
+    this.arrastrando = false;
+    if (!this.adjuntar) return;
+    const archivo = ev.dataTransfer?.files && ev.dataTransfer.files[0];
+    if (archivo) this.adjuntar.tomarArchivo(archivo);
+  }
+
+  /** Terminó un envío de archivo (de este chat o de otro; el servicio avisa los de otros chats). */
+  private alTerminarEnvioArchivo(ev: EventoEnvioAdjunto): void {
+    if (!this.phoneHash || ev.clave !== this.claveActual) return;
+    const hash = this.phoneHash;
+    if (ev.tipo === "listo") {
+      this.bajarTrasEnvio = true;
+      this.refreshMessages();
+      // Responder a mano le quita el hilo al bot (lo marca el servidor).
+      this.cargarEstadoBot(hash);
+      if (ev.aviso === "voz_pesada") {
+        this.toastr.warning(this.translate.instant("notificaciones.wa2.adjuntos.voz.pesada"));
+      }
+      return;
+    }
+    // Se cortó después de subir: se relee el chat para ver si salió antes de reintentar.
+    if (ev.tipo === "revisar") {
+      this.refreshMessages(false);
+      return;
+    }
+    const err: any = ev.error;
+    if (esErrorChatConDueno(err)) {
+      this.ponerDueno(err.error.owner || null);
+      this.toastr.warning(this.textoChatConDueno(err.error.owner), this.translate.instant("notificaciones.whatsapp.detail.ownedTitle"));
+    }
   }
 
   toggleContactPanel(): void {
@@ -426,6 +569,8 @@ export class WhatsappThreadDetailComponent
         return this.translate.instant('notificaciones.whatsapp.media.document');
       case "sticker":
         return this.translate.instant('notificaciones.whatsapp.media.sticker');
+      case "location":
+        return this.translate.instant('notificaciones.wa2.adjuntos.ubicacion');
       default:
         return this.translate.instant('notificaciones.whatsapp.media.attachment');
     }
@@ -488,6 +633,16 @@ export class WhatsappThreadDetailComponent
    */
   onSend(event: Event): void {
     event.preventDefault();
+    // Bandeja única: con un archivo o una nota listos, se envía el archivo con el texto como pie de foto.
+    if (this.atencion && this.adjEstado.conArchivo && this.adjuntar) {
+      if (this.soloLectura) return;
+      const r = this.adjuntar.enviarElegido(this.adjEstado.voz ? "" : (this.composerText || "").trim());
+      if (r === "enviado") {
+        if (!this.adjEstado.voz) this.composerText = "";
+        this.bajarTrasEnvio = true;
+      }
+      if (r !== "nada") return;
+    }
     this.enviarTexto((this.composerText || "").trim(), true);
   }
 
@@ -498,6 +653,8 @@ export class WhatsappThreadDetailComponent
       msg.status === "failed" &&
       !msg.esBot &&
       !msg.plantilla &&
+      // Un archivo no se reintenta como texto (su pie de foto saldría solo).
+      !this.conArchivo(msg) &&
       !!(msg.body || "").trim() &&
       this.canShowComposer &&
       !this.soloLectura
@@ -758,6 +915,7 @@ export class WhatsappThreadDetailComponent
         const veniaDeError = this.errorCarga;
         this.errorCarga = false;
         this.hayAnteriores = !!page.hasMore;
+        this.ventana = page.ventana ?? null;
         // Nuevos = los que no estaban (por id): con la página llena el total no crece aunque lleguen mensajes.
         const previos = new Set(veniaDeError ? [] : this.messages.map((m) => m.id));
         const nuevos = items.filter((m) => !previos.has(m.id));
@@ -921,6 +1079,7 @@ export class WhatsappThreadDetailComponent
         this.messages = page.items;
         this.feedItems = this.buildFeedItems(page.items);
         this.hayAnteriores = !!page.hasMore;
+        this.ventana = page.ventana ?? null;
         this.profile = profile;
         this.loading = false;
         this.needsScroll = true;
@@ -950,6 +1109,11 @@ export class WhatsappThreadDetailComponent
    */
   private vaciarChat(): void {
     this.chatSeq++;
+    // Los archivos bajados del chat anterior se sueltan (revoke) y una descarga tardía se descarta.
+    this.cache.soltar();
+    this.ventana = null;
+    // El adjuntar se vuelve a crear vacío al cargar (lo elegido o grabado era de antes).
+    this.adjEstado = { conArchivo: false, voz: false, grabando: false };
     this.messages = [];
     this.feedItems = [];
     this.profile = null;

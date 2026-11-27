@@ -787,3 +787,128 @@
   letter-spacing: normal;
   color: inherit !important;
 }
+
+// ─── Archivos (bandeja única) ───────────────────────────────────────────────
+// La columna del chat recibe archivos arrastrados: «Suelta para adjuntar» la cubre mientras tanto.
+.thread-detail__chat {
+  position: relative;
+}
+
+.thread-detail__soltar {
+  position: absolute;
+  inset: 8px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed #b9a8f5;
+  border-radius: 16px;
+  background: rgba(246, 244, 254, 0.94);
+  color: #5F3FE0;
+  pointer-events: none;
+
+  i { font-size: 26px; color: inherit; }
+}
+
+.thread-detail__soltar-texto {
+  font-size: 14px !important;
+  font-weight: 800;
+  letter-spacing: normal;
+  color: #5F3FE0 !important;
+}
+
+// Ubicación que mandó el cliente: tarjeta con enlace a Google Maps.
+.thread-detail__ubicacion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 300px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid var(--km-line2);
+  background: var(--km-surface);
+  text-decoration: none;
+  letter-spacing: normal;
+
+  &:hover { border-color: #d9cffb; }
+
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}
+
+.thread-detail__ubicacion-icono {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2eeff;
+  color: #5F3FE0;
+
+  i { font-size: 16px; color: inherit; }
+}
+
+.thread-detail__ubicacion-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.thread-detail__ubicacion-nombre {
+  font-size: 13px !important;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--km-ink) !important;
+}
+
+.thread-detail__ubicacion-dir {
+  font-size: 11.5px !important;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--km-muted) !important;
+}
+
+.thread-detail__ubicacion-ver {
+  font-size: 11.5px !important;
+  font-weight: 800;
+  letter-spacing: normal;
+  color: #5F3FE0 !important;
+}
+
+// La bandeja del adjuntar ocupa su propia fila encima del cuadro (el formulario se parte en filas).
+.thread-detail__composer {
+  flex-wrap: wrap;
+}
+
+.thread-detail__composer-input {
+  min-width: 0;
+
+  &:disabled {
+    background: #f4f3f8;
+    cursor: not-allowed;
+  }
+}
+
+// En el celular (390 px) el cuadro va arriba, en su propia fila, y los botones debajo.
+@media (max-width: 600px) {
+  .thread-detail__composer-wrap {
+    padding: 10px 12px 12px;
+  }
+
+  .thread-detail__composer-input {
+    order: -1;
+    flex: 1 0 100%;
+  }
+
+  .thread-detail__composer-send {
+    margin-left: auto;
+  }
+}

@@ -1,0 +1,126 @@
+<!-- Bandeja encima del cuadro: aviso, vista previa, grabación y avance del envío -->
+<div
+  class="wadjr__bandeja"
+  *ngIf="aviso || elegido || envio || estadoGrabacion !== 'inactivo'"
+>
+  <!-- Aviso local (tamaño, tipo, micrófono, ventana cerrada…) -->
+  <div class="wadjr__aviso" *ngIf="aviso" role="status">
+    <i class="fa fa-info-circle" aria-hidden="true"></i>
+    <span class="wadjr__aviso-texto">{{ aviso.clave | translate: aviso.params }}</span>
+    <button type="button" class="wadjr__x" (click)="aviso = null" [attr.aria-label]="'notificaciones.wa2.adjuntos.cerrar' | translate">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- Grabando una nota de voz -->
+  <div class="wadjr__fila wadjr__fila--grabando" *ngIf="estadoGrabacion !== 'inactivo'">
+    <span class="wadjr__punto" aria-hidden="true"></span>
+    <span class="wadjr__estado" aria-live="polite">
+      {{ (estadoGrabacion === 'pidiendo' ? 'notificaciones.wa2.adjuntos.voz.pidiendo' : 'notificaciones.wa2.adjuntos.voz.grabando') | translate }}
+    </span>
+    <ng-container *ngIf="grabando">
+      <span class="wadjr__tiempo" role="timer">{{ segundosGrabados }} / 2:30</span>
+      <span class="wadjr__nivel" aria-hidden="true"><span class="wadjr__nivel-barra" [style.width.%]="nivelGrabacion"></span></span>
+      <button type="button" class="wadjr__boton" (click)="detenerGrabacion()">
+        <i class="fa fa-stop" aria-hidden="true"></i>
+        {{ 'notificaciones.wa2.adjuntos.voz.detener' | translate }}
+      </button>
+    </ng-container>
+    <button type="button" class="wadjr__boton wadjr__boton--sec" (click)="cancelarGrabacion()">
+      {{ 'notificaciones.wa2.adjuntos.voz.descartar' | translate }}
+    </button>
+  </div>
+
+  <!-- Vista previa de lo elegido (aún no se envía) -->
+  <div class="wadjr__fila" *ngIf="elegido as e">
+    <img *ngIf="e.kind === 'image' && e.vista" class="wadjr__miniatura" [src]="e.vista" [alt]="e.nombre" />
+    <span *ngIf="e.kind !== 'image'" class="wadjr__icono" aria-hidden="true">
+      <i class="fa" [ngClass]="e.voz ? 'fa-microphone' : e.kind === 'video' ? 'fa-film' : e.kind === 'audio' ? 'fa-music' : 'fa-file-o'"></i>
+    </span>
+    <span class="wadjr__info">
+      <span class="wadjr__nombre" [attr.title]="e.nombre">
+        {{ e.voz ? ('notificaciones.wa2.adjuntos.nombreVoz' | translate) : e.nombre }}
+      </span>
+      <span class="wadjr__detalle">
+        {{ e.voz ? duracionElegida : tamanoElegido }}
+        <ng-container *ngIf="e.kind === 'audio' && !e.voz"> · {{ 'notificaciones.wa2.adjuntos.audioSinTexto' | translate }}</ng-container>
+        <ng-container *ngIf="e.voz"> · {{ 'notificaciones.wa2.adjuntos.voz.lista' | translate }}</ng-container>
+      </span>
+      <span class="wadjr__detalle wadjr__detalle--aviso" *ngIf="e.comoArchivo">{{ 'notificaciones.wa2.adjuntos.voz.comoArchivo' | translate }}</span>
+      <audio *ngIf="e.kind === 'audio' && e.vista" class="wadjr__audio" controls preload="metadata" [src]="e.vista"></audio>
+    </span>
+    <button type="button" class="wadjr__boton wadjr__boton--sec" (click)="quitar()">
+      {{ (e.voz ? 'notificaciones.wa2.adjuntos.voz.descartar' : 'notificaciones.wa2.adjuntos.quitar') | translate }}
+    </button>
+  </div>
+
+  <!-- Envío en camino (sigue aunque cambies de chat) -->
+  <div class="wadjr__fila" *ngIf="envio as env" [class.wadjr__fila--fallo]="env.etapa === 'fallo'">
+    <span class="wadjr__icono" aria-hidden="true">
+      <i class="fa" [ngClass]="env.etapa === 'fallo' ? 'fa-exclamation-circle' : env.voz ? 'fa-microphone' : 'fa-paperclip'"></i>
+    </span>
+    <span class="wadjr__info">
+      <span class="wadjr__nombre" [attr.title]="env.nombre">
+        {{ env.voz ? ('notificaciones.wa2.adjuntos.nombreVoz' | translate) : env.nombre }}
+      </span>
+      <span class="wadjr__detalle" aria-live="polite">
+        <ng-container *ngIf="env.etapa === 'subiendo'">{{ 'notificaciones.wa2.adjuntos.subiendo' | translate: { n: env.progreso } }}</ng-container>
+        <ng-container *ngIf="env.etapa === 'enviando'">{{ 'notificaciones.wa2.adjuntos.enviando' | translate }}</ng-container>
+        <ng-container *ngIf="env.etapa === 'fallo'">{{ (env.errorClave || 'notificaciones.wa2.adjuntos.errores.generico') | translate }}</ng-container>
+      </span>
+      <span class="wadjr__progreso" *ngIf="env.etapa !== 'fallo'" aria-hidden="true">
+        <span
+          class="wadjr__progreso-barra"
+          [class.wadjr__progreso-barra--enviando]="env.etapa === 'enviando'"
+          [style.width.%]="env.etapa === 'enviando' ? 100 : env.progreso"
+        ></span>
+      </span>
+    </span>
+    <button *ngIf="env.etapa === 'subiendo'" type="button" class="wadjr__boton wadjr__boton--sec" (click)="cancelarEnvio()">
+      {{ 'notificaciones.wa2.adjuntos.cancelar' | translate }}
+    </button>
+    <ng-container *ngIf="env.etapa === 'fallo'">
+      <button type="button" class="wadjr__boton" (click)="reintentarEnvio()">
+        {{ 'notificaciones.wa2.detail.retry' | translate }}
+      </button>
+      <button type="button" class="wadjr__boton wadjr__boton--sec" (click)="quitarEnvio()">
+        {{ 'notificaciones.wa2.adjuntos.quitar' | translate }}
+      </button>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Clip y micrófono (al lado del cuadro de escribir) -->
+<div class="wadjr__acciones">
+  <input
+    #selector
+    type="file"
+    class="wadjr__selector"
+    [accept]="accept"
+    (change)="alElegir($event)"
+    tabindex="-1"
+    aria-hidden="true"
+  />
+  <button
+    #botonClip
+    type="button"
+    class="wadjr__accion"
+    (click)="abrirSelector()"
+    [disabled]="!puedeAdjuntar"
+    [attr.aria-label]="(ventanaCerrada ? 'notificaciones.wa2.adjuntos.avisoVentana' : 'notificaciones.wa2.adjuntos.adjuntar') | translate"
+    [title]="(ventanaCerrada ? 'notificaciones.wa2.adjuntos.avisoVentana' : 'notificaciones.wa2.adjuntos.adjuntar') | translate"
+  >
+    <i class="fa fa-paperclip" aria-hidden="true"></i>
+  </button>
+  <button
+    *ngIf="formatoVoz"
+    type="button"
+    class="wadjr__accion"
+    (click)="grabar()"
+    [disabled]="!puedeAdjuntar"
+    [attr.aria-label]="(ventanaCerrada ? 'notificaciones.wa2.adjuntos.avisoVentana' : 'notificaciones.wa2.adjuntos.voz.grabar') | translate"
+    [title]="(ventanaCerrada ? 'notificaciones.wa2.adjuntos.avisoVentana' : 'notificaciones.wa2.adjuntos.voz.grabar') | translate"
+  >
+    <i class="fa fa-microphone" aria-hidden="true"></i>
+  </button>
+</div>

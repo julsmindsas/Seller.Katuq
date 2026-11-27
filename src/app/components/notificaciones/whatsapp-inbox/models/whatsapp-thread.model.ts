@@ -17,7 +17,44 @@ export type WhatsappMessageType =
   | "audio"
   | "video"
   | "document"
-  | "sticker";
+  | "sticker"
+  | "location";
+
+/** Tipo de archivo de un mensaje (bandeja única). */
+export type MediaKind = "image" | "audio" | "video" | "document" | "sticker";
+
+/**
+ * Archivo de un mensaje, tal como lo entrega el servidor con la bandeja única. Nunca trae el id ni la dirección
+ * del proveedor: `url` es la ruta de Katuq que se pide con la sesión (como blob), nunca un enlace directo.
+ */
+export interface MediaInfo {
+  id: string;
+  kind: MediaKind;
+  mime: string | null;
+  bytes: number | null;
+  filename: string | null;
+  /** Nota de voz (audio grabado en el celular o en el navegador). */
+  voice: boolean;
+  caption: string | null;
+  /** false: no se puede bajar (`motivo` dice por qué). */
+  disponible: boolean;
+  motivo?: "vencido" | "compartido" | "sin_archivo";
+  url: string;
+}
+
+/** Ubicación que mandó el cliente. */
+export interface UbicacionMensaje {
+  lat: number;
+  lng: number;
+  nombre: string | null;
+  direccion: string | null;
+}
+
+/** Ventana de 24 h según el servidor (solo para avisar; al enviar decide el servidor). */
+export interface VentanaChat {
+  abierta: boolean;
+  cierraEn: string | null;
+}
 
 /**
  * Banderas opcionales del hilo (retención, flags operativos).
@@ -94,6 +131,10 @@ export interface WhatsappMessage {
   sentByName?: string | null;
   /** Nombre técnico de la plantilla con que salió (aviso automático); un mensaje así no se reintenta como texto. */
   plantilla?: string | null;
+  /** Bandeja única: archivo del mensaje (0 o 1). Con archivo, `body` es solo el texto que lo acompaña. */
+  adjuntos?: MediaInfo[];
+  /** Bandeja única: ubicación que mandó el cliente. */
+  ubicacion?: UbicacionMensaje | null;
 }
 
 /**
@@ -163,6 +204,8 @@ export interface ThreadsPage {
 export interface MessagesPage {
   items: WhatsappMessage[];
   hasMore: boolean;
+  /** Bandeja única: ventana de 24 h según el servidor; ausente sin la bandera. */
+  ventana?: VentanaChat | null;
 }
 
 /**

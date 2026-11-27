@@ -1,0 +1,157 @@
+<div class="wadj" #caja [class.wadj--saliente]="saliente" *ngIf="a">
+  <!-- No se puede bajar: el motivo en palabras -->
+  <div class="wadj__tarjeta wadj__tarjeta--apagada" *ngIf="!a.disponible; else disponible">
+    <span class="wadj__icono" aria-hidden="true"><i class="fa" [ngClass]="esImagen ? 'fa-picture-o' : iconoDocumento"></i></span>
+    <span class="wadj__info">
+      <span class="wadj__nombre">{{ nombreArchivo }}</span>
+      <span class="wadj__detalle">{{ claveMotivo | translate }}</span>
+    </span>
+  </div>
+
+  <ng-template #disponible>
+    <!-- Falló la descarga -->
+    <div class="wadj__tarjeta wadj__tarjeta--apagada" *ngIf="estado?.estado === 'error'; else normal" role="status">
+      <span class="wadj__icono" aria-hidden="true"><i class="fa fa-exclamation-circle"></i></span>
+      <span class="wadj__info">
+        <span class="wadj__nombre">{{ nombreArchivo }}</span>
+        <span class="wadj__detalle">{{ claveFallo | translate }}</span>
+      </span>
+      <button *ngIf="puedeReintentarBajar" type="button" class="wadj__boton wadj__boton--sec" (click)="reintentarBajar()">
+        {{ 'notificaciones.wa2.detail.retry' | translate }}
+      </button>
+    </div>
+
+    <ng-template #normal>
+      <ng-container [ngSwitch]="esImagen && !soloDescarga && !noSeReproduce ? 'imagen' : a.kind">
+        <!-- Foto o sticker: se baja al quedar a la vista y se amplía dentro de la página -->
+        <ng-container *ngSwitchCase="'imagen'">
+          <button
+            type="button"
+            class="wadj__foto"
+            [class.wadj__foto--sticker]="a.kind === 'sticker'"
+            (click)="ampliar()"
+            [disabled]="estado?.estado !== 'listo'"
+            [attr.aria-label]="(a.kind === 'sticker' ? 'notificaciones.wa2.adjuntos.verSticker' : 'notificaciones.wa2.adjuntos.verFoto') | translate"
+          >
+            <img
+              *ngIf="estado?.estado === 'listo' && $any(estado).url as src"
+              class="wadj__img"
+              [src]="src"
+              [alt]="nombreArchivo"
+              (error)="alFallarReproduccion()"
+            />
+            <span *ngIf="estado?.estado !== 'listo'" class="wadj__esqueleto">
+              <i class="fa fa-picture-o" aria-hidden="true"></i>
+              <span class="wadj__esqueleto-texto">{{ 'notificaciones.wa2.adjuntos.cargando' | translate }}</span>
+            </span>
+          </button>
+        </ng-container>
+
+        <!-- Audio o nota de voz -->
+        <ng-container *ngSwitchCase="'audio'">
+          <div class="wadj__tarjeta" [class.wadj__tarjeta--voz]="a.voice">
+            <span class="wadj__icono" aria-hidden="true"><i class="fa" [ngClass]="a.voice ? 'fa-microphone' : 'fa-music'"></i></span>
+            <span class="wadj__info">
+              <span class="wadj__nombre">{{ (a.voice ? 'notificaciones.wa2.adjuntos.nombreVoz' : 'notificaciones.wa2.adjuntos.nombreAudio') | translate }}</span>
+              <span class="wadj__detalle" *ngIf="!reproducir && tamano">{{ tamano }}</span>
+            </span>
+            <button *ngIf="!reproducir" type="button" class="wadj__boton" (click)="alReproducir()">
+              <i class="fa fa-play" aria-hidden="true"></i>
+              {{ 'notificaciones.wa2.adjuntos.reproducir' | translate }}
+            </button>
+          </div>
+          <ng-container *ngIf="reproducir">
+            <span class="wadj__detalle wadj__detalle--estado" *ngIf="estado?.estado === 'cargando'" role="status">{{ 'notificaciones.wa2.adjuntos.cargando' | translate }}</span>
+            <audio
+              *ngIf="estado?.estado === 'listo' && !noSeReproduce && !soloDescarga && $any(estado).url as src"
+              class="wadj__audio"
+              controls
+              autoplay
+              preload="auto"
+              [src]="src"
+              (error)="alFallarReproduccion()"
+            ></audio>
+            <div class="wadj__aviso" *ngIf="estado?.estado === 'listo' && (noSeReproduce || soloDescarga)" role="status">
+              <span class="wadj__aviso-texto">{{ 'notificaciones.wa2.adjuntos.noReproduceAudio' | translate }}</span>
+              <button type="button" class="wadj__boton wadj__boton--sec" (click)="descargar()">
+                <i class="fa fa-download" aria-hidden="true"></i>
+                {{ 'notificaciones.wa2.adjuntos.descargar' | translate }}
+              </button>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Video -->
+        <ng-container *ngSwitchCase="'video'">
+          <div class="wadj__tarjeta" *ngIf="!reproducir || estado?.estado !== 'listo'">
+            <span class="wadj__icono" aria-hidden="true"><i class="fa fa-film"></i></span>
+            <span class="wadj__info">
+              <span class="wadj__nombre">{{ nombreArchivo }}</span>
+              <span class="wadj__detalle" *ngIf="!reproducir && tamano">{{ tamano }}</span>
+              <span class="wadj__detalle" *ngIf="reproducir" role="status">{{ 'notificaciones.wa2.adjuntos.cargando' | translate }}</span>
+            </span>
+            <button *ngIf="!reproducir" type="button" class="wadj__boton" (click)="alReproducir()">
+              <i class="fa fa-play" aria-hidden="true"></i>
+              {{ 'notificaciones.wa2.adjuntos.reproducir' | translate }}
+            </button>
+          </div>
+          <ng-container *ngIf="reproducir && estado?.estado === 'listo'">
+            <video
+              *ngIf="!noSeReproduce && !soloDescarga && $any(estado).url as src"
+              class="wadj__video"
+              controls
+              playsinline
+              autoplay
+              [src]="src"
+              (error)="alFallarReproduccion()"
+            ></video>
+            <div class="wadj__aviso" *ngIf="noSeReproduce || soloDescarga" role="status">
+              <span class="wadj__aviso-texto">{{ 'notificaciones.wa2.adjuntos.noReproduceVideo' | translate }}</span>
+              <button type="button" class="wadj__boton wadj__boton--sec" (click)="descargar()">
+                <i class="fa fa-download" aria-hidden="true"></i>
+                {{ 'notificaciones.wa2.adjuntos.descargar' | translate }}
+              </button>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Documento (o archivo que el navegador no muestra) -->
+        <ng-container *ngSwitchDefault>
+          <div class="wadj__tarjeta">
+            <span class="wadj__icono" aria-hidden="true"><i class="fa" [ngClass]="iconoDocumento"></i></span>
+            <span class="wadj__info">
+              <span class="wadj__nombre" [attr.title]="nombreArchivo">{{ nombreArchivo }}</span>
+              <span class="wadj__detalle" *ngIf="estado?.estado !== 'cargando' && tamano">{{ tamano }}</span>
+              <span class="wadj__detalle" *ngIf="estado?.estado === 'cargando'" role="status">{{ 'notificaciones.wa2.adjuntos.cargando' | translate }}</span>
+            </span>
+            <button type="button" class="wadj__boton" (click)="descargar()" [disabled]="estado?.estado === 'cargando'">
+              <i class="fa fa-download" aria-hidden="true"></i>
+              {{ 'notificaciones.wa2.adjuntos.descargar' | translate }}
+            </button>
+          </div>
+        </ng-container>
+      </ng-container>
+    </ng-template>
+  </ng-template>
+
+  <!-- Foto ampliada dentro de la página (Esc o la X cierran) -->
+  <div
+    class="wadj__ampliada"
+    *ngIf="ampliada && estado?.estado === 'listo'"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="nombreArchivo"
+    (click)="cerrar()"
+  >
+    <button
+      #cerrarAmpliada
+      type="button"
+      class="wadj__cerrar"
+      (click)="cerrar(); $event.stopPropagation()"
+      [attr.aria-label]="'notificaciones.wa2.adjuntos.cerrar' | translate"
+    >
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+    <img class="wadj__grande" [src]="$any(estado).url" [alt]="nombreArchivo" (click)="$event.stopPropagation()" />
+  </div>
+</div>

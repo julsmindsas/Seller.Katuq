@@ -20,6 +20,18 @@ const CLAVES_POR_CODIGO: Record<string, string> = {
   debit_failed_after_send: "notificaciones.wa2.errores.cobro",
   CHAT_CON_DUENO: "notificaciones.whatsapp.detail.ownedByOther",
   ownedByOther: "notificaciones.whatsapp.detail.ownedByOther",
+  // Archivos (bandeja única)
+  MEDIA_VACIO: "notificaciones.wa2.adjuntos.errores.vacio",
+  MEDIA_MUY_PESADO: "notificaciones.wa2.adjuntos.errores.pesado",
+  MEDIA_TIPO_NO_PERMITIDO: "notificaciones.wa2.adjuntos.errores.tipo",
+  MEDIA_TEXTO_LARGO: "notificaciones.wa2.adjuntos.errores.textoLargo",
+  MEDIA_AUDIO_CON_TEXTO: "notificaciones.wa2.adjuntos.errores.audioConTexto",
+  MEDIA_VOZ_NO_VALIDA: "notificaciones.wa2.adjuntos.errores.vozNoValida",
+  MEDIA_ID_INVALIDO: "notificaciones.wa2.adjuntos.errores.idInvalido",
+  MEDIA_RECHAZADO: "notificaciones.wa2.adjuntos.errores.rechazado",
+  MEDIA_SUBIDA_FALLIDA: "notificaciones.wa2.adjuntos.errores.subidaFallida",
+  MEDIA_OCUPADO: "notificaciones.wa2.adjuntos.errores.ocupado",
+  FEATURE_DISABLED: "notificaciones.wa2.adjuntos.errores.sinBandeja",
 };
 
 export const CLAVE_ERROR_ENVIO_GENERICA = "notificaciones.wa2.errores.generico";
@@ -30,7 +42,12 @@ export function claveDeErrorChat(err: any, generica: string = CLAVE_ERROR_ENVIO_
   if (status === 0) return "notificaciones.wa2.errores.sinConexion";
   const cuerpo = err?.error && typeof err.error === "object" ? err.error : {};
   const codigo = String(cuerpo.code || cuerpo.error || "");
+  // Un video que WhatsApp no acepta (.mov u otro códec): se sugiere MP4 o enviarlo como documento.
+  if (codigo === "MEDIA_TIPO_NO_PERMITIDO" && cuerpo.sugerencia === "documento") {
+    return "notificaciones.wa2.adjuntos.errores.videoComoDocumento";
+  }
   if (codigo && CLAVES_POR_CODIGO[codigo]) return CLAVES_POR_CODIGO[codigo];
+  if (status === 413) return "notificaciones.wa2.adjuntos.errores.pesado";
   if (status === 404) return "notificaciones.wa2.errores.noEncontrado";
   return generica;
 }

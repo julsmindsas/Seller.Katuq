@@ -101,7 +101,17 @@
   </div>
 
   <div class="thread-detail__body">
-    <div class="thread-detail__chat">
+    <div
+      class="thread-detail__chat"
+      (dragover)="alArrastrarEncima($event)"
+      (dragleave)="alSalirArrastre($event)"
+      (drop)="alSoltar($event)"
+    >
+      <!-- Bandeja única: arrastrar un archivo sobre el chat lo adjunta -->
+      <div class="thread-detail__soltar" *ngIf="arrastrando" aria-hidden="true">
+        <i class="fa fa-paperclip"></i>
+        <span class="thread-detail__soltar-texto">{{ 'notificaciones.wa2.adjuntos.soltar' | translate }}</span>
+      </div>
       <div *ngIf="loading" class="thread-detail__state">{{ 'notificaciones.whatsapp.detail.loadingMessages' | translate }}</div>
 
       <!-- La carga falló: el chat queda vacío (nada del anterior) y no se puede escribir hasta que cargue -->
@@ -148,15 +158,38 @@
             [class.is-grouped]="item.grouped"
           >
             <div class="thread-detail__bubble">
+              <!-- Bandeja única: el archivo (foto, audio, video, documento o sticker) y la ubicación -->
+              <ng-container *ngIf="vistaArchivo(item.msg)">
+                <app-wa-adjunto-vista
+                  *ngFor="let a of item.msg.adjuntos || []; trackBy: trackAdjunto"
+                  [adjunto]="a"
+                  [cache]="cache"
+                  [saliente]="item.msg.direction === 'outbound'"
+                ></app-wa-adjunto-vista>
+                <a
+                  *ngIf="item.msg.ubicacion as u"
+                  class="thread-detail__ubicacion"
+                  [href]="mapaDe(u)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span class="thread-detail__ubicacion-icono" aria-hidden="true"><i class="fa fa-location-arrow"></i></span>
+                  <span class="thread-detail__ubicacion-info">
+                    <span class="thread-detail__ubicacion-nombre">{{ u.nombre || ('notificaciones.wa2.adjuntos.ubicacion' | translate) }}</span>
+                    <span class="thread-detail__ubicacion-dir" *ngIf="u.direccion">{{ u.direccion }}</span>
+                    <span class="thread-detail__ubicacion-ver">{{ 'notificaciones.wa2.adjuntos.verMapa' | translate }}</span>
+                  </span>
+                </a>
+              </ng-container>
               <p
                 class="thread-detail__body-text"
-                *ngIf="!item.msg.mediaPlaceholder"
+                *ngIf="!esPlaceholder(item.msg) && (vistaArchivo(item.msg) ? item.msg.body : true)"
               >
-                {{ item.msg.body || item.msg.snippet }}
+                {{ vistaArchivo(item.msg) ? item.msg.body : (item.msg.body || item.msg.snippet) }}
               </p>
               <p
                 class="thread-detail__media"
-                *ngIf="item.msg.mediaPlaceholder"
+                *ngIf="esPlaceholder(item.msg)"
               >
                 {{ mediaLabel(item.msg) }}
               </p>
@@ -308,20 +341,31 @@
             [deshabilitado]="sending || soloLectura"
             (elegir)="alElegirRapida($event)"
           ></app-chat-rapidos>
+          <!-- Bandeja única: clip, micrófono, vista previa y avance del envío de archivos -->
+          <app-wa-adjuntar
+            *ngIf="atencion"
+            [clave]="claveActual"
+            [phoneHash]="phoneHash"
+            [lineId]="lineId"
+            [bloqueado]="soloLectura || sending"
+            [ventanaCerrada]="ventanaCerrada"
+            (estadoCambio)="adjEstado = $event"
+          ></app-wa-adjuntar>
           <textarea
             class="thread-detail__composer-input"
             [(ngModel)]="composerText"
             name="composerText"
-            [placeholder]="'notificaciones.whatsapp.detail.composerPlaceholder' | translate"
+            [placeholder]="placeholderComposer | translate"
             (keydown)="alTeclaRapidos($event)"
             (keydown.enter)="onEnterPress($event)"
-            [disabled]="sending || soloLectura"
+            (paste)="alPegar($event)"
+            [disabled]="sending || soloLectura || (atencion && (adjEstado.voz || adjEstado.grabando))"
             rows="1"
           ></textarea>
           <button
             type="submit"
             class="thread-detail__composer-send"
-            [disabled]="!composerText.trim() || sending || soloLectura"
+            [disabled]="!puedeEnviar"
           >
             <i class="fa fa-paper-plane" aria-hidden="true"></i>
             {{ (sending ? 'notificaciones.whatsapp.detail.sending' : 'notificaciones.whatsapp.detail.send') | translate }}
