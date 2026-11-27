@@ -148,15 +148,16 @@ $error-bg: #fdecec;
       background: $acento;
       color: #fff;
       box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
-      &:hover:not(:disabled) { background: #4a2fc0; }
+      &:hover:not(:disabled):not([aria-disabled='true']) { background: #4a2fc0; }
     }
     &--ghost {
       background: #fff;
       border: 1px solid #e4e2ef;
       color: #5b5878;
-      &:hover:not(:disabled) { border-color: $acento; color: $acento; }
+      &:hover:not(:disabled):not([aria-disabled='true']) { border-color: $acento; color: $acento; }
     }
-    &:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    // Sin ser administrador el botón sigue enfocable (aria-disabled) para que el lector lea por qué no se puede.
+    &:disabled, &[aria-disabled='true'] { opacity: .5; cursor: not-allowed; box-shadow: none; }
   }
 
   &__cargando, &__pie {

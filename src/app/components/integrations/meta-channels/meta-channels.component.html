@@ -54,7 +54,8 @@
           type="button"
           class="mc__btn mc__btn--primario"
           *ngIf="estadoDe(c.id)?.estado !== 'conectado'"
-          [disabled]="ocupado === c.id || !esAdministrador"
+          [disabled]="ocupado === c.id"
+          [attr.aria-disabled]="esAdministrador ? null : 'true'"
           [attr.aria-describedby]="esAdministrador ? null : 'mc-solo-admin-' + c.id"
           (click)="conectar(c.id)"
         >
@@ -65,7 +66,8 @@
           type="button"
           class="mc__btn mc__btn--ghost"
           *ngIf="estadoDe(c.id)?.estado === 'conectado'"
-          [disabled]="ocupado === c.id || !esAdministrador"
+          [disabled]="ocupado === c.id"
+          [attr.aria-disabled]="esAdministrador ? null : 'true'"
           [attr.aria-describedby]="esAdministrador ? null : 'mc-solo-admin-' + c.id"
           (click)="desconectar(c.id)"
         >
