@@ -17,13 +17,14 @@
       <span class="mb-aviso__titulo" *ngIf="!necesitaReconectar">
         {{ 'notificaciones.meta.notConnected' | translate: { canal: canalLabel } }}
       </span>
-      <span class="mb-aviso__detalle" *ngIf="necesitaReconectar">
+      <!-- «Conecta tu cuenta…» y «Vuelve a conectar…» son para quien puede hacerlo (el administrador) -->
+      <span class="mb-aviso__detalle" *ngIf="esAdministrador && necesitaReconectar">
         {{ (esTiktok ? 'notificaciones.meta.tiktokExpiredDetail' : 'notificaciones.meta.expiredDetail') | translate }}
       </span>
-      <span class="mb-aviso__detalle" *ngIf="!necesitaReconectar">
+      <span class="mb-aviso__detalle" *ngIf="esAdministrador && !necesitaReconectar">
         {{ 'notificaciones.meta.notConnectedDetail' | translate }}
       </span>
-      <!-- Solo un administrador conecta las redes: los demás ven a quién pedírselo -->
+      <!-- Solo un administrador conecta las redes: los demás solo ven a quién pedírselo -->
       <span class="mb-aviso__detalle mb-aviso__detalle--admin" *ngIf="!esAdministrador">
         {{ 'notificaciones.redes3.conexion.pideAdministrador' | translate: { canal: canalLabel } }}
       </span>

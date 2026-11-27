@@ -85,19 +85,21 @@ export function tipoErrorCarga(err: any): MetaErrorCarga {
   return 'red';
 }
 
+/** Códigos con que el servidor dice que la persona no es administrador (routers/meta.js y requireRole). */
+const CODIGOS_SOLO_ADMINISTRADOR = ['FUERA_DE_ALCANCE', 'ROLE_NOT_ALLOWED', 'INSUFFICIENT_ROLE'];
+
 /**
  * Clave de traducción para un rechazo al conectar o desconectar Instagram o Facebook; null si no tiene una
- * explicación propia (entonces la pantalla dice lo de siempre). Lee el código, nunca el `message` del servidor.
+ * explicación propia (entonces la pantalla dice lo de siempre). Solo por el código del servidor, nunca por el
+ * estado HTTP solo ni por el `message`: un 403 de otra cosa (suscripción, bandera, sesión) no es «solo un
+ * administrador», y un 409 o 503 sin código tampoco se adivina.
  */
-export function claveErrorConexion(err: any, accion: 'conectar' | 'desconectar' = 'conectar'): string | null {
-  const status = Number(err?.status);
+export function claveErrorConexion(err: any): string | null {
   const cuerpo = err && err.error && typeof err.error === 'object' ? err.error : {};
   const codigo = typeof cuerpo.code === 'string' ? cuerpo.code : '';
-  if (codigo === 'META_CUENTA_EN_USO' || (status === 409 && accion === 'conectar')) {
-    return 'notificaciones.redes3.conexion.cuentaEnUso';
-  }
-  if (codigo === 'FUERA_DE_ALCANCE' || status === 403) return 'notificaciones.redes3.conexion.soloAdministrador';
-  if (codigo === 'NO_SE_PUDO_REVISAR' || status === 503) return 'notificaciones.redes3.conexion.noSePudoRevisar';
+  if (codigo === 'META_CUENTA_EN_USO') return 'notificaciones.redes3.conexion.cuentaEnUso';
+  if (CODIGOS_SOLO_ADMINISTRADOR.includes(codigo)) return 'notificaciones.redes3.conexion.soloAdministrador';
+  if (codigo === 'NO_SE_PUDO_REVISAR') return 'notificaciones.redes3.conexion.noSePudoRevisar';
   return null;
 }
 
@@ -177,16 +179,26 @@ export class MetaInboxService extends BaseService {
       .post<any>(`${environment.urlApi}/v1/meta/connections/${canal}`, { code, redirectUri }, { context: contexto })
       .pipe(
         map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
-        catchError((err) => this.alFallarConexion(err, canal, 'conectar')),
+        catchError((err) => this.alFallarConexion(err, canal)),
       );
   }
 
-  /** Desconecta una red. Igual que `conectar`: un 403 o un 503 se explican en vez de quedar en silencio. */
+  /**
+   * Desconecta una red. En Instagram y Facebook, igual que `conectar`: los rechazos con código propio se explican
+   * en vez de quedar en silencio. TikTok queda como siempre (sus 403 vienen también de la bandera
+   * `tiktokMensajes`, y el interceptor y la pantalla de canales ya los cuentan).
+   */
   desconectar(canal: MetaCanal): Observable<MetaConexiones | null> {
+    if (canal === 'tiktok') {
+      return this.delete<any>(`/v1/meta/connections/${canal}`).pipe(
+        map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
+        catchError(() => of(null)),
+      );
+    }
     const contexto = new HttpContext().set(SIN_AVISO_NEGOCIO, true);
     return this.http.delete<any>(`${environment.urlApi}/v1/meta/connections/${canal}`, { context: contexto }).pipe(
       map((r) => (r && r.data ? normalizarConexiones(r.data) : null)),
-      catchError((err) => this.alFallarConexion(err, canal, 'desconectar')),
+      catchError((err) => this.alFallarConexion(err, canal)),
     );
   }
 
@@ -194,8 +206,8 @@ export class MetaInboxService extends BaseService {
    * Rechazo al conectar o desconectar: si tiene explicación, aviso claro y el estado actual de las conexiones
    * (null si tampoco se pudo leer); si no, null como antes.
    */
-  private alFallarConexion(err: any, canal: MetaCanal, accion: 'conectar' | 'desconectar'): Observable<MetaConexiones | null> {
-    const clave = claveErrorConexion(err, accion);
+  private alFallarConexion(err: any, canal: MetaCanal): Observable<MetaConexiones | null> {
+    const clave = claveErrorConexion(err);
     if (!clave) return of(null);
     this.toastr.warning(
       this.translate.instant(clave, { canal: META_CANAL_LABEL[canal] }),
