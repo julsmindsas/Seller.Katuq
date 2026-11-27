@@ -84,6 +84,20 @@ export class BandejaService {
     );
   }
 
+  /**
+   * Busca en todos los chats de WhatsApp del comercio (últimos 90 días), también en páginas sin cargar, con la
+   * búsqueda que el servidor ya tiene: nombre, número (también los últimos dígitos) y último mensaje. Devuelve
+   * la primera página de resultados; si falla, null (la lista se queda con la búsqueda local).
+   */
+  buscarWhatsapp(texto: string): Observable<ConversacionResumen[] | null> {
+    const q = (texto || "").trim();
+    if (!q) return of([]);
+    return this.whatsapp.getThreads({ search: q }).pipe(
+      map((res) => res.items.map(desdeWhatsapp)),
+      catchError(() => of(null)),
+    );
+  }
+
   /** Las páginas 2..n que fallen se ignoran; si falla la 1, el canal cuenta como caído. */
   private traerWhatsapp(paginas: number): Observable<AporteCanal> {
     const numeros = Array.from({ length: paginas }, (_, i) => i + 1);

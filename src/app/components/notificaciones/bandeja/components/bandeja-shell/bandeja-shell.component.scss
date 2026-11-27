@@ -51,6 +51,23 @@
   }
 }
 
+// Celular y tableta con un chat abierto: el encabezado y las pestañas se esconden y el chat usa la pantalla
+// (se vuelve con «Volver al listado»). 100vh queda de respaldo para navegadores sin dvh.
+@media (max-width: 1023px) {
+  .bj.bj--detalle {
+    padding-bottom: 12px;
+
+    > .cfg-cabeza,
+    > .bj-tabs { display: none; }
+
+    .bj__cuerpo {
+      height: calc(100vh - 124px);
+      height: calc(100dvh - 124px);
+      min-height: 420px;
+    }
+  }
+}
+
 // Nada elegido todavía
 .bj-elige {
   display: flex;
@@ -97,13 +114,50 @@
     overflow-y: auto;
   }
 
-  @media (max-width: 1199px) {
-    flex-direction: column;
-    overflow-y: auto;
-
-    &__chat { flex: 0 0 auto; }
-    &__ficha { flex: 0 0 auto; border-left: 0; border-top: 1px solid $cfg-line; overflow-y: visible; }
+  &__acciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
   }
+
+  // Menos de 1200 px: el chat ocupa todo y la ficha se ve en su lugar con «Ver ficha» (como en WhatsApp).
+  // El chat solo se esconde (no se destruye): lo escrito en el cuadro no se pierde.
+  @media (max-width: 1199px) {
+    overflow-y: hidden;
+
+    &__ficha { display: none; flex: 1 1 auto; border-left: 0; }
+
+    &--ficha {
+      .bj-red__chat { display: none; }
+      .bj-red__ficha { display: block; }
+    }
+  }
+}
+
+.bj-ver-ficha {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin: 8px 8px 0 auto;
+  padding: 0 12px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  i { color: inherit; }
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; letter-spacing: normal; }
+
+  &:hover { background: $cfg-tint; color: $cfg-accent-ink; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  @media (max-width: 1199px) { display: inline-flex; }
 }
 
 .bj-volver {
@@ -131,6 +185,11 @@
 
   @media (max-width: 1023px) {
     display: inline-flex;
+  }
+
+  // «Volver al chat» desde la ficha de redes: existe mientras la ficha va detrás de su botón.
+  &--chat {
+    @media (max-width: 1199px) { display: inline-flex; }
   }
 }
 

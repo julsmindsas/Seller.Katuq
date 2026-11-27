@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ChatNotasComponent } from "../../../inbox-core/chat-notas/chat-notas.component";
 import { TranslateService } from "@ngx-translate/core";
-import { Subject, Subscription, asyncScheduler, interval } from "rxjs";
-import { takeUntil, throttleTime } from "rxjs/operators";
+import { Subject, Subscription, asyncScheduler, interval, of } from "rxjs";
+import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil, throttleTime } from "rxjs/operators";
 
 import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
 import { LoaderService } from "../../../../../shared/services/loader.service";
@@ -55,6 +56,8 @@ import {
 import { claveRelacionado, desdeRelacionado, mezclar } from "../../bandeja.util";
 import { normalizarCola } from "../../bandeja.colas";
 import { construirCsv } from "../bandeja-informes/bandeja-informes.util";
+import { FiltroListaGuardado } from "../bandeja-lista/bandeja-lista.component";
+import { guardarUltimoMotivo, guardarVuelta, leerUltimoMotivo, leerVuelta } from "./bandeja-recuerdo";
 
 /** Vistas de la bandeja: la lista de chats o, para quien coordina, las pestañas Equipo e Informes (D-729). */
 export type VistaBandeja = "chats" | "equipo" | "informes";
@@ -68,6 +71,13 @@ const REFRESCO_MS = 5000;
  * buzón de WhatsApp (90 por minuto por usuario).
  */
 const CONFIRMA_EN_VIVO_MS = 3000;
+
+/** El resumen de Equipo se pide solo con esa pestaña abierta, y con el refresco como mucho cada 30 s. */
+const RESUMEN_MIN_MS = 30000;
+
+/** La búsqueda en el servidor espera a que la persona deje de escribir y pide al menos 3 caracteres. */
+const BUSQUEDA_ESPERA_MS = 450;
+const BUSQUEDA_MIN = 3;
 
 /**
  * Bandeja única («Todos los mensajes»): una sola lista con los chats de WhatsApp, Instagram, Facebook y
@@ -162,6 +172,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
   resumenError = false;
+  /** Cuándo se pidió el último resumen (para no pedirlo en cada refresco de la lista). */
+  private ultimoResumen = 0;
   guardandoAjustes = false;
   ajustesGuardados = false;
   errorAjustes = false;
@@ -206,6 +218,30 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
    */
   private eventosEnCarga: EventoChatEnVivo[] = [];
 
+  // ─── Búsqueda en el servidor (WhatsApp): encuentra chats de páginas sin cargar por número o mensaje ───
+  resultadosBusqueda: ConversacionResumen[] = [];
+  busquedaServidor = "";
+  buscandoServidor = false;
+  private readonly busqueda$ = new Subject<string>();
+
+  // ─── Volver a la bandeja: mismo chat y mismos filtros; el aviso «Chat sin responder» abre su chat ───
+  /** Filtros de la lista al salir; la lista los aplica una vez. */
+  filtroListaInicial: FiltroListaGuardado | null = null;
+  private filtroLista: FiltroListaGuardado | null = null;
+  /** Fila que estaba abierta al salir: se abre cuando llega la primera lista. */
+  private claveARestaurar: string | null = null;
+  /** Chat que pide abrir el enlace (`?chat=<id del hilo>`, del aviso): gana sobre la fila recordada. */
+  private hiloPedido: string | null = null;
+  private readonly usuarioClave: string;
+  /** Búsqueda recordada: se repite en el servidor cuando llega la primera lista (ya se saben los canales). */
+  private busquedaInicial = "";
+
+  /** Último motivo de cierre que usó la persona; se ofrece marcado si sigue en el catálogo. */
+  private ultimoMotivo = "";
+
+  /** Redes en pantallas de menos de 1200 px: la ficha se ve en lugar del chat, con un botón (como en WhatsApp). */
+  fichaRedAbierta = false;
+
   private conexiones: MetaConexiones | null = null;
   private refrescoSub?: Subscription;
   private cargaSub?: Subscription;
@@ -220,17 +256,33 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     private readonly loader: LoaderService,
     private readonly translate: TranslateService,
     private readonly enVivoSrv: BandejaEnVivoService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
     features: CompanyFeaturesService,
   ) {
     this.multiNumero = features.isEnabled("whatsappMultiNumero");
     const usuario = this.leerUsuario();
     this.esAdministrador = esFamiliaAdministrador(usuario["rol"]);
     this.miEmail = String(usuario["email"] || "");
+    // La empresa va en la clave: la misma persona en otra empresa no recibe filtros ajenos.
+    this.usuarioClave = this.miEmail ? `${String(usuario["company"] || "")}|${this.miEmail}` : "";
+    this.ultimoMotivo = leerUltimoMotivo(this.usuarioClave);
+    const vuelta = leerVuelta(this.usuarioClave);
+    if (vuelta) {
+      this.asesor = vuelta.asesor;
+      this.cola = vuelta.cola;
+      this.filtroLista = vuelta.filtro;
+      this.filtroListaInicial = vuelta.filtro;
+      this.claveARestaurar = vuelta.clave;
+      this.busquedaInicial = (vuelta.filtro?.busqueda || "").trim();
+    }
   }
 
   ngOnInit(): void {
     this.loader.suppressGlobalLoader();
     this.loader.ocultarBarraSuperior();
+    this.escucharEnlace();
+    this.escucharBusqueda();
     this.cargarAtencion();
     this.elegirCanalesYCargar();
     this.refrescoSub = interval(REFRESCO_MS).subscribe(() => {
@@ -375,6 +427,105 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     return this.carga?.conversaciones ?? [];
   }
 
+  // ─── Enlace del aviso y vuelta a la bandeja ───
+
+  /**
+   * `?chat=<id del hilo>` abre ese chat en cuanto aparece en la lista (el aviso «Chat sin responder» lo puede
+   * traer). El id del hilo es interno: no lleva el número ni el nombre del cliente. Si ya estamos en la bandeja,
+   * el aviso cambia solo el enlace y también se atiende.
+   */
+  private escucharEnlace(): void {
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((q) => {
+      const id = (q.get("chat") || "").trim();
+      if (!id) return;
+      this.hiloPedido = id.slice(0, 300);
+      this.claveARestaurar = null;
+      if (this.vista !== "chats") this.vista = "chats";
+      if (this.carga) this.abrirPendiente();
+    });
+  }
+
+  /**
+   * Tras la primera lista (y tras cada carga mientras siga pendiente el chat del enlace): abre el chat pedido o
+   * el que estaba abierto al salir. Si no está en lo cargado no se inventa nada: queda la lista como siempre.
+   */
+  private abrirPendiente(): void {
+    if (this.hiloPedido) {
+      const id = this.hiloPedido;
+      const fila = this.conversaciones.find((c) => c.threadId === id);
+      this.hiloPedido = null;
+      this.quitarEnlace();
+      if (fila) this.abrir(fila);
+      return;
+    }
+    if (this.claveARestaurar) {
+      const clave = this.claveARestaurar;
+      this.claveARestaurar = null;
+      const fila = this.conversaciones.find((c) => c.clave === clave);
+      if (fila && !this.seleccion) this.abrir(fila);
+    }
+  }
+
+  /** El enlace ya se usó: se quita para que recargar la página no lo vuelva a abrir. */
+  private quitarEnlace(): void {
+    this.router
+      .navigate([], { relativeTo: this.route, queryParams: { chat: null }, queryParamsHandling: "merge", replaceUrl: true })
+      .catch(() => undefined);
+  }
+
+  /** La lista cambió un filtro: se recuerda para volver igual. */
+  alCambiarFiltroLista(filtro: FiltroListaGuardado): void {
+    this.filtroLista = filtro;
+    this.recordarVuelta();
+  }
+
+  private recordarVuelta(): void {
+    guardarVuelta(this.usuarioClave, {
+      clave: this.seleccion?.clave ?? null,
+      asesor: this.asesor,
+      cola: this.cola,
+      filtro: this.filtroLista,
+    });
+  }
+
+  // ─── Búsqueda en el servidor ───
+
+  /** La lista avisa cada letra; aquí se espera a que la persona pare y se pregunta al servidor (solo WhatsApp). */
+  alBuscar(texto: string): void {
+    this.busqueda$.next(texto || "");
+  }
+
+  private escucharBusqueda(): void {
+    this.busqueda$
+      .pipe(
+        debounceTime(BUSQUEDA_ESPERA_MS),
+        distinctUntilChanged(),
+        switchMap((texto) => {
+          const q = texto.trim();
+          if (q.length < BUSQUEDA_MIN || !this.canales.includes("whatsapp")) {
+            this.buscandoServidor = false;
+            return of({ q: "", items: [] as ConversacionResumen[] | null });
+          }
+          this.buscandoServidor = true;
+          return this.bandeja.buscarWhatsapp(q).pipe(map((items) => ({ q, items })));
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(({ q, items }) => {
+        this.buscandoServidor = false;
+        // Si el servidor falla, la lista se queda con la búsqueda local.
+        this.busquedaServidor = items ? q : "";
+        this.resultadosBusqueda = items || [];
+      });
+  }
+
+  // ─── Último motivo de cierre ───
+
+  /** El último motivo usado, si sigue en el catálogo; vacío si no. */
+  get motivoSugerido(): string {
+    return this.ultimoMotivo && this.motivosCierre.includes(this.ultimoMotivo) ? this.ultimoMotivo : "";
+  }
+
   /** Ningún canal pedido pudo cargarse y no hay nada que mostrar: se ofrece reintentar. */
   get errorCarga(): boolean {
     return (
@@ -478,17 +629,26 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       }
     }
     this.seleccion = conversacion;
+    this.fichaRedAbierta = false;
     this.reiniciarNotas();
     this.reiniciarAcciones();
     // Si el catálogo no llegó la primera vez, se vuelve a pedir al abrir un chat.
     if (this.atencion && !this.motivosCierre.length) this.cargarCatalogos();
+    this.recordarVuelta();
   }
 
   /** Mobile: de vuelta a la lista. */
   volver(): void {
     this.seleccion = null;
+    this.fichaRedAbierta = false;
     this.reiniciarNotas();
     this.reiniciarAcciones();
+    this.recordarVuelta();
+  }
+
+  /** Redes en pantalla angosta: alterna entre el chat y la ficha del contacto. */
+  alternarFichaRed(): void {
+    this.fichaRedAbierta = !this.fichaRedAbierta;
   }
 
   /** El detalle cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */
@@ -517,6 +677,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   cambiarVista(vista: VistaBandeja): void {
     if ((vista === "equipo" || vista === "informes") && !this.coordina) return;
     this.vista = vista;
+    // El resumen solo se pide aquí y con esta pestaña abierta (antes, en cada refresco de la lista).
+    if (vista === "equipo") this.cargarResumen(true);
     if (vista === "informes" && !this.informesVisto) {
       this.informesVisto = true;
       this.consultarInforme({}); // rango por defecto del servidor: los últimos 7 días
@@ -605,10 +767,12 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   elegirAsesor(asesor: string | null): void {
     this.asesor = asesor;
+    this.recordarVuelta();
   }
 
   elegirCola(cola: string | null): void {
     this.cola = cola;
+    this.recordarVuelta();
   }
 
   /** Desde la pestaña Equipo: filtra la lista por esa cola y vuelve a Chats. */
@@ -616,6 +780,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.cola = cola;
     this.asesor = null;
     this.vista = "chats";
+    this.recordarVuelta();
   }
 
   /** Manda la lista completa de colas. Un 422 deja su mensaje en el editor, que sigue abierto. */
@@ -645,7 +810,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
           this.colasGuardadoOk = true;
           // Refresco de fondo: trae el horario en vivo y los números.
           this.cargarColas();
-          if (this.coordina) this.cargarResumen();
+          if (this.coordina) this.cargarResumen(true);
         },
         error: (err) => {
           this.guardandoColas = false;
@@ -673,6 +838,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.asesor = asesor;
     this.cola = null;
     this.vista = "chats";
+    this.recordarVuelta();
   }
 
   cambiarEstado(estado: EstadoAsesor): void {
@@ -686,7 +852,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         next: (nuevo) => {
           this.estado = nuevo;
           this.cambiandoEstado = false;
-          if (this.coordina) this.cargarResumen();
+          if (this.coordina) this.cargarResumen(true);
         },
         error: () => {
           this.cambiandoEstado = false;
@@ -730,6 +896,9 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.ocupadoCierre = false;
+          // Se recuerda en este navegador para ofrecerlo marcado en el próximo cierre.
+          this.ultimoMotivo = motivo;
+          guardarUltimoMotivo(this.usuarioClave, motivo);
           this.aplicarAccion(id, res);
         },
         error: (err) => {
@@ -1027,9 +1196,15 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     return this.translate.instant(clave);
   }
 
-  /** Quien coordina: cifras y carga por asesor. Un fallo conserva las cifras anteriores. */
-  private cargarResumen(): void {
-    if (!this.atencion || !this.coordina) return;
+  /**
+   * Quien coordina: cifras y carga por asesor. Un fallo conserva las cifras anteriores. Solo se pide con la
+   * pestaña Equipo abierta (es lo único que lo usa) y el refresco de la lista lo pide como mucho cada 30 s;
+   * `forzar` (entrar a Equipo, guardar, reintentar) no espera.
+   */
+  private cargarResumen(forzar = false): void {
+    if (!this.atencion || !this.coordina || this.vista !== "equipo") return;
+    if (!forzar && Date.now() - this.ultimoResumen < RESUMEN_MIN_MS) return;
+    this.ultimoResumen = Date.now();
     if (!this.resumen) this.resumenCargando = true;
     this.atencionSrv
       .resumen()
@@ -1048,7 +1223,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   }
 
   reintentarResumen(): void {
-    this.cargarResumen();
+    this.cargarResumen(true);
   }
 
   verMas(): void {
@@ -1147,6 +1322,11 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         this.carga = this.conEventosEnCarga(lista);
         this.cargando = false;
         this.actualizarSeleccion();
+        this.abrirPendiente();
+        if (this.busquedaInicial) {
+          this.alBuscar(this.busquedaInicial);
+          this.busquedaInicial = "";
+        }
         // Llegaron eventos mientras esta carga iba en camino: otra confirmación, en su turno.
         this.seguirConfirmacionPendiente();
       });
