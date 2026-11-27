@@ -152,8 +152,16 @@
         <p class="bj-elige__texto">{{ 'notificaciones.bandeja.chooseText' | translate }}</p>
       </div>
 
-      <!-- Barra del chat abierto (solo con atención multiagente y un chat con hilo propio): cerrar, etiquetas y notas -->
-      <div class="bj-barra" *ngIf="seleccion && puedeVerNotas">
+      <!-- Barra del chat abierto (con atención multiagente): otros chats del cliente y, con hilo propio, cerrar, etiquetas y notas -->
+      <div class="bj-barra" *ngIf="seleccion && atencion" [class.bj-barra--oculta]="!barraVisible">
+        <app-bandeja-relacionados
+          [canal]="relCanal"
+          [hash]="relHash"
+          [lineId]="relLineId"
+          (visibleChange)="alCambiarRelacionadosVisible($event)"
+          (elegir)="abrirRelacionado($event)"
+        ></app-bandeja-relacionados>
+        <ng-container *ngIf="puedeVerNotas">
         <app-chat-cierre
           [threadId]="threadIdAbierto"
           [cerrado]="cerradoAbierto"
@@ -188,6 +196,7 @@
           <span class="bj-barra__texto">{{ 'notificaciones.bandeja.notas.boton' | translate }}</span>
           <span class="bj-barra__cuenta" *ngIf="notas.length">{{ notas.length }}</span>
         </button>
+        </ng-container>
       </div>
       <div class="bj-notas" *ngIf="seleccion && puedeVerNotas && notasAbiertas">
         <p class="bj-notas__estado" *ngIf="notasCargando">{{ 'notificaciones.whatsapp.list.loading' | translate }}</p>

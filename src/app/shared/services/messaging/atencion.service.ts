@@ -18,6 +18,8 @@ import {
   InformeAtencion,
   MiembroAtencion,
   NotaChat,
+  CanalRelacionados,
+  RelacionadosRespuesta,
   ResumenAtencion,
   TipoAyudaOpttia,
   Transferencia,
@@ -67,6 +69,22 @@ export class AtencionService extends BaseService {
     });
     const qs = partes.length ? `?${partes.join('&')}` : '';
     return this.getSinLoader<InformeAtencion>(`${this.base}/informe${qs}`);
+  }
+
+  /**
+   * Otros chats del mismo cliente (solo lectura). Un 404 es igual si el chat no existe o la persona no puede
+   * verlo; 429 es el freno de frecuencia. `lineId` solo en WhatsApp con número propio.
+   */
+  relacionados(canal: CanalRelacionados, hash: string, lineId?: string | null): Observable<RelacionadosRespuesta> {
+    let qs = `canal=${encodeURIComponent(canal)}&hash=${encodeURIComponent(hash)}`;
+    if (canal === 'whatsapp' && lineId) qs += `&lineId=${encodeURIComponent(lineId)}`;
+    return this.getSinLoader<RelacionadosRespuesta>(`${this.base}/relacionados?${qs}`).pipe(
+      map((res) => ({
+        ancla: res?.ancla ?? null,
+        motivo: res?.motivo,
+        items: Array.isArray(res?.items) ? res.items : [],
+      })),
+    );
   }
 
   /** GET: quien coordina. */

@@ -1,0 +1,187 @@
+// Otros chats de este cliente (CONV). Plano, acento #5F3FE0, tokens --ds-* (claro y oscuro), sin gradientes.
+// Ningún nombre de clase lleva «p-» (trampa de CSS global) y cada span trae color y tamaño propios.
+@import '../../../../../shared/styles/config-pagina';
+
+:host { display: contents; }
+
+.rel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  i { color: inherit; font-size: 14px !important; }
+  &:hover { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &.is-activo { background: $cfg-accent-soft; border-color: #d9cffb; color: $cfg-accent-ink; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &__texto { color: inherit; font-size: 13px; font-weight: 700; }
+
+  &__cuenta {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: $cfg-accent;
+    color: var(--ds-on-accent);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 20px;
+    text-align: center;
+  }
+}
+
+.rel-bloque {
+  flex: 1 0 100%;
+  min-width: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 16px;
+  background: $cfg-tint;
+  text-align: left;
+}
+
+.rel-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0 0 8px;
+
+  &__texto {
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  &__cliente {
+    color: $cfg-body;
+    font-size: 13px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+}
+
+.rel-ayuda {
+  margin: 0 0 8px;
+  color: $cfg-muted;
+  font-size: 12.5px;
+  letter-spacing: normal;
+}
+
+.rel-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: $cfg-err-soft;
+
+  &__texto { color: $cfg-err; font-size: 12.5px; font-weight: 700; }
+}
+
+.rel-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rel-item { min-width: 0; }
+
+.rel-fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid $cfg-line;
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-body;
+  font-family: inherit;
+  text-align: left;
+  letter-spacing: normal;
+  cursor: pointer;
+
+  &:hover { background: $cfg-accent-soft; border-color: #d9cffb; }
+  &:focus-visible { outline: 3px solid #7c5cff !important; outline-offset: 2px; }
+
+  &__icono {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $cfg-accent-soft;
+    color: $cfg-accent-ink;
+
+    i { color: inherit; font-size: 14px !important; }
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__cabeza {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__nombre {
+    min-width: 0;
+    color: $cfg-body;
+    font-size: 13px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  &__hora { flex-shrink: 0; color: $cfg-muted; font-size: 11.5px; }
+
+  &__linea { color: $cfg-muted; font-size: 12px; overflow-wrap: anywhere; }
+
+  &__marcas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+
+  &__dueno { color: $cfg-muted; font-size: 12px; overflow-wrap: anywhere; }
+
+  &__porque { color: $cfg-accent-ink; font-size: 11.5px; font-weight: 700; }
+}
+
+.rel-marca {
+  padding: 0 8px;
+  border-radius: 20px;
+  background: $cfg-ok-soft;
+  color: $cfg-ok;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+
+  &--cerrado { background: $cfg-accent-soft; color: $cfg-muted; }
+  &--aviso { background: $cfg-err-soft; color: $cfg-err; }
+}

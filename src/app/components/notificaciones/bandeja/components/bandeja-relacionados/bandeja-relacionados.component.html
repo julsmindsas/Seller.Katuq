@@ -1,0 +1,57 @@
+<button
+  type="button"
+  class="rel-btn"
+  *ngIf="visible"
+  [class.is-activo]="abierto"
+  [attr.aria-expanded]="abierto"
+  aria-controls="rel-bloque"
+  (click)="alternar()"
+>
+  <i class="fa fa-users" aria-hidden="true"></i>
+  <span class="rel-btn__texto">{{ 'notificaciones.bandeja.relacionados.boton' | translate }}</span>
+  <span class="rel-btn__cuenta" *ngIf="filas.length">{{ filas.length }}</span>
+</button>
+
+<div
+  class="rel-bloque"
+  id="rel-bloque"
+  role="region"
+  [attr.aria-label]="'notificaciones.bandeja.relacionados.titulo' | translate"
+  *ngIf="visible && abierto"
+  (keydown.escape)="cerrar()"
+>
+  <p class="rel-titulo">
+    <span class="rel-titulo__texto">{{ 'notificaciones.bandeja.relacionados.titulo' | translate }}</span>
+    <span class="rel-titulo__cliente" *ngIf="clienteNombre">{{ clienteNombre }}</span>
+  </p>
+
+  <div class="rel-error" role="alert" *ngIf="hayError">
+    <span class="rel-error__texto">{{ textoError | translate }}</span>
+    <button type="button" class="rel-btn" (click)="reintentar()">
+      <span class="rel-btn__texto">{{ 'notificaciones.whatsapp.list.retry' | translate }}</span>
+    </button>
+  </div>
+
+  <p class="rel-ayuda" *ngIf="!hayError && ayuda">{{ ayuda }}</p>
+
+  <ul class="rel-lista" *ngIf="!hayError && filas.length">
+    <li class="rel-item" *ngFor="let f of filas; trackBy: trackFila">
+      <button type="button" class="rel-fila" (click)="elegirFila(f)">
+        <span class="rel-fila__icono" aria-hidden="true"><i [class]="f.icono"></i></span>
+        <span class="rel-fila__cuerpo">
+          <span class="rel-fila__cabeza">
+            <span class="rel-fila__nombre">{{ f.nombre }}</span>
+            <span class="rel-fila__hora">{{ f.hora }}</span>
+          </span>
+          <span class="rel-fila__linea">{{ f.canal }}<ng-container *ngIf="f.linea"> · {{ f.linea }}</ng-container></span>
+          <span class="rel-fila__marcas">
+            <span class="rel-marca" [class.rel-marca--cerrado]="f.cerrado">{{ (f.cerrado ? 'notificaciones.bandeja.relacionados.cerrado' : 'notificaciones.bandeja.relacionados.abierto') | translate }}</span>
+            <span class="rel-marca rel-marca--aviso" *ngIf="f.sinResponder">{{ 'notificaciones.bandeja.relacionados.sinResponder' | translate }}</span>
+            <span class="rel-fila__dueno" *ngIf="f.dueno">{{ 'notificaciones.bandeja.relacionados.atiende' | translate: { nombre: f.dueno } }}</span>
+          </span>
+          <span class="rel-fila__porque">{{ f.porque }}</span>
+        </span>
+      </button>
+    </li>
+  </ul>
+</div>

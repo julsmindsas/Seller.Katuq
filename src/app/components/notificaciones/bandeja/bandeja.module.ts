@@ -15,6 +15,7 @@ import { BandejaColaEditorComponent } from "./components/bandeja-cola-editor/ban
 import { BandejaMotivosComponent } from "./components/bandeja-motivos/bandeja-motivos.component";
 import { BandejaEtiquetasComponent } from "./components/bandeja-etiquetas/bandeja-etiquetas.component";
 import { BandejaInformesComponent } from "./components/bandeja-informes/bandeja-informes.component";
+import { BandejaRelacionadosComponent } from "./components/bandeja-relacionados/bandeja-relacionados.component";
 import { BandejaRapidosComponent } from "./components/bandeja-rapidos/bandeja-rapidos.component";
 
 /**
@@ -34,6 +35,7 @@ import { BandejaRapidosComponent } from "./components/bandeja-rapidos/bandeja-ra
     BandejaEtiquetasComponent,
     BandejaRapidosComponent,
     BandejaInformesComponent,
+    BandejaRelacionadosComponent,
   ],
   imports: [
     CommonModule,

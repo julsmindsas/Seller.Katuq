@@ -7,6 +7,7 @@ import { takeUntil } from "rxjs/operators";
 import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
 import { LoaderService } from "../../../../../shared/services/loader.service";
 import { AtencionService } from "../../../../../shared/services/messaging/atencion.service";
+import { ItemRelacionado } from "../../../../../shared/services/messaging/messaging.models";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
   AccionHilo,
@@ -42,7 +43,7 @@ import {
   CargaBandeja,
   ConversacionResumen,
 } from "../../bandeja.models";
-import { mezclar } from "../../bandeja.util";
+import { claveRelacionado, desdeRelacionado, mezclar } from "../../bandeja.util";
 import { normalizarCola } from "../../bandeja.colas";
 import { construirCsv } from "../bandeja-informes/bandeja-informes.util";
 
@@ -220,6 +221,41 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   /** Id del hilo de atención del chat abierto; sin él (número compartido) no hay notas ni dueño. */
   get threadIdAbierto(): string | null {
     return this.seleccion?.threadId || null;
+  }
+
+  // ─── Otros chats de este cliente: viven en la barra también en el número compartido (sin threadId) ───
+
+  /** El botón ya sabe si tiene algo que mostrar: sin eso, y sin hilo propio, la barra no se pinta. */
+  relacionadosVisible = false;
+
+  get relCanal(): CanalBandeja | null {
+    return this.atencion ? this.seleccion?.canal ?? null : null;
+  }
+
+  get relHash(): string | null {
+    const s = this.seleccion;
+    if (!this.atencion || !s) return null;
+    return s.canal === "whatsapp" ? s.origen.phoneHash || null : s.origen.identidadHash || null;
+  }
+
+  /** Solo WhatsApp con número propio; el número compartido va sin línea. */
+  get relLineId(): string | null {
+    const s = this.seleccion;
+    return s && s.canal === "whatsapp" ? s.lineId || null : null;
+  }
+
+  get barraVisible(): boolean {
+    return !!this.seleccion && this.atencion && (this.puedeVerNotas || this.relacionadosVisible);
+  }
+
+  alCambiarRelacionadosVisible(visible: boolean): void {
+    this.relacionadosVisible = visible;
+  }
+
+  /** Abre un chat relacionado por el mismo camino de la lista; si no está cargado, con una fila mínima. */
+  abrirRelacionado(item: ItemRelacionado): void {
+    const clave = claveRelacionado(item);
+    this.abrir(this.conversaciones.find((c) => c.clave === clave) ?? desdeRelacionado(item));
   }
 
   get puedeVerNotas(): boolean {

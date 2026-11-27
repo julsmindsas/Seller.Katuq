@@ -1,5 +1,6 @@
 import { WhatsappThread, claveChat } from "../whatsapp-inbox/models/whatsapp-thread.model";
-import { MetaHilo } from "../meta-inbox/models/meta-thread.model";
+import { MetaCanal, MetaHilo } from "../meta-inbox/models/meta-thread.model";
+import { ItemRelacionado } from "../../../shared/services/messaging/messaging.models";
 import {
   ASESOR_SIN_ASIGNAR,
   ConversacionRed,
@@ -49,6 +50,58 @@ export function desdeRed(hilo: MetaHilo): ConversacionRed {
     etiquetas: hilo.etiquetas || undefined,
     origen: hilo,
   };
+}
+
+/** Clave de fila de un chat relacionado: la misma que arman desdeWhatsapp y desdeRed. */
+export function claveRelacionado(item: Pick<ItemRelacionado, "canal" | "hash" | "lineId">): string {
+  return item.canal === "whatsapp"
+    ? `whatsapp|${claveChat(item.hash, item.lineId)}`
+    : `${item.canal}|${item.hash}`;
+}
+
+/**
+ * Fila mínima válida para abrir un chat relacionado que no está en la lista cargada (otra página de WhatsApp,
+ * filtro «Cerrados», fuera de los 90 días). Sin texto de mensajes: el detalle trae la conversación por su cuenta.
+ */
+export function desdeRelacionado(item: ItemRelacionado): ConversacionResumen {
+  const direccion = item.ultimaDireccion === "inbound" ? "inbound" : "outbound";
+  if (item.canal === "whatsapp") {
+    return desdeWhatsapp({
+      phoneHash: item.hash,
+      phoneMasked: item.phoneMasked || "",
+      contactName: item.nombre || "",
+      lastMessageAt: item.ultimoEn,
+      lastMessageSnippet: "",
+      unreadCount: 0,
+      lastDirection: direccion,
+      messageCount: 0,
+      threadId: item.threadId || null,
+      line: item.lineId
+        ? { id: item.lineId, displayName: item.linea?.nombre || "", displayPhone: item.linea?.telefono || "" }
+        : null,
+      owner: item.owner || null,
+      colaId: item.colaId || null,
+      cerrado: item.cerrado === true,
+      motivoCierre: item.motivoCierre || null,
+    });
+  }
+  const canal = item.canal as MetaCanal;
+  return desdeRed({
+    identidadHash: item.hash,
+    canal,
+    contactoNombre: item.nombre || null,
+    ultimoMensajeEn: item.ultimoEn,
+    ultimoMensajeResumen: "",
+    ultimaDireccion: direccion,
+    totalMensajes: 0,
+    // El detalle pide la ventana real al abrir; mientras llega el campo de respuesta queda cerrado.
+    ventana: { abierta: false, minutosRestantes: 0, expiraEn: null },
+    threadId: item.threadId || null,
+    owner: item.owner || null,
+    colaId: item.colaId || null,
+    cerrado: item.cerrado === true,
+    motivoCierre: item.motivoCierre || null,
+  });
 }
 
 function epoch(iso: string): number {

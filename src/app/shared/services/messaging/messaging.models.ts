@@ -404,3 +404,44 @@ export interface TextoSugerido {
   texto: string;
   n: number;
 }
+
+/* ---------- Otros chats de este cliente (CONV, solo lectura) ---------- */
+
+export type CanalRelacionados = 'whatsapp' | 'instagram' | 'facebook' | 'tiktok';
+
+/** Por qué el servidor une el chat con el abierto. `mismo_telefono` y `misma_ficha` son deducidos al leer; solo `vinculo_manual` lo hizo una persona. */
+export type PorqueRelacionado = 'mismo_telefono' | 'misma_ficha' | 'vinculo_manual';
+
+export interface AnclaRelacionados {
+  tipo: 'telefono' | 'cliente';
+  /** Hay más de una ficha con ese teléfono: solo se unen los chats del mismo teléfono. */
+  ambiguo?: boolean;
+  clienteNombre?: string | null;
+}
+
+export interface ItemRelacionado {
+  canal: CanalRelacionados;
+  /** WhatsApp con número propio: id de la línea; ausente = número compartido. Redes: `red_<canal>`. */
+  lineId?: string;
+  linea?: { id: string; nombre: string; telefono: string };
+  /** WhatsApp: phoneHash. Redes: identidadHash. */
+  hash: string;
+  phoneMasked?: string;
+  nombre: string;
+  ultimoEn: string;
+  ultimaDireccion: 'inbound' | 'outbound';
+  /** No existe en el número compartido. */
+  threadId?: string;
+  owner?: DuenoChat;
+  colaId?: string;
+  cerrado: boolean;
+  motivoCierre?: string;
+  porque: PorqueRelacionado;
+}
+
+export interface RelacionadosRespuesta {
+  /** null = sin ancla (ver `motivo`). */
+  ancla: AnclaRelacionados | null;
+  motivo?: 'sin_telefono' | 'sin_vinculo';
+  items: ItemRelacionado[];
+}

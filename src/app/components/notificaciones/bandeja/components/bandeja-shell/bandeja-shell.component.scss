@@ -213,6 +213,9 @@
   padding: 8px 12px;
   border-bottom: 1px solid $cfg-line;
 
+  // Chat sin hilo propio y sin otros chats que mostrar: la barra no ocupa lugar.
+  &--oculta { display: none; }
+
   &__btn {
     display: inline-flex;
     align-items: center;
