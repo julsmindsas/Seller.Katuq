@@ -51,7 +51,7 @@ import { construirCsv } from "../bandeja-informes/bandeja-informes.util";
 export type VistaBandeja = "chats" | "equipo" | "informes";
 
 /** Cada cuánto se vuelve a leer la lista: el mismo intervalo de la lista del buzón de WhatsApp. */
-const REFRESCO_MS = 10000;
+const REFRESCO_MS = 5000;
 
 /**
  * Bandeja única («Todos los mensajes»): una sola lista con los chats de WhatsApp, Instagram, Facebook y
@@ -187,6 +187,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loader.suppressGlobalLoader();
+    this.loader.ocultarBarraSuperior();
     this.cargarAtencion();
     this.elegirCanalesYCargar();
     this.refrescoSub = interval(REFRESCO_MS).subscribe(() => {
@@ -198,6 +199,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.loader.releaseGlobalLoader();
+    this.loader.mostrarBarraSuperior();
     this.refrescoSub?.unsubscribe();
     this.cargaSub?.unsubscribe();
     this.destroy$.next();

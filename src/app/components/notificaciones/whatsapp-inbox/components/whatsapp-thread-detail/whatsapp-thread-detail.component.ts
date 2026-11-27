@@ -527,7 +527,7 @@ export class WhatsappThreadDetailComponent
         const prevCount = this.messages.length;
         this.messages = items;
         this.feedItems = this.buildFeedItems(items);
-        this.needsScroll = true;
+        if (items.length > prevCount) this.needsScroll = true;
         // Si llegaron ENTRANTES nuevos con el chat abierto, marcarlos vistos
         // de una — antes el badge de la lista crecía aunque el operador
         // estuviera leyendo el hilo ("abro el chat y no se quitan").
@@ -543,20 +543,20 @@ export class WhatsappThreadDetailComponent
   }
 
   /**
-   * Polling cada 8s. Solo refresca si no estamos enviando y el composer
-   * está vacío — evita interrumpir al operador mientras redacta.
+   * Polling cada 4s. No refresca en mitad de un envío. Con texto a medias sí
+   * refresca (el asesor debe ver lo que el cliente sigue escribiendo); la
+   * pantalla solo baja al final cuando llegan mensajes nuevos.
    */
   private restartAutoRefresh(): void {
     this.stopAutoRefresh();
     if (!this.phoneHash) {
       return;
     }
-    this.refreshSub = interval(8000).subscribe(() => {
+    this.refreshSub = interval(4000).subscribe(() => {
       // [D-117] Pestaña oculta → no pollear (cada tick cuesta lecturas
       // Firestore del hilo completo); al volver, el siguiente tick refresca.
       if (document.hidden) return;
       if (this.sending) return;
-      if ((this.composerText || "").trim().length > 0) return;
       this.refreshMessages();
     });
   }

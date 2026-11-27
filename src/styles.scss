@@ -1664,3 +1664,9 @@ body.kq-editor-lleno {
     box-shadow: none !important;
   }
 }
+
+// La bandeja de mensajes se refresca sola cada pocos segundos: sin esto la barra de progreso de
+// arriba parpadea en cada refresco (LoaderService.ocultarBarraSuperior).
+body.kq-sin-barra-carga ngx-loading-bar {
+  display: none !important;
+}

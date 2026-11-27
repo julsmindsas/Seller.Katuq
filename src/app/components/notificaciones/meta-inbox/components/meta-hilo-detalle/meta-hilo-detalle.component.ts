@@ -40,7 +40,7 @@ const MAX_IMAGEN_MB = 3;
  * para poder alojarla también en la bandeja única.
  *
  * Quien la use le pasa el canal, el hilo y si el canal está conectado. Al cambiar de hilo recarga sola
- * los mensajes y los refresca cada 8 segundos (con los mismos frenos de siempre).
+ * los mensajes y los refresca cada 4 segundos (con los mismos frenos de siempre).
  */
 @Component({
   selector: 'app-meta-hilo-detalle',
@@ -170,7 +170,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
    * de un envío ni si el operador tiene texto a medias.
    */
   private arrancarRefrescoAutomatico(): void {
-    interval(8000)
+    interval(4000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         if (this.ocupado) return;
