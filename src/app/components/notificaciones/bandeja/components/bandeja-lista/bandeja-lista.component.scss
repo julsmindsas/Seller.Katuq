@@ -76,6 +76,10 @@ $canal-tiktok-fondo: #eef0f3;
     &::placeholder { color: $cfg-muted; }
     &:focus { background: var(--ds-surface); border-color: $cfg-accent-2; }
   }
+
+  // «Buscando en todos tus chats…» mientras responde la búsqueda del servidor.
+  &__estado { margin: 6px 2px 0; }
+  &__estado-texto { color: $cfg-muted; font-size: 11.5px; font-weight: 600; letter-spacing: normal; }
 }
 
 // ── Filtros ──
@@ -83,6 +87,30 @@ $canal-tiktok-fondo: #eef0f3;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+
+  // Canales en una sola fila: se desliza con el dedo en vez de ocupar dos o tres renglones.
+  &--fila {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    // Deja ver el anillo de foco del primer y último chip.
+    padding: 3px;
+    margin: -3px;
+
+    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar-thumb { background: $cfg-line; border-radius: 4px; }
+
+    .bj-filtro { flex: 0 0 auto; white-space: nowrap; }
+  }
+}
+
+// Asesor, etiqueta, cola y número: dos columnas dentro del bloque «Filtros».
+.bj-selectores {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+
+  @media (max-width: 359px) { grid-template-columns: minmax(0, 1fr); }
 }
 
 .bj-filtro {
@@ -107,6 +135,12 @@ $canal-tiktok-fondo: #eef0f3;
     border-color: #d9cffb;
     color: $cfg-accent-ink;
   }
+
+  &__texto { color: inherit; font-size: 12.5px; font-weight: 700; }
+
+  &__flecha { font-size: 13px; color: inherit; }
+
+  i { color: inherit; }
 
   &__cuenta {
     min-width: 18px;
@@ -136,6 +170,8 @@ $canal-tiktok-fondo: #eef0f3;
   }
 
   &__campo {
+    width: 100%;
+    min-width: 0;
     min-height: 38px;
     padding: 0 10px;
     border: 1px solid $cfg-chip-border;
@@ -228,6 +264,7 @@ $canal-tiktok-fondo: #eef0f3;
     box-shadow: inset 0 0 0 1px #d9cffb;
   }
 
+  // Un tono suave por cliente (fondo suave y tinta fuerte, plano): dos chats sin nombre no se ven iguales.
   &__avatar {
     flex: 0 0 auto;
     display: grid;
@@ -235,10 +272,18 @@ $canal-tiktok-fondo: #eef0f3;
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: $cfg-accent;
-    color: var(--ds-on-accent);
+    background: $cfg-accent-soft;
+    color: $cfg-accent-ink;
     font-size: 13px;
     font-weight: 800;
+
+    i { font-size: 15px; color: inherit; }
+
+    &--t1 { background: $cfg-info-soft; color: $cfg-info; }
+    &--t2 { background: $cfg-ok-soft; color: $cfg-ok; }
+    &--t3 { background: $cfg-warn-soft; color: $cfg-warn; }
+    &--t4 { background: $canal-instagram-fondo; color: $canal-instagram; }
+    &--t5 { background: $cfg-tile; color: $cfg-ink; }
   }
 
   &__cuerpo {
@@ -280,6 +325,18 @@ $canal-tiktok-fondo: #eef0f3;
     align-items: center;
     gap: 6px;
     min-width: 0;
+  }
+
+  // Número enmascarado del cliente con nombre: distingue a dos clientes con el mismo nombre.
+  &__numero {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $cfg-muted;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: normal;
   }
 
   &__abajo {

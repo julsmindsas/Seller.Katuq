@@ -139,6 +139,22 @@ export function normalizarTexto(texto: string): string {
     .trim();
 }
 
+/** Número enmascarado del chat (solo WhatsApp; las redes no tienen número). Vacío si no hay. */
+export function telefonoDe(c: ConversacionResumen): string {
+  return c.canal === "whatsapp" ? (c.origen?.phoneMasked || "").trim() : "";
+}
+
+/**
+ * La búsqueda local mira el nombre, el número enmascarado y el último mensaje. Con solo cifras («4521») compara
+ * también las cifras del número, para que «+57 300***4521» aparezca aunque se escriba sin signos.
+ */
+function coincideBusqueda(c: ConversacionResumen, busqueda: string): boolean {
+  const telefono = telefonoDe(c);
+  if (normalizarTexto([c.nombre, telefono, c.resumen].join(" ")).includes(busqueda)) return true;
+  const cifras = busqueda.replace(/\s+/g, "");
+  return /^\d{3,}$/.test(cifras) && telefono.replace(/\D/g, "").includes(cifras);
+}
+
 /** Colas con las líneas que cubren: lo mínimo para ubicar un chat que aún no trae `colaId`. */
 export interface ColaConLineas {
   id: string;
@@ -183,7 +199,7 @@ export function filtrar(
     // D-728: abiertos y cerrados no se mezclan; sin la bandeja nadie trae `cerrado` y todo es «abierto».
     if (!!c.cerrado !== (filtro.estado === "cerrados")) return false;
     if (filtro.etiqueta && !(c.etiquetas || []).includes(filtro.etiqueta)) return false;
-    if (busqueda && !normalizarTexto(c.nombre).includes(busqueda)) return false;
+    if (busqueda && !coincideBusqueda(c, busqueda)) return false;
     return true;
   });
 }

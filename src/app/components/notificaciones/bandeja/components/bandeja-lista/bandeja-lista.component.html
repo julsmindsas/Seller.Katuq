@@ -5,16 +5,19 @@
       <input
         type="search"
         class="bj-buscar__campo"
-        [placeholder]="'notificaciones.bandeja.searchPlaceholder' | translate"
-        [attr.aria-label]="'notificaciones.bandeja.searchPlaceholder' | translate"
+        [placeholder]="'notificaciones.bandeja2.buscarPlaceholder' | translate"
+        [attr.aria-label]="'notificaciones.bandeja2.buscarPlaceholder' | translate"
         [ngModel]="filtro.busqueda"
         (ngModelChange)="buscar($event)"
       />
     </div>
+    <p class="bj-buscar__estado" role="status" *ngIf="buscandoServidor && filtro.busqueda">
+      <span class="bj-buscar__estado-texto">{{ 'notificaciones.bandeja2.buscandoServidor' | translate }}</span>
+    </p>
 
     <!-- Canal: solo los que el usuario puede ver y están conectados -->
     <div
-      class="bj-filtros"
+      class="bj-filtros bj-filtros--fila"
       *ngIf="mostrarCanales"
       role="group"
       [attr.aria-label]="'notificaciones.bandeja.channelsAria' | translate"
@@ -72,7 +75,11 @@
         (click)="alternarSinResponder()"
       >
         {{ 'notificaciones.whatsapp.list.unanswered' | translate }}
-        <span class="bj-filtro__cuenta" *ngIf="sinResponderCount > 0">{{ sinResponderCount }}</span>
+        <span
+          class="bj-filtro__cuenta"
+          *ngIf="sinResponderTexto"
+          [attr.title]="puedeHaberMas ? ('notificaciones.bandeja2.cuentaCargados' | translate) : null"
+        >{{ sinResponderTexto }}</span>
       </button>
       <button
         type="button"
@@ -84,8 +91,28 @@
       >
         {{ 'notificaciones.bandeja.mine' | translate }}
       </button>
+      <!-- Asesor, etiqueta, cola y número: juntos en un bloque que se abre y se cierra -->
+      <button
+        type="button"
+        class="bj-filtro bj-filtro--mas"
+        *ngIf="mostrarBotonFiltros"
+        [class.is-activo]="filtrosAbiertos || filtrosActivos > 0"
+        [attr.aria-expanded]="filtrosAbiertos"
+        aria-controls="bj-selectores"
+        (click)="alternarFiltros()"
+      >
+        <i class="fa fa-sliders" aria-hidden="true"></i>
+        <span class="bj-filtro__texto">{{ 'notificaciones.bandeja2.filtros' | translate }}</span>
+        <span
+          class="bj-filtro__cuenta"
+          *ngIf="filtrosActivos > 0"
+          [attr.aria-label]="'notificaciones.bandeja2.filtrosActivosAria' | translate: { n: filtrosActivos }"
+        >{{ filtrosActivos }}</span>
+        <i class="fa bj-filtro__flecha" [class.fa-angle-down]="!filtrosAbiertos" [class.fa-angle-up]="filtrosAbiertos" aria-hidden="true"></i>
+      </button>
     </div>
 
+    <div class="bj-selectores" id="bj-selectores" *ngIf="mostrarBotonFiltros && filtrosAbiertos">
     <label class="bj-numero" *ngIf="mostrarAsesor">
       <span class="bj-numero__etiqueta">{{ 'notificaciones.bandeja.asesor.label' | translate }}</span>
       <select
@@ -136,10 +163,11 @@
       >
         <option value="">{{ 'notificaciones.whatsapp.list.allLines' | translate }}</option>
         <option *ngFor="let l of opcionesLinea" [value]="l.id">
-          {{ l.displayName || l.displayPhone }}{{ l.displayName ? " · " + l.displayPhone : "" }}
+          {{ l.displayName || l.displayPhone }}{{ l.displayName && l.displayPhone ? " · " + l.displayPhone : "" }}
         </option>
       </select>
     </label>
+    </div>
   </header>
 
   <!-- Un canal no cargó: los demás se muestran igual -->
@@ -161,11 +189,20 @@
     <div class="bj-vacio" *ngIf="!cargando && !errorCarga && filas.length === 0">
       <span class="bj-vacio__icono"><i class="pi pi-inbox" aria-hidden="true"></i></span>
       <p class="bj-vacio__titulo">
-        {{ (filtro.estado === 'cerrados' && !cerradosCount ? 'notificaciones.bandeja.estadoChat.sinCerradosTitulo' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterTitle' : 'notificaciones.bandeja.emptyTitle') | translate }}
+        {{ (filtro.estado === 'cerrados' && !cerradosCount && !puedeHaberMas ? 'notificaciones.bandeja.estadoChat.sinCerradosTitulo' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterTitle' : 'notificaciones.bandeja.emptyTitle') | translate }}
       </p>
       <p class="bj-vacio__texto">
-        {{ (filtro.estado === 'cerrados' && !cerradosCount ? 'notificaciones.bandeja.estadoChat.sinCerradosTexto' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterText' : 'notificaciones.bandeja.emptyText') | translate }}
+        {{ (puedeHaberMas && conversaciones.length ? 'notificaciones.bandeja2.puedeHaberMas' : filtro.estado === 'cerrados' && !cerradosCount ? 'notificaciones.bandeja.estadoChat.sinCerradosTexto' : conversaciones.length ? 'notificaciones.bandeja.emptyFilterText' : 'notificaciones.bandeja.emptyText') | translate }}
       </p>
+      <button
+        type="button"
+        class="bj-btn"
+        *ngIf="puedeHaberMas && conversaciones.length"
+        [disabled]="cargandoMas"
+        (click)="cargarMas()"
+      >
+        {{ (cargandoMas ? 'notificaciones.bandeja.loadingMore' : 'notificaciones.bandeja2.cargarMas') | translate }}
+      </button>
     </div>
 
     <button
@@ -176,11 +213,14 @@
       [class.is-sin-leer]="(fila.conversacion.sinLeer || 0) > 0"
       (click)="alElegir(fila)"
     >
-      <span class="bj-fila__avatar" aria-hidden="true">{{ fila.iniciales }}</span>
+      <span class="bj-fila__avatar" [ngClass]="'bj-fila__avatar--t' + fila.tono" aria-hidden="true">
+        <ng-container *ngIf="fila.iniciales; else sinIniciales">{{ fila.iniciales }}</ng-container>
+        <ng-template #sinIniciales><i class="pi pi-user"></i></ng-template>
+      </span>
 
       <span class="bj-fila__cuerpo">
         <span class="bj-fila__arriba">
-          <span class="bj-fila__nombre">{{ fila.nombre }}</span>
+          <span class="bj-fila__nombre" [attr.title]="fila.nombre">{{ fila.nombre }}</span>
           <span class="bj-fila__hora">{{ fila.hora }}</span>
         </span>
 
@@ -194,6 +234,7 @@
             [linea]="fila.conversacion.linea"
             [compacta]="true"
           ></app-linea-chip>
+          <span class="bj-fila__numero" *ngIf="fila.numero">{{ fila.numero }}</span>
         </span>
 
         <span class="bj-fila__abajo">
@@ -217,24 +258,15 @@
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.cierre.cerrado' | translate: { motivo: fila.motivo } }}</span>
         </span>
 
-        <span class="bj-fila__dueno" *ngIf="fila.conversacion.dueno as dueno">
-          <i class="fa fa-user-o" aria-hidden="true"></i>
-          <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.handledBy' | translate: { nombre: dueno.nombre || dueno.email } }}</span>
-        </span>
-
-        <span class="bj-fila__dueno" *ngIf="fila.colaNombre">
-          <i class="fa fa-sitemap" aria-hidden="true"></i>
-          <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.colas.deCola' | translate: { nombre: fila.colaNombre } }}</span>
-        </span>
-
-        <span class="bj-fila__dueno" *ngIf="atencion && !fila.conversacion.dueno && fila.conversacion.threadId && !fila.conversacion.cerrado">
-          <i class="fa fa-user-o" aria-hidden="true"></i>
-          <span class="bj-fila__dueno-texto">{{ 'notificaciones.owner.unassigned' | translate }}</span>
+        <!-- Quién atiende (o «Sin asignar») y la cola, en una sola línea -->
+        <span class="bj-fila__dueno" *ngIf="fila.meta">
+          <i class="fa" [class.fa-user-o]="fila.metaPersona" [class.fa-sitemap]="!fila.metaPersona" aria-hidden="true"></i>
+          <span class="bj-fila__dueno-texto">{{ fila.meta }}</span>
         </span>
       </span>
     </button>
 
-    <div class="bj-mas" *ngIf="hayMas && !cargando && !errorCarga">
+    <div class="bj-mas" *ngIf="hayMas && !cargando && !errorCarga && filas.length > 0">
       <button type="button" class="bj-btn" [disabled]="cargandoMas" (click)="verMas.emit()">
         {{ (cargandoMas ? 'notificaciones.bandeja.loadingMore' : 'notificaciones.bandeja.showMore') | translate }}
       </button>
