@@ -32,6 +32,7 @@
 
 .inf-titulo { margin: 0; color: $cfg-ink; font-size: 15px !important; font-weight: 800; }
 .inf-cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.inf-cabeza__botones { display: flex; flex-wrap: wrap; gap: 8px; }
 .inf-nota { margin: 0; color: $cfg-muted; font-size: 12.5px; line-height: 1.45; }
 .inf-error { margin: 0; color: $cfg-err; font-size: 12.5px; font-weight: 700; }
 
@@ -161,6 +162,7 @@
   &__valor { color: $cfg-ink; font-size: 28px; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
   &__valor--alerta { color: $cfg-err; }
   &__nota { color: $cfg-muted; font-size: 11.5px; line-height: 1.4; }
+  &__nota--fuerte { color: $cfg-body; font-size: 12px; font-weight: 700; }
 }
 
 // ── Tablas ──
@@ -204,6 +206,44 @@
   &--num { text-align: right; font-weight: 700; white-space: nowrap; }
   &--nowrap { white-space: nowrap; }
   &--corto { max-width: 160px; }
+  &--pct { color: $cfg-muted; font-weight: 700; }
+}
+
+// ── Barras de motivos y etiquetas: CSS plano (sin librería ni gradientes) ──
+.inf-barra {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 20px;
+  background: $cfg-chip-bg;
+  overflow: hidden;
+
+  &__nombre { display: block; color: $cfg-ink; font-size: 13px; line-height: 1.35; }
+  &__relleno { display: block; height: 100%; border-radius: 20px; background: $cfg-accent-ink; }
+}
+
+// ── «Abrir chat» junto al contacto (solo si la bandeja lo conecta) ──
+.inf-contacto {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  &__texto { color: $cfg-ink; font-size: 13px; }
+}
+
+.inf-abrir {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 11px;
+  background: var(--ds-surface);
+  color: $cfg-accent-ink;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  &:hover { background: $cfg-tint; }
 }
 
 .inf-pill {

@@ -161,6 +161,10 @@ export interface CargaAsesor {
   estado: EstadoAsesor;
   chats: number;
   sinResponder: number;
+  /** false si solo aparece por ser dueño de un chat abierto (p. ej. ya no está en el equipo). Ausente = servidor anterior. */
+  enEquipo?: boolean;
+  /** Coordina: no se cuenta como asesor disponible. */
+  coordina?: boolean;
 }
 
 /** `GET /atencion/resumen` (solo quien coordina). */
@@ -171,6 +175,10 @@ export interface ResumenAtencion {
   ajustes: AjustesAtencion;
   /** Fase D (D-727): resumen por cola; ausente o vacío si el comercio no tiene colas. */
   porCola?: ResumenCola[];
+  /** Cifras que el servidor aún no manda: la pantalla las muestra solo si llegan. Segundos que lleva esperando el chat sin responder más antiguo. */
+  esperaMasLargaSeg?: number | null;
+  /** Chats sin responder que ya pasaron el objetivo de respuesta. */
+  pasaronObjetivo?: number;
 }
 
 /** Movimiento del historial del chat (`log`). */
@@ -350,6 +358,21 @@ export interface ResumenInforme {
   /** Mediana en segundos; null si ningún chat la tiene. */
   primeraRespuestaSeg: number | null;
   conPrimeraRespuesta: number;
+  // Cifras que el servidor aún no manda: la pantalla las muestra solo si llegan (nunca se inventan).
+  /** Clientes que escribieron por primera vez en el rango. */
+  clientesNuevos?: number;
+  /** Clientes que ya habían escrito antes y volvieron en el rango. */
+  clientesVuelven?: number;
+  /** Chats cerrados que el cliente volvió a abrir en el rango. */
+  reabiertos?: number;
+  /** Percentil 90 de la primera respuesta, en segundos. */
+  primeraRespuestaP90Seg?: number | null;
+  /** Objetivo de primera respuesta del comercio, en segundos. */
+  objetivoSeg?: number | null;
+  /** Porcentaje (0-100) de primeras respuestas dentro del objetivo. */
+  dentroObjetivoPct?: number | null;
+  /** Las mismas cifras del periodo anterior de igual largo, para la tendencia. */
+  anterior?: { creados?: number; cerrados?: number; primeraRespuestaSeg?: number | null };
   porCanal: CifraInforme[];
   porCola: CifraInforme[];
   porAsesor: CifraInforme[];
