@@ -120,6 +120,12 @@
     box-shadow: none;
     cursor: not-allowed;
   }
+
+  // Foco visible con teclado (el reset global quita el outline); el clic con mouse no lo pinta.
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
 }
 
 // Botón secundario (borde suave sobre blanco)
@@ -146,6 +152,12 @@
     opacity: 0.55;
     cursor: not-allowed;
   }
+
+  // Foco visible con teclado (el reset global quita el outline); el clic con mouse no lo pinta.
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
 }
 
 // Botón verde WhatsApp (enviar / responder)
@@ -169,6 +181,12 @@
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  // Foco visible con teclado (el reset global quita el outline); el clic con mouse no lo pinta.
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
   }
 }
 

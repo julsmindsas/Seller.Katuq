@@ -188,3 +188,12 @@
     color: var(--km-muted);
   }
 }
+
+// Foco visible con teclado en los filtros y las tarjetas (el reset global quita el outline); el clic no lo pinta.
+.wa-pedidos__filtro,
+.wa-pedidos__card {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}
