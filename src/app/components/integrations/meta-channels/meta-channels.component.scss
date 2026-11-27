@@ -118,7 +118,23 @@ $error-bg: #fdecec;
   }
   &__cuenta-nombre { font-size: 13px; font-weight: 700; }
 
-  &__acciones { display: flex; gap: 10px; }
+  &__acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* Quien no es administrador: por qué los botones están apagados. Texto con color y tamaño propios. */
+  &__soloadmin {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6b6786;
+    letter-spacing: normal;
+
+    i { margin-top: 2px; font-size: 12px; color: inherit; }
+  }
+
+  &__btn:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
 
   &__btn {
     border-radius: 11px;

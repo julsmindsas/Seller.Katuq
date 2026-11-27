@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 
 import { environment } from 'src/environments/environment';
 import { CompanyFeaturesService } from 'src/app/shared/services/company-features.service';
+import { esFamiliaAdministrador } from 'src/app/shared/utils/roles';
 import { MetaInboxService } from '../../notificaciones/meta-inbox/meta-inbox.service';
 import { CANAL_RETORNO_OAUTH, CLAVE_STATE_TIKTOK } from './meta-oauth-return.component';
 import {
@@ -38,6 +39,17 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   aviso: string | null = null;
   /** Rechazo del servidor al conectar una cuenta (p. ej. TikTok que no es de empresa), dentro de su tarjeta. */
   avisoTarjeta: { canal: MetaCanal; texto: string } | null = null;
+  /**
+   * Conectar y desconectar redes es de la familia Administrador (el servidor responde 403 a los demás). Quien no
+   * lo es ve los botones apagados y una explicación corta. Solo decide qué se muestra: el servidor sigue mandando.
+   */
+  readonly esAdministrador: boolean = (() => {
+    try {
+      return esFamiliaAdministrador(JSON.parse(localStorage.getItem('user') || '{}')?.rol);
+    } catch {
+      return false;
+    }
+  })();
 
   private destroy$ = new Subject<void>();
   private ventana: Window | null = null;
@@ -206,7 +218,7 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
    * retorno le envía el código a esta ventana por `postMessage`.
    */
   conectar(canal: MetaCanal): void {
-    if (this.ocupado) return;
+    if (this.ocupado || !this.esAdministrador) return;
     this.aviso = null;
     this.avisoTarjeta = null;
 
@@ -409,7 +421,7 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
   }
 
   async desconectar(canal: MetaCanal): Promise<void> {
-    if (this.ocupado) return;
+    if (this.ocupado || !this.esAdministrador) return;
 
     // TikTok pide confirmar: desconectar borra el acceso guardado y corta el envío y la recepción.
     if (canal === 'tiktok') {

@@ -54,7 +54,8 @@
           type="button"
           class="mc__btn mc__btn--primario"
           *ngIf="estadoDe(c.id)?.estado !== 'conectado'"
-          [disabled]="ocupado === c.id"
+          [disabled]="ocupado === c.id || !esAdministrador"
+          [attr.aria-describedby]="esAdministrador ? null : 'mc-solo-admin-' + c.id"
           (click)="conectar(c.id)"
         >
           {{ ocupado === c.id ? textoOcupado(c.id) : textoBoton(c.id) }}
@@ -64,12 +65,19 @@
           type="button"
           class="mc__btn mc__btn--ghost"
           *ngIf="estadoDe(c.id)?.estado === 'conectado'"
-          [disabled]="ocupado === c.id"
+          [disabled]="ocupado === c.id || !esAdministrador"
+          [attr.aria-describedby]="esAdministrador ? null : 'mc-solo-admin-' + c.id"
           (click)="desconectar(c.id)"
         >
           {{ ocupado === c.id ? ('integrations.metaChannels.desconectando' | translate) : ('integrations.messagingLines.desconectar' | translate) }}
         </button>
       </div>
+
+      <!-- Conectar y desconectar es de los administradores (el servidor lo exige): los demás saben a quién pedirlo -->
+      <p class="mc__soloadmin" *ngIf="!esAdministrador" [id]="'mc-solo-admin-' + c.id">
+        <i class="fa fa-lock" aria-hidden="true"></i>
+        {{ 'notificaciones.redes3.conexion.soloAdministrador' | translate: { canal: c.nombre } }}
+      </p>
     </article>
   </div>
 
