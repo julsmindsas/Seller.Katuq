@@ -175,8 +175,15 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   informeTruncado = false;
   /** Cada lectura invalida la anterior: una respuesta tardía no pisa a la nueva. */
   private informeSeq = 0;
-  /** «Abrir chat» del informe: solo el último pulsado abre su chat. */
+  /**
+   * «Abrir chat» del informe: solo el último pulsado abre su chat, y nunca después de que la persona abrió otro
+   * chat, volvió a la lista o cambió de pestaña (ver `cancelarAperturaInforme`).
+   */
   private abrirInformeSeq = 0;
+  /** Se espera al servidor para abrir el chat del informe (no está en la lista cargada). */
+  abriendoChatInforme = false;
+  /** El chat del informe no se pudo abrir: su id no tiene la forma esperada. */
+  avisoAbrirInforme = false;
 
   resumen: ResumenAtencion | null = null;
   resumenCargando = false;
@@ -652,6 +659,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   }
 
   abrir(conversacion: ConversacionResumen): void {
+    // Un «Abrir chat» del informe que aún espera respuesta ya no debe cambiar este chat por el suyo.
+    this.cancelarAperturaInforme();
     // Marcado visual de «leído», como el buzón de WhatsApp; el detalle lo confirma al servidor.
     if ((conversacion.sinLeer || 0) > 0) {
       conversacion.sinLeer = 0;
@@ -674,6 +683,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   /** Mobile: de vuelta a la lista. */
   volver(): void {
+    this.cancelarAperturaInforme();
     this.seleccion = null;
     this.fichaRedAbierta = false;
     this.reiniciarNotas();
@@ -717,6 +727,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   cambiarVista(vista: VistaBandeja): void {
     if ((vista === "equipo" || vista === "informes") && !this.coordina) return;
+    this.cancelarAperturaInforme();
     this.vista = vista;
     // El resumen solo se pide aquí y con esta pestaña abierta (antes, en cada refresco de la lista).
     if (vista === "equipo") this.cargarResumen(true);
@@ -754,19 +765,29 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     const threadId = (c?.threadId || "").trim();
     const canal = c?.canal as CanalBandeja;
     if (!threadId || !CANALES_BANDEJA.includes(canal)) return;
-    const seq = ++this.abrirInformeSeq;
-    this.vista = "chats";
     const cargada = this.conversaciones.find((x) => x.threadId === threadId);
     if (cargada) {
+      this.vista = "chats";
       this.abrir(cargada);
       return;
     }
+    // Sin la forma «<línea>__<hash>» no hay fila que armar: se avisa en el informe en lugar de no hacer nada.
+    if (!desdeHiloDelInforme(canal, threadId)) {
+      this.cancelarAperturaInforme();
+      this.avisoAbrirInforme = true;
+      return;
+    }
+    this.cancelarAperturaInforme();
+    const seq = this.abrirInformeSeq;
+    // Mientras llega el hilo se queda en el informe con «Abriendo el chat…»; Chats se muestra ya con el chat.
+    this.abriendoChatInforme = true;
     const lineaDe = (lineId: string) => {
       const l = this.lineas.find((x) => x.id === lineId);
       return l ? { nombre: l.displayName || "", telefono: l.displayPhone || "" } : undefined;
     };
     const abrirMinima = (h: HiloAtencion | null) => {
       if (seq !== this.abrirInformeSeq) return;
+      this.abriendoChatInforme = false;
       // Pudo llegar con la lista mientras tanto.
       const yaEsta = this.conversaciones.find((x) => x.threadId === threadId);
       const lineId = threadId.slice(0, Math.max(0, threadId.lastIndexOf("__")));
@@ -778,12 +799,24 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         etiquetas: h?.etiquetas,
         linea: canal === "whatsapp" ? lineaDe(lineId) : undefined,
       });
-      if (fila) this.abrir(fila);
+      if (!fila) {
+        this.avisoAbrirInforme = true;
+        return;
+      }
+      this.vista = "chats";
+      this.abrir(fila);
     };
     this.atencionSrv
       .hilo(threadId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (h) => abrirMinima(h), error: () => abrirMinima(null) });
+  }
+
+  /** Invalida un «Abrir chat» del informe que espera al servidor y limpia su aviso. */
+  private cancelarAperturaInforme(): void {
+    this.abrirInformeSeq++;
+    this.abriendoChatInforme = false;
+    this.avisoAbrirInforme = false;
   }
 
   /** Lee el informe (D-729). Un error 422 muestra el mensaje del servidor; lo anterior se conserva a la vista. */
@@ -1530,8 +1563,8 @@ function aplicarEventoEnVivo(
       cambios.ultimaDireccion = e.motivo === "entrante" ? "inbound" : "outbound";
       cambios.resumen = e.textoCorto;
       // «Sin responder» del hilo de atención (solo si la fila lo trae): un mensaje del cliente lo marca, como hace
-      // el servidor. Un saliente no se sabe si fue de una persona o de Opttia (que no lo apaga): lo dice la
-      // confirmación.
+      // el servidor. Un saliente lo apaga en el servidor, sea de una persona o de Opttia, pero si Opttia pasa el
+      // chat a un asesor el servidor lo vuelve a poner: por eso no se adivina aquí y lo dice la confirmación.
       // Un chat cerrado que el cliente reabre al escribir llega con estado «abierto».
       const quedaCerrado = e.estado === "cerrado" || (e.estado !== "abierto" && !!actual.cerrado);
       if (actual.sinResponderDesde !== undefined && !quedaCerrado) {

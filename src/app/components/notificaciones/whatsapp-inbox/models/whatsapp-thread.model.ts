@@ -100,9 +100,10 @@ export interface WhatsappThread {
   /** [D-728] Ids de etiqueta vigentes. */
   etiquetas?: string[];
   /**
-   * Desde cuándo el cliente espera respuesta de una persona (ISO); `null` = ya le respondió una persona. Lo
-   * marca el servidor también cuando Opttia pasa el chat a un asesor, aunque el último mensaje sea del bot.
-   * Ausente = el servidor no lo manda todavía: la pantalla mira quién escribió último.
+   * Desde cuándo el cliente espera respuesta de una persona (ISO); `null` = nadie espera (hubo un saliente, de
+   * una persona o de Opttia, o se cerró). El servidor lo vuelve a marcar cuando Opttia pasa el chat a un asesor,
+   * aunque el último mensaje sea del bot. Ausente = el servidor no lo manda o el hilo no tiene el campo: la
+   * pantalla mira quién escribió último. El servidor solo manda `null` si el hilo tiene el campo.
    */
   sinResponderDesde?: string | null;
 }

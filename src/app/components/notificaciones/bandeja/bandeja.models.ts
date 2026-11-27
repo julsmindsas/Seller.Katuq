@@ -41,9 +41,11 @@ interface ConversacionBase {
   /** Fase E (D-728): ids de etiqueta vigentes del catálogo. */
   etiquetas?: string[];
   /**
-   * Desde cuándo el cliente espera a una persona (ISO), según el hilo de atención; `null` = una persona ya
-   * respondió. `undefined` = la fila no lo trae (servidor sin el dato o número compartido): se usa la dirección
-   * del último mensaje. Ver `esSinResponder`.
+   * Desde cuándo el cliente espera a una persona (ISO), según el hilo de atención; `null` = nadie espera (hubo un
+   * saliente, de una persona o de Opttia, o el chat se cerró; tras un traspaso de Opttia el servidor lo vuelve a
+   * poner). `undefined` = la fila no lo trae (servidor sin el dato, hilo sin el campo o número compartido): se usa
+   * la dirección del último mensaje. El servidor solo debe mandar `null` si el hilo tiene el campo. Ver
+   * `esSinResponder`.
    */
   sinResponderDesde?: string | null;
 }

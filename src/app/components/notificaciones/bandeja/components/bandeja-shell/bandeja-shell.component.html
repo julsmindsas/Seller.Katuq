@@ -92,6 +92,17 @@
     >{{ 'notificaciones.bandeja.tab.informes' | translate }}</button>
   </div>
 
+  <!-- «Abrir chat» del informe: espera al servidor o no se pudo abrir. La región queda siempre en la página
+       (con el informe a la vista) para que el lector de pantalla anuncie el cambio. -->
+  <div class="bj-abrir-informe" role="status" aria-live="polite" *ngIf="atencion && coordina" [hidden]="vista !== 'informes'">
+    <div class="cfg-aviso" *ngIf="abriendoChatInforme">
+      <span class="bj-abrir-informe__texto">{{ 'notificaciones.cierre.abriendoChat' | translate }}</span>
+    </div>
+    <div class="cfg-aviso cfg-aviso--warn" *ngIf="avisoAbrirInforme && !abriendoChatInforme">
+      <span class="bj-abrir-informe__texto">{{ 'notificaciones.cierre.noSeAbrioChat' | translate }}</span>
+    </div>
+  </div>
+
   <!-- Informes (D-729): se crea al entrar y solo se oculta, para conservar filtros y resultados -->
   <app-bandeja-informes
     *ngIf="atencion && coordina && informesVisto"
