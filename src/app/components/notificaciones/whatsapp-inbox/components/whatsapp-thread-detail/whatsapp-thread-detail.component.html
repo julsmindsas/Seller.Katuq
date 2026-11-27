@@ -318,6 +318,21 @@
           <span class="thread-detail__ventana-texto">{{ guia.clave | translate: guia.params }}</span>
         </div>
 
+        <!-- Pasaron 24 h: escribirle con una plantilla aprobada sin salir del chat (el número lo pone el servidor) -->
+        <div class="thread-detail__plantilla" *ngIf="mostrarEnviarPlantilla">
+          <button
+            #plantillaBoton
+            type="button"
+            class="thread-detail__plantilla-boton"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="plantillaAbierta"
+            (click)="abrirPlantilla()"
+          >
+            <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+            <span class="thread-detail__plantilla-boton-texto">{{ 'notificaciones.cierre2.plantilla.boton' | translate }}</span>
+          </button>
+        </div>
+
         <div class="thread-detail__quick-replies" *ngIf="!soloLectura && verFijas">
           <button
             type="button"
@@ -376,6 +391,96 @@
             {{ (sending ? 'notificaciones.whatsapp.detail.sending' : 'notificaciones.whatsapp.detail.send') | translate }}
           </button>
         </form>
+      </div>
+
+      <!-- «Enviar plantilla»: la misma elección de plantilla del buzón, sin pedir el teléfono -->
+      <div
+        class="wpl-fondo"
+        *ngIf="plantillaAbierta"
+        (click)="alFondoPlantilla($event)"
+        (keydown)="alTeclaPlantilla($event)"
+      >
+        <div class="wpl-caja" role="dialog" aria-modal="true" aria-labelledby="wpl-titulo" aria-describedby="wpl-ayuda">
+          <header class="wpl-cabeza">
+            <h3 class="wpl-titulo" id="wpl-titulo">{{ 'notificaciones.cierre2.plantilla.titulo' | translate }}</h3>
+            <button
+              type="button"
+              class="wpl-cerrar"
+              (click)="cerrarPlantilla()"
+              [disabled]="plantillaEnviando"
+              [attr.aria-label]="'comun.cerrar' | translate"
+            >
+              <i class="fa fa-times" aria-hidden="true"></i>
+            </button>
+          </header>
+
+          <div class="wpl-cuerpo">
+            <p class="wpl-ayuda" id="wpl-ayuda">{{ 'notificaciones.cierre2.plantilla.ayuda' | translate }}</p>
+
+            <label class="wpl-campo">
+              <span class="wpl-etiqueta">{{ 'notificaciones.whatsapp.newConversation.template' | translate }}</span>
+              <select
+                #plantillaSelect
+                class="wpl-control"
+                [(ngModel)]="plantillaNombre"
+                (ngModelChange)="alCambiarPlantilla()"
+                [disabled]="plantillaEnviando || plantillaCargando"
+              >
+                <option value="" disabled>
+                  {{ (plantillaCargando ? 'notificaciones.whatsapp.newConversation.loadingTemplates' : 'notificaciones.whatsapp.newConversation.selectTemplate') | translate }}
+                </option>
+                <option *ngFor="let t of plantillas" [value]="t.name">
+                  {{ t.titulo || t.name }}{{ t.descripcion ? ' — ' + t.descripcion : '' }}
+                </option>
+              </select>
+            </label>
+
+            <div class="wpl-aviso" *ngIf="plantillaErrorCarga" role="alert">
+              <span class="wpl-aviso-texto">{{ 'notificaciones.cierre2.plantilla.errorCargar' | translate }}</span>
+              <button type="button" class="wpl-enlace" (click)="cargarPlantillas()">
+                {{ 'notificaciones.meta.retry' | translate }}
+              </button>
+            </div>
+            <span class="wpl-nota" *ngIf="!plantillaCargando && !plantillaErrorCarga && plantillas.length === 0">
+              {{ 'notificaciones.whatsapp.newConversation.noTemplates' | translate }}
+            </span>
+
+            <div class="wpl-vars" *ngIf="plantillaElegida && plantillaElegida.variables.length > 0">
+              <span class="wpl-etiqueta">{{ 'notificaciones.whatsapp.newConversation.variables' | translate }}</span>
+              <label class="wpl-campo" *ngFor="let n of plantillaElegida.variables; let i = index">
+                <span class="wpl-etiqueta-var">{{ 'notificaciones.whatsapp.newConversation.variable' | translate }} {{ '{{' }}{{ n }}{{ '}}' }}</span>
+                <input
+                  type="text"
+                  class="wpl-control"
+                  [name]="'wpl-var-' + i"
+                  [placeholder]="'notificaciones.whatsapp.newConversation.valueFor' | translate: { name: '{{' + n + '}}' }"
+                  [(ngModel)]="plantillaVariables[i]"
+                  [disabled]="plantillaEnviando"
+                  maxlength="1000"
+                />
+              </label>
+            </div>
+
+            <div class="wpl-vista" *ngIf="plantillaElegida">
+              <span class="wpl-etiqueta">{{ 'notificaciones.whatsapp.newConversation.preview' | translate }}</span>
+              <div class="wpl-burbuja">{{ plantillaVista }}</div>
+            </div>
+
+            <div class="wpl-error" *ngIf="plantillaError" role="alert">
+              <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+              <span class="wpl-error-texto">{{ plantillaError }}</span>
+            </div>
+          </div>
+
+          <footer class="wpl-pie">
+            <button type="button" class="wpl-btn wpl-btn--sec" (click)="cerrarPlantilla()" [disabled]="plantillaEnviando">
+              {{ 'comun.cancelar' | translate }}
+            </button>
+            <button type="button" class="wpl-btn" (click)="enviarPlantilla()" [disabled]="!puedeEnviarPlantilla">
+              {{ (plantillaEnviando ? 'notificaciones.whatsapp.detail.sending' : 'notificaciones.cierre2.plantilla.boton') | translate }}
+            </button>
+          </footer>
+        </div>
       </div>
     </div>
 

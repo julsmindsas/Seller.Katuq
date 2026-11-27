@@ -316,6 +316,27 @@ export class WhatsappInboxService extends BaseService {
     return this.post<{ balanceAfter?: number }>("/v1/whatsapp/start-conversation", body);
   }
 
+  /**
+   * «Enviar plantilla» desde un chat abierto, cuando ya pasaron 24 horas: el servidor resuelve el teléfono real
+   * desde el chat (el front solo conoce el enmascarado) y envía con la misma lógica de `start-conversation`
+   * (no contactar, dueño del chat con `?lineId=`, saldo). Body `{templateName, languageCode, variables}`.
+   * Sin pantalla de carga ni aviso «Suscripción» del interceptor: la ventana del chat explica cada rechazo por
+   * su código (402 INSUFFICIENT_BALANCE o ACCOUNT_NOT_ACTIVE, 422 opted_out o invalid_variables, 409
+   * CHAT_CON_DUENO, 403 FUERA_DE_ALCANCE, 503 OPTOUT_UNAVAILABLE, SALDO_NO_DISPONIBLE o LINE_LOOKUP_FAILED, 400
+   * send_failed, 429 RATE_LIMIT_EXCEEDED). Un 401 de sesión sigue cerrando la sesión.
+   */
+  enviarPlantillaAlChat(
+    phoneHash: string,
+    lineId: string | null | undefined,
+    body: { templateName: string; languageCode: string; variables: string[] },
+  ): Observable<{ success?: boolean; balanceAfter?: number }> {
+    return this.postSinLoader<{ success?: boolean; balanceAfter?: number }>(
+      this.rutaChat(phoneHash, "/plantilla", lineId),
+      body,
+      { context: new HttpContext().set(SIN_AVISO_NEGOCIO, true) },
+    );
+  }
+
   // ============================================================
   // Bot de pedidos
   // ============================================================

@@ -35,8 +35,9 @@ import { mapaDeEquipo, nombreConMapa } from "../../../inbox-core/chat-dueno/nomb
 import { inicialesDe } from "../../../inbox-core/iniciales";
 import { agruparPorDia, cercaDelFinal, formatoHora } from "../../../inbox-core/feed-mensajes.util";
 import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
-import { WhatsappInboxService } from "../../whatsapp-inbox.service";
+import { KapsoTemplate, WhatsappInboxService } from "../../whatsapp-inbox.service";
 import { claveDeErrorChat } from "../../errores-envio";
+import { claveDeErrorPlantilla } from "./errores-plantilla";
 import {
   BotThreadState,
   ContactProfile,
@@ -192,6 +193,22 @@ export class WhatsappThreadDetailComponent
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
   /** Bandeja única: clip, micrófono y envío de archivos del cuadro de escribir. */
   @ViewChild(WaAdjuntarComponent) adjuntar?: WaAdjuntarComponent;
+  /** «Enviar plantilla»: la lista de plantillas recibe el foco al abrir la ventana. */
+  @ViewChild("plantillaSelect") plantillaSelect?: ElementRef<HTMLSelectElement>;
+  @ViewChild("plantillaBoton") plantillaBoton?: ElementRef<HTMLButtonElement>;
+
+  // ─── «Enviar plantilla» (pasaron 24 h) ───────────────────────────────────
+  /** La ventana de elegir plantilla está abierta para este chat. */
+  plantillaAbierta = false;
+  plantillaCargando = false;
+  /** No se pudieron traer las plantillas (se ofrece reintentar). */
+  plantillaErrorCarga = false;
+  plantillaEnviando = false;
+  plantillas: KapsoTemplate[] = [];
+  plantillaNombre = "";
+  plantillaVariables: string[] = [];
+  /** Clave de traducción del rechazo del envío (o texto ya armado del dueño del chat). */
+  plantillaError = "";
 
   // ─── Archivos (bandeja única, solo con `atencion`) ───────────────────────
   /** Archivos ya bajados de este chat (blob local); se sueltan al cambiar de chat y al salir. */
@@ -348,6 +365,7 @@ export class WhatsappThreadDetailComponent
       this.composerText = "";
       this.templatesOpen = false;
       this.arrastrando = false;
+      this.cerrarPlantilla(false);
       this.envios.chatVisible = this.phoneHash ? this.claveActual : null;
       this.vaciarChat();
       this.loadAll();
@@ -847,6 +865,155 @@ export class WhatsappThreadDetailComponent
   /** [D-728] El texto de la respuesta rápida elegida reemplaza el comando; no se envía. */
   alElegirRapida(texto: string): void {
     this.composerText = texto;
+  }
+
+  // ─── «Enviar plantilla» ──────────────────────────────────────────────────
+
+  /**
+   * Pasaron 24 h desde el último mensaje del cliente (o nunca escribió): WhatsApp solo deja escribirle con una
+   * plantilla aprobada. Con la bandera manda la ventana del servidor; sin ella, la guía de los mensajes cargados.
+   * No aparece en un chat que atiende otra persona.
+   */
+  get mostrarEnviarPlantilla(): boolean {
+    if (!this.canShowComposer || this.soloLectura) return false;
+    if (this.ventana) return this.ventana.abierta === false;
+    return !!this.guiaVentana?.vencida;
+  }
+
+  get plantillaElegida(): KapsoTemplate | null {
+    return this.plantillas.find((t) => t.name === this.plantillaNombre) || null;
+  }
+
+  /** Texto de la plantilla con lo que se lleva escrito en cada variable (igual que la ventana del buzón). */
+  get plantillaVista(): string {
+    const t = this.plantillaElegida;
+    if (!t) return "";
+    return (t.bodyText || "").replace(/\{\{\s*(\d+)\s*\}\}/g, (_, n) => {
+      const v = this.plantillaVariables[parseInt(n, 10) - 1];
+      return v ? v : `{{${n}}}`;
+    });
+  }
+
+  get puedeEnviarPlantilla(): boolean {
+    const t = this.plantillaElegida;
+    if (!t || this.plantillaEnviando || !this.phoneHash) return false;
+    return t.variables.every((_, i) => (this.plantillaVariables[i] || "").trim().length > 0);
+  }
+
+  /** Abre la ventana de elegir plantilla para este chat: el número lo pone el servidor, no se pide. */
+  abrirPlantilla(): void {
+    if (!this.mostrarEnviarPlantilla || this.plantillaAbierta) return;
+    this.plantillaAbierta = true;
+    this.plantillaNombre = "";
+    this.plantillaVariables = [];
+    this.plantillaError = "";
+    this.plantillaEnviando = false;
+    this.cargarPlantillas();
+    setTimeout(() => this.plantillaSelect?.nativeElement.focus());
+  }
+
+  /** Cierra la ventana; `devolverFoco` lleva el foco al botón que la abrió (no al cambiar de chat). */
+  cerrarPlantilla(devolverFoco = true): void {
+    if (!this.plantillaAbierta) return;
+    this.plantillaAbierta = false;
+    this.plantillaEnviando = false;
+    this.plantillaError = "";
+    if (devolverFoco) setTimeout(() => this.plantillaBoton?.nativeElement.focus());
+  }
+
+  alFondoPlantilla(ev: MouseEvent): void {
+    if (ev.target === ev.currentTarget && !this.plantillaEnviando) this.cerrarPlantilla();
+  }
+
+  /** Esc cierra; Tab y Mayús+Tab no salen de la ventana (es modal). */
+  alTeclaPlantilla(ev: KeyboardEvent): void {
+    if (ev.key === "Escape" && !this.plantillaEnviando) {
+      ev.stopPropagation();
+      this.cerrarPlantilla();
+      return;
+    }
+    if (ev.key !== "Tab") return;
+    const caja = (ev.currentTarget as HTMLElement | null)?.querySelector(".wpl-caja");
+    if (!caja) return;
+    const enfocables = Array.from(
+      caja.querySelectorAll<HTMLElement>("button:not([disabled]), select:not([disabled]), input:not([disabled])"),
+    );
+    if (!enfocables.length) return;
+    const primero = enfocables[0];
+    const ultimo = enfocables[enfocables.length - 1];
+    const activo = document.activeElement;
+    if (ev.shiftKey && (activo === primero || !caja.contains(activo))) {
+      ev.preventDefault();
+      ultimo.focus();
+    } else if (!ev.shiftKey && (activo === ultimo || !caja.contains(activo))) {
+      ev.preventDefault();
+      primero.focus();
+    }
+  }
+
+  alCambiarPlantilla(): void {
+    this.plantillaError = "";
+    const t = this.plantillaElegida;
+    this.plantillaVariables = t ? new Array(t.variables.length).fill("") : [];
+  }
+
+  cargarPlantillas(): void {
+    const seq = this.chatSeq;
+    this.plantillaCargando = true;
+    this.plantillaErrorCarga = false;
+    this.plantillas = [];
+    this.inbox.getKapsoTemplates().subscribe({
+      next: (lista) => {
+        if (seq !== this.chatSeq) return;
+        this.plantillas = lista;
+        this.plantillaCargando = false;
+      },
+      error: () => {
+        if (seq !== this.chatSeq) return;
+        this.plantillaCargando = false;
+        this.plantillaErrorCarga = true;
+      },
+    });
+  }
+
+  /**
+   * Envía la plantilla elegida a este chat. El servidor revisa la lista de no contactar, el dueño del chat (con
+   * `?lineId=`) y el saldo antes de enviar; aquí solo se explica lo que responda.
+   */
+  enviarPlantilla(): void {
+    const t = this.plantillaElegida;
+    if (!t || !this.puedeEnviarPlantilla || !this.phoneHash) return;
+    const hash = this.phoneHash;
+    const seq = this.chatSeq;
+    this.plantillaEnviando = true;
+    this.plantillaError = "";
+    this.inbox
+      .enviarPlantillaAlChat(hash, this.lineId, {
+        templateName: t.name,
+        languageCode: t.language,
+        variables: this.plantillaVariables.slice(0, t.variables.length).map((v) => (v || "").trim()),
+      })
+      .subscribe({
+        next: () => {
+          if (seq !== this.chatSeq) return;
+          this.plantillaEnviando = false;
+          this.cerrarPlantilla();
+          this.toastr.success(this.translate.instant("notificaciones.cierre2.plantilla.enviada"));
+          this.bajarTrasEnvio = true;
+          this.refreshMessages();
+          this.cargarEstadoBot(hash);
+        },
+        error: (err: any) => {
+          if (seq !== this.chatSeq) return;
+          this.plantillaEnviando = false;
+          if (esErrorChatConDueno(err)) {
+            this.ponerDueno(err.error.owner || null);
+            this.plantillaError = this.textoChatConDueno(err.error.owner);
+            return;
+          }
+          this.plantillaError = this.translate.instant(claveDeErrorPlantilla(err));
+        },
+      });
   }
 
   /** True si la UI debe mostrar el composer (hay hilo abierto, cargado bien y con mensajes). */
