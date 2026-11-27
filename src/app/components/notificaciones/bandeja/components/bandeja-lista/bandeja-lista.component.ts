@@ -45,7 +45,7 @@ interface FilaVista {
   conversacion: ConversacionResumen;
   /** Nombre del contacto; sin nombre, su número enmascarado (WhatsApp) o «Contacto de <canal>». */
   nombre: string;
-  /** Vacío = la vista pone el ícono de persona. */
+  /** Iniciales del nombre; sin nombre, las dos últimas cifras del número (WhatsApp). Vacío = ícono del canal. */
   iniciales: string;
   /** Tono del avatar (0 a 5): el mismo cliente, el mismo color. */
   tono: number;
@@ -53,7 +53,7 @@ interface FilaVista {
   numero: string;
   /** Quién atiende y cola, en una sola línea; vacío = no se pinta. */
   meta: string;
-  /** El chat tiene dueño o está sin asignar (ícono de persona); si no, solo la cola (ícono de cola). */
+  /** El chat tiene dueño (ícono de persona); si no, solo la cola (ícono de cola). */
   metaPersona: boolean;
   hora: string;
   resumen: string;
@@ -97,7 +97,7 @@ export class BandejaListaComponent implements OnChanges {
   @Input() lineas: MessagingLine[] = [];
   @Input() esAdministrador = false;
   @Input() miEmail = "";
-  /** Bandeja con atención multiagente (D-725): «Míos» siempre visible y «Sin asignar» en cada fila. */
+  /** Bandeja con atención multiagente (D-725): «Míos» siempre visible y el filtro «Sin asignar» por asesor. */
   @Input() atencion = false;
   /** Quien coordina ve el filtro por asesor. */
   @Input() coordina = false;
@@ -425,7 +425,7 @@ export class BandejaListaComponent implements OnChanges {
     return {
       conversacion: c,
       nombre,
-      iniciales: inicialesDe(propio),
+      iniciales: inicialesDe(propio) || telefono.replace(/\D/g, "").slice(-2),
       tono: tonoDe(c.clave),
       numero: propio && telefono ? telefono : "",
       meta,
@@ -439,7 +439,10 @@ export class BandejaListaComponent implements OnChanges {
     };
   }
 
-  /** Quién atiende (o «Sin asignar») y la cola, juntos en una línea corta. */
+  /**
+   * Quién atiende y la cola, juntos en una línea corta. «Sin asignar» no se pinta en cada fila: para eso está el
+   * filtro por asesor, y en los comercios grandes repetirlo en todas las filas solo alargaba la lista.
+   */
   private metaDe(c: ConversacionResumen): { meta: string; metaPersona: boolean } {
     const partes: string[] = [];
     let metaPersona = false;
@@ -447,9 +450,6 @@ export class BandejaListaComponent implements OnChanges {
       metaPersona = true;
       const nombre = nombreConMapa(c.dueno.email, c.dueno.nombre, this.mapaEquipo);
       partes.push(this.translate.instant("notificaciones.bandeja.handledBy", { nombre }));
-    } else if (this.atencion && c.threadId && !c.cerrado) {
-      metaPersona = true;
-      partes.push(this.translate.instant("notificaciones.owner.unassigned"));
     }
     const cola = this.nombreDeCola(c);
     if (cola) partes.push(this.translate.instant("notificaciones.bandeja.colas.deCola", { nombre: cola }));

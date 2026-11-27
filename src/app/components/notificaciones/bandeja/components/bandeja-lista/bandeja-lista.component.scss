@@ -79,6 +79,9 @@ $canal-tiktok-fondo: #eef0f3;
 
   // «Buscando en todos tus chats…» mientras responde la búsqueda del servidor.
   &__estado { margin: 6px 2px 0; }
+  // Sin búsqueda en curso el aviso queda vacío (sigue en la página para el lector) y devuelve el hueco del gap
+  // de 10 px de la cabecera, así no ocupa lugar.
+  &__estado--vacio { margin: -10px 0 0; }
   &__estado-texto { color: $cfg-muted; font-size: 11.5px; font-weight: 600; letter-spacing: normal; }
 }
 
@@ -93,9 +96,9 @@ $canal-tiktok-fondo: #eef0f3;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: thin;
-    // Deja ver el anillo de foco del primer y último chip.
-    padding: 3px;
-    margin: -3px;
+    // Deja ver entero el anillo de foco (3 px de contorno + 2 px de separación) del primer y último chip.
+    padding: 5px;
+    margin: -5px;
 
     &::-webkit-scrollbar { height: 4px; }
     &::-webkit-scrollbar-thumb { background: $cfg-line; border-radius: 4px; }
@@ -279,10 +282,12 @@ $canal-tiktok-fondo: #eef0f3;
 
     i { font-size: 15px; color: inherit; }
 
+    // Solo tokens del design-system (cambian en modo oscuro). Ni verde ni ámbar, que se leen como estado, ni el
+    // color de Instagram, que se confunde con la marca del canal de la misma fila.
     &--t1 { background: $cfg-info-soft; color: $cfg-info; }
-    &--t2 { background: $cfg-ok-soft; color: $cfg-ok; }
-    &--t3 { background: $cfg-warn-soft; color: $cfg-warn; }
-    &--t4 { background: $canal-instagram-fondo; color: $canal-instagram; }
+    &--t2 { background: $cfg-tile; color: $cfg-accent-ink; }
+    &--t3 { background: $cfg-chip-bg; color: $cfg-body; }
+    &--t4 { background: $cfg-accent-soft; color: $cfg-ink; }
     &--t5 { background: $cfg-tile; color: $cfg-ink; }
   }
 
@@ -435,4 +440,19 @@ $canal-tiktok-fondo: #eef0f3;
 
   &:hover:not(:disabled) { background: $cfg-tint; border-color: #d9cffb; color: $cfg-accent-ink; }
   &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+// Texto solo para el lector de pantalla (cifra de filtros, aviso del «+»).
+.bj-solo-lector {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  color: inherit;
+  font-size: 12px;
 }

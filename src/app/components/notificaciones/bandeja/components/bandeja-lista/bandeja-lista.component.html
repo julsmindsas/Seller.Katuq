@@ -11,8 +11,9 @@
         (ngModelChange)="buscar($event)"
       />
     </div>
-    <p class="bj-buscar__estado" role="status" *ngIf="buscandoServidor && filtro.busqueda">
-      <span class="bj-buscar__estado-texto">{{ 'notificaciones.bandeja2.buscandoServidor' | translate }}</span>
+    <!-- El contenedor del aviso queda siempre: así el lector de pantalla oye «Buscando…» cuando aparece el texto -->
+    <p class="bj-buscar__estado" role="status" [class.bj-buscar__estado--vacio]="!(buscandoServidor && filtro.busqueda)">
+      <span class="bj-buscar__estado-texto" *ngIf="buscandoServidor && filtro.busqueda">{{ 'notificaciones.bandeja2.buscandoServidor' | translate }}</span>
     </p>
 
     <!-- Canal: solo los que el usuario puede ver y están conectados -->
@@ -80,6 +81,8 @@
           *ngIf="sinResponderTexto"
           [attr.title]="puedeHaberMas ? ('notificaciones.bandeja2.cuentaCargados' | translate) : null"
         >{{ sinResponderTexto }}</span>
+        <!-- El «+» explicado también para el lector de pantalla y en táctil (el title no se oye ni se ve) -->
+        <span class="bj-solo-lector" *ngIf="sinResponderTexto && puedeHaberMas">{{ 'notificaciones.bandeja2.cuentaCargados' | translate }}</span>
       </button>
       <button
         type="button"
@@ -98,16 +101,13 @@
         *ngIf="mostrarBotonFiltros"
         [class.is-activo]="filtrosAbiertos || filtrosActivos > 0"
         [attr.aria-expanded]="filtrosAbiertos"
-        aria-controls="bj-selectores"
+        [attr.aria-controls]="filtrosAbiertos ? 'bj-selectores' : null"
         (click)="alternarFiltros()"
       >
         <i class="fa fa-sliders" aria-hidden="true"></i>
         <span class="bj-filtro__texto">{{ 'notificaciones.bandeja2.filtros' | translate }}</span>
-        <span
-          class="bj-filtro__cuenta"
-          *ngIf="filtrosActivos > 0"
-          [attr.aria-label]="'notificaciones.bandeja2.filtrosActivosAria' | translate: { n: filtrosActivos }"
-        >{{ filtrosActivos }}</span>
+        <span class="bj-filtro__cuenta" *ngIf="filtrosActivos > 0" aria-hidden="true">{{ filtrosActivos }}</span>
+        <span class="bj-solo-lector" *ngIf="filtrosActivos > 0">{{ 'notificaciones.bandeja2.filtrosActivosAria' | translate: { n: filtrosActivos } }}</span>
         <i class="fa bj-filtro__flecha" [class.fa-angle-down]="!filtrosAbiertos" [class.fa-angle-up]="filtrosAbiertos" aria-hidden="true"></i>
       </button>
     </div>
@@ -215,7 +215,7 @@
     >
       <span class="bj-fila__avatar" [ngClass]="'bj-fila__avatar--t' + fila.tono" aria-hidden="true">
         <ng-container *ngIf="fila.iniciales; else sinIniciales">{{ fila.iniciales }}</ng-container>
-        <ng-template #sinIniciales><i class="pi pi-user"></i></ng-template>
+        <ng-template #sinIniciales><i [class]="fila.canalIcono"></i></ng-template>
       </span>
 
       <span class="bj-fila__cuerpo">
@@ -258,7 +258,7 @@
           <span class="bj-fila__dueno-texto">{{ 'notificaciones.bandeja.cierre.cerrado' | translate: { motivo: fila.motivo } }}</span>
         </span>
 
-        <!-- Quién atiende (o «Sin asignar») y la cola, en una sola línea -->
+        <!-- Quién atiende y la cola, en una sola línea («Sin asignar» va en el filtro, no en cada fila) -->
         <span class="bj-fila__dueno" *ngIf="fila.meta">
           <i class="fa" [class.fa-user-o]="fila.metaPersona" [class.fa-sitemap]="!fila.metaPersona" aria-hidden="true"></i>
           <span class="bj-fila__dueno-texto">{{ fila.meta }}</span>
