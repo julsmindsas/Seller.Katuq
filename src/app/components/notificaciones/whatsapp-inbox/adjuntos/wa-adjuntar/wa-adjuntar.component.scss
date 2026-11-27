@@ -4,6 +4,11 @@
 // tamaño propios.
 @import '../../../../../shared/styles/katuq-marketing';
 
+// Tinta de los avisos: --ds-warn / --ds-err sobre su fondo suave no llegan a 4.5:1 (AA) en letra pequeña.
+// Mientras se decide si se oscurecen los tokens, el texto usa estas tintas y el fondo sigue siendo --ds-*-soft.
+$wa-tinta-aviso: #b45309;
+$wa-tinta-error: #b42f2f;
+
 :host {
   display: contents;
 }
@@ -25,7 +30,7 @@
   padding: 9px 12px;
   border-radius: 11px;
   background: var(--ds-warn-soft, #fff4e6);
-  color: var(--ds-warn, #b45309);
+  color: $wa-tinta-aviso;
 
   i { margin-top: 2px; font-size: 13px; color: inherit; }
 }
@@ -44,7 +49,15 @@
   border: none;
   background: transparent;
   color: inherit;
+  // Blanco de al menos 28 px (WCAG 2.2, 2.5.8); el aviso se alinea arriba, así que crece sin mover el texto.
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  margin: -6px -6px -6px 0;
   padding: 0 4px;
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
 
@@ -66,7 +79,7 @@
     border-color: transparent;
 
     .wadjr__icono { background: #fff; color: var(--ds-err, #d64545); }
-    .wadjr__detalle { color: var(--ds-err, #d64545) !important; font-weight: 700; }
+    .wadjr__detalle { color: $wa-tinta-error !important; font-weight: 700; }
   }
 
   &--grabando {
@@ -124,7 +137,7 @@
   letter-spacing: normal;
   color: var(--km-muted) !important;
 
-  &--aviso { color: var(--ds-warn, #b45309) !important; font-weight: 700; }
+  &--aviso { color: $wa-tinta-aviso !important; font-weight: 700; }
 }
 
 .wadjr__audio {

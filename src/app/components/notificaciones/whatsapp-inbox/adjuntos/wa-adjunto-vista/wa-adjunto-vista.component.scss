@@ -3,6 +3,11 @@
 // y tamaño propios (span.ng-star-inserted pinta de azul).
 @import '../../../../../shared/styles/katuq-marketing';
 
+// Tinta de los avisos: --ds-warn / --ds-err sobre su fondo suave no llegan a 4.5:1 (AA) en letra pequeña.
+// Mientras se decide si se oscurecen los tokens, el texto usa estas tintas y el fondo sigue siendo --ds-*-soft.
+$wa-tinta-aviso: #b45309;
+$wa-tinta-error: #b42f2f;
+
 :host {
   @include km-tokens;
   display: block;
@@ -201,7 +206,7 @@
   font-weight: 700;
   line-height: 1.4;
   letter-spacing: normal;
-  color: var(--ds-warn, #b45309) !important;
+  color: $wa-tinta-aviso !important;
 }
 
 .wadj__ampliada {

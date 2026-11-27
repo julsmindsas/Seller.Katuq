@@ -4,6 +4,11 @@
 // el morado de Katuq (#5F3FE0), como el resto de acciones principales.
 @import '../../../../../shared/styles/katuq-marketing';
 
+// Tinta de los avisos: --ds-warn / --ds-err sobre su fondo suave no llegan a 4.5:1 (AA) en letra pequeña.
+// Mientras se decide si se oscurecen los tokens, el texto usa estas tintas y el fondo sigue siendo --ds-*-soft.
+$wa-tinta-aviso: #b45309;
+$wa-tinta-error: #b42f2f;
+
 :host {
   @include km-tokens;
   display: flex;
@@ -639,9 +644,9 @@
   padding: 10px 12px;
   border-radius: 11px;
   background: var(--ds-warn-soft);
-  color: var(--ds-warn);
+  color: $wa-tinta-aviso;
 
-  i { margin-top: 2px; font-size: 13px; color: var(--ds-warn); }
+  i { margin-top: 2px; font-size: 13px; color: $wa-tinta-aviso; }
 }
 
 .thread-detail__lectura-texto {
@@ -649,7 +654,7 @@
   line-height: 1.45;
   font-weight: 600;
   letter-spacing: normal;
-  color: var(--ds-warn) !important;
+  color: $wa-tinta-aviso !important;
 }
 
 .thread-detail__header-info app-linea-chip { margin-top: 3px; }
@@ -699,7 +704,7 @@
 .thread-detail__error-titulo {
   font-size: 14px;
   font-weight: 800;
-  color: var(--ds-err);
+  color: $wa-tinta-error;
 }
 
 .thread-detail__error-texto {
@@ -770,13 +775,13 @@
   padding: 9px 12px;
   border-radius: 11px;
   background: var(--ds-warn-soft);
-  color: var(--ds-warn);
+  color: $wa-tinta-aviso;
 
   i { margin-top: 2px; font-size: 13px; color: inherit; }
 
   &--vencida {
     background: var(--ds-err-soft);
-    color: var(--ds-err);
+    color: $wa-tinta-error;
   }
 }
 

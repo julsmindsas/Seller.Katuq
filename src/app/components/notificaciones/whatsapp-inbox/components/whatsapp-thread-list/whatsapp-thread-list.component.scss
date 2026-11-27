@@ -1,6 +1,11 @@
 // Lista de hilos — look del mockup "Marketing y WhatsApp".
 @import '../../../../../shared/styles/katuq-marketing';
 
+// Tinta de los avisos: --ds-warn / --ds-err sobre su fondo suave no llegan a 4.5:1 (AA) en letra pequeña.
+// Mientras se decide si se oscurecen los tokens, el texto usa estas tintas y el fondo sigue siendo --ds-*-soft.
+$wa-tinta-aviso: #b45309;
+$wa-tinta-error: #b42f2f;
+
 :host {
   @include km-tokens;
   display: flex;
@@ -324,7 +329,7 @@
 
 .thread-list__state-texto {
   font-size: 13px !important;
-  color: var(--ds-err) !important;
+  color: $wa-tinta-error !important;
 }
 
 .thread-list__retry {
@@ -355,7 +360,7 @@
   font-size: 12.5px !important;
   font-weight: 600;
   letter-spacing: normal;
-  color: var(--ds-err) !important;
+  color: $wa-tinta-error !important;
 }
 
 .thread-list__mas-boton {
