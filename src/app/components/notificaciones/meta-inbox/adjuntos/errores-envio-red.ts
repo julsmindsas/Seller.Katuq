@@ -13,6 +13,11 @@ const CLAVES_POR_CODIGO: Record<string, string> = {
   RATE_LIMIT_EXCEEDED: 'notificaciones.redes3.errores.muyRapido',
   TOO_MANY_REQUESTS: 'notificaciones.redes3.errores.muyRapido',
   MENSAJE_MUY_LARGO: 'notificaciones.redes3.errores.textoLargo',
+  // multipartAdjunto.js: el campo de texto pasa el tope de multer (422, viene en `error`).
+  MEDIA_TEXTO_LARGO: 'notificaciones.redes3.errores.textoLargo',
+  // redes.js: con kind=voice el archivo no es un audio que la red acepte (422).
+  MEDIA_VOZ_NO_VALIDA: 'notificaciones.redes3.adjuntos.voz.noSoportado',
+  MEDIA_NO_DISPONIBLE: 'notificaciones.redes3.errores.generico',
   MEDIA_VACIO: 'notificaciones.redes3.errores.vacio',
   MEDIA_MUY_PESADO: 'notificaciones.redes3.errores.pesado',
   MEDIA_TIPO_NO_PERMITIDO: 'notificaciones.redes3.errores.tipo',
