@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ChatNotasComponent } from "../../../inbox-core/chat-notas/chat-notas.component";
 import { TranslateService } from "@ngx-translate/core";
@@ -244,6 +244,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
 
   /** Redes en pantallas de menos de 1200 px: la ficha se ve en lugar del chat, con un botón (como en WhatsApp). */
   fichaRedAbierta = false;
+  @ViewChild("botonVerFicha") private botonVerFicha?: ElementRef<HTMLButtonElement>;
+  @ViewChild("botonVolverChat") private botonVolverChat?: ElementRef<HTMLButtonElement>;
 
   private conexiones: MetaConexiones | null = null;
   private refrescoSub?: Subscription;
@@ -675,6 +677,12 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   /** Redes en pantalla angosta: alterna entre el chat y la ficha del contacto. */
   alternarFichaRed(): void {
     this.fichaRedAbierta = !this.fichaRedAbierta;
+    // El botón pulsado se esconde con su panel: el foco pasa al botón del panel que aparece.
+    const abierta = this.fichaRedAbierta;
+    setTimeout(() => {
+      const destino = abierta ? this.botonVolverChat : this.botonVerFicha;
+      destino?.nativeElement.focus();
+    }, 0);
   }
 
   /** El detalle cambió el dueño del chat abierto (tomar, soltar, pasar o un 409). */

@@ -269,8 +269,10 @@
             </button>
             <!-- Pantallas de menos de 1200 px: la ficha va detrás de este botón, como en WhatsApp -->
             <button
+              #botonVerFicha
               type="button"
               class="bj-ver-ficha"
+              aria-controls="bj-red-ficha"
               [attr.aria-expanded]="fichaRedAbierta"
               (click)="alternarFichaRed()"
             >
@@ -298,8 +300,8 @@
             (colaCambiada)="onColaCambiada($event)"
           ></app-meta-hilo-detalle>
         </div>
-        <aside class="bj-red__ficha">
-          <button type="button" class="bj-volver bj-volver--chat" (click)="alternarFichaRed()">
+        <aside class="bj-red__ficha" id="bj-red-ficha">
+          <button #botonVolverChat type="button" class="bj-volver bj-volver--chat" (click)="alternarFichaRed()">
             <i class="fa fa-arrow-left" aria-hidden="true"></i>
             <span class="bj-volver__texto">{{ 'notificaciones.bandeja2.verChat' | translate }}</span>
           </button>
