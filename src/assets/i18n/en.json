@@ -11167,6 +11167,7 @@
   "consolaWhatsapp.numeros.sinEquipo": "No people assigned",
   "consolaWhatsapp.numeros.equipoGuardado": "Team saved.",
   "consolaWhatsapp.numeros.equipoError": "We couldn’t save the team. Please try again.",
+  "consolaWhatsapp.numeros.desconectarError": "We couldn’t disconnect the number. Please try again.",
   "consolaWhatsapp.vistaPrevia.titulo": "How it will look on WhatsApp",
   "consolaWhatsapp.vistaPrevia.aria": "Preview of the message on WhatsApp",
   "consolaWhatsapp.vistaPrevia.vacio": "Write the message to see it here",

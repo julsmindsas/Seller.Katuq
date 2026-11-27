@@ -10987,6 +10987,7 @@
     "consolaWhatsapp.numeros.sinEquipo": "Keine Personen zugewiesen",
     "consolaWhatsapp.numeros.equipoGuardado": "Team gespeichert.",
     "consolaWhatsapp.numeros.equipoError": "Das Team konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "consolaWhatsapp.numeros.desconectarError": "Die Nummer konnte nicht getrennt werden. Bitte versuchen Sie es erneut.",
     "consolaWhatsapp.vistaPrevia.titulo": "So sieht es in WhatsApp aus",
     "consolaWhatsapp.vistaPrevia.aria": "Vorschau der Nachricht in WhatsApp",
     "consolaWhatsapp.vistaPrevia.vacio": "Schreiben Sie die Nachricht, um sie hier zu sehen",

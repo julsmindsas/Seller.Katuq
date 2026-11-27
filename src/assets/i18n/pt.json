@@ -11155,6 +11155,7 @@
   "consolaWhatsapp.numeros.sinEquipo": "Sem pessoas atribuídas",
   "consolaWhatsapp.numeros.equipoGuardado": "Equipe salva.",
   "consolaWhatsapp.numeros.equipoError": "Não conseguimos salvar a equipe. Tente de novo.",
+  "consolaWhatsapp.numeros.desconectarError": "Não conseguimos desconectar o número. Tente de novo.",
   "consolaWhatsapp.vistaPrevia.titulo": "Como vai aparecer no WhatsApp",
   "consolaWhatsapp.vistaPrevia.aria": "Prévia da mensagem no WhatsApp",
   "consolaWhatsapp.vistaPrevia.vacio": "Escreva a mensagem para vê-la aqui",

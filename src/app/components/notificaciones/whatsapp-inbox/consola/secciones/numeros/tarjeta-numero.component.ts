@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, Subscription, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 import { MessagingLinesService } from '../../../../../../shared/services/messaging/messaging-lines.service';
 import { MessagingLine, MiembroEquipo } from '../../../../../../shared/services/messaging/messaging.models';
@@ -48,7 +49,7 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
   @Input() equipo: MiembroEquipo[] = [];
   @Input() puedeAdministrar = false;
 
-  /** El equipo se guardó o el número se reintentó: llega la línea nueva. */
+  /** El equipo se guardó, el número se reintentó o se desconectó: llega la línea nueva. */
   @Output() lineaActualizada = new EventEmitter<MessagingLine>();
   /** Pidió ir a otra sección con este número. */
   @Output() abrir = new EventEmitter<SeccionDestino>();
@@ -62,6 +63,7 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
   seleccion: string[] = [];
   guardando = false;
   reintentando = false;
+  desconectando = false;
 
   private lineaId = '';
   private lectura?: Subscription;
@@ -245,6 +247,45 @@ export class TarjetaNumeroComponent implements OnChanges, OnDestroy {
         error: (err) => {
           this.reintentando = false;
           this.toastr.error(this.mensajeDe(err, this.translate.instant('integrations.messagingLines.metaErrorMeta')));
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  // ─── Desconectar ──────────────────────────────────────────────────────
+
+  /** Deja el número desconectado en Katuq, con confirmación. La tarjeta queda como «Desconectado». */
+  async desconectar(): Promise<void> {
+    if (this.desconectando || !this.puedeAdministrar || !this.conectada) return;
+    const r = await Swal.fire({
+      title: this.translate.instant('integrations.messagingLines.desconectarEsteNumero'),
+      text: this.translate.instant('integrations.messagingLines.dejaDeRecibirYEnviar', {
+        linea: this.linea.displayName || this.linea.displayPhone,
+      }),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('integrations.messagingLines.siDesconectar'),
+      cancelButtonText: this.translate.instant('comun.cancelar'),
+      confirmButtonColor: '#D64545',
+      reverseButtons: true,
+    });
+    if (!r.isConfirmed) return;
+    this.desconectando = true;
+    this.cdr.markForCheck();
+    this.lineas
+      .desconectar(this.linea.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (nueva) => {
+          this.desconectando = false;
+          this.lectura?.unsubscribe();
+          this.toastr.success(this.translate.instant('integrations.messagingLines.elNumeroQuedoDesconectado'));
+          this.lineaActualizada.emit(nueva);
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.desconectando = false;
+          this.toastr.error(this.mensajeDe(err, this.translate.instant('consolaWhatsapp.numeros.desconectarError')));
           this.cdr.markForCheck();
         },
       });
