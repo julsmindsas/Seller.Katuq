@@ -1,8 +1,107 @@
 {
-  "version": "2026.11.27.4 - 27 de Noviembre 2026 (Beta)",
-  "publicada": "2026-11-27T22:49:47.016Z",
-  "notas": [],
+  "version": "2026.11.27.5 - 27 de Noviembre 2026 (Beta)",
+  "publicada": "2026-11-27T23:18:42.872Z",
+  "notas": [
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el buzón de WhatsApp la lista ahora muestra lo último que se dijo en cada chat, el buscador encuentra con o sin tildes y los errores salen en palabras claras.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Si un chat de WhatsApp no carga, ahora te lo decimos y no puedes escribir hasta que cargue, para que nunca le escribas a un cliente viendo el chat de otro.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Pasadas 24 horas sin que el cliente escriba, ahora puedes enviarle una plantilla desde el mismo chat, sin volver a escribir su número.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los chats de Instagram, Facebook y TikTok abren en el último mensaje, muestran la hora y ya no se borran si se cae el internet un momento. Vincular el contacto con su cliente ahora sí funciona.",
+      "modulos": [
+        "notificaciones/instagram/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Las plantillas y los envíos masivos de WhatsApp ya no salen si no hay saldo, ni le llegan a quien pidió no recibir mensajes. Solo un administrador puede sacar a un cliente de «no contactar».",
+      "modulos": [
+        "notificaciones/whatsapp/inbox",
+        "marketing/campanas"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Solo un administrador de tu tienda puede conectar o desconectar Instagram, Facebook y TikTok.",
+      "modulos": [
+        "notificaciones/instagram/inbox"
+      ]
+    }
+  ],
   "recientes": [
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "En el buzón de WhatsApp la lista ahora muestra lo último que se dijo en cada chat, el buscador encuentra con o sin tildes y los errores salen en palabras claras.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "CORRIGE",
+      "texto": "Si un chat de WhatsApp no carga, ahora te lo decimos y no puedes escribir hasta que cargue, para que nunca le escribas a un cliente viendo el chat de otro.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Pasadas 24 horas sin que el cliente escriba, ahora puedes enviarle una plantilla desde el mismo chat, sin volver a escribir su número.",
+      "modulos": [
+        "notificaciones/whatsapp/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Los chats de Instagram, Facebook y TikTok abren en el último mensaje, muestran la hora y ya no se borran si se cae el internet un momento. Vincular el contacto con su cliente ahora sí funciona.",
+      "modulos": [
+        "notificaciones/instagram/inbox"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Las plantillas y los envíos masivos de WhatsApp ya no salen si no hay saldo, ni le llegan a quien pidió no recibir mensajes. Solo un administrador puede sacar a un cliente de «no contactar».",
+      "modulos": [
+        "notificaciones/whatsapp/inbox",
+        "marketing/campanas"
+      ]
+    },
+    {
+      "fecha": "2026-11-27T23:16:00Z",
+      "tipo": "MEJORA",
+      "texto": "Solo un administrador de tu tienda puede conectar o desconectar Instagram, Facebook y TikTok.",
+      "modulos": [
+        "notificaciones/instagram/inbox"
+      ]
+    },
     {
       "fecha": "2026-11-27T15:00:00Z",
       "tipo": "NUEVO",
@@ -424,62 +523,8 @@
       "modulos": [
         "sitios"
       ]
-    },
-    {
-      "fecha": "2026-11-09T23:16:00Z",
-      "tipo": "MEJORA",
-      "texto": "En el editor de tu sitio, cuando le pides a Opttia que tu página se vea más profesional, elegante o moderna, ahora cambia toda la página con un mismo estilo y conserva el color de tu marca.",
-      "modulos": [
-        "sitios"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Los valores en pesos de órdenes de compra, recepción de mercancía, bodegas, pagos y cartera también se ven con punto de miles y sin decimales, por ejemplo $1.528.602.",
-      "modulos": [
-        "inventario/ordenes-compra",
-        "inventario/recepcion-mercancia",
-        "tesoreria",
-        "cartera",
-        "compras/reposicion",
-        "contabilidad"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya no verás siglas como SP, PP o PD en Pedidos, Producción y Despachos: los indicadores dicen Sin producir, Para despachar, Pendiente de pago, etc.",
-      "modulos": [
-        "ventas",
-        "despachos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "MEJORA",
-      "texto": "En «Importar fotos de productos» puedes descargar una guía de cómo deben ser tus fotos (tamaño, forma cuadrada, peso y nombre del archivo) para imprimirla o guardarla.",
-      "modulos": [
-        "productos"
-      ]
-    },
-    {
-      "fecha": "2026-11-09T23:10:00Z",
-      "tipo": "MEJORA",
-      "texto": "Los botones de cerrar, borrar y los controles de voz tienen nombre para lectores de pantalla, son más fáciles de tocar y se ven al navegar con el teclado, y los textos pequeños se leen mejor."
-    },
-    {
-      "fecha": "2026-11-09T22:45:00Z",
-      "tipo": "CORRIGE",
-      "texto": "Ya puedes usar Pedidos, Clientes, Productos y Envíos desde el celular: las listas se ven como tarjetas, los filtros se abren con un botón y no hace falta desplazarte hacia los lados.",
-      "modulos": [
-        "ventas",
-        "ventas/clienteslista",
-        "productos",
-        "despachos"
-      ]
     }
   ],
-  "commit": "3e60e90ce3a790a428525ce1ee9984a3b75846f6",
+  "commit": "c075ef81dd74af4f54b950a5980183823ad27010",
   "cambiosSinCommit": 0
 }
