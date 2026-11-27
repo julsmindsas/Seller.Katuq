@@ -234,6 +234,7 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
     };
     // Con páginas de «Ver más», una sola petición trae todo lo cargado (hasta el tope del servidor).
     const tamano = Math.min(TOPE_POR_PETICION, this.paginas * POR_PAGINA);
+    const paginasPedidas = this.paginas;
     this.silentSub = this.inbox
       .getThreads({
         search: this.searchQuery,
@@ -242,6 +243,12 @@ export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy
       })
       .subscribe({
         next: (page) => {
+          // «Ver más» sumó una página mientras este refresco iba en camino: su respuesta es de antes (otro
+          // tamaño y otro «hay más»). Se descarta y se pide uno nuevo con lo cargado ahora.
+          if (paginasPedidas !== this.paginas) {
+            this.silentPendiente = true;
+            return;
+          }
           if (page.items.length === 0) return;
           this.ponerHilos(this.conservarResto(page.items, tamano));
           if (this.paginas * POR_PAGINA <= TOPE_POR_PETICION) this.hayMas = !!page.hasMore;
