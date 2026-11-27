@@ -19,6 +19,12 @@ import { MetaAdjunto, MetaAdjuntoKind } from '../../models/meta-thread.model';
 import { CacheAdjuntosRed, EstadoAdjuntoRed } from '../cache-adjuntos-red';
 import { LOCALE_POR_IDIOMA, claveEtiquetaAdjunto, esRutaDeMediaRed, kindDeAdjunto, tamanoLegibleRed } from '../adjuntos-red.util';
 
+/** ¿Es el mismo archivo? (Un refresco trae otro objeto con los mismos datos.) */
+function mismoArchivo(previo: MetaAdjunto | null | undefined, actual: MetaAdjunto | null | undefined): boolean {
+  if (!previo || !actual) return previo === actual;
+  return previo.id === actual.id && previo.url === actual.url && previo.disponible === actual.disponible;
+}
+
 /**
  * Archivo de un mensaje de Instagram o Facebook (solo presentación, bandeja única):
  *  - foto y sticker: se bajan al quedar a la vista y se amplían dentro de la página (Esc cierra);
@@ -61,12 +67,18 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
   constructor(private readonly translate: TranslateService, private readonly zona: NgZone) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['adjunto'] || changes['cache']) && !(changes['adjunto'] || changes['cache']).firstChange) {
-      this.reproducir = false;
-      this.noSeReproduce = false;
-      this.ampliada = false;
-      this.observar();
-    }
+    const cambioAdjunto = changes['adjunto'];
+    const cambioCache = changes['cache'];
+    if (!cambioAdjunto && !cambioCache) return;
+    if ((cambioAdjunto || cambioCache)!.firstChange) return;
+    // Cada refresco del chat (sondeo, respaldo o canal en vivo) trae objetos nuevos para el mismo archivo: si es
+    // el mismo (id, ruta y disponibilidad) y la caché no cambió, no se corta el audio o el video que suena ni se
+    // cierra la foto ampliada.
+    if (!cambioCache && cambioAdjunto && mismoArchivo(cambioAdjunto.previousValue, cambioAdjunto.currentValue)) return;
+    this.reproducir = false;
+    this.noSeReproduce = false;
+    this.ampliada = false;
+    this.observar();
   }
 
   ngAfterViewInit(): void {
@@ -245,6 +257,12 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
     const previo = this.focoPrevio;
     this.focoPrevio = null;
     if (previo && typeof previo.focus === 'function') setTimeout(() => previo.focus());
+  }
+
+  /** La foto ampliada es una ventana modal: Tab y Mayús+Tab se quedan en su único botón (la X). */
+  retenerFoco(evento: Event): void {
+    evento.preventDefault();
+    this.cerrarAmpliada?.nativeElement.focus();
   }
 
   @HostListener('document:keydown.escape')
