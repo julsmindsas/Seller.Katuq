@@ -17,7 +17,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { MetaAdjunto, MetaAdjuntoKind } from '../../models/meta-thread.model';
 import { CacheAdjuntosRed, EstadoAdjuntoRed } from '../cache-adjuntos-red';
-import { LOCALE_POR_IDIOMA, claveEtiquetaAdjunto, esRutaDeMediaRed, kindDeAdjunto, tamanoLegibleRed } from '../adjuntos-red.util';
+import { LOCALE_POR_IDIOMA, claveEtiquetaAdjunto, kindDeAdjunto, tamanoLegibleRed } from '../adjuntos-red.util';
 
 /** ¿Es el mismo archivo? (Un refresco trae otro objeto con los mismos datos.) */
 function mismoArchivo(previo: MetaAdjunto | null | undefined, actual: MetaAdjunto | null | undefined): boolean {
@@ -108,16 +108,20 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
 
   /** Se puede ver o bajar (con la ruta del servidor o con la copia local de lo enviado en esta sesión). */
   get disponible(): boolean {
-    return !!this.cache && this.cache.sePuedePedir(this.adjunto);
+    return !!this.cache && this.cache.sePuedePedir(this.adjunto, this.saliente);
   }
 
-  /** Lo enviado por el comercio sin copia local: solo la tarjeta con nombre y tamaño. */
+  /**
+   * Lo enviado por el comercio sin copia local: solo la tarjeta con nombre, tamaño y «Enviado». El servidor manda
+   * la ruta también en lo saliente, pero con `disponible:false` y `motivo:'sin_archivo'` (Meta no deja volver a
+   * bajarlo); por eso no depende de que falte la ruta. Lo vencido sí dice que venció.
+   */
   get enviadoSinCopia(): boolean {
-    return !this.disponible && this.saliente && !esRutaDeMediaRed(this.adjunto?.url) && this.adjunto?.disponible !== false;
+    return !this.disponible && this.saliente && this.adjunto?.motivo !== 'vencido';
   }
 
   get estado(): EstadoAdjuntoRed | null {
-    return this.cache ? this.cache.estado(this.adjunto) : null;
+    return this.cache ? this.cache.estado(this.adjunto, this.saliente) : null;
   }
 
   get esImagen(): boolean {
@@ -207,7 +211,7 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
   }
 
   reintentarBajar(): void {
-    if (this.adjunto && this.cache) this.cache.pedir(this.adjunto, true);
+    if (this.adjunto && this.cache) this.cache.pedir(this.adjunto, true, this.saliente);
   }
 
   /** «Reproducir» de audio y video: baja el archivo y monta el reproductor. */
@@ -215,16 +219,16 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
     if (!this.adjunto || !this.cache) return;
     this.reproducir = true;
     this.noSeReproduce = false;
-    this.cache.pedir(this.adjunto);
+    this.cache.pedir(this.adjunto, false, this.saliente);
   }
 
   /** «Descargar»: baja el archivo si hace falta y lo guarda con su nombre. */
   descargar(): void {
     const a = this.adjunto;
     if (!a || !this.cache) return;
-    if (this.cache.guardarComo(a, this.nombreDescarga)) return;
+    if (this.cache.guardarComo(a, this.nombreDescarga, this.saliente)) return;
     this.pendienteGuardar = true;
-    this.cache.pedir(a, true);
+    this.cache.pedir(a, true, this.saliente);
   }
 
   /** Se revisa en cada vuelta: si la descarga pedida ya llegó, se guarda. */
@@ -233,7 +237,7 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
     const e = this.estado;
     if (!e || e.estado === 'cargando') return;
     this.pendienteGuardar = false;
-    if (e.estado === 'listo') this.cache.guardarComo(this.adjunto, this.nombreDescarga);
+    if (e.estado === 'listo') this.cache.guardarComo(this.adjunto, this.nombreDescarga, this.saliente);
   }
 
   alFallarReproduccion(): void {
@@ -274,10 +278,10 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
   private observar(): void {
     this.dejarDeObservar();
     const a = this.adjunto;
-    if (!a || !this.cache || !this.esImagen || !this.cache.sePuedePedir(a)) return;
+    if (!a || !this.cache || !this.esImagen || !this.cache.sePuedePedir(a, this.saliente)) return;
     const el = this.caja?.nativeElement;
     if (!el || typeof IntersectionObserver === 'undefined') {
-      this.cache.pedir(a);
+      this.cache.pedir(a, false, this.saliente);
       return;
     }
     this.observador = new IntersectionObserver(
@@ -286,7 +290,7 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
         // Dentro de Angular: así la respuesta de la descarga repinta la burbuja.
         this.zona.run(() => {
           this.dejarDeObservar();
-          if (this.adjunto && this.cache) this.cache.pedir(this.adjunto);
+          if (this.adjunto && this.cache) this.cache.pedir(this.adjunto, false, this.saliente);
         });
       },
       { rootMargin: '200px' },

@@ -21,9 +21,29 @@ export function motivoDeFalloRed(err: unknown): MotivoFalloAdjuntoRed {
 }
 
 /**
+ * Descargas a la vez por chat. El servidor deja 2 por empresa (y 3 por proceso) y responde 503 `MEDIA_OCUPADO`
+ * a las demás: así un chat con varias fotos a la vista no se las gana a sí mismo.
+ */
+export const MAX_DESCARGAS_A_LA_VEZ_RED = 2;
+/** Esperas antes de volver a pedir un archivo que recibió 503 (servidor ocupado o sin poder revisar). */
+export const ESPERAS_OCUPADO_RED_MS = [1000, 2000, 4000];
+
+interface Pedido {
+  clave: string;
+  ruta: string;
+  kind: ReturnType<typeof kindDeAdjunto>;
+  mime: string | null | undefined;
+  intento: number;
+}
+
+/**
  * Archivos ya bajados del chat abierto de Instagram o Facebook (ruta del archivo → dirección `blob:` local). La
- * crea y la suelta el detalle del chat: al cambiar de chat o al salir, `soltar()` revoca todas las direcciones y
- * sube la generación, así una descarga que llegue tarde (del chat anterior) se descarta.
+ * crea y la suelta el detalle del chat: al cambiar de chat o al salir, `soltar()` revoca todas las direcciones,
+ * vacía la cola, corta las esperas y sube la generación, así una descarga que llegue tarde (del chat anterior) se
+ * descarta.
+ *
+ * Lo que envió el comercio (`saliente`) llega del servidor con su ruta, pero con `disponible:false` y
+ * `motivo:'sin_archivo'`: Meta no deja volver a bajarlo. Para eso se mira primero la copia local de esta sesión.
  *
  * Solo se marca como segura la dirección que acaba de crear este navegador con el archivo que entregó nuestro
  * servidor (o con el que el asesor acaba de enviar), y el `Blob` se crea con un formato de la lista blanca (si
@@ -32,6 +52,8 @@ export function motivoDeFalloRed(err: unknown): MotivoFalloAdjuntoRed {
 export class CacheAdjuntosRed {
   private readonly mapa = new Map<string, EstadoAdjuntoRed>();
   private readonly enCurso = new Map<string, Subscription>();
+  private readonly cola: Pedido[] = [];
+  private readonly esperas = new Set<ReturnType<typeof setTimeout>>();
   private generacion = 0;
 
   /**
@@ -45,57 +67,107 @@ export class CacheAdjuntosRed {
     private readonly local: (a: MetaAdjunto) => Blob | null = () => null,
   ) {}
 
-  private clave(a: MetaAdjunto): string | null {
-    if (esRutaDeMediaRed(a.url)) return a.url;
-    return a.id ? `local:${a.id}` : null;
+  /** Copia local de lo que envió el comercio en esta sesión (solo para lo saliente). */
+  private copiaLocal(a: MetaAdjunto, saliente: boolean): Blob | null {
+    if (!saliente || !kindDeAdjunto(a)) return null;
+    if (a.motivo === 'vencido') return null;
+    return this.local(a);
   }
 
-  estado(a: MetaAdjunto | null | undefined): EstadoAdjuntoRed | null {
-    const c = a ? this.clave(a) : null;
+  private clave(a: MetaAdjunto, saliente: boolean): string | null {
+    if (this.copiaLocal(a, saliente)) {
+      const id = a.id || (esRutaDeMediaRed(a.url) ? a.url : null);
+      return id ? `local:${id}` : null;
+    }
+    return esRutaDeMediaRed(a.url) ? a.url : null;
+  }
+
+  estado(a: MetaAdjunto | null | undefined, saliente = false): EstadoAdjuntoRed | null {
+    const c = a ? this.clave(a, saliente) : null;
     return c ? this.mapa.get(c) || null : null;
   }
 
-  /** ¿Se puede ver o bajar? Con ruta del servidor, o con la copia local de lo que se envió en esta sesión. */
-  sePuedePedir(a: MetaAdjunto | null | undefined): boolean {
+  /**
+   * ¿Se puede ver o bajar? Con la copia local de lo que se envió en esta sesión (primero), o con la ruta del
+   * servidor si el servidor dice que hay de dónde bajarlo.
+   */
+  sePuedePedir(a: MetaAdjunto | null | undefined, saliente = false): boolean {
     if (!a || !kindDeAdjunto(a)) return false;
-    if (esRutaDeMediaRed(a.url)) return a.disponible !== false;
-    return !!this.clave(a) && !!this.local(a);
+    if (this.copiaLocal(a, saliente)) return !!this.clave(a, saliente);
+    return esRutaDeMediaRed(a.url) && a.disponible !== false;
   }
 
   /** Pide el archivo si no está, no va en camino o falló con algo que se puede reintentar (`forzar`). */
-  pedir(a: MetaAdjunto, forzar = false): void {
+  pedir(a: MetaAdjunto, forzar = false, saliente = false): void {
     const kind = kindDeAdjunto(a);
-    const clave = this.clave(a);
-    if (!kind || !clave || !this.sePuedePedir(a)) return;
+    const clave = this.clave(a, saliente);
+    if (!kind || !clave || !this.sePuedePedir(a, saliente)) return;
     const previo = this.mapa.get(clave);
     if (previo && !(forzar && previo.estado === 'error')) return;
 
-    if (!esRutaDeMediaRed(a.url)) {
-      const blob = this.local(a);
-      if (blob) this.ponerListo(clave, kind, blob, a.mime);
+    const blob = this.copiaLocal(a, saliente);
+    if (blob) {
+      this.ponerListo(clave, kind, blob, a.mime);
       return;
     }
 
-    const generacion = this.generacion;
-    const ruta = a.url;
     this.mapa.set(clave, { estado: 'cargando' });
-    const sub = this.descargar(ruta).subscribe({
+    this.cola.push({ clave, ruta: a.url as string, kind, mime: a.mime, intento: 0 });
+    this.bombear();
+  }
+
+  /** Lanza lo que haya en la cola sin pasar de `MAX_DESCARGAS_A_LA_VEZ_RED`. */
+  private bombear(): void {
+    while (this.enCurso.size < MAX_DESCARGAS_A_LA_VEZ_RED && this.cola.length) {
+      const p = this.cola.shift()!;
+      if (this.enCurso.has(p.clave)) continue;
+      this.lanzar(p);
+    }
+  }
+
+  private lanzar(p: Pedido): void {
+    const generacion = this.generacion;
+    let terminado = false;
+    const terminar = () => {
+      terminado = true;
+      this.enCurso.delete(p.clave);
+    };
+    const sub = this.descargar(p.ruta).subscribe({
       next: (blob) => {
-        this.enCurso.delete(clave);
+        terminar();
         if (generacion !== this.generacion) return;
         if (!(blob instanceof Blob) || blob.size === 0) {
-          this.mapa.set(clave, { estado: 'error', motivo: 'reintentar' });
-          return;
+          this.mapa.set(p.clave, { estado: 'error', motivo: 'reintentar' });
+        } else {
+          this.ponerListo(p.clave, p.kind, blob, p.mime);
         }
-        this.ponerListo(clave, kind, blob, a.mime);
+        this.bombear();
       },
       error: (err) => {
-        this.enCurso.delete(clave);
+        terminar();
         if (generacion !== this.generacion) return;
-        this.mapa.set(clave, { estado: 'error', motivo: motivoDeFalloRed(err) });
+        const status = err instanceof HttpErrorResponse ? err.status : Number((err as any)?.status);
+        // 503: el servidor tiene sus cupos llenos (MEDIA_OCUPADO) o no pudo revisar el permiso. Se espera un poco
+        // más cada vez antes de mostrar el error.
+        if (status === 503 && p.intento < ESPERAS_OCUPADO_RED_MS.length) {
+          this.esperar(p, generacion);
+        } else {
+          this.mapa.set(p.clave, { estado: 'error', motivo: motivoDeFalloRed(err) });
+        }
+        this.bombear();
       },
     });
-    if (!sub.closed) this.enCurso.set(clave, sub);
+    if (!terminado && !sub.closed) this.enCurso.set(p.clave, sub);
+  }
+
+  private esperar(p: Pedido, generacion: number): void {
+    const t = setTimeout(() => {
+      this.esperas.delete(t);
+      if (generacion !== this.generacion) return;
+      this.cola.push({ ...p, intento: p.intento + 1 });
+      this.bombear();
+    }, ESPERAS_OCUPADO_RED_MS[p.intento]);
+    this.esperas.add(t);
   }
 
   private ponerListo(clave: string, kind: ReturnType<typeof kindDeAdjunto>, blob: Blob, mimeDicho?: string | null): void {
@@ -105,8 +177,8 @@ export class CacheAdjuntosRed {
   }
 
   /** Guarda el archivo ya bajado con su nombre (sin abrir pestañas con el blob). */
-  guardarComo(a: MetaAdjunto, nombre: string): boolean {
-    const e = this.estado(a);
+  guardarComo(a: MetaAdjunto, nombre: string, saliente = false): boolean {
+    const e = this.estado(a, saliente);
     if (!e || e.estado !== 'listo') return false;
     const enlace = document.createElement('a');
     enlace.href = e.cruda;
@@ -119,11 +191,17 @@ export class CacheAdjuntosRed {
     return true;
   }
 
-  /** Suelta todo (al cambiar de chat o al salir): revoca las direcciones y corta las descargas en camino. */
+  /**
+   * Suelta todo (al cambiar de chat o al salir): revoca las direcciones, corta las descargas en camino, vacía la
+   * cola y corta las esperas.
+   */
   soltar(): void {
     this.generacion += 1;
     this.enCurso.forEach((s) => s.unsubscribe());
     this.enCurso.clear();
+    this.cola.length = 0;
+    this.esperas.forEach((t) => clearTimeout(t));
+    this.esperas.clear();
     this.mapa.forEach((e) => {
       if (e.estado === 'listo') URL.revokeObjectURL(e.cruda);
     });
