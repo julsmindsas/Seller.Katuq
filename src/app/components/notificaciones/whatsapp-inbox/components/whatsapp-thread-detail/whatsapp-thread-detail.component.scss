@@ -649,6 +649,10 @@ $wa-tinta-error: #b42f2f;
   i { margin-top: 2px; font-size: 13px; color: $wa-tinta-aviso; }
 }
 
+// Recibe el foco al cerrar «Enviar plantilla» si el chat pasó a otra persona mientras estaba abierta.
+.thread-detail__lectura:focus { outline: none; }
+.thread-detail__lectura:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+
 .thread-detail__lectura-texto {
   font-size: 12.5px !important;
   line-height: 1.45;
@@ -969,6 +973,9 @@ $wa-tinta-error: #b42f2f;
   font-family: var(--km-font);
   overflow: hidden;
 }
+
+// La caja recibe el foco al abrir (mientras cargan las plantillas): sin anillo, el foco pasa enseguida a la lista.
+.wpl-caja:focus { outline: none; }
 
 .wpl-cabeza {
   display: flex;

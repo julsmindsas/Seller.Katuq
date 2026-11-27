@@ -11598,5 +11598,8 @@
   "notificaciones.cierre2.plantilla.errores.cuentaInactiva": "Tu cuenta de WhatsApp no está activa. Escríbenos para revisarla.",
   "notificaciones.cierre2.plantilla.errores.elige": "Elige la plantilla que quieres enviar.",
   "notificaciones.cierre2.plantilla.errores.datos": "Revisa los datos de la plantilla: hay alguno vacío o muy largo.",
-  "notificaciones.cierre2.plantilla.errores.generico": "No pudimos enviar la plantilla. Intenta de nuevo en un momento."
+  "notificaciones.cierre2.plantilla.errores.generico": "No pudimos enviar la plantilla. Intenta de nuevo en un momento.",
+  "notificaciones.cierre2.plantilla.enviadaOtroChat": "Se envió la plantilla en el chat anterior.",
+  "notificaciones.cierre2.plantilla.errores.otroChat": "No se envió la plantilla en el chat anterior. Ábrelo y vuelve a intentarlo.",
+  "notificaciones.cierre2.plantilla.errores.sinPermiso": "No tienes permiso para escribir en los chats. Pídeselo a un administrador de tu empresa."
 }

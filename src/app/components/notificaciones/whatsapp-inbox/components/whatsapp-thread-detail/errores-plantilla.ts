@@ -27,6 +27,12 @@ const CLAVES_PLANTILLA: Record<string, string> = {
   invalid_line_id: "notificaciones.wa2.errores.linea",
   // 400: el proveedor no envió la plantilla (el saldo reservado se devuelve).
   send_failed: "notificaciones.wa2.errores.whatsappRechazo",
+  // 403 de requirePermission (permiso de responder chats, whatsapp_conversations.reply): pedirlo a un administrador.
+  PERMISSION_DENIED: "notificaciones.cierre2.plantilla.errores.sinPermiso",
+  ROLE_NOT_ALLOWED: "notificaciones.cierre2.plantilla.errores.sinPermiso",
+  ROLE_NOT_FOUND: "notificaciones.cierre2.plantilla.errores.sinPermiso",
+  // 503 de requirePantallaOPermiso: no se pudo leer el rol; no se envió nada.
+  NO_SE_PUDO_REVISAR: "notificaciones.cierre2.plantilla.errores.noSePudoRevisar",
   // 429 del freno de envíos.
   RATE_LIMIT_EXCEEDED: "notificaciones.redes3.errores.muyRapido",
   TOO_MANY_REQUESTS: "notificaciones.redes3.errores.muyRapido",

@@ -11766,5 +11766,8 @@
   "notificaciones.cierre2.plantilla.errores.cuentaInactiva": "Sua conta do WhatsApp não está ativa. Escreva para nós para verificarmos.",
   "notificaciones.cierre2.plantilla.errores.elige": "Escolha o modelo que você quer enviar.",
   "notificaciones.cierre2.plantilla.errores.datos": "Confira os dados do modelo: algum está vazio ou longo demais.",
-  "notificaciones.cierre2.plantilla.errores.generico": "Não conseguimos enviar o modelo. Tente de novo em instantes."
+  "notificaciones.cierre2.plantilla.errores.generico": "Não conseguimos enviar o modelo. Tente de novo em instantes.",
+  "notificaciones.cierre2.plantilla.enviadaOtroChat": "O modelo foi enviado no chat anterior.",
+  "notificaciones.cierre2.plantilla.errores.otroChat": "O modelo não foi enviado no chat anterior. Abra-o e tente de novo.",
+  "notificaciones.cierre2.plantilla.errores.sinPermiso": "Você não tem permissão para escrever nos chats. Peça a um administrador da sua empresa."
 }

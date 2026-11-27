@@ -11778,5 +11778,8 @@
   "notificaciones.cierre2.plantilla.errores.cuentaInactiva": "Your WhatsApp account isn't active. Write to us so we can check it.",
   "notificaciones.cierre2.plantilla.errores.elige": "Choose the template you want to send.",
   "notificaciones.cierre2.plantilla.errores.datos": "Check the template details: one is empty or too long.",
-  "notificaciones.cierre2.plantilla.errores.generico": "We couldn't send the template. Try again in a moment."
+  "notificaciones.cierre2.plantilla.errores.generico": "We couldn't send the template. Try again in a moment.",
+  "notificaciones.cierre2.plantilla.enviadaOtroChat": "The template was sent in the previous chat.",
+  "notificaciones.cierre2.plantilla.errores.otroChat": "The template wasn't sent in the previous chat. Open it and try again.",
+  "notificaciones.cierre2.plantilla.errores.sinPermiso": "You don't have permission to write in chats. Ask an administrator of your company for it."
 }

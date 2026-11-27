@@ -193,9 +193,15 @@ export class WhatsappThreadDetailComponent
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
   /** Bandeja única: clip, micrófono y envío de archivos del cuadro de escribir. */
   @ViewChild(WaAdjuntarComponent) adjuntar?: WaAdjuntarComponent;
-  /** «Enviar plantilla»: la lista de plantillas recibe el foco al abrir la ventana. */
+  /**
+   * «Enviar plantilla»: al abrir, el foco va a la caja (nunca está desactivada, así Esc y Tab funcionan de una);
+   * cuando llegan las plantillas pasa a la lista.
+   */
+  @ViewChild("plantillaCaja") plantillaCaja?: ElementRef<HTMLElement>;
   @ViewChild("plantillaSelect") plantillaSelect?: ElementRef<HTMLSelectElement>;
   @ViewChild("plantillaBoton") plantillaBoton?: ElementRef<HTMLButtonElement>;
+  /** Si el botón ya no está (el chat pasó a otra persona), el foco vuelve al aviso de solo lectura. */
+  @ViewChild("lecturaAviso") lecturaAviso?: ElementRef<HTMLElement>;
 
   // ─── «Enviar plantilla» (pasaron 24 h) ───────────────────────────────────
   /** La ventana de elegir plantilla está abierta para este chat. */
@@ -209,6 +215,8 @@ export class WhatsappThreadDetailComponent
   plantillaVariables: string[] = [];
   /** Clave de traducción del rechazo del envío (o texto ya armado del dueño del chat). */
   plantillaError = "";
+  /** Carga de la lista en curso: se cancela al reabrir, al cerrar y al salir, para que una respuesta vieja no pise. */
+  private plantillasSub: Subscription | null = null;
 
   // ─── Archivos (bandeja única, solo con `atencion`) ───────────────────────
   /** Archivos ya bajados de este chat (blob local); se sueltan al cambiar de chat y al salir. */
@@ -390,6 +398,7 @@ export class WhatsappThreadDetailComponent
     this.stopAutoRefresh();
     this.cache.soltar();
     this.envioSub.unsubscribe();
+    this.plantillasSub?.unsubscribe();
     if (this.envios.chatVisible === this.claveActual) this.envios.chatVisible = null;
   }
 
@@ -896,7 +905,8 @@ export class WhatsappThreadDetailComponent
 
   get puedeEnviarPlantilla(): boolean {
     const t = this.plantillaElegida;
-    if (!t || this.plantillaEnviando || !this.phoneHash) return false;
+    // Si mientras está abierta el chat pasa a otra persona, no se deja reintentar: cada intento daría 409.
+    if (!t || this.plantillaEnviando || !this.phoneHash || this.soloLectura) return false;
     return t.variables.every((_, i) => (this.plantillaVariables[i] || "").trim().length > 0);
   }
 
@@ -909,7 +919,8 @@ export class WhatsappThreadDetailComponent
     this.plantillaError = "";
     this.plantillaEnviando = false;
     this.cargarPlantillas();
-    setTimeout(() => this.plantillaSelect?.nativeElement.focus());
+    // La lista arranca desactivada mientras carga: el foco va a la caja, que siempre lo recibe.
+    setTimeout(() => this.plantillaCaja?.nativeElement.focus());
   }
 
   /** Cierra la ventana; `devolverFoco` lleva el foco al botón que la abrió (no al cambiar de chat). */
@@ -918,7 +929,12 @@ export class WhatsappThreadDetailComponent
     this.plantillaAbierta = false;
     this.plantillaEnviando = false;
     this.plantillaError = "";
-    if (devolverFoco) setTimeout(() => this.plantillaBoton?.nativeElement.focus());
+    this.plantillasSub?.unsubscribe();
+    this.plantillasSub = null;
+    this.plantillaCargando = false;
+    if (devolverFoco) {
+      setTimeout(() => (this.plantillaBoton || this.lecturaAviso)?.nativeElement.focus());
+    }
   }
 
   alFondoPlantilla(ev: MouseEvent): void {
@@ -942,10 +958,12 @@ export class WhatsappThreadDetailComponent
     const primero = enfocables[0];
     const ultimo = enfocables[enfocables.length - 1];
     const activo = document.activeElement;
-    if (ev.shiftKey && (activo === primero || !caja.contains(activo))) {
+    // Con el foco en la caja misma (recién abierta) Mayús+Tab saldría hacia atrás: cuenta como fuera.
+    const fuera = activo === caja || !caja.contains(activo);
+    if (ev.shiftKey && (activo === primero || fuera)) {
       ev.preventDefault();
       ultimo.focus();
-    } else if (!ev.shiftKey && (activo === ultimo || !caja.contains(activo))) {
+    } else if (!ev.shiftKey && (activo === ultimo || fuera)) {
       ev.preventDefault();
       primero.focus();
     }
@@ -959,14 +977,21 @@ export class WhatsappThreadDetailComponent
 
   cargarPlantillas(): void {
     const seq = this.chatSeq;
+    this.plantillasSub?.unsubscribe();
     this.plantillaCargando = true;
     this.plantillaErrorCarga = false;
     this.plantillas = [];
-    this.inbox.getKapsoTemplates().subscribe({
+    this.plantillasSub = this.inbox.getKapsoTemplates().subscribe({
       next: (lista) => {
         if (seq !== this.chatSeq) return;
         this.plantillas = lista;
         this.plantillaCargando = false;
+        // Ya se puede elegir: si el foco sigue en la caja o se perdió (el «Reintentar» desaparece), pasa a la lista.
+        setTimeout(() => {
+          const caja = this.plantillaCaja?.nativeElement;
+          const activo = document.activeElement;
+          if (caja && (!activo || activo === caja || activo === document.body)) this.plantillaSelect?.nativeElement.focus();
+        });
       },
       error: () => {
         if (seq !== this.chatSeq) return;
@@ -995,7 +1020,11 @@ export class WhatsappThreadDetailComponent
       })
       .subscribe({
         next: () => {
-          if (seq !== this.chatSeq) return;
+          if (seq !== this.chatSeq) {
+            // Se cambió de chat mientras salía: la plantilla cuesta saldo, así que se avisa que sí se envió.
+            this.toastr.success(this.translate.instant("notificaciones.cierre2.plantilla.enviadaOtroChat"));
+            return;
+          }
           this.plantillaEnviando = false;
           this.cerrarPlantilla();
           this.toastr.success(this.translate.instant("notificaciones.cierre2.plantilla.enviada"));
@@ -1004,7 +1033,11 @@ export class WhatsappThreadDetailComponent
           this.cargarEstadoBot(hash);
         },
         error: (err: any) => {
-          if (seq !== this.chatSeq) return;
+          if (seq !== this.chatSeq) {
+            // Falló en el chat anterior: se avisa sin culpar al chat abierto (esta ruta va sin aviso del interceptor).
+            this.toastr.error(this.translate.instant("notificaciones.cierre2.plantilla.errores.otroChat"));
+            return;
+          }
           this.plantillaEnviando = false;
           if (esErrorChatConDueno(err)) {
             this.ponerDueno(err.error.owner || null);

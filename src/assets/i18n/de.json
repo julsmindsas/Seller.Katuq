@@ -11598,5 +11598,8 @@
   "notificaciones.cierre2.plantilla.errores.cuentaInactiva": "Ihr WhatsApp-Konto ist nicht aktiv. Schreiben Sie uns, damit wir es prüfen.",
   "notificaciones.cierre2.plantilla.errores.elige": "Wählen Sie die Vorlage, die Sie senden möchten.",
   "notificaciones.cierre2.plantilla.errores.datos": "Prüfen Sie die Angaben der Vorlage: Eine ist leer oder zu lang.",
-  "notificaciones.cierre2.plantilla.errores.generico": "Wir konnten die Vorlage nicht senden. Versuchen Sie es gleich noch einmal."
+  "notificaciones.cierre2.plantilla.errores.generico": "Wir konnten die Vorlage nicht senden. Versuchen Sie es gleich noch einmal.",
+  "notificaciones.cierre2.plantilla.enviadaOtroChat": "Die Vorlage wurde im vorherigen Chat gesendet.",
+  "notificaciones.cierre2.plantilla.errores.otroChat": "Die Vorlage wurde im vorherigen Chat nicht gesendet. Öffnen Sie ihn und versuchen Sie es noch einmal.",
+  "notificaciones.cierre2.plantilla.errores.sinPermiso": "Sie haben keine Berechtigung, in Chats zu schreiben. Bitten Sie eine Administratorin oder einen Administrator Ihres Unternehmens darum."
 }
