@@ -364,6 +364,7 @@ export class BandejaListaComponent implements OnChanges {
    * Suma a lo filtrado los chats que el servidor encontró para esta misma búsqueda (por número completo o por
    * el último mensaje, también en páginas sin cargar). Si el chat ya está cargado se usa la fila cargada, que es
    * la que el canal en vivo pone al día. Los demás filtros se aplican igual; sin búsqueda no cambia nada.
+   * Una búsqueda con letras se vuelve a revisar aquí; una de solo cifras, no (el servidor ve el número entero).
    */
   private conBusquedaServidor(todas: ConversacionResumen[], filtradas: ConversacionResumen[]): ConversacionResumen[] {
     const q = normalizarTexto(this.filtro.busqueda);
@@ -374,7 +375,11 @@ export class BandejaListaComponent implements OnChanges {
       .filter((c) => !yaEstan.has(c.clave))
       .map((c) => cargadas.get(c.clave) ?? c);
     if (!candidatas.length) return filtradas;
-    const extra = filtrar(candidatas, { ...this.filtro, busqueda: "" }, this.miEmail, this.colas);
+    // Solo cifras («4521», «+57 300»): se confía en el servidor, que ve el número completo. Con letras («hola 2»,
+    // «Ana 3») el servidor se queda con las cifras y trae chats cuyo número termina en ellas: aquí se exige que el
+    // texto aparezca de verdad en el nombre, el número o el último mensaje.
+    const soloCifras = /^[\d\s+()-]+$/.test(this.filtro.busqueda.trim());
+    const extra = filtrar(candidatas, soloCifras ? { ...this.filtro, busqueda: "" } : this.filtro, this.miEmail, this.colas);
     return extra.length ? mezclar([filtradas, extra]) : filtradas;
   }
 
