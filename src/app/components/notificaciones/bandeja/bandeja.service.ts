@@ -8,6 +8,10 @@ import { MetaCanal, MetaHilo } from "../meta-inbox/models/meta-thread.model";
 import { CanalBandeja, CargaBandeja, ConversacionResumen } from "./bandeja.models";
 import { desdeRed, desdeWhatsapp, mezclar } from "./bandeja.util";
 
+/** Chats por página de «Ver más» (el tamaño que usa el servidor por defecto) y el tope que acepta por petición. */
+const PAGINA_WHATSAPP = 20;
+const MAX_PAGINA_WHATSAPP = 100;
+
 /** Lo que aporta un canal a una carga. */
 interface AporteCanal {
   canal: CanalBandeja;
@@ -98,22 +102,31 @@ export class BandejaService {
     );
   }
 
-  /** Las páginas 2..n que fallen se ignoran; si falla la 1, el canal cuenta como caído. */
+  /**
+   * Refresca las páginas de WhatsApp ya abiertas con «Ver más» en una sola petición (`pageSize` = 20 por página,
+   * que el servidor topa en 100). Cada petición recalcula los 90 días del comercio y gasta el cupo de consultas,
+   * así que pedir una por página hacía la bandeja lenta. Más de 100 chats van en bloques de 100. Los bloques 2..n
+   * que fallen se ignoran; si falla el primero, el canal cuenta como caído.
+   */
   private traerWhatsapp(paginas: number): Observable<AporteCanal> {
-    const numeros = Array.from({ length: paginas }, (_, i) => i + 1);
+    const total = PAGINA_WHATSAPP * paginas;
+    const tamano = Math.min(MAX_PAGINA_WHATSAPP, total);
+    const bloques = Math.ceil(total / tamano);
+    const numeros = Array.from({ length: bloques }, (_, i) => i + 1);
     return forkJoin(
       numeros.map((pagina) =>
-        this.whatsapp.getThreads({ page: pagina }).pipe(catchError(() => of(null))),
+        this.whatsapp.getThreads({ page: pagina, pageSize: tamano }).pipe(catchError(() => of(null))),
       ),
     ).pipe(
       map((resultados) => {
         if (!resultados[0]) return { canal: "whatsapp", caido: true, conversaciones: [] };
         const buenas = resultados.filter((r): r is NonNullable<typeof r> => !!r);
+        const todas = mezclar(buenas.map((r) => r.items.map(desdeWhatsapp)));
         return {
           canal: "whatsapp",
           caido: false,
-          conversaciones: mezclar(buenas.map((r) => r.items.map(desdeWhatsapp))),
-          hayMas: !!buenas[buenas.length - 1].hasMore,
+          conversaciones: todas.slice(0, total),
+          hayMas: todas.length > total || !!buenas[buenas.length - 1].hasMore,
         } as AporteCanal;
       }),
     );
