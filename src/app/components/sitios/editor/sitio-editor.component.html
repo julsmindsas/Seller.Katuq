@@ -34,12 +34,12 @@
       </button>
     </div>
 
-    <div class="dispositivos">
-      <button [class.is-active]="dispositivo === 'escritorio'" (click)="dispositivo = 'escritorio'">
+    <div class="dispositivos" role="group" aria-label="Ver la página en">
+      <button [class.is-active]="dispositivo === 'escritorio'" [attr.aria-pressed]="dispositivo === 'escritorio'" (click)="dispositivo = 'escritorio'">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
         <span class="dispositivos__texto">Computador</span>
       </button>
-      <button [class.is-active]="dispositivo === 'movil'" (click)="dispositivo = 'movil'">
+      <button [class.is-active]="dispositivo === 'movil'" [attr.aria-pressed]="dispositivo === 'movil'" (click)="dispositivo = 'movil'">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 19h2"/></svg>
         <span class="dispositivos__texto">Celular</span>
       </button>
@@ -101,18 +101,24 @@
           </button>
         </div>
       </div>
-      <nav class="pestanas">
+      <!-- Guía para los asistentes de IA que manejan el navegador: la leen aunque no se vea. La persona puede copiarla. -->
+      <section class="guia-asistentes" aria-label="Guía para asistentes de IA">
+        <div class="guia-asistentes__texto">{{ textoGuiaAsistentes }}</div>
+        <button type="button" class="guia-asistentes__copiar" (click)="copiarGuiaAsistentes()"
+                title="Pégala en Claude, ChatGPT o el asistente que uses, para que te ayude a armar tu página">Copiar guía para mi asistente</button>
+      </section>
+      <nav class="pestanas" aria-label="Pestañas del editor">
         <!-- Editar la página conversando con la IA (bandera landingPrompt). -->
-        <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" (click)="abrirChatIA()">✨ Con IA</button>
-        <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
-        <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
-        <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
-        <button [class.is-active]="panel === 'resenas'" (click)="panel = 'resenas'; cargarResenas()">
+        <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" [attr.aria-current]="panel === 'ia' ? 'true' : null" (click)="abrirChatIA()">✨ Con IA</button>
+        <button [class.is-active]="panel === 'bloques'" [attr.aria-current]="panel === 'bloques' ? 'true' : null" (click)="panel = 'bloques'">Secciones</button>
+        <button [class.is-active]="panel === 'diseno'" [attr.aria-current]="panel === 'diseno' ? 'true' : null" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
+        <button [class.is-active]="panel === 'tienda'" [attr.aria-current]="panel === 'tienda' ? 'true' : null" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
+        <button [class.is-active]="panel === 'resenas'" [attr.aria-current]="panel === 'resenas' ? 'true' : null" (click)="panel = 'resenas'; cargarResenas()">
           Opiniones
           <span class="pestana-aviso" *ngIf="resenasPendientes">{{ resenasPendientes }}</span>
         </button>
-        <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
-        <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'; versionesCargadas || cargarVersiones()">Ajustes</button>
+        <button [class.is-active]="panel === 'pauta'" [attr.aria-current]="panel === 'pauta' ? 'true' : null" (click)="panel = 'pauta'">Pauta</button>
+        <button [class.is-active]="panel === 'ajustes'" [attr.aria-current]="panel === 'ajustes' ? 'true' : null" (click)="panel = 'ajustes'; versionesCargadas || cargarVersiones()">Ajustes</button>
       </nav>
 
       <!-- ── Con IA: pedirle cambios a la página conversando ──
@@ -181,7 +187,7 @@
                     <span class="chat-ia__motivo">{{ a }}</span>
                   </li>
                 </ul>
-                <div class="chat-ia__decision" *ngIf="m.propuesta">
+                <div class="chat-ia__decision" *ngIf="m.propuesta" role="group" aria-label="Propuesta de la IA">
                   <ng-container *ngIf="m.propuesta.estado === 'pendiente'">
                     <button type="button" class="btn-primario btn-primario--sm" (click)="aplicarPropuestaChatIA(m)" [disabled]="editandoIA">Aplicar cambios</button>
                     <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="descartarPropuestaChatIA(m)" [disabled]="editandoIA">Descartar</button>
@@ -253,6 +259,7 @@
           <div class="campo chat-ia__entrada" *ngIf="propositoAdjuntos !== 'usar'">
             <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"
                       (keydown.enter)="alEnterChatIA($any($event))" (paste)="alPegarEnChat($any($event))"
+                      aria-label="Pídele un cambio a la IA"
                       [placeholder]="adjuntosIA.length ? 'Opcional: cuéntame qué te gusta de la imagen (por ejemplo: los colores)' : (lugarIA ? '¿Qué quieres cambiar en esta sección? Ej: ponle fondo oscuro y un título más corto' : '¿Qué quieres cambiar? Ej: pon colores verdes y un título más llamativo')"></textarea>
           </div>
           <div class="chat-ia__acciones" *ngIf="propositoAdjuntos !== 'usar'">
@@ -261,7 +268,7 @@
                      [disabled]="editandoIA || adjuntosIA.length >= maxReferencias" (change)="alElegirAdjuntos($event)" />
               📎 Mostrar una foto o PDF
             </label>
-            <button class="btn-primario btn-primario--sm" (click)="enviarChatIA()"
+            <button class="btn-primario btn-primario--sm" (click)="enviarChatIA()" [attr.aria-label]="editandoIA ? 'Trabajando…' : 'Aplicar cambios: enviar pedido a la IA'"
                     [disabled]="editandoIA || preparandoAdjuntos || (mensajeIA.trim().length < 3 && !adjuntosIA.length)">
               {{ editandoIA ? 'Trabajando…' : 'Aplicar cambios' }}
             </button>
@@ -286,13 +293,13 @@
              trabaja; el resto del panel funciona igual para todas. -->
         <div class="paginas">
           <div class="paginas__fila">
-            <button class="paginas__chip" [class.is-active]="paginaActiva === -1"
+            <button class="paginas__chip" [class.is-active]="paginaActiva === -1" [attr.aria-current]="paginaActiva === -1 ? 'page' : null"
                     (click)="irAPagina(-1)">Inicio</button>
             <button class="paginas__chip" *ngFor="let p of paginas; let i = index"
-                    [class.is-active]="paginaActiva === i" (click)="irAPagina(i)">
+                    [class.is-active]="paginaActiva === i" [attr.aria-current]="paginaActiva === i ? 'page' : null" (click)="irAPagina(i)">
               {{ p.titulo }}
             </button>
-            <button class="paginas__mas" (click)="agregarPagina()" title="Nueva página">+</button>
+            <button class="paginas__mas" (click)="agregarPagina()" title="Nueva página" aria-label="Nueva página">+</button>
           </div>
 
           <div class="paginas__barra" *ngIf="paginaEnEdicion as pag">
@@ -327,7 +334,7 @@
         <!-- ── Qué te falta ──
              Lo que convierte una caja de piezas en una tienda que se termina:
              una lista corta y honesta de lo que falta para publicar tranquilo. -->
-        <div class="pendientes" [class.is-listo]="!pendientes.length">
+        <div class="pendientes" [class.is-listo]="!pendientes.length" role="region" aria-label="Pendientes para publicar">
           <div class="pendientes__cabeza">
             <strong>{{ pendientes.length ? 'Te falta' : 'Listo para publicar' }}</strong>
             <span *ngIf="pendientes.length">{{ pendientes.length }}</span>
@@ -362,6 +369,7 @@
                cdkDrag [cdkDragData]="i"
                [class.is-elegida]="i === seleccionado"
                [class.is-oculta]="b.visible === false"
+               role="group" [attr.aria-label]="'Sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo) + (b.visible === false ? ' (oculta)' : '')"
                (click)="seleccionar(i)">
             <!-- Fantasma que deja el hueco mientras se arrastra. -->
             <div class="seccion__hueco" *cdkDragPlaceholder></div>
@@ -387,6 +395,7 @@
 
             <div class="seccion__acciones">
               <button class="ojo" [class.is-visible]="b.visible !== false"
+                      [attr.aria-label]="(b.visible === false ? 'Mostrar' : 'Ocultar') + ' la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)"
                       (click)="$event.stopPropagation(); alternarVisible(i)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path *ngIf="b.visible !== false" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
@@ -397,22 +406,22 @@
 
               <span class="seccion__relleno"></span>
 
-              <button class="icono" title="Subir" [disabled]="i === 0"
+              <button class="icono" title="Subir" [attr.aria-label]="'Subir la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)" [disabled]="i === 0"
                       (click)="$event.stopPropagation(); mover(i, -1)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               </button>
-              <button class="icono" title="Bajar" [disabled]="i === bloques.length - 1"
+              <button class="icono" title="Bajar" [attr.aria-label]="'Bajar la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)" [disabled]="i === bloques.length - 1"
                       (click)="$event.stopPropagation(); mover(i, 1)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
               </button>
-              <button class="icono" title="Mover a otra página" *ngIf="paginas.length"
+              <button class="icono" title="Mover a otra página" [attr.aria-label]="'Mover a otra página la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)" *ngIf="paginas.length"
                       (click)="$event.stopPropagation(); moverAPagina(i)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h9M4 12h9M4 18h9"/><path d="m17 8 4 4-4 4"/></svg>
               </button>
-              <button class="icono" title="Duplicar" (click)="$event.stopPropagation(); duplicar(i)">
+              <button class="icono" title="Duplicar" [attr.aria-label]="'Duplicar la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)" (click)="$event.stopPropagation(); duplicar(i)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
               </button>
-              <button class="icono icono--peligro" title="Quitar de la página"
+              <button class="icono icono--peligro" title="Quitar de la página" [attr.aria-label]="'Quitar la sección ' + (i + 1) + ': ' + nombreDeTipo(b.tipo)"
                       (click)="$event.stopPropagation(); eliminar(i)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
               </button>
@@ -661,7 +670,7 @@
               <div class="miniaturas" *ngIf="b.datos.mosaico?.length">
                 <div class="miniatura" *ngFor="let img of b.datos.mosaico; let i = index">
                   <img [src]="img" alt="" />
-                  <button (click)="quitarFotoMosaico(b, i)" title="Quitar">×</button>
+                  <button (click)="quitarFotoMosaico(b, i)" title="Quitar" aria-label="Quitar">×</button>
                 </div>
               </div>
               <label class="archivo" *ngIf="(b.datos.mosaico?.length || 0) < 4">
@@ -679,7 +688,7 @@
                 <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
                   <!-- Cada foto es su dirección o, con descripción, { url, alt }. -->
                   <img [src]="$any(img)?.url || img" [alt]="$any(img)?.alt || ''" />
-                  <button (click)="quitarFotoCarrusel(b, i)" title="Quitar">×</button>
+                  <button (click)="quitarFotoCarrusel(b, i)" title="Quitar" aria-label="Quitar">×</button>
                 </div>
               </div>
               <label class="archivo" *ngIf="(b.datos.imagenes?.length || 0) < 5">
@@ -785,7 +794,7 @@
             <div class="miniaturas" *ngIf="b.datos.imagenes?.length">
               <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
                 <img [src]="img.url" alt="" />
-                <button (click)="quitarImagenGaleria(i)" title="Quitar">×</button>
+                <button (click)="quitarImagenGaleria(i)" title="Quitar" aria-label="Quitar">×</button>
               </div>
             </div>
             <div class="campo">
@@ -837,7 +846,7 @@
                   <span class="elegido__foto elegido__foto--vacia" *ngIf="!p.imagen"></span>
                   <span class="elegido__titulo">{{ p.titulo }}</span>
                   <button class="elegido__quitar" (click)="quitarProducto(i)"
-                          title="Quitar de la selección">✕</button>
+                          title="Quitar de la selección" aria-label="Quitar de la selección">✕</button>
                 </div>
               </div>
 
@@ -923,7 +932,7 @@
             <div class="campo">
               <label>Foto</label>
               <div class="miniaturas" *ngIf="b.datos.imagen">
-                <div class="miniatura"><img [src]="b.datos.imagen" alt="" /><button (click)="b.datos.imagen = ''; marcarSucio()" title="Quitar">×</button></div>
+                <div class="miniatura"><img [src]="b.datos.imagen" alt="" /><button (click)="b.datos.imagen = ''; marcarSucio()" title="Quitar" aria-label="Quitar">×</button></div>
               </div>
               <label class="archivo">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
@@ -1332,7 +1341,7 @@
             <div class="miniaturas" *ngIf="b.datos.fotos?.length">
               <div class="miniatura" *ngFor="let f of b.datos.fotos; let i = index">
                 <img [src]="f" alt="" />
-                <button (click)="quitarFotoInstagram(b, i)" title="Quitar">×</button>
+                <button (click)="quitarFotoInstagram(b, i)" title="Quitar" aria-label="Quitar">×</button>
               </div>
             </div>
             <div class="campo">
@@ -1813,7 +1822,7 @@
               <ng-container *ngIf="disenoNuevo && (!c.imagen || formaColumnas(b) === 'tarjetas') && !c.iconoImagen">
                 <span class="repetible__rotulo">Ícono (opcional)</span>
                 <div class="iconos">
-                  <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
+                  <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic" [attr.aria-label]="'Ícono: ' + ic"
                           [class.is-active]="c.icono === ic" [attr.aria-pressed]="c.icono === ic"
                           (click)="c.icono = c.icono === ic ? '' : ic; marcarSucio()">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2003,10 +2012,10 @@
                   </span>
                   <strong>{{ nombreDeElemento(el.tipo) }}</strong>
                   <span class="elemento__relleno"></span>
-                  <button class="icono" (click)="duplicarElemento(b, i)" title="Duplicar">
+                  <button class="icono" (click)="duplicarElemento(b, i)" title="Duplicar" aria-label="Duplicar">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5h10"/></svg>
                   </button>
-                  <button class="icono icono--peligro" (click)="quitarElemento(b, i)" title="Eliminar">
+                  <button class="icono icono--peligro" (click)="quitarElemento(b, i)" title="Eliminar" aria-label="Eliminar">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
                   </button>
                 </div>
@@ -2025,7 +2034,7 @@
                             [title]="a.nombre">{{ a.corto }}</button>
                   </div>
                   <div class="colocacion__grupo" role="group" aria-label="Alineación">
-                    <button *ngFor="let al of alineaciones" [title]="al.nombre"
+                    <button *ngFor="let al of alineaciones" [title]="al.nombre" [attr.aria-label]="al.nombre"
                             [class.is-active]="posDe(el).alineacion === al.id"
                             (click)="cambiarPos(el, 'alineacion', al.id)"
                             [title]="al.nombre">
@@ -2070,7 +2079,7 @@
                            (change)="escribirCoordenada(b, el, 'h', $any($event.target).value)" />
                     <em>%</em>
                     <button type="button" class="coordenadas__quitar" *ngIf="el.pos.h !== undefined"
-                            (click)="quitarAlto(el)" title="Que crezca con su contenido">×</button>
+                            (click)="quitarAlto(el)" title="Que crezca con su contenido" aria-label="Que crezca con su contenido">×</button>
                   </label>
                   <label class="coordenadas__campo">
                     <span>Giro</span>
@@ -2079,7 +2088,7 @@
                            (change)="escribirCoordenada(b, el, 'angulo', $any($event.target).value)" />
                     <em>°</em>
                     <button type="button" class="coordenadas__quitar" *ngIf="el.pos.angulo !== undefined"
-                            (click)="quitarGiro(el)" title="Enderezar">×</button>
+                            (click)="quitarGiro(el)" title="Enderezar" aria-label="Enderezar">×</button>
                   </label>
 
                   <!-- Quién tapa a quién, solo si hay con quién superponerse. -->
@@ -2104,14 +2113,14 @@
                     <input type="color" [value]="el.estilo?.colorTexto || '#222222'"
                            (change)="cambiarEstiloElemento(el, 'colorTexto', $any($event.target).value)" />
                     <button type="button" *ngIf="el.estilo?.colorTexto"
-                            (click)="quitarColor(el, 'colorTexto')" title="Heredar el de la sección">×</button>
+                            (click)="quitarColor(el, 'colorTexto')" title="Heredar el de la sección" aria-label="Heredar el de la sección">×</button>
                   </label>
                   <label class="vestido-objeto__color">
                     <span>Fondo</span>
                     <input type="color" [value]="el.estilo?.fondo || '#ffffff'"
                            (change)="cambiarEstiloElemento(el, 'fondo', $any($event.target).value)" />
                     <button type="button" *ngIf="el.estilo?.fondo"
-                            (click)="quitarColor(el, 'fondo')" title="Sin fondo propio">×</button>
+                            (click)="quitarColor(el, 'fondo')" title="Sin fondo propio" aria-label="Sin fondo propio">×</button>
                   </label>
                   <div class="vestido-objeto__escala" role="group" aria-label="Tamaño del texto">
                     <button type="button" *ngFor="let e of escalas"
@@ -2208,7 +2217,7 @@
 
                     <!-- PLAN-V2 T14: la tarjeta «solución» sin foto lleva su ícono. -->
                     <div class="iconos" *ngIf="el.datos.variante === 'icono' || (disenoNuevo && el.datos.variante === 'solucion' && !t.imagen)">
-                      <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
+                      <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic" [attr.aria-label]="'Ícono: ' + ic"
                               [class.is-active]="t.icono === ic"
                               (click)="t.icono = ic; marcarSucio()" [title]="ic">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2359,7 +2368,7 @@
                 <div class="fondos">
                   <button class="fondo-op" [class.is-active]="!estiloDe(b).fondo && !estiloDe(b).fondoImagen"
                           (click)="ponerFondo(b, '')">Ninguno</button>
-                  <button class="fondo-op" *ngFor="let c of fondosSugeridos" [title]="'Fondo ' + c"
+                  <button class="fondo-op" *ngFor="let c of fondosSugeridos" [title]="'Fondo ' + c" [attr.aria-label]="'Fondo ' + c"
                           [style.background]="c" [class.is-active]="estiloDe(b).fondo === c"
                           (click)="ponerFondo(b, c)" [title]="c"></button>
                   <input type="color" [ngModel]="estiloDe(b).fondo || '#ffffff'"

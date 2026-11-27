@@ -3165,6 +3165,37 @@ small.aviso { display: block; }
   }
 }
 
+// Guía para asistentes de IA: el texto lo leen los asistentes (no se ve); la persona solo ve el botón de copiarla.
+.guia-asistentes {
+  flex: none;
+  padding: 2px 12px 0;
+  text-align: right;
+
+  &__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: pre-line;
+  }
+
+  &__copiar {
+    border: 0;
+    background: none;
+    padding: 2px 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: #5F3FE0;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 3px solid #7C5CFF !important; outline-offset: 2px; }
+  }
+}
+
 // Ticket 1247: buscador de ajustes, avance hacia publicar y ajuste encontrado.
 .buscador-ajustes {
   flex: none;

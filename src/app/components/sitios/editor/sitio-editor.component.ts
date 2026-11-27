@@ -40,6 +40,7 @@ import { PanelSitio, catalogoDisenoNuevo, esTipoNuevoSitio, fichasFieles, panelD
 import { DestinoDeInicio, anclaSinDestino as anclaSinDestinoEnInicio, destinosDelInicio, paginaInternaQueNoExiste } from "./anclas-inicio";
 import { clavePromesa } from "./paneles/fichas/fichas-datos";
 import { pestanasListas } from "./paneles/vitrina/vitrina-datos";
+import { armarGuiaAsistentes } from "./guia-asistentes";
 
 /** Cuántas confirmaciones de promesas guarda el sitio (el servidor corta en 40, `siteBlocks.js`). */
 const MAX_PROMESAS_CONFIRMADAS = 40;
@@ -3968,6 +3969,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
   private destinosCache: { firma: string; lista: DestinoDeInicio[] } | null = null;
   trackDestino = (_: number, d: DestinoDeInicio): string => d.valor;
+
+  /** Guía para los asistentes de IA que manejan el navegador: dónde están y cuál es el camino corto. Solo lectura. */
+  get textoGuiaAsistentes(): string {
+    return armarGuiaAsistentes({
+      nombre: this.nombre,
+      pagina: this.nombrePaginaActiva,
+      publicado: !!this.sitio && this.sitio.estado === "publicado",
+      sinGuardar: this.sucio,
+      conIA: this.puedeEditarConIA,
+      propone: this.disenoNuevo,
+      secciones: this.bloques.map(b => this.nombreDeTipo(b.tipo) + (b.visible === false ? " (oculta)" : "")),
+      pendientes: this.pendientes,
+    });
+  }
+
+  copiarGuiaAsistentes(): void {
+    navigator.clipboard
+      .writeText(this.textoGuiaAsistentes)
+      .then(() => this.toastr.success("Guía copiada. Pégala en el chat de tu asistente."))
+      .catch(() => this.toastr.error("No pudimos copiar la guía. Inténtalo de nuevo."));
+  }
 
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
   copiarDns(valor: string): void {
