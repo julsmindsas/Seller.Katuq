@@ -11,14 +11,15 @@
   <ng-container *ngIf="resumen as r">
     <!-- Tres cifras -->
     <div class="eq-cifras">
+      <!-- Sin aria-label: el lector dice la etiqueta y la cifra visibles, y luego la acción -->
       <button
         type="button"
         class="eq-cifra eq-cifra--accion"
         (click)="verAsesor.emit(sinAsignar)"
-        [attr.aria-label]="'notificaciones.bandeja.equipo.verSinAsignar' | translate"
       >
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinAsignar' | translate }}</span>
         <span class="eq-cifra__valor">{{ r.sinAsignar }}</span>
+        <span class="eq-solo-lector">{{ 'notificaciones.informes2.verChatsLector' | translate }}</span>
       </button>
       <div class="eq-cifra">
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinResponder' | translate }}</span>
@@ -27,6 +28,15 @@
       <div class="eq-cifra">
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.disponibles' | translate }}</span>
         <span class="eq-cifra__valor">{{ disponibles }}</span>
+      </div>
+      <!-- Cifras que el servidor aún no manda: salen solo si llegan -->
+      <div class="eq-cifra" *ngIf="esperaMasLarga !== null">
+        <span class="eq-cifra__etiqueta">{{ 'notificaciones.informes2.esperaMasLarga' | translate }}</span>
+        <span class="eq-cifra__valor">{{ tiempo(esperaMasLarga!) }}</span>
+      </div>
+      <div class="eq-cifra" *ngIf="pasaronObjetivo !== null">
+        <span class="eq-cifra__etiqueta">{{ 'notificaciones.informes2.pasaronObjetivo' | translate }}</span>
+        <span class="eq-cifra__valor" [class.eq-cifra__valor--alerta]="pasaronObjetivo! > 0">{{ pasaronObjetivo }}</span>
       </div>
     </div>
 
@@ -59,9 +69,9 @@
                 type="button"
                 class="eq-asesor"
                 (click)="$event.stopPropagation(); verAsesor.emit(a.email)"
-                [attr.aria-label]="'notificaciones.bandeja.equipo.verChats' | translate: { nombre: a.nombre || a.email }"
               >
                 <span class="eq-asesor__nombre">{{ a.nombre || a.email }}</span>
+                <span class="eq-solo-lector">{{ 'notificaciones.informes2.verChatsLector' | translate }}</span>
               </button>
               <span class="eq-pill" [class.eq-pill--ausente]="a.estado === 'ausente'">
                 {{ (a.estado === 'ausente' ? 'notificaciones.bandeja.estado.ausente' : 'notificaciones.bandeja.estado.disponible') | translate }}
@@ -96,7 +106,6 @@
             type="button"
             class="eq-cola__ver"
             (click)="verCola.emit(c.id)"
-            [attr.aria-label]="'notificaciones.bandeja.colas.verChats' | translate: { nombre: c.nombre }"
           >
             <span class="eq-cola__nombre">{{ c.nombre }}</span>
             <span class="eq-cola__pills">
@@ -110,6 +119,7 @@
               <span class="eq-cola__cifra" [class.eq-cola__cifra--alerta]="c.sinResponder > 0">{{ 'notificaciones.bandeja.colas.sinResponder' | translate: { n: c.sinResponder } }}</span>
               <span class="eq-cola__cifra">{{ 'notificaciones.bandeja.colas.chats' | translate: { n: c.chats } }}</span>
             </span>
+            <span class="eq-solo-lector">{{ 'notificaciones.informes2.verChatsLector' | translate }}</span>
           </button>
           <button type="button" class="eq-btn eq-btn--sec eq-cola__editar" *ngIf="esAdmin" (click)="editarCola(c.id)">
             {{ 'notificaciones.bandeja.colas.editar' | translate }}

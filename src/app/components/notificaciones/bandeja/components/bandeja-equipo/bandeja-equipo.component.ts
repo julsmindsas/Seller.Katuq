@@ -21,6 +21,7 @@ import {
 } from "../../../../../shared/services/messaging/messaging.models";
 import { MAX_COLAS, paraGuardar } from "../../bandeja.colas";
 import { ASESOR_SIN_ASIGNAR } from "../../bandeja.models";
+import { textoSegundos } from "../bandeja-informes/bandeja-informes.util";
 
 /** Una fila de la tarjeta «Colas»: la cola con sus cifras del resumen. */
 export interface FilaCola {
@@ -122,8 +123,28 @@ export class BandejaEquipoComponent implements OnChanges {
     }
   }
 
+  /**
+   * Asesores disponibles: del equipo, que no coordinan y no están ausentes. Con un servidor que aún no
+   * manda `enEquipo`/`coordina`, cuenta como antes (todos menos los ausentes).
+   */
   get disponibles(): number {
-    return (this.resumen?.porAsesor || []).filter((a) => a.estado !== "ausente").length;
+    return (this.resumen?.porAsesor || []).filter((a) => a.enEquipo !== false && !a.coordina && a.estado !== "ausente").length;
+  }
+
+  /** Cifras que el servidor aún no manda: la tarjeta sale solo si llegan (nunca se inventan). */
+  get esperaMasLarga(): number | null {
+    const v = this.resumen?.esperaMasLargaSeg;
+    return typeof v === "number" && isFinite(v) ? v : null;
+  }
+
+  get pasaronObjetivo(): number | null {
+    const v = this.resumen?.pasaronObjetivo;
+    return typeof v === "number" && isFinite(v) ? v : null;
+  }
+
+  /** «45 s», «12 min» o «1 h 5 min». */
+  tiempo(seg: number): string {
+    return textoSegundos(seg);
   }
 
   get minutosValidos(): boolean {

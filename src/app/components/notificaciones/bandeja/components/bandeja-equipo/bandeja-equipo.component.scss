@@ -50,6 +50,7 @@
 // ── Cifras ──
 .eq-cifras {
   display: grid;
+  // Tres cifras por fila; las que el servidor mande después bajan a la fila siguiente.
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 
@@ -306,4 +307,19 @@
   &__cifras { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   &__cifra { color: $cfg-muted; font-size: 12.5px; &--alerta { color: $cfg-err; font-weight: 700; } }
   &__editar { min-height: 34px; padding: 0 14px; }
+}
+
+// Texto solo para lectores de pantalla (la acción de un botón cuya cifra ya se lee en pantalla).
+.eq-solo-lector {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  color: inherit;
+  font-size: 12px;
 }
