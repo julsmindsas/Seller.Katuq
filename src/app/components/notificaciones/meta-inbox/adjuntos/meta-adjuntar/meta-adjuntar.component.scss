@@ -8,7 +8,10 @@ $ink: #211f3a;
 $ink-2: #4b4763;
 $muted: #6b6786;
 $linea: #e9e6f3;
+// Rojo decorativo (el punto que late al grabar). En letra pequeña sobre #fdf1f4 da 3.97:1, debajo de AA:
+// el texto y el ícono de error usan $tinta-error (la misma tinta del chat de WhatsApp, 2c1dced9).
 $error: #d64545;
+$tinta-error: #b42f2f;
 
 :host {
   display: contents;
@@ -49,7 +52,15 @@ $error: #d64545;
   border: none;
   background: transparent;
   color: inherit;
+  // Blanco de al menos 28 px (WCAG 2.2, 2.5.8); el aviso se alinea arriba, así que crece sin mover el texto.
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  margin: -6px -6px -6px 0;
   padding: 0 4px;
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
 
@@ -71,8 +82,8 @@ $error: #d64545;
     border-color: transparent;
     flex-wrap: wrap;
 
-    .madjr__icono { background: #fff; color: $error; }
-    .madjr__detalle { color: $error !important; font-weight: 700; }
+    .madjr__icono { background: #fff; color: $tinta-error; }
+    .madjr__detalle { color: $tinta-error !important; font-weight: 700; }
   }
 
   &--grabando {
