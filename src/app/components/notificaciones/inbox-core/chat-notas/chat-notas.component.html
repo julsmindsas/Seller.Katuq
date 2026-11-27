@@ -7,7 +7,7 @@
   <ul class="nt-notas__lista" *ngIf="notas?.length; else vacio">
     <li class="nt-nota" *ngFor="let n of notas; trackBy: trackNota" [class.nt-nota--mia]="esMia(n)">
       <div class="nt-nota__meta">
-        <span class="nt-nota__autor">{{ n.nombre || n.por }}</span>
+        <span class="nt-nota__autor">{{ autorDe(n) }}</span>
         <span class="nt-nota__fecha">{{ n.en | date: 'dd/MM/yyyy HH:mm' }}</span>
       </div>
       <p class="nt-nota__texto">{{ n.texto }}</p>

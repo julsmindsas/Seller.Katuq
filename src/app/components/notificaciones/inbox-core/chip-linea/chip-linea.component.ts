@@ -10,7 +10,7 @@ import { LineaResumen } from '../../../../shared/services/messaging/messaging.mo
   selector: 'app-linea-chip',
   template: `
     <span class="linea-etiqueta" *ngIf="linea" [class.linea-etiqueta--compacta]="compacta"
-          [attr.title]="linea.displayName + ' · ' + linea.displayPhone">
+          [attr.title]="titulo">
       <i class="fa fa-whatsapp" aria-hidden="true"></i>
       <span class="linea-etiqueta__nombre">{{ linea.displayName || linea.displayPhone }}</span>
       <span class="linea-etiqueta__tel" *ngIf="!compacta && linea.displayName">{{ linea.displayPhone }}</span>
@@ -39,4 +39,12 @@ export class ChipLineaComponent {
   @Input() linea: LineaResumen | null | undefined = null;
   /** Solo el nombre, para filas angostas de la lista. */
   @Input() compacta = false;
+
+  /** Nombre y teléfono del número, sin «null» ni separadores sueltos cuando falta uno. */
+  get titulo(): string {
+    return [this.linea?.displayName, this.linea?.displayPhone]
+      .map((v) => String(v || '').trim())
+      .filter(Boolean)
+      .join(' · ');
+  }
 }

@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 
 import { MiembroEquipo, NotaChat } from '../../../../shared/services/messaging/messaging.models';
+import { nombreDeAsesor } from '../chat-dueno/nombre-asesor';
 
 /**
  * Notas internas de un chat (D-725). Solo presentación: lista las notas con autor
@@ -54,8 +55,12 @@ export class ChatNotasComponent {
   }
 
   nombreDe(email: string): string {
-    const m = (this.equipo || []).find((x) => (x.email || '').toLowerCase() === (email || '').toLowerCase());
-    return m?.nombre || email;
+    return nombreDeAsesor(email, '', this.equipo);
+  }
+
+  /** Autor de la nota con su nombre del equipo: las notas viejas guardaron el correo como nombre. */
+  autorDe(nota: NotaChat): string {
+    return nombreDeAsesor(nota.por, nota.nombre, this.equipo);
   }
 
   /** Más recientes abajo, como un chat. */

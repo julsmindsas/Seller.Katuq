@@ -15,9 +15,11 @@ import { Subscription } from 'rxjs';
 import { AtencionService } from '../../../../../shared/services/messaging/atencion.service';
 import {
   ItemRelacionado,
+  MiembroEquipo,
   PorqueRelacionado,
   RelacionadosRespuesta,
 } from '../../../../../shared/services/messaging/messaging.models';
+import { nombreDeAsesor } from '../../../inbox-core/chat-dueno/nombre-asesor';
 import { CANAL_BANDEJA_ICONO, CANAL_BANDEJA_LABEL } from '../../bandeja.canales';
 import { CanalBandeja } from '../../bandeja.models';
 import { claveRelacionado } from '../../bandeja.util';
@@ -66,6 +68,8 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   @Input() canal: CanalBandeja | null = null;
   @Input() hash: string | null = null;
   @Input() lineId: string | null = null;
+  /** Equipo del comercio: el asesor se muestra con su nombre aunque el chat haya guardado su correo. */
+  @Input() equipo: MiembroEquipo[] = [];
 
   @Output() elegir = new EventEmitter<ItemRelacionado>();
   /** Avisa si el botón se ve, para que la barra de quien lo aloja no quede vacía. */
@@ -81,6 +85,8 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   clienteNombre = '';
 
   private claveActual = '';
+  /** Última respuesta pintada: si llega el equipo después, las filas se rehacen con los nombres. */
+  private ultimaRes: RelacionadosRespuesta | null = null;
   /** Peticiones en vuelo (una por chat). Cambiar de chat NO las cancela: su respuesta llena la memoria igual. */
   private readonly subs = new Set<Subscription>();
   private readonly pendientes = new Set<string>();
@@ -96,6 +102,8 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   ngOnChanges(cambios: SimpleChanges): void {
     if (cambios['canal'] || cambios['hash'] || cambios['lineId']) {
       this.cargar();
+    } else if (cambios['equipo'] && this.estado === 'listo' && this.ultimaRes) {
+      this.aplicar(this.ultimaRes);
     }
   }
 
@@ -149,6 +157,7 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
     this.filas = [];
     this.ayuda = '';
     this.clienteNombre = '';
+    this.ultimaRes = null;
     const canal = this.canal;
     const hash = this.hash;
     if (!canal || !hash) {
@@ -225,6 +234,7 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
   }
 
   private aplicar(res: RelacionadosRespuesta): void {
+    this.ultimaRes = res;
     this.filas = (res.items || []).map((i) => this.fila(i));
     this.clienteNombre = res.ancla?.tipo === 'cliente' ? (res.ancla.clienteNombre || '').trim() : '';
     this.ayuda = this.textoAyuda(res);
@@ -252,20 +262,35 @@ export class BandejaRelacionadosComponent implements OnChanges, OnDestroy {
     const lineaWa = item.canal === 'whatsapp'
       ? nombreLinea || this.translate.instant('notificaciones.bandeja.relacionados.numeroCompartido')
       : '';
-    const linea = [lineaWa, item.canal === 'whatsapp' ? item.phoneMasked || '' : ''].filter(Boolean).join(' · ');
+    // Sin nombre, el número ya es el título de la fila: no se repite.
+    const numero = item.canal === 'whatsapp' && (item.nombre || '').trim() ? item.phoneMasked || '' : '';
+    const linea = [lineaWa, numero].filter(Boolean).join(' · ');
     return {
       item,
       clave: claveRelacionado(item),
       icono: CANAL_BANDEJA_ICONO[canal] || 'fa fa-comments',
       canal: CANAL_BANDEJA_LABEL[canal] || item.canal,
-      nombre: (item.nombre || '').trim() || this.translate.instant('notificaciones.sinNombre'),
+      nombre: this.nombreDe(item, canal),
       hora: this.tiempoRelativo(item.ultimoEn),
       linea,
       porque: this.translate.instant(TEXTO_PORQUE[item.porque] || TEXTO_PORQUE.mismo_telefono),
-      dueno: item.owner?.nombre || item.owner?.email || '',
+      dueno: item.owner ? nombreDeAsesor(item.owner.email, item.owner.nombre, this.equipo) : '',
       cerrado: item.cerrado === true,
       sinResponder: item.cerrado !== true && item.ultimaDireccion === 'inbound',
     };
+  }
+
+  /**
+   * Nombre del contacto; sin nombre, en WhatsApp su número enmascarado (así dos chats sin nombre no se ven
+   * iguales) y en redes «Contacto de Instagram». «Sin nombre» queda solo si tampoco hay número.
+   */
+  private nombreDe(item: ItemRelacionado, canal: CanalBandeja): string {
+    const nombre = (item.nombre || '').trim();
+    if (nombre) return nombre;
+    if (item.canal === 'whatsapp') {
+      return (item.phoneMasked || '').trim() || this.translate.instant('notificaciones.sinNombre');
+    }
+    return this.translate.instant('notificaciones.meta.contactOf', { canal: CANAL_BANDEJA_LABEL[canal] || item.canal });
   }
 
   /** Mismo formato relativo de la lista de la bandeja. */

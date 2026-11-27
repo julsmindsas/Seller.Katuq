@@ -3,8 +3,8 @@
     <div class="dueno-franja__info">
       <span class="dueno-franja__icono" aria-hidden="true"><i class="fa fa-user-circle-o"></i></span>
       <div class="dueno-franja__textos">
-        <span class="dueno-franja__titulo">{{ titulo | translate: { nombre: dueno?.nombre || dueno?.email } }}</span>
-        <span class="dueno-franja__motivo" *ngIf="motivo">{{ motivo | translate: { nombre: dueno?.nombre || dueno?.email } }}</span>
+        <span class="dueno-franja__titulo">{{ titulo | translate: { nombre: nombreDueno } }}</span>
+        <span class="dueno-franja__motivo" *ngIf="motivo">{{ motivo | translate: { nombre: nombreDueno } }}</span>
       </div>
     </div>
 

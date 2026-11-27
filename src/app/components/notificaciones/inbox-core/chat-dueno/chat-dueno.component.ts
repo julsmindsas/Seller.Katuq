@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 
 import { ColaBasica, DuenoChat, MiembroEquipo } from '../../../../shared/services/messaging/messaging.models';
+import { nombreDeAsesor } from './nombre-asesor';
 
 /**
  * Franja de "quién atiende" el chat (D-437). Solo presentación: emite Tomar,
@@ -60,8 +61,13 @@ export class ChatDuenoComponent implements OnChanges {
   opcionesCola: ColaBasica[] = [];
   /** Los destinos de estos dos tipos son los que se ofrecen en el selector «Persona / Cola». */
   excluirDueno: string[] = [];
+  /** Nombre de quien atiende: el del equipo, nunca el correo si se conoce su nombre. */
+  nombreDueno = '';
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['dueno'] || changes['equipo']) {
+      this.nombreDueno = this.dueno ? nombreDeAsesor(this.dueno.email, this.dueno.nombre, this.equipo) : '';
+    }
     if (changes['colas'] || changes['colaActualId']) {
       this.opcionesCola = (this.colas || []).filter((c) => c.activa && c.id !== this.colaActualId);
       if (this.colaDestino && !this.opcionesCola.some((c) => c.id === this.colaDestino)) this.colaDestino = '';
