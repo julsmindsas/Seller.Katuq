@@ -57,6 +57,11 @@ const VENTANA_MS = 24 * 60 * 60 * 1000;
 const HORAS_AVISO_VENTANA = 6;
 /** Distancia al final (px) con la que el asesor sigue «abajo» y lo nuevo lo baja. */
 const MARGEN_FINAL_PX = 80;
+/**
+ * Id del reintento de un saliente fallido: `retry-<id del fallido>`. El servidor guarda el envío como
+ * `reply-retry-<id>`, así que el chat sabe que ese fallido ya se reintentó (y un segundo clic es el mismo envío).
+ */
+const PREFIJO_REINTENTO = "retry-";
 
 /** Idioma de la pantalla → formato de fechas del navegador. */
 const LOCALE_POR_IDIOMA: Record<string, string> = {
@@ -246,6 +251,8 @@ export class WhatsappThreadDetailComponent
   private pendingClientMessageId: string | null = null;
   /** [D-118] Texto al que corresponde pendingClientMessageId. */
   private pendingForText: string | null = null;
+  /** Fallidos de este chat que ya se reintentaron con éxito: su botón «Reintentar» deja de verse. */
+  private reintentados = new Set<string>();
   /** Dropdown de plantillas abierto/cerrado. */
   templatesOpen = false;
   /** 6 plantillas rápidas con sandboxBody ya renderizado. */
@@ -594,12 +601,16 @@ export class WhatsappThreadDetailComponent
 
   /** Estado del saliente leído en palabras (lector de pantalla), no el valor crudo («delivered»). */
   statusLabel(status: string): string {
+    // Claves literales (no armadas en ejecución) para que el revisor de textos las encuentre.
     switch (status) {
       case "sent":
+        return this.translate.instant("notificaciones.wa2.estado.sent");
       case "delivered":
+        return this.translate.instant("notificaciones.wa2.estado.delivered");
       case "read":
+        return this.translate.instant("notificaciones.wa2.estado.read");
       case "failed":
-        return this.translate.instant(`notificaciones.wa2.estado.${status}`);
+        return this.translate.instant("notificaciones.wa2.estado.failed");
       default:
         return "";
     }
@@ -646,16 +657,22 @@ export class WhatsappThreadDetailComponent
     this.enviarTexto((this.composerText || "").trim(), true);
   }
 
-  /** Un saliente fallido escrito a mano (no del bot ni una plantilla) se puede volver a enviar desde su burbuja. */
+  /**
+   * Un saliente fallido escrito a mano se puede volver a enviar desde su burbuja. Solo si el servidor guardó el
+   * texto real (`textoReintentable`): un envío fallido sin texto llega con una etiqueta («Respuesta enviada») que
+   * nadie escribió. Tampoco si ya se reintentó con éxito (en esta vista o porque el chat trae su reintento).
+   */
   puedeReintentar(msg: WhatsappMessage): boolean {
     return (
       msg.direction === "outbound" &&
       msg.status === "failed" &&
+      msg.textoReintentable === true &&
       !msg.esBot &&
       !msg.plantilla &&
       // Un archivo no se reintenta como texto (su pie de foto saldría solo).
       !this.conArchivo(msg) &&
       !!(msg.body || "").trim() &&
+      !this.yaReintentado(msg) &&
       this.canShowComposer &&
       !this.soloLectura
     );
@@ -664,14 +681,25 @@ export class WhatsappThreadDetailComponent
   /** «Reintentar» de un mensaje que no se envió: mismo camino que un envío normal (el servidor revisa la ventana). */
   reintentar(msg: WhatsappMessage): void {
     if (!this.puedeReintentar(msg)) return;
-    this.enviarTexto((msg.body || "").trim(), false);
+    // Id fijo por mensaje fallido: varios clics (o un clic tras volver a abrir el chat) son el mismo envío.
+    this.enviarTexto((msg.body || "").trim(), false, `${PREFIJO_REINTENTO}${msg.id}`, msg.id);
+  }
+
+  /** El reintento de `msg` ya salió: se marcó en esta vista o su saliente (`…retry-<id>`) está en el chat. */
+  private yaReintentado(msg: WhatsappMessage): boolean {
+    if (this.reintentados.has(msg.id)) return true;
+    const marca = `${PREFIJO_REINTENTO}${msg.id}`;
+    return this.messages.some(
+      (m) => m.id !== msg.id && m.direction === "outbound" && m.status !== "failed" && String(m.id || "").endsWith(marca),
+    );
   }
 
   /**
    * Envía `text` al chat abierto. `desdeCuadro`: el texto salió del cuadro de escribir y se limpia al enviar
-   * (un reintento desde la burbuja no toca lo que el asesor esté escribiendo).
+   * (un reintento desde la burbuja no toca lo que el asesor esté escribiendo). `idFijo` y `reintentoDe`: un
+   * reintento desde la burbuja lleva su propio id (no toca el del cuadro) y, si sale, esconde el botón.
    */
-  private enviarTexto(text: string, desdeCuadro: boolean): void {
+  private enviarTexto(text: string, desdeCuadro: boolean, idFijo?: string, reintentoDe?: string): void {
     if (!this.phoneHash || !text || this.sending) {
       return;
     }
@@ -685,20 +713,25 @@ export class WhatsappThreadDetailComponent
     // [D-118] Id estable por mensaje lógico: si el envío falla (o el operador
     // no sabe si salió) y reintenta el MISMO texto, se reusa el id y el
     // backend no dispara un segundo mensaje real. Texto editado → id nuevo.
-    if (!this.pendingClientMessageId || this.pendingForText !== text) {
+    if (!idFijo && (!this.pendingClientMessageId || this.pendingForText !== text)) {
       this.pendingClientMessageId =
         `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
       this.pendingForText = text;
     }
+    const clientMessageId = idFijo || (this.pendingClientMessageId as string);
     this.sending = true;
     this.inbox
-      .sendReply(hash, text, this.pendingClientMessageId, lineId)
+      .sendReply(hash, text, clientMessageId, lineId)
       .subscribe({
         next: () => {
           // El asesor ya pasó a otro chat: el de ahora no se toca (su cuadro y su estado son suyos).
           if (seq !== this.chatSeq) return;
-          this.pendingClientMessageId = null;
-          this.pendingForText = null;
+          if (reintentoDe) {
+            this.reintentados.add(reintentoDe);
+          } else {
+            this.pendingClientMessageId = null;
+            this.pendingForText = null;
+          }
           if (desdeCuadro) this.composerText = "";
           this.sending = false;
           this.bajarTrasEnvio = true;
@@ -1123,6 +1156,7 @@ export class WhatsappThreadDetailComponent
     this.sending = false;
     this.pendingClientMessageId = null;
     this.pendingForText = null;
+    this.reintentados.clear();
     this.bajarTrasEnvio = false;
     this.needsScroll = false;
   }
@@ -1220,9 +1254,12 @@ export class WhatsappThreadDetailComponent
     if (this.duenoOcupado) return;
     this.duenoOcupado = true;
     const hash = this.phoneHash;
+    // La respuesta es del chat donde se tocó: si el asesor ya abrió otro, no se le pinta (ni se le guarda) ese dueño.
+    const seq = this.chatSeq;
     peticion.subscribe({
       next: (owner) => {
         this.duenoOcupado = false;
+        if (seq !== this.chatSeq) return;
         this.ponerDueno(owner);
         if (colaId) this.colaCambiada.emit(colaId);
         this.toastr.success(this.translate.instant(exito));
@@ -1231,6 +1268,13 @@ export class WhatsappThreadDetailComponent
       },
       error: (err: any) => {
         this.duenoOcupado = false;
+        if (seq !== this.chatSeq) {
+          // Falló en el chat anterior: se avisa sin tocar el abierto.
+          if (!esErrorChatConDueno(err) && err?.status !== 403) {
+            this.toastr.error(this.translate.instant("notificaciones.wa2.errores.otroChatDueno"));
+          }
+          return;
+        }
         if (esErrorChatConDueno(err)) {
           this.ponerDueno(err.error.owner || null);
           this.toastr.warning(this.textoChatConDueno(err.error.owner), this.translate.instant('notificaciones.whatsapp.detail.ownedTitle'));

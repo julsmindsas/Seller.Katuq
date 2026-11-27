@@ -131,6 +131,11 @@ export interface WhatsappMessage {
   sentByName?: string | null;
   /** Nombre técnico de la plantilla con que salió (aviso automático); un mensaje así no se reintenta como texto. */
   plantilla?: string | null;
+  /**
+   * Saliente escrito a mano por una persona (tipo REPLY_INBOUND del servidor) cuyo `body` es el texto real que se
+   * escribió, no una etiqueta puesta en su lugar («Respuesta enviada»). Solo así se puede reintentar.
+   */
+  textoReintentable?: boolean;
   /** Bandeja única: archivo del mensaje (0 o 1). Con archivo, `body` es solo el texto que lo acompaña. */
   adjuntos?: MediaInfo[];
   /** Bandeja única: ubicación que mandó el cliente. */

@@ -435,6 +435,9 @@ export class WhatsappInboxService extends BaseService {
       status: m.status || (entrante ? "delivered" : "sent"),
       mediaPlaceholder: sinTexto,
       plantilla: plantilla || null,
+      // Un envío fallido que el servidor guardó sin su texto llega con una etiqueta («Respuesta enviada»):
+      // ese no se reintenta, porque saldría al cliente un texto que nadie escribió.
+      textoReintentable: !entrante && !!propio && String(m.type || "") === "REPLY_INBOUND",
       ...(adjuntos.length ? { adjuntos } : {}),
       ...(ubicacion ? { ubicacion } : {}),
     };
