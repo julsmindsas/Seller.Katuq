@@ -131,6 +131,10 @@
 
 .tarjeta__chico { min-height: 36px; }
 
+// «Desconectar» va aparte de los accesos, al final de la fila.
+.tarjeta__salir { margin-left: auto; }
+
 @media (max-width: 480px) {
   .tarjeta__enlaces .cfg-btn { flex: 1 1 auto; }
+  .tarjeta__salir { margin-left: 0; }
 }

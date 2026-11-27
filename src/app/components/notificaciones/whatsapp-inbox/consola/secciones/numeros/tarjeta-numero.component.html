@@ -135,5 +135,10 @@
       <i class="fa fa-list-alt" aria-hidden="true"></i>
       {{ 'consolaWhatsapp.secciones.registro' | translate }}
     </button>
+    <button type="button" class="cfg-btn cfg-btn--peligro tarjeta__chico tarjeta__salir" *ngIf="puedeAdministrar"
+            (click)="desconectar()" [disabled]="desconectando || guardando">
+      <i class="fa" [ngClass]="desconectando ? 'fa-spinner fa-spin' : 'fa-chain-broken'" aria-hidden="true"></i>
+      {{ 'integrations.messagingLines.desconectar' | translate }}
+    </button>
   </footer>
 </article>

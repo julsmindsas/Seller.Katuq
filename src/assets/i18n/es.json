@@ -10987,6 +10987,7 @@
   "consolaWhatsapp.numeros.sinEquipo": "Sin personas asignadas",
   "consolaWhatsapp.numeros.equipoGuardado": "Equipo guardado.",
   "consolaWhatsapp.numeros.equipoError": "No pudimos guardar el equipo. Intenta de nuevo.",
+  "consolaWhatsapp.numeros.desconectarError": "No pudimos desconectar el número. Intenta de nuevo.",
   "consolaWhatsapp.vistaPrevia.titulo": "Así se verá en WhatsApp",
   "consolaWhatsapp.vistaPrevia.aria": "Vista previa del mensaje en WhatsApp",
   "consolaWhatsapp.vistaPrevia.vacio": "Escribe el mensaje para verlo aquí",
