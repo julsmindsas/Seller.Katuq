@@ -26,9 +26,11 @@ interface ReglasCanal {
 }
 
 /**
- * Qué se le puede enviar al cliente por cada red.
- *  - Instagram: foto JPG o PNG; audio AAC, M4A o WAV; video MP4, MOV o WebM; documento solo PDF.
- *  - Facebook: foto JPG, PNG o GIF; audio AAC, M4A o WAV; video MP4; documento PDF.
+ * Qué se le puede enviar al cliente por cada red. Es copia de `clasificarParaRed` del servidor
+ * (services/messaging/media/redes.js), que decide por la firma de los bytes:
+ *  - Instagram: foto JPG o PNG (sin GIF); audio AAC, M4A (AAC) o WAV; video MP4, MOV o WebM; documento solo PDF.
+ *  - Facebook: foto JPG, PNG o GIF; audio AAC, M4A (AAC) o WAV; video solo MP4; documento solo PDF.
+ * Las notas de voz van en M4A (AAC) o WAV en las dos redes: el servidor no acepta Ogg/Opus ni WebM de audio.
  */
 const REGLAS: Record<CanalConArchivos, ReglasCanal> = {
   instagram: {
@@ -171,6 +173,10 @@ export function claveEtiquetaAdjunto(tipo: string | null | undefined): string {
     case 'ephemeral':
     case 'efimero':
       return 'notificaciones.redes3.adjuntos.etiqueta.temporal';
+    case 'location':
+      return 'notificaciones.cierre2.adjuntos.etiqueta.ubicacion';
+    case 'template':
+      return 'notificaciones.cierre2.adjuntos.etiqueta.botones';
     default:
       return 'notificaciones.redes3.adjuntos.etiqueta.otro';
   }

@@ -201,6 +201,7 @@ export class MetaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoCh
     const e = this.estado;
     if (!e || e.estado !== 'error') return '';
     if (e.motivo === 'vencido') return 'notificaciones.redes3.adjuntos.vencido';
+    if (e.motivo === 'pesado') return 'notificaciones.cierre2.adjuntos.muyPesadoVer';
     if (e.motivo === 'noDisponible') return 'notificaciones.redes3.adjuntos.noDisponible';
     return 'notificaciones.redes3.adjuntos.errorBajar';
   }

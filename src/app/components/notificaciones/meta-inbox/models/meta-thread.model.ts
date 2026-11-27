@@ -110,19 +110,32 @@ export type MetaAdjuntoKind = 'image' | 'audio' | 'video' | 'document' | 'sticke
  * es `/v1/meta/conversations/<canal>/<hash>/media/<docId>?i=<n>` y se pide con la sesión (blob).
  */
 export interface MetaAdjunto {
+  /** `<docId>:<n>` (el mismo n del `?i=` de la ruta). */
   id?: string;
-  /** image, audio, video, document o sticker. Sin él (o con otro valor) es una etiqueta. */
-  kind?: MetaAdjuntoKind | string | null;
-  /** Tipo que dijo Meta: image, audio, video, file, share, story_mention, ig_reel, reel, post, ig_post, fallback… */
+  /**
+   * image, audio, video o document (sticker queda por compatibilidad). El servidor manda `'etiqueta'` para lo que
+   * no es un archivo (publicación, historia, reel, enlace, temporal, ubicación, botones): sin `url` y con
+   * `disponible:false`. Cualquier otro valor también se pinta como etiqueta.
+   */
+  kind?: MetaAdjuntoKind | 'etiqueta' | string | null;
+  /**
+   * Tipo que dijo Meta: image, audio, video, file, share, story_mention, ig_reel, reel, post, ig_post, fallback,
+   * ephemeral, location, template… En las etiquetas decide el texto que se muestra.
+   */
   tipo?: string | null;
+  /** Texto en español que arma el servidor para una etiqueta. No se muestra: la pantalla traduce por `tipo`. */
+  etiqueta?: string | null;
   mime?: string | null;
   bytes?: number | null;
   filename?: string | null;
   caption?: string | null;
   voice?: boolean;
-  /** false: ya no se puede bajar (`motivo` dice por qué). */
+  /**
+   * false: no se puede bajar. `motivo`: 'vencido' (Meta ya lo borró) o 'sin_archivo' (no hay de dónde bajarlo:
+   * etiquetas y todo lo que envió el comercio, porque Meta no deja volver a bajarlo).
+   */
   disponible?: boolean;
-  motivo?: string | null;
+  motivo?: 'vencido' | 'sin_archivo' | string | null;
   url?: string | null;
 }
 

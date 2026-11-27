@@ -6,7 +6,11 @@
  * clave genérica. El servidor sigue decidiendo qué se puede enviar; esto solo cambia cómo se cuenta.
  */
 const CLAVES_POR_CODIGO: Record<string, string> = {
+  // 200 `{success:false, motivo}` de metaSendService (no salió nada).
   ventana_cerrada: 'notificaciones.redes3.errores.ventana',
+  sin_conexion: 'notificaciones.meta.failNotConnected',
+  contacto_desconocido: 'notificaciones.meta.failUnknownContact',
+  rechazado_por_meta: 'notificaciones.meta.failRejected',
   FUERA_DE_ALCANCE: 'notificaciones.redes3.errores.sinAcceso',
   NO_SE_PUDO_REVISAR: 'notificaciones.redes3.errores.noSePudoRevisar',
   FEATURE_DISABLED: 'notificaciones.redes3.errores.sinBandeja',

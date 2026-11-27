@@ -284,7 +284,9 @@ export class EnvioAdjuntoRedService implements OnDestroy {
     this.cortar(clave);
     const form = new FormData();
     form.append('clientMessageId', e.clientMessageId);
-    form.append('kind', 'auto');
+    // `voice` para la nota grabada: el servidor revisa que sea un audio que la red acepte (M4A con AAC o WAV) y la
+    // guarda como nota de voz; cualquier otro archivo va con `auto` y el servidor decide por la firma.
+    form.append('kind', e.voz ? 'voice' : 'auto');
     if (e.texto) form.append('texto', e.texto);
     // El archivo va al final: así el servidor ya tiene los campos cuando empieza a leerlo.
     form.append('file', e.archivo, e.nombre);
@@ -308,6 +310,17 @@ export class EnvioAdjuntoRedService implements OnDestroy {
             this.falloDesde.set(clave, Date.now());
             this.programarLimpieza();
             this.terminar({ clave, tipo: 'fallo' });
+            return;
+          }
+          if (cuerpo.duplicate === true && cuerpo.enCurso === true) {
+            // El primer intento con este id sigue en camino y todavía puede fallar: no se da por entregado. Se
+            // relee el chat y, si hace falta, se reintenta con el mismo id (el servidor no lo manda dos veces).
+            actual.etapa = 'fallo';
+            actual.quizaEnviado = true;
+            actual.errorClave = 'notificaciones.redes3.adjuntos.quizaEnviado';
+            this.falloDesde.set(clave, Date.now());
+            this.programarLimpieza();
+            this.terminar({ clave, tipo: 'revisar' });
             return;
           }
           this.envios.delete(clave);

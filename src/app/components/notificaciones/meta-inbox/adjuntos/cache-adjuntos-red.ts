@@ -5,8 +5,12 @@ import { Observable, Subscription } from 'rxjs';
 import { MetaAdjunto } from '../models/meta-thread.model';
 import { esRutaDeMediaRed, kindDeAdjunto, mimeSeguroRed } from './adjuntos-red.util';
 
-/** Por qué no se pudo bajar un archivo: 410 ya venció, 404 no está, lo demás se puede reintentar. */
-export type MotivoFalloAdjuntoRed = 'vencido' | 'noDisponible' | 'reintentar';
+/**
+ * Por qué no se pudo bajar un archivo (códigos de GET /v1/meta/conversations/:canal/:hash/media/:docId):
+ * 410 MEDIA_VENCIDO ya venció; 413 MEDIA_MUY_PESADO pasa de 25 MB y no se trae; 404 no está y 403 (FUERA_DE_ALCANCE
+ * o FEATURE_DISABLED) no es para esta persona; lo demás (502 MEDIA_NO_DISPONIBLE, 500, 503) se puede reintentar.
+ */
+export type MotivoFalloAdjuntoRed = 'vencido' | 'pesado' | 'noDisponible' | 'reintentar';
 
 export type EstadoAdjuntoRed =
   | { estado: 'cargando' }
@@ -16,6 +20,7 @@ export type EstadoAdjuntoRed =
 export function motivoDeFalloRed(err: unknown): MotivoFalloAdjuntoRed {
   const status = err instanceof HttpErrorResponse ? err.status : Number((err as any)?.status);
   if (status === 410) return 'vencido';
+  if (status === 413) return 'pesado';
   if (status === 404 || status === 403 || status === 422) return 'noDisponible';
   return 'reintentar';
 }
