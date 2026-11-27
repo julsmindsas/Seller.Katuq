@@ -135,6 +135,34 @@
 }
 
 // ── Mi estado (Disponible / Ausente) ──
+// Canal en vivo: texto corto con punto de color, discreto bajo el subtítulo.
+.bj-vivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+
+  &__punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $cfg-accent;
+    box-shadow: 0 0 0 3px $cfg-accent-soft;
+  }
+
+  &__texto {
+    color: $cfg-accent-ink;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+
+  &--reconectando {
+    .bj-vivo__punto { background: $cfg-warn; box-shadow: 0 0 0 3px $cfg-warn-soft; }
+    .bj-vivo__texto { color: $cfg-muted; }
+  }
+}
+
 .bj-estado {
   &__grupo {
     display: inline-flex;

@@ -11306,5 +11306,9 @@
   "notificaciones.bandeja.ayuda.reemplazarTitulo": "Geschriebenen Text ersetzen?",
   "notificaciones.bandeja.ayuda.reemplazarTexto": "Das Feld enthält schon Text. Mit dem Vorschlag wird er ersetzt.",
   "notificaciones.bandeja.ayuda.reemplazarSi": "Ersetzen",
-  "notificaciones.bandeja.ayuda.reemplazarNo": "Meinen Text behalten"
+  "notificaciones.bandeja.ayuda.reemplazarNo": "Meinen Text behalten",
+  "notificaciones.bandeja.enVivo.activo": "Live",
+  "notificaciones.bandeja.enVivo.reconectando": "Verbindung wird wiederhergestellt…",
+  "notificaciones.bandeja.enVivo.ayudaActivo": "Nachrichten und Änderungen in den Chats kommen sofort an.",
+  "notificaciones.bandeja.enVivo.ayudaReconectando": "Die Live-Verbindung ist unterbrochen. Bis sie zurück ist, wird der Posteingang alle paar Sekunden aktualisiert."
 }

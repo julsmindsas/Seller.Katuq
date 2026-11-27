@@ -5,6 +5,18 @@
       <span class="cfg-eyebrow">{{ 'notificaciones.bandeja.eyebrow' | translate }}</span>
       <h1 class="cfg-titulo">{{ 'notificaciones.bandeja.title' | translate }}</h1>
       <p class="cfg-sub">{{ 'notificaciones.bandeja.subtitle' | translate }}</p>
+      <!-- Canal en vivo: solo se ve cuando está conectado o se está recuperando -->
+      <div
+        class="bj-vivo"
+        role="status"
+        aria-live="polite"
+        *ngIf="estadoEnVivo === 'en_vivo' || estadoEnVivo === 'reconectando'"
+        [class.bj-vivo--reconectando]="estadoEnVivo === 'reconectando'"
+        [attr.title]="(estadoEnVivo === 'en_vivo' ? 'notificaciones.bandeja.enVivo.ayudaActivo' : 'notificaciones.bandeja.enVivo.ayudaReconectando') | translate"
+      >
+        <span class="bj-vivo__punto" aria-hidden="true"></span>
+        <span class="bj-vivo__texto">{{ (estadoEnVivo === 'en_vivo' ? 'notificaciones.bandeja.enVivo.activo' : 'notificaciones.bandeja.enVivo.reconectando') | translate }}</span>
+      </div>
     </div>
 
     <!-- Mi estado para el reparto de chats (solo con la atención multiagente) -->
@@ -231,6 +243,8 @@
         [rapidos]="rapidos"
         [miNombre]="miNombre"
         [textoSugerido]="textoSugerido"
+        [enVivo]="enVivo"
+        [senalRefresco]="senalDetalle"
         (sugeridoResultado)="alResultadoSugerido($event)"
         (duenoCambiado)="onDuenoCambiado($event)"
         (colaCambiada)="onColaCambiada($event)"
@@ -257,6 +271,8 @@
             [rapidos]="rapidos"
             [miNombre]="miNombre"
             [textoSugerido]="textoSugerido"
+            [enVivo]="enVivo"
+            [senalRefresco]="senalDetalle"
             (sugeridoResultado)="alResultadoSugerido($event)"
             (duenoCambiado)="onDuenoCambiado($event)"
             (colaCambiada)="onColaCambiada($event)"

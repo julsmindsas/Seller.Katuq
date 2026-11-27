@@ -1,9 +1,15 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { Subject, interval } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { Subject, asyncScheduler, interval } from 'rxjs';
+import { filter, takeUntil, throttleTime } from 'rxjs/operators';
 
 import { LoaderService } from 'src/app/shared/services/loader.service';
+import {
+  BandejaEnVivoService,
+  SONDEO_RESPALDO_MS,
+  eventoEsDelChat,
+  eventoTocaMensajes,
+} from 'src/app/shared/services/messaging/bandeja-en-vivo.service';
 
 import { MetaInboxService } from '../../meta-inbox.service';
 import { MetaHiloDetalleComponent } from '../meta-hilo-detalle/meta-hilo-detalle.component';
@@ -47,6 +53,22 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   /**
+   * Canal en vivo (solo con la bandera `bandejaUnica`; el servicio lo decide). Con él conectado la lista y la
+   * conversación abierta se refrescan al llegar un evento de este canal y el sondeo baja a uno lento de
+   * respaldo. Sin él, todo igual que antes.
+   */
+  enVivo = false;
+  /** Cada cambio le pide a la conversación abierta releer sus mensajes. */
+  senalDetalle = 0;
+  private listaPendiente = false;
+  private detallePendiente = false;
+  private readonly rafaga$ = new Subject<void>();
+  /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
+  private ultimoRefresco = 0;
+  /** Cada lectura invalida a la anterior: una respuesta tardía no pisa a una más nueva. */
+  private hilosSeq = 0;
+
+  /**
    * Fecha del entrante más nuevo que ya vimos. Sirve para distinguir "llegó algo
    * nuevo" de "sigue lo mismo". En null mientras no se haya cargado nada, para
    * que la campana no suene al abrir el buzón con conversaciones viejas.
@@ -60,6 +82,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     private router: Router,
     private servicio: MetaInboxService,
     private loader: LoaderService,
+    private enVivoSrv: BandejaEnVivoService,
   ) {}
 
   ngOnInit(): void {
@@ -83,6 +106,35 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
       .subscribe(() => this.aplicarCanalDeLaUrl());
 
     this.arrancarRefrescoAutomatico();
+    this.escucharEnVivo();
+  }
+
+  /** Eventos de este canal del canal en vivo, agrupados: como mucho un refresco cada 400 ms. */
+  private escucharEnVivo(): void {
+    this.enVivoSrv.conectado$.pipe(takeUntil(this.destroy$)).subscribe((v) => (this.enVivo = v));
+    this.enVivoSrv.eventos$.pipe(takeUntil(this.destroy$)).subscribe((e) => {
+      if (e.canal !== this.canal) return;
+      if (e.motivo !== 'estado') this.listaPendiente = true;
+      const h = this.hiloActivo;
+      if (h && eventoTocaMensajes(e) && eventoEsDelChat(e, { canal: this.canal, hash: h.identidadHash, threadId: h.threadId })) {
+        this.detallePendiente = true;
+      }
+      this.rafaga$.next();
+    });
+    this.enVivoSrv.recargar$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.listaPendiente = true;
+      this.detallePendiente = !!this.hiloActivo;
+      this.rafaga$.next();
+    });
+    this.rafaga$
+      .pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true }), takeUntil(this.destroy$))
+      .subscribe(() => {
+        // La lista no toca la conversación abierta: se relee aunque el asesor esté escribiendo.
+        if (this.listaPendiente && !this.cargandoHilos) this.refrescarHilosEnSilencio();
+        if (this.detallePendiente) this.senalDetalle++;
+        this.listaPendiente = false;
+        this.detallePendiente = false;
+      });
   }
 
   /**
@@ -153,16 +205,22 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
           return;
         }
 
+        // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
+        if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
         this.refrescarHilosEnSilencio();
       });
   }
 
   /** Igual que cargar, pero sin spinner: el refresco no debe parpadear. */
   private refrescarHilosEnSilencio(): void {
+    const seq = ++this.hilosSeq;
+    const canal = this.canal;
+    this.ultimoRefresco = Date.now();
     this.servicio
-      .listarHilos(this.canal)
+      .listarHilos(canal)
       .pipe(takeUntil(this.destroy$))
       .subscribe((items) => {
+        if (seq !== this.hilosSeq || canal !== this.canal) return;
         this.hilos = items;
         this.avisarSiLlegoAlgoNuevo(items);
       });
@@ -257,6 +315,8 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
 
   private cargarHilos(): void {
     this.cargandoHilos = true;
+    this.hilosSeq++;
+    this.ultimoRefresco = Date.now();
     this.servicio
       .listarHilos(this.canal)
       .pipe(takeUntil(this.destroy$))

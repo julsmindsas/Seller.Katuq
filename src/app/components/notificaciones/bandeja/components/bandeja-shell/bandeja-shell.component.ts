@@ -1,14 +1,23 @@
 import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ChatNotasComponent } from "../../../inbox-core/chat-notas/chat-notas.component";
 import { TranslateService } from "@ngx-translate/core";
-import { Subject, Subscription, interval } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import { Subject, Subscription, asyncScheduler, interval } from "rxjs";
+import { takeUntil, throttleTime } from "rxjs/operators";
 
 import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
 import { LoaderService } from "../../../../../shared/services/loader.service";
 import { AtencionService } from "../../../../../shared/services/messaging/atencion.service";
 import { ItemRelacionado } from "../../../../../shared/services/messaging/messaging.models";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
+import {
+  BandejaEnVivoService,
+  ChatAbiertoEnVivo,
+  EstadoEnVivo,
+  EventoChatEnVivo,
+  SONDEO_RESPALDO_MS,
+  eventoEsDelChat,
+  eventoTocaMensajes,
+} from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 import {
   AccionHilo,
   AjustesAtencion,
@@ -164,6 +173,22 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   notasGuardando = false;
   errorNota = false;
 
+  // ─── Canal en vivo (solo con `bandejaUnica`; sin él o sin la ruta en el servidor, todo queda como antes) ───
+  /** Conectado: la lista y el chat abierto se refrescan al llegar un evento y el sondeo baja a uno lento. */
+  enVivo = false;
+  /** Para el indicador «En vivo» / «Reconectando…». */
+  estadoEnVivo: EstadoEnVivo = "apagado";
+  /** Cada cambio le pide al chat abierto releer sus mensajes en silencio. */
+  senalDetalle = 0;
+  private listaPendiente = false;
+  private detallePendiente = false;
+  private notasPendiente = false;
+  private readonly rafaga$ = new Subject<void>();
+  /** Un refresco en vivo pedido mientras otra carga iba en camino: se hace al terminar esa. */
+  private recargaEnVivoPendiente = false;
+  /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
+  private ultimoRefresco = 0;
+
   private conexiones: MetaConexiones | null = null;
   private refrescoSub?: Subscription;
   private cargaSub?: Subscription;
@@ -177,6 +202,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     private readonly atencionSrv: AtencionService,
     private readonly loader: LoaderService,
     private readonly translate: TranslateService,
+    private readonly enVivoSrv: BandejaEnVivoService,
     features: CompanyFeaturesService,
   ) {
     this.multiNumero = features.isEnabled("whatsappMultiNumero");
@@ -193,8 +219,109 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
     this.refrescoSub = interval(REFRESCO_MS).subscribe(() => {
       // Con la pestaña oculta no se pollea (D-117); al volver, el siguiente tick refresca.
       if (document.hidden || this.cargando || this.cargandoMas) return;
+      // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
+      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       this.cargar(true);
     });
+    this.escucharEnVivo();
+  }
+
+  // ─── Canal en vivo ───
+
+  /**
+   * Cada evento pone al día la fila en memoria (si ya está en la lista) y pide un refresco en silencio que lo
+   * confirma; las ráfagas se agrupan en uno cada 400 ms como mucho. Si el evento es del chat abierto, el
+   * detalle relee sus mensajes. Un cambio de estado de un mensaje (enviado, entregado…) solo se ve en el chat.
+   */
+  private escucharEnVivo(): void {
+    this.enVivoSrv.conectado$.pipe(takeUntil(this.destroy$)).subscribe((v) => (this.enVivo = v));
+    this.enVivoSrv.estado$.pipe(takeUntil(this.destroy$)).subscribe((e) => (this.estadoEnVivo = e));
+    this.enVivoSrv.eventos$.pipe(takeUntil(this.destroy$)).subscribe((e) => this.alEventoEnVivo(e));
+    this.enVivoSrv.recargar$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.listaPendiente = true;
+      this.detallePendiente = !!this.seleccion;
+      this.notasPendiente = this.notasAbiertas;
+      this.rafaga$.next();
+    });
+    this.rafaga$
+      .pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true }), takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.detallePendiente) this.senalDetalle++;
+        if (this.notasPendiente && this.notasAbiertas) this.cargarNotas(true);
+        if (this.listaPendiente) this.refrescarEnVivo();
+        this.listaPendiente = false;
+        this.detallePendiente = false;
+        this.notasPendiente = false;
+      });
+  }
+
+  private alEventoEnVivo(e: EventoChatEnVivo): void {
+    if (!this.canales.includes(e.canal)) return;
+    const delAbierto = eventoEsDelChat(e, this.chatAbiertoEnVivo());
+    if (e.motivo !== "estado") {
+      this.listaPendiente = true;
+      this.aplicarEnMemoria(e, delAbierto);
+    }
+    if (delAbierto) {
+      if (e.motivo === "nota") this.notasPendiente = true;
+      if (eventoTocaMensajes(e)) this.detallePendiente = true;
+    }
+    this.rafaga$.next();
+  }
+
+  private chatAbiertoEnVivo(): ChatAbiertoEnVivo | null {
+    const s = this.seleccion;
+    if (!s) return null;
+    return s.canal === "whatsapp"
+      ? { canal: "whatsapp", hash: s.origen.phoneHash, lineId: s.lineId || null, threadId: s.threadId || null }
+      : { canal: s.canal, hash: s.origen.identidadHash, threadId: s.threadId || null };
+  }
+
+  /**
+   * Refresco en silencio solo de la lista (el resumen y las colas siguen con el sondeo). Uno a la vez: si
+   * otra carga va en camino, se hace uno más al terminar, así una ráfaga no cancela todas las cargas.
+   */
+  private refrescarEnVivo(): void {
+    const enCurso = this.cargando || this.cargandoMas || (!!this.cargaSub && !this.cargaSub.closed);
+    if (enCurso) {
+      this.recargaEnVivoPendiente = true;
+      return;
+    }
+    this.cargar(true, true);
+  }
+
+  /**
+   * Con el texto y la hora del evento, la fila que ya está en la lista se pone al día de una vez (y se
+   * reordena por hora, como la carga). No se agregan filas: las nuevas llegan con el refresco. Si el evento
+   * coincide con más de una fila (el mismo cliente en dos números sin línea en el evento), no se toca nada.
+   */
+  private aplicarEnMemoria(e: EventoChatEnVivo, delAbierto: boolean): void {
+    const carga = this.carga;
+    if (!carga) return;
+    const indices: number[] = [];
+    carga.conversaciones.forEach((c, i) => {
+      const chat: ChatAbiertoEnVivo =
+        c.canal === "whatsapp"
+          ? { canal: "whatsapp", hash: c.origen.phoneHash, lineId: c.lineId || null, threadId: c.threadId || null }
+          : { canal: c.canal, hash: c.origen.identidadHash, threadId: c.threadId || null };
+      if (eventoEsDelChat(e, chat)) indices.push(i);
+    });
+    if (indices.length !== 1) return;
+    const actual = carga.conversaciones[indices[0]];
+    const cambios: { ultimoEn?: string; ultimaDireccion?: "inbound" | "outbound"; resumen?: string; sinLeer?: number } = {};
+    const hora = e.hora && Number.isFinite(Date.parse(e.hora)) ? e.hora : null;
+    const masNuevo = !!hora && Date.parse(hora) >= (Date.parse(actual.ultimoEn) || 0);
+    if ((e.motivo === "entrante" || e.motivo === "saliente") && masNuevo) {
+      cambios.ultimoEn = hora as string;
+      cambios.ultimaDireccion = e.motivo === "entrante" ? "inbound" : "outbound";
+      if (e.textoCorto !== null) cambios.resumen = e.textoCorto;
+    }
+    // El chat abierto no muestra insignia: el detalle lo marca como leído.
+    if (e.noLeidos !== null && !delAbierto) cambios.sinLeer = e.noLeidos;
+    if (!Object.keys(cambios).length) return;
+    const lista = carga.conversaciones.slice();
+    lista[indices[0]] = { ...actual, ...cambios } as ConversacionResumen;
+    this.carga = { ...carga, conversaciones: mezclar([lista]) };
   }
 
   ngOnDestroy(): void {
@@ -896,6 +1023,8 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       .subscribe((carga) => {
         this.carga = carga;
         this.cargandoMas = false;
+        // Llegaron eventos en vivo mientras se traía la página: se confirma con un refresco en silencio.
+        if (this.recargaEnVivoPendiente) this.cargar(true, true);
       });
   }
 
@@ -959,11 +1088,14 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
    * Trae la lista. En silencio (refresco) no muestra «Cargando…», no pisa lo que ya hay si todo falla y,
    * si un canal falla, conserva sus chats de la carga anterior en vez de hacerlos desaparecer.
    */
-  private cargar(enSilencio: boolean): void {
+  private cargar(enSilencio: boolean, soloLista = false): void {
     // «Ver más» en curso: no se le quita la carga de las manos; el siguiente refresco lo recoge.
     if (enSilencio && this.cargandoMas) return;
     if (!enSilencio) this.cargando = true;
     this.cargaSub?.unsubscribe();
+    this.ultimoRefresco = Date.now();
+    // Esta carga ya trae lo que un refresco en vivo pendiente iba a pedir.
+    this.recargaEnVivoPendiente = false;
     const previa = this.carga;
     this.cargaSub = this.bandeja
       .cargar(this.canales, previa?.paginasWhatsapp ?? 1)
@@ -972,7 +1104,13 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         this.carga = enSilencio && previa ? this.conservarCaidos(previa, nueva) : nueva;
         this.cargando = false;
         this.actualizarSeleccion();
+        // Llegaron eventos mientras esta carga iba en camino: una más, en silencio.
+        if (this.recargaEnVivoPendiente) {
+          this.recargaEnVivoPendiente = false;
+          this.cargar(true, true);
+        }
       });
+    if (soloLista) return;
     // El resumen y las notas se refrescan junto con la lista.
     this.cargarResumen();
     this.cargarColas();

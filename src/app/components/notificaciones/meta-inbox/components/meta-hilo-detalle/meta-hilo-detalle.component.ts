@@ -20,6 +20,7 @@ import {
 } from '../../../../../shared/services/messaging/messaging.models';
 
 import { ChatRapidosComponent } from '../../../inbox-core/chat-rapidos/chat-rapidos.component';
+import { SONDEO_RESPALDO_MS } from '../../../../../shared/services/messaging/bandeja-en-vivo.service';
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
   META_CANAL_LABEL,
@@ -77,6 +78,15 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   @Input() textoSugerido: TextoSugerido | null = null;
   /** [D-730] Qué pasó con la sugerencia: usada, cuadro bloqueado o el asesor no quiso reemplazar. */
   @Output() sugeridoResultado = new EventEmitter<ResultadoUsoSugerencia>();
+
+  /** Canal en vivo conectado (lo dice quien aloja): el sondeo baja a uno lento de respaldo. */
+  @Input() enVivo = false;
+  /** Cada cambio pide refrescar ya los mensajes en silencio (llegó un evento de este chat). */
+  @Input() senalRefresco = 0;
+  /** Cuándo se pidieron los mensajes por última vez (para el sondeo lento con el canal en vivo). */
+  private ultimoRefresco = 0;
+  /** Cada lectura invalida a la anterior: una respuesta tardía no pisa a una más nueva. */
+  private refrescoSeq = 0;
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
   /** Dueño vigente del chat abierto (la lista lo entrega y las acciones lo actualizan). */
@@ -143,6 +153,11 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     if (this.atencion && (changes['dueno'] || changes['hilo'])) {
       this.duenoActual = this.dueno || this.hilo?.owner || null;
     }
+    // Evento en vivo de este chat: se releen los mensajes ya. Solo se frena en mitad de un envío (el
+    // refresco no toca lo que el asesor está escribiendo ni la imagen elegida).
+    if (changes['senalRefresco'] && !changes['senalRefresco'].firstChange && !changes['hilo'] && this.hilo && !this.enviando && !this.cargandoMensajes) {
+      this.refrescarMensajesEnSilencio();
+    }
     if (!changes['hilo'] || !this.hilo) return;
     // Otra conversación: lo que se descargó de la anterior ya no sirve.
     const anterior = changes['hilo'].previousValue as MetaHilo | null;
@@ -175,6 +190,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
       .subscribe(() => {
         if (this.ocupado) return;
         if (document.hidden) return;
+        // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
+        if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
         if (this.hilo) this.refrescarMensajesEnSilencio();
       });
   }
@@ -182,6 +199,8 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
   private refrescarMensajesEnSilencio(): void {
     const hilo = this.hilo;
     if (!hilo) return;
+    const seq = ++this.refrescoSeq;
+    this.ultimoRefresco = Date.now();
 
     this.servicio
       .mensajesDeHilo(this.canal, hilo.identidadHash)
@@ -191,6 +210,7 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
         // en camino: si ya no es la misma, se descarta en vez de pintar los
         // mensajes de un hilo sobre otro.
         if (this.hilo?.identidadHash !== hilo.identidadHash) return;
+        if (seq !== this.refrescoSeq) return;
         this.mensajes = r.items;
         this.ventana = r.ventana;
         this.fijarPermiteImagen(hilo, r.permiteImagen);
@@ -207,6 +227,9 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy {
     this.fijarPermiteImagen(hilo, undefined);
     this.cargandoMensajes = true;
     this.cargarDueno(hilo);
+    // Los refrescos en silencio que ya iban en camino quedan viejos.
+    this.refrescoSeq++;
+    this.ultimoRefresco = Date.now();
 
     const canal = this.canal;
     this.servicio

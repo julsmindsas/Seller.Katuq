@@ -11486,5 +11486,9 @@
   "notificaciones.bandeja.ayuda.reemplazarTitulo": "Replace what you wrote?",
   "notificaciones.bandeja.ayuda.reemplazarTexto": "The box already has text. Using the suggestion replaces it.",
   "notificaciones.bandeja.ayuda.reemplazarSi": "Replace",
-  "notificaciones.bandeja.ayuda.reemplazarNo": "Keep my text"
+  "notificaciones.bandeja.ayuda.reemplazarNo": "Keep my text",
+  "notificaciones.bandeja.enVivo.activo": "Live",
+  "notificaciones.bandeja.enVivo.reconectando": "Reconnecting…",
+  "notificaciones.bandeja.enVivo.ayudaActivo": "Messages and chat changes arrive instantly.",
+  "notificaciones.bandeja.enVivo.ayudaReconectando": "The live connection was lost. Until it comes back, the inbox updates every few seconds."
 }

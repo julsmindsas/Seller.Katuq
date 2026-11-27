@@ -61,6 +61,8 @@
         [esAdministrador]="esAdministrador"
         [miEmail]="miEmail"
         [claveSeleccion]="claveSeleccion"
+        [enVivo]="enVivo"
+        [senalRefresco]="senalLista"
         (threadSelected)="onThreadSelected($event)"
         (seleccionRefrescada)="onSeleccionRefrescada($event)"
       ></app-whatsapp-thread-list>
@@ -80,6 +82,8 @@
         [equipo]="equipo"
         [esAdministrador]="esAdministrador"
         [miEmail]="miEmail"
+        [enVivo]="enVivo"
+        [senalRefresco]="senalDetalle"
         (duenoCambiado)="onDuenoCambiado($event)"
         (backToList)="onBackToList()"
       ></app-whatsapp-thread-detail>

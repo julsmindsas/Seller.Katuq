@@ -6,9 +6,16 @@ import {
   OnInit,
 } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
+import { Subject, Subscription, asyncScheduler } from "rxjs";
+import { throttleTime } from "rxjs/operators";
 
 import { CompanyFeaturesService } from "../../../../../shared/services/company-features.service";
 import { LoaderService } from "../../../../../shared/services/loader.service";
+import {
+  BandejaEnVivoService,
+  eventoEsDelChat,
+  eventoTocaMensajes,
+} from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 import { MessagingLinesService } from "../../../../../shared/services/messaging/messaging-lines.service";
 import {
   consolaWhatsappActiva,
@@ -73,6 +80,19 @@ export class WhatsappInboxShellComponent
    */
   vista: "conversaciones" | "pedidos" = "conversaciones";
 
+  /**
+   * Canal en vivo (solo con la bandera `bandejaUnica`; el servicio lo decide). Con él conectado la lista y el
+   * chat abierto se refrescan al llegar un evento y su sondeo baja a uno lento de respaldo. Sin él, todo igual.
+   */
+  enVivo = false;
+  /** Cada cambio le pide a la lista o al chat abierto refrescarse ya. */
+  senalLista = 0;
+  senalDetalle = 0;
+  private listaPendiente = false;
+  private detallePendiente = false;
+  private readonly rafaga$ = new Subject<void>();
+  private readonly enVivoSubs = new Subscription();
+
   private pageBodyEl: HTMLElement | null = null;
   private pageBodyOriginal: { minHeight: string; height: string } | null = null;
   private footerEl: HTMLElement | null = null;
@@ -83,6 +103,7 @@ export class WhatsappInboxShellComponent
     private readonly host: ElementRef<HTMLElement>,
     private readonly loader: LoaderService,
     private readonly lineasService: MessagingLinesService,
+    private readonly enVivoSrv: BandejaEnVivoService,
     features: CompanyFeaturesService,
   ) {
     this.multiNumero = features.isEnabled("whatsappMultiNumero");
@@ -104,6 +125,38 @@ export class WhatsappInboxShellComponent
       }
     });
     if (this.multiNumero) this.cargarLineas();
+    this.escucharEnVivo();
+  }
+
+  /** Eventos de WhatsApp del canal en vivo, agrupados: como mucho un refresco cada 400 ms. */
+  private escucharEnVivo(): void {
+    this.enVivoSubs.add(this.enVivoSrv.conectado$.subscribe((v) => (this.enVivo = v)));
+    this.enVivoSubs.add(
+      this.enVivoSrv.eventos$.subscribe((e) => {
+        if (e.canal !== "whatsapp") return;
+        // Un cambio de estado (enviado, entregado, leído por el cliente) solo se ve dentro del chat.
+        if (e.motivo !== "estado") this.listaPendiente = true;
+        if (eventoTocaMensajes(e) && eventoEsDelChat(e, { canal: "whatsapp", hash: this.selectedPhoneHash, lineId: this.selectedLineId, threadId: this.seleccion?.threadId })) {
+          this.detallePendiente = true;
+        }
+        this.rafaga$.next();
+      }),
+    );
+    this.enVivoSubs.add(
+      this.enVivoSrv.recargar$.subscribe(() => {
+        this.listaPendiente = true;
+        this.detallePendiente = !!this.selectedPhoneHash;
+        this.rafaga$.next();
+      }),
+    );
+    this.enVivoSubs.add(
+      this.rafaga$.pipe(throttleTime(400, asyncScheduler, { leading: true, trailing: true })).subscribe(() => {
+        if (this.listaPendiente) this.senalLista++;
+        if (this.detallePendiente) this.senalDetalle++;
+        this.listaPendiente = false;
+        this.detallePendiente = false;
+      }),
+    );
   }
 
   /** Líneas y equipo del comercio. Si falla, el buzón sigue sin filtro por número. */
@@ -156,6 +209,7 @@ export class WhatsappInboxShellComponent
 
   ngOnDestroy(): void {
     this.loader.releaseGlobalLoader();
+    this.enVivoSubs.unsubscribe();
     if (this.pageBodyEl) {
       this.pageBodyEl.style.removeProperty("min-height");
       this.pageBodyEl.style.removeProperty("height");

@@ -11474,5 +11474,9 @@
   "notificaciones.bandeja.ayuda.reemplazarTitulo": "Substituir o que você escreveu?",
   "notificaciones.bandeja.ayuda.reemplazarTexto": "A caixa já tem texto. Se usar a sugestão, ele será substituído.",
   "notificaciones.bandeja.ayuda.reemplazarSi": "Substituir",
-  "notificaciones.bandeja.ayuda.reemplazarNo": "Manter meu texto"
+  "notificaciones.bandeja.ayuda.reemplazarNo": "Manter meu texto",
+  "notificaciones.bandeja.enVivo.activo": "Ao vivo",
+  "notificaciones.bandeja.enVivo.reconectando": "Reconectando…",
+  "notificaciones.bandeja.enVivo.ayudaActivo": "As mensagens e mudanças dos chats chegam na hora.",
+  "notificaciones.bandeja.enVivo.ayudaReconectando": "A conexão ao vivo caiu. Enquanto ela volta, a caixa de entrada é atualizada a cada poucos segundos."
 }

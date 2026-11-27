@@ -29,6 +29,7 @@ import {
 } from "../../../../../shared/services/messaging/messaging.models";
 
 import { ChatRapidosComponent } from "../../../inbox-core/chat-rapidos/chat-rapidos.component";
+import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
   BotThreadState,
@@ -123,6 +124,11 @@ export class WhatsappThreadDetailComponent
   /** [D-730] Qué pasó con la sugerencia: usada, cuadro bloqueado o el asesor no quiso reemplazar. */
   @Output() sugeridoResultado = new EventEmitter<ResultadoUsoSugerencia>();
 
+  /** Canal en vivo conectado (lo dice quien aloja): el sondeo baja a uno lento de respaldo. */
+  @Input() enVivo = false;
+  /** Cada cambio pide refrescar ya los mensajes en silencio (llegó un evento de este chat). */
+  @Input() senalRefresco = 0;
+
   @ViewChild("messagesContainer") messagesContainer?: ElementRef<HTMLElement>;
   @ViewChild(ChatRapidosComponent) rapidosLista?: ChatRapidosComponent;
 
@@ -209,8 +215,12 @@ export class WhatsappThreadDetailComponent
 
   /** Flag para correr el auto-scroll una sola vez tras un load. */
   private needsScroll = false;
-  /** Suscripción del polling cada 8s; se cancela en ngOnDestroy. */
+  /** Suscripción del polling cada 4s; se cancela en ngOnDestroy. */
   private refreshSub: Subscription | null = null;
+  /** Cuándo se pidieron los mensajes por última vez (para el sondeo lento con el canal en vivo). */
+  private ultimoRefresco = 0;
+  /** Cada refresco invalida al anterior: una respuesta tardía no pisa a una más nueva. */
+  private refrescoSeq = 0;
 
   constructor(
     private readonly inbox: WhatsappInboxService,
@@ -233,6 +243,9 @@ export class WhatsappThreadDetailComponent
       this.templatesOpen = false;
       this.loadAll();
       this.restartAutoRefresh();
+    } else if (changes["senalRefresco"] && !changes["senalRefresco"].firstChange && !this.sending && !this.loading) {
+      // El evento ya dice que el mensaje está guardado: no hace falta pedir la sincronización con Kapso.
+      this.refreshMessages(false);
     }
   }
 
@@ -509,19 +522,22 @@ export class WhatsappThreadDetailComponent
    * Recargar mensajes sin re-pedir el perfil ni mover el `loading` flag.
    * Usado por el polling y tras enviar una respuesta.
    */
-  private refreshMessages(): void {
+  private refreshMessages(conSync = true): void {
     if (!this.phoneHash) {
       return;
     }
     const hash = this.phoneHash;
     const lineId = this.lineId;
+    const seq = ++this.refrescoSeq;
+    this.ultimoRefresco = Date.now();
     // Antes del refresh, pedir al backend que sincronice inbounds desde Kapso
     // (best-effort, el servicio ignora el error).
-    this.inbox.syncInbound().subscribe();
+    if (conSync) this.inbox.syncInbound().subscribe();
     this.inbox.getMessages(hash, lineId).subscribe({
       next: (page) => {
         // Si el chat cambió mientras respondía, se descarta.
         if (this.phoneHash !== hash || this.lineId !== lineId) return;
+        if (seq !== this.refrescoSeq) return;
         const items = page.items;
         if (items.length === 0) return; // mantener estado anterior si vacío
         const prevCount = this.messages.length;
@@ -545,7 +561,8 @@ export class WhatsappThreadDetailComponent
   /**
    * Polling cada 4s. No refresca en mitad de un envío. Con texto a medias sí
    * refresca (el asesor debe ver lo que el cliente sigue escribiendo); la
-   * pantalla solo baja al final cuando llegan mensajes nuevos.
+   * pantalla solo baja al final cuando llegan mensajes nuevos. Con el canal en
+   * vivo conectado queda de respaldo: un refresco cada 30 s como mucho.
    */
   private restartAutoRefresh(): void {
     this.stopAutoRefresh();
@@ -557,6 +574,7 @@ export class WhatsappThreadDetailComponent
       // Firestore del hilo completo); al volver, el siguiente tick refresca.
       if (document.hidden) return;
       if (this.sending) return;
+      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       this.refreshMessages();
     });
   }
@@ -628,6 +646,8 @@ export class WhatsappThreadDetailComponent
     this.loading = true;
     const hash = this.phoneHash;
     const lineId = this.lineId;
+    this.refrescoSeq++;
+    this.ultimoRefresco = Date.now();
     this.cargarEstadoBot(hash);
     forkJoin([
       this.inbox.getMessages(hash, lineId),

@@ -11306,5 +11306,9 @@
   "notificaciones.bandeja.ayuda.reemplazarTitulo": "¿Reemplazar lo que escribiste?",
   "notificaciones.bandeja.ayuda.reemplazarTexto": "El cuadro ya tiene texto. Si usas la sugerencia, se reemplaza.",
   "notificaciones.bandeja.ayuda.reemplazarSi": "Reemplazar",
-  "notificaciones.bandeja.ayuda.reemplazarNo": "Conservar mi texto"
+  "notificaciones.bandeja.ayuda.reemplazarNo": "Conservar mi texto",
+  "notificaciones.bandeja.enVivo.activo": "En vivo",
+  "notificaciones.bandeja.enVivo.reconectando": "Reconectando…",
+  "notificaciones.bandeja.enVivo.ayudaActivo": "Los mensajes y cambios de los chats llegan al instante.",
+  "notificaciones.bandeja.enVivo.ayudaReconectando": "Se perdió la conexión en vivo. Mientras vuelve, la bandeja se actualiza cada pocos segundos."
 }

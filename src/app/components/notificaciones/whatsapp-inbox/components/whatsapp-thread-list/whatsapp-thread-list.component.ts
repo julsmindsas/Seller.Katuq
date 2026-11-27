@@ -2,9 +2,11 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
 } from "@angular/core";
 import { Subject, Subscription, interval } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
@@ -21,6 +23,7 @@ import {
   MessagingLine,
 } from "../../../../../shared/services/messaging/messaging.models";
 import { textoHumanoDePlantilla } from "./plantillas-humanas";
+import { SONDEO_RESPALDO_MS } from "../../../../../shared/services/messaging/bandeja-en-vivo.service";
 
 /** Etiqueta de estado de un hilo en la lista (mockup Marketing y WhatsApp). */
 interface ThreadTag {
@@ -48,13 +51,17 @@ interface ThreadTag {
   templateUrl: "./whatsapp-thread-list.component.html",
   styleUrls: ["./whatsapp-thread-list.component.scss"],
 })
-export class WhatsappThreadListComponent implements OnInit, OnDestroy {
+export class WhatsappThreadListComponent implements OnInit, OnChanges, OnDestroy {
   /** [D-437] Líneas del comercio (vacío con la bandera apagada). */
   @Input() lineas: MessagingLine[] = [];
   @Input() esAdministrador = false;
   @Input() miEmail = "";
   /** [D-437] Clave (número + cliente) del chat abierto en el detalle. */
   @Input() claveSeleccion: string | null = null;
+  /** Canal en vivo conectado (lo dice quien aloja): el sondeo baja a uno lento de respaldo. */
+  @Input() enVivo = false;
+  /** Cada cambio pide refrescar ya la lista en silencio (llegó un evento de WhatsApp). */
+  @Input() senalRefresco = 0;
 
   @Output() threadSelected = new EventEmitter<WhatsappThread>();
   /** [D-437] El refresco trajo datos nuevos del chat abierto (por ejemplo, otro dueño). */
@@ -86,6 +93,11 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   /** Polling cada 10s para refrescar la lista (sin spinner) con inbounds nuevos. */
   private refreshSub?: Subscription;
   private fetchSub?: Subscription;
+  /** Refresco en silencio en curso y si otro quedó pedido mientras tanto (no se cancelan entre sí). */
+  private silentSub?: Subscription;
+  private silentPendiente = false;
+  /** Cuándo se pidió la lista por última vez (para el sondeo lento con el canal en vivo). */
+  private ultimoRefresco = 0;
 
   constructor(
     private readonly inbox: WhatsappInboxService,
@@ -106,6 +118,8 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     // refresca.
     this.refreshSub = interval(10000).subscribe(() => {
       if (document.hidden) return;
+      // Con el canal en vivo conectado este sondeo queda de respaldo: como mucho cada 30 s.
+      if (this.enVivo && Date.now() - this.ultimoRefresco < SONDEO_RESPALDO_MS) return;
       if ((this.searchQuery || "").trim().length === 0) {
         this.fetchThreadsSilent();
         this.fetchBotSesiones();
@@ -147,10 +161,22 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    // Evento en vivo: la lista se relee ya, con la misma regla del sondeo (no mientras se busca). El evento ya
+    // dice que el mensaje está guardado, así que no se pide la sincronización con Kapso.
+    if (changes["senalRefresco"] && !changes["senalRefresco"].firstChange) {
+      if ((this.searchQuery || "").trim().length === 0 && !this.loading) {
+        this.fetchThreadsSilent(false);
+        this.fetchBotSesiones();
+      }
+    }
+  }
+
   ngOnDestroy(): void {
     this.searchSub?.unsubscribe();
     this.refreshSub?.unsubscribe();
     this.fetchSub?.unsubscribe();
+    this.silentSub?.unsubscribe();
   }
 
   /**
@@ -159,17 +185,30 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
    * en paralelo para que el backend pollee Kapso (defensa por si el cron del
    * backend no está corriendo).
    */
-  private fetchThreadsSilent(): void {
+  private fetchThreadsSilent(conSync = true): void {
+    this.ultimoRefresco = Date.now();
+    // Uno a la vez: si ya va uno en camino, se pide otro al terminar (así una ráfaga no los cancela todos).
+    if (this.silentSub && !this.silentSub.closed) {
+      this.silentPendiente = true;
+      return;
+    }
     // Best-effort sync (el servicio ignora el error).
-    this.inbox.syncInbound().subscribe();
-    this.inbox
+    if (conSync) this.inbox.syncInbound().subscribe();
+    const siguiente = () => {
+      this.silentSub = undefined;
+      if (!this.silentPendiente) return;
+      this.silentPendiente = false;
+      this.fetchThreadsSilent(false);
+    };
+    this.silentSub = this.inbox
       .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
       .subscribe({
         next: (page) => {
           if (page.items.length === 0) return;
           this.ponerHilos(page.items);
         },
-        error: () => undefined,
+        error: () => siguiente(),
+        complete: () => siguiente(),
       });
   }
 
@@ -317,6 +356,11 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   fetchThreads(): void {
     this.loading = true;
     this.errorCarga = false;
+    this.ultimoRefresco = Date.now();
+    // Un refresco en silencio con la búsqueda o el número de antes ya no sirve.
+    this.silentSub?.unsubscribe();
+    this.silentSub = undefined;
+    this.silentPendiente = false;
     this.fetchSub?.unsubscribe();
     this.fetchSub = this.inbox
       .getThreads({ search: this.searchQuery, lineId: this.lineaFiltro || null })
