@@ -56,7 +56,21 @@ export class WaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoChec
   constructor(private readonly translate: TranslateService, private readonly zona: NgZone) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes["adjunto"] && !changes["adjunto"].firstChange) {
+    const cambio = changes["adjunto"];
+    if (cambio && !cambio.firstChange) {
+      // Cada refresco del chat trae objetos nuevos para el mismo archivo: si es el mismo, no se corta
+      // el audio o el video que suena ni se cierra la foto ampliada.
+      const previo = cambio.previousValue as MediaInfo | null;
+      const actual = this.adjunto;
+      if (
+        previo &&
+        actual &&
+        previo.id === actual.id &&
+        previo.url === actual.url &&
+        previo.disponible === actual.disponible
+      ) {
+        return;
+      }
       this.reproducir = false;
       this.noSeReproduce = false;
       this.ampliada = false;
@@ -221,6 +235,12 @@ export class WaAdjuntoVistaComponent implements OnChanges, AfterViewInit, DoChec
     const previo = this.focoPrevio;
     this.focoPrevio = null;
     if (previo && typeof previo.focus === "function") setTimeout(() => previo.focus());
+  }
+
+  /** La foto ampliada es una ventana modal: Tab y Mayús+Tab se quedan en su único botón. */
+  retenerFoco(evento: Event): void {
+    evento.preventDefault();
+    this.cerrarAmpliada?.nativeElement.focus();
   }
 
   @HostListener("document:keydown.escape")

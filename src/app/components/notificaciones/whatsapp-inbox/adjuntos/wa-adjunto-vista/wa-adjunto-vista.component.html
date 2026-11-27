@@ -142,6 +142,8 @@
     aria-modal="true"
     [attr.aria-label]="nombreArchivo"
     (click)="cerrar()"
+    (keydown.tab)="retenerFoco($event)"
+    (keydown.shift.tab)="retenerFoco($event)"
   >
     <button
       #cerrarAmpliada
