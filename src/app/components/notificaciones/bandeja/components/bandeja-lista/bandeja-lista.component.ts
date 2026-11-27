@@ -400,12 +400,15 @@ export class BandejaListaComponent implements OnChanges {
 
   private armarFila(c: ConversacionResumen): FilaVista {
     const canalLabel = CANAL_BANDEJA_LABEL[c.canal];
-    const propio = (c.nombre || "").trim();
+    const sinNombre = this.translate.instant("notificaciones.sinNombre");
+    // Una respuesta vieja del servicio de WhatsApp trae «Sin nombre» como si fuera el nombre: cuenta como vacío.
+    const crudo = (c.nombre || "").trim();
+    const propio = crudo === sinNombre ? "" : crudo;
     const telefono = telefonoDe(c);
     const nombre =
       propio ||
       (c.canal === "whatsapp"
-        ? telefono || this.translate.instant("notificaciones.sinNombre")
+        ? telefono || sinNombre
         : this.translate.instant("notificaciones.meta.contactOf", { canal: canalLabel }));
     const base = (c.canal === "whatsapp" ? textoHumanoDePlantilla(c.resumen) : c.resumen) || "";
     // «Tú:» cuando el último mensaje lo mandó el comercio: se ve de un vistazo quién debe responder.
