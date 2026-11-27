@@ -244,6 +244,13 @@ export class MetaHiloDetalleComponent implements OnChanges, OnDestroy, AfterView
       if (this.cargandoMensajes) this.refrescoPendiente = true;
       else this.refrescarMensajesEnSilencio();
     }
+    // Ya no se mira ningún chat (el hilo quedó en null sin cerrar el componente): un envío que termine ahora
+    // avisa aparte, como si se mirara otro chat.
+    if (changes['hilo'] && !this.hilo) {
+      const anterior = changes['hilo'].previousValue as MetaHilo | null;
+      const canalAnterior = changes['canal'] ? changes['canal'].previousValue : this.canal;
+      if (!anterior || this.envios.chatVisible === `${canalAnterior}|${anterior.identidadHash}`) this.envios.chatVisible = null;
+    }
     if (!changes['hilo'] || !this.hilo) return;
     // Otra conversación: lo que se descargó de la anterior ya no sirve.
     const anterior = changes['hilo'].previousValue as MetaHilo | null;

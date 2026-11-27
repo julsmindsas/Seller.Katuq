@@ -107,6 +107,11 @@ export class Diezmador {
   }
 }
 
+/** Lo único que el grabador necesita de NgZone (así sigue sin depender de Angular). */
+export interface ZonaGrabadorRed {
+  runOutsideAngular<T>(fn: () => T): T;
+}
+
 export class GrabadorVozRed {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
@@ -129,12 +134,15 @@ export class GrabadorVozRed {
 
   /**
    * @param alTerminar nota lista (al detener o al llegar a 2:30), o null si se canceló.
-   * @param alTick cada ~200 ms mientras graba (tiempo y nivel).
+   * @param alTick cada ~200 ms mientras graba (tiempo y nivel). Con `zona`, corre FUERA de Angular: quien lo
+   *   recibe repinta solo su parte (no toda la app cinco veces por segundo).
+   * @param zona NgZone de quien graba; sin ella el reloj corre donde se llame.
    */
   constructor(
     private readonly formato: FormatoVozRed,
     private readonly alTerminar: (nota: NotaGrabadaRed | null) => void,
     private readonly alTick: () => void,
+    private readonly zona: ZonaGrabadorRed | null = null,
   ) {}
 
   /**
@@ -203,7 +211,7 @@ export class GrabadorVozRed {
         silencio.connect(ctx.destination);
       }
       this.inicio = Date.now();
-      this.reloj = setInterval(() => this.tick(), 200);
+      this.reloj = this.fuera(() => setInterval(() => this.tick(), 200));
       return null;
     } catch {
       this.liberar();
@@ -227,15 +235,25 @@ export class GrabadorVozRed {
           channelCount: 1,
           channelCountMode: 'explicit',
         });
-        nodo.port.onmessage = (ev: MessageEvent) => alBloque(ev.data as Float32Array);
+        // Llegan cientos de bloques por segundo: el manejador se pone fuera de Angular (no repinta la app).
+        this.fuera(() => {
+          nodo.port.onmessage = (ev: MessageEvent) => alBloque(ev.data as Float32Array);
+        });
         return nodo;
       } catch {
         // sigue con ScriptProcessor
       }
     }
     const proc = ctx.createScriptProcessor(4096, 1, 1);
-    proc.onaudioprocess = (ev: AudioProcessingEvent) => alBloque(ev.inputBuffer.getChannelData(0).slice(0));
+    this.fuera(() => {
+      proc.onaudioprocess = (ev: AudioProcessingEvent) => alBloque(ev.inputBuffer.getChannelData(0).slice(0));
+    });
     return proc;
+  }
+
+  /** Corre `fn` fuera de Angular si hay zona (los manejadores que ponga quedan fuera). */
+  private fuera<T>(fn: () => T): T {
+    return this.zona ? this.zona.runOutsideAngular(fn) : fn();
   }
 
   get grabando(): boolean {

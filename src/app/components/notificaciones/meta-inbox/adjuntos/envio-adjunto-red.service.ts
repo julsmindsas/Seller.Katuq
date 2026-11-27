@@ -1,8 +1,10 @@
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import { META_CANAL_LABEL, MetaAdjunto } from '../models/meta-thread.model';
 import { MetaInboxService } from '../meta-inbox.service';
@@ -57,11 +59,34 @@ interface Reciente {
   kind: KindEnvioRed;
   bytes: number;
   archivo: Blob;
+  /** Cuándo se guardó (ms). */
+  guardado: number;
 }
 
+const MB = 1024 * 1024;
 const MAX_RECIENTES_POR_CHAT = 3;
-const MAX_CHATS_CON_RECIENTES = 10;
-const TOPE_RECIENTE = 8 * 1024 * 1024;
+const MAX_CHATS_CON_RECIENTES = 3;
+/** Tope de un archivo para guardar su copia local. */
+const TOPE_RECIENTE = 8 * MB;
+/** Tope de todas las copias locales juntas. */
+const TOPE_TOTAL_RECIENTES = 24 * MB;
+/** Una copia local vale media hora; después la burbuja muestra la tarjeta «Enviado». */
+const VIGENCIA_RECIENTE_MS = 30 * 60 * 1000;
+/**
+ * Un envío fallido que nadie reintenta ni quita suelta su archivo (hasta 25 MB) a los 15 minutos: el aviso sigue
+ * y «Reintentar» pide volver a adjuntarlo.
+ */
+const VIGENCIA_ARCHIVO_FALLIDO_MS = 15 * 60 * 1000;
+
+/** Quién tiene la sesión abierta (empresa y correo), para no dejarle a otro lo de la sesión anterior. */
+function duenoDeSesion(): string {
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || 'null');
+    return u ? `${u.company || ''}|${u.email || ''}` : '';
+  } catch {
+    return '';
+  }
+}
 
 /**
  * Envíos de archivos del chat de Instagram y Facebook (bandeja única). Vive en root para que cambiar de chat no
@@ -77,6 +102,13 @@ export class EnvioAdjuntoRedService implements OnDestroy {
   private readonly envios = new Map<string, EnvioAdjuntoRed>();
   private readonly subs = new Map<string, Subscription>();
   private readonly recientes = new Map<string, Reciente[]>();
+  /** Desde cuándo está fallido cada envío (ms), para soltar su archivo si nadie lo reintenta. */
+  private readonly falloDesde = new Map<string, number>();
+  /** Sesión dueña de lo guardado: si cambia (se cerró sesión o entró otra persona), se vacía todo. */
+  private dueno = duenoDeSesion();
+  private readonly navSub: Subscription;
+  /** Revisión de lo vencido (cada minuto, fuera de Angular, solo mientras haya algo guardado). */
+  private relojLimpieza: ReturnType<typeof setInterval> | null = null;
   readonly eventos$ = new Subject<EventoEnvioRed>();
   /** Chat que se está mirando: si un envío de otro termina, se avisa con un toast. */
   chatVisible: string | null = null;
@@ -85,11 +117,36 @@ export class EnvioAdjuntoRedService implements OnDestroy {
     private readonly inbox: MetaInboxService,
     private readonly toastr: ToastrService,
     private readonly translate: TranslateService,
-  ) {}
+    router: Router,
+    private readonly zona: NgZone,
+  ) {
+    // Al cerrar sesión la app va a /login sin recargar: lo de la sesión (envíos y copias) se suelta ahí.
+    this.navSub = router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        if (/^\/login(\/|\?|#|$)/.test(e.urlAfterRedirects || e.url || '')) this.vaciar();
+      });
+  }
 
   ngOnDestroy(): void {
-    this.subs.forEach((s) => s.unsubscribe());
-    this.subs.clear();
+    this.navSub.unsubscribe();
+    this.vaciar();
+  }
+
+  /**
+   * Revisa lo vencido cada minuto mientras haya copias locales o envíos fallidos. Corre fuera de Angular: no
+   * repinta la app; lo que suelte se ve en la siguiente vuelta de la pantalla.
+   */
+  private programarLimpieza(): void {
+    if (this.relojLimpieza || (!this.recientes.size && !this.falloDesde.size)) return;
+    this.zona.runOutsideAngular(() => {
+      this.relojLimpieza = setInterval(() => this.limpiarVencidos(), 60 * 1000);
+    });
+  }
+
+  private pararLimpieza(): void {
+    if (this.relojLimpieza) clearInterval(this.relojLimpieza);
+    this.relojLimpieza = null;
   }
 
   de(clave: string | null | undefined): EnvioAdjuntoRed | null {
@@ -97,6 +154,7 @@ export class EnvioAdjuntoRedService implements OnDestroy {
   }
 
   enviar(datos: Omit<EnvioAdjuntoRed, 'etapa' | 'progreso' | 'errorClave' | 'quizaEnviado'>): boolean {
+    this.limpiarVencidos();
     if (this.envios.has(datos.clave) || !datos.archivo) return false;
     this.envios.set(datos.clave, { ...datos, etapa: 'subiendo', progreso: 0, errorClave: null, quizaEnviado: false });
     this.lanzar(datos.clave);
@@ -127,6 +185,7 @@ export class EnvioAdjuntoRedService implements OnDestroy {
     e.progreso = 0;
     e.errorClave = null;
     e.quizaEnviado = false;
+    this.falloDesde.delete(clave);
     this.lanzar(clave);
   }
 
@@ -135,6 +194,7 @@ export class EnvioAdjuntoRedService implements OnDestroy {
     const e = this.envios.get(clave);
     if (!e || e.etapa !== 'fallo') return;
     this.envios.delete(clave);
+    this.falloDesde.delete(clave);
   }
 
   /**
@@ -153,7 +213,7 @@ export class EnvioAdjuntoRedService implements OnDestroy {
   private guardarReciente(e: EnvioAdjuntoRed): void {
     if (!e.archivo || e.archivo.size > TOPE_RECIENTE) return;
     const lista = (this.recientes.get(e.clave) || []).filter((x) => x.bytes !== e.archivo!.size || x.kind !== e.kind);
-    lista.push({ kind: e.kind, bytes: e.archivo.size, archivo: e.archivo });
+    lista.push({ kind: e.kind, bytes: e.archivo.size, archivo: e.archivo, guardado: Date.now() });
     while (lista.length > MAX_RECIENTES_POR_CHAT) lista.shift();
     this.recientes.delete(e.clave);
     this.recientes.set(e.clave, lista);
@@ -162,6 +222,54 @@ export class EnvioAdjuntoRedService implements OnDestroy {
       const primero = this.recientes.keys().next().value as string;
       this.recientes.delete(primero);
     }
+    // Y si entre todos pasan del tope, sale lo más viejo (del chat más viejo primero).
+    let total = 0;
+    this.recientes.forEach((l) => l.forEach((x) => (total += x.bytes)));
+    while (total > TOPE_TOTAL_RECIENTES && this.recientes.size) {
+      const primero = this.recientes.keys().next().value as string;
+      const l = this.recientes.get(primero)!;
+      const sale = l.shift();
+      if (sale) total -= sale.bytes;
+      if (!l.length) this.recientes.delete(primero);
+    }
+    this.programarLimpieza();
+  }
+
+  /**
+   * Suelta lo vencido: copias locales de más de media hora, el archivo de un envío fallido que lleva 15 minutos
+   * sin reintentarse y, si cambió la sesión, todo.
+   */
+  private limpiarVencidos(): void {
+    const dueno = duenoDeSesion();
+    if (dueno !== this.dueno) {
+      this.vaciar();
+      this.dueno = dueno;
+      return;
+    }
+    const ahora = Date.now();
+    this.recientes.forEach((l, clave) => {
+      const vigentes = l.filter((x) => ahora - x.guardado < VIGENCIA_RECIENTE_MS);
+      if (!vigentes.length) this.recientes.delete(clave);
+      else if (vigentes.length !== l.length) this.recientes.set(clave, vigentes);
+    });
+    this.falloDesde.forEach((desde, clave) => {
+      if (ahora - desde < VIGENCIA_ARCHIVO_FALLIDO_MS) return;
+      const e = this.envios.get(clave);
+      if (e && e.etapa === 'fallo') e.archivo = null;
+      this.falloDesde.delete(clave);
+    });
+    if (!this.recientes.size && !this.falloDesde.size) this.pararLimpieza();
+  }
+
+  /** Corta los envíos en camino y suelta envíos y copias locales (al cerrar sesión o cambiar de persona). */
+  private vaciar(): void {
+    this.subs.forEach((s) => s.unsubscribe());
+    this.subs.clear();
+    this.envios.clear();
+    this.recientes.clear();
+    this.falloDesde.clear();
+    this.chatVisible = null;
+    this.pararLimpieza();
   }
 
   private cortar(clave: string): void {
@@ -197,6 +305,8 @@ export class EnvioAdjuntoRedService implements OnDestroy {
             actual.etapa = 'fallo';
             actual.quizaEnviado = false;
             actual.errorClave = claveDeErrorArchivoRed({ status: 200, error: { code: cuerpo.motivo || '' } });
+            this.falloDesde.set(clave, Date.now());
+            this.programarLimpieza();
             this.terminar({ clave, tipo: 'fallo' });
             return;
           }
@@ -222,6 +332,8 @@ export class EnvioAdjuntoRedService implements OnDestroy {
         const incierto = yaSubio && (status === 0 || (status >= 500 && !codigo));
         actual.etapa = 'fallo';
         actual.quizaEnviado = incierto;
+        this.falloDesde.set(clave, Date.now());
+        this.programarLimpieza();
         actual.errorClave = incierto ? 'notificaciones.redes3.adjuntos.quizaEnviado' : claveDeErrorArchivoRed(err);
         this.terminar({ clave, tipo: incierto ? 'revisar' : 'fallo', error: err });
       },

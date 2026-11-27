@@ -325,10 +325,20 @@ export class MetaAdjuntarComponent implements OnChanges, OnDestroy {
     this.aviso = null;
     this.estadoGrabacion = 'pidiendo';
     this.emitir();
+    // El reloj (cada 200 ms) corre fuera de Angular y solo repinta este adjuntar (tiempo y nivel); al terminar,
+    // incluso por el corte de las 2:30, se vuelve a Angular para avisarle al chat.
     const grabador = new GrabadorVozRed(
       this.formatoVoz,
       (nota) => this.zona.run(() => this.alTerminarGrabacion(grabador, nota)),
-      () => this.cdr.markForCheck(),
+      () => {
+        if (this.grabador !== grabador) return;
+        try {
+          this.cdr.detectChanges();
+        } catch {
+          // la vista ya se destruyó: el grabador se suelta en ngOnDestroy
+        }
+      },
+      this.zona,
     );
     this.grabador = grabador;
     const fallo = await grabador.empezar();
