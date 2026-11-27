@@ -78,6 +78,8 @@ const RESUMEN_MIN_MS = 30000;
 /** La búsqueda en el servidor espera a que la persona deje de escribir y pide al menos 3 caracteres. */
 const BUSQUEDA_ESPERA_MS = 450;
 const BUSQUEDA_MIN = 3;
+/** Con una búsqueda activa, el refresco completo la repite en el servidor como mucho cada 30 s. */
+const REPETIR_BUSQUEDA_MS = 30000;
 
 /**
  * Bandeja única («Todos los mensajes»): una sola lista con los chats de WhatsApp, Instagram, Facebook y
@@ -223,6 +225,9 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
   busquedaServidor = "";
   buscandoServidor = false;
   private readonly busqueda$ = new Subject<string>();
+  /** Cuándo llegaron los resultados del servidor: el refresco los repite como mucho cada 30 s. */
+  private busquedaServidorEn = 0;
+  private repeticionBusquedaSub?: Subscription;
 
   // ─── Volver a la bandeja: mismo chat y mismos filtros; el aviso «Chat sin responder» abre su chat ───
   /** Filtros de la lista al salir; la lista los aplica una vez. */
@@ -514,9 +519,29 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
       )
       .subscribe(({ q, items }) => {
         this.buscandoServidor = false;
+        this.repeticionBusquedaSub?.unsubscribe();
         // Si el servidor falla, la lista se queda con la búsqueda local.
         this.busquedaServidor = items ? q : "";
         this.resultadosBusqueda = items || [];
+        this.busquedaServidorEn = Date.now();
+      });
+  }
+
+  /**
+   * Los chats que solo trajo la búsqueda (no cargados en la lista) no los ponen al día ni el canal en vivo ni el
+   * refresco. Con una búsqueda activa, el refresco completo la repite como mucho cada 30 s.
+   */
+  private repetirBusquedaServidor(): void {
+    const q = this.busquedaServidor;
+    if (!q || !this.resultadosBusqueda.length || Date.now() - this.busquedaServidorEn < REPETIR_BUSQUEDA_MS) return;
+    this.busquedaServidorEn = Date.now();
+    this.repeticionBusquedaSub?.unsubscribe();
+    this.repeticionBusquedaSub = this.bandeja
+      .buscarWhatsapp(q)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        // Si la persona cambió la búsqueda mientras tanto, esta respuesta ya no sirve; si falla, queda la anterior.
+        if (items && this.busquedaServidor === q) this.resultadosBusqueda = items;
       });
   }
 
@@ -1324,6 +1349,7 @@ export class BandejaShellComponent implements OnInit, OnDestroy {
         this.cargando = false;
         this.actualizarSeleccion();
         this.abrirPendiente();
+        if (enSilencio && !soloLista) this.repetirBusquedaServidor();
         // Llegaron eventos mientras esta carga iba en camino: otra confirmación, en su turno.
         this.seguirConfirmacionPendiente();
       });
