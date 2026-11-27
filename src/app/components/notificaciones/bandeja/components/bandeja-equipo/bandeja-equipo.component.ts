@@ -21,7 +21,7 @@ import {
 } from "../../../../../shared/services/messaging/messaging.models";
 import { MAX_COLAS, paraGuardar } from "../../bandeja.colas";
 import { ASESOR_SIN_ASIGNAR } from "../../bandeja.models";
-import { textoSegundos } from "../bandeja-informes/bandeja-informes.util";
+import { numeroOpcional as numero, textoSegundos } from "../bandeja-informes/bandeja-informes.util";
 
 /** Una fila de la tarjeta «Colas»: la cola con sus cifras del resumen. */
 export interface FilaCola {
@@ -131,15 +131,39 @@ export class BandejaEquipoComponent implements OnChanges {
     return (this.resumen?.porAsesor || []).filter((a) => a.enEquipo !== false && !a.coordina && a.estado !== "ausente").length;
   }
 
-  /** Cifras que el servidor aún no manda: la tarjeta sale solo si llegan (nunca se inventan). */
+  /**
+   * Cifras opcionales del servidor: la tarjeta sale solo si llegan (nunca se inventan). La espera vale 0
+   * cuando nadie espera; la pantalla la muestra como «—».
+   */
   get esperaMasLarga(): number | null {
-    const v = this.resumen?.esperaMasLargaSeg;
-    return typeof v === "number" && isFinite(v) ? v : null;
+    return numero(this.resumen?.esperaMasLargaSeg);
   }
 
+  /** null cuando no hay objetivo (el aviso «sin responder» está en 0): la tarjeta no sale. */
   get pasaronObjetivo(): number | null {
-    const v = this.resumen?.pasaronObjetivo;
-    return typeof v === "number" && isFinite(v) ? v : null;
+    return numero(this.resumen?.pasaronObjetivo);
+  }
+
+  /** Objetivo de respuesta, en segundos, para decir cuál es en la tarjeta; null si no llega. */
+  get objetivo(): number | null {
+    const v = numero(this.resumen?.objetivoSeg);
+    return v !== null && v > 0 ? v : null;
+  }
+
+  /** Días de la ventana con la que el servidor cuenta «Sin asignar» y «Sin responder»; null si no la manda. */
+  get ventanaDias(): number | null {
+    const v = numero(this.resumen?.ventanaDias);
+    return v !== null && v > 0 ? v : null;
+  }
+
+  /** Chats abiertos que quedaron fuera de «Sin asignar» por viejos (0 si el servidor no lo manda). */
+  get fueraSinAsignar(): number {
+    return numero(this.resumen?.fueraDeVentana?.sinAsignar) || 0;
+  }
+
+  /** Chats abiertos que quedaron fuera de «Sin responder» por viejos (0 si el servidor no lo manda). */
+  get fueraSinResponder(): number {
+    return numero(this.resumen?.fueraDeVentana?.sinResponder) || 0;
   }
 
   /** «45 s», «12 min» o «1 h 5 min». */

@@ -19,23 +19,26 @@
       >
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinAsignar' | translate }}</span>
         <span class="eq-cifra__valor">{{ r.sinAsignar }}</span>
+        <!-- La cifra cuenta solo la ventana del servidor; la lista que abre el botón trae también los viejos -->
+        <span class="eq-cifra__nota" *ngIf="ventanaDias">{{ (fueraSinAsignar ? 'notificaciones.informes2.ventanaMas' : 'notificaciones.informes2.ventana') | translate: { dias: ventanaDias, n: fueraSinAsignar } }}</span>
         <span class="eq-solo-lector">{{ 'notificaciones.informes2.verChatsLector' | translate }}</span>
       </button>
       <div class="eq-cifra">
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.sinResponder' | translate }}</span>
         <span class="eq-cifra__valor" [class.eq-cifra__valor--alerta]="r.sinResponder > 0">{{ r.sinResponder }}</span>
+        <span class="eq-cifra__nota" *ngIf="ventanaDias">{{ (fueraSinResponder ? 'notificaciones.informes2.ventanaMas' : 'notificaciones.informes2.ventana') | translate: { dias: ventanaDias, n: fueraSinResponder } }}</span>
       </div>
       <div class="eq-cifra">
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.bandeja.equipo.disponibles' | translate }}</span>
         <span class="eq-cifra__valor">{{ disponibles }}</span>
       </div>
-      <!-- Cifras que el servidor aún no manda: salen solo si llegan -->
+      <!-- Cifras opcionales del servidor: salen solo si llegan; una espera de 0 (nadie espera) se ve como «—» -->
       <div class="eq-cifra" *ngIf="esperaMasLarga !== null">
         <span class="eq-cifra__etiqueta">{{ 'notificaciones.informes2.esperaMasLarga' | translate }}</span>
-        <span class="eq-cifra__valor">{{ tiempo(esperaMasLarga!) }}</span>
+        <span class="eq-cifra__valor">{{ esperaMasLarga ? tiempo(esperaMasLarga) : '—' }}</span>
       </div>
       <div class="eq-cifra" *ngIf="pasaronObjetivo !== null">
-        <span class="eq-cifra__etiqueta">{{ 'notificaciones.informes2.pasaronObjetivo' | translate }}</span>
+        <span class="eq-cifra__etiqueta">{{ (objetivo ? 'notificaciones.informes2.pasaronObjetivoDe' : 'notificaciones.informes2.pasaronObjetivo') | translate: { t: objetivo ? tiempo(objetivo) : '' } }}</span>
         <span class="eq-cifra__valor" [class.eq-cifra__valor--alerta]="pasaronObjetivo! > 0">{{ pasaronObjetivo }}</span>
       </div>
     </div>

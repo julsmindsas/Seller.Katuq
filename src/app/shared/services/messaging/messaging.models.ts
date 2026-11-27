@@ -175,10 +175,16 @@ export interface ResumenAtencion {
   ajustes: AjustesAtencion;
   /** Fase D (D-727): resumen por cola; ausente o vacío si el comercio no tiene colas. */
   porCola?: ResumenCola[];
-  /** Cifras que el servidor aún no manda: la pantalla las muestra solo si llegan. Segundos que lleva esperando el chat sin responder más antiguo. */
+  /** Cifras opcionales: la pantalla las muestra solo si llegan. Segundos que lleva esperando el chat sin responder más antiguo (0 = nadie espera). */
   esperaMasLargaSeg?: number | null;
-  /** Chats sin responder que ya pasaron el objetivo de respuesta. */
-  pasaronObjetivo?: number;
+  /** Objetivo de respuesta (los minutos del aviso «sin responder», en segundos); null si el aviso está en 0. */
+  objetivoSeg?: number | null;
+  /** Chats sin responder que ya esperan `objetivoSeg` o más; null sin objetivo. */
+  pasaronObjetivo?: number | null;
+  /** «Sin asignar» y «Sin responder» cuentan solo los chats con mensajes de estos últimos días. */
+  ventanaDias?: number;
+  /** Chats abiertos que quedaron fuera de esas dos cifras por no tener mensajes en la ventana. */
+  fueraDeVentana?: { sinAsignar?: number; sinResponder?: number };
 }
 
 /** Movimiento del historial del chat (`log`). */
